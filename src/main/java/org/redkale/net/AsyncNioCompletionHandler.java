@@ -117,7 +117,13 @@ class AsyncNioCompletionHandler<A> implements CompletionHandler<Integer, A>, Run
         CompletionHandler<Integer, A> handler0 = handler;
         A attachment0 = attachment;
         clear();
-        handler0.failed(exc, attachment0);
+        if (handler0 == null) { //可能和超时run方法同时执行
+            if (exc != null) {
+                exc.printStackTrace();
+            }
+        } else {
+            handler0.failed(exc, attachment0);
+        }
     }
 
     @Override

@@ -10,7 +10,6 @@ import java.util.concurrent.*;
 import org.redkale.annotation.Nonnull;
 import org.redkale.net.*;
 import org.redkale.util.Traces;
-import org.redkale.util.Utility;
 
 /**
  *
@@ -86,9 +85,7 @@ public class ClientFuture<R extends ClientRequest, T> extends CompletableFuture<
             workThread = conn.getChannel().getReadIOThread();
         }
         workThread.runWork(() -> {
-            if (Utility.isNotEmpty(traceid)) {
-                Traces.computeIfAbsent(traceid);
-            }
+            Traces.currentTraceid(traceid);
             completeExceptionally(ex);
             Traces.removeTraceid();
         });

@@ -13,7 +13,6 @@ import java.util.function.*;
 import java.util.logging.Logger;
 import org.redkale.net.*;
 import org.redkale.util.*;
-import static org.redkale.util.Utility.isNotEmpty;
 
 /**
  *
@@ -31,7 +30,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
 
     public static final int DEFAULT_MAX_PIPELINES = 128;
 
-    protected boolean debug;
+    protected boolean debug = false;
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
@@ -91,7 +90,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     protected Supplier<R> closeRequestSupplier;
 
     //创建连接后进行的登录鉴权操作
-    protected Function<C, CompletableFuture<C>> authenticate;
+    protected Function<String, Function<C, CompletableFuture<C>>> authenticate;
 
     protected Client(String name, AsyncGroup group, ClientAddress address) {
         this(name, group, true, address, Utility.cpus(), DEFAULT_MAX_PIPELINES, null, null, null);
@@ -110,18 +109,18 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     }
 
     protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address, int maxConns,
-        Function<C, CompletableFuture<C>> authenticate) {
+        Function<String, Function<C, CompletableFuture<C>>> authenticate) {
         this(name, group, tcp, address, maxConns, DEFAULT_MAX_PIPELINES, null, null, authenticate);
     }
 
     protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address, int maxConns,
-        Supplier<R> closeRequestSupplier, Function<C, CompletableFuture<C>> authenticate) {
+        Supplier<R> closeRequestSupplier, Function<String, Function<C, CompletableFuture<C>>> authenticate) {
         this(name, group, tcp, address, maxConns, DEFAULT_MAX_PIPELINES, null, closeRequestSupplier, authenticate);
     }
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
     protected Client(String name, AsyncGroup group, boolean tcp, ClientAddress address, int maxConns,
-        int maxPipelines, Supplier<R> pingRequestSupplier, Supplier<R> closeRequestSupplier, Function<C, CompletableFuture<C>> authenticate) {
+        int maxPipelines, Supplier<R> pingRequestSupplier, Supplier<R> closeRequestSupplier, Function<String, Function<C, CompletableFuture<C>>> authenticate) {
         if (maxPipelines < 1) {
             throw new IllegalArgumentException("maxPipelines must bigger 0");
         }
@@ -220,7 +219,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     }
 
     public final CompletableFuture<P> sendAsync(R request) {
-        request.traceid = Traces.computeIfAbsent(request.traceid);
+        request.traceid = Traces.computeIfAbsent(request.traceid, Traces.currentTraceid());
         if (request.workThread == null) {
             request.workThread = WorkThread.currentWorkThread();
         }
@@ -228,7 +227,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     }
 
     public final <T> CompletableFuture<T> sendAsync(R request, Function<P, T> respTransfer) {
-        request.traceid = Traces.computeIfAbsent(request.traceid);
+        request.traceid = Traces.computeIfAbsent(request.traceid, Traces.currentTraceid());
         if (request.workThread == null) {
             request.workThread = WorkThread.currentWorkThread();
         }
@@ -236,7 +235,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     }
 
     public final CompletableFuture<P> sendAsync(SocketAddress addr, R request) {
-        request.traceid = Traces.computeIfAbsent(request.traceid);
+        request.traceid = Traces.computeIfAbsent(request.traceid, Traces.currentTraceid());
         if (request.workThread == null) {
             request.workThread = WorkThread.currentWorkThread();
         }
@@ -244,7 +243,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     }
 
     public final <T> CompletableFuture<T> sendAsync(SocketAddress addr, R request, Function<P, T> respTransfer) {
-        request.traceid = Traces.computeIfAbsent(request.traceid);
+        request.traceid = Traces.computeIfAbsent(request.traceid, Traces.currentTraceid());
         if (request.workThread == null) {
             request.workThread = WorkThread.currentWorkThread();
         }
@@ -260,7 +259,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     }
 
     public final CompletableFuture<List<P>> sendAsync(R[] requests) {
-        requests[0].traceid = Traces.computeIfAbsent(requests[0].traceid);
+        requests[0].traceid = Traces.computeIfAbsent(requests[0].traceid, Traces.currentTraceid());
         for (R request : requests) {
             if (request.workThread == null) {
                 request.workThread = WorkThread.currentWorkThread();
@@ -270,7 +269,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     }
 
     public final <T> CompletableFuture<List<T>> sendAsync(R[] requests, Function<P, T> respTransfer) {
-        requests[0].traceid = Traces.computeIfAbsent(requests[0].traceid);
+        requests[0].traceid = Traces.computeIfAbsent(requests[0].traceid, Traces.currentTraceid());
         for (R request : requests) {
             if (request.workThread == null) {
                 request.workThread = WorkThread.currentWorkThread();
@@ -280,7 +279,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     }
 
     public final CompletableFuture<List<P>> sendAsync(SocketAddress addr, R[] requests) {
-        requests[0].traceid = Traces.computeIfAbsent(requests[0].traceid);
+        requests[0].traceid = Traces.computeIfAbsent(requests[0].traceid, Traces.currentTraceid());
         for (R request : requests) {
             if (request.workThread == null) {
                 request.workThread = WorkThread.currentWorkThread();
@@ -290,13 +289,18 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     }
 
     public final <T> CompletableFuture<List<T>> sendAsync(SocketAddress addr, R[] requests, Function<P, T> respTransfer) {
-        requests[0].traceid = Traces.computeIfAbsent(requests[0].traceid);
+        requests[0].traceid = Traces.computeIfAbsent(requests[0].traceid, Traces.currentTraceid());
         for (R request : requests) {
             if (request.workThread == null) {
                 request.workThread = WorkThread.currentWorkThread();
             }
         }
         return connect(addr).thenCompose(conn -> writeChannel(conn, requests, respTransfer));
+    }
+
+    protected CompletableFuture<List<P>> writeChannelBatch(ClientConnection conn, R... requests) {
+        requests[0].traceid = Traces.computeIfAbsent(requests[0].traceid, Traces.currentTraceid());
+        return conn.writeChannel(requests);
     }
 
     protected CompletableFuture<List<P>> writeChannel(ClientConnection conn, R[] requests) {
@@ -324,43 +328,38 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         if (pool && cc != null && cc.isOpen()) {
             return CompletableFuture.completedFuture(cc);
         }
-
+        long s = System.currentTimeMillis();
         final Queue<CompletableFuture<C>> waitQueue = this.connAcquireWaitings[connIndex];
         if (!pool || this.connOpenStates[connIndex].compareAndSet(false, true)) {
             CompletableFuture<C> future = group.createClient(tcp, this.address.randomAddress(), readTimeoutSeconds, writeTimeoutSeconds)
                 .thenApply(c -> {
-                    if (isNotEmpty(traceid)) {
-                        Traces.computeIfAbsent(traceid);
-                    }
-                    return (C) createClientConnection(connIndex, c).setMaxPipelines(maxPipelines);
+                    Traces.currentTraceid(traceid);
+                    C rs = (C) createClientConnection(connIndex, c).setMaxPipelines(maxPipelines);
+//                    if (debug) {
+//                        logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ": " + rs
+//                            + ", " + rs.channel + ", 创建TCP连接耗时: (" + (System.currentTimeMillis() - s) + "ms)");
+//                    }
+                    return rs;
                 });
             R virtualReq = createVirtualRequestAfterConnect();
             if (virtualReq != null) {
                 virtualReq.traceid = traceid;
                 future = future.thenCompose(conn -> {
-                    if (isNotEmpty(traceid)) {
-                        Traces.computeIfAbsent(traceid);
-                    }
-                    return conn.writeVirtualRequest(virtualReq).thenApply(v -> {
-                        if (isNotEmpty(traceid)) {
-                            Traces.computeIfAbsent(traceid);
-                        }
-                        return conn;
-                    });
+                    Traces.currentTraceid(traceid);
+                    return conn.writeVirtualRequest(virtualReq).thenApply(v -> conn);
                 });
             } else {
                 future = future.thenApply(conn -> {
+                    Traces.currentTraceid(traceid);
                     conn.channel.readRegister(conn.getCodec()); //不用readRegisterInIOThread，因executeRead可能会异步
                     return conn;
                 });
             }
             if (authenticate != null) {
-                future = future.thenCompose(authenticate);
+                future = future.thenCompose(authenticate.apply(traceid));
             }
             return future.thenApply(c -> {
-                if (isNotEmpty(traceid)) {
-                    Traces.computeIfAbsent(traceid);
-                }
+                Traces.currentTraceid(traceid);
                 c.setAuthenticated(true);
                 if (pool) {
                     this.connArray[connIndex] = c;
@@ -370,9 +369,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
                             if (workThread != null) {
                                 CompletableFuture<C> fs = f;
                                 workThread.execute(() -> {
-                                    if (isNotEmpty(traceid)) {
-                                        Traces.computeIfAbsent(traceid);
-                                    }
+                                    Traces.currentTraceid(traceid);
                                     fs.complete(c);
                                 });
                             } else {
@@ -418,33 +415,41 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         WorkThread workThread = WorkThread.currentWorkThread();
         final Queue<CompletableFuture<C>> waitQueue = entry.connAcquireWaitings;
         if (!pool || entry.connOpenState.compareAndSet(false, true)) {
+            long s = System.currentTimeMillis();
             CompletableFuture<C> future = group.createClient(tcp, addr, readTimeoutSeconds, writeTimeoutSeconds)
                 .thenApply(c -> (C) createClientConnection(-1, c).setMaxPipelines(maxPipelines));
             R virtualReq = createVirtualRequestAfterConnect();
             if (virtualReq != null) {
                 virtualReq.traceid = traceid;
-                future = future.thenCompose(conn -> conn.writeVirtualRequest(virtualReq).thenApply(v -> conn));
+                future = future.thenCompose(conn -> {
+                    Traces.currentTraceid(traceid);
+                    return conn.writeVirtualRequest(virtualReq).thenApply(v -> conn);
+                });
             } else {
                 future = future.thenApply(conn -> {
+//                    if (debug) {
+//                        logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ": " + conn
+//                            + ", 注册读操作: (" + (System.currentTimeMillis() - s) + "ms) " + conn.channel);
+//                    }
                     conn.channel.readRegister(conn.getCodec()); //不用readRegisterInIOThread，因executeRead可能会异步
                     return conn;
                 });
             }
             if (authenticate != null) {
-                future = future.thenCompose(authenticate);
+                future = future.thenCompose(authenticate.apply(traceid));
             }
             return future.thenApply(c -> {
                 c.setAuthenticated(true);
                 if (pool) {
                     entry.connection = c;
                     CompletableFuture<C> f;
-                    Traces.computeIfAbsent(traceid);
+                    Traces.currentTraceid(traceid);
                     while ((f = waitQueue.poll()) != null) {
                         if (!f.isDone()) {
                             if (workThread != null) {
                                 CompletableFuture<C> fs = f;
                                 workThread.execute(() -> {
-                                    Traces.computeIfAbsent(traceid);
+                                    Traces.currentTraceid(traceid);
                                     fs.complete(c);
                                 });
                             } else {

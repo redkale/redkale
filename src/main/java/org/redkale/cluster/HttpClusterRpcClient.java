@@ -10,6 +10,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.redkale.annotation.Resource;
 import org.redkale.boot.Application;
+import org.redkale.net.WorkThread;
 import org.redkale.net.http.*;
 import org.redkale.util.Traces;
 import org.redkale.util.Utility;
@@ -81,6 +82,7 @@ public class HttpClusterRpcClient extends HttpRpcClient {
         } else {
             Traces.computeIfAbsent(req.getTraceid());
         }
+        final WorkThread workThread = WorkThread.currentWorkThread();
         String module = req.getRequestURI();
         module = module.substring(1); //去掉/
         module = module.substring(0, module.indexOf('/'));
@@ -91,9 +93,7 @@ public class HttpClusterRpcClient extends HttpRpcClient {
             logger.log(Level.FINEST, "httpAsync.queryHttpAddress: module=" + localModule + ", resname=" + resname);
         }
         return clusterAgent.queryHttpAddress("http", module, resname).thenCompose(addrs -> {
-            if (isNotEmpty(req.getTraceid())) {
-                Traces.computeIfAbsent(req.getTraceid());
-            }
+            Traces.currentTraceid(req.getTraceid());
             if (isEmpty(addrs)) {
                 if (logger.isLoggable(Level.WARNING)) {
                     logger.log(Level.WARNING, "httpAsync." + (produce ? "produceMessage" : "sendMessage") + " failed, module=" + localModule + ", resname=" + resname + ", address is empty");
@@ -150,13 +150,13 @@ public class HttpClusterRpcClient extends HttpRpcClient {
             if (logger.isLoggable(Level.FINEST)) {
                 logger.log(Level.FINEST, "httpAsync: module=" + localModule + ", resname=" + resname + ", enter forEachCollectionFuture");
             }
-            return forEachCollectionFuture(logger.isLoggable(Level.FINEST), userid, req,
+            return forEachCollectionFuture(workThread, logger.isLoggable(Level.FINEST), userid, req,
                 (req.getPath() != null && !req.getPath().isEmpty() ? req.getPath() : "") + req.getRequestURI(),
                 clientHeaders, clientBody, addrs.iterator());
         });
     }
 
-    private CompletableFuture<HttpResult<byte[]>> forEachCollectionFuture(boolean finest, Serializable userid,
+    private CompletableFuture<HttpResult<byte[]>> forEachCollectionFuture(final WorkThread workThread, boolean finest, Serializable userid,
         HttpSimpleRequest req, String requesturi, final Map<String, String> clientHeaders, byte[] clientBody, Iterator<InetSocketAddress> it) {
         if (!it.hasNext()) {
             return CompletableFuture.completedFuture(null);
@@ -178,9 +178,7 @@ public class HttpClusterRpcClient extends HttpRpcClient {
         }
         return httpClient.sendAsync(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofByteArray())
             .thenApply((java.net.http.HttpResponse<byte[]> resp) -> {
-                if (isNotEmpty(req.getTraceid())) {
-                    Traces.computeIfAbsent(req.getTraceid());
-                }
+                Traces.currentTraceid(req.getTraceid());
                 final int rs = resp.statusCode();
                 if (rs != 200) {
                     return new HttpResult<byte[]>().status(rs);

@@ -44,7 +44,7 @@ public class MessageRespProcessor implements MessageProcessor {
             logger.log(Level.FINEST, getClass().getSimpleName() + ".MessageRespFuture.receive (mq.delay = " + deplay + "ms, mq.seqid = " + msg.getSeqid() + ")");
         }
         messageClient.getMessageAgent().execute(() -> {
-            Traces.computeIfAbsent(traceid);
+            Traces.currentTraceid(traceid);
             resp.future.complete(msg);
             long comems = System.currentTimeMillis() - now;
             if ((deplay > 1000 || comems > 1000) && logger.isLoggable(Level.FINE)) {

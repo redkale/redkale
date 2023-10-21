@@ -112,6 +112,9 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
 
     void responseComplete(boolean halfCompleted, ClientFuture<R, P> respFuture, P message, Throwable exc) {
         R request = respFuture.request;
+        if (request != null) {
+            Traces.currentTraceid(request.getTraceid());
+        }
         AsyncIOThread readThread = connection.channel.getReadIOThread();
         final WorkThread workThread = request.workThread;
         try {
@@ -130,34 +133,35 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                 connection.client.incrRespDoneCounter();
             }
             respFuture.cancelTimeout();
-//                if (connection.client.debug) {
-//                    connection.client.logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ": " + connection + ", 回调处理, req=" + request + ", message=" + message, cause);
-//                }
+//            if (connection.client.debug) {
+//                connection.client.logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ": " + connection
+//                    + ", 回调处理(" + (request != null ? (System.currentTimeMillis() - request.getCreateTime()) : -1) + "ms), req=" + request + ", message=" + message, exc);
+//            }
             connection.preComplete(message, (R) request, exc);
 
             if (exc == null) {
                 final P rs = request.respTransfer == null ? message : (P) request.respTransfer.apply(message);
                 if (workThread == null) {
                     readThread.runWork(() -> {
-                        Traces.computeIfAbsent(request.traceid);
+                        Traces.currentTraceid(request.traceid);
                         respFuture.complete(rs);
                         Traces.removeTraceid();
                     });
                 } else if (workThread.getState() == Thread.State.RUNNABLE) { //fullCache时state不是RUNNABLE
                     if (workThread.inIO()) {
-                        Traces.computeIfAbsent(request.traceid);
+                        Traces.currentTraceid(request.traceid);
                         respFuture.complete(rs);
                         Traces.removeTraceid();
                     } else {
                         workThread.execute(() -> {
-                            Traces.computeIfAbsent(request.traceid);
+                            Traces.currentTraceid(request.traceid);
                             respFuture.complete(rs);
                             Traces.removeTraceid();
                         });
                     }
                 } else {
                     workThread.runWork(() -> {
-                        Traces.computeIfAbsent(request.traceid);
+                        Traces.currentTraceid(request.traceid);
                         respFuture.complete(rs);
                         Traces.removeTraceid();
                     });
@@ -165,25 +169,25 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
             } else { //异常
                 if (workThread == null) {
                     readThread.runWork(() -> {
-                        Traces.computeIfAbsent(request.traceid);
+                        Traces.currentTraceid(request.traceid);
                         respFuture.completeExceptionally(exc);
                         Traces.removeTraceid();
                     });
                 } else if (workThread.getState() == Thread.State.RUNNABLE) { //fullCache时state不是RUNNABLE
                     if (workThread.inIO()) {
-                        Traces.computeIfAbsent(request.traceid);
+                        Traces.currentTraceid(request.traceid);
                         respFuture.completeExceptionally(exc);
                         Traces.removeTraceid();
                     } else {
                         workThread.execute(() -> {
-                            Traces.computeIfAbsent(request.traceid);
+                            Traces.currentTraceid(request.traceid);
                             respFuture.completeExceptionally(exc);
                             Traces.removeTraceid();
                         });
                     }
                 } else {
                     workThread.runWork(() -> {
-                        Traces.computeIfAbsent(request.traceid);
+                        Traces.currentTraceid(request.traceid);
                         respFuture.completeExceptionally(exc);
                         Traces.removeTraceid();
                     });
@@ -192,25 +196,25 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
         } catch (Throwable t) {
             if (workThread == null) {
                 readThread.runWork(() -> {
-                    Traces.computeIfAbsent(request.traceid);
+                    Traces.currentTraceid(request.traceid);
                     respFuture.completeExceptionally(t);
                     Traces.removeTraceid();
                 });
             } else if (workThread.getState() == Thread.State.RUNNABLE) { //fullCache时state不是RUNNABLE
                 if (workThread.inIO()) {
-                    Traces.computeIfAbsent(request.traceid);
+                    Traces.currentTraceid(request.traceid);
                     respFuture.completeExceptionally(t);
                     Traces.removeTraceid();
                 } else {
                     workThread.execute(() -> {
-                        Traces.computeIfAbsent(request.traceid);
+                        Traces.currentTraceid(request.traceid);
                         respFuture.completeExceptionally(t);
                         Traces.removeTraceid();
                     });
                 }
             } else {
                 workThread.runWork(() -> {
-                    Traces.computeIfAbsent(request.traceid);
+                    Traces.currentTraceid(request.traceid);
                     respFuture.completeExceptionally(t);
                     Traces.removeTraceid();
                 });

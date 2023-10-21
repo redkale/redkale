@@ -118,6 +118,10 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     //respTransfer只会在ClientCodec的读线程里调用
     protected final <T> CompletableFuture<T> writeChannel(R request, Function<P, T> respTransfer) {
+//        if (client.debug) {
+//            client.logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ": "
+//                + this + ", 发送请求: " + request);
+//        }
         request.respTransfer = respTransfer;
         ClientFuture respFuture = createClientFuture(request);
         int rts = this.channel.getReadTimeoutSeconds();
@@ -163,6 +167,10 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
 
     //respTransfer只会在ClientCodec的读线程里调用
     protected final <T> CompletableFuture<List<T>> writeChannel(R[] requests, Function<P, T> respTransfer) {
+//        if (client.debug) {
+//            client.logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ": "
+//                + this + ", 发送请求: " + Arrays.toString(requests) + ", readTimeoutSeconds: " + this.channel.getReadTimeoutSeconds());
+//        }
         ClientFuture[] respFutures = new ClientFuture[requests.length];
         int rts = this.channel.getReadTimeoutSeconds();
         for (int i = 0; i < respFutures.length; i++) {

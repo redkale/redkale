@@ -19,7 +19,6 @@ import org.redkale.net.http.*;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Traces;
 import static org.redkale.util.Utility.isEmpty;
-import static org.redkale.util.Utility.isNotEmpty;
 
 /**
  * 没有配置MQ且也没有ClusterAgent的情况下实现的默认HttpMessageClient实例
@@ -146,9 +145,7 @@ public class HttpLocalRpcClient extends HttpRpcClient {
             future.completeExceptionally(e);
         }
         return future.thenApply(rs -> {
-            if (isNotEmpty(request.getTraceid())) {
-                Traces.computeIfAbsent(request.getTraceid());
-            }
+            Traces.currentTraceid(request.getTraceid());
             if (rs == null) {
                 return new HttpResult();
             }

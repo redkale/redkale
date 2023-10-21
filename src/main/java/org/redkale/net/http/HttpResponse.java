@@ -585,7 +585,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public void finishFuture(final Convert convert, Type valueType, CompletionStage future) {
         future.whenComplete((v, e) -> {
-            Traces.computeIfAbsent(request.getTraceid());
+            Traces.currentTraceid(request.getTraceid());
             if (e != null) {
                 context.getLogger().log(Level.WARNING, "Servlet occur exception. request = " + request + ", result is CompletionStage", (Throwable) e);
                 if (e instanceof TimeoutException) {
@@ -619,7 +619,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public void finishJsonFuture(final Convert convert, Type valueType, CompletionStage future) {
         future.whenComplete((v, e) -> {
-            Traces.computeIfAbsent(request.getTraceid());
+            Traces.currentTraceid(request.getTraceid());
             if (e != null) {
                 context.getLogger().log(Level.WARNING, "Servlet occur exception. request = " + request + ", result is CompletionStage", (Throwable) e);
                 if (e instanceof TimeoutException) {

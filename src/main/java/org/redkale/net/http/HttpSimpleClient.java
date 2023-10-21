@@ -17,7 +17,6 @@ import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
 import static org.redkale.net.http.HttpRequest.parseHeaderName;
 import org.redkale.util.*;
-import static org.redkale.util.Utility.isNotEmpty;
 
 /**
  * 简单的HttpClient实现, 存在以下情况不能使用此类: <br>
@@ -203,13 +202,12 @@ public class HttpSimpleClient {
 
     public <T> CompletableFuture<HttpResult<T>> sendAsync(String method, String url, Map<String, String> headers, byte[] body, Convert convert, Type valueType) {
         final String traceid = Traces.currentTraceid();
+        final WorkThread workThread = WorkThread.currentWorkThread();
         final URI uri = URI.create(url);
         final String host = uri.getHost();
         final int port = uri.getPort() > 0 ? uri.getPort() : (url.startsWith("https:") ? 443 : 80);
         return createConnection(host, port).thenCompose(conn -> {
-            if (isNotEmpty(traceid)) {
-                Traces.computeIfAbsent(traceid);
-            }
+            Traces.currentTraceid(traceid);
             final ByteArray array = new ByteArray();
             int urlpos = url.indexOf("/", url.indexOf("//") + 3);
             array.put((method.toUpperCase() + " " + (urlpos > 0 ? url.substring(urlpos) : "/") + " HTTP/1.1\r\n"
@@ -234,16 +232,24 @@ public class HttpSimpleClient {
             conn.write(array, new CompletionHandler<Integer, Void>() {
                 @Override
                 public void completed(Integer result, Void attachment) {
-                    conn.read(new ClientReadCompletionHandler(conn, traceid, array.clear(), convert, valueType, future));
+                    conn.read(new ClientReadCompletionHandler(conn, workThread, traceid, array.clear(), convert, valueType, future));
                 }
 
                 @Override
                 public void failed(Throwable exc, Void attachment) {
-                    if (isNotEmpty(traceid)) {
-                        Traces.computeIfAbsent(traceid);
-                    }
+                    Traces.currentTraceid(traceid);
                     conn.dispose();
-                    future.completeExceptionally(exc);
+                    if (workThread == null) {
+                        Utility.execute(() -> {
+                            Traces.currentTraceid(traceid);
+                            future.completeExceptionally(exc);
+                        });
+                    } else {
+                        workThread.runWork(() -> {
+                            Traces.currentTraceid(traceid);
+                            future.completeExceptionally(exc);
+                        });
+                    }
                 }
             });
             return future;
@@ -309,6 +315,8 @@ public class HttpSimpleClient {
 
         protected final String traceid;
 
+        protected final WorkThread workThread;
+
         protected final CompletableFuture<HttpResult<T>> future;
 
         protected Convert convert;
@@ -321,8 +329,9 @@ public class HttpSimpleClient {
 
         protected int contentLength = -1;
 
-        public ClientReadCompletionHandler(HttpConnection conn, String traceid, ByteArray array, Convert convert, Type valueType, CompletableFuture<HttpResult<T>> future) {
+        public ClientReadCompletionHandler(HttpConnection conn, WorkThread workThread, String traceid, ByteArray array, Convert convert, Type valueType, CompletableFuture<HttpResult<T>> future) {
             this.conn = conn;
+            this.workThread = workThread;
             this.traceid = traceid;
             this.array = array;
             this.convert = convert;
@@ -332,9 +341,7 @@ public class HttpSimpleClient {
 
         @Override
         public void completed(Integer count, ByteBuffer buffer) {
-            if (isNotEmpty(traceid)) {
-                Traces.computeIfAbsent(traceid);
-            }
+            Traces.currentTraceid(traceid);
             buffer.flip();
             if (this.readState == READ_STATE_ROUTE) {
                 if (this.responseResult == null) {
@@ -388,12 +395,42 @@ public class HttpSimpleClient {
                 HttpResult result = this.responseResult;
                 try {
                     result.result(c.convertFrom(valueType, this.responseResult.getResult()));
-                    this.future.complete((HttpResult<T>) this.responseResult);
+                    if (workThread == null) {
+                        Utility.execute(() -> {
+                            Traces.currentTraceid(traceid);
+                            future.complete((HttpResult<T>) this.responseResult);
+                        });
+                    } else {
+                        workThread.runWork(() -> {
+                            Traces.currentTraceid(traceid);
+                            future.complete((HttpResult<T>) this.responseResult);
+                        });
+                    }
                 } catch (Exception e) {
-                    this.future.completeExceptionally(e);
+                    if (workThread == null) {
+                        Utility.execute(() -> {
+                            Traces.currentTraceid(traceid);
+                            future.completeExceptionally(e);
+                        });
+                    } else {
+                        workThread.runWork(() -> {
+                            Traces.currentTraceid(traceid);
+                            future.completeExceptionally(e);
+                        });
+                    }
                 }
             } else {
-                this.future.complete((HttpResult<T>) this.responseResult);
+                if (workThread == null) {
+                    Utility.execute(() -> {
+                        Traces.currentTraceid(traceid);
+                        future.complete((HttpResult<T>) this.responseResult);
+                    });
+                } else {
+                    workThread.runWork(() -> {
+                        Traces.currentTraceid(traceid);
+                        future.complete((HttpResult<T>) this.responseResult);
+                    });
+                }
             }
         }
 

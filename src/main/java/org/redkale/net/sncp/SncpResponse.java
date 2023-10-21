@@ -146,7 +146,7 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
             finishVoid();
         } else if (future instanceof CompletionStage) {
             ((CompletionStage) future).whenComplete((v, t) -> {
-                Traces.computeIfAbsent(request.getTraceid());
+                Traces.currentTraceid(request.getTraceid());
                 if (t != null) {
                     finishError((Throwable) t);
                 } else {
