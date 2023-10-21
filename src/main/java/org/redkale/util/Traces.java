@@ -30,7 +30,7 @@ public class Traces {
     /**
      * 是否开启了trace功能
      *
-     * @return
+     * @return boolean
      */
     public static boolean enable() {
         return enable;
@@ -39,7 +39,7 @@ public class Traces {
     /**
      * 创建一个新的traceid
      *
-     * @return
+     * @return String
      */
     public static String createTraceid() {
         return enable ? tidSupplier.get() : null;
@@ -48,7 +48,7 @@ public class Traces {
     /**
      * 获取当前线程的traceid
      *
-     * @return
+     * @return String
      */
     public static String currentTraceid() {
         return enable ? localTrace.get() : null;
@@ -66,9 +66,8 @@ public class Traces {
     /**
      * 设置当前线程的traceid， 如果参数为空则清除当前线程traceid
      *
-     * @param traceid
+     * @param traceid traceid
      *
-     * @return
      */
     public static void currentTraceid(String traceid) {
         if (enable) {
@@ -83,9 +82,9 @@ public class Traces {
     /**
      * 设置当前线程的traceid， 若参数为空则会创建一个新的traceid
      *
-     * @param traceid
+     * @param traceid traceid
      *
-     * @return
+     * @return String
      */
     public static String computeIfAbsent(String traceid) {
         if (enable) {
@@ -102,10 +101,10 @@ public class Traces {
     /**
      * 设置当前线程的traceid， 若参数1为空，则使用参数2，若参数2未空，则会创建一个新的traceid
      *
-     * @param traceid
-     * @param traceid2
+     * @param traceid  traceid
+     * @param traceid2 traceid
      *
-     * @return
+     * @return String
      */
     public static String computeIfAbsent(String traceid, String traceid2) {
         if (enable) {
