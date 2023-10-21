@@ -13,6 +13,7 @@ import java.util.function.*;
 import java.util.logging.Logger;
 import org.redkale.net.*;
 import org.redkale.util.*;
+import static org.redkale.util.Utility.isNotEmpty;
 
 /**
  *
@@ -327,11 +328,26 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         final Queue<CompletableFuture<C>> waitQueue = this.connAcquireWaitings[connIndex];
         if (!pool || this.connOpenStates[connIndex].compareAndSet(false, true)) {
             CompletableFuture<C> future = group.createClient(tcp, this.address.randomAddress(), readTimeoutSeconds, writeTimeoutSeconds)
-                .thenApply(c -> (C) createClientConnection(connIndex, c).setMaxPipelines(maxPipelines));
+                .thenApply(c -> {
+                    if (isNotEmpty(traceid)) {
+                        Traces.computeIfAbsent(traceid);
+                    }
+                    return (C) createClientConnection(connIndex, c).setMaxPipelines(maxPipelines);
+                });
             R virtualReq = createVirtualRequestAfterConnect();
             if (virtualReq != null) {
                 virtualReq.traceid = traceid;
-                future = future.thenCompose(conn -> conn.writeVirtualRequest(virtualReq).thenApply(v -> conn));
+                future = future.thenCompose(conn -> {
+                    if (isNotEmpty(traceid)) {
+                        Traces.computeIfAbsent(traceid);
+                    }
+                    return conn.writeVirtualRequest(virtualReq).thenApply(v -> {
+                        if (isNotEmpty(traceid)) {
+                            Traces.computeIfAbsent(traceid);
+                        }
+                        return conn;
+                    });
+                });
             } else {
                 future = future.thenApply(conn -> {
                     conn.channel.readRegister(conn.getCodec()); //不用readRegisterInIOThread，因executeRead可能会异步
@@ -342,7 +358,9 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
                 future = future.thenCompose(authenticate);
             }
             return future.thenApply(c -> {
-                Traces.computeIfAbsent(traceid);
+                if (isNotEmpty(traceid)) {
+                    Traces.computeIfAbsent(traceid);
+                }
                 c.setAuthenticated(true);
                 if (pool) {
                     this.connArray[connIndex] = c;
@@ -352,7 +370,9 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
                             if (workThread != null) {
                                 CompletableFuture<C> fs = f;
                                 workThread.execute(() -> {
-                                    Traces.computeIfAbsent(traceid);
+                                    if (isNotEmpty(traceid)) {
+                                        Traces.computeIfAbsent(traceid);
+                                    }
                                     fs.complete(c);
                                 });
                             } else {

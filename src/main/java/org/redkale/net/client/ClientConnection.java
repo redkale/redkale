@@ -14,7 +14,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
-import java.util.logging.Level;
 import org.redkale.annotation.*;
 import org.redkale.net.*;
 import org.redkale.util.*;
@@ -134,7 +133,6 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
             } else {
                 sendRequestInLocking(request, respFuture);
             }
-            client.logger.log(Level.INFO,  channel + ", " +  request.getTraceid()+ " 发送完请求: " + request);
         } finally {
             writeLock.unlock();
         }
@@ -321,7 +319,6 @@ public abstract class ClientConnection<R extends ClientRequest, P> implements Co
     public void dispose(Throwable exc) {
         channel.offerWriteBuffer(writeBuffer);
         channel.dispose();
-        System.out.println(Thread.currentThread().getName() + ": " +  channel + ", 被关闭了");
         Throwable e = exc == null ? new ClosedChannelException() : exc;
         CompletableFuture f;
         respWaitingCounter.reset();
