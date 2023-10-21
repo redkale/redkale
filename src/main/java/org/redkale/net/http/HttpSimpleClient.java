@@ -208,7 +208,7 @@ public class HttpSimpleClient {
     }
 
     public <T> CompletableFuture<HttpResult<T>> sendAsync(String method, String url, Map<String, String> headers, byte[] body, Convert convert, Type valueType) {
-        final String traceid = Traces.currentTraceid();
+        final String traceid = Traces.computeIfAbsent(Traces.currentTraceid());
         final WorkThread workThread = WorkThread.currentWorkThread();
         final URI uri = URI.create(url);
         final String host = uri.getHost();
@@ -219,6 +219,7 @@ public class HttpSimpleClient {
             int urlpos = url.indexOf("/", url.indexOf("//") + 3);
             array.put((method.toUpperCase() + " " + (urlpos > 0 ? url.substring(urlpos) : "/") + " HTTP/1.1\r\n"
                 + "Host: " + uri.getHost() + "\r\n"
+                + Rest.REST_HEADER_TRACEID + ": " + traceid + "\r\n"
                 + "Content-Length: " + (body == null ? 0 : body.length) + "\r\n").getBytes(StandardCharsets.UTF_8));
             if (headers == null || !headers.containsKey("User-Agent")) {
                 array.put(header_bytes_useragent);

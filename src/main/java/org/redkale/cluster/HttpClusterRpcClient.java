@@ -77,11 +77,7 @@ public class HttpClusterRpcClient extends HttpRpcClient {
     }
 
     private CompletableFuture<HttpResult<byte[]>> httpAsync(boolean produce, Serializable userid, HttpSimpleRequest req) {
-        if (isEmpty(req.getTraceid())) {
-            req.setTraceid(Traces.currentTraceid());
-        } else {
-            Traces.computeIfAbsent(req.getTraceid());
-        }
+        req.setTraceid(Traces.computeIfAbsent(req.getTraceid(), Traces.currentTraceid()));
         final WorkThread workThread = WorkThread.currentWorkThread();
         String module = req.getRequestURI();
         module = module.substring(1); //去掉/
@@ -169,7 +165,9 @@ public class HttpClusterRpcClient extends HttpRpcClient {
         if (httpSimpleClient != null) {
             return httpSimpleClient.postAsync(url, clientHeaders, clientBody);
         }
-        java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder().uri(URI.create(url))
+        java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .header(Rest.REST_HEADER_TRACEID, req.getTraceid())
             .timeout(Duration.ofMillis(10_000))
             //存在sendHeader后不发送body数据的问题， java.net.http.HttpRequest的bug?
             .method("POST", clientBody == null ? java.net.http.HttpRequest.BodyPublishers.noBody() : java.net.http.HttpRequest.BodyPublishers.ofByteArray(clientBody));
