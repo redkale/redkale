@@ -42,16 +42,23 @@ public class HttpSimpleClient {
 
     protected final AsyncGroup asyncGroup;
 
+    protected ExecutorService workExecutor;
+
     protected int readTimeoutSeconds = 6;
 
     protected int writeTimeoutSeconds = 6;
 
-    protected HttpSimpleClient(AsyncGroup asyncGroup) {
+    protected HttpSimpleClient(ExecutorService workExecutor, AsyncGroup asyncGroup) {
+        this.workExecutor = workExecutor;
         this.asyncGroup = asyncGroup;
     }
 
+    public static HttpSimpleClient create(ExecutorService workExecutor, AsyncGroup asyncGroup) {
+        return new HttpSimpleClient(workExecutor, asyncGroup);
+    }
+
     public static HttpSimpleClient create(AsyncGroup asyncGroup) {
-        return new HttpSimpleClient(asyncGroup);
+        return create(null, asyncGroup);
     }
 
     public HttpSimpleClient readTimeoutSeconds(int readTimeoutSeconds) {
@@ -299,7 +306,7 @@ public class HttpSimpleClient {
 
     }
 
-    protected static class ClientReadCompletionHandler<T> implements CompletionHandler<Integer, ByteBuffer> {
+    protected class ClientReadCompletionHandler<T> implements CompletionHandler<Integer, ByteBuffer> {
 
         protected static final int READ_STATE_ROUTE = 1;
 
@@ -395,20 +402,30 @@ public class HttpSimpleClient {
                 HttpResult result = this.responseResult;
                 try {
                     result.result(c.convertFrom(valueType, this.responseResult.getResult()));
-                    if (workThread == null) {
-                        Utility.execute(() -> {
+                    if (workThread != null) {
+                        workThread.runWork(() -> {
+                            Traces.currentTraceid(traceid);
+                            future.complete((HttpResult<T>) this.responseResult);
+                        });
+                    } else if (workExecutor != null) {
+                        workExecutor.execute(() -> {
                             Traces.currentTraceid(traceid);
                             future.complete((HttpResult<T>) this.responseResult);
                         });
                     } else {
-                        workThread.runWork(() -> {
+                        Utility.execute(() -> {
                             Traces.currentTraceid(traceid);
                             future.complete((HttpResult<T>) this.responseResult);
                         });
                     }
                 } catch (Exception e) {
-                    if (workThread == null) {
+                    if (workThread != null) {
                         Utility.execute(() -> {
+                            Traces.currentTraceid(traceid);
+                            future.completeExceptionally(e);
+                        });
+                    } else if (workExecutor == null) {
+                        workExecutor.execute(() -> {
                             Traces.currentTraceid(traceid);
                             future.completeExceptionally(e);
                         });
@@ -420,13 +437,18 @@ public class HttpSimpleClient {
                     }
                 }
             } else {
-                if (workThread == null) {
-                    Utility.execute(() -> {
+                if (workThread != null) {
+                    workThread.runWork(() -> {
+                        Traces.currentTraceid(traceid);
+                        future.complete((HttpResult<T>) this.responseResult);
+                    });
+                } else if (workExecutor != null) {
+                    workExecutor.execute(() -> {
                         Traces.currentTraceid(traceid);
                         future.complete((HttpResult<T>) this.responseResult);
                     });
                 } else {
-                    workThread.runWork(() -> {
+                    Utility.execute(() -> {
                         Traces.currentTraceid(traceid);
                         future.complete((HttpResult<T>) this.responseResult);
                     });

@@ -2,6 +2,8 @@
  */
 package org.redkale.source;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ResourceListener;
@@ -51,6 +53,16 @@ public abstract class AbstractCacheSource extends AbstractService implements Cac
     //@since 2.7.0
     public static final String CACHE_SOURCE_PIPELINES = "pipelines";
 
+    public static void main(String[] args) throws Throwable {
+        File file = new File("C:\\Users\\zhangjx\\Desktop\\AnonymousVirtualPoolFunction.class");
+        
+        System.out.println(Utility.binToHexString(Files.readAllBytes(file.toPath()))); 
+        
+        file = new File("C:\\Users\\zhangjx\\Desktop\\AnonymousVirtualExecutor.class");
+        
+        System.out.println(Utility.binToHexString(Files.readAllBytes(file.toPath()))); 
+    }
+    
     @ResourceListener
     public abstract void onResourceChange(ResourceEvent[] events);
 

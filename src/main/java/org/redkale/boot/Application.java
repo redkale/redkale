@@ -955,7 +955,7 @@ public final class Application {
                 }
             });
         }
-        
+
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         final PrintStream ps = new PrintStream(out);
         properties.forEach((x, y) -> ps.println(x + "=" + y));
@@ -1135,7 +1135,7 @@ public final class Application {
                 if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
                     return null;
                 }
-                HttpSimpleClient httpClient = HttpSimpleClient.create(clientAsyncGroup);
+                HttpSimpleClient httpClient = HttpSimpleClient.create(workExecutor, clientAsyncGroup);
                 field.set(srcObj, httpClient);
                 rf.inject(resourceName, httpClient, null); // 给其可能包含@Resource的字段赋值;
                 rf.register(resourceName, HttpSimpleClient.class, httpClient);
