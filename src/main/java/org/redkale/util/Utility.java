@@ -934,6 +934,28 @@ public final class Utility {
         return rs;
     }
 
+    public static char[] box(Character[] array) {
+        if (array == null) {
+            return null;
+        }
+        char[] rs = new char[array.length];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = array[i] == null ? 0 : array[i];
+        }
+        return rs;
+    }
+
+    public static Character[] box(char[] array) {
+        if (array == null) {
+            return null;
+        }
+        Character[] rs = new Character[array.length];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = array[i];
+        }
+        return rs;
+    }
+
     public static short[] box(Short[] array) {
         if (array == null) {
             return null;
@@ -1044,6 +1066,23 @@ public final class Utility {
         return rs;
     }
 
+    public static <T> boolean[] reverse(boolean[] array) {
+        if (array == null) {
+            return array;
+        }
+        boolean[] arr = array;
+        int start = 0;
+        int end = arr.length - 1;
+        while (start < end) {
+            boolean temp = arr[start];
+            arr[start] = arr[end];
+            arr[end] = temp;
+            start++;
+            end--;
+        }
+        return arr;
+    }
+
     public static <T> byte[] reverse(byte[] array) {
         if (array == null) {
             return array;
@@ -1053,6 +1092,23 @@ public final class Utility {
         int end = arr.length - 1;
         while (start < end) {
             byte temp = arr[start];
+            arr[start] = arr[end];
+            arr[end] = temp;
+            start++;
+            end--;
+        }
+        return arr;
+    }
+
+    public static <T> char[] reverse(char[] array) {
+        if (array == null) {
+            return array;
+        }
+        char[] arr = array;
+        int start = 0;
+        int end = arr.length - 1;
+        while (start < end) {
+            char temp = arr[start];
             arr[start] = arr[end];
             arr[end] = temp;
             start++;
@@ -1161,6 +1217,13 @@ public final class Utility {
             end--;
         }
         return arr;
+    }
+
+    public static <T> List<T> reverse(List<T> list) {
+        if (list != null) {
+            Collections.reverse(list);
+        }
+        return list;
     }
 
     /**
@@ -1973,34 +2036,6 @@ public final class Utility {
             news[array.length + (++index)] = t;
         }
         return news;
-    }
-
-    /**
-     * 将int数组倒序
-     *
-     * @param array 原数组
-     *
-     * @return 新数组
-     */
-    public static int[] reverseSort(final int[] array) {
-        if (array == null || array.length == 0) {
-            return array;
-        }
-        return Arrays.stream(array).boxed().sorted(Collections.reverseOrder()).mapToInt(x -> x).toArray();
-    }
-
-    /**
-     * 将long数组倒序
-     *
-     * @param array 原数组
-     *
-     * @return 新数组
-     */
-    public static long[] reverseSort(final long[] array) {
-        if (array == null || array.length == 0) {
-            return array;
-        }
-        return Arrays.stream(array).boxed().sorted(Collections.reverseOrder()).mapToLong(x -> x).toArray();
     }
 
     /**
