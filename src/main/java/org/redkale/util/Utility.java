@@ -890,6 +890,279 @@ public final class Utility {
         return new String(chs);
     }
 
+    public static boolean[] box(Boolean[] array) {
+        if (array == null) {
+            return null;
+        }
+        boolean[] rs = new boolean[array.length];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = array[i] == null ? false : array[i];
+        }
+        return rs;
+    }
+
+    public static Boolean[] box(boolean[] array) {
+        if (array == null) {
+            return null;
+        }
+        Boolean[] rs = new Boolean[array.length];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = array[i];
+        }
+        return rs;
+    }
+
+    public static byte[] box(Byte[] array) {
+        if (array == null) {
+            return null;
+        }
+        byte[] rs = new byte[array.length];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = array[i] == null ? 0 : array[i];
+        }
+        return rs;
+    }
+
+    public static Byte[] box(byte[] array) {
+        if (array == null) {
+            return null;
+        }
+        Byte[] rs = new Byte[array.length];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = array[i];
+        }
+        return rs;
+    }
+
+    public static short[] box(Short[] array) {
+        if (array == null) {
+            return null;
+        }
+        short[] rs = new short[array.length];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = array[i] == null ? 0 : array[i];
+        }
+        return rs;
+    }
+
+    public static Short[] box(short[] array) {
+        if (array == null) {
+            return null;
+        }
+        Short[] rs = new Short[array.length];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = array[i];
+        }
+        return rs;
+    }
+
+    public static int[] box(Integer[] array) {
+        if (array == null) {
+            return null;
+        }
+        int[] rs = new int[array.length];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = array[i] == null ? 0 : array[i];
+        }
+        return rs;
+    }
+
+    public static Integer[] box(int[] array) {
+        if (array == null) {
+            return null;
+        }
+        Integer[] rs = new Integer[array.length];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = array[i];
+        }
+        return rs;
+    }
+
+    public static long[] box(Long[] array) {
+        if (array == null) {
+            return null;
+        }
+        long[] rs = new long[array.length];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = array[i] == null ? 0 : array[i];
+        }
+        return rs;
+    }
+
+    public static Long[] box(long[] array) {
+        if (array == null) {
+            return null;
+        }
+        Long[] rs = new Long[array.length];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = array[i];
+        }
+        return rs;
+    }
+
+    public static float[] box(Float[] array) {
+        if (array == null) {
+            return null;
+        }
+        float[] rs = new float[array.length];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = array[i] == null ? 0 : array[i];
+        }
+        return rs;
+    }
+
+    public static Float[] box(float[] array) {
+        if (array == null) {
+            return null;
+        }
+        Float[] rs = new Float[array.length];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = array[i];
+        }
+        return rs;
+    }
+
+    public static double[] box(Double[] array) {
+        if (array == null) {
+            return null;
+        }
+        double[] rs = new double[array.length];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = array[i] == null ? 0 : array[i];
+        }
+        return rs;
+    }
+
+    public static Double[] box(double[] array) {
+        if (array == null) {
+            return null;
+        }
+        Double[] rs = new Double[array.length];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = array[i];
+        }
+        return rs;
+    }
+
+    public static <T> byte[] reverse(byte[] array) {
+        if (array == null) {
+            return array;
+        }
+        byte[] arr = array;
+        int start = 0;
+        int end = arr.length - 1;
+        while (start < end) {
+            byte temp = arr[start];
+            arr[start] = arr[end];
+            arr[end] = temp;
+            start++;
+            end--;
+        }
+        return arr;
+    }
+
+    public static <T> short[] reverse(short[] array) {
+        if (array == null) {
+            return array;
+        }
+        short[] arr = array;
+        int start = 0;
+        int end = arr.length - 1;
+        while (start < end) {
+            short temp = arr[start];
+            arr[start] = arr[end];
+            arr[end] = temp;
+            start++;
+            end--;
+        }
+        return arr;
+    }
+
+    public static <T> int[] reverse(int[] array) {
+        if (array == null) {
+            return array;
+        }
+        int[] arr = array;
+        int start = 0;
+        int end = arr.length - 1;
+        while (start < end) {
+            int temp = arr[start];
+            arr[start] = arr[end];
+            arr[end] = temp;
+            start++;
+            end--;
+        }
+        return arr;
+    }
+
+    public static <T> long[] reverse(long[] array) {
+        if (array == null) {
+            return array;
+        }
+        long[] arr = array;
+        int start = 0;
+        int end = arr.length - 1;
+        while (start < end) {
+            long temp = arr[start];
+            arr[start] = arr[end];
+            arr[end] = temp;
+            start++;
+            end--;
+        }
+        return arr;
+    }
+
+    public static <T> float[] reverse(float[] array) {
+        if (array == null) {
+            return array;
+        }
+        float[] arr = array;
+        int start = 0;
+        int end = arr.length - 1;
+        while (start < end) {
+            float temp = arr[start];
+            arr[start] = arr[end];
+            arr[end] = temp;
+            start++;
+            end--;
+        }
+        return arr;
+    }
+
+    public static <T> double[] reverse(double[] array) {
+        if (array == null) {
+            return array;
+        }
+        double[] arr = array;
+        int start = 0;
+        int end = arr.length - 1;
+        while (start < end) {
+            double temp = arr[start];
+            arr[start] = arr[end];
+            arr[end] = temp;
+            start++;
+            end--;
+        }
+        return arr;
+    }
+
+    public static <T> T[] reverse(T[] array) {
+        if (array == null) {
+            return array;
+        }
+        T[] arr = array;
+        int start = 0;
+        int end = arr.length - 1;
+        while (start < end) {
+            T temp = arr[start];
+            arr[start] = arr[end];
+            arr[end] = temp;
+            start++;
+            end--;
+        }
+        return arr;
+    }
+
     /**
      * 将多个key:value的字符串键值对组合成一个Map，items长度必须是偶数, 参数个数若是奇数的话，最后一个会被忽略
      * 类似 JDK9中的 Map.of 方法
