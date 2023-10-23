@@ -73,6 +73,7 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
         if (!respResults.isEmpty()) { //存在解析结果
             connection.currRespIterator = null;
             readArray.clear();
+            boolean keepAlive = true;
             for (ClientResponse<R, P> cr : respResults) {
                 connection.doneResponseCounter.increment();
                 if (cr.isError()) {
@@ -89,15 +90,20 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
                             return;
                         }
                         responseComplete(false, respFuture, cr.message, cr.cause);
+                        if (cr.message != null && !cr.message.isKeepAlive()) {
+                            keepAlive = false;
+                        }
                     }
                     respPool.accept(cr);
                 }
             }
             respResults.clear();
-
+            if (!keepAlive) {
+                connection.dispose(null);
+            }
             if (buffer.hasRemaining()) { //还有响应数据包
                 decodeResponse(buffer);
-            } else { //队列都已处理完了
+            } else if (keepAlive) { //队列都已处理完了
                 buffer.clear();
                 channel.setReadBuffer(buffer);
                 channel.readRegister(this);
@@ -165,9 +171,6 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
                         respFuture.complete(rs);
                         Traces.removeTraceid();
                     });
-                }
-                if (!message.isKeepAlive()) {
-                    connection.dispose(null);
                 }
             } else { //异常
                 if (workThread == null) {
