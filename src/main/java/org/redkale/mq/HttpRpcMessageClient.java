@@ -35,10 +35,10 @@ final class HttpRpcMessageClient extends HttpRpcClient {
     }
 
     @Override
-    public void produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request) {
+    public CompletableFuture<Void> produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request) {
         MessageRecord message = messageClient.createMessageRecord(CTYPE_HTTP_REQUEST, topic, null, request.getTraceid(), requestCoder.encode(request));
         message.userid(userid).groupid(groupid);
-        messageClient.produceMessage(message);
+        return messageClient.produceMessage(message);
     }
 
     @Override

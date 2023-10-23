@@ -104,9 +104,9 @@ public class HttpLocalRpcClient extends HttpRpcClient {
         if (isEmpty(request.getTraceid())) {
             request.setTraceid(Traces.currentTraceid());
         }
+        CompletableFuture future = new CompletableFuture();
         String topic = generateHttpReqTopic(request, request.getPath());
         HttpServlet servlet = findHttpServlet(topic);
-        CompletableFuture future = new CompletableFuture();
         if (servlet == null) {
             if (logger.isLoggable(Level.FINE)) {
                 logger.log(Level.FINE, "sendMessage: request=" + request + ", not found servlet");
@@ -129,15 +129,16 @@ public class HttpLocalRpcClient extends HttpRpcClient {
         if (isEmpty(request.getTraceid())) {
             request.setTraceid(Traces.currentTraceid());
         }
+        CompletableFuture future = new CompletableFuture();
         HttpServlet servlet = findHttpServlet(topic);
         if (servlet == null) {
             if (logger.isLoggable(Level.FINE)) {
                 logger.log(Level.FINE, "sendMessage: request=" + request + ", not found servlet");
             }
-            return CompletableFuture.completedFuture(new HttpResult().status(404));
+            future.complete(new HttpResult().status(404));
+            return future;
         }
         HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);
-        CompletableFuture future = new CompletableFuture();
         HttpResponse resp = new HttpMessageLocalResponse(req, future);
         try {
             servlet.execute(req, resp);
@@ -161,14 +162,16 @@ public class HttpLocalRpcClient extends HttpRpcClient {
     }
 
     @Override
-    public void produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request) {
+    public CompletableFuture<Void> produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request) {
+        CompletableFuture future = new CompletableFuture();
         HttpDispatcherServlet ps = dispatcherServlet();
         HttpServlet servlet = ps.findServletByTopic(topic);
         if (servlet == null) {
             if (logger.isLoggable(Level.FINE)) {
                 logger.log(Level.FINE, "produceMessage: request=" + request + ", not found servlet");
             }
-            return;
+            future.completeExceptionally(new RuntimeException("404 Not Found " + topic));
+            return future;
         }
         HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);
         HttpResponse resp = new HttpMessageLocalResponse(req, null);
@@ -177,6 +180,10 @@ public class HttpLocalRpcClient extends HttpRpcClient {
         } catch (Exception e) {
             throw new RedkaleException(e);
         }
+        return future.thenApply(rs -> {
+            Traces.currentTraceid(request.getTraceid());
+            return null;
+        });
     }
 
     public static class HttpMessageLocalRequest extends HttpRequest {

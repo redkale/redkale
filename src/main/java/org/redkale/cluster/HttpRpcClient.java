@@ -26,20 +26,20 @@ import org.redkale.util.RedkaleException;
 public abstract class HttpRpcClient implements ClusterRpcClient<HttpSimpleRequest, HttpResult<byte[]>> {
 
     @Override
-    public final void produceMessage(HttpSimpleRequest request) {
-        produceMessage(generateHttpReqTopic(request, null), 0, null, request);
+    public final CompletableFuture<Void> produceMessage(HttpSimpleRequest request) {
+        return produceMessage(generateHttpReqTopic(request, null), 0, null, request);
     }
 
-    public final void produceMessage(Serializable userid, HttpSimpleRequest request) {
-        produceMessage(generateHttpReqTopic(request, null), userid, null, request);
+    public final CompletableFuture<Void> produceMessage(Serializable userid, HttpSimpleRequest request) {
+        return produceMessage(generateHttpReqTopic(request, null), userid, null, request);
     }
 
-    public final void produceMessage(Serializable userid, String groupid, HttpSimpleRequest request) {
-        produceMessage(generateHttpReqTopic(request, null), userid, groupid, request);
+    public final CompletableFuture<Void> produceMessage(Serializable userid, String groupid, HttpSimpleRequest request) {
+        return produceMessage(generateHttpReqTopic(request, null), userid, groupid, request);
     }
 
-    public final void produceMessage(String topic, HttpSimpleRequest request) {
-        produceMessage(topic, 0, null, request);
+    public final CompletableFuture<Void> produceMessage(String topic, HttpSimpleRequest request) {
+        return produceMessage(topic, 0, null, request);
     }
 
     @Override
@@ -119,7 +119,7 @@ public abstract class HttpRpcClient implements ClusterRpcClient<HttpSimpleReques
 
     public abstract CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request);
 
-    public abstract void produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request);
+    public abstract CompletableFuture<Void> produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request);
 
     protected abstract int getNodeid();
 

@@ -68,11 +68,11 @@ public class HttpClusterRpcClient extends HttpRpcClient {
     }
 
     @Override
-    public void produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request) {
+    public CompletableFuture<Void> produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request) {
         if (topicServletMap.computeIfAbsent(topic, t -> localClient.findHttpServlet(t) != null)) {
-            localClient.produceMessage(topic, userid, groupid, request);
+            return localClient.produceMessage(topic, userid, groupid, request);
         } else {
-            httpAsync(true, userid, request);
+            return httpAsync(true, userid, request).thenApply(v -> null);
         }
     }
 
@@ -160,7 +160,11 @@ public class HttpClusterRpcClient extends HttpRpcClient {
         InetSocketAddress addr = it.next();
         String url = "http://" + addr.getHostString() + ":" + addr.getPort() + requesturi;
         if (finest) {
-            logger.log(Level.FINEST, "forEachCollectionFuture: url=" + url + ", headers=" + clientHeaders);
+            if (clientBody != null) {
+                logger.log(Level.FINEST, "forEachCollectionFuture: url=" + url + ", body=" + new String(clientBody, StandardCharsets.UTF_8) + ", headers=" + clientHeaders);
+            } else {
+                logger.log(Level.FINEST, "forEachCollectionFuture: url=" + url + ", headers=" + clientHeaders);
+            }
         }
         if (httpSimpleClient != null) {
             return httpSimpleClient.postAsync(url, clientHeaders, clientBody);

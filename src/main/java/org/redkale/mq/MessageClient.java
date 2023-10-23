@@ -79,8 +79,8 @@ public class MessageClient implements ClusterRpcClient<MessageRecord, MessageRec
     }
 
     @Override
-    public void produceMessage(MessageRecord message) {
-        messageAgent.getMessageClientProducer().apply(message);
+    public CompletableFuture<Void> produceMessage(MessageRecord message) {
+        return messageAgent.getMessageClientProducer().apply(message);
     }
 
     @Override
