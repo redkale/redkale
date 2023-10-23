@@ -61,9 +61,9 @@ public class SncpClientRequest extends ClientRequest {
     public void writeTo(ClientConnection conn, ByteArray array) {
         array.putPlaceholder(SncpHeader.calcHeaderSize(this));
         if (bodyContent == null) {
-            header.writeTo(array, this, 0, 0);
+            header.writeTo(array, this, SncpHeader.KEEPALIVE_ON, 0, 0);
         } else {
-            header.writeTo(array, this, bodyContent.length, 0);
+            header.writeTo(array, this, SncpHeader.KEEPALIVE_ON, bodyContent.length, 0);
             array.put(bodyContent);
         }
     }

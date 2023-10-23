@@ -6,6 +6,7 @@ package org.redkale.net.sncp;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Objects;
+import org.redkale.net.client.ClientResult;
 import org.redkale.util.ByteArray;
 
 /**
@@ -18,7 +19,7 @@ import org.redkale.util.ByteArray;
  *
  * @since 2.8.0
  */
-public class SncpClientResult {
+public class SncpClientResult implements ClientResult {
 
     private SncpHeader header;
 
@@ -52,6 +53,11 @@ public class SncpClientResult {
 
     public Serializable getRequestid() {
         return header == null ? null : header.getSeqid();
+    }
+
+    @Override
+    public boolean isKeepAlive() {
+        return header == null ? false : header.isKeepAlive();
     }
 
     @Override

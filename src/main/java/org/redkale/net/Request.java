@@ -151,6 +151,10 @@ public abstract class Request<C extends Context> {
         return attributes;
     }
 
+    public boolean isKeepAlive() {
+        return keepAlive;
+    }
+
     public C getContext() {
         return this.context;
     }

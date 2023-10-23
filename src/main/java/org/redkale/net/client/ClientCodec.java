@@ -25,7 +25,7 @@ import org.redkale.util.*;
  * @param <R> ClientRequest
  * @param <P> 响应对象
  */
-public abstract class ClientCodec<R extends ClientRequest, P> implements CompletionHandler<Integer, ByteBuffer> {
+public abstract class ClientCodec<R extends ClientRequest, P extends ClientResult> implements CompletionHandler<Integer, ByteBuffer> {
 
     private final List<ClientResponse<R, P>> respResults = new ArrayList<>();
 
@@ -165,6 +165,9 @@ public abstract class ClientCodec<R extends ClientRequest, P> implements Complet
                         respFuture.complete(rs);
                         Traces.removeTraceid();
                     });
+                }
+                if (!message.isKeepAlive()) {
+                    connection.dispose(null);
                 }
             } else { //异常
                 if (workThread == null) {

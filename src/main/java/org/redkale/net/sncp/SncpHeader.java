@@ -15,7 +15,11 @@ import org.redkale.util.*;
  */
 public class SncpHeader {
 
-    public static final int HEADER_SUBSIZE = 72;
+    public static final int HEADER_SUBSIZE = 69;
+
+    public static final byte KEEPALIVE_ON = 0;
+
+    public static final byte KEEPALIVE_OFF = -1;
 
     private static final byte[] EMPTY_ADDR = new byte[4];
 
@@ -38,8 +42,8 @@ public class SncpHeader {
     //响应方地址端口
     private int addrPort;
 
-    // 预留扩展位
-    private int abilities;
+    //保持连接，0：keepAlive; -1:关闭连接
+    private byte keepAlive;
 
     //时间戳
     private long timestamp;
@@ -85,7 +89,7 @@ public class SncpHeader {
         }
         buffer.get(header.addrBytes); //addr      4
         header.addrPort = buffer.getChar(); //port 2
-        header.abilities = buffer.getInt(); //4
+        header.keepAlive = buffer.get(); //1
         header.timestamp = buffer.getLong(); //8
         int traceSize = buffer.getChar(); //2
         if (traceSize > 0) {
@@ -115,8 +119,8 @@ public class SncpHeader {
         offset += 4;
         header.addrPort = array.getChar(offset); //port 2        
         offset += 2;
-        header.abilities = array.getInt(offset); //4       
-        offset += 4;
+        header.keepAlive = array.get(offset); //1      
+        offset += 1;
         header.timestamp = array.getLong(offset); //8        
         offset += 8;
         int traceSize = array.getChar(offset); //2
@@ -132,16 +136,16 @@ public class SncpHeader {
         return header;
     }
 
-    public ByteArray writeTo(ByteArray array, SncpClientRequest clientRequest, int bodyLength, int retcode) {
-        return writeTo(array, this.addrBytes, this.addrPort, (Long) clientRequest.getRequestid(), clientRequest.traceBytes(), bodyLength, retcode);
+    public ByteArray writeTo(ByteArray array, SncpClientRequest clientRequest, byte keepAlive, int bodyLength, int retcode) {
+        return writeTo(array, this.addrBytes, this.addrPort, (Long) clientRequest.getRequestid(), clientRequest.traceBytes(), keepAlive, bodyLength, retcode);
     }
 
-    public ByteArray writeTo(ByteArray array, SncpResponse response, int bodyLength, int retcode) {
+    public ByteArray writeTo(ByteArray array, SncpResponse response, byte keepAlive, int bodyLength, int retcode) {
         SncpRequest request = response.request();
-        return writeTo(array, response.addrBytes, response.addrPort, (Long) request.getRequestid(), request.traceBytes(), bodyLength, retcode);
+        return writeTo(array, response.addrBytes, response.addrPort, (Long) request.getRequestid(), request.traceBytes(), keepAlive, bodyLength, retcode);
     }
 
-    private ByteArray writeTo(ByteArray array, byte[] newAddrBytes, int newAddrPort, long newSeqid, byte[] traces, int bodyLength, int retcode) {
+    private ByteArray writeTo(ByteArray array, byte[] newAddrBytes, int newAddrPort, long newSeqid, byte[] traces, byte keepAlive, int bodyLength, int retcode) {
         if (newAddrBytes.length != 4) {
             throw new SncpException("address bytes length must be 4, but " + newAddrBytes.length);
         }
@@ -167,8 +171,8 @@ public class SncpHeader {
         offset += 4;
         array.putChar(offset, (char) newAddrPort); //2      
         offset += 2;
-        array.putInt(offset, abilities); //4 
-        offset += 4;
+        array.put(offset, keepAlive); //1 
+        offset += 1;
         array.putLong(offset, System.currentTimeMillis()); //8 
         offset += 8;
         array.putChar(offset, (char) traces.length); //2
@@ -193,6 +197,7 @@ public class SncpHeader {
             + ",actionid=" + this.actionid
             + ",methodName=" + this.methodName
             + ",address=" + getAddress()
+            + ",keepAlive=" + isKeepAlive()
             + ",timestamp=" + this.timestamp
             + ",traceid=" + getTraceid()
             + ",retcode=" + this.retcode
@@ -208,6 +213,10 @@ public class SncpHeader {
 
     public boolean isValid() {
         return valid;
+    }
+
+    public boolean isKeepAlive() {
+        return keepAlive != -1;
     }
 
     //供client端request和response的header判断

@@ -19,7 +19,7 @@ import java.io.Serializable;
  * @param <R> 请求对象
  * @param <P> message
  */
-public class ClientResponse<R extends ClientRequest, P> {
+public class ClientResponse<R extends ClientRequest, P extends ClientResult> {
 
     protected R request; //服务端返回一个不存在的requestid，可能为null
 
@@ -105,7 +105,7 @@ public class ClientResponse<R extends ClientRequest, P> {
         return false;
     }
 
-    static class ClientErrorResponse<R extends ClientRequest, P> extends ClientResponse<R, P> {
+    static class ClientErrorResponse<R extends ClientRequest, P extends ClientResult> extends ClientResponse<R, P> {
 
         public ClientErrorResponse(R request, Throwable exc) {
             super(request, exc);

@@ -26,7 +26,7 @@ import org.redkale.util.*;
  * @param <R> 请求对象
  * @param <P> 响应对象
  */
-public abstract class Client<C extends ClientConnection<R, P>, R extends ClientRequest, P> implements Resourcable {
+public abstract class Client<C extends ClientConnection<R, P>, R extends ClientRequest, P extends ClientResult> implements Resourcable {
 
     public static final int DEFAULT_MAX_PIPELINES = 128;
 

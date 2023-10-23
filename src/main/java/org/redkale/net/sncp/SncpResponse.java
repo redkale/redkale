@@ -11,6 +11,8 @@ import java.util.concurrent.*;
 import org.redkale.asm.AsmDepends;
 import org.redkale.convert.bson.BsonWriter;
 import org.redkale.net.Response;
+import static org.redkale.net.sncp.SncpHeader.KEEPALIVE_OFF;
+import static org.redkale.net.sncp.SncpHeader.KEEPALIVE_ON;
 import org.redkale.util.ByteArray;
 import org.redkale.util.Traces;
 
@@ -111,7 +113,7 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
     }
 
     protected void writeHeader(ByteArray array, int bodyLength, int retcode) {
-        request.getHeader().writeTo(array, this, bodyLength, retcode);
+        request.getHeader().writeTo(array, this, request.isKeepAlive() ? KEEPALIVE_ON : KEEPALIVE_OFF, bodyLength, retcode);
     }
 
     @Override

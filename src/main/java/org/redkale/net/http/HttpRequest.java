@@ -282,10 +282,6 @@ public class HttpRequest extends Request<HttpContext> {
         this.keepAlive = keepAlive;
     }
 
-    protected boolean isKeepAlive() {
-        return this.keepAlive;
-    }
-
     protected ConvertType getRespConvertType() {
         return this.respConvertType;
     }

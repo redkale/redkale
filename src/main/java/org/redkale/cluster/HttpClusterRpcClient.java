@@ -161,9 +161,9 @@ public class HttpClusterRpcClient extends HttpRpcClient {
         String url = "http://" + addr.getHostString() + ":" + addr.getPort() + requesturi;
         if (finest) {
             if (clientBody != null) {
-                logger.log(Level.FINEST, "forEachCollectionFuture: url=" + url + ", body=" + new String(clientBody, StandardCharsets.UTF_8) + ", headers=" + clientHeaders);
+                logger.log(Level.FINEST, "forEachCollectionFuture: url: " + url + ", body: " + new String(clientBody, StandardCharsets.UTF_8) + ", headers: " + clientHeaders);
             } else {
-                logger.log(Level.FINEST, "forEachCollectionFuture: url=" + url + ", headers=" + clientHeaders);
+                logger.log(Level.FINEST, "forEachCollectionFuture: url: " + url + ", headers: " + clientHeaders);
             }
         }
         if (httpSimpleClient != null) {

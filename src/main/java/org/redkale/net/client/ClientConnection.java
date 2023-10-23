@@ -30,7 +30,7 @@ import org.redkale.util.*;
  * @param <R> 请求对象
  * @param <P> 响应对象
  */
-public abstract class ClientConnection<R extends ClientRequest, P> implements Consumer<AsyncConnection> {
+public abstract class ClientConnection<R extends ClientRequest, P extends ClientResult> implements Consumer<AsyncConnection> {
 
     //=-1 表示连接放在connAddrEntrys存储
     //>=0 表示connArray的下坐标，从0开始
