@@ -25,7 +25,6 @@ public class SncpMessageRequest extends SncpRequest {
     public SncpMessageRequest(SncpContext context, MessageRecord message) {
         super(context);
         this.message = message;
-        this.hashid = this.message.hash();
         this.createTime = System.currentTimeMillis();
         readHeader(ByteBuffer.wrap(message.getContent()), null);
     }

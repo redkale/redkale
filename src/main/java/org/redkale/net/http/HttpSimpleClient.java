@@ -15,6 +15,9 @@ import java.util.concurrent.*;
 import org.redkale.convert.Convert;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.*;
+import org.redkale.net.client.Client;
+import org.redkale.net.client.ClientAddress;
+import org.redkale.net.client.ClientConnection;
 import static org.redkale.net.http.HttpRequest.parseHeaderName;
 import org.redkale.util.*;
 
@@ -32,13 +35,13 @@ import org.redkale.util.*;
  * @since 2.3.0
  *
  */
-public class HttpSimpleClient {
+public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleRequest, HttpSimpleResult> {
 
     public static final String USER_AGENT = "Redkale-http-client/" + Redkale.getDotedVersion();
 
-    private static final byte[] header_bytes_useragent = ("User-Agent: " + USER_AGENT + "\r\n").getBytes(StandardCharsets.UTF_8);
+    static final byte[] header_bytes_useragent = ("User-Agent: " + USER_AGENT + "\r\n").getBytes(StandardCharsets.UTF_8);
 
-    private static final byte[] header_bytes_connclose = ("Connection: close\r\n").getBytes(StandardCharsets.UTF_8);
+    static final byte[] header_bytes_connclose = ("Connection: close\r\n").getBytes(StandardCharsets.UTF_8);
 
     protected final AsyncGroup asyncGroup;
 
@@ -49,6 +52,7 @@ public class HttpSimpleClient {
     protected int writeTimeoutSeconds = 6;
 
     protected HttpSimpleClient(ExecutorService workExecutor, AsyncGroup asyncGroup) {
+        super("Redkale-http-client", asyncGroup, new ClientAddress(new InetSocketAddress("127.0.0.1", 0))); 
         this.workExecutor = workExecutor;
         this.asyncGroup = asyncGroup;
     }
@@ -59,6 +63,16 @@ public class HttpSimpleClient {
 
     public static HttpSimpleClient create(AsyncGroup asyncGroup) {
         return create(null, asyncGroup);
+    }
+
+    @Override
+    protected HttpSimpleConnection createClientConnection(int index, AsyncConnection channel) {
+        return new HttpSimpleConnection(this, index, channel);
+    }
+
+    @Override
+    protected CompletableFuture<HttpSimpleResult> writeChannel(ClientConnection conn, HttpSimpleRequest request) {
+        return super.writeChannel(conn, request);
     }
 
     public HttpSimpleClient readTimeoutSeconds(int readTimeoutSeconds) {

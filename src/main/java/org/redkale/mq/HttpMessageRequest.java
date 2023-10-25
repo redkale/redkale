@@ -35,7 +35,6 @@ public class HttpMessageRequest extends HttpRequest {
     protected HttpMessageRequest prepare(MessageRecord message) {
         super.initSimpleRequest(message.decodeContent(HttpSimpleRequestCoder.getInstance()), false);
         this.message = message;
-        this.hashid = this.message.hash();
         this.currentUserid = message.getUserid();
         this.createTime = System.currentTimeMillis();
         return this;

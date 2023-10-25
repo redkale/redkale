@@ -171,16 +171,6 @@ public class MessageRecord implements Serializable {
         return this;
     }
 
-    public int hash() {
-        if (groupid != null && !groupid.isEmpty()) {
-            return Math.abs(groupid.hashCode());
-        } else if (userid != null) {
-            return Math.abs(userid.hashCode());
-        } else {
-            return 0;
-        }
-    }
-
     public MessageRecord version(int version) {
         this.version = version;
         return this;
@@ -348,9 +338,6 @@ public class MessageRecord implements Serializable {
                 if (req != null) {
                     if (req.getCurrentUserid() == null) {
                         req.setCurrentUserid(this.userid);
-                    }
-                    if (req.getHashid() == 0) {
-                        req.setHashid(this.hash());
                     }
                 }
                 sb.append(",\"content\":").append(req);

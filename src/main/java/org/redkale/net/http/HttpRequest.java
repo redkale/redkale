@@ -220,7 +220,6 @@ public class HttpRequest extends Request<HttpContext> {
             if (req.getParams() != null) {
                 this.params.putAll(req.getParams());
             }
-            this.hashid = req.getHashid();
             if (req.getCurrentUserid() != null) {
                 this.currentUserid = req.getCurrentUserid();
             }
@@ -232,7 +231,7 @@ public class HttpRequest extends Request<HttpContext> {
             } else {
                 this.requestURI = req.getRequestURI();
             }
-            this.method = METHOD_POST;
+            this.method = req.getMethod();
             if (req.getSessionid() != null && !req.getSessionid().isEmpty()) {
                 this.cookies = new HttpCookie[]{new HttpCookie(SESSIONID_NAME, req.getSessionid())};
             }
@@ -258,11 +257,11 @@ public class HttpRequest extends Request<HttpContext> {
         req.setLocale(getLocale());
         req.setContentType(getContentType());
         req.setPath(prefix);
+        req.setMethod(this.method);
         String uri = this.requestURI;
         if (prefix != null && !prefix.isEmpty() && uri.startsWith(prefix)) {
             uri = uri.substring(prefix.length());
         }
-        req.setHashid(this.hashid);
         req.setRequestURI(uri);
         req.setSessionid(getSessionid(false));
         req.setRpc(this.rpc);
@@ -323,7 +322,6 @@ public class HttpRequest extends Request<HttpContext> {
                 this.expect = httplast.expect;
                 this.rpc = httplast.rpc;
                 this.traceid = httplast.traceid;
-                this.hashid = httplast.hashid;
                 this.currentUserid = httplast.currentUserid;
                 this.frombody = httplast.frombody;
                 this.reqConvertType = httplast.reqConvertType;
@@ -822,7 +820,6 @@ public class HttpRequest extends Request<HttpContext> {
                     break;
                 case Rest.REST_HEADER_CURRUSERID: //rest-curruserid
                     value = bytes.toString(true, charset);
-                    this.hashid = value.hashCode();
                     this.currentUserid = value;
                     headers.put(name, value);
                     break;
@@ -949,7 +946,6 @@ public class HttpRequest extends Request<HttpContext> {
         req.expect = this.expect;
         req.rpc = this.rpc;
         req.traceid = this.traceid;
-        req.hashid = this.hashid;
         req.currentUserid = this.currentUserid;
         req.currentUserSupplier = this.currentUserSupplier;
         req.frombody = this.frombody;
