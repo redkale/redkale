@@ -116,12 +116,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     @Override
     public void start() {
         if (this.scheduler == null) {
-            AtomicInteger counter = new AtomicInteger();
-            this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
-                final Thread t = new Thread(r, "Redkale-" + CacheClusterAgent.class.getSimpleName() + "-Check-Thread-" + counter.incrementAndGet());
-                t.setDaemon(true);
-                return t;
-            });
+            this.scheduler = Utility.newScheduledExecutor(1, "Redkale-" + CacheClusterAgent.class.getSimpleName() + "-Check-Thread-%s");
         }
         if (this.taskFuture != null) {
             this.taskFuture.cancel(true);

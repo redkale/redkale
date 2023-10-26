@@ -144,11 +144,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             }
         }
         if (scheduler == null) {
-            this.scheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
-                final Thread t = new Thread(r, "Redkale-" + self.getClass().getSimpleName() + "-" + resourceName() + "-Expirer-Thread");
-                t.setDaemon(true);
-                return t;
-            });
+            this.scheduler = Utility.newScheduledExecutor(1, "Redkale-" + CacheMemorySource.class.getSimpleName() + "-" + resourceName() + "-Expirer-Thread");
             final List<String> keys = new ArrayList<>();
             scheduler.scheduleWithFixedDelay(() -> {
                 try {

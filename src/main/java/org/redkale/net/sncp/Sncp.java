@@ -80,6 +80,13 @@ public abstract class Sncp {
             if (method.isSynthetic()) {
                 continue;
             }
+            if (method.getAnnotation(Scheduled.class) != null) {
+                if (Modifier.isStatic(method.getModifiers())
+                    || !Modifier.isProtected(method.getModifiers()) || method.getParameterCount() > 0) {
+                    throw new SncpException(Scheduled.class.getSimpleName() + " must be on protected and non-parameter method, but on " + method);
+                }
+                continue;
+            }
             if (Modifier.isStatic(method.getModifiers())) {
                 continue;
             }
@@ -90,9 +97,6 @@ public abstract class Sncp {
                 continue;
             }
             if (method.getAnnotation(ResourceListener.class) != null) {
-                continue;
-            }
-            if (method.getAnnotation(Scheduled.class) != null) {
                 continue;
             }
             if (method.getName().equals("getClass") || method.getName().equals("toString")) {
