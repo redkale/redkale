@@ -35,7 +35,7 @@ import org.redkale.util.*;
  */
 public class HttpRequest extends Request<HttpContext> {
 
-    private static final boolean pipelineSameHeaders = Boolean.getBoolean("redkale.http.request.pipeline.sameheaders");
+    private static final boolean PIPELINE_SAME_HEADERS = Boolean.getBoolean("redkale.http.request.pipeline.sameheaders");
 
     protected static final Serializable CURRUSERID_NIL = new Serializable() {
     };
@@ -918,7 +918,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     @Override
     protected HttpRequest copyHeader() {
-        if (!pipelineSameHeaders || !context.lazyHeaders) {
+        if (!PIPELINE_SAME_HEADERS || !context.lazyHeaders) {
             return null;
         }
         HttpRequest req = new HttpRequest(context, this.array);
