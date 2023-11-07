@@ -113,7 +113,7 @@ public abstract class HttpRpcClient implements ClusterRpcClient<HttpSimpleReques
         module = module.substring(1); //去掉/
         module = module.substring(0, module.indexOf('/'));
         Map<String, String> headers = request.getHeaders();
-        String resname = headers == null ? "" : headers.getOrDefault(Rest.REST_HEADER_RESOURCE_NAME, "");
+        String resname = headers == null ? "" : headers.getOrDefault(Rest.REST_HEADER_RESNAME, "");
         return Rest.generateHttpReqTopic(module, resname, getNodeid());
     }
 

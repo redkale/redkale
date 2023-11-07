@@ -38,27 +38,25 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public final class Rest {
 
-    //请求所需的RestService的资源名，值类型: 字符串
-    public static final String REST_HEADER_RESOURCE_NAME = "rest-resource-name";
-
     //请求是否为rpc协议，值类型: 布尔，取值为true、false
-    public static final String REST_HEADER_RPC = "rest-rpc";
+    public static final String REST_HEADER_RPC = "Rest-Rpc";
 
     //traceid，值类型: 字符串
-    public static final String REST_HEADER_TRACEID = "rest-traceid";
+    public static final String REST_HEADER_TRACEID = "Rest-Traceid";
 
     //当前用户ID值，值类型: 字符串
-    public static final String REST_HEADER_CURRUSERID = "rest-curruserid";
+    public static final String REST_HEADER_CURRUSERID = "Rest-Curruserid";
 
-    //参数是否从body中获取，值类型: 布尔，取值为true、false
-    public static final String REST_HEADER_PARAM_FROM_BODY = "rest-param-from-body";
+    //请求所需的RestService的资源名，值类型: 字符串
+    public static final String REST_HEADER_RESNAME = "Rest-Resname";
 
     //请求参数的反序列化种类，值类型: 字符串，取值为ConvertType枚举值名
-    public static final String REST_HEADER_REQ_CONVERT_TYPE = "rest-req-convert-type";
+    public static final String REST_HEADER_REQ_CONVERT = "Rest-Req-Convert";
 
     //响应结果的序列化种类，值类型: 字符串，取值为ConvertType枚举值名
-    public static final String REST_HEADER_RESP_CONVERT_TYPE = "rest-resp-convert-type";
+    public static final String REST_HEADER_RESP_CONVERT = "Rest-Resp-Convert";
 
+    //---------------------------------------------------------------------------------------------------
     static final String REST_TOSTRINGOBJ_FIELD_NAME = "_redkale_tostringsupplier";
 
     static final String REST_CONVERT_FIELD_PREFIX = "_redkale_restconvert_";
@@ -1914,7 +1912,7 @@ public final class Rest {
             mv.visitVarInsn(ALOAD, 0);
             mv.visitFieldInsn(GETFIELD, newDynName, REST_SERVICEMAP_FIELD_NAME, "Ljava/util/Map;");
             mv.visitVarInsn(ALOAD, 1);
-            mv.visitLdcInsn(REST_HEADER_RESOURCE_NAME);
+            mv.visitLdcInsn(REST_HEADER_RESNAME);
             mv.visitLdcInsn("");
             mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getHeader", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
             mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Map", "get", "(Ljava/lang/Object;)Ljava/lang/Object;", true);

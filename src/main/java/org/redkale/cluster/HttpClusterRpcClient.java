@@ -83,7 +83,7 @@ public class HttpClusterRpcClient extends HttpRpcClient {
         module = module.substring(1); //去掉/
         module = module.substring(0, module.indexOf('/'));
         Map<String, String> headers = req.getHeaders();
-        String resname = headers == null ? "" : headers.getOrDefault(Rest.REST_HEADER_RESOURCE_NAME, "");
+        String resname = headers == null ? "" : headers.getOrDefault(Rest.REST_HEADER_RESNAME, "");
         final String localModule = module;
         if (logger.isLoggable(Level.FINEST)) {
             logger.log(Level.FINEST, "httpAsync.queryHttpAddress: module=" + localModule + ", resname=" + resname);
@@ -104,14 +104,11 @@ public class HttpClusterRpcClient extends HttpRpcClient {
             if (isNotEmpty(req.getTraceid())) {
                 clientHeaders.put(Rest.REST_HEADER_TRACEID, req.getTraceid());
             }
-            if (req.isFrombody()) {
-                clientHeaders.put(Rest.REST_HEADER_PARAM_FROM_BODY, "true");
-            }
             if (req.getReqConvertType() != null) {
-                clientHeaders.put(Rest.REST_HEADER_REQ_CONVERT_TYPE, req.getReqConvertType().toString());
+                clientHeaders.put(Rest.REST_HEADER_REQ_CONVERT, req.getReqConvertType().toString());
             }
             if (req.getRespConvertType() != null) {
-                clientHeaders.put(Rest.REST_HEADER_RESP_CONVERT_TYPE, req.getRespConvertType().toString());
+                clientHeaders.put(Rest.REST_HEADER_RESP_CONVERT, req.getRespConvertType().toString());
             }
             if (userid != null) {
                 clientHeaders.put(Rest.REST_HEADER_CURRUSERID, "" + userid);
@@ -196,14 +193,14 @@ public class HttpClusterRpcClient extends HttpRpcClient {
 //        module = module.substring(1); //去掉/
 //        module = module.substring(0, module.indexOf('/'));
 //        Map<String, String> headers = req.getHeaders();
-//        String resname = headers == null ? "" : headers.getOrDefault(Rest.REST_HEADER_RESOURCE_NAME, "");
+//        String resname = headers == null ? "" : headers.getOrDefault(Rest.REST_HEADER_RESNAME, "");
 //        return clusterAgent.queryHttpAddress("http", module, resname).thenCompose(addrs -> {
 //            if (addrs == null || addrs.isEmpty()) return new HttpResult().status(404).toAnyFuture();
 //            java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder().timeout(Duration.ofMillis(30000));
 //            if (req.isRpc()) builder.header(Rest.REST_HEADER_RPC_NAME, "true");
 //            if (req.isFrombody()) builder.header(Rest.REST_HEADER_PARAM_FROM_BODY, "true");
-//            if (req.getReqConvertType() != null) builder.header(Rest.REST_HEADER_REQ_CONVERT_TYPE, req.getReqConvertType().toString());
-//            if (req.getRespConvertType() != null) builder.header(Rest.REST_HEADER_RESP_CONVERT_TYPE, req.getRespConvertType().toString());
+//            if (req.getReqConvertType() != null) builder.header(Rest.REST_HEADER_REQ_CONVERT, req.getReqConvertType().toString());
+//            if (req.getRespConvertType() != null) builder.header(Rest.REST_HEADER_RESP_CONVERT, req.getRespConvertType().toString());
 //            if (userid != 0) builder.header(Rest.REST_HEADER_CURRUSERID, "" + userid);
 //            if (headers != null) headers.forEach((n, v) -> {
 //                    if (!DISALLOWED_HEADERS_SET.contains(n.toLowerCase())) builder.header(n, v);

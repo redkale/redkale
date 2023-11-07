@@ -30,13 +30,9 @@ import org.redkale.util.Traces;
  */
 public class HttpSimpleRequest extends ClientRequest implements java.io.Serializable {
 
-    @ConvertColumn(index = 1)
+    @ConvertColumn(index = 2)
     @Comment("是否RPC请求, 该类通常是为RPC创建的，故默认是true")
     protected boolean rpc = true;
-
-    @ConvertColumn(index = 2)
-    @Comment("是否从body中获取参数，比如protobuf数据格式")
-    protected boolean frombody;
 
     @ConvertColumn(index = 3)
     @Comment("链路ID")
@@ -160,16 +156,6 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
 
     public HttpSimpleRequest path(String path) {
         this.path = path;
-        return this;
-    }
-
-    public HttpSimpleRequest requestURI(boolean frombody) {
-        this.frombody = frombody;
-        return this;
-    }
-
-    public HttpSimpleRequest frombody(boolean frombody) {
-        this.frombody = frombody;
         return this;
     }
 
@@ -462,14 +448,6 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
 
     public void setBody(byte[] body) {
         this.body = body;
-    }
-
-    public boolean isFrombody() {
-        return frombody;
-    }
-
-    public void setFrombody(boolean frombody) {
-        this.frombody = frombody;
     }
 
     public ConvertType getReqConvertType() {

@@ -46,7 +46,7 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         byte[] params = MessageCoder.getBytes(data.getParams());
         byte[] body = MessageCoder.getBytes(data.getBody());
         byte[] userid = MessageCoder.encodeUserid(data.getCurrentUserid());
-        int count = 1 //rpc + frombody
+        int count = 1 //rpc
             + 4 //reqConvertType
             + 4 //respConvertType
             + 2 + traceid.length
@@ -60,7 +60,7 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
             + 4 + body.length;
         byte[] bs = new byte[count];
         ByteBuffer buffer = ByteBuffer.wrap(bs);
-        buffer.put((byte) ((data.isRpc() ? 0b01 : 0) | (data.isFrombody() ? 0b10 : 0)));
+        buffer.put((byte) (data.isRpc() ? 0b01 : 0));
         buffer.putInt(data.getReqConvertType() == null ? 0 : data.getReqConvertType().getValue());
         buffer.putInt(data.getRespConvertType() == null ? 0 : data.getRespConvertType().getValue());
         buffer.putChar((char) traceid.length);
@@ -109,7 +109,6 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         HttpSimpleRequest req = new HttpSimpleRequest();
         byte opt = buffer.get();
         req.setRpc((opt & 0b01) > 0);
-        req.setFrombody((opt & 0b10) > 0);
         int reqformat = buffer.getInt();
         int respformat = buffer.getInt();
         if (reqformat != 0) {

@@ -113,9 +113,6 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected Supplier<Serializable> currentUserSupplier;
 
-    //参数是否从body中取
-    protected boolean frombody;
-
     protected ConvertType reqConvertType;
 
     protected Convert reqConvert;
@@ -212,7 +209,6 @@ public class HttpRequest extends Request<HttpContext> {
             if (req.getHeaders() != null) {
                 this.headers.putAll(req.getHeaders());
             }
-            this.frombody = req.isFrombody();
             this.reqConvertType = req.getReqConvertType();
             this.reqConvert = req.getReqConvertType() == null ? null : ConvertFactory.findConvert(req.getReqConvertType());
             this.respConvertType = req.getRespConvertType();
@@ -323,7 +319,6 @@ public class HttpRequest extends Request<HttpContext> {
                 this.rpc = httplast.rpc;
                 this.traceid = httplast.traceid;
                 this.currentUserid = httplast.currentUserid;
-                this.frombody = httplast.frombody;
                 this.reqConvertType = httplast.reqConvertType;
                 this.reqConvert = httplast.reqConvert;
                 this.respConvertType = httplast.respConvertType;
@@ -823,19 +818,13 @@ public class HttpRequest extends Request<HttpContext> {
                     this.currentUserid = value;
                     headers.put(name, value);
                     break;
-                case Rest.REST_HEADER_PARAM_FROM_BODY: //rest-param-from-body
-                    this.frombody = vlen == 4 && content[0] == 't' && content[1] == 'r' && content[2] == 'u' && content[3] == 'e';
-                    headers.put(name, this.frombody ? "true"
-                        : (vlen == 5 && content[0] == 'f' && content[1] == 'a' && content[2] == 'l' && content[3] == 's' && content[4] == 'e'
-                            ? "false" : bytes.toString(true, charset)));
-                    break;
-                case Rest.REST_HEADER_REQ_CONVERT_TYPE: //rest-req-convert-type
+                case Rest.REST_HEADER_REQ_CONVERT: //rest-req-convert-type
                     value = bytes.toString(true, charset);
                     reqConvertType = ConvertType.valueOf(value);
                     reqConvert = ConvertFactory.findConvert(reqConvertType);
                     headers.put(name, value);
                     break;
-                case Rest.REST_HEADER_RESP_CONVERT_TYPE: //rest-resp-convert-type
+                case Rest.REST_HEADER_RESP_CONVERT: //rest-resp-convert-type
                     value = bytes.toString(true, charset);
                     respConvertType = ConvertType.valueOf(value);
                     respConvert = ConvertFactory.findConvert(respConvertType);
@@ -948,7 +937,6 @@ public class HttpRequest extends Request<HttpContext> {
         req.traceid = this.traceid;
         req.currentUserid = this.currentUserid;
         req.currentUserSupplier = this.currentUserSupplier;
-        req.frombody = this.frombody;
         req.reqConvertType = this.reqConvertType;
         req.reqConvert = this.reqConvert;
         req.respConvert = this.respConvert;
@@ -985,7 +973,6 @@ public class HttpRequest extends Request<HttpContext> {
         this.readState = READ_STATE_ROUTE;
         this.currentUserid = CURRUSERID_NIL;
         this.currentUserSupplier = null;
-        this.frombody = false;
         this.reqConvertType = null;
         this.reqConvert = null;
         this.respConvert = jsonConvert;
@@ -1542,7 +1529,6 @@ public class HttpRequest extends Request<HttpContext> {
     public String toString() {
         parseBody();
         return this.getClass().getSimpleName() + "{\r\n    method: " + this.method + ", \r\n    requestURI: " + this.requestURI
-            + (this.frombody ? (", \r\n    frombody: " + this.frombody) : "")
             + (this.reqConvertType != null ? (", \r\n    reqConvertType: " + this.reqConvertType) : "")
             + (this.respConvertType != null ? (", \r\n    respConvertType: " + this.respConvertType) : "")
             + (this.currentUserid != CURRUSERID_NIL ? (", \r\n    currentUserid: " + (this.currentUserid == CURRUSERID_NIL ? null : this.currentUserid)) : "")
@@ -2566,16 +2552,6 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public String getParameter(String name) {
-        if (this.frombody) {
-            if (array.isEmpty()) {
-                return null;
-            }
-            Convert convert = this.reqConvert;
-            if (convert == null) {
-                convert = jsonConvert;
-            }
-            return (String) convert.convertFrom(String.class, array.content());
-        }
         parseBody();
         return params.get(name);
     }
@@ -2589,16 +2565,6 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public String getParameter(String name, String defaultValue) {
-        if (this.frombody) {
-            if (array.isEmpty()) {
-                return defaultValue;
-            }
-            Convert convert = this.reqConvert;
-            if (convert == null) {
-                convert = jsonConvert;
-            }
-            return (String) convert.convertFrom(String.class, array.content());
-        }
         parseBody();
         return params.getOrDefault(name, defaultValue);
     }
@@ -2613,19 +2579,6 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public <T> T getJsonParameter(java.lang.reflect.Type type, String name) {
-        if (this.frombody) {
-            if (array.isEmpty()) {
-                return null;
-            }
-            Convert convert = this.reqConvert;
-            if (convert == null) {
-                convert = jsonConvert;
-            }
-            if (type == byte[].class) {
-                return (T) array.getBytes();
-            }
-            return (T) convert.convertFrom(type, array.content());
-        }
         String v = getParameter(name);
         return v == null || v.isEmpty() ? null : jsonConvert.convertFrom(type, v);
     }
@@ -2654,16 +2607,6 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public boolean getBooleanParameter(String name, boolean defaultValue) {
-        if (this.frombody) {
-            if (array.isEmpty()) {
-                return defaultValue;
-            }
-            Convert convert = this.reqConvert;
-            if (convert == null) {
-                convert = jsonConvert;
-            }
-            return (boolean) convert.convertFrom(boolean.class, array.content());
-        }
         parseBody();
         String value = params.get(name);
         return value == null || value.length() == 0 ? defaultValue : Boolean.parseBoolean(value);
@@ -2678,16 +2621,6 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public short getShortParameter(String name, short defaultValue) {
-        if (this.frombody) {
-            if (array.isEmpty()) {
-                return defaultValue;
-            }
-            Convert convert = this.reqConvert;
-            if (convert == null) {
-                convert = jsonConvert;
-            }
-            return (short) convert.convertFrom(short.class, array.content());
-        }
         parseBody();
         String value = params.get(name);
         if (value == null || value.length() == 0) {
@@ -2710,16 +2643,6 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public short getShortParameter(int radix, String name, short defaultValue) {
-        if (this.frombody) {
-            if (array.isEmpty()) {
-                return (short) defaultValue;
-            }
-            Convert convert = this.reqConvert;
-            if (convert == null) {
-                convert = jsonConvert;
-            }
-            return (short) convert.convertFrom(short.class, array.content());
-        }
         parseBody();
         String value = params.get(name);
         if (value == null || value.length() == 0) {
@@ -2741,16 +2664,6 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public short getShortParameter(String name, int defaultValue) {
-        if (this.frombody) {
-            if (array.isEmpty()) {
-                return (short) defaultValue;
-            }
-            Convert convert = this.reqConvert;
-            if (convert == null) {
-                convert = jsonConvert;
-            }
-            return (short) convert.convertFrom(short.class, array.content());
-        }
         parseBody();
         String value = params.get(name);
         if (value == null || value.length() == 0) {
@@ -2772,16 +2685,6 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public int getIntParameter(String name, int defaultValue) {
-        if (this.frombody) {
-            if (array.isEmpty()) {
-                return defaultValue;
-            }
-            Convert convert = this.reqConvert;
-            if (convert == null) {
-                convert = jsonConvert;
-            }
-            return (int) convert.convertFrom(int.class, array.content());
-        }
         parseBody();
         String value = params.get(name);
         if (value == null || value.length() == 0) {
@@ -2804,16 +2707,6 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public int getIntParameter(int radix, String name, int defaultValue) {
-        if (this.frombody) {
-            if (array.isEmpty()) {
-                return defaultValue;
-            }
-            Convert convert = this.reqConvert;
-            if (convert == null) {
-                convert = jsonConvert;
-            }
-            return (int) convert.convertFrom(int.class, array.content());
-        }
         parseBody();
         String value = params.get(name);
         if (value == null || value.length() == 0) {
@@ -2835,16 +2728,6 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public long getLongParameter(String name, long defaultValue) {
-        if (this.frombody) {
-            if (array.isEmpty()) {
-                return defaultValue;
-            }
-            Convert convert = this.reqConvert;
-            if (convert == null) {
-                convert = jsonConvert;
-            }
-            return (long) convert.convertFrom(long.class, array.content());
-        }
         parseBody();
         String value = params.get(name);
         if (value == null || value.length() == 0) {
@@ -2867,16 +2750,6 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public long getLongParameter(int radix, String name, long defaultValue) {
-        if (this.frombody) {
-            if (array.isEmpty()) {
-                return defaultValue;
-            }
-            Convert convert = this.reqConvert;
-            if (convert == null) {
-                convert = jsonConvert;
-            }
-            return (long) convert.convertFrom(long.class, array.content());
-        }
         parseBody();
         String value = params.get(name);
         if (value == null || value.length() == 0) {
@@ -2898,16 +2771,6 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public float getFloatParameter(String name, float defaultValue) {
-        if (this.frombody) {
-            if (array.isEmpty()) {
-                return defaultValue;
-            }
-            Convert convert = this.reqConvert;
-            if (convert == null) {
-                convert = jsonConvert;
-            }
-            return (float) convert.convertFrom(float.class, array.content());
-        }
         parseBody();
         String value = params.get(name);
         if (value == null || value.length() == 0) {
@@ -2929,16 +2792,6 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 参数值
      */
     public double getDoubleParameter(String name, double defaultValue) {
-        if (this.frombody) {
-            if (array.isEmpty()) {
-                return defaultValue;
-            }
-            Convert convert = this.reqConvert;
-            if (convert == null) {
-                convert = jsonConvert;
-            }
-            return (double) convert.convertFrom(double.class, array.content());
-        }
         parseBody();
         String value = params.get(name);
         if (value == null || value.length() == 0) {

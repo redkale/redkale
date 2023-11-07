@@ -29,7 +29,7 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     @HttpMapping(url = "/hello/create", auth = false, comment = "创建Hello对象")
     @HttpParam(name = "bean", type = HelloEntity.class, comment = "Hello对象")
     public void create(HttpRequest req, HttpResponse resp) throws IOException {
-        HelloService2 service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
+        HelloService2 service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
         bean.setClientaddr(req.getRemoteAddr());
         bean.setResname(req.getHeader("hello-res"));
@@ -43,7 +43,7 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     @HttpMapping(url = "/hello/delete/", auth = false, comment = "根据id删除Hello对象")
     @HttpParam(name = "#", type = int.class, comment = "Hello对象id")
     public void delete(HttpRequest req, HttpResponse resp) throws IOException {
-        HelloService2 service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
+        HelloService2 service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
         int id = Integer.parseInt(req.getRequstURILastPath());
         service.deleteHello(id);
         resp.finishJson(RetResult.success());
@@ -52,7 +52,7 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     @HttpMapping(url = "/hello/update", auth = false, comment = "修改Hello对象")
     @HttpParam(name = "bean", type = HelloEntity.class, comment = "Hello对象")
     public void update(HttpRequest req, HttpResponse resp) throws IOException {
-        HelloService2 service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
+        HelloService2 service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
         bean.setClientaddr(req.getRemoteAddr());
         bean.setResname(req.getHeader("hello-res"));
@@ -65,7 +65,7 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     @HttpMapping(url = "/hello/query", auth = false, comment = "查询Hello对象列表")
     @HttpParam(name = "bean", type = HelloBean.class, comment = "过滤条件")
     public void query(HttpRequest req, HttpResponse resp) throws IOException {
-        HelloService2 service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
+        HelloService2 service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
         HelloBean bean = req.getJsonParameter(HelloBean.class, "bean");
         bean.setClientaddr(req.getRemoteAddr());
         bean.setUseragent(req.getHeader("User-Agent"));
@@ -79,7 +79,7 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     @HttpMapping(url = "/hello/find/", auth = false, comment = "根据id删除Hello对象")
     @HttpParam(name = "#", type = int.class, comment = "Hello对象id")
     public void find(HttpRequest req, HttpResponse resp) throws IOException {
-        HelloService2 service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESOURCE_NAME, ""));
+        HelloService2 service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
         int id = Integer.parseInt(req.getRequstURILastPath());
         HelloEntity bean = service.findHello(id);
         resp.finishJson(bean);
