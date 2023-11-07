@@ -139,6 +139,11 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return sb.toString();
     }
 
+    public HttpSimpleRequest formUrlencoded() {
+        this.headers.put("Content-Type", "x-www-form-urlencoded");
+        return this;
+    }
+
     public HttpSimpleRequest rpc(boolean rpc) {
         this.rpc = rpc;
         return this;

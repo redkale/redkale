@@ -37,7 +37,7 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
 
     protected ClientMessageListener messageListener;
 
-    public ClientCodec(ClientConnection<R, P> connection) {
+    protected ClientCodec(ClientConnection<R, P> connection) {
         Objects.requireNonNull(connection);
         this.connection = connection;
     }
@@ -118,9 +118,7 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
 
     void responseComplete(boolean halfCompleted, ClientFuture<R, P> respFuture, P message, Throwable exc) {
         R request = respFuture.request;
-        if (request != null) {
-            Traces.currentTraceid(request.getTraceid());
-        }
+        Traces.currentTraceid(request.getTraceid());
         AsyncIOThread readThread = connection.channel.getReadIOThread();
         final WorkThread workThread = request.workThread;
         try {
