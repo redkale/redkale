@@ -396,9 +396,11 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
 
     //---------------------------------- 可定制方法 ----------------------------------
     protected void initForEachDeMember(ConvertFactory factory, DeMember member) {
+        //do nothing
     }
 
     protected void afterInitDeMember(ConvertFactory factory) {
+        //do nothing
     }
 
     protected boolean hasNext(R in, boolean first) {

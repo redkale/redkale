@@ -230,7 +230,8 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
                 return skipMapDecoder;
             case 127:
                 return BsonFactory.objectDecoder;
+            default:
+                return null;
         }
-        return null;
     }
 }

@@ -386,18 +386,18 @@ public final class ApiDocCommand {
             if (!swaggerComponentsMap.isEmpty()) {
                 swaggerResultMap.put("components", Utility.ofMap("schemas", swaggerComponentsMap));
             }
-            final FileOutputStream out = new FileOutputStream(new File(app.getHome(), "openapi-doc.json"));
-            out.write(JsonConvert.root().convertTo(swaggerResultMap).getBytes(StandardCharsets.UTF_8));
-            out.close();
+            try (FileOutputStream out = new FileOutputStream(new File(app.getHome(), "openapi-doc.json"))) {
+                out.write(JsonConvert.root().convertTo(swaggerResultMap).getBytes(StandardCharsets.UTF_8));
+            }
         }
         {
             Map<String, Object> oldapisResultMap = new LinkedHashMap<>();
             oldapisResultMap.put("servers", serverList);
             oldapisResultMap.put("types", typesMap);
             final String json = JsonConvert.root().convertTo(oldapisResultMap);
-            final FileOutputStream out = new FileOutputStream(new File(app.getHome(), "apidoc.json"));
-            out.write(json.getBytes(StandardCharsets.UTF_8));
-            out.close();
+            try (FileOutputStream out = new FileOutputStream(new File(app.getHome(), "apidoc.json"))) {
+                out.write(json.getBytes(StandardCharsets.UTF_8));
+            }
             File doctemplate = new File(app.getConfPath().toString(), "apidoc-template.html");
             InputStream in = null;
             if (doctemplate.isFile() && doctemplate.canRead()) {
@@ -406,9 +406,9 @@ public final class ApiDocCommand {
             if (in != null) {
                 String content = Utility.read(in).replace("'#{content}'", json);
                 in.close();
-                FileOutputStream outhtml = new FileOutputStream(new File(app.getHome(), "apidoc.html"));
-                outhtml.write(content.getBytes(StandardCharsets.UTF_8));
-                outhtml.close();
+                try (FileOutputStream outhtml = new FileOutputStream(new File(app.getHome(), "apidoc.html"))) {
+                    outhtml.write(content.getBytes(StandardCharsets.UTF_8));
+                }
             }
         }
         return "apidoc success";

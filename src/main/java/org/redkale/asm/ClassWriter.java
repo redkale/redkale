@@ -859,6 +859,7 @@ public class ClassWriter extends ClassVisitor {
 
     @Override
     public final void visitEnd() {
+        //do nothing
     }
 
     // ------------------------------------------------------------------------

@@ -623,6 +623,7 @@ class MethodWriter extends MethodVisitor {
 
     @Override
     public void visitCode() {
+        //do nothing
     }
 
     @Override
@@ -1700,6 +1701,7 @@ class MethodWriter extends MethodVisitor {
 
     @Override
     public void visitEnd() {
+        //do nothing
     }
 
     // ------------------------------------------------------------------------

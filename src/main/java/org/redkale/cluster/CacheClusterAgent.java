@@ -352,9 +352,6 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
 
         public String resname;
 
-        public AddressEntry() {
-        }
-
         public AddressEntry refresh() {
             this.time = System.currentTimeMillis();
             return this;

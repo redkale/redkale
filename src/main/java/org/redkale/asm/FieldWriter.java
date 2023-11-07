@@ -215,6 +215,7 @@ final class FieldWriter extends FieldVisitor {
 
     @Override
     public void visitEnd() {
+        //do nothing
     }
 
     // ------------------------------------------------------------------------

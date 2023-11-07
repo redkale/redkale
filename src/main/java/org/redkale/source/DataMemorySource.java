@@ -48,6 +48,7 @@ public class DataMemorySource extends AbstractDataSource {
     @Override
     @ResourceListener
     public void onResourceChange(ResourceEvent[] events) {
+        //do nothing
     }
 
     public static boolean acceptsConf(AnyValue config) {

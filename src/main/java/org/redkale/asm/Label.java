@@ -287,6 +287,7 @@ public class Label {
      * Constructs a new label.
      */
     public Label() {
+        //do nothing
     }
 
     // ------------------------------------------------------------------------

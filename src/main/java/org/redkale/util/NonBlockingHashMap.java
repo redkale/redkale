@@ -459,6 +459,7 @@ public class NonBlockingHashMap<TypeK, TypeV> extends AbstractMap<TypeK, TypeV> 
     // tests hang until it gets called... by somebody ... for some reason,
     // any reason....
     protected void rehash() {
+        //do nothing
     }
 
     /**

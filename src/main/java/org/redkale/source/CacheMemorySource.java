@@ -84,6 +84,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     @ResourceListener
     public void onResourceChange(ResourceEvent[] events) {
+        //do nothing
     }
 
     protected ExecutorService subExecutor() {

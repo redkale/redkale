@@ -125,7 +125,7 @@ public class ProtobufReader extends Reader {
 
     @Override
     public final void readObjectE(final Class clazz) {
-
+        //do nothing
     }
 
     @Override
@@ -135,6 +135,7 @@ public class ProtobufReader extends Reader {
 
     @Override
     public final void readMapE() {
+        //do nothing
     }
 
     /**
@@ -168,6 +169,7 @@ public class ProtobufReader extends Reader {
 
     @Override
     public final void readArrayE() {
+        //do nothing
     }
 
     /**
@@ -176,6 +178,7 @@ public class ProtobufReader extends Reader {
      */
     @Override
     public final void readBlank() {
+        //do nothing
     }
 
     @Override

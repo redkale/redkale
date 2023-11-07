@@ -240,10 +240,12 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
 
     @Override
     public void flush() {
+        //do nothing
     }
 
     @Override
     public void close() throws SecurityException {
+        //do nothing
     }
 
     @Entity

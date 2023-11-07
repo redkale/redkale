@@ -39,6 +39,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
     }
 
     public void prepare() {
+        //do nothing
     }
 
     protected boolean recycle() {

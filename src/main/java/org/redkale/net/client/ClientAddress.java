@@ -40,9 +40,7 @@ public class ClientAddress implements java.io.Serializable {
         if (this.weights == null) {
             this.weights = new ArrayList<>();
         }
-        for (WeightAddress addr : addrs) {
-            this.weights.add(addr);
-        }
+        this.weights.addAll(Arrays.asList(addrs));
         return this;
     }
 

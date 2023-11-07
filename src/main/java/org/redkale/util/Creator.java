@@ -545,6 +545,7 @@ public interface Creator<T> {
                         return new URLConnection(u) {
                             @Override
                             public void connect() throws IOException {
+                                //do nothing
                             }
 
                             @Override

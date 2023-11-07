@@ -316,10 +316,12 @@ public class BsonWriter extends Writer implements ByteTuple {
 
     @Override
     public final void writeArrayMark() {
+        //do nothing
     }
 
     @Override
     public final void writeArrayE() {
+        //do nothing
     }
 
     @Override
@@ -332,10 +334,12 @@ public class BsonWriter extends Writer implements ByteTuple {
 
     @Override
     public final void writeMapMark() {
+        //do nothing
     }
 
     @Override
     public final void writeMapE() {
+        //do nothing
     }
 
 }

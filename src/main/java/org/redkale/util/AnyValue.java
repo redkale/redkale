@@ -57,12 +57,12 @@ public abstract class AnyValue {
          * 区分name大小写的比较策略
          *
          */
-        public static final BiPredicate<String, String> EQUALS = (name1, name2) -> name1.equals(name2);
+        public static final BiPredicate<String, String> EQUALS_PREDICATE = (name1, name2) -> name1.equals(name2);
 
         /**
          * 不区分name大小写的比较策略
          */
-        public static final BiPredicate<String, String> EQUALSIGNORE = (name1, name2) -> name1.equalsIgnoreCase(name2);
+        public static final BiPredicate<String, String> EQUALS_IGNORE = (name1, name2) -> name1.equalsIgnoreCase(name2);
 
         private boolean ignoreCase;
 
@@ -140,7 +140,7 @@ public abstract class AnyValue {
          */
         public DefaultAnyValue(boolean ignoreCase) {
             this.ignoreCase = ignoreCase;
-            this.predicate = ignoreCase ? EQUALSIGNORE : EQUALS;
+            this.predicate = ignoreCase ? EQUALS_IGNORE : EQUALS_PREDICATE;
         }
 
         /**
@@ -430,7 +430,7 @@ public abstract class AnyValue {
         public void setIgnoreCase(boolean ignoreCase) {
             this.ignoreCase = ignoreCase;
             if (this.predicate == null) {
-                this.predicate = ignoreCase ? EQUALSIGNORE : EQUALS;
+                this.predicate = ignoreCase ? EQUALS_IGNORE : EQUALS_PREDICATE;
             }
         }
 

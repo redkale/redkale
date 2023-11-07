@@ -23,6 +23,7 @@ public class AnyValueEncoder<W extends Writer> implements Encodeable<W, AnyValue
 
     @Override
     public void convertTo(W out, AnyValue value) {
+        //do nothing
     }
 
     @Override

@@ -466,7 +466,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         finishBuffers(kill, buffer);
     }
 
-    protected <A> void send(final ByteTuple array, final CompletionHandler<Integer, Void> handler) {
+    protected void send(final ByteTuple array, final CompletionHandler<Integer, Void> handler) {
         ByteBuffer buffer = this.writeBuffer;
         if (buffer != null && buffer.capacity() >= array.length()) {
             buffer.clear();

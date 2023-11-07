@@ -86,6 +86,7 @@ public final class ByteArray implements ByteTuple {
 
             @Override
             public void close() throws IOException {
+                //do nothing
             }
         };
     }

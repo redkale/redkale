@@ -313,9 +313,11 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
 
     //---------------------------------- 可定制方法 ----------------------------------
     protected void initForEachEnMember(ConvertFactory factory, EnMember member) {
+        //do nothing
     }
 
     protected void afterInitEnMember(ConvertFactory factory) {
+        //do nothing
     }
 
     protected W objectWriter(W out, T value) {

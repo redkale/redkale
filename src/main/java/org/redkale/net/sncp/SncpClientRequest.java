@@ -27,6 +27,7 @@ public class SncpClientRequest extends ClientRequest {
     private byte[] bodyContent;
 
     public SncpClientRequest() {
+        //do nothing
     }
 
     public SncpClientRequest prepare(SncpHeader header, long seqid, String traceid, byte[] bodyContent) {
@@ -40,6 +41,7 @@ public class SncpClientRequest extends ClientRequest {
 
     @Override
     protected void prepare() {
+        //do nothing
     }
 
     @Override

@@ -180,6 +180,7 @@ public class BsonReader extends Reader {
 
     @Override
     public final void readMapE() {
+        //do nothing
     }
 
     /**
@@ -205,6 +206,7 @@ public class BsonReader extends Reader {
 
     @Override
     public final void readArrayE() {
+        //do nothing
     }
 
     /**
@@ -212,6 +214,7 @@ public class BsonReader extends Reader {
      */
     @Override
     public final void readBlank() {
+        //do nothing
     }
 
     @Override

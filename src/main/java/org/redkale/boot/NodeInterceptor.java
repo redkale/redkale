@@ -22,7 +22,7 @@ public class NodeInterceptor {
      * @param server NodeServer
      */
     public void preStart(NodeServer server) {
-
+        //do nothing
     }
 
     /**
@@ -32,7 +32,7 @@ public class NodeInterceptor {
      * @param server NodeServer
      */
     public void preShutdown(NodeServer server) {
-
+        //do nothing
     }
 
 }

@@ -174,10 +174,12 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
     }
 
     void postDestroy(Application application, HttpContext context, AnyValue config) {
+        //do nothing
     }
 
     //Server执行start后运行此方法
     public void postStart(HttpContext context, AnyValue config) {
+        //do nothing
     }
 
     /**

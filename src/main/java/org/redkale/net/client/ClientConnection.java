@@ -59,7 +59,7 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
 
         @Override
         public void completed(Integer result, ClientConnection attachment) {
-
+            //do nothing
         }
 
         @Override

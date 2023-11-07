@@ -19,7 +19,7 @@ class HttpSimpleCodec extends ClientCodec<HttpSimpleRequest, HttpSimpleResult> {
 
     @Override
     public void decodeMessages(ByteBuffer buffer, ByteArray array) {
-
+        //do nothing
     }
 
 }

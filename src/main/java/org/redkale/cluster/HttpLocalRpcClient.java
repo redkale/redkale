@@ -111,7 +111,7 @@ public class HttpLocalRpcClient extends HttpRpcClient {
             if (logger.isLoggable(Level.FINE)) {
                 logger.log(Level.FINE, "sendMessage: request=" + request + ", not found servlet");
             }
-            future.completeExceptionally(new RuntimeException("404 Not Found " + topic));
+            future.completeExceptionally(new HttpException("404 Not Found " + topic));
             return future;
         }
         HttpRequest req = new HttpMessageLocalRequest(context(), request, userid);
