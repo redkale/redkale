@@ -175,6 +175,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                                 continue;
                             }
                         } catch (Exception e) {
+                            //do nothing
                         }
                         if (f == null) {
                             boolean is = method.getParameterTypes()[0] == boolean.class || method.getParameterTypes()[0] == Boolean.class;
@@ -184,6 +185,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                                     continue;
                                 }
                             } catch (Exception e) {
+                                //do nothing
                             }
                         }
                     }
@@ -326,6 +328,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
             try {
                 condition.await();
             } catch (Exception e) {
+                //do nothing
             } finally {
                 lock.unlock();
             }

@@ -77,6 +77,7 @@ public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
                 try {
                     condition.await();
                 } catch (Exception e) {
+                    //do nothing
                 } finally {
                     lock.unlock();
                 }

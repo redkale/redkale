@@ -90,6 +90,7 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
                 try {
                     condition.await();
                 } catch (Exception e) {
+                    //do nothing
                 } finally {
                     lock.unlock();
                 }

@@ -93,6 +93,7 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
                 try {
                     condition.await();
                 } catch (Exception e) {
+                    //do nothing
                 } finally {
                     lock.unlock();
                 }

@@ -25,8 +25,6 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
 
-    static final Type[] TYPEZERO = new Type[0];
-
     protected final Type type;
 
     protected final Class typeClass;
@@ -162,6 +160,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                                 small = f.getAnnotation(ConvertSmallString.class);
                             }
                         } catch (Exception e) {
+                            //do nothing
                         }
                     }
                     Field maybeField = ConvertFactory.readGetSetField(method);
@@ -206,6 +205,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                             try {
                                 dissorts.add(new EnMember(createAttribute(factory, type, clazz, f, null, null), null, f, null)); //虚构
                             } catch (RuntimeException e) {
+                                //do nothing
                             }
                         } catch (NoSuchFieldException nsfe) { //不存在field， 可能存在getter方法
                             char[] fs = constructorField.toCharArray();
@@ -221,6 +221,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                             try {
                                 dissorts.add(new EnMember(createAttribute(factory, type, clazz, null, getter, null), null, null, null)); //虚构
                             } catch (RuntimeException e) {
+                                //do nothing
                             }
                         }
                     }
@@ -275,6 +276,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
             try {
                 condition.await();
             } catch (Exception e) {
+                //do nothing
             } finally {
                 lock.unlock();
             }

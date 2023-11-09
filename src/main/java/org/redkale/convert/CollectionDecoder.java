@@ -98,6 +98,7 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
                 try {
                     condition.await();
                 } catch (Exception e) {
+                    //do nothing
                 } finally {
                     lock.unlock();
                 }
