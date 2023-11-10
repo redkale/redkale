@@ -86,6 +86,79 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         this.value = val;
     }
 
+    protected FilterNode any(FilterNode node, boolean isOr) {
+        if (this.readOnly) {
+            throw new SourceException("FilterNode(" + this + ") is ReadOnly");
+        }
+        Objects.requireNonNull(node);
+        if (this.column == null) {
+            this.column = node.column;
+            this.express = node.express;
+            this.value = node.value;
+            return this;
+        }
+        if (this.nodes == null) {
+            this.nodes = new FilterNode[]{node};
+            this.or = isOr;
+            return this;
+        }
+        if (or == isOr) {
+            this.nodes = Utility.append(this.nodes, node);
+            return this;
+        }
+        FilterNode newNode = new FilterNode(this.column, this.express, this.value);
+        newNode.or = this.or;
+        newNode.nodes = this.nodes;
+        this.nodes = new FilterNode[]{newNode, node};
+        this.column = null;
+        this.express = null;
+        this.or = isOr;
+        this.value = null;
+        return this;
+    }
+
+    //----------------------------------------------------------------------------------------------------
+    @Deprecated(since = "2.8.0")
+    public static FilterNode create(String column, Serializable value) {
+        return FilterNodes.create(column, null, value);
+    }
+
+    @Deprecated(since = "2.8.0")
+    public static FilterNode create(String column, FilterExpress express, Serializable value) {
+        return FilterNodes.create(column, express, value);
+    }
+
+    @Deprecated(since = "2.8.0")
+    public static <F extends Serializable> FilterNode create(LambdaSupplier<F> func) {
+        return FilterNodes.create(func);
+    }
+
+    @Deprecated(since = "2.8.0")
+    public static <F extends Serializable> FilterNode create(LambdaSupplier<F> func, FilterExpress express) {
+        return FilterNodes.create(func, express);
+    }
+
+    @Deprecated(since = "2.8.0")
+    public static <T, F extends Serializable> FilterNode create(LambdaFunction<T, F> func, F value) {
+        return FilterNodes.create(func, value);
+    }
+
+    @Deprecated(since = "2.8.0")
+    public static <T, F extends Serializable> FilterNode create(LambdaFunction<T, F> func, FilterExpress express, F value) {
+        return FilterNodes.create(func, express, value);
+    }
+
+    @Deprecated(since = "2.8.0")
+    public static FilterNode filter(String column, Serializable value) {
+        return FilterNodes.create(column, null, value);
+    }
+
+    @Deprecated(since = "2.8.0")
+    public static FilterNode filter(String column, FilterExpress express, Serializable value) {
+        return FilterNodes.create(column, express, value);
+    }
+
+    //----------------------------------------------------------------------------------------------------
     public FilterNode copy() {
         return copy(new FilterNode());
     }
@@ -146,6 +219,34 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             }
         }
         return null;
+    }
+
+    public final FilterNode or(FilterNode node) {
+        return any(node, true);
+    }
+
+    public final FilterNode or(String column, Serializable value) {
+        return or(column, null, value);
+    }
+
+    public final FilterNode or(String column, FilterExpress express, Serializable value) {
+        return or(new FilterNode(column, express, value));
+    }
+
+    public final <F extends Serializable> FilterNode or(LambdaSupplier<F> func) {
+        return or(func, null);
+    }
+
+    public final <F extends Serializable> FilterNode or(LambdaSupplier<F> func, FilterExpress express) {
+        return or(new FilterNode(LambdaSupplier.readColumn(func), express, func.get()));
+    }
+
+    public final <T, F extends Serializable> FilterNode or(LambdaFunction<T, F> func, F value) {
+        return or(func, null, value);
+    }
+
+    public final <T, F extends Serializable> FilterNode or(LambdaFunction<T, F> func, FilterExpress express, F value) {
+        return or(new FilterNode(LambdaFunction.readColumn(func), express, value));
     }
 
     public final FilterNode and(FilterNode node) {
@@ -633,65 +734,6 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     //-----------------------------------------------------------------------
-    public final FilterNode or(FilterNode node) {
-        return any(node, true);
-    }
-
-    public final FilterNode or(String column, Serializable value) {
-        return or(column, null, value);
-    }
-
-    public final FilterNode or(String column, FilterExpress express, Serializable value) {
-        return or(new FilterNode(column, express, value));
-    }
-
-    public final <F extends Serializable> FilterNode or(LambdaSupplier<F> func) {
-        return or(func, null);
-    }
-
-    public final <F extends Serializable> FilterNode or(LambdaSupplier<F> func, FilterExpress express) {
-        return or(new FilterNode(LambdaSupplier.readColumn(func), express, func.get()));
-    }
-
-    public final <T, F extends Serializable> FilterNode or(LambdaFunction<T, F> func, F value) {
-        return or(func, null, value);
-    }
-
-    public final <T, F extends Serializable> FilterNode or(LambdaFunction<T, F> func, FilterExpress express, F value) {
-        return or(new FilterNode(LambdaFunction.readColumn(func), express, value));
-    }
-
-    protected FilterNode any(FilterNode node, boolean signor) {
-        if (this.readOnly) {
-            throw new SourceException("FilterNode(" + this + ") is ReadOnly");
-        }
-        Objects.requireNonNull(node);
-        if (this.column == null) {
-            this.column = node.column;
-            this.express = node.express;
-            this.value = node.value;
-            return this;
-        }
-        if (this.nodes == null) {
-            this.nodes = new FilterNode[]{node};
-            this.or = signor;
-            return this;
-        }
-        if (or == signor) {
-            this.nodes = Utility.append(this.nodes, node);
-            return this;
-        }
-        FilterNode newnode = new FilterNode(this.column, this.express, this.value);
-        newnode.or = this.or;
-        newnode.nodes = this.nodes;
-        this.nodes = new FilterNode[]{newnode, node};
-        this.column = null;
-        this.express = null;
-        this.or = signor;
-        this.value = null;
-        return this;
-    }
-
     /**
      * 该方法需要重载
      *
@@ -817,64 +859,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         return rs;
     }
 
-//    @Deprecated(since = "2.8.0")
-//    public static FilterNode create(String column, Serializable value) {
-//        return new FilterNode(column, null, value);
-//    }
-//
-//    @Deprecated(since = "2.8.0")
-//    public static FilterNode create(String column, FilterExpress express, Serializable value) {
-//        return new FilterNode(column, express, value);
-//    }
-//
-//    @Deprecated(since = "2.8.0")
-//    public static <F extends Serializable> FilterNode create(LambdaSupplier<F> func) {
-//        return new FilterNode(LambdaSupplier.readColumn(func), null, func.get());
-//    }
-//
-//    @Deprecated(since = "2.8.0")
-//    public static <F extends Serializable> FilterNode create(LambdaSupplier<F> func, FilterExpress express) {
-//        return new FilterNode(LambdaSupplier.readColumn(func), express, func.get());
-//    }
-//
-//    @Deprecated(since = "2.8.0")
-//    public static <T, F extends Serializable> FilterNode create(LambdaFunction<T, F> func, F value) {
-//        return new FilterNode(LambdaFunction.readColumn(func), null, value);
-//    }
-//
-//    @Deprecated(since = "2.8.0")
-//    public static <T, F extends Serializable> FilterNode create(LambdaFunction<T, F> func, FilterExpress express, F value) {
-//        return new FilterNode(LambdaFunction.readColumn(func), express, value);
-//    }
-    /**
-     * @see org.redkale.source.FilterNodes
-     *
-     * @param column String
-     * @param value  Serializable
-     *
-     * @return FilterNode
-     * @deprecated
-     */
-    @Deprecated(since = "2.8.0")
-    public static FilterNode filter(String column, Serializable value) {
-        return new FilterNode(column, null, value);
-    }
-
-    /**
-     * @see org.redkale.source.FilterNodes
-     *
-     * @param column  String
-     * @param express FilterExpress
-     * @param value   Serializable
-     *
-     * @return FilterNode
-     * @deprecated
-     */
-    @Deprecated(since = "2.8.0")
-    public static FilterNode filter(String column, FilterExpress express, Serializable value) {
-        return new FilterNode(column, express, value);
-    }
-
+    //----------------------------------------------------------------------------------------------------
     private boolean needSplit(final Object val0) {
         return needSplit(express, val0);
     }
