@@ -2,11 +2,6 @@
  */
 package org.redkale.test.convert.protobuf;
 
-import org.redkale.convert.protobuf.ProtobufObjectEncoder;
-import org.redkale.convert.protobuf.ProtobufReader;
-import org.redkale.convert.protobuf.ProtobufFactory;
-import org.redkale.convert.protobuf.ProtobufObjectDecoder;
-import org.redkale.convert.protobuf.ProtobufConvert;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -15,6 +10,11 @@ import java.util.function.*;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.convert.protobuf.ProtobufConvert;
+import org.redkale.convert.protobuf.ProtobufFactory;
+import org.redkale.convert.protobuf.ProtobufObjectDecoder;
+import org.redkale.convert.protobuf.ProtobufObjectEncoder;
+import org.redkale.convert.protobuf.ProtobufReader;
 import org.redkale.util.*;
 
 /**
@@ -148,6 +148,7 @@ public class PBCustMessageTest {
 
     public static class OnPlayerLeaveMessage {
 
+        @ConvertColumn(index = 1)
         private OnPlayerLeaveContent onPlayerLeaveMessage;
 
         public OnPlayerLeaveMessage() {

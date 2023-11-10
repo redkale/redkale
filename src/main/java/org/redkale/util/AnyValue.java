@@ -10,6 +10,7 @@ import java.nio.charset.*;
 import java.util.*;
 import java.util.function.*;
 import org.redkale.annotation.ConstructorParameters;
+import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.ConvertDisabled;
 
 /**
@@ -64,12 +65,15 @@ public abstract class AnyValue {
          */
         public static final BiPredicate<String, String> EQUALS_IGNORE = (name1, name2) -> name1.equalsIgnoreCase(name2);
 
+        @ConvertColumn(index = 1)
         private boolean ignoreCase;
 
         private BiPredicate<String, String> predicate;
 
+        @ConvertColumn(index = 2)
         private Entry<String>[] stringEntrys = new Entry[0];
 
+        @ConvertColumn(index = 3)
         private Entry<DefaultAnyValue>[] anyEntrys = new Entry[0];
 
         private int parentArrayIndex = -1; //只可能被loadFromProperties方法赋值
@@ -353,6 +357,7 @@ public abstract class AnyValue {
          *
          * @return DefaultAnyValue
          */
+        @ConvertDisabled
         public DefaultAnyValue setAll(final AnyValue av) {
             if (av == null) {
                 return this;
@@ -644,8 +649,10 @@ public abstract class AnyValue {
         /**
          * 字段名
          */
+        @ConvertColumn(index = 1)
         public final String name;
 
+        @ConvertColumn(index = 2)
         T value;
 
         @ConstructorParameters({"name", "value"})

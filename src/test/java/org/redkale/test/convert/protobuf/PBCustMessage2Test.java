@@ -2,18 +2,18 @@
  */
 package org.redkale.test.convert.protobuf;
 
-import org.redkale.convert.protobuf.ProtobufObjectEncoder;
-import org.redkale.convert.protobuf.ProtobufReader;
-import org.redkale.convert.protobuf.ProtobufObjectDecoder;
-import org.redkale.convert.protobuf.ProtobufConvert;
+import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.annotation.*;
 import java.util.Arrays;
 import java.util.function.*;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.convert.protobuf.ProtobufConvert;
+import org.redkale.convert.protobuf.ProtobufObjectDecoder;
+import org.redkale.convert.protobuf.ProtobufObjectEncoder;
+import org.redkale.convert.protobuf.ProtobufReader;
 import org.redkale.util.*;
 
 /**
@@ -34,7 +34,9 @@ public class PBCustMessage2Test {
     @Test
     public void run() throws Exception {
         final BiFunction<Attribute, Object, Object> objFieldFunc = (Attribute t, Object u) -> {
-            if (t.field().equals("retinfo")) return null;
+            if (t.field().equals("retinfo")) {
+                return null;
+            }
             return t.get(u);
         };
         OnPlayerLeaveMessage msg1 = new OnPlayerLeaveMessage(100, "haha");
@@ -43,19 +45,25 @@ public class PBCustMessage2Test {
         byte[] bs2 = ProtobufConvert.root().convertTo(msg2);
         System.out.println(Arrays.toString(bs1));
         System.out.println(Arrays.toString(bs2));
-        if (!main) Assertions.assertEquals(Arrays.toString(bs1), Arrays.toString(bs2));
+        if (!main) {
+            Assertions.assertEquals(Arrays.toString(bs1), Arrays.toString(bs2));
+        }
         System.out.println();
 
         OnPlayerLeaveMessage2 newmsg2 = ProtobufConvert.root().convertFrom(OnPlayerLeaveMessage2.class, bs1);
         byte[] newbs2 = ProtobufConvert.root().convertTo(newmsg2);
         System.out.println(Arrays.toString(newbs2));
-        if (!main) Assertions.assertEquals(Arrays.toString(bs1), Arrays.toString(newbs2));
+        if (!main) {
+            Assertions.assertEquals(Arrays.toString(bs1), Arrays.toString(newbs2));
+        }
         System.out.println();
 
         ProtobufConvert convert = ProtobufConvert.root().newConvert(objFieldFunc);
         System.out.println(Arrays.toString(convert.convertTo(msg1)));
         System.out.println(Arrays.toString(convert.convertTo(msg2)));
-        if (!main) Assertions.assertEquals(Arrays.toString(convert.convertTo(msg1)), Arrays.toString(convert.convertTo(msg2)));
+        if (!main) {
+            Assertions.assertEquals(Arrays.toString(convert.convertTo(msg1)), Arrays.toString(convert.convertTo(msg2)));
+        }
         System.out.println();
     }
 
@@ -72,7 +80,9 @@ public class PBCustMessage2Test {
 
         public static String getMessageName(Class<?> clazz) {
             MessageName mn = clazz.getAnnotation(MessageName.class);
-            if (mn != null) return mn.value();
+            if (mn != null) {
+                return mn.value();
+            }
             char[] fieldChars = clazz.getSimpleName().toCharArray();
             fieldChars[0] = Character.toLowerCase(fieldChars[0]);
             return new String(fieldChars);
@@ -165,8 +175,10 @@ public class PBCustMessage2Test {
 
     public static class OnPlayerLeaveMessage {
 
+        @ConvertColumn(index = 1)
         private String event = "onPlayerLeaveMessage";
 
+        @ConvertColumn(index = 2)
         private OnPlayerLeaveContent result;
 
         public OnPlayerLeaveMessage() {

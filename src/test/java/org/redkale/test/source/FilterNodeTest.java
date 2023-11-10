@@ -5,22 +5,18 @@
  */
 package org.redkale.test.source;
 
-import org.redkale.persistence.Cacheable;
-import org.redkale.persistence.Id;
-import org.redkale.persistence.Transient;
-import org.redkale.source.*;
-import org.redkale.annotation.AutoLoad;
-
-import static org.redkale.source.FilterExpress.*;
-
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
-
-import org.redkale.convert.json.*;
-
 import org.junit.jupiter.api.*;
+import org.redkale.annotation.AutoLoad;
+import org.redkale.convert.json.*;
+import org.redkale.persistence.Cacheable;
+import org.redkale.persistence.Id;
+import org.redkale.persistence.Transient;
+import org.redkale.source.*;
+import static org.redkale.source.FilterExpress.*;
 
 /**
  * @author zhangjx
@@ -105,9 +101,9 @@ public class FilterNodeTest {
     public void run() throws Exception {
         final CarTestBean bean = CarTestBean.create();
         FilterNode joinNode1 = FilterJoinNode.create(UserTestTable.class, new String[]{"userid", "username"}, "username", LIKE, bean.username)
-            .or(FilterJoinNode.create(UserTestTable.class, new String[]{"userid", "username"}, "createtime", GREATERTHAN, bean.createtime));
+            .or(FilterJoinNode.create(UserTestTable.class, new String[]{"userid", "username"}, "createtime", GT, bean.createtime));
         FilterNode joinNode2 = FilterJoinNode.create(CarTypeTestTable.class, "cartype", "typename", LIKE, bean.typename);
-        final FilterNode node = CarTestBean.caridTransient() ? (joinNode2.or(joinNode1)) : FilterNode.create("carid", GREATERTHAN, bean.carid).and(joinNode1).or(joinNode2);
+        final FilterNode node = CarTestBean.caridTransient() ? (joinNode2.or(joinNode1)) : FilterNodes.gt("carid", bean.carid).and(joinNode1).or(joinNode2);
         final FilterNode beanNode = FilterNodeBean.createFilterNode(bean);
         System.out.println("node.string = " + node);
         System.out.println("bean.string = " + beanNode);
@@ -136,7 +132,7 @@ public class FilterNodeTest {
     public static class CarTestBean implements FilterBean {
 
         @FilterGroup("[OR].[AND]a")
-        @FilterColumn(express = GREATERTHAN)
+        @FilterColumn(express = GT)
         @Transient
         public long carid;
 
@@ -146,7 +142,7 @@ public class FilterNodeTest {
         public String username;
 
         @FilterGroup("[OR].[AND]a.[OR]c")
-        @FilterColumn(express = GREATERTHAN)
+        @FilterColumn(express = GT)
         @FilterJoinColumn(table = UserTestTable.class, columns = {"userid", "username"})
         public long createtime;
 

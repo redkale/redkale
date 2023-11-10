@@ -2126,7 +2126,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         String column = info.getPrimary().field();
         int c = 0;
         for (Serializable id : pks) {
-            Sheet<T> sheet = querySheet(false, true, false, clazz, null, FLIPPER_ONE, FilterNode.create(column, id));
+            Sheet<T> sheet = querySheet(false, true, false, clazz, null, FLIPPER_ONE, FilterNodes.create(column, id));
             T value = sheet.isEmpty() ? null : sheet.list().get(0);
             if (value != null) {
                 c += cache.update(value);
@@ -2554,7 +2554,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
 
     protected <T> CompletableFuture<T[]> findsDBAsync(final EntityInfo<T> info, final SelectColumn selects, Serializable... pks) {
         final Attribute<T, Serializable> primary = info.getPrimary();
-        return queryListAsync(info.getType(), selects, null, FilterNode.create(info.getPrimarySQLColumn(), FilterExpress.IN, pks)).thenApply(list -> {
+        return queryListAsync(info.getType(), selects, null, FilterNodes.in(info.getPrimarySQLColumn(), pks)).thenApply(list -> {
             T[] rs = info.getArrayer().apply(pks.length);
             for (int i = 0; i < rs.length; i++) {
                 T t = null;
@@ -2580,7 +2580,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     public <D extends Serializable, T> CompletableFuture<List<T>> findsListAsync(final Class<T> clazz, final Stream<D> pks) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         Serializable[] ids = pks.toArray(serialArrayFunc);
-        return queryListAsync(info.getType(), null, null, FilterNode.create(info.getPrimarySQLColumn(), FilterExpress.IN, ids));
+        return queryListAsync(info.getType(), null, null, FilterNodes.in(info.getPrimarySQLColumn(), ids));
     }
 
     @Override
@@ -3077,7 +3077,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         final ArrayList<K> ids = new ArrayList<>();
         keyStream.forEach(k -> ids.add(k));
         final Attribute<T, Serializable> primary = info.getPrimary();
-        List<T> rs = queryList(clazz, FilterNode.create(primary.field(), ids));
+        List<T> rs = queryList(clazz, FilterNodes.in(primary.field(), ids));
         Map<K, T> map = new LinkedHashMap<>();
         if (rs.isEmpty()) {
             return new LinkedHashMap<>();
@@ -3097,7 +3097,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         final ArrayList<K> pks = new ArrayList<>();
         keyStream.forEach(k -> pks.add(k));
         final Attribute<T, Serializable> primary = info.getPrimary();
-        return queryListAsync(clazz, FilterNode.create(primary.field(), pks)).thenApply((List<T> rs) -> {
+        return queryListAsync(clazz, FilterNodes.in(primary.field(), pks)).thenApply((List<T> rs) -> {
             Map<K, T> map = new LinkedHashMap<>();
             if (rs.isEmpty()) {
                 return new LinkedHashMap<>();

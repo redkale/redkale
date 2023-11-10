@@ -2697,6 +2697,27 @@ public final class Utility {
     }
 
     /**
+     * 判断指定值是否包含指定的数组中，包含返回true
+     *
+     * @param <T>       泛型
+     * @param values    集合
+     * @param predicate 过滤条件
+     *
+     * @return boolean
+     */
+    public static <T> boolean contains(Collection<T> values, Predicate<T> predicate) {
+        if (values == null) {
+            return false;
+        }
+        for (T v : values) {
+            if (predicate.test(v)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * 将指定的short元素是否数组中完全包含，重复元素的次数也要相同 <br>
      * 例如: <br>
      * containsMatch(new short[]{1, 2, 2, 3, 3, 3}, 1, 2, 3, 3) = true <br>

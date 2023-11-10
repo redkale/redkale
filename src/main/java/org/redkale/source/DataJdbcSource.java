@@ -2192,7 +2192,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 }
             }
         } else {
-            return queryList(info.getType(), null, null, FilterNode.create(info.getPrimarySQLColumn(), FilterExpress.IN, ids));
+            return queryList(info.getType(), null, null, FilterNodes.in(info.getPrimarySQLColumn(), ids));
         }
     }
 

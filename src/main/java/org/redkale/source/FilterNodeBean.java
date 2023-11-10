@@ -79,21 +79,21 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
                 compType = (Class) pt;
             }
         }
-        if ((exp == null || exp == EQUAL) && (type.isArray() || Collection.class.isAssignableFrom(type))) {
+        if ((exp == null || exp == EQ) && (type.isArray() || Collection.class.isAssignableFrom(type))) {
             if (compType != null && Range.class.isAssignableFrom(compType)) {
                 if (AND != exp) {
                     exp = OR;
                 }
-            } else if (NOTIN != exp) {
+            } else if (NOT_IN != exp) {
                 exp = IN;
             }
         } else if (Range.class.isAssignableFrom(type)) {
-            if (NOTBETWEEN != exp) {
+            if (NOT_BETWEEN != exp) {
                 exp = BETWEEN;
             }
         }
         if (exp == null) {
-            exp = EQUAL;
+            exp = EQ;
         }
         this.express = exp;
 
@@ -178,7 +178,7 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
             }
             if (!skip) {
                 if (this.joinClass == null) {
-                    node = FilterNode.create(column, express, val);
+                    node = FilterNodes.create(column, express, val);
                 } else {
                     node = FilterJoinNode.create(joinClass, joinColumns, column, express, val);
                 }
@@ -419,16 +419,16 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
         StringBuilder sb = new StringBuilder();
         if (column != null) {
             String col = prefix == null ? column : (prefix + "." + column);
-            if (express == ISNULL || express == ISNOTNULL) {
+            if (express == IS_NULL || express == NOT_NULL) {
                 sb.append(col).append(' ').append(express.value());
-            } else if (express == ISEMPTY || express == ISNOTEMPTY) {
+            } else if (express == IS_EMPTY || express == NOT_EMPTY) {
                 sb.append(col).append(' ').append(express.value()).append(" ''");
-            } else if (express == LENGTH_EQUAL || express == LENGTH_LESSTHAN || express == LENGTH_LESSTHANOREQUALTO
-                || express == LENGTH_GREATERTHAN || express == LENGTH_GREATERTHANOREQUALTO) {
+            } else if (express == LEN_EQ || express == LEN_LT || express == LEN_LE
+                || express == LEN_GT || express == LEN_GE) {
                 sb.append("LENGTH(").append(col).append(") ").append(express.value()).append(" ?");
             } else {
-                boolean lower = (express == IGNORECASEEQUAL || express == IGNORECASENOTEQUAL || express == IGNORECASELIKE
-                    || express == IGNORECASENOTLIKE || express == IGNORECASECONTAIN || express == IGNORECASENOTCONTAIN);
+                boolean lower = (express == IG_EQ || express == IG_NOT_EQ || express == IG_LIKE
+                    || express == IG_NOT_LIKE || express == IG_CONTAIN || express == IG_NOT_CONTAIN);
                 sb.append(lower ? ("LOWER(" + col + ')') : col).append(' ').append(express.value()).append(" ?");
             }
         }

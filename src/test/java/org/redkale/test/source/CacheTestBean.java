@@ -42,12 +42,12 @@ public class CacheTestBean {
         System.out.println(cache.queryColumnMap("pkgid", FilterFunc.MAX, "price", null));
         System.out.println(cache.queryColumnMap("pkgid", FilterFunc.MIN, "price", null));
 
-        System.out.println(cache.find(null, FilterNode.create("name", FilterExpress.EQUAL, "BB")));
-        System.out.println(cache.find(null, FilterNode.create("name", FilterExpress.IGNORECASEEQUAL, "BB")));
-        System.out.println(cache.querySheet(null, null, FilterNode.create("name", FilterExpress.IGNORECASENOTLIKE, "B")));
-        System.out.println(cache.find(null, FilterNode.create(CacheTestBean::getName, FilterExpress.EQUAL, "BB")));
-        System.out.println(cache.find(null, FilterNode.create(CacheTestBean::getName, FilterExpress.IGNORECASEEQUAL, "BB")));
-        System.out.println(cache.querySheet(null, null, FilterNode.create(CacheTestBean::getName, FilterExpress.IGNORECASENOTLIKE, "B")));
+        System.out.println(cache.find(null, FilterNodes.eq("name", "BB")));
+        System.out.println(cache.find(null, FilterNodes.igEq("name", "BB")));
+        System.out.println(cache.querySheet(null, null, FilterNodes.igNotLike("name", "B")));
+        System.out.println(cache.find(null, FilterNodes.eq(CacheTestBean::getName, "BB")));
+        System.out.println(cache.find(null, FilterNodes.igEq(CacheTestBean::getName, "BB")));
+        System.out.println(cache.querySheet(null, null, FilterNodes.igNotLike(CacheTestBean::getName, "B")));
     }
 
     public CacheTestBean() {

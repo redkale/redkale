@@ -218,21 +218,19 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                 }
                 if (cps != null) { //可能存在某些构造函数中的字段名不存在setter方法
                     for (final String constructorField : cps) {
-                        boolean flag = false;
-                        for (DeMember m : list) {
-                            if (m.attribute.field().equals(constructorField)) {
-                                flag = true;
-                                break;
-                            }
-                        }
-                        if (flag) {
+                        if (Utility.contains(list, m -> m.attribute.field().equals(constructorField))) {
                             continue;
                         }
                         //不存在setter方法
                         try {
                             Field f = clazz.getDeclaredField(constructorField);
+                            ConvertColumnEntry ref2 = factory.findRef(clazz, f);
                             Type t = TypeToken.createClassType(f.getGenericType(), this.type);
-                            list.add(new DeMember(ObjectEncoder.createAttribute(factory, type, clazz, f, null, null), factory.loadDecoder(t), f, null));
+                            DeMember member = new DeMember(ObjectEncoder.createAttribute(factory, type, clazz, f, null, null), factory.loadDecoder(t), f, null);
+                            if (ref2 != null) {
+                                member.index = ref2.getIndex();
+                            }
+                            list.add(member);
                         } catch (NoSuchFieldException nsfe) { //不存在field， 可能存在getter方法
                             char[] fs = constructorField.toCharArray();
                             fs[0] = Character.toUpperCase(fs[0]);
@@ -243,8 +241,13 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                             } catch (NoSuchMethodException ex) {
                                 getter = clazz.getMethod("is" + mn);
                             }
+                            ConvertColumnEntry ref2 = factory.findRef(clazz, getter);
                             Type t = TypeToken.createClassType(TypeToken.getGenericType(getter.getGenericParameterTypes()[0], this.type), this.type);
-                            list.add(new DeMember(ObjectEncoder.createAttribute(factory, type, clazz, null, getter, null), factory.loadDecoder(t), ConvertFactory.readGetSetField(getter), getter));
+                            DeMember member = new DeMember(ObjectEncoder.createAttribute(factory, type, clazz, null, getter, null), factory.loadDecoder(t), ConvertFactory.readGetSetField(getter), getter);
+                            if (ref2 != null) {
+                                member.index = ref2.getIndex();
+                            }
+                            list.add(member);
                         }
                     }
                 }

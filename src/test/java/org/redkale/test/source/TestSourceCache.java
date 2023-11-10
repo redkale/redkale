@@ -24,7 +24,7 @@ public class TestSourceCache {
 
     public static class TestEntityBean implements FilterBean {
 
-        @FilterColumn(express = FilterExpress.GREATERTHAN)
+        @FilterColumn(express = FilterExpress.GT)
         public int userid;
 
         @FilterColumn(express = FilterExpress.LIKE)
@@ -60,9 +60,9 @@ public class TestSourceCache {
 
         final Flipper flipper = new Flipper(2);
         flipper.setSort("userid DESC, createtime DESC");
-        final FilterNode node = FilterNode.create("userid", FilterExpress.GREATERTHAN, 1000).and("username", FilterExpress.LIKE, "用户");
+        final FilterNode node = FilterNodes.gt("userid", 1000).like("username", "用户");
         System.out.println("node = " + node);
-        final FilterNode node2 = FilterNode.create(TestEntity::getUserid, FilterExpress.GREATERTHAN, 1000).and("username", FilterExpress.LIKE, "用户");
+        final FilterNode node2 = FilterNodes.gt(TestEntity::getUserid, 1000).like("username", "用户");
         Assertions.assertEquals(node.toString(), node2.toString());
         Sheet<TestEntity> sheet = info.getCache().querySheet(null, flipper, node);
         System.out.println(sheet);

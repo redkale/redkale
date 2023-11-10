@@ -82,7 +82,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             }
         }
         this.column = col;
-        this.express = exp == null ? EQUAL : exp;
+        this.express = exp == null ? EQ : FilterNodes.oldExpress(exp);
         this.value = val;
     }
 
@@ -176,6 +176,463 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         return and(new FilterNode(LambdaFunction.readColumn(func), express, value));
     }
 
+    public FilterNode eq(String column, Serializable value) {
+        return and(new FilterNode(column, EQ, value));
+    }
+
+    public <F extends Serializable> FilterNode eq(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), EQ, func.get()));
+    }
+
+    public <T, F extends Serializable> FilterNode eq(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), EQ, value));
+    }
+
+    public FilterNode igEq(String column, Serializable value) {
+        return and(new FilterNode(column, IG_EQ, value));
+    }
+
+    public <F extends Serializable> FilterNode igEq(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), IG_EQ, func.get()));
+    }
+
+    public <T, F extends Serializable> FilterNode igEq(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), IG_EQ, value));
+    }
+
+    public FilterNode notEq(String column, Serializable value) {
+        return and(new FilterNode(column, NOT_EQ, value));
+    }
+
+    public <F extends Serializable> FilterNode notEq(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), NOT_EQ, func.get()));
+    }
+
+    public <T, F extends Serializable> FilterNode notEq(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), NOT_EQ, value));
+    }
+
+    public FilterNode igNotEq(String column, Serializable value) {
+        return and(new FilterNode(column, IG_NOT_EQ, value));
+    }
+
+    public <F extends Serializable> FilterNode igNotEq(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), IG_NOT_EQ, func.get()));
+    }
+
+    public <T, F extends Serializable> FilterNode igNotEq(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), IG_NOT_EQ, value));
+    }
+
+    public FilterNode gt(String column, Number value) {
+        return and(new FilterNode(column, GT, value));
+    }
+
+    public <F extends Number> FilterNode gt(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), GT, func.get()));
+    }
+
+    public <T, F extends Number> FilterNode gt(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), GT, value));
+    }
+
+    public FilterNode lt(String column, Number value) {
+        return and(new FilterNode(column, LT, value));
+    }
+
+    public <F extends Number> FilterNode lt(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), LT, func.get()));
+    }
+
+    public <T, F extends Number> FilterNode lt(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), LT, value));
+    }
+
+    public FilterNode ge(String column, Number value) {
+        return and(new FilterNode(column, GE, value));
+    }
+
+    public <F extends Number> FilterNode ge(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), GE, func.get()));
+    }
+
+    public <T, F extends Number> FilterNode ge(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), GE, value));
+    }
+
+    public FilterNode le(String column, Number value) {
+        return and(new FilterNode(column, LE, value));
+    }
+
+    public <F extends Number> FilterNode le(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), LE, func.get()));
+    }
+
+    public <T, F extends Number> FilterNode le(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), LE, value));
+    }
+
+    public FilterNode like(String column, String value) {
+        return and(new FilterNode(column, LIKE, value));
+    }
+
+    public FilterNode like(LambdaSupplier<String> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), LIKE, func.get()));
+    }
+
+    public <T> FilterNode like(LambdaFunction<T, String> func, String value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), LIKE, value));
+    }
+
+    public FilterNode notLike(String column, String value) {
+        return and(new FilterNode(column, NOT_LIKE, value));
+    }
+
+    public FilterNode notLike(LambdaSupplier<String> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), NOT_LIKE, func.get()));
+    }
+
+    public <T> FilterNode notLike(LambdaFunction<T, String> func, String value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), NOT_LIKE, value));
+    }
+
+    public FilterNode igLike(String column, String value) {
+        return and(new FilterNode(column, IG_LIKE, value));
+    }
+
+    public FilterNode igLike(LambdaSupplier<String> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), IG_LIKE, func.get()));
+    }
+
+    public <T> FilterNode igLike(LambdaFunction<T, String> func, String value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), IG_LIKE, value));
+    }
+
+    public FilterNode igNotLike(String column, String value) {
+        return and(new FilterNode(column, IG_NOT_LIKE, value));
+    }
+
+    public FilterNode igNotLike(LambdaSupplier<String> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), IG_NOT_LIKE, func.get()));
+    }
+
+    public <T> FilterNode igNotLike(LambdaFunction<T, String> func, String value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), IG_NOT_LIKE, value));
+    }
+
+    public FilterNode starts(String column, String value) {
+        return and(new FilterNode(column, STARTS, value));
+    }
+
+    public FilterNode starts(LambdaSupplier<String> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), STARTS, func.get()));
+    }
+
+    public <T> FilterNode starts(LambdaFunction<T, String> func, String value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), STARTS, value));
+    }
+
+    public FilterNode ends(String column, String value) {
+        return and(new FilterNode(column, ENDS, value));
+    }
+
+    public FilterNode ends(LambdaSupplier<String> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), ENDS, func.get()));
+    }
+
+    public <T> FilterNode ends(LambdaFunction<T, String> func, String value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), ENDS, value));
+    }
+
+    public FilterNode notStarts(String column, String value) {
+        return and(new FilterNode(column, NOT_STARTS, value));
+    }
+
+    public FilterNode notStarts(LambdaSupplier<String> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), NOT_STARTS, func.get()));
+    }
+
+    public <T> FilterNode notStarts(LambdaFunction<T, String> func, String value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), NOT_STARTS, value));
+    }
+
+    public FilterNode notEnds(String column, String value) {
+        return and(new FilterNode(column, NOT_ENDS, value));
+    }
+
+    public FilterNode notEnds(LambdaSupplier<String> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), NOT_ENDS, func.get()));
+    }
+
+    public <T> FilterNode notEnds(LambdaFunction<T, String> func, String value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), NOT_ENDS, value));
+    }
+
+    public FilterNode lenEq(String column, Number value) {
+        return and(new FilterNode(column, LEN_EQ, value));
+    }
+
+    public <F extends Number> FilterNode lenEq(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), LEN_EQ, func.get()));
+    }
+
+    public <T, F extends Number> FilterNode lenEq(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), LEN_EQ, value));
+    }
+
+    public FilterNode lenGt(String column, Number value) {
+        return and(new FilterNode(column, LEN_GT, value));
+    }
+
+    public <F extends Number> FilterNode lenGt(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), LEN_GT, func.get()));
+    }
+
+    public <T, F extends Number> FilterNode lenGt(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), LEN_GT, value));
+    }
+
+    public FilterNode lenLt(String column, Number value) {
+        return and(new FilterNode(column, LEN_LT, value));
+    }
+
+    public <F extends Number> FilterNode lenLt(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), LEN_LT, func.get()));
+    }
+
+    public <T, F extends Number> FilterNode lenLt(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), LEN_LT, value));
+    }
+
+    public FilterNode lenGe(String column, Number value) {
+        return and(new FilterNode(column, LEN_GE, value));
+    }
+
+    public <F extends Number> FilterNode lenGe(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), LEN_GE, func.get()));
+    }
+
+    public <T, F extends Number> FilterNode lenGe(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), LEN_GE, value));
+    }
+
+    public FilterNode lenLe(String column, Number value) {
+        return and(new FilterNode(column, LEN_LE, value));
+    }
+
+    public <F extends Number> FilterNode lenLe(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), LEN_LE, func.get()));
+    }
+
+    public <T, F extends Number> FilterNode lenLe(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), LEN_LE, value));
+    }
+
+    public FilterNode contain(String column, Serializable value) {
+        return and(new FilterNode(column, CONTAIN, value));
+    }
+
+    public <F extends Serializable> FilterNode contain(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), CONTAIN, func.get()));
+    }
+
+    public <T, F extends Serializable> FilterNode contain(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), CONTAIN, value));
+    }
+
+    public FilterNode notContain(String column, Serializable value) {
+        return and(new FilterNode(column, NOT_CONTAIN, value));
+    }
+
+    public <F extends Serializable> FilterNode notContain(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), NOT_CONTAIN, func.get()));
+    }
+
+    public <T, F extends Serializable> FilterNode notContain(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), NOT_CONTAIN, value));
+    }
+
+    public FilterNode igContain(String column, Serializable value) {
+        return and(new FilterNode(column, IG_CONTAIN, value));
+    }
+
+    public <F extends Serializable> FilterNode igContain(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), IG_CONTAIN, func.get()));
+    }
+
+    public <T, F extends Serializable> FilterNode igContain(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), IG_CONTAIN, value));
+    }
+
+    public FilterNode igNotContain(String column, Serializable value) {
+        return and(new FilterNode(column, IG_NOT_CONTAIN, value));
+    }
+
+    public <F extends Serializable> FilterNode igNotContain(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), IG_NOT_CONTAIN, func.get()));
+    }
+
+    public <T, F extends Serializable> FilterNode igNotContain(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), IG_NOT_CONTAIN, value));
+    }
+
+    public FilterNode between(String column, Range value) {
+        return and(new FilterNode(column, BETWEEN, value));
+    }
+
+    public <F extends Range> FilterNode between(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), BETWEEN, func.get()));
+    }
+
+    public <T, F extends Range> FilterNode between(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), BETWEEN, value));
+    }
+
+    public FilterNode notBetween(String column, Range value) {
+        return and(new FilterNode(column, NOT_BETWEEN, value));
+    }
+
+    public <F extends Range> FilterNode notBetween(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), NOT_BETWEEN, func.get()));
+    }
+
+    public <T, F extends Range> FilterNode notBetween(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), NOT_BETWEEN, value));
+    }
+
+    public FilterNode in(String column, Serializable value) {
+        return and(new FilterNode(column, IN, value));
+    }
+
+    public <F extends Serializable> FilterNode in(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), IN, func.get()));
+    }
+
+    public <T, F extends Serializable> FilterNode in(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), IN, value));
+    }
+
+    public FilterNode notIn(String column, Serializable value) {
+        return and(new FilterNode(column, NOT_IN, value));
+    }
+
+    public <F extends Serializable> FilterNode notIn(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), NOT_IN, func.get()));
+    }
+
+    public <T, F extends Serializable> FilterNode notIn(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), NOT_IN, value));
+    }
+
+    public FilterNode isNull(String column) {
+        return and(new FilterNode(column, IS_NULL, null));
+    }
+
+    public <F extends Serializable> FilterNode isNull(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), IS_NULL, null));
+    }
+
+    public <T, F extends Serializable> FilterNode isNull(LambdaFunction<T, F> func) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), IS_NULL, null));
+    }
+
+    public FilterNode notNull(String column) {
+        return and(new FilterNode(column, NOT_NULL, null));
+    }
+
+    public <F extends Serializable> FilterNode notNull(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), NOT_NULL, null));
+    }
+
+    public <T, F extends Serializable> FilterNode notNull(LambdaFunction<T, F> func) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), NOT_NULL, null));
+    }
+
+    public FilterNode isEmpty(String column) {
+        return and(new FilterNode(column, IS_EMPTY, null));
+    }
+
+    public <F extends Serializable> FilterNode isEmpty(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), IS_EMPTY, null));
+    }
+
+    public <T, F extends Serializable> FilterNode isEmpty(LambdaFunction<T, F> func) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), IS_EMPTY, null));
+    }
+
+    public FilterNode notEmpty(String column) {
+        return and(new FilterNode(column, NOT_EMPTY, null));
+    }
+
+    public <F extends Serializable> FilterNode notEmpty(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), NOT_EMPTY, null));
+    }
+
+    public <T, F extends Serializable> FilterNode notEmpty(LambdaFunction<T, F> func) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), NOT_EMPTY, null));
+    }
+
+    public FilterNode opand(String column, Number value) {
+        return and(new FilterNode(column, OPAND, value));
+    }
+
+    public <F extends Number> FilterNode opand(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), OPAND, func.get()));
+    }
+
+    public <T, F extends Number> FilterNode opand(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), OPAND, value));
+    }
+
+    public FilterNode opor(String column, Number value) {
+        return and(new FilterNode(column, OPOR, value));
+    }
+
+    public <F extends Number> FilterNode opor(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), OPOR, func.get()));
+    }
+
+    public <T, F extends Number> FilterNode opor(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), OPOR, value));
+    }
+
+    public FilterNode notOpand(String column, Number value) {
+        return and(new FilterNode(column, NOT_OPAND, value));
+    }
+
+    public <F extends Number> FilterNode notOpand(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), NOT_OPAND, func.get()));
+    }
+
+    public <T, F extends Number> FilterNode notOpand(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), NOT_OPAND, value));
+    }
+
+    public FilterNode fvmode(String column, FilterValue value) {
+        return and(new FilterNode(column, FV_MOD, value));
+    }
+
+    public <F extends FilterValue> FilterNode fvmode(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), FV_MOD, func.get()));
+    }
+
+    public <T, F extends FilterValue> FilterNode fvmode(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), FV_MOD, value));
+    }
+
+    public FilterNode fvdiv(String column, FilterValue value) {
+        return and(new FilterNode(column, FV_DIV, value));
+    }
+
+    public <F extends FilterValue> FilterNode fvdiv(LambdaSupplier<F> func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), FV_DIV, func.get()));
+    }
+
+    public <T, F extends FilterValue> FilterNode fvdiv(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), FV_DIV, value));
+    }
+
+    //-----------------------------------------------------------------------
     public final FilterNode or(FilterNode node) {
         return any(node, true);
     }
@@ -360,35 +817,59 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         return rs;
     }
 
-    public static FilterNode create(String column, Serializable value) {
-        return create(column, null, value);
-    }
-
-    public static FilterNode create(String column, FilterExpress express, Serializable value) {
-        return new FilterNode(column, express, value);
-    }
-
-    public static <F extends Serializable> FilterNode create(LambdaSupplier<F> func) {
-        return create(func, null);
-    }
-
-    public static <F extends Serializable> FilterNode create(LambdaSupplier<F> func, FilterExpress express) {
-        return new FilterNode(LambdaSupplier.readColumn(func), express, func.get());
-    }
-
-    public static <T, F extends Serializable> FilterNode create(LambdaFunction<T, F> func, F value) {
-        return create(func, null, value);
-    }
-
-    public static <T, F extends Serializable> FilterNode create(LambdaFunction<T, F> func, FilterExpress express, F value) {
-        return new FilterNode(LambdaFunction.readColumn(func), express, value);
-    }
-
+//    @Deprecated(since = "2.8.0")
+//    public static FilterNode create(String column, Serializable value) {
+//        return new FilterNode(column, null, value);
+//    }
+//
+//    @Deprecated(since = "2.8.0")
+//    public static FilterNode create(String column, FilterExpress express, Serializable value) {
+//        return new FilterNode(column, express, value);
+//    }
+//
+//    @Deprecated(since = "2.8.0")
+//    public static <F extends Serializable> FilterNode create(LambdaSupplier<F> func) {
+//        return new FilterNode(LambdaSupplier.readColumn(func), null, func.get());
+//    }
+//
+//    @Deprecated(since = "2.8.0")
+//    public static <F extends Serializable> FilterNode create(LambdaSupplier<F> func, FilterExpress express) {
+//        return new FilterNode(LambdaSupplier.readColumn(func), express, func.get());
+//    }
+//
+//    @Deprecated(since = "2.8.0")
+//    public static <T, F extends Serializable> FilterNode create(LambdaFunction<T, F> func, F value) {
+//        return new FilterNode(LambdaFunction.readColumn(func), null, value);
+//    }
+//
+//    @Deprecated(since = "2.8.0")
+//    public static <T, F extends Serializable> FilterNode create(LambdaFunction<T, F> func, FilterExpress express, F value) {
+//        return new FilterNode(LambdaFunction.readColumn(func), express, value);
+//    }
+    /**
+     * @see org.redkale.source.FilterNodes
+     *
+     * @param column String
+     * @param value  Serializable
+     *
+     * @return FilterNode
+     * @deprecated
+     */
     @Deprecated(since = "2.8.0")
     public static FilterNode filter(String column, Serializable value) {
-        return create(column, null, value);
+        return new FilterNode(column, null, value);
     }
 
+    /**
+     * @see org.redkale.source.FilterNodes
+     *
+     * @param column  String
+     * @param express FilterExpress
+     * @param value   Serializable
+     *
+     * @return FilterNode
+     * @deprecated
+     */
     @Deprecated(since = "2.8.0")
     public static FilterNode filter(String column, FilterExpress express, Serializable value) {
         return new FilterNode(column, express, value);
@@ -402,7 +883,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         if (val0 == null) {
             return false;
         }
-        boolean items = express != IN && express != NOTIN;  //是否数组集合的表达式
+        boolean items = express != IN && express != NOT_IN;  //是否数组集合的表达式
         if (!items) {
             if (val0.getClass().isArray()) {
                 Class comp = val0.getClass().getComponentType();
@@ -491,10 +972,10 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         if (talis == null) {
             talis = "a";
         }
-        if (express == ISNULL || express == ISNOTNULL) {
+        if (express == IS_NULL || express == NOT_NULL) {
             return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value());
         }
-        if (express == ISEMPTY || express == ISNOTEMPTY) {
+        if (express == IS_EMPTY || express == NOT_EMPTY) {
             return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value()).append(" ''");
         }
         if (val0 == null) {
@@ -514,20 +995,20 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         if (express == CONTAIN) {
             return source.containSQL.replace("#{column}", info.getSQLColumn(talis, column)).replace("#{keystr}", val);
         }
-        if (express == IGNORECASECONTAIN) {
+        if (express == IG_CONTAIN) {
             return source.containSQL.replace("#{column}", "LOWER(" + info.getSQLColumn(talis, column) + ")").replace("#{keystr}", val);
         }
-        if (express == NOTCONTAIN) {
+        if (express == NOT_CONTAIN) {
             return source.notContainSQL.replace("#{column}", info.getSQLColumn(talis, column)).replace("#{keystr}", val);
         }
-        if (express == IGNORECASENOTCONTAIN) {
+        if (express == IG_NOT_CONTAIN) {
             return source.notContainSQL.replace("#{column}", "LOWER(" + info.getSQLColumn(talis, column) + ")").replace("#{keystr}", val);
         }
 
-        if (express == LENGTH_EQUAL || express == LENGTH_LESSTHAN || express == LENGTH_LESSTHANOREQUALTO
-            || express == LENGTH_GREATERTHAN || express == LENGTH_GREATERTHANOREQUALTO) {
+        if (express == LEN_EQ || express == LEN_LT || express == LEN_LE
+            || express == LEN_GT || express == LEN_GE) {
             sb.append("LENGTH(").append(info.getSQLColumn(talis, column)).append(')');
-        } else if (express == IGNORECASEEQUAL || express == IGNORECASENOTEQUAL || express == IGNORECASELIKE || express == IGNORECASENOTLIKE) {
+        } else if (express == IG_EQ || express == IG_NOT_EQ || express == IG_LIKE || express == IG_NOT_LIKE) {
             sb.append("LOWER(").append(info.getSQLColumn(talis, column)).append(')');
             if (fk) {
                 val = "LOWER(" + info.getSQLColumn(talis, ((FilterKey) val0).getColumn()) + ')';
@@ -541,7 +1022,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             case OPOR:
                 sb.append(express.value()).append(' ').append(val).append(" > 0");
                 break;
-            case OPANDNO:
+            case NOT_OPAND:
                 sb.append(express.value()).append(' ').append(val).append(" = 0");
                 break;
             default:
@@ -727,7 +1208,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             return null;
         }
         final String field = join ? (cache.getType().getSimpleName() + "." + attr.field()) : attr.field();
-        if (express == ISNULL) {
+        if (express == IS_NULL) {
             return new Predicate<T>() {
 
                 @Override
@@ -741,7 +1222,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                 }
             };
         }
-        if (express == ISNOTNULL) {
+        if (express == NOT_NULL) {
             return new Predicate<T>() {
 
                 @Override
@@ -755,7 +1236,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                 }
             };
         }
-        if (express == ISEMPTY) {
+        if (express == IS_EMPTY) {
             return new Predicate<T>() {
 
                 @Override
@@ -770,7 +1251,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                 }
             };
         }
-        if (express == ISNOTEMPTY) {
+        if (express == NOT_EMPTY) {
             return new Predicate<T>() {
 
                 @Override
@@ -807,7 +1288,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             }
         } else if (valtype.isArray()) {
             final int len = Array.getLength(val0);
-            if (len == 0 && express == NOTIN) {
+            if (len == 0 && express == NOT_IN) {
                 return null;
             }
             final Class compType = valtype.getComponentType();
@@ -855,7 +1336,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             }
         } else if (val0 instanceof Collection) {
             final Collection collection = (Collection) val0;
-            if (collection.isEmpty() && express == NOTIN) {
+            if (collection.isEmpty() && express == NOT_IN) {
                 return null;
             }
             if (!collection.isEmpty()) {
@@ -914,7 +1395,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             throw new SourceException(cache.getType() + " not found column(" + ((FilterKey) val).getColumn() + ")");
         }
         switch (express) {
-            case EQUAL:
+            case EQ:
                 return fk ? new Predicate<T>() {
 
                     @Override
@@ -938,7 +1419,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return field + ' ' + express.value() + ' ' + formatToString(val);
                     }
                 };
-            case IGNORECASEEQUAL:
+            case IG_EQ:
                 return fk ? new Predicate<T>() {
 
                     @Override
@@ -974,7 +1455,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return "LOWER(" + field + ") " + express.value() + ' ' + formatToString(val);
                     }
                 };
-            case NOTEQUAL:
+            case NOT_EQ:
                 return fk ? new Predicate<T>() {
 
                     @Override
@@ -998,7 +1479,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return field + ' ' + express.value() + ' ' + formatToString(val);
                     }
                 };
-            case IGNORECASENOTEQUAL:
+            case IG_NOT_EQ:
                 return fk ? new Predicate<T>() {
 
                     @Override
@@ -1034,7 +1515,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return "LOWER(" + field + ") " + express.value() + ' ' + formatToString(val);
                     }
                 };
-            case GREATERTHAN:
+            case GT:
                 return fk ? new Predicate<T>() {
 
                     @Override
@@ -1058,7 +1539,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return field + ' ' + express.value() + ' ' + val;
                     }
                 };
-            case LESSTHAN:
+            case LT:
                 return fk ? new Predicate<T>() {
 
                     @Override
@@ -1082,7 +1563,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return field + ' ' + express.value() + ' ' + val;
                     }
                 };
-            case GREATERTHANOREQUALTO:
+            case GE:
                 return fk ? new Predicate<T>() {
 
                     @Override
@@ -1106,7 +1587,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return field + ' ' + express.value() + ' ' + val;
                     }
                 };
-            case LESSTHANOREQUALTO:
+            case LE:
                 return fk ? new Predicate<T>() {
 
                     @Override
@@ -1134,7 +1615,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             case FV_MOD:
                 FilterValue fv0 = (FilterValue) val;
                 switch (fv0.getExpress()) {
-                    case EQUAL:
+                    case EQ:
                         return new Predicate<T>() {
 
                             @Override
@@ -1147,7 +1628,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                                 return field + " " + express.value() + " " + fv0.getLeft() + " " + fv0.getExpress().value() + " " + fv0.getRight();
                             }
                         };
-                    case NOTEQUAL:
+                    case NOT_EQ:
                         return new Predicate<T>() {
 
                             @Override
@@ -1160,7 +1641,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                                 return field + " " + express.value() + " " + fv0.getLeft() + " " + fv0.getExpress().value() + " " + fv0.getRight();
                             }
                         };
-                    case GREATERTHAN:
+                    case GT:
                         return new Predicate<T>() {
 
                             @Override
@@ -1173,7 +1654,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                                 return field + " " + express.value() + " " + fv0.getLeft() + " " + fv0.getExpress().value() + " " + fv0.getRight();
                             }
                         };
-                    case LESSTHAN:
+                    case LT:
                         return new Predicate<T>() {
 
                             @Override
@@ -1186,7 +1667,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                                 return field + " " + express.value() + " " + fv0.getLeft() + " " + fv0.getExpress().value() + " " + fv0.getRight();
                             }
                         };
-                    case GREATERTHANOREQUALTO:
+                    case GE:
                         return new Predicate<T>() {
 
                             @Override
@@ -1199,7 +1680,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                                 return field + " " + express.value() + " " + fv0.getLeft() + " " + fv0.getExpress().value() + " " + fv0.getRight();
                             }
                         };
-                    case LESSTHANOREQUALTO:
+                    case LE:
                         return new Predicate<T>() {
 
                             @Override
@@ -1218,7 +1699,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             case FV_DIV:
                 FilterValue fv1 = (FilterValue) val;
                 switch (fv1.getExpress()) {
-                    case EQUAL:
+                    case EQ:
                         return new Predicate<T>() {
 
                             @Override
@@ -1231,7 +1712,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                                 return field + " " + express.value() + " " + fv1.getLeft() + " " + fv1.getExpress().value() + " " + fv1.getRight();
                             }
                         };
-                    case NOTEQUAL:
+                    case NOT_EQ:
                         return new Predicate<T>() {
 
                             @Override
@@ -1244,7 +1725,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                                 return field + " " + express.value() + " " + fv1.getLeft() + " " + fv1.getExpress().value() + " " + fv1.getRight();
                             }
                         };
-                    case GREATERTHAN:
+                    case GT:
                         return new Predicate<T>() {
 
                             @Override
@@ -1257,7 +1738,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                                 return field + " " + express.value() + " " + fv1.getLeft() + " " + fv1.getExpress().value() + " " + fv1.getRight();
                             }
                         };
-                    case LESSTHAN:
+                    case LT:
                         return new Predicate<T>() {
 
                             @Override
@@ -1270,7 +1751,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                                 return field + " " + express.value() + " " + fv1.getLeft() + " " + fv1.getExpress().value() + " " + fv1.getRight();
                             }
                         };
-                    case GREATERTHANOREQUALTO:
+                    case GE:
                         return new Predicate<T>() {
 
                             @Override
@@ -1283,7 +1764,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                                 return field + " " + express.value() + " " + fv1.getLeft() + " " + fv1.getExpress().value() + " " + fv1.getRight();
                             }
                         };
-                    case LESSTHANOREQUALTO:
+                    case LE:
                         return new Predicate<T>() {
 
                             @Override
@@ -1347,7 +1828,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return field + " | " + val + " > 0";
                     }
                 };
-            case OPANDNO:
+            case NOT_OPAND:
                 return fk ? new Predicate<T>() {
 
                     @Override
@@ -1398,7 +1879,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return field + ' ' + express.value() + ' ' + formatToString(val);
                     }
                 };
-            case STARTSWITH:
+            case STARTS:
                 return fk ? new Predicate<T>() {
 
                     @Override
@@ -1425,7 +1906,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return field + " STARTSWITH " + formatToString(val);
                     }
                 };
-            case ENDSWITH:
+            case ENDS:
                 return fk ? new Predicate<T>() {
 
                     @Override
@@ -1452,7 +1933,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return field + " ENDSWITH " + formatToString(val);
                     }
                 };
-            case IGNORECASELIKE:
+            case IG_LIKE:
                 if (fk) {
                     return new Predicate<T>() {
 
@@ -1483,7 +1964,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return "LOWER(" + field + ") " + express.value() + ' ' + formatToString(valstr);
                     }
                 };
-            case NOTSTARTSWITH:
+            case NOT_STARTS:
                 return fk ? new Predicate<T>() {
 
                     @Override
@@ -1510,7 +1991,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return field + " NOT STARTSWITH " + formatToString(val);
                     }
                 };
-            case NOTENDSWITH:
+            case NOT_ENDS:
                 return fk ? new Predicate<T>() {
 
                     @Override
@@ -1537,7 +2018,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return field + " NOT ENDSWITH " + formatToString(val);
                     }
                 };
-            case IGNORECASENOTLIKE:
+            case IG_NOT_LIKE:
                 if (fk) {
                     return new Predicate<T>() {
 
@@ -1568,7 +2049,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return "LOWER(" + field + ") " + express.value() + ' ' + formatToString(valstr2);
                     }
                 };
-            case LENGTH_EQUAL:
+            case LEN_EQ:
                 final int intval = ((Number) val).intValue();
                 return new Predicate<T>() {
 
@@ -1583,7 +2064,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return "LENGTH(" + field + ") " + express.value() + ' ' + intval;
                     }
                 };
-            case LENGTH_LESSTHAN:
+            case LEN_LT:
                 final int intval2 = ((Number) val).intValue();
                 return new Predicate<T>() {
 
@@ -1598,7 +2079,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return "LENGTH(" + field + ") " + express.value() + ' ' + intval2;
                     }
                 };
-            case LENGTH_LESSTHANOREQUALTO:
+            case LEN_LE:
                 final int intval3 = ((Number) val).intValue();
                 return new Predicate<T>() {
 
@@ -1613,7 +2094,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return "LENGTH(" + field + ") " + express.value() + ' ' + intval3;
                     }
                 };
-            case LENGTH_GREATERTHAN:
+            case LEN_GT:
                 final int intval4 = ((Number) val).intValue();
                 return new Predicate<T>() {
 
@@ -1628,7 +2109,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return "LENGTH(" + field + ") " + express.value() + ' ' + intval4;
                     }
                 };
-            case LENGTH_GREATERTHANOREQUALTO:
+            case LEN_GE:
                 final int intval5 = ((Number) val).intValue();
                 return new Predicate<T>() {
 
@@ -1670,7 +2151,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return "" + formatToString(val) + ' ' + express.value() + ' ' + field;
                     }
                 };
-            case IGNORECASECONTAIN:
+            case IG_CONTAIN:
                 if (fk) {
                     return new Predicate<T>() {
 
@@ -1701,7 +2182,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return "" + formatToString(valstr3) + express.value() + ' ' + "LOWER(" + field + ") ";
                     }
                 };
-            case NOTCONTAIN:
+            case NOT_CONTAIN:
                 return fk ? new Predicate<T>() {
 
                     @Override
@@ -1728,7 +2209,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return "" + formatToString(val) + ' ' + express.value() + ' ' + field;
                     }
                 };
-            case IGNORECASENOTCONTAIN:
+            case IG_NOT_CONTAIN:
                 if (fk) {
                     return new Predicate<T>() {
 
@@ -1760,7 +2241,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     }
                 };
             case BETWEEN:
-            case NOTBETWEEN:
+            case NOT_BETWEEN:
                 Range range = (Range) val;
                 final Comparable min = range.getMin();
                 final Comparable max = range.getMax();
@@ -1785,7 +2266,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         }
                     };
                 }
-                if (express == NOTBETWEEN) {
+                if (express == NOT_BETWEEN) {
                     return new Predicate<T>() {
 
                         @Override
@@ -1808,7 +2289,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                 }
                 return null;
             case IN:
-            case NOTIN:
+            case NOT_IN:
                 Predicate<T> filter;
                 if (val instanceof Collection) {
                     Collection array = (Collection) val;
@@ -1994,7 +2475,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         };
                     }
                 }
-                if (express == NOTIN) {
+                if (express == NOT_IN) {
                     final Predicate<T> filter2 = filter;
                     filter = new Predicate<T>() {
 
@@ -2104,12 +2585,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         StringBuilder sb = new StringBuilder();
         if (column != null) {
             String col = prefix == null ? column : (prefix + "." + column);
-            if (express == ISNULL || express == ISNOTNULL) {
+            if (express == IS_NULL || express == NOT_NULL) {
                 sb.append(col).append(' ').append(express.value());
-            } else if (express == ISEMPTY || express == ISNOTEMPTY) {
+            } else if (express == IS_EMPTY || express == NOT_EMPTY) {
                 sb.append(col).append(' ').append(express.value()).append(" ''");
             } else if (ev != null) {
-                boolean lower = (express == IGNORECASELIKE || express == IGNORECASENOTLIKE || express == IGNORECASECONTAIN || express == IGNORECASENOTCONTAIN);
+                boolean lower = (express == IG_LIKE || express == IG_NOT_LIKE || express == IG_CONTAIN || express == IG_NOT_CONTAIN);
                 sb.append(lower ? ("LOWER(" + col + ')') : col).append(' ').append(express.value()).append(' ').append(formatToString(express, ev));
             }
         }
@@ -2129,16 +2610,16 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             return String.valueOf(value);
         }
         if (value instanceof CharSequence) {
-            if (express == LIKE || express == NOTLIKE) {
+            if (express == LIKE || express == NOT_LIKE) {
                 value = "%" + value + '%';
-            } else if (express == STARTSWITH || express == NOTSTARTSWITH) {
+            } else if (express == STARTS || express == NOT_STARTS) {
                 value = value + "%";
-            } else if (express == ENDSWITH || express == NOTENDSWITH) {
+            } else if (express == ENDS || express == NOT_ENDS) {
                 value = "%" + value;
-            } else if (express == IGNORECASELIKE || express == IGNORECASENOTLIKE) {
+            } else if (express == IG_LIKE || express == IG_NOT_LIKE) {
                 value = "%" + value.toString().toLowerCase() + '%';
-            } else if (express == IGNORECASECONTAIN || express == IGNORECASENOTCONTAIN
-                || express == IGNORECASEEQUAL || express == IGNORECASENOTEQUAL) {
+            } else if (express == IG_CONTAIN || express == IG_NOT_CONTAIN
+                || express == IG_EQ || express == IG_NOT_EQ) {
                 value = value.toString().toLowerCase();
             }
             return new StringBuilder().append('\'').append(value.toString().replace("'", "\\'")).append('\'');
@@ -2161,7 +2642,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         } else if (value.getClass().isArray()) {
             int len = Array.getLength(value);
             if (len == 0) {
-                return express == NOTIN ? null : new StringBuilder("(NULL)");
+                return express == NOT_IN ? null : new StringBuilder("(NULL)");
             }
             if (len == 1) {
                 Object firstval = Array.get(value, 0);
@@ -2186,7 +2667,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         } else if (value instanceof Collection) {
             Collection c = (Collection) value;
             if (c.isEmpty()) {
-                return express == NOTIN ? null : new StringBuilder("(NULL)");
+                return express == NOT_IN ? null : new StringBuilder("(NULL)");
             }
             StringBuilder sb = new StringBuilder();
             sb.append('(');

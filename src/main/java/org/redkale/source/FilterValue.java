@@ -31,7 +31,7 @@ public class FilterValue implements java.io.Serializable {
     }
 
     public FilterValue(Number left, Number right) {
-        this(left, FilterExpress.EQUAL, right);
+        this(left, FilterExpress.EQ, right);
     }
 
     public FilterValue(Number left, FilterExpress express) {
@@ -40,7 +40,7 @@ public class FilterValue implements java.io.Serializable {
 
     public FilterValue(Number left, FilterExpress express, Number right) {
         this.left = left;
-        this.express = express;
+        this.express = FilterNodes.oldExpress(express);
         this.right = right;
     }
 
@@ -53,7 +53,7 @@ public class FilterValue implements java.io.Serializable {
     }
 
     public FilterExpress getExpress() {
-        return express == null ? FilterExpress.EQUAL : express;
+        return express == null ? FilterExpress.EQ : express;
     }
 
     public void setExpress(FilterExpress express) {

@@ -54,7 +54,7 @@ public @interface FilterColumn {
      *
      * @return 字段表达式
      */
-    FilterExpress express() default FilterExpress.EQUAL;
+    FilterExpress express() default FilterExpress.EQ;
 
 
     /**

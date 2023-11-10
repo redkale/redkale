@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.*;
-import static org.redkale.source.FilterExpress.EQUAL;
+import static org.redkale.source.FilterExpress.EQ;
 import org.redkale.util.*;
 
 /**
@@ -46,7 +46,7 @@ public class FilterJoinNode extends FilterNode {
         this.joinClass = joinClass;
         this.joinColumns = joinColumns;
         this.column = column;
-        this.express = express == null ? EQUAL : express;
+        this.express = express == null ? EQ : express;
         this.value = value;
     }
 
