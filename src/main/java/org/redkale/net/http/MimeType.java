@@ -17,7 +17,7 @@ import java.util.*;
  */
 public class MimeType {
 
-    private final static Map<String, String> contentTypes = new HashMap<>();
+    private static final Map<String, String> contentTypes = new HashMap<>();
 
     static {
         contentTypes.put("abs", "audio/x-mpeg");
@@ -177,6 +177,9 @@ public class MimeType {
         contentTypes.put("zip", "application/zip");
     }
 
+    private MimeType() {
+    }
+
     public static String get(String extension) {
         return contentTypes.getOrDefault(extension.toLowerCase(), "text/plain");
     }
@@ -198,7 +201,9 @@ public class MimeType {
     public static String getByFilename(String fileName) {
         int length = fileName.length();
         int newEnd = fileName.lastIndexOf('#');
-        if (newEnd == -1) newEnd = length;
+        if (newEnd == -1) {
+            newEnd = length;
+        }
         int i = fileName.lastIndexOf('.', newEnd);
         return (i < 0) ? null : get(fileName.substring(i + 1, newEnd).toLowerCase());
     }

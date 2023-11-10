@@ -108,7 +108,7 @@ public final class MultiContext {
                 continue;//不遍历完后面getParameter可能获取不到值
             }
             has = true;
-            if (fileNameRegx != null && !fileNameRegx.isEmpty() && !part.getFilename().matches(fileNameRegx)) {
+            if (fileNameRegx != null && !fileNameRegx.isEmpty() && !part.getFileName().matches(fileNameRegx)) {
                 continue;
             }
             if (contentTypeRegx != null && !contentTypeRegx.isEmpty() && !part.getContentType().matches(contentTypeRegx)) {
@@ -157,13 +157,13 @@ public final class MultiContext {
                 continue; //不遍历完后面getParameter可能获取不到值
             }
             has = true;
-            if (fileNameRegx != null && !fileNameRegx.isEmpty() && !part.getFilename().matches(fileNameRegx)) {
+            if (fileNameRegx != null && !fileNameRegx.isEmpty() && !part.getFileName().matches(fileNameRegx)) {
                 continue;
             }
             if (contentTypeRegx != null && !contentTypeRegx.isEmpty() && !part.getContentType().matches(contentTypeRegx)) {
                 continue;
             }
-            File file = new File(home, "tmp/redkale-" + System.nanoTime() + "_" + part.getFilename());
+            File file = new File(home, "tmp/redkale-" + System.nanoTime() + "_" + part.getFileName());
             File parent = file.getParentFile();
             if (!parent.isDirectory()) {
                 parent.mkdirs();
@@ -197,13 +197,13 @@ public final class MultiContext {
         }
         List<File> files = null;
         for (MultiPart part : parts()) {
-            if (fileNameRegx != null && !fileNameRegx.isEmpty() && !part.getFilename().matches(fileNameRegx)) {
+            if (fileNameRegx != null && !fileNameRegx.isEmpty() && !part.getFileName().matches(fileNameRegx)) {
                 continue;
             }
             if (contentTypeRegx != null && !contentTypeRegx.isEmpty() && !part.getContentType().matches(contentTypeRegx)) {
                 continue;
             }
-            File file = new File(home, "tmp/redkale-" + System.nanoTime() + "_" + part.getFilename());
+            File file = new File(home, "tmp/redkale-" + System.nanoTime() + "_" + part.getFileName());
             File parent = file.getParentFile();
             if (!parent.isDirectory()) {
                 parent.mkdirs();

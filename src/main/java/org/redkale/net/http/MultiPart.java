@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.LongAdder;
  */
 public final class MultiPart {
 
-    private final String filename;
+    private final String fileName;
 
     private final String name;
 
@@ -28,7 +28,7 @@ public final class MultiPart {
     private final LongAdder received;
 
     MultiPart(String fileName, String name, String contentType, LongAdder received, InputStream in) {
-        this.filename = fileName;
+        this.fileName = fileName;
         this.name = name;
         this.in = in;
         this.contentType = contentType;
@@ -37,7 +37,7 @@ public final class MultiPart {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "{" + "name=" + name + ", filename=" + filename + ", contentType=" + contentType + ", received=" + received + '}';
+        return this.getClass().getSimpleName() + "{" + "name=" + name + ", fileName=" + fileName + ", contentType=" + contentType + ", received=" + received + '}';
     }
 
     public boolean save(File file) throws IOException {
@@ -99,8 +99,19 @@ public final class MultiPart {
         return contentType;
     }
 
+    public String getFileName() {
+        return fileName;
+    }
+
+    /**
+     * @see #getFileName()
+     *
+     * @return String
+     * @deprecated replace by {@link #getFileName() }
+     */
+    @Deprecated(since = "2.8.0")
     public String getFilename() {
-        return filename;
+        return fileName;
     }
 
     public String getName() {
