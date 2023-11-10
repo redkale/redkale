@@ -58,7 +58,7 @@ public @interface HttpMapping {
      *
      * @return 默认false
      */
-    boolean rpconly() default false;
+    boolean rpcOnly() default false;
 
     /**
      * 是否鉴权，默认需要鉴权 <br>

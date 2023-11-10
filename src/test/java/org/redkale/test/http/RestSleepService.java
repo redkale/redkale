@@ -11,7 +11,7 @@ import org.redkale.util.Utility;
  *
  * @author zhangjx
  */
-@RestService(name = "test", automapping = true)
+@RestService(name = "test", autoMapping = true)
 public class RestSleepService extends AbstractService {
 
     public String sleep200() {

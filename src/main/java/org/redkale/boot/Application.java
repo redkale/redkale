@@ -2547,7 +2547,7 @@ public final class Application {
             + "   restart                                   restart one process\r\n"
             + "       --conf-file=[file]                    application config file, eg. application.xml、application.properties\r\n"
             + "   apidoc                                    generate apidoc\r\n"
-            + "       --api-skiprpc=[true|false]            skip @RestService(rpconly=true) service or @RestMapping(rpconly=true) method, default is true\r\n"
+            + "       --api-skiprpc=[true|false]            skip @RestService(rpcOnly=true) service or @RestMapping(rpcOnly=true) method, default is true\r\n"
             + "       --api-host=[url]                      api root url, default is http://localhost\r\n"
             + "   help, -h, --help                          show this help\r\n";
     }

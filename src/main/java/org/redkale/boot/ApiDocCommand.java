@@ -155,7 +155,7 @@ public final class ApiDocCommand {
                         if (HttpScope.class.isAssignableFrom(action.result())) {
                             continue; //忽略模板引擎的方法
                         }
-                        if (action.rpconly() && skipRPC) {
+                        if (action.rpcOnly() && skipRPC) {
                             continue; //不生成RPC接口
                         }
                         final List<Map<String, Object>> swaggerParamsList = new ArrayList<>();
@@ -347,7 +347,7 @@ public final class ApiDocCommand {
                         }
                         swaggerOperatMap.put("parameters", swaggerParamsList);
                         String actiondesc = action.comment();
-                        if (action.rpconly()) {
+                        if (action.rpcOnly()) {
                             actiondesc = "[Only for RPC API] " + actiondesc;
                         }
                         swaggerOperatMap.put("responses", Utility.ofMap("200", Utility.ofMap("description", actiondesc, "content", Utility.ofMap("application/json", respMap))));

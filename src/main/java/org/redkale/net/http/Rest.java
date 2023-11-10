@@ -1128,7 +1128,7 @@ public final class Rest {
         if (controller != null && controller.ignore()) {
             throw new RestException(serviceType + " is ignore Rest Service Class"); //标记为ignore=true不创建Servlet
         }
-        final boolean serRpcOnly = controller != null && controller.rpconly();
+        final boolean serRpcOnly = controller != null && controller.rpcOnly();
         final Boolean parentNonBlocking = parentNon0;
 
         ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
@@ -1207,7 +1207,7 @@ public final class Rest {
                     }
 
                     RestMapping[] mappings = method.getAnnotationsByType(RestMapping.class);
-                    if (!controller.automapping() && mappings.length < 1) {
+                    if (!controller.autoMapping() && mappings.length < 1) {
                         continue;
                     }
                     boolean ignore = false;
@@ -1706,7 +1706,7 @@ public final class Rest {
             }
 
             RestMapping[] mappings = method.getAnnotationsByType(RestMapping.class);
-            if (!controller.automapping() && mappings.length < 1) {
+            if (!controller.autoMapping() && mappings.length < 1) {
                 continue;
             }
             boolean ignore = false;
@@ -1889,7 +1889,7 @@ public final class Rest {
             if ((rcs != null && rcs.length > 0) || (rcc != null && rcc.length > 0)) {
                 restConverts.add(new Object[]{rcs, rcc});
             }
-            if (dynsimple && entry.rpconly) { //需要读取http header
+            if (dynsimple && entry.rpcOnly) { //需要读取http header
                 dynsimple = false;
             }
 
@@ -2278,7 +2278,7 @@ public final class Rest {
                 av0.visit("url", url);
                 av0.visit("name", (defmodulename.isEmpty() ? "" : (defmodulename + "_")) + entry.name);
                 av0.visit("example", entry.example);
-                av0.visit("rpconly", entry.rpconly);
+                av0.visit("rpcOnly", entry.rpcOnly);
                 av0.visit("auth", entry.auth);
                 av0.visit("cacheSeconds", entry.cacheSeconds);
                 av0.visit("actionid", entry.actionid);
@@ -2314,7 +2314,7 @@ public final class Rest {
 
                 av0.visitEnd();
                 mappingMap.put("url", url);
-                mappingMap.put("rpconly", entry.rpconly);
+                mappingMap.put("rpcOnly", entry.rpcOnly);
                 mappingMap.put("auth", entry.auth);
                 mappingMap.put("cacheSeconds", entry.cacheSeconds);
                 mappingMap.put("actionid", entry.actionid);
@@ -3417,7 +3417,7 @@ public final class Rest {
                     mv.visitInsn(AASTORE);
                 }
                 mv.visitInsn(ACONST_NULL); //method
-                mv.visitInsn(entry.rpconly ? ICONST_1 : ICONST_0); //rpconly
+                mv.visitInsn(entry.rpcOnly ? ICONST_1 : ICONST_0); //rpcOnly
                 mv.visitInsn(entry.auth ? ICONST_1 : ICONST_0); //auth
                 Asms.visitInsn(mv, entry.cacheSeconds); //cacheSeconds
                 mv.visitTypeInsn(NEW, newDynName + "$" + entry.newActionClassName);
@@ -3736,7 +3736,7 @@ public final class Rest {
             this.mappingMethod = method;
             this.methods = mapping.methods();
             this.auth = mapping.auth();
-            this.rpconly = serRpcOnly || mapping.rpconly();
+            this.rpcOnly = serRpcOnly || mapping.rpcOnly();
             this.actionid = mapping.actionid();
             this.cacheSeconds = mapping.cacheSeconds();
             this.comment = mapping.comment();
@@ -3790,7 +3790,7 @@ public final class Rest {
 
         public final boolean nonBlocking;
 
-        public final boolean rpconly;
+        public final boolean rpcOnly;
 
         public final boolean auth;
 

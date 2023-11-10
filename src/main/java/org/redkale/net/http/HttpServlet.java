@@ -55,7 +55,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         @Override
         public void execute(HttpRequest request, HttpResponse response) throws IOException {
             ActionEntry entry = request.actionEntry;
-            if (entry.rpconly) {
+            if (entry.rpcOnly) {
                 if (!request.rpc) {
                     finish404(request, response);
                     return;
@@ -387,19 +387,19 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
     protected static final class ActionEntry {
 
         ActionEntry(int moduleid, int actionid, String name, String[] methods, Method method, HttpServlet servlet) {
-            this(moduleid, actionid, name, methods, method, rpconly(method), auth(method), cacheSeconds(method), servlet);
+            this(moduleid, actionid, name, methods, method, rpcOnly(method), auth(method), cacheSeconds(method), servlet);
             this.annotations = annotations(method);
         }
 
         //供Rest类使用，参数不能随便更改
-        public ActionEntry(int moduleid, int actionid, String name, String[] methods, Method method, boolean rpconly, boolean auth, int cacheSeconds, HttpServlet servlet) {
+        public ActionEntry(int moduleid, int actionid, String name, String[] methods, Method method, boolean rpcOnly, boolean auth, int cacheSeconds, HttpServlet servlet) {
             this.moduleid = moduleid;
             this.actionid = actionid;
             this.name = name;
             this.methods = methods;
             this.method = method;  //rest构建会为null
             this.servlet = servlet;
-            this.rpconly = rpconly;
+            this.rpcOnly = rpcOnly;
             this.auth = auth;
             this.cacheSeconds = cacheSeconds;
             if (Utility.contains(name, '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\') || name.endsWith("/")) { //是否是正则表达式
@@ -432,9 +432,9 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             return mapping == null || mapping.auth();
         }
 
-        protected static boolean rpconly(Method method) {
+        protected static boolean rpcOnly(Method method) {
             HttpMapping mapping = method.getAnnotation(HttpMapping.class);
-            return mapping == null || mapping.rpconly();
+            return mapping == null || mapping.rpcOnly();
         }
 
         protected static int cacheSeconds(Method method) {
@@ -467,7 +467,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
 
         final int cacheSeconds;
 
-        final boolean rpconly;
+        final boolean rpcOnly;
 
         final boolean nonBlocking;
 

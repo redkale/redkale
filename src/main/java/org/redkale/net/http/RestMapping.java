@@ -46,11 +46,11 @@ public @interface RestMapping {
     String comment() default "";
 
     /**
-     * 是否只接收RPC请求, 对应&#64;HttpMapping.rpconly
+     * 是否只接收RPC请求, 对应&#64;HttpMapping.rpcOnly
      *
      * @return boolean
      */
-    boolean rpconly() default false;
+    boolean rpcOnly() default false;
 
     /**
      * 是否鉴权，默认需要鉴权, 对应&#64;HttpMapping.auth
