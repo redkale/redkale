@@ -697,6 +697,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
             return (Copier) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz).getDeclaredConstructor().newInstance();
         } catch (Throwable ex) {
+            //do nothing
         }
 
         // ------------------------------------------------------------------------------

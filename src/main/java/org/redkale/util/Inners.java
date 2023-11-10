@@ -35,6 +35,9 @@ class Inners {
 
         static final IntFunction<String[]> stringFuncArray = x -> new String[x];
 
+        private CreatorInner() {
+        }
+
         static {
             creatorCacheMap.put(Object.class, p -> new Object());
             creatorCacheMap.put(ArrayList.class, p -> new ArrayList<>());
@@ -187,6 +190,7 @@ class Inners {
                             field = cz.getDeclaredField(names[i]);
                             break;
                         } catch (NoSuchFieldException nsfe) {
+                            //do nothing
                         }
                     }
                     if (field == null) {
@@ -225,6 +229,7 @@ class Inners {
                 Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
                 return (IntFunction) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz).getDeclaredConstructor().newInstance();
             } catch (Throwable ex) {
+                //do nothing
             }
 
             //-------------------------------------------------------------
@@ -289,6 +294,9 @@ class Inners {
 
         static final ConcurrentHashMap<Class, ConcurrentHashMap<Integer, ConcurrentHashMap<Class, ConcurrentHashMap<Class, Function>>>> copierFuncListTwoCaches = new ConcurrentHashMap();
 
+        private CopierInner() {
+        }
+
         public static void clearCopierCache() {
             copierOneCaches.clear();
             copierTwoCaches.clear();
@@ -303,5 +311,7 @@ class Inners {
 
         static final ConcurrentHashMap<Class, ConcurrentHashMap<Method, Invoker>> invokerCaches = new ConcurrentHashMap();
 
+        private InvokerInner() {
+        }
     }
 }

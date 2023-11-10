@@ -34,6 +34,7 @@ public class RedkaleClassLoader extends URLClassLoader {
         try {
             url = URI.create("file://redkale/uri").toURL(); //不能是jar结尾，否则会视为jar文件url
         } catch (MalformedURLException e) {
+            //do nothing
         }
         URL_NONE = url;
     }
@@ -42,16 +43,26 @@ public class RedkaleClassLoader extends URLClassLoader {
 
     private static final String[] buildPackages = {
         "org.redkaledyn", //所有动态生成类的根package
-        "org.redkale.annotation", "org.redkale.asm",
-        "org.redkale.boot", "org.redkale.boot.watch",
-        "org.redkale.cluster", "org.redkale.convert",
-        "org.redkale.convert.bson", "org.redkale.convert.ext",
-        "org.redkale.convert.json", "org.redkale.convert.protobuf",
-        "org.redkale.mq", "org.redkale.net",
-        "org.redkale.net.client", "org.redkale.net.http",
-        "org.redkale.net.sncp", "org.redkale.persistence",
-        "org.redkale.service", "org.redkale.source",
-        "org.redkale.util", "org.redkale.watch"
+        "org.redkale.annotation",
+        "org.redkale.asm",
+        "org.redkale.boot",
+        "org.redkale.boot.watch",
+        "org.redkale.cluster",
+        "org.redkale.convert",
+        "org.redkale.convert.bson",
+        "org.redkale.convert.ext",
+        "org.redkale.convert.json",
+        "org.redkale.convert.protobuf",
+        "org.redkale.mq",
+        "org.redkale.net",
+        "org.redkale.net.client",
+        "org.redkale.net.http",
+        "org.redkale.net.sncp",
+        "org.redkale.persistence",
+        "org.redkale.service",
+        "org.redkale.source",
+        "org.redkale.util",
+        "org.redkale.watch"
     };
 
     //redkale里所有使用动态字节码生成的类都需要存于此处
@@ -473,6 +484,7 @@ public class RedkaleClassLoader extends URLClassLoader {
                 try {
                     set.add(Paths.get(path.replace("&&", "://").replace("##", ":\\")).toRealPath().toFile().toURI().toURL());
                 } catch (Exception e) {
+                    //do nothing
                 }
             }
         }
@@ -497,6 +509,7 @@ public class RedkaleClassLoader extends URLClassLoader {
                         ucp = field.get(loader);
                         break;
                     } catch (Throwable e) {
+                        //do nothing
                     }
                 } while ((loaderClazz = loaderClazz.getSuperclass()) != Object.class);
                 if (ucp != null) { //URLClassPath
@@ -505,6 +518,7 @@ public class RedkaleClassLoader extends URLClassLoader {
                         Method method = ucp.getClass().getMethod("getURLs");
                         urls = (URL[]) method.invoke(ucp);
                     } catch (Exception e) {
+                        //do nothing
                     }
                     if (urls != null) {
                         for (URL url : urls) {

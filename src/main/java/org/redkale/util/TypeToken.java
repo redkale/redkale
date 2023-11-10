@@ -43,7 +43,7 @@ public abstract class TypeToken<T> {
      *
      * @return 是否可反解析
      */
-    public final static boolean isClassType(final Type type) {
+    public static final boolean isClassType(final Type type) {
         if (type instanceof Class) {
             return true;
         }
@@ -74,7 +74,7 @@ public abstract class TypeToken<T> {
         return true;
     }
 
-    public final static boolean containsUnknownType(final Type type) {
+    public static final boolean containsUnknownType(final Type type) {
         if (type == null) {
             return false;
         }
@@ -111,7 +111,7 @@ public abstract class TypeToken<T> {
         return true;
     }
 
-    public final static Class typeToClass(final Type type) {
+    public static final Class typeToClass(final Type type) {
         if (type instanceof Class) {
             return (Class) type;
         }
@@ -133,7 +133,7 @@ public abstract class TypeToken<T> {
         return typeToClass(raw != null ? raw : owner);
     }
 
-    public final static Class typeToClassOrElse(final Type type, final Class defClass) {
+    public static final Class typeToClassOrElse(final Type type, final Class defClass) {
         Class clazz = typeToClass(type);
         return clazz == null ? defClass : clazz;
     }

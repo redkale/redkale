@@ -7,6 +7,7 @@ package org.redkale.source;
 
 import java.util.Objects;
 import org.redkale.annotation.ConstructorParameters;
+import org.redkale.convert.ConvertColumn;
 
 /**
  * FilterKey主要用于自身字段间的表达式, 如： a.recordid = a.parentid , a.parentid就需要FilterKey来表示 new FilterKey("parentid")
@@ -20,6 +21,7 @@ import org.redkale.annotation.ConstructorParameters;
  */
 public class FilterKey implements java.io.Serializable {
 
+    @ConvertColumn(index = 1)
     private final String column;
 
     @ConstructorParameters({"column"})

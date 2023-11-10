@@ -189,7 +189,9 @@ public class XmlReader {
                     throw newException("illegal character " + ch);
                 }
             } else if (ch >= 'a' && ch <= 'z') {
+                //do nothing
             } else if (ch >= 'A' && ch <= 'Z') {
+                //do nothing
             } else if (ch == '.' || ch == '-' || ch == '_' || ch == ':') {
                 if (first) {
                     throw newException("illegal character " + ch);

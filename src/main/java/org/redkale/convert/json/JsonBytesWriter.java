@@ -43,7 +43,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     private byte[] content;
 
     public JsonBytesWriter() {
-        this(defaultSize);
+        this(DEFAULT_SIZE);
     }
 
     public JsonBytesWriter(int size) {
@@ -76,8 +76,8 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     public boolean recycle() {
         super.recycle();
         this.count = 0;
-        if (this.content != null && this.content.length > defaultSize * 100) {
-            this.content = new byte[defaultSize];
+        if (this.content != null && this.content.length > DEFAULT_SIZE * 100) {
+            this.content = new byte[DEFAULT_SIZE];
         }
         return true;
     }
