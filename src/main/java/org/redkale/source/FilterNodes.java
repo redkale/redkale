@@ -502,7 +502,25 @@ public final class FilterNodes {
     public static <T, F extends FilterValue> FilterNode fvdiv(LambdaFunction<T, F> func, F value) {
         return new FilterNode(LambdaFunction.readColumn(func), FV_DIV, value);
     }
+    
+    //----------------------------------------------------------------------------------------------------
+    public static FilterJoinNode joinInner(Class joinClass, String joinColumn, String column, Serializable value) {
+        return joinInner(joinClass, new String[]{joinColumn}, column, value);
+    }
 
+    public static FilterJoinNode joinInner(Class joinClass, String joinColumn, String column, FilterExpress express, Serializable value) {
+        return joinInner(joinClass, new String[]{joinColumn}, column, express, value);
+    }
+
+    public static FilterJoinNode joinInner(Class joinClass, String[] joinColumns, String column, Serializable value) {
+        return joinInner(joinClass, joinColumns, column, null, value);
+    }
+
+    public static FilterJoinNode joinInner(Class joinClass, String[] joinColumns, String column, FilterExpress express, Serializable value) {
+        return new FilterJoinNode(joinClass, joinColumns, column, express, value);
+    }
+    
+    //----------------------------------------------------------------------------------------------------
     static FilterExpress oldExpress(FilterExpress express) {
         switch (express) {
             case EQUAL:

@@ -46,7 +46,7 @@ public class FilterJoinNode extends FilterNode {
         this.joinClass = joinClass;
         this.joinColumns = joinColumns;
         this.column = column;
-        this.express = express == null ? EQ : express;
+        this.express = express == null ? EQ : FilterNodes.oldExpress(express);
         this.value = value;
     }
 
@@ -57,20 +57,24 @@ public class FilterJoinNode extends FilterNode {
         this.nodes = node.nodes;
     }
 
+    @Deprecated(since = "2.8.0")
     public static FilterJoinNode create(Class joinClass, String joinColumn, String column, Serializable value) {
-        return create(joinClass, new String[]{joinColumn}, column, value);
+        return FilterNodes.joinInner(joinClass, new String[]{joinColumn}, column, value);
     }
 
+    @Deprecated(since = "2.8.0")
     public static FilterJoinNode create(Class joinClass, String joinColumn, String column, FilterExpress express, Serializable value) {
-        return create(joinClass, new String[]{joinColumn}, column, express, value);
+        return FilterNodes.joinInner(joinClass, new String[]{joinColumn}, column, express, value);
     }
 
+    @Deprecated(since = "2.8.0")
     public static FilterJoinNode create(Class joinClass, String[] joinColumns, String column, Serializable value) {
-        return create(joinClass, joinColumns, column, null, value);
+        return FilterNodes.joinInner(joinClass, joinColumns, column, null, value);
     }
 
+    @Deprecated(since = "2.8.0")
     public static FilterJoinNode create(Class joinClass, String[] joinColumns, String column, FilterExpress express, Serializable value) {
-        return new FilterJoinNode(joinClass, joinColumns, column, express, value);
+        return FilterNodes.joinInner(joinClass, joinColumns, column, express, value);
     }
 
     @Override
@@ -86,22 +90,22 @@ public class FilterJoinNode extends FilterNode {
     }
 
     @Override
-    protected FilterNode any(final FilterNode node0, boolean signor) {
+    protected FilterNode any(final FilterNode node0, boolean isOr) {
         Objects.requireNonNull(node0);
         if (!(node0 instanceof FilterJoinNode)) {
-            throw new IllegalArgumentException(this + (signor ? " or " : " and ") + " a node but "
+            throw new IllegalArgumentException(this + (isOr ? " or " : " and ") + " a node but "
                 + String.valueOf(node0) + " is not a " + FilterJoinNode.class.getSimpleName());
         }
         final FilterJoinNode node = (FilterJoinNode) node0;
         if (this.nodes == null) {
             this.nodes = new FilterNode[]{node};
-            this.or = signor;
+            this.or = isOr;
             return this;
         }
-        if (or == signor || this.column == null) {
+        if (or == isOr || this.column == null) {
             this.nodes = Utility.append(this.nodes, node);
             if (this.column == null) {
-                this.or = signor;
+                this.or = isOr;
             }
             return this;
         }
@@ -112,7 +116,7 @@ public class FilterJoinNode extends FilterNode {
         this.joinClass = null;
         this.joinEntity = null;
         this.joinColumns = null;
-        this.or = signor;
+        this.or = isOr;
         return this;
     }
 

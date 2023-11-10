@@ -180,7 +180,7 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
                 if (this.joinClass == null) {
                     node = FilterNodes.create(column, express, val);
                 } else {
-                    node = FilterJoinNode.create(joinClass, joinColumns, column, express, val);
+                    node = FilterNodes.joinInner(joinClass, joinColumns, column, express, val);
                 }
             }
         }
