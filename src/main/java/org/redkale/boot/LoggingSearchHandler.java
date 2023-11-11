@@ -163,7 +163,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
             this.tag = tagstr.replace("${" + RESNAME_APP_NAME + "}", System.getProperty(RESNAME_APP_NAME, ""));
             if (this.tag.contains("%")) {
                 this.tagDateFormat = this.tag;
-                Utility.formatTime(this.tagDateFormat, -1, System.currentTimeMillis()); //测试时间格式是否正确
+                Times.formatTime(this.tagDateFormat, -1, System.currentTimeMillis()); //测试时间格式是否正确
             }
         }
 
@@ -233,7 +233,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
                 break;
             }
         }
-        String rawTag = tagDateFormat == null ? tag : Utility.formatTime(tagDateFormat, -1, log.getInstant().toEpochMilli());
+        String rawTag = tagDateFormat == null ? tag : Times.formatTime(tagDateFormat, -1, log.getInstant().toEpochMilli());
         fillLogRecord(log);
         logqueue.offer(new SearchLogRecord(rawTag, log));
     }
@@ -317,7 +317,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
             this.loggerName = log.getLoggerName();
             this.methodName = log.getSourceClassName() + " " + log.getSourceMethodName();
             this.timestamp = log.getInstant().toEpochMilli();
-            this.logid = Utility.format36time(timestamp) + "_" + Utility.uuid();
+            this.logid = Times.format36time(timestamp) + "_" + Utility.uuid();
         }
 
         @Override

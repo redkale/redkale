@@ -39,12 +39,6 @@ import org.redkale.convert.json.JsonConvert;
  */
 public final class Utility {
 
-    private static final int zoneRawOffset = TimeZone.getDefault().getRawOffset();
-
-    static final String format1 = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS";   //yyyy-MM-dd HH:mm:ss
-
-    static final String format2 = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%1$tL";  //yyyy-MM-dd HH:mm:ss.fff
-
     private static final char hex[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
     private static final int cpus = Integer.getInteger("redkale.cpus", Runtime.getRuntime().availableProcessors());
@@ -3504,8 +3498,9 @@ public final class Utility {
      *
      * @return 格式为yyyy-MM-dd HH:mm:ss的时间值
      */
+    @Deprecated(since = "2.8.0")
     public static String now() {
-        return String.format(format1, System.currentTimeMillis());
+        return Times.now();
     }
 
     /**
@@ -3513,8 +3508,9 @@ public final class Utility {
      *
      * @return 格式为yyyy-MM-dd HH:mm:ss.fff的时间值
      */
+    @Deprecated(since = "2.8.0")
     public static String nowMillis() {
-        return String.format(format2, System.currentTimeMillis());
+        return Times.nowMillis();
     }
 
     /**
@@ -3524,8 +3520,9 @@ public final class Utility {
      *
      * @return 格式为yyyy-MM-dd HH:mm:ss的时间值
      */
+    @Deprecated(since = "2.8.0")
     public static String formatTime(long time) {
-        return String.format(format1, time);
+        return Times.formatTime(time);
     }
 
     /**
@@ -3535,8 +3532,9 @@ public final class Utility {
      *
      * @return 36进制时间值
      */
+    @Deprecated(since = "2.8.0")
     public static String format36time(long time) {
-        return Long.toString(time, 36);
+        return Times.format36time(time);
     }
 
     /**
@@ -3544,8 +3542,9 @@ public final class Utility {
      *
      * @return 毫秒数
      */
+    @Deprecated(since = "2.8.0")
     public static long midnight() {
-        return midnight(System.currentTimeMillis());
+        return Times.midnight();
     }
 
     /**
@@ -3555,8 +3554,9 @@ public final class Utility {
      *
      * @return 毫秒数
      */
+    @Deprecated(since = "2.8.0")
     public static long midnight(long time) {
-        return (time + zoneRawOffset) / 86400000 * 86400000 - zoneRawOffset;
+        return Times.midnight(time);
     }
 
     /**
@@ -3564,9 +3564,9 @@ public final class Utility {
      *
      * @return 20151231格式的int值
      */
+    @Deprecated(since = "2.8.0")
     public static int today() {
-        java.time.LocalDate today = java.time.LocalDate.now();
-        return today.getYear() * 10000 + today.getMonthValue() * 100 + today.getDayOfMonth();
+        return Times.today();
     }
 
     /**
@@ -3574,9 +3574,9 @@ public final class Utility {
      *
      * @return 151231格式的int值
      */
+    @Deprecated(since = "2.8.0")
     public static int todayYYMMDD() {
-        java.time.LocalDate today = java.time.LocalDate.now();
-        return today.getYear() % 100 * 10000 + today.getMonthValue() * 100 + today.getDayOfMonth();
+        return Times.todayYYMMDD();
     }
 
     /**
@@ -3584,10 +3584,9 @@ public final class Utility {
      *
      * @return 1512312359格式的int值
      */
+    @Deprecated(since = "2.8.0")
     public static int todayYYMMDDHHmm() {
-        java.time.LocalDateTime today = java.time.LocalDateTime.now();
-        return today.getYear() % 100 * 100_00_00_00 + today.getMonthValue() * 100_00_00 + today.getDayOfMonth() * 100_00
-            + today.getHour() * 100 + today.getMinute();
+        return Times.todayYYMMDDHHmm();
     }
 
     /**
@@ -3595,10 +3594,9 @@ public final class Utility {
      *
      * @return 20151231235959格式的int值
      */
+    @Deprecated(since = "2.8.0")
     public static long todayYYYYMMDDHHmmss() {
-        java.time.LocalDateTime today = java.time.LocalDateTime.now();
-        return today.getYear() * 100_00_00_00_00L + today.getMonthValue() * 100_00_00_00 + today.getDayOfMonth() * 100_00_00
-            + today.getHour() * 100_00 + today.getMinute() * 100 + today.getSecond();
+        return Times.todayYYYYMMDDHHmmss();
     }
 
     /**
@@ -3606,10 +3604,9 @@ public final class Utility {
      *
      * @return 151231235959格式的int值
      */
+    @Deprecated(since = "2.8.0")
     public static long todayYYMMDDHHmmss() {
-        java.time.LocalDateTime today = java.time.LocalDateTime.now();
-        return today.getYear() % 100 * 100_00_00_00_00L + today.getMonthValue() * 100_00_00_00 + today.getDayOfMonth() * 100_00_00
-            + today.getHour() * 100_00 + today.getMinute() * 100 + today.getSecond();
+        return Times.todayYYMMDDHHmmss();
     }
 
     /**
@@ -3617,10 +3614,9 @@ public final class Utility {
      *
      * @return 20151230格式的int值
      */
+    @Deprecated(since = "2.8.0")
     public static int tomorrow() {
-        Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.DAY_OF_YEAR, 1);
-        return cal.get(Calendar.YEAR) * 10000 + (cal.get(Calendar.MONTH) + 1) * 100 + cal.get(Calendar.DAY_OF_MONTH);
+        return Times.tomorrow();
     }
 
     /**
@@ -3628,10 +3624,9 @@ public final class Utility {
      *
      * @return 151230格式的int值
      */
+    @Deprecated(since = "2.8.0")
     public static int tomorrowYYMMDD() {
-        Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.DAY_OF_YEAR, 1);
-        return cal.get(Calendar.YEAR) % 100 * 10000 + (cal.get(Calendar.MONTH) + 1) * 100 + cal.get(Calendar.DAY_OF_MONTH);
+        return Times.tomorrowYYMMDD();
     }
 
     /**
@@ -3639,10 +3634,9 @@ public final class Utility {
      *
      * @return 20151230格式的int值
      */
+    @Deprecated(since = "2.8.0")
     public static int yesterday() {
-        Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.DAY_OF_YEAR, -1);
-        return cal.get(Calendar.YEAR) * 10000 + (cal.get(Calendar.MONTH) + 1) * 100 + cal.get(Calendar.DAY_OF_MONTH);
+        return Times.yesterday();
     }
 
     /**
@@ -3650,10 +3644,9 @@ public final class Utility {
      *
      * @return 151230格式的int值
      */
+    @Deprecated(since = "2.8.0")
     public static int yesterdayYYMMDD() {
-        Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.DAY_OF_YEAR, -1);
-        return cal.get(Calendar.YEAR) % 100 * 10000 + (cal.get(Calendar.MONTH) + 1) * 100 + cal.get(Calendar.DAY_OF_MONTH);
+        return Times.yesterdayYYMMDD();
     }
 
     /**
@@ -3663,10 +3656,9 @@ public final class Utility {
      *
      * @return 毫秒数
      */
+    @Deprecated(since = "2.8.0")
     public static int yyyyMMdd(long time) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(time);
-        return cal.get(Calendar.YEAR) * 10000 + (cal.get(Calendar.MONTH) + 1) * 100 + cal.get(Calendar.DAY_OF_MONTH);
+        return Times.yyyyMMdd(time);
     }
 
     /**
@@ -3676,10 +3668,9 @@ public final class Utility {
      *
      * @return 毫秒数
      */
+    @Deprecated(since = "2.8.0")
     public static int yyMMdd(long time) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(time);
-        return cal.get(Calendar.YEAR) % 100 * 10000 + (cal.get(Calendar.MONTH) + 1) * 100 + cal.get(Calendar.DAY_OF_MONTH);
+        return Times.yyMMdd(time);
     }
 
     /**
@@ -3689,10 +3680,9 @@ public final class Utility {
      *
      * @return 16020223格式的int值
      */
+    @Deprecated(since = "2.8.0")
     public static int yyMMDDHHmm(long time) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(time);
-        return cal.get(Calendar.YEAR) % 100 * 100_00_00 + (cal.get(Calendar.MONTH) + 1) * 100_00 + cal.get(Calendar.DAY_OF_MONTH) * 100 + cal.get(Calendar.HOUR_OF_DAY);
+        return Times.yyMMDDHHmm(time);
     }
 
     /**
@@ -3702,12 +3692,9 @@ public final class Utility {
      *
      * @return 毫秒数
      */
+    @Deprecated(since = "2.8.0")
     public static long monday(long time) {
-        ZoneId zid = ZoneId.systemDefault();
-        Instant instant = Instant.ofEpochMilli(time);
-        LocalDate ld = instant.atZone(zid).toLocalDate();
-        ld = ld.minusDays(ld.getDayOfWeek().getValue() - 1);
-        return ld.atStartOfDay(zid).toInstant().toEpochMilli();
+        return Times.monday(time);
     }
 
     /**
@@ -3717,12 +3704,9 @@ public final class Utility {
      *
      * @return 毫秒数
      */
+    @Deprecated(since = "2.8.0")
     public static long sunday(long time) {
-        ZoneId zid = ZoneId.systemDefault();
-        Instant instant = Instant.ofEpochMilli(time);
-        LocalDate ld = instant.atZone(zid).toLocalDate();
-        ld = ld.plusDays(7 - ld.getDayOfWeek().getValue());
-        return ld.atStartOfDay(zid).toInstant().toEpochMilli();
+        return Times.sunday(time);
     }
 
     /**
@@ -3732,11 +3716,9 @@ public final class Utility {
      *
      * @return 毫秒数
      */
+    @Deprecated(since = "2.8.0")
     public static long monthFirstDay(long time) {
-        ZoneId zid = ZoneId.systemDefault();
-        Instant instant = Instant.ofEpochMilli(time);
-        LocalDate ld = instant.atZone(zid).toLocalDate().withDayOfMonth(1);
-        return ld.atStartOfDay(zid).toInstant().toEpochMilli();
+        return Times.monthFirstDay(time);
     }
 
     /**
@@ -3746,12 +3728,9 @@ public final class Utility {
      *
      * @return 毫秒数
      */
+    @Deprecated(since = "2.8.0")
     public static long monthLastDay(long time) {
-        ZoneId zid = ZoneId.systemDefault();
-        Instant instant = Instant.ofEpochMilli(time);
-        LocalDate ld = instant.atZone(zid).toLocalDate();
-        ld = ld.withDayOfMonth(ld.lengthOfMonth());
-        return ld.atStartOfDay(zid).toInstant().toEpochMilli();
+        return Times.monthLastDay(time);
     }
 
     /**
@@ -3765,47 +3744,9 @@ public final class Utility {
      *
      * @return 时间格式化
      */
+    @Deprecated(since = "2.8.0")
     public static String formatTime(String format, int size, Object time) {
-        if (size < 0) {
-            int c = 0;
-            if (!format.contains("%1$")) {
-                for (char ch : format.toCharArray()) {
-                    if (ch == '%') {
-                        c++;
-                    }
-                }
-            }
-            size = c;
-        }
-        if (size <= 1) {
-            return String.format(format, time);
-        }
-        if (size == 2) {
-            return String.format(format, time, time);
-        }
-        if (size == 3) {
-            return String.format(format, time, time, time);
-        }
-        if (size == 4) {
-            return String.format(format, time, time, time, time);
-        }
-        if (size == 5) {
-            return String.format(format, time, time, time, time, time);
-        }
-        if (size == 6) {
-            return String.format(format, time, time, time, time, time, time);
-        }
-        if (size == 7) {
-            return String.format(format, time, time, time, time, time, time, time);
-        }
-        if (size == 8) {
-            return String.format(format, time, time, time, time, time, time, time);
-        }
-        Object[] args = new Object[size];
-        for (int i = 0; i < size; i++) {
-            args[i] = time;
-        }
-        return String.format(format, args);
+        return Times.formatTime(format, size, time);
     }
 
     /**

@@ -8,6 +8,7 @@ package org.redkale.test.source;
 import java.io.Serializable;
 import org.redkale.persistence.*;
 import org.redkale.source.*;
+import org.redkale.util.Times;
 import org.redkale.util.Utility;
 
 /**
@@ -115,7 +116,7 @@ public class LoginRecord extends BaseEntity {
         LoginRecord record = new LoginRecord();
         long now = System.currentTimeMillis();
         record.setCreatetime(now); //设置创建时间
-        record.setLoginid(Utility.format36time(now) + "-" + Utility.uuid());  //主键的生成规则
+        record.setLoginid(Times.format36time(now) + "-" + Utility.uuid());  //主键的生成规则
         //....  填充其他字段
         source.insert(record);
     }

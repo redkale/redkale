@@ -180,14 +180,14 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                         }
                         if (logstream == null) {
                             logindex.incrementAndGet();
-                            logfile = new File(patternDateFormat == null ? pattern : Utility.formatTime(patternDateFormat, -1, System.currentTimeMillis()));
+                            logfile = new File(patternDateFormat == null ? pattern : Times.formatTime(patternDateFormat, -1, System.currentTimeMillis()));
                             logfile.getParentFile().mkdirs();
                             logLength.set(logfile.length());
                             logstream = new FileOutputStream(logfile, append);
                         }
                         if (unusual != null && logunusualstream == null) {
                             logunusualindex.incrementAndGet();
-                            logunusualfile = new File(unusualDateFormat == null ? unusual : Utility.formatTime(unusualDateFormat, -1, System.currentTimeMillis()));
+                            logunusualfile = new File(unusualDateFormat == null ? unusual : Times.formatTime(unusualDateFormat, -1, System.currentTimeMillis()));
                             logunusualfile.getParentFile().mkdirs();
                             logUnusualLength.set(logunusualfile.length());
                             logunusualstream = new FileOutputStream(logunusualfile, append);
@@ -234,7 +234,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
         }
         if (this.pattern != null && this.pattern.contains("%")) { //需要时间格式化
             this.patternDateFormat = this.pattern;
-            Utility.formatTime(this.patternDateFormat, -1, System.currentTimeMillis()); //测试时间格式是否正确
+            Times.formatTime(this.patternDateFormat, -1, System.currentTimeMillis()); //测试时间格式是否正确
         }
         String unusualstr = manager.getProperty(cname + ".unusual");
         if (unusualstr != null) {
@@ -247,7 +247,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
         }
         if (this.unusual != null && this.unusual.contains("%")) { //需要时间格式化
             this.unusualDateFormat = this.unusual;
-            Utility.formatTime(this.unusualDateFormat, -1, System.currentTimeMillis()); //测试时间格式是否正确
+            Times.formatTime(this.unusualDateFormat, -1, System.currentTimeMillis()); //测试时间格式是否正确
         }
         String limitstr = manager.getProperty(cname + ".limit");
         try {

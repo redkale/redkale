@@ -7,7 +7,7 @@ package org.redkale.source;
 
 import java.util.function.*;
 import org.redkale.convert.ConvertColumn;
-import org.redkale.util.Utility;
+import org.redkale.util.Times;
 
 /**
  *
@@ -209,12 +209,12 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
         }
 
         public static LongRange todayRange() {
-            long min = Utility.midnight();
+            long min = Times.midnight();
             return new LongRange(min, min + 24 * 60 * 60 * 1000 - 1);
         }
 
         public static LongRange yesterdayRange() {
-            long min = Utility.midnight(System.currentTimeMillis() - 24 * 60 * 60 * 1000);
+            long min = Times.midnight(System.currentTimeMillis() - 24 * 60 * 60 * 1000);
             return new LongRange(min, min + 24 * 60 * 60 * 1000 - 1);
         }
 

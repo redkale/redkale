@@ -2014,7 +2014,7 @@ public final class Application {
     }
 
     public static void main(String[] args) throws Exception {
-        Utility.midnight(); //先初始化一下Utility
+        Times.midnight(); //先初始化一下Utility
         Thread.currentThread().setName("Redkale-Application-Main-Thread");
         //运行主程序
         {
