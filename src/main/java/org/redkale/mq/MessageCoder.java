@@ -6,6 +6,7 @@
 package org.redkale.mq;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -36,7 +37,7 @@ public interface MessageCoder<T> {
     //消息内容的类型
     public byte ctype();
 
-    //type: 1:string, 2:int, 3:long
+    //type: 1:string, 2:int, 3:long, 4:BigInteger
     public static byte[] encodeUserid(Serializable value) {
         if (value == null) {
             return MessageRecord.EMPTY_BYTES;
@@ -48,6 +49,9 @@ public interface MessageCoder<T> {
             long val = (Long) value;
             return new byte[]{(byte) 3, (byte) (val >> 56 & 0xFF), (byte) (val >> 48 & 0xFF), (byte) (val >> 40 & 0xFF),
                 (byte) (val >> 32 & 0xFF), (byte) (val >> 24 & 0xFF), (byte) (val >> 16 & 0xFF), (byte) (val >> 8 & 0xFF), (byte) (val & 0xFF)};
+        } else if (value instanceof BigInteger) {
+            BigInteger val = (BigInteger) value;
+            return Utility.append(new byte[]{4}, val.toByteArray());
         }
         String str = value.toString();
         if (str.isEmpty()) {
@@ -71,6 +75,9 @@ public interface MessageCoder<T> {
         }
         byte[] bs = new byte[len - 1];
         buffer.get(bs);
+        if (type == 4) {
+            return new BigInteger(bs);
+        }
         return new String(bs, StandardCharsets.UTF_8);
     }
 
@@ -101,13 +108,13 @@ public interface MessageCoder<T> {
         final ByteBuffer buffer = ByteBuffer.wrap(bs);
         buffer.putChar((char) map.size());
         map.forEach((key, value) -> {
-            putShortString(buffer, key);
-            putLongString(buffer, value);
+            putSmallString(buffer, key);
+            putBigString(buffer, value);
         });
         return bs;
     }
 
-    public static void putLongString(ByteBuffer buffer, String value) {
+    public static void putBigString(ByteBuffer buffer, String value) {
         if (value == null || value.isEmpty()) {
             buffer.putInt(0);
         } else {
@@ -117,7 +124,7 @@ public interface MessageCoder<T> {
         }
     }
 
-    public static String getLongString(ByteBuffer buffer) {
+    public static String getBigString(ByteBuffer buffer) {
         int len = buffer.getInt();
         if (len == 0) {
             return null;
@@ -127,7 +134,8 @@ public interface MessageCoder<T> {
         return new String(bs, StandardCharsets.UTF_8);
     }
 
-    public static void putShortString(ByteBuffer buffer, String value) {
+    //一般用于存放类名、字段名、map中的key
+    public static void putSmallString(ByteBuffer buffer, String value) {
         if (value == null || value.isEmpty()) {
             buffer.putChar((char) 0);
         } else {
@@ -137,7 +145,7 @@ public interface MessageCoder<T> {
         }
     }
 
-    public static String getShortString(ByteBuffer buffer) {
+    public static String getSmallString(ByteBuffer buffer) {
         int len = buffer.getChar();
         if (len == 0) {
             return null;
@@ -154,7 +162,7 @@ public interface MessageCoder<T> {
         }
         Map<String, String> map = new HashMap<>(len);
         for (int i = 0; i < len; i++) {
-            map.put(getShortString(buffer), getLongString(buffer));
+            map.put(getSmallString(buffer), getBigString(buffer));
         }
         return map;
     }

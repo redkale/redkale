@@ -88,7 +88,7 @@ public class HttpResultCoder implements MessageCoder<HttpResult> {
         ByteBuffer buffer = ByteBuffer.wrap(data);
         HttpResult result = new HttpResult();
         result.setStatus(buffer.getInt());
-        result.setContentType(MessageCoder.getShortString(buffer));
+        result.setContentType(MessageCoder.getSmallString(buffer));
         result.setHeaders(MessageCoder.getMap(buffer));
         result.setCookies(getCookieList(buffer));
         int len = buffer.getInt();
@@ -117,11 +117,11 @@ public class HttpResultCoder implements MessageCoder<HttpResult> {
         final ByteBuffer buffer = ByteBuffer.wrap(bs);
         buffer.putChar((char) list.size());
         list.forEach(cookie -> {
-            putShortString(buffer, cookie.getName());
-            putShortString(buffer, cookie.getValue());
-            putShortString(buffer, cookie.getDomain());
-            putShortString(buffer, cookie.getPath());
-            putShortString(buffer, cookie.getPortlist());
+            putSmallString(buffer, cookie.getName());
+            putSmallString(buffer, cookie.getValue());
+            putSmallString(buffer, cookie.getDomain());
+            putSmallString(buffer, cookie.getPath());
+            putSmallString(buffer, cookie.getPortlist());
             buffer.putLong(cookie.getMaxAge());
             buffer.put(cookie.getSecure() ? (byte) 1 : (byte) 0);
             buffer.put(cookie.isHttpOnly() ? (byte) 1 : (byte) 0);
@@ -136,10 +136,10 @@ public class HttpResultCoder implements MessageCoder<HttpResult> {
         }
         final List<HttpCookie> list = new ArrayList<>(len);
         for (int i = 0; i < len; i++) {
-            HttpCookie cookie = new HttpCookie(getShortString(buffer), getShortString(buffer));
-            cookie.setDomain(getShortString(buffer));
-            cookie.setPath(getShortString(buffer));
-            cookie.setPortlist(getShortString(buffer));
+            HttpCookie cookie = new HttpCookie(getSmallString(buffer), getSmallString(buffer));
+            cookie.setDomain(getSmallString(buffer));
+            cookie.setPath(getSmallString(buffer));
+            cookie.setPortlist(getSmallString(buffer));
             cookie.setMaxAge(buffer.getLong());
             cookie.setSecure(buffer.get() == 1);
             cookie.setHttpOnly(buffer.get() == 1);

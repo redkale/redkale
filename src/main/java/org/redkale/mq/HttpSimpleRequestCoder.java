@@ -117,12 +117,12 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         if (respformat != 0) {
             req.setRespConvertType(ConvertType.find(respformat));
         }
-        req.setTraceid(MessageCoder.getShortString(buffer));
-        req.setRequestURI(MessageCoder.getLongString(buffer));
-        req.setPath(MessageCoder.getShortString(buffer));
-        req.setRemoteAddr(MessageCoder.getShortString(buffer));
-        req.setSessionid(MessageCoder.getShortString(buffer));
-        req.setContentType(MessageCoder.getShortString(buffer));
+        req.setTraceid(MessageCoder.getSmallString(buffer));
+        req.setRequestURI(MessageCoder.getBigString(buffer));
+        req.setPath(MessageCoder.getSmallString(buffer));
+        req.setRemoteAddr(MessageCoder.getSmallString(buffer));
+        req.setSessionid(MessageCoder.getSmallString(buffer));
+        req.setContentType(MessageCoder.getSmallString(buffer));
         req.setCurrentUserid(MessageCoder.decodeUserid(buffer));
         req.setHeaders(MessageCoder.getMap(buffer));
         req.setParams(MessageCoder.getMap(buffer));

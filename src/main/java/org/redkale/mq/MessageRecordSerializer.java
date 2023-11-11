@@ -108,10 +108,10 @@ public class MessageRecordSerializer implements MessageCoder<MessageRecord> {
         long createTime = buffer.getLong();
 
         Serializable userid = MessageCoder.decodeUserid(buffer);
-        String groupid = MessageCoder.getShortString(buffer);
-        String topic = MessageCoder.getShortString(buffer);
-        String respTopic = MessageCoder.getShortString(buffer);
-        String traceid = MessageCoder.getShortString(buffer);
+        String groupid = MessageCoder.getSmallString(buffer);
+        String topic = MessageCoder.getSmallString(buffer);
+        String respTopic = MessageCoder.getSmallString(buffer);
+        String traceid = MessageCoder.getSmallString(buffer);
 
         byte[] content = null;
         int contentlen = buffer.getInt();
