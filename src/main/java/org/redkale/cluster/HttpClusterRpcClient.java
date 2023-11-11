@@ -18,7 +18,7 @@ import static org.redkale.util.Utility.isEmpty;
 import static org.redkale.util.Utility.isNotEmpty;
 
 /**
- * 没有配置MQ的情况下依赖ClusterAgent实现的默认HttpMessageClient实例
+ * 没有配置MQ的情况下依赖ClusterAgent实现的默认HttpRpcClient实例
  *
  * <p>
  * 详情见: https://redkale.org

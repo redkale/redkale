@@ -27,12 +27,13 @@ public class SncpClient extends Client<SncpClientConnection, SncpClientRequest, 
 
     final InetSocketAddress clientSncpAddress;
 
-    public SncpClient(String name, AsyncGroup group, int nodeid, InetSocketAddress clientSncpAddress, ClientAddress address, String netprotocol, int maxConns, int maxPipelines) {
+    public SncpClient(String name, AsyncGroup group, int nodeid,
+        InetSocketAddress clientSncpAddress, ClientAddress address, String netprotocol, int maxConns, int maxPipelines) {
         super(name, group, "TCP".equalsIgnoreCase(netprotocol), address, maxConns, maxPipelines, null, null, null); //maxConns
         this.clientSncpAddress = clientSncpAddress;
         this.nodeid = nodeid;
-        this.readTimeoutSeconds = 15;
-        this.writeTimeoutSeconds = 15;
+        this.readTimeoutSeconds = 10;
+        this.writeTimeoutSeconds = 10;
     }
 
     @Override

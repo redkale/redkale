@@ -63,6 +63,9 @@ public class HttpLocalRpcClient extends HttpRpcClient {
                     }
                 }
             }
+            if (nodeHttpServer == null) {
+                throw new HttpException("Not found HttpServer");
+            }
             this.currServer = nodeHttpServer.getServer();
         }
         return this.currServer;

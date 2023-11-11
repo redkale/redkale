@@ -21,8 +21,6 @@ public class SncpHeader {
 
     public static final byte KEEPALIVE_OFF = -1;
 
-    private static final byte[] EMPTY_ADDR = new byte[4];
-
     private Long seqid;
 
     private Uint128 serviceid;

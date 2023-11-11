@@ -52,7 +52,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         super.init(config);
         this.sourceName = getSourceName();
         this.ttls = config.getIntValue("ttls", 10);
-        if (this.ttls < 5) {
+        if (this.ttls < 5) { //值不能太小
             this.ttls = 10;
         }
     }
@@ -121,7 +121,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         if (this.taskFuture != null) {
             this.taskFuture.cancel(true);
         }
-        this.taskFuture = this.scheduler.scheduleAtFixedRate(newTask(), Math.max(2000, ttls * 1000), Math.max(2000, ttls * 1000), TimeUnit.MILLISECONDS);
+        this.taskFuture = this.scheduler.scheduleAtFixedRate(newTask(), ttls, ttls, TimeUnit.SECONDS);
     }
 
     private Runnable newTask() {
@@ -208,15 +208,22 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     }
 
     private CompletableFuture<Set<InetSocketAddress>> queryAddress(final String serviceName) {
-        final CompletableFuture<Map<String, AddressEntry>> future = source.hscanAsync(serviceName, AddressEntry.class, new AtomicLong(), 10000);
-        return future.thenApply(map -> {
-            final Set<InetSocketAddress> set = new HashSet<>();
+        return queryAddress0(serviceName, new HashSet<>(), new AtomicLong());
+    }
+
+    private CompletableFuture<Set<InetSocketAddress>> queryAddress0(final String serviceName, final Set<InetSocketAddress> set, final AtomicLong cursor) {
+        final CompletableFuture<Map<String, AddressEntry>> future = source.hscanAsync(serviceName, AddressEntry.class, cursor, 10000);
+        return future.thenCompose(map -> {
             map.forEach((n, v) -> {
                 if (v != null && (System.currentTimeMillis() - v.time) / 1000 < ttls) {
                     set.add(v.addr);
                 }
             });
-            return set;
+            if (cursor.get() == 0) {
+                return CompletableFuture.completedFuture(set);
+            } else {
+                return queryAddress0(serviceName, set, cursor);
+            }
         });
     }
 
