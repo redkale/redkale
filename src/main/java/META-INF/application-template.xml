@@ -141,7 +141,6 @@
         port:                required 服务所占端口 
         root:                如果是web类型服务，则包含页面  默认:{APP_HOME}/root
         lib:                 server额外的class目录， 默认为${APP_HOME}/libs/*; 
-        excludelibs:         排除lib.path与excludes中的正则表达式匹配的路径, 多个正则表达式用分号;隔开
         charset:             文本编码， 默认: UTF-8
         backlog:             默认10K
         threads【已废弃】：    线程数， 默认: CPU核数*2，最小8个【已废弃 @since 2.3.0】
