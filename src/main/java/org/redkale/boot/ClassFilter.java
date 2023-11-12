@@ -576,26 +576,13 @@ public final class ClassFilter<T> {
          *
          * @throws IOException 异常
          */
-        public static void load(final File excludeFile, RedkaleClassLoader loader, final String[] excludeRegs, final ClassFilter... filters) throws IOException {
+        public static void load(final File excludeFile, RedkaleClassLoader loader, final ClassFilter... filters) throws IOException {
             List<URL> urlfiles = new ArrayList<>(2);
             List<URL> urljares = new ArrayList<>(2);
             final URL exurl = excludeFile != null ? excludeFile.toURI().toURL() : null;
-            final Pattern[] excludePatterns = toPattern(excludeRegs);
             for (URL url : loader.getAllURLs()) {
                 if (exurl != null && exurl.sameFile(url)) {
                     continue;
-                }
-                if (excludePatterns != null && url != RedkaleClassLoader.URL_NONE) {
-                    boolean skip = false;
-                    for (Pattern p : excludePatterns) {
-                        if (p.matcher(url.toString()).matches()) {
-                            skip = true;
-                            break;
-                        }
-                    }
-                    if (skip) {
-                        continue;
-                    }
                 }
                 if (url.getPath().endsWith(".jar")) {
                     urljares.add(url);

@@ -207,9 +207,6 @@ public final class Application {
     //服务配置项
     final AnyValue config;
 
-    //排除的jar路径
-    final String excludelibs;
-
     //临时计数器
     CountDownLatch servicecdl;  //会出现两次赋值
 
@@ -461,18 +458,13 @@ public final class Application {
         } catch (IOException e) {
             throw new RedkaleException(e);
         }
-        //------------------------------------ 配置 <transport> 节点 ------------------------------------
-        String excludelib0 = null;
+        //------------------------------------ 配置 <xxxagent> 节点 ------------------------------------
         ClusterAgent cluster = null;
         MessageAgent[] mqs = null;
         int bufferCapacity = 32 * 1024;
         int bufferPoolSize = Utility.cpus() * 8;
         AnyValue executorConf = null;
         executorConf = config.getAnyValue("executor");
-        AnyValue excludelibConf = config.getAnyValue("excludelibs");
-        if (excludelibConf != null) {
-            excludelib0 = excludelibConf.getValue("value");
-        }
 
         AnyValue clusterConf = config.getAnyValue("cluster");
         if (clusterConf != null) {
@@ -601,7 +593,6 @@ public final class Application {
         this.resourceFactory.register(RESNAME_APP_CLIENT_ASYNCGROUP, AsyncGroup.class, this.clientAsyncGroup);
         this.resourceFactory.register(RESNAME_APP_CLIENT_ASYNCGROUP, AsyncIOGroup.class, this.clientAsyncGroup);
 
-        this.excludelibs = excludelib0;
         this.clusterAgent = cluster;
         this.messageAgents = mqs;
         { //加载原生sql解析器
@@ -795,7 +786,6 @@ public final class Application {
         System.getProperties().forEach((k, v) -> {
             if (k.toString().startsWith("redkale.executor.") //节点全局唯一
                 || k.toString().startsWith("redkale.transport.") //节点全局唯一
-                || k.toString().startsWith("redkale.excludelibs.") //节点全局唯一
                 || k.toString().startsWith("redkale.cluster.") //节点全局唯一
                 || k.toString().startsWith("redkale.mq.")
                 || k.toString().startsWith("redkale.mq[")
@@ -1677,7 +1667,6 @@ public final class Application {
             logger.log(Level.FINE, MessageAgent.class.getSimpleName() + " starting");
         }
         long s = System.currentTimeMillis();
-        final StringBuffer sb = new StringBuffer();
         Set<String> names = new HashSet<>();
         ResourceFactory resourceFactory = this.resourceFactory.createChild();
         List<ResourceFactory> factorys = new ArrayList<>();
@@ -1734,23 +1723,11 @@ public final class Application {
             }
             agent.start(consumers);
         }
-        if (sb.length() > 0) {
-            logger.info(sb.toString().trim());
-        }
         logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") started in " + (System.currentTimeMillis() - s) + " ms");
     }
 
-    void loadClassesByFilters(String excludelibs, final ClassFilter... filters) throws IOException {
-        ClassFilter.Loader.load(getHome(), this.serverClassLoader, ((this.excludelibs != null ? (this.excludelibs + ";") : "") + (excludelibs == null ? "" : excludelibs)).split(";"), filters);
-    }
-
-    private String alignString(String value, int maxlen) {
-        StringBuilder sb = new StringBuilder(maxlen);
-        sb.append(value);
-        for (int i = 0; i < maxlen - value.length(); i++) {
-            sb.append(' ');
-        }
-        return sb.toString();
+    void loadClassesByFilters(final ClassFilter... filters) throws IOException {
+        ClassFilter.Loader.load(getHome(), this.serverClassLoader, filters);
     }
 
     //使用了nohup或使用了后台&，Runtime.getRuntime().addShutdownHook失效
@@ -1814,7 +1791,7 @@ public final class Application {
                                 try {
                                     if (!inited.getAndSet(true)) { //加载自定义的协议，如：SOCKS
                                         ClassFilter profilter = new ClassFilter(classLoader, NodeProtocol.class, NodeServer.class, (Class[]) null);
-                                        ClassFilter.Loader.load(home, classLoader, ((excludelibs != null ? (excludelibs + ";") : "") + serconf.getValue("excludelibs", "")).replace(',', ';').split(";"), profilter);
+                                        ClassFilter.Loader.load(home, classLoader, profilter);
                                         final Set<FilterEntry<NodeServer>> entrys = profilter.getFilterEntrys();
                                         for (FilterEntry<NodeServer> entry : entrys) {
                                             final Class<? extends NodeServer> type = entry.getType();
@@ -2262,7 +2239,7 @@ public final class Application {
                     Properties newLogProps = new Properties();
                     newLogProps.putAll(this.loggingProperties);
                     newLogProps.putAll(loggingChangedProps);
-                    loggingRemovedKeys.forEach(k -> newLogProps.remove(k));
+                    loggingRemovedKeys.forEach(newLogProps::remove);
                     reconfigLogging(newLogProps);
                     logger.log(Level.INFO, "Reconfig logging finished ");
                 }
@@ -2408,7 +2385,7 @@ public final class Application {
                         }
                     }
                 }
-                sourceRemovedKeys.forEach(k -> this.sourceProperties.remove(k));
+                sourceRemovedKeys.forEach(this.sourceProperties::remove);
                 this.sourceProperties.putAll(sourceChangedProps);
             }
 
@@ -2551,15 +2528,6 @@ public final class Application {
             + "       --api-skiprpc=[true|false]            skip @RestService(rpcOnly=true) service or @RestMapping(rpcOnly=true) method, default is true\r\n"
             + "       --api-host=[url]                      api root url, default is http://localhost\r\n"
             + "   help, -h, --help                          show this help\r\n";
-    }
-
-    NodeSncpServer findNodeSncpServer(final InetSocketAddress sncpAddr) {
-        for (NodeServer node : servers) {
-            if (node.isSNCP() && sncpAddr.equals(node.getSncpAddress())) {
-                return (NodeSncpServer) node;
-            }
-        }
-        return null;
     }
 
     public List<Object> command(String cmd, String[] params) {
@@ -2776,23 +2744,6 @@ public final class Application {
 
     public boolean isSingletonMode() {
         return singletonMode;
-    }
-
-    private static int parseLenth(String value, int defValue) {
-        if (value == null) {
-            return defValue;
-        }
-        value = value.toUpperCase().replace("B", "");
-        if (value.endsWith("G")) {
-            return Integer.decode(value.replace("G", "")) * 1024 * 1024 * 1024;
-        }
-        if (value.endsWith("M")) {
-            return Integer.decode(value.replace("M", "")) * 1024 * 1024;
-        }
-        if (value.endsWith("K")) {
-            return Integer.decode(value.replace("K", "")) * 1024;
-        }
-        return Integer.decode(value);
     }
 
 }

@@ -40,14 +40,7 @@
         threads： 线程数，为0表示不启用workExecutor，只用IO线程。默认: CPU核数, 核数=1的情况下默认值为2
     -->
     <executor threads="4"/>
-        
-    <!--
-       【节点全局唯一】
-        自动扫描时排除部分包路径
-        value：    排除lib.path与excludes中的正则表达式匹配的路径, 多个正则表达式用分号;隔开
-    -->
-    <excludelibs value="^.*mysql.*$;^.*kafka.*$"/>
-        
+
     <!--
        【节点全局唯一】
         第三方服务发现管理接口
