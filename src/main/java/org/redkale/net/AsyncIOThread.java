@@ -35,9 +35,9 @@ public class AsyncIOThread extends WorkThread {
 
     private final Consumer<ByteBuffer> bufferConsumer;
 
-    private final Queue<Runnable> commandQueue = Utility.unsafe() != null ? new MpscGrowableArrayQueue<>(16, 1 << 16) : new ConcurrentLinkedQueue<>();
+    private final Queue<Runnable> commandQueue = new ConcurrentLinkedQueue<>();
 
-    private final Queue<Consumer<Selector>> registerQueue = Utility.unsafe() != null ? new MpscGrowableArrayQueue<>(16, 1 << 16) : new ConcurrentLinkedQueue<>();
+    private final Queue<Consumer<Selector>> registerQueue = new ConcurrentLinkedQueue<>();
 
     private final AtomicBoolean closed = new AtomicBoolean();
 
