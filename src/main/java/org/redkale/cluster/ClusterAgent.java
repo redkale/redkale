@@ -213,6 +213,7 @@ public abstract class ClusterAgent {
             try {
                 Thread.sleep(s * 1000);
             } catch (InterruptedException ex) {
+            //do nothing
             }
             logger.info(this.getClass().getSimpleName() + " wait for " + s * 1000 + "ms after deregister");
         }

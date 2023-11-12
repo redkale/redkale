@@ -360,6 +360,7 @@ public class Type {
                 break;
             } else if (car == 'L') {
                 while (buf[off++] != ';') {
+                    //do nothing
                 }
                 ++size;
             } else if (car != '[') {
@@ -413,6 +414,7 @@ public class Type {
                 return getType(buf, off);
             } else if (car == 'L') {
                 while (buf[off++] != ';') {
+                    //do nothing
                 }
             }
         }
@@ -453,6 +455,7 @@ public class Type {
                         | (car == 'V' ? 0 : (car == 'D' || car == 'J' ? 2 : 1));
             } else if (car == 'L') {
                 while (desc.charAt(c++) != ';') {
+                    //do nothing
                 }
                 n += 1;
             } else if (car == '[') {

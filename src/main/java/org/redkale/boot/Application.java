@@ -375,6 +375,7 @@ public final class Application {
                             in.close();
                         }
                     } catch (Exception e) {
+            //do nothing
                     }
                 }
                 if (cacheClasses == null) {

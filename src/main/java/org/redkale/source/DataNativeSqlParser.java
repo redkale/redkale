@@ -4,7 +4,7 @@
 package org.redkale.source;
 
 import java.util.*;
-import java.util.function.Function;
+import java.util.function.IntFunction;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.RedkaleClassLoader;
@@ -21,10 +21,10 @@ import org.redkale.util.RedkaleClassLoader;
  */
 public interface DataNativeSqlParser {
 
-    NativeSqlStatement parse(Function<Integer, String> signFunc, String dbtype, String rawSql, Map<String, Object> params);
+    NativeSqlStatement parse(IntFunction<String> signFunc, String dbtype, String rawSql, Map<String, Object> params);
 
     public static DataNativeSqlParser loadFirst() {
-        if (NativeSqlStatement._first_parser != NativeSqlStatement._NIL) {
+        if (NativeSqlStatement._first_parser != NativeSqlStatement.PARSER_NIL) {
             return NativeSqlStatement._first_parser;
         }
         Iterator<DataNativeSqlParserProvider> it = ServiceLoader.load(DataNativeSqlParserProvider.class).iterator();
@@ -41,14 +41,14 @@ public interface DataNativeSqlParser {
 
     public static class NativeSqlStatement {
 
-        private static final DataNativeSqlParser _NIL = new DataNativeSqlParser() {
+        private static final DataNativeSqlParser PARSER_NIL = new DataNativeSqlParser() {
             @Override
-            public NativeSqlStatement parse(Function<Integer, String> signFunc, String dbtype, String rawSql, Map<String, Object> params) {
+            public NativeSqlStatement parse(IntFunction<String> signFunc, String dbtype, String rawSql, Map<String, Object> params) {
                 throw new UnsupportedOperationException("Not supported yet.");
             }
         };
 
-        private static DataNativeSqlParser _first_parser = _NIL;
+        private static DataNativeSqlParser _first_parser = PARSER_NIL;
 
         //根据参数值集合重新生成的带?参数可执行的sql
         protected String nativeSql;

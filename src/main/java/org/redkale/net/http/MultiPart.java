@@ -111,7 +111,7 @@ public final class MultiPart {
      */
     @Deprecated(since = "2.8.0")
     public String getFilename() {
-        return fileName;
+        return getFileName();
     }
 
     public String getName() {

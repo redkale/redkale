@@ -58,6 +58,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                 Class newHandlerClazz = clz == null ? Thread.currentThread().getContextClassLoader().loadClass(newDynName.replace('/', '.')) : clz;
                 return (Creator<SncpAsyncHandler>) Creator.create(newHandlerClazz);
             } catch (Throwable ex) {
+                //do nothing
             }
             // ------------------------------------------------------------------------------
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);

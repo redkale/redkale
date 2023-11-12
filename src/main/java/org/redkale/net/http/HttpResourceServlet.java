@@ -6,11 +6,10 @@
 package org.redkale.net.http;
 
 import java.io.*;
-import static java.nio.file.StandardWatchEventKinds.*;
 import java.nio.file.*;
 import static java.nio.file.StandardWatchEventKinds.*;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.*;
@@ -84,6 +83,7 @@ public class HttpResourceServlet extends HttpServlet {
                     key.reset();
                 }
             } catch (Exception e) {
+                //do nothing
             }
         }
     }

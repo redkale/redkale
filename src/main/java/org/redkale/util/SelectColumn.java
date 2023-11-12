@@ -34,24 +34,24 @@ public class SelectColumn implements Predicate<String> {
         if (len < 1) {
             return;
         }
-        Pattern[] regs = null;
+        Pattern[] regxs = null;
         String[] cols = null;
         int regcount = 0;
         int colcount = 0;
         for (String col : columns0) {
-            boolean reg = false;
+            boolean regx = false;
             for (int i = 0; i < col.length(); i++) {
                 char ch = col.charAt(i);
                 if (ch == '^' || ch == '$' || ch == '*' || ch == '?' || ch == '+' || ch == '[' || ch == '(') {
-                    reg = true;
+                    regx = true;
                     break;
                 }
             }
-            if (reg) {
-                if (regs == null) {
-                    regs = new Pattern[len];
+            if (regx) {
+                if (regxs == null) {
+                    regxs = new Pattern[len];
                 }
-                regs[regcount++] = Pattern.compile(col);
+                regxs[regcount++] = Pattern.compile(col);
             } else {
                 if (cols == null) {
                     cols = new String[len];
@@ -59,11 +59,11 @@ public class SelectColumn implements Predicate<String> {
                 cols[colcount++] = col;
             }
         }
-        if (regs != null) {
+        if (regxs != null) {
             if (regcount == len) {
-                this.patterns = regs;
+                this.patterns = regxs;
             } else {
-                this.patterns = Arrays.copyOf(regs, regcount);
+                this.patterns = Arrays.copyOf(regxs, regcount);
             }
         }
         if (cols != null) {

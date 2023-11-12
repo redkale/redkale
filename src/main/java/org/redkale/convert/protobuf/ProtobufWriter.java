@@ -20,7 +20,7 @@ import org.redkale.util.*;
  */
 public class ProtobufWriter extends Writer implements ByteTuple {
 
-    private static final int defaultSize = Integer.getInteger("redkale.convert.protobuf.writer.buffer.defsize", Integer.getInteger("redkale.convert.writer.buffer.defsize", 1024));
+    private static final int DEFAULT_SIZE = Integer.getInteger("redkale.convert.protobuf.writer.buffer.defsize", Integer.getInteger("redkale.convert.writer.buffer.defsize", 1024));
 
     private byte[] content;
 
@@ -68,7 +68,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     public ProtobufWriter() {
-        this(defaultSize);
+        this(DEFAULT_SIZE);
     }
 
     public ProtobufWriter(int size) {
@@ -85,8 +85,8 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         super.recycle();
         this.count = 0;
         this.initOffset = 0;
-        if (this.content.length > defaultSize) {
-            this.content = new byte[defaultSize];
+        if (this.content.length > DEFAULT_SIZE) {
+            this.content = new byte[DEFAULT_SIZE];
         }
         return true;
     }
@@ -195,6 +195,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
 
     @Override
     public void writeNull() {
+        //do nothing
     }
 
     @Override
@@ -204,6 +205,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
 
     @Override
     public void writeClassName(String clazz) {
+        //do nothing
     }
 
     @Override
@@ -380,10 +382,12 @@ public class ProtobufWriter extends Writer implements ByteTuple {
 
     @Override
     public void writeArrayMark() {
+        //do nothing
     }
 
     @Override
     public void writeArrayE() {
+        //do nothing
     }
 
     @Override
@@ -393,10 +397,12 @@ public class ProtobufWriter extends Writer implements ByteTuple {
 
     @Override
     public void writeMapMark() {
+        //do nothing
     }
 
     @Override
     public void writeMapE() {
+        //do nothing
     }
 
     @Override

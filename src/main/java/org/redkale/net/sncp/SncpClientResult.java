@@ -58,7 +58,7 @@ public class SncpClientResult implements ClientResult {
 
     @Override
     public boolean isKeepAlive() {
-        return header == null ? false : header.isKeepAlive();
+        return header != null && header.isKeepAlive();
     }
 
     @Override

@@ -49,19 +49,19 @@ import org.redkale.util.*;
 public abstract class WebSocketServlet extends HttpServlet implements Resourcable {
 
     @Comment("WebScoket服务器给客户端进行ping操作的间隔时间, 单位: 秒")
-    public static final String WEBPARAM__LIVEINTERVAL = "liveinterval";
+    public static final String WEBPARAM_LIVEINTERVAL = "liveinterval";
 
     @Comment("WebScoket服务器最大连接数，为0表示无限制")
-    public static final String WEBPARAM__WSMAXCONNS = "wsmaxconns";
+    public static final String WEBPARAM_WSMAXCONNS = "wsmaxconns";
 
     @Comment("WebScoket服务器操作WebSocketNode对应CacheSource并发数, 为-1表示无限制，为0表示系统默认值(CPU*8)")
-    public static final String WEBPARAM__WSTHREADS = "wsthreads";
+    public static final String WEBPARAM_WSTHREADS = "wsthreads";
 
     @Comment("最大消息体长度, 小于1表示无限制")
-    public static final String WEBPARAM__WSMAXBODY = "wsmaxbody";
+    public static final String WEBPARAM_WSMAXBODY = "wsmaxbody";
 
     @Comment("加密解密器")
-    public static final String WEBPARAM__CRYPTOR = "cryptor";
+    public static final String WEBPARAM_CRYPTOR = "cryptor";
 
     @Comment("WebScoket服务器给客户端进行ping操作的默认间隔时间, 单位: 秒")
     public static final int DEFAILT_LIVEINTERVAL = 15;
@@ -173,7 +173,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                 props = conf.getAnyValue("properties");
             }
             if (props != null) {
-                String cryptorClass = props.getValue(WEBPARAM__CRYPTOR);
+                String cryptorClass = props.getValue(WEBPARAM_CRYPTOR);
                 if (cryptorClass != null && !cryptorClass.isEmpty()) {
                     try {
                         Class clazz = Thread.currentThread().getContextClassLoader().loadClass(cryptorClass);

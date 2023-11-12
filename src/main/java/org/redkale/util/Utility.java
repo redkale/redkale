@@ -41,7 +41,7 @@ public final class Utility {
 
     private static final char hex[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
-    private static final int cpus = Integer.getInteger("redkale.cpus", Runtime.getRuntime().availableProcessors());
+    private static final int CPUS = Integer.getInteger("redkale.cpus", Runtime.getRuntime().availableProcessors());
 
     private static final int MAX_POW2 = 1 << 30;
 
@@ -148,6 +148,7 @@ public final class Utility {
                     try {
                         virtualClazz1 = (Class) loader.loadClass("org.redkale.util.AnonymousThreadLocal");
                     } catch (Throwable t) {
+                        //do nothing
                     }
                     if (virtualClazz1 == null) {
                         byte[] classBytes = hexToBin(functionThreadLocalBinary);
@@ -162,6 +163,7 @@ public final class Utility {
                             Supplier supplier = () -> null;
                             virtualThreadLocalFunction0 = virtualClazz1.getConstructor(Supplier.class).newInstance(supplier);
                         } catch (Throwable t) {
+                            //do nothing
                         }
                     }
                 }
@@ -170,6 +172,7 @@ public final class Utility {
                     try {
                         virtualClazz1 = (Class) loader.loadClass("org.redkale.util.AnonymousThreadFactory");
                     } catch (Throwable t) {
+                        //do nothing
                     }
                     if (virtualClazz1 == null) {
                         byte[] classBytes = hexToBin(functionThreadFactoryBinary);
@@ -183,6 +186,7 @@ public final class Utility {
                             RedkaleClassLoader.putReflectionDeclaredConstructors(virtualClazz1, virtualClazz1.getName());
                             virtualThreadFactoryFunction0 = virtualClazz1.getConstructor(String.class).newInstance(null);
                         } catch (Throwable t) {
+                            //do nothing
                         }
                     }
                 }
@@ -191,6 +195,7 @@ public final class Utility {
                     try {
                         virtualClazz1 = (Class) loader.loadClass("org.redkale.util.AnonymousVirtualPoolFunction");
                     } catch (Throwable t) {
+                        //do nothing
                     }
                     if (virtualClazz1 == null) {
                         byte[] classBytes = hexToBin(functionVirtualPoolBinary);
@@ -204,6 +209,7 @@ public final class Utility {
                             RedkaleClassLoader.putReflectionDeclaredConstructors(virtualClazz1, virtualClazz1.getName());
                             virtualPoolFunction0 = virtualClazz1.getConstructor().newInstance();
                         } catch (Throwable t) {
+                            //do nothing
                         }
                     }
                 }
@@ -212,6 +218,7 @@ public final class Utility {
                     try {
                         virtualClazz1 = (Class) loader.loadClass("org.redkale.util.AnonymousVirtualExecutor");
                     } catch (Throwable t) {
+                        //do nothing
                     }
                     if (virtualClazz1 == null) {
                         byte[] classBytes = hexToBin(consumerVirtualExecutorBinary);
@@ -225,6 +232,7 @@ public final class Utility {
                             RedkaleClassLoader.putReflectionDeclaredConstructors(virtualClazz1, virtualClazz1.getName());
                             virtualExecutorConsumer0 = virtualClazz1.getConstructor().newInstance();
                         } catch (Throwable t) {
+                            //do nothing
                         }
                     }
                 }
@@ -240,6 +248,7 @@ public final class Utility {
                     try {
                         unsafeClazz1 = (Class) loader.loadClass("org.redkale.util.AnonymousUnsafe");
                     } catch (Throwable t) {
+                        //do nothing
                     }
                     if (unsafeClazz1 == null) {
                         byte[] classBytes = hexToBin(funcAnonymousUnsafeBinary);
@@ -269,6 +278,7 @@ public final class Utility {
                     try {
                         shutdownClazz1 = (Class) loader.loadClass("org.redkale.util.SignalShutDown");
                     } catch (Throwable t) {
+                        //do nothing
                     }
                     if (shutdownClazz1 == null) {
                         byte[] classBytes = hexToBin(consumerSignalShutdownBinary);
@@ -329,7 +339,7 @@ public final class Utility {
     }
 
     public static int cpus() {
-        return cpus;
+        return CPUS;
     }
 
     public static Function<String, ExecutorService> virtualExecutorFunction() {
@@ -422,6 +432,7 @@ public final class Utility {
         try {
             Thread.sleep(millis);
         } catch (Exception e) {
+            //do nothing
         }
     }
 

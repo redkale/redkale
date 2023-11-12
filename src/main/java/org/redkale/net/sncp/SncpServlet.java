@@ -236,6 +236,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
                     }
                 }
             } catch (Throwable ex) {
+                //do nothing
             }
             java.lang.reflect.Type[] originalParamTypes = TypeToken.getGenericType(method.getGenericParameterTypes(), service.getClass());
             java.lang.reflect.Type originalReturnType = TypeToken.getGenericType(method.getGenericReturnType(), service.getClass());
@@ -474,6 +475,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
                 Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
                 newClazz = clz == null ? Thread.currentThread().getContextClassLoader().loadClass(newDynName.replace('/', '.')) : clz;
             } catch (Throwable ex) {
+                //do nothing
             }
 
             final java.lang.reflect.Type[] originalParamTypes = TypeToken.getGenericType(method.getGenericParameterTypes(), serviceClass);
@@ -667,6 +669,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
                 try {
                     RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), newClazz.getField("service"));
                 } catch (Exception e) {
+                    //do nothing
                 }
                 for (java.lang.reflect.Type t : originalParamTypes) {
                     if (t.toString().startsWith("java.lang.")) {

@@ -8,8 +8,8 @@ package org.redkale.convert.json;
 import java.lang.reflect.*;
 import java.lang.reflect.Type;
 import java.util.*;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.convert.*;
 import org.redkale.convert.ext.*;
@@ -315,6 +315,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                     small = f.getAnnotation(ConvertSmallString.class);
                 }
             } catch (Exception e) {
+                //do nothing
             }
         }
         return small;
@@ -403,6 +404,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
             }
             return resultEncoder;
         } catch (Throwable ex) {
+            //do nothing
         }
         // ------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);

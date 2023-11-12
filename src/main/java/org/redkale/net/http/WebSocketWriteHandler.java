@@ -95,6 +95,7 @@ public class WebSocketWriteHandler implements CompletionHandler<Integer, Void> {
             }
             respList.clear();
         } catch (Exception e) {
+            //do nothing
         }
         webSocket.kill(RETCODE_SENDEXCEPTION, "websocket send message failed on CompletionHandler");
         if (exc != null && context.getLogger().isLoggable(Level.FINER)) {

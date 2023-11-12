@@ -407,6 +407,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                 try {
                     ref = factory.findRef(clazz, clazz.getDeclaredField(mfieldname));
                 } catch (Exception e) {
+                    //do nothing
                 }
             }
             fieldalias = ref == null || ref.name().isEmpty() ? mfieldname : ref.name();
@@ -417,6 +418,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                 try {
                     ref = factory.findRef(clazz, clazz.getDeclaredField(mfieldname));
                 } catch (Exception e) {
+                    //do nothing
                 }
             }
             fieldalias = ref == null || ref.name().isEmpty() ? mfieldname : ref.name();

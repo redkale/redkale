@@ -57,6 +57,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                     this.denyRegx = Pattern.compile(denyregxstr);
                 }
             } catch (Exception e) {
+                //do nothing
             }
         }
 
@@ -267,6 +268,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                 this.limit = ls;
             }
         } catch (Exception e) {
+            //do nothing
         }
         String countstr = manager.getProperty(cname + ".count");
         try {
@@ -274,6 +276,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                 this.count = Math.max(1, Math.abs(Integer.decode(countstr)));
             }
         } catch (Exception e) {
+            //do nothing
         }
         String appendstr = manager.getProperty(cname + ".append");
         try {
@@ -281,6 +284,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                 this.append = "true".equalsIgnoreCase(appendstr) || "1".equals(appendstr);
             }
         } catch (Exception e) {
+            //do nothing
         }
         String levelstr = manager.getProperty(cname + ".level");
         try {
@@ -289,6 +293,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                 setLevel(l != null ? l : Level.ALL);
             }
         } catch (Exception e) {
+            //do nothing
         }
         String filterstr = manager.getProperty(cname + ".filter");
         try {
@@ -298,6 +303,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                 setFilter((Filter) clz.getDeclaredConstructor().newInstance());
             }
         } catch (Exception e) {
+            //do nothing
         }
         String formatterstr = manager.getProperty(cname + ".formatter");
         try {
@@ -307,6 +313,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                 setFormatter((Formatter) clz.getDeclaredConstructor().newInstance());
             }
         } catch (Exception e) {
+            //do nothing
         }
         if (getFormatter() == null) {
             setFormatter(new SimpleFormatter());
@@ -318,6 +325,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                 setEncoding(encodingstr);
             }
         } catch (Exception e) {
+            //do nothing
         }
 
         String denyregxstr = manager.getProperty(cname + ".denyregx");
@@ -326,6 +334,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                 denyregx = Pattern.compile(denyregxstr);
             }
         } catch (Exception e) {
+            //do nothing
         }
     }
 

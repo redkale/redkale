@@ -1170,6 +1170,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                             conn.commit();
                             conn.offerUpdateStatement(stmt);
                         } catch (SQLException e2) {
+                            //do nothing
                         }
                     }
                     //表不存在，更新条数为0
@@ -2994,6 +2995,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     stmt.close();
                     conn.close();
                 } catch (Exception e) {
+                    //do nothing
                 }
                 if (this.maxConns > newMaxconns) { //配置连接数过大
                     changeMaxConns(newMaxconns);
@@ -3118,6 +3120,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 try {
                     x.close();
                 } catch (Exception e) {
+                    //do nothing
                 }
             });
         }

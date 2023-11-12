@@ -165,7 +165,7 @@ public abstract class Request<C extends Context> {
     @Deprecated(since = "2.7.0") //replace by getCreateTime()
     @ConvertDisabled
     public long getCreatetime() {
-        return createTime;
+        return getCreateTime();
     }
 
     public long getCreateTime() {

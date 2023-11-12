@@ -12,18 +12,18 @@ import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 
 /**
- * 动态生成指定方法的调用对象, 替代Method.invoke的反射方式
+ * 动态生成指定public方法的调用对象, 替代Method.invoke的反射方式
  *
  * <p>
  * 详情见: https://redkale.org
  *
- * @param <OBJECT_TYPE> 泛型
- * @param <RETURN_TYPE> 泛型
+ * @param <C> 泛型
+ * @param <R> 泛型
  *
  * @author zhangjx
  * @since 2.5.0
  */
-public interface Invoker<OBJECT_TYPE, RETURN_TYPE> {
+public interface Invoker<C, R> {
 
     /**
      * 调用方法放回值， 调用静态方法obj=null
@@ -33,9 +33,9 @@ public interface Invoker<OBJECT_TYPE, RETURN_TYPE> {
      *
      * @return 方法返回的结果
      */
-    public RETURN_TYPE invoke(OBJECT_TYPE obj, Object... params);
+    public R invoke(C obj, Object... params);
 
-    public static <OBJECT_TYPE, RETURN_TYPE> Invoker<OBJECT_TYPE, RETURN_TYPE> load(final Class<OBJECT_TYPE> clazz, final String methodName, final Class... paramTypes) {
+    public static <C, T> Invoker<C, T> load(final Class<C> clazz, final String methodName, final Class... paramTypes) {
         java.lang.reflect.Method method = null;
         try {
             method = clazz.getMethod(methodName, paramTypes);
@@ -45,7 +45,7 @@ public interface Invoker<OBJECT_TYPE, RETURN_TYPE> {
         return load(clazz, method);
     }
 
-    public static <OBJECT_TYPE, RETURN_TYPE> Invoker<OBJECT_TYPE, RETURN_TYPE> create(final Class<OBJECT_TYPE> clazz, final String methodName, final Class... paramTypes) {
+    public static <C, T> Invoker<C, T> create(final Class<C> clazz, final String methodName, final Class... paramTypes) {
         java.lang.reflect.Method method = null;
         try {
             method = clazz.getMethod(methodName, paramTypes);
@@ -64,8 +64,8 @@ public interface Invoker<OBJECT_TYPE, RETURN_TYPE> {
     public static <C, T> Invoker<C, T> create(final Class<C> clazz, final Method method) {
         RedkaleClassLoader.putReflectionDeclaredMethods(clazz.getName());
         RedkaleClassLoader.putReflectionMethod(clazz.getName(), method);
-        boolean throwflag = Utility.contains(method.getExceptionTypes(), e -> !RuntimeException.class.isAssignableFrom(e)); //方法是否会抛出非RuntimeException异常
-        boolean staticflag = Modifier.isStatic(method.getModifiers());
+        boolean throwFlag = Utility.contains(method.getExceptionTypes(), e -> !RuntimeException.class.isAssignableFrom(e)); //方法是否会抛出非RuntimeException异常
+        boolean staticFlag = Modifier.isStatic(method.getModifiers());
         final Class<T> returnType = (Class<T>) method.getReturnType();
         final String supDynName = Invoker.class.getName().replace('.', '/');
         final String interName = clazz.getName().replace('.', '/');
@@ -100,6 +100,7 @@ public interface Invoker<OBJECT_TYPE, RETURN_TYPE> {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
             return (Invoker<C, T>) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz).getDeclaredConstructor().newInstance();
         } catch (Throwable ex) {
+            //do nothing
         }
         //-------------------------------------------------------------
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
@@ -122,11 +123,11 @@ public interface Invoker<OBJECT_TYPE, RETURN_TYPE> {
             Label label0 = new Label();
             Label label1 = new Label();
             Label label2 = new Label();
-            if (throwflag) {
+            if (throwFlag) {
                 mv.visitTryCatchBlock(label0, label1, label2, "java/lang/Throwable");
                 mv.visitLabel(label0);
             }
-            if (!staticflag) {
+            if (!staticFlag) {
                 mv.visitVarInsn(ALOAD, 1);
             }
 
@@ -142,11 +143,11 @@ public interface Invoker<OBJECT_TYPE, RETURN_TYPE> {
                 paramIndex++;
             }
 
-            mv.visitMethodInsn(staticflag ? INVOKESTATIC : (clazz.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL), interName, method.getName(), "(" + paramDescs + ")" + returnPrimiveDesc, !staticflag && clazz.isInterface());
+            mv.visitMethodInsn(staticFlag ? INVOKESTATIC : (clazz.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL), interName, method.getName(), "(" + paramDescs + ")" + returnPrimiveDesc, !staticFlag && clazz.isInterface());
             Asms.visitPrimitiveValueOf(mv, returnType);
             mv.visitLabel(label1);
             mv.visitInsn(ARETURN);
-            if (throwflag) {
+            if (throwFlag) {
                 mv.visitLabel(label2);
                 mv.visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[]{"java/lang/Throwable"});
                 mv.visitVarInsn(ASTORE, 3);

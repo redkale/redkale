@@ -17,9 +17,9 @@ import java.util.function.Supplier;
  */
 public class Traces {
 
-    private static final boolean enable = !Boolean.getBoolean("redkale.trace.disable");
+    private static final boolean ENABLE = !Boolean.getBoolean("redkale.trace.disable");
 
-    private static final String PROCESS_ID = UUID.randomUUID().toString().replaceAll("-", "");
+    private static final String PROCESS_ID = UUID.randomUUID().toString().replace("-", "");
 
     private static final AtomicLong sequence = new AtomicLong(System.currentTimeMillis());
 
@@ -33,7 +33,7 @@ public class Traces {
      * @return boolean
      */
     public static boolean enable() {
-        return enable;
+        return ENABLE;
     }
 
     /**
@@ -42,7 +42,7 @@ public class Traces {
      * @return String
      */
     public static String createTraceid() {
-        return enable ? tidSupplier.get() : null;
+        return ENABLE ? tidSupplier.get() : null;
     }
 
     /**
@@ -51,14 +51,14 @@ public class Traces {
      * @return String
      */
     public static String currentTraceid() {
-        return enable ? localTrace.get() : null;
+        return ENABLE ? localTrace.get() : null;
     }
 
     /**
      * 移除当前线程的traceid
      */
     public static void removeTraceid() {
-        if (enable) {
+        if (ENABLE) {
             localTrace.remove();
         }
     }
@@ -70,7 +70,7 @@ public class Traces {
      *
      */
     public static void currentTraceid(String traceid) {
-        if (enable) {
+        if (ENABLE) {
             if (traceid != null && !traceid.isEmpty()) {
                 localTrace.set(traceid);
             } else {
@@ -87,7 +87,7 @@ public class Traces {
      * @return String
      */
     public static String computeIfAbsent(String traceid) {
-        if (enable) {
+        if (ENABLE) {
             String rs = traceid;
             if (rs == null || rs.isEmpty()) {
                 rs = tidSupplier.get();
@@ -107,7 +107,7 @@ public class Traces {
      * @return String
      */
     public static String computeIfAbsent(String traceid, String traceid2) {
-        if (enable) {
+        if (ENABLE) {
             String rs = traceid;
             if (rs == null || rs.isEmpty()) {
                 if (traceid2 == null || traceid2.isEmpty()) {

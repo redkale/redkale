@@ -5,7 +5,6 @@
  */
 package org.redkale.convert;
 
-import java.io.Serializable;
 import java.lang.reflect.Type;
 import org.redkale.convert.json.JsonConvert;
 
@@ -17,7 +16,7 @@ import org.redkale.convert.json.JsonConvert;
  *
  * @author zhangjx
  */
-public class ConvertField implements Serializable {
+public class ConvertField {
 
     protected String name;
 

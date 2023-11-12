@@ -33,7 +33,7 @@ public abstract class Flows {
      * }
      * </pre></blockquote>
      */
-    private static final String functionMonoFutureBinary = "cafebabe0000003700220a000200030700040c0005000"
+    private static final String FUNCTION_MONO_FUTRUE_BINARY = "cafebabe0000003700220a000200030700040c0005000"
         + "60100106a6176612f6c616e672f4f626a6563740100063c696e69743e01000328295607000801001b72656163746f722f636f72652"
         + "f7075626c69736865722f4d6f6e6f0a0007000a0c000b000c010008746f46757475726501002a28294c6a6176612f7574696c2f636"
         + "f6e63757272656e742f436f6d706c657461626c654675747572653b0a000e000f0700100c0011001201002c6f72672f7265646b616"
@@ -65,7 +65,7 @@ public abstract class Flows {
      * }
      * </pre></blockquote>
      */
-    private static final String functionFluxFutureBinary = "cafebabe0000003700280a000200030700040c0005000"
+    private static final String FUNCTION_FLUX_FUTRUE_BINARY = "cafebabe0000003700280a000200030700040c0005000"
         + "60100106a6176612f6c616e672f4f626a6563740100063c696e69743e01000328295607000801001b72656163746f722f636f72"
         + "652f7075626c69736865722f466c75780a0007000a0c000b000c01000b636f6c6c6563744c69737401001f28294c72656163746"
         + "f722f636f72652f7075626c69736865722f4d6f6e6f3b0a000e000f0700100c0011001201001b72656163746f722f636f72652f"
@@ -110,9 +110,10 @@ public abstract class Flows {
                 try {
                     monoFuncClass = (Class) Thread.currentThread().getContextClassLoader().loadClass("org.redkale.util.AnonymousMonoFutureFunction");
                 } catch (Throwable t) {
+                    //do nothing
                 }
                 if (monoFuncClass == null) {
-                    byte[] classBytes = hexToBin(functionMonoFutureBinary);
+                    byte[] classBytes = hexToBin(FUNCTION_MONO_FUTRUE_BINARY);
                     monoFuncClass = (Class<Function<Object, CompletableFuture>>) new ClassLoader() {
                         public final Class<?> loadClass(String name, byte[] b) {
                             return defineClass(name, b, 0, b.length);
@@ -128,9 +129,10 @@ public abstract class Flows {
                 try {
                     fluxFuncClass = (Class) Thread.currentThread().getContextClassLoader().loadClass("org.redkale.util.AnonymousFluxFutureFunction");
                 } catch (Throwable t) {
+                    //do nothing
                 }
                 if (fluxFuncClass == null) {
-                    byte[] classBytes = hexToBin(functionFluxFutureBinary);
+                    byte[] classBytes = hexToBin(FUNCTION_FLUX_FUTRUE_BINARY);
                     fluxFuncClass = (Class<Function<Object, CompletableFuture>>) new ClassLoader() {
                         public final Class<?> loadClass(String name, byte[] b) {
                             return defineClass(name, b, 0, b.length);
@@ -141,6 +143,7 @@ public abstract class Flows {
                 RedkaleClassLoader.putReflectionDeclaredConstructors(fluxFuncClass, fluxFuncClass.getName());
                 reactorFluxFunction0 = (Function<Object, CompletableFuture>) fluxFuncClass.getDeclaredConstructor().newInstance();
             } catch (Throwable t) {
+                //do nothing
             }
         }
 

@@ -227,7 +227,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
 //    public abstract <A> AsyncConnection fastHandler(CompletionHandler<Integer, ? super A> handler);
 //
 //    public abstract <A> void fastWrite(byte[] data);
-
     protected abstract void readRegisterImpl(CompletionHandler<Integer, ByteBuffer> handler);
 
     protected abstract void readImpl(CompletionHandler<Integer, ByteBuffer> handler);
@@ -804,6 +803,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         try {
             this.close();
         } catch (IOException io) {
+            //do nothing
         }
     }
 
@@ -827,6 +827,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
                 sslEngine.closeInbound();
                 sslEngine.closeOutbound();
             } catch (SSLException e) {
+                //do nothing
             }
             sslEngine = null;
         }
@@ -834,6 +835,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
             try {
                 beforeCloseListener.accept(this);
             } catch (Exception io) {
+                //do nothing
             }
         }
         if (this.readBuffer != null && Thread.currentThread() == this.ioReadThread) {
@@ -853,6 +855,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
             }
             attributes.clear();
         } catch (Exception io) {
+            //do nothing
         }
     }
 

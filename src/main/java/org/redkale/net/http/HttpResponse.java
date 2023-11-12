@@ -59,9 +59,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     protected static final byte[] connectAliveBytes = "none".equalsIgnoreCase(System.getProperty("redkale.http.response.header.connection")) ? new byte[0] : "Connection: keep-alive\r\n".getBytes();
 
-    protected static final String contentTypeHtmlUTF8 = "text/html; charset=utf-8";
+    protected static final String CONTENT_TYPE_HTML_UTF8 = "text/html; charset=utf-8";
 
-    private static final int cacheMaxContentLength = 1000;
+    private static final int CACHE_MAX_CONTENT_LENGTH = 1000;
 
     private static final byte[] status200_server_live_Bytes = append(append(status200Bytes, serverNameBytes), connectAliveBytes);
 
@@ -71,7 +71,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private static final Map<Integer, String> httpCodes = new HashMap<>();
 
-    private static final byte[][] contentLengthArray = new byte[cacheMaxContentLength][];
+    private static final byte[][] contentLengthArray = new byte[CACHE_MAX_CONTENT_LENGTH][];
 
     private static final JsonConvert jsonRootConvert = JsonConvert.root();
 
@@ -122,7 +122,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         httpCodes.put(504, "Gateway Timeout");
         httpCodes.put(505, "HTTP Version Not Supported");
 
-        for (int i = 0; i < cacheMaxContentLength; i++) {
+        for (int i = 0; i < CACHE_MAX_CONTENT_LENGTH; i++) {
             contentLengthArray[i] = ("Content-Length: " + i + "\r\n").getBytes();
         }
     }
@@ -729,7 +729,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             return;
         }
         if (httpRender != null) {
-            setContentType(contentTypeHtmlUTF8);
+            setContentType(CONTENT_TYPE_HTML_UTF8);
             if (result.getHeaders() != null) {
                 addHeader(result.getHeaders());
             }
@@ -1301,6 +1301,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                         try {
                             fileChannel.close();
                         } catch (IOException ie) {
+                            //do nothing
                         }
                         completeFinishBytes(result, attachment);
                         return;
@@ -1333,6 +1334,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                         try {
                             fileChannel.close();
                         } catch (IOException ie) {
+                            //do nothing
                         }
                     }
                     failed(e, attachment);
@@ -1638,13 +1640,13 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
         public AnyValue renderConfig;
 
-        public final byte[][] plainLiveContentLengthArray = new byte[cacheMaxContentLength][];
+        public final byte[][] plainLiveContentLengthArray = new byte[CACHE_MAX_CONTENT_LENGTH][];
 
-        public final byte[][] jsonLiveContentLengthArray = new byte[cacheMaxContentLength][];
+        public final byte[][] jsonLiveContentLengthArray = new byte[CACHE_MAX_CONTENT_LENGTH][];
 
-        public final byte[][] plainCloseContentLengthArray = new byte[cacheMaxContentLength][];
+        public final byte[][] plainCloseContentLengthArray = new byte[CACHE_MAX_CONTENT_LENGTH][];
 
-        public final byte[][] jsonCloseContentLengthArray = new byte[cacheMaxContentLength][];
+        public final byte[][] jsonCloseContentLengthArray = new byte[CACHE_MAX_CONTENT_LENGTH][];
 
         public HttpResponseConfig init(AnyValue config) {
             if (this.plainContentTypeBytes == null) {
@@ -1654,7 +1656,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 this.jsonContentType = jsonct;
                 this.plainContentTypeBytes = ("Content-Type: " + plainct + "\r\n").getBytes();
                 this.jsonContentTypeBytes = ("Content-Type: " + jsonct + "\r\n").getBytes();
-                for (int i = 0; i < cacheMaxContentLength; i++) {
+                for (int i = 0; i < CACHE_MAX_CONTENT_LENGTH; i++) {
                     byte[] lenbytes = ("Content-Length: " + i + "\r\n").getBytes();
                     plainLiveContentLengthArray[i] = append(append(status200_server_live_Bytes, plainContentTypeBytes), lenbytes);
                     plainCloseContentLengthArray[i] = append(append(status200_server_close_Bytes, plainContentTypeBytes), lenbytes);

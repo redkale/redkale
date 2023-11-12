@@ -639,6 +639,7 @@ public abstract class TypeToken<T> {
         try {
             return loader.loadClass(newDynName.replace('/', '.')).getField("field").getGenericType();
         } catch (Throwable ex) {
+            //do nothing
         }
         // ------------------------------------------------------------------------------
         org.redkale.asm.ClassWriter cw = new org.redkale.asm.ClassWriter(COMPUTE_FRAMES);

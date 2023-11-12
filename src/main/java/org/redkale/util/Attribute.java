@@ -735,6 +735,7 @@ public interface Attribute<T, F> {
                             getter = m;
                         }
                     } catch (Exception ex2) {
+                        //do nothing
                     }
                 }
             }
@@ -742,6 +743,7 @@ public interface Attribute<T, F> {
                 try {
                     setter = clazz.getMethod("set" + mn, field.getType());
                 } catch (Exception ex) {
+                    //do nothing
                 }
             }
         }
@@ -868,6 +870,7 @@ public interface Attribute<T, F> {
             _attach.set(rs, attach);
             return rs;
         } catch (Throwable ex) {
+            //do nothing
         }
         //---------------------------------------------------
         final ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);

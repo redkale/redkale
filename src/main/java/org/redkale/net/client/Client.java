@@ -169,6 +169,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
                         conn.writeChannel(req).thenAccept(p -> handlePingResult((C) conn, p));
                     }
                 } catch (Throwable t) {
+                    //do nothing
                 }
             }, pingIntervalSeconds(), pingIntervalSeconds(), TimeUnit.SECONDS);
         }
@@ -213,6 +214,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
             try {
                 conn.writeChannel(closeReq).get(1, TimeUnit.SECONDS);
             } catch (Exception e) {
+                //do nothing
             }
             conn.dispose(null);
         }

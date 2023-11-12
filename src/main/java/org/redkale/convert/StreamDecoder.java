@@ -66,7 +66,9 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
         byte[] typevals = new byte[1];
         int len = in.readArrayB(member, typevals, this.componentDecoder);
         int contentLength = -1;
-        if (len == Reader.SIGN_NULL) return null;
+        if (len == Reader.SIGN_NULL) {
+            return null;
+        }
         if (len == Reader.SIGN_NOLENBUTBYTES) {
             contentLength = in.readMemberContentLength(member, this.componentDecoder);
             len = Reader.SIGN_NOLENGTH;
@@ -77,6 +79,7 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
                 try {
                     condition.await();
                 } catch (Exception e) {
+                    //do nothing
                 } finally {
                     lock.unlock();
                 }
@@ -89,7 +92,9 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
             int startPosition = in.position();
             while (hasNext(in, member, startPosition, contentLength, first)) {
                 Reader itemReader = getItemReader(in, member, first);
-                if (itemReader == null) break;
+                if (itemReader == null) {
+                    break;
+                }
                 result.add(readMemberValue(itemReader, member, localdecoder, first));
                 first = false;
             }

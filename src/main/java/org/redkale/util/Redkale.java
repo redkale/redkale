@@ -14,13 +14,13 @@ package org.redkale.util;
  */
 public final class Redkale {
 
-    private static final String rootPackage = "org.redkale";
+    private static final String ROOT_PACKAGE = "org.redkale";
 
     private Redkale() { 
     }
 
     public static String getRootPackage() {
-        return rootPackage;
+        return ROOT_PACKAGE;
     }
 
     public static String getDotedVersion() {

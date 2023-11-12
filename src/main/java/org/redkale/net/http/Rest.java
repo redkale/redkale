@@ -427,6 +427,7 @@ public final class Rest {
             }
             namePresent = m0 == null ? true : m0.getParameters()[0].isNamePresent();
         } catch (Exception e) {
+            //do nothing
         }
         final Map<String, List<String>> asmParamMap = namePresent ? null : MethodParamClassVisitor.getMethodParamNames(new HashMap<>(), webSocketType);
         final Set<String> messageNames = new HashSet<>();
@@ -518,6 +519,7 @@ public final class Rest {
             }
             return servlet;
         } catch (Throwable e) {
+            //do nothing
         }
 
         final List<Field> resourcesFields = new ArrayList<>(resourcesFieldSet);
@@ -1390,8 +1392,11 @@ public final class Rest {
                         } else if (pname != null && pname.charAt(0) == '#') { //从request.getRequstURIPath 中去参数
                         } else if ("&".equals(pname) && ptype == userType) { //当前用户对象的类名
                         } else if (ptype.isPrimitive()) {
+                            //do nothing
                         } else if (ptype == String.class) {
+                            //do nothing
                         } else if (ptype == Flipper.class) {
+                            //do nothing
                         } else { //其他Json对象
                             //构建 RestHeader、RestCookie、RestAddress 等赋值操作
                             Class loop = ptype;
@@ -1476,20 +1481,31 @@ public final class Rest {
                                     if (en.getKey().contains("_header_")) {
                                         String headerkey = en.getValue()[0].toString();
                                         if ("Host".equalsIgnoreCase(headerkey)) {
+                                            //do nothing
                                         } else if ("Content-Type".equalsIgnoreCase(headerkey)) {
+                                            //do nothing
                                         } else if ("Connection".equalsIgnoreCase(headerkey)) {
+                                            //do nothing
                                         } else if ("Method".equalsIgnoreCase(headerkey)) {
+                                            //do nothing
                                         } else if (en.getKey().contains("_header_json_")) {
                                             String typefieldname = "_redkale_body_jsontype_" + bodyTypes.size();
                                             bodyTypes.put(typefieldname, (java.lang.reflect.Type) en.getValue()[2]);
                                         }
                                     } else if (en.getKey().contains("_cookie_")) {
+                                        //do nothing
                                     } else if (en.getKey().contains("_sessionid_")) {
+                                        //do nothing
                                     } else if (en.getKey().contains("_address_")) {
+                                        //do nothing
                                     } else if (en.getKey().contains("_locale_")) {
+                                        //do nothing
                                     } else if (en.getKey().contains("_uri_")) {
+                                        //do nothing
                                     } else if (en.getKey().contains("_bodystring_")) {
+                                        //do nothing
                                     } else if (en.getKey().contains("_bodybytes_")) {
+                                        //do nothing
                                     } else if (en.getKey().contains("_bodyjson_")) {//JavaBean 转 Json
                                         String typefieldname = "_redkale_body_jsontype_" + bodyTypes.size();
                                         bodyTypes.put(typefieldname, (java.lang.reflect.Type) en.getValue()[2]);
@@ -1870,6 +1886,7 @@ public final class Rest {
             }
             namePresent = m0 == null ? true : m0.getParameters()[0].isNamePresent();
         } catch (Exception e) {
+            //do nothing
         }
         final Map<String, List<String>> asmParamMap = namePresent ? null : MethodParamClassVisitor.getMethodParamNames(new HashMap<>(), serviceType);
 

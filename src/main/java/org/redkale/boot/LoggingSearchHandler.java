@@ -174,6 +174,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
                 setLevel(l != null ? l : Level.ALL);
             }
         } catch (Exception e) {
+            //do nothing
         }
         String filterstr = manager.getProperty(cname + ".filter");
         try {
@@ -183,6 +184,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
                 setFilter((Filter) clz.getDeclaredConstructor().newInstance());
             }
         } catch (Exception e) {
+            //do nothing
         }
         String formatterstr = manager.getProperty(cname + ".formatter");
         try {
@@ -192,6 +194,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
                 setFormatter((Formatter) clz.getDeclaredConstructor().newInstance());
             }
         } catch (Exception e) {
+            //do nothing
         }
         if (getFormatter() == null) {
             setFormatter(new SimpleFormatter());
@@ -203,6 +206,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
                 setEncoding(encodingstr);
             }
         } catch (Exception e) {
+            //do nothing
         }
 
         String denyregxstr = manager.getProperty(cname + ".denyregx");
@@ -211,6 +215,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
                 denyRegx = Pattern.compile(denyregxstr);
             }
         } catch (Exception e) {
+            //do nothing
         }
     }
 

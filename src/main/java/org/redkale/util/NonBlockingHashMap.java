@@ -1041,13 +1041,14 @@ public class NonBlockingHashMap<TypeK, TypeV> extends AbstractMap<TypeK, TypeV> 
                 newkvs = _newkvs;        // Between dorking around, another thread did it
                 if (newkvs != null) // See if resize is already in progress
                     return newkvs;         // Use the new table already
-                // TODO - use a wait with timeout, so we'll wakeup as soon as the new table
+                // TO DO - use a wait with timeout, so we'll wakeup as soon as the new table
                 // is ready, or after the timeout in any case.
                 // For now, sleep a tad and see if the 2 guys already trying to make
                 // the table actually get around to making it happen.
                 try {
                     Thread.sleep(megs);
-                } catch (Exception e) {
+                } catch (Exception e) {                    
+                    //do nothing
                 }
             }
             // Last check, since the 'new' below is expensive and there is a chance

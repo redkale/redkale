@@ -85,6 +85,7 @@ public class OptionalCoder<R extends Reader, W extends Writer, T> extends Simple
                 try {
                     condition.await();
                 } catch (Exception e) {
+                    //do nothing
                 } finally {
                     lock.unlock();
                 }
@@ -101,6 +102,7 @@ public class OptionalCoder<R extends Reader, W extends Writer, T> extends Simple
                 try {
                     condition.await();
                 } catch (Exception e) {
+                    //do nothing
                 } finally {
                     lock.unlock();
                 }

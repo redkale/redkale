@@ -77,7 +77,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     protected final BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader = (s, i)
         -> ((CompletableFuture<Sheet>) querySheetDBAsync(i, false, false, false, null, null, (FilterNode) null)).thenApply(e -> e == null ? new ArrayList() : e.list(true));
 
-    protected final Function<Integer, String> signFunc = index -> prepareParamSign(index);
+    protected final IntFunction<String> signFunc = index -> prepareParamSign(index);
 
     //超过多少毫秒视为较慢, 会打印警告级别的日志, 默认值: 2000
     protected long slowmsWarn;

@@ -200,6 +200,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
                 });
             } catch (Throwable t) {
+                //do nothing
             }
         }
     }
@@ -707,6 +708,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                                 encoder = (Encodeable) instanceField.get(null);
                             }
                         } catch (Exception e) {
+                            //do nothing
                         }
                         if (encoder == null) {
                             Creator<? extends Encodeable> creator = Creator.create(enClazz);
@@ -774,6 +776,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                                 decoder = (Decodeable) instanceField.get(null);
                             }
                         } catch (Exception e) {
+                            //do nothing
                         }
                         if (decoder == null) {
                             Creator<? extends Decodeable> creator = Creator.create(deClazz);
@@ -947,6 +950,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         try {
             field = type.getDeclaredField(column);
         } catch (Exception e) {
+            //do nothing
         }
         String get = "get";
         if (field != null && (field.getType() == boolean.class || field.getType() == Boolean.class)) {
@@ -962,13 +966,16 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                 try {
                     register(type.getMethod("is" + bigColumn), entry);
                 } catch (Exception ex) {
+                    //do nothing
                 }
             }
         } catch (Exception ex) {
+            //do nothing
         }
         try {
             register(type.getMethod("set" + bigColumn, field.getType()), entry);
         } catch (Exception ex) {
+            //do nothing
         }
         return field == null ? true : register(field, entry);
     }

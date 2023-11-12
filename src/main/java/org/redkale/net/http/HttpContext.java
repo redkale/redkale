@@ -14,7 +14,6 @@ import org.redkale.annotation.ConstructorParameters;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.net.*;
-import org.redkale.net.Context;
 import org.redkale.net.Context.ContextConfig;
 import org.redkale.util.*;
 
@@ -117,6 +116,7 @@ public class HttpContext extends Context {
             Class newHandlerClazz = clz == null ? Thread.currentThread().getContextClassLoader().loadClass(newDynName.replace('/', '.')) : clz;
             return Creator.create(newHandlerClazz);
         } catch (Throwable ex) {
+            //do nothing
         }
         // ------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);

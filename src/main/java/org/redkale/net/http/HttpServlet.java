@@ -512,6 +512,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             instance.getClass().getField("_factServlet").set(instance, this);
             return instance;
         } catch (Throwable ex) {
+            //do nothing
         }
         //------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);

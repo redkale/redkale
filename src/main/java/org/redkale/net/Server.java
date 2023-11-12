@@ -458,6 +458,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         try {
             this.serverChannel.close();
         } catch (Exception e) {
+            //do nothing
         }
         logger.info(this.getClass().getSimpleName() + "-" + this.netprotocol + " shutdow prepare servlet");
         this.dispatcher.destroy(this.context, config);

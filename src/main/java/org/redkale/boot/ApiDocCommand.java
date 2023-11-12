@@ -687,6 +687,7 @@ public final class ApiDocCommand {
                     Type valType = pt.getActualTypeArguments()[0];
                     return formatExample(factory, example, valType instanceof ParameterizedType ? (Class) ((ParameterizedType) valType).getRawType() : ((Class) valType), valType);
                 } catch (Throwable t) {
+            //do nothing
                 }
             }
         } else if (Sheet.class.isAssignableFrom(type)) { //要在Collection前面
@@ -698,6 +699,7 @@ public final class ApiDocCommand {
                     Object val = formatExample(factory, example, valClass, valType);
                     return new StringWrapper(jsonFactory.getConvert().convertTo(jsonFactory.getConvert().convertFrom(genericType, "{'rows':[" + val + "," + val + "]}")));
                 } catch (Throwable t) {
+            //do nothing
                 }
             }
         } else if (type.isArray()) {
@@ -705,6 +707,7 @@ public final class ApiDocCommand {
                 Object val = formatExample(factory, example, type.getComponentType(), type.getComponentType());
                 return new StringWrapper(jsonFactory.getConvert().convertTo(jsonFactory.getConvert().convertFrom(genericType, "[" + val + "," + val + "]")));
             } catch (Throwable t) {
+            //do nothing
             }
         } else if (Collection.class.isAssignableFrom(type)) {
             if (genericType instanceof ParameterizedType) {
@@ -715,6 +718,7 @@ public final class ApiDocCommand {
                     Object val = formatExample(factory, example, valClass, valType);
                     return new StringWrapper(jsonFactory.getConvert().convertTo(jsonFactory.getConvert().convertFrom(genericType, "[" + val + "," + val + "]")));
                 } catch (Throwable t) {
+            //do nothing
                 }
             }
         } else if (type == RetResult.class) {
@@ -726,6 +730,7 @@ public final class ApiDocCommand {
                     Object val = formatExample(factory, example, valClass, valType);
                     return new StringWrapper(jsonFactory.getConvert().convertTo(jsonFactory.getConvert().convertFrom(genericType, "{'result':" + val + "}")));
                 } catch (Throwable t) {
+            //do nothing
                 }
             }
         } else if (type != void.class) {
@@ -752,6 +757,7 @@ public final class ApiDocCommand {
                 Creator creator = Creator.create(type);
                 return new StringWrapper(jsonFactory.getConvert().convertTo(creator.create()));
             } catch (Throwable t) {
+            //do nothing
             }
         }
         return example;

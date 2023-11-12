@@ -105,6 +105,7 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
                 try {
                     condition.await();
                 } catch (Exception e) {
+                    //do nothing
                 } finally {
                     lock.unlock();
                 }

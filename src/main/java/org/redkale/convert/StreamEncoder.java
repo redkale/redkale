@@ -78,6 +78,7 @@ public class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
                 try {
                     condition.await();
                 } catch (Exception e) {
+                    //do nothing
                 } finally {
                     lock.unlock();
                 }

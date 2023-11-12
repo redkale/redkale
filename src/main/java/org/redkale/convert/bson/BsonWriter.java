@@ -21,7 +21,7 @@ import org.redkale.util.*;
  */
 public class BsonWriter extends Writer implements ByteTuple {
 
-    private static final int defaultSize = Integer.getInteger("redkale.convert.bson.writer.buffer.defsize", Integer.getInteger("redkale.convert.writer.buffer.defsize", 1024));
+    private static final int DEFAULT_SIZE = Integer.getInteger("redkale.convert.bson.writer.buffer.defsize", Integer.getInteger("redkale.convert.writer.buffer.defsize", 1024));
 
     private byte[] content;
 
@@ -81,7 +81,7 @@ public class BsonWriter extends Writer implements ByteTuple {
     }
 
     public BsonWriter() {
-        this(defaultSize);
+        this(DEFAULT_SIZE);
         this.features = BsonFactory.root().getFeatures();
     }
 
@@ -144,8 +144,8 @@ public class BsonWriter extends Writer implements ByteTuple {
         super.recycle();
         this.count = 0;
         this.specificObjectType = null;
-        if (this.content != null && this.content.length > defaultSize) {
-            this.content = new byte[defaultSize];
+        if (this.content != null && this.content.length > DEFAULT_SIZE) {
+            this.content = new byte[DEFAULT_SIZE];
         }
         return true;
     }

@@ -3,8 +3,8 @@ package org.redkale.util;
 import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.function.*;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
 
 /**
@@ -17,7 +17,8 @@ import static org.redkale.asm.Opcodes.*;
  * @author zhangjx
  * @param <D> 目标对象的数据类型
  * @param <S> 源对象的数据类型
- * @deprecated 
+ *
+ * @deprecated
  */
 @Deprecated(since = "2.8.0")
 public interface Reproduce<D, S> extends BiFunction<D, S, D> {
@@ -64,6 +65,7 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
             return (Reproduce) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz).getDeclaredConstructor().newInstance();
         } catch (Throwable ex) {
+            //do nothing
         }
         // ------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
@@ -87,16 +89,26 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
             //mv.setDebug(true);
 
             for (java.lang.reflect.Field field : srcClass.getFields()) {
-                if (Modifier.isStatic(field.getModifiers())) continue;
-                if (Modifier.isFinal(field.getModifiers())) continue;
-                if (!Modifier.isPublic(field.getModifiers())) continue;
+                if (Modifier.isStatic(field.getModifiers())) {
+                    continue;
+                }
+                if (Modifier.isFinal(field.getModifiers())) {
+                    continue;
+                }
+                if (!Modifier.isPublic(field.getModifiers())) {
+                    continue;
+                }
                 final String sfname = field.getName();
-                if (srcColumnPredicate != null && !srcColumnPredicate.test(field, sfname)) continue;
+                if (srcColumnPredicate != null && !srcColumnPredicate.test(field, sfname)) {
+                    continue;
+                }
 
                 final String dfname = names == null ? sfname : names.getOrDefault(sfname, sfname);
                 java.lang.reflect.Method setter = null;
                 try {
-                    if (!field.getType().equals(destClass.getField(dfname).getType())) continue;
+                    if (!field.getType().equals(destClass.getField(dfname).getType())) {
+                        continue;
+                    }
                 } catch (Exception e) {
                     try {
                         char[] cs = dfname.toCharArray();
@@ -119,19 +131,31 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
             }
 
             for (java.lang.reflect.Method getter : srcClass.getMethods()) {
-                if (Modifier.isStatic(getter.getModifiers())) continue;
-                if (getter.getParameterTypes().length > 0) continue;
-                if ("getClass".equals(getter.getName())) continue;
-                if (!getter.getName().startsWith("get") && !getter.getName().startsWith("is")) continue;
+                if (Modifier.isStatic(getter.getModifiers())) {
+                    continue;
+                }
+                if (getter.getParameterTypes().length > 0) {
+                    continue;
+                }
+                if ("getClass".equals(getter.getName())) {
+                    continue;
+                }
+                if (!getter.getName().startsWith("get") && !getter.getName().startsWith("is")) {
+                    continue;
+                }
                 final boolean is = getter.getName().startsWith("is");
                 String sfname = getter.getName().substring(is ? 2 : 3);
-                if (sfname.isEmpty()) continue;
+                if (sfname.isEmpty()) {
+                    continue;
+                }
                 if (sfname.length() < 2 || Character.isLowerCase(sfname.charAt(1))) {
                     char[] cs = sfname.toCharArray();
                     cs[0] = Character.toLowerCase(cs[0]);
                     sfname = new String(cs);
                 }
-                if (srcColumnPredicate != null && !srcColumnPredicate.test(getter, sfname)) continue;
+                if (srcColumnPredicate != null && !srcColumnPredicate.test(getter, sfname)) {
+                    continue;
+                }
 
                 final String dfname = names == null ? sfname : names.getOrDefault(sfname, sfname);
                 java.lang.reflect.Method setter = null;
@@ -144,7 +168,9 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                 } catch (Exception e) {
                     try {
                         srcField = destClass.getField(dfname);
-                        if (!getter.getReturnType().equals(srcField.getType())) continue;
+                        if (!getter.getReturnType().equals(srcField.getType())) {
+                            continue;
+                        }
                     } catch (Exception e2) {
                         continue;
                     }

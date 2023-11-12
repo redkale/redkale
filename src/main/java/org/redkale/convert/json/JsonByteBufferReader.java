@@ -135,6 +135,7 @@ public class JsonByteBufferReader extends JsonReader {
         try {
             while ((one = nextChar()) != 0) sb.append(one);
         } catch (Exception e) {
+            //do nothing
         }
         throw new ConvertException("a json object text must begin with '{' (position = " + pos + ") but '" + ch + "' in (" + sb + ")");
     }
@@ -167,6 +168,7 @@ public class JsonByteBufferReader extends JsonReader {
         try {
             while ((one = nextChar()) != 0) sb.append(one);
         } catch (Exception e) {
+            //do nothing
         }
         throw new ConvertException("a json array text must begin with '[' (position = " + pos + ") but '" + ch + "' in (" + sb + ")");
     }
@@ -187,6 +189,7 @@ public class JsonByteBufferReader extends JsonReader {
         try {
             while ((one = nextChar()) != 0) sb.append(one);
         } catch (Exception e) {
+            //do nothing
         }
         throw new ConvertException("expected a ':' but '" + ch + "'(position = " + pos + ") in (" + sb + ")");
     }

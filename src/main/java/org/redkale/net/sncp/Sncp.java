@@ -65,6 +65,59 @@ public abstract class Sncp {
         Class type(); //serviceType
 
         int index() default 0;  //排列顺序， 主要用于Method
+
+    }
+
+    public static class SchedulingEntry {
+
+        private Class serviceType;
+
+        private String methodName;
+
+        private Scheduled schedule;
+
+        private Runnable task;
+
+        public SchedulingEntry(Class serviceType, String methodName, Scheduled schedule, Runnable task) {
+            Objects.requireNonNull(serviceType);
+            Objects.requireNonNull(methodName);
+            Objects.requireNonNull(schedule);
+            Objects.requireNonNull(task);
+            this.serviceType = serviceType;
+            this.methodName = methodName;
+            this.schedule = schedule;
+            this.task = task;
+        }
+
+        public Class getServiceType() {
+            return serviceType;
+        }
+
+        public String getMethodName() {
+            return methodName;
+        }
+
+        public Scheduled getSchedule() {
+            return schedule;
+        }
+
+        public Runnable getTask() {
+            return task;
+        }
+
+        @Override
+        public String toString() {
+            return getClass().getSimpleName() + "{"
+                + "serviceType=" + serviceType
+                + ", methodName=" + methodName
+                + ", schedule.cron=" + schedule.cron()
+                + ", schedule.zone=" + schedule.zone()
+                + ", schedule.fixedDelay=" + schedule.fixedDelay()
+                + ", schedule.fixedRate=" + schedule.fixedRate()
+                + ", schedule.initialDelay=" + schedule.initialDelay()
+                + ", schedule.timeUnit=" + schedule.timeUnit()
+                + '}';
+        }
     }
 
     private Sncp() {
@@ -492,6 +545,7 @@ public abstract class Sncp {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
             return (Class<T>) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz);
         } catch (ClassNotFoundException e) {
+            //do nothing
         } catch (Throwable t) {
             t.printStackTrace();
         }
@@ -562,6 +616,7 @@ public abstract class Sncp {
             c = newClazz.getDeclaredField(FIELDPREFIX + "_mq");
             RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), c);
         } catch (Exception e) {
+            //do nothing
         }
         return (Class<T>) newClazz;
     }
@@ -771,6 +826,7 @@ public abstract class Sncp {
             }
             return service;
         } catch (Throwable ex) {
+            //do nothing
         }
         //------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);

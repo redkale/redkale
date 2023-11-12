@@ -100,18 +100,18 @@ public class WebSocketEngine {
         if (conf != null && conf.getAnyValue("properties") != null) {
             props = conf.getAnyValue("properties");
         }
-        this.liveInterval = props == null ? (liveInterval < 0 ? DEFAILT_LIVEINTERVAL : liveInterval) : props.getIntValue(WEBPARAM__LIVEINTERVAL, (liveInterval < 0 ? DEFAILT_LIVEINTERVAL : liveInterval));
+        this.liveInterval = props == null ? (liveInterval < 0 ? DEFAILT_LIVEINTERVAL : liveInterval) : props.getIntValue(WEBPARAM_LIVEINTERVAL, (liveInterval < 0 ? DEFAILT_LIVEINTERVAL : liveInterval));
         if (liveInterval <= 0) {
             return;
         }
         if (props != null) {
-            this.wsMaxConns = props.getIntValue(WEBPARAM__WSMAXCONNS, this.wsMaxConns);
+            this.wsMaxConns = props.getIntValue(WEBPARAM_WSMAXCONNS, this.wsMaxConns);
         }
         if (props != null) {
-            this.wsThreads = props.getIntValue(WEBPARAM__WSTHREADS, this.wsThreads);
+            this.wsThreads = props.getIntValue(WEBPARAM_WSTHREADS, this.wsThreads);
         }
         if (props != null) {
-            this.wsMaxBody = props.getIntValue(WEBPARAM__WSMAXBODY, this.wsMaxBody);
+            this.wsMaxBody = props.getIntValue(WEBPARAM_WSMAXBODY, this.wsMaxBody);
         }
         if (scheduler != null) {
             return;

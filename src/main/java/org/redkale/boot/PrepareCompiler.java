@@ -131,6 +131,7 @@ public class PrepareCompiler {
             try {
                 FilterNodeBean.load(clz);
             } catch (Exception e) {
+                //do nothing
             }
         }
         for (ApplicationListener listener : application.listeners) {

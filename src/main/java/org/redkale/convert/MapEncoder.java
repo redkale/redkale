@@ -83,6 +83,7 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
                 try {
                     condition.await();
                 } catch (Exception e) {
+                    //do nothing
                 } finally {
                     lock.unlock();
                 }

@@ -131,6 +131,7 @@ public abstract class LoggingBaseHandler extends Handler {
             ps.println(handlerName + ".formatter = " + LoggingFormater.class.getName());
             LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(out.toByteArray()));
         } catch (Exception e) {
+            //do nothing
         }
     }
 

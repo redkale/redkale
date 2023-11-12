@@ -1054,6 +1054,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                                     }
                                 }
                             } catch (Exception e2) {
+                                //do nothing
                             }
                         }
                         if (setter == null) {

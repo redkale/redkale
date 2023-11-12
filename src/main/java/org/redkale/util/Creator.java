@@ -272,6 +272,7 @@ public interface Creator<T> {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
             return (Creator) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz).getDeclaredConstructor().newInstance();
         } catch (Throwable ex) {
+            //do nothing
         }
 
         Constructor<T> constructor0 = null;
