@@ -995,7 +995,7 @@ public final class Utility {
         }
         boolean[] rs = new boolean[array.length];
         for (int i = 0; i < rs.length; i++) {
-            rs[i] = array[i] == null ? false : array[i];
+            rs[i] = array[i] != null && array[i];
         }
         return rs;
     }

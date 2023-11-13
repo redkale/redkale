@@ -1677,7 +1677,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             stmt = conn.createQueryStatement();
             ResultSet set = stmt.executeQuery(sql);
             ResultSetMetaData rsd = set.getMetaData();
-            boolean smallint = rsd == null ? false : rsd.getColumnType(1) == Types.SMALLINT;
+            boolean smallint = rsd != null && rsd.getColumnType(1) == Types.SMALLINT;
             while (set.next()) {
                 rs.put((K) (smallint ? set.getShort(1) : set.getObject(1)), (N) set.getObject(2));
             }
@@ -1727,7 +1727,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         stmt = conn.createQueryStatement();
                         ResultSet set = stmt.executeQuery(sql);
                         ResultSetMetaData rsd = set.getMetaData();
-                        boolean smallint = rsd == null ? false : rsd.getColumnType(1) == Types.SMALLINT;
+                        boolean smallint = rsd != null && rsd.getColumnType(1) == Types.SMALLINT;
                         while (set.next()) {
                             rs.put((K) (smallint ? set.getShort(1) : set.getObject(1)), (N) set.getObject(2));
                         }
@@ -1772,7 +1772,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 if (smallints == null) {
                     smallints = new boolean[keys.length];
                     for (int i = 0; i < keys.length; i++) {
-                        smallints[i] = rsd == null ? false : rsd.getColumnType(i + 1) == Types.SMALLINT;
+                        smallints[i] = rsd != null && rsd.getColumnType(i + 1) == Types.SMALLINT;
                     }
                 }
                 for (int i = 0; i < keys.length; i++) {
@@ -1830,7 +1830,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         stmt = conn.createQueryStatement();
                         ResultSet set = stmt.executeQuery(sql);
                         ResultSetMetaData rsd = set.getMetaData();
-                        boolean smallint = rsd == null ? false : rsd.getColumnType(1) == Types.SMALLINT;
+                        boolean smallint = rsd != null && rsd.getColumnType(1) == Types.SMALLINT;
                         while (set.next()) {
                             rs.put((K) (smallint ? set.getShort(1) : set.getObject(1)), (N) set.getObject(2));
                         }

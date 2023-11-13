@@ -46,7 +46,7 @@ public class NodeHttpServer extends NodeServer {
     public NodeHttpServer(Application application, AnyValue serconf) {
         super(application, createServer(application, serconf));
         this.httpServer = (HttpServer) server;
-        this.rest = serconf == null ? false : serconf.getAnyValue("rest") != null;
+        this.rest = serconf != null && serconf.getAnyValue("rest") != null;
 
     }
 

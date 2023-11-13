@@ -36,7 +36,7 @@ public class WebSocketRange implements Serializable {
     }
 
     public boolean containsAttach(String key) {
-        return this.attach == null ? false : this.attach.containsKey(key);
+        return this.attach != null && this.attach.containsKey(key);
     }
 
     public String getAttach(String key) {

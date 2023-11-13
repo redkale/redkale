@@ -191,7 +191,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         this.defaultAddHeaders = config == null ? null : config.defaultAddHeaders;
         this.defaultSetHeaders = config == null ? null : config.defaultSetHeaders;
         this.defaultCookie = config == null ? null : config.defaultCookie;
-        this.autoOptions = config == null ? false : config.autoOptions;
+        this.autoOptions = config != null && config.autoOptions;
         this.dateSupplier = config == null ? null : config.dateSupplier;
         this.httpRender = config == null ? null : config.httpRender;
 

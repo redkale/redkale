@@ -426,7 +426,7 @@ public final class Rest {
                     break;
                 }
             }
-            namePresent = m0 == null ? true : m0.getParameters()[0].isNamePresent();
+            namePresent = m0 == null || m0.getParameters()[0].isNamePresent();
         } catch (Exception e) {
             //do nothing
         }
@@ -1588,7 +1588,7 @@ public final class Rest {
                 String urlpath = "";
                 final String defmodulename = getWebModuleNameLowerCase(serviceType);
                 final int moduleid = controller == null ? 0 : controller.moduleid();
-                boolean repair = controller == null ? true : controller.repair();
+                boolean repair = controller == null || controller.repair();
                 final String catalog = controller == null ? "" : controller.catalog();
 
                 boolean pound = false;
@@ -1651,7 +1651,7 @@ public final class Rest {
             tmpEntrysField.set(obj, innerEntryMap);
             Field nonblockField = Servlet.class.getDeclaredField("_nonBlocking");
             nonblockField.setAccessible(true);
-            nonblockField.set(obj, parentNonBlocking == null ? true : parentNonBlocking);
+            nonblockField.set(obj, parentNonBlocking == null || parentNonBlocking);
             return obj;
         } catch (ClassNotFoundException e) {
             //do nothing
@@ -1783,7 +1783,7 @@ public final class Rest {
         final int moduleid = controller == null ? 0 : controller.moduleid();
         { //注入 @WebServlet 注解
             String urlpath = "";
-            boolean repair = controller == null ? true : controller.repair();
+            boolean repair = controller == null || controller.repair();
             String comment = controller == null ? "" : controller.comment();
             av0 = cw.visitAnnotation(webServletDesc, true);
             {
@@ -1886,7 +1886,7 @@ public final class Rest {
                     break;
                 }
             }
-            namePresent = m0 == null ? true : m0.getParameters()[0].isNamePresent();
+            namePresent = m0 == null || m0.getParameters()[0].isNamePresent();
         } catch (Exception e) {
             //do nothing
         }
@@ -3608,7 +3608,7 @@ public final class Rest {
 
             Field nonblockField = Servlet.class.getDeclaredField("_nonBlocking");
             nonblockField.setAccessible(true);
-            nonblockField.set(obj, parentNonBlocking == null ? true : parentNonBlocking);
+            nonblockField.set(obj, parentNonBlocking == null || parentNonBlocking);
             RedkaleClassLoader.putReflectionField(Servlet.class.getName(), nonblockField);
             return obj;
         } catch (Throwable e) {
@@ -3786,7 +3786,7 @@ public final class Rest {
                     }
                 }
             }
-            this.nonBlocking = nonFlag == null ? false : nonFlag;
+            this.nonBlocking = nonFlag != null && nonFlag;
         }
 
         public final int methodIdx; // _paramtypes 的下标，从0开始

@@ -243,7 +243,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
                 }
             } else if (type == Boolean[].class) {
                 for (Boolean item : (Boolean[]) obj) {
-                    tmp.writeBoolean(item == null ? false : item);
+                    tmp.writeBoolean(item != null && item);
                 }
             } else if (type == short[].class) {
                 for (short item : (short[]) obj) {

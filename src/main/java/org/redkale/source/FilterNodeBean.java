@@ -57,9 +57,9 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
         this.joinClass = bean == null ? null : bean.joinClass;
         this.joinColumns = bean == null ? null : bean.joinColumns;
         this.least = bean == null ? 1 : bean.least;
-        this.string = bean == null ? false : bean.string;
-        this.number = bean == null ? false : bean.number;
-        this.or = bean == null ? false : bean.or;
+        this.string = bean != null && bean.string;
+        this.number = bean != null && bean.number;
+        this.or = bean != null && bean.or;
         this.nodeBeans = bean == null ? null : bean.nodeBeans;
     }
 

@@ -78,7 +78,7 @@ public class SncpRpcGroups {
             if (group == null) {
                 throw new SncpException("Not found group(" + entry.getGroup() + ")");
             } else {
-                return sncpAddress == null ? false : group.containsAddress(sncpAddress);
+                return sncpAddress != null && group.containsAddress(sncpAddress);
             }
         }
     }
