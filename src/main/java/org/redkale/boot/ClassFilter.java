@@ -571,7 +571,6 @@ public final class ClassFilter<T> {
          *
          * @param excludeFile 不需要扫描的文件夹， 可以为null
          * @param loader      RedkaleClassloader， 不可为null
-         * @param excludeRegs 包含此关键字的文件将被跳过， 可以为null
          * @param filters     过滤器
          *
          * @throws IOException 异常
