@@ -28,6 +28,7 @@ import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;
 import org.redkale.source.Flipper;
 import org.redkale.util.*;
+import static org.redkale.util.Utility.isEmpty;
 
 /**
  * <p>
@@ -1653,17 +1654,18 @@ public final class Rest {
             nonblockField.set(obj, parentNonBlocking == null ? true : parentNonBlocking);
             return obj;
         } catch (ClassNotFoundException e) {
+            //do nothing
         } catch (Throwable e) {
             e.printStackTrace();
         }
         //------------------------------------------------------------------------------
-        final String defmodulename = getWebModuleNameLowerCase(serviceType);
-        final String bigmodulename = getWebModuleName(serviceType);
+        final String defModuleName = getWebModuleNameLowerCase(serviceType);
+        final String bigModuleName = getWebModuleName(serviceType);
         final String catalog = controller == null ? "" : controller.catalog();
         if (!checkName(catalog)) {
             throw new RestException(serviceType.getName() + " have illegal " + RestService.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
         }
-        if (!checkName(defmodulename)) {
+        if (!checkName(defModuleName)) {
             throw new RestException(serviceType.getName() + " have illegal " + RestService.class.getSimpleName() + ".value, only 0-9 a-z A-Z _ cannot begin 0-9");
         }
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
@@ -1757,14 +1759,14 @@ public final class Rest {
             }
             retvalTypes.add(rtype);
             if (mappings.length == 0) { //没有Mapping，设置一个默认值
-                MappingEntry entry = new MappingEntry(serRpcOnly, methodidex, parentNonBlocking, null, bigmodulename, method);
+                MappingEntry entry = new MappingEntry(serRpcOnly, methodidex, parentNonBlocking, null, bigModuleName, method);
                 if (entrys.contains(entry)) {
                     throw new RestException(serviceType.getName() + " on " + method.getName() + " 's mapping(" + entry.name + ") is repeat");
                 }
                 entrys.add(entry);
             } else {
                 for (RestMapping mapping : mappings) {
-                    MappingEntry entry = new MappingEntry(serRpcOnly, methodidex, parentNonBlocking, mapping, defmodulename, method);
+                    MappingEntry entry = new MappingEntry(serRpcOnly, methodidex, parentNonBlocking, mapping, defModuleName, method);
                     if (entrys.contains(entry)) {
                         throw new RestException(serviceType.getName() + " on " + method.getName() + " 's mapping(" + entry.name + ") is repeat");
                     }
@@ -1793,10 +1795,10 @@ public final class Rest {
                         break;
                     }
                 }
-                if (defmodulename.isEmpty() || (!pound && entrys.size() <= 2)) {
+                if (isEmpty(defModuleName) || (!pound && entrys.size() <= 2)) {
                     Set<String> startWiths = new HashSet<>();
                     for (MappingEntry entry : entrys) {
-                        String suburl = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + (defmodulename.isEmpty() ? "" : (defmodulename + "/")) + entry.name;
+                        String suburl = (isEmpty(catalog) ? "/" : ("/" + catalog + "/")) + (isEmpty(defModuleName) ? "" : (defModuleName + "/")) + entry.name;
                         if ("//".equals(suburl)) {
                             suburl = "/";
                         } else if (suburl.length() > 2 && suburl.endsWith("/")) {
@@ -1821,12 +1823,12 @@ public final class Rest {
                         urlpath = urlpath.substring(1);
                     }
                 } else {
-                    urlpath = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + defmodulename + "/*";
+                    urlpath = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + defModuleName + "/*";
                     av1.visit(null, urlpath);
                 }
                 av1.visitEnd();
             }
-            av0.visit("name", defmodulename);
+            av0.visit("name", defModuleName);
             av0.visit("moduleid", moduleid);
             av0.visit("repair", repair);
             av0.visit("comment", comment);
@@ -2288,12 +2290,12 @@ public final class Rest {
                     av0.visitEnd();
                 }
                 av0 = mv.visitAnnotation(mappingDesc, true);
-                String url = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + (defmodulename.isEmpty() ? "" : (defmodulename + "/")) + entry.name + (reqpath ? "/" : "");
+                String url = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + (defModuleName.isEmpty() ? "" : (defModuleName + "/")) + entry.name + (reqpath ? "/" : "");
                 if ("//".equals(url)) {
                     url = "/";
                 }
                 av0.visit("url", url);
-                av0.visit("name", (defmodulename.isEmpty() ? "" : (defmodulename + "_")) + entry.name);
+                av0.visit("name", (defModuleName.isEmpty() ? "" : (defModuleName + "_")) + entry.name);
                 av0.visit("example", entry.example);
                 av0.visit("rpcOnly", entry.rpcOnly);
                 av0.visit("auth", entry.auth);

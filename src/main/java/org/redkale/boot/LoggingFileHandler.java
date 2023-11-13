@@ -156,7 +156,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                                     Files.move(logfile.toPath(), new File(logfile.getPath() + ".1").toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
                                 } else {
                                     if (logfile.exists() && logfile.length() < 1) {
-                                        logfile.delete();
+                                        Files.delete(logfile.toPath());
                                     }
                                 }
                                 logstream = null;
@@ -174,7 +174,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                                 Files.move(logunusualfile.toPath(), new File(logunusualfile.getPath() + ".1").toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
                             } else {
                                 if (logunusualfile.exists() && logunusualfile.length() < 1) {
-                                    logunusualfile.delete();
+                                    Files.delete(logunusualfile.toPath());
                                 }
                             }
                             logunusualstream = null;

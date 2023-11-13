@@ -164,7 +164,7 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
                         });
                     }
                 } else {
-                    workThread.runWork(() -> {
+                    Utility.execute(() -> {
                         Traces.currentTraceid(request.traceid);
                         respFuture.complete(rs);
                         Traces.removeTraceid();
@@ -190,7 +190,7 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
                         });
                     }
                 } else {
-                    workThread.runWork(() -> {
+                    Utility.execute(() -> {
                         Traces.currentTraceid(request.traceid);
                         respFuture.completeExceptionally(exc);
                         Traces.removeTraceid();
@@ -217,7 +217,7 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
                     });
                 }
             } else {
-                workThread.runWork(() -> {
+                Utility.execute(() -> {
                     Traces.currentTraceid(request.traceid);
                     respFuture.completeExceptionally(t);
                     Traces.removeTraceid();

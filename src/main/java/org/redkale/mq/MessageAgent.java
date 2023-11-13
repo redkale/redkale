@@ -225,9 +225,7 @@ public abstract class MessageAgent implements Resourcable {
         if (this.messageBaseProducer == null) {
             messageProducerLock.lock();
             try {
-                if (this.messageBaseProducer == null) {
-                    startMessageProducer();
-                }
+                startMessageProducer();
             } finally {
                 messageProducerLock.unlock();
             }

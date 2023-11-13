@@ -52,7 +52,7 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
     protected int writeTimeoutSeconds = 6;
 
     protected HttpSimpleClient(ExecutorService workExecutor, AsyncGroup asyncGroup) {
-        super("Redkale-http-client", asyncGroup, new ClientAddress(new InetSocketAddress("127.0.0.1", 0))); 
+        super("Redkale-http-client", asyncGroup, new ClientAddress(new InetSocketAddress("127.0.0.1", 0)));
         this.workExecutor = workExecutor;
         this.asyncGroup = asyncGroup;
     }
@@ -417,7 +417,7 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
                 HttpResult result = this.responseResult;
                 try {
                     result.result(c.convertFrom(valueType, this.responseResult.getResult()));
-                    if (workThread != null) {
+                    if (workThread != null && workThread.getState() == Thread.State.RUNNABLE) {
                         workThread.runWork(() -> {
                             Traces.currentTraceid(traceid);
                             future.complete((HttpResult<T>) this.responseResult);
@@ -434,25 +434,25 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
                         });
                     }
                 } catch (Exception e) {
-                    if (workThread != null) {
-                        Utility.execute(() -> {
+                    if (workThread != null && workThread.getState() == Thread.State.RUNNABLE) {
+                        workThread.execute(() -> {
                             Traces.currentTraceid(traceid);
                             future.completeExceptionally(e);
                         });
-                    } else if (workExecutor == null) {
+                    } else if (workExecutor != null) {
                         workExecutor.execute(() -> {
                             Traces.currentTraceid(traceid);
                             future.completeExceptionally(e);
                         });
                     } else {
-                        workThread.runWork(() -> {
+                        Utility.execute(() -> {
                             Traces.currentTraceid(traceid);
                             future.completeExceptionally(e);
                         });
                     }
                 }
             } else {
-                if (workThread != null) {
+                if (workThread != null && workThread.getState() == Thread.State.RUNNABLE) {
                     workThread.runWork(() -> {
                         Traces.currentTraceid(traceid);
                         future.complete((HttpResult<T>) this.responseResult);

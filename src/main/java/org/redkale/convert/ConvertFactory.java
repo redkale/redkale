@@ -972,12 +972,14 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         } catch (Exception ex) {
             //do nothing
         }
-        try {
-            register(type.getMethod("set" + bigColumn, field.getType()), entry);
-        } catch (Exception ex) {
-            //do nothing
+        if (field != null) {
+            try {
+                register(type.getMethod("set" + bigColumn, field.getType()), entry);
+            } catch (Exception ex) {
+                //do nothing
+            }
         }
-        return field == null ? true : register(field, entry);
+        return field == null || register(field, entry);
     }
 
     public final <E> boolean register(final AccessibleObject field, final ConvertColumnEntry entry) {

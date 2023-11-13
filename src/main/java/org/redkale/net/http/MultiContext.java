@@ -7,6 +7,7 @@ package org.redkale.net.http;
 
 import java.io.*;
 import java.nio.charset.*;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
@@ -170,7 +171,7 @@ public final class MultiContext {
             }
             boolean rs = part.save(max < 1 ? Long.MAX_VALUE : max, file);
             if (!rs) {
-                file.delete();
+                Files.delete(file.toPath());
                 parent.delete();
             } else {
                 tmpfile = file;

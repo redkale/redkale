@@ -148,12 +148,11 @@ public class ProtobufWriter extends Writer implements ByteTuple {
 
     protected int expand(int len) {
         int newcount = count + len;
-        if (newcount <= content.length) {
-            return 0;
+        if (newcount > content.length) {
+            byte[] newdata = new byte[Math.max(content.length * 3 / 2, newcount)];
+            System.arraycopy(content, 0, newdata, 0, count);
+            this.content = newdata;
         }
-        byte[] newdata = new byte[Math.max(content.length * 3 / 2, newcount)];
-        System.arraycopy(content, 0, newdata, 0, count);
-        this.content = newdata;
         return 0;
     }
 

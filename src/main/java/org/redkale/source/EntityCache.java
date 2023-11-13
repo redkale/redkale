@@ -563,7 +563,7 @@ public final class EntityCache<T> {
         return null;
     }
 
-    private <V> Number getNumberResult(final Collection<T> entityList, final FilterFunc func, final Number defResult, final Class attrType, final Function<T, Number> attrFunc, final FilterNode node) {
+    private Number getNumberResult(final Collection<T> entityList, final FilterFunc func, final Number defResult, final Class attrType, final Function<T, Number> attrFunc, final FilterNode node) {
         final Predicate<T> filter = node == null ? null : node.createPredicate(this);
         Stream<T> stream = entityList.stream();
         if (filter != null) {

@@ -15,12 +15,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 import org.redkale.cluster.ClusterRpcClient;
-import org.redkale.convert.Convert;
-import org.redkale.convert.json.JsonConvert;
-import static org.redkale.mq.MessageRecord.CTYPE_HTTP_REQUEST;
-import static org.redkale.mq.MessageRecord.CTYPE_HTTP_RESULT;
-import org.redkale.net.http.HttpResult;
-import org.redkale.net.http.HttpSimpleRequest;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Traces;
 import org.redkale.util.Utility;
@@ -135,18 +129,6 @@ public class MessageClient implements ClusterRpcClient<MessageRecord, MessageRec
 
     public MessageRecord createMessageRecord(long seqid, byte ctype, String topic, String respTopic, String traceid, byte[] content) {
         return new MessageRecord(seqid, ctype, topic, respTopic, traceid, content);
-    }
-
-    private byte ctype(Convert convert, Object bean) {
-        byte ctype = 0;
-        if (convert instanceof JsonConvert) {
-            if (bean instanceof HttpSimpleRequest) {
-                ctype = CTYPE_HTTP_REQUEST;
-            } else if (bean instanceof HttpResult) {
-                ctype = CTYPE_HTTP_RESULT;
-            }
-        }
-        return ctype;
     }
 
     public String getProtocol() {

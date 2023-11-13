@@ -75,7 +75,7 @@ public class OptionalCoder<R extends Reader, W extends Writer, T> extends Simple
 
     @Override
     public void convertTo(W out, Optional<T> value) {
-        if (value == null || !value.isPresent()) {
+        if (!value.isPresent()) {
             out.writeObjectNull(null);
             return;
         }

@@ -43,7 +43,7 @@ public class HttpMessageServlet extends MessageServlet {
     protected void onError(Response response, MessageRecord message, Throwable t) {
         if (message.getRespTopic() != null && !message.getRespTopic().isEmpty()) {
             HttpMessageRequest request = ((HttpMessageResponse) response).request();
-            HttpMessageResponse.finishHttpResult(logger.isLoggable(Level.FINEST), response == null ? null : request.getRespConvert(),
+            HttpMessageResponse.finishHttpResult(logger.isLoggable(Level.FINEST), request == null ? null : request.getRespConvert(),
                 null, message, messageClient, message.getRespTopic(), new HttpResult().status(500));
         }
     }
