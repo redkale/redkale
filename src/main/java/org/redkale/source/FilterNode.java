@@ -709,27 +709,27 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         return and(new FilterNode(LambdaFunction.readColumn(func), NOT_OPAND, value));
     }
 
-    public FilterNode fvmode(String column, FilterValue value) {
+    public FilterNode fvmode(String column, FilterExpValue value) {
         return and(new FilterNode(column, FV_MOD, value));
     }
 
-    public <F extends FilterValue> FilterNode fvmode(LambdaSupplier<F> func) {
+    public <F extends FilterExpValue> FilterNode fvmode(LambdaSupplier<F> func) {
         return and(new FilterNode(LambdaSupplier.readColumn(func), FV_MOD, func.get()));
     }
 
-    public <T, F extends FilterValue> FilterNode fvmode(LambdaFunction<T, F> func, F value) {
+    public <T, F extends FilterExpValue> FilterNode fvmode(LambdaFunction<T, F> func, F value) {
         return and(new FilterNode(LambdaFunction.readColumn(func), FV_MOD, value));
     }
 
-    public FilterNode fvdiv(String column, FilterValue value) {
+    public FilterNode fvdiv(String column, FilterExpValue value) {
         return and(new FilterNode(column, FV_DIV, value));
     }
 
-    public <F extends FilterValue> FilterNode fvdiv(LambdaSupplier<F> func) {
+    public <F extends FilterExpValue> FilterNode fvdiv(LambdaSupplier<F> func) {
         return and(new FilterNode(LambdaSupplier.readColumn(func), FV_DIV, func.get()));
     }
 
-    public <T, F extends FilterValue> FilterNode fvdiv(LambdaFunction<T, F> func, F value) {
+    public <T, F extends FilterExpValue> FilterNode fvdiv(LambdaFunction<T, F> func, F value) {
         return and(new FilterNode(LambdaFunction.readColumn(func), FV_DIV, value));
     }
 
@@ -967,12 +967,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             return null;
         }
         if (express == FV_MOD || express == FV_DIV) {
-            FilterValue fv = (FilterValue) val0;
+            FilterExpValue fv = (FilterExpValue) val0;
             return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value()).append(' ').append(fv.getLeft())
                 .append(' ').append(fv.getExpress().value()).append(' ').append(fv.getRight());
         }
-        final boolean fk = (val0 instanceof FilterKey);
-        CharSequence val = fk ? info.getSQLColumn(talis, ((FilterKey) val0).getColumn()) : formatToString(express, info.getSQLValue(column, (Serializable) val0));
+        final boolean fk = (val0 instanceof FilterColValue);
+        CharSequence val = fk ? info.getSQLColumn(talis, ((FilterColValue) val0).getColumn()) : formatToString(express, info.getSQLValue(column, (Serializable) val0));
         if (val == null) {
             return null;
         }
@@ -996,7 +996,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         } else if (express == IG_EQ || express == IG_NOT_EQ || express == IG_LIKE || express == IG_NOT_LIKE) {
             sb.append("LOWER(").append(info.getSQLColumn(talis, column)).append(')');
             if (fk) {
-                val = "LOWER(" + info.getSQLColumn(talis, ((FilterKey) val0).getColumn()) + ')';
+                val = "LOWER(" + info.getSQLColumn(talis, ((FilterColValue) val0).getColumn()) + ')';
             }
         } else {
             sb.append(info.getSQLColumn(talis, column));
@@ -1374,10 +1374,10 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             }
         }
         final Serializable val = (Serializable) val0;
-        final boolean fk = (val instanceof FilterKey);
-        final Attribute<T, Serializable> fkattr = fk ? cache.getAttribute(((FilterKey) val).getColumn()) : null;
+        final boolean fk = (val instanceof FilterColValue);
+        final Attribute<T, Serializable> fkattr = fk ? cache.getAttribute(((FilterColValue) val).getColumn()) : null;
         if (fk && fkattr == null) {
-            throw new SourceException(cache.getType() + " not found column(" + ((FilterKey) val).getColumn() + ")");
+            throw new SourceException(cache.getType() + " not found column(" + ((FilterColValue) val).getColumn() + ")");
         }
         switch (express) {
             case EQ:
@@ -1598,7 +1598,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                 };
 
             case FV_MOD:
-                FilterValue fv0 = (FilterValue) val;
+                FilterExpValue fv0 = (FilterExpValue) val;
                 switch (fv0.getExpress()) {
                     case EQ:
                         return new Predicate<T>() {
@@ -1682,7 +1682,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         throw new SourceException("(" + fv0 + ")'s express illegal, must be =, !=, <, >, <=, >=");
                 }
             case FV_DIV:
-                FilterValue fv1 = (FilterValue) val;
+                FilterExpValue fv1 = (FilterExpValue) val;
                 switch (fv1.getExpress()) {
                     case EQ:
                         return new Predicate<T>() {

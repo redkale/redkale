@@ -479,27 +479,27 @@ public final class FilterNodes {
         return new FilterNode(LambdaFunction.readColumn(func), NOT_OPAND, value);
     }
 
-    public static FilterNode fvmode(String column, FilterValue value) {
+    public static FilterNode fvmode(String column, FilterExpValue value) {
         return new FilterNode(column, FV_MOD, value);
     }
 
-    public static <F extends FilterValue> FilterNode fvmode(LambdaSupplier<F> func) {
+    public static <F extends FilterExpValue> FilterNode fvmode(LambdaSupplier<F> func) {
         return new FilterNode(LambdaSupplier.readColumn(func), FV_MOD, func.get());
     }
 
-    public static <T, F extends FilterValue> FilterNode fvmode(LambdaFunction<T, F> func, F value) {
+    public static <T, F extends FilterExpValue> FilterNode fvmode(LambdaFunction<T, F> func, F value) {
         return new FilterNode(LambdaFunction.readColumn(func), FV_MOD, value);
     }
 
-    public static FilterNode fvdiv(String column, FilterValue value) {
+    public static FilterNode fvdiv(String column, FilterExpValue value) {
         return new FilterNode(column, FV_DIV, value);
     }
 
-    public static <F extends FilterValue> FilterNode fvdiv(LambdaSupplier<F> func) {
+    public static <F extends FilterExpValue> FilterNode fvdiv(LambdaSupplier<F> func) {
         return new FilterNode(LambdaSupplier.readColumn(func), FV_DIV, func.get());
     }
 
-    public static <T, F extends FilterValue> FilterNode fvdiv(LambdaFunction<T, F> func, F value) {
+    public static <T, F extends FilterExpValue> FilterNode fvdiv(LambdaFunction<T, F> func, F value) {
         return new FilterNode(LambdaFunction.readColumn(func), FV_DIV, value);
     }
     

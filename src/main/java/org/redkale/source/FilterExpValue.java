@@ -16,7 +16,7 @@ import org.redkale.convert.ConvertColumn;
  *
  * @author zhangjx
  */
-public class FilterValue implements java.io.Serializable {
+public class FilterExpValue implements java.io.Serializable {
 
     @ConvertColumn(index = 1)
     private Number left;
@@ -27,18 +27,18 @@ public class FilterValue implements java.io.Serializable {
     @ConvertColumn(index = 3)
     private Number right;
 
-    public FilterValue() {
+    public FilterExpValue() {
     }
 
-    public FilterValue(Number left, Number right) {
+    public FilterExpValue(Number left, Number right) {
         this(left, FilterExpress.EQ, right);
     }
 
-    public FilterValue(Number left, FilterExpress express) {
+    public FilterExpValue(Number left, FilterExpress express) {
         this(left, express, 0);
     }
 
-    public FilterValue(Number left, FilterExpress express, Number right) {
+    public FilterExpValue(Number left, FilterExpress express, Number right) {
         this.left = left;
         this.express = FilterNodes.oldExpress(express);
         this.right = right;
@@ -70,6 +70,6 @@ public class FilterValue implements java.io.Serializable {
 
     @Override
     public String toString() {
-        return FilterValue.class.getSimpleName() + "[left=" + getLeft() + ", express=" + getExpress() + ", right=" + getRight() + "]";
+        return FilterExpValue.class.getSimpleName() + "[left=" + getLeft() + ", express=" + getExpress() + ", right=" + getRight() + "]";
     }
 }
