@@ -351,6 +351,14 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return this;
     }
 
+    public String getHeader(String name) {
+        return headers == null ? null : headers.get(name);
+    }
+
+    public String getHeader(String name, String defaultValue) {
+        return headers == null ? defaultValue : headers.getOrDefault(name, defaultValue);
+    }
+
     public boolean isRpc() {
         return rpc;
     }

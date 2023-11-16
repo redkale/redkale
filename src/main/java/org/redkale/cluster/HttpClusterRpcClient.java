@@ -83,7 +83,7 @@ public class HttpClusterRpcClient extends HttpRpcClient {
         module = module.substring(1); //去掉/
         module = module.substring(0, module.indexOf('/'));
         Map<String, String> headers = req.getHeaders();
-        String resname = headers == null ? "" : headers.getOrDefault(Rest.REST_HEADER_RESNAME, "");
+        String resname = req.getHeader(Rest.REST_HEADER_RESNAME, "");
         final String localModule = module;
         if (logger.isLoggable(Level.FINEST)) {
             logger.log(Level.FINEST, "httpAsync.queryHttpAddress: module=" + localModule + ", resname=" + resname);

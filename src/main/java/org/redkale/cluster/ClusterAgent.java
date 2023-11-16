@@ -213,7 +213,7 @@ public abstract class ClusterAgent {
             try {
                 Thread.sleep(s * 1000);
             } catch (InterruptedException ex) {
-            //do nothing
+                //do nothing
             }
             logger.info(this.getClass().getSimpleName() + " wait for " + s * 1000 + "ms after deregister");
         }
@@ -285,12 +285,12 @@ public abstract class ClusterAgent {
     }
 
     public String generateSncpServiceName(String protocol, String restype, String resname) {
-        return protocol.toLowerCase() + ":" + restype + (resname == null || resname.isEmpty() ? "" : ("-" + resname));
+        return protocol.toLowerCase() + ":" + restype + (Utility.isEmpty(resname) ? "" : ("-" + resname));
     }
 
     //也会提供给HttpMessageClusterAgent适用
     public String generateHttpServiceName(String protocol, String module, String resname) {
-        return protocol.toLowerCase() + ":" + module + (resname == null || resname.isEmpty() ? "" : ("-" + resname));
+        return protocol.toLowerCase() + ":" + module + (Utility.isEmpty(resname) ? "" : ("-" + resname));
     }
 
     //格式: protocol:classtype-resourcename
