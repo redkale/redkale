@@ -1511,13 +1511,22 @@ public final class EntityInfo<T> {
         if (cv == null) {
             return null;
         }
-        Object val = cv.getValue();
+        //ColumnExpNode、ColumnFuncNode、ColumnNameNode、ColumnNumberNode、ColumnStringNode
+        ColumnNode node = cv.getValue2();
         //ColumnExpNode时 cv.getExpress() == ColumnExpress.MOV 只用于updateColumn
-        if (val instanceof ColumnExpNode) {
-            return formatSQLValue(attr, null, (ColumnExpNode) val, formatter);
+        if (node instanceof ColumnExpNode) {
+            return formatColumnExpNodeSQLValue(attr, null, (ColumnExpNode) node, formatter);
         }
-        if (val instanceof ColumnFuncNode) {
-            return formatSQLValue(attr, null, (ColumnFuncNode) val, formatter);
+        if (node instanceof ColumnFuncNode) {
+            return formatColumnFuncNodeSQLValue(attr, null, (ColumnFuncNode) node, formatter);
+        }
+        CharSequence val = null;
+        if (node instanceof ColumnNameNode) {
+            val = formatColumnNameNodeSQLValue(attr, null, (ColumnNameNode) node, formatter);
+        } else if (node instanceof ColumnNumberNode) {
+            val = formatColumnNumberNodeSQLValue(attr, null, (ColumnNumberNode) node, formatter);
+        } else if (node instanceof ColumnStringNode) {
+            val = formatColumnStringNodeSQLValue(attr, null, (ColumnStringNode) node, formatter);
         }
         switch (cv.getExpress()) {
             case INC:
@@ -1535,60 +1544,79 @@ public final class EntityInfo<T> {
             case ORR:
                 return new StringBuilder().append(sqlColumn).append(" | ").append(val);
             case MOV:
-                CharSequence rs = formatter == null ? formatToString(val) : formatter.apply(this, val);
-                if (rs == null && isNotNullJson(attr)) {
-                    rs = "";
-                }
-                return rs;
+                return val == null && isNotNullJson(attr) ? "" : val;
+            default:
+                return val;
         }
-        return formatter == null ? formatToString(val) : formatter.apply(this, val);
     }
 
-    protected CharSequence formatSQLValue(Attribute<T, Serializable> attr, String tabalis, final ColumnFuncNode node, BiFunction<EntityInfo, Object, CharSequence> formatter) {
-        if (node.getValue() instanceof ColumnExpNode) {
-            return node.getFunc().getColumn(formatSQLValue(attr, tabalis, (ColumnExpNode) node.getValue(), formatter).toString());
+    protected CharSequence formatColumnFuncNodeSQLValue(Attribute<T, Serializable> attr, String tabalis, final ColumnFuncNode node, BiFunction<EntityInfo, Object, CharSequence> formatter) {
+        if (node.getValue2() instanceof ColumnExpNode) {
+            return node.getFunc().getColumn(formatColumnExpNodeSQLValue(attr, tabalis, (ColumnExpNode) node.getValue2(), formatter).toString());
         } else {
-            return node.getFunc().getColumn(this.getSQLColumn(tabalis, String.valueOf(node.getValue())));
+            return node.getFunc().getColumn(formatColumnNameNodeSQLValue(attr, tabalis, (ColumnNameNode) node.getValue2(), formatter).toString());
         }
     }
 
-    protected CharSequence formatSQLValue(Attribute<T, Serializable> attr, String tabalis, final ColumnExpNode node, BiFunction<EntityInfo, Object, CharSequence> formatter) {
-        Serializable left = node.getLeft();
-        if (left instanceof CharSequence) {
-            left = this.getSQLColumn(tabalis, left.toString());
-            if (node.getExpress() == ColumnExpress.MOV) {
-                return (String) left;
-            }
-        } else if (left instanceof ColumnExpNode) {
-            left = "(" + formatSQLValue(attr, tabalis, (ColumnExpNode) left, formatter) + ")";
-        } else if (left instanceof ColumnFuncNode) {
-            left = "(" + formatSQLValue(attr, tabalis, (ColumnFuncNode) left, formatter) + ")";
+    protected CharSequence formatColumnExpNodeSQLValue(Attribute<T, Serializable> attr, String tabalis, final ColumnExpNode node, BiFunction<EntityInfo, Object, CharSequence> formatter) {
+        CharSequence leftVal = null;
+        ColumnNode leftNode = node.getLeft2();
+        if (leftNode instanceof ColumnNameNode) {
+            leftVal = formatColumnNameNodeSQLValue(attr, tabalis, (ColumnNameNode) leftNode, formatter);
+        } else if (leftNode instanceof ColumnStringNode) {
+            leftVal = formatColumnStringNodeSQLValue(attr, tabalis, (ColumnStringNode) leftNode, formatter);
+        } else if (leftNode instanceof ColumnNumberNode) {
+            leftVal = formatColumnNumberNodeSQLValue(attr, tabalis, (ColumnNumberNode) leftNode, formatter);
+        } else if (leftNode instanceof ColumnExpNode) {
+            leftVal = "(" + formatColumnExpNodeSQLValue(attr, tabalis, (ColumnExpNode) leftNode, formatter) + ")";
+        } else if (leftNode instanceof ColumnFuncNode) {
+            leftVal = "(" + formatColumnFuncNodeSQLValue(attr, tabalis, (ColumnFuncNode) leftNode, formatter) + ")";
         }
-        Serializable right = node.getRight();
-        if (right instanceof CharSequence) {
-            right = this.getSQLColumn(null, right.toString());
-        } else if (left instanceof ColumnExpNode) {
-            right = "(" + formatSQLValue(attr, tabalis, (ColumnExpNode) right, formatter) + ")";
-        } else if (left instanceof ColumnFuncNode) {
-            right = "(" + formatSQLValue(attr, tabalis, (ColumnFuncNode) right, formatter) + ")";
+        if (node.getExpress() == ColumnExpress.MOV) {
+            return leftVal;
+        }
+        CharSequence rightVal = null;
+        ColumnNode rightNode = node.getRight2();
+        if (rightNode instanceof ColumnNameNode) {
+            rightVal = formatColumnNameNodeSQLValue(attr, tabalis, (ColumnNameNode) rightNode, formatter);
+        } else if (rightNode instanceof ColumnStringNode) {
+            rightVal = formatColumnStringNodeSQLValue(attr, tabalis, (ColumnStringNode) rightNode, formatter);
+        } else if (rightNode instanceof ColumnNumberNode) {
+            rightVal = formatColumnNumberNodeSQLValue(attr, tabalis, (ColumnNumberNode) rightNode, formatter);
+        } else if (rightNode instanceof ColumnExpNode) {
+            rightVal = "(" + formatColumnExpNodeSQLValue(attr, tabalis, (ColumnExpNode) rightNode, formatter) + ")";
+        } else if (rightNode instanceof ColumnFuncNode) {
+            rightVal = "(" + formatColumnFuncNodeSQLValue(attr, tabalis, (ColumnFuncNode) rightNode, formatter) + ")";
         }
         switch (node.getExpress()) {
             case INC:
-                return new StringBuilder().append(left).append(" + ").append(right);
+                return new StringBuilder().append(leftVal).append(" + ").append(rightVal);
             case DEC:
-                return new StringBuilder().append(left).append(" - ").append(right);
+                return new StringBuilder().append(leftVal).append(" - ").append(rightVal);
             case MUL:
-                return new StringBuilder().append(left).append(" * ").append(right);
+                return new StringBuilder().append(leftVal).append(" * ").append(rightVal);
             case DIV:
-                return new StringBuilder().append(left).append(" / ").append(right);
+                return new StringBuilder().append(leftVal).append(" / ").append(rightVal);
             case MOD:
-                return new StringBuilder().append(left).append(" % ").append(right);
+                return new StringBuilder().append(leftVal).append(" % ").append(rightVal);
             case AND:
-                return new StringBuilder().append(left).append(" & ").append(right);
+                return new StringBuilder().append(leftVal).append(" & ").append(rightVal);
             case ORR:
-                return new StringBuilder().append(left).append(" | ").append(right);
+                return new StringBuilder().append(leftVal).append(" | ").append(rightVal);
         }
         throw new IllegalArgumentException(node + " express cannot be null or MOV");
+    }
+
+    protected CharSequence formatColumnNameNodeSQLValue(Attribute<T, Serializable> attr, String tabalis, final ColumnNameNode node, BiFunction<EntityInfo, Object, CharSequence> formatter) {
+        return this.getSQLColumn(tabalis, node.getColumn());
+    }
+
+    protected CharSequence formatColumnStringNodeSQLValue(Attribute<T, Serializable> attr, String tabalis, final ColumnStringNode node, BiFunction<EntityInfo, Object, CharSequence> formatter) {
+        return formatter == null ? formatToString(node.getValue()) : formatter.apply(this, node.getValue());
+    }
+
+    protected CharSequence formatColumnNumberNodeSQLValue(Attribute<T, Serializable> attr, String tabalis, final ColumnNumberNode node, BiFunction<EntityInfo, Object, CharSequence> formatter) {
+        return String.valueOf(node.getValue());
     }
 
     /**

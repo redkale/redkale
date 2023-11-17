@@ -6,6 +6,7 @@
 package org.redkale.source;
 
 import java.io.Serializable;
+import org.redkale.convert.ConvertColumn;
 import static org.redkale.source.ColumnExpress.*;
 
 /**
@@ -13,9 +14,9 @@ import static org.redkale.source.ColumnExpress.*;
  * String 视为 字段名  <br>
  * Number 视为 数值   <br>
  * 例如： UPDATE Reord SET updateTime = createTime + 10 WHERE id = 1   <br>
- source.updateColumn(Record.class, 1, ColumnValue.mov("updateTime", ColumnExpNode.inc("createTime", 10)));  <br>
+ * source.updateColumn(Record.class, 1, ColumnValue.mov("updateTime", ColumnExpNode.inc("createTime", 10)));  <br>
  * 例如： UPDATE Reord SET updateTime = createTime * 10 / createCount WHERE id = 1   <br>
- source.updateColumn(Record.class, 1, ColumnValue.mov("updateTime", ColumnExpNode.div(ColumnExpNode.mul("createTime", 10), "createCount")));  <br>
+ * source.updateColumn(Record.class, 1, ColumnValue.mov("updateTime", ColumnExpNode.div(ColumnExpNode.mul("createTime", 10), "createCount")));  <br>
  *
  * <p>
  * 详情见: https://redkale.org
@@ -25,34 +26,50 @@ import static org.redkale.source.ColumnExpress.*;
  */
 public class ColumnExpNode implements ColumnNode {
 
-    protected Serializable left;//类型只能是String、Number、ColumnExpNode
+    @ConvertColumn(index = 1)
+    protected ColumnNode left;//类型只能是ColumnNameNode、ColumnNumberNode、ColumnExpNode
 
-    protected ColumnExpress express; //MOV时，left必须是String, right必须是null
+    @ConvertColumn(index = 2)
+    protected ColumnExpress express; //MOV时，left必须是ColumnNameNode, right必须是null
 
-    protected Serializable right;//类型只能是String、Number、ColumnExpNode
+    @ConvertColumn(index = 3)
+    protected ColumnNode right;//类型只能是ColumnNameNode、ColumnNumberNode、ColumnExpNode
 
     public ColumnExpNode() {
     }
 
-    public ColumnExpNode(Serializable left, ColumnExpress express, Serializable right) {
+    protected ColumnExpNode(Serializable left, ColumnExpress express, Serializable right) {
         if (express == null) {
             throw new IllegalArgumentException("express cannot be null");
         }
+        ColumnNode leftNode = createColumnNode(left);
+        ColumnNode rightNode = createColumnNode(right);
         if (express == MOV) {
-            if (!(left instanceof String) || right != null) {
-                throw new IllegalArgumentException("left value must be String, right value must be null on ColumnExpress.MOV");
-            }
-        } else {
-            if (!(left instanceof String) && !(left instanceof Number) && !(left instanceof ColumnExpNode) && !(left instanceof ColumnFuncNode)) {
-                throw new IllegalArgumentException("left value must be String, Number, ColumnFuncNode or ColumnExpNode");
-            }
-            if (!(right instanceof String) && !(right instanceof Number) && !(right instanceof ColumnExpNode) && !(right instanceof ColumnFuncNode)) {
-                throw new IllegalArgumentException("right value must be String, Number, ColumnFuncNode or ColumnExpNode");
+            if (!(leftNode instanceof ColumnNameNode) || right != null) {
+                throw new IllegalArgumentException("left value must be ColumnNameNode, right value must be null on ColumnExpress.MOV");
             }
         }
-        this.left = left;
+        this.left = leftNode;
         this.express = express;
-        this.right = right;
+        this.right = rightNode;
+    }
+
+    private ColumnNode createColumnNode(Serializable value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof String) {
+            return new ColumnNameNode(value.toString());
+        }
+        if (value instanceof Number) {
+            return new ColumnNumberNode((Number) value);
+        }
+        if (!(value instanceof ColumnNameNode)
+            && !(value instanceof ColumnNumberNode)
+            && !(value instanceof ColumnExpNode)) {
+            throw new IllegalArgumentException("value must be ColumnNameNode、ColumnNumberNode、ColumnExpNode");
+        }
+        return (ColumnNode) value;
     }
 
     public static ColumnExpNode create(Serializable left, ColumnExpress express, Serializable right) {
@@ -123,15 +140,15 @@ public class ColumnExpNode implements ColumnNode {
         ColumnExpNode one = new ColumnExpNode(this.left, this.express, this.right);
         this.left = one;
         this.express = express;
-        this.right = right;
+        this.right = createColumnNode(right);
         return this;
     }
 
-    public Serializable getLeft() {
+    public ColumnNode getLeft2() {
         return left;
     }
 
-    public void setLeft(Serializable left) {
+    public void setLeft(ColumnNode left) {
         this.left = left;
     }
 
@@ -143,16 +160,16 @@ public class ColumnExpNode implements ColumnNode {
         this.express = express;
     }
 
-    public Serializable getRight() {
+    public ColumnNode getRight2() {
         return right;
     }
 
-    public void setRight(Serializable right) {
+    public void setRight(ColumnNode right) {
         this.right = right;
     }
 
     @Override
     public String toString() {
-        return "{\"column\":" + ((left instanceof CharSequence) ? ("\"" + left + "\"") : left) + ", \"express\":" + express + ", \"value\":" + ((right instanceof CharSequence) ? ("\"" + right + "\"") : right) + "}";
+        return "{\"column\":" + left + ", \"express\":" + express + ", \"value\":" + right + "}";
     }
 }

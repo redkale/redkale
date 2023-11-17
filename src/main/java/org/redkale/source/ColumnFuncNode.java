@@ -6,10 +6,10 @@
 package org.redkale.source;
 
 import java.io.Serializable;
+import org.redkale.convert.ConvertColumn;
 
 /**
- * 与ColumnExpNode 组合，用于复杂的字段表达式 。
- * String 视为 字段名
+ * 与ColumnNameNode、ColumnExpNode组合，用于复杂的字段表达式 。
  *
  * <p>
  * 详情见: https://redkale.org
@@ -19,19 +19,32 @@ import java.io.Serializable;
  */
 public class ColumnFuncNode implements ColumnNode {
 
+    @ConvertColumn(index = 1)
     protected FilterFunc func;
 
-    protected Serializable value;//类型只能是String、ColumnExpNode
+    @ConvertColumn(index = 2)
+    protected ColumnNode value;//类型只能是ColumnNameNode、ColumnExpNode、ColumnFuncNode
 
     public ColumnFuncNode() {
     }
 
-    public ColumnFuncNode(FilterFunc func, Serializable node) {
-        if (!(node instanceof String) && !(node instanceof ColumnExpNode)) {
-            throw new IllegalArgumentException("value must be String or ColumnExpNode");
-        }
+    protected ColumnFuncNode(FilterFunc func, Serializable node) {
         this.func = func;
-        this.value = node;
+        this.value = createColumnNode(node);
+    }
+
+    protected ColumnNode createColumnNode(Serializable value) {
+        if (value instanceof String) {
+            return new ColumnNameNode(value.toString());
+        } else if (value instanceof ColumnNameNode) {
+            return (ColumnNode) value;
+        } else if (value instanceof ColumnExpNode) {
+            return (ColumnNode) value;
+        } else if (value instanceof ColumnFuncNode) {
+            return (ColumnNode) value;
+        } else {
+            throw new IllegalArgumentException("value must be ColumnNameNode or ColumnExpNode or ColumnFuncNode");
+        }
     }
 
     public static ColumnFuncNode create(FilterFunc func, Serializable node) {
@@ -70,16 +83,16 @@ public class ColumnFuncNode implements ColumnNode {
         this.func = func;
     }
 
-    public Serializable getValue() {
+    public ColumnNode getValue2() {
         return value;
     }
 
-    public void setValue(Serializable value) {
+    public void setValue(ColumnNode value) {
         this.value = value;
     }
 
     @Override
     public String toString() {
-        return "{\"func\":\"" + func + "\", \"value\":" + ((value instanceof CharSequence) ? ("\"" + value + "\"") : value) + "}";
+        return "{\"func\":\"" + func + "\", \"value\":" + value + "}";
     }
 }

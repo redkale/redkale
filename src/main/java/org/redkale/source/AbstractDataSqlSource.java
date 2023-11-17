@@ -1702,11 +1702,11 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
                 setsql.append(", ");
             }
             String sqlColumn = info.getSQLColumn(null, col.getColumn());
-            if (col.getValue() instanceof byte[]) {
+            if (col.getValue2() instanceof ColumnBytesNode) {
                 if (blobs == null) {
                     blobs = new ArrayList<>();
                 }
-                blobs.add((byte[]) col.getValue());
+                blobs.add(((ColumnBytesNode) col.getValue2()).getValue());
                 setsql.append(sqlColumn).append("=").append(prepareParamSign(++index));
             } else {
                 setsql.append(sqlColumn).append("=").append(info.formatSQLValue(sqlColumn, attr, col, sqlFormatter));
@@ -1787,11 +1787,11 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
                 setsql.append(", ");
             }
             String sqlColumn = info.getSQLColumn(alias, col.getColumn());
-            if (col.getValue() instanceof byte[]) {
+            if (col.getValue2() instanceof ColumnBytesNode) {
                 if (blobs == null) {
                     blobs = new ArrayList<>();
                 }
-                blobs.add((byte[]) col.getValue());
+                blobs.add(((ColumnBytesNode) col.getValue2()).getValue());
                 setsql.append(sqlColumn).append("=").append(prepareParamSign(++index));
             } else {
                 setsql.append(sqlColumn).append("=").append(info.formatSQLValue(sqlColumn, attr, col, sqlFormatter));
@@ -2456,9 +2456,9 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
                 funcSqlColumns.append(", ");
             }
             if (funcNodes[i] instanceof ColumnFuncNode) {
-                funcSqlColumns.append(info.formatSQLValue((Attribute) null, "a", (ColumnFuncNode) funcNodes[i], sqlFormatter));
+                funcSqlColumns.append(info.formatColumnFuncNodeSQLValue((Attribute) null, "a", (ColumnFuncNode) funcNodes[i], sqlFormatter));
             } else {
-                funcSqlColumns.append(info.formatSQLValue((Attribute) null, "a", (ColumnExpNode) funcNodes[i], sqlFormatter));
+                funcSqlColumns.append(info.formatColumnExpNodeSQLValue((Attribute) null, "a", (ColumnExpNode) funcNodes[i], sqlFormatter));
             }
         }
         final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();

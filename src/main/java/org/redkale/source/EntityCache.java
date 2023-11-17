@@ -536,30 +536,31 @@ public final class EntityCache<T> {
 
     private Number queryColumnNumber(final List<T> list, final ColumnNode funcNode) {
         if (funcNode instanceof ColumnFuncNode) {
-            return queryColumnNumber(list, (ColumnFuncNode) funcNode);
+            return queryColumnFuncNodeNumber(list, (ColumnFuncNode) funcNode);
         } else if (funcNode instanceof ColumnExpNode) {
-            return queryColumnNumber(list, (ColumnExpNode) funcNode);
+            return queryColumnExpNodeNumber(list, (ColumnExpNode) funcNode);
         } else {
             return null;
         }
     }
 
-    private Number queryColumnNumber(final List<T> list, final ColumnFuncNode funcNode) {
-        if (funcNode.getValue() instanceof String) {
-            final Attribute<T, Serializable> attr = info.getAttribute((String) funcNode.getValue());
+    private Number queryColumnFuncNodeNumber(final List<T> list, final ColumnFuncNode funcNode) {
+        if (funcNode.getValue2() instanceof ColumnNameNode) {
+            final Attribute<T, Serializable> attr = info.getAttribute(((ColumnNameNode) funcNode.getValue2()).getColumn());
             final Function<T, Number> attrFunc = x -> (Number) attr.get(x);
             return getNumberResult(list, funcNode.getFunc(), null, attr.type(), attrFunc, (FilterNode) null);
         }
         Number num = null;
-        if (funcNode.getValue() instanceof ColumnFuncNode) {
-            num = queryColumnNumber(list, (ColumnFuncNode) funcNode.getValue());
-        } else if (funcNode.getValue() instanceof ColumnExpNode) {
-            num = queryColumnNumber(list, (ColumnExpNode) funcNode.getValue());
+        if (funcNode.getValue2() instanceof ColumnFuncNode) {
+            num = queryColumnFuncNodeNumber(list, (ColumnFuncNode) funcNode.getValue2());
+        } else if (funcNode.getValue2() instanceof ColumnExpNode) {
+            num = queryColumnExpNodeNumber(list, (ColumnExpNode) funcNode.getValue2());
         }
         return num;
     }
 
-    private Number queryColumnNumber(final List<T> list, final ColumnExpNode nodeValue) {
+    private Number queryColumnExpNodeNumber(final List<T> list, final ColumnExpNode nodeValue) {
+        //TODO 尚未实现
         return null;
     }
 
@@ -889,7 +890,7 @@ public final class EntityCache<T> {
         return rms;
     }
 
-    public <V> T updateColumn(final Serializable pk, List<Attribute<T, Serializable>> attrs, final List<ColumnValue> values) {
+    public T updateColumn(final Serializable pk, List<Attribute<T, Serializable>> attrs, final List<ColumnValue> values) {
         if (pk == null || attrs == null || attrs.isEmpty()) {
             return null;
         }
@@ -901,7 +902,7 @@ public final class EntityCache<T> {
         try {
             for (int i = 0; i < attrs.size(); i++) {
                 ColumnValue cv = values.get(i);
-                updateColumn(attrs.get(i), rs, cv.getExpress(), cv.getValue());
+                updateColumn(attrs.get(i), rs, cv.getExpress(), cv.getValue2());
             }
         } finally {
             tableLock.unlock();
@@ -909,7 +910,7 @@ public final class EntityCache<T> {
         return rs;
     }
 
-    public <V> T[] updateColumn(final FilterNode node, final Flipper flipper, List<Attribute<T, Serializable>> attrs, final List<ColumnValue> values) {
+    public T[] updateColumn(final FilterNode node, final Flipper flipper, List<Attribute<T, Serializable>> attrs, final List<ColumnValue> values) {
         if (attrs == null || attrs.isEmpty() || node == null) {
             return (T[]) Creator.newArray(type, 0);
         }
@@ -927,7 +928,7 @@ public final class EntityCache<T> {
             for (T rs : rms) {
                 for (int i = 0; i < attrs.size(); i++) {
                     ColumnValue cv = values.get(i);
-                    updateColumn(attrs.get(i), rs, cv.getExpress(), cv.getValue());
+                    updateColumn(attrs.get(i), rs, cv.getExpress(), cv.getValue2());
                 }
             }
         } finally {
@@ -1003,7 +1004,7 @@ public final class EntityCache<T> {
     private <V> T updateColumn(Attribute<T, V> attr, final T entity, final ColumnExpress express, Serializable val) {
         final Class ft = attr.type();
         Number numb = null;
-        Serializable newval = null;
+        Serializable newVal = null;
         switch (express) {
             case INC:
             case DEC:
@@ -1012,13 +1013,13 @@ public final class EntityCache<T> {
             case MOD:
             case AND:
             case ORR:
-                numb = getValue((Number) attr.get(entity), express, val);
+                numb = getNumberValue((Number) attr.get(entity), express, val instanceof ColumnNumberNode ? ((ColumnNumberNode) val).getValue() : (Number) val);
                 break;
             case MOV:
                 if (val instanceof ColumnExpNode) {
                     val = updateColumnExpNode(attr, entity, (ColumnExpNode) val);
                 }
-                newval = val;
+                newVal = val;
                 if (val instanceof Number) {
                     numb = (Number) val;
                 }
@@ -1026,85 +1027,94 @@ public final class EntityCache<T> {
         }
         if (numb != null) {
             if (ft == int.class || ft == Integer.class) {
-                newval = numb.intValue();
+                newVal = numb.intValue();
             } else if (ft == long.class || ft == Long.class) {
-                newval = numb.longValue();
+                newVal = numb.longValue();
             } else if (ft == short.class || ft == Short.class) {
-                newval = numb.shortValue();
+                newVal = numb.shortValue();
             } else if (ft == float.class || ft == Float.class) {
-                newval = numb.floatValue();
+                newVal = numb.floatValue();
             } else if (ft == double.class || ft == Double.class) {
-                newval = numb.doubleValue();
+                newVal = numb.doubleValue();
             } else if (ft == byte.class || ft == Byte.class) {
-                newval = numb.byteValue();
+                newVal = numb.byteValue();
             } else if (ft == AtomicInteger.class) {
-                newval = new AtomicInteger(numb.intValue());
+                newVal = new AtomicInteger(numb.intValue());
             } else if (ft == AtomicLong.class) {
-                newval = new AtomicLong(numb.longValue());
+                newVal = new AtomicLong(numb.longValue());
             } else if (ft == LongAdder.class) {
                 LongAdder la = new LongAdder();
                 la.add(numb.longValue());
-                newval = la;
+                newVal = la;
             }
         } else {
-            if (ft == AtomicInteger.class && newval != null && newval.getClass() != AtomicInteger.class) {
-                newval = new AtomicInteger(((Number) newval).intValue());
-            } else if (ft == AtomicLong.class && newval != null && newval.getClass() != AtomicLong.class) {
-                newval = new AtomicLong(((Number) newval).longValue());
-            } else if (ft == LongAdder.class && newval != null && newval.getClass() != LongAdder.class) {
+            if (ft == AtomicInteger.class && newVal != null && newVal.getClass() != AtomicInteger.class) {
+                newVal = new AtomicInteger(((Number) newVal).intValue());
+            } else if (ft == AtomicLong.class && newVal != null && newVal.getClass() != AtomicLong.class) {
+                newVal = new AtomicLong(((Number) newVal).longValue());
+            } else if (ft == LongAdder.class && newVal != null && newVal.getClass() != LongAdder.class) {
                 LongAdder la = new LongAdder();
-                la.add(((Number) newval).longValue());
-                newval = la;
+                la.add(((Number) newVal).longValue());
+                newVal = la;
             }
         }
-        attr.set(entity, (V) newval);
+        attr.set(entity, (V) newVal);
         return entity;
     }
 
     private <V> Serializable updateColumnExpNode(Attribute<T, V> attr, final T entity, ColumnExpNode node) {
-        Serializable left = node.getLeft();
-        if (left instanceof CharSequence) {
-            left = info.getUpdateAttribute(left.toString()).get(entity);
-            if (node.getExpress() == ColumnExpress.MOV) {
-                return left;
-            }
-        } else if (left instanceof ColumnExpNode) {
-            left = updateColumnExpNode(attr, entity, (ColumnExpNode) left);
+        Serializable leftVal = null;
+        ColumnNode leftNode = node.getLeft2();
+        //类型只能是ColumnNameNode、ColumnNumberNode、ColumnExpNode
+        if (leftNode instanceof ColumnNameNode) {
+            leftVal = info.getUpdateAttribute(leftNode.toString()).get(entity);
+        } else if (leftNode instanceof ColumnNumberNode) {
+            leftVal = ((ColumnNumberNode) leftNode).getValue();
+        } else if (leftNode instanceof ColumnExpNode) {
+            leftVal = updateColumnExpNode(attr, entity, (ColumnExpNode) leftNode);
         }
-        Serializable right = node.getRight();
-        if (left instanceof CharSequence) {
-            right = info.getUpdateAttribute(right.toString()).get(entity);
-        } else if (left instanceof ColumnExpNode) {
-            right = updateColumnExpNode(attr, entity, (ColumnExpNode) right);
+        if (node.getExpress() == ColumnExpress.MOV) {
+            return leftVal;
         }
-        return getValue((Number) left, node.getExpress(), right);
+        
+        Serializable rightVal = null;
+        ColumnNode rightNode = node.getRight2();
+        //类型只能是ColumnNameNode、ColumnNumberNode、ColumnExpNode
+        if (rightNode instanceof ColumnNameNode) {
+            rightVal = info.getUpdateAttribute(rightNode.toString()).get(entity);
+        } else if (rightNode instanceof ColumnNumberNode) {
+            rightVal = ((ColumnNumberNode) rightNode).getValue();
+        } else if (rightNode instanceof ColumnExpNode) {
+            rightVal = updateColumnExpNode(attr, entity, (ColumnExpNode) rightNode);
+        }
+        return getNumberValue((Number) leftVal, node.getExpress(), (Number) rightVal);
     }
 
-    private <V> Number getValue(Number numb, final ColumnExpress express, Serializable val) {
+    private Number getNumberValue(Number numb, final ColumnExpress express, Number val) {
         switch (express) {
             case INC:
                 if (numb == null) {
-                    numb = (Number) val;
+                    numb = val;
                 } else {
-                    if (numb instanceof Float || ((Number) val) instanceof Float) {
-                        numb = numb.floatValue() + ((Number) val).floatValue();
-                    } else if (numb instanceof Double || ((Number) val) instanceof Double) {
-                        numb = numb.doubleValue() + ((Number) val).doubleValue();
+                    if (numb instanceof Float || val instanceof Float) {
+                        numb = numb.floatValue() + val.floatValue();
+                    } else if (numb instanceof Double || val instanceof Double) {
+                        numb = numb.doubleValue() + val.doubleValue();
                     } else {
-                        numb = numb.longValue() + ((Number) val).longValue();
+                        numb = numb.longValue() + val.longValue();
                     }
                 }
                 break;
             case DEC:
                 if (numb == null) {
-                    numb = (Number) val;
+                    numb = val;
                 } else {
-                    if (numb instanceof Float || ((Number) val) instanceof Float) {
-                        numb = numb.floatValue() - ((Number) val).floatValue();
-                    } else if (numb instanceof Double || ((Number) val) instanceof Double) {
-                        numb = numb.doubleValue() - ((Number) val).doubleValue();
+                    if (numb instanceof Float || val instanceof Float) {
+                        numb = numb.floatValue() - val.floatValue();
+                    } else if (numb instanceof Double || val instanceof Double) {
+                        numb = numb.doubleValue() - val.doubleValue();
                     } else {
-                        numb = numb.longValue() - ((Number) val).longValue();
+                        numb = numb.longValue() - val.longValue();
                     }
                 }
                 break;
@@ -1112,35 +1122,35 @@ public final class EntityCache<T> {
                 if (numb == null) {
                     numb = 0;
                 } else {
-                    numb = numb.longValue() * ((Number) val).floatValue();
+                    numb = numb.longValue() * val.floatValue();
                 }
                 break;
             case DIV:
                 if (numb == null) {
                     numb = 0;
                 } else {
-                    numb = numb.longValue() / ((Number) val).floatValue();
+                    numb = numb.longValue() / val.floatValue();
                 }
                 break;
             case MOD:
                 if (numb == null) {
                     numb = 0;
                 } else {
-                    numb = numb.longValue() % ((Number) val).intValue();
+                    numb = numb.longValue() % val.intValue();
                 }
                 break;
             case AND:
                 if (numb == null) {
                     numb = 0;
                 } else {
-                    numb = numb.longValue() & ((Number) val).longValue();
+                    numb = numb.longValue() & val.longValue();
                 }
                 break;
             case ORR:
                 if (numb == null) {
                     numb = 0;
                 } else {
-                    numb = numb.longValue() | ((Number) val).longValue();
+                    numb = numb.longValue() | val.longValue();
                 }
                 break;
         }

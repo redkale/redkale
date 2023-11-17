@@ -13,7 +13,7 @@ import org.redkale.util.*;
 
 /**
  * ColumnValue主要用于多个字段更新的表达式。
- * value值一般为: ColumnExpNode、ColumnFuncNode、Number、String等 <br>
+ * value值一般为:ColumnExpNode、ColumnFuncNode、ColumnNameNode、ColumnNumberNode、ColumnStringNode、ColumnBytesNode <br>
  * 用于 DataSource.updateColumn 方法  <br>
  *
  * <p>
@@ -30,33 +30,40 @@ public class ColumnValue {
     private ColumnExpress express;
 
     @ConvertColumn(index = 3)
-    private Serializable value;
+    private ColumnNode value;
 
     public ColumnValue() {
     }
 
-    private <T extends Serializable> ColumnValue(LambdaSupplier<T> func) {
-        this(LambdaSupplier.readColumn(func), ColumnExpress.MOV, func.get());
-    }
-
-    public <T extends Serializable> ColumnValue(LambdaSupplier<T> func, ColumnExpress express) {
+    protected <T extends Serializable> ColumnValue(LambdaSupplier<T> func, ColumnExpress express) {
         this(LambdaSupplier.readColumn(func), express, func.get());
     }
 
-    public <T> ColumnValue(LambdaFunction<T, ?> func, ColumnExpress express, Serializable value) {
+    protected <T> ColumnValue(LambdaFunction<T, ?> func, ColumnExpress express, Serializable value) {
         this(LambdaFunction.readColumn(func), express, value);
     }
 
-    private ColumnValue(String column, Serializable value) {
-        this(column, ColumnExpress.MOV, value);
-    }
-
-    public ColumnValue(String column, ColumnExpress express, Serializable value) {
+    protected ColumnValue(String column, ColumnExpress express, Serializable value) {
         Objects.requireNonNull(column);
         Objects.requireNonNull(express);
         this.column = column;
         this.express = express;
-        this.value = value;
+        if (value instanceof String) {
+            this.value = new ColumnStringNode(value.toString());
+        } else if (value instanceof Number) {
+            this.value = new ColumnNumberNode((Number) value);
+        } else if (value instanceof ColumnExpNode
+            || value instanceof ColumnFuncNode
+            || value instanceof ColumnNameNode
+            || value instanceof ColumnNumberNode
+            || value instanceof ColumnStringNode
+            || value instanceof ColumnBytesNode) {
+            this.value = (ColumnNode) value;
+        } else if (value == null) {
+            this.value = null;
+        } else {
+            throw new IllegalArgumentException("Not supported value: " + value);
+        }
     }
 
     /**
@@ -68,7 +75,7 @@ public class ColumnValue {
      * @return ColumnValue
      */
     public static ColumnValue create(String column, Serializable value) {
-        return new ColumnValue(column, value);
+        return new ColumnValue(column, MOV, value);
     }
 
     /**
@@ -205,7 +212,7 @@ public class ColumnValue {
      * @since 2.8.0
      */
     public static <T extends Serializable> ColumnValue create(LambdaSupplier<T> func) {
-        return new ColumnValue(func);
+        return new ColumnValue(func, MOV);
     }
 
     /**
@@ -470,16 +477,16 @@ public class ColumnValue {
         this.express = express;
     }
 
-    public Serializable getValue() {
+    public ColumnNode getValue2() {
         return value;
     }
 
-    public void setValue(Serializable value) {
+    public void setValue(ColumnNode value) {
         this.value = value;
     }
 
     @Override
     public String toString() {
-        return "{\"column\":\"" + column + "\", \"express\":" + express + ", \"value\":" + ((value instanceof CharSequence) ? ("\"" + value + "\"") : value) + "}";
+        return "{\"column\":\"" + column + "\", \"express\":" + express + ", \"value\":" + value + "}";
     }
 }
