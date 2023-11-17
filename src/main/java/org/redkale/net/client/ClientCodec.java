@@ -83,7 +83,7 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
                     messageListener.onMessage(connection, cr);
                     respPool.accept(cr);
                 } else {
-                    ClientFuture<R, P> respFuture = connection.pollRespFuture(cr.getRequestid());
+                    ClientFuture respFuture = connection.pollRespFuture(cr.getRequestid());
                     if (respFuture != null) {
                         if (respFuture.request != cr.request) {
                             connection.dispose(new RedkaleException("request pipeline error"));
@@ -116,7 +116,7 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
         }
     }
 
-    void responseComplete(boolean halfCompleted, ClientFuture<R, P> respFuture, P message, Throwable exc) {
+    void responseComplete(boolean halfCompleted, ClientFuture<R, Object> respFuture, P message, Throwable exc) {
         R request = respFuture.request;
         Traces.currentTraceid(request.getTraceid());
         AsyncIOThread readThread = connection.channel.getReadIOThread();
@@ -144,7 +144,7 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
             connection.preComplete(message, (R) request, exc);
 
             if (exc == null) {
-                final P rs = request.respTransfer == null ? message : (P) request.respTransfer.apply(message);
+                final Object rs = request.respTransfer == null ? message : request.respTransfer.apply(message);
                 if (workThread == null) {
                     readThread.runWork(() -> {
                         Traces.currentTraceid(request.traceid);

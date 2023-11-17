@@ -6,6 +6,7 @@
 package org.redkale.net.client;
 
 import java.io.Serializable;
+import org.redkale.annotation.Nullable;
 
 /**
  *
@@ -21,6 +22,7 @@ import java.io.Serializable;
  */
 public class ClientResponse<R extends ClientRequest, P extends ClientResult> {
 
+    @Nullable
     protected R request; //服务端返回一个不存在的requestid，可能为null
 
     protected P message;

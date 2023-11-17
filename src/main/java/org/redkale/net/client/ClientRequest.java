@@ -30,7 +30,7 @@ public abstract class ClientRequest {
 
     protected String traceid;
 
-    //只会在ClientCodec的读线程里调用
+    //只会在ClientCodec的读线程里调用, 将ClientResult转成最终结果对象
     Function respTransfer;
 
     public abstract void writeTo(ClientConnection conn, ByteArray array);
