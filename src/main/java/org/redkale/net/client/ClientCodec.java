@@ -120,7 +120,7 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
         R request = respFuture.request;
         Traces.currentTraceid(request.getTraceid());
         AsyncIOThread readThread = connection.channel.getReadIOThread();
-        final WorkThread workThread = request.workThread;
+        final WorkThread workThread = request.workThread == null ? readThread : request.workThread;
         try {
             if (!halfCompleted && !request.isCompleted()) {
                 if (exc == null) {
@@ -145,52 +145,24 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
 
             if (exc == null) {
                 final Object rs = request.respTransfer == null ? message : request.respTransfer.apply(message);
-                if (workThread == null) {
-                    readThread.runWork(() -> {
-                        Traces.currentTraceid(request.traceid);
-                        respFuture.complete(rs);
-                        Traces.removeTraceid();
-                    });
-                } else if (workThread.getState() == Thread.State.RUNNABLE) { //fullCache时state不是RUNNABLE
-                    if (workThread.inIO()) {
-                        Traces.currentTraceid(request.traceid);
-                        respFuture.complete(rs);
-                        Traces.removeTraceid();
-                    } else {
-                        workThread.execute(() -> {
-                            Traces.currentTraceid(request.traceid);
-                            respFuture.complete(rs);
-                            Traces.removeTraceid();
-                        });
-                    }
+                if (workThread.inIO() && workThread.getState() == Thread.State.RUNNABLE) { //fullCache时state不是RUNNABLE
+                    Traces.currentTraceid(request.traceid);
+                    respFuture.complete(rs);
+                    Traces.removeTraceid();
                 } else {
-                    Utility.execute(() -> {
+                    workThread.runWork(() -> {
                         Traces.currentTraceid(request.traceid);
                         respFuture.complete(rs);
                         Traces.removeTraceid();
                     });
                 }
             } else { //异常
-                if (workThread == null) {
-                    readThread.runWork(() -> {
-                        Traces.currentTraceid(request.traceid);
-                        respFuture.completeExceptionally(exc);
-                        Traces.removeTraceid();
-                    });
-                } else if (workThread.getState() == Thread.State.RUNNABLE) { //fullCache时state不是RUNNABLE
-                    if (workThread.inIO()) {
-                        Traces.currentTraceid(request.traceid);
-                        respFuture.completeExceptionally(exc);
-                        Traces.removeTraceid();
-                    } else {
-                        workThread.execute(() -> {
-                            Traces.currentTraceid(request.traceid);
-                            respFuture.completeExceptionally(exc);
-                            Traces.removeTraceid();
-                        });
-                    }
+                if (workThread.inIO() && workThread.getState() == Thread.State.RUNNABLE) { //fullCache时state不是RUNNABLE
+                    Traces.currentTraceid(request.traceid);
+                    respFuture.completeExceptionally(exc);
+                    Traces.removeTraceid();
                 } else {
-                    Utility.execute(() -> {
+                    workThread.runWork(() -> {
                         Traces.currentTraceid(request.traceid);
                         respFuture.completeExceptionally(exc);
                         Traces.removeTraceid();
@@ -198,26 +170,12 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
                 }
             }
         } catch (Throwable t) {
-            if (workThread == null) {
-                readThread.runWork(() -> {
-                    Traces.currentTraceid(request.traceid);
-                    respFuture.completeExceptionally(t);
-                    Traces.removeTraceid();
-                });
-            } else if (workThread.getState() == Thread.State.RUNNABLE) { //fullCache时state不是RUNNABLE
-                if (workThread.inIO()) {
-                    Traces.currentTraceid(request.traceid);
-                    respFuture.completeExceptionally(t);
-                    Traces.removeTraceid();
-                } else {
-                    workThread.execute(() -> {
-                        Traces.currentTraceid(request.traceid);
-                        respFuture.completeExceptionally(t);
-                        Traces.removeTraceid();
-                    });
-                }
+            if (workThread.inIO() && workThread.getState() == Thread.State.RUNNABLE) { //fullCache时state不是RUNNABLE
+                Traces.currentTraceid(request.traceid);
+                respFuture.completeExceptionally(t);
+                Traces.removeTraceid();
             } else {
-                Utility.execute(() -> {
+                workThread.runWork(() -> {
                     Traces.currentTraceid(request.traceid);
                     respFuture.completeExceptionally(t);
                     Traces.removeTraceid();
