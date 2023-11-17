@@ -365,7 +365,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
      *
      * @return Predicate
      */
-    protected <T, E> Predicate<T> createPredicate(FilterNode node, EntityCache<T> cache) {
+    protected <T> Predicate<T> createPredicate(FilterNode node, EntityCache<T> cache) {
         return node.createPredicate(cache);
     }
 

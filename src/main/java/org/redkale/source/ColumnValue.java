@@ -13,7 +13,7 @@ import org.redkale.util.*;
 
 /**
  * ColumnValue主要用于多个字段更新的表达式。
- * value值一般为: ColumnNodeValue、ColumnFuncNode、Number、String等 <br>
+ * value值一般为: ColumnExpNode、ColumnFuncNode、Number、String等 <br>
  * 用于 DataSource.updateColumn 方法  <br>
  *
  * <p>
@@ -35,7 +35,7 @@ public class ColumnValue {
     public ColumnValue() {
     }
 
-    public <T extends Serializable> ColumnValue(LambdaSupplier<T> func) {
+    private <T extends Serializable> ColumnValue(LambdaSupplier<T> func) {
         this(LambdaSupplier.readColumn(func), ColumnExpress.MOV, func.get());
     }
 
@@ -43,22 +43,19 @@ public class ColumnValue {
         this(LambdaSupplier.readColumn(func), express, func.get());
     }
 
-    public <T> ColumnValue(LambdaFunction<T, ?> func, Serializable value) {
-        this(LambdaFunction.readColumn(func), ColumnExpress.MOV, value);
-    }
-
     public <T> ColumnValue(LambdaFunction<T, ?> func, ColumnExpress express, Serializable value) {
         this(LambdaFunction.readColumn(func), express, value);
     }
 
-    public ColumnValue(String column, Serializable value) {
+    private ColumnValue(String column, Serializable value) {
         this(column, ColumnExpress.MOV, value);
     }
 
     public ColumnValue(String column, ColumnExpress express, Serializable value) {
         Objects.requireNonNull(column);
+        Objects.requireNonNull(express);
         this.column = column;
-        this.express = express == null ? ColumnExpress.MOV : express;
+        this.express = express;
         this.value = value;
     }
 
@@ -94,7 +91,7 @@ public class ColumnValue {
      *
      * @return ColumnValue
      */
-    public static ColumnValue inc(String column, Serializable value) {
+    public static ColumnValue inc(String column, Number value) {
         return new ColumnValue(column, INC, value);
     }
 
@@ -119,7 +116,7 @@ public class ColumnValue {
      *
      * @return ColumnValue
      */
-    public static ColumnValue dec(String column, Serializable value) {
+    public static ColumnValue dec(String column, Number value) {
         return new ColumnValue(column, DEC, value);
     }
 
@@ -144,7 +141,7 @@ public class ColumnValue {
      *
      * @return ColumnValue
      */
-    public static ColumnValue mul(String column, Serializable value) {
+    public static ColumnValue mul(String column, Number value) {
         return new ColumnValue(column, MUL, value);
     }
 
@@ -156,7 +153,7 @@ public class ColumnValue {
      *
      * @return ColumnValue
      */
-    public static ColumnValue div(String column, Serializable value) {
+    public static ColumnValue div(String column, Number value) {
         return new ColumnValue(column, DIV, value);
     }
 
@@ -321,7 +318,7 @@ public class ColumnValue {
      * @since 2.8.0
      */
     public static <T> ColumnValue create(LambdaFunction<T, ?> func, Serializable value) {
-        return new ColumnValue(func, value);
+        return new ColumnValue(func, MOV, value);
     }
 
     /**

@@ -1358,7 +1358,7 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE GROUP BY {col1}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), "targetid")
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid")
      * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
      *
      * @param <T>           Entity泛型
@@ -1377,7 +1377,7 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} GROUP BY {col1}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), "targetid")
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid")
      * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
      *
      * @param <T>           Entity泛型
@@ -1396,7 +1396,7 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter bean} GROUP BY {col1}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), "targetid", (FilterBean)null)
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid", (FilterBean)null)
      * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
      *
      * @param <T>           Entity泛型
@@ -1416,7 +1416,7 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter bean} GROUP BY {col1}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), "targetid", (FilterBean)null)
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid", (FilterBean)null)
      * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
      *
      * @param <T>           Entity泛型
@@ -1436,7 +1436,7 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter node} GROUP BY {col1}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), "targetid", (FilterNode)null)
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid", (FilterNode)null)
      * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
      *
      * @param <T>           Entity泛型
@@ -1454,7 +1454,7 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter node} GROUP BY {col1}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), "targetid", (FilterNode)null)
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid", (FilterNode)null)
      * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
      *
      * @param <T>           Entity泛型
@@ -1472,7 +1472,7 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} GROUP BY {col1}, {col2}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), Utility.ofArray("fromid", "targetid"))
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"))
      * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
      *
      * @param <T>            Entity泛型
@@ -1491,7 +1491,7 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} GROUP BY {col1}, {col2}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), Utility.ofArray("fromid", "targetid"))
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"))
      * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
      *
      * @param <T>            Entity泛型
@@ -1510,7 +1510,7 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter bean} GROUP BY {col1}, {col2}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterBean)null)
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterBean)null)
      * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
      *
      * @param <T>            Entity泛型
@@ -1530,7 +1530,7 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter bean} GROUP BY {col1}, {col2}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterBean)null)
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterBean)null)
      * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
      *
      * @param <T>            Entity泛型
@@ -1550,7 +1550,7 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter node} GROUP BY {col1}, {col2}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterNode)null)
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterNode)null)
      * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
      *
      * @param <T>            Entity泛型
@@ -1568,7 +1568,7 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter node} GROUP BY {col1}, {col2}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnNodeValue.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnNodeValue.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterNode)null)
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterNode)null)
      * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
      *
      * @param <T>            Entity泛型

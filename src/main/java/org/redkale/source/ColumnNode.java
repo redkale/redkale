@@ -8,7 +8,7 @@ package org.redkale.source;
 import java.io.Serializable;
 
 /**
- * ColumnFuncNode与ColumnNodeValue 的接口
+ * ColumnFuncNode与ColumnExpNode 的接口
  *
  * <p>
  * 详情见: https://redkale.org

@@ -537,8 +537,8 @@ public final class EntityCache<T> {
     private Number queryColumnNumber(final List<T> list, final ColumnNode funcNode) {
         if (funcNode instanceof ColumnFuncNode) {
             return queryColumnNumber(list, (ColumnFuncNode) funcNode);
-        } else if (funcNode instanceof ColumnNodeValue) {
-            return queryColumnNumber(list, (ColumnNodeValue) funcNode);
+        } else if (funcNode instanceof ColumnExpNode) {
+            return queryColumnNumber(list, (ColumnExpNode) funcNode);
         } else {
             return null;
         }
@@ -553,13 +553,13 @@ public final class EntityCache<T> {
         Number num = null;
         if (funcNode.getValue() instanceof ColumnFuncNode) {
             num = queryColumnNumber(list, (ColumnFuncNode) funcNode.getValue());
-        } else if (funcNode.getValue() instanceof ColumnNodeValue) {
-            num = queryColumnNumber(list, (ColumnNodeValue) funcNode.getValue());
+        } else if (funcNode.getValue() instanceof ColumnExpNode) {
+            num = queryColumnNumber(list, (ColumnExpNode) funcNode.getValue());
         }
         return num;
     }
 
-    private Number queryColumnNumber(final List<T> list, final ColumnNodeValue nodeValue) {
+    private Number queryColumnNumber(final List<T> list, final ColumnExpNode nodeValue) {
         return null;
     }
 
@@ -1015,8 +1015,8 @@ public final class EntityCache<T> {
                 numb = getValue((Number) attr.get(entity), express, val);
                 break;
             case MOV:
-                if (val instanceof ColumnNodeValue) {
-                    val = updateColumnNodeValue(attr, entity, (ColumnNodeValue) val);
+                if (val instanceof ColumnExpNode) {
+                    val = updateColumnExpNode(attr, entity, (ColumnExpNode) val);
                 }
                 newval = val;
                 if (val instanceof Number) {
@@ -1061,21 +1061,21 @@ public final class EntityCache<T> {
         return entity;
     }
 
-    private <V> Serializable updateColumnNodeValue(Attribute<T, V> attr, final T entity, ColumnNodeValue node) {
+    private <V> Serializable updateColumnExpNode(Attribute<T, V> attr, final T entity, ColumnExpNode node) {
         Serializable left = node.getLeft();
         if (left instanceof CharSequence) {
             left = info.getUpdateAttribute(left.toString()).get(entity);
             if (node.getExpress() == ColumnExpress.MOV) {
                 return left;
             }
-        } else if (left instanceof ColumnNodeValue) {
-            left = updateColumnNodeValue(attr, entity, (ColumnNodeValue) left);
+        } else if (left instanceof ColumnExpNode) {
+            left = updateColumnExpNode(attr, entity, (ColumnExpNode) left);
         }
         Serializable right = node.getRight();
         if (left instanceof CharSequence) {
             right = info.getUpdateAttribute(right.toString()).get(entity);
-        } else if (left instanceof ColumnNodeValue) {
-            right = updateColumnNodeValue(attr, entity, (ColumnNodeValue) right);
+        } else if (left instanceof ColumnExpNode) {
+            right = updateColumnExpNode(attr, entity, (ColumnExpNode) right);
         }
         return getValue((Number) left, node.getExpress(), right);
     }

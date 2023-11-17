@@ -8,7 +8,7 @@ package org.redkale.source;
 import java.io.Serializable;
 
 /**
- * 与ColumnNodeValue 组合，用于复杂的字段表达式 。
+ * 与ColumnExpNode 组合，用于复杂的字段表达式 。
  * String 视为 字段名
  *
  * <p>
@@ -21,14 +21,14 @@ public class ColumnFuncNode implements ColumnNode {
 
     protected FilterFunc func;
 
-    protected Serializable value;//类型只能是String、ColumnNodeValue
+    protected Serializable value;//类型只能是String、ColumnExpNode
 
     public ColumnFuncNode() {
     }
 
     public ColumnFuncNode(FilterFunc func, Serializable node) {
-        if (!(node instanceof String) && !(node instanceof ColumnNodeValue)) {
-            throw new IllegalArgumentException("value must be String or ColumnNodeValue");
+        if (!(node instanceof String) && !(node instanceof ColumnExpNode)) {
+            throw new IllegalArgumentException("value must be String or ColumnExpNode");
         }
         this.func = func;
         this.value = node;

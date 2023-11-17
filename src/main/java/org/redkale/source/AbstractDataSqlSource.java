@@ -2458,7 +2458,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
             if (funcNodes[i] instanceof ColumnFuncNode) {
                 funcSqlColumns.append(info.formatSQLValue((Attribute) null, "a", (ColumnFuncNode) funcNodes[i], sqlFormatter));
             } else {
-                funcSqlColumns.append(info.formatSQLValue((Attribute) null, "a", (ColumnNodeValue) funcNodes[i], sqlFormatter));
+                funcSqlColumns.append(info.formatSQLValue((Attribute) null, "a", (ColumnExpNode) funcNodes[i], sqlFormatter));
             }
         }
         final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
