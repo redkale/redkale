@@ -1512,7 +1512,7 @@ public final class EntityInfo<T> {
             return null;
         }
         //ColumnExpNode、ColumnFuncNode、ColumnNameNode、ColumnNumberNode、ColumnStringNode
-        ColumnNode node = cv.getValue2();
+        ColumnNode node = cv.getValue();
         //ColumnExpNode时 cv.getExpress() == ColumnExpress.MOV 只用于updateColumn
         if (node instanceof ColumnExpNode) {
             return formatColumnExpNodeSQLValue(attr, null, (ColumnExpNode) node, formatter);
@@ -1551,16 +1551,16 @@ public final class EntityInfo<T> {
     }
 
     protected CharSequence formatColumnFuncNodeSQLValue(Attribute<T, Serializable> attr, String tabalis, final ColumnFuncNode node, BiFunction<EntityInfo, Object, CharSequence> formatter) {
-        if (node.getValue2() instanceof ColumnExpNode) {
-            return node.getFunc().getColumn(formatColumnExpNodeSQLValue(attr, tabalis, (ColumnExpNode) node.getValue2(), formatter).toString());
+        if (node.getValue() instanceof ColumnExpNode) {
+            return node.getFunc().getColumn(formatColumnExpNodeSQLValue(attr, tabalis, (ColumnExpNode) node.getValue(), formatter).toString());
         } else {
-            return node.getFunc().getColumn(formatColumnNameNodeSQLValue(attr, tabalis, (ColumnNameNode) node.getValue2(), formatter).toString());
+            return node.getFunc().getColumn(formatColumnNameNodeSQLValue(attr, tabalis, (ColumnNameNode) node.getValue(), formatter).toString());
         }
     }
 
     protected CharSequence formatColumnExpNodeSQLValue(Attribute<T, Serializable> attr, String tabalis, final ColumnExpNode node, BiFunction<EntityInfo, Object, CharSequence> formatter) {
         CharSequence leftVal = null;
-        ColumnNode leftNode = node.getLeft2();
+        ColumnNode leftNode = node.getLeft();
         if (leftNode instanceof ColumnNameNode) {
             leftVal = formatColumnNameNodeSQLValue(attr, tabalis, (ColumnNameNode) leftNode, formatter);
         } else if (leftNode instanceof ColumnStringNode) {
@@ -1576,7 +1576,7 @@ public final class EntityInfo<T> {
             return leftVal;
         }
         CharSequence rightVal = null;
-        ColumnNode rightNode = node.getRight2();
+        ColumnNode rightNode = node.getRight();
         if (rightNode instanceof ColumnNameNode) {
             rightVal = formatColumnNameNodeSQLValue(attr, tabalis, (ColumnNameNode) rightNode, formatter);
         } else if (rightNode instanceof ColumnStringNode) {

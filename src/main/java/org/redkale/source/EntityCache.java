@@ -545,16 +545,16 @@ public final class EntityCache<T> {
     }
 
     private Number queryColumnFuncNodeNumber(final List<T> list, final ColumnFuncNode funcNode) {
-        if (funcNode.getValue2() instanceof ColumnNameNode) {
-            final Attribute<T, Serializable> attr = info.getAttribute(((ColumnNameNode) funcNode.getValue2()).getColumn());
+        if (funcNode.getValue() instanceof ColumnNameNode) {
+            final Attribute<T, Serializable> attr = info.getAttribute(((ColumnNameNode) funcNode.getValue()).getColumn());
             final Function<T, Number> attrFunc = x -> (Number) attr.get(x);
             return getNumberResult(list, funcNode.getFunc(), null, attr.type(), attrFunc, (FilterNode) null);
         }
         Number num = null;
-        if (funcNode.getValue2() instanceof ColumnFuncNode) {
-            num = queryColumnFuncNodeNumber(list, (ColumnFuncNode) funcNode.getValue2());
-        } else if (funcNode.getValue2() instanceof ColumnExpNode) {
-            num = queryColumnExpNodeNumber(list, (ColumnExpNode) funcNode.getValue2());
+        if (funcNode.getValue() instanceof ColumnFuncNode) {
+            num = queryColumnFuncNodeNumber(list, (ColumnFuncNode) funcNode.getValue());
+        } else if (funcNode.getValue() instanceof ColumnExpNode) {
+            num = queryColumnExpNodeNumber(list, (ColumnExpNode) funcNode.getValue());
         }
         return num;
     }
@@ -902,7 +902,7 @@ public final class EntityCache<T> {
         try {
             for (int i = 0; i < attrs.size(); i++) {
                 ColumnValue cv = values.get(i);
-                updateColumn(attrs.get(i), rs, cv.getExpress(), cv.getValue2());
+                updateColumn(attrs.get(i), rs, cv.getExpress(), cv.getValue());
             }
         } finally {
             tableLock.unlock();
@@ -928,7 +928,7 @@ public final class EntityCache<T> {
             for (T rs : rms) {
                 for (int i = 0; i < attrs.size(); i++) {
                     ColumnValue cv = values.get(i);
-                    updateColumn(attrs.get(i), rs, cv.getExpress(), cv.getValue2());
+                    updateColumn(attrs.get(i), rs, cv.getExpress(), cv.getValue());
                 }
             }
         } finally {
@@ -1064,7 +1064,7 @@ public final class EntityCache<T> {
 
     private <V> Serializable updateColumnExpNode(Attribute<T, V> attr, final T entity, ColumnExpNode node) {
         Serializable leftVal = null;
-        ColumnNode leftNode = node.getLeft2();
+        ColumnNode leftNode = node.getLeft();
         //类型只能是ColumnNameNode、ColumnNumberNode、ColumnExpNode
         if (leftNode instanceof ColumnNameNode) {
             leftVal = info.getUpdateAttribute(leftNode.toString()).get(entity);
@@ -1078,7 +1078,7 @@ public final class EntityCache<T> {
         }
         
         Serializable rightVal = null;
-        ColumnNode rightNode = node.getRight2();
+        ColumnNode rightNode = node.getRight();
         //类型只能是ColumnNameNode、ColumnNumberNode、ColumnExpNode
         if (rightNode instanceof ColumnNameNode) {
             rightVal = info.getUpdateAttribute(rightNode.toString()).get(entity);

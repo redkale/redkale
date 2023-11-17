@@ -144,7 +144,7 @@ public class ColumnExpNode implements ColumnNode {
         return this;
     }
 
-    public ColumnNode getLeft2() {
+    public ColumnNode getLeft() {
         return left;
     }
 
@@ -160,7 +160,7 @@ public class ColumnExpNode implements ColumnNode {
         this.express = express;
     }
 
-    public ColumnNode getRight2() {
+    public ColumnNode getRight() {
         return right;
     }
 

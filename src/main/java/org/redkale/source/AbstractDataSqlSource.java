@@ -1702,11 +1702,11 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
                 setsql.append(", ");
             }
             String sqlColumn = info.getSQLColumn(null, col.getColumn());
-            if (col.getValue2() instanceof ColumnBytesNode) {
+            if (col.getValue() instanceof ColumnBytesNode) {
                 if (blobs == null) {
                     blobs = new ArrayList<>();
                 }
-                blobs.add(((ColumnBytesNode) col.getValue2()).getValue());
+                blobs.add(((ColumnBytesNode) col.getValue()).getValue());
                 setsql.append(sqlColumn).append("=").append(prepareParamSign(++index));
             } else {
                 setsql.append(sqlColumn).append("=").append(info.formatSQLValue(sqlColumn, attr, col, sqlFormatter));
@@ -1787,11 +1787,11 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
                 setsql.append(", ");
             }
             String sqlColumn = info.getSQLColumn(alias, col.getColumn());
-            if (col.getValue2() instanceof ColumnBytesNode) {
+            if (col.getValue() instanceof ColumnBytesNode) {
                 if (blobs == null) {
                     blobs = new ArrayList<>();
                 }
-                blobs.add(((ColumnBytesNode) col.getValue2()).getValue());
+                blobs.add(((ColumnBytesNode) col.getValue()).getValue());
                 setsql.append(sqlColumn).append("=").append(prepareParamSign(++index));
             } else {
                 setsql.append(sqlColumn).append("=").append(info.formatSQLValue(sqlColumn, attr, col, sqlFormatter));

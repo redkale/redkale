@@ -13,7 +13,7 @@ import org.redkale.util.*;
 
 /**
  * ColumnValue主要用于多个字段更新的表达式。
- * value值一般为:ColumnExpNode、ColumnFuncNode、ColumnNameNode、ColumnNumberNode、ColumnStringNode、ColumnBytesNode <br>
+ * value值为:ColumnExpNode、ColumnFuncNode、ColumnNameNode、ColumnNumberNode、ColumnStringNode、ColumnBytesNode <br>
  * 用于 DataSource.updateColumn 方法  <br>
  *
  * <p>
@@ -477,7 +477,7 @@ public class ColumnValue {
         this.express = express;
     }
 
-    public ColumnNode getValue2() {
+    public ColumnNode getValue() {
         return value;
     }
 

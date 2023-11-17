@@ -83,7 +83,7 @@ public class ColumnFuncNode implements ColumnNode {
         this.func = func;
     }
 
-    public ColumnNode getValue2() {
+    public ColumnNode getValue() {
         return value;
     }
 
