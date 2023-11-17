@@ -46,11 +46,11 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     @Override
     public void init(AnyValue conf) {
         super.init(conf);
-        this.readPool = new ConnectionPool(readConfProps);
+        this.readPool = new ConnectionPool(true, readConfProps);
         if (readConfProps == writeConfProps) {
             this.writePool = readPool;
         } else {
-            this.writePool = new ConnectionPool(writeConfProps);
+            this.writePool = new ConnectionPool(false, writeConfProps);
         }
     }
 
@@ -119,6 +119,22 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
     protected ConnectionPool writePool() {
         return writePool;
+    }
+
+    @Local
+    public DataJdbcConnection getReadJdbcConnection() {
+        return readPool().pollConnection();
+    }
+
+    @Local
+    public DataJdbcConnection getWriteJdbcConnection() {
+        return writePool().pollConnection();
+    }
+
+    @Local
+    public void offerJdbcConnection(DataJdbcConnection conn) {
+        ConnectionPool pool = conn.readFlag ? readPool() : writePool();
+        pool.offerConnection(conn);
     }
 
     @Override
@@ -2913,7 +2929,10 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
         protected final AtomicInteger urlVersion = new AtomicInteger();
 
-        public ConnectionPool(Properties prop) {
+        protected final boolean readFlag;
+
+        public ConnectionPool(boolean readFlag, Properties prop) {
+            this.readFlag = readFlag;
             this.connectTimeoutSeconds = Integer.decode(prop.getProperty(DATA_SOURCE_CONNECTTIMEOUT_SECONDS, "30"));
             int defMaxConns = Utility.cpus() * 4;
             if (workExecutor instanceof ThreadPoolExecutor) {
@@ -3055,7 +3074,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             SourceConnection conn = null;
             if (semaphore.tryAcquire()) {
                 try {
-                    conn = new SourceConnection(driver.connect(url, connectAttrs), this.urlVersion.get());
+                    conn = new SourceConnection(driver.connect(url, connectAttrs), readFlag, this.urlVersion.get());
                 } catch (SQLException ex) {
                     semaphore.release();
                     throw new SourceException(ex);
@@ -3126,7 +3145,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         }
     }
 
-    protected class SourceConnection {
+    protected class SourceConnection extends DataJdbcConnection {
 
         public int version;
 
@@ -3134,10 +3153,16 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
         boolean commiting;
 
-        public SourceConnection(Connection conn, int version) {
+        public SourceConnection(Connection conn, boolean readFlag, int version) {
+            super(readFlag);
             Objects.requireNonNull(conn);
             this.conn = conn;
             this.version = version;
+        }
+
+        @Override
+        public Connection getConnection() {
+            return conn;
         }
 
         public Statement createStreamStatement() throws SQLException {

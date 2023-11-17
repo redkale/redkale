@@ -372,7 +372,7 @@ public final class Application {
                             in.close();
                         }
                     } catch (Exception e) {
-            //do nothing
+                        //do nothing
                     }
                 }
                 if (cacheClasses == null) {
@@ -1348,6 +1348,9 @@ public final class Application {
                         if (source instanceof DataSqlSource) {
                             resourceFactory.register(sourceName, DataSqlSource.class, source);
                         }
+                        if (source instanceof DataJdbcSource) {
+                            resourceFactory.register(sourceName, DataJdbcSource.class, source);
+                        }
                     }
                 }
                 return source;
@@ -1365,6 +1368,9 @@ public final class Application {
                     resourceFactory.register(sourceName, DataSource.class, source);
                     if (source instanceof DataSqlSource) {
                         resourceFactory.register(sourceName, DataSqlSource.class, source);
+                    }
+                    if (source instanceof DataJdbcSource) {
+                        resourceFactory.register(sourceName, DataJdbcSource.class, source);
                     }
                 }
                 logger.info("Load DataSource resourceName = '" + sourceName + "', source = " + source);
