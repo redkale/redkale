@@ -3,6 +3,7 @@
 package org.redkale.util;
 
 import java.lang.reflect.*;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 import org.redkale.convert.*;
@@ -21,16 +22,25 @@ import org.redkale.convert.json.*;
  */
 public class OneOrList<T> implements java.io.Serializable {
 
-    public static final Type TYPE_OL_LONG = new TypeToken<OneOrList<Long>>() {
-    }.getType();
-
     public static final Type TYPE_OL_STRING = new TypeToken<OneOrList<String>>() {
     }.getType();
 
     public static final Type TYPE_OL_INTEGER = new TypeToken<OneOrList<Integer>>() {
     }.getType();
 
+    public static final Type TYPE_OL_LONG = new TypeToken<OneOrList<Long>>() {
+    }.getType();
+
+    public static final Type TYPE_OL_FLOAT = new TypeToken<OneOrList<Float>>() {
+    }.getType();
+
+    public static final Type TYPE_OL_DOUBLE = new TypeToken<OneOrList<Double>>() {
+    }.getType();
+
     public static final Type TYPE_OL_BIGINTEGER = new TypeToken<OneOrList<BigInteger>>() {
+    }.getType();
+
+    public static final Type TYPE_OL_BIGDECIMAL = new TypeToken<OneOrList<BigDecimal>>() {
     }.getType();
 
     @ConvertColumn(index = 1)

@@ -28,7 +28,7 @@ public class ColumnFuncNode implements ColumnNode {
     public ColumnFuncNode() {
     }
 
-    protected ColumnFuncNode(FilterFunc func, Serializable node) {
+    public ColumnFuncNode(FilterFunc func, Serializable node) {
         this.func = func;
         this.value = createColumnNode(node);
     }
@@ -47,30 +47,74 @@ public class ColumnFuncNode implements ColumnNode {
         }
     }
 
-    public static ColumnFuncNode create(FilterFunc func, Serializable node) {
-        return new ColumnFuncNode(func, node);
-    }
-
+    /**
+     * @see org.redkale.source.ColumnNodes#avg(java.io.Serializable)
+     * @param node Serializable
+     *
+     * @return ColumnFuncNode
+     * @deprecated 2.8.0
+     */
+    @Deprecated(since = "2.8.0")
     public static ColumnFuncNode avg(Serializable node) {
         return new ColumnFuncNode(FilterFunc.AVG, node);
     }
 
+    /**
+     * @see org.redkale.source.ColumnNodes#count(java.io.Serializable)
+     * @param node Serializable
+     *
+     * @return ColumnFuncNode
+     * @deprecated 2.8.0
+     */
+    @Deprecated(since = "2.8.0")
     public static ColumnFuncNode count(Serializable node) {
         return new ColumnFuncNode(FilterFunc.COUNT, node);
     }
 
+    /**
+     * @see org.redkale.source.ColumnNodes#distinctCount(java.io.Serializable)
+     * @param node Serializable
+     *
+     * @return ColumnFuncNode
+     * @deprecated 2.8.0
+     */
+    @Deprecated(since = "2.8.0")
     public static ColumnFuncNode distinctCount(Serializable node) {
         return new ColumnFuncNode(FilterFunc.DISTINCTCOUNT, node);
     }
 
+    /**
+     * @see org.redkale.source.ColumnNodes#max(java.io.Serializable)
+     * @param node Serializable
+     *
+     * @return ColumnFuncNode
+     * @deprecated 2.8.0
+     */
+    @Deprecated(since = "2.8.0")
     public static ColumnFuncNode max(Serializable node) {
         return new ColumnFuncNode(FilterFunc.MAX, node);
     }
 
+    /**
+     * @see org.redkale.source.ColumnNodes#min(java.io.Serializable)
+     * @param node Serializable
+     *
+     * @return ColumnFuncNode
+     * @deprecated 2.8.0
+     */
+    @Deprecated(since = "2.8.0")
     public static ColumnFuncNode min(Serializable node) {
         return new ColumnFuncNode(FilterFunc.MIN, node);
     }
 
+    /**
+     * @see org.redkale.source.ColumnNodes#sum(java.io.Serializable)
+     * @param node Serializable
+     *
+     * @return ColumnFuncNode
+     * @deprecated 2.8.0
+     */
+    @Deprecated(since = "2.8.0")
     public static ColumnFuncNode sum(Serializable node) {
         return new ColumnFuncNode(FilterFunc.SUM, node);
     }

@@ -28,10 +28,6 @@ public class ColumnStringNode implements ColumnNode {
         this.value = value;
     }
 
-    public static ColumnStringNode create(String value) {
-        return new ColumnStringNode(value);
-    }
-
     public String getValue() {
         return value;
     }

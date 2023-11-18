@@ -28,10 +28,6 @@ public class ColumnNameNode implements ColumnNode {
         this.column = column;
     }
 
-    public static ColumnNameNode create(String column) {
-        return new ColumnNameNode(column);
-    }
-
     public String getColumn() {
         return column;
     }

@@ -28,10 +28,6 @@ public class ColumnNumberNode implements ColumnNode {
         this.value = value;
     }
 
-    public static ColumnNumberNode create(Number value) {
-        return new ColumnNumberNode(value);
-    }
-
     public Number getValue() {
         return value;
     }

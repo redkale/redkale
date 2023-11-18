@@ -38,7 +38,7 @@ public class ColumnExpNode implements ColumnNode {
     public ColumnExpNode() {
     }
 
-    protected ColumnExpNode(Serializable left, ColumnExpress express, Serializable right) {
+    public ColumnExpNode(Serializable left, ColumnExpress express, Serializable right) {
         if (express == null) {
             throw new IllegalArgumentException("express cannot be null");
         }
@@ -72,38 +72,106 @@ public class ColumnExpNode implements ColumnNode {
         return (ColumnNode) value;
     }
 
-    public static ColumnExpNode create(Serializable left, ColumnExpress express, Serializable right) {
-        return new ColumnExpNode(left, express, right);
-    }
-
+    /**
+     * @see org.redkale.source.ColumnNodes#mov(java.lang.String)
+     *
+     * @param left Serializable
+     *
+     * @return ColumnExpNode
+     * @deprecated 2.8.0
+     */
+    @Deprecated(since = "2.8.0")
     public static ColumnExpNode mov(String left) {
         return new ColumnExpNode(left, MOV, null);
     }
 
+    /**
+     * @see org.redkale.source.ColumnNodes#inc(java.io.Serializable, java.io.Serializable)
+     * @param left  Serializable
+     * @param right Serializable
+     *
+     * @return ColumnExpNode
+     * @deprecated 2.8.0
+     */
+    @Deprecated(since = "2.8.0")
     public static ColumnExpNode inc(Serializable left, Serializable right) {
         return new ColumnExpNode(left, INC, right);
     }
 
+    /**
+     * @see org.redkale.source.ColumnNodes#dec(java.io.Serializable, java.io.Serializable)
+     * @param left  Serializable
+     * @param right Serializable
+     *
+     * @return ColumnExpNode
+     * @deprecated 2.8.0
+     */
+    @Deprecated(since = "2.8.0")
     public static ColumnExpNode dec(Serializable left, Serializable right) {
         return new ColumnExpNode(left, DEC, right);
     }
 
+    /**
+     * @see org.redkale.source.ColumnNodes#mul(java.io.Serializable, java.io.Serializable)
+     * @param left  Serializable
+     * @param right Serializable
+     *
+     * @return ColumnExpNode
+     * @deprecated 2.8.0
+     */
+    @Deprecated(since = "2.8.0")
     public static ColumnExpNode mul(Serializable left, Serializable right) {
         return new ColumnExpNode(left, MUL, right);
     }
 
+    /**
+     * @see org.redkale.source.ColumnNodes#div(java.io.Serializable, java.io.Serializable)
+     * @param left  Serializable
+     * @param right Serializable
+     *
+     * @return ColumnExpNode
+     * @deprecated 2.8.0
+     */
+    @Deprecated(since = "2.8.0")
     public static ColumnExpNode div(Serializable left, Serializable right) {
         return new ColumnExpNode(left, DIV, right);
     }
 
+    /**
+     * @see org.redkale.source.ColumnNodes#mod(java.io.Serializable, java.io.Serializable)
+     * @param left  Serializable
+     * @param right Serializable
+     *
+     * @return ColumnExpNode
+     * @deprecated 2.8.0
+     */
+    @Deprecated(since = "2.8.0")
     public static ColumnExpNode mod(Serializable left, Serializable right) {
         return new ColumnExpNode(left, MOD, right);
     }
 
+    /**
+     * @see org.redkale.source.ColumnNodes#and(java.io.Serializable, java.io.Serializable)
+     * @param left  Serializable
+     * @param right Serializable
+     *
+     * @return ColumnExpNode
+     * @deprecated 2.8.0
+     */
+    @Deprecated(since = "2.8.0")
     public static ColumnExpNode and(Serializable left, Serializable right) {
         return new ColumnExpNode(left, AND, right);
     }
 
+    /**
+     * @see org.redkale.source.ColumnNodes#orr(java.io.Serializable, java.io.Serializable)
+     * @param left  Serializable
+     * @param right Serializable
+     *
+     * @return ColumnExpNode
+     * @deprecated 2.8.0
+     */
+    @Deprecated(since = "2.8.0")
     public static ColumnExpNode orr(Serializable left, Serializable right) {
         return new ColumnExpNode(left, ORR, right);
     }
