@@ -86,7 +86,7 @@ public class ColumnExpNode implements ColumnNode {
     }
 
     /**
-     * @see org.redkale.source.ColumnNodes#inc(java.io.Serializable, java.io.Serializable)
+     * @see org.redkale.source.ColumnNodes#inc(org.redkale.source.ColumnNode, org.redkale.source.ColumnNode) 
      * @param left  Serializable
      * @param right Serializable
      *
@@ -99,7 +99,7 @@ public class ColumnExpNode implements ColumnNode {
     }
 
     /**
-     * @see org.redkale.source.ColumnNodes#dec(java.io.Serializable, java.io.Serializable)
+     * @see org.redkale.source.ColumnNodes#dec(org.redkale.source.ColumnNode, org.redkale.source.ColumnNode)
      * @param left  Serializable
      * @param right Serializable
      *
@@ -112,7 +112,7 @@ public class ColumnExpNode implements ColumnNode {
     }
 
     /**
-     * @see org.redkale.source.ColumnNodes#mul(java.io.Serializable, java.io.Serializable)
+     * @see org.redkale.source.ColumnNodes#mul(org.redkale.source.ColumnNode, org.redkale.source.ColumnNode)
      * @param left  Serializable
      * @param right Serializable
      *
@@ -125,7 +125,7 @@ public class ColumnExpNode implements ColumnNode {
     }
 
     /**
-     * @see org.redkale.source.ColumnNodes#div(java.io.Serializable, java.io.Serializable)
+     * @see org.redkale.source.ColumnNodes#div(org.redkale.source.ColumnNode, org.redkale.source.ColumnNode)
      * @param left  Serializable
      * @param right Serializable
      *
@@ -138,7 +138,7 @@ public class ColumnExpNode implements ColumnNode {
     }
 
     /**
-     * @see org.redkale.source.ColumnNodes#mod(java.io.Serializable, java.io.Serializable)
+     * @see org.redkale.source.ColumnNodes#mod(org.redkale.source.ColumnNode, org.redkale.source.ColumnNode)
      * @param left  Serializable
      * @param right Serializable
      *
@@ -151,7 +151,7 @@ public class ColumnExpNode implements ColumnNode {
     }
 
     /**
-     * @see org.redkale.source.ColumnNodes#and(java.io.Serializable, java.io.Serializable)
+     * @see org.redkale.source.ColumnNodes#and(org.redkale.source.ColumnNode, org.redkale.source.ColumnNode)
      * @param left  Serializable
      * @param right Serializable
      *
@@ -164,7 +164,7 @@ public class ColumnExpNode implements ColumnNode {
     }
 
     /**
-     * @see org.redkale.source.ColumnNodes#orr(java.io.Serializable, java.io.Serializable)
+     * @see org.redkale.source.ColumnNodes#orr(org.redkale.source.ColumnNode, org.redkale.source.ColumnNode)
      * @param left  Serializable
      * @param right Serializable
      *

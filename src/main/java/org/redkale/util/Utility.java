@@ -954,6 +954,7 @@ public final class Utility {
     /**
      * 是否为空
      *
+     * @param <T>   泛型
      * @param array 数组
      *
      * @return 是否为空
@@ -966,6 +967,7 @@ public final class Utility {
     /**
      * 是否不为空
      *
+     * @param <T>   泛型
      * @param array 数组
      *
      * @return 是否不为空

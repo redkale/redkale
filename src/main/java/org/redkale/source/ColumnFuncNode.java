@@ -48,7 +48,7 @@ public class ColumnFuncNode implements ColumnNode {
     }
 
     /**
-     * @see org.redkale.source.ColumnNodes#avg(java.io.Serializable)
+     * @see org.redkale.source.ColumnNodes#avg(org.redkale.source.ColumnNode) 
      * @param node Serializable
      *
      * @return ColumnFuncNode
@@ -60,7 +60,7 @@ public class ColumnFuncNode implements ColumnNode {
     }
 
     /**
-     * @see org.redkale.source.ColumnNodes#count(java.io.Serializable)
+     * @see org.redkale.source.ColumnNodes#count(org.redkale.source.ColumnNode)
      * @param node Serializable
      *
      * @return ColumnFuncNode
@@ -72,7 +72,7 @@ public class ColumnFuncNode implements ColumnNode {
     }
 
     /**
-     * @see org.redkale.source.ColumnNodes#distinctCount(java.io.Serializable)
+     * @see org.redkale.source.ColumnNodes#distinctCount(org.redkale.source.ColumnNode)
      * @param node Serializable
      *
      * @return ColumnFuncNode
@@ -84,7 +84,7 @@ public class ColumnFuncNode implements ColumnNode {
     }
 
     /**
-     * @see org.redkale.source.ColumnNodes#max(java.io.Serializable)
+     * @see org.redkale.source.ColumnNodes#max(org.redkale.source.ColumnNode)
      * @param node Serializable
      *
      * @return ColumnFuncNode
@@ -96,7 +96,7 @@ public class ColumnFuncNode implements ColumnNode {
     }
 
     /**
-     * @see org.redkale.source.ColumnNodes#min(java.io.Serializable)
+     * @see org.redkale.source.ColumnNodes#min(org.redkale.source.ColumnNode)
      * @param node Serializable
      *
      * @return ColumnFuncNode
@@ -108,7 +108,7 @@ public class ColumnFuncNode implements ColumnNode {
     }
 
     /**
-     * @see org.redkale.source.ColumnNodes#sum(java.io.Serializable)
+     * @see org.redkale.source.ColumnNodes#sum(org.redkale.source.ColumnNode)
      * @param node Serializable
      *
      * @return ColumnFuncNode

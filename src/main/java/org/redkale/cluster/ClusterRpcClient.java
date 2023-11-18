@@ -30,6 +30,8 @@ public interface ClusterRpcClient<R, P> {
      * 发送消息，无需响应
      *
      * @param message 消息体
+     *
+     * @return 应答
      */
     public CompletableFuture<Void> produceMessage(R message);
 

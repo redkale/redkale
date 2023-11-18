@@ -359,7 +359,6 @@ public abstract class AbstractDataSource extends AbstractService implements Data
      * 生成过滤函数
      *
      * @param <T>   泛型
-     * @param <E>   泛型
      * @param node  过滤条件
      * @param cache 缓存
      *
