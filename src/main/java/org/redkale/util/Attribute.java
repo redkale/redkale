@@ -429,12 +429,13 @@ public interface Attribute<T, F> {
      * 根据Class生成getter、setter方法都存在的字段对应的 Attribute 对象数组。
      *
      * @param <T>   依附类的类型
+     * @param <F>   字段的类型
      * @param clazz 指定依附的类
      *
      * @return Attribute对象数组
      */
-    public static <T> Attribute<T, ?>[] create(Class<T> clazz) {
-        List<Attribute<T, ?>> list = new ArrayList<>();
+    public static <T, F> Attribute<T, F>[] create(Class<T> clazz) {
+        List<Attribute<T, F>> list = new ArrayList<>();
         RedkaleClassLoader.putReflectionPublicFields(clazz.getName());
         for (java.lang.reflect.Field field : clazz.getFields()) {
             if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
@@ -476,12 +477,13 @@ public interface Attribute<T, F> {
      * 根据Class生成getter方法对应的 Attribute 对象数组。
      *
      * @param <T>   依附类的类型
+     * @param <F>   字段的类型
      * @param clazz 指定依附的类
      *
      * @return Attribute对象数组
      */
-    public static <T> Attribute<T, ?>[] createGetters(Class<T> clazz) {
-        List<Attribute<T, ?>> list = new ArrayList<>();
+    public static <T, F> Attribute<T, F>[] createGetters(Class<T> clazz) {
+        List<Attribute<T, F>> list = new ArrayList<>();
         RedkaleClassLoader.putReflectionPublicFields(clazz.getName());
         for (java.lang.reflect.Field field : clazz.getFields()) {
             if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
@@ -519,12 +521,13 @@ public interface Attribute<T, F> {
      * 根据Class生成setter方法对应的 Attribute 对象数组。
      *
      * @param <T>   依附类的类型
+     * @param <F>   字段的类型
      * @param clazz 指定依附的类
      *
      * @return Attribute对象数组
      */
-    public static <T> Attribute<T, ?>[] createSetters(Class<T> clazz) {
-        List<Attribute<T, ?>> list = new ArrayList<>();
+    public static <T, F> Attribute<T, F>[] createSetters(Class<T> clazz) {
+        List<Attribute<T, F>> list = new ArrayList<>();
         RedkaleClassLoader.putReflectionPublicFields(clazz.getName());
         for (java.lang.reflect.Field field : clazz.getFields()) {
             if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) {

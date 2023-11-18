@@ -119,7 +119,7 @@ public final class Utility {
     private static final ReentrantLock clientLock = new ReentrantLock();
 
     //是否native-image运行环境
-    private static final boolean nativeImageEnv = "executable".equals(System.getProperty("org.graalvm.nativeimage.kind"));
+    private static final boolean NATIVE_IMAGE_ENV = "executable".equals(System.getProperty("org.graalvm.nativeimage.kind"));
 
     private static HttpClient httpClient;
 
@@ -140,7 +140,7 @@ public final class Utility {
         Function<String, ExecutorService> virtualPoolFunction0 = null;
         Executor virtualExecutorConsumer0 = null;
 
-        if (!nativeImageEnv) { //not native-image
+        if (!NATIVE_IMAGE_ENV) { //not native-image
             try {
                 final ClassLoader loader = Thread.currentThread().getContextClassLoader();
                 { //virtualThreadLocalFunction
@@ -949,6 +949,30 @@ public final class Utility {
      */
     public static boolean isNotEmpty(Collection collection) {
         return collection != null && !collection.isEmpty();
+    }
+
+    /**
+     * 是否为空
+     *
+     * @param array 数组
+     *
+     * @return 是否为空
+     *
+     */
+    public static <T> boolean isEmpty(T[] array) {
+        return array == null || array.length == 0;
+    }
+
+    /**
+     * 是否不为空
+     *
+     * @param array 数组
+     *
+     * @return 是否不为空
+     *
+     */
+    public static <T> boolean isNotEmpty(T[] array) {
+        return array != null && array.length > 0;
     }
 
     /**

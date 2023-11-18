@@ -1015,7 +1015,7 @@ public final class EntityCache<T> {
             case ORR:
                 numb = getNumberValue((Number) attr.get(entity), express, val instanceof ColumnNumberNode ? ((ColumnNumberNode) val).getValue() : (Number) val);
                 break;
-            case MOV:
+            case SET:
                 if (val instanceof ColumnExpNode) {
                     val = updateColumnExpNode(attr, entity, (ColumnExpNode) val);
                 }
@@ -1073,7 +1073,7 @@ public final class EntityCache<T> {
         } else if (leftNode instanceof ColumnExpNode) {
             leftVal = updateColumnExpNode(attr, entity, (ColumnExpNode) leftNode);
         }
-        if (node.getExpress() == ColumnExpress.MOV) {
+        if (node.getExpress() == ColumnExpress.SET) {
             return leftVal;
         }
         

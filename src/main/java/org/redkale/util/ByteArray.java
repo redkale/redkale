@@ -756,10 +756,7 @@ public final class ByteArray implements ByteTuple {
      * @return ByteArray
      */
     public ByteArray putUnsignedMedium(int offset, int value) {
-        content[offset] = (byte) (value >> 16 & 0xFF);
-        content[offset + 1] = (byte) (value >> 8 & 0xFF);
-        content[offset + 2] = (byte) (value & 0xFF);
-        return this;
+        return putMedium(offset, value);
     }
 
     /**

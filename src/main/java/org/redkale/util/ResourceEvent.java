@@ -2,11 +2,10 @@
  */
 package org.redkale.util;
 
-import org.redkale.annotation.ConstructorParameters;
-
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import org.redkale.annotation.ConstructorParameters;
 
 /**
  * 详情见: https://redkale.org
@@ -71,7 +70,7 @@ public interface ResourceEvent<T> {
 
     public static class ResourceChangeEvent<T> implements ResourceEvent<T> {
 
-        private static final Predicate<String> numRegx = Pattern.compile("^(\\-|\\+)?\\d+(\\.\\d+)?$").asPredicate();
+        private static final Predicate<String> numRegx = Pattern.compile("^(\\-\\+)?\\d+(\\.\\d+)?$").asPredicate();
 
         protected String name;
 

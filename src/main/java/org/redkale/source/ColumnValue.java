@@ -67,7 +67,7 @@ public class ColumnValue {
     }
 
     /**
-     * 同 mov 操作
+     * 同 set 操作
      *
      * @param column 字段名
      * @param value  字段值
@@ -75,7 +75,21 @@ public class ColumnValue {
      * @return ColumnValue
      */
     public static ColumnValue create(String column, Serializable value) {
-        return new ColumnValue(column, MOV, value);
+        return new ColumnValue(column, SET, value);
+    }
+
+    /**
+     * @see #set(java.lang.String, java.io.Serializable)
+     *
+     * @param column 字段名
+     * @param value  字段值
+     *
+     * @return ColumnValue
+     * @deprecated
+     */
+    @Deprecated(since = "2.8.0")
+    public static ColumnValue mov(String column, Serializable value) {
+        return set(column, value);
     }
 
     /**
@@ -86,8 +100,8 @@ public class ColumnValue {
      *
      * @return ColumnValue
      */
-    public static ColumnValue mov(String column, Serializable value) {
-        return new ColumnValue(column, MOV, value);
+    public static ColumnValue set(String column, Serializable value) {
+        return new ColumnValue(column, SET, value);
     }
 
     /**
@@ -172,10 +186,10 @@ public class ColumnValue {
      *
      * @return ColumnValue
      */
-    //不常用，防止开发者容易在mov时误输入mod
-//    public static ColumnValue mod(String column, Serializable value) {
-//        return new ColumnValue(column, MOD, value);
-//    }
+    public static ColumnValue mod(String column, Serializable value) {
+        return new ColumnValue(column, MOD, value);
+    }
+
     /**
      * 返回 {column} = {column} &#38; {value} 操作
      *
@@ -201,7 +215,7 @@ public class ColumnValue {
     }
 
     /**
-     * 同 mov 操作
+     * 同 set 操作
      *
      * @param func 字段名Lambda
      * @param <T>  值的泛型
@@ -212,7 +226,7 @@ public class ColumnValue {
      * @since 2.8.0
      */
     public static <T extends Serializable> ColumnValue create(LambdaSupplier<T> func) {
-        return new ColumnValue(func, MOV);
+        return new ColumnValue(func, SET);
     }
 
     /**
@@ -225,8 +239,8 @@ public class ColumnValue {
      *
      * @since 2.8.0
      */
-    public static <T extends Serializable> ColumnValue mov(LambdaSupplier<T> func) {
-        return new ColumnValue(func, MOV);
+    public static <T extends Serializable> ColumnValue set(LambdaSupplier<T> func) {
+        return new ColumnValue(func, SET);
     }
 
     /**
@@ -286,6 +300,20 @@ public class ColumnValue {
     }
 
     /**
+     * 返回 {column} = {column} % {value} 操作
+     *
+     * @param func 字段名Lambda
+     * @param <T>  值的泛型
+     *
+     * @return ColumnValue
+     *
+     * @since 2.8.0
+     */
+    public static <T extends Serializable> ColumnValue mod(LambdaSupplier<T> func) {
+        return new ColumnValue(func, MOD);
+    }
+
+    /**
      * 返回 {column} = {column} &#38; {value} 操作
      *
      * @param func 字段名Lambda
@@ -314,7 +342,7 @@ public class ColumnValue {
     }
 
     /**
-     * 同 mov 操作
+     * 同 set 操作
      *
      * @param func  字段名Lambda
      * @param value 字段值
@@ -325,7 +353,7 @@ public class ColumnValue {
      * @since 2.8.0
      */
     public static <T> ColumnValue create(LambdaFunction<T, ?> func, Serializable value) {
-        return new ColumnValue(func, MOV, value);
+        return new ColumnValue(func, SET, value);
     }
 
     /**
@@ -339,8 +367,8 @@ public class ColumnValue {
      *
      * @since 2.8.0
      */
-    public static <T> ColumnValue mov(LambdaFunction<T, ?> func, Serializable value) {
-        return new ColumnValue(func, MOV, value);
+    public static <T> ColumnValue set(LambdaFunction<T, ?> func, Serializable value) {
+        return new ColumnValue(func, SET, value);
     }
 
     /**
@@ -429,6 +457,21 @@ public class ColumnValue {
      */
     public static <T> ColumnValue div(LambdaFunction<T, ?> func, Serializable value) {
         return new ColumnValue(func, DIV, value);
+    }
+
+    /**
+     * 返回 {column} = {column} % {value} 操作
+     *
+     * @param func  字段名Lambda
+     * @param value 字段值
+     * @param <T>   值的泛型
+     *
+     * @return ColumnValue
+     *
+     * @since 2.8.0
+     */
+    public static <T> ColumnValue mod(LambdaFunction<T, ?> func, Serializable value) {
+        return new ColumnValue(func, MOD, value);
     }
 
     /**

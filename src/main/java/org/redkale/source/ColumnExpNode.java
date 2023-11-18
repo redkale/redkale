@@ -14,9 +14,9 @@ import static org.redkale.source.ColumnExpress.*;
  * String 视为 字段名  <br>
  * Number 视为 数值   <br>
  * 例如： UPDATE Reord SET updateTime = createTime + 10 WHERE id = 1   <br>
- * source.updateColumn(Record.class, 1, ColumnValue.mov("updateTime", ColumnExpNode.inc("createTime", 10)));  <br>
+ * source.updateColumn(Record.class, 1, ColumnValue.set("updateTime", ColumnExpNode.inc("createTime", 10)));  <br>
  * 例如： UPDATE Reord SET updateTime = createTime * 10 / createCount WHERE id = 1   <br>
- * source.updateColumn(Record.class, 1, ColumnValue.mov("updateTime", ColumnExpNode.div(ColumnExpNode.mul("createTime", 10), "createCount")));  <br>
+ * source.updateColumn(Record.class, 1, ColumnValue.set("updateTime", ColumnExpNode.div(ColumnExpNode.mul("createTime", 10), "createCount")));  <br>
  *
  * <p>
  * 详情见: https://redkale.org
@@ -30,7 +30,7 @@ public class ColumnExpNode implements ColumnNode {
     protected ColumnNode left;//类型只能是ColumnNameNode、ColumnNumberNode、ColumnExpNode
 
     @ConvertColumn(index = 2)
-    protected ColumnExpress express; //MOV时，left必须是ColumnNameNode, right必须是null
+    protected ColumnExpress express; //SET时，left必须是ColumnNameNode, right必须是null
 
     @ConvertColumn(index = 3)
     protected ColumnNode right;//类型只能是ColumnNameNode、ColumnNumberNode、ColumnExpNode
@@ -44,9 +44,9 @@ public class ColumnExpNode implements ColumnNode {
         }
         ColumnNode leftNode = createColumnNode(left);
         ColumnNode rightNode = createColumnNode(right);
-        if (express == MOV) {
+        if (express == SET) {
             if (!(leftNode instanceof ColumnNameNode) || right != null) {
-                throw new IllegalArgumentException("left value must be ColumnNameNode, right value must be null on ColumnExpress.MOV");
+                throw new IllegalArgumentException("left value must be ColumnNameNode, right value must be null on ColumnExpress.SET");
             }
         }
         this.left = leftNode;
@@ -73,7 +73,7 @@ public class ColumnExpNode implements ColumnNode {
     }
 
     /**
-     * @see org.redkale.source.ColumnNodes#mov(java.lang.String)
+     * @see org.redkale.source.ColumnNodes#set(java.lang.String)
      *
      * @param left Serializable
      *
@@ -82,7 +82,7 @@ public class ColumnExpNode implements ColumnNode {
      */
     @Deprecated(since = "2.8.0")
     public static ColumnExpNode mov(String left) {
-        return new ColumnExpNode(left, MOV, null);
+        return new ColumnExpNode(left, SET, null);
     }
 
     /**

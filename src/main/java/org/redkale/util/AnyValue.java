@@ -12,6 +12,7 @@ import java.util.function.*;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.ConvertDisabled;
+import static org.redkale.util.Utility.isEmpty;
 
 /**
  * 该类提供类似JSONObject的数据结构，主要用于读取xml配置文件和http-header存储
@@ -1631,8 +1632,7 @@ public abstract class AnyValue {
      * @return 字段值
      */
     public String getOrDefault(String name, String defaultValue) {
-        String value = getValue(name);
-        return value == null ? defaultValue : value;
+        return getValue(name, defaultValue);
     }
 
     @Override
@@ -1648,7 +1648,7 @@ public abstract class AnyValue {
     }
 
     private static <T> boolean equals(Entry<? extends T>[] entry1, Entry<T>[] entry2) {
-        if ((entry1 == null || entry1.length == 0) && (entry2 == null || entry2.length == 0)) {
+        if (isEmpty(entry1) && isEmpty(entry2)) {
             return true;
         }
         if (entry1.length != entry2.length) {

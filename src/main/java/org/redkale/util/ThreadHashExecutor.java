@@ -96,11 +96,11 @@ public class ThreadHashExecutor extends AbstractExecutorService {
     }
 
     @Override
-    public Future<?> submit(Runnable task) {
+    public Future submit(Runnable task) {
         return hashExecutor(0).submit(task);
     }
 
-    public Future<?> submit(int hash, Runnable task) {
+    public Future submit(int hash, Runnable task) {
         return hashExecutor(hash).submit(task);
     }
 

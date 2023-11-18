@@ -101,14 +101,14 @@ public class OneOrList<T> implements java.io.Serializable {
             @Override
             public OneOrList convertFrom(JsonReader in) {
                 if (in.isNextArray()) {
-                    List list = (List) listDecoder.convertFrom(in);
+                    List val = (List) listDecoder.convertFrom(in);
                     OneOrList rs = creator.create();
-                    rs.setList(list);
+                    rs.setList(val);
                     return rs;
                 } else {
-                    Object one = oneDecoder.convertFrom(in);
+                    Object val = oneDecoder.convertFrom(in);
                     OneOrList rs = creator.create();
-                    rs.setOne(one);
+                    rs.setOne(val);
                     return rs;
                 }
             }

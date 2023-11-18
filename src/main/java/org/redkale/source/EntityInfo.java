@@ -1513,7 +1513,7 @@ public final class EntityInfo<T> {
         }
         //ColumnExpNode、ColumnFuncNode、ColumnNameNode、ColumnNumberNode、ColumnStringNode
         ColumnNode node = cv.getValue();
-        //ColumnExpNode时 cv.getExpress() == ColumnExpress.MOV 只用于updateColumn
+        //ColumnExpNode时 cv.getExpress() == ColumnExpress.SET 只用于updateColumn
         if (node instanceof ColumnExpNode) {
             return formatColumnExpNodeSQLValue(attr, null, (ColumnExpNode) node, formatter);
         }
@@ -1543,7 +1543,7 @@ public final class EntityInfo<T> {
                 return new StringBuilder().append(sqlColumn).append(" & ").append(val);
             case ORR:
                 return new StringBuilder().append(sqlColumn).append(" | ").append(val);
-            case MOV:
+            case SET:
                 return val == null && isNotNullJson(attr) ? "" : val;
             default:
                 return val;
@@ -1572,7 +1572,7 @@ public final class EntityInfo<T> {
         } else if (leftNode instanceof ColumnFuncNode) {
             leftVal = "(" + formatColumnFuncNodeSQLValue(attr, tabalis, (ColumnFuncNode) leftNode, formatter) + ")";
         }
-        if (node.getExpress() == ColumnExpress.MOV) {
+        if (node.getExpress() == ColumnExpress.SET) {
             return leftVal;
         }
         CharSequence rightVal = null;
@@ -1604,7 +1604,7 @@ public final class EntityInfo<T> {
             case ORR:
                 return new StringBuilder().append(leftVal).append(" | ").append(rightVal);
         }
-        throw new IllegalArgumentException(node + " express cannot be null or MOV");
+        throw new IllegalArgumentException(node + " express cannot be null or SET");
     }
 
     protected CharSequence formatColumnNameNodeSQLValue(Attribute<T, Serializable> attr, String tabalis, final ColumnNameNode node, BiFunction<EntityInfo, Object, CharSequence> formatter) {

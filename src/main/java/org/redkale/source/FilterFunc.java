@@ -22,7 +22,9 @@ public enum FilterFunc {
     SUM; //求和
 
     public String getColumn(String col) {
-        if (this == DISTINCTCOUNT) return "COUNT(DISTINCT " + col + ")";
+        if (this == DISTINCTCOUNT) {
+            return "COUNT(DISTINCT " + col + ")";
+        }
         return this.name() + "(" + col + ")";
     }
 }

@@ -1403,7 +1403,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
         @Override
         public <T> DataBatch update(Class<T> clazz, Serializable pk, String column, Serializable value) {
-            return update(clazz, pk, ColumnValue.mov(column, value));
+            return update(clazz, pk, ColumnValue.set(column, value));
         }
 
         @Override
@@ -1425,7 +1425,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
         @Override
         public <T> DataBatch update(Class<T> clazz, FilterNode node, String column, Serializable value) {
-            return update(clazz, node, (Flipper) null, ColumnValue.mov(column, value));
+            return update(clazz, node, (Flipper) null, ColumnValue.set(column, value));
         }
 
         @Override

@@ -72,9 +72,9 @@ public class JsonRecord {
         source.init(conf);
         JsonRecord record = JsonRecord.create();
         source.insert(record);
-        source.updateColumn(JsonRecord.class, record.getRecordid(), ColumnValue.mov("recordname", "my name 2"));
+        source.updateColumn(JsonRecord.class, record.getRecordid(), ColumnValue.set("recordname", "my name 2"));
         record.getRmap().put("haha", 2222);
-        source.updateColumn(JsonRecord.class, record.getRecordid(), ColumnValue.mov("rmap", (Serializable) (Object) record.getRmap()));
+        source.updateColumn(JsonRecord.class, record.getRecordid(), ColumnValue.set("rmap", (Serializable) (Object) record.getRmap()));
         System.out.println(source.find(JsonRecord.class, record.getRecordid()));
         System.out.println(source.findColumn(JsonRecord.class, "rmap", record.getRecordid()));
     }

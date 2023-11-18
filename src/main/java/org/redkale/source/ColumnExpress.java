@@ -17,7 +17,7 @@ public enum ColumnExpress {
     /**
      * 赋值 col = val
      */
-    MOV,
+    SET,
     /**
      * 加值 col = col + val
      */

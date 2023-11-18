@@ -59,12 +59,6 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     private final ReentrantLock containerLock = new ReentrantLock();
 
-    private final BiConsumer futureCompleteConsumer = (r, t) -> {
-        if (t != null) {
-            logger.log(Level.SEVERE, "CompletableFuture complete error", (Throwable) t);
-        }
-    };
-
     //key: topic
     private final Map<String, Set<CacheEventListener<byte[]>>> pubsubListeners = new ConcurrentHashMap<>();
 
@@ -574,7 +568,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
                     entry.cacheType = CacheEntryType.DOUBLE;
                 }
                 Long v = ((AtomicLong) entry.objectValue).addAndGet(Double.doubleToLongBits(num));
-                return Double.longBitsToDouble(v.intValue());
+                return Double.longBitsToDouble(v.longValue());
             } finally {
                 entry.unlock();
             }
@@ -631,7 +625,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             case ATOMIC:
                 return Utility.convertValue(type, (AtomicLong) entry.objectValue);
             case DOUBLE:
-                return Utility.convertValue(type, Double.longBitsToDouble(((AtomicLong) entry.objectValue).intValue()));
+                return Utility.convertValue(type, Double.longBitsToDouble(((AtomicLong) entry.objectValue).longValue()));
             case SSET:
                 return (T) new LinkedHashSet(entry.setValue);
             case ZSET:
