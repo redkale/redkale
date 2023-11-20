@@ -33,7 +33,7 @@ public class HttpParameters implements RestParams, Serializable {
         HttpParameters params = new HttpParameters();
         int len = items.length / 2;
         for (int i = 0; i < len; i++) {
-            params.set(items[i * 2], items[i * 2 + 1]);
+            params.put(items[i * 2], items[i * 2 + 1]);
         }
         return params;
     }
@@ -125,7 +125,7 @@ public class HttpParameters implements RestParams, Serializable {
         return put(name, (convert == null ? JsonConvert.root() : convert).convertTo(value));
     }
 
-    public HttpParameters set(String name, Object value) {
+    public HttpParameters put(String name, Object value) {
         return put(name, JsonConvert.root().convertTo(value));
     }
 

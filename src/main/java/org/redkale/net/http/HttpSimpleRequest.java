@@ -297,7 +297,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         if (this.params == null) {
             this.params = HttpParameters.create();
         }
-        this.params.set(key, value);
+        this.params.put(key, value);
         return this;
     }
 
