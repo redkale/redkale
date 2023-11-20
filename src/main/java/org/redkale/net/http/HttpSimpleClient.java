@@ -135,23 +135,23 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
         return sendAsync("GET", url, null, body, convert, valueType);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> getAsync(String url, HttpHeader headers) {
+    public CompletableFuture<HttpResult<byte[]>> getAsync(String url, HttpHeaders headers) {
         return sendAsync("GET", url, headers, (byte[]) null);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> getAsync(String url, HttpHeader headers, Type valueType) {
+    public CompletableFuture<HttpResult<byte[]>> getAsync(String url, HttpHeaders headers, Type valueType) {
         return sendAsync("GET", url, headers, null, (Convert) null, valueType);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> getAsync(String url, HttpHeader headers, Convert convert, Type valueType) {
+    public CompletableFuture<HttpResult<byte[]>> getAsync(String url, HttpHeaders headers, Convert convert, Type valueType) {
         return sendAsync("GET", url, headers, null, convert, valueType);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> getAsync(String url, HttpHeader headers, String body) {
+    public CompletableFuture<HttpResult<byte[]>> getAsync(String url, HttpHeaders headers, String body) {
         return sendAsync("GET", url, headers, body == null ? null : body.getBytes(StandardCharsets.UTF_8));
     }
 
-    public CompletableFuture<HttpResult<byte[]>> getAsync(String url, HttpHeader headers, byte[] body) {
+    public CompletableFuture<HttpResult<byte[]>> getAsync(String url, HttpHeaders headers, byte[] body) {
         return sendAsync("GET", url, headers, body);
     }
 
@@ -191,23 +191,23 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
         return sendAsync("POST", url, null, body, convert, valueType);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> postAsync(String url, HttpHeader headers) {
+    public CompletableFuture<HttpResult<byte[]>> postAsync(String url, HttpHeaders headers) {
         return sendAsync("POST", url, headers, (byte[]) null);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> postAsync(String url, HttpHeader headers, Type valueType) {
+    public CompletableFuture<HttpResult<byte[]>> postAsync(String url, HttpHeaders headers, Type valueType) {
         return sendAsync("POST", url, headers, null, (Convert) null, valueType);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> postAsync(String url, HttpHeader headers, Convert convert, Type valueType) {
+    public CompletableFuture<HttpResult<byte[]>> postAsync(String url, HttpHeaders headers, Convert convert, Type valueType) {
         return sendAsync("POST", url, headers, null, convert, valueType);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> postAsync(String url, HttpHeader headers, String body) {
+    public CompletableFuture<HttpResult<byte[]>> postAsync(String url, HttpHeaders headers, String body) {
         return sendAsync("POST", url, headers, body == null ? null : body.getBytes(StandardCharsets.UTF_8));
     }
 
-    public CompletableFuture<HttpResult<byte[]>> postAsync(String url, HttpHeader headers, byte[] body) {
+    public CompletableFuture<HttpResult<byte[]>> postAsync(String url, HttpHeaders headers, byte[] body) {
         return sendAsync("POST", url, headers, body);
     }
 
@@ -219,15 +219,15 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
         return sendAsync(req.getMethod(), url, req.getHeaders(), req.getBody(), (Convert) null, null);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> sendAsync(String method, String url, HttpHeader headers, byte[] body) {
+    public CompletableFuture<HttpResult<byte[]>> sendAsync(String method, String url, HttpHeaders headers, byte[] body) {
         return sendAsync(method, url, headers, body, (Convert) null, null);
     }
 
-    public <T> CompletableFuture<HttpResult<T>> sendAsync(String method, String url, HttpHeader headers, byte[] body, Type valueType) {
+    public <T> CompletableFuture<HttpResult<T>> sendAsync(String method, String url, HttpHeaders headers, byte[] body, Type valueType) {
         return sendAsync(method, url, headers, body, (Convert) null, valueType);
     }
 
-    public <T> CompletableFuture<HttpResult<T>> sendAsync(String method, String url, HttpHeader headers, byte[] body, Convert convert, Type valueType) {
+    public <T> CompletableFuture<HttpResult<T>> sendAsync(String method, String url, HttpHeaders headers, byte[] body, Convert convert, Type valueType) {
         final String traceid = Traces.computeIfAbsent(Traces.currentTraceid());
         final WorkThread workThread = WorkThread.currentWorkThread();
         if (url.indexOf(' ') >= 0 || url.indexOf('\r') >= 0 || url.indexOf('\n') >= 0) {

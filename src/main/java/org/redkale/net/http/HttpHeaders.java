@@ -25,20 +25,20 @@ import org.redkale.util.RedkaleException;
  * @author zhangjx
  * @since 2.8.0
  */
-public class HttpHeader implements RestHeaders, Serializable {
+public class HttpHeaders implements RestHeaders, Serializable {
 
     //value值只能是String、List<String>
     protected LinkedHashMap<String, Serializable> map;
 
-    protected HttpHeader() {
+    protected HttpHeaders() {
     }
 
-    public static HttpHeader create() {
-        return new HttpHeader();
+    public static HttpHeaders create() {
+        return new HttpHeaders();
     }
 
-    public static HttpHeader of(String... items) {
-        HttpHeader header = new HttpHeader();
+    public static HttpHeaders of(String... items) {
+        HttpHeaders header = new HttpHeaders();
         int len = items.length / 2;
         for (int i = 0; i < len; i++) {
             header.add(items[i * 2], items[i * 2 + 1]);
@@ -51,10 +51,10 @@ public class HttpHeader implements RestHeaders, Serializable {
      *
      * @param map 参数
      *
-     * @return HttpHeader
+     * @return HttpHeaders
      */
-    public static HttpHeader ofValid(Map<String, Serializable> map) {
-        HttpHeader header = new HttpHeader();
+    public static HttpHeaders ofValid(Map<String, Serializable> map) {
+        HttpHeaders header = new HttpHeaders();
         if (map != null) {
             header.map = map instanceof LinkedHashMap ? (LinkedHashMap) map : new LinkedHashMap(map);
         }
@@ -130,7 +130,7 @@ public class HttpHeader implements RestHeaders, Serializable {
         return this.map != null && this.map.containsKey(key);
     }
 
-    public HttpHeader addAll(HttpHeader header) {
+    public HttpHeaders addAll(HttpHeaders header) {
         if (header.map != null) {
             if (this.map == null) {
                 this.map = new LinkedHashMap<>(header.map);
@@ -141,7 +141,7 @@ public class HttpHeader implements RestHeaders, Serializable {
         return this;
     }
 
-    public HttpHeader add(Map<String, String> values) {
+    public HttpHeaders add(Map<String, String> values) {
         if (values != null) {
             values.forEach(this::add);
         }
@@ -168,7 +168,7 @@ public class HttpHeader implements RestHeaders, Serializable {
         }
     }
 
-    public HttpHeader add(String key, String value) {
+    public HttpHeaders add(String key, String value) {
         check(key, value);
         if (this.map == null) {
             this.map = new LinkedHashMap<>();
@@ -189,7 +189,7 @@ public class HttpHeader implements RestHeaders, Serializable {
         return this;
     }
 
-    public HttpHeader add(String key, List<String> value) {
+    public HttpHeaders add(String key, List<String> value) {
         if (value.isEmpty()) {
             return this;
         }
@@ -215,43 +215,43 @@ public class HttpHeader implements RestHeaders, Serializable {
         return this;
     }
 
-    public HttpHeader add(String key, TextConvert convert, Object value) {
+    public HttpHeaders add(String key, TextConvert convert, Object value) {
         return add(key, (convert == null ? JsonConvert.root() : convert).convertTo(value));
     }
 
-    public HttpHeader add(String key, Object value) {
+    public HttpHeaders add(String key, Object value) {
         return add(key, JsonConvert.root().convertTo(value));
     }
 
-    public HttpHeader add(String key, boolean value) {
+    public HttpHeaders add(String key, boolean value) {
         return add(key, String.valueOf(value));
     }
 
-    public HttpHeader add(String key, short value) {
+    public HttpHeaders add(String key, short value) {
         return add(key, String.valueOf(value));
     }
 
-    public HttpHeader add(String key, int value) {
+    public HttpHeaders add(String key, int value) {
         return add(key, String.valueOf(value));
     }
 
-    public HttpHeader add(String key, float value) {
+    public HttpHeaders add(String key, float value) {
         return add(key, String.valueOf(value));
     }
 
-    public HttpHeader add(String key, long value) {
+    public HttpHeaders add(String key, long value) {
         return add(key, String.valueOf(value));
     }
 
-    public HttpHeader add(String key, double value) {
+    public HttpHeaders add(String key, double value) {
         return add(key, String.valueOf(value));
     }
 
-    public HttpHeader add(String key, BigInteger value) {
+    public HttpHeaders add(String key, BigInteger value) {
         return add(key, String.valueOf(value));
     }
 
-    public HttpHeader setAll(HttpHeader header) {
+    public HttpHeaders setAll(HttpHeaders header) {
         if (header.map != null) {
             if (this.map == null) {
                 this.map = new LinkedHashMap<>();
@@ -261,7 +261,7 @@ public class HttpHeader implements RestHeaders, Serializable {
         return this;
     }
 
-    public HttpHeader set(Map<String, String> values) {
+    public HttpHeaders set(Map<String, String> values) {
         if (values != null) {
             values.forEach(this::set);
         }
@@ -276,7 +276,7 @@ public class HttpHeader implements RestHeaders, Serializable {
         this.map.put(key, value);
     }
 
-    public HttpHeader set(String key, String value) {
+    public HttpHeaders set(String key, String value) {
         check(key, value);
         if (this.map == null) {
             this.map = new LinkedHashMap<>();
@@ -285,7 +285,7 @@ public class HttpHeader implements RestHeaders, Serializable {
         return this;
     }
 
-    public HttpHeader set(String key, List<String> value) {
+    public HttpHeaders set(String key, List<String> value) {
         if (value.isEmpty()) {
             return this;
         }
@@ -299,43 +299,43 @@ public class HttpHeader implements RestHeaders, Serializable {
         return this;
     }
 
-    public HttpHeader set(String key, TextConvert convert, Object value) {
+    public HttpHeaders set(String key, TextConvert convert, Object value) {
         return set(key, (convert == null ? JsonConvert.root() : convert).convertTo(value));
     }
 
-    public HttpHeader set(String key, Object value) {
+    public HttpHeaders set(String key, Object value) {
         return set(key, JsonConvert.root().convertTo(value));
     }
 
-    public HttpHeader set(String key, boolean value) {
+    public HttpHeaders set(String key, boolean value) {
         return set(key, String.valueOf(value));
     }
 
-    public HttpHeader set(String key, short value) {
+    public HttpHeaders set(String key, short value) {
         return set(key, String.valueOf(value));
     }
 
-    public HttpHeader set(String key, int value) {
+    public HttpHeaders set(String key, int value) {
         return set(key, String.valueOf(value));
     }
 
-    public HttpHeader set(String key, float value) {
+    public HttpHeaders set(String key, float value) {
         return set(key, String.valueOf(value));
     }
 
-    public HttpHeader set(String key, long value) {
+    public HttpHeaders set(String key, long value) {
         return set(key, String.valueOf(value));
     }
 
-    public HttpHeader set(String key, double value) {
+    public HttpHeaders set(String key, double value) {
         return set(key, String.valueOf(value));
     }
 
-    public HttpHeader set(String key, BigInteger value) {
+    public HttpHeaders set(String key, BigInteger value) {
         return set(key, String.valueOf(value));
     }
 
-    public HttpHeader remove(String key) {
+    public HttpHeaders remove(String key) {
         if (this.map != null) {
             this.map.remove(key);
         }
@@ -351,7 +351,7 @@ public class HttpHeader implements RestHeaders, Serializable {
         return this.map == null || this.map.isEmpty();
     }
 
-    public HttpHeader clear() {
+    public HttpHeaders clear() {
         if (this.map != null) {
             this.map.clear();
         }

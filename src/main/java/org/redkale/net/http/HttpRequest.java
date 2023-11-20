@@ -122,7 +122,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected Convert respConvert;
 
-    protected final HttpHeader headers = HttpHeader.create();
+    protected final HttpHeaders headers = HttpHeaders.create();
 
     //---------- header 相关参数 结束 ----------
     @Comment("Method GET/POST/...")
@@ -2162,7 +2162,7 @@ public class HttpRequest extends Request<HttpContext> {
      * @return AnyValue
      */
     @AsmDepends
-    public HttpHeader getHeaders() {
+    public HttpHeaders getHeaders() {
         parseHeader();
         return headers;
     }

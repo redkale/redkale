@@ -80,7 +80,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
 
     @ConvertColumn(index = 14)
     @Comment("http header信息")
-    protected HttpHeader headers;
+    protected HttpHeaders headers;
 
     @ConvertColumn(index = 15)
     @Comment("参数信息")
@@ -103,7 +103,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return req;
     }
 
-    public static HttpSimpleRequest create(String requestURI, HttpHeader header) {
+    public static HttpSimpleRequest create(String requestURI, HttpHeaders header) {
         return new HttpSimpleRequest().requestURI(requestURI).method("POST").headers(header).traceid(Traces.currentTraceid());
     }
 
@@ -231,7 +231,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return this;
     }
 
-    public HttpSimpleRequest headers(HttpHeader header) {
+    public HttpSimpleRequest headers(HttpHeaders header) {
         this.headers = header;
         return this;
     }
@@ -248,7 +248,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
 
     public HttpSimpleRequest addHeader(String key, String value) {
         if (this.headers == null) {
-            this.headers = HttpHeader.create();
+            this.headers = HttpHeaders.create();
         }
         this.headers.add(key, value);
         return this;
@@ -272,7 +272,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
 
     public HttpSimpleRequest setHeader(String key, String value) {
         if (this.headers == null) {
-            this.headers = HttpHeader.create();
+            this.headers = HttpHeaders.create();
         }
         this.headers.set(key, value);
         return this;
@@ -450,11 +450,11 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         this.contentType = contentType;
     }
 
-    public HttpHeader getHeaders() {
+    public HttpHeaders getHeaders() {
         return headers;
     }
 
-    public void setHeaders(HttpHeader headers) {
+    public void setHeaders(HttpHeaders headers) {
         headers(headers);
     }
 

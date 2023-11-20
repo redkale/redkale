@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.redkale.convert.ConvertType;
-import org.redkale.net.http.HttpHeader;
+import org.redkale.net.http.HttpHeaders;
 import org.redkale.net.http.HttpSimpleRequest;
 import org.redkale.util.Utility;
 
@@ -166,7 +166,7 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         req.setCurrentUserid(MessageCoder.decodeUserid(buffer));
         Map<String, Serializable> headerMap = MessageCoder.getSeriMap(buffer);
         if (Utility.isNotEmpty(headerMap)) {
-            req.setHeaders(HttpHeader.ofValid(headerMap));
+            req.setHeaders(HttpHeaders.ofValid(headerMap));
         }
         req.setParams(MessageCoder.getStringMap(buffer));
         int len = buffer.getInt();

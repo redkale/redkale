@@ -1102,7 +1102,7 @@ public final class Rest {
         final String httpResultDesc = Type.getDescriptor(HttpResult.class);
         final String httpScopeDesc = Type.getDescriptor(HttpScope.class);
         final String stageDesc = Type.getDescriptor(CompletionStage.class);
-        final String httpHeaderDesc = Type.getDescriptor(HttpHeader.class);
+        final String httpHeaderDesc = Type.getDescriptor(HttpHeaders.class);
         final String flipperDesc = Type.getDescriptor(Flipper.class);
         final String httpServletName = HttpServlet.class.getName().replace('.', '/');
         final String actionEntryName = HttpServlet.ActionEntry.class.getName().replace('.', '/');

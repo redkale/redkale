@@ -82,7 +82,7 @@ public class HttpClusterRpcClient extends HttpRpcClient {
         String module = req.getRequestURI();
         module = module.substring(1); //去掉/
         module = module.substring(0, module.indexOf('/'));
-        HttpHeader headers = req.getHeaders();
+        HttpHeaders headers = req.getHeaders();
         String resname = req.getHeader(Rest.REST_HEADER_RESNAME, "");
         final String localModule = module;
         if (logger.isLoggable(Level.FINEST)) {
@@ -96,7 +96,7 @@ public class HttpClusterRpcClient extends HttpRpcClient {
                 }
                 return new HttpResult<byte[]>().status(404).toFuture();
             }
-            final HttpHeader clientHeaders = HttpHeader.create();
+            final HttpHeaders clientHeaders = HttpHeaders.create();
             if (headers != null) {
                 boolean ws = headers.contains("Sec-WebSocket-Key");
                 headers.forEach((n, v) -> {
@@ -150,7 +150,7 @@ public class HttpClusterRpcClient extends HttpRpcClient {
     }
 
     private CompletableFuture<HttpResult<byte[]>> forEachCollectionFuture(final WorkThread workThread, boolean finest, Serializable userid,
-        HttpSimpleRequest req, String requesturi, final HttpHeader clientHeaders, byte[] clientBody, Iterator<InetSocketAddress> it) {
+        HttpSimpleRequest req, String requesturi, final HttpHeaders clientHeaders, byte[] clientBody, Iterator<InetSocketAddress> it) {
         if (!it.hasNext()) {
             return CompletableFuture.completedFuture(null);
         }
