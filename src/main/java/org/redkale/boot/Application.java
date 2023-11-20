@@ -1644,9 +1644,9 @@ public final class Application {
                     return;
                 }
                 //if ("SHUTDOWN".equalsIgnoreCase(cmd)) {
-                //    System.out.println("--- application not running ---");
+                //    System.out .println("--- application not running ---");
                 //} else {
-                System.err.println("--- application not running ---");
+                (System.err).println("--- application not running ---");
                 //}
                 return;
             }
@@ -2083,7 +2083,7 @@ public final class Application {
                     cmd = "shutdown";
                 }
                 if ("help".equalsIgnoreCase(cmd) || "--help".equalsIgnoreCase(cmd) || "-h".equalsIgnoreCase(cmd)) {
-                    System.out.println(generateHelp());
+                    (System.out).println(generateHelp());
                     return;
                 }
                 boolean restart = "restart".equalsIgnoreCase(cmd);
@@ -2261,7 +2261,7 @@ public final class Application {
             //普通配置项的变更
             if (!envRegisterProps.isEmpty()) {
                 this.envProperties.putAll(envChangedProps);
-                envRemovedKeys.forEach(k -> this.envProperties.remove(k));
+                envRemovedKeys.forEach(this.envProperties::remove);
                 DefaultAnyValue oldConf = (DefaultAnyValue) this.config.getAnyValue("properties");
                 DefaultAnyValue newConf = new DefaultAnyValue();
                 oldConf.forEach((k, v) -> newConf.addValue(k, v));
@@ -2604,6 +2604,32 @@ public final class Application {
                 logger.log(Level.WARNING, listener.getClass() + " preShutdown erroneous", e);
             }
         }
+        stopServers();
+        destroyMessageAgents();
+        destroyClusterAgent();
+        destroySources();
+
+        if (this.propertiesAgent != null) {
+            long s = System.currentTimeMillis();
+            this.propertiesAgent.destroy(config.getAnyValue("properties"));
+            logger.info(this.propertiesAgent.getClass().getSimpleName() + " destroy in " + (System.currentTimeMillis() - s) + " ms");
+        }
+        if (this.clientAsyncGroup != null) {
+            long s = System.currentTimeMillis();
+            this.clientAsyncGroup.dispose();
+            logger.info("AsyncGroup destroy in " + (System.currentTimeMillis() - s) + " ms");
+        }
+        if (this.workExecutor != null) {
+            this.workExecutor.shutdownNow();
+        }
+        long intms = System.currentTimeMillis() - f;
+        String ms = String.valueOf(intms);
+        int repeat = ms.length() > 7 ? 0 : (7 - ms.length()) / 2;
+        logger.info(colorMessage(logger, 36, 1, "-".repeat(repeat) + "------------------------ Redkale shutdown in " + ms + " ms " + (ms.length() / 2 == 0 ? " " : "") + "-".repeat(repeat) + "------------------------") + "\r\n" + "\r\n");
+        LoggingBaseHandler.traceEnable = true;
+    }
+
+    private void stopServers() {
         List<NodeServer> localServers = new ArrayList<>(servers); //顺序sncps, others, watchs
         Collections.reverse(localServers); //倒序， 必须让watchs先关闭，watch包含服务发现和注销逻辑
         if (isCompileMode() && this.messageAgents != null) {
@@ -2627,6 +2653,9 @@ public final class Application {
                 shutdownLatch.countDown();
             }
         });
+    }
+
+    private void destroyMessageAgents() {
         if (this.messageAgents != null) {
             Set<String> names = new HashSet<>();
             if (logger.isLoggable(Level.FINER)) {
@@ -2639,6 +2668,9 @@ public final class Application {
             }
             logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") destroy in " + (System.currentTimeMillis() - s) + " ms");
         }
+    }
+
+    private void destroyClusterAgent() {
         if (!isCompileMode() && clusterAgent != null) {
             if (logger.isLoggable(Level.FINER)) {
                 logger.log(Level.FINER, "ClusterAgent destroying");
@@ -2648,6 +2680,9 @@ public final class Application {
             clusterAgent.destroy(clusterAgent.getConfig());
             logger.info("ClusterAgent destroy in " + (System.currentTimeMillis() - s) + " ms");
         }
+    }
+
+    private void destroySources() {
         for (DataSource source : dataSources) {
             if (source == null) {
                 continue;
@@ -2657,9 +2692,6 @@ public final class Application {
                     long s = System.currentTimeMillis();
                     ((Service) source).destroy(Sncp.isSncpDyn((Service) source) ? Sncp.getResourceConf((Service) source) : null);
                     logger.info(source + " destroy in " + (System.currentTimeMillis() - s) + " ms");
-//                } else {
-//                    source.getClass().getMethod("close").invoke(source);
-//                    RedkaleClassLoader.putReflectionMethod(source.getClass().getName(), source.getClass().getMethod("close"));
                 }
             } catch (Exception e) {
                 logger.log(Level.FINER, source.getClass() + " close DataSource erroneous", e);
@@ -2674,32 +2706,11 @@ public final class Application {
                     long s = System.currentTimeMillis();
                     ((Service) source).destroy(Sncp.isSncpDyn((Service) source) ? Sncp.getResourceConf((Service) source) : null);
                     logger.info(source + " destroy in " + (System.currentTimeMillis() - s) + " ms");
-//                } else {
-//                    source.getClass().getMethod("close").invoke(source);
-//                    RedkaleClassLoader.putReflectionMethod(source.getClass().getName(), source.getClass().getMethod("close"));
                 }
             } catch (Exception e) {
                 logger.log(Level.FINER, source.getClass() + " close CacheSource erroneous", e);
             }
         }
-        if (this.propertiesAgent != null) {
-            long s = System.currentTimeMillis();
-            this.propertiesAgent.destroy(config.getAnyValue("properties"));
-            logger.info(this.propertiesAgent.getClass().getSimpleName() + " destroy in " + (System.currentTimeMillis() - s) + " ms");
-        }
-        if (this.clientAsyncGroup != null) {
-            long s = System.currentTimeMillis();
-            this.clientAsyncGroup.dispose();
-            logger.info("AsyncGroup destroy in " + (System.currentTimeMillis() - s) + " ms");
-        }
-        if (this.workExecutor != null) {
-            this.workExecutor.shutdownNow();
-        }
-        long intms = System.currentTimeMillis() - f;
-        String ms = String.valueOf(intms);
-        int repeat = ms.length() > 7 ? 0 : (7 - ms.length()) / 2;
-        logger.info(colorMessage(logger, 36, 1, "-".repeat(repeat) + "------------------------ Redkale shutdown in " + ms + " ms " + (ms.length() / 2 == 0 ? " " : "") + "-".repeat(repeat) + "------------------------") + "\r\n" + "\r\n");
-        LoggingBaseHandler.traceEnable = true;
     }
 
     public ExecutorService getWorkExecutor() {

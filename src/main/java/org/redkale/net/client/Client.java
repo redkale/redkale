@@ -347,7 +347,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
                     Traces.currentTraceid(traceid);
                     C rs = (C) createClientConnection(connIndex, c).setMaxPipelines(maxPipelines);
 //                    if (debug) {
-//                        logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ": " + rs
+//                        logger.log(Level.FINEST, Times.nowMillis() + ": " + Thread.currentThread().getName() + ": " + rs
 //                            + ", " + rs.channel + ", 创建TCP连接耗时: (" + (System.currentTimeMillis() - s) + "ms)");
 //                    }
                     return rs;
@@ -451,7 +451,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
             } else {
                 future = future.thenApply(conn -> {
 //                    if (debug) {
-//                        logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ": " + conn
+//                        logger.log(Level.FINEST, Times.nowMillis() + ": " + Thread.currentThread().getName() + ": " + conn
 //                            + ", 注册读操作: (" + (System.currentTimeMillis() - s) + "ms) " + conn.channel);
 //                    }
                     conn.channel.readRegister(conn.getCodec()); //不用readRegisterInIOThread，因executeRead可能会异步
