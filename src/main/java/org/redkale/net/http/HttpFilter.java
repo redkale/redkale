@@ -46,6 +46,10 @@ public abstract class HttpFilter extends Filter<HttpContext, HttpRequest, HttpRe
         request.setHeader(name, value);
     }
 
+    protected void addHeader(HttpRequest request, String name, String value) {
+        request.addHeader(name, value);
+    }
+
     protected void removeParameter(HttpRequest request, String name) {
         request.removeParameter(name);
     }

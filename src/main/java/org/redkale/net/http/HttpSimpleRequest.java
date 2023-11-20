@@ -16,6 +16,7 @@ import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.client.ClientConnection;
 import org.redkale.net.client.ClientRequest;
 import org.redkale.util.ByteArray;
+import org.redkale.util.RedkaleException;
 import org.redkale.util.Traces;
 
 /**
@@ -79,7 +80,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
 
     @ConvertColumn(index = 14)
     @Comment("http header信息")
-    protected Map<String, String> headers;
+    protected HttpHeader headers;
 
     @ConvertColumn(index = 15)
     @Comment("参数信息")
@@ -102,8 +103,8 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return req;
     }
 
-    public static HttpSimpleRequest create(String requestURI, Map<String, String> headers) {
-        return new HttpSimpleRequest().requestURI(requestURI).method("POST").headers(headers).traceid(Traces.currentTraceid());
+    public static HttpSimpleRequest create(String requestURI, HttpHeader header) {
+        return new HttpSimpleRequest().requestURI(requestURI).method("POST").headers(header).traceid(Traces.currentTraceid());
     }
 
     @Override
@@ -140,7 +141,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     }
 
     public HttpSimpleRequest formUrlencoded() {
-        this.headers.put("Content-Type", "x-www-form-urlencoded");
+        this.headers.set("Content-Type", "x-www-form-urlencoded");
         return this;
     }
 
@@ -150,16 +151,27 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     }
 
     public HttpSimpleRequest traceid(String traceid) {
+        if (traceid != null) {
+            if (traceid.indexOf('\r') >= 0 || traceid.indexOf('\n') >= 0) {
+                throw new RedkaleException("http-traceid(" + traceid + ") is illegal");
+            }
+        }
         this.traceid = traceid;
         return this;
     }
 
     public HttpSimpleRequest requestURI(String requestURI) {
+        if (requestURI.indexOf(' ') >= 0 || requestURI.indexOf('\r') >= 0 || requestURI.indexOf('\n') >= 0) {
+            throw new RedkaleException("http-uri(" + requestURI + ") is illegal");
+        }
         this.requestURI = requestURI;
         return this;
     }
 
     public HttpSimpleRequest path(String path) {
+        if (path.indexOf(' ') >= 0 || path.indexOf('\r') >= 0 || path.indexOf('\n') >= 0) {
+            throw new RedkaleException("http-path(" + path + ") is illegal");
+        }
         this.path = path;
         return this;
     }
@@ -219,8 +231,8 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return this;
     }
 
-    public HttpSimpleRequest headers(Map<String, String> headers) {
-        this.headers = headers;
+    public HttpSimpleRequest headers(HttpHeader header) {
+        this.headers = header;
         return this;
     }
 
@@ -234,53 +246,52 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return this;
     }
 
-    public HttpSimpleRequest header(String key, String value) {
+    public HttpSimpleRequest addHeader(String key, String value) {
         if (this.headers == null) {
-            this.headers = new HashMap<>();
+            this.headers = HttpHeader.create();
         }
-        this.headers.put(key, value);
+        this.headers.add(key, value);
         return this;
     }
 
-    public HttpSimpleRequest header(String key, TextConvert convert, Object value) {
-        if (value == null) {
-            return this;
-        }
+    public HttpSimpleRequest addHeader(String key, TextConvert convert, Object value) {
+        return addHeader(key, (convert == null ? JsonConvert.root() : convert).convertTo(value));
+    }
+
+    public HttpSimpleRequest addHeader(String key, Object value) {
+        return addHeader(key, JsonConvert.root().convertTo(value));
+    }
+
+    public HttpSimpleRequest addHeader(String key, int value) {
+        return addHeader(key, String.valueOf(value));
+    }
+
+    public HttpSimpleRequest addHeader(String key, long value) {
+        return addHeader(key, String.valueOf(value));
+    }
+
+    public HttpSimpleRequest setHeader(String key, String value) {
         if (this.headers == null) {
-            this.headers = new HashMap<>();
+            this.headers = HttpHeader.create();
         }
-        if (convert == null) {
-            convert = JsonConvert.root();
-        }
-        this.headers.put(key, convert.convertTo(value));
+        this.headers.set(key, value);
         return this;
     }
 
-    public HttpSimpleRequest header(String key, Object value) {
-        if (value == null) {
-            return this;
-        }
-        if (this.headers == null) {
-            this.headers = new HashMap<>();
-        }
-        this.headers.put(key, JsonConvert.root().convertTo(value));
-        return this;
+    public HttpSimpleRequest setHeader(String key, TextConvert convert, Object value) {
+        return setHeader(key, (convert == null ? JsonConvert.root() : convert).convertTo(value));
     }
 
-    public HttpSimpleRequest header(String key, int value) {
-        if (this.headers == null) {
-            this.headers = new HashMap<>();
-        }
-        this.headers.put(key, String.valueOf(value));
-        return this;
+    public HttpSimpleRequest setHeader(String key, Object value) {
+        return setHeader(key, JsonConvert.root().convertTo(value));
     }
 
-    public HttpSimpleRequest header(String key, long value) {
-        if (this.headers == null) {
-            this.headers = new HashMap<>();
-        }
-        this.headers.put(key, String.valueOf(value));
-        return this;
+    public HttpSimpleRequest setHeader(String key, int value) {
+        return setHeader(key, String.valueOf(value));
+    }
+
+    public HttpSimpleRequest setHeader(String key, long value) {
+        return setHeader(key, String.valueOf(value));
     }
 
     public HttpSimpleRequest param(String key, String value) {
@@ -352,11 +363,11 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     }
 
     public String getHeader(String name) {
-        return headers == null ? null : headers.get(name);
+        return getHeader(name, null);
     }
 
     public String getHeader(String name, String defaultValue) {
-        return headers == null ? defaultValue : headers.getOrDefault(name, defaultValue);
+        return headers.firstValue(name, defaultValue);
     }
 
     public boolean isRpc() {
@@ -439,12 +450,12 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         this.contentType = contentType;
     }
 
-    public Map<String, String> getHeaders() {
+    public HttpHeader getHeaders() {
         return headers;
     }
 
-    public void setHeaders(Map<String, String> headers) {
-        this.headers = headers;
+    public void setHeaders(HttpHeader headers) {
+        headers(headers);
     }
 
     public Map<String, String> getParams() {
@@ -452,7 +463,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     }
 
     public void setParams(Map<String, String> params) {
-        this.params = params;
+        params(params);
     }
 
     public byte[] getBody() {

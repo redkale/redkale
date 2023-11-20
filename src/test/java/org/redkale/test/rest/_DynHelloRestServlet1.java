@@ -1,6 +1,7 @@
 package org.redkale.test.rest;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.*;
 import org.redkale.annotation.Resource;
 import org.redkale.net.http.*;
@@ -29,11 +30,11 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         DefaultAnyValue conf = DefaultAnyValue.create("port", "" + port);
         server.init(conf);
         server.start();
-        Thread.sleep(100);
+        Utility.sleep(100);
 
         HelloEntity entity = new HelloEntity();
         entity.setHelloname("my name");
-        Map<String, String> headers = new HashMap<>();
+        Map<String, Serializable> headers = new HashMap<>();
         headers.put("hello-res", "my res");
         //headers.put(Rest.REST_HEADER_RESNAME, "my-res");
         String url = "http://127.0.0.1:" + port + "/pipes/hello/update?entity={}&bean2={}";

@@ -32,6 +32,7 @@ public class SncpClient extends Client<SncpClientConnection, SncpClientRequest, 
         super(name, group, "TCP".equalsIgnoreCase(netprotocol), address, maxConns, maxPipelines, null, null, null); //maxConns
         this.clientSncpAddress = clientSncpAddress;
         this.nodeid = nodeid;
+        this.connectTimeoutSeconds = 10;
         this.readTimeoutSeconds = 10;
         this.writeTimeoutSeconds = 10;
     }

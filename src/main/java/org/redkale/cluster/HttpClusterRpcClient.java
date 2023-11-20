@@ -82,7 +82,7 @@ public class HttpClusterRpcClient extends HttpRpcClient {
         String module = req.getRequestURI();
         module = module.substring(1); //去掉/
         module = module.substring(0, module.indexOf('/'));
-        Map<String, String> headers = req.getHeaders();
+        HttpHeader headers = req.getHeaders();
         String resname = req.getHeader(Rest.REST_HEADER_RESNAME, "");
         final String localModule = module;
         if (logger.isLoggable(Level.FINEST)) {
@@ -96,34 +96,34 @@ public class HttpClusterRpcClient extends HttpRpcClient {
                 }
                 return new HttpResult<byte[]>().status(404).toFuture();
             }
-            final Map<String, String> clientHeaders = new LinkedHashMap<>();
-            byte[] clientBody = null;
-            if (req.isRpc()) {
-                clientHeaders.put(Rest.REST_HEADER_RPC, "true");
-            }
-            if (isNotEmpty(req.getTraceid())) {
-                clientHeaders.put(Rest.REST_HEADER_TRACEID, req.getTraceid());
-            }
-            if (req.getReqConvertType() != null) {
-                clientHeaders.put(Rest.REST_HEADER_REQ_CONVERT, req.getReqConvertType().toString());
-            }
-            if (req.getRespConvertType() != null) {
-                clientHeaders.put(Rest.REST_HEADER_RESP_CONVERT, req.getRespConvertType().toString());
-            }
-            if (userid != null) {
-                clientHeaders.put(Rest.REST_HEADER_CURRUSERID, "" + userid);
-            }
+            final HttpHeader clientHeaders = HttpHeader.create();
             if (headers != null) {
-                boolean ws = headers.containsKey("Sec-WebSocket-Key");
+                boolean ws = headers.contains("Sec-WebSocket-Key");
                 headers.forEach((n, v) -> {
                     if (!DISALLOWED_HEADERS_SET.contains(n.toLowerCase())
                         && (!ws || (!"Connection".equals(n) && !"Sec-WebSocket-Key".equals(n)
                         && !"Sec-WebSocket-Version".equals(n)))) {
-                        clientHeaders.put(n, v);
+                        clientHeaders.add(n, v);
                     }
                 });
             }
-            clientHeaders.put("Content-Type", "x-www-form-urlencoded");
+            byte[] clientBody = null;
+            if (req.isRpc()) {
+                clientHeaders.set(Rest.REST_HEADER_RPC, "true");
+            }
+            if (isNotEmpty(req.getTraceid())) {
+                clientHeaders.set(Rest.REST_HEADER_TRACEID, req.getTraceid());
+            }
+            if (req.getReqConvertType() != null) {
+                clientHeaders.set(Rest.REST_HEADER_REQ_CONVERT, req.getReqConvertType().toString());
+            }
+            if (req.getRespConvertType() != null) {
+                clientHeaders.set(Rest.REST_HEADER_RESP_CONVERT, req.getRespConvertType().toString());
+            }
+            if (userid != null) {
+                clientHeaders.set(Rest.REST_HEADER_CURRUSERID, "" + userid);
+            }
+            clientHeaders.set("Content-Type", "x-www-form-urlencoded");
             if (req.getBody() != null && req.getBody().length > 0) {
                 String paramstr = req.getParametersToString();
                 if (paramstr != null) {
@@ -150,7 +150,7 @@ public class HttpClusterRpcClient extends HttpRpcClient {
     }
 
     private CompletableFuture<HttpResult<byte[]>> forEachCollectionFuture(final WorkThread workThread, boolean finest, Serializable userid,
-        HttpSimpleRequest req, String requesturi, final Map<String, String> clientHeaders, byte[] clientBody, Iterator<InetSocketAddress> it) {
+        HttpSimpleRequest req, String requesturi, final HttpHeader clientHeaders, byte[] clientBody, Iterator<InetSocketAddress> it) {
         if (!it.hasNext()) {
             return CompletableFuture.completedFuture(null);
         }
@@ -173,7 +173,7 @@ public class HttpClusterRpcClient extends HttpRpcClient {
             //存在sendHeader后不发送body数据的问题， java.net.http.HttpRequest的bug?
             .method("POST", clientBody == null ? java.net.http.HttpRequest.BodyPublishers.noBody() : java.net.http.HttpRequest.BodyPublishers.ofByteArray(clientBody));
         if (clientHeaders != null) {
-            clientHeaders.forEach((n, v) -> builder.header(n, v));
+            clientHeaders.forEach(builder::header);
         }
         return httpClient.sendAsync(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofByteArray())
             .thenApply((java.net.http.HttpResponse<byte[]> resp) -> {

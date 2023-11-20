@@ -19,6 +19,7 @@ import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.Request;
 import org.redkale.util.*;
+import static org.redkale.util.Utility.isEmpty;
 
 /**
  * Http请求包 与javax.servlet.http.HttpServletRequest 基本类似。  <br>
@@ -121,9 +122,9 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected Convert respConvert;
 
-    protected final Map<String, String> headers = new HashMap<>();
-    //---------- header 相关参数 结束 ----------
+    protected final HttpHeader headers = HttpHeader.create();
 
+    //---------- header 相关参数 结束 ----------
     @Comment("Method GET/POST/...")
     protected String method;
 
@@ -207,7 +208,7 @@ public class HttpRequest extends Request<HttpContext> {
                 this.array.put(req.getBody());
             }
             if (req.getHeaders() != null) {
-                this.headers.putAll(req.getHeaders());
+                this.headers.setAll(req.getHeaders());
             }
             this.reqConvertType = req.getReqConvertType();
             this.reqConvert = req.getReqConvertType() == null ? null : ConvertFactory.findConvert(req.getReqConvertType());
@@ -239,11 +240,11 @@ public class HttpRequest extends Request<HttpContext> {
         HttpSimpleRequest req = new HttpSimpleRequest();
         req.setBody(array.length() == 0 ? null : array.getBytes());
         if (!getHeaders().isEmpty()) {
-            req.setHeaders(new HashMap<>(headers));
-            if (headers.containsKey(Rest.REST_HEADER_RPC)) { //外部request不能包含RPC的header信息
+            req.setHeaders(headers);
+            if (headers.contains(Rest.REST_HEADER_RPC)) { //外部request不能包含RPC的header信息
                 req.removeHeader(Rest.REST_HEADER_RPC);
             }
-            if (headers.containsKey(Rest.REST_HEADER_CURRUSERID)) { //外部request不能包含RPC的header信息
+            if (headers.contains(Rest.REST_HEADER_CURRUSERID)) { //外部request不能包含RPC的header信息
                 req.removeHeader(Rest.REST_HEADER_CURRUSERID);
             }
         }
@@ -327,7 +328,7 @@ public class HttpRequest extends Request<HttpContext> {
                 this.headerHalfLen = httplast.headerHalfLen;
                 this.headerBytes = httplast.headerBytes;
                 this.headerParsed = httplast.headerParsed;
-                this.headers.putAll(httplast.headers);
+                this.headers.setAll(httplast.headers);
             } else if (context.lazyHeaders && getmethod) { //非GET必须要读header，会有Content-Length
                 int rs = loadHeaderBytes(buffer);
                 if (rs != 0) {
@@ -789,49 +790,49 @@ public class HttpRequest extends Request<HttpContext> {
                     } else {
                         value = "";
                     }
-                    headers.put(HEAD_CONNECTION, value);
+                    headers.setValid(HEAD_CONNECTION, value);
                     break;
                 case HEAD_UPGRADE: //Upgrade          
                     this.maybews = vlen == 9 && content[0] == 'w' && content[1] == 'e' && content[2] == 'b' && content[3] == 's'
                         && content[4] == 'o' && content[5] == 'c' && content[6] == 'k' && content[7] == 'e' && content[8] == 't';
-                    headers.put(HEAD_UPGRADE, this.maybews ? "websocket" : bytes.toString(true, charset));
+                    headers.setValid(HEAD_UPGRADE, this.maybews ? "websocket" : bytes.toString(true, charset));
                     break;
                 case HEAD_EXPECT: //Expect                
                     this.expect = vlen == 12 && content[0] == '1' && content[1] == '0' && content[2] == '0' && content[3] == '-'
                         && content[4] == 'c' && content[5] == 'o' && content[6] == 'n' && content[7] == 't' && content[8] == 'i'
                         && content[9] == 'n' && content[10] == 'u' && content[11] == 'e';
-                    headers.put(HEAD_EXPECT, this.expect ? "100-continue" : bytes.toString(true, charset));
+                    headers.setValid(HEAD_EXPECT, this.expect ? "100-continue" : bytes.toString(true, charset));
                     break;
                 case Rest.REST_HEADER_RPC: //rest-rpc     
                     this.rpc = vlen == 4 && content[0] == 't' && content[1] == 'r' && content[2] == 'u' && content[3] == 'e';
-                    headers.put(name, this.rpc ? "true"
+                    headers.setValid(name, this.rpc ? "true"
                         : (vlen == 5 && content[0] == 'f' && content[1] == 'a' && content[2] == 'l' && content[3] == 's' && content[4] == 'e'
                             ? "false" : bytes.toString(true, charset)));
                     break;
                 case Rest.REST_HEADER_TRACEID: //rest-traceid
                     value = bytes.toString(true, charset);
                     this.traceid = value;
-                    headers.put(name, value);
+                    headers.setValid(name, value);
                     break;
                 case Rest.REST_HEADER_CURRUSERID: //rest-curruserid
                     value = bytes.toString(true, charset);
                     this.currentUserid = value;
-                    headers.put(name, value);
+                    headers.setValid(name, value);
                     break;
                 case Rest.REST_HEADER_REQ_CONVERT: //rest-req-convert-type
                     value = bytes.toString(true, charset);
                     reqConvertType = ConvertType.valueOf(value);
                     reqConvert = ConvertFactory.findConvert(reqConvertType);
-                    headers.put(name, value);
+                    headers.setValid(name, value);
                     break;
                 case Rest.REST_HEADER_RESP_CONVERT: //rest-resp-convert-type
                     value = bytes.toString(true, charset);
                     respConvertType = ConvertType.valueOf(value);
                     respConvert = ConvertFactory.findConvert(respConvertType);
-                    headers.put(name, value);
+                    headers.setValid(name, value);
                     break;
                 default:
-                    headers.put(name, bytes.toString(charset));
+                    headers.addValid(name, bytes.toString(charset));
             }
         }
     }
@@ -941,7 +942,7 @@ public class HttpRequest extends Request<HttpContext> {
         req.reqConvert = this.reqConvert;
         req.respConvert = this.respConvert;
         req.respConvertType = this.respConvertType;
-        req.headers.putAll(this.headers);
+        req.headers.setAll(this.headers);
         return req;
     }
 
@@ -1065,7 +1066,12 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     protected HttpRequest setHeader(String name, String value) {
-        this.headers.put(name, value);
+        this.headers.setValid(name, value);
+        return this;
+    }
+
+    protected HttpRequest addHeader(String name, String value) {
+        this.headers.add(name, value);
         return this;
     }
 
@@ -1541,16 +1547,25 @@ public class HttpRequest extends Request<HttpContext> {
             + (this.array.length() > 0 ? (", \r\n    bodyLength: " + this.array.length()) : "")
             + (this.boundary || this.array.isEmpty() ? "" : (", \r\n    bodyContent: " + (this.respConvertType == null || this.respConvertType == ConvertType.JSON ? this.getBodyUTF8() : Arrays.toString(getBody()))))
             + ", \r\n    params: " + toMapString(this.params, 4)
-            + ", \r\n    header: " + toMapString(this.headers, 4)
+            + ", \r\n    header: " + toMapString(this.headers.map, 4)
             + "\r\n}"; //this.headers.toString(4)
     }
 
-    private static CharSequence toMapString(Map<String, String> map, int indent) {
+    private static CharSequence toMapString(Map<String, ?> map, int indent) {
         final String space = " ".repeat(indent);
         StringBuilder sb = new StringBuilder();
         sb.append("{\r\n");
-        for (Map.Entry en : map.entrySet()) {
-            sb.append(space).append("    '").append(en.getKey()).append("': '").append(en.getValue()).append("',\r\n");
+        if (map != null) {
+            for (Map.Entry en : map.entrySet()) {
+                Object val = en.getValue();
+                if (val instanceof Collection) {
+                    for (Object item : (Collection) val) {
+                        sb.append(space).append("    '").append(en.getKey()).append("': '").append(item).append("',\r\n");
+                    }
+                } else {
+                    sb.append(space).append("    '").append(en.getKey()).append("': '").append(val).append("',\r\n");
+                }
+            }
         }
         sb.append(space).append('}');
         return sb;
@@ -2146,27 +2161,10 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return AnyValue
      */
-    public Map<String, String> getHeaders() {
+    @AsmDepends
+    public HttpHeader getHeaders() {
         parseHeader();
         return headers;
-    }
-
-    /**
-     * 将请求Header转换成Map
-     *
-     * @param map Map
-     *
-     * @return Map
-     */
-    @ConvertDisabled
-    public Map<String, String> getHeadersToMap(Map<String, String> map) {
-        parseHeader();
-        if (map == null) {
-            map = new LinkedHashMap<>();
-        }
-        final Map<String, String> map0 = map;
-        headers.forEach((k, v) -> map0.put(k, v));
-        return map0;
     }
 
     /**
@@ -2177,8 +2175,7 @@ public class HttpRequest extends Request<HttpContext> {
     @ConvertDisabled
     public String[] getHeaderNames() {
         parseHeader();
-        Set<String> names = headers.keySet();
-        return names.toArray(new String[names.size()]);
+        return headers.names();
     }
 
     /**
@@ -2189,8 +2186,7 @@ public class HttpRequest extends Request<HttpContext> {
      * @return header值
      */
     public String getHeader(String name) {
-        parseHeader();
-        return headers.get(name);
+        return getHeader(name, null);
     }
 
     /**
@@ -2201,9 +2197,10 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
+    @AsmDepends
     public String getHeader(String name, String defaultValue) {
         parseHeader();
-        return headers.getOrDefault(name, defaultValue);
+        return headers.firstValue(name, defaultValue);
     }
 
     /**
@@ -2215,9 +2212,10 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
+    @AsmDepends
     public <T> T getJsonHeader(java.lang.reflect.Type type, String name) {
         String v = getHeader(name);
-        return v == null || v.isEmpty() ? null : jsonConvert.convertFrom(type, v);
+        return isEmpty(v) ? null : jsonConvert.convertFrom(type, v);
     }
 
     /**
@@ -2230,9 +2228,10 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
+    @AsmDepends
     public <T> T getJsonHeader(JsonConvert convert, java.lang.reflect.Type type, String name) {
         String v = getHeader(name);
-        return v == null || v.isEmpty() ? null : convert.convertFrom(type, v);
+        return isEmpty(v) ? null : convert.convertFrom(type, v);
     }
 
     /**
@@ -2243,11 +2242,10 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
+    @AsmDepends
     public boolean getBooleanHeader(String name, boolean defaultValue) {
-        //return headers.getBoolValue(name, defaultValue);
-        parseHeader();
-        String value = headers.get(name);
-        return value == null || value.length() == 0 ? defaultValue : Boolean.parseBoolean(value);
+        String value = getHeader(name);
+        return isEmpty(value) ? defaultValue : Boolean.parseBoolean(value);
     }
 
     /**
@@ -2258,11 +2256,10 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
+    @AsmDepends
     public short getShortHeader(String name, short defaultValue) {
-        //return headers.getShortValue(name, defaultValue);    
-        parseHeader();
-        String value = headers.get(name);
-        if (value == null || value.length() == 0) {
+        String value = getHeader(name);
+        if (isEmpty(value)) {
             return defaultValue;
         }
         try {
@@ -2281,11 +2278,10 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
+    @AsmDepends
     public short getShortHeader(int radix, String name, short defaultValue) {
-        //return headers.getShortValue(name, defaultValue);
-        parseHeader();
-        String value = headers.get(name);
-        if (value == null || value.length() == 0) {
+        String value = getHeader(name);
+        if (isEmpty(value)) {
             return defaultValue;
         }
         try {
@@ -2303,11 +2299,10 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
+    @AsmDepends
     public short getShortHeader(String name, int defaultValue) {
-        //return headers.getShortValue(name, (short) defaultValue);
-        parseHeader();
-        String value = headers.get(name);
-        if (value == null || value.length() == 0) {
+        String value = getHeader(name);
+        if (isEmpty(value)) {
             return (short) defaultValue;
         }
         try {
@@ -2326,11 +2321,10 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
+    @AsmDepends
     public short getShortHeader(int radix, String name, int defaultValue) {
-        //return headers.getShortValue(radix, name, (short) defaultValue);
-        parseHeader();
-        String value = headers.get(name);
-        if (value == null || value.length() == 0) {
+        String value = getHeader(name);
+        if (isEmpty(value)) {
             return (short) defaultValue;
         }
         try {
@@ -2348,11 +2342,10 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
+    @AsmDepends
     public int getIntHeader(String name, int defaultValue) {
-        //return headers.getIntValue(name, defaultValue);
-        parseHeader();
-        String value = headers.get(name);
-        if (value == null || value.length() == 0) {
+        String value = getHeader(name);
+        if (isEmpty(value)) {
             return defaultValue;
         }
         try {
@@ -2371,11 +2364,10 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
+    @AsmDepends
     public int getIntHeader(int radix, String name, int defaultValue) {
-        //return headers.getIntValue(radix, name, defaultValue);
-        parseHeader();
-        String value = headers.get(name);
-        if (value == null || value.length() == 0) {
+        String value = getHeader(name);
+        if (isEmpty(value)) {
             return defaultValue;
         }
         try {
@@ -2393,11 +2385,10 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
+    @AsmDepends
     public long getLongHeader(String name, long defaultValue) {
-        //return headers.getLongValue(name, defaultValue);
-        parseHeader();
-        String value = headers.get(name);
-        if (value == null || value.length() == 0) {
+        String value = getHeader(name);
+        if (isEmpty(value)) {
             return defaultValue;
         }
         try {
@@ -2416,11 +2407,10 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
+    @AsmDepends
     public long getLongHeader(int radix, String name, long defaultValue) {
-        //return headers.getLongValue(radix, name, defaultValue);
-        parseHeader();
-        String value = headers.get(name);
-        if (value == null || value.length() == 0) {
+        String value = getHeader(name);
+        if (isEmpty(value)) {
             return defaultValue;
         }
         try {
@@ -2438,11 +2428,10 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
+    @AsmDepends
     public float getFloatHeader(String name, float defaultValue) {
-        //return headers.getFloatValue(name, defaultValue);
-        parseHeader();
-        String value = headers.get(name);
-        if (value == null || value.length() == 0) {
+        String value = getHeader(name);
+        if (isEmpty(value)) {
             return defaultValue;
         }
         try {
@@ -2460,11 +2449,10 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
+    @AsmDepends
     public double getDoubleHeader(String name, double defaultValue) {
-        //return headers.getDoubleValue(name, defaultValue);
-        parseHeader();
-        String value = headers.get(name);
-        if (value == null || value.length() == 0) {
+        String value = getHeader(name);
+        if (isEmpty(value)) {
             return defaultValue;
         }
         try {
@@ -2480,6 +2468,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return AnyValue
      */
+    @AsmDepends
     public Map<String, String> getParameters() {
         parseBody();
         return params;

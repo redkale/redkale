@@ -25,6 +25,7 @@ import org.redkale.cluster.*;
 import org.redkale.convert.Convert;
 import org.redkale.convert.bson.BsonFactory;
 import org.redkale.convert.json.*;
+import org.redkale.convert.protobuf.ProtobufFactory;
 import org.redkale.mq.*;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
@@ -268,40 +269,55 @@ public final class Application {
         this.config = config;
         this.configFromCache = "true".equals(config.getValue("[config-from-cache]"));
         this.environment = new Environment(this.envProperties);
-        //设置APP_HOME、APP_NAME
+        //设置APP_NAME
         this.name = checkName(config.getValue("name", ""));
         this.resourceFactory.register(RESNAME_APP_NAME, name);
         System.setProperty(RESNAME_APP_NAME, name);
 
-        final File root = new File(System.getProperty(RESNAME_APP_HOME));
-        this.resourceFactory.register(RESNAME_APP_TIME, long.class, this.startTime);
-        this.resourceFactory.register(RESNAME_APP_HOME, Path.class, root.toPath());
-        this.resourceFactory.register(RESNAME_APP_HOME, File.class, root);
-        this.resourceFactory.register(RESNAME_APP_HOME, URI.class, root.toURI());
-        File confFile = null;
-        try { //设置APP_HOME
-            this.resourceFactory.register(RESNAME_APP_HOME, root.getCanonicalPath());
+        { //设置APP_HOME
+            final File root = new File(System.getProperty(RESNAME_APP_HOME));
+            final String rootPath = getCanonicalPath(root);
+            this.resourceFactory.register(RESNAME_APP_TIME, long.class, this.startTime);
+            this.resourceFactory.register(RESNAME_APP_HOME, Path.class, root.toPath());
+            this.resourceFactory.register(RESNAME_APP_HOME, File.class, root);
+            this.resourceFactory.register(RESNAME_APP_HOME, URI.class, root.toURI());
+
+            File confFile = null;
+            this.resourceFactory.register(RESNAME_APP_HOME, rootPath);
             if (System.getProperty(RESNAME_APP_HOME) == null) {
-                System.setProperty(RESNAME_APP_HOME, root.getCanonicalPath());
+                System.setProperty(RESNAME_APP_HOME, rootPath);
             }
-            this.home = root.getCanonicalFile();
+            this.home = new File(rootPath);
             this.homePath = this.home.getPath();
             String confDir = System.getProperty(RESNAME_APP_CONF_DIR, "conf");
             if (confDir.contains("://") || confDir.startsWith("file:") || confDir.startsWith("resource:") || confDir.contains("!")) { //graalvm native-image startwith resource:META-INF
                 this.confPath = URI.create(confDir);
                 if (confDir.startsWith("file:")) {
-                    confFile = new File(this.confPath.getPath()).getCanonicalFile();
+                    confFile = getCanonicalFile(new File(this.confPath.getPath()));
                 }
-            } else if (confDir.charAt(0) == '/' || confDir.indexOf(':') > 0) {
-                confFile = new File(confDir).getCanonicalFile();
+            } else if (confDir.charAt(0) == '/' || confDir.indexOf(':') > -1) {
+                confFile = getCanonicalFile(new File(confDir));
                 this.confPath = confFile.toURI();
             } else {
-                confFile = new File(this.home, confDir).getCanonicalFile();
+                confFile = new File(getCanonicalPath(new File(this.home, confDir)));
                 this.confPath = confFile.toURI();
             }
-        } catch (IOException e) {
-            throw new RedkaleException(e);
+            if (confFile != null) {
+                this.resourceFactory.register(RESNAME_APP_CONF_DIR, File.class, confFile);
+                this.resourceFactory.register(RESNAME_APP_CONF_DIR, Path.class, confFile.toPath());
+            }
+
+            String localaddr = getPropertyValue(config.getValue("address", "").trim());
+            InetAddress addr = localaddr.isEmpty() ? Utility.localInetAddress() : new InetSocketAddress(localaddr, config.getIntValue("port")).getAddress();
+            this.localAddress = new InetSocketAddress(addr, config.getIntValue("port"));
+            this.resourceFactory.register(RESNAME_APP_ADDR, addr.getHostAddress());
+            this.resourceFactory.register(RESNAME_APP_ADDR, InetAddress.class, addr);
+            this.resourceFactory.register(RESNAME_APP_ADDR, InetSocketAddress.class, this.localAddress);
+
+            this.resourceFactory.register(RESNAME_APP_CONF_DIR, URI.class, this.confPath);
+            this.resourceFactory.register(RESNAME_APP_CONF_DIR, String.class, this.confPath.toString());
         }
+
         {   //设置系统变量
             System.setProperty("redkale.version", Redkale.getDotedVersion());
             int nid = config.getIntValue("nodeid", 0);
@@ -335,22 +351,8 @@ public final class Application {
             sysProperties.forEach((key, value) -> {
                 System.setProperty(key.toString(), getPropertyValue(value.toString(), sysProperties));
             });
+            this.resourceFactory.register(Environment.class, environment);
         }
-
-        String localaddr = getPropertyValue(config.getValue("address", "").trim());
-        InetAddress addr = localaddr.isEmpty() ? Utility.localInetAddress() : new InetSocketAddress(localaddr, config.getIntValue("port")).getAddress();
-        this.localAddress = new InetSocketAddress(addr, config.getIntValue("port"));
-        this.resourceFactory.register(RESNAME_APP_ADDR, addr.getHostAddress());
-        this.resourceFactory.register(RESNAME_APP_ADDR, InetAddress.class, addr);
-        this.resourceFactory.register(RESNAME_APP_ADDR, InetSocketAddress.class, this.localAddress);
-
-        this.resourceFactory.register(RESNAME_APP_CONF_DIR, URI.class, this.confPath);
-        this.resourceFactory.register(RESNAME_APP_CONF_DIR, String.class, this.confPath.toString());
-        if (confFile != null) {
-            this.resourceFactory.register(RESNAME_APP_CONF_DIR, File.class, confFile);
-            this.resourceFactory.register(RESNAME_APP_CONF_DIR, Path.class, confFile.toPath());
-        }
-        this.resourceFactory.register(Environment.class, environment);
 
         { //初始化ClassLoader
             ClassLoader currClassLoader = Thread.currentThread().getContextClassLoader();
@@ -364,7 +366,7 @@ public final class Application {
                         if (in != null) {
                             BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8), 1024);
                             List<String> list = new ArrayList<>();
-                            reader.lines().forEach(v -> list.add(v));
+                            reader.lines().forEach(list::add);
                             Collections.sort(list);
                             if (!list.isEmpty()) {
                                 cacheClasses = new LinkedHashSet<>(list);
@@ -382,8 +384,14 @@ public final class Application {
                 }
                 Thread.currentThread().setContextClassLoader(this.classLoader);
             }
+            if (compileMode || this.classLoader instanceof RedkaleClassLoader.RedkaleCacheClassLoader) {
+                this.serverClassLoader = this.classLoader;
+            } else {
+                this.serverClassLoader = new RedkaleClassLoader(this.classLoader);
+            }
         }
-        { //以下是初始化日志配置
+
+        { //初始化日志配置
             URI logConfURI;
             File logConfFile = null;
             if (configFromCache) {
@@ -420,13 +428,12 @@ public final class Application {
                 RedkaleClassLoader.putReflectionPublicConstructors(LoggingFileHandler.LoggingConsoleHandler.class, LoggingFileHandler.LoggingConsoleHandler.class.getName());
                 RedkaleClassLoader.putReflectionPublicConstructors(LoggingFileHandler.LoggingSncpFileHandler.class, LoggingFileHandler.LoggingSncpFileHandler.class.getName());
             }
+            this.logger = Logger.getLogger(this.getClass().getSimpleName());
+            this.shutdownLatch = new CountDownLatch(config.getAnyValues("server").length + 1);
+            logger.log(Level.INFO, colorMessage(logger, 36, 1, "-------------------------------- Redkale " + Redkale.getDotedVersion() + " --------------------------------"));
         }
-        this.logger = Logger.getLogger(this.getClass().getSimpleName());
-        this.shutdownLatch = new CountDownLatch(config.getAnyValues("server").length + 1);
-        logger.log(Level.INFO, colorMessage(logger, 36, 1, "-------------------------------- Redkale " + Redkale.getDotedVersion() + " --------------------------------"));
 
-        //------------------------------------ 基本设置 ------------------------------------   
-        {
+        { //基本设置
             final String confDir = this.confPath.toString();
             logger.log(Level.INFO, "APP_OS       = " + System.getProperty("os.name") + " " + System.getProperty("os.version") + " " + System.getProperty("os.arch") + "\r\n"
                 + "APP_JAVA     = " + System.getProperty("java.runtime.name", System.getProperty("org.graalvm.nativeimage.kind") != null ? "Nativeimage" : "")
@@ -447,154 +454,179 @@ public final class Application {
 
             this.resourceFactory.register(BsonFactory.root());
             this.resourceFactory.register(JsonFactory.root());
+            this.resourceFactory.register(ProtobufFactory.root());
             this.resourceFactory.register(BsonFactory.root().getConvert());
             this.resourceFactory.register(JsonFactory.root().getConvert());
+            this.resourceFactory.register(ProtobufFactory.root().getConvert());
             this.resourceFactory.register("bsonconvert", Convert.class, BsonFactory.root().getConvert());
             this.resourceFactory.register("jsonconvert", Convert.class, JsonFactory.root().getConvert());
+            this.resourceFactory.register("protobufconvert", Convert.class, ProtobufFactory.root().getConvert());
         }
-        //------------------------------------ 读取配置 ------------------------------------
-        try {
+
+        try { //读取配置
             loadResourceProperties();
         } catch (IOException e) {
             throw new RedkaleException(e);
         }
-        //------------------------------------ 配置 <xxxagent> 节点 ------------------------------------
-        ClusterAgent cluster = null;
-        MessageAgent[] mqs = null;
-        int bufferCapacity = 32 * 1024;
-        int bufferPoolSize = Utility.cpus() * 8;
-        AnyValue executorConf = null;
-        executorConf = config.getAnyValue("executor");
 
-        AnyValue clusterConf = config.getAnyValue("cluster");
-        if (clusterConf != null) {
-            try {
-                String classVal = getPropertyValue(clusterConf.getValue("type", clusterConf.getValue("value"))); //兼容value字段
-                if (classVal == null || classVal.isEmpty() || classVal.indexOf('.') < 0) { //不包含.表示非类名，比如值: consul, nacos
-                    Iterator<ClusterAgentProvider> it = ServiceLoader.load(ClusterAgentProvider.class, classLoader).iterator();
-                    RedkaleClassLoader.putServiceLoader(ClusterAgentProvider.class);
-                    while (it.hasNext()) {
-                        ClusterAgentProvider provider = it.next();
-                        if (provider != null) {
-                            RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName()); //loader class
-                        }
-                        if (provider != null && provider.acceptsConf(clusterConf)) {
-                            cluster = provider.createInstance();
-                            cluster.setConfig(clusterConf);
-                            break;
-                        }
-                    }
-                    if (cluster == null) {
-                        ClusterAgent cacheClusterAgent = new CacheClusterAgent();
-                        if (cacheClusterAgent.acceptsConf(clusterConf)) {
-                            cluster = cacheClusterAgent;
-                            cluster.setConfig(clusterConf);
-                        }
-                    }
-                    if (cluster == null) {
-                        logger.log(Level.SEVERE, "load application cluster resource, but not found name='type' value error: " + clusterConf);
-                    }
-                } else {
-                    Class type = classLoader.loadClass(classVal);
-                    if (!ClusterAgent.class.isAssignableFrom(type)) {
-                        logger.log(Level.SEVERE, "load application cluster resource, but not found " + ClusterAgent.class.getSimpleName() + " implements class error: " + clusterConf);
-                    } else {
-                        RedkaleClassLoader.putReflectionDeclaredConstructors(type, type.getName());
-                        cluster = (ClusterAgent) type.getDeclaredConstructor().newInstance();
-                        cluster.setConfig(clusterConf);
-                    }
-                }
-                //此时不能执行cluster.init，因内置的对象可能依赖config.properties配置项
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "load application cluster resource error: " + clusterConf, e);
-            }
-        }
+        { //加载XXXAgent
+            ClusterAgent cluster = null;
+            MessageAgent[] mqs = null;
 
-        AnyValue[] mqConfs = config.getAnyValues("mq");
-        if (mqConfs != null && mqConfs.length > 0) {
-            mqs = new MessageAgent[mqConfs.length];
-            Set<String> mqnames = new HashSet<>();
-            for (int i = 0; i < mqConfs.length; i++) {
-                AnyValue mqConf = mqConfs[i];
-                String names = getPropertyValue(mqConf.getValue("name")); //含,或者;表示多个别名使用同一mq对象
-                if (names != null && !names.isEmpty()) {
-                    for (String n : names.replace(',', ';').split(";")) {
-                        if (n.trim().isEmpty()) {
-                            continue;
-                        }
-                        if (mqnames.contains(n.trim())) {
-                            throw new RedkaleException("mq.name(" + n.trim() + ") is repeat");
-                        }
-                        mqnames.add(n.trim());
-                    }
-                } else if (names != null && names.isEmpty()) {
-                    String n = "";
-                    if (mqnames.contains(n.trim())) {
-                        throw new RedkaleException("mq.name(" + n.trim() + ") is repeat");
-                    }
-                    mqnames.add(n);
-                }
+            AnyValue clusterConf = config.getAnyValue("cluster");
+            if (clusterConf != null) {
                 try {
-                    String classVal = getPropertyValue(mqConf.getValue("type", mqConf.getValue("value"))); //兼容value字段
-                    if (classVal == null || classVal.isEmpty() || classVal.indexOf('.') < 0) { //不包含.表示非类名，比如值: kafka, pulsar
-                        Iterator<MessageAgentProvider> it = ServiceLoader.load(MessageAgentProvider.class, classLoader).iterator();
-                        RedkaleClassLoader.putServiceLoader(MessageAgentProvider.class);
+                    String classVal = getPropertyValue(clusterConf.getValue("type", clusterConf.getValue("value"))); //兼容value字段
+                    if (classVal == null || classVal.isEmpty() || classVal.indexOf('.') < 0) { //不包含.表示非类名，比如值: consul, nacos
+                        Iterator<ClusterAgentProvider> it = ServiceLoader.load(ClusterAgentProvider.class, classLoader).iterator();
+                        RedkaleClassLoader.putServiceLoader(ClusterAgentProvider.class);
                         while (it.hasNext()) {
-                            MessageAgentProvider provider = it.next();
+                            ClusterAgentProvider provider = it.next();
                             if (provider != null) {
                                 RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName()); //loader class
                             }
-                            if (provider != null && provider.acceptsConf(mqConf)) {
-                                mqs[i] = provider.createInstance();
-                                mqs[i].setConfig(mqConf);
+                            if (provider != null && provider.acceptsConf(clusterConf)) {
+                                cluster = provider.createInstance();
+                                cluster.setConfig(clusterConf);
                                 break;
                             }
                         }
-                        if (mqs[i] == null) {
-                            logger.log(Level.SEVERE, "load application mq resource, but not found name='value' value error: " + mqConf);
+                        if (cluster == null) {
+                            ClusterAgent cacheClusterAgent = new CacheClusterAgent();
+                            if (cacheClusterAgent.acceptsConf(clusterConf)) {
+                                cluster = cacheClusterAgent;
+                                cluster.setConfig(clusterConf);
+                            }
+                        }
+                        if (cluster == null) {
+                            logger.log(Level.SEVERE, "load application cluster resource, but not found name='type' value error: " + clusterConf);
                         }
                     } else {
                         Class type = classLoader.loadClass(classVal);
-                        if (!MessageAgent.class.isAssignableFrom(type)) {
-                            logger.log(Level.SEVERE, "load application mq resource, but not found " + MessageAgent.class.getSimpleName() + " implements class error: " + mqConf);
+                        if (!ClusterAgent.class.isAssignableFrom(type)) {
+                            logger.log(Level.SEVERE, "load application cluster resource, but not found " + ClusterAgent.class.getSimpleName() + " implements class error: " + clusterConf);
                         } else {
                             RedkaleClassLoader.putReflectionDeclaredConstructors(type, type.getName());
-                            mqs[i] = (MessageAgent) type.getDeclaredConstructor().newInstance();
-                            mqs[i].setConfig(mqConf);
+                            cluster = (ClusterAgent) type.getDeclaredConstructor().newInstance();
+                            cluster.setConfig(clusterConf);
                         }
                     }
-                    //此时不能执行mq.init，因内置的对象可能依赖config.properties配置项
+                    //此时不能执行cluster.init，因内置的对象可能依赖config.properties配置项
                 } catch (Exception e) {
-                    logger.log(Level.SEVERE, "load application mq resource error: " + mqs[i], e);
+                    logger.log(Level.SEVERE, "load application cluster resource error: " + clusterConf, e);
                 }
             }
-        }
 
-        ExecutorService workExecutor0 = null;
-        if (executorConf == null) {
-            executorConf = DefaultAnyValue.create();
-        }
-        final int workThreads = executorConf.getIntValue("threads", Utility.cpus() * 4);
-        if (workThreads > 0) {
-            //指定threads则不使用虚拟线程池
-            workExecutor0 = executorConf.getValue("threads") != null ? WorkThread.createExecutor(workThreads, "Redkale-WorkThread-%s") : WorkThread.createWorkExecutor(workThreads, "Redkale-WorkThread-%s");
-        }
-        this.workExecutor = workExecutor0;
-        this.resourceFactory.register(RESNAME_APP_EXECUTOR, Executor.class, this.workExecutor);
-        this.resourceFactory.register(RESNAME_APP_EXECUTOR, ExecutorService.class, this.workExecutor);
-        {
-            ExecutorService clientExecutor = workExecutor0;
-            if (clientExecutor == null) {
-                //给所有client给一个默认的ExecutorService
-                clientExecutor = WorkThread.createWorkExecutor(executorConf.getIntValue("clients", Utility.cpus()), "Redkale-DefaultClient-WorkThread-%s");
+            AnyValue[] mqConfs = config.getAnyValues("mq");
+            if (mqConfs != null && mqConfs.length > 0) {
+                mqs = new MessageAgent[mqConfs.length];
+                Set<String> mqnames = new HashSet<>();
+                for (int i = 0; i < mqConfs.length; i++) {
+                    AnyValue mqConf = mqConfs[i];
+                    String names = getPropertyValue(mqConf.getValue("name")); //含,或者;表示多个别名使用同一mq对象
+                    if (names != null && !names.isEmpty()) {
+                        for (String n : names.replace(',', ';').split(";")) {
+                            if (n.trim().isEmpty()) {
+                                continue;
+                            }
+                            if (mqnames.contains(n.trim())) {
+                                throw new RedkaleException("mq.name(" + n.trim() + ") is repeat");
+                            }
+                            mqnames.add(n.trim());
+                        }
+                    } else if (names != null && names.isEmpty()) {
+                        String n = "";
+                        if (mqnames.contains(n.trim())) {
+                            throw new RedkaleException("mq.name(" + n.trim() + ") is repeat");
+                        }
+                        mqnames.add(n);
+                    }
+                    try {
+                        String classVal = getPropertyValue(mqConf.getValue("type", mqConf.getValue("value"))); //兼容value字段
+                        if (classVal == null || classVal.isEmpty() || classVal.indexOf('.') < 0) { //不包含.表示非类名，比如值: kafka, pulsar
+                            Iterator<MessageAgentProvider> it = ServiceLoader.load(MessageAgentProvider.class, classLoader).iterator();
+                            RedkaleClassLoader.putServiceLoader(MessageAgentProvider.class);
+                            while (it.hasNext()) {
+                                MessageAgentProvider provider = it.next();
+                                if (provider != null) {
+                                    RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName()); //loader class
+                                }
+                                if (provider != null && provider.acceptsConf(mqConf)) {
+                                    mqs[i] = provider.createInstance();
+                                    mqs[i].setConfig(mqConf);
+                                    break;
+                                }
+                            }
+                            if (mqs[i] == null) {
+                                logger.log(Level.SEVERE, "load application mq resource, but not found name='value' value error: " + mqConf);
+                            }
+                        } else {
+                            Class type = classLoader.loadClass(classVal);
+                            if (!MessageAgent.class.isAssignableFrom(type)) {
+                                logger.log(Level.SEVERE, "load application mq resource, but not found " + MessageAgent.class.getSimpleName() + " implements class error: " + mqConf);
+                            } else {
+                                RedkaleClassLoader.putReflectionDeclaredConstructors(type, type.getName());
+                                mqs[i] = (MessageAgent) type.getDeclaredConstructor().newInstance();
+                                mqs[i].setConfig(mqConf);
+                            }
+                        }
+                        //此时不能执行mq.init，因内置的对象可能依赖config.properties配置项
+                    } catch (Exception e) {
+                        logger.log(Level.SEVERE, "load application mq resource error: " + mqs[i], e);
+                    }
+                }
             }
-            this.clientAsyncGroup = new AsyncIOGroup("Redkale-DefaultClient-IOThread-%s", clientExecutor, bufferCapacity, bufferPoolSize).skipClose(true);
+            this.clusterAgent = cluster;
+            this.messageAgents = mqs;
         }
-        this.resourceFactory.register(RESNAME_APP_CLIENT_ASYNCGROUP, AsyncGroup.class, this.clientAsyncGroup);
-        this.resourceFactory.register(RESNAME_APP_CLIENT_ASYNCGROUP, AsyncIOGroup.class, this.clientAsyncGroup);
 
-        this.clusterAgent = cluster;
-        this.messageAgents = mqs;
+        { //设置WorkExecutor            
+            int bufferCapacity = 32 * 1024;
+            int bufferPoolSize = Utility.cpus() * 8;
+            final AnyValue executorConf = config.getAnyValue("executor", true);
+            StringBuilder executorLog = new StringBuilder();
+
+            ExecutorService workExecutor0 = null;
+            final int workThreads = executorConf.getIntValue("threads", Utility.cpus() * 4);
+            if (workThreads > 0) {
+                //指定threads则不使用虚拟线程池
+                workExecutor0 = executorConf.getValue("threads") != null ? WorkThread.createExecutor(workThreads, "Redkale-WorkThread-%s") : WorkThread.createWorkExecutor(workThreads, "Redkale-WorkThread-%s");
+                String executorName = workExecutor0.getClass().getSimpleName();
+                executorLog.append("defaultWorkExecutor: {type=" + executorName);
+                if (executorName.contains("VirtualExecutor") || executorName.contains("PerTaskExecutor")) {
+                    executorLog.append(", threads=[virtual]}");
+                } else {
+                    executorLog.append(", threads=" + workThreads + "}");
+                }
+            }
+            this.workExecutor = workExecutor0;
+            this.resourceFactory.register(RESNAME_APP_EXECUTOR, Executor.class, this.workExecutor);
+            this.resourceFactory.register(RESNAME_APP_EXECUTOR, ExecutorService.class, this.workExecutor);
+
+            ExecutorService clientWorkExecutor = workExecutor0;
+            if (clientWorkExecutor == null) {
+                //给所有client给一个默认的ExecutorService
+                int clients = executorConf.getIntValue("clients", Utility.cpus());
+                clientWorkExecutor = WorkThread.createWorkExecutor(clients, "Redkale-DefaultClient-WorkThread-%s");
+                String executorName = clientWorkExecutor.getClass().getSimpleName();
+                executorLog.append("clientWorkExecutor: {type=" + executorName);
+                if (executorName.contains("VirtualExecutor") || executorName.contains("PerTaskExecutor")) {
+                    executorLog.append(", threads=[virtual]}");
+                } else {
+                    executorLog.append(", threads=" + workThreads + "}");
+                }
+            } else {
+                executorLog.append(", clientWorkExecutor: [workExecutor]");
+            }
+            this.clientAsyncGroup = new AsyncIOGroup("Redkale-DefaultClient-IOThread-%s", clientWorkExecutor, bufferCapacity, bufferPoolSize).skipClose(true);
+            this.resourceFactory.register(RESNAME_APP_CLIENT_ASYNCGROUP, AsyncGroup.class, this.clientAsyncGroup);
+            this.resourceFactory.register(RESNAME_APP_CLIENT_ASYNCGROUP, AsyncIOGroup.class, this.clientAsyncGroup);
+
+            if (executorLog.length() > 0) {
+                logger.log(Level.INFO, executorLog.toString());
+            }
+        }
+
         { //加载原生sql解析器
             Iterator<DataNativeSqlParserProvider> it = ServiceLoader.load(DataNativeSqlParserProvider.class, classLoader).iterator();
             RedkaleClassLoader.putServiceLoader(DataNativeSqlParserProvider.class);
@@ -609,13 +641,8 @@ public final class Application {
             for (DataNativeSqlParserProvider provider : InstanceProvider.sort(providers)) {
                 this.nativeSqlParser = provider.createInstance();
                 this.resourceFactory.register(DataNativeSqlParser.class, this.nativeSqlParser);
-                break;
+                break;  //only first provider
             }
-        }
-        if (compileMode || this.classLoader instanceof RedkaleClassLoader.RedkaleCacheClassLoader) {
-            this.serverClassLoader = this.classLoader;
-        } else {
-            this.serverClassLoader = new RedkaleClassLoader(this.classLoader);
         }
     }
 
@@ -1006,6 +1033,22 @@ public final class Application {
             }
         }
         return name;
+    }
+
+    private String getCanonicalPath(File file) {
+        try {
+            return file.getCanonicalPath();
+        } catch (IOException e) {
+            return file.getAbsolutePath();
+        }
+    }
+
+    private File getCanonicalFile(File file) {
+        try {
+            return file.getCanonicalFile();
+        } catch (IOException e) {
+            return file;
+        }
     }
 
     public void init() throws Exception {
@@ -1585,7 +1628,7 @@ public final class Application {
             if (logger != null) {
                 logger.info("Send: " + cmd + ", Reply: " + rs);
             }
-            System.out.println(rs);
+            (System.out).println(rs);
         } catch (Exception e) {
             if (e instanceof PortUnreachableException) {
                 if ("APIDOC".equalsIgnoreCase(cmd)) {
@@ -1597,7 +1640,7 @@ public final class Application {
                     if (logger != null) {
                         logger.info(rs);
                     }
-                    System.out.println(rs);
+                    (System.out).println(rs);
                     return;
                 }
                 //if ("SHUTDOWN".equalsIgnoreCase(cmd)) {

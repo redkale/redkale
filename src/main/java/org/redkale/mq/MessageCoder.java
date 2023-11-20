@@ -60,10 +60,10 @@ public interface MessageCoder<T> {
         return Utility.append(new byte[]{(byte) 1}, str.getBytes(StandardCharsets.UTF_8));
     }
 
-    //type: 1:string, 2:int, 3:long
+    //type: 1:string, 2:int, 3:long, 4:BigInteger
     public static Serializable decodeUserid(ByteBuffer buffer) {
-        int len = buffer.getChar();
-        if (len == 0) {
+        int len = buffer.getShort();
+        if (len == -1) {
             return null;
         }
         byte type = buffer.get();
@@ -95,7 +95,7 @@ public interface MessageCoder<T> {
         return value.getBytes(StandardCharsets.UTF_8);
     }
 
-    public static byte[] getBytes(final Map<String, String> map) {
+    public static byte[] getStringMapBytes(final Map<String, String> map) {
         if (map == null || map.isEmpty()) {
             return new byte[2];
         }
@@ -106,7 +106,7 @@ public interface MessageCoder<T> {
         });
         final byte[] bs = new byte[len.get()];
         final ByteBuffer buffer = ByteBuffer.wrap(bs);
-        buffer.putChar((char) map.size());
+        buffer.putShort((short) map.size());
         map.forEach((key, value) -> {
             putSmallString(buffer, key);
             putBigString(buffer, value);
@@ -114,8 +114,53 @@ public interface MessageCoder<T> {
         return bs;
     }
 
+    public static Map<String, String> getStringMap(ByteBuffer buffer) {
+        int len = buffer.getShort();
+        if (len == 0) {
+            return null;
+        }
+        Map<String, String> map = new HashMap<>(len);
+        for (int i = 0; i < len; i++) {
+            map.put(getSmallString(buffer), getBigString(buffer));
+        }
+        return map;
+    }
+
+    public static byte[] getSeriMapBytes(final Map<String, Serializable> map) {
+        if (map == null || map.isEmpty()) {
+            return new byte[2];
+        }
+        final AtomicInteger len = new AtomicInteger(2);
+        map.forEach((key, value) -> {
+            len.addAndGet(2 + (key == null ? 0 : Utility.encodeUTF8Length(key)));
+            len.addAndGet(2 + (value == null ? 0 : lengthSeriStringOrList(value)));
+        });
+        final byte[] bs = new byte[len.get()];
+        final ByteBuffer buffer = ByteBuffer.wrap(bs);
+        buffer.putShort((short) map.size());
+        map.forEach((key, value) -> {
+            putSmallString(buffer, key);
+            putSeriStringOrList(buffer, value);
+        });
+        return bs;
+    }
+
+    public static Map<String, Serializable> getSeriMap(ByteBuffer buffer) {
+        int len = buffer.getShort();
+        if (len <= 0) {
+            return null;
+        }
+        Map<String, Serializable> map = new HashMap<>(len);
+        for (int i = 0; i < len; i++) {
+            map.put(getSmallString(buffer), getSeriStringOrList(buffer));
+        }
+        return map;
+    }
+
     public static void putBigString(ByteBuffer buffer, String value) {
-        if (value == null || value.isEmpty()) {
+        if (value == null) {
+            buffer.putInt(-1);
+        } else if (value.isEmpty()) {
             buffer.putInt(0);
         } else {
             byte[] bs = value.getBytes(StandardCharsets.UTF_8);
@@ -126,8 +171,10 @@ public interface MessageCoder<T> {
 
     public static String getBigString(ByteBuffer buffer) {
         int len = buffer.getInt();
-        if (len == 0) {
+        if (len == -1) {
             return null;
+        } else if (len == 0) {
+            return "";
         }
         byte[] bs = new byte[len];
         buffer.get(bs);
@@ -136,34 +183,69 @@ public interface MessageCoder<T> {
 
     //一般用于存放类名、字段名、map中的key
     public static void putSmallString(ByteBuffer buffer, String value) {
-        if (value == null || value.isEmpty()) {
-            buffer.putChar((char) 0);
+        if (value == null) {
+            buffer.putShort((short) -1);
+        } else if (value.isEmpty()) {
+            buffer.putShort((short) 0);
         } else {
             byte[] bs = value.getBytes(StandardCharsets.UTF_8);
-            buffer.putChar((char) bs.length);
+            buffer.putShort((short) bs.length);
             buffer.put(bs);
         }
     }
 
     public static String getSmallString(ByteBuffer buffer) {
-        int len = buffer.getChar();
-        if (len == 0) {
+        int len = buffer.getShort();
+        if (len == -1) {
             return null;
+        } else if (len == 0) {
+            return "";
         }
         byte[] bs = new byte[len];
         buffer.get(bs);
         return new String(bs, StandardCharsets.UTF_8);
     }
 
-    public static Map<String, String> getMap(ByteBuffer buffer) {
-        int len = buffer.getChar();
-        if (len == 0) {
-            return null;
+    private static void putSeriStringOrList(ByteBuffer buffer, Serializable value) {
+        if (value == null) {
+            buffer.putShort((short) -1);
+        } else if (value instanceof Collection) {
+            buffer.putShort((short) ((Collection) value).size());
+            for (Object val : (Collection) value) {
+                putBigString(buffer, val == null ? null : val.toString());
+            }
+        } else {
+            buffer.putShort((short) 0);
+            putBigString(buffer, value == null ? null : value.toString());
         }
-        Map<String, String> map = new HashMap<>(len);
-        for (int i = 0; i < len; i++) {
-            map.put(getSmallString(buffer), getBigString(buffer));
-        }
-        return map;
     }
+
+    private static Serializable getSeriStringOrList(ByteBuffer buffer) {
+        int size = buffer.getShort();
+        if (size == -1) {
+            return null;
+        } else if (size == 0) {  //单个字符串
+            return getBigString(buffer);
+        }
+        ArrayList list = new ArrayList();
+        for (int i = 0; i < size; i++) {
+            list.add(getBigString(buffer));
+        }
+        return list;
+    }
+
+    private static int lengthSeriStringOrList(Serializable value) {
+        if (value == null) {
+            return 0;
+        } else if (value instanceof Collection) {
+            int c = 0;
+            for (Object val : (Collection) value) {
+                c += 4 + (val == null ? 0 : Utility.encodeUTF8Length(val.toString()));
+            }
+            return c;
+        } else {
+            return 4 + (value == null ? 0 : Utility.encodeUTF8Length(value.toString()));
+        }
+    }
+
 }

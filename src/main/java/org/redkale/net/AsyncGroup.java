@@ -32,23 +32,27 @@ public abstract class AsyncGroup {
     }
 
     public CompletableFuture<AsyncConnection> createTCPClient(final SocketAddress address) {
-        return createTCPClient(address, 0, 0);
+        return createTCPClient(address, 0, 0, 0);
     }
 
-    public abstract CompletableFuture<AsyncConnection> createTCPClient(final SocketAddress address, final int readTimeoutSeconds, final int writeTimeoutSeconds);
+    public abstract CompletableFuture<AsyncConnection> createTCPClient(final SocketAddress address,
+        final int connectTimeoutSeconds, final int readTimeoutSeconds, final int writeTimeoutSeconds);
 
     public CompletableFuture<AsyncConnection> createUDPClient(final SocketAddress address) {
-        return createUDPClient(address, 0, 0);
+        return createUDPClient(address, 0, 0, 0);
     }
 
-    public abstract CompletableFuture<AsyncConnection> createUDPClient(final SocketAddress address, final int readTimeoutSeconds, final int writeTimeoutSeconds);
+    public abstract CompletableFuture<AsyncConnection> createUDPClient(final SocketAddress address,
+        final int connectTimeoutSeconds, final int readTimeoutSeconds, final int writeTimeoutSeconds);
 
     public CompletableFuture<AsyncConnection> createClient(final boolean tcp, final SocketAddress address) {
         return tcp ? createTCPClient(address) : createUDPClient(address);
     }
 
-    public CompletableFuture<AsyncConnection> createClient(final boolean tcp, final SocketAddress address, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
-        return tcp ? createTCPClient(address, readTimeoutSeconds, writeTimeoutSeconds) : createUDPClient(address, readTimeoutSeconds, writeTimeoutSeconds);
+    public CompletableFuture<AsyncConnection> createClient(final boolean tcp, final SocketAddress address,
+        final int connectTimeoutSeconds, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
+        return tcp ? createTCPClient(address, connectTimeoutSeconds, readTimeoutSeconds, writeTimeoutSeconds)
+            : createUDPClient(address, connectTimeoutSeconds, readTimeoutSeconds, writeTimeoutSeconds);
     }
 
     public abstract ScheduledFuture scheduleTimeout(Runnable callable, long delay, TimeUnit unit);

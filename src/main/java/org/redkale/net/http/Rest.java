@@ -70,6 +70,9 @@ public final class Rest {
 
     private static final String REST_RETURNTYPES_FIELD_NAME = "_redkale_returntypes"; //存在泛型的结果数组
 
+    private static final java.lang.reflect.Type TYPE_MAP_STRING_SERIALIZE = new TypeToken<Map<String, Serializable>>() {
+    }.getType();
+
     private static final java.lang.reflect.Type TYPE_MAP_STRING_STRING = new TypeToken<Map<String, String>>() {
     }.getType();
 
@@ -1099,6 +1102,7 @@ public final class Rest {
         final String httpResultDesc = Type.getDescriptor(HttpResult.class);
         final String httpScopeDesc = Type.getDescriptor(HttpScope.class);
         final String stageDesc = Type.getDescriptor(CompletionStage.class);
+        final String httpHeaderDesc = Type.getDescriptor(HttpHeader.class);
         final String flipperDesc = Type.getDescriptor(Flipper.class);
         final String httpServletName = HttpServlet.class.getName().replace('.', '/');
         final String actionEntryName = HttpServlet.ActionEntry.class.getName().replace('.', '/');
@@ -1308,9 +1312,10 @@ public final class Rest {
                         if (userid != null) {
                             comment = "";
                         }
-                        RestHeaders annheaders = param.getAnnotation(RestHeaders.class);
-                        if (annheaders != null) {
+                        boolean annheaders = param.getType() == RestHeaders.class;
+                        if (annheaders) {
                             comment = "";
+                            n = "^"; //Http头信息类型特殊处理
                         }
                         RestParams annparams = param.getAnnotation(RestParams.class);
                         if (annparams != null) {
@@ -1376,14 +1381,13 @@ public final class Rest {
                         RestUploadFile annfile = (RestUploadFile) ps[headIndex + 3];
                         RestURI annuri = (RestURI) ps[headIndex + 4];
                         RestUserid annuserid = (RestUserid) ps[headIndex + 5];
-                        RestHeaders annheaders = (RestHeaders) ps[headIndex + 6];
+                        boolean annheaders = (Boolean) ps[headIndex + 6];
                         RestParams annparams = (RestParams) ps[headIndex + 7];
 
                         if (CompletionHandler.class.isAssignableFrom(ptype)) { //HttpResponse.createAsyncHandler() or HttpResponse.createAsyncHandler(Class)
                         } else if (annsid != null) { //HttpRequest.getSessionid(true|false)
                         } else if (annaddr != null) { //HttpRequest.getRemoteAddr
                         } else if (annlocale != null) { //HttpRequest.getLocale
-                        } else if (annheaders != null) { //HttpRequest.getHeaders
                         } else if (annparams != null) { //HttpRequest.getParameters
                         } else if (annbody != null) { //HttpRequest.getBodyUTF8 / HttpRequest.getBody
                         } else if (annfile != null) { //MultiContext.partsFirstBytes / HttpRequest.partsFirstFile / HttpRequest.partsFiles
@@ -1392,6 +1396,7 @@ public final class Rest {
                         } else if ("#".equals(pname)) { //从request.getRequstURI 中取参数
                         } else if (pname != null && pname.charAt(0) == '#') { //从request.getRequstURIPath 中去参数
                         } else if ("&".equals(pname) && ptype == userType) { //当前用户对象的类名
+                        } else if ("^".equals(pname) && annheaders) { //HttpRequest.getHeaders Http头信息
                         } else if (ptype.isPrimitive()) {
                             //do nothing
                         } else if (ptype == String.class) {
@@ -2149,38 +2154,6 @@ public final class Rest {
                     required = false;
                 }
 
-                RestHeaders annheaders = param.getAnnotation(RestHeaders.class);
-                if (annheaders != null) {
-                    if (annhead != null) {
-                        throw new RestException("@RestHeaders and @RestHeader cannot on the same Parameter in " + method);
-                    }
-                    if (anncookie != null) {
-                        throw new RestException("@RestHeaders and @RestCookie cannot on the same Parameter in " + method);
-                    }
-                    if (annsid != null) {
-                        throw new RestException("@RestHeaders and @RestSessionid cannot on the same Parameter in " + method);
-                    }
-                    if (annaddr != null) {
-                        throw new RestException("@RestHeaders and @RestAddress cannot on the same Parameter in " + method);
-                    }
-                    if (annlocale != null) {
-                        throw new RestException("@RestHeaders and @RestLocale cannot on the same Parameter in " + method);
-                    }
-                    if (annbody != null) {
-                        throw new RestException("@RestHeaders and @RestBody cannot on the same Parameter in " + method);
-                    }
-                    if (annfile != null) {
-                        throw new RestException("@RestHeaders and @RestUploadFile cannot on the same Parameter in " + method);
-                    }
-                    if (userid != null) {
-                        throw new RestException("@RestHeaders and @RestUserid cannot on the same Parameter in " + method);
-                    }
-                    if (!TYPE_MAP_STRING_STRING.equals(param.getParameterizedType())) {
-                        throw new RestException("@RestHeaders must on Map<String, String> Parameter in " + method);
-                    }
-                    comment = "";
-                    required = false;
-                }
                 RestParams annparams = param.getAnnotation(RestParams.class);
                 if (annparams != null) {
                     if (annhead != null) {
@@ -2207,13 +2180,43 @@ public final class Rest {
                     if (userid != null) {
                         throw new RestException("@RestParams and @RestUserid cannot on the same Parameter in " + method);
                     }
-                    if (annheaders != null) {
-                        throw new RestException("@RestParams and @RestHeaders cannot on the same Parameter in " + method);
-                    }
                     if (!TYPE_MAP_STRING_STRING.equals(param.getParameterizedType())) {
                         throw new RestException("@RestParams must on Map<String, String> Parameter in " + method);
                     }
                     comment = "";
+                }
+
+                boolean annheaders = param.getType() == RestHeaders.class;
+                if (annheaders) {
+                    if (annhead != null) {
+                        throw new RestException("@RestHeaders cannot on the " + RestHeaders.class.getSimpleName() + " Parameter in " + method);
+                    }
+                    if (anncookie != null) {
+                        throw new RestException("@RestHeaders cannot on the " + RestHeaders.class.getSimpleName() + " Parameter in " + method);
+                    }
+                    if (annsid != null) {
+                        throw new RestException("@RestHeaders cannot on the " + RestHeaders.class.getSimpleName() + " Parameter in " + method);
+                    }
+                    if (annaddr != null) {
+                        throw new RestException("@RestHeaders cannot on the " + RestHeaders.class.getSimpleName() + " Parameter in " + method);
+                    }
+                    if (annlocale != null) {
+                        throw new RestException("@RestHeaders cannot on the " + RestHeaders.class.getSimpleName() + " Parameter in " + method);
+                    }
+                    if (annbody != null) {
+                        throw new RestException("@RestHeaders cannot on the " + RestHeaders.class.getSimpleName() + " Parameter in " + method);
+                    }
+                    if (annfile != null) {
+                        throw new RestException("@RestHeaders cannot on the " + RestHeaders.class.getSimpleName() + " Parameter in " + method);
+                    }
+                    if (userid != null) {
+                        throw new RestException("@RestHeaders cannot on the " + RestHeaders.class.getSimpleName() + " Parameter in " + method);
+                    }
+                    if (annparams != null) {
+                        throw new RestException("@RestParams cannot on the " + RestHeaders.class.getSimpleName() + " Parameter in " + method);
+                    }
+                    comment = "";
+                    required = false;
                 }
 
                 RestParam annpara = param.getAnnotation(RestParam.class);
@@ -2231,6 +2234,9 @@ public final class Rest {
                 }
                 if (n == null && ptype == userType) {
                     n = "&"; //用户类型特殊处理
+                }
+                if (n == null && ptype == RestHeaders.class) {
+                    n = "^"; //Http头信息类型特殊处理
                 }
                 if (n == null && asmParamNames != null && asmParamNames.size() > i) {
                     n = asmParamNames.get(i);
@@ -2505,10 +2511,10 @@ public final class Rest {
                 RestUploadFile annfile = (RestUploadFile) ps[headIndex + 3];
                 RestURI annuri = (RestURI) ps[headIndex + 4];
                 RestUserid userid = (RestUserid) ps[headIndex + 5];
-                RestHeaders annheaders = (RestHeaders) ps[headIndex + 6];
+                boolean annheaders = (Boolean) ps[headIndex + 6];
                 RestParams annparams = (RestParams) ps[headIndex + 7];
                 java.lang.reflect.Type pgentype = (java.lang.reflect.Type) ps[headIndex + 8];
-                if (dynsimple && (annsid != null || annaddr != null || annlocale != null || annhead != null || anncookie != null || annfile != null || annheaders != null)) {
+                if (dynsimple && (annsid != null || annaddr != null || annlocale != null || annhead != null || anncookie != null || annfile != null || annheaders)) {
                     dynsimple = false;
                 }
 
@@ -2549,9 +2555,9 @@ public final class Rest {
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getLocale", "()Ljava/lang/String;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
-                } else if (annheaders != null) { //HttpRequest.getHeaders
+                } else if (annheaders) { //HttpRequest.getHeaders
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getHeaders", "()Ljava/util/Map;", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getHeaders", "()" + httpHeaderDesc, false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
                 } else if (annparams != null) { //HttpRequest.getParameters

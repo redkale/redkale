@@ -229,7 +229,8 @@ public class AsyncIOGroup extends AsyncGroup {
     }
 
     @Override
-    public CompletableFuture<AsyncConnection> createTCPClient(final SocketAddress address, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
+    public CompletableFuture<AsyncConnection> createTCPClient(final SocketAddress address,
+        final int connectTimeoutSeconds, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
         Objects.requireNonNull(address);
         AsyncNioTcpConnection conn;
         try {
@@ -237,7 +238,8 @@ public class AsyncIOGroup extends AsyncGroup {
         } catch (IOException e) {
             return CompletableFuture.failedFuture(e);
         }
-        final CompletableFuture<AsyncConnection> future = new CompletableFuture<>();
+        int seconds = connectTimeoutSeconds > 0 ? connectTimeoutSeconds : 6;
+        final CompletableFuture future = Utility.orTimeout(new CompletableFuture(), seconds, TimeUnit.SECONDS);
         conn.connect(address, null, new CompletionHandler<Void, Void>() {
             @Override
             public void completed(Void result, Void attachment) {
@@ -309,14 +311,16 @@ public class AsyncIOGroup extends AsyncGroup {
     }
 
     @Override
-    public CompletableFuture<AsyncConnection> createUDPClient(final SocketAddress address, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
+    public CompletableFuture<AsyncConnection> createUDPClient(final SocketAddress address,
+        final int connectTimeoutSeconds, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
         AsyncNioUdpConnection conn;
         try {
             conn = newUDPClientConnection(address);
         } catch (IOException e) {
             return CompletableFuture.failedFuture(e);
         }
-        CompletableFuture future = new CompletableFuture();
+        int seconds = connectTimeoutSeconds > 0 ? connectTimeoutSeconds : 6;
+        final CompletableFuture future = Utility.orTimeout(new CompletableFuture(), seconds, TimeUnit.SECONDS);
         conn.connect(address, null, new CompletionHandler<Void, Void>() {
             @Override
             public void completed(Void result, Void attachment) {

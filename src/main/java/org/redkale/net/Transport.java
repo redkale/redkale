@@ -274,14 +274,14 @@ public final class Transport {
         try {
             if (!tcp) { // UDP
                 SocketAddress udpaddr = rand ? nodes[0].address : addr;
-                return asyncGroup.createUDPClient(udpaddr, factory.readTimeoutSeconds, factory.writeTimeoutSeconds);
+                return asyncGroup.createUDPClient(udpaddr, 6, factory.readTimeoutSeconds, factory.writeTimeoutSeconds);
             }
             if (!rand) { //指定地址
                 TransportNode node = findTransportNode(addr);
                 if (node == null) {
-                    return asyncGroup.createTCPClient(addr, factory.readTimeoutSeconds, factory.writeTimeoutSeconds);
+                    return asyncGroup.createTCPClient(addr, 6, factory.readTimeoutSeconds, factory.writeTimeoutSeconds);
                 }
-                return pollAsync(node, addr, () -> asyncGroup.createTCPClient(addr, factory.readTimeoutSeconds, factory.writeTimeoutSeconds));
+                return pollAsync(node, addr, () -> asyncGroup.createTCPClient(addr, 6, factory.readTimeoutSeconds, factory.writeTimeoutSeconds));
             }
 
             //---------------------随机取地址------------------------
@@ -308,7 +308,7 @@ public final class Transport {
                     }
                 }
                 return pollAsync(one, one.getAddress(), () -> {
-                    return asyncGroup.createTCPClient(one.address, factory.readTimeoutSeconds, factory.writeTimeoutSeconds)
+                    return asyncGroup.createTCPClient(one.address, 6, factory.readTimeoutSeconds, factory.writeTimeoutSeconds)
                         .whenComplete((c, t) -> {
                             one.disabletime = t == null ? 0 : System.currentTimeMillis();
                         });
@@ -330,7 +330,7 @@ public final class Transport {
             if (future.isDone()) {
                 return future;
             }
-            asyncGroup.createTCPClient(node.address, factory.readTimeoutSeconds, factory.writeTimeoutSeconds)
+            asyncGroup.createTCPClient(node.address, 6, factory.readTimeoutSeconds, factory.writeTimeoutSeconds)
                 .whenComplete((c, t) -> {
                     if (c != null && !future.complete(c)) {
                         node.connQueue.offer(c);

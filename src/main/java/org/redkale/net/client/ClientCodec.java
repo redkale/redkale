@@ -117,7 +117,7 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
     }
 
     void responseComplete(boolean halfCompleted, ClientFuture<R, Object> respFuture, P message, Throwable exc) {
-        R request = respFuture.request;
+        final R request = respFuture.request;
         Traces.currentTraceid(request.getTraceid());
         AsyncIOThread readThread = connection.channel.getReadIOThread();
         final WorkThread workThread = request.workThread == null ? readThread : request.workThread;

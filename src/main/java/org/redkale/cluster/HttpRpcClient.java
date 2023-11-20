@@ -7,7 +7,6 @@ package org.redkale.cluster;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
@@ -112,8 +111,7 @@ public abstract class HttpRpcClient implements ClusterRpcClient<HttpSimpleReques
         }
         module = module.substring(1); //去掉/
         module = module.substring(0, module.indexOf('/'));
-        Map<String, String> headers = request.getHeaders();
-        String resname = headers == null ? "" : headers.getOrDefault(Rest.REST_HEADER_RESNAME, "");
+        String resname = request.getHeader(Rest.REST_HEADER_RESNAME, "");
         return Rest.generateHttpReqTopic(module, resname, getNodeid());
     }
 

@@ -14,6 +14,7 @@ import java.util.concurrent.CompletableFuture;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.util.Creator;
+import org.redkale.util.RedkaleException;
 
 /**
  *
@@ -33,7 +34,7 @@ public class HttpResult<T> {
     @ConvertColumn(index = 2)
     protected String contentType;
 
-    @ConvertColumn(index = 3)
+    @ConvertColumn(index = 3)  //不使用HttpHeader因不易反序列化
     protected Map<String, String> headers;
 
     @ConvertColumn(index = 4)
@@ -63,10 +64,17 @@ public class HttpResult<T> {
     }
 
     public HttpResult<T> header(String name, Serializable value) {
+        if (name.indexOf('\r') >= 0 || name.indexOf('\n') >= 0) {
+            throw new RedkaleException("http-header name(name = " + name + ") is illegal");
+        }
+        String val = String.valueOf(value);
+        if (val.indexOf('\r') >= 0 || val.indexOf('\n') >= 0) {
+            throw new RedkaleException("http-header value(name = " + name + ", value = " + val + ") is illegal");
+        }
         if (this.headers == null) {
             this.headers = new HashMap<>();
         }
-        this.headers.put(name, String.valueOf(value));
+        this.headers.put(name, val);
         return this;
     }
 

@@ -38,14 +38,14 @@ public class HttpResultCoder implements MessageCoder<HttpResult> {
     public byte ctype() {
         return MessageRecord.CTYPE_HTTP_RESULT;
     }
-    
+
     @Override
     public byte[] encode(HttpResult data) {
         if (data == null) {
             return null;
         }
         byte[] contentType = MessageCoder.getBytes(data.getContentType());
-        byte[] headers = MessageCoder.getBytes(data.getHeaders());
+        byte[] headers = MessageCoder.getSeriMapBytes(data.getHeaders());
         byte[] cookies = getBytes(data.getCookies());
         byte[] content;
         if (data.getResult() == null) {
@@ -89,7 +89,7 @@ public class HttpResultCoder implements MessageCoder<HttpResult> {
         HttpResult result = new HttpResult();
         result.setStatus(buffer.getInt());
         result.setContentType(MessageCoder.getSmallString(buffer));
-        result.setHeaders(MessageCoder.getMap(buffer));
+        result.setHeaders(MessageCoder.getSeriMap(buffer));
         result.setCookies(getCookieList(buffer));
         int len = buffer.getInt();
         if (len > 0) {

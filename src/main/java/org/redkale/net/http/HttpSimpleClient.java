@@ -10,7 +10,6 @@ import java.net.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.nio.charset.*;
-import java.util.*;
 import java.util.concurrent.*;
 import org.redkale.convert.Convert;
 import org.redkale.convert.json.JsonConvert;
@@ -47,14 +46,13 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
 
     protected ExecutorService workExecutor;
 
-    protected int readTimeoutSeconds = 6;
-
-    protected int writeTimeoutSeconds = 6;
-
     protected HttpSimpleClient(ExecutorService workExecutor, AsyncGroup asyncGroup) {
         super("Redkale-http-client", asyncGroup, new ClientAddress(new InetSocketAddress("127.0.0.1", 0)));
         this.workExecutor = workExecutor;
         this.asyncGroup = asyncGroup;
+        this.connectTimeoutSeconds = 6;
+        this.readTimeoutSeconds = 6;
+        this.writeTimeoutSeconds = 6;
     }
 
     public static HttpSimpleClient create(ExecutorService workExecutor, AsyncGroup asyncGroup) {
@@ -137,23 +135,23 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
         return sendAsync("GET", url, null, body, convert, valueType);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> getAsync(String url, Map<String, String> headers) {
+    public CompletableFuture<HttpResult<byte[]>> getAsync(String url, HttpHeader headers) {
         return sendAsync("GET", url, headers, (byte[]) null);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> getAsync(String url, Map<String, String> headers, Type valueType) {
+    public CompletableFuture<HttpResult<byte[]>> getAsync(String url, HttpHeader headers, Type valueType) {
         return sendAsync("GET", url, headers, null, (Convert) null, valueType);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> getAsync(String url, Map<String, String> headers, Convert convert, Type valueType) {
+    public CompletableFuture<HttpResult<byte[]>> getAsync(String url, HttpHeader headers, Convert convert, Type valueType) {
         return sendAsync("GET", url, headers, null, convert, valueType);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> getAsync(String url, Map<String, String> headers, String body) {
+    public CompletableFuture<HttpResult<byte[]>> getAsync(String url, HttpHeader headers, String body) {
         return sendAsync("GET", url, headers, body == null ? null : body.getBytes(StandardCharsets.UTF_8));
     }
 
-    public CompletableFuture<HttpResult<byte[]>> getAsync(String url, Map<String, String> headers, byte[] body) {
+    public CompletableFuture<HttpResult<byte[]>> getAsync(String url, HttpHeader headers, byte[] body) {
         return sendAsync("GET", url, headers, body);
     }
 
@@ -193,63 +191,74 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
         return sendAsync("POST", url, null, body, convert, valueType);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> postAsync(String url, Map<String, String> headers) {
+    public CompletableFuture<HttpResult<byte[]>> postAsync(String url, HttpHeader headers) {
         return sendAsync("POST", url, headers, (byte[]) null);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> postAsync(String url, Map<String, String> headers, Type valueType) {
+    public CompletableFuture<HttpResult<byte[]>> postAsync(String url, HttpHeader headers, Type valueType) {
         return sendAsync("POST", url, headers, null, (Convert) null, valueType);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> postAsync(String url, Map<String, String> headers, Convert convert, Type valueType) {
+    public CompletableFuture<HttpResult<byte[]>> postAsync(String url, HttpHeader headers, Convert convert, Type valueType) {
         return sendAsync("POST", url, headers, null, convert, valueType);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> postAsync(String url, Map<String, String> headers, String body) {
+    public CompletableFuture<HttpResult<byte[]>> postAsync(String url, HttpHeader headers, String body) {
         return sendAsync("POST", url, headers, body == null ? null : body.getBytes(StandardCharsets.UTF_8));
     }
 
-    public CompletableFuture<HttpResult<byte[]>> postAsync(String url, Map<String, String> headers, byte[] body) {
+    public CompletableFuture<HttpResult<byte[]>> postAsync(String url, HttpHeader headers, byte[] body) {
         return sendAsync("POST", url, headers, body);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> sendAsync(String method, String url, Map<String, String> headers, byte[] body) {
+    public CompletableFuture<HttpResult<byte[]>> sendAsync(String url, HttpSimpleRequest req) {
+        return sendAsync(req.getMethod(), url, req.getHeaders(), req.getBody(), (Convert) null, null);
+    }
+
+    public <T> CompletableFuture<HttpResult<T>> sendAsync(String url, HttpSimpleRequest req, Type valueType) {
+        return sendAsync(req.getMethod(), url, req.getHeaders(), req.getBody(), (Convert) null, null);
+    }
+
+    public CompletableFuture<HttpResult<byte[]>> sendAsync(String method, String url, HttpHeader headers, byte[] body) {
         return sendAsync(method, url, headers, body, (Convert) null, null);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> sendAsync(String method, String url, Map<String, String> headers, byte[] body, Type valueType) {
+    public <T> CompletableFuture<HttpResult<T>> sendAsync(String method, String url, HttpHeader headers, byte[] body, Type valueType) {
         return sendAsync(method, url, headers, body, (Convert) null, valueType);
     }
 
-    public <T> CompletableFuture<HttpResult<T>> sendAsync(String method, String url, Map<String, String> headers, byte[] body, Convert convert, Type valueType) {
+    public <T> CompletableFuture<HttpResult<T>> sendAsync(String method, String url, HttpHeader headers, byte[] body, Convert convert, Type valueType) {
         final String traceid = Traces.computeIfAbsent(Traces.currentTraceid());
         final WorkThread workThread = WorkThread.currentWorkThread();
+        if (url.indexOf(' ') >= 0 || url.indexOf('\r') >= 0 || url.indexOf('\n') >= 0) {
+            throw new RedkaleException("http-url(" + url + ") is illegal");
+        }
         final URI uri = URI.create(url);
         final String host = uri.getHost();
+
+        final ByteArray array = new ByteArray();
+        int urlpos = url.indexOf("/", url.indexOf("//") + 3);
+        array.put((method.toUpperCase() + " " + (urlpos > 0 ? url.substring(urlpos) : "/") + " HTTP/1.1\r\n"
+            + "Host: " + uri.getHost() + "\r\n"
+            + Rest.REST_HEADER_TRACEID + ": " + traceid + "\r\n"
+            + "Content-Length: " + (body == null ? 0 : body.length) + "\r\n").getBytes(StandardCharsets.UTF_8));
+        if (headers == null || !headers.contains("User-Agent")) {
+            array.put(header_bytes_useragent);
+        }
+        if (headers == null || !headers.contains("Connection")) {
+            array.put(header_bytes_connclose);
+        }
+        if (headers != null) {
+            headers.forEach((k, v) -> array.put((k + ": " + String.valueOf(v) + "\r\n").getBytes(StandardCharsets.UTF_8)));
+        }
+        array.put((byte) '\r', (byte) '\n');
+        if (body != null) {
+            array.put(body);
+        }
+
         final int port = uri.getPort() > 0 ? uri.getPort() : (url.startsWith("https:") ? 443 : 80);
         return createConnection(host, port).thenCompose(conn -> {
             Traces.currentTraceid(traceid);
-            final ByteArray array = new ByteArray();
-            int urlpos = url.indexOf("/", url.indexOf("//") + 3);
-            array.put((method.toUpperCase() + " " + (urlpos > 0 ? url.substring(urlpos) : "/") + " HTTP/1.1\r\n"
-                + "Host: " + uri.getHost() + "\r\n"
-                + Rest.REST_HEADER_TRACEID + ": " + traceid + "\r\n"
-                + "Content-Length: " + (body == null ? 0 : body.length) + "\r\n").getBytes(StandardCharsets.UTF_8));
-            if (headers == null || !headers.containsKey("User-Agent")) {
-                array.put(header_bytes_useragent);
-            }
-            if (headers == null || !headers.containsKey("Connection")) {
-                array.put(header_bytes_connclose);
-            }
-            if (headers != null) {
-                headers.forEach((k, v) -> {
-                    array.put((k + ": " + v + "\r\n").getBytes(StandardCharsets.UTF_8));
-                });
-            }
-            array.put((byte) '\r', (byte) '\n');
-            if (body != null) {
-                array.put(body);
-            }
             final CompletableFuture<HttpResult<T>> future = new CompletableFuture();
             conn.write(array, new CompletionHandler<Integer, Void>() {
                 @Override
@@ -279,7 +288,8 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
     }
 
     protected CompletableFuture<HttpConnection> createConnection(String host, int port) {
-        return asyncGroup.createTCPClient(new InetSocketAddress(host, port), readTimeoutSeconds, writeTimeoutSeconds).thenApply(conn -> new HttpConnection(conn));
+        return asyncGroup.createTCPClient(new InetSocketAddress(host, port), connectTimeoutSeconds, readTimeoutSeconds, writeTimeoutSeconds)
+            .thenApply(conn -> new HttpConnection(conn));
     }
 
 //

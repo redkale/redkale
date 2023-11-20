@@ -26,7 +26,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *    &#64;ResourceListener
  *    private void changeResource(ResourceEvent[] events) {
  *        for(ResourceEvent event : events) {
- *            System.out.println("@Resource = " + event.name() + " 资源变更:  newVal = " + event.newValue() + ", oldVal = " + event.oldValue());
+ *            System.out .println("@Resource = " + event.name() + " 资源变更:  newVal = " + event.newValue() + ", oldVal = " + event.oldValue());
  *        }
  *    }
  *

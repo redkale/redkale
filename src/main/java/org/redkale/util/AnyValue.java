@@ -574,7 +574,7 @@ public abstract class AnyValue {
             if (this.anyEntrys == null) {
                 return this;
             }
-            this.anyEntrys = Utility.remove(this.anyEntrys, (t) -> name.equals(((Entry) t).name));
+            this.anyEntrys = Utility.remove(this.anyEntrys, t -> name.equals(((Entry) t).name));
             return this;
         }
 
@@ -583,7 +583,7 @@ public abstract class AnyValue {
             if (value == null || this.anyEntrys == null) {
                 return this;
             }
-            this.anyEntrys = Utility.remove(this.anyEntrys, (t) -> name.equals(((Entry) t).name) && ((Entry) t).getValue().equals(value));
+            this.anyEntrys = Utility.remove(this.anyEntrys, t -> name.equals(((Entry) t).name) && ((Entry) t).getValue().equals(value));
             return this;
         }
 
@@ -592,7 +592,7 @@ public abstract class AnyValue {
             if (this.stringEntrys == null) {
                 return this;
             }
-            this.stringEntrys = Utility.remove(this.stringEntrys, (t) -> name.equals(((Entry) t).name));
+            this.stringEntrys = Utility.remove(this.stringEntrys, t -> name.equals(((Entry) t).name));
             return this;
         }
 
@@ -601,18 +601,23 @@ public abstract class AnyValue {
             if (value == null || this.stringEntrys == null) {
                 return this;
             }
-            this.stringEntrys = Utility.remove(this.stringEntrys, (t) -> name.equals(((Entry) t).name) && ((Entry) t).getValue().equals(value));
+            this.stringEntrys = Utility.remove(this.stringEntrys, t -> name.equals(((Entry) t).name) && ((Entry) t).getValue().equals(value));
             return this;
         }
 
         @Override
         public AnyValue getAnyValue(String name) {
+            return getAnyValue(name, false);
+        }
+
+        @Override
+        public AnyValue getAnyValue(String name, boolean create) {
             for (Entry<DefaultAnyValue> en : this.anyEntrys) {
                 if (predicate.test(en.name, name)) {
                     return en.value;
                 }
             }
-            return null;
+            return create ? new DefaultAnyValue() : null;
         }
 
         @Override
@@ -1273,6 +1278,16 @@ public abstract class AnyValue {
      * @return AnyValue
      */
     public abstract AnyValue getAnyValue(String name);
+
+    /**
+     * 根据字段名获取AnyValue类型的字段值
+     *
+     * @param name    字段名
+     * @param create 没有是否创建一个新的对象返回
+     *
+     * @return AnyValue
+     */
+    public abstract AnyValue getAnyValue(String name, boolean create);
 
     /**
      * 根据字段名获取String类型的字段值
