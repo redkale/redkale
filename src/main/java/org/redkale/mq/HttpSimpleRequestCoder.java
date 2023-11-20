@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.redkale.convert.ConvertType;
 import org.redkale.net.http.HttpHeaders;
+import org.redkale.net.http.HttpParameters;
 import org.redkale.net.http.HttpSimpleRequest;
 import org.redkale.util.Utility;
 
@@ -49,7 +50,7 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         byte[] contentType = MessageCoder.getBytes(data.getContentType());//short-string
         byte[] userid = MessageCoder.encodeUserid(data.getCurrentUserid());
         byte[] headers = MessageCoder.getSeriMapBytes(data.getHeaders() == null ? null : data.getHeaders().map());
-        byte[] params = MessageCoder.getStringMapBytes(data.getParams());
+        byte[] params = MessageCoder.getStringMapBytes(data.getParams() == null ? null : data.getParams().map());
         byte[] body = MessageCoder.getBytes(data.getBody());
         int count = 1 //rpc
             + 4 //reqConvertType
@@ -168,7 +169,10 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
         if (Utility.isNotEmpty(headerMap)) {
             req.setHeaders(HttpHeaders.ofValid(headerMap));
         }
-        req.setParams(MessageCoder.getStringMap(buffer));
+        Map<String, String> paramsMap = MessageCoder.getStringMap(buffer);
+        if (Utility.isNotEmpty(paramsMap)) {
+            req.setParams(HttpParameters.ofValid(paramsMap));
+        }
         int len = buffer.getInt();
         if (len >= 0) {
             byte[] bs = new byte[len];

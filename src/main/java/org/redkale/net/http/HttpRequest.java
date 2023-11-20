@@ -138,7 +138,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected String newSessionid;
 
-    protected final Map<String, String> params = new HashMap<>();
+    protected final HttpParameters params = HttpParameters.create();
 
     protected boolean boundary = false;
 
@@ -1546,7 +1546,7 @@ public class HttpRequest extends Request<HttpContext> {
             + (this.getContentLength() >= 0 ? (", \r\n    contentLength: " + this.contentLength) : "")
             + (this.array.length() > 0 ? (", \r\n    bodyLength: " + this.array.length()) : "")
             + (this.boundary || this.array.isEmpty() ? "" : (", \r\n    bodyContent: " + (this.respConvertType == null || this.respConvertType == ConvertType.JSON ? this.getBodyUTF8() : Arrays.toString(getBody()))))
-            + ", \r\n    params: " + toMapString(this.params, 4)
+            + ", \r\n    params: " + toMapString(this.params.map, 4)
             + ", \r\n    header: " + toMapString(this.headers.map, 4)
             + "\r\n}"; //this.headers.toString(4)
     }
@@ -1579,7 +1579,7 @@ public class HttpRequest extends Request<HttpContext> {
     @ConvertDisabled
     public final MultiContext getMultiContext() {
         final InputStream in = newInputStream();
-        return new MultiContext(context.getCharset(), this.getContentType(), this.params,
+        return new MultiContext(context.getCharset(), this.getContentType(), this.params.map(),
             new BufferedInputStream(in, Math.max(array.length(), 8192)) {
             {
                 array.copyTo(this.buf);
@@ -2469,26 +2469,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @return AnyValue
      */
     @AsmDepends
-    public Map<String, String> getParameters() {
+    public HttpParameters getParameters() {
         parseBody();
         return params;
-    }
-
-    /**
-     * 将请求参数转换成Map
-     *
-     * @param map Map
-     *
-     * @return Map
-     */
-    @ConvertDisabled
-    public Map<String, String> getParametersToMap(Map<String, String> map) {
-        if (map == null) {
-            map = new LinkedHashMap<>();
-        }
-        final Map<String, String> map0 = map;
-        getParameters().forEach((k, v) -> map0.put(k, v));
-        return map0;
     }
 
     /**
@@ -2529,8 +2512,7 @@ public class HttpRequest extends Request<HttpContext> {
     @ConvertDisabled
     public String[] getParameterNames() {
         parseBody();
-        Set<String> names = params.keySet();
-        return names.toArray(new String[names.size()]);
+        return params.names();
     }
 
     /**
@@ -2555,7 +2537,7 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public String getParameter(String name, String defaultValue) {
         parseBody();
-        return params.getOrDefault(name, defaultValue);
+        return params.get(name, defaultValue);
     }
 
     /**

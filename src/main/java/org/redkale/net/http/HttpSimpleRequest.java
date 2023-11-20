@@ -8,7 +8,6 @@ package org.redkale.net.http;
 import java.io.Serializable;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.redkale.annotation.Comment;
 import org.redkale.convert.*;
@@ -84,7 +83,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
 
     @ConvertColumn(index = 15)
     @Comment("参数信息")
-    protected Map<String, String> params;
+    protected HttpParameters params;
 
     @ConvertColumn(index = 16)
     @Comment("http body信息")
@@ -236,7 +235,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return this;
     }
 
-    public HttpSimpleRequest params(Map<String, String> params) {
+    public HttpSimpleRequest params(HttpParameters params) {
         this.params = params;
         return this;
     }
@@ -296,35 +295,25 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
 
     public HttpSimpleRequest param(String key, String value) {
         if (this.params == null) {
-            this.params = new HashMap<>();
+            this.params = HttpParameters.create();
         }
-        this.params.put(key, value);
+        this.params.set(key, value);
         return this;
     }
 
     public HttpSimpleRequest param(String key, TextConvert convert, Object value) {
-        if (value == null) {
-            return this;
-        }
         if (this.params == null) {
-            this.params = new HashMap<>();
+            this.params = HttpParameters.create();
         }
         if (convert == null) {
             convert = JsonConvert.root();
         }
-        this.params.put(key, convert.convertTo(value));
+        this.params.put(key, convert, value);
         return this;
     }
 
     public HttpSimpleRequest param(String key, Object value) {
-        if (value == null) {
-            return this;
-        }
-        if (this.params == null) {
-            this.params = new HashMap<>();
-        }
-        this.params.put(key, value instanceof CharSequence ? value.toString() : JsonConvert.root().convertTo(value));
-        return this;
+        return param(key, JsonConvert.root(), value);
     }
 
     public HttpSimpleRequest body(byte[] body) {
@@ -458,11 +447,11 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         headers(headers);
     }
 
-    public Map<String, String> getParams() {
+    public HttpParameters getParams() {
         return params;
     }
 
-    public void setParams(Map<String, String> params) {
+    public void setParams(HttpParameters params) {
         params(params);
     }
 

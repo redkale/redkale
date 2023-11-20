@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 /**
- * 用于RestService类的方法的参数获取HttpHeader
+ * 用于RestService类的方法的参数获取HttpHeaders
  *
  * <p>
  * 详情见: https://redkale.org

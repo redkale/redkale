@@ -5,24 +5,30 @@
  */
 package org.redkale.net.http;
 
-import java.lang.annotation.*;
-import static java.lang.annotation.ElementType.*;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
- * 只能注解于RestService类的方法的参数或参数内的Map&#60;String, String&#62;字段
+ * 用于RestService类的方法的参数获取HttpParams
  *
  * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
  *
- * @since 2.4.0
+ * @since 2.8.0
  */
-@Inherited
-@Documented
-@Target({PARAMETER, FIELD})
-@Retention(RUNTIME)
-public @interface RestParams {
+public interface RestParams {
 
+    public String get(String name);
+
+    public String get(String name, String defaultValue);
+
+    public void forEach(BiConsumer<String, String> consumer);
+
+    public String[] names();
+
+    public boolean contains(String name);
+
+    public Map<String, String> map();
 }

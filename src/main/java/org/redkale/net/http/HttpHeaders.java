@@ -126,8 +126,8 @@ public class HttpHeaders implements RestHeaders, Serializable {
     }
 
     @Override
-    public boolean contains(String key) {
-        return this.map != null && this.map.containsKey(key);
+    public boolean contains(String name) {
+        return this.map != null && this.map.containsKey(name);
     }
 
     public HttpHeaders addAll(HttpHeaders header) {
@@ -149,106 +149,106 @@ public class HttpHeaders implements RestHeaders, Serializable {
     }
 
     //服务端接收，无需校验参数合法性
-    void addValid(String key, String value) {
+    void addValid(String name, String value) {
         if (this.map == null) {
             this.map = new LinkedHashMap<>();
-            this.map.put(key, value);
+            this.map.put(name, value);
         } else {
-            Serializable old = this.map.get(key);
+            Serializable old = this.map.get(name);
             if (old == null) {
-                this.map.put(key, value);
+                this.map.put(name, value);
             } else if (old instanceof Collection) {
                 ((Collection) old).add(value);
             } else {
                 ArrayList list = new ArrayList();
                 list.add(old);
                 list.add(value);
-                this.map.put(key, list);
+                this.map.put(name, list);
             }
         }
     }
 
-    public HttpHeaders add(String key, String value) {
-        check(key, value);
+    public HttpHeaders add(String name, String value) {
+        check(name, value);
         if (this.map == null) {
             this.map = new LinkedHashMap<>();
-            this.map.put(key, value);
+            this.map.put(name, value);
         } else {
-            Serializable old = this.map.get(key);
+            Serializable old = this.map.get(name);
             if (old == null) {
-                this.map.put(key, value);
+                this.map.put(name, value);
             } else if (old instanceof Collection) {
                 ((Collection) old).add(value);
             } else {
                 ArrayList list = new ArrayList();
                 list.add(old);
                 list.add(value);
-                this.map.put(key, list);
+                this.map.put(name, list);
             }
         }
         return this;
     }
 
-    public HttpHeaders add(String key, List<String> value) {
+    public HttpHeaders add(String name, List<String> value) {
         if (value.isEmpty()) {
             return this;
         }
         for (String val : value) {
-            check(key, val);
+            check(name, val);
         }
         if (this.map == null) {
             this.map = new LinkedHashMap<>();
-            this.map.put(key, new ArrayList(value));
+            this.map.put(name, new ArrayList(value));
         } else {
-            Serializable old = this.map.get(key);
+            Serializable old = this.map.get(name);
             if (old == null) {
-                this.map.put(key, new ArrayList(value));
+                this.map.put(name, new ArrayList(value));
             } else if (old instanceof Collection) {
                 ((Collection) old).addAll(value);
             } else {
                 ArrayList list = new ArrayList();
                 list.add(old);
                 list.addAll(value);
-                this.map.put(key, list);
+                this.map.put(name, list);
             }
         }
         return this;
     }
 
-    public HttpHeaders add(String key, TextConvert convert, Object value) {
-        return add(key, (convert == null ? JsonConvert.root() : convert).convertTo(value));
+    public HttpHeaders add(String name, TextConvert convert, Object value) {
+        return add(name, (convert == null ? JsonConvert.root() : convert).convertTo(value));
     }
 
-    public HttpHeaders add(String key, Object value) {
-        return add(key, JsonConvert.root().convertTo(value));
+    public HttpHeaders add(String name, Object value) {
+        return add(name, JsonConvert.root().convertTo(value));
     }
 
-    public HttpHeaders add(String key, boolean value) {
-        return add(key, String.valueOf(value));
+    public HttpHeaders add(String name, boolean value) {
+        return add(name, String.valueOf(value));
     }
 
-    public HttpHeaders add(String key, short value) {
-        return add(key, String.valueOf(value));
+    public HttpHeaders add(String name, short value) {
+        return add(name, String.valueOf(value));
     }
 
-    public HttpHeaders add(String key, int value) {
-        return add(key, String.valueOf(value));
+    public HttpHeaders add(String name, int value) {
+        return add(name, String.valueOf(value));
     }
 
-    public HttpHeaders add(String key, float value) {
-        return add(key, String.valueOf(value));
+    public HttpHeaders add(String name, float value) {
+        return add(name, String.valueOf(value));
     }
 
-    public HttpHeaders add(String key, long value) {
-        return add(key, String.valueOf(value));
+    public HttpHeaders add(String name, long value) {
+        return add(name, String.valueOf(value));
     }
 
-    public HttpHeaders add(String key, double value) {
-        return add(key, String.valueOf(value));
+    public HttpHeaders add(String name, double value) {
+        return add(name, String.valueOf(value));
     }
 
-    public HttpHeaders add(String key, BigInteger value) {
-        return add(key, String.valueOf(value));
+    public HttpHeaders add(String name, BigInteger value) {
+        return add(name, String.valueOf(value));
     }
 
     public HttpHeaders setAll(HttpHeaders header) {
@@ -269,75 +269,75 @@ public class HttpHeaders implements RestHeaders, Serializable {
     }
 
     //服务端接收，无需校验参数合法性
-    void setValid(String key, String value) {
+    void setValid(String name, String value) {
         if (this.map == null) {
             this.map = new LinkedHashMap<>();
         }
-        this.map.put(key, value);
+        this.map.put(name, value);
     }
 
-    public HttpHeaders set(String key, String value) {
-        check(key, value);
+    public HttpHeaders set(String name, String value) {
+        check(name, value);
         if (this.map == null) {
             this.map = new LinkedHashMap<>();
         }
-        this.map.put(key, value);
+        this.map.put(name, value);
         return this;
     }
 
-    public HttpHeaders set(String key, List<String> value) {
+    public HttpHeaders set(String name, List<String> value) {
         if (value.isEmpty()) {
             return this;
         }
         for (String val : value) {
-            check(key, val);
+            check(name, val);
         }
         if (this.map == null) {
             this.map = new LinkedHashMap<>();
         }
-        this.map.put(key, new ArrayList(value));
+        this.map.put(name, new ArrayList(value));
         return this;
     }
 
-    public HttpHeaders set(String key, TextConvert convert, Object value) {
-        return set(key, (convert == null ? JsonConvert.root() : convert).convertTo(value));
+    public HttpHeaders set(String name, TextConvert convert, Object value) {
+        return set(name, (convert == null ? JsonConvert.root() : convert).convertTo(value));
     }
 
-    public HttpHeaders set(String key, Object value) {
-        return set(key, JsonConvert.root().convertTo(value));
+    public HttpHeaders set(String name, Object value) {
+        return set(name, JsonConvert.root().convertTo(value));
     }
 
-    public HttpHeaders set(String key, boolean value) {
-        return set(key, String.valueOf(value));
+    public HttpHeaders set(String name, boolean value) {
+        return set(name, String.valueOf(value));
     }
 
-    public HttpHeaders set(String key, short value) {
-        return set(key, String.valueOf(value));
+    public HttpHeaders set(String name, short value) {
+        return set(name, String.valueOf(value));
     }
 
-    public HttpHeaders set(String key, int value) {
-        return set(key, String.valueOf(value));
+    public HttpHeaders set(String name, int value) {
+        return set(name, String.valueOf(value));
     }
 
-    public HttpHeaders set(String key, float value) {
-        return set(key, String.valueOf(value));
+    public HttpHeaders set(String name, float value) {
+        return set(name, String.valueOf(value));
     }
 
-    public HttpHeaders set(String key, long value) {
-        return set(key, String.valueOf(value));
+    public HttpHeaders set(String name, long value) {
+        return set(name, String.valueOf(value));
     }
 
-    public HttpHeaders set(String key, double value) {
-        return set(key, String.valueOf(value));
+    public HttpHeaders set(String name, double value) {
+        return set(name, String.valueOf(value));
     }
 
-    public HttpHeaders set(String key, BigInteger value) {
-        return set(key, String.valueOf(value));
+    public HttpHeaders set(String name, BigInteger value) {
+        return set(name, String.valueOf(value));
     }
 
-    public HttpHeaders remove(String key) {
+    public HttpHeaders remove(String name) {
         if (this.map != null) {
-            this.map.remove(key);
+            this.map.remove(name);
         }
         return this;
     }
@@ -358,12 +358,12 @@ public class HttpHeaders implements RestHeaders, Serializable {
         return this;
     }
 
-    protected String check(String key, String value) {
-        if (key.indexOf('\r') >= 0 || key.indexOf('\n') >= 0) {
-            throw new RedkaleException("http-header name(name = " + key + ") is illegal");
+    protected String check(String name, String value) {
+        if (name.indexOf('\r') >= 0 || name.indexOf('\n') >= 0) {
+            throw new RedkaleException("http-header name(name = " + name + ") is illegal");
         }
         if (value.indexOf('\r') >= 0 || value.indexOf('\n') >= 0) {
-            throw new RedkaleException("http-header value(name = " + key + ", value = " + value + ") is illegal");
+            throw new RedkaleException("http-header value(name = " + name + ", value = " + value + ") is illegal");
         }
         return value;
     }
