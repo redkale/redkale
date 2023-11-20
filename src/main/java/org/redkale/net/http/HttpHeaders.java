@@ -370,6 +370,6 @@ public class HttpHeaders implements RestHeaders, Serializable {
 
     @Override
     public String toString() {
-        return String.valueOf(this.map);
+        return JsonConvert.root().convertTo(this.map);
     }
 }
