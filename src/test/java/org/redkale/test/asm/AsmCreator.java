@@ -16,9 +16,9 @@ public class AsmCreator {
 
     public static void main(String[] args) throws Throwable {
         boolean realasm = false; //从http://forge.ow2.org/projects/asm/ 下载最新asm的src放在 srcasmroot 目录下
-        File srcasmroot = new File("D:/JAVA/JDK源码/JDK11源码/java.base/jdk/internal/org/objectweb/asm");
+        File srcasmroot = new File("D:/JAVA/JDK源码/jdk/internal/org/objectweb/asm");
         if (realasm) srcasmroot = new File("D:/JAVA/JDK源码/org/objectweb/asm");
-        File destasmroot = new File("D:/Java-Projects/RedkaleProject/src/org/redkale/asm");
+        File destasmroot = new File("D:/Java-Projects/RedkaleProject/src/main/java/org/redkale/asm");
         String line = null;
         LineNumberReader txtin = new LineNumberReader(new FileReader(new File(destasmroot, "asm.txt")));
         while ((line = txtin.readLine()) != null) {
