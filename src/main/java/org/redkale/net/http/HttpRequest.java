@@ -24,11 +24,11 @@ import static org.redkale.util.Utility.isEmpty;
 /**
  * Http请求包 与javax.servlet.http.HttpServletRequest 基本类似。  <br>
  * 同时提供json的解析接口: public Object getJsonParameter(Type type, String name)  <br>
- * Redkale提倡带简单的参数的GET请求采用类似REST风格, 因此提供了 getRequstURIPath 系列接口。  <br>
+ * Redkale提倡带简单的参数的GET请求采用类似REST风格, 因此提供了 getPathParam 系列接口。  <br>
  * 例如简单的翻页查询   <br>
  *      /pipes/user/query/offset:0/limit:20 <br>
- * 获取页号: int offset = request.getRequstURIPath("offset:", 0);   <br>
- * 获取行数: int limit = request.getRequstURIPath("limit:", 10);  <br>
+ * 获取页号: int offset = request.getPathParam("offset:", 0);   <br>
+ * 获取行数: int limit = request.getPathParam("limit:", 10);  <br>
  * <p>
  * 详情见: https://redkale.org
  *
@@ -132,7 +132,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected String protocol;
 
-    protected String requestURI;
+    protected String path;
 
     protected byte[] queryBytes;
 
@@ -152,9 +152,9 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected String locale;
 
-    private String lastRequestURIString;
+    private String lastPathString;
 
-    private byte[] lastRequestURIBytes;
+    private byte[] lastPathBytes;
 
     private final ByteArray array;
 
@@ -224,9 +224,9 @@ public class HttpRequest extends Request<HttpContext> {
             this.remoteAddr = req.getRemoteAddr();
             this.locale = req.getLocale();
             if (needPath) {
-                this.requestURI = (req.getPath() == null || req.getPath().isEmpty()) ? req.getRequestURI() : (req.getPath() + req.getRequestURI());
+                this.path = req.requestPath();
             } else {
-                this.requestURI = req.getRequestURI();
+                this.path = req.getPath();
             }
             this.method = req.getMethod();
             if (req.getSessionid() != null && !req.getSessionid().isEmpty()) {
@@ -236,7 +236,7 @@ public class HttpRequest extends Request<HttpContext> {
         return this;
     }
 
-    public HttpSimpleRequest createSimpleRequest(String prefix) {
+    public HttpSimpleRequest createSimpleRequest(String prefixPath) {
         HttpSimpleRequest req = new HttpSimpleRequest();
         req.setBody(array.length() == 0 ? null : array.getBytes());
         if (!getHeaders().isEmpty()) {
@@ -253,13 +253,13 @@ public class HttpRequest extends Request<HttpContext> {
         req.setRemoteAddr(getRemoteAddr());
         req.setLocale(getLocale());
         req.setContentType(getContentType());
-        req.setPath(prefix);
+        req.setContextPath(prefixPath);
         req.setMethod(this.method);
-        String uri = this.requestURI;
-        if (prefix != null && !prefix.isEmpty() && uri.startsWith(prefix)) {
-            uri = uri.substring(prefix.length());
+        String path0 = this.path;
+        if (prefixPath != null && !prefixPath.isEmpty() && path0.startsWith(prefixPath)) {
+            path0 = path0.substring(prefixPath.length());
         }
-        req.setRequestURI(uri);
+        req.setPath(path0);
         req.setSessionid(getSessionid(false));
         req.setRpc(this.rpc);
         req.setTraceid(this.traceid);
@@ -565,7 +565,7 @@ public class HttpRequest extends Request<HttpContext> {
         }
 
         //读uri
-        if (this.requestURI == null) {
+        if (this.path == null) {
             int qst = -1;//?的位置
             boolean decodeable = false;
             boolean latin1 = true;
@@ -589,11 +589,11 @@ public class HttpRequest extends Request<HttpContext> {
             }
             size = bytes.length();
             if (qst > 0) { //带?参数
-                this.requestURI = decodeable ? toDecodeString(bytes, 0, qst, charset) : context.loadUriPath(bytes, qst, latin1, charset);// bytes.toString(latin1, 0, qst, charset);
+                this.path = decodeable ? toDecodeString(bytes, 0, qst, charset) : context.loadUriPath(bytes, qst, latin1, charset);// bytes.toString(latin1, 0, qst, charset);
                 int qlen = size - qst - 1;
                 this.queryBytes = bytes.getBytes(qst + 1, qlen);
-                this.lastRequestURIString = null;
-                this.lastRequestURIBytes = null;
+                this.lastPathString = null;
+                this.lastPathBytes = null;
                 try {
                     addParameter(bytes, false, qst + 1, qlen);
                 } catch (Exception e) {
@@ -601,22 +601,22 @@ public class HttpRequest extends Request<HttpContext> {
                 }
             } else {
                 if (decodeable) { //需要转义
-                    this.requestURI = toDecodeString(bytes, 0, bytes.length(), charset);
-                    this.lastRequestURIString = null;
-                    this.lastRequestURIBytes = null;
+                    this.path = toDecodeString(bytes, 0, bytes.length(), charset);
+                    this.lastPathString = null;
+                    this.lastPathBytes = null;
                 } else if (context.lazyHeaders) {
-                    byte[] lastURIBytes = lastRequestURIBytes;
+                    byte[] lastURIBytes = lastPathBytes;
                     if (lastURIBytes != null && lastURIBytes.length == size && bytes.deepEquals(lastURIBytes)) {
-                        this.requestURI = this.lastRequestURIString;
+                        this.path = this.lastPathString;
                     } else {
-                        this.requestURI = context.loadUriPath(bytes, latin1, charset);// bytes.toString(latin1, charset);
-                        this.lastRequestURIString = this.requestURI;
-                        this.lastRequestURIBytes = bytes.getBytes();
+                        this.path = context.loadUriPath(bytes, latin1, charset);// bytes.toString(latin1, charset);
+                        this.lastPathString = this.path;
+                        this.lastPathBytes = bytes.getBytes();
                     }
                 } else {
-                    this.requestURI = context.loadUriPath(bytes, latin1, charset); //bytes.toString(latin1, charset);
-                    this.lastRequestURIString = null;
-                    this.lastRequestURIBytes = null;
+                    this.path = context.loadUriPath(bytes, latin1, charset); //bytes.toString(latin1, charset);
+                    this.lastPathString = null;
+                    this.lastPathBytes = null;
                 }
                 this.queryBytes = EMPTY_BYTES;
             }
@@ -984,7 +984,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.method = null;
         this.getmethod = false;
         this.protocol = null;
-        this.requestURI = null;
+        this.path = null;
         this.queryBytes = null;
         this.boundary = false;
         this.bodyParsed = false;
@@ -1045,8 +1045,8 @@ public class HttpRequest extends Request<HttpContext> {
         return this;
     }
 
-    protected HttpRequest setRequestURI(String requestURI) {
-        this.requestURI = requestURI;
+    protected HttpRequest setPath(String path) {
+        this.path = path;
         return this;
     }
 
@@ -1534,7 +1534,7 @@ public class HttpRequest extends Request<HttpContext> {
     @Override
     public String toString() {
         parseBody();
-        return this.getClass().getSimpleName() + "{\r\n    method: " + this.method + ", \r\n    requestURI: " + this.requestURI
+        return this.getClass().getSimpleName() + "{\r\n    method: " + this.method + ", \r\n    path: " + this.path
             + (this.reqConvertType != null ? (", \r\n    reqConvertType: " + this.reqConvertType) : "")
             + (this.respConvertType != null ? (", \r\n    respConvertType: " + this.respConvertType) : "")
             + (this.currentUserid != CURRUSERID_NIL ? (", \r\n    currentUserid: " + (this.currentUserid == CURRUSERID_NIL ? null : this.currentUserid)) : "")
@@ -1781,8 +1781,8 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return 请求的URL
      */
-    public String getRequestURI() {
-        return requestURI;
+    public String getPath() {
+        return path;
     }
 
     /**
@@ -1795,29 +1795,29 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 截取getRequestURI最后的一个/后面的部分
+     * 截取getPath最后的一个/后面的部分
      *
      * @return String
      */
     @ConvertDisabled
-    public String getRequstURILastPath() {
-        if (requestURI == null) {
+    public String getPathLastParam() {
+        if (path == null) {
             return "";
         }
-        return requestURI.substring(requestURI.lastIndexOf('/') + 1);
+        return path.substring(path.lastIndexOf('/') + 1);
     }
 
     /**
      * 获取请求URL最后的一个/后面的部分的short值   <br>
      * 例如请求URL /pipes/user/query/2   <br>
-     * 获取type参数: short type = request.getRequstURILastPath((short)0); //type = 2
+     * 获取type参数: short type = request.getPathLastParam((short)0); //type = 2
      *
      * @param defvalue 默认short值
      *
      * @return short值
      */
-    public short getRequstURILastPath(short defvalue) {
-        String val = getRequstURILastPath();
+    public short getPathLastParam(short defvalue) {
+        String val = getPathLastParam();
         if (val.isEmpty()) {
             return defvalue;
         }
@@ -1831,15 +1831,15 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求URL最后的一个/后面的部分的short值   <br>
      * 例如请求URL /pipes/user/query/2   <br>
-     * 获取type参数: short type = request.getRequstURILastPath(16, (short)0); //type = 2
+     * 获取type参数: short type = request.getPathLastParam(16, (short)0); //type = 2
      *
      * @param radix    进制数
      * @param defvalue 默认short值
      *
      * @return short值
      */
-    public short getRequstURILastPath(int radix, short defvalue) {
-        String val = getRequstURILastPath();
+    public short getPathLastParam(int radix, short defvalue) {
+        String val = getPathLastParam();
         if (val.isEmpty()) {
             return defvalue;
         }
@@ -1853,14 +1853,14 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求URL最后的一个/后面的部分的int值   <br>
      * 例如请求URL /pipes/user/query/2   <br>
-     * 获取type参数: int type = request.getRequstURILastPath(0); //type = 2
+     * 获取type参数: int type = request.getPathLastParam(0); //type = 2
      *
      * @param defvalue 默认int值
      *
      * @return int值
      */
-    public int getRequstURILastPath(int defvalue) {
-        String val = getRequstURILastPath();
+    public int getPathLastParam(int defvalue) {
+        String val = getPathLastParam();
         try {
             return val.isEmpty() ? defvalue : Integer.parseInt(val);
         } catch (NumberFormatException e) {
@@ -1871,15 +1871,15 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求URL最后的一个/后面的部分的int值   <br>
      * 例如请求URL /pipes/user/query/2   <br>
-     * 获取type参数: int type = request.getRequstURILastPath(16, 0); //type = 2
+     * 获取type参数: int type = request.getPathLastParam(16, 0); //type = 2
      *
      * @param radix    进制数
      * @param defvalue 默认int值
      *
      * @return int值
      */
-    public int getRequstURILastPath(int radix, int defvalue) {
-        String val = getRequstURILastPath();
+    public int getPathLastParam(int radix, int defvalue) {
+        String val = getPathLastParam();
         try {
             return val.isEmpty() ? defvalue : Integer.parseInt(val, radix);
         } catch (NumberFormatException e) {
@@ -1890,14 +1890,14 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求URL最后的一个/后面的部分的float值   <br>
      * 例如请求URL /pipes/user/query/2   <br>
-     * 获取type参数: float type = request.getRequstURILastPath(0.0f); //type = 2.0f
+     * 获取type参数: float type = request.getPathLastParam(0.0f); //type = 2.0f
      *
      * @param defvalue 默认float值
      *
      * @return float值
      */
-    public float getRequstURILastPath(float defvalue) {
-        String val = getRequstURILastPath();
+    public float getPathLastParam(float defvalue) {
+        String val = getPathLastParam();
         try {
             return val.isEmpty() ? defvalue : Float.parseFloat(val);
         } catch (NumberFormatException e) {
@@ -1908,14 +1908,14 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求URL最后的一个/后面的部分的int值   <br>
      * 例如请求URL /pipes/user/query/2   <br>
-     * 获取type参数: long type = request.getRequstURILastPath(0L); //type = 2
+     * 获取type参数: long type = request.getPathLastParam(0L); //type = 2
      *
      * @param defvalue 默认long值
      *
      * @return long值
      */
-    public long getRequstURILastPath(long defvalue) {
-        String val = getRequstURILastPath();
+    public long getPathLastParam(long defvalue) {
+        String val = getPathLastParam();
         try {
             return val.isEmpty() ? defvalue : Long.parseLong(val);
         } catch (NumberFormatException e) {
@@ -1926,15 +1926,15 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求URL最后的一个/后面的部分的int值   <br>
      * 例如请求URL /pipes/user/query/2   <br>
-     * 获取type参数: long type = request.getRequstURILastPath(16, 0L); //type = 2
+     * 获取type参数: long type = request.getPathLastParam(16, 0L); //type = 2
      *
      * @param radix    进制数
      * @param defvalue 默认long值
      *
      * @return long值
      */
-    public long getRequstURILastPath(int radix, long defvalue) {
-        String val = getRequstURILastPath();
+    public long getPathLastParam(int radix, long defvalue) {
+        String val = getPathLastParam();
         try {
             return val.isEmpty() ? defvalue : Long.parseLong(val, radix);
         } catch (NumberFormatException e) {
@@ -1945,14 +1945,14 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求URL最后的一个/后面的部分的double值   <br>
      * 例如请求URL /pipes/user/query/2   <br>
-     * 获取type参数: double type = request.getRequstURILastPath(0.0); //type = 2.0
+     * 获取type参数: double type = request.getPathLastParam(0.0); //type = 2.0
      *
      * @param defvalue 默认double值
      *
      * @return double值
      */
-    public double getRequstURILastPath(double defvalue) {
-        String val = getRequstURILastPath();
+    public double getPathLastParam(double defvalue) {
+        String val = getPathLastParam();
         try {
             return val.isEmpty() ? defvalue : Double.parseDouble(val);
         } catch (NumberFormatException e) {
@@ -1962,38 +1962,38 @@ public class HttpRequest extends Request<HttpContext> {
 
     /**
      *
-     * 从prefix之后截取getRequestURI再对"/"进行分隔
+     * 从prefix之后截取getPath再对"/"进行分隔
      * <p>
      * @param prefix 前缀
      *
      * @return String[]
      */
-    public String[] getRequstURIPaths(String prefix) {
-        if (requestURI == null || prefix == null) {
+    public String[] getPathParams(String prefix) {
+        if (path == null || prefix == null) {
             return new String[0];
         }
-        return requestURI.substring(requestURI.indexOf(prefix) + prefix.length() + (prefix.endsWith("/") ? 0 : 1)).split("/");
+        return path.substring(path.indexOf(prefix) + prefix.length() + (prefix.endsWith("/") ? 0 : 1)).split("/");
     }
 
     /**
      * 获取请求URL分段中含prefix段的值   <br>
      * 例如请求URL /pipes/user/query/name:hello   <br>
-     * 获取name参数: String name = request.getRequstURIPath("name:", "none");
+     * 获取name参数: String name = request.getPathParam("name:", "none");
      *
      * @param prefix   prefix段前缀
      * @param defvalue 默认值
      *
      * @return prefix截断后的值
      */
-    public String getRequstURIPath(String prefix, String defvalue) {
-        if (requestURI == null || prefix == null || prefix.isEmpty()) {
+    public String getPathParam(String prefix, String defvalue) {
+        if (path == null || prefix == null || prefix.isEmpty()) {
             return defvalue;
         }
-        int pos = requestURI.indexOf(prefix);
+        int pos = path.indexOf(prefix);
         if (pos < 0) {
             return defvalue;
         }
-        String sub = requestURI.substring(pos + prefix.length());
+        String sub = path.substring(pos + prefix.length());
         pos = sub.indexOf('/');
         return pos < 0 ? sub : sub.substring(0, pos);
     }
@@ -2001,15 +2001,15 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求URL分段中含prefix段的short值   <br>
      * 例如请求URL /pipes/user/query/type:10   <br>
-     * 获取type参数: short type = request.getRequstURIPath("type:", (short)0);
+     * 获取type参数: short type = request.getPathParam("type:", (short)0);
      *
      * @param prefix   prefix段前缀
      * @param defvalue 默认short值
      *
      * @return short值
      */
-    public short getRequstURIPath(String prefix, short defvalue) {
-        String val = getRequstURIPath(prefix, null);
+    public short getPathParam(String prefix, short defvalue) {
+        String val = getPathParam(prefix, null);
         try {
             return val == null ? defvalue : Short.parseShort(val);
         } catch (NumberFormatException e) {
@@ -2020,7 +2020,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求URL分段中含prefix段的short值   <br>
      * 例如请求URL /pipes/user/query/type:a   <br>
-     * 获取type参数: short type = request.getRequstURIPath(16, "type:", (short)0); //type = 10
+     * 获取type参数: short type = request.getPathParam(16, "type:", (short)0); //type = 10
      *
      * @param radix    进制数
      * @param prefix   prefix段前缀
@@ -2028,8 +2028,8 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return short值
      */
-    public short getRequstURIPath(int radix, String prefix, short defvalue) {
-        String val = getRequstURIPath(prefix, null);
+    public short getPathParam(int radix, String prefix, short defvalue) {
+        String val = getPathParam(prefix, null);
         try {
             return val == null ? defvalue : Short.parseShort(val, radix);
         } catch (NumberFormatException e) {
@@ -2040,16 +2040,16 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求URL分段中含prefix段的int值  <br>
      * 例如请求URL /pipes/user/query/offset:0/limit:50   <br>
-     * 获取offset参数: int offset = request.getRequstURIPath("offset:", 0);   <br>
-     * 获取limit参数: int limit = request.getRequstURIPath("limit:", 20);  <br>
+     * 获取offset参数: int offset = request.getPathParam("offset:", 0);   <br>
+     * 获取limit参数: int limit = request.getPathParam("limit:", 20);  <br>
      *
      * @param prefix   prefix段前缀
      * @param defvalue 默认int值
      *
      * @return int值
      */
-    public int getRequstURIPath(String prefix, int defvalue) {
-        String val = getRequstURIPath(prefix, null);
+    public int getPathParam(String prefix, int defvalue) {
+        String val = getPathParam(prefix, null);
         try {
             return val == null ? defvalue : Integer.parseInt(val);
         } catch (NumberFormatException e) {
@@ -2060,8 +2060,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求URL分段中含prefix段的int值  <br>
      * 例如请求URL /pipes/user/query/offset:0/limit:50   <br>
-     * 获取offset参数: int offset = request.getRequstURIPath("offset:", 0);   <br>
-     * 获取limit参数: int limit = request.getRequstURIPath(16, "limit:", 20); // limit = 16  <br>
+     * 获取offset参数: int offset = request.getPathParam("offset:", 0);   <br>
+     * 获取limit参数: int limit = request.getPathParam(16, "limit:", 20); // limit = 16  <br>
      *
      * @param radix    进制数
      * @param prefix   prefix段前缀
@@ -2069,8 +2069,8 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return int值
      */
-    public int getRequstURIPath(int radix, String prefix, int defvalue) {
-        String val = getRequstURIPath(prefix, null);
+    public int getPathParam(int radix, String prefix, int defvalue) {
+        String val = getPathParam(prefix, null);
         try {
             return val == null ? defvalue : Integer.parseInt(val, radix);
         } catch (NumberFormatException e) {
@@ -2081,15 +2081,15 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求URL分段中含prefix段的float值   <br>
      * 例如请求URL /pipes/user/query/point:40.0   <br>
-     * 获取time参数: float point = request.getRequstURIPath("point:", 0.0f);
+     * 获取time参数: float point = request.getPathParam("point:", 0.0f);
      *
      * @param prefix   prefix段前缀
      * @param defvalue 默认float值
      *
      * @return float值
      */
-    public float getRequstURIPath(String prefix, float defvalue) {
-        String val = getRequstURIPath(prefix, null);
+    public float getPathParam(String prefix, float defvalue) {
+        String val = getPathParam(prefix, null);
         try {
             return val == null ? defvalue : Float.parseFloat(val);
         } catch (NumberFormatException e) {
@@ -2100,15 +2100,15 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求URL分段中含prefix段的long值   <br>
      * 例如请求URL /pipes/user/query/time:1453104341363/id:40   <br>
-     * 获取time参数: long time = request.getRequstURIPath("time:", 0L);
+     * 获取time参数: long time = request.getPathParam("time:", 0L);
      *
      * @param prefix   prefix段前缀
      * @param defvalue 默认long值
      *
      * @return long值
      */
-    public long getRequstURIPath(String prefix, long defvalue) {
-        String val = getRequstURIPath(prefix, null);
+    public long getPathParam(String prefix, long defvalue) {
+        String val = getPathParam(prefix, null);
         try {
             return val == null ? defvalue : Long.parseLong(val);
         } catch (NumberFormatException e) {
@@ -2119,7 +2119,7 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求URL分段中含prefix段的long值   <br>
      * 例如请求URL /pipes/user/query/time:1453104341363/id:40   <br>
-     * 获取time参数: long time = request.getRequstURIPath(16, "time:", 0L);
+     * 获取time参数: long time = request.getPathParam(16, "time:", 0L);
      *
      * @param radix    进制数
      * @param prefix   prefix段前缀
@@ -2127,8 +2127,8 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return long值
      */
-    public long getRequstURIPath(int radix, String prefix, long defvalue) {
-        String val = getRequstURIPath(prefix, null);
+    public long getPathParam(int radix, String prefix, long defvalue) {
+        String val = getPathParam(prefix, null);
         try {
             return val == null ? defvalue : Long.parseLong(val, radix);
         } catch (NumberFormatException e) {
@@ -2139,15 +2139,15 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求URL分段中含prefix段的double值   <br>
      * 例如请求URL /pipes/user/query/point:40.0   <br>
-     * 获取time参数: double point = request.getRequstURIPath("point:", 0.0);
+     * 获取time参数: double point = request.getPathParam("point:", 0.0);
      *
      * @param prefix   prefix段前缀
      * @param defvalue 默认double值
      *
      * @return double值
      */
-    public double getRequstURIPath(String prefix, double defvalue) {
-        String val = getRequstURIPath(prefix, null);
+    public double getPathParam(String prefix, double defvalue) {
+        String val = getPathParam(prefix, null);
         try {
             return val == null ? defvalue : Double.parseDouble(val);
         } catch (NumberFormatException e) {

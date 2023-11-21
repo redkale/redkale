@@ -66,7 +66,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                 }
             }
             if (entry.cacheSeconds > 0) {//有缓存设置
-                CacheEntry ce = entry.modeOneCache ? entry.oneCache : entry.cache.get(request.getRequestURI());
+                CacheEntry ce = entry.modeOneCache ? entry.oneCache : entry.cache.get(request.getPath());
                 if (ce != null && ce.time + entry.cacheSeconds * 1000 > System.currentTimeMillis()) { //缓存有效
                     response.setStatus(ce.status);
                     response.setContentType(ce.contentType);
@@ -125,7 +125,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                 return;
             }
             for (Map.Entry<String, ActionEntry> en : mappings) {
-                if (request.getRequestURI().startsWith(en.getKey())) {
+                if (request.getPath().startsWith(en.getKey())) {
                     ActionEntry entry = en.getValue();
                     if (!entry.checkMethod(request.getMethod())) {
                         //response.finishJson(new RetResult(RET_METHOD_ERROR, "Method(" + request.getMethod() + ") Error"));
@@ -146,7 +146,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                 }
             }
             finish404(request, response);
-            //throw new IOException(this.getClass().getName() + " not found method for URI(" + request.getRequestURI() + ")");
+            //throw new IOException(this.getClass().getName() + " not found method for URI(" + request.getPath() + ")");
         }
     };
 
@@ -411,7 +411,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                         return;
                     }
                     CacheEntry ce = new CacheEntry(response.getStatus(), response.getContentType(), content);
-                    cache.put(response.getRequest().getRequestURI(), ce);
+                    cache.put(response.getRequest().getPath(), ce);
                 } : null;
             } else { //单一url
                 this.modeOneCache = true;

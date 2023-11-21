@@ -310,7 +310,7 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
     @Override
     public void execute(HttpRequest request, HttpResponse response) throws IOException {
         try {
-            final String uri = request.getRequestURI();
+            final String uri = request.getPath();
             HttpServlet servlet;
             if (response.isAutoOptions() && HttpRequest.METHOD_OPTIONS.equals(request.getMethod())) {
                 response.finish(200, null);
@@ -446,7 +446,6 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                     }
                 } else if (mappingPath != null && !mappingPath.isEmpty()) {
                     if (servlet._actionmap != null && servlet._actionmap.containsKey(mappingPath)) {
-                        //context.addRequestURINode(mappingpath);
                         putMapping(mappingPath, new HttpServlet.HttpActionServlet(servlet._actionmap.get(mappingPath), servlet, mappingPath));
                     } else {
                         putMapping(mappingPath, servlet);

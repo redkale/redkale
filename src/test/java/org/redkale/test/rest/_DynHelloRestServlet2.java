@@ -44,7 +44,7 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     @HttpParam(name = "#", type = int.class, comment = "Hello对象id")
     public void delete(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService2 service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
-        int id = Integer.parseInt(req.getRequstURILastPath());
+        int id = Integer.parseInt(req.getPathLastParam());
         service.deleteHello(id);
         resp.finishJson(RetResult.success());
     }
@@ -80,7 +80,7 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
     @HttpParam(name = "#", type = int.class, comment = "Hello对象id")
     public void find(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService2 service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
-        int id = Integer.parseInt(req.getRequstURILastPath());
+        int id = Integer.parseInt(req.getPathLastParam());
         HelloEntity bean = service.findHello(id);
         resp.finishJson(bean);
     }

@@ -18,7 +18,7 @@ import java.util.TimeZone;
  * @author zhangjx
  * @since 2.8.0
  */
-public abstract class Times {
+public final class Times {
 
     private static final int ZONE_RAW_OFFSET = TimeZone.getDefault().getRawOffset();
 

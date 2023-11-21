@@ -15,7 +15,7 @@ import java.util.function.Supplier;
  * @author zhangjx
  * @since 2.7.0
  */
-public class Traces {
+public final class Traces {
 
     private static final boolean ENABLE = !Boolean.getBoolean("redkale.trace.disable");
 
@@ -26,6 +26,10 @@ public class Traces {
     private static final Supplier<String> tidSupplier = () -> PROCESS_ID + Long.toHexString(sequence.incrementAndGet());
 
     private static final ThreadLocal<String> localTrace = new ThreadLocal<>();
+
+    private Traces() {
+        //do nothing
+    }
 
     /**
      * 是否开启了trace功能

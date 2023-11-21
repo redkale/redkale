@@ -171,7 +171,7 @@ public class HttpMessageResponse extends HttpResponse {
     @Override
     public void finish(int status, String msg) {
         if (status > 400) {
-            messageClient.logger.log(Level.WARNING, "HttpMessageResponse.finish status: " + status + ", uri: " + this.request.getRequestURI() + ", message: " + this.message);
+            messageClient.logger.log(Level.WARNING, "HttpMessageResponse.finish status: " + status + ", uri: " + this.request.getPath() + ", message: " + this.message);
         } else if (messageClient.logger.isLoggable(Level.FINEST)) {
             messageClient.logger.log(Level.FINEST, "HttpMessageResponse.finish status: " + status);
         }

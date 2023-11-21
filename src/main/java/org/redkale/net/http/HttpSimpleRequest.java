@@ -51,12 +51,12 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     protected String method;
 
     @ConvertColumn(index = 7)
-    @Comment("请求的URI")
-    protected String requestURI;
+    @Comment("请求的Path")
+    protected String path;
 
     @ConvertColumn(index = 8)
     @Comment("请求的前缀")
-    protected String path;
+    protected String contextPath;
 
     @ConvertColumn(index = 9)
     @Comment("客户端IP")
@@ -74,7 +74,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     @Comment("Content-Type")
     protected String contentType;
 
-    @ConvertColumn(index = 13) //@since 2.5.0 由int改成Serializable, 具体数据类型只能是int、long、String
+    @ConvertColumn(index = 13) //@since 2.5.0 由int改成Serializable, 具体数据类型只能是int、long、BigInteger、String
     protected Serializable currentUserid;
 
     @ConvertColumn(index = 14)
@@ -89,12 +89,12 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     @Comment("http body信息")
     protected byte[] body; //对应HttpRequest.array
 
-    public static HttpSimpleRequest create(String requestURI) {
-        return new HttpSimpleRequest().requestURI(requestURI).method("POST").traceid(Traces.currentTraceid());
+    public static HttpSimpleRequest createPath(String path) {
+        return new HttpSimpleRequest().path(path).method("POST").traceid(Traces.currentTraceid());
     }
 
-    public static HttpSimpleRequest create(String requestURI, Object... params) {
-        HttpSimpleRequest req = new HttpSimpleRequest().requestURI(requestURI).method("POST").traceid(Traces.currentTraceid());
+    public static HttpSimpleRequest createPath(String path, Object... params) {
+        HttpSimpleRequest req = new HttpSimpleRequest().path(path).method("POST").traceid(Traces.currentTraceid());
         int len = params.length / 2;
         for (int i = 0; i < len; i++) {
             req.param(params[i * 2].toString(), params[i * 2 + 1]);
@@ -102,13 +102,13 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return req;
     }
 
-    public static HttpSimpleRequest create(String requestURI, HttpHeaders header) {
-        return new HttpSimpleRequest().requestURI(requestURI).method("POST").headers(header).traceid(Traces.currentTraceid());
+    public static HttpSimpleRequest createPath(String path, HttpHeaders header) {
+        return new HttpSimpleRequest().path(path).method("POST").headers(header).traceid(Traces.currentTraceid());
     }
 
     @Override
     public void writeTo(ClientConnection conn, ByteArray array) {
-        array.put((method.toUpperCase() + " " + requestURI + " HTTP/1.1\r\n"
+        array.put((method.toUpperCase() + " " + path + " HTTP/1.1\r\n"
             + Rest.REST_HEADER_TRACEID + ": " + traceid + "\r\n"
             + "Content-Length: " + (body == null ? 0 : body.length) + "\r\n").getBytes(StandardCharsets.UTF_8));
         if (headers != null) {
@@ -139,6 +139,13 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return sb.toString();
     }
 
+    public String requestPath() {
+        if (this.contextPath == null) {
+            return this.path;
+        }
+        return this.contextPath + this.path;
+    }
+
     public HttpSimpleRequest formUrlencoded() {
         this.headers.set("Content-Type", "x-www-form-urlencoded");
         return this;
@@ -151,19 +158,11 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
 
     public HttpSimpleRequest traceid(String traceid) {
         if (traceid != null) {
-            if (traceid.indexOf('\r') >= 0 || traceid.indexOf('\n') >= 0) {
+            if (traceid.indexOf(' ') >= 0 || traceid.indexOf('\r') >= 0 || traceid.indexOf('\n') >= 0) {
                 throw new RedkaleException("http-traceid(" + traceid + ") is illegal");
             }
         }
         this.traceid = traceid;
-        return this;
-    }
-
-    public HttpSimpleRequest requestURI(String requestURI) {
-        if (requestURI.indexOf(' ') >= 0 || requestURI.indexOf('\r') >= 0 || requestURI.indexOf('\n') >= 0) {
-            throw new RedkaleException("http-uri(" + requestURI + ") is illegal");
-        }
-        this.requestURI = requestURI;
         return this;
     }
 
@@ -172,6 +171,14 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
             throw new RedkaleException("http-path(" + path + ") is illegal");
         }
         this.path = path;
+        return this;
+    }
+
+    public HttpSimpleRequest contextPath(String contextPath) {
+        if (contextPath.indexOf(' ') >= 0 || contextPath.indexOf('\r') >= 0 || contextPath.indexOf('\n') >= 0) {
+            throw new RedkaleException("http-context-path(" + contextPath + ") is illegal");
+        }
+        this.contextPath = contextPath;
         return this;
     }
 
@@ -383,20 +390,20 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         this.method = method;
     }
 
-    public String getRequestURI() {
-        return requestURI;
-    }
-
-    public void setRequestURI(String requestURI) {
-        this.requestURI = requestURI;
-    }
-
     public String getPath() {
         return path;
     }
 
     public void setPath(String path) {
         this.path = path;
+    }
+
+    public String getContextPath() {
+        return contextPath;
+    }
+
+    public void setContextPath(String contextPath) {
+        this.contextPath = contextPath;
     }
 
     public String getSessionid() {

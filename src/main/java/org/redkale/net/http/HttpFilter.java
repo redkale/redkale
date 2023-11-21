@@ -26,8 +26,8 @@ public abstract class HttpFilter extends Filter<HttpContext, HttpRequest, HttpRe
         request.setMethod(method);
     }
 
-    protected void setRequestURI(HttpRequest request, String requestURI) {
-        request.setRequestURI(requestURI);
+    protected void setPath(HttpRequest request, String path) {
+        request.setPath(path);
     }
 
     protected void setRemoteAddr(HttpRequest request, String remoteAddr) {

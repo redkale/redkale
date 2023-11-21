@@ -74,7 +74,7 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
     @HttpMapping(url = "/hello/delete/", auth = false)
     public void delete(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
-        int id = Integer.parseInt(req.getRequstURILastPath());
+        int id = Integer.parseInt(req.getPathLastParam());
         service.deleteHello(id);
         resp.finishJson(RetResult.success());
     }
@@ -129,7 +129,7 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
     @HttpMapping(url = "/hello/find/", auth = false)
     public void find(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
-        int id = Integer.parseInt(req.getRequstURILastPath());
+        int id = Integer.parseInt(req.getPathLastParam());
         HelloEntity bean = service.findHello(id);
         resp.finishJson(bean);
     }
@@ -137,21 +137,21 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
     @HttpMapping(url = "/hello/asyncfind/", auth = false)
     public void asyncfind(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
-        int id = Integer.parseInt(req.getRequstURILastPath());
+        int id = Integer.parseInt(req.getPathLastParam());
         resp.finishJson(service.asyncFindHello(id));
     }
 
     @HttpMapping(url = "/hello/asyncfind2/", auth = false)
     public void asyncfind2(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
-        int id = Integer.parseInt(req.getRequstURILastPath());
+        int id = Integer.parseInt(req.getPathLastParam());
         service.asyncFindHello(resp.createAsyncHandler(), id);
     }
 
     @HttpMapping(url = "/hello/asyncfind3/", auth = false)
     public void asyncfind3(HttpRequest req, HttpResponse resp) throws IOException {
         HelloService service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
-        int id = Integer.parseInt(req.getRequstURILastPath());
+        int id = Integer.parseInt(req.getPathLastParam());
         service.asyncFindHello(resp.createAsyncHandler(HelloAsyncHandler.class), id);
     }
 }

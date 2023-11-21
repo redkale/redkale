@@ -17,7 +17,7 @@ public class UploadTestServlet extends HttpServlet {
 
     @Override
     public void execute(HttpRequest request, HttpResponse response) throws IOException {
-        if (request.getRequestURI().contains("/uploadtest/send")) {
+        if (request.getPath().contains("/uploadtest/send")) {
             send(request, response);
         } else {
             form(request, response);

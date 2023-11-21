@@ -319,7 +319,7 @@
             <cache  limit="0M" lengthmax="1M" watch="false"/>
             <!--
                支持类似nginx中的rewrite， 目前只支持静态资源对静态资源的跳转。
-               type:    匹配的类型, 目前只支持location(匹配requestURI), 默认: location
+               type:    匹配的类型, 目前只支持location(匹配path), 默认: location
                match:   匹配的正则表达式
                forward: 需跳转后的资源链接
                例如下面例子是将/xxx-yyy.html的页面全部跳转到/xxx.html

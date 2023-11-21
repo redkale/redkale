@@ -297,7 +297,7 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
 //        final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
 //        asyncGroup.start();
 //        String url = "http://redkale.org";
-//        HttpSimpleClient client = HttpSimpleClient.create(asyncGroup);
+//        HttpSimpleClient client = HttpSimpleClient.createPath(asyncGroup);
 //        System.out.println(client.getAsync(url).join());
 //    }
 //    

@@ -38,7 +38,7 @@ public class HelloEntity {
     @RestAddress
     private String clientaddr;
 
-    @RestURI
+    @RestPath
     private String uri;
 
     public HelloEntity() {

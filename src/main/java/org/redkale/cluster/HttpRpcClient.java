@@ -105,7 +105,7 @@ public abstract class HttpRpcClient implements ClusterRpcClient<HttpSimpleReques
     }
 
     public String generateHttpReqTopic(HttpSimpleRequest request, String path) {
-        String module = request.getRequestURI();
+        String module = request.getPath();
         if (path != null && !path.isEmpty() && module.startsWith(path)) {
             module = module.substring(path.length());
         }

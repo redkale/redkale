@@ -89,7 +89,7 @@ public class HttpLocalRpcClient extends HttpRpcClient {
     }
 
     public HttpServlet findHttpServlet(HttpSimpleRequest request) {
-        return dispatcherServlet().findServletByTopic(generateHttpReqTopic(request, request.getPath()));
+        return dispatcherServlet().findServletByTopic(generateHttpReqTopic(request, request.getContextPath()));
     }
 
     @Override
@@ -108,7 +108,7 @@ public class HttpLocalRpcClient extends HttpRpcClient {
             request.setTraceid(Traces.currentTraceid());
         }
         CompletableFuture future = new CompletableFuture();
-        String topic = generateHttpReqTopic(request, request.getPath());
+        String topic = generateHttpReqTopic(request, request.getContextPath());
         HttpServlet servlet = findHttpServlet(topic);
         if (servlet == null) {
             if (logger.isLoggable(Level.FINE)) {

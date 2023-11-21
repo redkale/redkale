@@ -1304,9 +1304,9 @@ public final class Rest {
                         if (annfile != null) {
                             comment = annfile.comment();
                         }
-                        RestURI annuri = param.getAnnotation(RestURI.class);
-                        if (annuri != null) {
-                            comment = annuri.comment();
+                        RestPath annpath = param.getAnnotation(RestPath.class);
+                        if (annpath != null) {
+                            comment = annpath.comment();
                         }
                         RestUserid userid = param.getAnnotation(RestUserid.class);
 
@@ -1348,9 +1348,9 @@ public final class Rest {
                         } //n maybe is null
 
                         java.lang.reflect.Type paramtype = TypeToken.getGenericType(param.getParameterizedType(), serviceType);
-                        paramlist.add(new Object[]{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annlocale, annhead, anncookie, annbody, annfile, annuri, userid, annheaders, annparams, paramtype});
+                        paramlist.add(new Object[]{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annlocale, annhead, anncookie, annbody, annfile, annpath, userid, annheaders, annparams, paramtype});
                     }
-                    for (Object[] ps : paramlist) { //{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annlocale, annhead, anncookie, annbody, annfile, annuri, annuserid, annheaders, annparams, paramtype}
+                    for (Object[] ps : paramlist) { //{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annlocale, annhead, anncookie, annbody, annfile, annpath, annuserid, annheaders, annparams, paramtype}
                         final boolean isuserid = ((RestUserid) ps[headIndex + 5]) != null; //是否取userid
                         if ((ps[1] != null && ps[1].toString().indexOf('&') >= 0) || isuserid) {
                             continue;  //@RestUserid 不需要生成 @HttpParam
@@ -1381,7 +1381,7 @@ public final class Rest {
                         RestCookie anncookie = (RestCookie) ps[headIndex + 1];
                         RestBody annbody = (RestBody) ps[headIndex + 2];
                         RestUploadFile annfile = (RestUploadFile) ps[headIndex + 3];
-                        RestURI annuri = (RestURI) ps[headIndex + 4];
+                        RestPath annpath = (RestPath) ps[headIndex + 4];
                         RestUserid annuserid = (RestUserid) ps[headIndex + 5];
                         boolean annheaders = (Boolean) ps[headIndex + 6];
                         boolean annparams = (Boolean) ps[headIndex + 7];
@@ -1392,9 +1392,9 @@ public final class Rest {
                         } else if (annlocale != null) { //HttpRequest.getLocale
                         } else if (annbody != null) { //HttpRequest.getBodyUTF8 / HttpRequest.getBody
                         } else if (annfile != null) { //MultiContext.partsFirstBytes / HttpRequest.partsFirstFile / HttpRequest.partsFiles
-                        } else if (annuri != null) { //HttpRequest.getRequestURI
+                        } else if (annpath != null) { //HttpRequest.getPath
                         } else if (annuserid != null) { //HttpRequest.currentUserid
-                        } else if (pname != null && pname.charAt(0) == '#') { //从request.getRequstURIPath 中去参数
+                        } else if (pname != null && pname.charAt(0) == '#') { //从request.getPathParam 中去参数
                         } else if ("#".equals(pname)) { //从request.getRequstURI 中取参数
                         } else if ("&".equals(pname) && ptype == userType) { //当前用户对象的类名
                         } else if ("^".equals(pname) && annheaders) { //HttpRequest.getHeaders Http头信息
@@ -1431,7 +1431,7 @@ public final class Rest {
                                     RestLocale rl = field.getAnnotation(RestLocale.class);
                                     RestBody rb = field.getAnnotation(RestBody.class);
                                     RestUploadFile ru = field.getAnnotation(RestUploadFile.class);
-                                    RestURI ri = field.getAnnotation(RestURI.class);
+                                    RestPath ri = field.getAnnotation(RestPath.class);
                                     if (rh == null && rc == null && ra == null && rl == null && rb == null && rs == null && ru == null && ri == null) {
                                         continue;
                                     }
@@ -2097,33 +2097,33 @@ public final class Rest {
                     comment = annfile.comment();
                 }
 
-                RestURI annuri = param.getAnnotation(RestURI.class);
-                if (annuri != null) {
+                RestPath annpath = param.getAnnotation(RestPath.class);
+                if (annpath != null) {
                     if (annhead != null) {
-                        throw new RestException("@RestURI and @RestHeader cannot on the same Parameter in " + method);
+                        throw new RestException("@RestPath and @RestHeader cannot on the same Parameter in " + method);
                     }
                     if (anncookie != null) {
-                        throw new RestException("@RestURI and @RestCookie cannot on the same Parameter in " + method);
+                        throw new RestException("@RestPath and @RestCookie cannot on the same Parameter in " + method);
                     }
                     if (annsid != null) {
-                        throw new RestException("@RestURI and @RestSessionid cannot on the same Parameter in " + method);
+                        throw new RestException("@RestPath and @RestSessionid cannot on the same Parameter in " + method);
                     }
                     if (annaddr != null) {
-                        throw new RestException("@RestURI and @RestAddress cannot on the same Parameter in " + method);
+                        throw new RestException("@RestPath and @RestAddress cannot on the same Parameter in " + method);
                     }
                     if (annlocale != null) {
-                        throw new RestException("@RestURI and @RestLocale cannot on the same Parameter in " + method);
+                        throw new RestException("@RestPath and @RestLocale cannot on the same Parameter in " + method);
                     }
                     if (annbody != null) {
-                        throw new RestException("@RestURI and @RestBody cannot on the same Parameter in " + method);
+                        throw new RestException("@RestPath and @RestBody cannot on the same Parameter in " + method);
                     }
                     if (annfile != null) {
-                        throw new RestException("@RestURI and @RestUploadFile cannot on the same Parameter in " + method);
+                        throw new RestException("@RestPath and @RestUploadFile cannot on the same Parameter in " + method);
                     }
                     if (ptype != String.class) {
-                        throw new RestException("@RestURI must on String Parameter in " + method);
+                        throw new RestException("@RestPath must on String Parameter in " + method);
                     }
-                    comment = annuri.comment();
+                    comment = annpath.comment();
                 }
 
                 RestUserid userid = param.getAnnotation(RestUserid.class);
@@ -2283,7 +2283,7 @@ public final class Rest {
                     } while ((loop = loop.getSuperclass()) != Object.class);
                 }
                 java.lang.reflect.Type paramtype = TypeToken.getGenericType(param.getParameterizedType(), serviceType);
-                paramlist.add(new Object[]{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annlocale, annhead, anncookie, annbody, annfile, annuri, userid, annheaders, annparams, paramtype});
+                paramlist.add(new Object[]{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annlocale, annhead, anncookie, annbody, annfile, annpath, userid, annheaders, annparams, paramtype});
             }
 
             Map<String, Object> mappingMap = new LinkedHashMap<>();
@@ -2406,7 +2406,7 @@ public final class Rest {
                 av0 = mv.visitAnnotation(httpParamsDesc, true);
                 AnnotationVisitor av1 = av0.visitArray("value");
                 //设置 HttpParam
-                for (Object[] ps : paramlist) { //{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annlocale, annhead, anncookie, annbody, annfile, annuri, annuserid, annheaders, annparams, paramtype}
+                for (Object[] ps : paramlist) { //{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annlocale, annhead, anncookie, annbody, annfile, annpath, annuserid, annheaders, annparams, paramtype}
                     String n = ps[1].toString();
                     final boolean isuserid = ((RestUserid) ps[headIndex + 5]) != null; //是否取userid
                     if (n.indexOf('&') >= 0 || isuserid) {
@@ -2514,7 +2514,7 @@ public final class Rest {
                 RestCookie anncookie = (RestCookie) ps[headIndex + 1];
                 RestBody annbody = (RestBody) ps[headIndex + 2];
                 RestUploadFile annfile = (RestUploadFile) ps[headIndex + 3];
-                RestURI annuri = (RestURI) ps[headIndex + 4];
+                RestPath annpath = (RestPath) ps[headIndex + 4];
                 RestUserid userid = (RestUserid) ps[headIndex + 5];
                 boolean annheaders = (Boolean) ps[headIndex + 6];
                 boolean annparams = (Boolean) ps[headIndex + 7];
@@ -2596,9 +2596,9 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 4);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
-                } else if (annuri != null) { //HttpRequest.getRequestURI
+                } else if (annpath != null) { //HttpRequest.getPath
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequestURI", "()Ljava/lang/String;", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPath", "()Ljava/lang/String;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
                 } else if (userid != null) { //HttpRequest.currentUserid
@@ -2626,47 +2626,47 @@ public final class Rest {
                 } else if ("#".equals(pname)) { //从request.getRequstURI 中取参数
                     if (ptype == boolean.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURILastPath", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "parseBoolean", "(Ljava/lang/String;)Z", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
                         varInsns.add(new int[]{ILOAD, maxLocals});
                     } else if (ptype == byte.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURILastPath", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
                         mv.visitIntInsn(BIPUSH, radix);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "parseByte", "(Ljava/lang/String;I)B", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
                         varInsns.add(new int[]{ILOAD, maxLocals});
                     } else if (ptype == short.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURILastPath", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
                         mv.visitIntInsn(BIPUSH, radix);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "parseShort", "(Ljava/lang/String;I)S", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
                         varInsns.add(new int[]{ILOAD, maxLocals});
                     } else if (ptype == char.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURILastPath", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
                         mv.visitInsn(ICONST_0);
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "charAt", "(I)C", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
                         varInsns.add(new int[]{ILOAD, maxLocals});
                     } else if (ptype == int.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURILastPath", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
                         mv.visitIntInsn(BIPUSH, radix);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "parseInt", "(Ljava/lang/String;I)I", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
                         varInsns.add(new int[]{ILOAD, maxLocals});
                     } else if (ptype == float.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURILastPath", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "parseFloat", "(Ljava/lang/String;)F", false);
                         mv.visitVarInsn(FSTORE, maxLocals);
                         varInsns.add(new int[]{FLOAD, maxLocals});
                     } else if (ptype == long.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURILastPath", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
                         mv.visitIntInsn(BIPUSH, radix);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "parseLong", "(Ljava/lang/String;I)J", false);
                         mv.visitVarInsn(LSTORE, maxLocals);
@@ -2674,25 +2674,25 @@ public final class Rest {
                         maxLocals++;
                     } else if (ptype == double.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURILastPath", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "parseDouble", "(Ljava/lang/String;)D", false);
                         mv.visitVarInsn(DSTORE, maxLocals);
                         varInsns.add(new int[]{DLOAD, maxLocals});
                         maxLocals++;
                     } else if (ptype == String.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURILastPath", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
                         mv.visitVarInsn(ASTORE, maxLocals);
                         varInsns.add(new int[]{ALOAD, maxLocals});
                     } else {
                         throw new RestException(method + " only " + RestParam.class.getSimpleName() + "(#) to Type(primitive class or String)");
                     }
-                } else if (pname.charAt(0) == '#') { //从request.getRequstURIPath 中去参数
+                } else if (pname.charAt(0) == '#') { //从request.getPathParam 中去参数
                     if (ptype == boolean.class) {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("false");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathParam", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "parseBoolean", "(Ljava/lang/String;)Z", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
                         varInsns.add(new int[]{ILOAD, maxLocals});
@@ -2700,7 +2700,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("0");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathParam", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                         mv.visitIntInsn(BIPUSH, radix);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "parseByte", "(Ljava/lang/String;I)B", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
@@ -2709,7 +2709,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("0");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathParam", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                         mv.visitIntInsn(BIPUSH, radix);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "parseShort", "(Ljava/lang/String;I)S", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
@@ -2718,7 +2718,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("0");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathParam", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                         mv.visitInsn(ICONST_0);
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "charAt", "(I)C", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
@@ -2727,7 +2727,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("0");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathParam", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                         mv.visitIntInsn(BIPUSH, radix);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "parseInt", "(Ljava/lang/String;I)I", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
@@ -2736,7 +2736,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("0");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathParam", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "parseFloat", "(Ljava/lang/String;)F", false);
                         mv.visitVarInsn(FSTORE, maxLocals);
                         varInsns.add(new int[]{FLOAD, maxLocals});
@@ -2744,7 +2744,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("0");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathParam", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                         mv.visitIntInsn(BIPUSH, radix);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "parseLong", "(Ljava/lang/String;I)J", false);
                         mv.visitVarInsn(LSTORE, maxLocals);
@@ -2754,7 +2754,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("0");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathParam", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "parseDouble", "(Ljava/lang/String;)D", false);
                         mv.visitVarInsn(DSTORE, maxLocals);
                         varInsns.add(new int[]{DLOAD, maxLocals});
@@ -2763,7 +2763,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequstURIPath", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathParam", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
                         mv.visitVarInsn(ASTORE, maxLocals);
                         varInsns.add(new int[]{ALOAD, maxLocals});
                     } else {
@@ -2903,7 +2903,7 @@ public final class Rest {
                             RestLocale rl = field.getAnnotation(RestLocale.class);
                             RestBody rb = field.getAnnotation(RestBody.class);
                             RestUploadFile ru = field.getAnnotation(RestUploadFile.class);
-                            RestURI ri = field.getAnnotation(RestURI.class);
+                            RestPath ri = field.getAnnotation(RestPath.class);
                             if (rh == null && rc == null && ra == null && rl == null && rb == null && rs == null && ru == null && ri == null) {
                                 continue;
                             }
@@ -2930,7 +2930,7 @@ public final class Rest {
                             }
 
                             if (ri != null && field.getType() != String.class) {
-                                throw new RestException("@RestURI must on String Field in " + field);
+                                throw new RestException("@RestPath must on String Field in " + field);
                             }
                             org.redkale.util.Attribute attr = org.redkale.util.Attribute.create(loop, field);
                             String attrFieldName;
@@ -3026,7 +3026,7 @@ public final class Rest {
                             } else if (en.getKey().contains("_locale_")) {
                                 mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getLocale", "()Ljava/lang/String;", false);
                             } else if (en.getKey().contains("_uri_")) {
-                                mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequestURI", "()Ljava/lang/String;", false);
+                                mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPath", "()Ljava/lang/String;", false);
                             } else if (en.getKey().contains("_bodystring_")) {
                                 mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getBodyUTF8", "()Ljava/lang/String;", false);
                             } else if (en.getKey().contains("_bodybytes_")) {

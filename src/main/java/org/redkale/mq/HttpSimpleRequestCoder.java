@@ -42,8 +42,8 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
     @Override
     public byte[] encode(HttpSimpleRequest data) {
         byte[] traceid = MessageCoder.getBytes(data.getTraceid());//short-string
-        byte[] requestURI = MessageCoder.getBytes(data.getRequestURI()); //long-string
-        byte[] path = MessageCoder.getBytes(data.getPath()); //short-string
+        byte[] path = MessageCoder.getBytes(data.getPath()); //long-string
+        byte[] contextPath = MessageCoder.getBytes(data.getContextPath()); //short-string
         byte[] method = MessageCoder.getBytes(data.getMethod());//short-string
         byte[] remoteAddr = MessageCoder.getBytes(data.getRemoteAddr());//short-string
         byte[] sessionid = MessageCoder.getBytes(data.getSessionid());//short-string
@@ -56,8 +56,8 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
             + 4 //reqConvertType
             + 4 //respConvertType
             + 2 + traceid.length
-            + 4 + requestURI.length
-            + 2 + path.length
+            + 4 + path.length
+            + 2 + contextPath.length
             + 2 + method.length
             + 2 + remoteAddr.length
             + 2 + sessionid.length
@@ -80,18 +80,18 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
             buffer.put(traceid);
         }
 
-        if (data.getRequestURI() == null) {
+        if (data.getPath() == null) {
             buffer.putInt(-1);
         } else {
-            buffer.putInt(requestURI.length);
-            buffer.put(requestURI);
+            buffer.putInt(path.length);
+            buffer.put(path);
         }
 
-        if (data.getPath() == null) {
+        if (data.getContextPath() == null) {
             buffer.putShort((short) -1);
         } else {
-            buffer.putShort((short) path.length);
-            buffer.put(path);
+            buffer.putShort((short) contextPath.length);
+            buffer.put(contextPath);
         }
 
         if (data.getMethod() == null) {
@@ -158,8 +158,8 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
             req.setRespConvertType(ConvertType.find(respformat));
         }
         req.setTraceid(MessageCoder.getSmallString(buffer));
-        req.setRequestURI(MessageCoder.getBigString(buffer));
-        req.setPath(MessageCoder.getSmallString(buffer));
+        req.setPath(MessageCoder.getBigString(buffer));
+        req.setContextPath(MessageCoder.getSmallString(buffer));
         req.setMethod(MessageCoder.getSmallString(buffer));
         req.setRemoteAddr(MessageCoder.getSmallString(buffer));
         req.setSessionid(MessageCoder.getSmallString(buffer));

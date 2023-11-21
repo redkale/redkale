@@ -12,7 +12,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * 只能注解于Service类的方法的String参数或参数内的String字段
  * <p>
- * 用于获取HTTP请求URL HttpRequest.getRequestURI
+ * 用于获取HTTP请求URL HttpRequest.getPath
  * <p>
  * 详情见: https://redkale.org
  *
@@ -22,7 +22,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 @Target({PARAMETER, FIELD})
 @Retention(RUNTIME)
-public @interface RestURI {
+public @interface RestPath {
 
     /**
      * 备注描述, 对应&#64;HttpParam.comment

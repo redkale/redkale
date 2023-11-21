@@ -79,7 +79,7 @@ public class HttpClusterRpcClient extends HttpRpcClient {
     private CompletableFuture<HttpResult<byte[]>> httpAsync(boolean produce, Serializable userid, HttpSimpleRequest req) {
         req.setTraceid(Traces.computeIfAbsent(req.getTraceid(), Traces.currentTraceid()));
         final WorkThread workThread = WorkThread.currentWorkThread();
-        String module = req.getRequestURI();
+        String module = req.getPath();
         module = module.substring(1); //去掉/
         module = module.substring(0, module.indexOf('/'));
         HttpHeaders headers = req.getHeaders();
@@ -127,10 +127,10 @@ public class HttpClusterRpcClient extends HttpRpcClient {
             if (req.getBody() != null && req.getBody().length > 0) {
                 String paramstr = req.getParametersToString();
                 if (paramstr != null) {
-                    if (req.getRequestURI().indexOf('?') > 0) {
-                        req.setRequestURI(req.getRequestURI() + "&" + paramstr);
+                    if (req.getPath().indexOf('?') > 0) {
+                        req.setPath(req.getPath() + "&" + paramstr);
                     } else {
-                        req.setRequestURI(req.getRequestURI() + "?" + paramstr);
+                        req.setPath(req.getPath() + "?" + paramstr);
                     }
                 }
                 clientBody = req.getBody();
@@ -143,19 +143,18 @@ public class HttpClusterRpcClient extends HttpRpcClient {
             if (logger.isLoggable(Level.FINEST)) {
                 logger.log(Level.FINEST, "httpAsync: module=" + localModule + ", resname=" + resname + ", enter forEachCollectionFuture");
             }
-            return forEachCollectionFuture(workThread, logger.isLoggable(Level.FINEST), userid, req,
-                (req.getPath() != null && !req.getPath().isEmpty() ? req.getPath() : "") + req.getRequestURI(),
+            return forEachCollectionFuture(logger.isLoggable(Level.FINEST), req, req.requestPath(),
                 clientHeaders, clientBody, addrs.iterator());
         });
     }
 
-    private CompletableFuture<HttpResult<byte[]>> forEachCollectionFuture(final WorkThread workThread, boolean finest, Serializable userid,
-        HttpSimpleRequest req, String requesturi, final HttpHeaders clientHeaders, byte[] clientBody, Iterator<InetSocketAddress> it) {
+    private CompletableFuture<HttpResult<byte[]>> forEachCollectionFuture(boolean finest, HttpSimpleRequest req,
+        String requestPath, final HttpHeaders clientHeaders, byte[] clientBody, Iterator<InetSocketAddress> it) {
         if (!it.hasNext()) {
             return CompletableFuture.completedFuture(null);
         }
         InetSocketAddress addr = it.next();
-        String url = "http://" + addr.getHostString() + ":" + addr.getPort() + requesturi;
+        String url = "http://" + addr.getHostString() + ":" + addr.getPort() + requestPath;
         if (finest) {
             if (clientBody != null) {
                 logger.log(Level.FINEST, "forEachCollectionFuture: url: " + url + ", body: " + new String(clientBody, StandardCharsets.UTF_8) + ", headers: " + clientHeaders);
@@ -186,75 +185,4 @@ public class HttpClusterRpcClient extends HttpRpcClient {
             });
     }
 
-//
-//    private CompletableFuture<HttpResult<byte[]>> httpAsync(Serializable userid, HttpSimpleRequest req) {
-//        final boolean finest = logger.isLoggable(Level.FINEST);
-//        String module = req.getRequestURI();
-//        module = module.substring(1); //去掉/
-//        module = module.substring(0, module.indexOf('/'));
-//        Map<String, String> headers = req.getHeaders();
-//        String resname = headers == null ? "" : headers.getOrDefault(Rest.REST_HEADER_RESNAME, "");
-//        return clusterAgent.queryHttpAddress("http", module, resname).thenCompose(addrs -> {
-//            if (addrs == null || addrs.isEmpty()) return new HttpResult().status(404).toAnyFuture();
-//            java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder().timeout(Duration.ofMillis(30000));
-//            if (req.isRpc()) builder.header(Rest.REST_HEADER_RPC_NAME, "true");
-//            if (req.isFrombody()) builder.header(Rest.REST_HEADER_PARAM_FROM_BODY, "true");
-//            if (req.getReqConvertType() != null) builder.header(Rest.REST_HEADER_REQ_CONVERT, req.getReqConvertType().toString());
-//            if (req.getRespConvertType() != null) builder.header(Rest.REST_HEADER_RESP_CONVERT, req.getRespConvertType().toString());
-//            if (userid != 0) builder.header(Rest.REST_HEADER_CURRUSERID, "" + userid);
-//            if (headers != null) headers.forEach((n, v) -> {
-//                    if (!DISALLOWED_HEADERS_SET.contains(n.toLowerCase())) builder.header(n, v);
-//                });
-//            builder.header("Content-Type", "x-www-form-urlencoded");
-//            if (req.getBody() != null && req.getBody().length > 0) {
-//                String paramstr = req.getParametersToString();
-//                if (paramstr != null) {
-//                    if (req.getRequestURI().indexOf('?') > 0) {
-//                        req.setRequestURI(req.getRequestURI() + "&" + paramstr);
-//                    } else {
-//                        req.setRequestURI(req.getRequestURI() + "?" + paramstr);
-//                    }
-//                }
-//                builder.POST(java.net.http.HttpRequest.BodyPublishers.ofByteArray(req.getBody()));
-//            } else {
-//                String paramstr = req.getParametersToString();
-//                if (paramstr != null) builder.POST(java.net.http.HttpRequest.BodyPublishers.ofString(paramstr));
-//            }
-//            return forEachCollectionFuture(finest, userid, req, (req.getPath() != null && !req.getPath().isEmpty() ? req.getPath() : "") + req.getRequestURI(), builder, addrs.iterator());
-//        });
-//    }
-//
-//    private CompletableFuture<HttpResult<byte[]>> forEachCollectionFuture(boolean finest, Serializable userid, HttpSimpleRequest req, String requesturi, java.net.http.HttpRequest.Builder builder, Iterator<InetSocketAddress> it) {
-//        if (!it.hasNext()) return CompletableFuture.completedFuture(null);
-//        InetSocketAddress addr = it.next();
-//        String url = "http://" + addr.getHostString() + ":" + addr.getPort() + requesturi;
-//        return httpClient.sendAsync(builder.copy().uri(URI.create(url)).build(), java.net.http.HttpResponse.BodyHandlers.ofByteArray()).thenCompose(resp -> {
-//            if (resp.statusCode() != 200) return forEachCollectionFuture(finest, userid, req, requesturi, builder, it);
-//            HttpResult rs = new HttpResult();
-//            java.net.http.HttpHeaders hs = resp.headers();
-//            if (hs != null) {
-//                Map<String, List<String>> hm = hs.map();
-//                if (hm != null) {
-//                    for (Map.Entry<String, List<String>> en : hm.entrySet()) {
-//                        if ("date".equals(en.getKey()) || "content-type".equals(en.getKey())
-//                            || "server".equals(en.getKey()) || "connection".equals(en.getKey())) continue;
-//                        List<String> val = en.getValue();
-//                        if (val != null && val.size() == 1) {
-//                            rs.header(en.getKey(), val.get(0));
-//                        }
-//                    }
-//                }
-//            }
-//            rs.setResult(resp.body());
-//            if (finest) {
-//                StringBuilder sb = new StringBuilder();
-//                Map<String, String> params = req.getParams();
-//                if (params != null && !params.isEmpty()) {
-//                    params.forEach((n, v) -> sb.append('&').append(n).append('=').append(v));
-//                }
-//                logger.log(Level.FINEST, url + "?userid=" + userid + sb + ", result = " + new String(resp.body(), StandardCharsets.UTF_8));
-//            }
-//            return CompletableFuture.completedFuture(rs);
-//        });
-//    }
 }
