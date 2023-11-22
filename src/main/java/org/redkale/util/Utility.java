@@ -1003,6 +1003,102 @@ public final class Utility {
     }
 
     /**
+     * 是否为空
+     *
+     * @param array 数组
+     *
+     * @return 是否为空
+     *
+     */
+    public static boolean isEmpty(byte[] array) {
+        return array == null || array.length == 0;
+    }
+
+    /**
+     * 是否不为空
+     *
+     * @param array 数组
+     *
+     * @return 是否不为空
+     *
+     */
+    public static boolean isNotEmpty(byte[] array) {
+        return array != null && array.length > 0;
+    }
+
+    /**
+     * 是否为空
+     *
+     * @param array 数组
+     *
+     * @return 是否为空
+     *
+     */
+    public static boolean isEmpty(short[] array) {
+        return array == null || array.length == 0;
+    }
+
+    /**
+     * 是否不为空
+     *
+     * @param array 数组
+     *
+     * @return 是否不为空
+     *
+     */
+    public static boolean isNotEmpty(short[] array) {
+        return array != null && array.length > 0;
+    }
+
+    /**
+     * 是否为空
+     *
+     * @param array 数组
+     *
+     * @return 是否为空
+     *
+     */
+    public static boolean isEmpty(int[] array) {
+        return array == null || array.length == 0;
+    }
+
+    /**
+     * 是否不为空
+     *
+     * @param array 数组
+     *
+     * @return 是否不为空
+     *
+     */
+    public static boolean isNotEmpty(int[] array) {
+        return array != null && array.length > 0;
+    }
+
+    /**
+     * 是否为空
+     *
+     * @param array 数组
+     *
+     * @return 是否为空
+     *
+     */
+    public static boolean isEmpty(long[] array) {
+        return array == null || array.length == 0;
+    }
+
+    /**
+     * 是否不为空
+     *
+     * @param array 数组
+     *
+     * @return 是否不为空
+     *
+     */
+    public static boolean isNotEmpty(long[] array) {
+        return array != null && array.length > 0;
+    }
+
+    /**
      * 将字符串首字母大写
      *
      * @param str 字符串

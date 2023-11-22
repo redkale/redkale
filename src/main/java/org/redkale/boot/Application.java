@@ -1159,7 +1159,7 @@ public final class Application {
                 rf.register(resourceName, java.net.http.HttpClient.class, httpClient);
                 return httpClient;
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "java.net.http.HttpClient inject error", e);
+                logger.log(Level.SEVERE, java.net.http.HttpClient.class.getSimpleName() + " inject error", e);
                 return null;
             }
         }, java.net.http.HttpClient.class);
@@ -1175,7 +1175,7 @@ public final class Application {
                 rf.register(resourceName, HttpSimpleClient.class, httpClient);
                 return httpClient;
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "HttpClient inject error", e);
+                logger.log(Level.SEVERE, HttpSimpleClient.class.getSimpleName() + " inject error", e);
                 return null;
             }
         }, HttpSimpleClient.class);

@@ -73,7 +73,7 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
     }
 
     @Override
-    public <T> Set<SocketOption<?>> supportedOptions() {
+    public Set<SocketOption<?>> supportedOptions() {
         return this.serverChannel.supportedOptions();
     }
 

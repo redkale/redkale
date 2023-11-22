@@ -70,12 +70,6 @@ public final class Rest {
 
     private static final String REST_RETURNTYPES_FIELD_NAME = "_redkale_returntypes"; //存在泛型的结果数组
 
-    private static final java.lang.reflect.Type TYPE_MAP_STRING_SERIALIZE = new TypeToken<Map<String, Serializable>>() {
-    }.getType();
-
-    private static final java.lang.reflect.Type TYPE_MAP_STRING_STRING = new TypeToken<Map<String, String>>() {
-    }.getType();
-
     private static final java.lang.reflect.Type TYPE_RETRESULT_STRING = new TypeToken<RetResult<String>>() {
     }.getType();
 

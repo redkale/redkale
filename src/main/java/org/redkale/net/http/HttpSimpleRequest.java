@@ -10,6 +10,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.redkale.annotation.Comment;
+import org.redkale.annotation.Nullable;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.client.ClientConnection;
@@ -122,6 +123,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         }
     }
 
+    @Nullable
     @ConvertDisabled
     public String getParametersToString() {
         if (this.params == null || this.params.isEmpty()) {

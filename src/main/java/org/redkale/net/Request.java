@@ -49,6 +49,9 @@ public abstract class Request<C extends Context> {
      */
     private final Map<String, Object> properties = new HashMap<>();
 
+    /**
+     * 每次新请求都会清空
+     */
     protected final Map<String, Object> attributes = new HashMap<>();
 
     protected Request(C context) {

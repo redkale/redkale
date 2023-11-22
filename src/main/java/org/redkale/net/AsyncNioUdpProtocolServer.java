@@ -81,7 +81,7 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
     }
 
     @Override
-    public <T> Set<SocketOption<?>> supportedOptions() {
+    public Set<SocketOption<?>> supportedOptions() {
         return udpServerChannel.serverChannel.supportedOptions();
     }
 

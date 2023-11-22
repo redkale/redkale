@@ -10,7 +10,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.redkale.annotation.Resource;
 import org.redkale.boot.Application;
-import org.redkale.net.WorkThread;
 import org.redkale.net.http.*;
 import org.redkale.util.Traces;
 import org.redkale.util.Utility;
@@ -42,10 +41,10 @@ public class HttpClusterRpcClient extends HttpRpcClient {
     protected ClusterAgent clusterAgent;
 
     @Resource(name = "cluster.httpClient", required = false)
-    protected java.net.http.HttpClient httpClient;
+    protected HttpSimpleClient httpSimpleClient;
 
     @Resource(name = "cluster.httpClient", required = false)
-    protected HttpSimpleClient httpSimpleClient;
+    protected java.net.http.HttpClient httpClient;
 
     public HttpClusterRpcClient(Application application, String resourceName, ClusterAgent clusterAgent) {
         Objects.requireNonNull(clusterAgent);
@@ -78,7 +77,6 @@ public class HttpClusterRpcClient extends HttpRpcClient {
 
     private CompletableFuture<HttpResult<byte[]>> httpAsync(boolean produce, Serializable userid, HttpSimpleRequest req) {
         req.setTraceid(Traces.computeIfAbsent(req.getTraceid(), Traces.currentTraceid()));
-        final WorkThread workThread = WorkThread.currentWorkThread();
         String module = req.getPath();
         module = module.substring(1); //去掉/
         module = module.substring(0, module.indexOf('/'));
@@ -92,7 +90,8 @@ public class HttpClusterRpcClient extends HttpRpcClient {
             Traces.currentTraceid(req.getTraceid());
             if (isEmpty(addrs)) {
                 if (logger.isLoggable(Level.WARNING)) {
-                    logger.log(Level.WARNING, "httpAsync." + (produce ? "produceMessage" : "sendMessage") + " failed, module=" + localModule + ", resname=" + resname + ", address is empty");
+                    logger.log(Level.WARNING, "httpAsync." + (produce ? "produceMessage" : "sendMessage")
+                        + " failed, module=" + localModule + ", resname=" + resname + ", address is empty");
                 }
                 return new HttpResult<byte[]>().status(404).toFuture();
             }
@@ -107,12 +106,15 @@ public class HttpClusterRpcClient extends HttpRpcClient {
                     }
                 });
             }
-            byte[] clientBody = null;
+            clientHeaders.set("Content-Type", "x-www-form-urlencoded");
             if (req.isRpc()) {
                 clientHeaders.set(Rest.REST_HEADER_RPC, "true");
             }
             if (isNotEmpty(req.getTraceid())) {
                 clientHeaders.set(Rest.REST_HEADER_TRACEID, req.getTraceid());
+            }
+            if (userid != null) {
+                clientHeaders.set(Rest.REST_HEADER_CURRUSERID, String.valueOf(userid));
             }
             if (req.getReqConvertType() != null) {
                 clientHeaders.set(Rest.REST_HEADER_REQ_CONVERT, req.getReqConvertType().toString());
@@ -120,11 +122,9 @@ public class HttpClusterRpcClient extends HttpRpcClient {
             if (req.getRespConvertType() != null) {
                 clientHeaders.set(Rest.REST_HEADER_RESP_CONVERT, req.getRespConvertType().toString());
             }
-            if (userid != null) {
-                clientHeaders.set(Rest.REST_HEADER_CURRUSERID, "" + userid);
-            }
-            clientHeaders.set("Content-Type", "x-www-form-urlencoded");
-            if (req.getBody() != null && req.getBody().length > 0) {
+
+            byte[] clientBody = null;
+            if (isNotEmpty(req.getBody())) {
                 String paramstr = req.getParametersToString();
                 if (paramstr != null) {
                     if (req.getPath().indexOf('?') > 0) {
@@ -141,48 +141,48 @@ public class HttpClusterRpcClient extends HttpRpcClient {
                 }
             }
             if (logger.isLoggable(Level.FINEST)) {
-                logger.log(Level.FINEST, "httpAsync: module=" + localModule + ", resname=" + resname + ", enter forEachCollectionFuture");
+                logger.log(Level.FINEST, "httpAsync: module=" + localModule + ", resname=" + resname + ", enter sendEachAddressAsync");
             }
-            return forEachCollectionFuture(logger.isLoggable(Level.FINEST), req, req.requestPath(),
-                clientHeaders, clientBody, addrs.iterator());
+            return sendEachAddressAsync(req, req.requestPath(), clientHeaders, clientBody, addrs.iterator());
         });
     }
 
-    private CompletableFuture<HttpResult<byte[]>> forEachCollectionFuture(boolean finest, HttpSimpleRequest req,
+    private CompletableFuture<HttpResult<byte[]>> sendEachAddressAsync(HttpSimpleRequest req,
         String requestPath, final HttpHeaders clientHeaders, byte[] clientBody, Iterator<InetSocketAddress> it) {
         if (!it.hasNext()) {
-            return CompletableFuture.completedFuture(null);
+            return new HttpResult<byte[]>().status(404).toFuture();
         }
         InetSocketAddress addr = it.next();
-        String url = "http://" + addr.getHostString() + ":" + addr.getPort() + requestPath;
-        if (finest) {
-            if (clientBody != null) {
-                logger.log(Level.FINEST, "forEachCollectionFuture: url: " + url + ", body: " + new String(clientBody, StandardCharsets.UTF_8) + ", headers: " + clientHeaders);
-            } else {
-                logger.log(Level.FINEST, "forEachCollectionFuture: url: " + url + ", headers: " + clientHeaders);
-            }
+        String host = addr.getPort() != 80 ? addr.getHostString() : (addr.getHostString() + ":" + addr.getPort());
+        String url = "http://" + host + requestPath;
+        if (logger.isLoggable(Level.FINER)) {
+            logger.log(Level.FINER, "sendEachAddressAsync: url: " + url
+                + ", body: " + (clientBody != null ? new String(clientBody, StandardCharsets.UTF_8) : "") + ", headers: " + clientHeaders);
         }
         if (httpSimpleClient != null) {
+            clientHeaders.set("Host", host);
             return httpSimpleClient.postAsync(url, clientHeaders, clientBody);
-        }
-        java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .header(Rest.REST_HEADER_TRACEID, req.getTraceid())
-            .timeout(Duration.ofMillis(10_000))
-            //存在sendHeader后不发送body数据的问题， java.net.http.HttpRequest的bug?
-            .method("POST", clientBody == null ? java.net.http.HttpRequest.BodyPublishers.noBody() : java.net.http.HttpRequest.BodyPublishers.ofByteArray(clientBody));
-        if (clientHeaders != null) {
+        } else {
+            java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .timeout(Duration.ofMillis(10_000))
+                //存在sendHeader后不发送body数据的问题， java.net.http.HttpRequest的bug?
+                .method("POST", createBodyPublisher(clientBody));
             clientHeaders.forEach(builder::header);
+            return httpClient.sendAsync(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofByteArray())
+                .thenApply((java.net.http.HttpResponse<byte[]> resp) -> {
+                    Traces.currentTraceid(req.getTraceid());
+                    final int rs = resp.statusCode();
+                    if (rs != 200) {
+                        return new HttpResult<byte[]>().status(rs);
+                    }
+                    return new HttpResult<>(resp.body());
+                });
         }
-        return httpClient.sendAsync(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofByteArray())
-            .thenApply((java.net.http.HttpResponse<byte[]> resp) -> {
-                Traces.currentTraceid(req.getTraceid());
-                final int rs = resp.statusCode();
-                if (rs != 200) {
-                    return new HttpResult<byte[]>().status(rs);
-                }
-                return new HttpResult<byte[]>(resp.body());
-            });
+    }
+
+    private static java.net.http.HttpRequest.BodyPublisher createBodyPublisher(byte[] clientBody) {
+        return clientBody == null ? java.net.http.HttpRequest.BodyPublishers.noBody() : java.net.http.HttpRequest.BodyPublishers.ofByteArray(clientBody);
     }
 
 }

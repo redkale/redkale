@@ -230,6 +230,9 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
     public <T> CompletableFuture<HttpResult<T>> sendAsync(String method, String url, HttpHeaders headers, byte[] body, Convert convert, Type valueType) {
         final String traceid = Traces.computeIfAbsent(Traces.currentTraceid());
         final WorkThread workThread = WorkThread.currentWorkThread();
+        if (method.indexOf(' ') >= 0 || method.indexOf('\r') >= 0 || method.indexOf('\n') >= 0) {
+            throw new RedkaleException("http-method(" + method + ") is illegal");
+        }
         if (url.indexOf(' ') >= 0 || url.indexOf('\r') >= 0 || url.indexOf('\n') >= 0) {
             throw new RedkaleException("http-url(" + url + ") is illegal");
         }
@@ -238,18 +241,21 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
 
         final ByteArray array = new ByteArray();
         int urlpos = url.indexOf("/", url.indexOf("//") + 3);
-        array.put((method.toUpperCase() + " " + (urlpos > 0 ? url.substring(urlpos) : "/") + " HTTP/1.1\r\n"
-            + "Host: " + uri.getHost() + "\r\n"
-            + Rest.REST_HEADER_TRACEID + ": " + traceid + "\r\n"
-            + "Content-Length: " + (body == null ? 0 : body.length) + "\r\n").getBytes(StandardCharsets.UTF_8));
+        array.put((method.toUpperCase() + " " + (urlpos > 0 ? url.substring(urlpos) : "/") + " HTTP/1.1\r\n").getBytes(StandardCharsets.UTF_8));
+        array.put(("Host: " + uri.getHost() + "\r\n").getBytes(StandardCharsets.UTF_8));
+
+        array.put(("Content-Length: " + (body == null ? 0 : body.length) + "\r\n").getBytes(StandardCharsets.UTF_8));
         if (headers == null || !headers.contains("User-Agent")) {
             array.put(header_bytes_useragent);
         }
         if (headers == null || !headers.contains("Connection")) {
             array.put(header_bytes_connclose);
         }
+        if (headers == null || !headers.contains(Rest.REST_HEADER_TRACEID)) {
+            array.put((Rest.REST_HEADER_TRACEID + ": " + traceid + "\r\n").getBytes(StandardCharsets.UTF_8));
+        }
         if (headers != null) {
-            headers.forEach((k, v) -> array.put((k + ": " + String.valueOf(v) + "\r\n").getBytes(StandardCharsets.UTF_8)));
+            headers.forEach((k, v) -> array.put((k + ": " + v + "\r\n").getBytes(StandardCharsets.UTF_8)));
         }
         array.put((byte) '\r', (byte) '\n');
         if (body != null) {

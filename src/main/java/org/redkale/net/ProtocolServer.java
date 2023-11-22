@@ -34,7 +34,7 @@ public abstract class ProtocolServer {
 
     public abstract void bind(SocketAddress local, int backlog) throws IOException;
 
-    public abstract <T> Set<SocketOption<?>> supportedOptions();
+    public abstract Set<SocketOption<?>> supportedOptions();
 
     public abstract <T> void setOption(SocketOption<T> name, T value) throws IOException;
 
