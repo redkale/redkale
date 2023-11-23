@@ -25,9 +25,9 @@ public class SncpClientResult implements ClientResult {
 
     private byte[] bodyContent;
 
-    protected void prepare() {
-        //do nothing
-    }
+//    protected void prepare() {
+//        //do nothing
+//    }
 
     protected boolean recycle() {
         this.header = null;

@@ -212,7 +212,7 @@ public class HttpResourceServlet extends HttpServlet {
 
     @Override
     public void execute(HttpRequest request, HttpResponse response) throws IOException {
-        String uri = request.getPath();
+        String uri = request.getRequestPath();
         if (uri.contains("../")) {
             if (logger.isLoggable(Level.FINEST)) {
                 logger.log(Level.FINEST, "Not found resource (404) be " + uri + ", request = " + request);
@@ -254,7 +254,7 @@ public class HttpResourceServlet extends HttpServlet {
         }
         if (entry == null) {
             if (logger.isLoggable(Level.FINER)) {
-                logger.log(Level.FINER, "Not found resource (404), url = " + request.getPath());
+                logger.log(Level.FINER, "Not found resource (404), url = " + request.getRequestPath());
             }
             finish404(request, response);
         } else {

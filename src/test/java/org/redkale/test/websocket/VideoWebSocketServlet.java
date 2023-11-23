@@ -53,7 +53,7 @@ public class VideoWebSocketServlet extends WebSocketServlet {
 
             @Override
             public CompletableFuture<String> onOpen(final HttpRequest request) {
-                String uri = request.getPath();
+                String uri = request.getRequestPath();
                 int pos = uri.indexOf("/listen/");
                 uri = uri.substring(pos + "/listen/".length());
                 this.repeat = sessions.get(uri) != null;

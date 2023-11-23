@@ -34,5 +34,7 @@ public interface RestHeaders {
 
     public boolean contains(String name);
 
+    public boolean containsIgnoreCase(String name);
+
     public Map<String, Serializable> map();
 }

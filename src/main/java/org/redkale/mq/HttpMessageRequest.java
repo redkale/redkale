@@ -41,8 +41,8 @@ public class HttpMessageRequest extends HttpRequest {
     }
 
     @Override
-    public HttpMessageRequest setPath(String path) {
-        this.path = path;
+    public HttpMessageRequest setRequestPath(String path) {
+        this.requestPath = path;
         return this;
     }
 

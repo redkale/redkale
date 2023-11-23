@@ -1386,7 +1386,7 @@ public final class Rest {
                         } else if (annlocale != null) { //HttpRequest.getLocale
                         } else if (annbody != null) { //HttpRequest.getBodyUTF8 / HttpRequest.getBody
                         } else if (annfile != null) { //MultiContext.partsFirstBytes / HttpRequest.partsFirstFile / HttpRequest.partsFiles
-                        } else if (annpath != null) { //HttpRequest.getPath
+                        } else if (annpath != null) { //HttpRequest.getRequestPath
                         } else if (annuserid != null) { //HttpRequest.currentUserid
                         } else if (pname != null && pname.charAt(0) == '#') { //从request.getPathParam 中去参数
                         } else if ("#".equals(pname)) { //从request.getRequstURI 中取参数
@@ -2590,9 +2590,9 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 4);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
-                } else if (annpath != null) { //HttpRequest.getPath
+                } else if (annpath != null) { //HttpRequest.getRequestPath
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPath", "()Ljava/lang/String;", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequestPath", "()Ljava/lang/String;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     varInsns.add(new int[]{ALOAD, maxLocals});
                 } else if (userid != null) { //HttpRequest.currentUserid

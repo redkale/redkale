@@ -15,6 +15,7 @@ import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.client.ClientConnection;
 import org.redkale.net.client.ClientRequest;
+import static org.redkale.net.http.HttpSimpleClient.*;
 import org.redkale.util.ByteArray;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Traces;
@@ -109,18 +110,36 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
 
     @Override
     public void writeTo(ClientConnection conn, ByteArray array) {
-        array.put((method.toUpperCase() + " " + path + " HTTP/1.1\r\n"
-            + Rest.REST_HEADER_TRACEID + ": " + traceid + "\r\n"
-            + "Content-Length: " + (body == null ? 0 : body.length) + "\r\n").getBytes(StandardCharsets.UTF_8));
+        array.put((method.toUpperCase() + " " + requestPath() + " HTTP/1.1\r\n").getBytes(StandardCharsets.UTF_8));
+        if (traceid != null && !containsHeaderIgnoreCase(Rest.REST_HEADER_TRACEID)) {
+            array.put((Rest.REST_HEADER_TRACEID + ": " + traceid + "\r\n").getBytes(StandardCharsets.UTF_8));
+        }
+        if (!containsHeaderIgnoreCase("User-Agent")) {
+            array.put(header_bytes_useragent);
+        }
+        if (!containsHeaderIgnoreCase("Connection")) {
+            array.put(header_bytes_connalive);
+        }
+        array.put(contentLengthBytes());
         if (headers != null) {
-            headers.forEach((k, v) -> {
-                array.put((k + ": " + v + "\r\n").getBytes(StandardCharsets.UTF_8));
-            });
+            headers.forEach((k, v) -> array.put((k + ": " + v + "\r\n").getBytes(StandardCharsets.UTF_8)));
         }
         array.put((byte) '\r', (byte) '\n');
         if (body != null) {
             array.put(body);
         }
+    }
+
+    protected boolean containsHeaderIgnoreCase(String name) {
+        return headers != null && headers.containsIgnoreCase(name);
+    }
+
+    protected byte[] contentLengthBytes() {
+        int len = body == null ? 0 : body.length;
+        if (len < contentLengthArray.length) {
+            return contentLengthArray[len];
+        }
+        return ("Content-Length: " + len + "\r\n").getBytes(StandardCharsets.UTF_8);
     }
 
     @Nullable
@@ -493,4 +512,11 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return JsonConvert.root().convertTo(this);
     }
 
+    private static final byte[][] contentLengthArray = new byte[1000][];
+
+    static {
+        for (int i = 0; i < contentLengthArray.length; i++) {
+            contentLengthArray[i] = ("Content-Length: " + i + "\r\n").getBytes();
+        }
+    }
 }

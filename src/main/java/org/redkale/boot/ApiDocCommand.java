@@ -72,8 +72,8 @@ public final class ApiDocCommand {
         }
 
         List<Map> serverList = new ArrayList<>();
-        Field __prefix = HttpServlet.class.getDeclaredField("_prefix");
-        __prefix.setAccessible(true);
+        Field prefixField = HttpServlet.class.getDeclaredField("_prefix");
+        prefixField.setAccessible(true);
         Map<String, Map<String, Map<String, Object>>> typesMap = new LinkedHashMap<>();
         //https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md
         Map<String, Object> swaggerPathsMap = new LinkedHashMap<>();
@@ -117,7 +117,7 @@ public final class ApiDocCommand {
                 }
                 final String tag = ws.name().isEmpty() ? servlet.getClass().getSimpleName().replace("Servlet", "").toLowerCase() : ws.name();
                 final Map<String, Object> servletMap = new LinkedHashMap<>();
-                String prefix = (String) __prefix.get(servlet);
+                String prefix = (String) prefixField.get(servlet);
                 String[] urlregs = ws.value();
                 if (prefix != null && !prefix.isEmpty()) {
                     for (int i = 0; i < urlregs.length; i++) {
@@ -214,7 +214,7 @@ public final class ApiDocCommand {
 //                            typesMap.put(rtype.getName(), typeMap);
 //                        }
                         mappingMap.put("results", results);
-                        boolean hasbodyparam = false;
+                        boolean hasBodyParam = false;
                         Map<String, Object> swaggerRequestBody = new LinkedHashMap<>();
                         for (HttpParam param : method.getAnnotationsByType(HttpParam.class)) {
                             final Map<String, Object> oldapisParamMap = new LinkedHashMap<>();
@@ -262,7 +262,7 @@ public final class ApiDocCommand {
                                 }
                             }
                             if (param.style() == HttpParam.HttpParameterStyle.BODY) {
-                                hasbodyparam = true;
+                                hasBodyParam = true;
                             }
                             if (ptype.isPrimitive() || ptype == String.class) {
                                 continue;
@@ -354,7 +354,7 @@ public final class ApiDocCommand {
 
                         String m = action.methods() == null || action.methods().length == 0 ? null : action.methods()[0].toLowerCase();
                         if (m == null) {
-                            m = hasbodyparam || TYPE_RETRESULT_STRING.equals(resultType) || TYPE_RETRESULT_INTEGER.equals(resultType)
+                            m = hasBodyParam || TYPE_RETRESULT_STRING.equals(resultType) || TYPE_RETRESULT_INTEGER.equals(resultType)
                                 || TYPE_RETRESULT_LONG.equals(resultType) || action.name().contains("create") || action.name().contains("insert")
                                 || action.name().contains("update") || action.name().contains("delete") || action.name().contains("send") ? "post" : "get";
                         }

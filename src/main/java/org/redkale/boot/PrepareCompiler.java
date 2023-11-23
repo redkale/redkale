@@ -38,7 +38,7 @@ public class PrepareCompiler {
             listener.preCompile(application);
         }
         application.start();
-        final boolean hasSncp = application.getNodeServers().stream().filter(v -> v instanceof NodeSncpServer).findFirst().isPresent();
+        final boolean hasSncp = application.getNodeServers().stream().filter(NodeSncpServer.class::isInstance).findFirst().isPresent();
 
         final ClassFilter<?> entityFilter = new ClassFilter(application.getClassLoader(), Entity.class, Object.class, (Class[]) null);
         final ClassFilter<?> entityFilter2 = new ClassFilter(application.getClassLoader(), javax.persistence.Entity.class, Object.class, (Class[]) null);

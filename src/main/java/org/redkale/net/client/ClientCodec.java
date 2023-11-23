@@ -42,6 +42,7 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
         this.connection = connection;
     }
 
+    //buffer之后会clear
     public abstract void decodeMessages(ByteBuffer buffer, ByteArray array);
 
     public ClientCodec<R, P> withMessageListener(ClientMessageListener listener) {

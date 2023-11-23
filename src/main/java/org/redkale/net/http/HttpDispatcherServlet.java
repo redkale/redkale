@@ -310,7 +310,7 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
     @Override
     public void execute(HttpRequest request, HttpResponse response) throws IOException {
         try {
-            final String uri = request.getPath();
+            final String uri = request.getRequestPath();
             HttpServlet servlet;
             if (response.isAutoOptions() && HttpRequest.METHOD_OPTIONS.equals(request.getMethod())) {
                 response.finish(200, null);

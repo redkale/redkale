@@ -130,6 +130,14 @@ public class HttpHeaders implements RestHeaders, Serializable {
         return this.map != null && this.map.containsKey(name);
     }
 
+    @Override
+    public boolean containsIgnoreCase(String name) {
+        if (this.map == null || name == null) {
+            return false;
+        }
+        return !this.map.keySet().stream().filter(name::equalsIgnoreCase).findFirst().isEmpty();
+    }
+
     public HttpHeaders addAll(HttpHeaders header) {
         if (header.map != null) {
             if (this.map == null) {

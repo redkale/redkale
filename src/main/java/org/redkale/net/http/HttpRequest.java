@@ -20,6 +20,7 @@ import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.Request;
 import org.redkale.util.*;
 import static org.redkale.util.Utility.isEmpty;
+import static org.redkale.util.Utility.isNotEmpty;
 
 /**
  * Http请求包 与javax.servlet.http.HttpServletRequest 基本类似。  <br>
@@ -132,7 +133,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected String protocol;
 
-    protected String path;
+    protected String requestPath;
 
     protected byte[] queryBytes;
 
@@ -223,13 +224,9 @@ public class HttpRequest extends Request<HttpContext> {
             this.contentType = req.getContentType();
             this.remoteAddr = req.getRemoteAddr();
             this.locale = req.getLocale();
-            if (needPath) {
-                this.path = req.requestPath();
-            } else {
-                this.path = req.getPath();
-            }
+            this.requestPath = needPath ? req.requestPath() : req.getPath();
             this.method = req.getMethod();
-            if (req.getSessionid() != null && !req.getSessionid().isEmpty()) {
+            if (isNotEmpty(req.getSessionid())) {
                 this.cookies = new HttpCookie[]{new HttpCookie(SESSIONID_NAME, req.getSessionid())};
             }
         }
@@ -255,8 +252,8 @@ public class HttpRequest extends Request<HttpContext> {
         req.setContentType(getContentType());
         req.setContextPath(prefixPath);
         req.setMethod(this.method);
-        String path0 = this.path;
-        if (prefixPath != null && !prefixPath.isEmpty() && path0.startsWith(prefixPath)) {
+        String path0 = this.requestPath;
+        if (isNotEmpty(prefixPath) && path0.startsWith(prefixPath)) {
             path0 = path0.substring(prefixPath.length());
         }
         req.setPath(path0);
@@ -565,7 +562,7 @@ public class HttpRequest extends Request<HttpContext> {
         }
 
         //读uri
-        if (this.path == null) {
+        if (this.requestPath == null) {
             int qst = -1;//?的位置
             boolean decodeable = false;
             boolean latin1 = true;
@@ -589,7 +586,7 @@ public class HttpRequest extends Request<HttpContext> {
             }
             size = bytes.length();
             if (qst > 0) { //带?参数
-                this.path = decodeable ? toDecodeString(bytes, 0, qst, charset) : context.loadUriPath(bytes, qst, latin1, charset);// bytes.toString(latin1, 0, qst, charset);
+                this.requestPath = decodeable ? toDecodeString(bytes, 0, qst, charset) : context.loadUriPath(bytes, qst, latin1, charset);// bytes.toString(latin1, 0, qst, charset);
                 int qlen = size - qst - 1;
                 this.queryBytes = bytes.getBytes(qst + 1, qlen);
                 this.lastPathString = null;
@@ -601,20 +598,20 @@ public class HttpRequest extends Request<HttpContext> {
                 }
             } else {
                 if (decodeable) { //需要转义
-                    this.path = toDecodeString(bytes, 0, bytes.length(), charset);
+                    this.requestPath = toDecodeString(bytes, 0, bytes.length(), charset);
                     this.lastPathString = null;
                     this.lastPathBytes = null;
                 } else if (context.lazyHeaders) {
                     byte[] lastURIBytes = lastPathBytes;
                     if (lastURIBytes != null && lastURIBytes.length == size && bytes.deepEquals(lastURIBytes)) {
-                        this.path = this.lastPathString;
+                        this.requestPath = this.lastPathString;
                     } else {
-                        this.path = context.loadUriPath(bytes, latin1, charset);// bytes.toString(latin1, charset);
-                        this.lastPathString = this.path;
+                        this.requestPath = context.loadUriPath(bytes, latin1, charset);// bytes.toString(latin1, charset);
+                        this.lastPathString = this.requestPath;
                         this.lastPathBytes = bytes.getBytes();
                     }
                 } else {
-                    this.path = context.loadUriPath(bytes, latin1, charset); //bytes.toString(latin1, charset);
+                    this.requestPath = context.loadUriPath(bytes, latin1, charset); //bytes.toString(latin1, charset);
                     this.lastPathString = null;
                     this.lastPathBytes = null;
                 }
@@ -984,7 +981,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.method = null;
         this.getmethod = false;
         this.protocol = null;
-        this.path = null;
+        this.requestPath = null;
         this.queryBytes = null;
         this.boundary = false;
         this.bodyParsed = false;
@@ -1045,8 +1042,8 @@ public class HttpRequest extends Request<HttpContext> {
         return this;
     }
 
-    protected HttpRequest setPath(String path) {
-        this.path = path;
+    protected HttpRequest setRequestPath(String path) {
+        this.requestPath = path;
         return this;
     }
 
@@ -1534,7 +1531,7 @@ public class HttpRequest extends Request<HttpContext> {
     @Override
     public String toString() {
         parseBody();
-        return this.getClass().getSimpleName() + "{\r\n    method: " + this.method + ", \r\n    path: " + this.path
+        return this.getClass().getSimpleName() + "{\r\n    method: " + this.method + ", \r\n    path: " + this.requestPath
             + (this.reqConvertType != null ? (", \r\n    reqConvertType: " + this.reqConvertType) : "")
             + (this.respConvertType != null ? (", \r\n    respConvertType: " + this.respConvertType) : "")
             + (this.currentUserid != CURRUSERID_NIL ? (", \r\n    currentUserid: " + (this.currentUserid == CURRUSERID_NIL ? null : this.currentUserid)) : "")
@@ -1781,8 +1778,8 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return 请求的URL
      */
-    public String getPath() {
-        return path;
+    public String getRequestPath() {
+        return requestPath;
     }
 
     /**
@@ -1795,16 +1792,16 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 截取getPath最后的一个/后面的部分
+     * 截取getRequestPath最后的一个/后面的部分
      *
      * @return String
      */
     @ConvertDisabled
     public String getPathLastParam() {
-        if (path == null) {
+        if (requestPath == null) {
             return "";
         }
-        return path.substring(path.lastIndexOf('/') + 1);
+        return requestPath.substring(requestPath.lastIndexOf('/') + 1);
     }
 
     /**
@@ -1969,10 +1966,10 @@ public class HttpRequest extends Request<HttpContext> {
      * @return String[]
      */
     public String[] getPathParams(String prefix) {
-        if (path == null || prefix == null) {
+        if (requestPath == null || prefix == null) {
             return new String[0];
         }
-        return path.substring(path.indexOf(prefix) + prefix.length() + (prefix.endsWith("/") ? 0 : 1)).split("/");
+        return requestPath.substring(requestPath.indexOf(prefix) + prefix.length() + (prefix.endsWith("/") ? 0 : 1)).split("/");
     }
 
     /**
@@ -1986,14 +1983,14 @@ public class HttpRequest extends Request<HttpContext> {
      * @return prefix截断后的值
      */
     public String getPathParam(String prefix, String defvalue) {
-        if (path == null || prefix == null || prefix.isEmpty()) {
+        if (requestPath == null || prefix == null || prefix.isEmpty()) {
             return defvalue;
         }
-        int pos = path.indexOf(prefix);
+        int pos = requestPath.indexOf(prefix);
         if (pos < 0) {
             return defvalue;
         }
-        String sub = path.substring(pos + prefix.length());
+        String sub = requestPath.substring(pos + prefix.length());
         pos = sub.indexOf('/');
         return pos < 0 ? sub : sub.substring(0, pos);
     }

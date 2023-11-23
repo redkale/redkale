@@ -22,8 +22,6 @@ public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientRe
 
     protected static final Logger logger = Logger.getLogger(SncpClientCodec.class.getSimpleName());
 
-    private final ObjectPool<SncpClientResult> resultPool = ObjectPool.createUnsafePool(256, t -> new SncpClientResult(), SncpClientResult::prepare, SncpClientResult::recycle);
-
     private ByteArray recyclableArray;
 
     private ByteArray halfBodyBytes;
@@ -41,12 +39,11 @@ public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientRe
     }
 
     protected SncpClientResult pollResult(SncpClientRequest request) {
-        SncpClientResult rs = resultPool.get();
-        return rs;
+        return new SncpClientResult();
     }
 
     protected void offerResult(SncpClientResult rs) {
-        resultPool.accept(rs);
+        //do nothing
     }
 
     protected ByteArray pollArray() {

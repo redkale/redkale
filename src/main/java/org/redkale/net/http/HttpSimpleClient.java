@@ -42,6 +42,8 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
 
     static final byte[] header_bytes_connclose = ("Connection: close\r\n").getBytes(StandardCharsets.UTF_8);
 
+    static final byte[] header_bytes_connalive = ("Connection: keep-alive\r\n").getBytes(StandardCharsets.UTF_8);
+
     protected final AsyncGroup asyncGroup;
 
     protected ExecutorService workExecutor;
@@ -245,13 +247,13 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
         array.put(("Host: " + uri.getHost() + "\r\n").getBytes(StandardCharsets.UTF_8));
 
         array.put(("Content-Length: " + (body == null ? 0 : body.length) + "\r\n").getBytes(StandardCharsets.UTF_8));
-        if (headers == null || !headers.contains("User-Agent")) {
+        if (headers == null || !headers.containsIgnoreCase("User-Agent")) {
             array.put(header_bytes_useragent);
         }
-        if (headers == null || !headers.contains("Connection")) {
+        if (headers == null || !headers.containsIgnoreCase("Connection")) {
             array.put(header_bytes_connclose);
         }
-        if (headers == null || !headers.contains(Rest.REST_HEADER_TRACEID)) {
+        if (headers == null || !headers.containsIgnoreCase(Rest.REST_HEADER_TRACEID)) {
             array.put((Rest.REST_HEADER_TRACEID + ": " + traceid + "\r\n").getBytes(StandardCharsets.UTF_8));
         }
         if (headers != null) {

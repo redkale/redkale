@@ -71,7 +71,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
         }
     }
 
-    protected final LinkedBlockingQueue<LogRecord> logqueue = new LinkedBlockingQueue();
+    protected final LinkedBlockingQueue<LogRecord> logQueue = new LinkedBlockingQueue();
 
     protected String pattern;
 
@@ -83,9 +83,9 @@ public class LoggingFileHandler extends LoggingBaseHandler {
 
     private int limit;   //文件大小限制
 
-    private final AtomicInteger logindex = new AtomicInteger();
+    private final AtomicInteger logIndex = new AtomicInteger();
 
-    private final AtomicInteger logunusualindex = new AtomicInteger();
+    private final AtomicInteger logUnusualIndex = new AtomicInteger();
 
     private int count = 1;  //文件限制
 
@@ -93,19 +93,19 @@ public class LoggingFileHandler extends LoggingBaseHandler {
 
     protected boolean append;
 
-    protected Pattern denyregx;
+    protected Pattern denyRegx;
 
     private final AtomicLong logLength = new AtomicLong();
 
     private final AtomicLong logUnusualLength = new AtomicLong();
 
-    private File logfile;
+    private File logFile;
 
-    private File logunusualfile;
+    private File logUnusualFile;
 
-    private OutputStream logstream;
+    private OutputStream logStream;
 
-    private OutputStream logunusualstream;
+    private OutputStream logUnusualStream;
 
     public LoggingFileHandler() {
         updateTomorrow();
@@ -122,7 +122,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
         cal.add(Calendar.DAY_OF_YEAR, 1);
         long t = cal.getTimeInMillis();
         if (this.tomorrow != t) {
-            logindex.set(0);
+            logIndex.set(0);
         }
         this.tomorrow = t;
     }
@@ -139,68 +139,68 @@ public class LoggingFileHandler extends LoggingBaseHandler {
             public void run() {
                 while (true) {
                     try {
-                        LogRecord log = logqueue.take();
+                        LogRecord log = logQueue.take();
                         final boolean bigger = (limit > 0 && limit <= logLength.get());
                         final boolean changeday = tomorrow <= log.getMillis();
                         if (bigger || changeday) {
                             updateTomorrow();
-                            if (logstream != null) {
-                                logstream.close();
+                            if (logStream != null) {
+                                logStream.close();
                                 if (bigger) {
-                                    for (int i = Math.min(count - 2, logindex.get() - 1); i > 0; i--) {
-                                        File greater = new File(logfile.getPath() + "." + i);
+                                    for (int i = Math.min(count - 2, logIndex.get() - 1); i > 0; i--) {
+                                        File greater = new File(logFile.getPath() + "." + i);
                                         if (greater.exists()) {
-                                            Files.move(greater.toPath(), new File(logfile.getPath() + "." + (i + 1)).toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
+                                            Files.move(greater.toPath(), new File(logFile.getPath() + "." + (i + 1)).toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
                                         }
                                     }
-                                    Files.move(logfile.toPath(), new File(logfile.getPath() + ".1").toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
+                                    Files.move(logFile.toPath(), new File(logFile.getPath() + ".1").toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
                                 } else {
-                                    if (logfile.exists() && logfile.length() < 1) {
-                                        Files.delete(logfile.toPath());
+                                    if (logFile.exists() && logFile.length() < 1) {
+                                        Files.delete(logFile.toPath());
                                     }
                                 }
-                                logstream = null;
+                                logStream = null;
                             }
                         }
-                        if (unusual != null && changeday && logunusualstream != null) {
-                            logunusualstream.close();
+                        if (unusual != null && changeday && logUnusualStream != null) {
+                            logUnusualStream.close();
                             if (limit > 0 && limit <= logUnusualLength.get()) {
-                                for (int i = Math.min(count - 2, logunusualindex.get() - 1); i > 0; i--) {
-                                    File greater = new File(logunusualfile.getPath() + "." + i);
+                                for (int i = Math.min(count - 2, logUnusualIndex.get() - 1); i > 0; i--) {
+                                    File greater = new File(logUnusualFile.getPath() + "." + i);
                                     if (greater.exists()) {
-                                        Files.move(greater.toPath(), new File(logunusualfile.getPath() + "." + (i + 1)).toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
+                                        Files.move(greater.toPath(), new File(logUnusualFile.getPath() + "." + (i + 1)).toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
                                     }
                                 }
-                                Files.move(logunusualfile.toPath(), new File(logunusualfile.getPath() + ".1").toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
+                                Files.move(logUnusualFile.toPath(), new File(logUnusualFile.getPath() + ".1").toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
                             } else {
-                                if (logunusualfile.exists() && logunusualfile.length() < 1) {
-                                    Files.delete(logunusualfile.toPath());
+                                if (logUnusualFile.exists() && logUnusualFile.length() < 1) {
+                                    Files.delete(logUnusualFile.toPath());
                                 }
                             }
-                            logunusualstream = null;
+                            logUnusualStream = null;
                         }
-                        if (logstream == null) {
-                            logindex.incrementAndGet();
-                            logfile = new File(patternDateFormat == null ? pattern : Times.formatTime(patternDateFormat, -1, System.currentTimeMillis()));
-                            logfile.getParentFile().mkdirs();
-                            logLength.set(logfile.length());
-                            logstream = new FileOutputStream(logfile, append);
+                        if (logStream == null) {
+                            logIndex.incrementAndGet();
+                            logFile = new File(patternDateFormat == null ? pattern : Times.formatTime(patternDateFormat, -1, System.currentTimeMillis()));
+                            logFile.getParentFile().mkdirs();
+                            logLength.set(logFile.length());
+                            logStream = new FileOutputStream(logFile, append);
                         }
-                        if (unusual != null && logunusualstream == null) {
-                            logunusualindex.incrementAndGet();
-                            logunusualfile = new File(unusualDateFormat == null ? unusual : Times.formatTime(unusualDateFormat, -1, System.currentTimeMillis()));
-                            logunusualfile.getParentFile().mkdirs();
-                            logUnusualLength.set(logunusualfile.length());
-                            logunusualstream = new FileOutputStream(logunusualfile, append);
+                        if (unusual != null && logUnusualStream == null) {
+                            logUnusualIndex.incrementAndGet();
+                            logUnusualFile = new File(unusualDateFormat == null ? unusual : Times.formatTime(unusualDateFormat, -1, System.currentTimeMillis()));
+                            logUnusualFile.getParentFile().mkdirs();
+                            logUnusualLength.set(logUnusualFile.length());
+                            logUnusualStream = new FileOutputStream(logUnusualFile, append);
                         }
                         //----------------------写日志-------------------------
                         String message = getFormatter().format(log);
                         String encoding = getEncoding();
                         byte[] bytes = encoding == null ? message.getBytes() : message.getBytes(encoding);
-                        logstream.write(bytes);
+                        logStream.write(bytes);
                         logLength.addAndGet(bytes.length);
                         if (unusual != null && (log.getLevel() == Level.WARNING || log.getLevel() == Level.SEVERE)) {
-                            logunusualstream.write(bytes);
+                            logUnusualStream.write(bytes);
                             logUnusualLength.addAndGet(bytes.length);
                         }
                     } catch (Exception e) {
@@ -331,7 +331,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
         String denyregxstr = manager.getProperty(cname + ".denyregx");
         try {
             if (denyregxstr != null && !denyregxstr.trim().isEmpty()) {
-                denyregx = Pattern.compile(denyregxstr);
+                denyRegx = Pattern.compile(denyregxstr);
             }
         } catch (Exception e) {
             //do nothing
@@ -343,18 +343,18 @@ public class LoggingFileHandler extends LoggingBaseHandler {
         if (!isLoggable(log)) {
             return;
         }
-        if (denyregx != null && denyregx.matcher(log.getMessage()).find()) {
+        if (denyRegx != null && denyRegx.matcher(log.getMessage()).find()) {
             return;
         }
         fillLogRecord(log);
-        logqueue.offer(log);
+        logQueue.offer(log);
     }
 
     @Override
     public void flush() {
         try {
-            if (logstream != null) {
-                logstream.flush();
+            if (logStream != null) {
+                logStream.flush();
             }
         } catch (Exception e) {
             ErrorManager err = getErrorManager();
@@ -367,8 +367,8 @@ public class LoggingFileHandler extends LoggingBaseHandler {
     @Override
     public void close() throws SecurityException {
         try {
-            if (logstream != null) {
-                logstream.close();
+            if (logStream != null) {
+                logStream.close();
             }
         } catch (Exception e) {
             ErrorManager err = getErrorManager();
