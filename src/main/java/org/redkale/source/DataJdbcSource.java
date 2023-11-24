@@ -3124,7 +3124,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
         protected boolean checkValid(SourceConnection conn) {
             try {
-                return !conn.conn.isClosed() && conn.conn.isValid(1) && conn.version == this.urlVersion.get();
+                return !conn.conn.isClosed() && conn.version == this.urlVersion.get();
             } catch (SQLException ex) {
                 if (!"08S01".equals(ex.getSQLState())) {//MySQL特性， 长时间连接没使用会抛出com.mysql.jdbc.exceptions.jdbc4.CommunicationsException
                     logger.log(Level.FINER, "result.getConnection from pooled connection abort [" + ex.getSQLState() + "]", ex);
