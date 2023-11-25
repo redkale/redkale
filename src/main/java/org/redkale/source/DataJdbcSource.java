@@ -372,7 +372,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         T entity = entitys[++i];
                         if (primaryType == int.class || primaryType == Integer.class) {
                             primary.set(entity, set.getInt(1));
-                        } else if (primaryType == long.class || primaryType == long.class) {
+                        } else if (primaryType == long.class || primaryType == Long.class) {
                             primary.set(entity, set.getLong(1));
                         } else if (primaryType == String.class) {
                             primary.set(entity, set.getString(1));
@@ -398,7 +398,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                             T entity = prepareInfo.entitys.get(++i);
                             if (primaryType == int.class || primaryType == Integer.class) {
                                 primary.set(entity, set.getInt(1));
-                            } else if (primaryType == long.class || primaryType == long.class) {
+                            } else if (primaryType == long.class || primaryType == Long.class) {
                                 primary.set(entity, set.getLong(1));
                             } else if (primaryType == String.class) {
                                 primary.set(entity, set.getString(1));
@@ -548,7 +548,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         T entity = entitys[++i];
                         if (primaryType == int.class || primaryType == Integer.class) {
                             primary.set(entity, set.getInt(1));
-                        } else if (primaryType == long.class || primaryType == long.class) {
+                        } else if (primaryType == long.class || primaryType == Long.class) {
                             primary.set(entity, set.getLong(1));
                         } else if (primaryType == String.class) {
                             primary.set(entity, set.getString(1));
@@ -576,7 +576,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                             T entity = prepareInfo.entitys.get(++i);
                             if (primaryType == int.class || primaryType == Integer.class) {
                                 primary.set(entity, set.getInt(1));
-                            } else if (primaryType == long.class || primaryType == long.class) {
+                            } else if (primaryType == long.class || primaryType == Long.class) {
                                 primary.set(entity, set.getLong(1));
                             } else if (primaryType == String.class) {
                                 primary.set(entity, set.getString(1));
@@ -2143,7 +2143,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         }
                         prestmt = conn.prepareQueryStatement(sql);
                         final ResultSet set = prestmt.executeQuery();
-                        boolean rs = set.next() ? (set.getInt(1) > 0) : false;
+                        boolean rs = set.next() && (set.getInt(1) > 0);
                         set.close();
                         conn.offerQueryStatement(prestmt);
                         if (info.isLoggable(logger, Level.FINEST, sql)) {
