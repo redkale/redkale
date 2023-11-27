@@ -147,7 +147,8 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         array.put(("Content-Type: " + contentType0 + "\r\n").getBytes(StandardCharsets.UTF_8));
         array.put(contentLengthBytes(clientBody));
         if (headers != null) {
-            headers.forEach((k, v) -> array.put((k + ": " + v + "\r\n").getBytes(StandardCharsets.UTF_8)));
+            headers.forEach(k -> !k.equalsIgnoreCase("Content-Type") && !k.equalsIgnoreCase("Content-Length"),
+                (k, v) -> array.put((k + ": " + v + "\r\n").getBytes(StandardCharsets.UTF_8)));
         }
         array.put((byte) '\r', (byte) '\n');
         //写body    
@@ -160,7 +161,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return headers != null && headers.containsIgnoreCase(name);
     }
 
-    protected byte[] contentLengthBytes(byte[] clientBody) {
+    protected static byte[] contentLengthBytes(byte[] clientBody) {
         int len = clientBody == null ? 0 : clientBody.length;
         if (len < contentLengthArray.length) {
             return contentLengthArray[len];

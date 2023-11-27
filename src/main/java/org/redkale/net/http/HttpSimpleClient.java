@@ -246,18 +246,17 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
         array.put((method.toUpperCase() + " " + (urlpos > 0 ? url.substring(urlpos) : "/") + " HTTP/1.1\r\n").getBytes(StandardCharsets.UTF_8));
         array.put(("Host: " + uri.getHost() + "\r\n").getBytes(StandardCharsets.UTF_8));
 
-        array.put(("Content-Length: " + (body == null ? 0 : body.length) + "\r\n").getBytes(StandardCharsets.UTF_8));
+        array.put(HttpSimpleRequest.contentLengthBytes(body));
         if (headers == null || !headers.containsIgnoreCase("User-Agent")) {
             array.put(header_bytes_useragent);
         }
-        if (headers == null || !headers.containsIgnoreCase("Connection")) {
-            array.put(header_bytes_connclose);
-        }
+        array.put(header_bytes_connclose);
         if (headers == null || !headers.containsIgnoreCase(Rest.REST_HEADER_TRACEID)) {
             array.put((Rest.REST_HEADER_TRACEID + ": " + traceid + "\r\n").getBytes(StandardCharsets.UTF_8));
         }
         if (headers != null) {
-            headers.forEach((k, v) -> array.put((k + ": " + v + "\r\n").getBytes(StandardCharsets.UTF_8)));
+            headers.forEach(k -> !k.equalsIgnoreCase("Connection") && !k.equalsIgnoreCase("Content-Length"),
+                (k, v) -> array.put((k + ": " + v + "\r\n").getBytes(StandardCharsets.UTF_8)));
         }
         array.put((byte) '\r', (byte) '\n');
         if (body != null) {
@@ -336,7 +335,7 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
         public void readInIOThread(CompletionHandler<Integer, ByteBuffer> handler) {
             this.channel.readInIOThread(handler);
         }
-        
+
         public void write(ByteTuple array, CompletionHandler<Integer, Void> handler) {
             this.channel.write(array, handler);
         }

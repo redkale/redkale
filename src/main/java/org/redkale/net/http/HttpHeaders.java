@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 import org.redkale.convert.TextConvert;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.RedkaleException;
@@ -103,14 +104,21 @@ public class HttpHeaders implements RestHeaders, Serializable {
 
     @Override
     public void forEach(BiConsumer<String, String> consumer) {
+        forEach((Predicate) null, consumer);
+    }
+
+    @Override
+    public void forEach(Predicate<String> filter, BiConsumer<String, String> consumer) {
         if (map != null) {
             map.forEach((k, v) -> {
-                if (v instanceof Collection) {
-                    for (Object item : (Collection) v) {
-                        consumer.accept(k, item == null ? null : item.toString());
+                if (filter == null || filter.test(k)) {
+                    if (v instanceof Collection) {
+                        for (Object item : (Collection) v) {
+                            consumer.accept(k, item == null ? null : item.toString());
+                        }
+                    } else {
+                        consumer.accept(k, v == null ? null : v.toString());
                     }
-                } else {
-                    consumer.accept(k, v == null ? null : v.toString());
                 }
             });
         }

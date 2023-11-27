@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 
 /**
  * 用于RestService类的方法的参数获取HttpHeaders
@@ -29,6 +30,8 @@ public interface RestHeaders {
     public List<String> listValue(String name);
 
     public void forEach(BiConsumer<String, String> consumer);
+
+    public void forEach(Predicate<String> filter, BiConsumer<String, String> consumer);
 
     public String[] names();
 

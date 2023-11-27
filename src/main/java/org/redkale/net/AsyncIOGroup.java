@@ -27,7 +27,7 @@ import org.redkale.util.*;
 @ResourceType(AsyncGroup.class)
 public class AsyncIOGroup extends AsyncGroup {
 
-    private boolean started;
+    private final AtomicBoolean started = new AtomicBoolean();
 
     private boolean skipClose;
 
@@ -108,20 +108,18 @@ public class AsyncIOGroup extends AsyncGroup {
 
     @Override
     public AsyncGroup start() {
-        if (started) {
-            return this;
-        }
         if (closed.get()) {
             throw new RedkaleException("group is closed");
         }
-        for (int i = 0; i < this.ioReadThreads.length; i++) {
-            this.ioReadThreads[i].start();
-            if (this.ioWriteThreads[i] != this.ioReadThreads[i]) {
-                this.ioWriteThreads[i].start();
+        if (started.compareAndSet(false, true)) {
+            for (int i = 0; i < this.ioReadThreads.length; i++) {
+                this.ioReadThreads[i].start();
+                if (this.ioWriteThreads[i] != this.ioReadThreads[i]) {
+                    this.ioWriteThreads[i].start();
+                }
             }
+            //connectThread用时才初始化
         }
-        //connectThread用时才初始化
-        started = true;
         return this;
     }
 
