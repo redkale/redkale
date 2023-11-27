@@ -3,8 +3,9 @@
  */
 package org.redkale.net.http;
 
+import org.redkale.convert.ConvertDisabled;
+import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.client.ClientResult;
-import static org.redkale.net.http.HttpSimpleClient.ClientReadCompletionHandler.READ_STATE_ROUTE;
 
 /**
  *
@@ -16,19 +17,20 @@ import static org.redkale.net.http.HttpSimpleClient.ClientReadCompletionHandler.
  *
  * @since 2.8.0
  */
-class HttpSimpleResult<T> extends HttpResult<T> implements ClientResult {
+public class HttpSimpleResult<T> extends HttpResult<T> implements ClientResult {
 
-    int readState = READ_STATE_ROUTE;
+    int readState;
 
     int contentLength = -1;
 
-    byte[] headerBytes;
-
-    boolean headerParsed = false;
-
     @Override
+    @ConvertDisabled
     public boolean isKeepAlive() {
         return true;
     }
 
+    @Override
+    public String toString() {
+        return JsonConvert.root().convertTo(HttpResult.class, this);
+    }
 }

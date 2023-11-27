@@ -153,7 +153,7 @@ public class HttpClusterRpcClient extends HttpRpcClient {
             return new HttpResult<byte[]>().status(404).toFuture();
         }
         InetSocketAddress addr = it.next();
-        String host = addr.getPort() != 80 ? addr.getHostString() : (addr.getHostString() + ":" + addr.getPort());
+        String host = addr.getPort() > 0 && addr.getPort() != 80 ? (addr.getHostString() + ":" + addr.getPort()) : addr.getHostString();
         String url = "http://" + host + requestPath;
         if (logger.isLoggable(Level.FINER)) {
             logger.log(Level.FINER, "sendEachAddressAsync: url: " + url

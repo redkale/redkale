@@ -19,6 +19,7 @@ import static org.redkale.net.http.HttpSimpleClient.*;
 import org.redkale.util.ByteArray;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Traces;
+import static org.redkale.util.Utility.isNotEmpty;
 
 /**
  * HttpRequest的缩减版, 只提供部分字段
@@ -110,7 +111,30 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
 
     @Override
     public void writeTo(ClientConnection conn, ByteArray array) {
-        array.put((method.toUpperCase() + " " + requestPath() + " HTTP/1.1\r\n").getBytes(StandardCharsets.UTF_8));
+        //组装path和body
+        String requestPath = requestPath();
+        String contentType0 = this.contentType;
+        byte[] clientBody = null;
+        if (isNotEmpty(body)) {
+            String paramstr = getParametersToString();
+            if (paramstr != null) {
+                if (getPath().indexOf('?') > 0) {
+                    requestPath += "&" + paramstr;
+                } else {
+                    requestPath += "?" + paramstr;
+                }
+            }
+            clientBody = getBody();
+        } else {
+            String paramstr = getParametersToString();
+            if (paramstr != null) {
+                clientBody = paramstr.getBytes(StandardCharsets.UTF_8);
+            }
+            contentType0 = "x-www-form-urlencoded";
+        }
+        //写status
+        array.put((method.toUpperCase() + " " + requestPath + " HTTP/1.1\r\n").getBytes(StandardCharsets.UTF_8));
+        //写header
         if (traceid != null && !containsHeaderIgnoreCase(Rest.REST_HEADER_TRACEID)) {
             array.put((Rest.REST_HEADER_TRACEID + ": " + traceid + "\r\n").getBytes(StandardCharsets.UTF_8));
         }
@@ -120,13 +144,15 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         if (!containsHeaderIgnoreCase("Connection")) {
             array.put(header_bytes_connalive);
         }
-        array.put(contentLengthBytes());
+        array.put(("Content-Type: " + contentType0 + "\r\n").getBytes(StandardCharsets.UTF_8));
+        array.put(contentLengthBytes(clientBody));
         if (headers != null) {
             headers.forEach((k, v) -> array.put((k + ": " + v + "\r\n").getBytes(StandardCharsets.UTF_8)));
         }
         array.put((byte) '\r', (byte) '\n');
-        if (body != null) {
-            array.put(body);
+        //写body    
+        if (clientBody != null) {
+            array.put(clientBody);
         }
     }
 
@@ -134,8 +160,8 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return headers != null && headers.containsIgnoreCase(name);
     }
 
-    protected byte[] contentLengthBytes() {
-        int len = body == null ? 0 : body.length;
+    protected byte[] contentLengthBytes(byte[] clientBody) {
+        int len = clientBody == null ? 0 : clientBody.length;
         if (len < contentLengthArray.length) {
             return contentLengthArray[len];
         }

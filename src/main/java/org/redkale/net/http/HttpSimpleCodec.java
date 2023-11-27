@@ -4,6 +4,8 @@
 package org.redkale.net.http;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 import org.redkale.net.client.ClientCodec;
 import static org.redkale.net.http.HttpRequest.*;
@@ -27,14 +29,6 @@ class HttpSimpleCodec extends ClientCodec<HttpSimpleRequest, HttpSimpleResult> {
         super(connection);
     }
 
-    protected HttpSimpleResult pollResult(HttpSimpleRequest request) {
-        return new HttpSimpleResult();
-    }
-
-    protected void offerResult(HttpSimpleResult rs) {
-        //do nothing
-    }
-
     private ByteArray pollArray(ByteArray array) {
         if (recyclableArray == null) {
             recyclableArray = new ByteArray();
@@ -49,11 +43,12 @@ class HttpSimpleCodec extends ClientCodec<HttpSimpleRequest, HttpSimpleResult> {
     @Override
     public void decodeMessages(final ByteBuffer realBuf, final ByteArray array) {
         int rs;
-        HttpSimpleResult result = this.lastResult;
         final ByteBuffer buffer = realBuf;
         while (buffer.hasRemaining()) {
+            HttpSimpleResult result = this.lastResult;
             if (result == null) {
                 result = new HttpSimpleResult();
+                result.readState = READ_STATE_ROUTE;
                 this.lastResult = result;
             }
             array.clear();
@@ -67,18 +62,18 @@ class HttpSimpleCodec extends ClientCodec<HttpSimpleRequest, HttpSimpleResult> {
                     this.halfBytes = pollArray(array);
                     return;
                 } else if (rs < 0) { //数据异常
-                    occurError(null, new HttpException("http data not valid"));
+                    occurError(null, new HttpException("http status not valid"));
                     return;
                 }
                 result.readState = READ_STATE_HEADER;
             }
             if (result.readState == READ_STATE_HEADER) {
-                rs = readHeaderLines(result, buffer, array);
+                rs = readHeaderBytes(result, buffer, array);
                 if (rs > 0) { //数据不全
                     this.halfBytes = pollArray(array);
                     return;
                 } else if (rs < 0) { //数据异常
-                    occurError(null, new HttpException("http data not valid"));
+                    occurError(null, new HttpException("http header not valid"));
                     return;
                 }
                 result.readState = READ_STATE_BODY;
@@ -134,107 +129,51 @@ class HttpSimpleCodec extends ClientCodec<HttpSimpleRequest, HttpSimpleResult> {
 
     //解析Header Connection: keep-alive
     //返回0表示解析完整，非0表示还需继续读数据
-    private int readHeaderLines(final HttpSimpleResult result, final ByteBuffer buffer, final ByteArray array) {
-        int remain = buffer.remaining();
-        for (;;) {
-            array.clear();
-            if (remain-- < 2) {
-                if (remain == 1) {
-                    array.put(buffer.get());
-                    return 1;
+    private int readHeaderBytes(final HttpSimpleResult result, final ByteBuffer buffer, final ByteArray array) {
+        byte b;
+        while (buffer.hasRemaining()) {
+            b = buffer.get();
+            if (b == '\n') {
+                int len = array.length();
+                if (len >= 3 && array.get(len - 1) == '\r' && array.get(len - 2) == '\n' && array.get(len - 3) == '\r') {
+                    //最后一个\r\n不写入
+                    readHeaderLines(result, array.removeLastByte()); //移除最后一个\r
+                    array.clear();
+                    return 0;
                 }
-                return 1;
             }
-            remain--;
-            byte b1 = buffer.get();
-            byte b2 = buffer.get();
-            if (b1 == '\r' && b2 == '\n') {
-                return 0;
-            }
-            boolean latin1 = true;
-            if (latin1 && (b1 < 0x20 || b1 >= 0x80)) {
-                latin1 = false;
-            }
-            if (latin1 && (b2 < 0x20 || b2 >= 0x80)) {
-                latin1 = false;
-            }
-            array.put(b1, b2);
-            for (;;) {  // name
-                if (remain-- < 1) {
-                    buffer.clear();
-                    buffer.put(array.content(), 0, array.length());
-                    return 1;
-                }
-                byte b = buffer.get();
-                if (b == ':') {
-                    break;
-                } else if (latin1 && (b < 0x20 || b >= 0x80)) {
-                    latin1 = false;
-                }
-                array.put(b);
-            }
-            String name = parseHeaderName(latin1, array, null);
-            array.clear();
-            boolean first = true;
-            int space = 0;
-            for (;;) {  // value
-                if (remain-- < 1) {
-                    buffer.clear();
-                    buffer.put(name.getBytes());
-                    buffer.put((byte) ':');
-                    if (space == 1) {
-                        buffer.put((byte) ' ');
-                    } else if (space > 0) {
-                        for (int i = 0; i < space; i++) buffer.put((byte) ' ');
-                    }
-                    buffer.put(array.content(), 0, array.length());
-                    return 1;
-                }
-                byte b = buffer.get();
-                if (b == '\r') {
-                    if (remain-- < 1) {
-                        buffer.clear();
-                        buffer.put(name.getBytes());
-                        buffer.put((byte) ':');
-                        if (space == 1) {
-                            buffer.put((byte) ' ');
-                        } else if (space > 0) {
-                            for (int i = 0; i < space; i++) buffer.put((byte) ' ');
-                        }
-                        buffer.put(array.content(), 0, array.length());
-                        buffer.put((byte) '\r');
-                        return 1;
-                    }
-                    if (buffer.get() != '\n') {
-                        return -1;
-                    }
-                    break;
-                }
-                if (first) {
-                    if (b <= ' ') {
-                        space++;
-                        continue;
-                    }
-                    first = false;
-                }
-                array.put(b);
-            }
-            String value;
-            switch (name) {
-                case "Content-Length":
-                case "content-length":
-                    value = array.toString(true, null);
-                    result.contentLength = Integer.decode(value);
-                    result.header(name, value);
-                    break;
-                default:
-                    value = array.toString(null);
-                    result.header(name, value);
-            }
+            array.put(b);
         }
+        return 1;
     }
 
     private int readBody(final HttpSimpleResult result, final ByteBuffer buffer, final ByteArray array) {
-        return 0;
+        if (result.contentLength >= 0) {
+            array.put(buffer, Math.min((int) result.contentLength, buffer.remaining()));
+            int lr = (int) result.contentLength - array.length();
+            if (lr == 0) {
+                result.result(array.getBytes());
+            }
+            return lr > 0 ? lr : 0;
+        }
+        return -1;
     }
+
+    private void readHeaderLines(final HttpSimpleResult result, ByteArray bytes) {
+        int start = 0;
+        int posC, posR;
+        Charset charset = StandardCharsets.UTF_8;
+        while (start < bytes.length()) {
+            posC = bytes.indexOf(start, ':');
+            String name = bytes.toString(start, posC - start, charset).trim();
+            posR = bytes.indexOf(posC + 1, '\r');
+            String value = bytes.toString(posC + 1, posR - posC - 1, charset).trim();
+            result.header(name, value);
+            if ("Content-Length".equalsIgnoreCase(name)) {
+                result.contentLength = Integer.parseInt(value);
+            }
+            start = posR + 2; //跳过\r\n
+        }
+    }
+
 }

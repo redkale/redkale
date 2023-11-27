@@ -41,8 +41,6 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
     private ByteBufferPool safeBufferPool;
 
-    private final ReentrantLock groupLock = new ReentrantLock();
-
     private final ReentrantLock addLock = new ReentrantLock();
 
     //配置<executor threads="0"> APP_EXECUTOR资源为null

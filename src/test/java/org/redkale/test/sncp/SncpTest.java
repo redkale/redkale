@@ -100,7 +100,7 @@ public class SncpTest {
         callbean = service.insert(callbean);
         System.out.println("bean： " + callbean);
         System.out.println("\r\n\r\n\r\n\r\n---------------------------------------------------");
-        Thread.sleep(200);
+        Utility.sleep(200);
         final int count = main ? 40 : 11;
         final CountDownLatch cld = new CountDownLatch(count);
         final AtomicInteger ai = new AtomicInteger();
@@ -142,7 +142,7 @@ public class SncpTest {
             }
             return;
         }
-        Thread.sleep(200);
+        Utility.sleep(200);
         final CountDownLatch cld2 = new CountDownLatch(1);
         long s2 = System.currentTimeMillis();
         final CompletableFuture<String> future = service.queryResultAsync(callbean);

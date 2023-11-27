@@ -344,15 +344,13 @@ public class HttpResourceServlet extends HttpServlet {
             if (this.servlet.cachedLength.longValue() + length > this.servlet.cachelimit) {
                 return; //超过缓存总容量
             }
-            try {
-                FileInputStream in = new FileInputStream(file);
+            try (FileInputStream in = new FileInputStream(file)) {
                 ByteArray out = new ByteArray((int) file.length());
                 byte[] bytes = new byte[10240];
                 int pos;
                 while ((pos = in.read(bytes)) != -1) {
                     out.put(bytes, 0, pos);
                 }
-                in.close();
                 this.content = out;
                 this.servlet.cachedLength.add(this.content.length());
             } catch (Exception e) {

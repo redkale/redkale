@@ -271,7 +271,7 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
             conn.write(array, new CompletionHandler<Integer, Void>() {
                 @Override
                 public void completed(Integer result, Void attachment) {
-                    conn.read(new ClientReadCompletionHandler(conn, workThread, traceid, array.clear(), convert, valueType, future));
+                    conn.readInIOThread(new ClientReadCompletionHandler(conn, workThread, traceid, array.clear(), convert, valueType, future));
                 }
 
                 @Override
@@ -306,7 +306,7 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
 //        asyncGroup.start();
 //        String url = "http://redkale.org";
 //        HttpSimpleClient client = HttpSimpleClient.createPath(asyncGroup);
-//        System.out.println(client.getAsync(url).join());
+//        (System.out).println(client.getAsync(url).join());
 //    }
 //    
     protected static class HttpConnection {
@@ -333,6 +333,10 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
             this.channel.read(handler);
         }
 
+        public void readInIOThread(CompletionHandler<Integer, ByteBuffer> handler) {
+            this.channel.readInIOThread(handler);
+        }
+        
         public void write(ByteTuple array, CompletionHandler<Integer, Void> handler) {
             this.channel.write(array, handler);
         }

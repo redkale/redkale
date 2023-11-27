@@ -91,7 +91,7 @@ public final class MultiContext {
     /**
      * 获取第一个文件的二进制
      *
-     * @param max            可接收的文件大小最大值
+     * @param max             可接收的文件大小最大值
      * @param fileNameRegx    可接收的文件名正则表达式
      * @param contentTypeRegx 可接收的ContentType正则表达式
      *
@@ -139,8 +139,8 @@ public final class MultiContext {
     /**
      * 获取第一个文件
      *
-     * @param home           进程目录
-     * @param max            可接收的文件大小最大值
+     * @param home            进程目录
+     * @param max             可接收的文件大小最大值
      * @param fileNameRegx    可接收的文件名正则表达式
      * @param contentTypeRegx 可接收的ContentType正则表达式
      *
@@ -172,7 +172,7 @@ public final class MultiContext {
             boolean rs = part.save(max < 1 ? Long.MAX_VALUE : max, file);
             if (!rs) {
                 Files.delete(file.toPath());
-                parent.delete();
+                Files.delete(parent.toPath());
             } else {
                 tmpfile = file;
             }
@@ -184,8 +184,8 @@ public final class MultiContext {
     /**
      * 获取所有文件
      *
-     * @param home           进程目录
-     * @param max            可接收的文件大小最大值
+     * @param home            进程目录
+     * @param max             可接收的文件大小最大值
      * @param fileNameRegx    可接收的文件名正则表达式
      * @param contentTypeRegx 可接收的ContentType正则表达式
      *
@@ -211,8 +211,8 @@ public final class MultiContext {
             }
             boolean rs = part.save(max < 1 ? Long.MAX_VALUE : max, file);
             if (!rs) {
-                file.delete();
-                parent.delete();
+                Files.delete(file.toPath());
+                Files.delete(parent.toPath());
                 continue;
             }
             if (files == null) {

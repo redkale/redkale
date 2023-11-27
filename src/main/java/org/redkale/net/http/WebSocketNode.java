@@ -95,7 +95,7 @@ public abstract class WebSocketNode implements Service {
         if (source != null && this.wsNodeAddress == null) { //非分布式模式
             this.wsNodeAddress = new WebSocketAddress(mqtopic, new InetSocketAddress("127.0.0.1", 27));
         }
-        if (source != null && wsNodeAddress != null) {
+        if (source != null) {
             source.sadd(WS_SOURCE_KEY_NODES, WebSocketAddress.class, this.wsNodeAddress);
         }
     }
