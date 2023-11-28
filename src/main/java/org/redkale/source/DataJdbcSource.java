@@ -2548,7 +2548,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     @Local
     @Override
     public int nativeUpdate(String sql) {
-        return nativeUpdates(new String[]{sql})[0];
+        return nativeUpdates(sql)[0];
     }
 
     @Local
