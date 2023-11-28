@@ -646,7 +646,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return getSQLAttrValue(info, attr, val);
     }
 
-    protected DataNativeSqlParser.NativeSqlStatement nativeParse(String nativeSql, Map<String, Object> params) {
+    protected DataNativeSqlStatement nativeParse(String nativeSql, Map<String, Object> params) {
         if (nativeSqlParser == null) {
             throw new SourceException("not found DataNativeSqlParser instance");
         }

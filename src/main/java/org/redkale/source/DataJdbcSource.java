@@ -18,7 +18,6 @@ import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
 import org.redkale.service.Local;
-import org.redkale.source.DataNativeSqlParser.NativeSqlStatement;
 import org.redkale.util.*;
 
 /**
@@ -2555,7 +2554,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     @Local
     @Override
     public int nativeUpdate(String sql, Map<String, Object> params) {
-        NativeSqlStatement sinfo = super.nativeParse(sql, params);
+        DataNativeSqlStatement sinfo = super.nativeParse(sql, params);
         final long s = System.currentTimeMillis();
         SourceConnection conn = writePool.pollConnection();
         Statement stmt = null;
@@ -2632,7 +2631,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     @Local
     @Override
     public <V> V nativeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler, Map<String, Object> params) {
-        NativeSqlStatement sinfo = super.nativeParse(sql, params);
+        DataNativeSqlStatement sinfo = super.nativeParse(sql, params);
         final long s = System.currentTimeMillis();
         final SourceConnection conn = readPool.pollConnection();
         try {
@@ -2678,7 +2677,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
     public <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, Flipper flipper, Map<String, Object> params) {
         final boolean mysqlOrPgsql = "mysql".equals(dbtype()) || "postgresql".equals(dbtype());
-        NativeSqlStatement sinfo = super.nativeParse(sql, params);
+        DataNativeSqlStatement sinfo = super.nativeParse(sql, params);
         final long s = System.currentTimeMillis();
         final SourceConnection conn = readPool.pollConnection();
         try {
