@@ -246,7 +246,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 } else if (action instanceof InsertBatchAction1) {
                     InsertBatchAction1 act = (InsertBatchAction1) action;
                     EntityInfo info = apply(act.entity.getClass());
-                    c += insertDBStatement(true, stmtsRef, conn, info, act.entity);
+                    c += insertDBStatement(stmtsRef, conn, info, act.entity);
 
                 } else if (action instanceof DeleteBatchAction1) {
                     DeleteBatchAction1 act = (DeleteBatchAction1) action;
@@ -255,7 +255,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     Map<String, List<Serializable>> pkmap = info.getTableMap(pk);
                     String[] tables = pkmap.keySet().toArray(new String[pkmap.size()]);
                     String[] sqls = deleteSql(info, pkmap);
-                    c += deleteDBStatement(true, stmtsRef, conn, info, tables, null, null, pkmap, sqls);
+                    c += deleteDBStatement(stmtsRef, conn, info, tables, null, null, pkmap, sqls);
 
                 } else if (action instanceof DeleteBatchAction2) {
                     DeleteBatchAction2 act = (DeleteBatchAction2) action;
@@ -263,37 +263,37 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     Map<String, List<Serializable>> pkmap = info.getTableMap(act.pk);
                     String[] tables = pkmap.keySet().toArray(new String[pkmap.size()]);
                     String[] sqls = deleteSql(info, pkmap);
-                    c += deleteDBStatement(true, stmtsRef, conn, info, tables, null, null, pkmap, sqls);
+                    c += deleteDBStatement(stmtsRef, conn, info, tables, null, null, pkmap, sqls);
 
                 } else if (action instanceof DeleteBatchAction3) {
                     DeleteBatchAction3 act = (DeleteBatchAction3) action;
                     EntityInfo info = apply(act.clazz);
                     String[] tables = info.getTables(act.node);
                     String[] sqls = deleteSql(info, tables, act.flipper, act.node);
-                    c += deleteDBStatement(true, stmtsRef, conn, info, tables, act.flipper, act.node, null, sqls);
+                    c += deleteDBStatement(stmtsRef, conn, info, tables, act.flipper, act.node, null, sqls);
 
                 } else if (action instanceof UpdateBatchAction1) {
                     UpdateBatchAction1 act = (UpdateBatchAction1) action;
                     EntityInfo info = apply(act.entity.getClass());
-                    c += updateEntityDBStatement(true, stmtsRef, conn, info, act.entity);
+                    c += updateEntityDBStatement(stmtsRef, conn, info, act.entity);
 
                 } else if (action instanceof UpdateBatchAction2) {
                     UpdateBatchAction2 act = (UpdateBatchAction2) action;
                     EntityInfo info = apply(act.clazz);
                     UpdateSqlInfo sql = updateColumnSql(info, act.pk, act.values);
-                    c += updateColumnDBStatement(true, stmtsRef, conn, info, null, sql);
+                    c += updateColumnDBStatement(stmtsRef, conn, info, null, sql);
 
                 } else if (action instanceof UpdateBatchAction3) {
                     UpdateBatchAction3 act = (UpdateBatchAction3) action;
                     EntityInfo info = apply(act.clazz);
                     UpdateSqlInfo sql = updateColumnSql(info, act.node, act.flipper, act.values);
-                    c += updateColumnDBStatement(true, stmtsRef, conn, info, act.flipper, sql);
+                    c += updateColumnDBStatement(stmtsRef, conn, info, act.flipper, sql);
 
                 } else if (action instanceof UpdateBatchAction4) {
                     UpdateBatchAction4 act = (UpdateBatchAction4) action;
                     EntityInfo info = apply(act.entity.getClass());
                     UpdateSqlInfo sql = updateColumnSql(info, false, act.entity, act.node, act.selects);
-                    c += updateColumnDBStatement(true, stmtsRef, conn, info, null, sql);
+                    c += updateColumnDBStatement(stmtsRef, conn, info, null, sql);
                 }
             }
             conn.commit();
@@ -329,13 +329,11 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         List<Statement> stmtsRef = new ArrayList<>();
         try {
             conn = writePool.pollConnection();
-            conn.setAutoCommit(false);
-            int c = insertDBStatement(false, stmtsRef, conn, info, entitys);
-            conn.commit();
+            conn.setAutoCommit(true);
+            int c = insertDBStatement(stmtsRef, conn, info, entitys);
             conn.offerUpdateStatement(stmtsRef);
             return c;
         } catch (SQLException e) {
-            conn.rollback(stmtsRef);
             throw new SourceException(e);
         } finally {
             if (conn != null) {
@@ -344,7 +342,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         }
     }
 
-    private <T> int insertDBStatement(final boolean batch, List<Statement> stmtsRef, final SourceConnection conn, final EntityInfo<T> info, T... entitys) throws SQLException {
+    private <T> int insertDBStatement(List<Statement> stmtsRef, final SourceConnection conn, final EntityInfo<T> info, T... entitys) throws SQLException {
         final long s = System.currentTimeMillis();
         int c = 0;
         String presql = null;
@@ -408,15 +406,10 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     }
                 }
             }
-            if (!batch) {
-                conn.commit();
-                conn.offerUpdateStatement(prestmt, prestmts);
+            if (prestmt != null) {
+                stmtsRef.add(prestmt);
             } else {
-                if (prestmt != null) {
-                    stmtsRef.add(prestmt);
-                } else {
-                    stmtsRef.addAll(prestmts);
-                }
+                stmtsRef.addAll(prestmts);
             }
         } catch (SQLException se) {
             conn.rollback(prestmt, prestmts);
@@ -586,15 +579,10 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     }
                 }
             }
-            if (!batch) {
-                conn.commit();
-                conn.offerUpdateStatement(prestmt, prestmts);
+            if (prestmt != null) {
+                stmtsRef.add(prestmt);
             } else {
-                if (prestmt != null) {
-                    stmtsRef.add(prestmt);
-                } else {
-                    stmtsRef.addAll(prestmts);
-                }
+                stmtsRef.addAll(prestmts);
             }
         }
         //------------------------------------------------------------
@@ -672,9 +660,8 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         List<Statement> stmtsRef = new ArrayList<>();
         try {
             conn = writePool.pollConnection();
-            conn.setAutoCommit(false);
-            int c = deleteDBStatement(false, stmtsRef, conn, info, tables, flipper, node, pkmap, sqls);
-            conn.commit();
+            conn.setAutoCommit(true);
+            int c = deleteDBStatement(stmtsRef, conn, info, tables, flipper, node, pkmap, sqls);
             conn.offerUpdateStatement(stmtsRef);
             return c;
         } catch (SQLException e) {
@@ -687,7 +674,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         }
     }
 
-    private <T> int deleteDBStatement(final boolean batch, List<Statement> stmtsRef, final SourceConnection conn, final EntityInfo<T> info, String[] tables, Flipper flipper, FilterNode node, Map<String, List<Serializable>> pkmap, String... sqls) throws SQLException {
+    private <T> int deleteDBStatement(List<Statement> stmtsRef, final SourceConnection conn, final EntityInfo<T> info, String[] tables, Flipper flipper, FilterNode node, Map<String, List<Serializable>> pkmap, String... sqls) throws SQLException {
         final long s = System.currentTimeMillis();
         Statement stmt = null;
         try {
@@ -703,12 +690,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 }
                 c = Utility.sum(stmt.executeBatch());
             }
-            if (!batch) {
-                conn.commit();
-                conn.offerUpdateStatement(stmt);
-            } else {
-                stmtsRef.add(stmt);
-            }
+            stmtsRef.add(stmt);
             slowLog(s, sqls);
             return c;
         } catch (SQLException e) {
@@ -769,7 +751,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                             stmt2.addBatch(sql);
                         }
                         int c = Utility.sum(stmt2.executeBatch());
-                        conn.commit();
                         slowLog(s, sqls);
                         return c;
                     } catch (SQLException se) {
@@ -797,7 +778,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         Statement stmt = null;
         try {
             conn = writePool.pollConnection();
-            conn.setAutoCommit(false);
+            conn.setAutoCommit(true);
             int c;
             if (sqls.length == 1) {
                 stmt = conn.createUpdateStatement();
@@ -809,12 +790,10 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 }
                 c = Utility.sum(stmt.executeBatch());
             }
-            conn.commit();
             conn.offerUpdateStatement(stmt);
             slowLog(s, sqls);
             return c;
         } catch (SQLException e) {
-            conn.rollback(stmt);
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
                     //单表结构不存在
@@ -853,7 +832,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                             stmt2.addBatch(sql);
                         }
                         int c = Utility.sum(stmt2.executeBatch());
-                        conn.commit();
                         conn.offerUpdateStatement(stmt2);
                         slowLog(s, sqls);
                         return c;
@@ -891,7 +869,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         final long s = System.currentTimeMillis();
         try {
             conn = writePool.pollConnection();
-            conn.setAutoCommit(false);
+            conn.setAutoCommit(true);
             int c;
             if (copyTableSql == null) {
                 if (sqls.length == 1) {
@@ -985,12 +963,10 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     throw se;
                 }
             }
-            conn.commit();
             conn.offerUpdateStatement(stmt);
             slowLog(s, sqls);
             return c;
         } catch (SQLException e) {
-            conn.rollback(stmt);
             throw new SourceException(e);
         } finally {
             if (conn != null) {
@@ -1006,7 +982,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         Statement stmt = null;
         try {
             conn = writePool.pollConnection();
-            conn.setAutoCommit(false);
+            conn.setAutoCommit(true);
             int c;
             if (sqls.length == 1) {
                 stmt = conn.createUpdateStatement();
@@ -1018,12 +994,10 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 }
                 c = Utility.sum(stmt.executeBatch());
             }
-            conn.commit();
             conn.offerUpdateStatement(stmt);
             slowLog(s, sqls);
             return c;
         } catch (SQLException e) {
-            conn.rollback(stmt);
             if (isTableNotExist(info, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
                     //单表结构不存在
@@ -1061,7 +1035,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                             stmt2.addBatch(sql);
                         }
                         int c = Utility.sum(stmt2.executeBatch());
-                        conn.commit();
                         conn.offerUpdateStatement(stmt2);
                         slowLog(s, sqls);
                         return c;
@@ -1091,9 +1064,8 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         List<Statement> stmtsRef = new ArrayList<>();
         try {
             conn = writePool.pollConnection();
-            conn.setAutoCommit(false);
-            int c = updateEntityDBStatement(false, stmtsRef, conn, info, entitys);
-            conn.commit();
+            conn.setAutoCommit(true);
+            int c = updateEntityDBStatement(stmtsRef, conn, info, entitys);
             conn.offerUpdateStatement(stmtsRef);
             return c;
         } catch (SQLException e) {
@@ -1106,7 +1078,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         }
     }
 
-    private <T> int updateEntityDBStatement(final boolean batch, List<Statement> stmtsRef, final SourceConnection conn, final EntityInfo<T> info, T... entitys) throws SQLException {
+    private <T> int updateEntityDBStatement(List<Statement> stmtsRef, final SourceConnection conn, final EntityInfo<T> info, T... entitys) throws SQLException {
         final long s = System.currentTimeMillis();
         String presql = null;
         String caseSql = null;
@@ -1156,15 +1128,10 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 }
                 c = c1;
             }
-            if (!batch) {
-                conn.commit();
-                conn.offerUpdateStatement(prestmt, prestmts);
+            if (prestmt != null) {
+                stmtsRef.add(prestmt);
             } else {
-                if (prestmt != null) {
-                    stmtsRef.add(prestmt);
-                } else {
-                    stmtsRef.addAll(prestmts);
-                }
+                stmtsRef.addAll(prestmts);
             }
         } catch (SQLException se) {
             conn.rollback(prestmt, prestmts);
@@ -1182,7 +1149,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                                 }
                                 stmt.executeBatch();
                             }
-                            conn.commit();
                             conn.offerUpdateStatement(stmt);
                         } catch (SQLException e2) {
                             //do nothing
@@ -1215,12 +1181,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         c1 += Utility.sum(stmt.executeBatch());
                     }
                     c = c1;
-                    if (!batch) {
-                        conn.commit();
-                        conn.offerUpdateStatement(prestmts);
-                    } else {
-                        stmtsRef.addAll(prestmts);
-                    }
+                    stmtsRef.addAll(prestmts);
                 }
             } else {
                 throw se;
@@ -1302,9 +1263,8 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         List<Statement> stmtsRef = new ArrayList<>();
         try {
             conn = writePool.pollConnection();
-            conn.setAutoCommit(false);
-            int c = updateColumnDBStatement(false, stmtsRef, conn, info, flipper, sql);
-            conn.commit();
+            conn.setAutoCommit(true);
+            int c = updateColumnDBStatement(stmtsRef, conn, info, flipper, sql);
             conn.offerUpdateStatement(stmtsRef);
             return c;
         } catch (SQLException e) {
@@ -1317,7 +1277,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         }
     }
 
-    private <T> int updateColumnDBStatement(final boolean batch, List<Statement> stmtsRef, final SourceConnection conn, final EntityInfo<T> info, Flipper flipper, UpdateSqlInfo sql) throws SQLException { //String sql, boolean prepared, Object... blobs) {
+    private <T> int updateColumnDBStatement(List<Statement> stmtsRef, final SourceConnection conn, final EntityInfo<T> info, Flipper flipper, UpdateSqlInfo sql) throws SQLException { //String sql, boolean prepared, Object... blobs) {
         final long s = System.currentTimeMillis();
         int c = -1;
         String firstTable = null;
@@ -1338,10 +1298,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         logger.finest(info.getType().getSimpleName() + " updateColumn sql=" + sql.sql);
                     }
                     c = prestmt.executeUpdate();
-                    if (!batch) {
-                        conn.commit();
-                        conn.offerUpdateStatement(onestmt, prestmts);
-                    } else if (onestmt != null) {
+                    if (onestmt != null) {
                         stmtsRef.add(onestmt);
                     }
                     slowLog(s, sql.sql);
@@ -1372,10 +1329,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         c1 += Utility.sum(stmt.executeBatch());
                     }
                     c = c1;
-                    if (!batch) {
-                        conn.commit();
-                        conn.offerUpdateStatement(onestmt, prestmts);
-                    } else if (prestmts != null) {
+                    if (prestmts != null) {
                         stmtsRef.addAll(prestmts);
                     }
                     slowLog(s, sqls);
@@ -1387,10 +1341,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 }
                 onestmt = conn.createUpdateStatement();
                 c = onestmt.executeUpdate(sql.sql);
-                if (!batch) {
-                    conn.commit();
-                    conn.offerUpdateStatement(onestmt, prestmts);
-                } else if (onestmt != null) {
+                if (onestmt != null) {
                     stmtsRef.add(onestmt);
                 }
                 slowLog(s, sql.sql);
@@ -1412,7 +1363,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                                 }
                                 onestmt.executeBatch();
                             }
-                            conn.commit();
                             conn.offerUpdateStatement(onestmt);
                         } catch (SQLException e2) {
                             conn.rollback(onestmt);
@@ -1466,10 +1416,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         c1 += Utility.sum(stmt.executeBatch());
                     }
                     c = c1;
-                    if (!batch) {
-                        conn.commit();
-                        conn.offerUpdateStatement(onestmt, prestmts);
-                    } else if (prestmts != null) {
+                    if (prestmts != null) {
                         stmtsRef.addAll(prestmts);
                     }
                     slowLog(s, sqls);
