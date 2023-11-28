@@ -11,7 +11,11 @@ import org.redkale.util.RedkaleClassLoader;
 
 /**
  *
- * 原生的sql解析器
+ * 原生的sql解析器 <br>
+ * 参数变量有三种方式:  <br>
+ * #{xx.xx}: 用于拼接sql的变量， 变量值必需的
+ * ${xx.xx}: 用于预编译的sql的参数变量
+ * $${xx.xx}: 用于预编译的sql的参数变量， 变量值必需的
  *
  * <p>
  * 详情见: https://redkale.org
@@ -56,7 +60,7 @@ public interface DataNativeSqlParser {
         //根据参数值集合重新生成的带?参数可执行的计算总数sql,用于返回Sheet对象
         protected String nativeCountSql;
 
-        //需要预编译的${xxx}参数名, 数量与sql中的?数量一致
+        //需要预编译的$${xxx}、${xxx}参数名, 数量与sql中的?数量一致
         protected List<String> paramNames;
 
         //需要预编译的jdbc参数名, 数量与sql中的?数量一致
