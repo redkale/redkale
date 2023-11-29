@@ -38,8 +38,8 @@ public class SncpClient extends Client<SncpClientConnection, SncpClientRequest, 
     }
 
     @Override
-    public SncpClientConnection createClientConnection(int index, AsyncConnection channel) {
-        return new SncpClientConnection(this, index, channel);
+    public SncpClientConnection createClientConnection(AsyncConnection channel) {
+        return new SncpClientConnection(this, channel);
     }
 
     public InetSocketAddress getClientSncpAddress() {

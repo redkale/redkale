@@ -225,7 +225,7 @@ public class SncpRemoteInfo<T extends Service> {
 
     protected InetSocketAddress nextRemoteAddress() {
         InetSocketAddress addr = sncpRpcGroups.nextRemoteAddress(resourceid);
-        if (addr == null) {
+        if (addr != null) {
             return addr;
         }
         SncpRpcGroup srg = sncpRpcGroups.getSncpRpcGroup(remoteGroup);

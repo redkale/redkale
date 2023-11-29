@@ -19,8 +19,8 @@ import org.redkale.net.client.ClientConnection;
  */
 class HttpSimpleConnection extends ClientConnection<HttpSimpleRequest, HttpSimpleResult> {
 
-    public HttpSimpleConnection(HttpSimpleClient client, int index, AsyncConnection channel) {
-        super(client, index, channel);
+    public HttpSimpleConnection(HttpSimpleClient client, AsyncConnection channel) {
+        super(client, channel);
     }
 
     @Override

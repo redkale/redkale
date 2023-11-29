@@ -21,8 +21,8 @@ public class SncpClientConnection extends ClientConnection<SncpClientRequest, Sn
 
     private final ObjectPool<SncpClientRequest> requestPool;
 
-    public SncpClientConnection(SncpClient client, int index, AsyncConnection channel) {
-        super(client, index, channel);
+    public SncpClientConnection(SncpClient client, AsyncConnection channel) {
+        super(client, channel);
         requestPool = ObjectPool.createUnsafePool(Thread.currentThread(), 256,
             ObjectPool.createSafePool(256, t -> new SncpClientRequest(), SncpClientRequest::prepare, SncpClientRequest::recycle)
         );

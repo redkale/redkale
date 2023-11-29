@@ -32,14 +32,10 @@ import org.redkale.util.*;
  */
 public abstract class ClientConnection<R extends ClientRequest, P extends ClientResult> implements Consumer<AsyncConnection> {
 
-    //=-1 表示连接放在connAddrEntrys存储
-    //>=0 表示connArray的下坐标，从0开始
-    protected final int index;
-
     protected final Client client;
 
     @Nonnull
-    protected final LongAdder respWaitingCounter;
+    protected LongAdder respWaitingCounter;
 
     protected final LongAdder doneRequestCounter = new LongAdder();
 
@@ -76,8 +72,8 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
     //pauseWriting=true，此字段才会有值; pauseWriting=false，此字段值为null
     ClientFuture currHalfWriteFuture;
 
-    @Nullable
-    private final Client.AddressConnEntry connEntry;
+    @Nonnull
+    private Client.AddressConnEntry connEntry;
 
     protected final AsyncConnection channel;
 
@@ -96,14 +92,17 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
     private boolean authenticated;
 
     @SuppressWarnings({"LeakingThisInConstructor", "OverridableMethodCallInConstructor"})
-    public ClientConnection(Client<? extends ClientConnection<R, P>, R, P> client, int index, AsyncConnection channel) {
+    public ClientConnection(Client<? extends ClientConnection<R, P>, R, P> client, AsyncConnection channel) {
         this.client = client;
         this.codec = createCodec();
-        this.index = index;
-        this.connEntry = index >= 0 ? null : client.connAddrEntrys.get(channel.getRemoteAddress());
-        this.respWaitingCounter = index >= 0 ? client.connRespWaitings[index] : this.connEntry.connRespWaiting;
         this.channel = channel.beforeCloseListener(this); //.fastHandler(writeHandler);
         this.writeBuffer = channel.pollWriteBuffer();
+    }
+
+    ClientConnection setConnEntry(Client.AddressConnEntry entry) {
+        this.connEntry = entry;
+        this.respWaitingCounter = entry.connRespWaiting;
+        return this;
     }
 
     protected abstract ClientCodec createCodec();
@@ -312,10 +311,7 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
     @Override //AsyncConnection.beforeCloseListener
     public void accept(AsyncConnection t) {
         respWaitingCounter.reset();
-        if (index >= 0) {
-            client.connOpenStates[index].set(false);
-            client.connArray[index] = null; //必须connOpenStates之后
-        } else if (connEntry != null) { //index=-1
+        if (connEntry != null) { //index=-1
             connEntry.connOpenState.set(false);
         }
         ClientMessageListener listener = getCodec().getMessageListener();

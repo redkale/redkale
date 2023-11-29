@@ -66,8 +66,8 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
     }
 
     @Override
-    protected HttpSimpleConnection createClientConnection(int index, AsyncConnection channel) {
-        return new HttpSimpleConnection(this, index, channel);
+    protected HttpSimpleConnection createClientConnection(AsyncConnection channel) {
+        return new HttpSimpleConnection(this, channel);
     }
 
     @Override

@@ -35,6 +35,13 @@ public abstract class ClientRequest {
 
     public abstract void writeTo(ClientConnection conn, ByteArray array);
 
+    <T extends ClientRequest> T computeWorkThreadIfAbsent() {
+        if (workThread == null) {
+            workThread = WorkThread.currentWorkThread();
+        }
+        return (T) this;
+    }
+
     public Serializable getRequestid() {
         return null;
     }

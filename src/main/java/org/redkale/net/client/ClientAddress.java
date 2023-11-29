@@ -19,60 +19,41 @@ import org.redkale.convert.json.JsonConvert;
  */
 public class ClientAddress implements java.io.Serializable {
 
-    private SocketAddress address;
-
-    private List<WeightAddress> weights;
-
     private SocketAddress[] addresses;
 
     public ClientAddress() {
     }
 
-    public ClientAddress(SocketAddress address) {
-        this.address = address;
+    public ClientAddress(SocketAddress... addresses) {
+        if (addresses == null || addresses.length == 0) {
+            throw new NullPointerException("addresses is empty");
+        }
+        for (SocketAddress addr : addresses) {
+            Objects.requireNonNull(addr);
+        }
+        this.addresses = addresses;
     }
 
     public ClientAddress(List<WeightAddress> addrs) {
-        this.weights = new ArrayList<>(addrs);
+        if (addrs == null || addrs.isEmpty()) {
+            throw new NullPointerException("addresses is empty");
+        }
+        this.addresses = createAddressArray(addrs);
     }
 
-    public ClientAddress addWeightAddress(WeightAddress... addrs) {
-        if (this.weights == null) {
-            this.weights = new ArrayList<>();
+    public void updateAddress(List<WeightAddress> addrs) {
+        if (addrs == null || addrs.isEmpty()) {
+            throw new NullPointerException("addresses is empty");
         }
-        this.weights.addAll(Arrays.asList(addrs));
-        return this;
-    }
-
-    public void updateAddress(SocketAddress addr, List<WeightAddress> addrs) {
-        if (addr == null && (addrs == null || addrs.isEmpty())) {
-            throw new NullPointerException("address is empty");
-        }
-        setWeights(addrs);
-        setAddress(addr);
-    }
-
-    public void checkValid() {
-        if (address == null && (weights == null || weights.isEmpty())) {
-            throw new NullPointerException("address is empty");
-        }
+        this.addresses = createAddressArray(addrs);
     }
 
     public SocketAddress randomAddress() {
-        SocketAddress addr = address;
-        if (addr == null) {
-            SocketAddress[] addrs = this.addresses;
-            if (addrs == null) {
-                this.addresses = createAddressArray(this.weights);
-                addrs = this.addresses;
-            }
-            if (addrs.length == 1) {
-                addr = addrs[0];
-            } else {
-                addr = addrs[ThreadLocalRandom.current().nextInt(addrs.length)];
-            }
+        SocketAddress[] addrs = this.addresses;
+        if (addrs.length == 1) {
+            return addrs[0];
         }
-        return addr;
+        return addrs[ThreadLocalRandom.current().nextInt(addrs.length)];
     }
 
     private static SocketAddress[] createAddressArray(List<WeightAddress> ws) {
@@ -108,23 +89,6 @@ public class ClientAddress implements java.io.Serializable {
             }
         }
         return newAddrs;
-    }
-
-    public SocketAddress getAddress() {
-        return address;
-    }
-
-    public void setAddress(SocketAddress address) {
-        this.address = address;
-    }
-
-    public List<WeightAddress> getWeights() {
-        return weights;
-    }
-
-    public void setWeights(List<WeightAddress> weights) {
-        this.weights = weights == null ? null : new ArrayList<>(weights);
-        this.addresses = null;
     }
 
     @Override

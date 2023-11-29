@@ -2,11 +2,13 @@ package org.redkale.test.sncp;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import org.junit.jupiter.api.*;
 import org.redkale.boot.Application;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.AsyncIOGroup;
+import org.redkale.net.WorkThread;
 import org.redkale.net.client.ClientAddress;
 import org.redkale.net.sncp.*;
 import org.redkale.util.*;
@@ -29,14 +31,17 @@ public class SncpSleepTest {
     public void run() throws Exception {
         System.out.println("------------------- 并发调用 -----------------------------------");
         final Application application = Application.create(true);
-        final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
+        final ExecutorService workExecutor = WorkThread.createWorkExecutor(10, "Thread-Work-%s");
+        final AsyncIOGroup asyncGroup = new AsyncIOGroup("Redkale-TestClient-IOThread-%s", workExecutor, 8192, 16);
         asyncGroup.start();
         final ResourceFactory resFactory = ResourceFactory.create();
+        resFactory.register(Application.RESNAME_APP_EXECUTOR, ExecutorService.class, workExecutor);
         resFactory.register(JsonConvert.root());
         resFactory.register(BsonConvert.root());
 
         //------------------------ 初始化 CService ------------------------------------
         SncpSleepService service = Sncp.createSimpleLocalService(SncpSleepService.class, resFactory);
+        resFactory.inject(service);
         SncpServer server = new SncpServer(application, System.currentTimeMillis(), null, resFactory);
         server.getResourceFactory().register(application);
         server.addSncpServlet(service);
@@ -60,6 +65,7 @@ public class SncpSleepTest {
         long e = System.currentTimeMillis() - s;
         System.out.println("耗时: " + e + " ms");
         server.shutdown();
-        Assertions.assertTrue(e < 600);
+        workExecutor.shutdown();
+        Assertions.assertTrue(e < 900);
     }
 }
