@@ -83,6 +83,7 @@ public class SncpRequest extends Request<SncpContext> {
         }
         //---------------------head----------------------------------
         if (this.readState == READ_STATE_HEADER) {
+            this.completed = true;
             int remain = buffer.remaining();
             int expect = halfArray == null ? this.headerSize - 2 : this.headerSize - 2 - halfArray.length();
             if (remain < expect) {

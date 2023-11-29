@@ -66,6 +66,6 @@ public class SncpSleepTest {
         System.out.println("耗时: " + e + " ms");
         server.shutdown();
         workExecutor.shutdown();
-        Assertions.assertTrue(e < 900);
+        Assertions.assertTrue(e < 600);
     }
 }

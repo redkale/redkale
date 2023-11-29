@@ -159,6 +159,8 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
             context.dispatcher.incrExecuteCounter();
             int pindex = pipelineIndex;
             boolean pipeline = false;
+            boolean seted = false;
+            boolean completed = request.completed;
             Request hreq = lastReq;
             if (buffer.hasRemaining()) {
                 pipeline = true;
@@ -176,6 +178,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
                     request.pipeline(pindex, pindex);
                 }
                 channel.setReadBuffer(buffer.clear());
+                seted = true;
             }
             context.executeDispatch(request, response);
             if (pipeline) {
@@ -186,6 +189,11 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
                     context.logger.log(Level.WARNING, "dispatch pipeline servlet abort, force to close channel ", t);
                     pipelineResponse.codecError(t);
                 }
+            } else if (completed) {
+                if (!seted) {
+                    channel.setReadBuffer(buffer.clear());
+                }
+                channel.readRegister(this);
             }
         } else {
             channel.setReadBuffer(buffer);

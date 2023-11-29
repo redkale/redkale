@@ -329,11 +329,14 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             }
             this.recycleListener = null;
         }
+        boolean completed = request.completed;
         if (request.keepAlive && (request.pipelineIndex == 0 || request.pipelineCompleted)) {
             AsyncConnection conn = removeChannel();
             if (conn != null && conn.protocolCodec != null) {
                 this.responseConsumer.accept(this);
-                conn.readRegister(conn.protocolCodec);
+                if (!completed) {
+                    conn.readRegister(conn.protocolCodec);
+                }
             } else {
                 Supplier<Response> poolSupplier = this.responseSupplier;
                 Consumer<Response> poolConsumer = this.responseConsumer;
