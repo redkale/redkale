@@ -95,11 +95,6 @@ public final class DataSources {
         //do nothing
     }
 
-    //从AnyValue配置中创建DataSource
-    public static DataSource createDataSource(AnyValue sourceConf) {
-        return createDataSource(sourceConf, "");
-    }
-
     //从Properties配置中创建DataSource
     public static DataSource createDataSource(Properties sourceProperties, String sourceName) {
         AnyValue redConf = AnyValue.loadFromProperties(sourceProperties);
