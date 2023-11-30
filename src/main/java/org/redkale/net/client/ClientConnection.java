@@ -312,6 +312,7 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
     public void accept(AsyncConnection t) {
         respWaitingCounter.reset();
         if (connEntry != null) { //index=-1
+            connEntry.connection = null;
             connEntry.connOpenState.set(false);
         }
         ClientMessageListener listener = getCodec().getMessageListener();

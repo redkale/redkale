@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import org.redkale.annotation.Comment;
 import org.redkale.annotation.Nullable;
 import org.redkale.convert.*;
@@ -17,8 +18,10 @@ import org.redkale.net.client.ClientConnection;
 import org.redkale.net.client.ClientRequest;
 import static org.redkale.net.http.HttpSimpleClient.*;
 import org.redkale.util.ByteArray;
+import org.redkale.util.Copier;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Traces;
+import org.redkale.util.Utility;
 import static org.redkale.util.Utility.isNotEmpty;
 
 /**
@@ -33,87 +36,134 @@ import static org.redkale.util.Utility.isNotEmpty;
  */
 public class HttpSimpleRequest extends ClientRequest implements java.io.Serializable {
 
-    @ConvertColumn(index = 2)
+    private static final Function<HttpSimpleRequest, HttpSimpleRequest> copyFunc = Copier.func(HttpSimpleRequest.class, HttpSimpleRequest.class);
+
+    @ConvertColumn(index = 12)
     @Comment("是否RPC请求, 该类通常是为RPC创建的，故默认是true")
     protected boolean rpc = true;
 
-    @ConvertColumn(index = 3)
+    @ConvertColumn(index = 13)
     @Comment("链路ID")
     protected String traceid;
 
-    @ConvertColumn(index = 4)
+    @ConvertColumn(index = 14)
     @Comment("请求参数的ConvertType")
     protected ConvertType reqConvertType;
 
-    @ConvertColumn(index = 5)
+    @ConvertColumn(index = 15)
     @Comment("输出结果的ConvertType")
     protected ConvertType respConvertType;
 
     @Comment("Method GET/POST/...")
-    @ConvertColumn(index = 6)
+    @ConvertColumn(index = 16)
     protected String method;
 
-    @ConvertColumn(index = 7)
+    @ConvertColumn(index = 17)
     @Comment("请求的Path")
     protected String path;
 
-    @ConvertColumn(index = 8)
+    @ConvertColumn(index = 18)
     @Comment("请求的前缀")
     protected String contextPath;
 
-    @ConvertColumn(index = 9)
+    @ConvertColumn(index = 19)
     @Comment("客户端IP")
     protected String remoteAddr;
 
-    @ConvertColumn(index = 10)
+    @ConvertColumn(index = 20)
     @Comment("Locale国际化")
     protected String locale;
 
-    @ConvertColumn(index = 11)
+    @ConvertColumn(index = 21)
     @Comment("会话ID")
     protected String sessionid;
 
-    @ConvertColumn(index = 12)
+    @ConvertColumn(index = 22)
     @Comment("Content-Type")
     protected String contentType;
 
-    @ConvertColumn(index = 13) //@since 2.5.0 由int改成Serializable, 具体数据类型只能是int、long、BigInteger、String
+    @ConvertColumn(index = 23) //@since 2.5.0 由int改成Serializable, 具体数据类型只能是int、long、BigInteger、String
     protected Serializable currentUserid;
 
-    @ConvertColumn(index = 14)
+    @ConvertColumn(index = 24)
     @Comment("http header信息")
     protected HttpHeaders headers;
 
-    @ConvertColumn(index = 15)
+    @ConvertColumn(index = 25)
     @Comment("参数信息")
     protected HttpParameters params;
 
-    @ConvertColumn(index = 16)
+    @ConvertColumn(index = 26)
     @Comment("http body信息")
     protected byte[] body; //对应HttpRequest.array
 
     public static HttpSimpleRequest createPath(String path) {
-        return new HttpSimpleRequest().path(path).method("POST").traceid(Traces.currentTraceid());
+        return new HttpSimpleRequest().path(path).traceid(Traces.currentTraceid());
+    }
+
+    public static HttpSimpleRequest createPath(String path, HttpHeaders header) {
+        return createPath(path).headers(header);
     }
 
     public static HttpSimpleRequest createPath(String path, Object... params) {
-        HttpSimpleRequest req = new HttpSimpleRequest().path(path).method("POST").traceid(Traces.currentTraceid());
-        int len = params.length / 2;
-        for (int i = 0; i < len; i++) {
-            req.param(params[i * 2].toString(), params[i * 2 + 1]);
+        return createPath(path, (HttpHeaders) null, params);
+    }
+
+    public static HttpSimpleRequest createPath(String path, HttpHeaders header, Object... params) {
+        HttpSimpleRequest req = createPath(path).headers(header);
+        if (params.length > 0) {
+            int len = params.length / 2;
+            for (int i = 0; i < len; i++) {
+                req.param(params[i * 2].toString(), params[i * 2 + 1]);
+            }
         }
         return req;
     }
 
-    public static HttpSimpleRequest createPath(String path, HttpHeaders header) {
-        return new HttpSimpleRequest().path(path).method("POST").headers(header).traceid(Traces.currentTraceid());
+    public static HttpSimpleRequest createGetPath(String path) {
+        return createPath(path).method("GET");
+    }
+
+    public static HttpSimpleRequest createGetPath(String path, HttpHeaders header) {
+        return createPath(path, header).method("GET");
+    }
+
+    public static HttpSimpleRequest createGetPath(String path, Object... params) {
+        return createPath(path, params).method("GET");
+    }
+
+    public static HttpSimpleRequest createGetPath(String path, HttpHeaders header, Object... params) {
+        return createPath(path, header, params).method("GET");
+    }
+
+    public static HttpSimpleRequest createPostPath(String path) {
+        return createPath(path).method("POST");
+    }
+
+    public static HttpSimpleRequest createPostPath(String path, HttpHeaders header) {
+        return createPath(path, header).method("POST");
+    }
+
+    public static HttpSimpleRequest createPostPath(String path, Object... params) {
+        return createPath(path, params).method("POST");
+    }
+
+    public static HttpSimpleRequest createPostPath(String path, HttpHeaders header, Object... params) {
+        return createPath(path, header, params).method("POST");
+    }
+
+    public HttpSimpleRequest copy() {
+        HttpSimpleRequest rs = copyFunc.apply(this);
+        rs.workThread = this.workThread;
+        rs.createTime = this.createTime;
+        return rs;
     }
 
     @Override
     public void writeTo(ClientConnection conn, ByteArray array) {
         //组装path和body
         String requestPath = requestPath();
-        String contentType0 = this.contentType;
+        String contentType0 = Utility.orElse(this.contentType, "x-www-form-urlencoded");
         byte[] clientBody = null;
         if (isNotEmpty(body)) {
             String paramstr = getParametersToString();
@@ -133,10 +183,13 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
             contentType0 = "x-www-form-urlencoded";
         }
         //写status
-        array.put((method.toUpperCase() + " " + requestPath + " HTTP/1.1\r\n").getBytes(StandardCharsets.UTF_8));
+        array.put(((method == null ? "GET" : method.toUpperCase()) + " " + requestPath + " HTTP/1.1\r\n").getBytes(StandardCharsets.UTF_8));
         //写header
         if (traceid != null && !containsHeaderIgnoreCase(Rest.REST_HEADER_TRACEID)) {
             array.put((Rest.REST_HEADER_TRACEID + ": " + traceid + "\r\n").getBytes(StandardCharsets.UTF_8));
+        }
+        if (currentUserid != null && !containsHeaderIgnoreCase(Rest.REST_HEADER_CURRUSERID)) {
+            array.put((Rest.REST_HEADER_CURRUSERID + ": " + currentUserid + "\r\n").getBytes(StandardCharsets.UTF_8));
         }
         if (!containsHeaderIgnoreCase("User-Agent")) {
             array.put(header_bytes_useragent);
@@ -215,16 +268,20 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     }
 
     public HttpSimpleRequest path(String path) {
-        if (path.indexOf(' ') >= 0 || path.indexOf('\r') >= 0 || path.indexOf('\n') >= 0) {
-            throw new RedkaleException("http-path(" + path + ") is illegal");
+        if (path != null) {
+            if (path.indexOf(' ') >= 0 || path.indexOf('\r') >= 0 || path.indexOf('\n') >= 0) {
+                throw new RedkaleException("http-path(" + path + ") is illegal");
+            }
         }
         this.path = path;
         return this;
     }
 
     public HttpSimpleRequest contextPath(String contextPath) {
-        if (contextPath.indexOf(' ') >= 0 || contextPath.indexOf('\r') >= 0 || contextPath.indexOf('\n') >= 0) {
-            throw new RedkaleException("http-context-path(" + contextPath + ") is illegal");
+        if (contextPath != null) {
+            if (contextPath.indexOf(' ') >= 0 || contextPath.indexOf('\r') >= 0 || contextPath.indexOf('\n') >= 0) {
+                throw new RedkaleException("http-context-path(" + contextPath + ") is illegal");
+            }
         }
         this.contextPath = contextPath;
         return this;
@@ -296,6 +353,11 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     }
 
     public HttpSimpleRequest method(String method) {
+        if (method != null) {
+            if (method.indexOf(' ') >= 0 || method.indexOf('\r') >= 0 || method.indexOf('\n') >= 0) {
+                throw new RedkaleException("http-method(" + method + ") is illegal");
+            }
+        }
         this.method = method;
         return this;
     }
@@ -419,7 +481,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     }
 
     public void setRpc(boolean rpc) {
-        this.rpc = rpc;
+        rpc(rpc);
     }
 
     public String getTraceid() {
@@ -427,7 +489,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     }
 
     public void setTraceid(String traceid) {
-        this.traceid = traceid;
+        traceid(traceid);
     }
 
     public String getMethod() {
@@ -435,7 +497,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     }
 
     public void setMethod(String method) {
-        this.method = method;
+        method(method);
     }
 
     public String getPath() {
@@ -443,7 +505,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     }
 
     public void setPath(String path) {
-        this.path = path;
+        path(path);
     }
 
     public String getContextPath() {
@@ -451,7 +513,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     }
 
     public void setContextPath(String contextPath) {
-        this.contextPath = contextPath;
+        contextPath(contextPath);
     }
 
     public String getSessionid() {
@@ -459,7 +521,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     }
 
     public void setSessionid(String sessionid) {
-        this.sessionid = sessionid;
+        sessionid(sessionid);
     }
 
     public String getRemoteAddr() {
@@ -467,7 +529,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     }
 
     public void setRemoteAddr(String remoteAddr) {
-        this.remoteAddr = remoteAddr;
+        remoteAddr(remoteAddr);
     }
 
     public String getLocale() {
@@ -475,7 +537,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     }
 
     public void setLocale(String locale) {
-        this.locale = locale;
+        locale(locale);
     }
 
     public Serializable getCurrentUserid() {
@@ -483,7 +545,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     }
 
     public void setCurrentUserid(Serializable currentUserid) {
-        this.currentUserid = currentUserid;
+        currentUserid(currentUserid);
     }
 
     public String getContentType() {
@@ -491,7 +553,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     }
 
     public void setContentType(String contentType) {
-        this.contentType = contentType;
+        contentType(contentType);
     }
 
     public HttpHeaders getHeaders() {
@@ -515,7 +577,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     }
 
     public void setBody(byte[] body) {
-        this.body = body;
+        body(body);
     }
 
     public ConvertType getReqConvertType() {
@@ -523,7 +585,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     }
 
     public void setReqConvertType(ConvertType reqConvertType) {
-        this.reqConvertType = reqConvertType;
+        reqConvertType(reqConvertType);
     }
 
     public ConvertType getRespConvertType() {
@@ -531,7 +593,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     }
 
     public void setRespConvertType(ConvertType respConvertType) {
-        this.respConvertType = respConvertType;
+        respConvertType(respConvertType);
     }
 
     @Override

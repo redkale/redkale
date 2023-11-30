@@ -83,7 +83,6 @@ public class SncpRequest extends Request<SncpContext> {
         }
         //---------------------head----------------------------------
         if (this.readState == READ_STATE_HEADER) {
-            this.completed = true;
             int remain = buffer.remaining();
             int expect = halfArray == null ? this.headerSize - 2 : this.headerSize - 2 - halfArray.length();
             if (remain < expect) {
@@ -110,6 +109,8 @@ public class SncpRequest extends Request<SncpContext> {
                 return -1;
             }
             this.traceid = this.header.getTraceid();
+            //completed=true时ProtocolCodec会继续读下一个request
+            this.completed = true;
             this.readState = READ_STATE_BODY;
         }
         //---------------------body----------------------------------

@@ -240,10 +240,25 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
         }
         final URI uri = URI.create(url);
         final String host = uri.getHost();
-
-        final ByteArray array = new ByteArray();
+        final int port = uri.getPort() > 0 ? uri.getPort() : (url.startsWith("https:") ? 443 : 80);
         int urlpos = url.indexOf("/", url.indexOf("//") + 3);
-        array.put((method.toUpperCase() + " " + (urlpos > 0 ? url.substring(urlpos) : "/") + " HTTP/1.1\r\n").getBytes(StandardCharsets.UTF_8));
+        final String path = (urlpos > 0 ? url.substring(urlpos) : "/");
+        if (!url.startsWith("https:")) {
+            HttpSimpleRequest req = HttpSimpleRequest.createPath(path, headers).method(method).body(body);
+            return (CompletableFuture) sendAsync(new InetSocketAddress(host, port), req)
+                .thenApply((HttpSimpleResult rs) -> {
+                    if (valueType == null) {
+                        return rs;
+                    } else {
+                        Convert c = convert == null ? JsonConvert.root() : convert;
+                        return rs.result(c.convertToBytes(valueType, (byte[]) rs.result));
+                    }
+                });
+        }
+
+        //以下代码暂废弃
+        final ByteArray array = new ByteArray();
+        array.put((method.toUpperCase() + " " + path + " HTTP/1.1\r\n").getBytes(StandardCharsets.UTF_8));
         array.put(("Host: " + uri.getHost() + "\r\n").getBytes(StandardCharsets.UTF_8));
 
         array.put(HttpSimpleRequest.contentLengthBytes(body));
@@ -263,7 +278,6 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
             array.put(body);
         }
 
-        final int port = uri.getPort() > 0 ? uri.getPort() : (url.startsWith("https:") ? 443 : 80);
         return createConnection(host, port).thenCompose(conn -> {
             Traces.currentTraceid(traceid);
             final CompletableFuture<HttpResult<T>> future = new CompletableFuture();
@@ -304,7 +318,7 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
 //        final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
 //        asyncGroup.start();
 //        String url = "http://redkale.org";
-//        HttpSimpleClient client = HttpSimpleClient.createPath(asyncGroup);
+//        HttpSimpleClient client = HttpSimpleClient.createPostPath(asyncGroup);
 //        (System.out).println(client.getAsync(url).join());
 //    }
 //    

@@ -146,42 +146,25 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
 
             if (exc == null) {
                 final Object rs = request.respTransfer == null ? message : request.respTransfer.apply(message);
-                if (workThread.inIO() && workThread.getState() == Thread.State.RUNNABLE) { //fullCache时state不是RUNNABLE
+                //workThread不区分IO线程，respFuture.complete中使用CompletableFuture.join会一直阻塞
+                workThread.runWork(() -> {
                     Traces.currentTraceid(request.traceid);
                     respFuture.complete(rs);
                     Traces.removeTraceid();
-                } else {
-                    workThread.runWork(() -> {
-                        Traces.currentTraceid(request.traceid);
-                        respFuture.complete(rs);
-                        Traces.removeTraceid();
-                    });
-                }
+                });
             } else { //异常
-                if (workThread.inIO() && workThread.getState() == Thread.State.RUNNABLE) { //fullCache时state不是RUNNABLE
+                workThread.runWork(() -> {
                     Traces.currentTraceid(request.traceid);
                     respFuture.completeExceptionally(exc);
                     Traces.removeTraceid();
-                } else {
-                    workThread.runWork(() -> {
-                        Traces.currentTraceid(request.traceid);
-                        respFuture.completeExceptionally(exc);
-                        Traces.removeTraceid();
-                    });
-                }
+                });
             }
         } catch (Throwable t) {
-            if (workThread.inIO() && workThread.getState() == Thread.State.RUNNABLE) { //fullCache时state不是RUNNABLE
+            workThread.runWork(() -> {
                 Traces.currentTraceid(request.traceid);
                 respFuture.completeExceptionally(t);
                 Traces.removeTraceid();
-            } else {
-                workThread.runWork(() -> {
-                    Traces.currentTraceid(request.traceid);
-                    respFuture.completeExceptionally(t);
-                    Traces.removeTraceid();
-                });
-            }
+            });
             connection.client.logger.log(Level.INFO, "Complete result error, request: " + respFuture.request, t);
         }
     }

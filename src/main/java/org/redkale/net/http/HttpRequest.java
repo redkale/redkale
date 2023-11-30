@@ -295,7 +295,6 @@ public class HttpRequest extends Request<HttpContext> {
             this.readState = READ_STATE_HEADER;
         }
         if (this.readState == READ_STATE_HEADER) {
-            this.completed = true;
             if (last != null && ((HttpRequest) last).headerLength > 0) {
                 final HttpRequest httplast = (HttpRequest) last;
                 int bufremain = buffer.remaining();
@@ -351,9 +350,10 @@ public class HttpRequest extends Request<HttpContext> {
                 this.boundary = true;
             }
             if (this.boundary) {
-                this.completed = false; //completed=true时ProtocolCodec会继续读下一个request
                 this.keepAlive = false; //文件上传必须设置keepAlive为false，因为文件过大时用户不一定会skip掉多余的数据
             }
+            //completed=true时ProtocolCodec会继续读下一个request
+            this.completed = !this.boundary && !maybews && this.headerParsed; 
             this.readState = READ_STATE_BODY;
         }
         if (this.readState == READ_STATE_BODY) {

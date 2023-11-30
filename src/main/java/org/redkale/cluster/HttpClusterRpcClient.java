@@ -123,6 +123,14 @@ public class HttpClusterRpcClient extends HttpRpcClient {
                 clientHeaders.set(Rest.REST_HEADER_RESP_CONVERT, req.getRespConvertType().toString());
             }
 
+            if (httpSimpleClient != null) {
+                HttpSimpleRequest newReq = req.copy().headers(clientHeaders);
+                InetSocketAddress addr = randomAddress(newReq, addrs);
+                if (logger.isLoggable(Level.FINEST)) {
+                    logger.log(Level.FINEST, "httpAsync: module=" + localModule + ", resname=" + resname + ", addr=" + addr);
+                }
+                return (CompletableFuture) httpSimpleClient.sendAsync(addr, newReq);
+            }
             byte[] clientBody = null;
             if (isNotEmpty(req.getBody())) {
                 String paramstr = req.getParametersToString();
@@ -147,7 +155,12 @@ public class HttpClusterRpcClient extends HttpRpcClient {
         });
     }
 
-    private CompletableFuture<HttpResult<byte[]>> sendEachAddressAsync(HttpSimpleRequest req,
+    protected InetSocketAddress randomAddress(HttpSimpleRequest req, Set<InetSocketAddress> addrs) {
+        InetSocketAddress[] array = addrs.toArray(new InetSocketAddress[addrs.size()]);
+        return array[ThreadLocalRandom.current().nextInt(array.length)];
+    }
+
+    protected CompletableFuture<HttpResult<byte[]>> sendEachAddressAsync(HttpSimpleRequest req,
         String requestPath, final HttpHeaders clientHeaders, byte[] clientBody, Iterator<InetSocketAddress> it) {
         if (!it.hasNext()) {
             return new HttpResult<byte[]>().status(404).toFuture();
@@ -159,26 +172,21 @@ public class HttpClusterRpcClient extends HttpRpcClient {
             logger.log(Level.FINER, "sendEachAddressAsync: url: " + url
                 + ", body: " + (clientBody != null ? new String(clientBody, StandardCharsets.UTF_8) : "") + ", headers: " + clientHeaders);
         }
-        if (httpSimpleClient != null) {
-            clientHeaders.set("Host", host);
-            return httpSimpleClient.postAsync(url, clientHeaders, clientBody);
-        } else {
-            java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .timeout(Duration.ofMillis(10_000))
-                //存在sendHeader后不发送body数据的问题， java.net.http.HttpRequest的bug?
-                .method("POST", createBodyPublisher(clientBody));
-            clientHeaders.forEach(builder::header);
-            return httpClient.sendAsync(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofByteArray())
-                .thenApply((java.net.http.HttpResponse<byte[]> resp) -> {
-                    Traces.currentTraceid(req.getTraceid());
-                    final int rs = resp.statusCode();
-                    if (rs != 200) {
-                        return new HttpResult<byte[]>().status(rs);
-                    }
-                    return new HttpResult<>(resp.body());
-                });
-        }
+        java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .timeout(Duration.ofMillis(10_000))
+            //存在sendHeader后不发送body数据的问题， java.net.http.HttpRequest的bug?
+            .method("POST", createBodyPublisher(clientBody));
+        clientHeaders.forEach(builder::header);
+        return httpClient.sendAsync(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofByteArray())
+            .thenApply((java.net.http.HttpResponse<byte[]> resp) -> {
+                Traces.currentTraceid(req.getTraceid());
+                final int rs = resp.statusCode();
+                if (rs != 200) {
+                    return new HttpResult<byte[]>().status(rs);
+                }
+                return new HttpResult<>(resp.body());
+            });
     }
 
     private static java.net.http.HttpRequest.BodyPublisher createBodyPublisher(byte[] clientBody) {

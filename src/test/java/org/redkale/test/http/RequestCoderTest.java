@@ -28,7 +28,7 @@ public class RequestCoderTest {
 
     @Test
     public void run1() throws Exception {
-        HttpSimpleRequest req1 = HttpSimpleRequest.createPath("/aaa");
+        HttpSimpleRequest req1 = HttpSimpleRequest.createPostPath("/aaa");
         System.out.println("simpleRequest1: " + req1);
         byte[] bytes = HttpSimpleRequestCoder.getInstance().encode(req1);
         HttpSimpleRequest req2 = HttpSimpleRequestCoder.getInstance().decode(bytes);
@@ -41,7 +41,7 @@ public class RequestCoderTest {
 
     @Test
     public void run2() throws Exception {
-        HttpSimpleRequest req1 = HttpSimpleRequest.createPath("/aaa");
+        HttpSimpleRequest req1 = HttpSimpleRequest.createPostPath("/aaa");
         req1.addHeader("X-aaa", "aaa");
         req1.param("bean", "{}");
         System.out.println("simpleRequest1: " + req1);
@@ -56,7 +56,7 @@ public class RequestCoderTest {
 
     @Test
     public void run3() throws Exception {
-        HttpSimpleRequest req1 = HttpSimpleRequest.createPath("/aaa");
+        HttpSimpleRequest req1 = HttpSimpleRequest.createPostPath("/aaa");
         req1.addHeader("X-aaa", "aaa");
         req1.addHeader("X-bbb", "bbb1");
         req1.addHeader("X-bbb", "bbb2");

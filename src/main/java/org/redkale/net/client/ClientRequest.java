@@ -8,6 +8,7 @@ package org.redkale.net.client;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
+import org.redkale.convert.ConvertColumn;
 import org.redkale.net.WorkThread;
 import org.redkale.util.*;
 
@@ -24,11 +25,13 @@ public abstract class ClientRequest {
 
     public static final byte[] EMPTY_TRACEID = new byte[0];
 
+    @ConvertColumn(index = 1)
+    protected String traceid;
+
+    @ConvertColumn(index = 2)
     protected long createTime = System.currentTimeMillis();
 
     protected WorkThread workThread;
-
-    protected String traceid;
 
     //只会在ClientCodec的读线程里调用, 将ClientResult转成最终结果对象
     Function respTransfer;
