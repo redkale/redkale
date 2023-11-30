@@ -48,13 +48,13 @@ public final class ClassFilter<T> {
 
     private Class<? extends Annotation> annotationClass;//符合的注解。不为空时，扫描结果的class必须包含该注解
 
-    private Pattern[] includePatterns; //符合的classname正则表达式
+    private Pattern[] includePatterns; //符合的className正则表达式
 
-    private Pattern[] excludePatterns;//拒绝的classname正则表达式
+    private Pattern[] excludePatterns;//拒绝的className正则表达式
 
-    private Set<String> privilegeIncludes; //特批符合条件的classname
+    private Set<String> privilegeIncludes; //特批符合条件的className
 
-    private Set<String> privilegeExcludes;//特批拒绝条件的classname
+    private Set<String> privilegeExcludes;//特批拒绝条件的className
 
     private List<ClassFilter> ors; //或关系的其他ClassFilter
 
@@ -157,12 +157,12 @@ public final class ClassFilter<T> {
      * 自动扫描地过滤指定的class
      *
      * @param property  AnyValue
-     * @param clazzname String
+     * @param clazzName String
      * @param url       URL
      */
     @SuppressWarnings("unchecked")
-    public final void filter(AnyValue property, String clazzname, URL url) {
-        filter(property, clazzname, true, url);
+    public final void filter(AnyValue property, String clazzName, URL url) {
+        filter(property, clazzName, true, url);
     }
 
     /**
@@ -252,34 +252,34 @@ public final class ClassFilter<T> {
     /**
      * 判断class是否有效
      *
-     * @param classname String
+     * @param className String
      *
      * @return boolean
      */
-    public boolean accept(String classname) {
-        return accept(null, classname);
+    public boolean accept(String className) {
+        return accept(null, className);
     }
 
     /**
      * 判断class是否有效
      *
      * @param property  AnyValue
-     * @param classname String
+     * @param className String
      *
      * @return boolean
      */
-    public boolean accept(AnyValue property, String classname) {
-        boolean r = accept0(property, classname);
+    public boolean accept(AnyValue property, String className) {
+        boolean r = accept0(property, className);
         if (r && ands != null) {
             for (ClassFilter filter : ands) {
-                if (!filter.accept(property, classname)) {
+                if (!filter.accept(property, className)) {
                     return false;
                 }
             }
         }
         if (!r && ors != null) {
             for (ClassFilter filter : ors) {
-                if (filter.accept(filter.conf, classname)) {
+                if (filter.accept(filter.conf, className)) {
                     return true;
                 }
             }
@@ -287,29 +287,29 @@ public final class ClassFilter<T> {
         return r;
     }
 
-    private boolean accept0(AnyValue property, String classname) {
+    private boolean accept0(AnyValue property, String className) {
         if (this.refused) {
             return false;
         }
-        if (this.privilegeIncludes != null && this.privilegeIncludes.contains(classname)) {
+        if (this.privilegeIncludes != null && this.privilegeIncludes.contains(className)) {
             return true;
         }
-        if (this.privilegeExcludes != null && this.privilegeExcludes.contains(classname)) {
+        if (this.privilegeExcludes != null && this.privilegeExcludes.contains(className)) {
             return false;
         }
-        if (classname.startsWith("java.") || classname.startsWith("javax.")) {
+        if (className.startsWith("java.") || className.startsWith("javax.")) {
             return false;
         }
         if (excludePatterns != null) {
             for (Pattern reg : excludePatterns) {
-                if (reg.matcher(classname).matches()) {
+                if (reg.matcher(className).matches()) {
                     return false;
                 }
             }
         }
         if (includePatterns != null) {
             for (Pattern reg : includePatterns) {
-                if (reg.matcher(classname).matches()) {
+                if (reg.matcher(className).matches()) {
                     return true;
                 }
             }
@@ -576,67 +576,76 @@ public final class ClassFilter<T> {
          * @throws IOException 异常
          */
         public static void load(final File excludeFile, RedkaleClassLoader loader, final ClassFilter... filters) throws IOException {
-            List<URL> urlfiles = new ArrayList<>(2);
-            List<URL> urljares = new ArrayList<>(2);
+            List<URL> urlFiles = new ArrayList<>(2);
+            List<URL> urlJares = new ArrayList<>(2);
             final URL exurl = excludeFile != null ? excludeFile.toURI().toURL() : null;
             for (URL url : loader.getAllURLs()) {
                 if (exurl != null && exurl.sameFile(url)) {
                     continue;
                 }
                 if (url.getPath().endsWith(".jar")) {
-                    urljares.add(url);
+                    urlJares.add(url);
                 } else {
-                    urlfiles.add(url);
+                    urlFiles.add(url);
                 }
             }
             List<File> files = new ArrayList<>();
             boolean debug = logger.isLoggable(Level.FINEST);
             StringBuilder debugstr = new StringBuilder();
-            for (final URL url : urljares) {
+            for (final URL url : urlJares) {
                 Set<String> classes = cache.get(url);
                 if (classes == null) {
                     classes = new LinkedHashSet<>();
                     try (JarFile jar = new JarFile(URLDecoder.decode(url.getFile(), StandardCharsets.UTF_8))) {
                         Enumeration<JarEntry> it = jar.entries();
                         while (it.hasMoreElements()) {
-                            String entryname = it.nextElement().getName().replace('/', '.');
-                            if (entryname.endsWith(".class") && entryname.indexOf('$') < 0) {
-                                String classname = entryname.substring(0, entryname.length() - 6);
-                                if (classname.startsWith("javax.") || classname.startsWith("com.sun.")) {
+                            String entryName = it.nextElement().getName().replace('/', '.');
+                            if (entryName.endsWith(".class") && entryName.indexOf('$') < 0) {
+                                String className = entryName.substring(0, entryName.length() - 6);
+                                if (className.startsWith("javax.") || className.startsWith("com.sun.")) {
                                     continue;
                                 }
                                 //常见的jar跳过
-                                if (classname.startsWith("org.redkaledyn.")) {
+                                if (className.startsWith("org.redkaledyn.")) {
                                     break; //redkale动态生成的类
                                 }
-                                if (classname.startsWith("com.mysql.")) {
+                                if (className.startsWith("org.junit.")) {
                                     break;
                                 }
-                                if (classname.startsWith("org.junit.")) {
+                                if (className.startsWith("org.openjfx.")) {
                                     break;
                                 }
-                                if (classname.startsWith("org.openjfx.")) {
+                                if (className.startsWith("org.mariadb.")) {
                                     break;
                                 }
-                                if (classname.startsWith("org.mariadb.")) {
+                                if (className.startsWith("com.mysql.")) {
                                     break;
                                 }
-                                if (classname.startsWith("oracle.jdbc.")) {
+                                if (className.startsWith("oracle.jdbc.")) {
                                     break;
                                 }
-                                if (classname.startsWith("org.postgresql.")) {
+                                if (className.startsWith("org.postgresql.")) {
                                     break;
                                 }
-                                if (classname.startsWith("com.microsoft.sqlserver.")) {
+                                if (className.startsWith("com.microsoft.sqlserver.")) {
                                     break;
                                 }
-                                classes.add(classname);
+                                if (className.startsWith("org.apache.")) {
+                                    break;
+                                }
+                                if (className.startsWith("io.netty.")) {
+                                    break;
+                                }
+                                if (className.startsWith("io.vertx.")) {
+                                    break;
+                                }
+                                classes.add(className);
                                 if (debug) {
-                                    debugstr.append(classname).append("\r\n");
+                                    debugstr.append(className).append("\r\n");
                                 }
                                 for (final ClassFilter filter : filters) {
                                     if (filter != null) {
-                                        filter.filter(null, classname, url);
+                                        filter.filter(null, className, url);
                                     }
                                 }
                             }
@@ -644,16 +653,16 @@ public final class ClassFilter<T> {
                     }
                     cache.put(url, classes);
                 } else {
-                    for (String classname : classes) {
+                    for (String className : classes) {
                         for (final ClassFilter filter : filters) {
                             if (filter != null) {
-                                filter.filter(null, classname, url);
+                                filter.filter(null, className, url);
                             }
                         }
                     }
                 }
             }
-            for (final URL url : urlfiles) {
+            for (final URL url : urlFiles) {
                 Set<String> classes = cache.get(url);
                 if (classes == null) {
                     classes = new LinkedHashSet<>();
@@ -664,38 +673,38 @@ public final class ClassFilter<T> {
                     if (cs.isEmpty()) {
                         files.clear();
                         File root = new File(url.getFile());
-                        String rootpath = root.getPath();
+                        String rootPath = root.getPath();
                         loadClassFiles(excludeFile, root, files);
                         for (File f : files) {
-                            String classname = f.getPath().substring(rootpath.length() + 1, f.getPath().length() - 6).replace(File.separatorChar, '.');
-                            if (classname.startsWith("javax.") || classname.startsWith("com.sun.")) {
+                            String className = f.getPath().substring(rootPath.length() + 1, f.getPath().length() - 6).replace(File.separatorChar, '.');
+                            if (className.startsWith("javax.") || className.startsWith("com.sun.")) {
                                 continue;
                             }
-                            classes.add(classname);
+                            classes.add(className);
                             if (debug) {
-                                debugstr.append(classname).append("\r\n");
+                                debugstr.append(className).append("\r\n");
                             }
                             for (final ClassFilter filter : filters) {
                                 if (filter != null) {
-                                    filter.filter(null, classname, url);
+                                    filter.filter(null, className, url);
                                 }
                             }
                         }
                     } else {
-                        for (String classname : classes) {
+                        for (String className : classes) {
                             for (final ClassFilter filter : filters) {
                                 if (filter != null) {
-                                    filter.filter(null, classname, url);
+                                    filter.filter(null, className, url);
                                 }
                             }
                         }
                     }
                     cache.put(url, classes);
                 } else {
-                    for (String classname : classes) {
+                    for (String className : classes) {
                         for (final ClassFilter filter : filters) {
                             if (filter != null) {
-                                filter.filter(null, classname, url);
+                                filter.filter(null, className, url);
                             }
                         }
                     }
