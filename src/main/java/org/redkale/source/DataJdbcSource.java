@@ -18,6 +18,7 @@ import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
 import org.redkale.service.Local;
+import static org.redkale.source.DataSources.*;
 import org.redkale.util.*;
 
 /**
@@ -2879,7 +2880,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
         public ConnectionPool(boolean readFlag, Properties prop) {
             this.readFlag = readFlag;
-            this.connectTimeoutSeconds = Integer.decode(prop.getProperty(DATA_SOURCE_CONNECTTIMEOUT_SECONDS, "30"));
+            this.connectTimeoutSeconds = Integer.decode(prop.getProperty(DATA_SOURCE_CONNECT_TIMEOUT_SECONDS, "30"));
             int defMaxConns = Utility.cpus() * 4;
             if (workExecutor instanceof ThreadPoolExecutor) {
                 defMaxConns = ((ThreadPoolExecutor) workExecutor).getCorePoolSize();
@@ -2917,7 +2918,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             for (ResourceEvent event : events) {
                 if (event.name().equals(DATA_SOURCE_URL) || event.name().endsWith("." + DATA_SOURCE_URL)) {
                     newUrl = event.newValue().toString();
-                } else if (event.name().equals(DATA_SOURCE_CONNECTTIMEOUT_SECONDS) || event.name().endsWith("." + DATA_SOURCE_CONNECTTIMEOUT_SECONDS)) {
+                } else if (event.name().equals(DATA_SOURCE_CONNECT_TIMEOUT_SECONDS) || event.name().endsWith("." + DATA_SOURCE_CONNECT_TIMEOUT_SECONDS)) {
                     newConnectTimeoutSeconds = Integer.decode(event.newValue().toString());
                 } else if (event.name().equals(DATA_SOURCE_USER) || event.name().endsWith("." + DATA_SOURCE_USER)) {
                     newUser = event.newValue().toString();

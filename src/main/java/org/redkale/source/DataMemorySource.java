@@ -52,7 +52,7 @@ public class DataMemorySource extends AbstractDataSource {
     }
 
     public static boolean acceptsConf(AnyValue config) {
-        return config.getValue(DATA_SOURCE_URL).startsWith("memory:");
+        return config.getValue(DataSources.DATA_SOURCE_URL).startsWith("memory:");
     }
 //
 //    public static boolean isSearchType(AnyValue config) {

@@ -22,6 +22,7 @@ import static org.redkale.boot.Application.*;
 import org.redkale.net.AsyncGroup;
 import org.redkale.persistence.Table;
 import org.redkale.service.Local;
+import static org.redkale.source.DataSources.*;
 import org.redkale.source.EntityInfo.EntityColumn;
 import org.redkale.util.*;
 import static org.redkale.util.Utility.isEmpty;

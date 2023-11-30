@@ -1381,8 +1381,8 @@ public final class Application {
                 logger.info("Load DataSource resourceName = '" + sourceName + "', source = " + source);
                 return source;
             }
-            if (!sourceConf.getValue(AbstractDataSource.DATA_SOURCE_RESOURCE, "").isEmpty()) {
-                DataSource source = loadDataSource(sourceConf.getValue(AbstractDataSource.DATA_SOURCE_RESOURCE), autoMemory);
+            if (!sourceConf.getValue(DataSources.DATA_SOURCE_RESOURCE, "").isEmpty()) {
+                DataSource source = loadDataSource(sourceConf.getValue(DataSources.DATA_SOURCE_RESOURCE), autoMemory);
                 if (source != null) {
                     if (source instanceof DataMemorySource && source instanceof SearchSource) {
                         resourceFactory.register(sourceName, SearchSource.class, source);
@@ -1399,7 +1399,7 @@ public final class Application {
                 return source;
             }
             try {
-                DataSource source = AbstractDataSource.createDataSource(serverClassLoader, resourceFactory, sourceConf, sourceName, compileMode);
+                DataSource source = DataSources.createDataSource(serverClassLoader, resourceFactory, sourceConf, sourceName, compileMode);
                 if (!compileMode && source instanceof Service) {
                     resourceFactory.inject(sourceName, source);
                     ((Service) source).init(sourceConf);

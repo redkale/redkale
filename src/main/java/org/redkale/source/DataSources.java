@@ -8,16 +8,199 @@ package org.redkale.source;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import org.redkale.service.Service;
 import org.redkale.util.*;
+import static org.redkale.util.Utility.isEmpty;
 
 /**
- * 常量放入 AbstractDataSource 类中，方法都已作废，persistence.xml 采用 source.properties 代替
+ * 构建DataSource对象的工具类
  *
  * @author zhangjx
  */
-@Deprecated(since = "2.7.0")
 public final class DataSources {
 
+    //@since 2.8.0  复用另一source资源
+    public static final String DATA_SOURCE_RESOURCE = "resource";
+
+    //@since 2.8.0 格式: x.x.x.x:yyyy
+    public static final String DATA_SOURCE_PROXY_ADDRESS = "proxy-address";
+
+    //@since 2.8.0 值: SOCKS/DIRECT/HTTP，默认值: http
+    public static final String DATA_SOURCE_PROXY_TYPE = "proxy-type";
+
+    //@since 2.8.0 
+    public static final String DATA_SOURCE_PROXY_USER = "proxy-user";
+
+    //@since 2.8.0 
+    public static final String DATA_SOURCE_PROXY_PASSWORD = "proxy-password";
+
+    //@since 2.8.0 值: true/false，默认值: true
+    public static final String DATA_SOURCE_PROXY_ENABLE = "proxy-enable";
+
+    //@since 2.8.0
+    public static final String DATA_SOURCE_URL = "url";
+
+    //@since 2.8.0
+    public static final String DATA_SOURCE_USER = "user";
+
+    //@since 2.8.0
+    public static final String DATA_SOURCE_PASSWORD = "password";
+
+    //@since 2.8.0
+    public static final String DATA_SOURCE_ENCODING = "encoding";
+
+    //@since 2.8.0
+    public static final String DATA_SOURCE_MAXCONNS = "maxconns";
+
+    //@since 2.8.0
+    public static final String DATA_SOURCE_PIPELINES = "pipelines";
+
+    //@since 2.8.0 //超过多少毫秒视为较慢, 会打印警告级别的日志, 默认值: 2000
+    public static final String DATA_SOURCE_SLOWMS_WARN = "warn-slowms";
+
+    //@since 2.8.0 //超过多少毫秒视为较慢, 会打印警告级别的日志, 默认值: 3000
+    public static final String DATA_SOURCE_SLOWMS_ERROR = "error-slowms";
+
+    //@since 2.8.0 //sourceExecutor线程数, 默认值: 内核数
+    public static final String DATA_SOURCE_THREADS = "threads";
+
+    //@since 2.8.0
+    public static final String DATA_SOURCE_AUTOMAPPING = "auto-mapping";
+
+    //@since 2.8.0
+    public static final String DATA_SOURCE_TABLE_AUTODDL = "table-autoddl";
+
+    //@since 2.8.0
+    public static final String DATA_SOURCE_CONNECT_TIMEOUT_SECONDS = "connect-timeout";
+
+    //@since 2.8.0 //NONE ALL 设置@Cacheable是否生效
+    public static final String DATA_SOURCE_CACHEMODE = "cachemode";
+
+    //@since 2.8.0
+    public static final String DATA_SOURCE_CONNECTIONS_CAPACITY = "connections-bufcapacity";
+
+    //@since 2.8.0
+    public static final String DATA_SOURCE_CONTAIN_SQLTEMPLATE = "contain-sqltemplate";
+
+    //@since 2.8.0
+    public static final String DATA_SOURCE_NOTCONTAIN_SQLTEMPLATE = "notcontain-sqltemplate";
+
+    //@since 2.8.0
+    public static final String DATA_SOURCE_TABLENOTEXIST_SQLSTATES = "tablenotexist-sqlstates";
+
+    //@since 2.8.0
+    public static final String DATA_SOURCE_TABLECOPY_SQLTEMPLATE = "tablecopy-sqltemplate";
+
+    private DataSources() {
+        //do nothing
+    }
+
+    //从AnyValue配置中创建DataSource
+    public static DataSource createDataSource(AnyValue sourceConf) {
+        return createDataSource(sourceConf, "");
+    }
+
+    //从Properties配置中创建DataSource
+    public static DataSource createDataSource(Properties sourceProperties, String sourceName) {
+        AnyValue redConf = AnyValue.loadFromProperties(sourceProperties);
+        AnyValue sourceConf = redConf.getAnyValue("datasource").getAnyValue(sourceName);
+        return createDataSource(sourceConf, sourceName);
+    }
+
+    //从AnyValue配置中创建DataSource
+    public static DataSource createDataSource(AnyValue sourceConf, String sourceName) {
+        return createDataSource(null, null, sourceConf, sourceName, false);
+    }
+
+    //根据配置中创建DataSource
+    public static DataSource createDataSource(ClassLoader serverClassLoader, ResourceFactory resourceFactory, AnyValue sourceConf, String sourceName, boolean compileMode) {
+        DataSource source = null;
+        if (serverClassLoader == null) {
+            serverClassLoader = Thread.currentThread().getContextClassLoader();
+        }
+        String classVal = sourceConf.getValue("type");
+        if (isEmpty(classVal)) {
+            if (DataJdbcSource.acceptsConf(sourceConf)) {
+                source = new DataJdbcSource();
+            } else {
+                RedkaleClassLoader.putServiceLoader(DataSourceProvider.class);
+                List<DataSourceProvider> providers = new ArrayList<>();
+                Iterator<DataSourceProvider> it = ServiceLoader.load(DataSourceProvider.class, serverClassLoader).iterator();
+                while (it.hasNext()) {
+                    DataSourceProvider provider = it.next();
+                    if (provider != null) {
+                        RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
+                    }
+                    if (provider != null && provider.acceptsConf(sourceConf)) {
+                        providers.add(provider);
+                    }
+                }
+                for (DataSourceProvider provider : InstanceProvider.sort(providers)) {
+                    source = provider.createInstance();
+                    if (source != null) {
+                        break;
+                    }
+                }
+                if (source == null) {
+                    if (DataMemorySource.acceptsConf(sourceConf)) {
+                        source = new DataMemorySource(sourceName);
+                    }
+                }
+            }
+        } else {
+            try {
+                Class sourceType = serverClassLoader.loadClass(classVal);
+                RedkaleClassLoader.putReflectionPublicConstructors(sourceType, sourceType.getName());
+                source = (DataSource) sourceType.getConstructor().newInstance();
+            } catch (Exception e) {
+                throw new SourceException(e);
+            }
+        }
+        if (source == null) {
+            throw new SourceException("Not found DataSourceProvider for config=" + sourceConf);
+        }
+        if (!compileMode && resourceFactory != null) {
+            resourceFactory.inject(sourceName, source);
+        }
+        if (!compileMode && source instanceof Service) {
+            ((Service) source).init(sourceConf);
+        }
+        return source;
+    }
+
+    public static String parseDbtype(String url) {
+        String dbtype = null;
+        if (url == null) {
+            return dbtype;
+        }
+        if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("search://") || url.startsWith("searchs://")) { //elasticsearch or opensearch
+            dbtype = "search";
+        } else {
+            /* jdbc:mysql:// jdbc:microsoft:sqlserver:// 取://之前的到最后一个:之间的字符串 */
+            int pos = url.indexOf("://");
+            if (pos > 0) {
+                String url0 = url.substring(0, pos);
+                pos = url0.lastIndexOf(':');
+                if (pos > 0) {
+                    dbtype = url0.substring(pos + 1);
+                } else { //mongodb://127.0.01:27017
+                    dbtype = url0;
+                }
+            } else { //jdbc:oracle:thin:@localhost:1521
+                String url0 = url.substring(url.indexOf(":") + 1);
+                pos = url0.indexOf(':');
+                if (pos > 0) {
+                    dbtype = url0.substring(0, pos);
+                }
+            }
+        }
+        if ("mariadb".equals(dbtype)) {
+            return "mysql";
+        }
+        return dbtype;
+    }
+
+    //----------------------------------------------- 以下是废弃代码 -----------------------------------------------
     @Deprecated(since = "2.7.0")
     private static final String DATASOURCE_CONFPATH = "DATASOURCE_CONFPATH";
 
@@ -78,9 +261,6 @@ public final class DataSources {
     //@since 2.4.0 for SearchSource  default value: true
     private static final String JDBC_AUTO_MAPPING = "javax.persistence.jdbc.auto-mapping";
 
-    private DataSources() {
-    }
-
     @Deprecated(since = "2.7.0")
     public static DataSource createDataSource(final String unitName, final AnyValue conf) throws IOException {
         Properties prop = new Properties();
@@ -114,10 +294,10 @@ public final class DataSources {
 //        String dbtype = null;
 //        if (DataJdbcSource.class.getName().equals(impl)) {
 //            if (DataJdbcSource.acceptsConf(readprop)) {
-//                return new DataJdbcSource(unitName, persistxml, AbstractDataSource.parseDbtype(readprop.getProperty(JDBC_URL)), readprop, writeprop);
+//                return new DataJdbcSource(unitName, persistxml, parseDbtype(readprop.getProperty(JDBC_URL)), readprop, writeprop);
 //            }
 //            String url = readprop.getProperty(JDBC_URL);
-//            dbtype = AbstractDataSource.parseDbtype(url);
+//            dbtype = parseDbtype(url);
 //            if (dbtype == null) throw new SourceException("not found datasource implements class, url=" + url);
 //
 //            RedkaleClassLoader.putServiceLoader(DataSourceProvider.class);
@@ -170,7 +350,7 @@ public final class DataSources {
 //                    return (DataSource) d.newInstance(unitName, persistxml, readprop, writeprop);
 //                } else if (paramtypes.length == 5 && paramtypes[0] == String.class && paramtypes[1] == URL.class && paramtypes[2] == String.class && paramtypes[3] == Properties.class && paramtypes[4] == Properties.class) {
 //                    RedkaleClassLoader.putReflectionDeclaredConstructors(ds, impl, String.class, URL.class, Properties.class, Properties.class);
-//                    if (dbtype == null) dbtype = AbstractDataSource.parseDbtype(readprop.getProperty(JDBC_URL));
+//                    if (dbtype == null) dbtype = parseDbtype(readprop.getProperty(JDBC_URL));
 //                    return (DataSource) d.newInstance(unitName, persistxml, dbtype, readprop, writeprop);
 //                }
 //            }
@@ -238,7 +418,7 @@ public final class DataSources {
         return createDataSource(unitName, readprop, writeprop);
     }
 
-    //@since 2.8.0 临时给Application使用，直到DataSources整个类移除
+    @Deprecated(since = "2.7.0")
     public static Properties loadSourceProperties(final InputStream in) {
         try {
             Map<String, Properties> map = loadPersistenceXml(in);
@@ -271,33 +451,33 @@ public final class DataSources {
 
     private static String transferKeyName(String key) {
         if (JDBC_TABLE_AUTODDL.equalsIgnoreCase(key)) {
-            return AbstractDataSource.DATA_SOURCE_TABLE_AUTODDL;
+            return DATA_SOURCE_TABLE_AUTODDL;
         } else if (JDBC_CACHE_MODE.equalsIgnoreCase(key)) {
-            return AbstractDataSource.DATA_SOURCE_CACHEMODE;
+            return DATA_SOURCE_CACHEMODE;
         } else if (JDBC_CONNECTIONS_LIMIT.equalsIgnoreCase(key)) {
-            return AbstractDataSource.DATA_SOURCE_MAXCONNS;
+            return DATA_SOURCE_MAXCONNS;
         } else if (JDBC_CONNECTIONSCAPACITY.equalsIgnoreCase(key)) {
-            return AbstractDataSource.DATA_SOURCE_CONNECTIONS_CAPACITY;
+            return DATA_SOURCE_CONNECTIONS_CAPACITY;
         } else if (JDBC_CONTAIN_SQLTEMPLATE.equalsIgnoreCase(key)) {
-            return AbstractDataSource.DATA_SOURCE_CONTAIN_SQLTEMPLATE;
+            return DATA_SOURCE_CONTAIN_SQLTEMPLATE;
         } else if (JDBC_NOTCONTAIN_SQLTEMPLATE.equalsIgnoreCase(key)) {
-            return AbstractDataSource.DATA_SOURCE_NOTCONTAIN_SQLTEMPLATE;
+            return DATA_SOURCE_NOTCONTAIN_SQLTEMPLATE;
         } else if (JDBC_TABLENOTEXIST_SQLSTATES.equalsIgnoreCase(key)) {
-            return AbstractDataSource.DATA_SOURCE_TABLENOTEXIST_SQLSTATES;
+            return DATA_SOURCE_TABLENOTEXIST_SQLSTATES;
         } else if (JDBC_TABLECOPY_SQLTEMPLATE.equalsIgnoreCase(key)) {
-            return AbstractDataSource.DATA_SOURCE_TABLECOPY_SQLTEMPLATE;
+            return DATA_SOURCE_TABLECOPY_SQLTEMPLATE;
         } else if (JDBC_CONNECTTIMEOUT_SECONDS.equalsIgnoreCase(key)) {
-            return AbstractDataSource.DATA_SOURCE_CONNECTTIMEOUT_SECONDS;
+            return DATA_SOURCE_CONNECT_TIMEOUT_SECONDS;
         } else if (JDBC_URL.equalsIgnoreCase(key)) {
-            return AbstractDataSource.DATA_SOURCE_URL;
+            return DATA_SOURCE_URL;
         } else if (JDBC_USER.equalsIgnoreCase(key)) {
-            return AbstractDataSource.DATA_SOURCE_USER;
+            return DATA_SOURCE_USER;
         } else if (JDBC_PWD.equalsIgnoreCase(key)) {
-            return AbstractDataSource.DATA_SOURCE_PASSWORD;
+            return DATA_SOURCE_PASSWORD;
         } else if (JDBC_AUTO_MAPPING.equalsIgnoreCase(key)) {
-            return AbstractDataSource.DATA_SOURCE_AUTOMAPPING;
+            return DATA_SOURCE_AUTOMAPPING;
         } else if (JDBC_ENCODING.equalsIgnoreCase(key)) {
-            return AbstractDataSource.DATA_SOURCE_ENCODING;
+            return DATA_SOURCE_ENCODING;
         }
         return key;
     }
