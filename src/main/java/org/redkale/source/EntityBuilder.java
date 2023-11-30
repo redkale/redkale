@@ -23,6 +23,10 @@ public class EntityBuilder<T> {
 
     private static final ConcurrentHashMap<Class, EntityBuilder> cacheMap = new ConcurrentHashMap<>();
 
+    private static final ConcurrentHashMap<String, String> snakeMap = new ConcurrentHashMap<>();
+
+    private static final ConcurrentHashMap<String, String> camelMap = new ConcurrentHashMap<>();
+
     //实体类名
     private final Class<T> type;
 
@@ -237,6 +241,40 @@ public class EntityBuilder<T> {
         return getObjectValue(null, row);
     }
 
+    //带下划线的字段名替换成驼峰式
+    protected String snakeCaseColumn(String sqlCol) {
+        return snakeMap.computeIfAbsent(sqlCol, col -> {
+            char ch;
+            char[] chs = col.toCharArray();
+            StringBuilder sb = new StringBuilder(chs.length - 1);
+            for (int i = 0; i < chs.length; i++) {
+                ch = chs[i];
+                if (ch != '_') {
+                    sb.append(i > 0 && chs[i - 1] == '_' ? Character.toUpperCase(ch) : ch);
+                }
+            }
+            return sb.toString();
+        });
+    }
+
+    //驼峰式字段名替换成带下划线的
+    protected String camelCaseColumn(String column) {
+        return camelMap.computeIfAbsent(column, col -> {
+            char ch;
+            char[] chs = col.toCharArray();
+            StringBuilder sb = new StringBuilder(chs.length + 3);
+            for (int i = 0; i < chs.length; i++) {
+                ch = chs[i];
+                if (Character.isUpperCase(ch)) {
+                    sb.append('_').append(Character.toLowerCase(ch));
+                } else {
+                    sb.append(ch);
+                }
+            }
+            return sb.toString();
+        });
+    }
+
     protected T getObjectValue(List<String> sqlColumns, final DataResultSetRow row) {
         if (row.wasNull()) {
             return null;
@@ -258,6 +296,9 @@ public class EntityBuilder<T> {
             obj = creator.create();
             for (String sqlCol : sqlColumns) {
                 Attribute<T, Serializable> attr = attrs.get(sqlCol);
+                if (attr == null && sqlCol.indexOf('_') > -1) {
+                    attr = attrs.get(snakeCaseColumn(sqlCol));
+                }
                 if (attr != null) { //兼容返回的字段不存在类中
                     attr.set(obj, getFieldValue(attr, row, 0));
                 }
@@ -269,6 +310,11 @@ public class EntityBuilder<T> {
                 String sqlCol = getSQLColumn(null, attr.field());
                 if (sqlColumns.contains(sqlCol)) {
                     cps[i] = getFieldValue(attr, row, 0);
+                } else {
+                    sqlCol = camelCaseColumn(sqlCol);
+                    if (sqlColumns.contains(sqlCol)) {
+                        cps[i] = getFieldValue(attr, row, 0);
+                    }
                 }
             }
             obj = creator.create(cps);
@@ -276,6 +322,11 @@ public class EntityBuilder<T> {
                 String sqlCol = getSQLColumn(null, attr.field());
                 if (sqlColumns.contains(sqlCol)) {
                     attr.set(obj, getFieldValue(attr, row, 0));
+                } else {
+                    sqlCol = camelCaseColumn(sqlCol);
+                    if (sqlColumns.contains(sqlCol)) {
+                        attr.set(obj, getFieldValue(attr, row, 0));
+                    }
                 }
             }
         }
