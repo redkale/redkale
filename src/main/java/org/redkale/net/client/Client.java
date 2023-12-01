@@ -170,6 +170,29 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         return null;
     }
 
+    //更新地址列表
+    protected void updateClientAddress(List<SocketAddress> addrs) {
+        Set<SocketAddress> newAddrs = new HashSet<>(addrs);
+        Set<SocketAddress> delAddrs = new HashSet<>();
+        for (SocketAddress addr : this.address.getAddresses()) {
+            if (!newAddrs.contains(addr)) {
+                delAddrs.add(addr);
+            }
+        }
+        this.address.updateAddress(addrs);
+
+        for (SocketAddress addr : delAddrs) {
+            AddressConnEntry<C>[] entrys = this.connAddrEntrys.remove(addr);
+            if (entrys != null) {
+                for (AddressConnEntry<C> entry : entrys) {
+                    if (entry != null && entry.connection != null) {
+                        entry.connection.dispose(null);
+                    }
+                }
+            }
+        }
+    }
+
     protected int pingIntervalSeconds() {
         return 30;
     }

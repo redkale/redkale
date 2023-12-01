@@ -38,14 +38,17 @@ public class ClientAddress implements java.io.Serializable {
         if (addrs == null || addrs.isEmpty()) {
             throw new NullPointerException("addresses is empty");
         }
-        this.addresses = createAddressArray(addrs);
+        this.addresses = WeightAddress.createAddressArray(addrs);
     }
 
-    public void updateAddress(List<WeightAddress> addrs) {
+    void updateAddress(List<SocketAddress> addrs) {
         if (addrs == null || addrs.isEmpty()) {
             throw new NullPointerException("addresses is empty");
         }
-        this.addresses = createAddressArray(addrs);
+        for (SocketAddress addr : addrs) {
+            Objects.requireNonNull(addr);
+        }
+        this.addresses = addrs.toArray(new SocketAddress[addrs.size()]);
     }
 
     public SocketAddress randomAddress() {
@@ -56,39 +59,8 @@ public class ClientAddress implements java.io.Serializable {
         return addrs[ThreadLocalRandom.current().nextInt(addrs.length)];
     }
 
-    private static SocketAddress[] createAddressArray(List<WeightAddress> ws) {
-        int min = 0;
-        int size = 0; //20,35,45去掉最大公约数，数组长度为:4+7+9=20
-        for (WeightAddress w : ws) {
-            size += w.getWeight();
-            if (min == 0 || w.getWeight() < min) {
-                min = w.getWeight();
-            }
-        }
-        int divisor = 1; //最大公约数
-        for (int i = 2; i <= min; i++) {
-            boolean all = true;
-            for (WeightAddress w : ws) {
-                if (w.getWeight() % i > 0) {
-                    all = false;
-                    break;
-                }
-            }
-            if (all) {
-                divisor = i;
-            }
-        }
-        size /= divisor;
-        SocketAddress[] newAddrs = new SocketAddress[size];
-        int index = -1;
-        for (int i = 0; i < ws.size(); i++) {
-            WeightAddress w = ws.get(i);
-            int z = w.getWeight() / divisor;
-            for (int j = 0; j < z; j++) {
-                newAddrs[++index] = w.getAddress();
-            }
-        }
-        return newAddrs;
+    public Set<SocketAddress> getAddresses() {
+        return Set.of(addresses);
     }
 
     @Override

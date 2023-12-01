@@ -4,6 +4,7 @@
 package org.redkale.net.client;
 
 import java.net.SocketAddress;
+import java.util.List;
 import java.util.Objects;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.ConvertColumn;
@@ -36,6 +37,41 @@ public class WeightAddress implements Comparable<WeightAddress>, java.io.Seriali
         }
         this.address = address;
         this.weight = weight;
+    }
+
+    public static SocketAddress[] createAddressArray(List<WeightAddress> ws) {
+        int min = 0;
+        int size = 0; //20,35,45去掉最大公约数，数组长度为:4+7+9=20
+        for (WeightAddress w : ws) {
+            size += w.getWeight();
+            if (min == 0 || w.getWeight() < min) {
+                min = w.getWeight();
+            }
+        }
+        int divisor = 1; //最大公约数
+        for (int i = 2; i <= min; i++) {
+            boolean all = true;
+            for (WeightAddress w : ws) {
+                if (w.getWeight() % i > 0) {
+                    all = false;
+                    break;
+                }
+            }
+            if (all) {
+                divisor = i;
+            }
+        }
+        size /= divisor;
+        SocketAddress[] newAddrs = new SocketAddress[size];
+        int index = -1;
+        for (int i = 0; i < ws.size(); i++) {
+            WeightAddress w = ws.get(i);
+            int z = w.getWeight() / divisor;
+            for (int j = 0; j < z; j++) {
+                newAddrs[++index] = w.getAddress();
+            }
+        }
+        return newAddrs;
     }
 
     @Override
