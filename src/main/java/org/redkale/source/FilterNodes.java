@@ -71,28 +71,28 @@ public final class FilterNodes {
         return new FilterNode(LambdaFunction.readColumn(func), IG_EQ, value);
     }
 
-    public static FilterNode notEq(String column, Serializable value) {
-        return new FilterNode(column, NOT_EQ, value);
+    public static FilterNode ne(String column, Serializable value) {
+        return new FilterNode(column, NE, value);
     }
 
-    public static <F extends Serializable> FilterNode notEq(LambdaSupplier<F> func) {
-        return new FilterNode(LambdaSupplier.readColumn(func), NOT_EQ, func.get());
+    public static <F extends Serializable> FilterNode ne(LambdaSupplier<F> func) {
+        return new FilterNode(LambdaSupplier.readColumn(func), NE, func.get());
     }
 
-    public static <T, F extends Serializable> FilterNode notEq(LambdaFunction<T, F> func, F value) {
-        return new FilterNode(LambdaFunction.readColumn(func), NOT_EQ, value);
+    public static <T, F extends Serializable> FilterNode ne(LambdaFunction<T, F> func, F value) {
+        return new FilterNode(LambdaFunction.readColumn(func), NE, value);
     }
 
-    public static FilterNode igNotEq(String column, Serializable value) {
-        return new FilterNode(column, IG_NOT_EQ, value);
+    public static FilterNode igNe(String column, Serializable value) {
+        return new FilterNode(column, IG_NE, value);
     }
 
-    public static <F extends Serializable> FilterNode igNotEq(LambdaSupplier<F> func) {
-        return new FilterNode(LambdaSupplier.readColumn(func), IG_NOT_EQ, func.get());
+    public static <F extends Serializable> FilterNode igNe(LambdaSupplier<F> func) {
+        return new FilterNode(LambdaSupplier.readColumn(func), IG_NE, func.get());
     }
 
-    public static <T, F extends Serializable> FilterNode igNotEq(LambdaFunction<T, F> func, F value) {
-        return new FilterNode(LambdaFunction.readColumn(func), IG_NOT_EQ, value);
+    public static <T, F extends Serializable> FilterNode igNe(LambdaFunction<T, F> func, F value) {
+        return new FilterNode(LambdaFunction.readColumn(func), IG_NE, value);
     }
 
     public static FilterNode gt(String column, Number value) {
@@ -528,9 +528,9 @@ public final class FilterNodes {
             case IGNORECASEEQUAL:
                 return IG_EQ;
             case NOTEQUAL:
-                return NOT_EQ;
+                return NE;
             case IGNORECASENOTEQUAL:
-                return IG_NOT_EQ;
+                return IG_NE;
             case GREATERTHAN:
                 return GT;
             case LESSTHAN:

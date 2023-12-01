@@ -302,27 +302,27 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     public FilterNode notEq(String column, Serializable value) {
-        return and(new FilterNode(column, NOT_EQ, value));
+        return and(new FilterNode(column, NE, value));
     }
 
     public <F extends Serializable> FilterNode notEq(LambdaSupplier<F> func) {
-        return and(new FilterNode(LambdaSupplier.readColumn(func), NOT_EQ, func.get()));
+        return and(new FilterNode(LambdaSupplier.readColumn(func), NE, func.get()));
     }
 
     public <T, F extends Serializable> FilterNode notEq(LambdaFunction<T, F> func, F value) {
-        return and(new FilterNode(LambdaFunction.readColumn(func), NOT_EQ, value));
+        return and(new FilterNode(LambdaFunction.readColumn(func), NE, value));
     }
 
     public FilterNode igNotEq(String column, Serializable value) {
-        return and(new FilterNode(column, IG_NOT_EQ, value));
+        return and(new FilterNode(column, IG_NE, value));
     }
 
     public <F extends Serializable> FilterNode igNotEq(LambdaSupplier<F> func) {
-        return and(new FilterNode(LambdaSupplier.readColumn(func), IG_NOT_EQ, func.get()));
+        return and(new FilterNode(LambdaSupplier.readColumn(func), IG_NE, func.get()));
     }
 
     public <T, F extends Serializable> FilterNode igNotEq(LambdaFunction<T, F> func, F value) {
-        return and(new FilterNode(LambdaFunction.readColumn(func), IG_NOT_EQ, value));
+        return and(new FilterNode(LambdaFunction.readColumn(func), IG_NE, value));
     }
 
     public FilterNode gt(String column, Number value) {
@@ -993,7 +993,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         if (express == LEN_EQ || express == LEN_LT || express == LEN_LE
             || express == LEN_GT || express == LEN_GE) {
             sb.append("LENGTH(").append(info.getSQLColumn(talis, column)).append(')');
-        } else if (express == IG_EQ || express == IG_NOT_EQ || express == IG_LIKE || express == IG_NOT_LIKE) {
+        } else if (express == IG_EQ || express == IG_NE || express == IG_LIKE || express == IG_NOT_LIKE) {
             sb.append("LOWER(").append(info.getSQLColumn(talis, column)).append(')');
             if (fk) {
                 val = "LOWER(" + info.getSQLColumn(talis, ((FilterColValue) val0).getColumn()) + ')';
@@ -1440,7 +1440,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return "LOWER(" + field + ") " + express.value() + ' ' + formatToString(val);
                     }
                 };
-            case NOT_EQ:
+            case NE:
                 return fk ? new Predicate<T>() {
 
                     @Override
@@ -1464,7 +1464,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         return field + ' ' + express.value() + ' ' + formatToString(val);
                     }
                 };
-            case IG_NOT_EQ:
+            case IG_NE:
                 return fk ? new Predicate<T>() {
 
                     @Override
@@ -1613,7 +1613,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                                 return field + " " + express.value() + " " + fv0.getLeft() + " " + fv0.getExpress().value() + " " + fv0.getRight();
                             }
                         };
-                    case NOT_EQ:
+                    case NE:
                         return new Predicate<T>() {
 
                             @Override
@@ -1697,7 +1697,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                                 return field + " " + express.value() + " " + fv1.getLeft() + " " + fv1.getExpress().value() + " " + fv1.getRight();
                             }
                         };
-                    case NOT_EQ:
+                    case NE:
                         return new Predicate<T>() {
 
                             @Override
@@ -2604,7 +2604,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             } else if (express == IG_LIKE || express == IG_NOT_LIKE) {
                 value = "%" + value.toString().toLowerCase() + '%';
             } else if (express == IG_CONTAIN || express == IG_NOT_CONTAIN
-                || express == IG_EQ || express == IG_NOT_EQ) {
+                || express == IG_EQ || express == IG_NE) {
                 value = value.toString().toLowerCase();
             }
             return new StringBuilder().append('\'').append(value.toString().replace("'", "\\'")).append('\'');

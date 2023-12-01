@@ -17,8 +17,8 @@ public enum FilterExpress {
 
     EQ("="),
     IG_EQ("="),//不区分大小写的 = 
-    NOT_EQ("<>"), //
-    IG_NOT_EQ("="),//不区分大小写的 <> 
+    NE("<>"), //
+    IG_NE("="),//不区分大小写的 <> 
     GT(">"),
     LT("<"),
     GE(">="),

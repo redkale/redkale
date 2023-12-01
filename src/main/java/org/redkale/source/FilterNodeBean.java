@@ -427,7 +427,7 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
                 || express == LEN_GT || express == LEN_GE) {
                 sb.append("LENGTH(").append(col).append(") ").append(express.value()).append(" ?");
             } else {
-                boolean lower = (express == IG_EQ || express == IG_NOT_EQ || express == IG_LIKE
+                boolean lower = (express == IG_EQ || express == IG_NE || express == IG_LIKE
                     || express == IG_NOT_LIKE || express == IG_CONTAIN || express == IG_NOT_CONTAIN);
                 sb.append(lower ? ("LOWER(" + col + ')') : col).append(' ').append(express.value()).append(" ?");
             }
