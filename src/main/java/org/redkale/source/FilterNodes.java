@@ -517,7 +517,7 @@ public final class FilterNodes {
     }
 
     public static FilterJoinNode joinInner(Class joinClass, String[] joinColumns, String column, FilterExpress express, Serializable value) {
-        return new FilterJoinNode(joinClass, joinColumns, column, express, value);
+        return new FilterJoinNode(FilterJoinType.INNER, joinClass, joinColumns, column, express, value);
     }
     
     //----------------------------------------------------------------------------------------------------

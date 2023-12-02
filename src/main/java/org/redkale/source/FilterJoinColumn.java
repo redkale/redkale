@@ -46,6 +46,13 @@ public @interface FilterJoinColumn {
     String[] columns();
 
     /**
+     * join类别
+     *
+     * @return join类别
+     */
+    FilterJoinType type() default FilterJoinType.INNER;
+
+    /**
      * 备注描述
      *
      * @return 备注描述

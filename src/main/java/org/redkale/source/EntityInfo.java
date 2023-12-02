@@ -323,11 +323,14 @@ public final class EntityInfo<T> {
         javax.persistence.Table t2 = type.getAnnotation(javax.persistence.Table.class);
         final String tableName0 = t1 != null ? t1.name() : (t2 != null ? t2.name() : null);
         final String tableCcatalog0 = t1 != null ? t1.catalog() : (t2 != null ? t2.catalog() : null);
-
+        String table0 = Utility.isEmpty(tableName0) ? type.getSimpleName().toLowerCase() : tableName0;
+        if (Utility.isNotEmpty(tableCcatalog0)) {
+            table0 = tableCcatalog0 + '.' + table0;
+        }
         if (type.getAnnotation(org.redkale.persistence.VirtualEntity.class) != null
             || type.getAnnotation(org.redkale.source.VirtualEntity.class) != null
             || (source == null || "memory".equalsIgnoreCase(source.getType()))) {
-            this.table = null;
+            this.table = source == null && type.getAnnotation(org.redkale.persistence.VirtualEntity.class) == null ? table0 : null;
             this.tableOneArray = null;
             BiFunction<DataSource, EntityInfo, CompletableFuture<List>> loader = null;
             try {
@@ -350,7 +353,7 @@ public final class EntityInfo<T> {
             if (tableName0 != null && !tableName0.isEmpty() && tableName0.indexOf('.') >= 0) {
                 throw new SourceException(type + " have illegal table.name on @Table");
             }
-            this.table = (tableCcatalog0 == null) ? type.getSimpleName().toLowerCase() : (tableCcatalog0.isEmpty()) ? (tableName0.isEmpty() ? type.getSimpleName().toLowerCase() : tableName0) : (tableCcatalog0 + '.' + (tableName0.isEmpty() ? type.getSimpleName().toLowerCase() : tableName0));
+            this.table = table0;
             this.tableOneArray = new String[]{this.table};
         }
         DistributeTable dt = type.getAnnotation(DistributeTable.class);

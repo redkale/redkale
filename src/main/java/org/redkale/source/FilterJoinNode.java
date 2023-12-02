@@ -22,6 +22,8 @@ import org.redkale.util.*;
  */
 public class FilterJoinNode extends FilterNode {
 
+    private FilterJoinType joinType;
+
     private Class joinClass;
 
     private EntityInfo joinEntity;  //在调用createSQLJoin和isCacheUseable时会注入
@@ -31,7 +33,7 @@ public class FilterJoinNode extends FilterNode {
     public FilterJoinNode() {
     }
 
-    protected FilterJoinNode(Class joinClass, String[] joinColumns, String column, FilterExpress express, Serializable value) {
+    protected FilterJoinNode(FilterJoinType joinType, Class joinClass, String[] joinColumns, String column, FilterExpress express, Serializable value) {
         Objects.requireNonNull(joinClass);
         Objects.requireNonNull(joinColumns);
         if (express == null && value != null) {
@@ -44,6 +46,7 @@ public class FilterJoinNode extends FilterNode {
             }
         }
         this.joinClass = joinClass;
+        this.joinType = joinType;
         this.joinColumns = joinColumns;
         this.column = column;
         this.express = express == null ? EQ : FilterNodes.oldExpress(express);
@@ -51,7 +54,7 @@ public class FilterJoinNode extends FilterNode {
     }
 
     protected FilterJoinNode(FilterJoinNode node) {
-        this(node.joinClass, node.joinColumns, node.column, node.express, node.value);
+        this(node.joinType, node.joinClass, node.joinColumns, node.column, node.express, node.value);
         this.joinEntity = node.joinEntity;
         this.or = node.or;
         this.nodes = node.nodes;
@@ -118,11 +121,6 @@ public class FilterJoinNode extends FilterNode {
         this.joinColumns = null;
         this.or = isOr;
         return this;
-    }
-
-    @Override
-    protected <T> CharSequence createSQLExpress(AbstractDataSqlSource source, final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
-        return super.createSQLExpress(source, this.joinEntity == null ? info : this.joinEntity, joinTabalis);
     }
 
     @Override
@@ -262,8 +260,13 @@ public class FilterJoinNode extends FilterNode {
     }
 
     @Override
+    protected <T> CharSequence createSQLExpress(AbstractDataSqlSource source, final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
+        return super.createSQLExpress(source, this.joinEntity == null ? info : this.joinEntity, joinTabalis);
+    }
+
+    @Override
     protected <T> CharSequence createSQLJoin(final Function<Class, EntityInfo> func, final boolean update, final Map<Class, String> joinTabalis, final Set<String> haset, final EntityInfo<T> info) {
-        boolean morejoin = false;
+        boolean moreJoin = false;
         if (this.joinEntity == null) {
             if (this.joinClass != null) {
                 this.joinEntity = func.apply(this.joinClass);
@@ -275,7 +278,7 @@ public class FilterJoinNode extends FilterNode {
                         if (joinNode.joinClass != null) {
                             joinNode.joinEntity = func.apply(joinNode.joinClass);
                             if (this.joinClass != null && this.joinClass != joinNode.joinClass) {
-                                morejoin = true;
+                                moreJoin = true;
                             }
                         }
                     }
@@ -289,7 +292,7 @@ public class FilterJoinNode extends FilterNode {
                 sb.append(cs);
             }
         }
-        if (morejoin) {
+        if (moreJoin) {
             Set<Class> set = new HashSet<>();
             if (this.joinClass != null) {
                 set.add(this.joinClass);
@@ -318,7 +321,7 @@ public class FilterJoinNode extends FilterNode {
         String[] joinColumns = node.joinColumns;
         int pos = joinColumns[0].indexOf('=');
         if (update) {
-            sb.append("[").append(node.joinEntity.getTable(node)).append(" ").append(joinTabalis.get(node.joinClass)).append(']');
+            sb.append('[').append(node.joinEntity.getTable(node)).append(" ").append(joinTabalis.get(node.joinClass)).append(']');
             sb.append('{').append(info.getSQLColumn("a", pos > 0 ? joinColumns[0].substring(0, pos) : joinColumns[0])).append(" = ").append(node.joinEntity.getSQLColumn(joinTabalis.get(node.joinClass), pos > 0 ? joinColumns[0].substring(pos + 1) : joinColumns[0]));
             for (int i = 1; i < joinColumns.length; i++) {
                 pos = joinColumns[i].indexOf('=');
@@ -326,7 +329,7 @@ public class FilterJoinNode extends FilterNode {
             }
             sb.append('}');
         } else {
-            sb.append(" INNER JOIN ").append(node.joinEntity.getTable(node)).append(" ").append(joinTabalis.get(node.joinClass))
+            sb.append(" ").append(node.joinType).append(" JOIN ").append(node.joinEntity.getTables(node)[0]).append(" ").append(joinTabalis.get(node.joinClass))
                 .append(" ON ").append(info.getSQLColumn("a", pos > 0 ? joinColumns[0].substring(0, pos) : joinColumns[0])).append(" = ").append(node.joinEntity.getSQLColumn(joinTabalis.get(node.joinClass), pos > 0 ? joinColumns[0].substring(pos + 1) : joinColumns[0]));
             for (int i = 1; i < joinColumns.length; i++) {
                 pos = joinColumns[i].indexOf('=');
@@ -361,7 +364,20 @@ public class FilterJoinNode extends FilterNode {
     @Override
     protected void putJoinTabalis(Map<Class, String> map) {
         if (this.joinClass != null && !map.containsKey(this.joinClass)) {
-            map.put(joinClass, "jt" + map.size()); //join_table_1
+            char[] chs = this.joinClass.getSimpleName().toCharArray();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < chs.length; i++) {
+                char ch = chs[i];
+                if (i == 0 || Character.isUpperCase(ch)) {
+                    sb.append(Character.toLowerCase(ch));
+                }
+            }
+            String alis = sb.toString();
+            if (map.values().contains(alis)) {
+                map.put(joinClass, "jt" + map.size()); //join_table_1
+            } else {
+                map.put(joinClass, alis);
+            }
         }
         if (this.nodes == null) {
             return;
@@ -379,6 +395,10 @@ public class FilterJoinNode extends FilterNode {
     @Override
     public String toString() {
         return toString(joinClass == null ? null : joinClass.getSimpleName()).toString();
+    }
+
+    public FilterJoinType getJoinType() {
+        return joinType;
     }
 
     public Class getJoinClass() {

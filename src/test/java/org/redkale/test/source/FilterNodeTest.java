@@ -27,6 +27,12 @@ public class FilterNodeTest {
 
     private static EntityInfo<CarTestTable> carEntity;
 
+    public static void main(String[] args) throws Throwable {
+        FilterNodeTest test = new FilterNodeTest();
+        test.init();
+        test.run();
+    }
+
     @BeforeAll
     public static void init() throws Exception {
         final Properties props = new Properties();
@@ -34,7 +40,7 @@ public class FilterNodeTest {
         func = (Class t) -> loadEntityInfo(t, false, props, null, fullloader);
         carEntity = loadEntityInfo(CarTestTable.class, false, props, null, (s, t) -> CompletableFuture.completedFuture(CarTestTable.createList()));
         final EntityInfo<UserTestTable> userEntity = loadEntityInfo(UserTestTable.class, false, props, null, (s, t) -> CompletableFuture.completedFuture(UserTestTable.createList()));
-        final EntityInfo<CarTypeTestTable> typeEntity = loadEntityInfo(CarTypeTestTable.class, false, props, null, (s, t) -> CompletableFuture.completedFuture(CarTypeTestTable.createList()));
+        final EntityInfo<CarTypeTable> typeEntity = loadEntityInfo(CarTypeTable.class, false, props, null, (s, t) -> CompletableFuture.completedFuture(CarTypeTable.createList()));
     }
 
     private static <T> EntityInfo<T> loadEntityInfo(Class<T> clazz, final boolean cacheForbidden, final Properties conf, DataSource source, BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader) {
@@ -102,24 +108,29 @@ public class FilterNodeTest {
         final CarTestBean bean = CarTestBean.create();
         FilterNode joinNode1 = FilterNodes.joinInner(UserTestTable.class, new String[]{"userid", "username"}, "username", LIKE, bean.username)
             .or(FilterNodes.joinInner(UserTestTable.class, new String[]{"userid", "username"}, "createtime", GT, bean.createtime));
-        FilterNode joinNode2 = FilterNodes.joinInner(CarTypeTestTable.class, "cartype", "typename", LIKE, bean.typename);
+        FilterNode joinNode2 = FilterNodes.joinInner(CarTypeTable.class, "cartype", "typename", LIKE, bean.typename);
         final FilterNode node = CarTestBean.caridTransient() ? (joinNode2.or(joinNode1)) : FilterNodes.gt("carid", bean.carid).and(joinNode1).or(joinNode2);
         final FilterNode beanNode = FilterNodeBean.createFilterNode(bean);
         System.out.println("node.string = " + node);
         System.out.println("bean.string = " + beanNode);
-        Assertions.assertEquals("(CarTypeTestTable.typename LIKE '%法拉利%' OR (UserTestTable.username LIKE '%用户1%' OR UserTestTable.createtime > 500))", node.toString());
+        Assertions.assertEquals("(CarTypeTable.typename LIKE '%法拉利%' OR (UserTestTable.username LIKE '%用户1%' OR UserTestTable.createtime > 500))", node.toString());
         Assertions.assertEquals(node.toString(), beanNode.toString());
         Map<Class, String> nodeJoinTabalis = getJoinTabalis(node);
         Map<Class, String> beanJoinTabalis = getJoinTabalis(beanNode);
+        System.out.println("nodeJoinTabalis: " + nodeJoinTabalis);
+        System.out.println("beanJoinTabalis: " + beanJoinTabalis);
         CharSequence nodeJoinsql = createSQLJoin(node, func, false, nodeJoinTabalis, new HashSet<>(), carEntity);
         CharSequence beanJoinsql = createSQLJoin(beanNode, func, false, beanJoinTabalis, new HashSet<>(), carEntity);
         CharSequence nodeWhere = createSQLExpress(node, null, carEntity, nodeJoinTabalis);
         CharSequence beanWhere = createSQLExpress(beanNode, null, carEntity, beanJoinTabalis);
+        String expect = "SELECT a.* FROM cartesttable a INNER JOIN cartypetable ctt ON a.cartype = ctt.cartype INNER JOIN usertesttable utt ON a.userid = utt.userid AND a.username = utt.username WHERE (ctt.typename LIKE '%法拉利%' OR (utt.username LIKE '%用户1%' OR utt.createtime > 500))";
         System.out.println("node.sql = SELECT a.* FROM " + CarTestTable.class.getSimpleName().toLowerCase() + " a" + (nodeJoinsql == null ? "" : nodeJoinsql) + " WHERE " + nodeWhere);
         System.out.println("bean.sql = SELECT a.* FROM " + CarTestTable.class.getSimpleName().toLowerCase() + " a" + (beanJoinsql == null ? "" : beanJoinsql) + " WHERE " + beanWhere);
         boolean r1 = isCacheUseable(node, func);
         Assertions.assertTrue(r1);
-        if (!r1) System.err.println("node.isCacheUseable 应该是true");
+        if (!r1) {
+            System.err.println("node.isCacheUseable 应该是true");
+        }
         boolean r2 = isCacheUseable(beanNode, func);
         Assertions.assertTrue(r2);
 
@@ -148,7 +159,7 @@ public class FilterNodeTest {
 
         @FilterGroup("[OR]")
         @FilterColumn(express = LIKE)
-        @FilterJoinColumn(table = CarTypeTestTable.class, columns = {"cartype"})
+        @FilterJoinColumn(table = CarTypeTable.class, columns = {"cartype"})
         public String typename;
 
         @Override
@@ -270,21 +281,21 @@ public class FilterNodeTest {
 
     @AutoLoad
     @Cacheable
-    public static class CarTypeTestTable {
+    public static class CarTypeTable {
 
-        public static List<CarTypeTestTable> createList() {
-            List<CarTypeTestTable> list = new ArrayList<>();
-            list.add(new CarTypeTestTable(101, "奥迪A1"));
-            list.add(new CarTypeTestTable(102, "奥迪A2"));
-            list.add(new CarTypeTestTable(103, "奥迪A3"));
-            list.add(new CarTypeTestTable(104, "奥迪A4"));
-            list.add(new CarTypeTestTable(105, "奥迪A5"));
-            list.add(new CarTypeTestTable(201, "奔驰S1"));
-            list.add(new CarTypeTestTable(202, "奔驰S2"));
-            list.add(new CarTypeTestTable(203, "奔驰S3"));
-            list.add(new CarTypeTestTable(204, "奔驰S4"));
-            list.add(new CarTypeTestTable(205, "奔驰S5"));
-            list.add(new CarTypeTestTable(301, "法拉利"));
+        public static List<CarTypeTable> createList() {
+            List<CarTypeTable> list = new ArrayList<>();
+            list.add(new CarTypeTable(101, "奥迪A1"));
+            list.add(new CarTypeTable(102, "奥迪A2"));
+            list.add(new CarTypeTable(103, "奥迪A3"));
+            list.add(new CarTypeTable(104, "奥迪A4"));
+            list.add(new CarTypeTable(105, "奥迪A5"));
+            list.add(new CarTypeTable(201, "奔驰S1"));
+            list.add(new CarTypeTable(202, "奔驰S2"));
+            list.add(new CarTypeTable(203, "奔驰S3"));
+            list.add(new CarTypeTable(204, "奔驰S4"));
+            list.add(new CarTypeTable(205, "奔驰S5"));
+            list.add(new CarTypeTable(301, "法拉利"));
             return list;
         }
 
@@ -293,11 +304,11 @@ public class FilterNodeTest {
 
         private String typename;
 
-        public CarTypeTestTable() {
+        public CarTypeTable() {
 
         }
 
-        public CarTypeTestTable(int cartype, String typename) {
+        public CarTypeTable(int cartype, String typename) {
             this.cartype = cartype;
             this.typename = typename;
         }
