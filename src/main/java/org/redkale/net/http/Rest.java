@@ -58,17 +58,17 @@ public final class Rest {
     public static final String REST_HEADER_RESP_CONVERT = "Rest-Resp-Convert";
 
     //---------------------------------------------------------------------------------------------------
-    static final String REST_TOSTRINGOBJ_FIELD_NAME = "_redkale_tostringsupplier";
+    static final String REST_TOSTRINGOBJ_FIELD_NAME = "_redkale_toStringSupplier";
 
-    static final String REST_CONVERT_FIELD_PREFIX = "_redkale_restconvert_";
+    static final String REST_CONVERT_FIELD_PREFIX = "_redkale_restConvert_";
 
     static final String REST_SERVICE_FIELD_NAME = "_redkale_service";
 
-    static final String REST_SERVICEMAP_FIELD_NAME = "_redkale_servicemap"; //如果只有name=""的Service资源，则实例中_servicemap必须为null
+    static final String REST_SERVICEMAP_FIELD_NAME = "_redkale_serviceMap"; //如果只有name=""的Service资源，则实例中_servicemap必须为null
 
-    private static final String REST_PARAMTYPES_FIELD_NAME = "_redkale_paramtypes"; //存在泛型的参数数组 Type[][] 第1维度是方法的下标， 第二维度是参数的下标
+    private static final String REST_PARAMTYPES_FIELD_NAME = "_redkale_paramTypes"; //存在泛型的参数数组 Type[][] 第1维度是方法的下标， 第二维度是参数的下标
 
-    private static final String REST_RETURNTYPES_FIELD_NAME = "_redkale_returntypes"; //存在泛型的结果数组
+    private static final String REST_RETURNTYPES_FIELD_NAME = "_redkale_returnTypes"; //存在泛型的结果数组
 
     private static final java.lang.reflect.Type TYPE_RETRESULT_STRING = new TypeToken<RetResult<String>>() {
     }.getType();
@@ -114,11 +114,11 @@ public final class Rest {
 
     static class MethodParamClassVisitor extends ClassVisitor {
 
-        private final Map<String, List<String>> fieldmap;
+        private final Map<String, List<String>> fieldMap;
 
         public MethodParamClassVisitor(int api, final Map<String, List<String>> fieldmap) {
             super(api);
-            this.fieldmap = fieldmap;
+            this.fieldMap = fieldmap;
         }
 
         @Override
@@ -128,10 +128,10 @@ public final class Rest {
             }
             List<String> fieldnames = new ArrayList<>();
             String key = name + ":" + desc;
-            if (fieldmap.containsKey(key)) {
+            if (fieldMap.containsKey(key)) {
                 return null;
             }
-            fieldmap.put(key, fieldnames);
+            fieldMap.put(key, fieldnames);
             return new MethodVisitor(Opcodes.ASM6) {
                 @Override
                 public void visitLocalVariable(String name, String description, String signature, Label start, Label end, int index) {
@@ -1859,11 +1859,11 @@ public final class Rest {
             av0.visitEnd();
             fv.visitEnd();
         }
-        { //_servicemap字段 Map<String, XXXService>
+        { //_serviceMap字段 Map<String, XXXService>
             fv = cw.visitField(ACC_PRIVATE, REST_SERVICEMAP_FIELD_NAME, "Ljava/util/Map;", "Ljava/util/Map<Ljava/lang/String;" + serviceDesc + ">;", null);
             fv.visitEnd();
         }
-        { //_redkale_tostringsupplier字段 Supplier<String>
+        { //_redkale_toStringSupplier字段 Supplier<String>
             fv = cw.visitField(ACC_PRIVATE, REST_TOSTRINGOBJ_FIELD_NAME, "Ljava/util/function/Supplier;", "Ljava/util/function/Supplier<Ljava/lang/String;>;", null);
             fv.visitEnd();
         }

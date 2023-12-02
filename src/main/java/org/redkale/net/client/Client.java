@@ -398,6 +398,9 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
             }
             return array;
         });
+        if (workThread != null && workThread.threads() == entrys.length && workThread.index() > -1) {
+            return entrys[workThread.index()];
+        }
         ThreadLocalRandom random = ThreadLocalRandom.current();
         int index = workThread == null || workThread.index() < 0 ? random.nextInt(entrys.length) : workThread.index() % entrys.length;
         return entrys[index];
