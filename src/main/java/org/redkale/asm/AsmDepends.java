@@ -22,4 +22,5 @@ import static java.lang.annotation.RetentionPolicy.*;
 @Retention(SOURCE)
 public @interface AsmDepends {
 
+    Class[] value() default {};
 }

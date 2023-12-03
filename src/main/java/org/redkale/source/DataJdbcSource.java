@@ -1082,7 +1082,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     private <T> int updateEntityDBStatement(List<Statement> stmtsRef, final SourceConnection conn, final EntityInfo<T> info, T... entitys) throws SQLException {
         final long s = System.currentTimeMillis();
         String presql = null;
-        String caseSql = null;
         PreparedStatement prestmt = null;
         List<PreparedStatement> prestmts = null;
         Map<String, PrepareInfo<T>> prepareInfos = null;
@@ -1090,25 +1089,8 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         final Attribute<T, Serializable>[] attrs = info.updateAttributes;
         try {
             if (info.getTableStrategy() == null) {
-                caseSql = info.getUpdateQuestionPrepareCaseSQL(entitys);
-                if (caseSql == null) {
-                    presql = info.getUpdateQuestionPrepareSQL(entitys[0]);
-                    prestmt = prepareUpdateEntityStatement(conn, presql, info, entitys);
-                } else {
-                    presql = caseSql;
-                    prestmt = conn.prepareUpdateStatement(presql);
-                    int len = entitys.length;
-                    final Attribute<T, Serializable> primary = info.getPrimary();
-                    Attribute<T, Serializable> otherAttr = attrs[0];
-                    //UPDATE twointrecord SET randomNumber = ( CASE WHEN id = ? THEN ? WHEN id = ? THEN ? WHEN id = ? THEN ? END ) WHERE id IN (?,?,?)
-                    for (int i = 0; i < entitys.length; i++) {
-                        Serializable pk = primary.get(entitys[i]);
-                        prestmt.setObject(i * 2 + 1, pk);  //1 3 5
-                        prestmt.setObject(i * 2 + 2, getEntityAttrValue(info, otherAttr, entitys[i]));  //2 4 6
-                        prestmt.setObject(len * 2 + i + 1, pk); //7 8 9
-                    }
-                    prestmt.addBatch();
-                }
+                presql = info.getUpdateQuestionPrepareSQL(entitys[0]);
+                prestmt = prepareUpdateEntityStatement(conn, presql, info, entitys);
                 int c1 = 0;
                 int[] pc = prestmt.executeBatch();
                 for (int p : pc) {
@@ -1189,7 +1171,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             }
         }
 
-        if (info.isLoggable(logger, Level.FINEST) && caseSql == null) {  //打印调试信息
+        if (info.isLoggable(logger, Level.FINEST)) {  //打印调试信息
             Attribute<T, Serializable> primary = info.getPrimary();
             if (info.getTableStrategy() == null) {
                 char[] sqlchars = presql.toCharArray();

@@ -3394,67 +3394,67 @@ public final class Utility {
      *
      * @return 对象
      */
-    @AsmDepends
+    @AsmDepends(Copier.class)
     public static <T> T convertValue(Type type, Object value) {
         if (type == null || value == null) {
             return (T) value;
         }
-        final Class clazz = TypeToken.typeToClass(type);
-        final Class vclzz = value.getClass();
-        if (clazz == vclzz || clazz.isAssignableFrom(vclzz)) {
+        final Class typeClazz = TypeToken.typeToClass(type);
+        final Class valClazz = value.getClass();
+        if (typeClazz == valClazz || typeClazz.isAssignableFrom(valClazz)) {
             return (T) value;
-        } else if (clazz == String.class) {
+        } else if (typeClazz == String.class) {
             return (T) value.toString();
-        } else if (clazz == double.class || clazz == Double.class) {
+        } else if (typeClazz == double.class || typeClazz == Double.class) {
             if (value instanceof Number) {
                 return (T) (Number) ((Number) value).doubleValue();
-            } else if (vclzz == String.class) {
+            } else if (valClazz == String.class) {
                 return (T) (Number) Double.parseDouble(value.toString());
             }
-        } else if (clazz == float.class || clazz == Float.class) {
+        } else if (typeClazz == float.class || typeClazz == Float.class) {
             if (value instanceof Number) {
                 return (T) (Number) ((Number) value).floatValue();
-            } else if (vclzz == String.class) {
+            } else if (valClazz == String.class) {
                 return (T) (Number) Float.parseFloat(value.toString());
             }
-        } else if (clazz == long.class || clazz == Long.class) {
+        } else if (typeClazz == long.class || typeClazz == Long.class) {
             if (value instanceof Number) {
                 return (T) (Number) ((Number) value).longValue();
-            } else if (vclzz == String.class) {
+            } else if (valClazz == String.class) {
                 return (T) (Number) Long.parseLong(value.toString());
             }
-        } else if (clazz == int.class || clazz == Integer.class) {
+        } else if (typeClazz == int.class || typeClazz == Integer.class) {
             if (value instanceof Number) {
                 return (T) (Number) ((Number) value).intValue();
-            } else if (vclzz == String.class) {
+            } else if (valClazz == String.class) {
                 return (T) (Number) Integer.parseInt(value.toString());
             }
-        } else if (clazz == short.class || clazz == Short.class) {
+        } else if (typeClazz == short.class || typeClazz == Short.class) {
             if (value instanceof Number) {
                 return (T) (Number) ((Number) value).shortValue();
-            } else if (vclzz == String.class) {
+            } else if (valClazz == String.class) {
                 return (T) (Number) Short.parseShort(value.toString());
             }
-        } else if (clazz == char.class || clazz == Character.class) {
+        } else if (typeClazz == char.class || typeClazz == Character.class) {
             if (value instanceof Number) {
                 char ch = (char) ((Number) value).intValue();
                 return (T) (Object) ch;
             }
-        } else if (clazz == byte.class || clazz == Byte.class) {
+        } else if (typeClazz == byte.class || typeClazz == Byte.class) {
             if (value instanceof Number) {
                 return (T) (Number) ((Number) value).byteValue();
             }
-        } else if (clazz == boolean.class || clazz == Boolean.class) {
+        } else if (typeClazz == boolean.class || typeClazz == Boolean.class) {
             if (value instanceof Number) {
                 return (T) (Object) (((Number) value).intValue() > 0);
             }
-        } else if (clazz == BigInteger.class && vclzz == String.class) {
+        } else if (typeClazz == BigInteger.class && valClazz == String.class) {
             return (T) new BigInteger(value.toString());
-        } else if (clazz == BigDecimal.class && vclzz == String.class) {
+        } else if (typeClazz == BigDecimal.class && valClazz == String.class) {
             return (T) new BigDecimal(value.toString());
         }
         JsonConvert convert = JsonConvert.root();
-        if (CharSequence.class.isAssignableFrom(vclzz)) {
+        if (CharSequence.class.isAssignableFrom(valClazz)) {
             return convert.convertFrom(type, value.toString());
         } else {
             return convert.convertFrom(type, convert.convertToBytes(value));
