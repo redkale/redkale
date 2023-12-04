@@ -35,9 +35,9 @@ import org.redkale.util.*;
 @ResourceType(DataSource.class)
 public class DataJdbcSource extends AbstractDataSqlSource {
 
-    protected ConnectionPool readPool;
+    protected JdbcConnectionPool readPool;
 
-    protected ConnectionPool writePool;
+    protected JdbcConnectionPool writePool;
 
     public DataJdbcSource() {
         super();
@@ -46,11 +46,11 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     @Override
     public void init(AnyValue conf) {
         super.init(conf);
-        this.readPool = new ConnectionPool(true, readConfProps);
+        this.readPool = new JdbcConnectionPool(true, readConfProps);
         if (readConfProps == writeConfProps) {
             this.writePool = readPool;
         } else {
-            this.writePool = new ConnectionPool(false, writeConfProps);
+            this.writePool = new JdbcConnectionPool(false, writeConfProps);
         }
     }
 
@@ -113,11 +113,11 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         return true;
     }
 
-    protected ConnectionPool readPool() {
+    protected JdbcConnectionPool readPool() {
         return readPool;
     }
 
-    protected ConnectionPool writePool() {
+    protected JdbcConnectionPool writePool() {
         return writePool;
     }
 
@@ -133,7 +133,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
     @Local
     public void offerJdbcConnection(DataJdbcConnection conn) {
-        ConnectionPool pool = conn.readFlag ? readPool() : writePool();
+        JdbcConnectionPool pool = conn.readFlag ? readPool() : writePool();
         pool.offerConnection(conn);
     }
 
@@ -2578,7 +2578,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 ResultSet set = stmt.executeQuery(sinfo.getNativeCountSql());
                 if (set.next()) {
                     total = set.getLong(1);
-                };
+                }
                 set.close();
                 conn.offerQueryStatement(stmt);
             } else {
@@ -2591,7 +2591,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 ResultSet set = prestmt.executeQuery();
                 if (set.next()) {
                     total = set.getLong(1);
-                };
+                }
                 set.close();
                 conn.offerQueryStatement(prestmt);
             }
@@ -2838,7 +2838,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
     }
 
-    protected class ConnectionPool implements AutoCloseable {
+    protected class JdbcConnectionPool implements AutoCloseable {
 
         protected final LongAdder closeCounter = new LongAdder(); //已关闭连接数
 
@@ -2866,7 +2866,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
         protected final boolean readFlag;
 
-        public ConnectionPool(boolean readFlag, Properties prop) {
+        public JdbcConnectionPool(boolean readFlag, Properties prop) {
             this.readFlag = readFlag;
             this.connectTimeoutSeconds = Integer.decode(prop.getProperty(DATA_SOURCE_CONNECT_TIMEOUT_SECONDS, "30"));
             int defMaxConns = Utility.cpus() * 4;
