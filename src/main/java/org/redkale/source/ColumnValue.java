@@ -21,7 +21,7 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  */
-public class ColumnValue {
+public class ColumnValue implements Comparable<ColumnValue> {
 
     @ConvertColumn(index = 1)
     private String column;
@@ -529,7 +529,13 @@ public class ColumnValue {
     }
 
     @Override
+    public int compareTo(ColumnValue o) {
+        return o == null ? 1 : this.column.compareTo(o.column);
+    }
+
+    @Override
     public String toString() {
         return "{\"column\":\"" + column + "\", \"express\":" + express + ", \"value\":" + value + "}";
     }
+
 }

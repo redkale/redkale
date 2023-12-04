@@ -701,6 +701,11 @@ public final class EntityInfo<T> {
         return (V) this.subobjectMap.get(name);
     }
 
+    @SuppressWarnings("unchecked")
+    public <V> V getSubobjectIfAbsent(String name, Function<String, ? extends V> func) {
+        return (V) this.subobjectMap.computeIfAbsent(name, func);
+    }
+
     public void setSubobject(String name, Object value) {
         this.subobjectMap.put(name, value);
     }
