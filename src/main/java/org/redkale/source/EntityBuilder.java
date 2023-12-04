@@ -350,6 +350,9 @@ public class EntityBuilder<T> {
      * @return Entity对象
      */
     public T getEntityValue(final SelectColumn sels, final DataResultSetRow row) {
+        if (sels == null) {
+            return getFullEntityValue(row);
+        }
         if (row.wasNull()) {
             return null;
         }
