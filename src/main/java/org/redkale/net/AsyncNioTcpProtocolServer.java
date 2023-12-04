@@ -32,8 +32,6 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
 
     private AsyncIOGroup ioGroup;
 
-    private Thread acceptThread;
-
     private boolean closed;
 
     private Supplier<Response> responseSupplier;
@@ -117,13 +115,14 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
             ObjectPool<Response> pool = localResponsePool.get();
             (pool == null ? safeResponsePool : pool).accept(v);
         };
-        final String threadNameFormat = server.name == null || server.name.isEmpty() ? "Redkale-IOServletThread-%s" : ("Redkale-" + server.name.replace("Server-", "") + "-IOServletThread-%s");
+        final String threadNameFormat = Utility.isEmpty(server.name) ? "Redkale-IOServletThread-%s"
+            : ("Redkale-" + server.name.replace("Server-", "") + "-IOServletThread-%s");
         if (this.ioGroup == null) {
             this.ioGroup = new AsyncIOGroup(threadNameFormat, null, safeBufferPool);
             this.ioGroup.start();
         }
 
-        this.acceptThread = new Thread() {
+        Thread acceptThread = new Thread() {
             {
                 setName(String.format(threadNameFormat, "Accept"));
             }
@@ -164,7 +163,7 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
                 }
             }
         };
-        this.acceptThread.start();
+        acceptThread.start();
     }
 
     private void accept(AsyncIOThread ioReadThread, AsyncIOThread ioWriteThread) throws IOException {
@@ -177,7 +176,8 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
         channel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
         ioGroup.connCreateCounter.increment();
         ioGroup.connLivingCounter.increment();
-        AsyncNioTcpConnection conn = new AsyncNioTcpConnection(false, ioGroup, ioReadThread, ioWriteThread, channel, context.getSSLBuilder(), context.getSSLContext(), null);
+        AsyncNioTcpConnection conn = new AsyncNioTcpConnection(false, ioGroup,
+            ioReadThread, ioWriteThread, channel, context.getSSLBuilder(), context.getSSLContext(), null);
         ProtocolCodec codec = new ProtocolCodec(context, responseSupplier, responseConsumer, conn);
         conn.protocolCodec = codec;
         if (conn.sslEngine == null) {

@@ -34,8 +34,6 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
 
     private AsyncIOGroup ioGroup;
 
-    private Thread acceptThread;
-
     private boolean closed;
 
     private Supplier<Response> responseSupplier;
@@ -106,17 +104,18 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
             ObjectPool<Response> pool = localResponsePool.get();
             return pool == null ? safeResponsePool.get() : pool.get();
         };
-        this.responseConsumer = (v) -> {
+        this.responseConsumer = v -> {
             ObjectPool<Response> pool = localResponsePool.get();
             (pool == null ? safeResponsePool : pool).accept(v);
         };
-        final String threadNameFormat = server.name == null || server.name.isEmpty() ? "Redkale-IOServletThread-%s" : ("Redkale-" + server.name.replace("Server-", "") + "-IOServletThread-%s");
+        final String threadNameFormat = Utility.isEmpty(server.name) ? "Redkale-IOServletThread-%s"
+            : ("Redkale-" + server.name.replace("Server-", "") + "-IOServletThread-%s");
         if (this.ioGroup == null) {
             this.ioGroup = new AsyncIOGroup(threadNameFormat, null, safeBufferPool);
             this.ioGroup.start();
         }
         udpServerChannel.serverChannel.register(this.selector, SelectionKey.OP_READ);
-        this.acceptThread = new Thread() {
+        Thread acceptThread = new Thread() {
             {
                 setName(String.format(threadNameFormat, "Accept"));
             }
@@ -175,13 +174,14 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
                 }
             }
         };
-        this.acceptThread.start();
+        acceptThread.start();
     }
 
     private void accept(SocketAddress address, ByteBuffer buffer, AsyncIOThread ioReadThread, AsyncIOThread ioWriteThread) throws IOException {
         ioGroup.connCreateCounter.increment();
         ioGroup.connLivingCounter.increment();
-        AsyncNioUdpConnection conn = new AsyncNioUdpConnection(false, ioGroup, ioReadThread, ioWriteThread, udpServerChannel.serverChannel, context.getSSLBuilder(), context.getSSLContext(), address);
+        AsyncNioUdpConnection conn = new AsyncNioUdpConnection(false, ioGroup,
+            ioReadThread, ioWriteThread, udpServerChannel.serverChannel, context.getSSLBuilder(), context.getSSLContext(), address);
         conn.udpServerChannel = udpServerChannel;
         udpServerChannel.connections.put(address, conn);
         ProtocolCodec codec = new ProtocolCodec(context, responseSupplier, responseConsumer, conn);

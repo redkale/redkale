@@ -45,7 +45,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
     private final ReentrantLock executorLock = new ReentrantLock();
 
-    private int sourceThreads = Utility.cpus();
+    protected int sourceThreads = Utility.cpus();
 
     @Resource(name = RESNAME_APP_EXECUTOR, required = false)
     private ExecutorService sourceExecutor;
@@ -69,6 +69,10 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
     @ResourceListener
     public abstract void onResourceChange(ResourceEvent[] events);
+
+    protected void setSourceExecutor(ExecutorService executor) {
+        this.sourceExecutor = executor;
+    }
 
     protected SourceUrlInfo parseSourceUrl(final String url) {
         final SourceUrlInfo info = new SourceUrlInfo();
@@ -146,11 +150,11 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         return executor;
     }
 
-    protected <T> void complete(CompletableFuture<T> future, T value) {
+    protected <T> void complete(WorkThread workThread, CompletableFuture<T> future, T value) {
         getExecutor().execute(() -> future.complete(value));
     }
 
-    protected <T> void completeExceptionally(CompletableFuture<T> future, Throwable exp) {
+    protected <T> void completeExceptionally(WorkThread workThread, CompletableFuture<T> future, Throwable exp) {
         getExecutor().execute(() -> future.completeExceptionally(exp));
     }
 

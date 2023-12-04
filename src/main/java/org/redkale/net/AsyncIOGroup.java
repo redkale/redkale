@@ -243,12 +243,8 @@ public class AsyncIOGroup extends AsyncGroup {
             public void completed(Void result, Void attachment) {
                 conn.setReadTimeoutSeconds(readTimeoutSeconds);
                 conn.setWriteTimeoutSeconds(writeTimeoutSeconds);
-                if (connCreateCounter != null) {
-                    connCreateCounter.increment();
-                }
-                if (connLivingCounter != null) {
-                    connLivingCounter.increment();
-                }
+                connCreateCounter.increment();
+                connLivingCounter.increment();
                 if (conn.sslEngine == null) {
                     future.complete(conn);
                 } else {
