@@ -2882,6 +2882,9 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             if (password != null) {
                 this.connectAttrs.put("password", password);
             }
+            if (!url.contains("prepareThreshold=")) {
+                this.connectAttrs.put("prepareThreshold", "-1");
+            }
             try {
                 this.driver = DriverManager.getDriver(this.url);
             } catch (SQLException e) {
@@ -2913,6 +2916,11 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             if (!Objects.equals(newUser, this.connectAttrs.get("user"))
                 || !Objects.equals(newPassword, this.connectAttrs.get("password")) || !Objects.equals(newUrl, url)) {
                 this.urlVersion.incrementAndGet();
+            }
+            if (!newUrl.contains("prepareThreshold=")) {
+                this.connectAttrs.put("prepareThreshold", "-1");
+            } else {
+                this.connectAttrs.remove("prepareThreshold");
             }
             this.url = newUrl;
             this.connectTimeoutSeconds = newConnectTimeoutSeconds;
