@@ -3,6 +3,8 @@
  */
 package org.redkale.scheduling;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -154,22 +156,27 @@ public class ScheduledFactory {
     }
 
     protected Runnable createRunnable(final WeakReference ref, Method method) {
-        if (!Modifier.isPublic(method.getModifiers())) {
-            method.setAccessible(true);
-        }
-        return () -> {
-            try {
-                Object obj = ref.get();
-                if (obj != null) {
-                    if (logger.isLoggable(Level.FINEST)) {
-                        logger.log(Level.FINEST, "schedule task " + method.getDeclaringClass().getSimpleName() + "." + method.getName());
-                    }
-                    method.invoke(obj);
-                }
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "schedule task error", e);
+        try {
+            if (!Modifier.isPublic(method.getModifiers())) {
+                method.setAccessible(true);
             }
-        };
+            MethodHandle mh = MethodHandles.lookup().unreflect(method);
+            return () -> {
+                try {
+                    Object obj = ref.get();
+                    if (obj != null) {
+                        if (logger.isLoggable(Level.FINEST)) {
+                            logger.log(Level.FINEST, "schedule task " + method.getDeclaringClass().getSimpleName() + "." + method.getName());
+                        }
+                        mh.invoke(obj);
+                    }
+                } catch (Throwable t) {
+                    logger.log(Level.SEVERE, "schedule task error", t);
+                }
+            };
+        } catch (IllegalAccessException e) {
+            throw new RedkaleException(e);
+        }
     }
 
     protected String getProperty(String value) {
