@@ -30,6 +30,7 @@ import org.redkale.mq.*;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
+import org.redkale.scheduling.ScheduledFactory;
 import org.redkale.service.Service;
 import org.redkale.source.*;
 import org.redkale.util.*;
@@ -204,6 +205,9 @@ public final class Application {
 
     //全局根ResourceFactory
     final ResourceFactory resourceFactory = ResourceFactory.create();
+
+    //全局ScheduledFactory
+    private final ScheduledFactory scheduledFactory;
 
     //服务配置项
     final AnyValue config;
@@ -625,6 +629,10 @@ public final class Application {
             if (executorLog.length() > 0) {
                 logger.log(Level.INFO, executorLog.toString());
             }
+        }
+
+        { //设置ScheduledFactory
+            this.scheduledFactory = ScheduledFactory.create(this::getPropertyValue).disable(isCompileMode());
         }
 
         { //加载原生sql解析器
@@ -2159,6 +2167,14 @@ public final class Application {
         return val;
     }
 
+    public void schedule(Object service) {
+        this.scheduledFactory.schedule(service);
+    }
+
+    public void unschedule(Object service) {
+        this.scheduledFactory.unschedule(service);
+    }
+
     void updateEnvironmentProperties(String namespace, List<ResourceEvent> events) {
         if (events == null || events.isEmpty()) {
             return;
@@ -2622,6 +2638,8 @@ public final class Application {
         if (this.workExecutor != null) {
             this.workExecutor.shutdownNow();
         }
+        this.scheduledFactory.destroy();
+
         long intms = System.currentTimeMillis() - f;
         String ms = String.valueOf(intms);
         int repeat = ms.length() > 7 ? 0 : (7 - ms.length()) / 2;

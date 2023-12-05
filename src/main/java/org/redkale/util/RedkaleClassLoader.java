@@ -59,6 +59,7 @@ public class RedkaleClassLoader extends URLClassLoader {
         "org.redkale.net.http",
         "org.redkale.net.sncp",
         "org.redkale.persistence",
+        "org.redkale.scheduling",
         "org.redkale.service",
         "org.redkale.source",
         "org.redkale.util",

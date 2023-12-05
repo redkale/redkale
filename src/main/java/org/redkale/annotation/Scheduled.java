@@ -20,16 +20,57 @@ import java.util.concurrent.TimeUnit;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Scheduled {
 
+    /**
+     * 名称
+     *
+     * @return 名称
+     */
+    String name() default "";
+
+    /**
+     * cron表达式
+     *
+     * @return cron表达式
+     */
     String cron() default "";
 
+    /**
+     * 时区
+     *
+     * @return 时区
+     */
     String zone() default "";
 
+    /**
+     *
+     * @return deplay时间
+     */
     String fixedDelay() default "-1";
 
+    /**
+     *
+     * @return 周期时间
+     */
     String fixedRate() default "-1";
 
+    /**
+     *
+     * @return 起始deplay时间
+     */
     String initialDelay() default "-1";
 
-    TimeUnit timeUnit() default TimeUnit.MILLISECONDS;
+    /**
+     * 时间单元
+     *
+     * @return 时间单元
+     */
+    TimeUnit timeUnit() default TimeUnit.SECONDS;
+
+    /**
+     * 备注
+     *
+     * @return 备注
+     */
+    String comment() default "";
 
 }

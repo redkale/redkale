@@ -29,6 +29,7 @@ module org.redkale {
     exports org.redkale.net.http;
     exports org.redkale.net.sncp;
     exports org.redkale.persistence;
+    exports org.redkale.scheduling;
     exports org.redkale.service;
     exports org.redkale.source;
     exports org.redkale.util;

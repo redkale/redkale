@@ -1,12 +1,19 @@
 /*
  *
  */
-package org.redkale.util;
+package org.redkale.scheduling;
 
 import java.time.DateTimeException;
-import java.time.temporal.*;
-import java.util.*;
+import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
+import java.time.temporal.ValueRange;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.redkale.annotation.Nullable;
+import org.redkale.util.RedkaleException;
+import org.redkale.util.Utility;
 
 /**
  * cron定时表达式解析器 <br> 代码复制于org.springframework.scheduling.support.CronExpression
@@ -28,7 +35,8 @@ public class CronExpression {
         "@weekly", "0 0 0 * * 0",
         "@daily", "0 0 0 * * *",
         "@midnight", "0 0 0 * * *",
-        "@hourly", "0 0 * * * *"
+        "@hourly", "0 0 * * * *",
+        "@minutely", "0 0/1 * * * *" 
     };
 
     private final CronField[] fields;
