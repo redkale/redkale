@@ -11,6 +11,7 @@ import java.nio.channels.*;
 import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.function.Supplier;
 import org.redkale.annotation.ResourceType;
 import org.redkale.util.*;
 
@@ -237,7 +238,8 @@ public class AsyncIOGroup extends AsyncGroup {
             return CompletableFuture.failedFuture(e);
         }
         int seconds = connectTimeoutSeconds > 0 ? connectTimeoutSeconds : 6;
-        final CompletableFuture future = Utility.orTimeout(new CompletableFuture(), seconds, TimeUnit.SECONDS);
+        final Supplier<String> timeoutMsg = () -> address + " connect timeout";
+        final CompletableFuture future = Utility.orTimeout(new CompletableFuture(), timeoutMsg, seconds, TimeUnit.SECONDS);
         conn.connect(address, null, new CompletionHandler<Void, Void>() {
             @Override
             public void completed(Void result, Void attachment) {
@@ -263,7 +265,7 @@ public class AsyncIOGroup extends AsyncGroup {
                 future.completeExceptionally(exc);
             }
         });
-        return Utility.orTimeout(future, 30, TimeUnit.SECONDS);
+        return Utility.orTimeout(future, timeoutMsg, 30, TimeUnit.SECONDS);
     }
 
     //创建一个AsyncConnection对象，只给测试代码使用
@@ -314,7 +316,7 @@ public class AsyncIOGroup extends AsyncGroup {
             return CompletableFuture.failedFuture(e);
         }
         int seconds = connectTimeoutSeconds > 0 ? connectTimeoutSeconds : 6;
-        final CompletableFuture future = Utility.orTimeout(new CompletableFuture(), seconds, TimeUnit.SECONDS);
+        final CompletableFuture future = Utility.orTimeout(new CompletableFuture(), () -> address + " connect timeout", seconds, TimeUnit.SECONDS);
         conn.connect(address, null, new CompletionHandler<Void, Void>() {
             @Override
             public void completed(Void result, Void attachment) {

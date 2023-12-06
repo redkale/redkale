@@ -242,7 +242,7 @@ public final class Transport {
             }
         }
         if (semaphore != null && !semaphore.tryAcquire()) {
-            final CompletableFuture<AsyncConnection> future = Utility.orTimeout(new CompletableFuture<>(), 10, TimeUnit.SECONDS);
+            final CompletableFuture<AsyncConnection> future = Utility.orTimeout(new CompletableFuture<>(), null, 10, TimeUnit.SECONDS);
             future.whenComplete((r, t) -> node.pollQueue.remove(future));
             if (node.pollQueue.offer(future)) {
                 return future;

@@ -484,6 +484,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                     t.setDaemon(true);
                     return t;
                 });
+                this.dateScheduler.setRemoveOnCancelPolicy(true);
                 final ObjectRef<byte[]> dateRef = new ObjectRef<>();
                 final DateFormat gmtDateFormat = new SimpleDateFormat("EEE, d MMM y HH:mm:ss z", Locale.ENGLISH);
                 gmtDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));

@@ -56,7 +56,8 @@ public class ScheduledFactory {
 
     protected ScheduledFactory(UnaryOperator<String> propertyFunc) {
         this.propertyFunc = propertyFunc;
-        this.scheduler = new ScheduledThreadPoolExecutor(Utility.cpus(), Utility.newThreadFactory("Scheduled-Task-Thread-%s"));
+        this.scheduler = new ScheduledThreadPoolExecutor(Utility.cpus(), Utility.newThreadFactory("Scheduled-Task-Thread-%s"));        
+        this.scheduler.setRemoveOnCancelPolicy(true); 
     }
 
     public static ScheduledFactory create(UnaryOperator<String> propertyFunc) {

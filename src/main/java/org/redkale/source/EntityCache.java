@@ -163,6 +163,7 @@ public final class EntityCache<T> {
                 t.setDaemon(true);
                 return t;
             });
+            this.scheduler.setRemoveOnCancelPolicy(true); 
             this.scheduler.scheduleAtFixedRate(() -> {
                 try {
                     ConcurrentHashMap newmap2 = new ConcurrentHashMap();

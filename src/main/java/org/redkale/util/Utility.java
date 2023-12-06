@@ -123,10 +123,20 @@ public final class Utility {
 
     private static HttpClient httpClient;
 
+    private static final ScheduledThreadPoolExecutor delayer;
+
     //private static final javax.net.ssl.SSLContext DEFAULTSSL_CONTEXT;
     //private static final javax.net.ssl.HostnameVerifier defaultVerifier = (s, ss) -> true;
     static {
         System.setProperty("jdk.httpclient.allowRestrictedHeaders", "host");
+
+        (delayer = new ScheduledThreadPoolExecutor(1, r -> {
+            Thread t = new Thread(r);
+            t.setDaemon(true);
+            t.setName("RedkaleFutureDelayScheduler");
+            return t;
+        })).setRemoveOnCancelPolicy(true);
+
         Unsafe unsafe0 = null;
         Function<Object, Object> strCharFunction0 = null;
         Function<Object, Object> sbCharFunction0 = null;
@@ -401,15 +411,21 @@ public final class Utility {
     }
 
     public static ScheduledThreadPoolExecutor newScheduledExecutor(int corePoolSize) {
-        return new ScheduledThreadPoolExecutor(corePoolSize, newThreadFactory(null));
+        ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(corePoolSize, newThreadFactory(null));
+        scheduler.setRemoveOnCancelPolicy(true);
+        return scheduler;
     }
 
     public static ScheduledThreadPoolExecutor newScheduledExecutor(int corePoolSize, String name) {
-        return new ScheduledThreadPoolExecutor(corePoolSize, newThreadFactory(name));
+        ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(corePoolSize, newThreadFactory(name));
+        scheduler.setRemoveOnCancelPolicy(true);
+        return scheduler;
     }
 
     public static ScheduledThreadPoolExecutor newScheduledExecutor(int corePoolSize, String name, RejectedExecutionHandler handler) {
-        return new ScheduledThreadPoolExecutor(corePoolSize, newThreadFactory(name), handler);
+        ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(corePoolSize, newThreadFactory(name), handler);
+        scheduler.setRemoveOnCancelPolicy(true);
+        return scheduler;
     }
 
     public static Consumer<Consumer<String>> signalShutdownConsumer() {
@@ -645,16 +661,29 @@ public final class Utility {
         }
     }
 
-    public static <T> CompletableFuture<T> orTimeout(CompletableFuture future, Duration timeout) {
-        return future.orTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS);
+    public static <T> CompletableFuture<T> orTimeout(CompletableFuture future, Supplier<String> errMsgFunc, Duration timeout) {
+        return orTimeout(future, errMsgFunc, timeout.toMillis(), TimeUnit.MILLISECONDS);
+    }
+
+    public static <T> CompletableFuture<T> orTimeout(CompletableFuture future, Supplier<String> errMsgFunc, long timeout, TimeUnit unit) {
+        if (future == null) {
+            return future;
+        }
+        final ScheduledFuture<?> sf = delayer.schedule(() -> {
+            if (!future.isDone()) {
+                String msg = errMsgFunc == null ? null : errMsgFunc.get();
+                future.completeExceptionally(msg == null ? new TimeoutException(msg) : new TimeoutException());
+            }
+        }, timeout, unit);
+        return future.whenComplete((v, t) -> {
+            if (t == null && !sf.isDone()) {
+                sf.cancel(false);
+            }
+        });
     }
 
     public static <T> CompletableFuture<T> completeOnTimeout(CompletableFuture future, T value, Duration timeout) {
-        return future.completeOnTimeout(value, timeout.toMillis(), TimeUnit.MILLISECONDS);
-    }
-
-    public static <T> CompletableFuture<T> orTimeout(CompletableFuture future, long timeout, TimeUnit unit) {
-        return future.orTimeout(timeout, unit);
+        return completeOnTimeout(future, value, timeout.toMillis(), TimeUnit.MILLISECONDS);
     }
 
     public static <T> CompletableFuture<T> completeOnTimeout(CompletableFuture future, T value, long timeout, TimeUnit unit) {

@@ -43,7 +43,7 @@ public class ClientFuture<R extends ClientRequest, T> extends CompletableFuture<
     }
 
     void cancelTimeout() {
-        if (timeout != null) {
+        if (timeout != null && !timeout.isDone()) {
             timeout.cancel(true);
         }
     }
@@ -88,7 +88,9 @@ public class ClientFuture<R extends ClientRequest, T> extends CompletableFuture<
         }
         workThread.runWork(() -> {
             Traces.currentTraceid(traceid);
-            completeExceptionally(ex);
+            if (!isDone()) {
+                completeExceptionally(ex);
+            }
             Traces.removeTraceid();
         });
     }

@@ -130,6 +130,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
             t.setDaemon(true);
             return t;
         });
+        this.timeoutScheduler.setRemoveOnCancelPolicy(true);
         int pingSeconds = pingIntervalSeconds();
         if (pingRequestSupplier != null && pingSeconds > 0 && this.timeoutFuture == null) {
             this.timeoutFuture = this.timeoutScheduler.scheduleAtFixedRate(() -> {
@@ -384,7 +385,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
             });
         } else {
             int seconds = connectTimeoutSeconds > 0 ? connectTimeoutSeconds : 6;
-            CompletableFuture rs = Utility.orTimeout(new CompletableFuture(), seconds, TimeUnit.SECONDS);
+            CompletableFuture rs = Utility.orTimeout(new CompletableFuture(), () -> addr + " connect timeout", seconds, TimeUnit.SECONDS);
             waitQueue.offer(rs);
             return rs;
         }

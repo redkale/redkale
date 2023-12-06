@@ -121,6 +121,7 @@ public class WebSocketEngine {
             t.setDaemon(true);
             return t;
         });
+        this.scheduler.setRemoveOnCancelPolicy(true); 
         long delay = (liveInterval - System.currentTimeMillis() / 1000 % liveInterval) + index * 5;
         final int intervalms = liveInterval * 1000;
         scheduler.scheduleWithFixedDelay(() -> {
