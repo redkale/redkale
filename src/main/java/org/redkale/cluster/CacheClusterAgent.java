@@ -130,14 +130,14 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
                 checkApplicationHealth();
                 checkHttpAddressHealth();
                 loadSncpAddressHealth();
-                localEntrys.values().stream().filter(e -> !e.canceled).forEach(entry -> {
-                    checkLocalHealth(entry);
-                });
-                remoteEntrys.values().stream().filter(entry -> "SNCP".equalsIgnoreCase(entry.protocol)).forEach(entry -> {
-                    updateSncpAddress(entry);
-                });
+                localEntrys.values().stream()
+                    .filter(e -> !e.canceled)
+                    .forEach(this::checkLocalHealth);
+                remoteEntrys.values().stream()
+                    .filter(entry -> "SNCP".equalsIgnoreCase(entry.protocol))
+                    .forEach(this::updateSncpAddress);
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "scheduleAtFixedRate check error", e instanceof CompletionException ? ((CompletionException) e).getCause() : e);
+                logger.log(Level.SEVERE, "scheduleAtFixedRate check error", e);
             }
         };
     }

@@ -137,8 +137,10 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
                 try {
                     R req = pingRequestSupplier.get();
                     if (req == null) { //可能运行中进行重新赋值
-                        timeoutFuture.cancel(true);
-                        timeoutFuture = null;
+                        if (timeoutFuture != null && !timeoutFuture.isDone()) {
+                            timeoutFuture.cancel(true);
+                            timeoutFuture = null;
+                        }
                         return;
                     }
                     long now = System.currentTimeMillis();

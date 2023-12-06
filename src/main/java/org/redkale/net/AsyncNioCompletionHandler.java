@@ -67,7 +67,7 @@ class AsyncNioCompletionHandler<A> implements CompletionHandler<Integer, A>, Run
     @Override
     public void completed(Integer result, A attach) {
         ScheduledFuture future = this.timeoutFuture;
-        if (future != null) {
+        if (future != null && !future.isDone()) {
             this.timeoutFuture = null;
             future.cancel(true);
         }
@@ -95,7 +95,7 @@ class AsyncNioCompletionHandler<A> implements CompletionHandler<Integer, A>, Run
     @Override
     public void failed(Throwable exc, A attach) {
         ScheduledFuture future = this.timeoutFuture;
-        if (future != null) {
+        if (future != null && !future.isDone()) {
             this.timeoutFuture = null;
             future.cancel(true);
         }
