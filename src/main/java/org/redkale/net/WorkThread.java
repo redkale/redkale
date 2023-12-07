@@ -171,7 +171,7 @@ public class WorkThread extends Thread implements Executor {
      * 1、work线程池
      * 2、虚拟线程
      * 3、当前线程
-     * <bt>
+     * <br>
      * <b>与execute的区别：子类AsyncIOThread中execute会被重载，确保优先在IO线程中执行</b>
      *
      * @param command 任务

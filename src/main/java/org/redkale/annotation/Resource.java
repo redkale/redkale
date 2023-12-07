@@ -8,9 +8,9 @@ package org.redkale.annotation;
 import java.lang.annotation.*;
 
 /**
- * &#64;Resource(name = "#") 表示资源name采用所属对象的name  <br>
- * &#64;Resource(name = "@name") 表示资源对象自身的name  <br>
- * &#64;Resource(name = "@type") 表示资源对象自身的类型  <br>
+ * &#64;Resource(name = "@") 表示资源name采用所属对象的name  <br>
+ * &#64;Resource(name = "#name") 表示资源对象自身的name  <br>
+ * &#64;Resource(name = "#type") 表示资源对象自身的类型  <br>
  *
  * @since Common Annotations 1.0
  *
@@ -20,11 +20,11 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Resource {
 
-    public static final String PARENT_NAME = "#";
+    public static final String PARENT_NAME = "@";
 
-    public static final String SELF_NAME = "@name";
+    public static final String SELF_NAME = "#name";
 
-    public static final String SELF_TYPE = "@type";
+    public static final String SELF_TYPE = "#type";
 
     /**
      * 是否必须存在

@@ -24,12 +24,12 @@ import org.redkale.convert.*;
  *
  * 依赖注入功能主类   <br>
  *
- * 如果&#64;Resource(name = "#") 表示资源name采用所属对象的name  <br>
+ * 如果&#64;Resource(name = "@") 表示资源name采用所属对象的name  <br>
  * 如果没有&#64;Resource且对象实现了Resourcable, 则会取对象的resourceName()方法值
  * <blockquote><pre>
  * name规则:
- *    1: "#"有特殊含义, 表示资源本身，"#"不能单独使用
- *    2: "@name"、"@type"有特殊含义
+ *    1: "@"有特殊含义, 表示资源本身，"@"不能单独使用
+ *    2: "#name"、"#type"有特殊含义
  *    3: 只能是字母、数字、(短横)-、(下划线)_、点(.)的组合
  * </pre></blockquote>
  * <p>
