@@ -27,7 +27,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.redkale.annotation.Nullable;
 import org.redkale.annotation.Scheduled;
-import org.redkale.source.SourceException;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Utility;
@@ -168,9 +167,9 @@ public class ScheduledFactory {
                 try {
                     Object obj = ref.get();
                     if (obj != null) {
-                        if (logger.isLoggable(Level.FINEST)) {
-                            logger.log(Level.FINEST, "schedule task " + method.getDeclaringClass().getSimpleName() + "." + method.getName());
-                        }
+//                        if (logger.isLoggable(Level.FINEST)) {
+//                            logger.log(Level.FINEST, "schedule task " + method.getDeclaringClass().getSimpleName() + "." + method.getName());
+//                        }
                         mh.invoke(obj);
                     }
                 } catch (Throwable t) {
@@ -204,11 +203,25 @@ public class ScheduledFactory {
         } else if (value.indexOf('#') == 0) {
             try {
                 String fieldName = value.substring(1);
-                Field field = service.getClass().getDeclaredField(fieldName);
-                field.setAccessible(true);
-                return field.getLong(service);
+                Exception ex = null;
+                Field field = null;
+                Class clazz = service.getClass();
+                do {
+                    try {
+                        field = clazz.getDeclaredField(fieldName);
+                        field.setAccessible(true);
+                        RedkaleClassLoader.putReflectionField(clazz.getName(), field);
+                        break;
+                    } catch (NoSuchFieldException fe) {
+                        ex = fe;
+                    }
+                } while ((clazz = clazz.getSuperclass()) != Object.class);
+                if (field == null) {
+                    throw ex;
+                }
+                return ((Number) field.get(service)).longValue();
             } catch (Exception e) {
-                throw new SourceException(e);
+                throw new RedkaleException(e);
             }
         } else {
             return Long.parseLong(value);
