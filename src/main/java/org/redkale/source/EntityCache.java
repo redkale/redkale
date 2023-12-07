@@ -80,8 +80,8 @@ public final class EntityCache<T> {
 
     private CompletableFuture<List<T>> loadFuture;
 
-    public EntityCache(final EntityInfo<T> info, final Cacheable c) {
-        this(info, c != null ? c.interval() : 0, c != null && c.direct());
+    public EntityCache(final EntityInfo<T> info, final Entity c) {
+        this(info, c != null && c.cacheable() ? c.cacheInterval() : 0, c != null && c.cacheable() && c.cacheDirect());
     }
 
     EntityCache(final EntityInfo<T> info, final int cacheInterval, final boolean cacheDirect) {
@@ -163,7 +163,7 @@ public final class EntityCache<T> {
                 t.setDaemon(true);
                 return t;
             });
-            this.scheduler.setRemoveOnCancelPolicy(true); 
+            this.scheduler.setRemoveOnCancelPolicy(true);
             this.scheduler.scheduleAtFixedRate(() -> {
                 try {
                     ConcurrentHashMap newmap2 = new ConcurrentHashMap();
@@ -1077,7 +1077,7 @@ public final class EntityCache<T> {
         if (node.getExpress() == ColumnExpress.SET) {
             return leftVal;
         }
-        
+
         Serializable rightVal = null;
         ColumnNode rightNode = node.getRight();
         //类型只能是ColumnNameNode、ColumnNumberNode、ColumnExpNode
