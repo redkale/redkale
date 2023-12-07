@@ -6,6 +6,7 @@ package org.redkale.scheduling;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.time.Duration;
@@ -26,6 +27,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.redkale.annotation.Nullable;
 import org.redkale.annotation.Scheduled;
+import org.redkale.source.SourceException;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Utility;
@@ -149,9 +151,9 @@ public class ScheduledFactory {
             CronExpression cronExpr = CronExpression.parse(cron);
             return new CronTask(ref, name, method, cronExpr, zoneId);
         } else {
-            long fixedDelayLong = getLongValue(fixedDelay);
-            long fixedRateLong = getLongValue(fixedRate);
-            long initialDelayLong = getLongValue(initialDelay);
+            long fixedDelayLong = getLongValue(ref.get(), fixedDelay);
+            long fixedRateLong = getLongValue(ref.get(), fixedRate);
+            long initialDelayLong = getLongValue(ref.get(), initialDelay);
             return new FixedTask(ref, name, method, fixedDelayLong, fixedRateLong, initialDelayLong, timeUnit);
         }
     }
@@ -188,7 +190,7 @@ public class ScheduledFactory {
     }
 
     //支持5*60乘法表达式
-    protected long getLongValue(String value) {
+    protected long getLongValue(Object service, String value) {
         if (value.indexOf('*') > -1) {
             long rs = 1;
             boolean flag = false;
@@ -199,8 +201,18 @@ public class ScheduledFactory {
                 }
             }
             return flag ? rs : -1;
+        } else if (value.indexOf('#') == 0) {
+            try {
+                String fieldName = value.substring(1);
+                Field field = service.getClass().getDeclaredField(fieldName);
+                field.setAccessible(true);
+                return field.getLong(service);
+            } catch (Exception e) {
+                throw new SourceException(e);
+            }
+        } else {
+            return Long.parseLong(value);
         }
-        return Long.parseLong(value);
     }
 
     public void destroy() {

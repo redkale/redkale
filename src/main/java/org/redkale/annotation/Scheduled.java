@@ -44,20 +44,32 @@ public @interface Scheduled {
     String zone() default "";
 
     /**
+     * 延迟时间，支持参数配置、乘法表达式和对象字段值 <br>
+     * ${env.fixedDelay}: 读取系统配置项
+     * 5*60: 乘法表达式，值为30
+     * #delays: 读取对象的delays字段值作为值，字段类型必须是long
      *
-     * @return deplay时间
+     * @return 延迟时间
      */
     String fixedDelay() default "-1";
 
     /**
+     * 周期时间，支持参数配置、乘法表达式和对象字段值 <br>
+     * ${env.fixedRate}: 读取系统配置项
+     * 5*60: 乘法表达式，值为30
+     * #intervals: 读取对象的intervals字段值作为值，字段类型必须是long
      *
      * @return 周期时间
      */
     String fixedRate() default "-1";
 
     /**
+     * 起始延迟时间，支持参数配置、乘法表达式和对象字段值 <br>
+     * ${env.initialDelay}: 读取系统配置项
+     * 5*60: 乘法表达式，值为30
+     * #inits: 读取对象的inits字段值作为值，字段类型必须是long
      *
-     * @return 起始deplay时间
+     * @return 起始延迟时间
      */
     String initialDelay() default "-1";
 
