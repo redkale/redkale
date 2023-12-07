@@ -46,10 +46,10 @@ public class ResourceLoaderTest {
 
     public static class Bean {
 
-        @Resource(name = "#.id")
+        @Resource(name = "@.id")
         public int id;
 
-        @Resource(name = "#.name")
+        @Resource(name = "@.name")
         public String name;
 
         public Bean() {
