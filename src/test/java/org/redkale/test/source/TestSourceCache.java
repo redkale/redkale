@@ -86,7 +86,6 @@ public class TestSourceCache {
     }
 
     @VirtualEntity
-    @Cacheable
     public static class TestEntity {
 
         @Id

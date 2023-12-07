@@ -12,7 +12,7 @@ import java.util.function.*;
 import org.junit.jupiter.api.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.convert.json.*;
-import org.redkale.persistence.Cacheable;
+import org.redkale.persistence.Entity;
 import org.redkale.persistence.Id;
 import org.redkale.persistence.Transient;
 import org.redkale.source.*;
@@ -187,7 +187,7 @@ public class FilterNodeTest {
     }
 
     @AutoLoad
-    @Cacheable
+    @Entity(cacheable = true)
     public static class CarTestTable {
 
         public static List<CarTestTable> createList() {
@@ -280,7 +280,7 @@ public class FilterNodeTest {
     }
 
     @AutoLoad
-    @Cacheable
+    @Entity(cacheable = true)
     public static class CarTypeTable {
 
         public static List<CarTypeTable> createList() {
@@ -337,7 +337,7 @@ public class FilterNodeTest {
     }
 
     @AutoLoad
-    @Cacheable
+    @Entity(cacheable = true)
     public static class UserTestTable {
 
         public static List<UserTestTable> createList() {

@@ -31,8 +31,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <code>Cacheable(false)</code> means that the entity and its state must
  * not be cached by the provider.
  *
+ * @deprecated replace by {@link org.redkale.persistence.Entity#cacheable() }
+ *
  * @since Java Persistence 2.0
  */
+@Deprecated(since = "2.8.0")
 @Target({TYPE})
 @Retention(RUNTIME)
 public @interface Cacheable {

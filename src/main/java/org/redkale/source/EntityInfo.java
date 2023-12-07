@@ -687,10 +687,37 @@ public final class EntityInfo<T> {
             this.updateQuestionPrepareCaseSQLs = null;
         }
         //----------------cache--------------
-        Cacheable c1 = type.getAnnotation(Cacheable.class);
-        javax.persistence.Cacheable c2 = type.getAnnotation(javax.persistence.Cacheable.class);
-        if (this.table == null || (!cacheForbidden && c1 != null && c1.value()) || (!cacheForbidden && c2 != null && c2.value())) {
-            this.cache = new EntityCache<>(this, c1 == null ? (c2 == null ? 0 : c2.interval()) : c1.interval(), c1 == null ? (c2 != null && c2.direct()) : c1.direct());
+        boolean cacheable = false;
+        int interval = 0;
+        boolean direct = false;
+        org.redkale.persistence.Entity en = type.getAnnotation(org.redkale.persistence.Entity.class);
+        if (en != null) {
+            cacheable = en.cacheable();
+            interval = en.cacheInterval();
+            direct = en.cacheDirect();
+        } else {
+            org.redkale.persistence.VirtualEntity ve = type.getAnnotation(org.redkale.persistence.VirtualEntity.class);
+            if (ve != null) {
+                cacheable = true;
+                direct = ve.direct();
+            }
+        }
+        { //兼容旧类
+            org.redkale.persistence.Cacheable c1 = type.getAnnotation(org.redkale.persistence.Cacheable.class);
+            if (c1 != null) {
+                cacheable = c1.value();
+                interval = c1.interval();
+                direct = c1.direct();
+            }
+            javax.persistence.Cacheable c2 = type.getAnnotation(javax.persistence.Cacheable.class);
+            if (c2 != null) {
+                cacheable = c2.value();
+                interval = c2.interval();
+                direct = c2.direct();
+            }
+        }
+        if (this.table == null || (!cacheForbidden && cacheable)) {
+            this.cache = new EntityCache<>(this, interval, direct);
         } else {
             this.cache = null;
         }
