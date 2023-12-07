@@ -38,16 +38,37 @@ public class WorkThread extends Thread implements Executor {
         this.setDaemon(true);
     }
 
+    /**
+     * 当前WorkThread线程，不是WorkThread返回null
+     *
+     * @return WorkThread线程
+     */
     public static WorkThread currentWorkThread() {
         Thread t = Thread.currentThread();
         return t instanceof WorkThread ? (WorkThread) t : null;
     }
 
+    /**
+     * 创建线程池，当前JDK若支持虚拟线程池，返回虚拟线程池
+     *
+     * @param threads          线程数
+     * @param threadNameFormat 格式化线程名
+     *
+     * @return 线程池
+     */
     public static ExecutorService createWorkExecutor(final int threads, final String threadNameFormat) {
         final Function<String, ExecutorService> func = Utility.virtualExecutorFunction();
         return func == null ? createExecutor(threads, threadNameFormat) : func.apply(threadNameFormat);
     }
 
+    /**
+     * 创建线程池
+     *
+     * @param threads          线程数
+     * @param threadNameFormat 格式化线程名
+     *
+     * @return 线程池
+     */
     public static ExecutorService createExecutor(final int threads, final String threadNameFormat) {
         final AtomicReference<ExecutorService> ref = new AtomicReference<>();
         final AtomicInteger counter = new AtomicInteger();
@@ -61,7 +82,15 @@ public class WorkThread extends Thread implements Executor {
         });
     }
 
-    public static String formatIndex(int threads, int index) {
+    /**
+     * 根据线程池大小补位序号
+     *
+     * @param threads 线程池大小
+     * @param index   序号
+     *
+     * @return 返回固定长度的序号
+     */
+    static String formatIndex(int threads, int index) {
         String v = String.valueOf(index);
         if (threads >= 100) {
             if (index < 10) {
@@ -77,6 +106,14 @@ public class WorkThread extends Thread implements Executor {
         return v;
     }
 
+    /**
+     * 按以下优先级顺序的线程池执行给定的任务: <br>
+     * 1、work线程池
+     * 2、虚拟线程
+     * 3、当前线程
+     *
+     * @param command 任务
+     */
     @Override
     public void execute(Runnable command) {
         if (workExecutor == null) {
@@ -86,6 +123,14 @@ public class WorkThread extends Thread implements Executor {
         }
     }
 
+    /**
+     * 按以下优先级顺序的线程池执行给定的任务集合: <br>
+     * 1、work线程池
+     * 2、虚拟线程
+     * 3、当前线程
+     *
+     * @param commands 任务集合
+     */
     public void execute(Runnable... commands) {
         if (workExecutor == null) {
             for (Runnable command : commands) {
@@ -98,6 +143,14 @@ public class WorkThread extends Thread implements Executor {
         }
     }
 
+    /**
+     * 按以下优先级顺序的线程池执行给定的任务集合: <br>
+     * 1、work线程池
+     * 2、虚拟线程
+     * 3、当前线程
+     *
+     * @param commands 任务集合
+     */
     public void execute(Collection<Runnable> commands) {
         if (commands == null) {
             return;
@@ -113,7 +166,16 @@ public class WorkThread extends Thread implements Executor {
         }
     }
 
-    //与execute的区别在于子类AsyncIOThread中execute会被重载，确保在IO线程中执行
+    /**
+     * 按以下优先级顺序的线程池执行给定的任务: <br>
+     * 1、work线程池
+     * 2、虚拟线程
+     * 3、当前线程
+     * <bt>
+     * <b>与execute的区别：子类AsyncIOThread中execute会被重载，确保优先在IO线程中执行</b>
+     *
+     * @param command 任务
+     */
     public final void runWork(Runnable command) {
         if (workExecutor == null) {
             Utility.execute(command);
@@ -122,6 +184,11 @@ public class WorkThread extends Thread implements Executor {
         }
     }
 
+    /**
+     * 获取work线程池
+     *
+     * @return work线程池
+     */
     public ExecutorService getWorkExecutor() {
         return workExecutor;
     }
@@ -136,10 +203,22 @@ public class WorkThread extends Thread implements Executor {
         return false;
     }
 
+    /**
+     * 判断当前线程是否为当前对象
+     *
+     * @return 是否一致
+     */
     public boolean inCurrThread() {
         return this == Thread.currentThread();
     }
 
+    /**
+     * 判断当前线程是否为指定线程
+     *
+     * @param thread 线程
+     *
+     * @return 是否一致
+     */
     public boolean inCurrThread(Thread thread) {
         return this == thread;
     }

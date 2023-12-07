@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.logging.*;
+import org.redkale.annotation.Nonnull;
 import org.redkale.annotation.Resource;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.cluster.*;
@@ -140,6 +141,7 @@ public final class Application {
 
     //业务逻辑线程池
     //@since 2.3.0
+    @Nonnull
     final ExecutorService workExecutor;
 
     //日志配置资源
@@ -590,37 +592,29 @@ public final class Application {
             final AnyValue executorConf = config.getAnyValue("executor", true);
             StringBuilder executorLog = new StringBuilder();
 
-            ExecutorService workExecutor0 = null;
-            final int workThreads = executorConf.getIntValue("threads", Utility.cpus() * 4);
-            if (workThreads > 0) {
-                //指定threads则不使用虚拟线程池
-                workExecutor0 = executorConf.getValue("threads") != null ? WorkThread.createExecutor(workThreads, "Redkale-WorkThread-%s") : WorkThread.createWorkExecutor(workThreads, "Redkale-WorkThread-%s");
-                String executorName = workExecutor0.getClass().getSimpleName();
-                executorLog.append("defaultWorkExecutor: {type=" + executorName);
-                if (executorName.contains("VirtualExecutor") || executorName.contains("PerTaskExecutor")) {
-                    executorLog.append(", threads=[virtual]}");
-                } else {
-                    executorLog.append(", threads=" + workThreads + "}");
-                }
+            final int workThreads = Math.max(Utility.cpus(), executorConf.getIntValue("threads", Utility.cpus() * 4));
+            //指定threads则不使用虚拟线程池
+            this.workExecutor = executorConf.getValue("threads") != null
+                ? WorkThread.createExecutor(workThreads, "Redkale-WorkThread-%s")
+                : WorkThread.createWorkExecutor(workThreads, "Redkale-WorkThread-%s");
+            String executorName = this.workExecutor.getClass().getSimpleName();
+            executorLog.append("defaultWorkExecutor: {type=" + executorName);
+            if (executorName.contains("VirtualExecutor") || executorName.contains("PerTaskExecutor")) {
+                executorLog.append(", threads=[virtual]}");
+            } else {
+                executorLog.append(", threads=" + workThreads + "}");
             }
-            this.workExecutor = workExecutor0;
             this.resourceFactory.register(RESNAME_APP_EXECUTOR, Executor.class, this.workExecutor);
             this.resourceFactory.register(RESNAME_APP_EXECUTOR, ExecutorService.class, this.workExecutor);
 
-            ExecutorService clientWorkExecutor = workExecutor0;
-            if (clientWorkExecutor == null) {
-                //给所有client给一个默认的ExecutorService
-                int clients = executorConf.getIntValue("clients", Utility.cpus());
-                clientWorkExecutor = WorkThread.createWorkExecutor(clients, "Redkale-DefaultClient-WorkThread-%s");
-                String executorName = clientWorkExecutor.getClass().getSimpleName();
-                executorLog.append("clientWorkExecutor: {type=" + executorName);
-                if (executorName.contains("VirtualExecutor") || executorName.contains("PerTaskExecutor")) {
-                    executorLog.append(", threads=[virtual]}");
-                } else {
-                    executorLog.append(", threads=" + workThreads + "}");
-                }
-            } else {
+            ExecutorService clientWorkExecutor = this.workExecutor;
+            if (executorName.contains("VirtualExecutor") || executorName.contains("PerTaskExecutor")) {
                 executorLog.append(", clientWorkExecutor: [workExecutor]");
+            } else {
+                //给所有client给一个新的默认ExecutorService
+                int clientThreads = executorConf.getIntValue("clients", Utility.cpus() * 4);
+                clientWorkExecutor = WorkThread.createWorkExecutor(clientThreads, "Redkale-DefaultClient-WorkThread-%s");
+                executorLog.append(", threads=" + clientThreads + "}");
             }
             this.clientAsyncGroup = new AsyncIOGroup("Redkale-DefaultClient-IOThread-%s", clientWorkExecutor, bufferCapacity, bufferPoolSize).skipClose(true);
             this.resourceFactory.register(RESNAME_APP_CLIENT_ASYNCGROUP, AsyncGroup.class, this.clientAsyncGroup);

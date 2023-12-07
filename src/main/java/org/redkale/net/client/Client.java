@@ -56,13 +56,13 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     //不可protected、public
     private final ClientAddress address;  //连接的地址
 
-    protected ScheduledFuture timeoutFuture;
-
     //连随机地址模式
-    final int connLimit;  //最大连接数
+    private final int connLimit;  //最大连接数
 
     //连指定地址模式
-    final ConcurrentHashMap<SocketAddress, AddressConnEntry[]> connAddrEntrys = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<SocketAddress, AddressConnEntry[]> connAddrEntrys = new ConcurrentHashMap<>();
+
+    protected ScheduledFuture timeoutFuture;
 
     protected int maxPipelines = DEFAULT_MAX_PIPELINES; //单个连接最大并行处理数
 

@@ -54,6 +54,11 @@ public class AsyncIOThread extends WorkThread {
         return closed.get();
     }
 
+    /**
+     * 当前IOThread线程，不是IOThread返回null
+     *
+     * @return IOThread线程
+     */
     public static AsyncIOThread currentAsyncIOThread() {
         Thread t = Thread.currentThread();
         return t instanceof AsyncIOThread ? (AsyncIOThread) t : null;
@@ -136,6 +141,9 @@ public class AsyncIOThread extends WorkThread {
         return bufferConsumer;
     }
 
+    /**
+     * 运行线程
+     */
     @Override
     public void run() {
         final Queue<Runnable> commands = this.commandQueue;
@@ -208,6 +216,9 @@ public class AsyncIOThread extends WorkThread {
         }
     }
 
+    /**
+     * 关闭线程
+     */
     public void close() {
         if (this.closed.compareAndSet(false, true)) {
             try {
