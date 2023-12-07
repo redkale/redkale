@@ -28,7 +28,9 @@ public @interface Scheduled {
     String name() default "";
 
     /**
-     * cron表达式
+     * cron表达式, 特殊值: <br>
+     * yearly、annually、monthly、weekly、daily、midnight、hourly、minutely
+     * 1m、2m、3m、5m、10m、15m、30m、1h、2h、3h、6h
      *
      * @return cron表达式
      */

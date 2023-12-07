@@ -56,8 +56,8 @@ public class ScheduledFactory {
 
     protected ScheduledFactory(UnaryOperator<String> propertyFunc) {
         this.propertyFunc = propertyFunc;
-        this.scheduler = new ScheduledThreadPoolExecutor(Utility.cpus(), Utility.newThreadFactory("Scheduled-Task-Thread-%s"));        
-        this.scheduler.setRemoveOnCancelPolicy(true); 
+        this.scheduler = new ScheduledThreadPoolExecutor(Utility.cpus(), Utility.newThreadFactory("Scheduled-Task-Thread-%s"));
+        this.scheduler.setRemoveOnCancelPolicy(true);
     }
 
     public static ScheduledFactory create(UnaryOperator<String> propertyFunc) {
@@ -149,9 +149,9 @@ public class ScheduledFactory {
             CronExpression cronExpr = CronExpression.parse(cron);
             return new CronTask(ref, name, method, cronExpr, zoneId);
         } else {
-            long fixedDelayLong = Long.parseLong(fixedDelay);
-            long fixedRateLong = Long.parseLong(fixedRate);
-            long initialDelayLong = Long.parseLong(initialDelay);
+            long fixedDelayLong = getLongValue(fixedDelay);
+            long fixedRateLong = getLongValue(fixedRate);
+            long initialDelayLong = getLongValue(initialDelay);
             return new FixedTask(ref, name, method, fixedDelayLong, fixedRateLong, initialDelayLong, timeUnit);
         }
     }
@@ -185,6 +185,22 @@ public class ScheduledFactory {
             return value;
         }
         return propertyFunc.apply(value);
+    }
+
+    //支持5*60乘法表达式
+    protected long getLongValue(String value) {
+        if (value.indexOf('*') > -1) {
+            long rs = 1;
+            boolean flag = false;
+            for (String v : value.split("\\*")) {
+                if (!v.trim().isEmpty()) {
+                    rs *= Long.parseLong(v.trim());
+                    flag = true;
+                }
+            }
+            return flag ? rs : -1;
+        }
+        return Long.parseLong(value);
     }
 
     public void destroy() {
