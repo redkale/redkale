@@ -11,7 +11,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Target;
 
 /**
- * @TODO 待实现
+ * //TODO 待实现
  *
  * 标记在Service的锁接口, 方法有以下限制: <br>
  * 1、方法返回类型不能是void
