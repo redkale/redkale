@@ -45,9 +45,11 @@ public @interface Scheduled {
 
     /**
      * 延迟时间，支持参数配置、乘法表达式和对象字段值 <br>
-     * ${env.fixedDelay}: 读取系统配置项
+     * 参数值支持方式:<br>
+     * 100: 设置数值
      * 5*60: 乘法表达式，值为30
-     * #delays: 读取对象的delays字段值作为值，字段类型必须是long
+     * ${env.scheduling.fixedDelay}: 读取系统配置项
+     * #delays: 读取宿主对象的delays字段值作为值，字段类型必须是int、long数值类型
      *
      * @return 延迟时间
      */
@@ -55,9 +57,11 @@ public @interface Scheduled {
 
     /**
      * 周期时间，支持参数配置、乘法表达式和对象字段值 <br>
-     * ${env.fixedRate}: 读取系统配置项
+     * 参数值支持方式:<br>
+     * 100: 设置数值
      * 5*60: 乘法表达式，值为30
-     * #intervals: 读取对象的intervals字段值作为值，字段类型必须是long
+     * ${env.scheduling.fixedRate}: 读取系统配置项
+     * #intervals: 读取宿主对象的intervals字段值作为值，字段类型必须是int、long数值类型
      *
      * @return 周期时间
      */
@@ -65,9 +69,11 @@ public @interface Scheduled {
 
     /**
      * 起始延迟时间，支持参数配置、乘法表达式和对象字段值 <br>
-     * ${env.initialDelay}: 读取系统配置项
+     * 参数值支持方式:<br>
+     * 100: 设置数值
      * 5*60: 乘法表达式，值为30
-     * #inits: 读取对象的inits字段值作为值，字段类型必须是long
+     * ${env.scheduling.initialDelay}: 读取系统配置项
+     * #inits: 读取宿主对象的inits字段值作为值，字段类型必须是int、long数值类型
      *
      * @return 起始延迟时间
      */

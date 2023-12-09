@@ -31,6 +31,11 @@ public abstract class TypeToken<T> {
         type = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
     }
 
+    /**
+     * 具体泛型类型
+     *
+     * @return 泛型
+     */
     public final Type getType() {
         return type;
     }
@@ -74,6 +79,13 @@ public abstract class TypeToken<T> {
         return true;
     }
 
+    /**
+     * 判断泛型知否包含了不确定的数据类型
+     *
+     * @param type 类型
+     *
+     * @return 是否含不确定类型
+     */
     public static final boolean containsUnknownType(final Type type) {
         if (type == null) {
             return false;
@@ -111,6 +123,13 @@ public abstract class TypeToken<T> {
         return true;
     }
 
+    /**
+     * 获取type的主类
+     *
+     * @param type 类型
+     *
+     * @return 主类
+     */
     public static final Class typeToClass(final Type type) {
         if (type instanceof Class) {
             return (Class) type;
@@ -133,11 +152,27 @@ public abstract class TypeToken<T> {
         return typeToClass(raw != null ? raw : owner);
     }
 
+    /**
+     * 获取type的主类，如果是不确定类型，则返回defClass
+     *
+     * @param type     类型
+     * @param defClass 默认类
+     *
+     * @return 确定的类型
+     */
     public static final Class typeToClassOrElse(final Type type, final Class defClass) {
         Class clazz = typeToClass(type);
         return clazz == null ? defClass : clazz;
     }
 
+    /**
+     * 将泛型中不确定的类型转成确定性类型
+     *
+     * @param types          泛型集合
+     * @param declaringClass 宿主类型
+     *
+     * @return 确定性类型集合
+     */
     public static Type[] getGenericType(final Type[] types, final Type declaringClass) {
         Type[] newTypes = new Type[types.length];
         for (int i = 0; i < newTypes.length; i++) {
@@ -146,6 +181,13 @@ public abstract class TypeToken<T> {
         return newTypes;
     }
 
+    /**
+     * 获取primitive类对应的box类型
+     *
+     * @param clazz primitive类
+     *
+     * @return 基础类型box类型
+     */
     public static Class primitiveToWrapper(Class clazz) {
         if (clazz == boolean.class) {
             return Boolean.class;
@@ -630,7 +672,7 @@ public abstract class TypeToken<T> {
                 nsb.append(ch);
             } else if (ch >= 'A' && ch <= 'Z') {
                 nsb.append(ch);
-            } else {
+            } else { //特殊字符统一使用_
                 nsb.append('_');
             }
         }
