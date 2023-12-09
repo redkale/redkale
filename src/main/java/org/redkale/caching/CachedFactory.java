@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.cacheing;
+package org.redkale.caching;
 
 import org.redkale.source.CacheMemorySource;
 import org.redkale.source.CacheSource;
