@@ -40,7 +40,7 @@ import org.redkale.annotation.Scheduling;
  * @author zhangjx
  * @since 2.8.0
  */
-public class ScheduledFactory {
+public class ScheduleFactory {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
@@ -55,17 +55,17 @@ public class ScheduledFactory {
 
     private boolean disable;
 
-    protected ScheduledFactory(UnaryOperator<String> propertyFunc) {
+    protected ScheduleFactory(UnaryOperator<String> propertyFunc) {
         this.propertyFunc = propertyFunc;
         this.scheduler = new ScheduledThreadPoolExecutor(Utility.cpus(), Utility.newThreadFactory("Scheduled-Task-Thread-%s"));
         this.scheduler.setRemoveOnCancelPolicy(true);
     }
 
-    public static ScheduledFactory create(UnaryOperator<String> propertyFunc) {
-        return new ScheduledFactory(propertyFunc);
+    public static ScheduleFactory create(UnaryOperator<String> propertyFunc) {
+        return new ScheduleFactory(propertyFunc);
     }
 
-    public ScheduledFactory disable(boolean val) {
+    public ScheduleFactory disable(boolean val) {
         this.disable = val;
         return this;
     }

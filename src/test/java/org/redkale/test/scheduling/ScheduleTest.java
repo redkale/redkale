@@ -4,7 +4,7 @@
 package org.redkale.test.scheduling;
 
 import org.junit.jupiter.api.Test;
-import org.redkale.scheduling.ScheduledFactory;
+import org.redkale.scheduling.ScheduleFactory;
 import org.redkale.util.Utility;
 
 /**
@@ -20,7 +20,7 @@ public class ScheduleTest {
 
     @Test
     public void run() throws Exception {
-        ScheduledFactory factory = ScheduledFactory.create(null);
+        ScheduleFactory factory = ScheduleFactory.create(null);
         ScheduleService service = new ScheduleService();
         factory.schedule(service);
         Utility.sleep(3000);

@@ -31,7 +31,7 @@ import org.redkale.mq.*;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
-import org.redkale.scheduling.ScheduledFactory;
+import org.redkale.scheduling.ScheduleFactory;
 import org.redkale.service.Service;
 import org.redkale.source.*;
 import org.redkale.util.*;
@@ -209,7 +209,7 @@ public final class Application {
     final ResourceFactory resourceFactory = ResourceFactory.create();
 
     //全局ScheduledFactory
-    private final ScheduledFactory scheduledFactory;
+    private final ScheduleFactory scheduledFactory;
 
     //服务配置项
     final AnyValue config;
@@ -626,7 +626,7 @@ public final class Application {
         }
 
         { //设置ScheduledFactory
-            this.scheduledFactory = ScheduledFactory.create(this::getPropertyValue).disable(isCompileMode());
+            this.scheduledFactory = ScheduleFactory.create(this::getPropertyValue).disable(isCompileMode());
         }
 
         { //加载原生sql解析器
