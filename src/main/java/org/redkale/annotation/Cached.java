@@ -72,4 +72,11 @@ public @interface Cached {
      */
     TimeUnit timeUnit() default TimeUnit.SECONDS;
 
+    /**
+     * 是否可以缓存null值
+     *
+     * @return 是否可以缓存null
+     */
+    boolean nullable() default false;
+
 }
