@@ -26,10 +26,10 @@ import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.redkale.annotation.Nullable;
-import org.redkale.annotation.Scheduled;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Utility;
+import org.redkale.annotation.Scheduling;
 
 /**
  * 定时任务工厂
@@ -106,14 +106,14 @@ public class ScheduledFactory {
             WeakReference ref = new WeakReference(service);
             do {
                 for (final Method method : clazz.getDeclaredMethods()) {
-                    if (method.getAnnotation(Scheduled.class) == null) {
+                    if (method.getAnnotation(Scheduling.class) == null) {
                         continue;
                     }
                     if (tasks.containsKey(method.getName())) {
                         continue;
                     }
                     if (method.getParameterCount() > 0) {
-                        throw new RedkaleException("@" + Scheduled.class.getSimpleName() + " must be on non-parameter method, but on " + method);
+                        throw new RedkaleException("@" + Scheduling.class.getSimpleName() + " must be on non-parameter method, but on " + method);
                     }
                     ScheduledTask task = schedule(ref, method);
                     if (task == null) {
@@ -134,7 +134,7 @@ public class ScheduledFactory {
     }
 
     protected ScheduledTask schedule(WeakReference ref, Method method) {
-        Scheduled ann = method.getAnnotation(Scheduled.class);
+        Scheduling ann = method.getAnnotation(Scheduling.class);
         String name = getProperty(ann.name());
         String cron = getProperty(ann.cron());
         String fixedDelay = getProperty(ann.fixedDelay());

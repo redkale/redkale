@@ -74,11 +74,11 @@ public abstract class Sncp {
 
         private String methodName;
 
-        private Scheduled schedule;
+        private Scheduling schedule;
 
         private Runnable task;
 
-        public SchedulingEntry(Class serviceType, String methodName, Scheduled schedule, Runnable task) {
+        public SchedulingEntry(Class serviceType, String methodName, Scheduling schedule, Runnable task) {
             Objects.requireNonNull(serviceType);
             Objects.requireNonNull(methodName);
             Objects.requireNonNull(schedule);
@@ -97,7 +97,7 @@ public abstract class Sncp {
             return methodName;
         }
 
-        public Scheduled getSchedule() {
+        public Scheduling getSchedule() {
             return schedule;
         }
 
@@ -133,10 +133,10 @@ public abstract class Sncp {
             if (method.isSynthetic()) {
                 continue;
             }
-            if (method.getAnnotation(Scheduled.class) != null) {
+            if (method.getAnnotation(Scheduling.class) != null) {
                 if (Modifier.isStatic(method.getModifiers())
                     || method.getParameterCount() > 0) {
-                    throw new SncpException(Scheduled.class.getSimpleName() + " must be on protected and non-parameter method, but on " + method);
+                    throw new SncpException(Scheduling.class.getSimpleName() + " must be on protected and non-parameter method, but on " + method);
                 }
                 RedkaleClassLoader.putReflectionMethod(serviceTypeOrImplClass.getName(), method);
                 continue;

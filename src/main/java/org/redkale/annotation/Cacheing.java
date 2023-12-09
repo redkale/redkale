@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 @Documented
 @Target(METHOD)
 @Retention(RUNTIME)
-public @interface Cached {
+public @interface Cacheing {
 
     /**
      * 缓存的key，支持参数动态组合，比如"key_#{id}"

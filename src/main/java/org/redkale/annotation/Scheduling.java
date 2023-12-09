@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Scheduled {
+public @interface Scheduling {
 
     /**
      * 名称
