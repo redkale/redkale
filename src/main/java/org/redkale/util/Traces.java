@@ -17,7 +17,7 @@ import java.util.function.Supplier;
  */
 public final class Traces {
 
-    private static final boolean ENABLE = !Boolean.getBoolean("redkale.trace.disable");
+    private static final boolean ENABLE = "true".equalsIgnoreCase(System.getProperty("redkale.trace.enabled", "true"));
 
     private static final String PROCESS_ID = UUID.randomUUID().toString().replace("-", "");
 

@@ -42,6 +42,13 @@
     <executor threads="4"/>
 
     <!--
+       【节点全局唯一】 @since 2.8.0
+        全局Serivce的缓存设置，没配置该节点将自动创建一个。
+        enabled： 是否开启缓存功能。默认: true
+    -->
+    <caching enabled="true"/>
+    
+    <!--
        【节点全局唯一】
         第三方服务发现管理接口
         type：          类名，必须是org.redkale.cluster.ClusterAgent的子类
