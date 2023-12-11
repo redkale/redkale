@@ -28,11 +28,14 @@ import java.util.logging.Logger;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Component;
 import org.redkale.annotation.Nullable;
+import org.redkale.annotation.Resource;
 import org.redkale.annotation.ResourceType;
+import org.redkale.boot.Application;
 import org.redkale.schedule.ScheduleManager;
 import org.redkale.schedule.Scheduling;
 import org.redkale.service.Local;
 import org.redkale.service.Service;
+import org.redkale.util.AnyValue;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Utility;
@@ -58,26 +61,62 @@ public class ScheduleManagerService implements ScheduleManager, Service {
 
     private final ReentrantLock lock = new ReentrantLock();
 
-    @Nullable
-    private final UnaryOperator<String> propertyFunc;
+    @Resource(required = false)
+    protected Application application;
 
-    private final ScheduledThreadPoolExecutor scheduler;
+    @Nullable
+    private UnaryOperator<String> propertyFunc;
+
+    private ScheduledThreadPoolExecutor scheduler;
 
     private boolean enabled = true;
 
+    private AnyValue config;
+
     protected ScheduleManagerService(UnaryOperator<String> propertyFunc) {
         this.propertyFunc = propertyFunc;
-        this.scheduler = new ScheduledThreadPoolExecutor(Utility.cpus(), Utility.newThreadFactory("Scheduled-Task-Thread-%s"));
-        this.scheduler.setRemoveOnCancelPolicy(true);
     }
 
+    //一般用于独立组件
     public static ScheduleManagerService create(UnaryOperator<String> propertyFunc) {
         return new ScheduleManagerService(propertyFunc);
+    }
+
+    public boolean enabled() {
+        return this.enabled;
     }
 
     public ScheduleManagerService enabled(boolean val) {
         this.enabled = val;
         return this;
+    }
+
+    public AnyValue getConfig() {
+        return config;
+    }
+
+    @Override
+    public void init(AnyValue conf) {
+        this.config = conf;
+        if (conf == null) {
+            conf = AnyValue.create();
+        }
+        this.enabled = conf.getBoolValue("enabled", true);
+        if (this.enabled) {
+            if (this.propertyFunc == null && application != null) {
+                UnaryOperator<String> func = application::getPropertyValue;
+                this.propertyFunc = func;
+            }
+            this.scheduler = new ScheduledThreadPoolExecutor(Utility.cpus(), Utility.newThreadFactory("Scheduled-Task-Thread-%s"));
+            this.scheduler.setRemoveOnCancelPolicy(true);
+        }
+    }
+
+    @Override
+    public void destroy(AnyValue conf) {
+        if (scheduler != null) {
+            scheduler.shutdown();
+        }
     }
 
     @Override
@@ -179,9 +218,6 @@ public class ScheduleManagerService implements ScheduleManager, Service {
                 try {
                     Object obj = ref.get();
                     if (obj != null) {
-//                        if (logger.isLoggable(Level.FINEST)) {
-//                            logger.log(Level.FINEST, "schedule task " + method.getDeclaringClass().getSimpleName() + "." + method.getName());
-//                        }
                         mh.invoke(obj);
                     }
                 } catch (Throwable t) {
@@ -237,12 +273,6 @@ public class ScheduleManagerService implements ScheduleManager, Service {
             }
         } else {
             return Long.parseLong(value);
-        }
-    }
-
-    public void destroy() {
-        if (scheduler != null) {
-            scheduler.shutdown();
         }
     }
 

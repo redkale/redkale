@@ -401,10 +401,10 @@ public final class ResourceFactory {
             }
         }
         if (rt == null) {
-            return (A) register(autoSync, name, claz, val);
+            return register(autoSync, name, claz, val);
         } else {
             A old = null;
-            A t = (A) register(autoSync, name, rt, val);
+            A t = register(autoSync, name, rt, val);
             if (t != null) {
                 old = t;
             }
@@ -744,7 +744,7 @@ public final class ResourceFactory {
         return null;
     }
 
-    public <T> boolean inject(final Object srcObj) {
+    public boolean inject(final Object srcObj) {
         return inject(srcObj, null);
     }
 
@@ -752,7 +752,7 @@ public final class ResourceFactory {
         return inject(srcObj, attachment, null);
     }
 
-    public <T> boolean inject(final Object srcObj, final BiConsumer<Object, Field> consumer) {
+    public boolean inject(final Object srcObj, final BiConsumer<Object, Field> consumer) {
         return inject(srcObj, null, consumer);
     }
 
@@ -760,7 +760,7 @@ public final class ResourceFactory {
         return inject(null, srcObj, attachment, consumer, new ArrayList());
     }
 
-    public <T> boolean inject(final String srcResourceName, final Object srcObj) {
+    public boolean inject(final String srcResourceName, final Object srcObj) {
         return inject(srcResourceName, srcObj, null);
     }
 
@@ -768,7 +768,7 @@ public final class ResourceFactory {
         return inject(srcResourceName, srcObj, attachment, null);
     }
 
-    public <T> boolean inject(final String srcResourceName, final Object srcObj, final BiConsumer<Object, Field> consumer) {
+    public boolean inject(final String srcResourceName, final Object srcObj, final BiConsumer<Object, Field> consumer) {
         return inject(srcResourceName, srcObj, null, consumer);
     }
 

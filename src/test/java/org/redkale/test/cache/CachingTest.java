@@ -26,24 +26,24 @@ public class CachingTest {
     public void run() throws Exception {
         CacheMemorySource remoteSource = new CacheMemorySource("remote");
         remoteSource.init(null);
-        CacheManagerService cache = CacheManagerService.create(remoteSource);
-        cache.init(null);
+        CacheManagerService manager = CacheManagerService.create(remoteSource);
+        manager.init(null);
         Duration expire = Duration.ofMillis(490);
-        cache.localSetString("user", "name:haha", "myha", expire);
-        Assertions.assertEquals(cache.localGetString("user", "name:haha"), "myha");
+        manager.localSetString("user", "name:haha", "myha", expire);
+        Assertions.assertEquals(manager.localGetString("user", "name:haha"), "myha");
         Utility.sleep(500);
-        Assertions.assertTrue(cache.localGetString("user", "name:haha") == null);
+        Assertions.assertTrue(manager.localGetString("user", "name:haha") == null);
 
         CachingBean bean = new CachingBean();
         bean.setName("tom");
         bean.setRemark("这是名字备注");
 
         String json = bean.toString();
-        cache.localSet("user", bean.getName(), CachingBean.class, bean, expire);
-        Assertions.assertEquals(cache.localGet("user", bean.getName(), CachingBean.class).toString(), json);
+        manager.localSet("user", bean.getName(), CachingBean.class, bean, expire);
+        Assertions.assertEquals(manager.localGet("user", bean.getName(), CachingBean.class).toString(), json);
         bean.setRemark(bean.getRemark() + "-新备注");
-        Assertions.assertEquals(cache.localGet("user", bean.getName(), CachingBean.class).toString(), json);
-        cache.destroy(null);
+        Assertions.assertEquals(manager.localGet("user", bean.getName(), CachingBean.class).toString(), json);
+        manager.destroy(null);
     }
 
     public static class CachingBean {

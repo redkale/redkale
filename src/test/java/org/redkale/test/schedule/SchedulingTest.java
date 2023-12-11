@@ -11,21 +11,22 @@ import org.redkale.util.Utility;
  *
  * @author zhangjx
  */
-public class ScheduleTest {
+public class SchedulingTest {
 
     public static void main(String[] args) throws Throwable {
-        ScheduleTest test = new ScheduleTest();
+        SchedulingTest test = new SchedulingTest();
         test.run();
     }
 
     @Test
     public void run() throws Exception {
-        ScheduleManagerService factory = ScheduleManagerService.create(null);
+        ScheduleManagerService manager = ScheduleManagerService.create(null);
+        manager.init(null);
         ScheduleService service = new ScheduleService();
-        factory.schedule(service);
+        manager.schedule(service);
         Utility.sleep(3000);
-        factory.unschedule(service);
-        factory.destroy();
+        manager.unschedule(service);
+        manager.destroy(null);
     }
 
 }

@@ -11,14 +11,18 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Component;
 import org.redkale.annotation.Nullable;
+import org.redkale.annotation.Resource;
 import org.redkale.annotation.ResourceType;
+import org.redkale.boot.Application;
 import org.redkale.cache.CacheManager;
 import org.redkale.service.Local;
 import org.redkale.service.Service;
 import org.redkale.source.CacheMemorySource;
 import org.redkale.source.CacheSource;
 import org.redkale.util.AnyValue;
+import org.redkale.util.RedkaleException;
 import org.redkale.util.TypeToken;
+import org.redkale.util.Utility;
 
 /**
  * 缓存管理器
@@ -34,6 +38,9 @@ public class CacheManagerService implements CacheManager, Service {
     //缓存配置项
     protected boolean enabled = true;
 
+    //配置
+    protected AnyValue config;
+
     //数据类型与CacheValue泛型的对应关系
     private final ConcurrentHashMap<Type, Type> cacheValueTypes = new ConcurrentHashMap<>();
 
@@ -43,6 +50,9 @@ public class CacheManagerService implements CacheManager, Service {
     //缓存hash集合, 用于定时遍历删除过期数据
     protected final ConcurrentSkipListSet<String> hashNames = new ConcurrentSkipListSet<>();
 
+    @Resource(required = false)
+    protected Application application;
+
     //远程缓存Source
     protected CacheSource remoteSource;
 
@@ -50,18 +60,41 @@ public class CacheManagerService implements CacheManager, Service {
         this.remoteSource = remoteSource;
     }
 
+    //一般用于独立组件
     public static CacheManagerService create(@Nullable CacheSource remoteSource) {
         return new CacheManagerService(remoteSource);
     }
 
+    public boolean enabled() {
+        return this.enabled;
+    }
+
+    public CacheManagerService enabled(boolean val) {
+        this.enabled = val;
+        return this;
+    }
+
+    public AnyValue getConfig() {
+        return config;
+    }
+
     @Override
     public void init(AnyValue conf) {
+        this.config = conf;
         if (conf == null) {
             conf = AnyValue.create();
         }
         this.enabled = conf.getBoolValue("enabled", true);
         if (this.enabled) {
             this.localSource.init(conf);
+            String remoteSourceName = conf.getValue("remoteSource");
+            if (remoteSource == null && application != null && Utility.isNotBlank(remoteSourceName)) {
+                CacheSource source = application.loadCacheSource(remoteSourceName, false);
+                if (source == null) {
+                    throw new RedkaleException("Not found CacheSource '" + remoteSourceName + "'");
+                }
+                this.remoteSource = source;
+            }
         }
 
     }

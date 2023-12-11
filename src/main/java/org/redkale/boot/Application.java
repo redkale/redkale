@@ -22,6 +22,8 @@ import java.util.logging.*;
 import org.redkale.annotation.Nonnull;
 import org.redkale.annotation.Resource;
 import org.redkale.boot.ClassFilter.FilterEntry;
+import org.redkale.cache.CacheManager;
+import org.redkale.cache.support.CacheManagerService;
 import org.redkale.cluster.*;
 import org.redkale.convert.Convert;
 import org.redkale.convert.bson.BsonFactory;
@@ -31,6 +33,7 @@ import org.redkale.mq.*;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
+import org.redkale.schedule.ScheduleManager;
 import org.redkale.schedule.support.ScheduleManagerService;
 import org.redkale.service.Service;
 import org.redkale.source.*;
@@ -210,6 +213,9 @@ public final class Application {
 
     //全局定时任务管理器
     private final ScheduleManagerService scheduleManager;
+
+    //全局缓存管理器
+    private final CacheManagerService cacheManager;
 
     //服务配置项
     final AnyValue config;
@@ -625,9 +631,12 @@ public final class Application {
             }
         }
 
-        { //设置定时管理
-            this.scheduleManager = ScheduleManagerService.create(this::getPropertyValue).enabled(!isCompileMode());
-            this.resourceFactory.register("", this.scheduleManager);
+        { //设置定时管理器
+            this.scheduleManager = ScheduleManagerService.create(null).enabled(false);
+        }
+
+        { //设置缓存管理器
+            this.cacheManager = CacheManagerService.create(null).enabled(false);
         }
 
         { //加载原生sql解析器
@@ -1212,6 +1221,25 @@ public final class Application {
             }
             logger.info("MessageAgent init in " + (System.currentTimeMillis() - s) + " ms");
         }
+
+        { //设置定时管理器
+            final AnyValue scheduleConf = config.getAnyValue("scheduling", true);
+            this.resourceFactory.inject(this.scheduleManager);
+            if (!isCompileMode()) {
+                this.scheduleManager.init(scheduleConf);
+            }
+            this.resourceFactory.register("", this.scheduleManager);
+        }
+
+        { //设置缓存管理器
+            final AnyValue cacheConf = config.getAnyValue("caching");
+            this.resourceFactory.inject(this.cacheManager);
+            if (!isCompileMode() && cacheConf != null) {
+                this.cacheManager.init(cacheConf);
+            }
+            this.resourceFactory.register("", this.cacheManager);
+        }
+
         //------------------------------------ 注册 ResourceProducer MessageProducer ------------------------------------       
         resourceFactory.register(new ResourceAnnotationProvider<ResourceProducer>() {
             @Override
@@ -1316,7 +1344,7 @@ public final class Application {
         return null;
     }
 
-    CacheSource loadCacheSource(final String sourceName, boolean autoMemory) {
+    public CacheSource loadCacheSource(final String sourceName, boolean autoMemory) {
         cacheSourceLock.lock();
         try {
             long st = System.currentTimeMillis();
@@ -2633,7 +2661,12 @@ public final class Application {
         if (this.workExecutor != null) {
             this.workExecutor.shutdownNow();
         }
-        this.scheduleManager.destroy();
+        if (!isCompileMode()) {
+            this.scheduleManager.destroy(this.scheduleManager.getConfig());
+        }
+        if (!isCompileMode()) {
+            this.cacheManager.destroy(this.cacheManager.getConfig());
+        }
 
         long intms = System.currentTimeMillis() - f;
         String ms = String.valueOf(intms);
@@ -2747,8 +2780,12 @@ public final class Application {
         return clusterAgent;
     }
 
-    public ScheduleManagerService getScheduleManager() {
+    public ScheduleManager getScheduleManager() {
         return this.scheduleManager;
+    }
+
+    public CacheManager getCacheManager() {
+        return this.cacheManager;
     }
 
     public MessageAgent getMessageAgent(String name) {
