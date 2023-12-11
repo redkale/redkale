@@ -5,13 +5,11 @@ package org.redkale.caching;
 
 import java.lang.reflect.Type;
 import java.time.Duration;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Component;
-import org.redkale.annotation.Nonnull;
 import org.redkale.annotation.Nullable;
 import org.redkale.annotation.ResourceType;
 import org.redkale.service.Local;
@@ -22,6 +20,7 @@ import org.redkale.util.AnyValue;
 import org.redkale.util.TypeToken;
 
 /**
+ * 缓存管理器
  *
  * @author zhangjx
  */
@@ -29,10 +28,10 @@ import org.redkale.util.TypeToken;
 @Component
 @AutoLoad(false)
 @ResourceType(CacheManager.class)
-public class CacheManagerService implements CacheManager, Service {
+public class CacheEngine implements CacheManager, Service {
 
     //缓存配置项
-    protected final CacheConfig config;
+    protected boolean enabled = true;
 
     //数据类型与CacheValue泛型的对应关系
     private final ConcurrentHashMap<Type, Type> cacheValueTypes = new ConcurrentHashMap<>();
@@ -46,26 +45,38 @@ public class CacheManagerService implements CacheManager, Service {
     //远程缓存Source
     protected CacheSource remoteSource;
 
-    protected CacheManagerService(@Nonnull CacheConfig config, @Nullable CacheSource remoteSource) {
-        this.config = Objects.requireNonNull(config);
+    protected CacheEngine(@Nullable CacheSource remoteSource) {
         this.remoteSource = remoteSource;
     }
 
-    public static CacheManagerService create(@Nonnull CacheConfig config, @Nullable CacheSource remoteSource) {
-        return new CacheManagerService(config, remoteSource);
+    public static CacheEngine create(@Nullable CacheSource remoteSource) {
+        return new CacheEngine(remoteSource);
     }
 
     @Override
     public void init(AnyValue conf) {
-        this.localSource.init(conf);
+        if (conf == null) {
+            conf = AnyValue.create();
+        }
+        this.enabled = conf.getBoolValue("enabled", true);
+        if (this.enabled) {
+            this.localSource.init(conf);
+        }
+
     }
 
     @Override
     public void destroy(AnyValue conf) {
-        this.localSource.destroy(conf);
+        if (this.enabled) {
+            this.localSource.destroy(conf);
+        }
     }
 
-    public CacheManagerService addHash(String hash) {
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public CacheEngine addHash(String hash) {
         this.hashNames.add(hash);
         return this;
     }
@@ -223,7 +234,7 @@ public class CacheManagerService implements CacheManager, Service {
     public <T> T bothGet(final String hash, final String key, final Type type) {
         Type t = loadCacheType(type);
         CacheValue<T> val = localSource.hget(hash, key, t);
-        if (val != null && !val.isExpired()) {
+        if (CacheValue.isValid(val)) {
             return val.getValue();
         }
         if (remoteSource != null) {
@@ -246,7 +257,7 @@ public class CacheManagerService implements CacheManager, Service {
     public <T> CompletableFuture<T> bothGetAsync(final String hash, final String key, final Type type) {
         Type t = loadCacheType(type);
         CacheValue<T> val = localSource.hget(hash, key, t);
-        if (val != null && !val.isExpired()) {
+        if (CacheValue.isValid(val)) {
             return CompletableFuture.completedFuture(val.getValue());
         }
         if (remoteSource != null) {

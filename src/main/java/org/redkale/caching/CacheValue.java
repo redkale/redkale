@@ -9,7 +9,7 @@ import org.redkale.convert.json.JsonConvert;
 
 /**
  *
- * 缓存对象
+ * 内部缓存对象
  *
  * <p>
  * 详情见: https://redkale.org
@@ -36,8 +36,12 @@ public class CacheValue<T> extends CacheExpire {
         return new CacheValue(value, expire);
     }
 
+    public static boolean isValid(CacheValue val) {
+        return val != null && !val.isExpired();
+    }
+
     public static <T> T get(CacheValue val) {
-        return val != null && !val.isExpired() ? (T) val.getValue() : null;
+        return isValid(val) ? (T) val.getValue() : null;
     }
 
     public T getValue() {

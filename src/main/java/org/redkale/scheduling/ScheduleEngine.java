@@ -25,14 +25,19 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.redkale.annotation.AutoLoad;
+import org.redkale.annotation.Component;
 import org.redkale.annotation.Nullable;
+import org.redkale.annotation.ResourceType;
+import org.redkale.annotation.Scheduling;
+import org.redkale.service.Local;
+import org.redkale.service.Service;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Utility;
-import org.redkale.annotation.Scheduling;
 
 /**
- * 定时任务工厂
+ * 定时任务管理器
  *
  * <p>
  * 详情见: https://redkale.org
@@ -40,7 +45,11 @@ import org.redkale.annotation.Scheduling;
  * @author zhangjx
  * @since 2.8.0
  */
-public class ScheduleFactory {
+@Local
+@Component
+@AutoLoad(false)
+@ResourceType(ScheduleManager.class)
+public class ScheduleEngine implements ScheduleManager, Service {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
@@ -53,23 +62,24 @@ public class ScheduleFactory {
 
     private final ScheduledThreadPoolExecutor scheduler;
 
-    private boolean disable;
+    private boolean enabled = true;
 
-    protected ScheduleFactory(UnaryOperator<String> propertyFunc) {
+    protected ScheduleEngine(UnaryOperator<String> propertyFunc) {
         this.propertyFunc = propertyFunc;
         this.scheduler = new ScheduledThreadPoolExecutor(Utility.cpus(), Utility.newThreadFactory("Scheduled-Task-Thread-%s"));
         this.scheduler.setRemoveOnCancelPolicy(true);
     }
 
-    public static ScheduleFactory create(UnaryOperator<String> propertyFunc) {
-        return new ScheduleFactory(propertyFunc);
+    public static ScheduleEngine create(UnaryOperator<String> propertyFunc) {
+        return new ScheduleEngine(propertyFunc);
     }
 
-    public ScheduleFactory disable(boolean val) {
-        this.disable = val;
+    public ScheduleEngine enabled(boolean val) {
+        this.enabled = val;
         return this;
     }
 
+    @Override
     public void unschedule(Object service) {
         lock.lock();
         try {
@@ -92,6 +102,7 @@ public class ScheduleFactory {
         }
     }
 
+    @Override
     public void schedule(Object service) {
         lock.lock();
         try {
@@ -124,7 +135,7 @@ public class ScheduleFactory {
                 }
             } while ((clazz = clazz.getSuperclass()) != Object.class);
             //开始执行定时任务
-            if (!disable && !tasks.isEmpty()) {
+            if (enabled && !tasks.isEmpty()) {
                 tasks.forEach((name, task) -> task.start());
                 refTaskMap.put(ref, new ArrayList<>(tasks.values()));
             }

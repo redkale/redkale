@@ -31,7 +31,7 @@ import org.redkale.mq.*;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
-import org.redkale.scheduling.ScheduleFactory;
+import org.redkale.scheduling.ScheduleEngine;
 import org.redkale.service.Service;
 import org.redkale.source.*;
 import org.redkale.util.*;
@@ -208,8 +208,8 @@ public final class Application {
     //全局根ResourceFactory
     final ResourceFactory resourceFactory = ResourceFactory.create();
 
-    //全局ScheduledFactory
-    private final ScheduleFactory scheduledFactory;
+    //全局定时任务管理器
+    private final ScheduleEngine scheduleEngine;
 
     //服务配置项
     final AnyValue config;
@@ -625,8 +625,9 @@ public final class Application {
             }
         }
 
-        { //设置ScheduledFactory
-            this.scheduledFactory = ScheduleFactory.create(this::getPropertyValue).disable(isCompileMode());
+        { //设置定时管理
+            this.scheduleEngine = ScheduleEngine.create(this::getPropertyValue).enabled(!isCompileMode());
+            this.resourceFactory.register("", this.scheduleEngine);
         }
 
         { //加载原生sql解析器
@@ -2162,11 +2163,11 @@ public final class Application {
     }
 
     public void schedule(Object service) {
-        this.scheduledFactory.schedule(service);
+        this.scheduleEngine.schedule(service);
     }
 
     public void unschedule(Object service) {
-        this.scheduledFactory.unschedule(service);
+        this.scheduleEngine.unschedule(service);
     }
 
     void updateEnvironmentProperties(String namespace, List<ResourceEvent> events) {
@@ -2632,7 +2633,7 @@ public final class Application {
         if (this.workExecutor != null) {
             this.workExecutor.shutdownNow();
         }
-        this.scheduledFactory.destroy();
+        this.scheduleEngine.destroy();
 
         long intms = System.currentTimeMillis() - f;
         String ms = String.valueOf(intms);
@@ -2744,6 +2745,10 @@ public final class Application {
 
     public ClusterAgent getClusterAgent() {
         return clusterAgent;
+    }
+
+    public ScheduleEngine getScheduleEngine() {
+        return this.scheduleEngine;
     }
 
     public MessageAgent getMessageAgent(String name) {
