@@ -6,7 +6,7 @@ package org.redkale.test.caching;
 import java.time.Duration;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.redkale.caching.CacheEngine;
+import org.redkale.caching.CacheManagerService;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.source.CacheMemorySource;
 import org.redkale.util.Utility;
@@ -26,7 +26,7 @@ public class CachingTest {
     public void run() throws Exception {
         CacheMemorySource remoteSource = new CacheMemorySource("remote");
         remoteSource.init(null);
-        CacheEngine cache = CacheEngine.create(remoteSource);
+        CacheManagerService cache = CacheManagerService.create(remoteSource);
         cache.init(null);
         Duration expire = Duration.ofMillis(490);
         cache.localSetString("user", "name:haha", "myha", expire);

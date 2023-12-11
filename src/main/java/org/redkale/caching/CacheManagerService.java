@@ -28,7 +28,7 @@ import org.redkale.util.TypeToken;
 @Component
 @AutoLoad(false)
 @ResourceType(CacheManager.class)
-public class CacheEngine implements CacheManager, Service {
+public class CacheManagerService implements CacheManager, Service {
 
     //缓存配置项
     protected boolean enabled = true;
@@ -45,12 +45,12 @@ public class CacheEngine implements CacheManager, Service {
     //远程缓存Source
     protected CacheSource remoteSource;
 
-    protected CacheEngine(@Nullable CacheSource remoteSource) {
+    protected CacheManagerService(@Nullable CacheSource remoteSource) {
         this.remoteSource = remoteSource;
     }
 
-    public static CacheEngine create(@Nullable CacheSource remoteSource) {
-        return new CacheEngine(remoteSource);
+    public static CacheManagerService create(@Nullable CacheSource remoteSource) {
+        return new CacheManagerService(remoteSource);
     }
 
     @Override
@@ -76,7 +76,7 @@ public class CacheEngine implements CacheManager, Service {
         return enabled;
     }
 
-    public CacheEngine addHash(String hash) {
+    public CacheManagerService addHash(String hash) {
         this.hashNames.add(hash);
         return this;
     }

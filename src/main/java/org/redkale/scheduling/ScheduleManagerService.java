@@ -49,7 +49,7 @@ import org.redkale.util.Utility;
 @Component
 @AutoLoad(false)
 @ResourceType(ScheduleManager.class)
-public class ScheduleEngine implements ScheduleManager, Service {
+public class ScheduleManagerService implements ScheduleManager, Service {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
@@ -64,17 +64,17 @@ public class ScheduleEngine implements ScheduleManager, Service {
 
     private boolean enabled = true;
 
-    protected ScheduleEngine(UnaryOperator<String> propertyFunc) {
+    protected ScheduleManagerService(UnaryOperator<String> propertyFunc) {
         this.propertyFunc = propertyFunc;
         this.scheduler = new ScheduledThreadPoolExecutor(Utility.cpus(), Utility.newThreadFactory("Scheduled-Task-Thread-%s"));
         this.scheduler.setRemoveOnCancelPolicy(true);
     }
 
-    public static ScheduleEngine create(UnaryOperator<String> propertyFunc) {
-        return new ScheduleEngine(propertyFunc);
+    public static ScheduleManagerService create(UnaryOperator<String> propertyFunc) {
+        return new ScheduleManagerService(propertyFunc);
     }
 
-    public ScheduleEngine enabled(boolean val) {
+    public ScheduleManagerService enabled(boolean val) {
         this.enabled = val;
         return this;
     }
