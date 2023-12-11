@@ -226,7 +226,11 @@ public class CacheManagerService implements CacheManager, Service {
         if (val != null && !val.isExpired()) {
             return val.getValue();
         }
-        return CacheValue.get(remoteSource.hget(hash, key, t));
+        if (remoteSource != null) {
+            return CacheValue.get(remoteSource.hget(hash, key, t));
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -245,8 +249,12 @@ public class CacheManagerService implements CacheManager, Service {
         if (val != null && !val.isExpired()) {
             return CompletableFuture.completedFuture(val.getValue());
         }
-        CompletableFuture<CacheValue<T>> future = remoteSource.hgetAsync(hash, key, t);
-        return future.thenApply(CacheValue::get);
+        if (remoteSource != null) {
+            CompletableFuture<CacheValue<T>> future = remoteSource.hgetAsync(hash, key, t);
+            return future.thenApply(CacheValue::get);
+        } else {
+            return CompletableFuture.completedFuture(null);
+        }
     }
 
     /**
@@ -263,7 +271,9 @@ public class CacheManagerService implements CacheManager, Service {
     public <T> void bothSet(final String hash, final String key, final Type type, final T value, Duration localExpire, Duration remoteExpire) {
         Type t = loadCacheType(type, value);
         localSource.hset(hash, key, t, CacheValue.create(value, localExpire));
-        remoteSource.hset(hash, key, t, CacheValue.create(value, remoteExpire));
+        if (remoteSource != null) {
+            remoteSource.hset(hash, key, t, CacheValue.create(value, remoteExpire));
+        }
     }
 
     /**
@@ -280,7 +290,11 @@ public class CacheManagerService implements CacheManager, Service {
     public <T> CompletableFuture<Void> bothSetAsync(String hash, String key, Type type, T value, Duration localExpire, Duration remoteExpire) {
         Type t = loadCacheType(type, value);
         localSource.hset(hash, key, t, CacheValue.create(value, localExpire));
-        return remoteSource.hsetAsync(hash, key, t, CacheValue.create(value, remoteExpire));
+        if (remoteSource != null) {
+            return remoteSource.hsetAsync(hash, key, t, CacheValue.create(value, remoteExpire));
+        } else {
+            return CompletableFuture.completedFuture(null);
+        }
     }
 
     /**
@@ -292,8 +306,12 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 删除数量
      */
     public long bothDel(String hash, String key) {
-        localSource.hdel(hash, key);
-        return remoteSource.hdel(hash, key);
+        long v = localSource.hdel(hash, key);
+        if (remoteSource != null) {
+            return remoteSource.hdel(hash, key);
+        } else {
+            return v;
+        }
     }
 
     /**
@@ -305,8 +323,12 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 删除数量
      */
     public CompletableFuture<Long> bothDelAsync(String hash, String key) {
-        localSource.hdel(hash, key);
-        return remoteSource.hdelAsync(hash, key);
+        long v = localSource.hdel(hash, key);
+        if (remoteSource != null) {
+            return remoteSource.hdelAsync(hash, key);
+        } else {
+            return CompletableFuture.completedFuture(v);
+        }
     }
 
     //-------------------------------------- 内部方法 --------------------------------------
