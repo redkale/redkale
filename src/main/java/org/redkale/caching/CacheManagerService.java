@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Component;
 import org.redkale.annotation.Nonnull;
@@ -39,6 +40,9 @@ public class CacheManagerService implements CacheManager, Service {
     //本地缓存Source
     protected final CacheMemorySource localSource = new CacheMemorySource("caching");
 
+    //缓存hash集合, 用于定时遍历删除过期数据
+    protected final ConcurrentSkipListSet<String> hashNames = new ConcurrentSkipListSet<>();
+
     //远程缓存Source
     protected CacheSource remoteSource;
 
@@ -61,21 +65,26 @@ public class CacheManagerService implements CacheManager, Service {
         this.localSource.destroy(conf);
     }
 
+    public CacheManagerService addHash(String hash) {
+        this.hashNames.add(hash);
+        return this;
+    }
+
     //-------------------------------------- 本地缓存 --------------------------------------
     /**
      * 本地获取缓存数据, 过期返回null
      *
      * @param <T>  泛型
-     * @param map  缓存hash
+     * @param hash 缓存hash
      * @param key  缓存键
      * @param type 数据类型
      *
      * @return 数据值
      */
     @Override
-    public <T> T localGet(final String map, final String key, final Type type) {
+    public <T> T localGet(final String hash, final String key, final Type type) {
         Type t = loadCacheType(type);
-        CacheValue<T> val = localSource.hget(map, key, t);
+        CacheValue<T> val = localSource.hget(hash, key, t);
         return CacheValue.get(val);
     }
 
@@ -83,30 +92,30 @@ public class CacheManagerService implements CacheManager, Service {
      * 本地缓存数据
      *
      * @param <T>    泛型
-     * @param map    缓存hash
+     * @param hash   缓存hash
      * @param key    缓存键
      * @param type   数据类型
      * @param value  数据值
      * @param expire 过期时长，为null表示永不过期
      */
     @Override
-    public <T> void localSet(String map, String key, Type type, T value, Duration expire) {
+    public <T> void localSet(String hash, String key, Type type, T value, Duration expire) {
         Type t = loadCacheType(type, value);
         CacheValue val = CacheValue.create(value, expire);
-        localSource.hset(map, key, t, val);
+        localSource.hset(hash, key, t, val);
     }
 
     /**
      * 本地删除缓存数据
      *
-     * @param map 缓存hash
-     * @param key 缓存键
+     * @param hash 缓存hash
+     * @param key  缓存键
      *
      * @return 删除数量
      */
     @Override
-    public long localDel(String map, String key) {
-        return localSource.hdel(map, key);
+    public long localDel(String hash, String key) {
+        return localSource.hdel(hash, key);
     }
 
     //-------------------------------------- 远程缓存 --------------------------------------
@@ -114,16 +123,16 @@ public class CacheManagerService implements CacheManager, Service {
      * 远程获取缓存数据, 过期返回null
      *
      * @param <T>  泛型
-     * @param map  缓存hash
+     * @param hash 缓存hash
      * @param key  缓存键
      * @param type 数据类型
      *
      * @return 数据值
      */
     @Override
-    public <T> T remoteGet(final String map, final String key, final Type type) {
+    public <T> T remoteGet(final String hash, final String key, final Type type) {
         Type t = loadCacheType(type);
-        CacheValue<T> val = remoteSource.hget(map, key, t);
+        CacheValue<T> val = remoteSource.hget(hash, key, t);
         return CacheValue.get(val);
     }
 
@@ -131,16 +140,16 @@ public class CacheManagerService implements CacheManager, Service {
      * 远程异步获取缓存数据, 过期返回null
      *
      * @param <T>  泛型
-     * @param map  缓存hash
+     * @param hash 缓存hash
      * @param key  缓存键
      * @param type 数据类型
      *
      * @return 数据值
      */
     @Override
-    public <T> CompletableFuture<T> remoteGetAsync(final String map, final String key, final Type type) {
+    public <T> CompletableFuture<T> remoteGetAsync(final String hash, final String key, final Type type) {
         Type t = loadCacheType(type);
-        CompletableFuture<CacheValue<T>> future = remoteSource.hgetAsync(map, key, t);
+        CompletableFuture<CacheValue<T>> future = remoteSource.hgetAsync(hash, key, t);
         return future.thenApply(CacheValue::get);
     }
 
@@ -148,56 +157,56 @@ public class CacheManagerService implements CacheManager, Service {
      * 远程缓存数据
      *
      * @param <T>    泛型
-     * @param map    缓存hash
+     * @param hash   缓存hash
      * @param key    缓存键
      * @param type   数据类型
      * @param value  数据值
      * @param expire 过期时长，为null表示永不过期
      */
-    public <T> void remoteSet(final String map, final String key, final Type type, final T value, Duration expire) {
+    public <T> void remoteSet(final String hash, final String key, final Type type, final T value, Duration expire) {
         Type t = loadCacheType(type, value);
         CacheValue val = CacheValue.create(value, expire);
-        remoteSource.hset(map, key, t, val);
+        remoteSource.hset(hash, key, t, val);
     }
 
     /**
      * 远程异步缓存数据
      *
      * @param <T>    泛型
-     * @param map    缓存hash
+     * @param hash   缓存hash
      * @param key    缓存键
      * @param type   数据类型
      * @param value  数据值
      * @param expire 过期时长，为null表示永不过期
      */
-    public <T> CompletableFuture<Void> remoteSetAsync(String map, String key, Type type, T value, Duration expire) {
+    public <T> CompletableFuture<Void> remoteSetAsync(String hash, String key, Type type, T value, Duration expire) {
         Type t = loadCacheType(type, value);
         CacheValue val = CacheValue.create(value, expire);
-        return remoteSource.hsetAsync(map, key, t, val);
+        return remoteSource.hsetAsync(hash, key, t, val);
     }
 
     /**
      * 远程删除缓存数据
      *
-     * @param map 缓存hash
-     * @param key 缓存键
+     * @param hash 缓存hash
+     * @param key  缓存键
      *
      * @return 删除数量
      */
-    public long remoteDel(String map, String key) {
-        return remoteSource.hdel(map, key);
+    public long remoteDel(String hash, String key) {
+        return remoteSource.hdel(hash, key);
     }
 
     /**
      * 远程异步删除缓存数据
      *
-     * @param map 缓存hash
-     * @param key 缓存键
+     * @param hash 缓存hash
+     * @param key  缓存键
      *
      * @return 删除数量
      */
-    public CompletableFuture<Long> remoteDelAsync(String map, String key) {
-        return remoteSource.hdelAsync(map, key);
+    public CompletableFuture<Long> remoteDelAsync(String hash, String key) {
+        return remoteSource.hdelAsync(hash, key);
     }
 
     //-------------------------------------- both缓存 --------------------------------------
@@ -205,38 +214,38 @@ public class CacheManagerService implements CacheManager, Service {
      * 远程获取缓存数据, 过期返回null
      *
      * @param <T>  泛型
-     * @param map  缓存hash
+     * @param hash 缓存hash
      * @param key  缓存键
      * @param type 数据类型
      *
      * @return 数据值
      */
-    public <T> T bothGet(final String map, final String key, final Type type) {
+    public <T> T bothGet(final String hash, final String key, final Type type) {
         Type t = loadCacheType(type);
-        CacheValue<T> val = localSource.hget(map, key, t);
+        CacheValue<T> val = localSource.hget(hash, key, t);
         if (val != null && !val.isExpired()) {
             return val.getValue();
         }
-        return CacheValue.get(remoteSource.hget(map, key, t));
+        return CacheValue.get(remoteSource.hget(hash, key, t));
     }
 
     /**
      * 远程异步获取缓存数据, 过期返回null
      *
      * @param <T>  泛型
-     * @param map  缓存hash
+     * @param hash 缓存hash
      * @param key  缓存键
      * @param type 数据类型
      *
      * @return 数据值
      */
-    public <T> CompletableFuture<T> bothGetAsync(final String map, final String key, final Type type) {
+    public <T> CompletableFuture<T> bothGetAsync(final String hash, final String key, final Type type) {
         Type t = loadCacheType(type);
-        CacheValue<T> val = localSource.hget(map, key, t);
+        CacheValue<T> val = localSource.hget(hash, key, t);
         if (val != null && !val.isExpired()) {
             return CompletableFuture.completedFuture(val.getValue());
         }
-        CompletableFuture<CacheValue<T>> future = remoteSource.hgetAsync(map, key, t);
+        CompletableFuture<CacheValue<T>> future = remoteSource.hgetAsync(hash, key, t);
         return future.thenApply(CacheValue::get);
     }
 
@@ -244,60 +253,60 @@ public class CacheManagerService implements CacheManager, Service {
      * 远程缓存数据
      *
      * @param <T>          泛型
-     * @param map          缓存hash
+     * @param hash         缓存hash
      * @param key          缓存键
      * @param type         数据类型
      * @param value        数据值
      * @param localExpire  本地过期时长，为null表示永不过期
      * @param remoteExpire 远程过期时长，为null表示永不过期
      */
-    public <T> void bothSet(final String map, final String key, final Type type, final T value, Duration localExpire, Duration remoteExpire) {
+    public <T> void bothSet(final String hash, final String key, final Type type, final T value, Duration localExpire, Duration remoteExpire) {
         Type t = loadCacheType(type, value);
-        localSource.hset(map, key, t, CacheValue.create(value, localExpire));
-        remoteSource.hset(map, key, t, CacheValue.create(value, remoteExpire));
+        localSource.hset(hash, key, t, CacheValue.create(value, localExpire));
+        remoteSource.hset(hash, key, t, CacheValue.create(value, remoteExpire));
     }
 
     /**
      * 远程异步缓存数据
      *
      * @param <T>          泛型
-     * @param map          缓存hash
+     * @param hash         缓存hash
      * @param key          缓存键
      * @param type         数据类型
      * @param value        数据值
      * @param localExpire  本地过期时长，为null表示永不过期
      * @param remoteExpire 远程过期时长，为null表示永不过期
      */
-    public <T> CompletableFuture<Void> bothSetAsync(String map, String key, Type type, T value, Duration localExpire, Duration remoteExpire) {
+    public <T> CompletableFuture<Void> bothSetAsync(String hash, String key, Type type, T value, Duration localExpire, Duration remoteExpire) {
         Type t = loadCacheType(type, value);
-        localSource.hset(map, key, t, CacheValue.create(value, localExpire));
-        return remoteSource.hsetAsync(map, key, t, CacheValue.create(value, remoteExpire));
+        localSource.hset(hash, key, t, CacheValue.create(value, localExpire));
+        return remoteSource.hsetAsync(hash, key, t, CacheValue.create(value, remoteExpire));
     }
 
     /**
      * 远程删除缓存数据
      *
-     * @param map 缓存hash
-     * @param key 缓存键
+     * @param hash 缓存hash
+     * @param key  缓存键
      *
      * @return 删除数量
      */
-    public long bothDel(String map, String key) {
-        localSource.hdel(map, key);
-        return remoteSource.hdel(map, key);
+    public long bothDel(String hash, String key) {
+        localSource.hdel(hash, key);
+        return remoteSource.hdel(hash, key);
     }
 
     /**
      * 远程异步删除缓存数据
      *
-     * @param map 缓存hash
-     * @param key 缓存键
+     * @param hash 缓存hash
+     * @param key  缓存键
      *
      * @return 删除数量
      */
-    public CompletableFuture<Long> bothDelAsync(String map, String key) {
-        localSource.hdel(map, key);
-        return remoteSource.hdelAsync(map, key);
+    public CompletableFuture<Long> bothDelAsync(String hash, String key) {
+        localSource.hdel(hash, key);
+        return remoteSource.hdelAsync(hash, key);
     }
 
     //-------------------------------------- 内部方法 --------------------------------------
