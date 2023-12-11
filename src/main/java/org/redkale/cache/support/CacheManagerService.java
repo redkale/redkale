@@ -5,9 +5,11 @@ package org.redkale.cache.support;
 
 import java.lang.reflect.Type;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.function.Supplier;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Component;
 import org.redkale.annotation.Nullable;
@@ -35,8 +37,11 @@ import org.redkale.util.Utility;
 @ResourceType(CacheManager.class)
 public class CacheManagerService implements CacheManager, Service {
 
-    //缓存配置项
+    //是否开启缓存
     protected boolean enabled = true;
+
+    //是否缓存null值
+    protected boolean nullable = false;
 
     //配置
     protected AnyValue config;
@@ -49,6 +54,9 @@ public class CacheManagerService implements CacheManager, Service {
 
     //缓存hash集合, 用于定时遍历删除过期数据
     protected final ConcurrentSkipListSet<String> hashNames = new ConcurrentSkipListSet<>();
+
+    //缓存无效时使用的锁
+    private final ConcurrentHashMap<String, CacheValue> hashLock = new ConcurrentHashMap<>();
 
     @Resource(required = false)
     protected Application application;
@@ -131,6 +139,56 @@ public class CacheManagerService implements CacheManager, Service {
         Type t = loadCacheType(type);
         CacheValue<T> val = localSource.hget(hash, key, t);
         return CacheValue.get(val);
+    }
+
+    /**
+     * 本地获取缓存数据, 过期返回null
+     *
+     * @param <T>      泛型
+     * @param hash     缓存hash
+     * @param key      缓存键
+     * @param type     数据类型
+     * @param expire   过期时长，为null表示永不过期
+     * @param supplier 数据函数
+     *
+     * @return 数据值
+     */
+    public <T> T localGet(final String hash, final String key, final Type type, Duration expire, Supplier<T> supplier) {
+        Objects.requireNonNull(supplier);
+        Type t = loadCacheType(type);
+        CacheValue<T> val = localSource.hget(hash, key, t);
+        if (CacheValue.isValid(val)) {
+            return val.getValue();
+        }
+        String lockKey = lockKey(hash, key);
+        val = hashLock.computeIfAbsent(lockKey, k -> cacheSupplier(expire, supplier).get());
+        try {
+            if (CacheValue.isValid(val)) {
+                localSource.hset(hash, key, t, val);
+                return val.getValue();
+            } else {
+                return null;
+            }
+        } finally {
+            hashLock.remove(lockKey);
+        }
+    }
+
+    /**
+     * 远程异步获取缓存数据, 过期返回null
+     *
+     * @param <T>      泛型
+     * @param hash     缓存hash
+     * @param key      缓存键
+     * @param type     数据类型
+     * @param expire   过期时长，为null表示永不过期
+     * @param supplier 数据函数
+     *
+     * @return 数据值
+     */
+    @Override
+    public <T> CompletableFuture<T> localGetAsync(String hash, String key, Type type, Duration expire, Supplier<CompletableFuture<T>> supplier) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     /**
@@ -378,6 +436,45 @@ public class CacheManagerService implements CacheManager, Service {
 
     //-------------------------------------- 内部方法 --------------------------------------
     /**
+     * 创建一个锁key
+     *
+     * @param hash 缓存hash
+     * @param key  缓存键
+     *
+     * @return
+     */
+    protected String lockKey(String hash, String key) {
+        return hash + (char) 8 + key;
+    }
+
+    /**
+     * 将原始数据函数转换成获取CacheValue数据函数
+     *
+     * @param expire   过期时长，为null表示永不过期
+     * @param supplier 数据函数
+     *
+     * @return CacheValue函数
+     */
+    protected <T> CacheValue<T> cacheFunc(Duration expire, T value) {
+        if (value == null) {
+            return nullable ? CacheValue.create(value, expire) : null;
+        }
+        return CacheValue.create(value, expire);
+    }
+
+    /**
+     * 将原始数据函数转换成获取CacheValue数据函数
+     *
+     * @param expire   过期时长，为null表示永不过期
+     * @param supplier 数据函数
+     *
+     * @return CacheValue函数
+     */
+    protected <T> Supplier<CacheValue<T>> cacheSupplier(Duration expire, Supplier<T> supplier) {
+        return () -> cacheFunc(expire, supplier.get());
+    }
+
+    /**
      * 创建数据类型创建对应CacheValue泛型
      *
      * @param type  数据类型，为null则取value的类型
@@ -399,4 +496,5 @@ public class CacheManagerService implements CacheManager, Service {
     protected Type loadCacheType(Type type) {
         return cacheValueTypes.computeIfAbsent(type, t -> TypeToken.createParameterizedType(null, CacheValue.class, type));
     }
+
 }
