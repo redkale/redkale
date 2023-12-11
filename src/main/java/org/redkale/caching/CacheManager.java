@@ -241,6 +241,148 @@ public class CacheManager {
         return delAsync(remoteSource, map, key);
     }
 
+    //-------------------------------------- both缓存 --------------------------------------
+    /**
+     * 远程获取缓存数据, 过期返回null
+     *
+     * @param <T>  泛型
+     * @param map  缓存hash
+     * @param key  缓存键
+     * @param type 数据类型
+     *
+     * @return 数据值
+     */
+    public <T> T bothGet(final String map, final String key, final Type type) {
+        T val = get(localSource, map, key, type);
+        return val == null ? get(remoteSource, map, key, type) : val;
+    }
+
+    /**
+     * 远程异步获取缓存数据, 过期返回null
+     *
+     * @param <T>  泛型
+     * @param map  缓存hash
+     * @param key  缓存键
+     * @param type 数据类型
+     *
+     * @return 数据值
+     */
+    public <T> CompletableFuture<T> bothGetAsync(final String map, final String key, final Type type) {
+        T val = get(localSource, map, key, type);
+        if (val != null) {
+            return CompletableFuture.completedFuture(val);
+        }
+        return getAsync(remoteSource, map, key, type);
+    }
+
+    /**
+     * 远程获取字符串缓存数据, 过期返回null
+     *
+     * @param map 缓存hash
+     * @param key 缓存键
+     *
+     * @return 数据值
+     */
+    public final String bothGetString(final String map, final String key) {
+        return bothGet(map, key, String.class);
+    }
+
+    /**
+     * 远程异步获取字符串缓存数据, 过期返回null
+     *
+     * @param map 缓存hash
+     * @param key 缓存键
+     *
+     * @return 数据值
+     */
+    public final CompletableFuture<String> bothGetStringAsync(final String map, final String key) {
+        return bothGetAsync(map, key, String.class);
+    }
+
+    /**
+     * 远程缓存数据
+     *
+     * @param <T>          泛型
+     * @param map          缓存hash
+     * @param key          缓存键
+     * @param type         数据类型
+     * @param value        数据值
+     * @param localExpire  本地过期时长，为null表示永不过期
+     * @param remoteExpire 远程过期时长，为null表示永不过期
+     */
+    public <T> void bothSet(final String map, final String key, final Type type, final T value, Duration localExpire, Duration remoteExpire) {
+        set(localSource, map, key, type, value, localExpire);
+        set(remoteSource, map, key, type, value, remoteExpire);
+    }
+
+    /**
+     * 远程异步缓存数据
+     *
+     * @param <T>          泛型
+     * @param map          缓存hash
+     * @param key          缓存键
+     * @param type         数据类型
+     * @param value        数据值
+     * @param localExpire  本地过期时长，为null表示永不过期
+     * @param remoteExpire 远程过期时长，为null表示永不过期
+     */
+    public <T> CompletableFuture<Void> bothSetAsync(final String map, final String key, final Type type, final T value, Duration localExpire, Duration remoteExpire) {
+        set(localSource, map, key, type, value, localExpire);
+        return setAsync(remoteSource, map, key, type, value, remoteExpire);
+    }
+
+    /**
+     * 远程缓存字符串数据
+     *
+     * @param map          缓存hash
+     * @param key          缓存键
+     * @param value        数据值
+     * @param localExpire  本地过期时长，为null表示永不过期
+     * @param remoteExpire 远程过期时长，为null表示永不过期
+     */
+    public void bothSetString(final String map, final String key, final String value, Duration localExpire, Duration remoteExpire) {
+        bothSet(map, key, String.class, value, localExpire, remoteExpire);
+    }
+
+    /**
+     * 远程异步缓存字符串数据
+     *
+     * @param map          缓存hash
+     * @param key          缓存键
+     * @param value        数据值
+     * @param localExpire  本地过期时长，为null表示永不过期
+     * @param remoteExpire 远程过期时长，为null表示永不过期
+     */
+    public CompletableFuture<Void> bothSetStringAsync(final String map, final String key, final String value, Duration localExpire, Duration remoteExpire) {
+        return bothSetAsync(map, key, String.class, value, localExpire, remoteExpire);
+    }
+
+    /**
+     * 远程删除缓存数据
+     *
+     * @param map 缓存hash
+     * @param key 缓存键
+     *
+     * @return 删除数量
+     */
+    public long bothDel(String map, String key) {
+        del(localSource, map, key);
+        return del(remoteSource, map, key);
+    }
+
+    /**
+     * 远程异步删除缓存数据
+     *
+     * @param map 缓存hash
+     * @param key 缓存键
+     *
+     * @return 删除数量
+     */
+    public CompletableFuture<Long> bothDelAsync(String map, String key) {
+        del(localSource, map, key);
+        return delAsync(remoteSource, map, key);
+    }
+
     //-------------------------------------- 内部方法 --------------------------------------
     /**
      * 获取缓存数据, 过期返回null
