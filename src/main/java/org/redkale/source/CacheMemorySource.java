@@ -344,7 +344,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
                 if (entry == null) {
                     entry = new CacheEntry(CacheEntryType.OBJECT, key);
                     container.put(key, entry);
-                    entry.setObjectValue(convert, type, value);
+                    entry.setObjectValue(convert == null ? this.convert : convert, type, value);
                     entry.expireSeconds(expireSeconds);
                     entry.lastAccessed = System.currentTimeMillis();
                     return true;
@@ -365,7 +365,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public <T> T getSet(String key, Convert convert, Type type, T value) {
         CacheEntry entry = find(key, CacheEntryType.OBJECT);
-        T old = entry == null ? null : (T) entry.getObjectValue(convert, type);
+        T old = entry == null ? null : (T) entry.getObjectValue(convert == null ? this.convert : convert, type);
         set0(key, 0, convert, type, value);
         return old;
     }
@@ -387,7 +387,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         } finally {
             containerLock.unlock();
         }
-        return entry.getObjectValue(null, type);
+        return entry.getObjectValue(convert, type);
     }
 
     @Override
@@ -411,7 +411,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
         entry.lock();
         try {
-            entry.setObjectValue(convert, type, value);
+            entry.setObjectValue(convert == null ? this.convert : convert, type, value);
             entry.expireSeconds(expireSeconds);
             entry.lastAccessed = System.currentTimeMillis();
         } finally {
@@ -577,7 +577,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         entry.lock();
         try {
             if (entry.cacheType != CacheEntryType.ATOMIC) {
-                entry.objectValue = new AtomicLong(Long.parseLong(entry.getObjectValue(null, String.class)));
+                entry.objectValue = new AtomicLong(Long.parseLong(entry.getObjectValue(convert, String.class)));
                 entry.cacheType = CacheEntryType.ATOMIC;
             }
             return ((AtomicLong) entry.objectValue).addAndGet(num);
@@ -610,7 +610,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         entry.lock();
         try {
             if (entry.cacheType != CacheEntryType.DOUBLE) {
-                entry.objectValue = new AtomicLong(Long.parseLong(entry.getObjectValue(null, String.class)));
+                entry.objectValue = new AtomicLong(Long.parseLong(entry.getObjectValue(convert, String.class)));
                 entry.cacheType = CacheEntryType.DOUBLE;
             }
             Long v = ((AtomicLong) entry.objectValue).addAndGet(Double.doubleToLongBits(num));
@@ -698,24 +698,25 @@ public final class CacheMemorySource extends AbstractCacheSource {
         if (expireSeconds > 0) {
             entry.expireSeconds(expireSeconds);
         }
+        final Convert c = convert == null ? this.convert : convert;
         // OBJECT, ATOMIC, DOUBLE, SSET, ZSET, LIST, MAP;
         switch (entry.cacheType) {
             case ATOMIC:
-                return CacheEntry.serialToObj(convert, type, (AtomicLong) entry.objectValue);
+                return CacheEntry.serialToObj(c, type, (AtomicLong) entry.objectValue);
             case DOUBLE:
-                return CacheEntry.serialToObj(convert, type, Double.longBitsToDouble(((AtomicLong) entry.objectValue).longValue()));
+                return CacheEntry.serialToObj(c, type, Double.longBitsToDouble(((AtomicLong) entry.objectValue).longValue()));
             case SSET:
-                return (T) entry.ssetValue.stream().map(v -> CacheEntry.serialToObj(convert, type, v)).collect(Collectors.toSet());
+                return (T) entry.ssetValue.stream().map(v -> CacheEntry.serialToObj(c, type, v)).collect(Collectors.toSet());
             case ZSET:
                 return (T) entry.zsetValue.stream().map(v -> new CacheScoredValue(v)).collect(Collectors.toSet());
             case LIST:
-                return (T) entry.listValue.stream().map(v -> CacheEntry.serialToObj(convert, type, v)).collect(Collectors.toList());
+                return (T) entry.listValue.stream().map(v -> CacheEntry.serialToObj(c, type, v)).collect(Collectors.toList());
             case MAP:
                 LinkedHashMap<String, Object> map = new LinkedHashMap();
-                entry.mapValue.forEach((k, v) -> map.put(k, CacheEntry.serialToObj(convert, type, v)));
+                entry.mapValue.forEach((k, v) -> map.put(k, CacheEntry.serialToObj(c, type, v)));
                 return (T) map;
             default:
-                return entry.getObjectValue(convert, type);
+                return entry.getObjectValue(c, type);
         }
     }
 
@@ -803,7 +804,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             Map map = entry.mapValue;
             Serializable val = (Serializable) map.computeIfAbsent(field, f -> new AtomicLong());
             if (!(val instanceof AtomicLong)) {
-                val = CacheEntry.objToSerial(null, AtomicLong.class, val);
+                val = CacheEntry.objToSerial(convert, AtomicLong.class, val);
                 map.put(field, val);
             }
             return ((AtomicLong) val).addAndGet(num);
@@ -889,7 +890,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
         entry.lock();
         try {
-            boolean rs = entry.setMapValueIfAbsent(field, convert, type, value) == null;
+            boolean rs = entry.setMapValueIfAbsent(field, convert == null ? this.convert : convert, type, value) == null;
             entry.lastAccessed = System.currentTimeMillis();
             return rs;
         } finally {
@@ -932,7 +933,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
         List<T> rs = new ArrayList<>(fields.length);
         for (String field : fields) {
-            rs.add(entry.getMapValue(field, null, type));
+            rs.add(entry.getMapValue(field, convert, type));
         }
         return rs;
     }
@@ -949,7 +950,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             return new LinkedHashMap();
         } else {
             Map map = new LinkedHashMap();
-            entry.mapValue.forEach((k, v) -> map.put(k, CacheEntry.serialToObj(null, type, v)));
+            entry.mapValue.forEach((k, v) -> map.put(k, CacheEntry.serialToObj(convert, type, v)));
             return map;
         }
     }
@@ -965,7 +966,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         if (entry == null) {
             return new ArrayList();
         } else {
-            Stream<T> stream = entry.mapValue.values().stream().map(v -> CacheEntry.serialToObj(null, type, v));
+            Stream<T> stream = entry.mapValue.values().stream().map(v -> CacheEntry.serialToObj(convert, type, v));
             return new ArrayList(stream.collect(Collectors.toList()));
         }
     }
@@ -987,12 +988,12 @@ public final class CacheMemorySource extends AbstractCacheSource {
         if (Utility.isEmpty(pattern)) {
             Set<Map.Entry<String, Serializable>> set = entry.mapValue.entrySet();
             return set.stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, en -> CacheEntry.serialToObj(null, type, en.getValue())));
+                .collect(Collectors.toMap(Map.Entry::getKey, en -> CacheEntry.serialToObj(convert, type, en.getValue())));
         } else {
             Predicate<String> regx = Pattern.compile(pattern.replace("*", ".*")).asPredicate();
             Set<Map.Entry<String, Serializable>> set = entry.mapValue.entrySet();
             return set.stream().filter(en -> regx.test(en.getKey()))
-                .collect(Collectors.toMap(Map.Entry::getKey, en -> CacheEntry.serialToObj(null, type, en.getValue())));
+                .collect(Collectors.toMap(Map.Entry::getKey, en -> CacheEntry.serialToObj(convert, type, en.getValue())));
         }
     }
 
@@ -1028,7 +1029,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         if (entry == null) {
             return 0L;
         }
-        String obj = entry.getMapValue(field, null, String.class);
+        String obj = entry.getMapValue(field, convert, String.class);
         return obj == null ? 0L : (long) obj.length();
     }
 
@@ -1056,7 +1057,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
         entry.lock();
         try {
-            entry.setMapValue(field, convert, type, value);
+            entry.setMapValue(field, convert == null ? this.convert : convert, type, value);
             entry.lastAccessed = System.currentTimeMillis();
         } finally {
             entry.unlock();
@@ -1110,7 +1111,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
         List<Serializable> list = new ArrayList(entry.listValue);
         int pos = index >= 0 ? index : list.size() + index;
-        return pos >= list.size() ? null : CacheEntry.serialToObj(null, componentType, list.get(pos));
+        return pos >= list.size() ? null : CacheEntry.serialToObj(convert, componentType, list.get(pos));
     }
 
     @Override
@@ -1144,7 +1145,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             return 0L;
         }
         entry.lock();
-        Serializable val = CacheEntry.objToSerial(null, componentType, value);
+        Serializable val = CacheEntry.objToSerial(convert, componentType, value);
         try {
             List<Serializable> list = new ArrayList<>(entry.listValue);
             int pos = list.indexOf(pivot);
@@ -1197,7 +1198,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         entry.lock();
         try {
             for (T val : values) {
-                entry.listValue.addFirst(CacheEntry.objToSerial(null, componentType, val));
+                entry.listValue.addFirst(CacheEntry.objToSerial(convert, componentType, val));
             }
         } finally {
             entry.unlock();
@@ -1219,7 +1220,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         try {
             ConcurrentLinkedDeque list = entry.listValue;
             for (T val : values) {
-                list.addFirst(CacheEntry.objToSerial(null, componentType, val));
+                list.addFirst(CacheEntry.objToSerial(convert, componentType, val));
             }
         } finally {
             entry.unlock();
@@ -1239,7 +1240,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
         entry.lock();
         try {
-            return CacheEntry.serialToObj(null, componentType, entry.listValue.pollFirst());
+            return CacheEntry.serialToObj(convert, componentType, entry.listValue.pollFirst());
         } finally {
             entry.unlock();
         }
@@ -1300,7 +1301,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
         entry.lock();
         try {
-            return CacheEntry.serialToObj(null, componentType, entry.listValue.pollLast());
+            return CacheEntry.serialToObj(convert, componentType, entry.listValue.pollLast());
         } finally {
             entry.unlock();
         }
@@ -1321,7 +1322,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         try {
             ConcurrentLinkedDeque<Serializable> list = entry.listValue;
             for (T val : values) {
-                list.add(CacheEntry.objToSerial(null, componentType, val));
+                list.add(CacheEntry.objToSerial(convert, componentType, val));
             }
         } finally {
             entry.unlock();
@@ -1352,7 +1353,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         try {
             ConcurrentLinkedDeque<Serializable> list = entry.listValue;
             for (T val : values) {
-                list.add(CacheEntry.objToSerial(null, componentType, val));
+                list.add(CacheEntry.objToSerial(convert, componentType, val));
             }
         } finally {
             entry.unlock();
@@ -1396,15 +1397,15 @@ public final class CacheMemorySource extends AbstractCacheSource {
             for (int i = 0; i < Math.abs(count); i++) {
                 int index = ThreadLocalRandom.current().nextInt(vals.size());
                 Serializable val = vals.get(index);
-                list.add(CacheEntry.serialToObj(null, componentType, val));
+                list.add(CacheEntry.serialToObj(convert, componentType, val));
             }
         } else { //不可以重复
             if (count >= vals.size()) {
                 return vals.stream()
-                    .map(val -> (T) CacheEntry.serialToObj(null, componentType, val)).collect(Collectors.toList());
+                    .map(val -> (T) CacheEntry.serialToObj(convert, componentType, val)).collect(Collectors.toList());
             }
             return vals.subList(0, count).stream()
-                .map(val -> (T) CacheEntry.serialToObj(null, componentType, val)).collect(Collectors.toList());
+                .map(val -> (T) CacheEntry.serialToObj(convert, componentType, val)).collect(Collectors.toList());
         }
         return list;
     }
@@ -1423,7 +1424,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         boolean rs = false;
         entry.lock();
         try {
-            Serializable val = CacheEntry.objToSerial(null, componentType, member);
+            Serializable val = CacheEntry.objToSerial(convert, componentType, member);
             rs = entry.ssetValue.remove(val);
         } finally {
             entry.unlock();
@@ -1444,7 +1445,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             }
             entry2.lock();
             try {
-                entry2.addSsetValue(null, componentType, member);
+                entry2.addSsetValue(convert, componentType, member);
             } finally {
                 entry2.unlock();
             }
@@ -1460,7 +1461,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public <T> Set<T> sdiff(final String key, final Type componentType, final String... key2s) {
         return sdiff0(key, key2s).stream()
-            .map(v -> (T) CacheEntry.serialToObj(null, componentType, v))
+            .map(v -> (T) CacheEntry.serialToObj(convert, componentType, v))
             .collect(Collectors.toSet());
     }
 
@@ -1519,7 +1520,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public <T> Set<T> sinter(final String key, final Type componentType, final String... key2s) {
         return sinter0(key, key2s).stream()
-            .map(v -> (T) CacheEntry.serialToObj(null, componentType, v))
+            .map(v -> (T) CacheEntry.serialToObj(convert, componentType, v))
             .collect(Collectors.toSet());
     }
 
@@ -1587,7 +1588,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public <T> Set<T> sunion(final String key, final Type componentType, final String... key2s) {
         return sunion0(key, key2s).stream()
-            .map(v -> (T) CacheEntry.serialToObj(null, componentType, v))
+            .map(v -> (T) CacheEntry.serialToObj(convert, componentType, v))
             .collect(Collectors.toSet());
     }
 
@@ -1650,7 +1651,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             return new LinkedHashSet<>();
         }
         return entry.ssetValue.stream()
-            .map(v -> (T) CacheEntry.serialToObj(null, componentType, v))
+            .map(v -> (T) CacheEntry.serialToObj(convert, componentType, v))
             .collect(Collectors.toSet());
     }
 
@@ -1666,7 +1667,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             CacheEntry entry = find(key, CacheEntryType.SSET);
             if (entry != null) {
                 map.put(key, entry.ssetValue.stream()
-                    .map(v -> (T) CacheEntry.serialToObj(null, componentType, v))
+                    .map(v -> (T) CacheEntry.serialToObj(convert, componentType, v))
                     .collect(Collectors.toSet()));
             }
         }
@@ -1718,7 +1719,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         entry.lock();
         try {
             for (T val : values) {
-                entry.addSsetValue(null, componentType, val);
+                entry.addSsetValue(convert, componentType, val);
             }
         } finally {
             entry.unlock();
@@ -1744,7 +1745,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public <T> boolean sismember(final String key, final Type type, final T value) {
         CacheEntry entry = find(key, CacheEntryType.SSET);
-        return entry != null && entry.ssetValue.contains(CacheEntry.objToSerial(null, type, value));
+        return entry != null && entry.ssetValue.contains(CacheEntry.objToSerial(convert, type, value));
     }
 
     @Override
@@ -1771,7 +1772,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             }
             if (del != null) {
                 cset.remove(del);
-                return CacheEntry.serialToObj(null, componentType, del);
+                return CacheEntry.serialToObj(convert, componentType, del);
             }
             return null;
         } finally {
@@ -1803,7 +1804,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             while (it.hasNext()) {
                 Serializable item = it.next();
                 rms.add(item);
-                list.add(CacheEntry.serialToObj(null, componentType, item));
+                list.add(CacheEntry.serialToObj(convert, componentType, item));
                 if (++index >= count) {
                     break;
                 }
@@ -1835,7 +1836,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             Iterator<Serializable> it = cset.iterator();
             Set<T> list = new LinkedHashSet<>();
             while (it.hasNext()) {
-                list.add(CacheEntry.serialToObj(null, componentType, it.next()));
+                list.add(CacheEntry.serialToObj(convert, componentType, it.next()));
             }
             return list;
         } finally {
@@ -1856,7 +1857,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
         long count = 0;
         for (T val : values) {
-            count += entry.ssetValue.remove(CacheEntry.objToSerial(null, type, val)) ? 1 : 0;
+            count += entry.ssetValue.remove(CacheEntry.objToSerial(convert, type, val)) ? 1 : 0;
         }
         return count;
     }
@@ -2248,7 +2249,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         OBJECT, ATOMIC, DOUBLE, SSET, ZSET, LIST, MAP;
     }
 
-    //值类型只能是: String、byte[]、AtomicLong
+    //Serializable的具体数据类型只能是: String、byte[]、AtomicLong
     public static final class CacheEntry {
 
         volatile long lastAccessed; //最后刷新时间
@@ -2303,36 +2304,34 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
 
         //value类型只能是byte[]/String/AtomicLong
-        public static <T> T serialToObj(Convert convert, @Nonnull Type type, Serializable value) {
+        public static <T> T serialToObj(@Nonnull Convert convert, @Nonnull Type type, Serializable value) {
             if (value == null) {
                 return null;
             }
-            Convert c = convert == null ? JsonConvert.root() : convert;
             if (value.getClass() == byte[].class) {
-                return (T) c.convertFrom(type, (byte[]) value);
+                return (T) convert.convertFrom(type, (byte[]) value);
             } else { //String/AtomicLong
-                if (c instanceof TextConvert) {
-                    return (T) ((TextConvert) c).convertFrom(type, value.toString());
+                if (convert instanceof TextConvert) {
+                    return (T) ((TextConvert) convert).convertFrom(type, value.toString());
                 } else {
-                    return (T) c.convertFrom(type, value.toString().getBytes(StandardCharsets.UTF_8));
+                    return (T) convert.convertFrom(type, value.toString().getBytes(StandardCharsets.UTF_8));
                 }
             }
         }
 
         //返回类型只能是byte[]/String/AtomicLong
-        public static Serializable objToSerial(Convert convert, Type type, Object value) {
+        public static Serializable objToSerial(@Nonnull Convert convert, Type type, Object value) {
             if (value == null) {
                 return null;
             }
             if (value instanceof String || value instanceof byte[]) {
                 return (Serializable) value;
             }
-            Convert c = convert == null ? JsonConvert.root() : convert;
             Type t = type == null ? value.getClass() : type;
-            if (c instanceof TextConvert) {
-                return ((TextConvert) c).convertTo(t, value);
+            if (convert instanceof TextConvert) {
+                return ((TextConvert) convert).convertTo(t, value);
             } else {
-                return c.convertToBytes(t, value);
+                return convert.convertToBytes(t, value);
             }
         }
 
