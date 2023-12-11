@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.scheduling;
+package org.redkale.schedule;
 
 /**
  * 定时管理器

@@ -1,12 +1,12 @@
 /*
  *
  */
-package org.redkale.test.caching;
+package org.redkale.test.cache;
 
 import java.time.Duration;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.redkale.caching.CacheManagerService;
+import org.redkale.cache.support.CacheManagerService;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.source.CacheMemorySource;
 import org.redkale.util.Utility;

@@ -31,7 +31,7 @@ import org.redkale.mq.*;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
-import org.redkale.scheduling.ScheduleManagerService;
+import org.redkale.schedule.support.ScheduleManagerService;
 import org.redkale.service.Service;
 import org.redkale.source.*;
 import org.redkale.util.*;

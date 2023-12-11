@@ -1,11 +1,11 @@
 /*
  *
  */
-package org.redkale.test.scheduling;
+package org.redkale.test.schedule;
 
+import org.redkale.schedule.Scheduling;
 import org.redkale.service.Service;
 import org.redkale.util.Times;
-import org.redkale.annotation.Scheduling;
 
 /**
  *

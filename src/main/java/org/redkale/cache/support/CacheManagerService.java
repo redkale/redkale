@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.caching;
+package org.redkale.cache.support;
 
 import java.lang.reflect.Type;
 import java.time.Duration;
@@ -12,6 +12,7 @@ import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Component;
 import org.redkale.annotation.Nullable;
 import org.redkale.annotation.ResourceType;
+import org.redkale.cache.CacheManager;
 import org.redkale.service.Local;
 import org.redkale.service.Service;
 import org.redkale.source.CacheMemorySource;

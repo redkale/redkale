@@ -1,10 +1,10 @@
 /*
  *
  */
-package org.redkale.test.scheduling;
+package org.redkale.test.schedule;
 
 import org.junit.jupiter.api.Test;
-import org.redkale.scheduling.ScheduleManagerService;
+import org.redkale.schedule.support.ScheduleManagerService;
 import org.redkale.util.Utility;
 
 /**

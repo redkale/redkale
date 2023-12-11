@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.scheduling;
+package org.redkale.schedule.support;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -29,7 +29,8 @@ import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Component;
 import org.redkale.annotation.Nullable;
 import org.redkale.annotation.ResourceType;
-import org.redkale.annotation.Scheduling;
+import org.redkale.schedule.ScheduleManager;
+import org.redkale.schedule.Scheduling;
 import org.redkale.service.Local;
 import org.redkale.service.Service;
 import org.redkale.util.RedkaleClassLoader;

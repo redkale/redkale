@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.caching;
+package org.redkale.cache;
 
 import java.lang.reflect.Type;
 import java.time.Duration;
