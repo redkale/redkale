@@ -31,14 +31,14 @@ import org.redkale.annotation.Nullable;
 import org.redkale.annotation.Resource;
 import org.redkale.annotation.ResourceType;
 import org.redkale.boot.Application;
-import org.redkale.schedule.ScheduleManager;
-import org.redkale.schedule.Scheduling;
 import org.redkale.service.Local;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Utility;
+import org.redkale.schedule.Scheduled;
+import org.redkale.schedule.ScheduleManager;
 
 /**
  * 定时任务管理器
@@ -157,14 +157,14 @@ public class ScheduleManagerService implements ScheduleManager, Service {
             WeakReference ref = new WeakReference(service);
             do {
                 for (final Method method : clazz.getDeclaredMethods()) {
-                    if (method.getAnnotation(Scheduling.class) == null) {
+                    if (method.getAnnotation(Scheduled.class) == null) {
                         continue;
                     }
                     if (tasks.containsKey(method.getName())) {
                         continue;
                     }
                     if (method.getParameterCount() > 0) {
-                        throw new RedkaleException("@" + Scheduling.class.getSimpleName() + " must be on non-parameter method, but on " + method);
+                        throw new RedkaleException("@" + Scheduled.class.getSimpleName() + " must be on non-parameter method, but on " + method);
                     }
                     ScheduledTask task = schedule(ref, method);
                     if (task == null) {
@@ -185,7 +185,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
     }
 
     protected ScheduledTask schedule(WeakReference ref, Method method) {
-        Scheduling ann = method.getAnnotation(Scheduling.class);
+        Scheduled ann = method.getAnnotation(Scheduled.class);
         String name = getProperty(ann.name());
         String cron = getProperty(ann.cron());
         String fixedDelay = getProperty(ann.fixedDelay());

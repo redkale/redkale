@@ -1223,7 +1223,7 @@ public final class Application {
         }
 
         { //设置定时管理器
-            final AnyValue scheduleConf = config.getAnyValue("scheduling", true);
+            final AnyValue scheduleConf = config.getAnyValue("schedule", true);
             this.resourceFactory.inject(this.scheduleManager);
             if (!isCompileMode()) {
                 this.scheduleManager.init(scheduleConf);
@@ -1232,7 +1232,7 @@ public final class Application {
         }
 
         { //设置缓存管理器
-            final AnyValue cacheConf = config.getAnyValue("caching");
+            final AnyValue cacheConf = config.getAnyValue("cache");
             this.resourceFactory.inject(this.cacheManager);
             if (!isCompileMode() && cacheConf != null) {
                 this.cacheManager.init(cacheConf);

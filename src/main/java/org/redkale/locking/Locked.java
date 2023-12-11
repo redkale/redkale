@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.lock;
+package org.redkale.locking;
 
 import java.lang.annotation.Documented;
 import static java.lang.annotation.ElementType.METHOD;
@@ -29,6 +29,6 @@ import java.lang.annotation.Target;
 @Documented
 @Target(METHOD)
 @Retention(RUNTIME)
-public @interface Locking {
+public @interface Locked {
 
 }

@@ -87,7 +87,7 @@ public class CacheManagerService implements CacheManager, Service {
         this.enabled = conf.getBoolValue("enabled", true);
         if (this.enabled) {
             this.localSource.init(conf);
-            String remoteSourceName = conf.getValue("remoteSource");
+            String remoteSourceName = conf.getValue("source");
             if (remoteSource == null && application != null && Utility.isNotBlank(remoteSourceName)) {
                 CacheSource source = application.loadCacheSource(remoteSourceName, false);
                 if (source == null) {

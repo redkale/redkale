@@ -22,7 +22,6 @@ import org.redkale.convert.bson.BsonConvert;
 import org.redkale.mq.MessageAgent;
 import org.redkale.net.http.WebSocketNode;
 import org.redkale.net.sncp.SncpRemoteInfo.SncpRemoteAction;
-import org.redkale.schedule.Scheduling;
 import org.redkale.service.*;
 import org.redkale.util.AnyValue;
 import org.redkale.util.RedkaleClassLoader;
@@ -31,6 +30,7 @@ import org.redkale.util.ResourceFactory;
 import org.redkale.util.TypeToken;
 import org.redkale.util.Uint128;
 import org.redkale.util.Utility;
+import org.redkale.schedule.Scheduled;
 
 /**
  * Service Node Communicate Protocol
@@ -75,11 +75,11 @@ public abstract class Sncp {
 
         private String methodName;
 
-        private Scheduling schedule;
+        private Scheduled schedule;
 
         private Runnable task;
 
-        public SchedulingEntry(Class serviceType, String methodName, Scheduling schedule, Runnable task) {
+        public SchedulingEntry(Class serviceType, String methodName, Scheduled schedule, Runnable task) {
             Objects.requireNonNull(serviceType);
             Objects.requireNonNull(methodName);
             Objects.requireNonNull(schedule);
@@ -98,7 +98,7 @@ public abstract class Sncp {
             return methodName;
         }
 
-        public Scheduling getSchedule() {
+        public Scheduled getSchedule() {
             return schedule;
         }
 
@@ -134,10 +134,10 @@ public abstract class Sncp {
             if (method.isSynthetic()) {
                 continue;
             }
-            if (method.getAnnotation(Scheduling.class) != null) {
+            if (method.getAnnotation(Scheduled.class) != null) {
                 if (Modifier.isStatic(method.getModifiers())
                     || method.getParameterCount() > 0) {
-                    throw new SncpException(Scheduling.class.getSimpleName() + " must be on protected and non-parameter method, but on " + method);
+                    throw new SncpException(Scheduled.class.getSimpleName() + " must be on protected and non-parameter method, but on " + method);
                 }
                 RedkaleClassLoader.putReflectionMethod(serviceTypeOrImplClass.getName(), method);
                 continue;
