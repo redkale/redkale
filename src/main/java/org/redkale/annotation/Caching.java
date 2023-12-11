@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
  * //TODO 待实现
  *
  * 标记在Service的缓存接口, 方法有以下限制: <br>
- * 1、方法返回类型不能是void
+ * 1、方法返回类型不能是void/CompletableFuture&#60;Void&#62;
  * 2、方法必须是protected/public
  * 3、方法不能是final
  *

@@ -17,6 +17,7 @@ module org.redkale {
     exports org.redkale.asm;
     exports org.redkale.boot;
     exports org.redkale.boot.watch;
+    exports org.redkale.caching;
     exports org.redkale.cluster;
     exports org.redkale.convert;
     exports org.redkale.convert.bson;

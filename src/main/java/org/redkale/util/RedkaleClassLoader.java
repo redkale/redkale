@@ -47,6 +47,7 @@ public class RedkaleClassLoader extends URLClassLoader {
         "org.redkale.asm",
         "org.redkale.boot",
         "org.redkale.boot.watch",
+        "org.redkale.caching",
         "org.redkale.cluster",
         "org.redkale.convert",
         "org.redkale.convert.bson",

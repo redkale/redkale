@@ -45,8 +45,9 @@
        【节点全局唯一】 @since 2.8.0
         全局Serivce的缓存设置，没配置该节点将自动创建一个。
         enabled： 是否开启缓存功能。默认: true
+        source: 远程CacheSource的资源名
     -->
-    <caching enabled="true"/>
+    <caching enabled="true" source="xxx"/>
     
     <!--
        【节点全局唯一】
