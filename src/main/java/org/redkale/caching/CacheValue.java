@@ -41,6 +41,10 @@ public class CacheValue<T> {
         return new CacheValue(value, expire);
     }
 
+    public static <T> T get(CacheValue val) {
+        return val != null && !val.isExpired() ? (T) val.getValue() : null;
+    }
+
     @ConvertDisabled
     public boolean isExpired() {
         return time > 0 && System.currentTimeMillis() > time;
