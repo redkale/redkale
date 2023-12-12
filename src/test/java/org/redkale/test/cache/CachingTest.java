@@ -4,30 +4,35 @@
 package org.redkale.test.cache;
 
 import java.time.Duration;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.redkale.cache.support.CacheManagerService;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.source.CacheMemorySource;
 import org.redkale.util.Utility;
-
 /**
  *
  * @author zhangjx
  */
 public class CachingTest {
 
+    private static CacheManagerService manager;
+
     public static void main(String[] args) throws Throwable {
         CachingTest test = new CachingTest();
+        test.wait();
         test.run();
+    }
+
+    @BeforeAll
+    public static void init() throws Exception {
+        CacheMemorySource remoteSource = new CacheMemorySource("remote");
+        remoteSource.init(null);
+        manager = CacheManagerService.create(remoteSource);
+        manager.init(null);
     }
 
     @Test
     public void run() throws Exception {
-        CacheMemorySource remoteSource = new CacheMemorySource("remote");
-        remoteSource.init(null);
-        CacheManagerService manager = CacheManagerService.create(remoteSource);
-        manager.init(null);
         Duration expire = Duration.ofMillis(490);
         manager.localSetString("user", "name:haha", "myha", expire);
         Assertions.assertEquals(manager.localGetString("user", "name:haha"), "myha");

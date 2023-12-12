@@ -60,7 +60,7 @@ public interface CacheManager {
     public <T> T localGet(final String hash, final String key, final Type type, Duration expire, Supplier<T> supplier);
 
     /**
-     * 远程异步获取缓存数据, 过期返回null
+     * 本地异步获取缓存数据, 过期返回null
      *
      * @param <T>      泛型
      * @param hash     缓存hash
@@ -155,6 +155,34 @@ public interface CacheManager {
     default CompletableFuture<String> remoteGetStringAsync(final String hash, final String key) {
         return remoteGetAsync(hash, key, String.class);
     }
+
+    /**
+     * 远程获取缓存数据, 过期返回null
+     *
+     * @param <T>      泛型
+     * @param hash     缓存hash
+     * @param key      缓存键
+     * @param type     数据类型
+     * @param expire   过期时长，为null表示永不过期
+     * @param supplier 数据函数
+     *
+     * @return 数据值
+     */
+    public <T> T remoteGet(final String hash, final String key, final Type type, Duration expire, Supplier<T> supplier);
+
+    /**
+     * 远程异步获取缓存数据, 过期返回null
+     *
+     * @param <T>      泛型
+     * @param hash     缓存hash
+     * @param key      缓存键
+     * @param type     数据类型
+     * @param expire   过期时长，为null表示永不过期
+     * @param supplier 数据函数
+     *
+     * @return 数据值
+     */
+    public <T> CompletableFuture<T> remoteGetAsync(String hash, String key, Type type, Duration expire, Supplier<CompletableFuture<T>> supplier);
 
     /**
      * 远程缓存数据

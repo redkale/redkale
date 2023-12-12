@@ -702,20 +702,6 @@ public final class EntityInfo<T> {
                 direct = ve.direct();
             }
         }
-        { //兼容旧类
-            org.redkale.persistence.Cacheable c1 = type.getAnnotation(org.redkale.persistence.Cacheable.class);
-            if (c1 != null) {
-                cacheable = c1.value();
-                interval = c1.interval();
-                direct = c1.direct();
-            }
-            javax.persistence.Cacheable c2 = type.getAnnotation(javax.persistence.Cacheable.class);
-            if (c2 != null) {
-                cacheable = c2.value();
-                interval = c2.interval();
-                direct = c2.direct();
-            }
-        }
         if (this.table == null || (!cacheForbidden && cacheable)) {
             this.cache = new EntityCache<>(this, interval, direct);
         } else {

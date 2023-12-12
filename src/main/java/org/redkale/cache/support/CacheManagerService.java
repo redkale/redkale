@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Component;
@@ -63,7 +64,7 @@ public class CacheManagerService implements CacheManager, Service {
     private final ConcurrentHashMap<String, CacheValue> syncLock = new ConcurrentHashMap<>();
 
     //缓存无效时使用的异步锁
-    private final ConcurrentHashMap<String, CacheWaitEntry> asyncLock = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, CacheAsyncEntry> asyncLock = new ConcurrentHashMap<>();
 
     @Resource(required = false)
     protected Application application;
@@ -161,28 +162,11 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 数据值
      */
     public <T> T localGet(final String hash, final String key, final Type type, Duration expire, Supplier<T> supplier) {
-        Objects.requireNonNull(supplier);
-        final Type t = loadCacheType(type);
-        CacheValue<T> val = localSource.hget(hash, key, t);
-        if (CacheValue.isValid(val)) {
-            return val.getValue();
-        }
-        final String lockKey = lockKey(hash, key);
-        val = syncLock.computeIfAbsent(lockKey, k -> cacheSupplier(expire, supplier).get());
-        try {
-            if (CacheValue.isValid(val)) {
-                localSource.hset(hash, key, t, val);
-                return val.getValue();
-            } else {
-                return null;
-            }
-        } finally {
-            syncLock.remove(lockKey);
-        }
+        return get(localSource, hash, key, type, expire, supplier);
     }
 
     /**
-     * 远程异步获取缓存数据, 过期返回null
+     * 本地异步获取缓存数据, 过期返回null
      *
      * @param <T>      泛型
      * @param hash     缓存hash
@@ -195,36 +179,7 @@ public class CacheManagerService implements CacheManager, Service {
      */
     @Override
     public <T> CompletableFuture<T> localGetAsync(String hash, String key, Type type, Duration expire, Supplier<CompletableFuture<T>> supplier) {
-        Objects.requireNonNull(supplier);
-        final Type t = loadCacheType(type);
-        CacheValue<T> val = localSource.hget(hash, key, t);
-        if (CacheValue.isValid(val)) {
-            return CompletableFuture.completedFuture(val.getValue());
-        }
-        final String lockKey = lockKey(hash, key);
-        final CacheWaitEntry entry = asyncLock.computeIfAbsent(lockKey, k -> new CacheWaitEntry());
-        CompletableFuture<T> future = new CompletableFuture<>();
-        if (entry.compare(future)) {
-            try {
-                supplier.get().whenComplete((v, e) -> {
-                    if (e != null) {
-                        asyncLock.remove(lockKey);
-                        entry.fail(e);
-                    }
-                    CacheValue<T> rs = cacheFunc(expire, v);
-                    if (CacheValue.isValid(val)) {
-                        localSource.hset(hash, key, t, val);
-                    }
-                    asyncLock.remove(lockKey);
-                    entry.success(CacheValue.get(rs));
-                });
-            } catch (Throwable e) {
-                asyncLock.remove(lockKey);
-                entry.fail(e);
-                return CompletableFuture.failedFuture(e);
-            }
-        }
-        return future;
+        return get(localSource, hash, key, type, expire, supplier);
     }
 
     /**
@@ -238,10 +193,7 @@ public class CacheManagerService implements CacheManager, Service {
      * @param expire 过期时长，为null表示永不过期
      */
     @Override
-    public <T> void localSet(String hash, String key,
-        Type type, T value,
-        Duration expire
-    ) {
+    public <T> void localSet(String hash, String key, Type type, T value, Duration expire) {
         Type t = loadCacheType(type, value);
         CacheValue val = CacheValue.create(value, expire);
         localSource.hset(hash, key, t, val);
@@ -256,8 +208,7 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 删除数量
      */
     @Override
-    public long localDel(String hash, String key
-    ) {
+    public long localDel(String hash, String key) {
         return localSource.hdel(hash, key);
     }
 
@@ -273,9 +224,7 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 数据值
      */
     @Override
-    public <T> T remoteGet(
-        final String hash, final String key, final Type type
-    ) {
+    public <T> T remoteGet(final String hash, final String key, final Type type) {
         Type t = loadCacheType(type);
         CacheValue<T> val = remoteSource.hget(hash, key, t);
         return CacheValue.get(val);
@@ -292,13 +241,42 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 数据值
      */
     @Override
-    public <T> CompletableFuture<T>
-        remoteGetAsync(
-            final String hash, final String key, final Type type
-        ) {
+    public <T> CompletableFuture<T> remoteGetAsync(final String hash, final String key, final Type type) {
         Type t = loadCacheType(type);
         CompletableFuture<CacheValue<T>> future = remoteSource.hgetAsync(hash, key, t);
         return future.thenApply(CacheValue::get);
+    }
+
+    /**
+     * 远程获取缓存数据, 过期返回null
+     *
+     * @param <T>      泛型
+     * @param hash     缓存hash
+     * @param key      缓存键
+     * @param type     数据类型
+     * @param expire   过期时长，为null表示永不过期
+     * @param supplier 数据函数
+     *
+     * @return 数据值
+     */
+    public <T> T remoteGet(final String hash, final String key, final Type type, Duration expire, Supplier<T> supplier) {
+        return get(remoteSource, hash, key, type, expire, supplier);
+    }
+
+    /**
+     * 远程异步获取缓存数据, 过期返回null
+     *
+     * @param <T>      泛型
+     * @param hash     缓存hash
+     * @param key      缓存键
+     * @param type     数据类型
+     * @param expire   过期时长，为null表示永不过期
+     * @param supplier 数据函数
+     *
+     * @return 数据值
+     */
+    public <T> CompletableFuture<T> remoteGetAsync(String hash, String key, Type type, Duration expire, Supplier<CompletableFuture<T>> supplier) {
+        return getAsync(remoteSource, hash, key, type, expire, supplier);
     }
 
     /**
@@ -481,6 +459,88 @@ public class CacheManagerService implements CacheManager, Service {
 
     //-------------------------------------- 内部方法 --------------------------------------
     /**
+     * 获取缓存数据, 过期返回null
+     *
+     * @param <T>      泛型
+     * @param source   缓存源
+     * @param hash     缓存hash
+     * @param key      缓存键
+     * @param type     数据类型
+     * @param expire   过期时长，为null表示永不过期
+     * @param supplier 数据函数
+     *
+     * @return 数据值
+     */
+    protected <T> T get(CacheSource source, String hash, String key, Type type, Duration expire, Supplier<T> supplier) {
+        Objects.requireNonNull(supplier);
+        final Type t = loadCacheType(type);
+        CacheValue<T> val = source.hget(hash, key, t);
+        if (CacheValue.isValid(val)) {
+            return val.getValue();
+        }
+        Function<String, CacheValue> func = k -> {
+            CacheValue<T> oldVal = source.hget(hash, key, t);
+            if (CacheValue.isValid(oldVal)) {
+                return oldVal;
+            }
+            CacheValue<T> newVal = toCacheSupplier(expire, supplier).get();
+            if (CacheValue.isValid(newVal)) {
+                source.hset(hash, key, t, newVal);
+            }
+            return newVal;
+        };
+        final String lockId = lockId(hash, key);
+        val = syncLock.computeIfAbsent(lockId, func);
+        try {
+            return CacheValue.get(val);
+        } finally {
+            syncLock.remove(lockId);
+        }
+    }
+
+    /**
+     * 异步获取缓存数据, 过期返回null
+     *
+     * @param <T>      泛型
+     * @param source   缓存源
+     * @param hash     缓存hash
+     * @param key      缓存键
+     * @param type     数据类型
+     * @param expire   过期时长，为null表示永不过期
+     * @param supplier 数据函数
+     *
+     * @return 数据值
+     */
+    protected <T> CompletableFuture<T> getAsync(CacheSource source, String hash, String key, Type type, Duration expire, Supplier<CompletableFuture<T>> supplier) {
+        Objects.requireNonNull(supplier);
+        final Type t = loadCacheType(type);
+        CacheValue<T> val = source.hget(hash, key, t);
+        if (CacheValue.isValid(val)) {
+            return CompletableFuture.completedFuture(val.getValue());
+        }
+        final String lockId = lockId(hash, key);
+        final CacheAsyncEntry entry = asyncLock.computeIfAbsent(lockId, CacheAsyncEntry::new);
+        CompletableFuture<T> future = new CompletableFuture<>();
+        if (entry.compareAddFuture(future)) {
+            try {
+                supplier.get().whenComplete((v, e) -> {
+                    if (e != null) {
+                        entry.fail(e);
+                    }
+                    CacheValue<T> rs = toCacheValue(expire, v);
+                    if (CacheValue.isValid(val)) {
+                        source.hset(hash, key, t, val);
+                    }
+                    entry.success(CacheValue.get(rs));
+                });
+            } catch (Throwable e) {
+                entry.fail(e);
+            }
+        }
+        return future;
+    }
+
+    /**
      * 创建一个锁key
      *
      * @param hash 缓存hash
@@ -488,7 +548,7 @@ public class CacheManagerService implements CacheManager, Service {
      *
      * @return
      */
-    protected String lockKey(String hash, String key) {
+    protected String lockId(String hash, String key) {
         return hash + (char) 8 + key;
     }
 
@@ -500,7 +560,7 @@ public class CacheManagerService implements CacheManager, Service {
      *
      * @return CacheValue函数
      */
-    protected <T> CacheValue<T> cacheFunc(Duration expire, T value) {
+    protected <T> CacheValue<T> toCacheValue(Duration expire, T value) {
         if (value == null) {
             return nullable ? CacheValue.create(value, expire) : null;
         }
@@ -515,8 +575,8 @@ public class CacheManagerService implements CacheManager, Service {
      *
      * @return CacheValue函数
      */
-    protected <T> Supplier<CacheValue<T>> cacheSupplier(Duration expire, Supplier<T> supplier) {
-        return () -> cacheFunc(expire, supplier.get());
+    protected <T> Supplier<CacheValue<T>> toCacheSupplier(Duration expire, Supplier<T> supplier) {
+        return () -> toCacheValue(expire, supplier.get());
     }
 
     /**
@@ -542,9 +602,9 @@ public class CacheManagerService implements CacheManager, Service {
         return cacheValueTypes.computeIfAbsent(type, t -> TypeToken.createParameterizedType(null, CacheValue.class, type));
     }
 
-    protected static class CacheWaitEntry {
+    private static final Object NIL = new Object();
 
-        private static final Object NIL = new Object();
+    protected class CacheAsyncEntry {
 
         private final AtomicBoolean state = new AtomicBoolean();
 
@@ -552,11 +612,17 @@ public class CacheManagerService implements CacheManager, Service {
 
         private final ReentrantLock lock = new ReentrantLock();
 
+        private final String lockId;
+
         private Object resultObj = NIL;
 
         private Throwable resultExp;
 
-        public boolean compare(CompletableFuture future) {
+        public CacheAsyncEntry(String lockId) {
+            this.lockId = lockId;
+        }
+
+        public boolean compareAddFuture(CompletableFuture future) {
             lock.lock();
             try {
                 if (resultObj != NIL) {
@@ -581,7 +647,9 @@ public class CacheManagerService implements CacheManager, Service {
                 for (CompletableFuture future : futures) {
                     future.completeExceptionally(t);
                 }
+                this.futures.clear();
             } finally {
+                asyncLock.remove(lockId);
                 lock.unlock();
             }
         }
@@ -593,7 +661,9 @@ public class CacheManagerService implements CacheManager, Service {
                 for (CompletableFuture future : futures) {
                     future.complete(val);
                 }
+                this.futures.clear();
             } finally {
+                asyncLock.remove(lockId);
                 lock.unlock();
             }
         }
