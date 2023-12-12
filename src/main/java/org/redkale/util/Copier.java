@@ -1089,6 +1089,9 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                                 mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
                             } else {  //src: method, dest: method
                                 mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                                if (setter.getReturnType() != void.class) {
+                                    mv.visitInsn(POP);
+                                }
                             }
                         } else {
                             mv.visitVarInsn(ALOAD, 2);
@@ -1098,6 +1101,9 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                                 mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
                             } else {  //src: method, dest: method
                                 mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                                if (setter.getReturnType() != void.class) {
+                                    mv.visitInsn(POP);
+                                }
                             }
                         }
                     } else {  // skipNullValue OR (skipEmptyString && charstr)
@@ -1124,6 +1130,9 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                                 mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
                             } else { //src: method, dest: method
                                 mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                                if (setter.getReturnType() != void.class) {
+                                    mv.visitInsn(POP);
+                                }
                             }
                         } else {
                             mv.visitVarInsn(ALOAD, 2);
@@ -1133,6 +1142,9 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                                 mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(getter.getReturnType()));
                             } else { //src: method, dest: method
                                 mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                                if (setter.getReturnType() != void.class) {
+                                    mv.visitInsn(POP);
+                                }
                             }
                         }
                         mv.visitLabel(ifLabel);

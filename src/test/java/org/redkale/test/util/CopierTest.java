@@ -38,6 +38,7 @@ public class CopierTest {
         test.run18();
         test.run19();
         test.run20();
+        test.run21();
     }
 
     @Test
@@ -313,7 +314,142 @@ public class CopierTest {
         List<Bean0> list = funcList.apply(Arrays.asList(bean1, bean2));
         Assertions.assertEquals(2, list.size());
 
-        System.out.println("------------------------------------------");
+        System.out.println("--------------------20----------------------");
+    }
+
+    @Test
+    public void run21() throws Exception {
+        Large21Src src = new Large21Src();
+        src.setCurrent(1);
+        src.setSize(20);
+        System.out.println(Copier.copy(src, Large21Dest.class, Copier.OPTION_ALLOW_TYPE_CAST));
+        System.out.println("--------------------21----------------------");
+    }
+
+    public static class Large21Dest extends Large21Page<Object> {
+
+        private Integer day;
+
+        public Integer getDay() {
+            return day;
+        }
+
+        public void setDay(Integer day) {
+            this.day = day;
+        }
+
+        @Override
+        public String toString() {
+            return JsonConvert.root().convertTo(this);
+        }
+    }
+
+    public static abstract class Large21Page<T> {
+
+        private long total;
+
+        private long size;
+
+        private long current;
+
+        private List<T> records;
+
+        public long getTotal() {
+            return total;
+        }
+
+        public void setTotal(long total) {
+            this.total = total;
+        }
+
+        public long getSize() {
+            return size;
+        }
+
+        public Large21Page<T> setSize(long size) {
+            this.size = size;
+            return this;
+        }
+
+        public long getCurrent() {
+            return current;
+        }
+
+        public Large21Page<T> setCurrent(long current) {
+            this.current = current;
+            return this;
+        }
+
+        public List<T> getRecords() {
+            return records;
+        }
+
+        public void setRecords(List<T> records) {
+            this.records = records;
+        }
+
+        @Override
+        public String toString() {
+            return JsonConvert.root().convertTo(this);
+        }
+    }
+
+    public static class Large21Src {
+
+        private Integer current;
+
+        private Integer size;
+
+        private Integer startDay;
+
+        private Integer endDay;
+
+        private List<String> fields;
+
+        public Integer getCurrent() {
+            return current;
+        }
+
+        public void setCurrent(Integer current) {
+            this.current = current;
+        }
+
+        public Integer getSize() {
+            return size;
+        }
+
+        public void setSize(Integer size) {
+            this.size = size;
+        }
+
+        public Integer getStartDay() {
+            return startDay;
+        }
+
+        public void setStartDay(Integer startDay) {
+            this.startDay = startDay;
+        }
+
+        public Integer getEndDay() {
+            return endDay;
+        }
+
+        public void setEndDay(Integer endDay) {
+            this.endDay = endDay;
+        }
+
+        public List<String> getFields() {
+            return fields;
+        }
+
+        public void setFields(List<String> fields) {
+            this.fields = fields;
+        }
+
+        @Override
+        public String toString() {
+            return JsonConvert.root().convertTo(this);
+        }
     }
 
     public class Bean0 {
@@ -335,8 +471,9 @@ public class CopierTest {
             return carid;
         }
 
-        public void setCarid(long carid) {
+        public Bean0 setCarid(long carid) {
             this.carid = carid;
+            return this;
         }
 
         public int getUserid() {
@@ -464,8 +601,9 @@ public class CopierTest {
             return seqno;
         }
 
-        public void setSeqno(int seqno) {
+        public Bean5 setSeqno(int seqno) {
             this.seqno = seqno;
+            return this;
         }
 
         @Override
