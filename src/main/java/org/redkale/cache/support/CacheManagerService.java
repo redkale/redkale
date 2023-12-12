@@ -4,6 +4,7 @@
 package org.redkale.cache.support;
 
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -162,7 +163,7 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 数据值
      */
     public <T> T localGet(final String hash, final String key, final Type type, Duration expire, Supplier<T> supplier) {
-        return get(localSource, hash, key, type, expire, supplier);
+        return get(localSource::hget, localSource::hset, hash, key, type, expire, supplier);
     }
 
     /**
@@ -179,7 +180,7 @@ public class CacheManagerService implements CacheManager, Service {
      */
     @Override
     public <T> CompletableFuture<T> localGetAsync(String hash, String key, Type type, Duration expire, Supplier<CompletableFuture<T>> supplier) {
-        return get(localSource, hash, key, type, expire, supplier);
+        return getAsync(localSource::hgetAsync, localSource::hsetAsync, hash, key, type, expire, supplier);
     }
 
     /**
@@ -260,7 +261,7 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 数据值
      */
     public <T> T remoteGet(final String hash, final String key, final Type type, Duration expire, Supplier<T> supplier) {
-        return get(remoteSource, hash, key, type, expire, supplier);
+        return get(remoteSource::hget, remoteSource::hset, hash, key, type, expire, supplier);
     }
 
     /**
@@ -276,7 +277,7 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 数据值
      */
     public <T> CompletableFuture<T> remoteGetAsync(String hash, String key, Type type, Duration expire, Supplier<CompletableFuture<T>> supplier) {
-        return getAsync(remoteSource, hash, key, type, expire, supplier);
+        return getAsync(remoteSource::hgetAsync, remoteSource::hsetAsync, hash, key, type, expire, supplier);
     }
 
     /**
@@ -346,17 +347,9 @@ public class CacheManagerService implements CacheManager, Service {
      *
      * @return 数据值
      */
+    @Override
     public <T> T bothGet(final String hash, final String key, final Type type) {
-        Type t = loadCacheType(type);
-        CacheValue<T> val = localSource.hget(hash, key, t);
-        if (CacheValue.isValid(val)) {
-            return val.getValue();
-        }
-        if (remoteSource != null) {
-            return CacheValue.get(remoteSource.hget(hash, key, t));
-        } else {
-            return null;
-        }
+        return CacheValue.get(bothGetCache(hash, key, type));
     }
 
     /**
@@ -369,18 +362,57 @@ public class CacheManagerService implements CacheManager, Service {
      *
      * @return 数据值
      */
+    @Override
     public <T> CompletableFuture<T> bothGetAsync(final String hash, final String key, final Type type) {
-        Type t = loadCacheType(type);
-        CacheValue<T> val = localSource.hget(hash, key, t);
-        if (CacheValue.isValid(val)) {
-            return CompletableFuture.completedFuture(val.getValue());
-        }
-        if (remoteSource != null) {
-            CompletableFuture<CacheValue<T>> future = remoteSource.hgetAsync(hash, key, t);
-            return future.thenApply(CacheValue::get);
-        } else {
-            return CompletableFuture.completedFuture(null);
-        }
+        return bothGetCacheAsync(hash, key, type).thenApply(CacheValue::get);
+    }
+
+    /**
+     * 远程获取缓存数据, 过期返回null
+     *
+     * @param <T>          泛型
+     * @param hash         缓存hash
+     * @param key          缓存键
+     * @param type         数据类型
+     * @param localExpire  本地过期时长，为null表示永不过期
+     * @param remoteExpire 远程过期时长，为null表示永不过期
+     * @param supplier     数据函数
+     *
+     * @return 数据值
+     */
+    @Override
+    public <T> T bothGet(final String hash, final String key, final Type type, Duration localExpire, Duration remoteExpire, Supplier<T> supplier) {
+        return get(this::bothGetCache, (h, k, t, v) -> {
+            localSource.hset(key, key, type, v);
+            if (remoteSource != null) {
+                remoteSource.hset(hash, key, t, CacheValue.create(v.getValue(), remoteExpire));
+            }
+        }, hash, key, type, localExpire, supplier);
+    }
+
+    /**
+     * 远程异步获取缓存数据, 过期返回null
+     *
+     * @param <T>          泛型
+     * @param hash         缓存hash
+     * @param key          缓存键
+     * @param type         数据类型
+     * @param localExpire  本地过期时长，为null表示永不过期
+     * @param remoteExpire 远程过期时长，为null表示永不过期
+     * @param supplier     数据函数
+     *
+     * @return 数据值
+     */
+    @Override
+    public <T> CompletableFuture<T> bothGetAsync(String hash, String key, Type type, Duration localExpire, Duration remoteExpire, Supplier<CompletableFuture<T>> supplier) {
+        return getAsync(this::bothGetCacheAsync, (h, k, t, v) -> {
+            localSource.hset(key, key, type, v);
+            if (remoteSource != null) {
+                return remoteSource.hsetAsync(hash, key, t, CacheValue.create(v.getValue(), remoteExpire));
+            } else {
+                return CompletableFuture.completedFuture(null);
+            }
+        }, hash, key, type, localExpire, supplier);
     }
 
     /**
@@ -400,6 +432,11 @@ public class CacheManagerService implements CacheManager, Service {
         if (remoteSource != null) {
             remoteSource.hset(hash, key, t, CacheValue.create(value, remoteExpire));
         }
+    }
+
+    public static void main(String[] args) throws Throwable {
+        BigDecimal z = new BigDecimal("0");
+        System.out.println(Objects.equals(BigDecimal.ZERO, z));
     }
 
     /**
@@ -462,7 +499,8 @@ public class CacheManagerService implements CacheManager, Service {
      * 获取缓存数据, 过期返回null
      *
      * @param <T>      泛型
-     * @param source   缓存源
+     * @param getter   获取数据函数
+     * @param setter   设置数据函数
      * @param hash     缓存hash
      * @param key      缓存键
      * @param type     数据类型
@@ -471,21 +509,22 @@ public class CacheManagerService implements CacheManager, Service {
      *
      * @return 数据值
      */
-    protected <T> T get(CacheSource source, String hash, String key, Type type, Duration expire, Supplier<T> supplier) {
+    protected <T> T get(GetterFunc<CacheValue<T>> getter, SetterSyncFunc setter,
+        String hash, String key, Type type, Duration expire, Supplier<T> supplier) {
         Objects.requireNonNull(supplier);
         final Type t = loadCacheType(type);
-        CacheValue<T> val = source.hget(hash, key, t);
+        CacheValue<T> val = getter.apply(hash, key, t);
         if (CacheValue.isValid(val)) {
             return val.getValue();
         }
         Function<String, CacheValue> func = k -> {
-            CacheValue<T> oldVal = source.hget(hash, key, t);
+            CacheValue<T> oldVal = getter.apply(hash, key, t);
             if (CacheValue.isValid(oldVal)) {
                 return oldVal;
             }
             CacheValue<T> newVal = toCacheSupplier(expire, supplier).get();
             if (CacheValue.isValid(newVal)) {
-                source.hset(hash, key, t, newVal);
+                setter.apply(hash, key, t, newVal);
             }
             return newVal;
         };
@@ -502,7 +541,8 @@ public class CacheManagerService implements CacheManager, Service {
      * 异步获取缓存数据, 过期返回null
      *
      * @param <T>      泛型
-     * @param source   缓存源
+     * @param getter   获取数据函数
+     * @param setter   设置数据函数
      * @param hash     缓存hash
      * @param key      缓存键
      * @param type     数据类型
@@ -511,33 +551,74 @@ public class CacheManagerService implements CacheManager, Service {
      *
      * @return 数据值
      */
-    protected <T> CompletableFuture<T> getAsync(CacheSource source, String hash, String key, Type type, Duration expire, Supplier<CompletableFuture<T>> supplier) {
+    protected <T> CompletableFuture<T> getAsync(GetterFunc<CompletableFuture<CacheValue<T>>> getter, SetterAsyncFunc setter,
+        String hash, String key, Type type, Duration expire, Supplier<CompletableFuture<T>> supplier) {
         Objects.requireNonNull(supplier);
         final Type t = loadCacheType(type);
-        CacheValue<T> val = source.hget(hash, key, t);
-        if (CacheValue.isValid(val)) {
-            return CompletableFuture.completedFuture(val.getValue());
-        }
-        final String lockId = lockId(hash, key);
-        final CacheAsyncEntry entry = asyncLock.computeIfAbsent(lockId, CacheAsyncEntry::new);
-        CompletableFuture<T> future = new CompletableFuture<>();
-        if (entry.compareAddFuture(future)) {
-            try {
-                supplier.get().whenComplete((v, e) -> {
-                    if (e != null) {
-                        entry.fail(e);
-                    }
-                    CacheValue<T> rs = toCacheValue(expire, v);
-                    if (CacheValue.isValid(val)) {
-                        source.hset(hash, key, t, val);
-                    }
-                    entry.success(CacheValue.get(rs));
-                });
-            } catch (Throwable e) {
-                entry.fail(e);
+        CompletableFuture<CacheValue<T>> sourceFuture = getter.apply(hash, key, t);
+        return sourceFuture.thenCompose(val -> {
+            if (CacheValue.isValid(val)) {
+                return CompletableFuture.completedFuture(val.getValue());
             }
+            final String lockId = lockId(hash, key);
+            final CacheAsyncEntry entry = asyncLock.computeIfAbsent(lockId, CacheAsyncEntry::new);
+            CompletableFuture<T> future = new CompletableFuture<>();
+            if (entry.compareAddFuture(future)) {
+                try {
+                    supplier.get().whenComplete((v, e) -> {
+                        if (e != null) {
+                            entry.fail(e);
+                        }
+                        CacheValue<T> rs = toCacheValue(expire, v);
+                        if (CacheValue.isValid(val)) {
+                            setter.apply(hash, key, t, val)
+                                .whenComplete((v2, e2) -> entry.success(CacheValue.get(rs)));
+                        } else {
+                            entry.success(CacheValue.get(rs));
+                        }
+                    });
+                } catch (Throwable e) {
+                    entry.fail(e);
+                }
+            }
+            return future;
+        });
+    }
+
+    protected <T> CacheValue<T> bothGetCache(final String hash, final String key, final Type type) {
+        Type t = loadCacheType(type);
+        CacheValue<T> val = localSource.hget(hash, key, t);
+        if (CacheValue.isValid(val)) {
+            return val;
         }
-        return future;
+        if (remoteSource != null) {
+            return remoteSource.hget(hash, key, t);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * 远程异步获取缓存数据, 过期返回null
+     *
+     * @param <T>  泛型
+     * @param hash 缓存hash
+     * @param key  缓存键
+     * @param type 数据类型
+     *
+     * @return 数据值
+     */
+    protected <T> CompletableFuture<CacheValue<T>> bothGetCacheAsync(final String hash, final String key, final Type type) {
+        Type t = loadCacheType(type);
+        CacheValue<T> val = localSource.hget(hash, key, t);
+        if (CacheValue.isValid(val)) {
+            return CompletableFuture.completedFuture(val);
+        }
+        if (remoteSource != null) {
+            return remoteSource.hgetAsync(hash, key, t);
+        } else {
+            return CompletableFuture.completedFuture(null);
+        }
     }
 
     /**
@@ -603,6 +684,21 @@ public class CacheManagerService implements CacheManager, Service {
     }
 
     private static final Object NIL = new Object();
+
+    protected static interface GetterFunc<R> {
+
+        public R apply(String hash, String key, Type type);
+    }
+
+    protected static interface SetterSyncFunc {
+
+        public void apply(String hash, String key, Type type, CacheValue value);
+    }
+
+    protected static interface SetterAsyncFunc {
+
+        public CompletableFuture<Void> apply(String hash, String key, Type type, CacheValue value);
+    }
 
     protected class CacheAsyncEntry {
 

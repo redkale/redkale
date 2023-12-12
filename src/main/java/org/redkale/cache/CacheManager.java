@@ -254,7 +254,7 @@ public interface CacheManager {
 
     //-------------------------------------- both缓存 --------------------------------------
     /**
-     * 远程获取缓存数据, 过期返回null
+     * 本地或远程获取缓存数据, 过期返回null
      *
      * @param <T>  泛型
      * @param hash 缓存hash
@@ -266,7 +266,7 @@ public interface CacheManager {
     public <T> T bothGet(final String hash, final String key, final Type type);
 
     /**
-     * 远程获取字符串缓存数据, 过期返回null
+     * 本地或远程获取字符串缓存数据, 过期返回null
      *
      * @param hash 缓存hash
      * @param key  缓存键
@@ -278,7 +278,7 @@ public interface CacheManager {
     }
 
     /**
-     * 远程异步获取缓存数据, 过期返回null
+     * 本地或远程异步获取缓存数据, 过期返回null
      *
      * @param <T>  泛型
      * @param hash 缓存hash
@@ -290,7 +290,7 @@ public interface CacheManager {
     public <T> CompletableFuture<T> bothGetAsync(final String hash, final String key, final Type type);
 
     /**
-     * 远程异步获取字符串缓存数据, 过期返回null
+     * 本地或远程异步获取字符串缓存数据, 过期返回null
      *
      * @param hash 缓存hash
      * @param key  缓存键
@@ -302,7 +302,37 @@ public interface CacheManager {
     }
 
     /**
-     * 远程缓存数据
+     * 本地或远程获取缓存数据, 过期返回null
+     *
+     * @param <T>          泛型
+     * @param hash         缓存hash
+     * @param key          缓存键
+     * @param type         数据类型
+     * @param localExpire  本地过期时长，为null表示永不过期
+     * @param remoteExpire 远程过期时长，为null表示永不过期
+     * @param supplier     数据函数
+     *
+     * @return 数据值
+     */
+    public <T> T bothGet(String hash, String key, Type type, Duration localExpire, Duration remoteExpire, Supplier<T> supplier);
+
+    /**
+     * 本地或远程异步获取缓存数据, 过期返回null
+     *
+     * @param <T>          泛型
+     * @param hash         缓存hash
+     * @param key          缓存键
+     * @param type         数据类型
+     * @param localExpire  本地过期时长，为null表示永不过期
+     * @param remoteExpire 远程过期时长，为null表示永不过期
+     * @param supplier     数据函数
+     *
+     * @return 数据值
+     */
+    public <T> CompletableFuture<T> bothGetAsync(String hash, String key, Type type, Duration localExpire, Duration remoteExpire, Supplier<CompletableFuture<T>> supplier);
+
+    /**
+     * 本地和远程缓存数据
      *
      * @param <T>          泛型
      * @param hash         缓存hash
@@ -315,7 +345,7 @@ public interface CacheManager {
     public <T> void bothSet(final String hash, final String key, final Type type, final T value, Duration localExpire, Duration remoteExpire);
 
     /**
-     * 远程缓存字符串数据
+     * 本地和远程缓存字符串数据
      *
      * @param hash         缓存hash
      * @param key          缓存键
@@ -328,7 +358,7 @@ public interface CacheManager {
     }
 
     /**
-     * 远程异步缓存数据
+     * 本地和远程异步缓存数据
      *
      * @param <T>          泛型
      * @param hash         缓存hash
@@ -341,7 +371,7 @@ public interface CacheManager {
     public <T> CompletableFuture<Void> bothSetAsync(String hash, String key, Type type, T value, Duration localExpire, Duration remoteExpire);
 
     /**
-     * 远程异步缓存字符串数据
+     * 本地和远程异步缓存字符串数据
      *
      * @param hash         缓存hash
      * @param key          缓存键
@@ -354,7 +384,7 @@ public interface CacheManager {
     }
 
     /**
-     * 远程删除缓存数据
+     * 本地和远程删除缓存数据
      *
      * @param hash 缓存hash
      * @param key  缓存键
@@ -364,7 +394,7 @@ public interface CacheManager {
     public long bothDel(String hash, String key);
 
     /**
-     * 远程异步删除缓存数据
+     * 本地和远程异步删除缓存数据
      *
      * @param hash 缓存hash
      * @param key  缓存键
