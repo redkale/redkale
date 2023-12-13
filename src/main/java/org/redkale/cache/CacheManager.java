@@ -52,12 +52,13 @@ public interface CacheManager {
      * @param hash     缓存hash
      * @param key      缓存键
      * @param type     数据类型
+     * @param nullable 是否缓存null值
      * @param expire   过期时长，为null表示永不过期
      * @param supplier 数据函数
      *
      * @return 数据值
      */
-    public <T> T localGet(final String hash, final String key, final Type type, Duration expire, Supplier<T> supplier);
+    public <T> T localGet(final String hash, final String key, final Type type, boolean nullable, Duration expire, Supplier<T> supplier);
 
     /**
      * 本地异步获取缓存数据, 过期返回null
@@ -66,12 +67,13 @@ public interface CacheManager {
      * @param hash     缓存hash
      * @param key      缓存键
      * @param type     数据类型
+     * @param nullable 是否缓存null值
      * @param expire   过期时长，为null表示永不过期
      * @param supplier 数据函数
      *
      * @return 数据值
      */
-    public <T> CompletableFuture<T> localGetAsync(String hash, String key, Type type, Duration expire, Supplier<CompletableFuture<T>> supplier);
+    public <T> CompletableFuture<T> localGetAsync(String hash, String key, Type type, boolean nullable, Duration expire, Supplier<CompletableFuture<T>> supplier);
 
     /**
      * 本地缓存数据
@@ -163,12 +165,14 @@ public interface CacheManager {
      * @param hash     缓存hash
      * @param key      缓存键
      * @param type     数据类型
+     * @param nullable 是否缓存null值
      * @param expire   过期时长，为null表示永不过期
      * @param supplier 数据函数
      *
      * @return 数据值
      */
-    public <T> T remoteGet(final String hash, final String key, final Type type, Duration expire, Supplier<T> supplier);
+    public <T> T remoteGet(final String hash, final String key, final Type type, boolean nullable,
+        Duration expire, Supplier<T> supplier);
 
     /**
      * 远程异步获取缓存数据, 过期返回null
@@ -177,12 +181,14 @@ public interface CacheManager {
      * @param hash     缓存hash
      * @param key      缓存键
      * @param type     数据类型
+     * @param nullable 是否缓存null值
      * @param expire   过期时长，为null表示永不过期
      * @param supplier 数据函数
      *
      * @return 数据值
      */
-    public <T> CompletableFuture<T> remoteGetAsync(String hash, String key, Type type, Duration expire, Supplier<CompletableFuture<T>> supplier);
+    public <T> CompletableFuture<T> remoteGetAsync(String hash, String key, Type type, boolean nullable,
+        Duration expire, Supplier<CompletableFuture<T>> supplier);
 
     /**
      * 远程缓存数据
@@ -308,13 +314,15 @@ public interface CacheManager {
      * @param hash         缓存hash
      * @param key          缓存键
      * @param type         数据类型
+     * @param nullable     是否缓存null值
      * @param localExpire  本地过期时长，为null表示永不过期
      * @param remoteExpire 远程过期时长，为null表示永不过期
      * @param supplier     数据函数
      *
      * @return 数据值
      */
-    public <T> T bothGet(String hash, String key, Type type, Duration localExpire, Duration remoteExpire, Supplier<T> supplier);
+    public <T> T bothGet(String hash, String key, Type type, boolean nullable,
+        Duration localExpire, Duration remoteExpire, Supplier<T> supplier);
 
     /**
      * 本地或远程异步获取缓存数据, 过期返回null
@@ -323,13 +331,15 @@ public interface CacheManager {
      * @param hash         缓存hash
      * @param key          缓存键
      * @param type         数据类型
+     * @param nullable     是否缓存null值
      * @param localExpire  本地过期时长，为null表示永不过期
      * @param remoteExpire 远程过期时长，为null表示永不过期
      * @param supplier     数据函数
      *
      * @return 数据值
      */
-    public <T> CompletableFuture<T> bothGetAsync(String hash, String key, Type type, Duration localExpire, Duration remoteExpire, Supplier<CompletableFuture<T>> supplier);
+    public <T> CompletableFuture<T> bothGetAsync(String hash, String key, Type type, boolean nullable,
+        Duration localExpire, Duration remoteExpire, Supplier<CompletableFuture<T>> supplier);
 
     /**
      * 本地和远程缓存数据
