@@ -820,6 +820,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
             }
 
             Predicate<Class> simpler = t -> t.isPrimitive() || t == String.class || Number.class.isAssignableFrom(t);
+            //遍历所有字段
             for (Map.Entry<String, AccessibleObject> en : elements.entrySet()) {
                 if (!(en.getValue() instanceof java.lang.reflect.Field)) {
                     continue;
@@ -929,19 +930,25 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                             Asms.visitPrimitiveValueOf(mv, srcFieldType);
                             mv.visitMethodInsn(INVOKESTATIC, utilClassName, "convertValue", "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;", false);
                             Asms.visitCheckCast(mv, destFieldType);
-                            if (setter == null) { //src: field, dest:field
+                            if (setter == null) { //src: field, dest: field
                                 mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
-                            } else { //src: field, dest:method
+                            } else { //src: field, dest: method
                                 mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                                if (setter.getReturnType() != void.class) {
+                                    mv.visitInsn(POP);
+                                }
                             }
                         } else {
                             mv.visitVarInsn(ALOAD, 2);
                             mv.visitVarInsn(ALOAD, 1);
                             mv.visitFieldInsn(GETFIELD, srcClassName, sfname, srcFieldDesc);
-                            if (setter == null) {  //src: field, dest:field
+                            if (setter == null) {  //src: field, dest: field
                                 mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
-                            } else { //src: field, dest:method
+                            } else { //src: field, dest: method
                                 mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                                if (setter.getReturnType() != void.class) {
+                                    mv.visitInsn(POP);
+                                }
                             }
                         }
                     } else { // skipNullValue OR (skipEmptyString && charstr)
@@ -964,19 +971,25 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                             Asms.visitPrimitiveValueOf(mv, srcFieldType);
                             mv.visitMethodInsn(INVOKESTATIC, utilClassName, "convertValue", "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;", false);
                             Asms.visitCheckCast(mv, destFieldType);
-                            if (setter == null) { //src: field, dest:field
+                            if (setter == null) { //src: field, dest: field
                                 mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
-                            } else { //src: field, dest:method
+                            } else { //src: field, dest: method
                                 mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                                if (setter.getReturnType() != void.class) {
+                                    mv.visitInsn(POP);
+                                }
                             }
                         } else {
                             mv.visitVarInsn(ALOAD, 2);
                             mv.visitVarInsn(ALOAD, 3);
                             mv.visitTypeInsn(CHECKCAST, srcFieldType.getName().replace('.', '/'));
-                            if (setter == null) {  //src: field, dest:field
+                            if (setter == null) {  //src: field, dest: field
                                 mv.visitFieldInsn(PUTFIELD, destClassName, dfname, srcFieldDesc);
-                            } else { //src: field, dest:method
+                            } else { //src: field, dest: method
                                 mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                                if (setter.getReturnType() != void.class) {
+                                    mv.visitInsn(POP);
+                                }
                             }
                         }
                         mv.visitLabel(ifLabel);
@@ -984,6 +997,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                     }
                 }
             }
+            //遍历所有方法
             for (Map.Entry<String, AccessibleObject> en : elements.entrySet()) {
                 if (!(en.getValue() instanceof java.lang.reflect.Method)) {
                     continue;
