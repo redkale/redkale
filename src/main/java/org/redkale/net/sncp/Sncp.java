@@ -22,6 +22,7 @@ import org.redkale.convert.bson.BsonConvert;
 import org.redkale.mq.MessageAgent;
 import org.redkale.net.http.WebSocketNode;
 import org.redkale.net.sncp.SncpRemoteInfo.SncpRemoteAction;
+import org.redkale.schedule.Scheduled;
 import org.redkale.service.*;
 import org.redkale.util.AnyValue;
 import org.redkale.util.RedkaleClassLoader;
@@ -30,7 +31,6 @@ import org.redkale.util.ResourceFactory;
 import org.redkale.util.TypeToken;
 import org.redkale.util.Uint128;
 import org.redkale.util.Utility;
-import org.redkale.schedule.Scheduled;
 
 /**
  * Service Node Communicate Protocol
@@ -173,7 +173,8 @@ public abstract class Sncp {
             Method old = actionids.get(actionid);
             if (old != null) {
                 if (old.getDeclaringClass().equals(method.getDeclaringClass())) {
-                    throw new SncpException(serviceTypeOrImplClass.getName() + " have one more same action(Method=" + method + ", " + old + ", actionid=" + actionid + ")");
+                    throw new SncpException(serviceTypeOrImplClass.getName() 
+                        + " have one more same action(Method=" + method + ", " + old + ", actionid=" + actionid + ")");
                 }
                 continue;
             }
@@ -324,7 +325,9 @@ public abstract class Sncp {
         if (WebSocketNode.class.isAssignableFrom(resourceType)) {
             return getSncpReqTopicPrefix() + "module.wsnode" + nodeid + (resourceName.isEmpty() ? "" : ("-" + resourceName));
         }
-        return getSncpReqTopicPrefix() + "module." + resourceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase() + (resourceName.isEmpty() ? "" : ("-" + resourceName));
+        return getSncpReqTopicPrefix() + "module." 
+            + resourceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase() 
+            + (resourceName.isEmpty() ? "" : ("-" + resourceName));
     }
 
     public static String getSncpReqTopicPrefix() {
@@ -557,7 +560,7 @@ public abstract class Sncp {
         MethodDebugVisitor mv;
         AnnotationVisitor av0;
 
-        cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
+        cw.visit(V11, ACC_PUBLIC + ACC_SUPER, newDynName, null, supDynName, null);
         { //给动态生成的Service类标记上Resource
             av0 = cw.visitAnnotation(resDesc, true);
             av0.visit("name", name);
@@ -786,7 +789,8 @@ public abstract class Sncp {
         if (!java.lang.reflect.Modifier.isPublic(mod)) {
             return null;
         }
-        final SncpRemoteInfo info = createSncpRemoteInfo(name, getResourceType(serviceTypeOrImplClass), serviceTypeOrImplClass, BsonConvert.root(), sncpRpcGroups, client, agent, remoteGroup);
+        final SncpRemoteInfo info = createSncpRemoteInfo(name, getResourceType(serviceTypeOrImplClass), 
+            serviceTypeOrImplClass, BsonConvert.root(), sncpRpcGroups, client, agent, remoteGroup);
         final String supDynName = serviceTypeOrImplClass.getName().replace('.', '/');
         final String sncpInfoName = SncpRemoteInfo.class.getName().replace('.', '/');
         final String resDesc = Type.getDescriptor(Resource.class);
@@ -836,7 +840,8 @@ public abstract class Sncp {
         MethodDebugVisitor mv;
         AnnotationVisitor av0;
 
-        cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, serviceTypeOrImplClass.isInterface() ? "java/lang/Object" : supDynName, serviceTypeOrImplClass.isInterface() ? new String[]{supDynName} : null);
+        cw.visit(V11, ACC_PUBLIC + ACC_SUPER, newDynName, null, serviceTypeOrImplClass.isInterface() ? "java/lang/Object" : supDynName, 
+            serviceTypeOrImplClass.isInterface() ? new String[]{supDynName} : null);
         { //给动态生成的Service类标记上Resource
             av0 = cw.visitAnnotation(resDesc, true);
             av0.visit("name", name);
@@ -956,7 +961,8 @@ public abstract class Sncp {
                                 mv.visitVarInsn(ILOAD, insn);
                             }
                             Class bigclaz = TypeToken.primitiveToWrapper((Class) pt);
-                            mv.visitMethodInsn(INVOKESTATIC, bigclaz.getName().replace('.', '/'), "valueOf", "(" + Type.getDescriptor((Class) pt) + ")" + Type.getDescriptor(bigclaz), false);
+                            mv.visitMethodInsn(INVOKESTATIC, bigclaz.getName().replace('.', '/'), "valueOf", 
+                                "(" + Type.getDescriptor((Class) pt) + ")" + Type.getDescriptor(bigclaz), false);
                         } else {
                             mv.visitVarInsn(ALOAD, insn);
                         }

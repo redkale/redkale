@@ -536,7 +536,7 @@ public final class Rest {
         FieldVisitor fv;
         MethodDebugVisitor mv;
         AnnotationVisitor av0;
-        cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
+        cw.visit(V11, ACC_PUBLIC + ACC_SUPER, newDynName, null, supDynName, null);
         { //RestDyn
             av0 = cw.visitAnnotation(Type.getDescriptor(RestDyn.class), true);
             av0.visit("simple", false); //WebSocketServlet必须要解析http-header
@@ -588,7 +588,8 @@ public final class Rest {
                 Resource res = field.getAnnotation(Resource.class);
                 javax.annotation.Resource res2 = field.getAnnotation(javax.annotation.Resource.class);
                 java.lang.reflect.Type fieldType = field.getGenericType();
-                fv = cw.visitField(ACC_PRIVATE, "_redkale_resource_" + i, Type.getDescriptor(field.getType()), fieldType == field.getType() ? null : Utility.getTypeDescriptor(fieldType), null);
+                fv = cw.visitField(ACC_PRIVATE, "_redkale_resource_" + i, Type.getDescriptor(field.getType()),
+                    fieldType == field.getType() ? null : Utility.getTypeDescriptor(fieldType), null);
                 {
                     av0 = fv.visitAnnotation(resDesc, true);
                     av0.visit("name", res != null ? res.name() : res2.name());
@@ -599,7 +600,8 @@ public final class Rest {
             }
         }
         { //_redkale_annotations
-            fv = cw.visitField(ACC_PUBLIC + ACC_STATIC, "_redkale_annotations", "Ljava/util/Map;", "Ljava/util/Map<Ljava/lang/String;[Ljava/lang/annotation/Annotation;>;", null);
+            fv = cw.visitField(ACC_PUBLIC + ACC_STATIC, "_redkale_annotations", "Ljava/util/Map;",
+                "Ljava/util/Map<Ljava/lang/String;[Ljava/lang/annotation/Annotation;>;", null);
             fv.visitEnd();
         }
         { //_DynWebSocketServlet构造函数
@@ -635,7 +637,8 @@ public final class Rest {
             mv.visitEnd();
         }
         { //createWebSocket 方法
-            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PROTECTED, "createWebSocket", "()" + wsDesc, "<G::Ljava/io/Serializable;T:Ljava/lang/Object;>()L" + WebSocket.class.getName().replace('.', '/') + "<TG;TT;>;", null));
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PROTECTED, "createWebSocket", "()" + wsDesc,
+                "<G::Ljava/io/Serializable;T:Ljava/lang/Object;>()L" + WebSocket.class.getName().replace('.', '/') + "<TG;TT;>;", null));
             mv.visitTypeInsn(NEW, newDynName + "$" + newDynWebSokcetSimpleName);
             mv.visitInsn(DUP);
             for (int i = 0; i < resourcesFields.size(); i++) {
@@ -648,7 +651,8 @@ public final class Rest {
             mv.visitEnd();
         }
         { //createRestOnMessageConsumer
-            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PROTECTED, "createRestOnMessageConsumer", "()Ljava/util/function/BiConsumer;", "()Ljava/util/function/BiConsumer<" + wsDesc + "Ljava/lang/Object;>;", null));
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PROTECTED, "createRestOnMessageConsumer",
+                "()Ljava/util/function/BiConsumer;", "()Ljava/util/function/BiConsumer<" + wsDesc + "Ljava/lang/Object;>;", null));
             mv.visitTypeInsn(NEW, newDynConsumerFullName);
             mv.visitInsn(DUP);
             mv.visitMethodInsn(INVOKESPECIAL, newDynConsumerFullName, "<init>", "()V", false);
@@ -1683,7 +1687,7 @@ public final class Rest {
         final List<Object[]> restConverts = new ArrayList<>();
         final Map<String, Method> mappingurlToMethod = new HashMap<>();
 
-        cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
+        cw.visit(V11, ACC_PUBLIC + ACC_SUPER, newDynName, null, supDynName, null);
 
         { //RestDynSourceType
             av0 = cw.visitAnnotation(Type.getDescriptor(RestDynSourceType.class), true);
