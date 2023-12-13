@@ -53,7 +53,7 @@ public interface CacheManager {
      * @param key      缓存键
      * @param type     数据类型
      * @param nullable 是否缓存null值
-     * @param expire   过期时长，为null表示永不过期
+     * @param expire   过期时长，Duration.ZERO为永不过期
      * @param supplier 数据函数
      *
      * @return 数据值
@@ -68,7 +68,7 @@ public interface CacheManager {
      * @param key      缓存键
      * @param type     数据类型
      * @param nullable 是否缓存null值
-     * @param expire   过期时长，为null表示永不过期
+     * @param expire   过期时长，Duration.ZERO为永不过期
      * @param supplier 数据函数
      *
      * @return 数据值
@@ -83,7 +83,7 @@ public interface CacheManager {
      * @param key    缓存键
      * @param type   数据类型
      * @param value  数据值
-     * @param expire 过期时长，为null表示永不过期
+     * @param expire 过期时长，Duration.ZERO为永不过期
      */
     public <T> void localSet(String hash, String key, Type type, T value, Duration expire);
 
@@ -93,7 +93,7 @@ public interface CacheManager {
      * @param hash   缓存hash
      * @param key    缓存键
      * @param value  数据值
-     * @param expire 过期时长，为null表示永不过期
+     * @param expire 过期时长，Duration.ZERO为永不过期
      */
     default void localSetString(final String hash, final String key, final String value, Duration expire) {
         localSet(hash, key, String.class, value, expire);
@@ -166,7 +166,7 @@ public interface CacheManager {
      * @param key      缓存键
      * @param type     数据类型
      * @param nullable 是否缓存null值
-     * @param expire   过期时长，为null表示永不过期
+     * @param expire   过期时长，Duration.ZERO为永不过期
      * @param supplier 数据函数
      *
      * @return 数据值
@@ -182,7 +182,7 @@ public interface CacheManager {
      * @param key      缓存键
      * @param type     数据类型
      * @param nullable 是否缓存null值
-     * @param expire   过期时长，为null表示永不过期
+     * @param expire   过期时长，Duration.ZERO为永不过期
      * @param supplier 数据函数
      *
      * @return 数据值
@@ -198,7 +198,7 @@ public interface CacheManager {
      * @param key    缓存键
      * @param type   数据类型
      * @param value  数据值
-     * @param expire 过期时长，为null表示永不过期
+     * @param expire 过期时长，Duration.ZERO为永不过期
      */
     public <T> void remoteSet(final String hash, final String key, final Type type, final T value, Duration expire);
 
@@ -208,7 +208,7 @@ public interface CacheManager {
      * @param hash   缓存hash
      * @param key    缓存键
      * @param value  数据值
-     * @param expire 过期时长，为null表示永不过期
+     * @param expire 过期时长，Duration.ZERO为永不过期
      */
     default void remoteSetString(final String hash, final String key, final String value, Duration expire) {
         remoteSet(hash, key, String.class, value, expire);
@@ -222,7 +222,9 @@ public interface CacheManager {
      * @param key    缓存键
      * @param type   数据类型
      * @param value  数据值
-     * @param expire 过期时长，为null表示永不过期
+     * @param expire 过期时长，Duration.ZERO为永不过期
+     *
+     * @return void
      */
     public <T> CompletableFuture<Void> remoteSetAsync(String hash, String key, Type type, T value, Duration expire);
 
@@ -232,7 +234,9 @@ public interface CacheManager {
      * @param hash   缓存hash
      * @param key    缓存键
      * @param value  数据值
-     * @param expire 过期时长，为null表示永不过期
+     * @param expire 过期时长，Duration.ZERO为永不过期
+     *
+     * @return void
      */
     default CompletableFuture<Void> remoteSetStringAsync(final String hash, final String key, final String value, Duration expire) {
         return remoteSetAsync(hash, key, String.class, value, expire);
@@ -315,8 +319,8 @@ public interface CacheManager {
      * @param key          缓存键
      * @param type         数据类型
      * @param nullable     是否缓存null值
-     * @param localExpire  本地过期时长，为null表示永不过期
-     * @param remoteExpire 远程过期时长，为null表示永不过期
+     * @param localExpire  本地过期时长，Duration.ZERO为永不过期，为null表示不本地缓存
+     * @param remoteExpire 远程过期时长，Duration.ZERO为永不过期，为null表示不远程缓存
      * @param supplier     数据函数
      *
      * @return 数据值
@@ -332,8 +336,8 @@ public interface CacheManager {
      * @param key          缓存键
      * @param type         数据类型
      * @param nullable     是否缓存null值
-     * @param localExpire  本地过期时长，为null表示永不过期
-     * @param remoteExpire 远程过期时长，为null表示永不过期
+     * @param localExpire  本地过期时长，Duration.ZERO为永不过期，为null表示不本地缓存
+     * @param remoteExpire 远程过期时长，Duration.ZERO为永不过期，为null表示不远程缓存
      * @param supplier     数据函数
      *
      * @return 数据值
@@ -349,8 +353,8 @@ public interface CacheManager {
      * @param key          缓存键
      * @param type         数据类型
      * @param value        数据值
-     * @param localExpire  本地过期时长，为null表示永不过期
-     * @param remoteExpire 远程过期时长，为null表示永不过期
+     * @param localExpire  本地过期时长，Duration.ZERO为永不过期，为null表示不本地缓存
+     * @param remoteExpire 远程过期时长，Duration.ZERO为永不过期，为null表示不远程缓存
      */
     public <T> void bothSet(final String hash, final String key, final Type type, final T value, Duration localExpire, Duration remoteExpire);
 
@@ -360,8 +364,8 @@ public interface CacheManager {
      * @param hash         缓存hash
      * @param key          缓存键
      * @param value        数据值
-     * @param localExpire  本地过期时长，为null表示永不过期
-     * @param remoteExpire 远程过期时长，为null表示永不过期
+     * @param localExpire  本地过期时长，Duration.ZERO为永不过期，为null表示不本地缓存
+     * @param remoteExpire 远程过期时长，Duration.ZERO为永不过期，为null表示不远程缓存
      */
     default void bothSetString(final String hash, final String key, final String value, Duration localExpire, Duration remoteExpire) {
         bothSet(hash, key, String.class, value, localExpire, remoteExpire);
@@ -375,8 +379,10 @@ public interface CacheManager {
      * @param key          缓存键
      * @param type         数据类型
      * @param value        数据值
-     * @param localExpire  本地过期时长，为null表示永不过期
-     * @param remoteExpire 远程过期时长，为null表示永不过期
+     * @param localExpire  本地过期时长，Duration.ZERO为永不过期，为null表示不本地缓存
+     * @param remoteExpire 远程过期时长，Duration.ZERO为永不过期，为null表示不远程缓存
+     *
+     * @return void
      */
     public <T> CompletableFuture<Void> bothSetAsync(String hash, String key, Type type, T value, Duration localExpire, Duration remoteExpire);
 
@@ -386,8 +392,10 @@ public interface CacheManager {
      * @param hash         缓存hash
      * @param key          缓存键
      * @param value        数据值
-     * @param localExpire  本地过期时长，为null表示永不过期
-     * @param remoteExpire 远程过期时长，为null表示永不过期
+     * @param localExpire  本地过期时长，Duration.ZERO为永不过期，为null表示不本地缓存
+     * @param remoteExpire 远程过期时长，Duration.ZERO为永不过期，为null表示不远程缓存
+     *
+     * @return void
      */
     default CompletableFuture<Void> bothSetStringAsync(String hash, String key, String value, Duration localExpire, Duration remoteExpire) {
         return bothSetAsync(hash, key, String.class, value, localExpire, remoteExpire);

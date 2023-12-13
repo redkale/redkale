@@ -16,8 +16,9 @@ import java.util.concurrent.TimeUnit;
  *
  * 标记在Service的缓存接口, 方法有以下限制: <br>
  * 1、方法返回类型不能是void/CompletableFuture&#60;Void&#62;
- * 2、方法必须是protected/public
- * 3、方法不能是final
+ * 2、方法返回类型必须可json序列化
+ * 3、方法必须是protected/public
+ * 4、方法不能是final
  *
  * @since 2.8.0
  */
@@ -35,7 +36,7 @@ public @interface Cached {
     String key();
 
     /**
-     * 缓存的hash, 默认值用当前Service类的SimpleName
+     * 缓存的hash, 默认值用当前Service类的SimpleName, 不能含有':'、'#'、'@'字符
      *
      * @return hash
      */

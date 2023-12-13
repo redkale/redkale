@@ -15,7 +15,6 @@ import org.redkale.convert.json.JsonConvert;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
- * @param <T> 泛型
  *
  * @since 2.8.0
  */
