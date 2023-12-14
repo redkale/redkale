@@ -36,6 +36,9 @@ public abstract class ModuleEngine {
 
     /**
      * 进入Application.init方法时被调用
+     * 此时状态:
+     *  1、远程配置项未获取
+     *  2、WorkExecutor未初始化
      */
     public void onAppPreInit() {
         //do nothing

@@ -22,9 +22,9 @@ public class ScheduleModuleEngine extends ModuleEngine {
     }
 
     /**
-     * 进入Application.init方法时被调用
+     * 结束Application.init方法前被调用
      */
-    public void onAppPreInit() {
+    public void onAppPostInit() {
         //设置定时管理器
         this.scheduleManager = ScheduleManagerService.create(null).enabled(false);
         final AnyValue scheduleConf = application.getAppConfig().getAnyValue("schedule", true);

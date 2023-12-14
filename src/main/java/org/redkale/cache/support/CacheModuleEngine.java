@@ -21,9 +21,9 @@ public class CacheModuleEngine extends ModuleEngine {
     }
 
     /**
-     * 进入Application.init方法时被调用
+     * 结束Application.init方法前被调用
      */
-    public void onAppPreInit() {
+    public void onAppPostInit() {
         //设置缓存管理器
         this.cacheManager = CacheManagerService.create(null).enabled(false);
         final AnyValue cacheConf = application.getAppConfig().getAnyValue("cache");

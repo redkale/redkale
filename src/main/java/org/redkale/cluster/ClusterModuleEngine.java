@@ -38,9 +38,10 @@ public class ClusterModuleEngine extends ModuleEngine {
     }
 
     /**
-     * 进入Application.init方法时被调用
+     * 结束Application.init方法前被调用
      */
-    public void onAppPreInit() {
+    @Override
+    public void onAppPostInit() {        
         ClusterAgent cluster = null;
         AnyValue clusterConf = application.getAppConfig().getAnyValue("cluster");
         if (clusterConf != null) {
@@ -87,13 +88,7 @@ public class ClusterModuleEngine extends ModuleEngine {
             }
         }
         this.clusterAgent = cluster;
-    }
-
-    /**
-     * 结束Application.init方法前被调用
-     */
-    @Override
-    public void onAppPostInit() {
+        
         if (this.clusterAgent != null) {
             if (logger.isLoggable(Level.FINER)) {
                 logger.log(Level.FINER, "ClusterAgent (type = " + this.clusterAgent.getClass().getSimpleName() + ") initing");

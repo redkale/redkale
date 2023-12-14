@@ -67,9 +67,10 @@ public class MessageModuleEngine extends ModuleEngine {
     }
 
     /**
-     * 进入Application.init方法时被调用
+     * 结束Application.init方法前被调用
      */
-    public void onAppPreInit() {
+    @Override
+    public void onAppPostInit() {
         MessageAgent[] mqs = null;
         AnyValue[] mqConfs = application.getAppConfig().getAnyValues("mq");
         if (mqConfs != null && mqConfs.length > 0) {
@@ -161,13 +162,7 @@ public class MessageModuleEngine extends ModuleEngine {
                 return ResourceProducer.class;
             }
         });
-    }
 
-    /**
-     * 结束Application.init方法前被调用
-     */
-    @Override
-    public void onAppPostInit() {
         if (this.messageAgents == null) {
             return;
         }

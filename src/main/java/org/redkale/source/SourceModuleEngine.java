@@ -75,9 +75,10 @@ public class SourceModuleEngine extends ModuleEngine {
     }
 
     /**
-     * 进入Application.init方法时被调用
+     * 结束Application.init方法前被调用
      */
-    public void onAppPreInit() {
+    @Override
+    public void onAppPostInit() {
         //加载原生sql解析器
         Iterator<DataNativeSqlParserProvider> it = ServiceLoader.load(DataNativeSqlParserProvider.class, application.getClassLoader()).iterator();
         RedkaleClassLoader.putServiceLoader(DataNativeSqlParserProvider.class);
@@ -94,13 +95,7 @@ public class SourceModuleEngine extends ModuleEngine {
             this.resourceFactory.register(DataNativeSqlParser.class, this.nativeSqlParser);
             break;  //only first provider
         }
-    }
-
-    /**
-     * 结束Application.init方法前被调用
-     */
-    @Override
-    public void onAppPostInit() {
+        
         //------------------------------------- 注册 DataSource --------------------------------------------------------        
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {

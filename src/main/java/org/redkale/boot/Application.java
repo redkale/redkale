@@ -330,15 +330,15 @@ public final class Application {
     }
 
     public void init() throws Exception {
-        //读取远程配置
-        this.loadResourceProperties();
         //注册ResourceType
         this.initResourceTypeLoader();
+        this.onAppPreInit();
+        //读取远程配置
+        this.loadResourceProperties();
         //设置WorkExecutor    
         this.initWorkExecutor();
-        //
-        this.onAppPreInit();
         initResources();
+        //结束时回调
         this.onAppPostInit();
     }
 
@@ -1340,6 +1340,7 @@ public final class Application {
         }
         this.watching = !watchs.isEmpty();
 
+        this.onServersPreStart();
         runServers(serverCdl, sncps);  //必须确保SNCP服务都启动后再启动其他服务
         runServers(serverCdl, others);
         runServers(serverCdl, watchs); //必须在所有服务都启动后再启动WATCH服务
@@ -1844,14 +1845,13 @@ public final class Application {
         if (this.workExecutor != null) {
             this.workExecutor.shutdownNow();
         }
-
         if (this.clientAsyncGroup != null) {
             long s = System.currentTimeMillis();
             this.clientAsyncGroup.dispose();
             logger.info("AsyncGroup destroy in " + (System.currentTimeMillis() - s) + " ms");
         }
-
         this.onAppPostShutdown();
+
         long intms = System.currentTimeMillis() - f;
         String ms = String.valueOf(intms);
         int repeat = ms.length() > 7 ? 0 : (7 - ms.length()) / 2;
