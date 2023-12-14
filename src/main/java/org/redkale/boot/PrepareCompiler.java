@@ -5,6 +5,7 @@
  */
 package org.redkale.boot;
 
+import java.util.List;
 import org.redkale.annotation.Bean;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.convert.Decodeable;
@@ -29,14 +30,9 @@ public class PrepareCompiler {
         //必须设置redkale.resource.skip.check=true
         //因redkale-maven-plugin的maven-core依赖jsr250，会覆盖redkale的javax.annotation.Resource导致无法识别Resource.required方法
         System.setProperty("redkale.resource.skip.check", "true");
-        final Application application = new Application(false, true, Application.loadAppConfig());
+        final Application application = new Application(AppConfig.create(false, true));
         application.init();
-        for (ApplicationListener listener : application.listeners) {
-            listener.preStart(application);
-        }
-        for (ApplicationListener listener : application.listeners) {
-            listener.preCompile(application);
-        }
+        application.onPreCompile();
         application.start();
         final boolean hasSncp = application.getNodeServers().stream().filter(NodeSncpServer.class::isInstance).findFirst().isPresent();
 
@@ -54,7 +50,9 @@ public class PrepareCompiler {
                 continue;
             }
             try {
-                application.dataSources.forEach(source -> source.compile(clz));
+                List<DataSource> dataSources = application.getResourceFactory().query(DataSource.class);
+                dataSources.forEach(source -> source.compile(clz));
+                //application.dataSources.forEach(source -> source.compile(clz));
                 JsonFactory.root().loadEncoder(clz);
                 if (hasSncp) {
                     BsonFactory.root().loadEncoder(clz);
@@ -73,7 +71,9 @@ public class PrepareCompiler {
                 continue;
             }
             try {
-                application.dataSources.forEach(source -> source.compile(clz));
+                List<DataSource> dataSources = application.getResourceFactory().query(DataSource.class);
+                dataSources.forEach(source -> source.compile(clz));
+                //application.dataSources.forEach(source -> source.compile(clz));
                 JsonFactory.root().loadEncoder(clz);
                 if (hasSncp) {
                     BsonFactory.root().loadEncoder(clz);
@@ -133,9 +133,7 @@ public class PrepareCompiler {
                 //do nothing
             }
         }
-        for (ApplicationListener listener : application.listeners) {
-            listener.postCompile(application);
-        }
+        application.onPostCompile();
         application.shutdown();
         return application;
     }

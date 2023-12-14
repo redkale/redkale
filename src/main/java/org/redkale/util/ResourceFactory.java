@@ -372,7 +372,7 @@ public final class ResourceFactory {
      *
      * @return 旧资源对象
      */
-    public <A> A register(final String name, final A val) {
+    public <A> A register(final String name, @Nonnull final A val) {
         return register(true, name, val);
     }
 
@@ -386,7 +386,7 @@ public final class ResourceFactory {
      *
      * @return 旧资源对象
      */
-    public <A> A register(final boolean autoSync, final String name, final A val) {
+    public <A> A register(final boolean autoSync, final String name, @Nonnull final A val) {
         checkResourceName(name);
         final Class<?> claz = val.getClass();
 
@@ -422,7 +422,7 @@ public final class ResourceFactory {
      *
      * @return 旧资源对象
      */
-    public <A> A register(final String name, final Class<? extends A> clazz, final A val) {
+    public <A> A register(final String name, final Class<? extends A> clazz, @Nullable final A val) {
         return register(true, name, clazz, val);
     }
 
@@ -436,7 +436,7 @@ public final class ResourceFactory {
      *
      * @return 旧资源对象
      */
-    public <A> A register(final String name, final Type clazz, final A val) {
+    public <A> A register(final String name, final Type clazz, @Nullable final A val) {
         return register(true, name, clazz, val);
     }
 
@@ -1092,6 +1092,7 @@ public final class ResourceFactory {
 
         public final String name;
 
+        @Nullable
         public final T value;
 
         public final List<ResourceElement> elements;

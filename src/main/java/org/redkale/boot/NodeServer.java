@@ -12,6 +12,7 @@ import java.net.*;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.*;
 import org.redkale.annotation.*;
@@ -102,6 +103,8 @@ public abstract class NodeServer {
     private volatile int maxTypeLength = 0;
 
     private volatile int maxNameLength = 0;
+
+    CountDownLatch serviceCdl;
 
     public NodeServer(Application application, Server server) {
         this.threadName = Thread.currentThread().getName();
@@ -328,60 +331,60 @@ public abstract class NodeServer {
                 return null;
             }
         }, Service.class);
-
-        //------------------------------------- 注册 DataSource --------------------------------------------------------        
-        resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
-            try {
-                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
-                    return null;
-                }
-                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
-                    return null; //远程模式不得注入 DataSource
-                }
-                DataSource source = application.loadDataSource(resourceName, false);
-                field.set(srcObj, source);
-                return source;
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "DataSource inject to " + srcObj + " error", e);
-                return null;
-            }
-        }, DataSource.class);
-
-        //------------------------------------- 注册 CacheSource --------------------------------------------------------
-        resourceFactory.register(new ResourceTypeLoader() {
-            @Override
-            public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
-                try {
-                    if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
-                        return null;
-                    }
-                    if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
-                        return null; //远程模式不需要注入 CacheSource 
-                    }
-                    if (srcObj instanceof Servlet) {
-                        throw new RedkaleException("CacheSource cannot inject in Servlet " + srcObj);
-                    }
-                    final boolean ws = (srcObj instanceof org.redkale.net.http.WebSocketNodeService);
-                    CacheSource source = application.loadCacheSource(resourceName, ws);
-                    field.set(srcObj, source);
-                    Resource res = field.getAnnotation(Resource.class);
-                    if (res != null && res.required() && source == null) {
-                        throw new RedkaleException("CacheSource (resourceName = '" + resourceName + "') not found");
-                    } else {
-                        logger.info("Load CacheSource (type = " + (source == null ? null : source.getClass().getSimpleName()) + ", resourceName = '" + resourceName + "')");
-                    }
-                    return source;
-                } catch (Exception e) {
-                    logger.log(Level.SEVERE, "DataSource inject error", e);
-                    return null;
-                }
-            }
-
-            @Override
-            public boolean autoNone() {
-                return false;
-            }
-        }, CacheSource.class);
+//
+//        //------------------------------------- 注册 DataSource --------------------------------------------------------        
+//        resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
+//            try {
+//                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
+//                    return null;
+//                }
+//                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
+//                    return null; //远程模式不得注入 DataSource
+//                }
+//                DataSource source = application.loadDataSource(resourceName, false);
+//                field.set(srcObj, source);
+//                return source;
+//            } catch (Exception e) {
+//                logger.log(Level.SEVERE, "DataSource inject to " + srcObj + " error", e);
+//                return null;
+//            }
+//        }, DataSource.class);
+//
+//        //------------------------------------- 注册 CacheSource --------------------------------------------------------
+//        resourceFactory.register(new ResourceTypeLoader() {
+//            @Override
+//            public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
+//                try {
+//                    if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
+//                        return null;
+//                    }
+//                    if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
+//                        return null; //远程模式不需要注入 CacheSource 
+//                    }
+//                    if (srcObj instanceof Servlet) {
+//                        throw new RedkaleException("CacheSource cannot inject in Servlet " + srcObj);
+//                    }
+//                    final boolean ws = (srcObj instanceof org.redkale.net.http.WebSocketNodeService);
+//                    CacheSource source = application.loadCacheSource(resourceName, ws);
+//                    field.set(srcObj, source);
+//                    Resource res = field.getAnnotation(Resource.class);
+//                    if (res != null && res.required() && source == null) {
+//                        throw new RedkaleException("CacheSource (resourceName = '" + resourceName + "') not found");
+//                    } else {
+//                        logger.info("Load CacheSource (type = " + (source == null ? null : source.getClass().getSimpleName()) + ", resourceName = '" + resourceName + "')");
+//                    }
+//                    return source;
+//                } catch (Exception e) {
+//                    logger.log(Level.SEVERE, "DataSource inject error", e);
+//                    return null;
+//                }
+//            }
+//
+//            @Override
+//            public boolean autoNone() {
+//                return false;
+//            }
+//        }, CacheSource.class);
 
         //------------------------------------- 注册 WebSocketNode --------------------------------------------------------
         resourceFactory.register(new ResourceTypeLoader() {
@@ -432,9 +435,7 @@ public abstract class NodeServer {
 
     @SuppressWarnings("unchecked")
     protected void loadService(ClassFilter<? extends Service> serviceFilter) throws Exception {
-        if (serviceFilter == null) {
-            return;
-        }
+        Objects.requireNonNull(serviceFilter);
         final long starts = System.currentTimeMillis();
         final Set<FilterEntry<? extends Service>> entrys = (Set) serviceFilter.getAllFilterEntrys();
         ResourceFactory regFactory = isSNCP() ? application.getResourceFactory() : resourceFactory;
@@ -548,8 +549,10 @@ public abstract class NodeServer {
 
         }
         long et = System.currentTimeMillis();
-        application.servicecdl.countDown();
-        application.servicecdl.await();
+        if (serviceCdl != null) {
+            serviceCdl.countDown();
+            serviceCdl.await();
+        }
         logger.info(this.getClass().getSimpleName() + " construct services in " + (et - starts) + " ms and await " + (System.currentTimeMillis() - et) + " ms");
 
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
@@ -611,8 +614,9 @@ public abstract class NodeServer {
         } else {
             localServices.stream().forEach(y -> {
                 long s = System.currentTimeMillis();
+                application.onServicePreInit(y);
                 y.init(Sncp.getResourceConf(y));
-                application.schedule(y);
+                application.onServicePostInit(y);
                 long e = System.currentTimeMillis() - s;
                 if (slist != null) {
                     String serstr = Sncp.toSimpleString(y, maxNameLength, maxTypeLength);
@@ -666,7 +670,7 @@ public abstract class NodeServer {
     protected MessageAgent getMessageAgent(AnyValue serviceConf) {
         MessageAgent agent = null;
         if (serviceConf != null && serviceConf.getValue("mq") != null) {
-            agent = application.getMessageAgent(serviceConf.getValue("mq"));
+            agent = application.getResourceFactory().find(serviceConf.getValue("mq"), MessageAgent.class);
             if (agent != null) {
                 messageAgents.put(agent.getName(), agent);
             }
@@ -676,7 +680,7 @@ public abstract class NodeServer {
 
     //Service.init执行之前调用
     protected void preInitServices(Set<Service> localServices, Set<Service> remoteServices, Set<Service> servletServices) {
-        final ClusterAgent cluster = application.getClusterAgent();
+        final ClusterAgent cluster = application.getResourceFactory().find("", ClusterAgent.class);
         if (!application.isCompileMode() && cluster != null) {
             NodeProtocol pros = getClass().getAnnotation(NodeProtocol.class);
             String protocol = pros.value().toUpperCase();
@@ -697,8 +701,8 @@ public abstract class NodeServer {
 
     //Service.destroy执行之前调用
     protected void preDestroyServices(Set<Service> localServices, Set<Service> remoteServices, Set<Service> servletServices) {
-        if (!application.isCompileMode() && application.getClusterAgent() != null) { //服务注销
-            final ClusterAgent cluster = application.getClusterAgent();
+        final ClusterAgent cluster = application.getResourceFactory().find("", ClusterAgent.class);
+        if (!application.isCompileMode() && cluster != null) { //服务注销
             NodeProtocol pros = getClass().getAnnotation(NodeProtocol.class);
             String protocol = pros.value().toUpperCase();
             if (cluster.containsProtocol(protocol) && cluster.containsPort(server.getSocketAddress().getPort())) {
@@ -877,11 +881,12 @@ public abstract class NodeServer {
             if (finest) {
                 logger.finest(Sncp.getResourceType(y) + " is destroying");
             }
-            application.unschedule(y);
+            application.onServicePreDestroy(y);
             y.destroy(Sncp.getResourceConf(y));
             if (finest) {
                 logger.finest(Sncp.getResourceType(y) + " was destroyed");
             }
+            application.onServicePostDestroy(y);
             long e = System.currentTimeMillis() - s;
             if (e > 2 && sb != null) {
                 sb.append(Sncp.toSimpleString(y, maxNameLength, maxTypeLength)).append(" destroy ").append(e).append("ms").append(LINE_SEPARATOR);

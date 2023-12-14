@@ -6,14 +6,13 @@
 package org.redkale.service;
 
 import java.io.*;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.reflect.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.BiFunction;
-import static org.redkale.boot.Application.*;
 import org.redkale.util.RedkaleClassLoader;
 
 /**
@@ -59,13 +58,21 @@ public @interface RetLabel {
             RedkaleClassLoader.putServiceLoader(RetInfoTransfer.class);
             Iterator<RetInfoTransfer> it = loader.iterator();
             RetInfoTransfer func = it.hasNext() ? it.next() : null;
-            if (func != null) RedkaleClassLoader.putReflectionPublicConstructors(func.getClass(), func.getClass().getName());
+            if (func != null) {
+                RedkaleClassLoader.putReflectionPublicConstructors(func.getClass(), func.getClass().getName());
+            }
             RedkaleClassLoader.putReflectionPublicFields(clazz.getName());
             for (Field field : clazz.getFields()) {
-                if (!Modifier.isStatic(field.getModifiers())) continue;
-                if (field.getType() != int.class) continue;
+                if (!Modifier.isStatic(field.getModifiers())) {
+                    continue;
+                }
+                if (field.getType() != int.class) {
+                    continue;
+                }
                 RetLabel[] infos = field.getAnnotationsByType(RetLabel.class);
-                if (infos == null || infos.length == 0) continue;
+                if (infos == null || infos.length == 0) {
+                    continue;
+                }
                 int value;
                 try {
                     value = field.getInt(null);
@@ -74,11 +81,12 @@ public @interface RetLabel {
                     continue;
                 }
                 for (RetLabel info : infos) {
-                    rets.computeIfAbsent(info.locale(), (k) -> new LinkedHashMap<>()).put(value, func == null ? info.value() : func.apply(value, info.value()));
+                    rets.computeIfAbsent(info.locale(), k -> new LinkedHashMap<>()).put(value, func == null ? info.value() : func.apply(value, info.value()));
                 }
             }
             try {
-                File propPath = new File(System.getProperty(RESNAME_APP_CONF_DIR, new File(System.getProperty(RESNAME_APP_HOME, ""), "conf").getPath()));
+                File homePath = new File(System.getProperty("redkale.application.home", ""), "conf");
+                File propPath = new File(System.getProperty("redkale.application.confPath", homePath.getPath()));
                 if (propPath.isDirectory() && propPath.canRead()) {
                     final String prefix = clazz.getSimpleName().toLowerCase();
                     for (File propFile : propPath.listFiles(f -> f.getName().startsWith(prefix) && f.getName().endsWith(".properties"))) {
@@ -93,7 +101,9 @@ public @interface RetLabel {
                                 in.close();
                                 prop.forEach((k, v) -> {
                                     int retcode = Integer.parseInt(k.toString());
-                                    if (defrets.containsKey(retcode)) defrets.put(retcode, v.toString());
+                                    if (defrets.containsKey(retcode)) {
+                                        defrets.put(retcode, v.toString());
+                                    }
                                 });
                             }
                         }

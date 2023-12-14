@@ -57,7 +57,9 @@ public abstract class PropertiesAgent {
     public abstract void destroy(AnyValue conf);
 
     protected void updateEnvironmentProperties(Application application, String namespace, List<ResourceEvent> events) {
-        if (events == null || events.isEmpty()) return;
+        if (events == null || events.isEmpty()) {
+            return;
+        }
         application.updateEnvironmentProperties(namespace, events);
     }
 

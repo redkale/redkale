@@ -69,58 +69,6 @@ public abstract class Sncp {
 
     }
 
-    public static class SchedulingEntry {
-
-        private Class serviceType;
-
-        private String methodName;
-
-        private Scheduled schedule;
-
-        private Runnable task;
-
-        public SchedulingEntry(Class serviceType, String methodName, Scheduled schedule, Runnable task) {
-            Objects.requireNonNull(serviceType);
-            Objects.requireNonNull(methodName);
-            Objects.requireNonNull(schedule);
-            Objects.requireNonNull(task);
-            this.serviceType = serviceType;
-            this.methodName = methodName;
-            this.schedule = schedule;
-            this.task = task;
-        }
-
-        public Class getServiceType() {
-            return serviceType;
-        }
-
-        public String getMethodName() {
-            return methodName;
-        }
-
-        public Scheduled getSchedule() {
-            return schedule;
-        }
-
-        public Runnable getTask() {
-            return task;
-        }
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() + "{"
-                + "serviceType=" + serviceType
-                + ", methodName=" + methodName
-                + ", schedule.cron=" + schedule.cron()
-                + ", schedule.zone=" + schedule.zone()
-                + ", schedule.fixedDelay=" + schedule.fixedDelay()
-                + ", schedule.fixedRate=" + schedule.fixedRate()
-                + ", schedule.initialDelay=" + schedule.initialDelay()
-                + ", schedule.timeUnit=" + schedule.timeUnit()
-                + '}';
-        }
-    }
-
     private Sncp() {
     }
 
@@ -173,7 +121,7 @@ public abstract class Sncp {
             Method old = actionids.get(actionid);
             if (old != null) {
                 if (old.getDeclaringClass().equals(method.getDeclaringClass())) {
-                    throw new SncpException(serviceTypeOrImplClass.getName() 
+                    throw new SncpException(serviceTypeOrImplClass.getName()
                         + " have one more same action(Method=" + method + ", " + old + ", actionid=" + actionid + ")");
                 }
                 continue;
@@ -317,7 +265,7 @@ public abstract class Sncp {
 
     //格式: sncp.req.module.user
     public static String generateSncpReqTopic(Service service, int nodeid) {
-        return generateSncpReqTopic(Sncp.getResourceName(service), Sncp.getResourceType(service), nodeid);
+        return generateSncpReqTopic(getResourceName(service), getResourceType(service), nodeid);
     }
 
     //格式: sncp.req.module.user
@@ -325,8 +273,8 @@ public abstract class Sncp {
         if (WebSocketNode.class.isAssignableFrom(resourceType)) {
             return getSncpReqTopicPrefix() + "module.wsnode" + nodeid + (resourceName.isEmpty() ? "" : ("-" + resourceName));
         }
-        return getSncpReqTopicPrefix() + "module." 
-            + resourceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase() 
+        return getSncpReqTopicPrefix() + "module."
+            + resourceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase()
             + (resourceName.isEmpty() ? "" : ("-" + resourceName));
     }
 
@@ -789,7 +737,7 @@ public abstract class Sncp {
         if (!java.lang.reflect.Modifier.isPublic(mod)) {
             return null;
         }
-        final SncpRemoteInfo info = createSncpRemoteInfo(name, getResourceType(serviceTypeOrImplClass), 
+        final SncpRemoteInfo info = createSncpRemoteInfo(name, getResourceType(serviceTypeOrImplClass),
             serviceTypeOrImplClass, BsonConvert.root(), sncpRpcGroups, client, agent, remoteGroup);
         final String supDynName = serviceTypeOrImplClass.getName().replace('.', '/');
         final String sncpInfoName = SncpRemoteInfo.class.getName().replace('.', '/');
@@ -840,7 +788,7 @@ public abstract class Sncp {
         MethodDebugVisitor mv;
         AnnotationVisitor av0;
 
-        cw.visit(V11, ACC_PUBLIC + ACC_SUPER, newDynName, null, serviceTypeOrImplClass.isInterface() ? "java/lang/Object" : supDynName, 
+        cw.visit(V11, ACC_PUBLIC + ACC_SUPER, newDynName, null, serviceTypeOrImplClass.isInterface() ? "java/lang/Object" : supDynName,
             serviceTypeOrImplClass.isInterface() ? new String[]{supDynName} : null);
         { //给动态生成的Service类标记上Resource
             av0 = cw.visitAnnotation(resDesc, true);
@@ -961,7 +909,7 @@ public abstract class Sncp {
                                 mv.visitVarInsn(ILOAD, insn);
                             }
                             Class bigclaz = TypeToken.primitiveToWrapper((Class) pt);
-                            mv.visitMethodInsn(INVOKESTATIC, bigclaz.getName().replace('.', '/'), "valueOf", 
+                            mv.visitMethodInsn(INVOKESTATIC, bigclaz.getName().replace('.', '/'), "valueOf",
                                 "(" + Type.getDescriptor((Class) pt) + ")" + Type.getDescriptor(bigclaz), false);
                         } else {
                             mv.visitVarInsn(ALOAD, insn);

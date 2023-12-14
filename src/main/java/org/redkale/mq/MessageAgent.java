@@ -123,9 +123,7 @@ public abstract class MessageAgent implements Resourcable {
                 Class<MessageCoder<MessageRecord>> coderClass = (Class) Thread.currentThread().getContextClassLoader().loadClass(coderType);
                 RedkaleClassLoader.putReflectionPublicConstructors(coderClass, coderClass.getName());
                 MessageCoder<MessageRecord> coder = coderClass.getConstructor().newInstance();
-                if (application != null) {
-                    application.getResourceFactory().inject(coder);
-                }
+                application.getResourceFactory().inject(coder);
                 if (coder instanceof Service) {
                     ((Service) coder).init(config);
                 }

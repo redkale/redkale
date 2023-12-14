@@ -26,17 +26,17 @@ import org.redkale.util.*;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
- * @param <T> Service泛型
+ * @param <S> Service泛型
  *
  * @since 2.8.0
  */
-public class SncpRemoteInfo<T extends Service> {
+public class SncpRemoteInfo<S extends Service> {
 
     protected static final Logger logger = Logger.getLogger(SncpRemoteInfo.class.getSimpleName());
 
     protected final String name;
 
-    protected final Class<T> serviceType;
+    protected final Class<S> serviceType;
 
     protected final Uint128 serviceid;
 
@@ -71,7 +71,7 @@ public class SncpRemoteInfo<T extends Service> {
     //MQ模式下此字段才有值
     protected final MessageClient messageClient;
 
-    SncpRemoteInfo(String resourceName, Class<T> resourceType, Class<T> serviceImplClass, Convert convert,
+    SncpRemoteInfo(String resourceName, Class<S> resourceType, Class<S> serviceImplClass, Convert convert,
         SncpRpcGroups sncpRpcGroups, SncpClient sncpClient, MessageAgent messageAgent, String remoteGroup) {
         Objects.requireNonNull(sncpRpcGroups);
         this.name = resourceName;

@@ -389,7 +389,7 @@ public class NodeHttpServer extends NodeServer {
         String mqname = restConf.getValue("mq");
         MessageAgent agent0 = null;
         if (mqname != null) {
-            agent0 = application.getMessageAgent(mqname);
+            agent0 = application.getResourceFactory().find(mqname, MessageAgent.class);
             if (agent0 == null) {
                 throw new RedkaleException("not found " + MessageAgent.class.getSimpleName() + " config for (name=" + mqname + ")");
             }
@@ -548,7 +548,7 @@ public class NodeHttpServer extends NodeServer {
 
     @Override //loadServlet执行之后调用
     protected void postLoadServlets() {
-        final ClusterAgent cluster = application.getClusterAgent();
+        final ClusterAgent cluster = application.getResourceFactory().find("", ClusterAgent.class);
         if (!application.isCompileMode() && cluster != null) {
             NodeProtocol pros = getClass().getAnnotation(NodeProtocol.class);
             String protocol = pros.value().toUpperCase();

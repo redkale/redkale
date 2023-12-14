@@ -112,7 +112,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
             if (application == null) {
                 return;
             }
-            this.source = (SearchSource) application.loadDataSource(sourceResourceName, false);
+            this.source = application.getResourceFactory().find(sourceResourceName, SearchSource.class);
             if (retryCount.get() == 1 && this.source == null) {
                 System.err.println("ERROR: not load logging.source(" + sourceResourceName + ")");
             }
@@ -160,7 +160,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
             if (!checkTagName(tagstr.replaceAll("\\$\\{.+\\}", ""))) {
                 throw new RedkaleException("found illegal logging.property " + cname + ".tag = " + tagstr);
             }
-            this.tag = tagstr.replace("${" + RESNAME_APP_NAME + "}", System.getProperty(RESNAME_APP_NAME, ""));
+            this.tag = tagstr.replace("${" + RESNAME_APP_NAME + "}", System.getProperty("redkale.application.name", ""));
             if (this.tag.contains("%")) {
                 this.tagDateFormat = this.tag;
                 Times.formatTime(this.tagDateFormat, -1, System.currentTimeMillis()); //测试时间格式是否正确

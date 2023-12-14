@@ -13,8 +13,8 @@ import org.redkale.mq.MessageAgent;
 import org.redkale.net.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Local;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.*;
+import org.redkale.util.AnyValue.DefaultAnyValue;
 
 /**
  * SNCP Server节点的配置Server
@@ -145,7 +145,7 @@ public class NodeSncpServer extends NodeServer {
                     dynServletMap.put(x, servlet);
                     String mq = Sncp.getResourceMQ(x);
                     if (mq != null) {
-                        MessageAgent agent = application.getMessageAgent(mq);
+                        MessageAgent agent = application.getResourceFactory().find(mq, MessageAgent.class);
                         agent.putService(this, x, servlet);
                     }
                 });

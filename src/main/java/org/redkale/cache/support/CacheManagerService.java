@@ -102,7 +102,7 @@ public class CacheManagerService implements CacheManager, Service {
             this.localSource.init(conf);
             String remoteSourceName = conf.getValue("source");
             if (remoteSource == null && application != null && Utility.isNotBlank(remoteSourceName)) {
-                CacheSource source = application.loadCacheSource(remoteSourceName, false);
+                CacheSource source = application.getResourceFactory().find(remoteSourceName, CacheSource.class);
                 if (source == null) {
                     throw new RedkaleException("Not found CacheSource '" + remoteSourceName + "'");
                 }

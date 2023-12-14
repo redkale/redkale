@@ -108,7 +108,7 @@ public class AsyncIOGroup extends AsyncGroup {
     }
 
     @Override
-    public AsyncGroup start() {
+    public AsyncIOGroup start() {
         if (closed.get()) {
             throw new RedkaleException("group is closed");
         }
