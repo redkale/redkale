@@ -24,6 +24,7 @@ import java.util.logging.SimpleFormatter;
 import static org.redkale.boot.Application.RESNAME_APP_CONF_DIR;
 import static org.redkale.boot.Application.RESNAME_APP_CONF_FILE;
 import static org.redkale.boot.Application.RESNAME_APP_HOME;
+import org.redkale.source.DataSources;
 import org.redkale.util.AnyValue;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
@@ -83,14 +84,14 @@ class AppConfig {
     //Server根ClassLoader
     RedkaleClassLoader serverClassLoader;
 
-    //本地文件非system.property.开头的配置项
-    Properties localEnvProperties = new Properties();
+    //本地文件所有的配置项, 包含system.property.开头的
+    final Properties localEnvProperties = new Properties();
 
     //本地文件设置System.properties且不存于System.properties的配置项
-    Properties localSysProperties = new Properties();
+    final Properties localSysProperties = new Properties();
 
     //本地文件日志配置项
-    Properties locaLogProperties = new Properties();
+    final Properties locaLogProperties = new Properties();
 
     public AppConfig(boolean singletonMode, boolean compileMode) {
         this.singletonMode = singletonMode;
@@ -116,6 +117,8 @@ class AppConfig {
         this.initLocalProperties();
         //读取本地日志配置
         this.initLogProperties();
+        //读取本地数据库配置
+        this.initSourceProperties();
     }
 
     /**
@@ -190,17 +193,56 @@ class AppConfig {
      */
     private void initLocalProperties() {
         AnyValue propsConf = this.config.getAnyValue("properties");
+        if (propsConf == null) {
+            final AnyValue resources = config.getAnyValue("resources");
+            if (resources != null) {
+                System.err.println("<resources> in application config file is deprecated");
+                propsConf = resources.getAnyValue("properties");
+            }
+        }
         if (propsConf != null) { //设置配置文件中的系统变量
             for (AnyValue prop : propsConf.getAnyValues("property")) {
                 String key = prop.getValue("name", "");
                 String value = prop.getValue("value");
-                if (value != null && key.startsWith("system.property.")) {
-                    String propName = key.substring("system.property.".length());
-                    if (System.getProperty(propName) == null) { //命令行传参数优先级高
-                        localSysProperties.put(propName, value);
-                    }
-                } else if (value != null) {
+                if (value != null) {
                     localEnvProperties.put(key, value);
+                    if (key.startsWith("system.property.")) {
+                        String propName = key.substring("system.property.".length());
+                        if (System.getProperty(propName) == null) { //命令行传参数优先级高
+                            localSysProperties.put(propName, value);
+                        }
+                    }
+                }
+            }
+            if (propsConf.getValue("load") != null) { //加载本地配置项文件
+                for (String dfload : propsConf.getValue("load").replace(',', ';').split(";")) {
+                    if (dfload.trim().isEmpty()) {
+                        continue;
+                    }
+                    final URI df = RedkaleClassLoader.getConfResourceAsURI(configFromCache ? null : this.confPath.toString(), dfload.trim());
+                    if (df == null) {
+                        continue;
+                    }
+                    if (!"file".equals(df.getScheme()) || df.toString().contains("!") || new File(df).isFile()) {
+                        Properties props = new Properties();
+                        try {
+                            InputStream in = df.toURL().openStream();
+                            props.load(in);
+                            in.close();
+                            props.forEach((x, y) -> {
+                                String key = x.toString();
+                                if (key.startsWith("system.property.")) {
+                                    String propName = key.substring("system.property.".length());
+                                    if (System.getProperty(propName) == null) { //命令行传参数优先级高
+                                        localSysProperties.put(propName, y.toString());
+                                    }
+                                }
+                            });
+                            localEnvProperties.putAll(props);
+                        } catch (Exception e) {
+                            throw new RedkaleException(e);
+                        }
+                    }
                 }
             }
         }
@@ -212,6 +254,69 @@ class AppConfig {
         if (System.getProperty("redkale.convert.writer.buffer.defsize") == null
             && localSysProperties.getProperty("redkale.convert.writer.buffer.defsize") == null) {
             localSysProperties.put("redkale.convert.writer.buffer.defsize", "4096");
+        }
+    }
+
+    /**
+     * 读取本地数据库配置
+     */
+    private void initSourceProperties() {
+        //------------------------------------ 读取本地DataSource、CacheSource配置 ------------------------------------
+        if ("file".equals(this.confPath.getScheme())) {
+            File sourceFile = new File(new File(confPath), "source.properties");
+            if (sourceFile.isFile() && sourceFile.canRead()) {
+                Properties props = new Properties();
+                try {
+                    InputStream in = new FileInputStream(sourceFile);
+                    props.load(in);
+                    in.close();
+                } catch (IOException e) {
+                    throw new RedkaleException(e);
+                }
+                props.forEach((x, y) -> {
+                    String key = x.toString();
+                    if (key.startsWith("system.property.")) {
+                        String propName = key.substring("system.property.".length());
+                        if (System.getProperty(propName) == null) { //命令行传参数优先级高
+                            localSysProperties.put(propName, y.toString());
+                        }
+                    }
+                });
+                this.localEnvProperties.putAll(props);
+            } else {
+                //兼容 persistence.xml 【已废弃】
+                File persist = new File(new File(confPath), "persistence.xml");
+                if (persist.isFile() && persist.canRead()) {
+                    System.err.println("persistence.xml is deprecated, replaced by source.properties");
+                    try {
+                        InputStream in = new FileInputStream(persist);
+                        this.localEnvProperties.putAll(DataSources.loadSourceProperties(in));
+                        in.close();
+                    } catch (IOException e) {
+                        throw new RedkaleException(e);
+                    }
+                }
+            }
+        } else { //从url或jar文件中resources读取
+            try {
+                final URI sourceURI = RedkaleClassLoader.getConfResourceAsURI(configFromCache ? null : this.confPath.toString(), "source.properties");
+                InputStream in = sourceURI.toURL().openStream();
+                Properties props = new Properties();
+                props.load(in);
+                in.close();
+                props.forEach((x, y) -> {
+                    String key = x.toString();
+                    if (key.startsWith("system.property.")) {
+                        String propName = key.substring("system.property.".length());
+                        if (System.getProperty(propName) == null) { //命令行传参数优先级高
+                            localSysProperties.put(propName, y.toString());
+                        }
+                    }
+                });
+                this.localEnvProperties.putAll(props);
+            } catch (Exception e) {
+                //没有文件 跳过
+            }
         }
     }
 
@@ -238,7 +343,10 @@ class AppConfig {
                 Properties properties0 = new Properties();
                 properties0.load(fin);
                 fin.close();
-                properties0.forEach((k, v) -> locaLogProperties.put(k.toString(), v.toString()));
+                properties0.forEach((k, v) -> {
+                    locaLogProperties.put(k.toString(), v.toString());
+                    localEnvProperties.put(k.toString(), v.toString());
+                });
             } catch (IOException e) {
                 throw new RedkaleException("read logging.properties error", e);
             }

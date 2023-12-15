@@ -79,7 +79,7 @@ public final class Application {
 
     /**
      * 当前进程的配置文件， 类型：String、URI、File、Path <br>
-     * 一般命名为: application.xml、application.properties， 若配置文件不是本地文件， 则File、Path类型的值为null
+     * 一般命名为: application.xml、application.onlyLogProps， 若配置文件不是本地文件， 则File、Path类型的值为null
      */
     public static final String RESNAME_APP_CONF_FILE = "APP_CONF_FILE";
 
@@ -134,6 +134,9 @@ public final class Application {
     //日志
     private final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
+    //系统初始化时的原始配置项，启动后是不可更改的配置项
+    final Set<String> sysPropNames;
+
     //本进程节点ID
     final int nodeid;
 
@@ -165,11 +168,8 @@ public final class Application {
     //@since 2.7.0
     private PropertiesAgent propertiesAgent;
 
-    //只存放不以system.property.、mimetype.property.、redkale.开头的配置项
-    private final Properties envProperties = new Properties();
-
-    //envProperties更新锁
-    private final ReentrantLock envPropertiesLock = new ReentrantLock();
+    //所有配置项，包含本地配置项、logging配置项和配置中心获取的配置项
+    final Properties envProperties = new Properties();
 
     //配置信息，只读版Properties
     private final Environment environment;
@@ -240,6 +240,7 @@ public final class Application {
         this.compileMode = appConfig.compileMode;
         this.config = appConfig.config;
         this.configFromCache = appConfig.configFromCache;
+        this.envProperties.putAll(appConfig.localEnvProperties);
         this.environment = new Environment(this.envProperties);
         this.name = appConfig.name;
         this.nodeid = appConfig.nodeid;
@@ -275,6 +276,7 @@ public final class Application {
         System.setProperty("redkale.application.nodeid", String.valueOf(this.nodeid));
         System.setProperty("redkale.application.home", this.home.getPath());
         System.setProperty("redkale.application.confPath", this.confPath.toString());
+        this.sysPropNames = Collections.unmodifiableSet((Set) System.getProperties().keySet());
 
         //初始化本地配置的System.properties
         appConfig.localSysProperties.forEach((k, v) -> {
@@ -304,7 +306,7 @@ public final class Application {
         moduleEngines.add(new ScheduleModuleEngine(this));
 
         //根据本地日志配置文件初始化日志
-        reconfigLogging(appConfig.locaLogProperties);
+        reconfigLogging(true, appConfig.locaLogProperties);
 
         //打印基础信息日志
         logger.log(Level.INFO, colorMessage(logger, 36, 1, "-------------------------------- Redkale " + Redkale.getDotedVersion() + " --------------------------------"));
@@ -332,13 +334,17 @@ public final class Application {
     public void init() throws Exception {
         //注册ResourceType
         this.initResourceTypeLoader();
-        this.onAppPreInit();
         //读取远程配置
-        this.loadResourceProperties();
+        this.initRemoteProperties();
+        //解析配置
+        this.onEnvironmentLoaded();
+        //init起始回调
+        this.onAppPreInit();
         //设置WorkExecutor    
         this.initWorkExecutor();
-        initResources();
-        //结束时回调
+        //回调Listener
+        initAppListeners();
+        //init结束回调
         this.onAppPostInit();
     }
 
@@ -550,7 +556,7 @@ public final class Application {
         }, HttpRpcClient.class);
     }
 
-    private void initResources() throws Exception {
+    private void initAppListeners() throws Exception {
         //------------------------------------------------------------------------
         for (AnyValue conf : config.getAnyValues("group")) {
             final String group = conf.getValue("name", "");
@@ -585,72 +591,10 @@ public final class Application {
         //------------------------------------------------------------------------
     }
 
-    private void loadResourceProperties() {
+    private void initRemoteProperties() {
         final Properties dyncProps = new Properties();
         final AtomicInteger propertyIndex = new AtomicInteger();
         Properties logProps = null; //新的日志配置项
-        //------------------------------------ 读取本地DataSource、CacheSource配置 ------------------------------------
-        if ("file".equals(this.confPath.getScheme())) {
-            File sourceFile = new File(new File(confPath), "source.properties");
-            if (sourceFile.isFile() && sourceFile.canRead()) {
-                Properties props = new Properties();
-                try {
-                    InputStream in = new FileInputStream(sourceFile);
-                    props.load(in);
-                    in.close();
-                } catch (IOException e) {
-                    throw new RedkaleException(e);
-                }
-                props.forEach((key, val) -> {
-                    if (key.toString().startsWith("redkale.datasource.") || key.toString().startsWith("redkale.datasource[")
-                        || key.toString().startsWith("redkale.cachesource.") || key.toString().startsWith("redkale.cachesource[")) {
-                        dyncProps.put(key, val);
-                    } else {
-                        logger.log(Level.WARNING, "skip illegal key " + key + " in source.properties");
-                    }
-                });
-            } else {
-                //兼容 persistence.xml 【已废弃】
-                File persist = new File(new File(confPath), "persistence.xml");
-                if (persist.isFile() && persist.canRead()) {
-                    logger.log(Level.WARNING, "persistence.xml is deprecated, replaced by source.properties");
-                    try {
-                        InputStream in = new FileInputStream(persist);
-                        dyncProps.putAll(DataSources.loadSourceProperties(in));
-                        in.close();
-                    } catch (IOException e) {
-                        throw new RedkaleException(e);
-                    }
-                }
-            }
-        } else { //从url或jar文件中resources读取
-            try {
-                final URI sourceURI = RedkaleClassLoader.getConfResourceAsURI(configFromCache ? null : this.confPath.toString(), "source.properties");
-                InputStream in = sourceURI.toURL().openStream();
-                Properties props = new Properties();
-                props.load(in);
-                in.close();
-                props.forEach((key, val) -> {
-                    if (key.toString().startsWith("redkale.datasource.") || key.toString().startsWith("redkale.datasource[")
-                        || key.toString().startsWith("redkale.cachesource.") || key.toString().startsWith("redkale.cachesource[")) {
-                        dyncProps.put(key, val);
-                    } else {
-                        logger.log(Level.WARNING, "skip illegal key " + key + " in source.properties");
-                    }
-                });
-            } catch (Exception e) { //没有文件 跳过
-            }
-            //兼容 persistence.xml 【已废弃】
-            try {
-                final URI xmlURI = RedkaleClassLoader.getConfResourceAsURI(configFromCache ? null : this.confPath.toString(), "persistence.xml");
-                InputStream in = xmlURI.toURL().openStream();
-                dyncProps.putAll(DataSources.loadSourceProperties(in));
-                in.close();
-                logger.log(Level.WARNING, "persistence.xml is deprecated, replaced by source.properties");
-            } catch (Exception e) { //没有文件 跳过
-            }
-        }
-
         //------------------------------------ 读取配置项 ------------------------------------       
         AnyValue propertiesConf = config.getAnyValue("properties");
         if (propertiesConf == null) {
@@ -775,7 +719,7 @@ public final class Application {
                     || k.toString().startsWith("redkale.properties.property[")) {
                     dyncProps.put(k, v);
                 } else {
-                    //支持系统变量 -Dredkale.properties.mykey=my-value
+                    //支持系统变量 -Dredkale.onlyLogProps.mykey=my-value
                     String prefix = "redkale.properties.property[" + propertyIndex.getAndIncrement() + "]";
                     dyncProps.put(prefix + ".name", k.toString().substring("redkale.properties.".length()));
                     dyncProps.put(prefix + ".value", v);
@@ -817,98 +761,107 @@ public final class Application {
         }
         //重置日志配置
         if (logProps != null && !logProps.isEmpty()) {
-            reconfigLogging(logProps);
+            reconfigLogging(false, logProps);
         }
     }
 
-    void reconfigLogging(Properties properties0) {
+    /**
+     * 设置日志策略
+     *
+     * @param first    是否首次设置
+     * @param allProps 配置项全量
+     */
+    void reconfigLogging(boolean first, Properties allProps) {
         String searchRawHandler = "java.util.logging.SearchHandler";
         String searchReadHandler = LoggingSearchHandler.class.getName();
-        Properties properties = new Properties();
-        properties0.entrySet().forEach(x -> {
-            properties.put(x.getKey().toString().replace(searchRawHandler, searchReadHandler),
-                x.getValue().toString()
+        Properties onlyLogProps = new Properties();
+
+        allProps.entrySet().forEach(x -> {
+            String key = x.getKey().toString();
+            if (key.startsWith("java.util.logging.") || key.contains(".level") || key.contains("handlers")) {
+                String val = x.getValue().toString()
                     .replace("%m", "%tY%tm").replace("%d", "%tY%tm%td") //兼容旧时间格式
-                    .replace(searchRawHandler, searchReadHandler)
-            );
+                    .replace(searchRawHandler, searchReadHandler);
+                onlyLogProps.put(key.replace(searchRawHandler, searchReadHandler), val);
+            }
         });
-        if (properties.getProperty("java.util.logging.FileHandler.formatter") == null) {
+        if (onlyLogProps.getProperty("java.util.logging.FileHandler.formatter") == null) {
             if (compileMode) {
-                properties.setProperty("java.util.logging.FileHandler.formatter", SimpleFormatter.class.getName());
-                if (properties.getProperty("java.util.logging.SimpleFormatter.format") == null) {
-                    properties.setProperty("java.util.logging.SimpleFormatter.format", LoggingFileHandler.FORMATTER_FORMAT.replaceAll("\r\n", "%n"));
+                onlyLogProps.setProperty("java.util.logging.FileHandler.formatter", SimpleFormatter.class.getName());
+                if (onlyLogProps.getProperty("java.util.logging.SimpleFormatter.format") == null) {
+                    onlyLogProps.setProperty("java.util.logging.SimpleFormatter.format", LoggingFileHandler.FORMATTER_FORMAT.replaceAll("\r\n", "%n"));
                 }
             } else {
-                properties.setProperty("java.util.logging.FileHandler.formatter", LoggingFileHandler.LoggingFormater.class.getName());
+                onlyLogProps.setProperty("java.util.logging.FileHandler.formatter", LoggingFileHandler.LoggingFormater.class.getName());
             }
         }
-        if (properties.getProperty("java.util.logging.ConsoleHandler.formatter") == null) {
+        if (onlyLogProps.getProperty("java.util.logging.ConsoleHandler.formatter") == null) {
             if (compileMode) {
-                properties.setProperty("java.util.logging.ConsoleHandler.formatter", SimpleFormatter.class.getName());
-                if (properties.getProperty("java.util.logging.SimpleFormatter.format") == null) {
-                    properties.setProperty("java.util.logging.SimpleFormatter.format", LoggingFileHandler.FORMATTER_FORMAT.replaceAll("\r\n", "%n"));
+                onlyLogProps.setProperty("java.util.logging.ConsoleHandler.formatter", SimpleFormatter.class.getName());
+                if (onlyLogProps.getProperty("java.util.logging.SimpleFormatter.format") == null) {
+                    onlyLogProps.setProperty("java.util.logging.SimpleFormatter.format", LoggingFileHandler.FORMATTER_FORMAT.replaceAll("\r\n", "%n"));
                 }
             } else {
-                properties.setProperty("java.util.logging.ConsoleHandler.formatter", LoggingFileHandler.LoggingFormater.class.getName());
+                onlyLogProps.setProperty("java.util.logging.ConsoleHandler.formatter", LoggingFileHandler.LoggingFormater.class.getName());
             }
         }
         if (!compileMode) { //ConsoleHandler替换成LoggingConsoleHandler
-            final String handlers = properties.getProperty("handlers");
+            final String handlers = onlyLogProps.getProperty("handlers");
             if (handlers != null && handlers.contains("java.util.logging.ConsoleHandler")) {
                 final String consoleHandlerClass = LoggingFileHandler.LoggingConsoleHandler.class.getName();
-                properties.setProperty("handlers", handlers.replace("java.util.logging.ConsoleHandler", consoleHandlerClass));
+                onlyLogProps.setProperty("handlers", handlers.replace("java.util.logging.ConsoleHandler", consoleHandlerClass));
                 Properties prop = new Properties();
                 String prefix = consoleHandlerClass + ".";
-                properties.entrySet().forEach(x -> {
+                onlyLogProps.entrySet().forEach(x -> {
                     if (x.getKey().toString().startsWith("java.util.logging.ConsoleHandler.")) {
                         prop.put(x.getKey().toString().replace("java.util.logging.ConsoleHandler.", prefix), x.getValue());
                     }
                 });
                 prop.entrySet().forEach(x -> {
-                    properties.put(x.getKey(), x.getValue());
+                    onlyLogProps.put(x.getKey(), x.getValue());
                 });
             }
         }
-        String fileHandlerPattern = properties.getProperty("java.util.logging.FileHandler.pattern");
+        String fileHandlerPattern = onlyLogProps.getProperty("java.util.logging.FileHandler.pattern");
         if (fileHandlerPattern != null && fileHandlerPattern.contains("%")) { //带日期格式
             final String fileHandlerClass = LoggingFileHandler.class.getName();
             Properties prop = new Properties();
-            final String handlers = properties.getProperty("handlers");
+            final String handlers = onlyLogProps.getProperty("handlers");
             if (handlers != null && handlers.contains("java.util.logging.FileHandler")) {
                 //singletonrun模式下不输出文件日志
                 prop.setProperty("handlers", handlers.replace("java.util.logging.FileHandler", singletonMode || compileMode ? "" : fileHandlerClass));
             }
             if (!prop.isEmpty()) {
                 String prefix = fileHandlerClass + ".";
-                properties.entrySet().forEach(x -> {
+                onlyLogProps.entrySet().forEach(x -> {
                     if (x.getKey().toString().startsWith("java.util.logging.FileHandler.")) {
                         prop.put(x.getKey().toString().replace("java.util.logging.FileHandler.", prefix), x.getValue());
                     }
                 });
-                prop.entrySet().forEach(x -> properties.put(x.getKey(), x.getValue()));
+                prop.entrySet().forEach(x -> onlyLogProps.put(x.getKey(), x.getValue()));
             }
             if (!compileMode) {
-                properties.put(SncpClient.class.getSimpleName() + ".handlers", LoggingFileHandler.LoggingSncpFileHandler.class.getName());
+                onlyLogProps.put(SncpClient.class.getSimpleName() + ".handlers", LoggingFileHandler.LoggingSncpFileHandler.class.getName());
             }
         }
         if (compileMode) {
-            properties.put("handlers", "java.util.logging.ConsoleHandler");
-            Map newprop = new HashMap(properties);
+            onlyLogProps.put("handlers", "java.util.logging.ConsoleHandler");
+            Map newprop = new HashMap(onlyLogProps);
             newprop.forEach((k, v) -> {
                 if (k.toString().startsWith("java.util.logging.FileHandler.")) {
-                    properties.remove(k);
+                    onlyLogProps.remove(k);
                 }
             });
         }
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         final PrintStream ps = new PrintStream(out);
-        properties.forEach((x, y) -> ps.println(x + "=" + y));
+        onlyLogProps.forEach((x, y) -> ps.println(x + "=" + y));
         try {
             LogManager manager = LogManager.getLogManager();
             manager.readConfiguration(new ByteArrayInputStream(out.toByteArray()));
             this.loggingProperties.clear();
-            this.loggingProperties.putAll(properties);
+            this.loggingProperties.putAll(onlyLogProps);
             Enumeration<String> en = manager.getLoggerNames();
             while (en.hasMoreElements()) {
                 for (Handler handler : manager.getLogger(en.nextElement()).getHandlers()) {
@@ -1187,9 +1140,9 @@ public final class Application {
      *
      * @param props 配置项全量
      */
-    private void onEnvironmentLoaded(Properties props) {
+    private void onEnvironmentLoaded() {
         for (ModuleEngine item : moduleEngines) {
-            item.onEnvironmentLoaded(props);
+            item.onEnvironmentLoaded(this.envProperties);
         }
     }
 
@@ -1630,12 +1583,8 @@ public final class Application {
                 newVal = String.valueOf(getStartTime());
             } else {
                 List<Properties> list = new ArrayList<>();
-                list.addAll(Arrays.asList(envs));
                 list.add(this.envProperties);
-                //list.add(this.sourceProperties);
-                //list.add(this.clusterProperties);
-                list.add(this.loggingProperties);
-                //list.add(this.messageProperties);
+                list.addAll(Arrays.asList(envs));
                 for (Properties prop : list) {
                     if (prop.containsKey(key)) {
                         newVal = getPropertyValue(prop.getProperty(key), envs);
@@ -1654,151 +1603,6 @@ public final class Application {
             throw new RedkaleException(value + " is illegal naming");
         }
         return val;
-    }
-
-//    public void schedule(Object service) {
-//        this.scheduleManager.schedule(service);
-//    }
-//
-//    public void unschedule(Object service) {
-//        this.scheduleManager.unschedule(service);
-//    }
-    void updateEnvironmentProperties(String namespace, List<ResourceEvent> events) {
-        if (events == null || events.isEmpty()) {
-            return;
-        }
-        envPropertiesLock.lock();
-        try {
-            Properties envRegisterProps = new Properties();
-            Set<String> envRemovedKeys = new HashSet<>();
-            Properties envChangedProps = new Properties();
-
-//            Set<String> sourceRemovedKeys = new HashSet<>();
-//            Properties sourceChangedProps = new Properties();
-            Set<String> loggingRemovedKeys = new HashSet<>();
-            Properties loggingChangedProps = new Properties();
-
-//            Set<String> clusterRemovedKeys = new HashSet<>();
-//            Properties clusterChangedProps = new Properties();
-//
-//            Set<String> messageRemovedKeys = new HashSet<>();
-//            Properties messageChangedProps = new Properties();
-            for (ResourceEvent<String> event : events) {
-                if (namespace != null && namespace.startsWith("logging")) {
-                    if (event.newValue() == null) {
-                        if (this.loggingProperties.containsKey(event.name())) {
-                            loggingRemovedKeys.add(event.name());
-                        }
-                    } else {
-                        loggingChangedProps.put(event.name(), event.newValue());
-                    }
-                    continue;
-                }
-                if (event.name().startsWith("redkale.datasource.") || event.name().startsWith("redkale.datasource[")
-                    || event.name().startsWith("redkale.cachesource.") || event.name().startsWith("redkale.cachesource[")) {
-//                    if (event.name().endsWith(".name")) {
-//                        logger.log(Level.WARNING, "skip illegal key " + event.name() + " in source config " + (namespace == null ? "" : namespace) + ", key cannot endsWith '.name'");
-//                    } else {
-//                        if (!Objects.equals(event.newValue(), this.sourceProperties.getProperty(event.name()))) {
-//                            if (event.newValue() == null) {
-//                                if (this.sourceProperties.containsKey(event.name())) {
-//                                    sourceRemovedKeys.add(event.name());
-//                                }
-//                            } else {
-//                                sourceChangedProps.put(event.name(), event.newValue());
-//                            }
-//                        }
-//                    }
-                } else if (event.name().startsWith("redkale.mq.") || event.name().startsWith("redkale.mq[")) {
-//                    if (event.name().endsWith(".name")) {
-//                        logger.log(Level.WARNING, "skip illegal key " + event.name() + " in mq config " + (namespace == null ? "" : namespace) + ", key cannot endsWith '.name'");
-//                    } else {
-//                        if (!Objects.equals(event.newValue(), this.messageProperties.getProperty(event.name()))) {
-//                            if (event.newValue() == null) {
-//                                if (this.messageProperties.containsKey(event.name())) {
-//                                    messageRemovedKeys.add(event.name());
-//                                }
-//                            } else {
-//                                messageChangedProps.put(event.name(), event.newValue());
-//                            }
-//                        }
-//                    }
-                } else if (event.name().startsWith("redkale.cluster.")) {
-//                    if (!Objects.equals(event.newValue(), this.clusterProperties.getProperty(event.name()))) {
-//                        if (event.newValue() == null) {
-//                            if (this.clusterProperties.containsKey(event.name())) {
-//                                clusterRemovedKeys.add(event.name());
-//                            }
-//                        } else {
-//                            clusterChangedProps.put(event.name(), event.newValue());
-//                        }
-//                    }
-                } else if (event.name().startsWith("system.property.")) {
-                    String propName = event.name().substring("system.property.".length());
-                    if (event.newValue() == null) {
-                        System.getProperties().remove(propName);
-                    } else {
-                        System.setProperty(propName, event.newValue());
-                    }
-                } else if (event.name().startsWith("mimetype.property.")) {
-                    String propName = event.name().substring("system.property.".length());
-                    if (event.newValue() != null) {
-                        MimeType.add(propName, event.newValue());
-                    }
-                } else if (event.name().startsWith("redkale.")) {
-                    logger.log(Level.WARNING, "not support the environment property key " + event.name() + " on change event");
-                } else {
-                    if (!Objects.equals(event.newValue(), this.envProperties.getProperty(event.name()))) {
-                        envRegisterProps.put(event.name(), event.newValue());
-                        if (event.newValue() == null) {
-                            if (this.envProperties.containsKey(event.name())) {
-                                envRemovedKeys.add(event.name());
-                            }
-                        } else {
-                            envChangedProps.put(event.name(), event.newValue());
-                        }
-                    }
-                }
-            }
-            //普通配置项的变更
-            if (!envRegisterProps.isEmpty()) {
-                this.envProperties.putAll(envChangedProps);
-                envRemovedKeys.forEach(this.envProperties::remove);
-                DefaultAnyValue oldConf = (DefaultAnyValue) this.config.getAnyValue("properties");
-                DefaultAnyValue newConf = new DefaultAnyValue();
-                oldConf.forEach((k, v) -> newConf.addValue(k, v));
-                this.envProperties.forEach((k, v) -> {
-                    newConf.addValue("property", new DefaultAnyValue().addValue("name", k.toString()).addValue("value", v.toString()));
-                });
-                oldConf.replace(newConf);
-                resourceFactory.register(envRegisterProps, "", Environment.class);
-            }
-
-            //日志配置项的变更
-            if (!loggingChangedProps.isEmpty() || !loggingRemovedKeys.isEmpty()) {
-                //只是简单变更日志级别则直接操作，无需重新配置日志
-                if (loggingRemovedKeys.isEmpty() && loggingChangedProps.size() == 1 && loggingChangedProps.containsKey(".level")) {
-                    try {
-                        Level logLevel = Level.parse(loggingChangedProps.getProperty(".level"));
-                        Logger.getGlobal().setLevel(logLevel);
-                        this.loggingProperties.putAll(loggingChangedProps);
-                        logger.log(Level.INFO, "Reconfig logging level to " + logLevel);
-                    } catch (Exception e) {
-                        logger.log(Level.WARNING, "Reconfig logging level error, new level is " + loggingChangedProps.getProperty(".level"));
-                    }
-                } else {
-                    Properties newLogProps = new Properties();
-                    newLogProps.putAll(this.loggingProperties);
-                    newLogProps.putAll(loggingChangedProps);
-                    loggingRemovedKeys.forEach(newLogProps::remove);
-                    reconfigLogging(newLogProps);
-                    logger.log(Level.INFO, "Reconfig logging finished ");
-                }
-            }
-
-        } finally {
-            envPropertiesLock.unlock();
-        }
     }
 
     private static String generateHelp() {

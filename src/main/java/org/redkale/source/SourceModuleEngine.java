@@ -23,6 +23,7 @@ import org.redkale.net.Servlet;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
+import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.InstanceProvider;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
@@ -51,7 +52,7 @@ public class SourceModuleEngine extends ModuleEngine {
     private final ReentrantLock dataSourceLock = new ReentrantLock();
 
     //原生sql解析器
-    private DataNativeSqlParser nativeSqlParser;
+    DataNativeSqlParser nativeSqlParser;
 
     public SourceModuleEngine(Application application) {
         super(application);
@@ -95,7 +96,7 @@ public class SourceModuleEngine extends ModuleEngine {
             this.resourceFactory.register(DataNativeSqlParser.class, this.nativeSqlParser);
             break;  //only first provider
         }
-        
+
         //------------------------------------- 注册 DataSource --------------------------------------------------------        
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
             try {
@@ -480,15 +481,24 @@ public class SourceModuleEngine extends ModuleEngine {
     }
 
     private AnyValue findSourceConfig(String sourceName, String sourceType) {
-        AnyValue sourceNode = application.getAppConfig().getAnyValue(sourceType);
-        if (sourceNode != null) {
-            AnyValue confNode = sourceNode.getAnyValue(sourceName);
-            if (confNode != null) { //必须要设置name属性
-                ((AnyValue.DefaultAnyValue) confNode).setValue("name", sourceName);
+        Properties props = new Properties();
+        String bprefix = "redkale." + sourceType;
+        String prefix1 = bprefix + "." + sourceName + ".";
+        String prefix2 = bprefix + "[" + sourceName + "].";
+        this.sourceProperties.forEach((k, v) -> {
+            String key = k.toString();
+            if (key.startsWith(prefix1)) {
+                props.put(key.substring(prefix1.length()), v);
+            } else if (key.startsWith(prefix2)) {
+                props.put(key.substring(prefix2.length()), v);
             }
-            return confNode;
+        });
+        if (props.isEmpty()) {
+            return null;
         }
-        return null;
+        AnyValue conf = DefaultAnyValue.loadFromProperties(props);
+        ((DefaultAnyValue) conf).setValue("name", sourceName);
+        return conf;
     }
 
 }

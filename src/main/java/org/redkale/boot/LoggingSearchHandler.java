@@ -57,7 +57,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
         final String name = "Redkale-Logging-" + getClass().getSimpleName().replace("Logging", "") + "-Thread";
         final int batchSize = 100; //批量最多100条
         final List<SearchLogRecord> logList = new ArrayList<>();
-        final SimpleFormatter formatter = new SimpleFormatter();
+        final Formatter formatter = new LoggingBaseHandler.LoggingFormater();
         final PrintStream outStream = System.out;
         new Thread() {
             {
@@ -155,41 +155,41 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
         if (this.sourceResourceName == null || this.sourceResourceName.isEmpty()) {
             throw new RedkaleException("not found logging.property " + cname + ".source");
         }
-        String tagstr = manager.getProperty(cname + ".tag");
-        if (tagstr != null && !tagstr.isEmpty()) {
-            if (!checkTagName(tagstr.replaceAll("\\$\\{.+\\}", ""))) {
-                throw new RedkaleException("found illegal logging.property " + cname + ".tag = " + tagstr);
+        String tagStr = manager.getProperty(cname + ".tag");
+        if (tagStr != null && !tagStr.isEmpty()) {
+            if (!checkTagName(tagStr.replaceAll("\\$\\{.+\\}", ""))) {
+                throw new RedkaleException("found illegal logging.property " + cname + ".tag = " + tagStr);
             }
-            this.tag = tagstr.replace("${" + RESNAME_APP_NAME + "}", System.getProperty("redkale.application.name", ""));
+            this.tag = tagStr.replace("${" + RESNAME_APP_NAME + "}", System.getProperty("redkale.application.name", ""));
             if (this.tag.contains("%")) {
                 this.tagDateFormat = this.tag;
                 Times.formatTime(this.tagDateFormat, -1, System.currentTimeMillis()); //测试时间格式是否正确
             }
         }
 
-        String levelstr = manager.getProperty(cname + ".level");
+        String levelStr = manager.getProperty(cname + ".level");
         try {
-            if (levelstr != null) {
-                Level l = Level.parse(levelstr);
+            if (levelStr != null) {
+                Level l = Level.parse(levelStr);
                 setLevel(l != null ? l : Level.ALL);
             }
         } catch (Exception e) {
             //do nothing
         }
-        String filterstr = manager.getProperty(cname + ".filter");
+        String filterStr = manager.getProperty(cname + ".filter");
         try {
-            if (filterstr != null) {
-                Class<?> clz = ClassLoader.getSystemClassLoader().loadClass(filterstr);
+            if (filterStr != null) {
+                Class<?> clz = ClassLoader.getSystemClassLoader().loadClass(filterStr);
                 RedkaleClassLoader.putReflectionDeclaredConstructors(clz, clz.getName());
                 setFilter((Filter) clz.getDeclaredConstructor().newInstance());
             }
         } catch (Exception e) {
             //do nothing
         }
-        String formatterstr = manager.getProperty(cname + ".formatter");
+        String formatterStr = manager.getProperty(cname + ".formatter");
         try {
-            if (formatterstr != null) {
-                Class<?> clz = ClassLoader.getSystemClassLoader().loadClass(formatterstr);
+            if (formatterStr != null) {
+                Class<?> clz = ClassLoader.getSystemClassLoader().loadClass(formatterStr);
                 RedkaleClassLoader.putReflectionDeclaredConstructors(clz, clz.getName());
                 setFormatter((Formatter) clz.getDeclaredConstructor().newInstance());
             }
@@ -200,19 +200,19 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
             setFormatter(new SimpleFormatter());
         }
 
-        String encodingstr = manager.getProperty(cname + ".encoding");
+        String encodingStr = manager.getProperty(cname + ".encoding");
         try {
-            if (encodingstr != null) {
-                setEncoding(encodingstr);
+            if (encodingStr != null) {
+                setEncoding(encodingStr);
             }
         } catch (Exception e) {
             //do nothing
         }
 
-        String denyregxstr = manager.getProperty(cname + ".denyregx");
+        String denyRegxStr = manager.getProperty(cname + ".denyregx");
         try {
-            if (denyregxstr != null && !denyregxstr.trim().isEmpty()) {
-                denyRegx = Pattern.compile(denyregxstr);
+            if (denyRegxStr != null && !denyRegxStr.trim().isEmpty()) {
+                denyRegx = Pattern.compile(denyRegxStr);
             }
         } catch (Exception e) {
             //do nothing
