@@ -248,8 +248,10 @@ public final class Application {
 
         //设置基础信息资源
         this.resourceFactory.register(RESNAME_APP_NAME, String.class, this.name);
+        
         this.resourceFactory.register(RESNAME_APP_NODEID, int.class, this.nodeid);
         this.resourceFactory.register(RESNAME_APP_NODEID, Integer.class, this.nodeid);
+        
         this.resourceFactory.register(RESNAME_APP_TIME, long.class, this.startTime);
         this.resourceFactory.register(RESNAME_APP_TIME, Long.class, this.startTime);
 
@@ -706,7 +708,7 @@ public final class Application {
             Properties newDyncProps = new Properties();
             dyncProps.forEach((k, v) -> newDyncProps.put(k.toString(), getPropertyValue(v.toString(), dyncProps)));
             //合并配置
-            this.config.merge(AnyValue.loadFromProperties(newDyncProps).getAnyValue("redkale"), AppConfig.appConfigmergeFunction);
+            this.config.merge(AnyValue.loadFromProperties(newDyncProps).getAnyValue("redkale"), AppConfig.APP_CONFIG_MERGE_FUNC);
         }
         //使用合并后的新配置节点
         propsConf = this.config.getAnyValue("properties");

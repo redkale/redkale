@@ -483,7 +483,7 @@ class AppConfig {
         }
     }
 
-    static final AnyValue.MergeFunction appConfigmergeFunction = (path, key, val1, val2) -> {
+    static final AnyValue.MergeFunction APP_CONFIG_MERGE_FUNC = (path, key, val1, val2) -> {
         if ("".equals(path)) {
             if ("executor".equals(key)) {
                 return AnyValue.MergeFunction.REPLACE;

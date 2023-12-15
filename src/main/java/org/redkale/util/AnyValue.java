@@ -35,12 +35,24 @@ public abstract class AnyValue {
      */
     public static interface MergeFunction {
 
+        /**
+         * 追加
+         */
         public static final int NONE = 0;
 
+        /**
+         * 替换
+         */
         public static final int REPLACE = 1;
 
+        /**
+         * 合并
+         */
         public static final int MERGE = 2;
 
+        /**
+         * 丢弃
+         */
         public static final int SKIP = 3;
 
         public int apply(String path, String name, AnyValue val1, AnyValue val2);
