@@ -52,11 +52,11 @@ public class MessageModuleEngine extends ModuleEngine {
      * 配置项加载后被调用
      */
     @Override
-    public void onEnvironmentLoaded(Properties props) {
+    public void onEnvironmentLoaded(Properties allProps) {
         if (this.messageAgents == null) {
             return;
         }
-        props.forEach((key, val) -> {
+        allProps.forEach((key, val) -> {
             if (key.toString().startsWith("redkale.mq.") || key.toString().startsWith("redkale.mq[")) {
                 if (key.toString().endsWith(".name")) {
                     logger.log(Level.WARNING, "skip illegal key " + key + " in mq config, key cannot endsWith '.name'");

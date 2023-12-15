@@ -173,9 +173,6 @@ public final class Application {
     //配置信息，只读版Properties
     private final Environment environment;
 
-    //是否从/META-INF中读取配置
-    private final boolean configFromCache;
-
     //全局根ResourceFactory
     final ResourceFactory resourceFactory = ResourceFactory.create();
 
@@ -238,7 +235,6 @@ public final class Application {
         this.singletonMode = appConfig.singletonMode;
         this.compileMode = appConfig.compileMode;
         this.config = appConfig.config;
-        this.configFromCache = appConfig.configFromCache;
         this.envProperties.putAll(appConfig.localEnvProperties);
         this.environment = new Environment(this.envProperties);
         this.name = appConfig.name;
@@ -610,45 +606,45 @@ public final class Application {
             }
         }
         if (propsConf != null) {
-            final Properties agentEnvs = new Properties();
-            { //可能通过系统环境变量配置信息
-                Iterator<PropertiesAgentProvider> it = ServiceLoader.load(PropertiesAgentProvider.class, classLoader).iterator();
-                RedkaleClassLoader.putServiceLoader(PropertiesAgentProvider.class);
-                List<PropertiesAgentProvider> providers = new ArrayList<>();
-                while (it.hasNext()) {
-                    PropertiesAgentProvider provider = it.next();
-                    if (provider != null && provider.acceptsConf(propsConf)) {
-                        RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
-                        providers.add(provider);
-                    }
+            final Properties remoteEnvs = new Properties();
+            //可能通过系统环境变量配置信息
+            Iterator<PropertiesAgentProvider> it = ServiceLoader.load(PropertiesAgentProvider.class, classLoader).iterator();
+            RedkaleClassLoader.putServiceLoader(PropertiesAgentProvider.class);
+            List<PropertiesAgentProvider> providers = new ArrayList<>();
+            while (it.hasNext()) {
+                PropertiesAgentProvider provider = it.next();
+                if (provider != null && provider.acceptsConf(propsConf)) {
+                    RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
+                    providers.add(provider);
                 }
-                for (PropertiesAgentProvider provider : InstanceProvider.sort(providers)) {
-                    long s = System.currentTimeMillis();
-                    this.propertiesAgent = provider.createInstance();
-                    this.resourceFactory.inject(this.propertiesAgent);
-                    if (compileMode) {
-                        this.propertiesAgent.compile(propsConf);
-                    } else {
-                        Map<String, Properties> propMap = this.propertiesAgent.init(this, propsConf);
-                        int propCount = 0;
-                        if (propMap != null) {
-                            for (Map.Entry<String, Properties> en : propMap.entrySet()) {
-                                propCount += en.getValue().size();
-                                if (en.getKey().startsWith("logging")) {
-                                    if (logProps != null) {
-                                        logger.log(Level.WARNING, "skip repeat logging config properties(" + en.getKey() + ")");
-                                    } else {
-                                        logProps = en.getValue();
-                                    }
+            }
+            for (PropertiesAgentProvider provider : InstanceProvider.sort(providers)) {
+                long s = System.currentTimeMillis();
+                this.propertiesAgent = provider.createInstance();
+                this.resourceFactory.inject(this.propertiesAgent);
+                if (compileMode) {
+                    this.propertiesAgent.compile(propsConf);
+                } else {
+                    Map<String, Properties> propMap = this.propertiesAgent.init(this, propsConf);
+                    int propCount = 0;
+                    if (propMap != null) {
+                        for (Map.Entry<String, Properties> en : propMap.entrySet()) {
+                            propCount += en.getValue().size();
+                            if (en.getKey().contains("logging")) {
+                                if (logProps != null) {
+                                    logger.log(Level.WARNING, "skip repeat logging config properties(" + en.getKey() + ")");
                                 } else {
-                                    agentEnvs.putAll(en.getValue());
+                                    logProps = en.getValue();
                                 }
+                            } else {
+                                remoteEnvs.putAll(en.getValue());
                             }
                         }
-                        logger.info("PropertiesAgent (type = " + this.propertiesAgent.getClass().getSimpleName() + ") load " + propCount + " data in " + (System.currentTimeMillis() - s) + " ms");
                     }
-                    break;
+                    logger.info("PropertiesAgent (type = " + this.propertiesAgent.getClass().getSimpleName()
+                        + ") load " + propCount + " data in " + (System.currentTimeMillis() - s) + " ms");
                 }
+                break;
             }
 
             final Properties oldEnvs = new Properties();
@@ -660,7 +656,7 @@ public final class Application {
                 }
                 oldEnvs.put(key, value);
             }
-            agentEnvs.forEach((k, v) -> {
+            remoteEnvs.forEach((k, v) -> {
                 if (k.toString().startsWith("redkale.")) {
                     dyncProps.put(k, v);
                 } else {
@@ -682,6 +678,8 @@ public final class Application {
             if (k.toString().startsWith("redkale.executor.") //节点全局唯一
                 || k.toString().startsWith("redkale.transport.") //节点全局唯一
                 || k.toString().startsWith("redkale.cluster.") //节点全局唯一
+                || k.toString().startsWith("redkale.cache.") //节点全局唯一
+                || k.toString().startsWith("redkale.schedule.") //节点全局唯一
                 || k.toString().startsWith("redkale.mq.")
                 || k.toString().startsWith("redkale.mq[")
                 || k.toString().startsWith("redkale.group.")
@@ -708,7 +706,7 @@ public final class Application {
             Properties newDyncProps = new Properties();
             dyncProps.forEach((k, v) -> newDyncProps.put(k.toString(), getPropertyValue(v.toString(), dyncProps)));
             //合并配置
-            this.config.merge(AnyValue.loadFromProperties(newDyncProps).getAnyValue("redkale"), NodeServer.appConfigmergeFunction);
+            this.config.merge(AnyValue.loadFromProperties(newDyncProps).getAnyValue("redkale"), AppConfig.appConfigmergeFunction);
         }
         //使用合并后的新配置节点
         propsConf = this.config.getAnyValue("properties");
@@ -736,7 +734,7 @@ public final class Application {
                 }
             }
         }
-        //重置日志配置
+        //重置远程日志配置
         if (logProps != null && !logProps.isEmpty()) {
             reconfigLogging(false, logProps);
         }

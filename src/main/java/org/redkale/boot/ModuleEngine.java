@@ -72,9 +72,9 @@ public abstract class ModuleEngine {
     /**
      * 配置项加载后被调用
      *
-     * @param props 配置项全量
+     * @param allProps 配置项全量
      */
-    public void onEnvironmentLoaded(Properties props) {
+    public void onEnvironmentLoaded(Properties allProps) {
         //do nothing
     }
 

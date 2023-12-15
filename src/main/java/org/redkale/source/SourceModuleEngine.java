@@ -62,8 +62,8 @@ public class SourceModuleEngine extends ModuleEngine {
      * 配置项加载后被调用
      */
     @Override
-    public void onEnvironmentLoaded(Properties props) {
-        props.forEach((key, val) -> {
+    public void onEnvironmentLoaded(Properties allProps) {
+        allProps.forEach((key, val) -> {
             if (key.toString().startsWith("redkale.datasource.") || key.toString().startsWith("redkale.datasource[")
                 || key.toString().startsWith("redkale.cachesource.") || key.toString().startsWith("redkale.cachesource[")) {
                 if (key.toString().endsWith(".name")) {

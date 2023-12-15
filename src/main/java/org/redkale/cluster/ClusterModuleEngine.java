@@ -43,7 +43,7 @@ public class ClusterModuleEngine extends ModuleEngine {
     @Override
     public void onAppPostInit() {
         ClusterAgent cluster = null;
-        AnyValue clusterConf = environment.getAnyValue("redkale.cluster", false);
+        AnyValue clusterConf = application.getAppConfig().getAnyValue("cluster");
         if (clusterConf != null) {
             try {
                 String classVal = application.getPropertyValue(clusterConf.getValue("type", clusterConf.getValue("value"))); //兼容value字段
@@ -109,8 +109,8 @@ public class ClusterModuleEngine extends ModuleEngine {
      * 配置项加载后被调用
      */
     @Override
-    public void onEnvironmentLoaded(Properties props) {
-        props.forEach((key, val) -> {
+    public void onEnvironmentLoaded(Properties allProps) {
+        allProps.forEach((key, val) -> {
             if (key.toString().startsWith("redkale.cluster.")) {
                 this.clusterProperties.put(key, val);
             }

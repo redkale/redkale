@@ -17,16 +17,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
-import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import static org.redkale.boot.Application.*;
 import org.redkale.source.DataSources;
 import org.redkale.util.AnyValue;
+import org.redkale.util.AnyValueWriter;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
-import org.redkale.util.AnyValueWriter;
 import org.redkale.util.Utility;
 
 /**
@@ -35,11 +35,6 @@ import org.redkale.util.Utility;
  * @author zhangjx
  */
 class AppConfig {
-
-    //日志
-    private final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
-
-    final long startTime = System.currentTimeMillis();
 
     //是否用于main方法运行
     final boolean singletonMode;
@@ -487,5 +482,114 @@ class AppConfig {
             return file;
         }
     }
+
+    static final AnyValue.MergeFunction appConfigmergeFunction = (path, key, val1, val2) -> {
+        if ("".equals(path)) {
+            if ("executor".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("cluster".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("cache".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("schedule".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("listener".equals(key)) {
+                if (Objects.equals(val1.getValue("value"), val2.getValue("value"))) {
+                    return AnyValue.MergeFunction.SKIP;
+                } else {
+                    return AnyValue.MergeFunction.NONE;
+                }
+            }
+            if ("mq".equals(key)) {
+                if (Objects.equals(val1.getValue("name"), val2.getValue("name"))) {
+                    return AnyValue.MergeFunction.REPLACE;
+                } else {
+                    return AnyValue.MergeFunction.NONE;
+                }
+            }
+            if ("group".equals(key)) {
+                if (Objects.equals(val1.getValue("name"), val2.getValue("name"))) {
+                    return AnyValue.MergeFunction.REPLACE;
+                } else {
+                    return AnyValue.MergeFunction.NONE;
+                }
+            }
+            if ("server".equals(key)) {
+                if (Objects.equals(val1.getValue("name", val1.getValue("protocol") + "_" + val1.getValue("port")),
+                    val2.getValue("name", val2.getValue("protocol") + "_" + val2.getValue("port")))) {
+                    return AnyValue.MergeFunction.REPLACE;
+                } else {
+                    return AnyValue.MergeFunction.NONE;
+                }
+            }
+        }
+        if ("cachesource".equals(path)) {
+            return AnyValue.MergeFunction.REPLACE;
+        }
+        if ("datasource".equals(path)) {
+            return AnyValue.MergeFunction.REPLACE;
+        }
+        if ("properties".equals(path)) {
+            if ("property".equals(key)) {
+                if (Objects.equals(val1.getValue("name"), val2.getValue("name"))) {
+                    return AnyValue.MergeFunction.REPLACE;
+                } else {
+                    return AnyValue.MergeFunction.NONE;
+                }
+            }
+        }
+        if ("server".equals(path)) {
+            if ("ssl".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("render".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("resource-servlet".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+        }
+        if ("server.request".equals(path)) {
+            if ("remoteaddr".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("rpc".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("locale".equals(key)) {
+                if (Objects.equals(val1.getValue("name"), val2.getValue("name"))) {
+                    return AnyValue.MergeFunction.REPLACE;
+                } else {
+                    return AnyValue.MergeFunction.NONE;
+                }
+            }
+        }
+        if ("server.response".equals(path)) {
+            if ("content-type".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("defcookie".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("options".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("date".equals(key)) {
+                return AnyValue.MergeFunction.REPLACE;
+            }
+            if ("addheader".equals(key) || "setheader".equals(key)) {
+                if (Objects.equals(val1.getValue("name"), val2.getValue("name"))) {
+                    return AnyValue.MergeFunction.REPLACE;
+                } else {
+                    return AnyValue.MergeFunction.NONE;
+                }
+            }
+        }
+        return AnyValue.MergeFunction.MERGE;
+    };
 
 }
