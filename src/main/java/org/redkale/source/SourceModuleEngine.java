@@ -23,7 +23,7 @@ import org.redkale.net.Servlet;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
-import org.redkale.util.AnyValue.DefaultAnyValue;
+import org.redkale.util.AnyValueWriter;
 import org.redkale.util.InstanceProvider;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
@@ -205,7 +205,7 @@ public class SourceModuleEngine extends ModuleEngine {
                 if (source == null) {
                     continue;  //多余的数据源
                 }
-                final AnyValue.DefaultAnyValue old = (AnyValue.DefaultAnyValue) findSourceConfig(sourceName, "cachesource");
+                final AnyValueWriter old = (AnyValueWriter) findSourceConfig(sourceName, "cachesource");
                 Properties newProps = new Properties();
                 this.sourceProperties.forEach((k, v) -> {
                     final String key = k.toString();
@@ -250,7 +250,7 @@ public class SourceModuleEngine extends ModuleEngine {
                     changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), null, this.sourceProperties.getProperty(key)));
                 });
                 if (!changeEvents.isEmpty()) {
-                    AnyValue.DefaultAnyValue back = old.copy();
+                    AnyValueWriter back = old.copy();
                     try {
                         old.replace(AnyValue.loadFromProperties(newProps).getAnyValue("redkale").getAnyValue("cachesource").getAnyValue(sourceName));
                         ((AbstractCacheSource) source).onResourceChange(changeEvents.toArray(new ResourceEvent[changeEvents.size()]));
@@ -266,7 +266,7 @@ public class SourceModuleEngine extends ModuleEngine {
                 if (source == null) {
                     continue;  //多余的数据源
                 }
-                AnyValue.DefaultAnyValue old = (AnyValue.DefaultAnyValue) findSourceConfig(sourceName, "datasource");
+                AnyValueWriter old = (AnyValueWriter) findSourceConfig(sourceName, "datasource");
                 Properties newProps = new Properties();
                 this.sourceProperties.forEach((k, v) -> {
                     final String key = k.toString();
@@ -311,7 +311,7 @@ public class SourceModuleEngine extends ModuleEngine {
                     changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), null, this.sourceProperties.getProperty(key)));
                 });
                 if (!changeEvents.isEmpty()) {
-                    AnyValue.DefaultAnyValue back = old.copy();
+                    AnyValueWriter back = old.copy();
                     try {
                         old.replace(AnyValue.loadFromProperties(newProps).getAnyValue("redkale").getAnyValue("datasource").getAnyValue(sourceName));
                         ((AbstractDataSource) source).onResourceChange(changeEvents.toArray(new ResourceEvent[changeEvents.size()]));
@@ -496,8 +496,8 @@ public class SourceModuleEngine extends ModuleEngine {
         if (props.isEmpty()) {
             return null;
         }
-        AnyValue conf = DefaultAnyValue.loadFromProperties(props);
-        ((DefaultAnyValue) conf).setValue("name", sourceName);
+        AnyValue conf = AnyValueWriter.loadFromProperties(props);
+        ((AnyValueWriter) conf).setValue("name", sourceName);
         return conf;
     }
 

@@ -243,44 +243,44 @@ public abstract class NodeServer {
         //---------------------------------------------------------------------------------------------
         final ResourceFactory appResFactory = application.getResourceFactory();
         //------------------------------------- 注册 Resource --------------------------------------------------------
-        resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
-            try {
-                String resName = null;
-                Resource res = field.getAnnotation(Resource.class);
-                if (res != null) {
-                    resName = res.name();
-                } else {
-                    javax.annotation.Resource res2 = field.getAnnotation(javax.annotation.Resource.class);
-                    if (res2 != null) {
-                        resName = res2.name();
-                    }
-                }
-                if (resName == null || !resName.startsWith("properties.")) {
-                    return null;
-                }
-                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
-                    return null; //远程模式不得注入 DataSource
-                }
-                Class type = field.getType();
-                if (type != AnyValue.class && type != AnyValue[].class) {
-                    return null;
-                }
-                Object resource = null;
-                final AnyValue properties = application.getAppConfig().getAnyValue("properties");
-                if (properties != null && type == AnyValue.class) {
-                    resource = properties.getAnyValue(resName.substring("properties.".length()));
-                    appResFactory.register(resourceName, AnyValue.class, resource);
-                } else if (properties != null && type == AnyValue[].class) {
-                    resource = properties.getAnyValues(resName.substring("properties.".length()));
-                    appResFactory.register(resourceName, AnyValue[].class, resource);
-                }
-                field.set(srcObj, resource);
-                return resource;
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "Resource inject error", e);
-                return null;
-            }
-        }, AnyValue.class, AnyValue[].class);
+//        resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
+//            try {
+//                String resName = null;
+//                Resource res = field.getAnnotation(Resource.class);
+//                if (res != null) {
+//                    resName = res.name();
+//                } else {
+//                    javax.annotation.Resource res2 = field.getAnnotation(javax.annotation.Resource.class);
+//                    if (res2 != null) {
+//                        resName = res2.name();
+//                    }
+//                }
+//                if (resName == null || !resName.startsWith("properties.")) {
+//                    return null;
+//                }
+//                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
+//                    return null; //远程模式不得注入 DataSource
+//                }
+//                Class type = field.getType();
+//                if (type != AnyValue.class && type != AnyValue[].class) {
+//                    return null;
+//                }
+//                Object resource = null;
+//                final AnyValue properties = application.getAppConfig().getAnyValue("properties");
+//                if (properties != null && type == AnyValue.class) {
+//                    resource = properties.getAnyValue(resName.substring("properties.".length()));
+//                    appResFactory.register(resourceName, AnyValue.class, resource);
+//                } else if (properties != null && type == AnyValue[].class) {
+//                    resource = properties.getAnyValues(resName.substring("properties.".length()));
+//                    appResFactory.register(resourceName, AnyValue[].class, resource);
+//                }
+//                field.set(srcObj, resource);
+//                return resource;
+//            } catch (Exception e) {
+//                logger.log(Level.SEVERE, "Resource inject error", e);
+//                return null;
+//            }
+//        }, AnyValue.class, AnyValue[].class);
 
         //------------------------------------- 注册 Local AutoLoad(false) Service --------------------------------------------------------        
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
@@ -751,7 +751,7 @@ public abstract class NodeServer {
         }
         cf = null;
         for (AnyValue list : proplist) {
-            AnyValue.DefaultAnyValue prop = null;
+            AnyValueWriter prop = null;
             String sc = list.getValue("group");
             String mq = list.getValue("mq");
             if (sc != null) {
@@ -761,7 +761,7 @@ public abstract class NodeServer {
                 sc = localGroup;
             }
             if (sc != null || mq != null) {
-                prop = new AnyValue.DefaultAnyValue();
+                prop = new AnyValueWriter();
                 if (sc != null) {
                     prop.addValue("group", sc);
                 }
@@ -772,8 +772,8 @@ public abstract class NodeServer {
             ClassFilter filter = new ClassFilter(this.serverClassLoader, ref, inter, excludeSuperClasses, prop);
             for (AnyValue av : list.getAnyValues(property)) { // <service>、<filter>、<servlet> 节点
                 final AnyValue[] items = av.getAnyValues("property");
-                if (av instanceof AnyValue.DefaultAnyValue && items.length > 0) { //存在 <property>节点
-                    AnyValue.DefaultAnyValue dav = AnyValue.DefaultAnyValue.create();
+                if (av instanceof AnyValueWriter && items.length > 0) { //存在 <property>节点
+                    AnyValueWriter dav = AnyValueWriter.create();
                     final AnyValue.Entry<String>[] strings = av.getStringEntrys();
                     if (strings != null) {  //将<service>、<filter>、<servlet>节点的属性值传给dav
                         for (AnyValue.Entry<String> en : strings) {
@@ -788,7 +788,7 @@ public abstract class NodeServer {
                             }
                         }
                     }
-                    AnyValue.DefaultAnyValue ps = AnyValue.DefaultAnyValue.create();
+                    AnyValueWriter ps = AnyValueWriter.create();
                     for (AnyValue item : items) {
                         ps.addValue(item.getValue("name"), item.getValue("value"));
                     }

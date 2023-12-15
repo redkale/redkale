@@ -18,7 +18,6 @@ import org.redkale.net.Filter;
 import org.redkale.net.http.Rest.RestDynSourceType;
 import org.redkale.service.Service;
 import org.redkale.util.*;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 
 /**
  * HTTP Servlet的总入口，请求在HttpDispatcherServlet中进行分流。  <br>
@@ -268,11 +267,11 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
         });
         { //设置ResourceServlet
             AnyValue resConfig = config.getAnyValue("resource-servlet");
-            if ((resConfig instanceof DefaultAnyValue) && resConfig.getValue("webroot", "").isEmpty()) {
-                ((DefaultAnyValue) resConfig).addValue("webroot", config.getValue("root"));
+            if ((resConfig instanceof AnyValueWriter) && resConfig.getValue("webroot", "").isEmpty()) {
+                ((AnyValueWriter) resConfig).addValue("webroot", config.getValue("root"));
             }
             if (resConfig == null) { //主要用于嵌入式的HttpServer初始化
-                DefaultAnyValue dresConfig = new DefaultAnyValue();
+                AnyValueWriter dresConfig = new AnyValueWriter();
                 dresConfig.addValue("webroot", config.getValue("root"));
                 dresConfig.addValue("ranges", config.getValue("ranges"));
                 dresConfig.addValue("cache", config.getAnyValue("cache"));

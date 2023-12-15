@@ -27,7 +27,7 @@ public class ScheduleModuleEngine extends ModuleEngine {
     public void onAppPostInit() {
         //设置定时管理器
         this.scheduleManager = ScheduleManagerService.create(null).enabled(false);
-        final AnyValue scheduleConf = application.getAppConfig().getAnyValue("schedule", true);
+        final AnyValue scheduleConf = environment.getAnyValue("redkale.schedule", true);
         this.resourceFactory.inject(this.scheduleManager);
         if (!application.isCompileMode()) {
             this.scheduleManager.init(scheduleConf);

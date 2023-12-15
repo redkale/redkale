@@ -8,7 +8,6 @@ package org.redkale.util;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.BiFunction;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 
 /**
  * 简单的xml读取器, 只读element节点信息，其他信息(如: namespace、comment、docdecl等)都会丢弃
@@ -38,9 +37,9 @@ public class XmlReader {
 
         public String tag;
 
-        public DefaultAnyValue config;
+        public AnyValueWriter config;
 
-        public TagNode(String tag, DefaultAnyValue node) {
+        public TagNode(String tag, AnyValueWriter node) {
             this.tag = tag;
             this.config = node;
         }
@@ -71,7 +70,7 @@ public class XmlReader {
     }
 
     public AnyValue read() {
-        DefaultAnyValue root = DefaultAnyValue.create();
+        AnyValueWriter root = AnyValueWriter.create();
         char ch;
         lineNumber++;
         ByteArray array = new ByteArray(128);
@@ -172,7 +171,7 @@ public class XmlReader {
     }
 
     //返回是否endtag， 即以 />结尾
-    protected boolean readTagAttribute(String tag, DefaultAnyValue config) {
+    protected boolean readTagAttribute(String tag, AnyValueWriter config) {
         boolean first = true;
         boolean endtag = false;
         boolean endattr = false;
@@ -254,7 +253,7 @@ public class XmlReader {
         return readTagAttribute(tag, config);
     }
 
-    protected void readStartTag(DefaultAnyValue root) {
+    protected void readStartTag(AnyValueWriter root) {
         final int start = this.position;
         boolean hasattr = false;
         boolean endtag = false;
@@ -273,7 +272,7 @@ public class XmlReader {
             ch = nextChar();
         }
         final String tag = new String(this.text, start, this.position - start).trim();
-        DefaultAnyValue config = DefaultAnyValue.create();
+        AnyValueWriter config = AnyValueWriter.create();
         TagNode tagNode = new TagNode(tag, config);
         if (tags.isEmpty()) {
             root.addValue(tag, tagNode.config);
@@ -322,7 +321,7 @@ public class XmlReader {
         }
     }
 
-    protected void readDocdecl(DefaultAnyValue root, ByteArray array) {//读取到 <!D 才进入此方法  '<!DOCTYPE' S Name (S ExternalID)? S? ('[' (markupdecl | DeclSep)* ']' S?)? '>'
+    protected void readDocdecl(AnyValueWriter root, ByteArray array) {//读取到 <!D 才进入此方法  '<!DOCTYPE' S Name (S ExternalID)? S? ('[' (markupdecl | DeclSep)* ']' S?)? '>'
         if (nextChar() != 'O') {
             throw newException("expected <!DOCTYPE");
         }
@@ -355,7 +354,7 @@ public class XmlReader {
         }
     }
 
-    protected void readCDSect(DefaultAnyValue root, ByteArray array) {//读取到 <![ 才进入此方法  '<![CDATA[ (Char* - (Char* ']]>' Char*)) ]]>'
+    protected void readCDSect(AnyValueWriter root, ByteArray array) {//读取到 <![ 才进入此方法  '<![CDATA[ (Char* - (Char* ']]>' Char*)) ]]>'
         if (nextChar() != 'C') {
             throw newException("expected <![CDATA[ for cdsect start");
         }
@@ -391,7 +390,7 @@ public class XmlReader {
         }
     }
 
-    protected void readXmlDecl(DefaultAnyValue root, ByteArray array) {//读取到 <? 才进入此方法  <?xml version="1.0" encoding="UTF-8"?>
+    protected void readXmlDecl(AnyValueWriter root, ByteArray array) {//读取到 <? 才进入此方法  <?xml version="1.0" encoding="UTF-8"?>
         char ch;
         array.clear();
         array.putByte('<');

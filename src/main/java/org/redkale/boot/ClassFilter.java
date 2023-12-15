@@ -19,7 +19,6 @@ import java.util.regex.Pattern;
 import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.util.*;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 
 /**
  * class过滤器， 符合条件的class会保留下来存入FilterEntry。
@@ -214,10 +213,10 @@ public final class ClassFilter<T> {
             if (cf.conf != null) {
                 if (property == null) {
                     property = cf.conf;
-                } else if (property instanceof DefaultAnyValue) {
-                    ((DefaultAnyValue) property).addAllStringSet(cf.conf);
+                } else if (property instanceof AnyValueWriter) {
+                    ((AnyValueWriter) property).addAllStringSet(cf.conf);
                 } else {
-                    DefaultAnyValue dav = new DefaultAnyValue();
+                    AnyValueWriter dav = new AnyValueWriter();
                     dav.addAllStringSet(property);
                     dav.addAllStringSet(cf.conf);
                     property = dav;

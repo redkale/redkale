@@ -12,7 +12,7 @@ import org.redkale.net.AsyncIOGroup;
 import org.redkale.net.http.HttpServer;
 import org.redkale.net.http.HttpSimpleClient;
 import org.redkale.net.http.HttpSimpleRequest;
-import org.redkale.util.AnyValue;
+import org.redkale.util.AnyValueWriter;
 import org.redkale.util.ResourceFactory;
 
 /**
@@ -96,7 +96,7 @@ public class HttpSimpleClientTest {
             @Override
             public void run() {
                 try {
-                    AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
+                    AnyValueWriter conf = new AnyValueWriter();
                     conf.addValue("host", "0.0.0.0");
                     conf.addValue("port", "" + port);
                     conf.addValue("protocol", "HTTP");

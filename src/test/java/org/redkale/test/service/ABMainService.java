@@ -23,7 +23,6 @@ import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
 import org.redkale.util.*;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 
 /**
  *
@@ -58,7 +57,7 @@ public class ABMainService implements Service {
         cserver.getResourceFactory().register(application);
         //cserver.getLogger().setLevel(Level.WARNING);
         cserver.addSncpServlet(cservice);
-        cserver.init(DefaultAnyValue.create("port", 5577));
+        cserver.init(AnyValueWriter.create("port", 5577));
         cserver.start();
 
         //------------------------ 初始化 BCService ------------------------------------
@@ -72,7 +71,7 @@ public class ABMainService implements Service {
         bcserver.getResourceFactory().register(application);
         //bcserver.getLogger().setLevel(Level.WARNING);
         bcserver.addSncpServlet(bcservice);
-        bcserver.init(DefaultAnyValue.create("port", 5588));
+        bcserver.init(AnyValueWriter.create("port", 5588));
         bcserver.start();
 
         //------------------------ 初始化 ABMainService ------------------------------------
@@ -91,7 +90,7 @@ public class ABMainService implements Service {
         server.getResourceFactory().register(application);
         //server.getLogger().setLevel(Level.WARNING);
 
-        server.init(DefaultAnyValue.create("port", abport));
+        server.init(AnyValueWriter.create("port", abport));
         server.addRestServlet(null, service, null, HttpServlet.class, "/pipes");
         server.start();
         Thread.sleep(100);
@@ -140,7 +139,7 @@ public class ABMainService implements Service {
 
         server.addRestServlet(null, service, null, HttpServlet.class, "/pipes");
 
-        server.init(DefaultAnyValue.create("port", "" + abport));
+        server.init(AnyValueWriter.create("port", "" + abport));
         server.start();
         Thread.sleep(100);
 

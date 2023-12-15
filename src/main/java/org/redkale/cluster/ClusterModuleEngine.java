@@ -15,7 +15,7 @@ import java.util.logging.Level;
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
 import org.redkale.util.AnyValue;
-import org.redkale.util.AnyValue.DefaultAnyValue;
+import org.redkale.util.AnyValueWriter;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.ResourceEvent;
 
@@ -41,9 +41,9 @@ public class ClusterModuleEngine extends ModuleEngine {
      * 结束Application.init方法前被调用
      */
     @Override
-    public void onAppPostInit() {        
+    public void onAppPostInit() {
         ClusterAgent cluster = null;
-        AnyValue clusterConf = application.getAppConfig().getAnyValue("cluster");
+        AnyValue clusterConf = environment.getAnyValue("redkale.cluster", false);
         if (clusterConf != null) {
             try {
                 String classVal = application.getPropertyValue(clusterConf.getValue("type", clusterConf.getValue("value"))); //兼容value字段
@@ -88,7 +88,7 @@ public class ClusterModuleEngine extends ModuleEngine {
             }
         }
         this.clusterAgent = cluster;
-        
+
         if (this.clusterAgent != null) {
             if (logger.isLoggable(Level.FINER)) {
                 logger.log(Level.FINER, "ClusterAgent (type = " + this.clusterAgent.getClass().getSimpleName() + ") initing");
@@ -143,7 +143,7 @@ public class ClusterModuleEngine extends ModuleEngine {
         //第三方服务注册配置项的变更
         if (!clusterChangedProps.isEmpty() || !clusterRemovedKeys.isEmpty()) {
             if (this.clusterAgent != null) {
-                final DefaultAnyValue old = (DefaultAnyValue) application.getAppConfig().getAnyValue("cluster");
+                final AnyValueWriter old = (AnyValueWriter) environment.getAnyValue("redkale.cluster", false);
                 Properties newProps = new Properties();
                 newProps.putAll(clusterProperties);
                 List<ResourceEvent> changeEvents = new ArrayList<>();
@@ -158,7 +158,7 @@ public class ClusterModuleEngine extends ModuleEngine {
                     changeEvents.add(ResourceEvent.create(key.substring("redkale.cluster.".length()), null, this.clusterProperties.getProperty(key)));
                 });
                 if (!changeEvents.isEmpty()) {
-                    DefaultAnyValue back = old.copy();
+                    AnyValueWriter back = old.copy();
                     try {
                         old.replace(AnyValue.loadFromProperties(newProps).getAnyValue("redkale").getAnyValue("cluster"));
                         clusterAgent.onResourceChange(changeEvents.toArray(new ResourceEvent[changeEvents.size()]));

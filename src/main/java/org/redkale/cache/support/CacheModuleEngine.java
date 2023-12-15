@@ -26,7 +26,7 @@ public class CacheModuleEngine extends ModuleEngine {
     public void onAppPostInit() {
         //设置缓存管理器
         this.cacheManager = CacheManagerService.create(null).enabled(false);
-        final AnyValue cacheConf = application.getAppConfig().getAnyValue("cache");
+        final AnyValue cacheConf = environment.getAnyValue("redkale.cache", false);
         this.resourceFactory.inject(this.cacheManager);
         if (!application.isCompileMode() && cacheConf != null) {
             this.cacheManager.init(cacheConf);

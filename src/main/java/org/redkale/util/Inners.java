@@ -50,8 +50,8 @@ class Inners {
             creatorCacheMap.put(CompletableFuture.class, p -> new CompletableFuture<>());
             creatorCacheMap.put(CompletionStage.class, p -> new CompletableFuture<>());
             creatorCacheMap.put(Future.class, p -> new CompletableFuture<>());
-            creatorCacheMap.put(AnyValue.DefaultAnyValue.class, p -> new AnyValue.DefaultAnyValue());
-            creatorCacheMap.put(AnyValue.class, p -> new AnyValue.DefaultAnyValue());
+            creatorCacheMap.put(AnyValueWriter.class, p -> new AnyValueWriter());
+            creatorCacheMap.put(AnyValue.class, p -> new AnyValueWriter());
             creatorCacheMap.put(Map.Entry.class, new Creator<Map.Entry>() {
                 @Override
                 @org.redkale.annotation.ConstructorParameters({"key", "value"})

@@ -8,7 +8,6 @@ import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
 import org.redkale.source.Flipper;
 import org.redkale.util.*;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 
 @WebServlet(value = {"/hello/*"}, repair = true)
 public class _DynHelloRestServlet1 extends SimpleRestServlet {
@@ -27,7 +26,7 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         System.out.println(server.addRestServlet(null, service, null, SimpleRestServlet.class, "/pipes"));
         System.out.println(server.addRestServlet(null, new HelloService(3), null, SimpleRestServlet.class, "/pipes"));
 
-        DefaultAnyValue conf = DefaultAnyValue.create("port", "" + port);
+        AnyValueWriter conf = AnyValueWriter.create("port", "" + port);
         server.init(conf);
         server.start();
         Utility.sleep(100);

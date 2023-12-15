@@ -45,7 +45,7 @@ public class SncpSleepTest {
         SncpServer server = new SncpServer(application, System.currentTimeMillis(), null, resFactory);
         server.getResourceFactory().register(application);
         server.addSncpServlet(service);
-        server.init(AnyValue.DefaultAnyValue.create("port", 0));
+        server.init(AnyValueWriter.create("port", 0));
         server.start();
 
         int port = server.getSocketAddress().getPort();

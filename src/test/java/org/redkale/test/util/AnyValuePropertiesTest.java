@@ -5,7 +5,7 @@ package org.redkale.test.util;
 import java.util.Properties;
 import org.junit.jupiter.api.*;
 import org.redkale.util.AnyValue;
-import org.redkale.util.AnyValue.DefaultAnyValue;
+import org.redkale.util.AnyValueWriter;
 
 /**
  *
@@ -110,7 +110,7 @@ public class AnyValuePropertiesTest {
 
     @Test
     public void run3() {
-        DefaultAnyValue conf = AnyValue.create();
+        AnyValueWriter conf = AnyValue.create();
         conf.addValue("name", "haha");
         conf.addValue("value", AnyValue.create().addValue("id", 1234).addValue("key", (String) null).addValue("desc", "nothing !!!"));
         String json = "{\"name\":\"haha\",\"value\":{\"id\":\"1234\",\"key\":null,\"desc\":\"nothing !!!\"}}";

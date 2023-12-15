@@ -47,8 +47,8 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
         instance.register(Serializable.class, objectDecoder);
         instance.register(Serializable.class, objectEncoder);
 
-        //instance.register(AnyValue.class, instance.loadDecoder(AnyValue.DefaultAnyValue.class));
-        //instance.register(AnyValue.class, instance.loadEncoder(AnyValue.DefaultAnyValue.class));
+        //instance.register(AnyValue.class, instance.loadDecoder(SimpleAnyValue.class));
+        //instance.register(AnyValue.class, instance.loadEncoder(SimpleAnyValue.class));
     }
 
     private BsonFactory(BsonFactory parent, int features) {

@@ -32,8 +32,8 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
     static {
         instance.register(Serializable.class, instance.loadEncoder(Object.class));
 
-        //instance.register(AnyValue.class, instance.loadDecoder(AnyValue.DefaultAnyValue.class));
-        //instance.register(AnyValue.class, instance.loadEncoder(AnyValue.DefaultAnyValue.class));
+        //instance.register(AnyValue.class, instance.loadDecoder(SimpleAnyValue.class));
+        //instance.register(AnyValue.class, instance.loadEncoder(SimpleAnyValue.class));
     }
 
     private JsonFactory(JsonFactory parent, int features) {

@@ -297,7 +297,7 @@ public final class DataSources {
 //
 //            RedkaleClassLoader.putServiceLoader(DataSourceProvider.class);
 //            Class dsClass = null;
-//            final AnyValue.DefaultAnyValue lc = new AnyValue.DefaultAnyValue();
+//            final SimpleAnyValue lc = new SimpleAnyValue();
 //            readprop.forEach((k, v) -> lc.addValue(k.toString(), v.toString()));
 //            lc.setValue("dbtype", dbtype);
 //            List<DataSourceProvider> providers = new ArrayList<>();

@@ -11,7 +11,6 @@ import java.util.*;
 import java.util.function.*;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.ConvertColumn;
-import org.redkale.convert.ConvertDisabled;
 import static org.redkale.util.Utility.isEmpty;
 
 /**
@@ -48,602 +47,18 @@ public abstract class AnyValue {
     }
 
     /**
-     * 可读写的AnyValue默认实现类
      *
-     * @author zhangjx
+     * @see org.redkale.util.AnyValueWriter
+     * @deprecated replace {@link org.redkale.util.AnyValueWriter}
      */
-    @SuppressWarnings("unchecked")
-    public static final class DefaultAnyValue extends AnyValue {
+    @Deprecated(since = "2.8.0")
+    public static final class DefaultAnyValue extends AnyValueWriter {
 
-        /**
-         * 区分name大小写的比较策略
-         *
-         */
-        public static final BiPredicate<String, String> EQUALS_PREDICATE = (name1, name2) -> name1.equals(name2);
-
-        /**
-         * 不区分name大小写的比较策略
-         */
-        public static final BiPredicate<String, String> EQUALS_IGNORE = (name1, name2) -> name1.equalsIgnoreCase(name2);
-
-        @ConvertColumn(index = 1)
-        private boolean ignoreCase;
-
-        private BiPredicate<String, String> predicate;
-
-        @ConvertColumn(index = 2)
-        private Entry<String>[] stringEntrys = new Entry[0];
-
-        @ConvertColumn(index = 3)
-        private Entry<DefaultAnyValue>[] anyEntrys = new Entry[0];
-
-        private int parentArrayIndex = -1; //只可能被loadFromProperties方法赋值
-
-        /**
-         * 创建空的DefaultAnyValue对象
-         *
-         * @return DefaultAnyValue对象
-         */
         public static final DefaultAnyValue create() {
             return new DefaultAnyValue();
         }
-
-        /**
-         * 创建含name-value值的DefaultAnyValue对象
-         *
-         * @param name  name
-         * @param value value值
-         *
-         * @return DefaultAnyValue对象
-         */
-        public static final DefaultAnyValue create(String name, Number value) {
-            DefaultAnyValue conf = new DefaultAnyValue();
-            conf.addValue(name, value);
-            return conf;
-        }
-
-        /**
-         * 创建含name-value值的DefaultAnyValue对象
-         *
-         * @param name  name
-         * @param value value值
-         *
-         * @return DefaultAnyValue对象
-         */
-        public static final DefaultAnyValue create(String name, String value) {
-            DefaultAnyValue conf = new DefaultAnyValue();
-            conf.addValue(name, value);
-            return conf;
-        }
-
-        /**
-         * 创建含name-value值的DefaultAnyValue对象
-         *
-         * @param name  name
-         * @param value value值
-         *
-         * @return DefaultAnyValue对象
-         */
-        public static final DefaultAnyValue create(String name, AnyValue value) {
-            DefaultAnyValue conf = new DefaultAnyValue();
-            conf.addValue(name, value);
-            return conf;
-        }
-
-        /**
-         * 创建一个区分大小写比较策略的DefaultAnyValue对象
-         *
-         */
-        public DefaultAnyValue() {
-            this(false);
-        }
-
-        /**
-         * 创建DefaultAnyValue对象
-         *
-         * @param ignoreCase name是否不区分大小写
-         */
-        public DefaultAnyValue(boolean ignoreCase) {
-            this.ignoreCase = ignoreCase;
-            this.predicate = ignoreCase ? EQUALS_IGNORE : EQUALS_PREDICATE;
-        }
-
-        /**
-         * 创建共享此内容的DefaultAnyValue对象
-         *
-         * @return DefaultAnyValue对象
-         */
-        public DefaultAnyValue duplicate() {
-            DefaultAnyValue rs = new DefaultAnyValue(this.ignoreCase);
-            rs.stringEntrys = this.stringEntrys;
-            rs.anyEntrys = this.anyEntrys;
-            return rs;
-        }
-
-        /**
-         * 复制一份对象
-         *
-         * @return DefaultAnyValue对象
-         */
-        @Override
-        public DefaultAnyValue copy() {
-            DefaultAnyValue rs = new DefaultAnyValue(this.ignoreCase);
-            rs.predicate = this.predicate;
-            rs.parentArrayIndex = this.parentArrayIndex;
-            if (this.stringEntrys != null) {
-                rs.stringEntrys = new Entry[this.stringEntrys.length];
-                for (int i = 0; i < rs.stringEntrys.length; i++) {
-                    Entry<String> en = this.stringEntrys[i];
-                    if (en == null) {
-                        continue;
-                    }
-                    rs.stringEntrys[i] = new Entry(en.name, en.value);
-                }
-            }
-            if (this.anyEntrys != null) {
-                rs.anyEntrys = new Entry[this.anyEntrys.length];
-                for (int i = 0; i < rs.anyEntrys.length; i++) {
-                    Entry<DefaultAnyValue> en = this.anyEntrys[i];
-                    if (en == null) {
-                        continue;
-                    }
-                    rs.anyEntrys[i] = new Entry(en.name, en.value == null ? null : en.value.copy());
-                }
-            }
-            return rs;
-        }
-
-        /**
-         * 将另一个对象替换本对象
-         *
-         * @param node 替换的对象
-         *
-         * @return AnyValue
-         */
-        @Override
-        public DefaultAnyValue replace(AnyValue node) {
-            if (node != null) {
-                DefaultAnyValue rs = (DefaultAnyValue) node;
-                this.ignoreCase = rs.ignoreCase;
-                this.predicate = rs.predicate;
-                this.parentArrayIndex = rs.parentArrayIndex;
-                this.stringEntrys = rs.stringEntrys;
-                this.anyEntrys = rs.anyEntrys;
-            }
-            return this;
-        }
-
-        /**
-         * 将另一个对象合并过来
-         *
-         * @param node 代合并对象
-         * @param func 判断覆盖方式的函数
-         *
-         * @return AnyValue
-         */
-        @Override
-        public DefaultAnyValue merge(AnyValue node, MergeFunction func) {
-            return merge(node, "", func);
-        }
-
-        protected DefaultAnyValue merge(AnyValue node0, String path, MergeFunction func) {
-            if (node0 == null) {
-                return this;
-            }
-            if (node0 == this) {
-                throw new IllegalArgumentException();
-            }
-            DefaultAnyValue node = (DefaultAnyValue) node0;
-            if (node.stringEntrys != null) {
-                for (Entry<String> en : node.stringEntrys) {
-                    if (en == null) {
-                        continue;
-                    }
-                    setValue(en.name, en.value);
-                }
-            }
-            if (node.anyEntrys != null) {
-                for (Entry<DefaultAnyValue> en : node.anyEntrys) {
-                    if (en == null || en.value == null) {
-                        continue;
-                    }
-                    Entry<AnyValue>[] ns = getAnyValueEntrys(en.name);
-                    if (ns == null || ns.length < 1) {
-                        addValue(en.name, en.value);
-                    } else {
-                        boolean ok = false;
-                        for (Entry<AnyValue> item : ns) {
-                            if (item == null) {
-                                continue;
-                            }
-                            if (item.value != null && en.value.parentArrayIndex == ((DefaultAnyValue) item.value).parentArrayIndex) {
-                                if (func == null) {
-                                    item.value.merge(en.value, func);
-                                    ok = true;
-                                    break;
-                                } else {
-                                    int funcVal = func.apply(path, en.name, en.value, item.value);
-                                    if (funcVal == MergeFunction.MERGE) {
-                                        String subPath = path.isEmpty() ? en.name : (path + "." + en.name);
-                                        ((DefaultAnyValue) item.value).merge(en.value, subPath, func);
-                                        ok = true;
-                                        break;
-                                    } else if (funcVal == MergeFunction.REPLACE) {
-                                        item.value = en.value.copy();
-                                        ok = true;
-                                        break;
-                                    } else if (funcVal == MergeFunction.SKIP) {
-                                        ok = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        if (!ok) {
-                            addValue(en.name, en.value);
-                        }
-                    }
-                }
-            }
-            return this;
-        }
-
-        /**
-         * 合并两个AnyValue对象， 会去重， 没有的才增加
-         *
-         * @param av AnyValue
-         *
-         * @return DefaultAnyValue
-         */
-        public DefaultAnyValue addAllStringSet(final AnyValue av) {
-            if (av == null) {
-                return this;
-            }
-            final Entry<String>[] strings = av.getStringEntrys();
-            if (strings == null) {
-                return this;
-            }
-            for (Entry<String> en : strings) {
-                if (!existsValue(en.name)) {
-                    this.addValue(en.name, en.value);
-                }
-            }
-            return this;
-        }
-
-        /**
-         * 合并两个AnyValue对象 不去重
-         *
-         * @param av AnyValue
-         *
-         * @return DefaultAnyValue
-         */
-        public DefaultAnyValue addAll(final AnyValue av) {
-            if (av == null) {
-                return this;
-            }
-            if (av instanceof DefaultAnyValue) {
-                final DefaultAnyValue adv = (DefaultAnyValue) av;
-                if (adv.stringEntrys != null) {
-                    for (Entry<String> en : adv.stringEntrys) {
-                        this.addValue(en.name, en.value);
-                    }
-                }
-                if (adv.anyEntrys != null) {
-                    for (Entry<DefaultAnyValue> en : adv.anyEntrys) {
-                        this.addValue(en.name, en.value);
-                    }
-                }
-            } else {
-                final Entry<String>[] strings = av.getStringEntrys();
-                if (strings != null) {
-                    for (Entry<String> en : strings) {
-                        this.addValue(en.name, en.value);
-                    }
-                }
-                final Entry<AnyValue>[] anys = av.getAnyEntrys();
-                if (anys != null) {
-                    for (Entry<AnyValue> en : anys) {
-                        this.addValue(en.name, en.value);
-                    }
-                }
-            }
-            return this;
-        }
-
-        /**
-         * 合并两个AnyValue对象 会去重
-         *
-         * @param av AnyValue
-         *
-         * @return DefaultAnyValue
-         */
-        @ConvertDisabled
-        public DefaultAnyValue setAll(final AnyValue av) {
-            if (av == null) {
-                return this;
-            }
-            if (av instanceof DefaultAnyValue) {
-                final DefaultAnyValue adv = (DefaultAnyValue) av;
-                if (adv.stringEntrys != null) {
-                    for (Entry<String> en : adv.stringEntrys) {
-                        this.setValue(en.name, en.value);
-                    }
-                }
-                if (adv.anyEntrys != null) {
-                    for (Entry<DefaultAnyValue> en : adv.anyEntrys) {
-                        this.setValue(en.name, en.value);
-                    }
-                }
-            } else {
-                final Entry<String>[] strings = av.getStringEntrys();
-                if (strings != null) {
-                    for (Entry<String> en : strings) {
-                        this.setValue(en.name, en.value);
-                    }
-                }
-                final Entry<AnyValue>[] anys = av.getAnyEntrys();
-                if (anys != null) {
-                    for (Entry<AnyValue> en : anys) {
-                        this.setValue(en.name, en.value);
-                    }
-                }
-            }
-            return this;
-        }
-
-        @Override
-        public void forEach(BiConsumer<String, String> stringConsumer) {
-            forEach(stringConsumer, null);
-        }
-
-        @Override
-        public void forEach(BiConsumer<String, String> stringConsumer, BiConsumer<String, AnyValue> anyConsumer) {
-            if (stringConsumer != null) {
-                for (Entry<String> en : stringEntrys) {
-                    stringConsumer.accept(en.name, en.value);
-                }
-            }
-            if (anyConsumer != null) {
-                for (Entry<AnyValue> en : (Entry[]) anyEntrys) {
-                    anyConsumer.accept(en.name, en.value);
-                }
-            }
-        }
-
-        @Override
-        public Entry<String>[] getStringEntrys() {
-            return stringEntrys;
-        }
-
-        public void setStringEntrys(Entry<String>[] stringEntrys) {
-            this.stringEntrys = stringEntrys;
-        }
-
-        @Override
-        public Entry<AnyValue>[] getAnyEntrys() {
-            return (Entry<AnyValue>[]) (Entry[]) anyEntrys;
-        }
-
-        public void setAnyEntrys(Entry<DefaultAnyValue>[] anyEntrys) {
-            this.anyEntrys = anyEntrys;
-        }
-
-        public boolean isIgnoreCase() {
-            return ignoreCase;
-        }
-
-        public void setIgnoreCase(boolean ignoreCase) {
-            this.ignoreCase = ignoreCase;
-            if (this.predicate == null) {
-                this.predicate = ignoreCase ? EQUALS_IGNORE : EQUALS_PREDICATE;
-            }
-        }
-
-        @Override
-        @ConvertDisabled
-        public String[] getNames() {
-            Set<String> set = new LinkedHashSet<>();
-            for (Entry en : this.stringEntrys) {
-                set.add(en.name);
-            }
-            for (Entry en : this.anyEntrys) {
-                set.add(en.name);
-            }
-            return set.toArray(new String[set.size()]);
-        }
-
-        @Override
-        public String[] getValues(String... names) {
-            return Entry.getStringArray(this.predicate, this.stringEntrys, names);
-        }
-
-        @Override
-        public AnyValue[] getAnyValues(String... names) {
-            return Entry.getAnyValueArray(this.predicate, this.anyEntrys, names);
-        }
-
-        @Override
-        public String[] getValues(String name) {
-            return Entry.getStringArray(this.predicate, this.stringEntrys, name);
-        }
-
-        @Override
-        public AnyValue[] getAnyValues(String name) {
-            return Entry.getAnyValueArray(this.predicate, this.anyEntrys, name);
-        }
-
-        protected Entry<AnyValue>[] getAnyValueEntrys(String name) {
-            return Entry.getEntryAnyValueArray(this.predicate, this.anyEntrys, name);
-        }
-
-        @Override
-        public String toString() {
-            return toString(0, (any, space) -> {
-                int index = ((DefaultAnyValue) any).parentArrayIndex;
-                if (index < 0) {
-                    return null;
-                }
-                return new StringBuilder().append(space).append("    '$index': ").append(index).append(",\r\n");
-            });
-        }
-
-        public DefaultAnyValue clear() {
-            if (this.stringEntrys != null && this.stringEntrys.length > 0) {
-                this.stringEntrys = new Entry[0];
-            }
-            if (this.anyEntrys != null && this.anyEntrys.length > 0) {
-                this.anyEntrys = new Entry[0];
-            }
-            return this;
-        }
-
-        public DefaultAnyValue setValue(String name, String value) {
-            Objects.requireNonNull(name);
-            if (!existsValue(name)) {
-                this.addValue(name, value);
-            } else {
-                for (Entry<String> en : this.stringEntrys) {
-                    if (predicate.test(en.name, name)) {
-                        en.value = value;
-                        return this;
-                    }
-                }
-            }
-            return this;
-        }
-
-        public DefaultAnyValue setValue(String name, AnyValue value) {
-            Objects.requireNonNull(name);
-            if (!existsValue(name)) {
-                this.addValue(name, value);
-            } else {
-                for (Entry<DefaultAnyValue> en : this.anyEntrys) {
-                    if (predicate.test(en.name, name)) {
-                        en.value = (DefaultAnyValue) value;
-                        return this;
-                    }
-                }
-            }
-            return this;
-        }
-
-        public DefaultAnyValue put(String name, boolean value) {
-            return addValue(name, String.valueOf(value));
-        }
-
-        public DefaultAnyValue put(String name, Number value) {
-            return addValue(name, String.valueOf(value));
-        }
-
-        public DefaultAnyValue put(String name, String value) {
-            this.stringEntrys = Utility.append(this.stringEntrys, new Entry(name, value));
-            return this;
-        }
-
-        public DefaultAnyValue addValue(String name, boolean value) {
-            return addValue(name, String.valueOf(value));
-        }
-
-        public DefaultAnyValue addValue(String name, Number value) {
-            return addValue(name, String.valueOf(value));
-        }
-
-        public DefaultAnyValue addValue(String name, String value) {
-            Objects.requireNonNull(name);
-            this.stringEntrys = Utility.append(this.stringEntrys, new Entry(name, value));
-            return this;
-        }
-
-        public DefaultAnyValue addValue(String name, AnyValue value) {
-            Objects.requireNonNull(name);
-            this.anyEntrys = Utility.append(this.anyEntrys, new Entry(name, value));
-            return this;
-        }
-
-        public void clearParentArrayIndex(String name) {
-            for (Entry<AnyValue> item : getAnyValueEntrys(name)) {
-                if (item.value != null) {
-                    ((DefaultAnyValue) item.value).parentArrayIndex = -1;
-                }
-            }
-        }
-
-        public DefaultAnyValue removeAnyValues(String name) {
-            Objects.requireNonNull(name);
-            if (this.anyEntrys == null) {
-                return this;
-            }
-            this.anyEntrys = Utility.remove(this.anyEntrys, t -> name.equals(((Entry) t).name));
-            return this;
-        }
-
-        public DefaultAnyValue removeValue(String name, AnyValue value) {
-            Objects.requireNonNull(name);
-            if (value == null || this.anyEntrys == null) {
-                return this;
-            }
-            this.anyEntrys = Utility.remove(this.anyEntrys, t -> name.equals(((Entry) t).name) && ((Entry) t).getValue().equals(value));
-            return this;
-        }
-
-        public DefaultAnyValue removeStringValues(String name) {
-            Objects.requireNonNull(name);
-            if (this.stringEntrys == null) {
-                return this;
-            }
-            this.stringEntrys = Utility.remove(this.stringEntrys, t -> name.equals(((Entry) t).name));
-            return this;
-        }
-
-        public DefaultAnyValue removeValue(String name, String value) {
-            Objects.requireNonNull(name);
-            if (value == null || this.stringEntrys == null) {
-                return this;
-            }
-            this.stringEntrys = Utility.remove(this.stringEntrys, t -> name.equals(((Entry) t).name) && ((Entry) t).getValue().equals(value));
-            return this;
-        }
-
-        @Override
-        public AnyValue getAnyValue(String name) {
-            return getAnyValue(name, false);
-        }
-
-        @Override
-        public AnyValue getAnyValue(String name, boolean create) {
-            for (Entry<DefaultAnyValue> en : this.anyEntrys) {
-                if (predicate.test(en.name, name)) {
-                    return en.value;
-                }
-            }
-            return create ? new DefaultAnyValue() : null;
-        }
-
-        @Override
-        public String get(String name) {
-            return getValue(name);
-        }
-
-        @Override
-        public String getValue(String name) {
-            for (Entry<String> en : this.stringEntrys) {
-                if (predicate.test(en.name, name)) {
-                    return en.value;
-                }
-            }
-            return null;
-        }
-
-        public boolean existsValue(String name) {
-            for (Entry<String> en : this.stringEntrys) {
-                if (predicate.test(en.name, name)) {
-                    return true;
-                }
-            }
-            return false;
-        }
     }
+//
 
     /**
      * 字段名和值的组合对象
@@ -685,7 +100,7 @@ public abstract class AnyValue {
             return value;
         }
 
-        static Entry<AnyValue>[] getEntryAnyValueArray(BiPredicate<String, String> comparison, Entry<DefaultAnyValue>[] entitys, String name) {
+        static Entry<AnyValue>[] getEntryAnyValueArray(BiPredicate<String, String> comparison, Entry<AnyValueWriter>[] entitys, String name) {
             int len = 0;
             for (Entry en : entitys) {
                 if (comparison.test(en.name, name)) {
@@ -697,7 +112,7 @@ public abstract class AnyValue {
             }
             Entry[] rs = new Entry[len];
             int i = 0;
-            for (Entry<DefaultAnyValue> en : entitys) {
+            for (Entry<AnyValueWriter> en : entitys) {
                 if (comparison.test(en.name, name)) {
                     rs[i++] = en;
                 }
@@ -725,7 +140,7 @@ public abstract class AnyValue {
             return rs;
         }
 
-        static AnyValue[] getAnyValueArray(BiPredicate<String, String> comparison, Entry<DefaultAnyValue>[] entitys, String name) {
+        static AnyValue[] getAnyValueArray(BiPredicate<String, String> comparison, Entry<AnyValueWriter>[] entitys, String name) {
             int len = 0;
             for (Entry en : entitys) {
                 if (comparison.test(en.name, name)) {
@@ -737,7 +152,7 @@ public abstract class AnyValue {
             }
             AnyValue[] rs = new AnyValue[len];
             int i = 0;
-            for (Entry<DefaultAnyValue> en : entitys) {
+            for (Entry<AnyValueWriter> en : entitys) {
                 if (comparison.test(en.name, name)) {
                     rs[i++] = en.value;
                 }
@@ -771,7 +186,7 @@ public abstract class AnyValue {
             return rs;
         }
 
-        static AnyValue[] getAnyValueArray(BiPredicate<String, String> comparison, Entry<DefaultAnyValue>[] entitys, String... names) {
+        static AnyValue[] getAnyValueArray(BiPredicate<String, String> comparison, Entry<AnyValueWriter>[] entitys, String... names) {
             int len = 0;
             for (Entry en : entitys) {
                 for (String name : names) {
@@ -786,7 +201,7 @@ public abstract class AnyValue {
             }
             AnyValue[] rs = new AnyValue[len];
             int i = 0;
-            for (Entry<DefaultAnyValue> en : entitys) {
+            for (Entry<AnyValueWriter> en : entitys) {
                 for (String name : names) {
                     if (comparison.test(en.name, name)) {
                         rs[i++] = en.value;
@@ -799,12 +214,12 @@ public abstract class AnyValue {
     }
 
     /**
-     * 创建DefaultAnyValue
+     * 创建AnyValueWriter
      *
-     * @return DefaultAnyValue
+     * @return AnyValueWriter
      */
-    public static DefaultAnyValue create() {
-        return new DefaultAnyValue();
+    public static AnyValueWriter create() {
+        return new AnyValueWriter();
     }
 
     /**
@@ -900,9 +315,9 @@ public abstract class AnyValue {
         if (properties == null) {
             return null;
         }
-        DefaultAnyValue conf = new DefaultAnyValue();
+        AnyValueWriter conf = new AnyValueWriter();
         final char splitChar = (char) 2;
-        Map<String, DefaultAnyValue> prefixArray = new TreeMap<>(); //已处理的数组key，如 redkale.source[0].xx  存redkale.source[0]
+        Map<String, AnyValueWriter> prefixArray = new TreeMap<>(); //已处理的数组key，如:redkale.source[0].xx存redkale.source[0]
         properties.forEach((key, value) -> {
             StringBuilder temp = new StringBuilder();
             boolean flag = false;
@@ -921,15 +336,15 @@ public abstract class AnyValue {
             for (int i = 0; i < keys.length; i++) {
                 keys[i] = keys[i].replace(splitChar, '.');
             }
-            DefaultAnyValue parent = conf;
+            AnyValueWriter parent = conf;
             if (keys.length > 1) {
                 for (int i = 0; i < keys.length - 1; i++) {
                     String item = keys[i];
                     int pos = item.indexOf('[');
                     if (pos < 0) {
-                        DefaultAnyValue child = (DefaultAnyValue) parent.getAnyValue(item);
+                        AnyValueWriter child = (AnyValueWriter) parent.getAnyValue(item);
                         if (child == null) {
-                            child = new DefaultAnyValue();
+                            child = new AnyValueWriter();
                             parent.addValue(item, child);
                         }
                         parent = child;
@@ -948,12 +363,12 @@ public abstract class AnyValue {
                             for (int j = 0; j < i; j++) {
                                 prefixKey += keys[j] + ".";
                             }
-                            DefaultAnyValue array = prefixArray.get(prefixKey + item); //item: [1]
+                            AnyValueWriter array = prefixArray.get(prefixKey + item); //item: [1]
                             if (array == null) {
                                 final int ii = i;
                                 String findkey = prefixKey + itemField + "[";
-                                Map<String, DefaultAnyValue> keymap = new TreeMap<>();
-                                Map<Integer, DefaultAnyValue> sortmap = new TreeMap<>();
+                                Map<String, AnyValueWriter> keymap = new TreeMap<>();
+                                Map<Integer, AnyValueWriter> sortmap = new TreeMap<>();
                                 properties.keySet().stream().filter(x -> x.toString().startsWith(findkey)).forEach(k -> {
                                     String[] ks = k.toString().split("\\.");
                                     String prefixKey2 = "";
@@ -962,7 +377,7 @@ public abstract class AnyValue {
                                     }
                                     prefixKey2 += ks[ii];
                                     if (!keymap.containsKey(prefixKey2)) {
-                                        DefaultAnyValue vv = new DefaultAnyValue();
+                                        AnyValueWriter vv = new AnyValueWriter();
                                         keymap.put(prefixKey2, vv);
                                         int aindex = Integer.parseInt(ks[ii].substring(ks[ii].indexOf('[') + 1, ks[ii].lastIndexOf(']')));
                                         vv.parentArrayIndex = aindex;
@@ -970,20 +385,20 @@ public abstract class AnyValue {
                                     }
                                 });
                                 prefixArray.putAll(keymap);
-                                DefaultAnyValue pv = parent;
+                                AnyValueWriter pv = parent;
                                 sortmap.values().forEach(v -> pv.addValue(itemField, v));
                                 array = prefixArray.get(prefixKey + item);
                             }
                             parent = array;
                         } else { //Map结构
-                            DefaultAnyValue field = (DefaultAnyValue) parent.getAnyValue(itemField);
+                            AnyValueWriter field = (AnyValueWriter) parent.getAnyValue(itemField);
                             if (field == null) {
-                                field = new DefaultAnyValue();
+                                field = new AnyValueWriter();
                                 parent.addValue(itemField, field);
                             }
-                            DefaultAnyValue index = (DefaultAnyValue) field.getAnyValue(keyOrIndex);
+                            AnyValueWriter index = (AnyValueWriter) field.getAnyValue(keyOrIndex);
                             if (index == null) {
-                                index = new DefaultAnyValue();
+                                index = new AnyValueWriter();
                                 if (nameName != null) {
                                     index.setValue(nameName, keyOrIndex);
                                 }
@@ -1027,13 +442,13 @@ public abstract class AnyValue {
                                 sortmap.put(Integer.parseInt(ks[ii].substring(ks[ii].indexOf('[') + 1, ks[ii].lastIndexOf(']'))), vv);
                             }
                         });
-                        DefaultAnyValue pv = parent;
+                        AnyValueWriter pv = parent;
                         sortmap.values().forEach(v -> pv.addValue(itemField, v));
                     }
                 } else { //Map
-                    DefaultAnyValue child = (DefaultAnyValue) parent.getAnyValue(itemField);
+                    AnyValueWriter child = (AnyValueWriter) parent.getAnyValue(itemField);
                     if (child == null) {
-                        child = new DefaultAnyValue();
+                        child = new AnyValueWriter();
                         parent.addValue(itemField, child);
                     }
                     child.addValue(itemIndex, value.toString());
@@ -1088,7 +503,7 @@ public abstract class AnyValue {
      * @return AnyValue
      * @throws IOException 异常
      */
-    public static AnyValue loadFromXml(String text, BiFunction<String, String, String> attrFunc) throws IOException {
+    public static AnyValue loadFromXml(String text, BinaryOperator<String> attrFunc) throws IOException {
         return new XmlReader(text).attrFunc(attrFunc).read();
     }
 
@@ -1101,7 +516,7 @@ public abstract class AnyValue {
      * @return AnyValue
      * @throws IOException 异常
      */
-    public static AnyValue loadFromXml(InputStream in, BiFunction<String, String, String> attrFunc) throws IOException {
+    public static AnyValue loadFromXml(InputStream in, BinaryOperator<String> attrFunc) throws IOException {
         return loadFromXml(in, StandardCharsets.UTF_8, attrFunc);
     }
 
@@ -1115,7 +530,7 @@ public abstract class AnyValue {
      * @return AnyValue
      * @throws IOException 异常
      */
-    public static AnyValue loadFromXml(InputStream in, Charset charset, BiFunction<String, String, String> attrFunc) throws IOException {
+    public static AnyValue loadFromXml(InputStream in, Charset charset, BinaryOperator<String> attrFunc) throws IOException {
         return new XmlReader(Utility.read(in, charset)).attrFunc(attrFunc).read();
     }
 
@@ -1282,7 +697,7 @@ public abstract class AnyValue {
     /**
      * 根据字段名获取AnyValue类型的字段值
      *
-     * @param name    字段名
+     * @param name   字段名
      * @param create 没有是否创建一个新的对象返回
      *
      * @return AnyValue

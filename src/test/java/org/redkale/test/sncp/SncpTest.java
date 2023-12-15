@@ -167,7 +167,7 @@ public class SncpTest {
             @Override
             public void run() {
                 try {
-                    AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
+                    AnyValueWriter conf = new AnyValueWriter();
                     conf.addValue("host", "0.0.0.0");
                     conf.addValue("port", "" + port);
                     conf.addValue("protocol", protocol);
@@ -206,7 +206,7 @@ public class SncpTest {
             @Override
             public void run() {
                 try {
-                    AnyValue.DefaultAnyValue conf = new AnyValue.DefaultAnyValue();
+                    AnyValueWriter conf = new AnyValueWriter();
                     conf.addValue("host", "0.0.0.0");
                     conf.addValue("port", "" + (port2 < 10 ? 0 : port2));
                     conf.addValue("protocol", protocol);

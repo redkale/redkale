@@ -14,7 +14,6 @@ import org.redkale.net.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Local;
 import org.redkale.util.*;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 
 /**
  * SNCP Server节点的配置Server
@@ -123,7 +122,7 @@ public class NodeSncpServer extends NodeServer {
             RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());
             final SncpFilter filter = clazz.getDeclaredConstructor().newInstance();
             resourceFactory.inject(filter, this);
-            DefaultAnyValue filterConf = (DefaultAnyValue) entry.getProperty();
+            AnyValueWriter filterConf = (AnyValueWriter) entry.getProperty();
             this.sncpServer.addSncpFilter(filter, filterConf);
             if (sb != null) {
                 sb.append("Load ").append(clazz.getName()).append(LINE_SEPARATOR);

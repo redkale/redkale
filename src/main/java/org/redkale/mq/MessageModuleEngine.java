@@ -27,6 +27,7 @@ import org.redkale.util.ResourceAnnotationProvider;
 import org.redkale.util.ResourceEvent;
 import org.redkale.util.ResourceFactory;
 import org.redkale.util.ResourceTypeLoader;
+import org.redkale.util.AnyValueWriter;
 import org.redkale.util.Utility;
 
 /**
@@ -225,7 +226,7 @@ public class MessageModuleEngine extends ModuleEngine {
                 if (agent == null) {
                     continue;  //多余的数据源
                 }
-                final AnyValue.DefaultAnyValue old = (AnyValue.DefaultAnyValue) findMQConfig(mqName);
+                final AnyValueWriter old = (AnyValueWriter) findMQConfig(mqName);
                 Properties newProps = new Properties();
                 this.messageProperties.forEach((k, v) -> {
                     final String key = k.toString();
@@ -270,7 +271,7 @@ public class MessageModuleEngine extends ModuleEngine {
                     changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), null, this.messageProperties.getProperty(key)));
                 });
                 if (!changeEvents.isEmpty()) {
-                    AnyValue.DefaultAnyValue back = old.copy();
+                    AnyValueWriter back = old.copy();
                     try {
                         old.replace(AnyValue.loadFromProperties(newProps).getAnyValue("redkale").getAnyValue("mq").getAnyValue(mqName));
                         agent.onResourceChange(changeEvents.toArray(new ResourceEvent[changeEvents.size()]));
@@ -403,7 +404,7 @@ public class MessageModuleEngine extends ModuleEngine {
         if (mqsNode != null) {
             AnyValue confNode = mqsNode.getAnyValue(mqName);
             if (confNode != null) { //必须要设置name属性
-                ((AnyValue.DefaultAnyValue) confNode).setValue("name", mqName);
+                ((AnyValueWriter) confNode).setValue("name", mqName);
             }
             return confNode;
         }

@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.*;
 import java.util.stream.Stream;
 import org.redkale.convert.*;
 import org.redkale.util.AnyValue;
+import org.redkale.util.AnyValueWriter;
 
 /**
  *
@@ -36,8 +37,8 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
         instance.register(Serializable.class, objectDecoder);
         instance.register(Serializable.class, objectEncoder);
 
-        instance.register(AnyValue.class, instance.loadDecoder(AnyValue.DefaultAnyValue.class));
-        instance.register(AnyValue.class, instance.loadEncoder(AnyValue.DefaultAnyValue.class));
+        instance.register(AnyValue.class, instance.loadDecoder(AnyValueWriter.class));
+        instance.register(AnyValue.class, instance.loadEncoder(AnyValueWriter.class));
     }
 
     @SuppressWarnings("OverridableMethodCallInConstructor")

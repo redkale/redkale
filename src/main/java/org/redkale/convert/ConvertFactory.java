@@ -141,7 +141,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             this.register(DoubleStream.class, DoubleArraySimpledCoder.DoubleStreamSimpledCoder.instance);
             this.register(String[].class, StringArraySimpledCoder.instance);
             //---------------------------------------------------------
-            this.register(AnyValue.class, Creator.create(AnyValue.DefaultAnyValue.class));
+            this.register(AnyValue.class, Creator.create(AnyValueWriter.class));
             this.register(HttpCookie.class, new Creator<HttpCookie>() {
                 @Override
                 @ConstructorParameters({"name", "value"})

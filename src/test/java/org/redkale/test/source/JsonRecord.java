@@ -7,12 +7,11 @@ package org.redkale.test.source;
 
 import java.io.Serializable;
 import java.util.*;
-
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.persistence.Column;
 import org.redkale.persistence.Id;
 import org.redkale.source.*;
-import org.redkale.util.AnyValue.DefaultAnyValue;
+import org.redkale.util.AnyValueWriter;
 
 /**
  *
@@ -63,7 +62,7 @@ public class JsonRecord {
     }
 
     public static void main(String[] args) throws Throwable {
-        DefaultAnyValue conf = DefaultAnyValue.create();
+        AnyValueWriter conf = AnyValueWriter.create();
         conf.addValue("name", "");
         conf.addValue("url", "jdbc:mysql://localhost:3306/center?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&rewriteBatchedStatements=true");
         conf.addValue("user", "root");

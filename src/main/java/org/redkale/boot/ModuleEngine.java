@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
 import org.redkale.service.Service;
+import org.redkale.util.Environment;
 import org.redkale.util.ResourceEvent;
 import org.redkale.util.ResourceFactory;
 
@@ -29,16 +30,19 @@ public abstract class ModuleEngine {
 
     protected final ResourceFactory resourceFactory;
 
+    protected final Environment environment;
+
     public ModuleEngine(Application application) {
         this.application = application;
         this.resourceFactory = application.getResourceFactory();
+        this.environment = application.getEnvironment();
     }
 
     /**
      * 进入Application.init方法时被调用
      * 此时状态:
-     *  1、远程配置项未获取
-     *  2、WorkExecutor未初始化
+     * 1、远程配置项未获取
+     * 2、WorkExecutor未初始化
      */
     public void onAppPreInit() {
         //do nothing

@@ -36,7 +36,6 @@ import org.redkale.schedule.support.ScheduleModuleEngine;
 import org.redkale.service.Service;
 import org.redkale.source.*;
 import org.redkale.util.*;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.watch.WatchServlet;
 
 /**
@@ -276,8 +275,14 @@ public final class Application {
         System.setProperty("redkale.application.nodeid", String.valueOf(this.nodeid));
         System.setProperty("redkale.application.home", this.home.getPath());
         System.setProperty("redkale.application.confPath", this.confPath.toString());
-        this.sysPropNames = Collections.unmodifiableSet((Set) System.getProperties().keySet());
+        this.envProperties.put(RESNAME_APP_NAME, this.name);
+        this.envProperties.put(RESNAME_APP_NODEID, String.valueOf(this.nodeid));
+        this.envProperties.put(RESNAME_APP_TIME, String.valueOf(this.startTime));
+        this.envProperties.put(RESNAME_APP_HOME, this.home.getPath());
+        this.envProperties.put(RESNAME_APP_ADDR, this.localAddress.getAddress().getHostAddress());
+        this.envProperties.put(RESNAME_APP_CONF_DIR, this.confPath.toString());
 
+        this.sysPropNames = Collections.unmodifiableSet((Set) System.getProperties().keySet());
         //初始化本地配置的System.properties
         appConfig.localSysProperties.forEach((k, v) -> {
             String key = k.toString();
@@ -596,51 +601,23 @@ public final class Application {
         final AtomicInteger propertyIndex = new AtomicInteger();
         Properties logProps = null; //新的日志配置项
         //------------------------------------ 读取配置项 ------------------------------------       
-        AnyValue propertiesConf = config.getAnyValue("properties");
-        if (propertiesConf == null) {
+        AnyValue propsConf = config.getAnyValue("properties");
+        if (propsConf == null) {
             final AnyValue resources = config.getAnyValue("resources");
             if (resources != null) {
                 logger.log(Level.WARNING, "<resources> in application config file is deprecated");
-                propertiesConf = resources.getAnyValue("properties");
+                propsConf = resources.getAnyValue("properties");
             }
         }
-        if (propertiesConf != null) {
+        if (propsConf != null) {
             final Properties agentEnvs = new Properties();
-            if (propertiesConf.getValue("load") != null) { //加载本地配置项文件
-                for (String dfload : propertiesConf.getValue("load").replace(',', ';').split(";")) {
-                    if (dfload.trim().isEmpty()) {
-                        continue;
-                    }
-                    final URI df = RedkaleClassLoader.getConfResourceAsURI(configFromCache ? null : this.confPath.toString(), dfload.trim());
-                    if (df != null && (!"file".equals(df.getScheme()) || df.toString().contains("!") || new File(df).isFile())) {
-                        Properties ps = new Properties();
-                        try {
-                            InputStream in = df.toURL().openStream();
-                            ps.load(in);
-                            in.close();
-                            if (logger.isLoggable(Level.FINE)) {
-                                logger.log(Level.FINE, "Load properties(" + dfload + ") size = " + ps.size());
-                            }
-                            ps.forEach((x, y) -> { //load中的配置项除了redkale.cachesource.和redkale.datasource.开头，不应该有其他redkale.开头配置项
-                                if (!x.toString().startsWith("redkale.")) {
-                                    agentEnvs.put(x, y);
-                                } else {
-                                    logger.log(Level.WARNING, "skip illegal(startswith 'redkale.') key " + x + " in properties file");
-                                }
-                            });
-                        } catch (Exception e) {
-                            logger.log(Level.WARNING, "Load properties(" + dfload + ") error", e);
-                        }
-                    }
-                }
-            }
             { //可能通过系统环境变量配置信息
                 Iterator<PropertiesAgentProvider> it = ServiceLoader.load(PropertiesAgentProvider.class, classLoader).iterator();
                 RedkaleClassLoader.putServiceLoader(PropertiesAgentProvider.class);
                 List<PropertiesAgentProvider> providers = new ArrayList<>();
                 while (it.hasNext()) {
                     PropertiesAgentProvider provider = it.next();
-                    if (provider != null && provider.acceptsConf(propertiesConf)) {
+                    if (provider != null && provider.acceptsConf(propsConf)) {
                         RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
                         providers.add(provider);
                     }
@@ -650,9 +627,9 @@ public final class Application {
                     this.propertiesAgent = provider.createInstance();
                     this.resourceFactory.inject(this.propertiesAgent);
                     if (compileMode) {
-                        this.propertiesAgent.compile(propertiesConf);
+                        this.propertiesAgent.compile(propsConf);
                     } else {
-                        Map<String, Properties> propMap = this.propertiesAgent.init(this, propertiesConf);
+                        Map<String, Properties> propMap = this.propertiesAgent.init(this, propsConf);
                         int propCount = 0;
                         if (propMap != null) {
                             for (Map.Entry<String, Properties> en : propMap.entrySet()) {
@@ -675,7 +652,7 @@ public final class Application {
             }
 
             final Properties oldEnvs = new Properties();
-            for (AnyValue prop : propertiesConf.getAnyValues("property")) {
+            for (AnyValue prop : propsConf.getAnyValues("property")) {
                 String key = prop.getValue("name");
                 String value = prop.getValue("value");
                 if (key == null || value == null) {
@@ -691,14 +668,14 @@ public final class Application {
                 }
             });
             //原有properties节点上的属性同步到dyncEnvs
-            propertiesConf.forEach((k, v) -> dyncProps.put("redkale.properties[" + k + "]", v));
+            propsConf.forEach((k, v) -> dyncProps.put("redkale.properties[" + k + "]", v));
             oldEnvs.forEach((k, v) -> { //去重后的配置项
                 String prefix = "redkale.properties.property[" + propertyIndex.getAndIncrement() + "]";
                 dyncProps.put(prefix + ".name", k);
                 dyncProps.put(prefix + ".value", v);
             });
             //移除旧节点
-            ((DefaultAnyValue) this.config).removeAnyValues("properties");
+            ((AnyValueWriter) this.config).removeAnyValues("properties");
         }
         //环境变量的优先级最高
         System.getProperties().forEach((k, v) -> {
@@ -734,12 +711,12 @@ public final class Application {
             this.config.merge(AnyValue.loadFromProperties(newDyncProps).getAnyValue("redkale"), NodeServer.appConfigmergeFunction);
         }
         //使用合并后的新配置节点
-        propertiesConf = this.config.getAnyValue("properties");
-        if (propertiesConf != null) {
+        propsConf = this.config.getAnyValue("properties");
+        if (propsConf != null) {
             //清除property节点数组的下坐标
-            ((DefaultAnyValue) propertiesConf).clearParentArrayIndex("property");
+            ((AnyValueWriter) propsConf).clearParentArrayIndex("property");
             //注入配置项
-            for (AnyValue prop : propertiesConf.getAnyValues("property")) {
+            for (AnyValue prop : propsConf.getAnyValues("property")) {
                 String key = prop.getValue("name");
                 String value = prop.getValue("value");
                 if (key == null) {
@@ -1361,10 +1338,10 @@ public final class Application {
                         if ("SNCP".equals(protocol)) {
                             server = NodeSncpServer.createNodeServer(Application.this, serconf);
                         } else if ("WATCH".equalsIgnoreCase(protocol)) {
-                            DefaultAnyValue serconf2 = (DefaultAnyValue) serconf;
-                            DefaultAnyValue rest = (DefaultAnyValue) serconf2.getAnyValue("rest");
+                            AnyValueWriter serconf2 = (AnyValueWriter) serconf;
+                            AnyValueWriter rest = (AnyValueWriter) serconf2.getAnyValue("rest");
                             if (rest == null) {
-                                rest = new DefaultAnyValue();
+                                rest = new AnyValueWriter();
                                 serconf2.addValue("rest", rest);
                             }
                             rest.setValue("base", WatchServlet.class.getName());
@@ -1497,58 +1474,56 @@ public final class Application {
         Times.midnight(); //先初始化一下Utility
         Thread.currentThread().setName("Redkale-Application-Main-Thread");
         //运行主程序
-        {
-            String cmd = System.getProperty("cmd", System.getProperty("CMD"));
-            String[] params = args;
-            if (args != null && args.length > 0) {
+        String cmd = System.getProperty("cmd", System.getProperty("CMD"));
+        String[] params = args;
+        if (args != null && args.length > 0) {
+            for (int i = 0; i < args.length; i++) {
+                if (args[i] != null && args[i].toLowerCase().startsWith("--conf-file=")) {
+                    System.setProperty(RESNAME_APP_CONF_FILE, args[i].substring("--conf-file=".length()));
+                    String[] newargs = new String[args.length - 1];
+                    System.arraycopy(args, 0, newargs, 0, i);
+                    System.arraycopy(args, i + 1, newargs, i, args.length - 1 - i);
+                    args = newargs;
+                    break;
+                }
+            }
+            if (cmd == null) {
                 for (int i = 0; i < args.length; i++) {
-                    if (args[i] != null && args[i].toLowerCase().startsWith("--conf-file=")) {
-                        System.setProperty(RESNAME_APP_CONF_FILE, args[i].substring("--conf-file=".length()));
-                        String[] newargs = new String[args.length - 1];
-                        System.arraycopy(args, 0, newargs, 0, i);
-                        System.arraycopy(args, i + 1, newargs, i, args.length - 1 - i);
-                        args = newargs;
+                    if (args[i] != null && !args[i].startsWith("-")) { //非-开头的第一个视为命令号
+                        cmd = args[i];
+                        if ("start".equalsIgnoreCase(cmd) || "startup".equalsIgnoreCase(cmd)) {
+                            cmd = null;
+                        }
+                        params = new String[args.length - 1];
+                        System.arraycopy(args, 0, params, 0, i);
+                        System.arraycopy(args, i + 1, params, i, args.length - 1 - i);
                         break;
                     }
                 }
-                if (cmd == null) {
-                    for (int i = 0; i < args.length; i++) {
-                        if (args[i] != null && !args[i].startsWith("-")) { //非-开头的第一个视为命令号
-                            cmd = args[i];
-                            if ("start".equalsIgnoreCase(cmd) || "startup".equalsIgnoreCase(cmd)) {
-                                cmd = null;
-                            }
-                            params = new String[args.length - 1];
-                            System.arraycopy(args, 0, params, 0, i);
-                            System.arraycopy(args, i + 1, params, i, args.length - 1 - i);
-                            break;
-                        }
-                    }
-                }
-                if (cmd == null) {
-                    if (args.length == 1 && ("--help".equalsIgnoreCase(args[0]) || "-h".equalsIgnoreCase(args[0]))) {
-                        cmd = args[0];
-                    }
-                }
             }
-            if (cmd != null) {
-                if ("stop".equalsIgnoreCase(cmd)) {
-                    cmd = "shutdown";
-                }
-                if ("help".equalsIgnoreCase(cmd) || "--help".equalsIgnoreCase(cmd) || "-h".equalsIgnoreCase(cmd)) {
-                    (System.out).println(generateHelp());
-                    return;
-                }
-                boolean restart = "restart".equalsIgnoreCase(cmd);
-                AnyValue config = AppConfig.loadAppConfig();
-                Application.sendCommand(null, config.getIntValue("port"), restart ? "SHUTDOWN" : cmd, params);
-                if (!restart) {
-                    return;
+            if (cmd == null) {
+                if (args.length == 1 && ("--help".equalsIgnoreCase(args[0]) || "-h".equalsIgnoreCase(args[0]))) {
+                    cmd = args[0];
                 }
             }
         }
-        //PrepareCompiler.main(args); //测试代码
+        if (cmd != null) {
+            if ("stop".equalsIgnoreCase(cmd)) {
+                cmd = "shutdown";
+            }
+            if ("help".equalsIgnoreCase(cmd) || "--help".equalsIgnoreCase(cmd) || "-h".equalsIgnoreCase(cmd)) {
+                (System.out).println(generateHelp());
+                return;
+            }
+            boolean restart = "restart".equalsIgnoreCase(cmd);
+            AnyValue config = AppConfig.loadAppConfig();
+            Application.sendCommand(null, config.getIntValue("port"), restart ? "SHUTDOWN" : cmd, params);
+            if (!restart) {
+                return;
+            }
+        }
 
+        //PrepareCompiler.main(args); //测试代码
         final Application application = Application.create(false);
         application.init();
         application.startSelfServer();
@@ -1730,6 +1705,10 @@ public final class Application {
 
     public long getStartTime() {
         return startTime;
+    }
+
+    public Environment getEnvironment() {
+        return environment;
     }
 
     public AnyValue getAppConfig() {

@@ -22,7 +22,6 @@ import org.redkale.convert.json.*;
 import org.redkale.net.*;
 import org.redkale.service.RetResult;
 import org.redkale.util.*;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.util.AnyValue.Entry;
 import static org.redkale.util.Utility.append;
 
@@ -152,7 +151,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private final byte[] jsonContentTypeBytes;
 
-    private final DefaultAnyValue header = new DefaultAnyValue();
+    private final AnyValueWriter header = new AnyValueWriter();
 
     private final String[][] defaultAddHeaders;
 
@@ -1365,7 +1364,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         return this;
     }
 
-    protected DefaultAnyValue duplicateHeader() {
+    protected AnyValueWriter duplicateHeader() {
         return this.header.duplicate();
     }
 

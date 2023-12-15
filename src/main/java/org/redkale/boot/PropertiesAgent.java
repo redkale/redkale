@@ -8,7 +8,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.redkale.net.http.MimeType;
 import org.redkale.util.*;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 
 /**
  * 配置源Agent, 在init方法内需要实现读取配置信息，如果支持配置更改通知，也需要在init里实现监听
@@ -164,11 +163,11 @@ public abstract class PropertiesAgent {
             if (!envRegisterProps.isEmpty()) {
                 application.envProperties.putAll(envChangedProps);
                 envRemovedKeys.forEach(application.envProperties::remove);
-                DefaultAnyValue oldConf = (DefaultAnyValue) application.getAppConfig().getAnyValue("properties");
-                DefaultAnyValue newConf = new DefaultAnyValue();
+                AnyValueWriter oldConf = (AnyValueWriter) application.getAppConfig().getAnyValue("properties");
+                AnyValueWriter newConf = new AnyValueWriter();
                 oldConf.forEach((k, v) -> newConf.addValue(k, v));
                 application.envProperties.forEach((k, v) -> {
-                    newConf.addValue("property", new DefaultAnyValue().addValue("name", k.toString()).addValue("value", v.toString()));
+                    newConf.addValue("property", new AnyValueWriter().addValue("name", k.toString()).addValue("value", v.toString()));
                 });
                 oldConf.replace(newConf);
                 application.getResourceFactory().register(envRegisterProps, "", Environment.class);

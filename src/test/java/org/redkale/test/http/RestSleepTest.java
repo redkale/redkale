@@ -43,7 +43,7 @@ public class RestSleepTest {
         HttpServer server = new HttpServer(application, System.currentTimeMillis(), resFactory);
         server.getResourceFactory().register(application);
         System.out.println("servlet = " + server.addRestServlet(null, service, null, HttpServlet.class, ""));
-        server.init(AnyValue.DefaultAnyValue.create("port", 0));
+        server.init(AnyValueWriter.create("port", 0));
         server.start();
 
         int port = server.getSocketAddress().getPort();

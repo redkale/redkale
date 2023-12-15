@@ -5,16 +5,16 @@
  */
 package org.redkale.test.websocket;
 
-import org.redkale.net.http.WebServlet;
-import org.redkale.net.http.WebSocketServlet;
-import org.redkale.net.http.HttpRequest;
-import org.redkale.net.http.WebSocket;
-import org.redkale.net.http.HttpServer;
-import org.redkale.util.TypeToken;
-import org.redkale.util.AnyValue;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
+import org.redkale.net.http.HttpRequest;
+import org.redkale.net.http.HttpServer;
+import org.redkale.net.http.WebServlet;
+import org.redkale.net.http.WebSocket;
+import org.redkale.net.http.WebSocketServlet;
+import org.redkale.util.AnyValueWriter;
+import org.redkale.util.TypeToken;
 
 /**
  *
@@ -108,7 +108,7 @@ public class VideoWebSocketServlet extends WebSocketServlet {
 
     public static void main(String[] args) throws Throwable {
         CountDownLatch cdl = new CountDownLatch(1);
-        AnyValue.DefaultAnyValue config = AnyValue.create()
+        AnyValueWriter config = AnyValueWriter.create()
             .addValue("threads", System.getProperty("threads"))
             .addValue("bufferPoolSize", System.getProperty("bufferPoolSize"))
             .addValue("responsePoolSize", System.getProperty("responsePoolSize"))

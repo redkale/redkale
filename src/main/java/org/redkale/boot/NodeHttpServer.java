@@ -23,7 +23,6 @@ import org.redkale.net.http.*;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.service.Service;
 import org.redkale.util.*;
-import org.redkale.util.AnyValue.DefaultAnyValue;
 import org.redkale.watch.*;
 
 /**
@@ -201,7 +200,7 @@ public class NodeHttpServer extends NodeServer {
             RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());
             final HttpFilter filter = clazz.getDeclaredConstructor().newInstance();
             resourceFactory.inject(filter, this);
-            DefaultAnyValue filterConf = (DefaultAnyValue) entry.getProperty();
+            AnyValueWriter filterConf = (AnyValueWriter) entry.getProperty();
             this.httpServer.addHttpFilter(filter, filterConf);
             if (sb != null) {
                 sb.append("Load ").append(clazz.getName()).append(LINE_SEPARATOR);
@@ -265,7 +264,7 @@ public class NodeHttpServer extends NodeServer {
             resourceFactory.inject(servlet, this);
             final String[] mappings = ws.value();
             String pref = ws.repair() ? prefix : "";
-            DefaultAnyValue servletConf = (DefaultAnyValue) entry.getProperty();
+            AnyValueWriter servletConf = (AnyValueWriter) entry.getProperty();
             this.httpServer.addHttpServlet(servlet, pref, servletConf, mappings);
             if (ss != null) {
                 for (int i = 0; i < mappings.length; i++) {

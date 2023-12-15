@@ -35,30 +35,82 @@ public class Environment implements java.io.Serializable {
         return properties.containsKey(key);
     }
 
-    public String getProperty(String key) {
-        return properties.getProperty(key);
-    }
-
-    public String getProperty(String key, String defaultValue) {
-        return properties.getProperty(key, defaultValue);
-    }
-
     public void forEach(BiConsumer<String, String> action) {
         properties.forEach((BiConsumer) action);
     }
 
     public void forEach(Predicate<String> predicate, BiConsumer<String, String> action) {
         properties.entrySet().stream().filter(en -> predicate.test(en.getKey().toString()))
-            .forEach(en -> action.accept(en.getKey().toString(), en.getValue() == null ? null : en.getValue().toString()));
+            .forEach(en -> action.accept(en.getKey().toString(), String.valueOf(en.getValue())));
+    }
+
+    public String getProperty(String name) {
+        return getProperty(name, null);
+    }
+
+    public String getProperty(String name, String defaultValue) {
+        return getPropertyValue(getRawProperty(name, defaultValue));
+    }
+
+    public String getPropertyValue(String val, Properties... envs) {
+        if (val == null || val.isBlank()) {
+            return val;
+        }
+        //${domain}/${path}/xxx    ${aa${bbb}}
+        int pos2 = val.indexOf("}");
+        int pos1 = val.lastIndexOf("${", pos2);
+        if (pos1 >= 0 && pos2 > 0) {
+            String key = val.substring(pos1 + 2, pos2);
+            String subVal = properties.getProperty(key);
+            if (subVal != null) {
+                String newVal = getPropertyValue(subVal, envs);
+                return getPropertyValue(val.substring(0, pos1) + newVal + val.substring(pos2 + 1));
+            } else {
+                for (Properties prop : envs) {
+                    subVal = prop.getProperty(key);
+                    if (subVal != null) {
+                        String newVal = getPropertyValue(subVal, envs);
+                        return getPropertyValue(val.substring(0, pos1) + newVal + val.substring(pos2 + 1));
+                    }
+                }
+                throw new RedkaleException("Not found '" + key + "' value");
+            }
+
+        } else if ((pos1 >= 0 && pos2 < 0) || (pos1 < 0 && pos2 >= 0)) {
+            throw new RedkaleException(val + " is illegal naming");
+        }
+        return val;
+    }
+
+    public AnyValue getAnyValue(String name, boolean autoCreated) {
+        Properties props = new Properties();
+        String prefix = name + ".";
+        properties.forEach((k, v) -> {
+            if (k.toString().equals(name) || k.toString().startsWith(prefix)) {
+                props.put(k, getProperty(k.toString()));
+            }
+        });
+        if (props.isEmpty()) {
+            return autoCreated ? AnyValueWriter.create() : null;
+        }
+        return AnyValueWriter.loadFromProperties(props);
+    }
+
+    public String getRawProperty(String key) {
+        return getRawProperty(key, null);
+    }
+
+    public String getRawProperty(String key, String defaultValue) {
+        return properties.getProperty(key, defaultValue);
     }
 
     public boolean getBooleanProperty(String key) {
-        String val = properties.getProperty(key);
+        String val = getProperty(key);
         return "true".equalsIgnoreCase(val) || "1".equalsIgnoreCase(val);
     }
 
     public boolean getBooleanProperty(String key, boolean defaultValue) {
-        String val = properties.getProperty(key);
+        String val = getProperty(key);
         if (val == null || val.isEmpty()) {
             return defaultValue;
         }
@@ -66,11 +118,11 @@ public class Environment implements java.io.Serializable {
     }
 
     public short getShortProperty(String key) {
-        return Short.parseShort(properties.getProperty(key));
+        return Short.parseShort(getProperty(key));
     }
 
     public short getShortProperty(String key, short defaultValue) {
-        String val = properties.getProperty(key);
+        String val = getProperty(key);
         if (val == null || val.isEmpty()) {
             return defaultValue;
         }
@@ -82,11 +134,11 @@ public class Environment implements java.io.Serializable {
     }
 
     public int getIntProperty(String key) {
-        return Integer.parseInt(properties.getProperty(key));
+        return Integer.parseInt(getProperty(key));
     }
 
     public int getIntProperty(String key, int defaultValue) {
-        String val = properties.getProperty(key);
+        String val = getProperty(key);
         if (val == null || val.isEmpty()) {
             return defaultValue;
         }
@@ -98,11 +150,11 @@ public class Environment implements java.io.Serializable {
     }
 
     public float getFloatProperty(String key) {
-        return Float.parseFloat(properties.getProperty(key));
+        return Float.parseFloat(getProperty(key));
     }
 
     public float getFloatProperty(String key, float defaultValue) {
-        String val = properties.getProperty(key);
+        String val = getProperty(key);
         if (val == null || val.isEmpty()) {
             return defaultValue;
         }
@@ -114,11 +166,11 @@ public class Environment implements java.io.Serializable {
     }
 
     public long getLongProperty(String key) {
-        return Long.parseLong(properties.getProperty(key));
+        return Long.parseLong(getProperty(key));
     }
 
     public long getLongProperty(String key, long defaultValue) {
-        String val = properties.getProperty(key);
+        String val = getProperty(key);
         if (val == null || val.isEmpty()) {
             return defaultValue;
         }
@@ -130,11 +182,11 @@ public class Environment implements java.io.Serializable {
     }
 
     public double getDoubleProperty(String key) {
-        return Double.parseDouble(properties.getProperty(key));
+        return Double.parseDouble(getProperty(key));
     }
 
     public double getDoubleProperty(String key, double defaultValue) {
-        String val = properties.getProperty(key);
+        String val = getProperty(key);
         if (val == null || val.isEmpty()) {
             return defaultValue;
         }

@@ -29,6 +29,6 @@ public class TestService implements Service {
         SncpServer cserver = new SncpServer();
         cserver.getResourceFactory().register(application);
         cserver.addSncpServlet(new TestService());
-        cserver.init(AnyValue.DefaultAnyValue.create("port", 5577));
+        cserver.init(AnyValueWriter.create("port", 5577));
     }
 }
