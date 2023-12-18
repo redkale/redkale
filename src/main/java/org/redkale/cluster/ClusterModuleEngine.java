@@ -143,7 +143,7 @@ public class ClusterModuleEngine extends ModuleEngine {
         //第三方服务注册配置项的变更
         if (!clusterChangedProps.isEmpty() || !clusterRemovedKeys.isEmpty()) {
             if (this.clusterAgent != null) {
-                final AnyValueWriter old = (AnyValueWriter) environment.getAnyValue("redkale.cluster", false);
+                final AnyValueWriter old = (AnyValueWriter) application.getAppConfig().getAnyValue("cluster");
                 Properties newProps = new Properties();
                 newProps.putAll(clusterProperties);
                 List<ResourceEvent> changeEvents = new ArrayList<>();
