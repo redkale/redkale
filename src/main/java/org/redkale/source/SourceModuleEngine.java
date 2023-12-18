@@ -59,6 +59,27 @@ public class SourceModuleEngine extends ModuleEngine {
     }
 
     /**
+     * 判断模块的配置项合并策略， 返回null表示模块不识别此配置项
+     *
+     * @param path 配置项路径
+     * @param key  配置项名称
+     * @param val1 配置项原值
+     * @param val2 配置项新值
+     *
+     * @return MergeEnum
+     */
+    @Override
+    public AnyValue.MergeEnum mergeAppConfigStrategy(String path, String key, AnyValue val1, AnyValue val2) {
+        if ("cachesource".equals(path)) {
+            return AnyValue.MergeEnum.REPLACE;
+        }
+        if ("datasource".equals(path)) {
+            return AnyValue.MergeEnum.REPLACE;
+        }
+        return null;
+    }
+
+    /**
      * 配置项加载后被调用
      */
     @Override
@@ -98,59 +119,10 @@ public class SourceModuleEngine extends ModuleEngine {
         }
 
         //------------------------------------- 注册 DataSource --------------------------------------------------------        
-        resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
-            try {
-                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
-                    return null;
-                }
-                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
-                    return null; //远程模式不得注入 DataSource
-                }
-                DataSource source = loadDataSource(resourceName, false);
-                field.set(srcObj, source);
-                return source;
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "DataSource inject to " + srcObj + " error", e);
-                return null;
-            }
-        }, DataSource.class);
+        resourceFactory.register(new DataSourceLoader(), DataSource.class);
 
         //------------------------------------- 注册 CacheSource --------------------------------------------------------
-        resourceFactory.register(new ResourceTypeLoader() {
-            @Override
-            public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
-                try {
-                    if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
-                        return null;
-                    }
-                    if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
-                        return null; //远程模式不需要注入 CacheSource 
-                    }
-                    if (srcObj instanceof Servlet) {
-                        throw new RedkaleException("CacheSource cannot inject in Servlet " + srcObj);
-                    }
-                    final boolean ws = (srcObj instanceof org.redkale.net.http.WebSocketNodeService);
-                    CacheSource source = loadCacheSource(resourceName, ws);
-                    field.set(srcObj, source);
-                    Resource res = field.getAnnotation(Resource.class);
-                    if (res != null && res.required() && source == null) {
-                        throw new RedkaleException("CacheSource (resourceName = '" + resourceName + "') not found");
-                    } else {
-                        logger.info("Load CacheSource (type = " + (source == null ? null : source.getClass().getSimpleName()) + ", resourceName = '" + resourceName + "')");
-                    }
-                    return source;
-                } catch (Exception e) {
-                    logger.log(Level.SEVERE, "DataSource inject error", e);
-                    return null;
-                }
-            }
-
-            @Override
-            public boolean autoNone() {
-                return false;
-            }
-        }, CacheSource.class);
-
+        resourceFactory.register(new CacheSourceLoader(), CacheSource.class);
     }
 
     /**
@@ -499,6 +471,63 @@ public class SourceModuleEngine extends ModuleEngine {
         AnyValue conf = AnyValueWriter.loadFromProperties(props);
         ((AnyValueWriter) conf).setValue("name", sourceName);
         return conf;
+    }
+
+    private class DataSourceLoader implements ResourceTypeLoader {
+
+        @Override
+        public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
+            try {
+                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
+                    return null;
+                }
+                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
+                    return null; //远程模式不得注入 DataSource
+                }
+                DataSource source = loadDataSource(resourceName, false);
+                field.set(srcObj, source);
+                return source;
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "DataSource inject to " + srcObj + " error", e);
+                return null;
+            }
+        }
+    }
+
+    private class CacheSourceLoader implements ResourceTypeLoader {
+
+        @Override
+        public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
+            try {
+                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
+                    return null;
+                }
+                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
+                    return null; //远程模式不需要注入 CacheSource 
+                }
+                if (srcObj instanceof Servlet) {
+                    throw new RedkaleException("CacheSource cannot inject in Servlet " + srcObj);
+                }
+                final boolean ws = (srcObj instanceof org.redkale.net.http.WebSocketNodeService);
+                CacheSource source = loadCacheSource(resourceName, ws);
+                field.set(srcObj, source);
+                Resource res = field.getAnnotation(Resource.class);
+                if (res != null && res.required() && source == null) {
+                    throw new RedkaleException("CacheSource (resourceName = '" + resourceName + "') not found");
+                } else {
+                    logger.info("Load CacheSource (type = " + (source == null ? null : source.getClass().getSimpleName()) + ", resourceName = '" + resourceName + "')");
+                }
+                return source;
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "DataSource inject error", e);
+                return null;
+            }
+        }
+
+        @Override
+        public boolean autoNone() {
+            return false;
+        }
     }
 
 }

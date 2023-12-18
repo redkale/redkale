@@ -22,6 +22,24 @@ public class ScheduleModuleEngine extends ModuleEngine {
     }
 
     /**
+     * 判断模块的配置项合并策略， 返回null表示模块不识别此配置项
+     *
+     * @param path 配置项路径
+     * @param key  配置项名称
+     * @param val1 配置项原值
+     * @param val2 配置项新值
+     *
+     * @return MergeEnum
+     */
+    @Override
+    public AnyValue.MergeEnum mergeAppConfigStrategy(String path, String key, AnyValue val1, AnyValue val2) {
+        if ("".equals(path) && "schedule".equals(key)) {
+            return AnyValue.MergeEnum.REPLACE;
+        }
+        return null;
+    }
+
+    /**
      * 结束Application.init方法前被调用
      */
     public void onAppPostInit() {

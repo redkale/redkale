@@ -10,6 +10,7 @@ import java.util.logging.*;
 import java.util.logging.Formatter;
 import java.util.regex.Pattern;
 import static org.redkale.boot.Application.RESNAME_APP_NAME;
+import static org.redkale.boot.Application.SYSNAME_APP_NAME;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.persistence.*;
@@ -160,7 +161,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
             if (!checkTagName(tagStr.replaceAll("\\$\\{.+\\}", ""))) {
                 throw new RedkaleException("found illegal logging.property " + cname + ".tag = " + tagStr);
             }
-            this.tag = tagStr.replace("${" + RESNAME_APP_NAME + "}", System.getProperty("redkale.application.name", ""));
+            this.tag = tagStr.replace("${" + RESNAME_APP_NAME + "}", System.getProperty(SYSNAME_APP_NAME, ""));
             if (this.tag.contains("%")) {
                 this.tagDateFormat = this.tag;
                 Times.formatTime(this.tagDateFormat, -1, System.currentTimeMillis()); //测试时间格式是否正确

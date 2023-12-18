@@ -77,12 +77,6 @@ public final class Application {
     public static final String RESNAME_APP_CONF_DIR = "APP_CONF_DIR";
 
     /**
-     * 当前进程的配置文件， 类型：String、URI、File、Path <br>
-     * 一般命名为: application.xml、application.onlyLogProps， 若配置文件不是本地文件， 则File、Path类型的值为null
-     */
-    public static final String RESNAME_APP_CONF_FILE = "APP_CONF_FILE";
-
-    /**
      * 当前进程节点的nodeid， 类型：int
      */
     public static final String RESNAME_APP_NODEID = "APP_NODEID";
@@ -127,14 +121,28 @@ public final class Application {
      */
     public static final String RESNAME_SERVER_RESFACTORY = "SERVER_RESFACTORY";
 
+    public static final String SYSNAME_APP_NAME = "redkale.application.name";
+
+    public static final String SYSNAME_APP_NODEID = "redkale.application.nodeid";
+
+    public static final String SYSNAME_APP_HOME = "redkale.application.home";
+
+    public static final String SYSNAME_APP_CONF_DIR = "redkale.application.confdir";
+
+    public static final Set<String> REDKALE_RESNAMES = Collections.unmodifiableSet(Set.of(
+        RESNAME_APP_NAME,
+        RESNAME_APP_NODEID,
+        RESNAME_APP_TIME,
+        RESNAME_APP_HOME,
+        RESNAME_APP_ADDR,
+        RESNAME_APP_CONF_DIR
+    ));
+
     //UDP协议的ByteBuffer Capacity
     private static final int UDP_CAPACITY = 1024;
 
     //日志
     private final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
-
-    //系统初始化时的原始配置项，启动后是不可更改的配置项
-    final Set<String> sysPropNames;
 
     //本进程节点ID
     final int nodeid;
@@ -145,9 +153,9 @@ public final class Application {
     //本地IP地址
     final InetSocketAddress localAddress;
 
-    //日志配置资源
+    //日志组件
     //@since 2.8.0
-    final Properties loggingProperties = new Properties();
+    final LoggingModule loggingModule = new LoggingModule(this);
 
     //NodeServer 资源, 顺序必须是sncps, others, watchs
     final List<NodeServer> servers = new CopyOnWriteArrayList<>();
@@ -163,11 +171,10 @@ public final class Application {
     //给客户端使用，包含SNCP客户端、自定义数据库客户端连接池
     private AsyncIOGroup clientAsyncGroup;
 
-    //配置源管理接口
-    //@since 2.7.0
-    private PropertiesAgent propertiesAgent;
+    //配置组件
+    final PropertiesModule propertiesModule = new PropertiesModule(this);
 
-    //所有配置项，包含本地配置项、logging配置项和配置中心获取的配置项
+    //除logging配置之外的所有配置项，包含本地和远程配置项
     final Properties envProperties = new Properties();
 
     //配置信息，只读版Properties
@@ -192,11 +199,8 @@ public final class Application {
     //进程根目录
     private final File home;
 
-    //进程根目录
-    private final String homePath;
-
     //配置文件目录
-    private final URI confPath;
+    private final URI confDir;
 
     //监听事件
     private final List<ApplicationListener> listeners = new CopyOnWriteArrayList<>();
@@ -240,18 +244,17 @@ public final class Application {
         this.name = appConfig.name;
         this.nodeid = appConfig.nodeid;
         this.home = appConfig.home;
-        this.homePath = appConfig.homePath;
-        this.confPath = appConfig.confPath;
+        this.confDir = appConfig.confDir;
         this.localAddress = appConfig.localAddress;
         this.classLoader = appConfig.classLoader;
         this.serverClassLoader = appConfig.serverClassLoader;
 
         //设置基础信息资源
         this.resourceFactory.register(RESNAME_APP_NAME, String.class, this.name);
-        
+
         this.resourceFactory.register(RESNAME_APP_NODEID, int.class, this.nodeid);
         this.resourceFactory.register(RESNAME_APP_NODEID, Integer.class, this.nodeid);
-        
+
         this.resourceFactory.register(RESNAME_APP_TIME, long.class, this.startTime);
         this.resourceFactory.register(RESNAME_APP_TIME, Long.class, this.startTime);
 
@@ -264,30 +267,25 @@ public final class Application {
         this.resourceFactory.register(RESNAME_APP_ADDR, InetAddress.class, this.localAddress.getAddress());
         this.resourceFactory.register(RESNAME_APP_ADDR, String.class, this.localAddress.getAddress().getHostAddress());
 
-        this.resourceFactory.register(RESNAME_APP_CONF_DIR, URI.class, this.confPath);
+        this.resourceFactory.register(RESNAME_APP_CONF_DIR, URI.class, this.confDir);
         this.resourceFactory.register(RESNAME_APP_CONF_DIR, File.class, appConfig.confFile);
-        this.resourceFactory.register(RESNAME_APP_CONF_DIR, String.class, this.confPath.toString());
+        this.resourceFactory.register(RESNAME_APP_CONF_DIR, String.class, this.confDir.toString());
 
         System.setProperty("redkale.version", Redkale.getDotedVersion());
-        System.setProperty("redkale.application.name", this.name);
-        System.setProperty("redkale.application.nodeid", String.valueOf(this.nodeid));
-        System.setProperty("redkale.application.home", this.home.getPath());
-        System.setProperty("redkale.application.confPath", this.confPath.toString());
+        System.setProperty(SYSNAME_APP_NAME, this.name);
+        System.setProperty(SYSNAME_APP_NODEID, String.valueOf(this.nodeid));
+        System.setProperty(SYSNAME_APP_HOME, this.home.getPath());
+        System.setProperty(SYSNAME_APP_CONF_DIR, this.confDir.toString());
+
         this.envProperties.put(RESNAME_APP_NAME, this.name);
         this.envProperties.put(RESNAME_APP_NODEID, String.valueOf(this.nodeid));
         this.envProperties.put(RESNAME_APP_TIME, String.valueOf(this.startTime));
         this.envProperties.put(RESNAME_APP_HOME, this.home.getPath());
         this.envProperties.put(RESNAME_APP_ADDR, this.localAddress.getAddress().getHostAddress());
-        this.envProperties.put(RESNAME_APP_CONF_DIR, this.confPath.toString());
+        this.envProperties.put(RESNAME_APP_CONF_DIR, this.confDir.toString());
 
-        this.sysPropNames = Collections.unmodifiableSet((Set) System.getProperties().keySet());
-        //初始化本地配置的System.properties
-        appConfig.localSysProperties.forEach((k, v) -> {
-            String key = k.toString();
-            if (System.getProperty(key) == null) {
-                System.setProperty(key, getPropertyValue(v.toString(), appConfig.localSysProperties));
-            }
-        });
+        //初始化本地配置的System.properties、mimetypes
+        this.registerResourceEnvs(true, appConfig.localEnvProperties);
 
         //需要在加载properties初始化System.properties之后再注册
         this.resourceFactory.register(Environment.class, environment);
@@ -309,12 +307,12 @@ public final class Application {
         moduleEngines.add(new ScheduleModuleEngine(this));
 
         //根据本地日志配置文件初始化日志
-        reconfigLogging(true, appConfig.locaLogProperties);
+        loggingModule.reconfigLogging(true, appConfig.locaLogProperties);
 
         //打印基础信息日志
         logger.log(Level.INFO, colorMessage(logger, 36, 1, "-------------------------------- Redkale " + Redkale.getDotedVersion() + " --------------------------------"));
 
-        final String confDir = this.confPath.toString();
+        final String confDir = this.confDir.toString();
         logger.log(Level.INFO, "APP_OS       = " + System.getProperty("os.name") + " " + System.getProperty("os.version") + " " + System.getProperty("os.arch") + "\r\n"
             + "APP_JAVA     = " + System.getProperty("java.runtime.name", System.getProperty("org.graalvm.nativeimage.kind") != null ? "Nativeimage" : "")
             + " " + System.getProperty("java.runtime.version", System.getProperty("java.vendor.version", System.getProperty("java.vm.version"))) + "\r\n" //graalvm.nativeimage 模式下无 java.runtime.xxx 属性
@@ -323,11 +321,11 @@ public final class Application {
             + RESNAME_APP_NODEID + "   = " + this.nodeid + "\r\n"
             + "APP_LOADER   = " + this.classLoader.getClass().getSimpleName() + "\r\n"
             + RESNAME_APP_ADDR + "     = " + this.localAddress.getHostString() + ":" + this.localAddress.getPort() + "\r\n"
-            + RESNAME_APP_HOME + "     = " + homePath + "\r\n"
+            + RESNAME_APP_HOME + "     = " + this.home.getPath().replace('\\', '/') + "\r\n"
             + RESNAME_APP_CONF_DIR + " = " + confDir.substring(confDir.indexOf('!') + 1));
 
         if (!compileMode && !(classLoader instanceof RedkaleClassLoader.RedkaleCacheClassLoader)) {
-            String lib = getPropertyValue(config.getValue("lib", "${APP_HOME}/libs/*").trim());
+            String lib = environment.getPropertyValue(config.getValue("lib", "${APP_HOME}/libs/*").trim());
             lib = Utility.isEmpty(lib) ? confDir : (lib + ";" + confDir);
             Server.loadLib(classLoader, logger, lib.isEmpty() ? confDir : (lib + ";" + confDir));
         }
@@ -337,8 +335,8 @@ public final class Application {
     public void init() throws Exception {
         //注册ResourceType
         this.initResourceTypeLoader();
-        //读取远程配置
-        this.initRemoteProperties();
+        //读取远程配置，并合并app.config
+        this.propertiesModule.initRemoteProperties();
         //解析配置
         this.onEnvironmentLoaded();
         //init起始回调
@@ -349,6 +347,25 @@ public final class Application {
         initAppListeners();
         //init结束回调
         this.onAppPostInit();
+    }
+
+    private void registerResourceEnvs(boolean first, Properties... envs) {
+        for (Properties props : envs) {
+            props.forEach((k, v) -> {
+                String val = environment.getPropertyValue(v.toString(), envs);
+                if (k.toString().startsWith("system.property.")) {
+                    String key = k.toString().substring("system.property.".length());
+                    if (System.getProperty(key) == null || !first) {
+                        System.setProperty(key, val);
+                    }
+                    resourceFactory.register(!first, k.toString(), val);
+                } else if (k.toString().startsWith("mimetype.property.")) {
+                    MimeType.add(k.toString().substring("mimetype.property.".length()), val);
+                } else {
+                    resourceFactory.register(!first, k.toString(), val);
+                }
+            });
+        }
     }
 
     /**
@@ -366,11 +383,11 @@ public final class Application {
             ? WorkThread.createExecutor(workThreads, "Redkale-WorkThread-%s")
             : WorkThread.createWorkExecutor(workThreads, "Redkale-WorkThread-%s");
         String executorName = this.workExecutor.getClass().getSimpleName();
-        executorLog.append("defaultWorkExecutor: {type=" + executorName);
+        executorLog.append("defaultWorkExecutor: {type=").append(executorName);
         if (executorName.contains("VirtualExecutor") || executorName.contains("PerTaskExecutor")) {
             executorLog.append(", threads=[virtual]}");
         } else {
-            executorLog.append(", threads=" + workThreads + "}");
+            executorLog.append(", threads=").append(workThreads).append("}");
         }
 
         ExecutorService clientWorkExecutor = this.workExecutor;
@@ -380,7 +397,7 @@ public final class Application {
             //给所有client给一个新的默认ExecutorService
             int clientThreads = executorConf.getIntValue("clients", Utility.cpus() * 4);
             clientWorkExecutor = WorkThread.createWorkExecutor(clientThreads, "Redkale-DefaultClient-WorkThread-%s");
-            executorLog.append(", threads=" + clientThreads + "}");
+            executorLog.append(", threads=").append(clientThreads).append("}");
         }
         AsyncIOGroup ioGroup = new AsyncIOGroup("Redkale-DefaultClient-IOThread-%s", clientWorkExecutor, bufferCapacity, bufferPoolSize).skipClose(true);
         this.clientAsyncGroup = ioGroup.start();
@@ -592,263 +609,6 @@ public final class Application {
             this.listeners.add(listener);
         }
         //------------------------------------------------------------------------
-    }
-
-    private void initRemoteProperties() {
-        final Properties dyncProps = new Properties();
-        final AtomicInteger propertyIndex = new AtomicInteger();
-        Properties logProps = null; //新的日志配置项
-        //------------------------------------ 读取配置项 ------------------------------------       
-        AnyValue propsConf = config.getAnyValue("properties");
-        if (propsConf == null) {
-            final AnyValue resources = config.getAnyValue("resources");
-            if (resources != null) {
-                logger.log(Level.WARNING, "<resources> in application config file is deprecated");
-                propsConf = resources.getAnyValue("properties");
-            }
-        }
-        if (propsConf != null) {
-            final Properties remoteEnvs = new Properties();
-            //可能通过系统环境变量配置信息
-            Iterator<PropertiesAgentProvider> it = ServiceLoader.load(PropertiesAgentProvider.class, classLoader).iterator();
-            RedkaleClassLoader.putServiceLoader(PropertiesAgentProvider.class);
-            List<PropertiesAgentProvider> providers = new ArrayList<>();
-            while (it.hasNext()) {
-                PropertiesAgentProvider provider = it.next();
-                if (provider != null && provider.acceptsConf(propsConf)) {
-                    RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
-                    providers.add(provider);
-                }
-            }
-            for (PropertiesAgentProvider provider : InstanceProvider.sort(providers)) {
-                long s = System.currentTimeMillis();
-                this.propertiesAgent = provider.createInstance();
-                this.resourceFactory.inject(this.propertiesAgent);
-                if (compileMode) {
-                    this.propertiesAgent.compile(propsConf);
-                } else {
-                    Map<String, Properties> propMap = this.propertiesAgent.init(this, propsConf);
-                    int propCount = 0;
-                    if (propMap != null) {
-                        for (Map.Entry<String, Properties> en : propMap.entrySet()) {
-                            propCount += en.getValue().size();
-                            if (en.getKey().contains("logging")) {
-                                if (logProps != null) {
-                                    logger.log(Level.WARNING, "skip repeat logging config properties(" + en.getKey() + ")");
-                                } else {
-                                    logProps = en.getValue();
-                                }
-                            } else {
-                                remoteEnvs.putAll(en.getValue());
-                            }
-                        }
-                    }
-                    logger.info("PropertiesAgent (type = " + this.propertiesAgent.getClass().getSimpleName()
-                        + ") load " + propCount + " data in " + (System.currentTimeMillis() - s) + " ms");
-                }
-                break;
-            }
-
-            final Properties oldEnvs = new Properties();
-            for (AnyValue prop : propsConf.getAnyValues("property")) {
-                String key = prop.getValue("name");
-                String value = prop.getValue("value");
-                if (key == null || value == null) {
-                    continue;
-                }
-                oldEnvs.put(key, value);
-            }
-            remoteEnvs.forEach((k, v) -> {
-                if (k.toString().startsWith("redkale.")) {
-                    dyncProps.put(k, v);
-                } else {
-                    oldEnvs.put(k, v);  //新配置项会覆盖旧的
-                }
-            });
-            //原有properties节点上的属性同步到dyncEnvs
-            propsConf.forEach((k, v) -> dyncProps.put("redkale.properties[" + k + "]", v));
-            oldEnvs.forEach((k, v) -> { //去重后的配置项
-                String prefix = "redkale.properties.property[" + propertyIndex.getAndIncrement() + "]";
-                dyncProps.put(prefix + ".name", k);
-                dyncProps.put(prefix + ".value", v);
-            });
-            //移除旧节点
-            ((AnyValueWriter) this.config).removeAnyValues("properties");
-        }
-        //环境变量的优先级最高
-        System.getProperties().forEach((k, v) -> {
-            if (k.toString().startsWith("redkale.executor.") //节点全局唯一
-                || k.toString().startsWith("redkale.transport.") //节点全局唯一
-                || k.toString().startsWith("redkale.cluster.") //节点全局唯一
-                || k.toString().startsWith("redkale.cache.") //节点全局唯一
-                || k.toString().startsWith("redkale.schedule.") //节点全局唯一
-                || k.toString().startsWith("redkale.mq.")
-                || k.toString().startsWith("redkale.mq[")
-                || k.toString().startsWith("redkale.group.")
-                || k.toString().startsWith("redkale.group[")
-                || k.toString().startsWith("redkale.listener.")
-                || k.toString().startsWith("redkale.listener[")
-                || k.toString().startsWith("redkale.server.")
-                || k.toString().startsWith("redkale.server[")) {
-                dyncProps.put(k, v);
-            } else if (k.toString().startsWith("redkale.properties.")) {
-                if (k.toString().startsWith("redkale.properties.property.")
-                    || k.toString().startsWith("redkale.properties.property[")) {
-                    dyncProps.put(k, v);
-                } else {
-                    //支持系统变量 -Dredkale.onlyLogProps.mykey=my-value
-                    String prefix = "redkale.properties.property[" + propertyIndex.getAndIncrement() + "]";
-                    dyncProps.put(prefix + ".name", k.toString().substring("redkale.properties.".length()));
-                    dyncProps.put(prefix + ".value", v);
-                }
-            }
-        });
-
-        if (!dyncProps.isEmpty()) {
-            Properties newDyncProps = new Properties();
-            dyncProps.forEach((k, v) -> newDyncProps.put(k.toString(), getPropertyValue(v.toString(), dyncProps)));
-            //合并配置
-            this.config.merge(AnyValue.loadFromProperties(newDyncProps).getAnyValue("redkale"), AppConfig.APP_CONFIG_MERGE_FUNC);
-        }
-        //使用合并后的新配置节点
-        propsConf = this.config.getAnyValue("properties");
-        if (propsConf != null) {
-            //清除property节点数组的下坐标
-            ((AnyValueWriter) propsConf).clearParentArrayIndex("property");
-            //注入配置项
-            for (AnyValue prop : propsConf.getAnyValues("property")) {
-                String key = prop.getValue("name");
-                String value = prop.getValue("value");
-                if (key == null) {
-                    continue;
-                }
-                value = value == null ? value : getPropertyValue(value, dyncProps);
-                if (key.startsWith("system.property.")) {
-                    String propName = key.substring("system.property.".length());
-                    if (System.getProperty(propName) == null) { //命令行传参数优先级高
-                        System.setProperty(propName, value);
-                    }
-                } else if (key.startsWith("mimetype.property.")) {
-                    MimeType.add(key.substring("mimetype.property.".length()), value);
-                } else {
-                    this.envProperties.put(key, value);
-                    resourceFactory.register(false, key, value);
-                }
-            }
-        }
-        //重置远程日志配置
-        if (logProps != null && !logProps.isEmpty()) {
-            reconfigLogging(false, logProps);
-        }
-    }
-
-    /**
-     * 设置日志策略
-     *
-     * @param first    是否首次设置
-     * @param allProps 配置项全量
-     */
-    void reconfigLogging(boolean first, Properties allProps) {
-        String searchRawHandler = "java.util.logging.SearchHandler";
-        String searchReadHandler = LoggingSearchHandler.class.getName();
-        Properties onlyLogProps = new Properties();
-
-        allProps.entrySet().forEach(x -> {
-            String key = x.getKey().toString();
-            if (key.startsWith("java.util.logging.") || key.contains(".level") || key.contains("handlers")) {
-                String val = x.getValue().toString()
-                    .replace("%m", "%tY%tm").replace("%d", "%tY%tm%td") //兼容旧时间格式
-                    .replace(searchRawHandler, searchReadHandler);
-                onlyLogProps.put(key.replace(searchRawHandler, searchReadHandler), val);
-            }
-        });
-        if (onlyLogProps.getProperty("java.util.logging.FileHandler.formatter") == null) {
-            if (compileMode) {
-                onlyLogProps.setProperty("java.util.logging.FileHandler.formatter", SimpleFormatter.class.getName());
-                if (onlyLogProps.getProperty("java.util.logging.SimpleFormatter.format") == null) {
-                    onlyLogProps.setProperty("java.util.logging.SimpleFormatter.format", LoggingFileHandler.FORMATTER_FORMAT.replaceAll("\r\n", "%n"));
-                }
-            } else {
-                onlyLogProps.setProperty("java.util.logging.FileHandler.formatter", LoggingFileHandler.LoggingFormater.class.getName());
-            }
-        }
-        if (onlyLogProps.getProperty("java.util.logging.ConsoleHandler.formatter") == null) {
-            if (compileMode) {
-                onlyLogProps.setProperty("java.util.logging.ConsoleHandler.formatter", SimpleFormatter.class.getName());
-                if (onlyLogProps.getProperty("java.util.logging.SimpleFormatter.format") == null) {
-                    onlyLogProps.setProperty("java.util.logging.SimpleFormatter.format", LoggingFileHandler.FORMATTER_FORMAT.replaceAll("\r\n", "%n"));
-                }
-            } else {
-                onlyLogProps.setProperty("java.util.logging.ConsoleHandler.formatter", LoggingFileHandler.LoggingFormater.class.getName());
-            }
-        }
-        if (!compileMode) { //ConsoleHandler替换成LoggingConsoleHandler
-            final String handlers = onlyLogProps.getProperty("handlers");
-            if (handlers != null && handlers.contains("java.util.logging.ConsoleHandler")) {
-                final String consoleHandlerClass = LoggingFileHandler.LoggingConsoleHandler.class.getName();
-                onlyLogProps.setProperty("handlers", handlers.replace("java.util.logging.ConsoleHandler", consoleHandlerClass));
-                Properties prop = new Properties();
-                String prefix = consoleHandlerClass + ".";
-                onlyLogProps.entrySet().forEach(x -> {
-                    if (x.getKey().toString().startsWith("java.util.logging.ConsoleHandler.")) {
-                        prop.put(x.getKey().toString().replace("java.util.logging.ConsoleHandler.", prefix), x.getValue());
-                    }
-                });
-                prop.entrySet().forEach(x -> {
-                    onlyLogProps.put(x.getKey(), x.getValue());
-                });
-            }
-        }
-        String fileHandlerPattern = onlyLogProps.getProperty("java.util.logging.FileHandler.pattern");
-        if (fileHandlerPattern != null && fileHandlerPattern.contains("%")) { //带日期格式
-            final String fileHandlerClass = LoggingFileHandler.class.getName();
-            Properties prop = new Properties();
-            final String handlers = onlyLogProps.getProperty("handlers");
-            if (handlers != null && handlers.contains("java.util.logging.FileHandler")) {
-                //singletonrun模式下不输出文件日志
-                prop.setProperty("handlers", handlers.replace("java.util.logging.FileHandler", singletonMode || compileMode ? "" : fileHandlerClass));
-            }
-            if (!prop.isEmpty()) {
-                String prefix = fileHandlerClass + ".";
-                onlyLogProps.entrySet().forEach(x -> {
-                    if (x.getKey().toString().startsWith("java.util.logging.FileHandler.")) {
-                        prop.put(x.getKey().toString().replace("java.util.logging.FileHandler.", prefix), x.getValue());
-                    }
-                });
-                prop.entrySet().forEach(x -> onlyLogProps.put(x.getKey(), x.getValue()));
-            }
-            if (!compileMode) {
-                onlyLogProps.put(SncpClient.class.getSimpleName() + ".handlers", LoggingFileHandler.LoggingSncpFileHandler.class.getName());
-            }
-        }
-        if (compileMode) {
-            onlyLogProps.put("handlers", "java.util.logging.ConsoleHandler");
-            Map newprop = new HashMap(onlyLogProps);
-            newprop.forEach((k, v) -> {
-                if (k.toString().startsWith("java.util.logging.FileHandler.")) {
-                    onlyLogProps.remove(k);
-                }
-            });
-        }
-
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        final PrintStream ps = new PrintStream(out);
-        onlyLogProps.forEach((x, y) -> ps.println(x + "=" + y));
-        try {
-            LogManager manager = LogManager.getLogManager();
-            manager.readConfiguration(new ByteArrayInputStream(out.toByteArray()));
-            this.loggingProperties.clear();
-            this.loggingProperties.putAll(onlyLogProps);
-            Enumeration<String> en = manager.getLoggerNames();
-            while (en.hasMoreElements()) {
-                for (Handler handler : manager.getLogger(en.nextElement()).getHandlers()) {
-                    if (handler instanceof LoggingSearchHandler) {
-                        ((LoggingSearchHandler) handler).application = this;
-                    }
-                }
-            }
-        } catch (IOException e) { //不会发生
-        }
     }
 
     private static String colorMessage(Logger logger, int color, int type, String msg) {
@@ -1093,7 +853,7 @@ public final class Application {
      */
     private void onAppPreStart() {
         for (ApplicationListener listener : this.listeners) {
-            listener.preStart(this);
+            listener.onPreStart(this);
         }
         for (ModuleEngine item : moduleEngines) {
             item.onAppPostInit();
@@ -1105,7 +865,7 @@ public final class Application {
      */
     private void onAppPostStart() {
         for (ApplicationListener listener : this.listeners) {
-            listener.postStart(this);
+            listener.onPostStart(this);
         }
         for (ModuleEngine item : moduleEngines) {
             item.onAppPostStart();
@@ -1118,6 +878,7 @@ public final class Application {
      * @param props 配置项全量
      */
     private void onEnvironmentLoaded() {
+        this.registerResourceEnvs(true, this.envProperties);
         for (ModuleEngine item : moduleEngines) {
             item.onEnvironmentLoaded(this.envProperties);
         }
@@ -1129,7 +890,7 @@ public final class Application {
      * @param namespace 命名空间
      * @param events    变更项
      */
-    private void onEnvironmentChanged(String namespace, List<ResourceEvent> events) {
+    void onEnvironmentChanged(String namespace, List<ResourceEvent> events) {
         for (ModuleEngine item : moduleEngines) {
             item.onEnvironmentChanged(namespace, events);
         }
@@ -1193,6 +954,9 @@ public final class Application {
      * 服务全部停掉前被调用
      */
     private void onServersPreStop() {
+        for (ApplicationListener listener : listeners) {
+            listener.onServersPreStop(this);
+        }
         for (ModuleEngine item : moduleEngines) {
             item.onServersPreStop();
         }
@@ -1202,6 +966,9 @@ public final class Application {
      * 服务全部停掉后被调用
      */
     private void onServersPostStop() {
+        for (ApplicationListener listener : listeners) {
+            listener.onServersPostStop(this);
+        }
         for (ModuleEngine item : moduleEngines) {
             item.onServersPostStop();
         }
@@ -1213,7 +980,7 @@ public final class Application {
     private void onAppPreShutdown() {
         for (ApplicationListener listener : this.listeners) {
             try {
-                listener.preShutdown(this);
+                listener.onPreShutdown(this);
             } catch (Exception e) {
                 logger.log(Level.WARNING, listener.getClass() + " preShutdown erroneous", e);
             }
@@ -1234,13 +1001,19 @@ public final class Application {
 
     void onPreCompile() {
         for (ApplicationListener listener : listeners) {
-            listener.preCompile(this);
+            listener.onPreCompile(this);
+        }
+        for (ModuleEngine item : moduleEngines) {
+            item.onPreCompile();
         }
     }
 
     void onPostCompile() {
         for (ApplicationListener listener : listeners) {
-            listener.postCompile(this);
+            listener.onPostCompile(this);
+        }
+        for (ModuleEngine item : moduleEngines) {
+            item.onPostCompile();
         }
     }
 
@@ -1291,6 +1064,10 @@ public final class Application {
 
     void loadClassesByFilters(final ClassFilter... filters) throws IOException {
         ClassFilter.Loader.load(getHome(), this.serverClassLoader, filters);
+    }
+
+    List<ModuleEngine> getModuleEngines() {
+        return moduleEngines;
     }
 
     //使用了nohup或使用了后台&，Runtime.getRuntime().addShutdownHook失效
@@ -1479,7 +1256,7 @@ public final class Application {
         if (args != null && args.length > 0) {
             for (int i = 0; i < args.length; i++) {
                 if (args[i] != null && args[i].toLowerCase().startsWith("--conf-file=")) {
-                    System.setProperty(RESNAME_APP_CONF_FILE, args[i].substring("--conf-file=".length()));
+                    System.setProperty(AppConfig.PARAM_APP_CONF_FILE, args[i].substring("--conf-file=".length()));
                     String[] newargs = new String[args.length - 1];
                     System.arraycopy(args, 0, newargs, 0, i);
                     System.arraycopy(args, i + 1, newargs, i, args.length - 1 - i);
@@ -1537,49 +1314,6 @@ public final class Application {
         System.exit(0); //必须要有
     }
 
-    public String getPropertyValue(String value, Properties... envs) {
-        if (value == null || value.isBlank()) {
-            return value;
-        }
-        final String val = value;
-        //${domain}/${path}/xxx    ${aa${bbb}}
-        int pos2 = val.indexOf("}");
-        int pos1 = val.lastIndexOf("${", pos2);
-        if (pos1 >= 0 && pos2 > 0) {
-            String key = val.substring(pos1 + 2, pos2);
-            String newVal = null;
-            if (RESNAME_APP_NAME.equals(key)) {
-                newVal = getName();
-            } else if (RESNAME_APP_HOME.equals(key)) {
-                newVal = getHome().getPath().replace('\\', '/');
-            } else if (RESNAME_APP_NODEID.equals(key)) {
-                newVal = String.valueOf(getNodeid());
-            } else if (RESNAME_APP_TIME.equals(key)) {
-                newVal = String.valueOf(getStartTime());
-            } else {
-                List<Properties> list = new ArrayList<>();
-                list.add(this.envProperties);
-                list.addAll(Arrays.asList(envs));
-                for (Properties prop : list) {
-                    if (prop.containsKey(key)) {
-                        newVal = getPropertyValue(prop.getProperty(key), envs);
-                        break;
-                    }
-                }
-                if (newVal == null) {
-                    newVal = this.resourceFactory.find(key, String.class);
-                }
-            }
-            if (newVal == null) {
-                throw new RedkaleException("Not found '" + key + "' value");
-            }
-            return getPropertyValue(val.substring(0, pos1) + newVal + val.substring(pos2 + 1), envs);
-        } else if ((pos1 >= 0 && pos2 < 0) || (pos1 < 0 && pos2 >= 0)) {
-            throw new RedkaleException(value + " is illegal naming");
-        }
-        return val;
-    }
-
     private static String generateHelp() {
         return ""
             + "Usage: redkale [command] [arguments]\r\n"
@@ -1616,11 +1350,7 @@ public final class Application {
         long f = System.currentTimeMillis();
         this.onAppPreShutdown();
         stopServers();
-        if (this.propertiesAgent != null) {
-            long s = System.currentTimeMillis();
-            this.propertiesAgent.destroy(config.getAnyValue("properties"));
-            logger.info(this.propertiesAgent.getClass().getSimpleName() + " destroy in " + (System.currentTimeMillis() - s) + " ms");
-        }
+        this.propertiesModule.destroy();
         if (this.workExecutor != null) {
             this.workExecutor.shutdownNow();
         }
@@ -1699,8 +1429,8 @@ public final class Application {
         return home;
     }
 
-    public URI getConfPath() {
-        return confPath;
+    public URI getConfDir() {
+        return confDir;
     }
 
     public long getStartTime() {

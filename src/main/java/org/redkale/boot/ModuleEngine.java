@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
 import org.redkale.service.Service;
+import org.redkale.util.AnyValue;
 import org.redkale.util.Environment;
 import org.redkale.util.ResourceEvent;
 import org.redkale.util.ResourceFactory;
@@ -36,6 +37,20 @@ public abstract class ModuleEngine {
         this.application = application;
         this.resourceFactory = application.getResourceFactory();
         this.environment = application.getEnvironment();
+    }
+
+    /**
+     * 判断模块的配置项合并策略， 返回null表示模块不识别此配置项
+     *
+     * @param path 配置项路径
+     * @param key  配置项名称
+     * @param val1 配置项原值
+     * @param val2 配置项新值
+     *
+     * @return MergeEnum
+     */
+    public AnyValue.MergeEnum mergeAppConfigStrategy(String path, String key, AnyValue val1, AnyValue val2) {
+        return null;
     }
 
     /**
@@ -85,6 +100,22 @@ public abstract class ModuleEngine {
      * @param events    变更项
      */
     public void onEnvironmentChanged(String namespace, List<ResourceEvent> events) {
+        //do nothing
+    }
+
+    /**
+     * Application 在运行Compile前调用
+     *
+     */
+    public void onPreCompile() {
+        //do nothing
+    }
+
+    /**
+     * Application 在运行Compile后调用
+     *
+     */
+    public void onPostCompile() {
         //do nothing
     }
 

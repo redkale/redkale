@@ -13,6 +13,8 @@ import java.lang.reflect.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.BiFunction;
+import static org.redkale.boot.Application.SYSNAME_APP_CONF_DIR;
+import static org.redkale.boot.Application.SYSNAME_APP_HOME;
 import org.redkale.util.RedkaleClassLoader;
 
 /**
@@ -85,8 +87,8 @@ public @interface RetLabel {
                 }
             }
             try {
-                File homePath = new File(System.getProperty("redkale.application.home", ""), "conf");
-                File propPath = new File(System.getProperty("redkale.application.confPath", homePath.getPath()));
+                File homePath = new File(System.getProperty(SYSNAME_APP_HOME, ""), "conf");
+                File propPath = new File(System.getProperty(SYSNAME_APP_CONF_DIR, homePath.getPath()));
                 if (propPath.isDirectory() && propPath.canRead()) {
                     final String prefix = clazz.getSimpleName().toLowerCase();
                     for (File propFile : propPath.listFiles(f -> f.getName().startsWith(prefix) && f.getName().endsWith(".properties"))) {

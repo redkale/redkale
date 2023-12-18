@@ -398,7 +398,7 @@ public final class ApiDocCommand {
             try (FileOutputStream out = new FileOutputStream(new File(app.getHome(), "apidoc.json"))) {
                 out.write(json.getBytes(StandardCharsets.UTF_8));
             }
-            File doctemplate = new File(app.getConfPath().toString(), "apidoc-template.html");
+            File doctemplate = new File(app.getConfDir().toString(), "apidoc-template.html");
             InputStream in = null;
             if (doctemplate.isFile() && doctemplate.canRead()) {
                 in = new FileInputStream(doctemplate);

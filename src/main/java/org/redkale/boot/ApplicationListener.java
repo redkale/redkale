@@ -28,42 +28,58 @@ public interface ApplicationListener {
     }
 
     /**
-     * Application 在运行start前调用
+     * Application在运行start前调用
      *
      * @param application Application
      */
-    default void preStart(Application application) {
+    default void onPreStart(Application application) {
     }
 
     /**
-     * Application 在运行start后调用
+     * 服务全部停掉前被调用
      *
      * @param application Application
      */
-    default void postStart(Application application) {
+    default void onServersPreStop(Application application) {
     }
 
     /**
-     * Application 在运行Compile前调用
+     * 服务全部停掉后被调用
      *
      * @param application Application
      */
-    default void preCompile(Application application) {
+    default void onServersPostStop(Application application) {
     }
 
     /**
-     * Application 在运行Compile后调用
+     * Application在运行start后调用
      *
      * @param application Application
      */
-    default void postCompile(Application application) {
+    default void onPostStart(Application application) {
     }
 
     /**
-     * Application 在运行shutdown前调用
+     * Application在运行Compile前调用
      *
      * @param application Application
      */
-    default void preShutdown(Application application) {
+    default void onPreCompile(Application application) {
+    }
+
+    /**
+     * Application在运行Compile后调用
+     *
+     * @param application Application
+     */
+    default void onPostCompile(Application application) {
+    }
+
+    /**
+     * Application在运行shutdown前调用
+     *
+     * @param application Application
+     */
+    default void onPreShutdown(Application application) {
     }
 }

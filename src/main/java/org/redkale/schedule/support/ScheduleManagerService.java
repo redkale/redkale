@@ -31,14 +31,14 @@ import org.redkale.annotation.Nullable;
 import org.redkale.annotation.Resource;
 import org.redkale.annotation.ResourceType;
 import org.redkale.boot.Application;
+import org.redkale.schedule.ScheduleManager;
+import org.redkale.schedule.Scheduled;
 import org.redkale.service.Local;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Utility;
-import org.redkale.schedule.Scheduled;
-import org.redkale.schedule.ScheduleManager;
 
 /**
  * 定时任务管理器
@@ -104,7 +104,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
         this.enabled = conf.getBoolValue("enabled", true);
         if (this.enabled) {
             if (this.propertyFunc == null && application != null) {
-                UnaryOperator<String> func = application::getPropertyValue;
+                UnaryOperator<String> func = application.getEnvironment()::getPropertyValue;
                 this.propertyFunc = func;
             }
             this.scheduler = new ScheduledThreadPoolExecutor(Utility.cpus(), Utility.newThreadFactory("Scheduled-Task-Thread-%s"));

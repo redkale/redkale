@@ -180,11 +180,11 @@ public class AnyValueWriter extends AnyValue {
      * @return AnyValue
      */
     @Override
-    public AnyValueWriter merge(AnyValue node, MergeFunction func) {
+    public AnyValueWriter merge(AnyValue node, MergeStrategy func) {
         return merge(node, "", func);
     }
 
-    protected AnyValueWriter merge(AnyValue node0, String path, MergeFunction func) {
+    protected AnyValueWriter merge(AnyValue node0, String path, MergeStrategy func) {
         if (node0 == null) {
             return this;
         }
@@ -220,17 +220,17 @@ public class AnyValueWriter extends AnyValue {
                                 ok = true;
                                 break;
                             } else {
-                                int funcVal = func.apply(path, en.name, en.value, item.value);
-                                if (funcVal == MergeFunction.MERGE) {
+                                MergeEnum funcVal = func.apply(path, en.name, en.value, item.value);
+                                if (funcVal == MergeEnum.MERGE) {
                                     String subPath = path.isEmpty() ? en.name : (path + "." + en.name);
                                     ((AnyValueWriter) item.value).merge(en.value, subPath, func);
                                     ok = true;
                                     break;
-                                } else if (funcVal == MergeFunction.REPLACE) {
+                                } else if (funcVal == MergeEnum.REPLACE) {
                                     item.value = en.value.copy();
                                     ok = true;
                                     break;
-                                } else if (funcVal == MergeFunction.SKIP) {
+                                } else if (funcVal == MergeEnum.IGNORE) {
                                     ok = true;
                                     break;
                                 }

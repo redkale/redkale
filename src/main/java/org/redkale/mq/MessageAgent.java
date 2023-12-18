@@ -48,6 +48,9 @@ public abstract class MessageAgent implements Resourcable {
     @Resource(required = false)
     protected Application application;
 
+    @Resource(required = false)
+    protected Environment environment;
+    
     @Resource(name = RESNAME_APP_NODEID)
     protected int nodeid;
 
@@ -244,14 +247,14 @@ public abstract class MessageAgent implements Resourcable {
             Map<String, String> views = new LinkedHashMap<>();
             for (MessageConsumer consumer : consumers) {
                 ResourceConsumer res = consumer.getClass().getAnnotation(ResourceConsumer.class);
-                String group = application.getPropertyValue(res.group());
+                String group = environment.getPropertyValue(res.group());
                 if (Utility.isBlank(group)) {
                     group = consumer.getClass().getName();
                 }
                 Map<String, MessageConsumerWrapper> map = maps.computeIfAbsent(group, g -> new HashMap<>());
                 List<String> topics = new ArrayList<>();
                 for (String t : res.topics()) {
-                    String topic = application.getPropertyValue(t);
+                    String topic = environment.getPropertyValue(t);
                     if (!topic.trim().isEmpty()) {
                         topics.add(topic);
                         if (map.containsKey(topic.trim())) {

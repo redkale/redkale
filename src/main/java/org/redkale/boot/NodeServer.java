@@ -174,7 +174,7 @@ public abstract class NodeServer {
                 this.sncpAddress, new ClientAddress(this.sncpAddress), server.getNetprotocol(), Utility.cpus(), 1000);
         }
 
-        initResource(); //给DataSource、CacheSource注册依赖注入时的监听回调事件。
+        registerResTypeLoader(); //给DataSource、CacheSource注册依赖注入时的监听回调事件。
         String interceptorClass = this.serverConf.getValue("interceptor", "");
         if (!interceptorClass.isEmpty()) {
             Class clazz = serverClassLoader.loadClass(interceptorClass);
@@ -238,155 +238,12 @@ public abstract class NodeServer {
 
     protected abstract void loadServlet(ClassFilter<? extends Servlet> servletFilter) throws Exception;
 
-    private void initResource() {
+    private void registerResTypeLoader() {
+        //--------------------- 注册 Local AutoLoad(false) Service ---------------------        
+        resourceFactory.register(this::loadService, Service.class);
+        //----------------------------- 注册 WebSocketNode -----------------------------
         final NodeServer self = this;
-        //---------------------------------------------------------------------------------------------
         final ResourceFactory appResFactory = application.getResourceFactory();
-        //------------------------------------- 注册 Resource --------------------------------------------------------
-//        resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
-//            try {
-//                String resName = null;
-//                Resource res = field.getAnnotation(Resource.class);
-//                if (res != null) {
-//                    resName = res.name();
-//                } else {
-//                    javax.annotation.Resource res2 = field.getAnnotation(javax.annotation.Resource.class);
-//                    if (res2 != null) {
-//                        resName = res2.name();
-//                    }
-//                }
-//                if (resName == null || !resName.startsWith("properties.")) {
-//                    return null;
-//                }
-//                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
-//                    return null; //远程模式不得注入 DataSource
-//                }
-//                Class type = field.getType();
-//                if (type != AnyValue.class && type != AnyValue[].class) {
-//                    return null;
-//                }
-//                Object resource = null;
-//                final AnyValue properties = application.getAppConfig().getAnyValue("properties");
-//                if (properties != null && type == AnyValue.class) {
-//                    resource = properties.getAnyValue(resName.substring("properties.".length()));
-//                    appResFactory.register(resourceName, AnyValue.class, resource);
-//                } else if (properties != null && type == AnyValue[].class) {
-//                    resource = properties.getAnyValues(resName.substring("properties.".length()));
-//                    appResFactory.register(resourceName, AnyValue[].class, resource);
-//                }
-//                field.set(srcObj, resource);
-//                return resource;
-//            } catch (Exception e) {
-//                logger.log(Level.SEVERE, "Resource inject error", e);
-//                return null;
-//            }
-//        }, AnyValue.class, AnyValue[].class);
-
-        //------------------------------------- 注册 Local AutoLoad(false) Service --------------------------------------------------------        
-        resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
-            Class<Service> resServiceType = Service.class;
-            try {
-                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
-                    return null;
-                }
-                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
-                    return null; //远程模式不得注入 AutoLoad Service
-                }
-                if (!Service.class.isAssignableFrom(field.getType())) {
-                    return null;
-                }
-                resServiceType = (Class) field.getType();
-                if (resServiceType.getAnnotation(Local.class) == null) {
-                    return null;
-                }
-                boolean auto = true;
-                AutoLoad al = resServiceType.getAnnotation(AutoLoad.class);
-                if (al != null) {
-                    auto = al.value();
-                }
-                org.redkale.util.AutoLoad al2 = resServiceType.getAnnotation(org.redkale.util.AutoLoad.class);
-                if (al2 != null) {
-                    auto = al2.value();
-                }
-                if (auto) {
-                    return null;
-                }
-
-                //ResourceFactory resfactory = (isSNCP() ? appResFactory : resourceFactory);
-                Service service = Modifier.isFinal(resServiceType.getModifiers()) || Sncp.isComponent(resServiceType)
-                    ? (Service) resServiceType.getConstructor().newInstance()
-                    : Sncp.createLocalService(serverClassLoader, resourceName, resServiceType,
-                        appResFactory, application.getSncpRpcGroups(), sncpClient, null, null, null);
-                appResFactory.register(resourceName, resServiceType, service);
-
-                field.set(srcObj, service);
-                rf.inject(resourceName, service, self); // 给其可能包含@Resource的字段赋值;
-                if (!application.isCompileMode()) {
-                    service.init(null);
-                }
-                logger.info("Load Service(@Local @AutoLoad service = " + resServiceType.getSimpleName() + ", resourceName = '" + resourceName + "')");
-                return service;
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "Load @Local @AutoLoad(false) Service inject " + resServiceType + " to " + srcObj + " error", e);
-                return null;
-            }
-        }, Service.class);
-//
-//        //------------------------------------- 注册 DataSource --------------------------------------------------------        
-//        resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
-//            try {
-//                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
-//                    return null;
-//                }
-//                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
-//                    return null; //远程模式不得注入 DataSource
-//                }
-//                DataSource source = application.loadDataSource(resourceName, false);
-//                field.set(srcObj, source);
-//                return source;
-//            } catch (Exception e) {
-//                logger.log(Level.SEVERE, "DataSource inject to " + srcObj + " error", e);
-//                return null;
-//            }
-//        }, DataSource.class);
-//
-//        //------------------------------------- 注册 CacheSource --------------------------------------------------------
-//        resourceFactory.register(new ResourceTypeLoader() {
-//            @Override
-//            public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
-//                try {
-//                    if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
-//                        return null;
-//                    }
-//                    if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
-//                        return null; //远程模式不需要注入 CacheSource 
-//                    }
-//                    if (srcObj instanceof Servlet) {
-//                        throw new RedkaleException("CacheSource cannot inject in Servlet " + srcObj);
-//                    }
-//                    final boolean ws = (srcObj instanceof org.redkale.net.http.WebSocketNodeService);
-//                    CacheSource source = application.loadCacheSource(resourceName, ws);
-//                    field.set(srcObj, source);
-//                    Resource res = field.getAnnotation(Resource.class);
-//                    if (res != null && res.required() && source == null) {
-//                        throw new RedkaleException("CacheSource (resourceName = '" + resourceName + "') not found");
-//                    } else {
-//                        logger.info("Load CacheSource (type = " + (source == null ? null : source.getClass().getSimpleName()) + ", resourceName = '" + resourceName + "')");
-//                    }
-//                    return source;
-//                } catch (Exception e) {
-//                    logger.log(Level.SEVERE, "DataSource inject error", e);
-//                    return null;
-//                }
-//            }
-//
-//            @Override
-//            public boolean autoNone() {
-//                return false;
-//            }
-//        }, CacheSource.class);
-
-        //------------------------------------- 注册 WebSocketNode --------------------------------------------------------
         resourceFactory.register(new ResourceTypeLoader() {
             @Override
             public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
@@ -431,6 +288,57 @@ public abstract class NodeServer {
                 return false;
             }
         }, WebSocketNode.class);
+    }
+
+    private Object loadService(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+        final NodeServer self = this;
+        final ResourceFactory appResFactory = application.getResourceFactory();
+        Class<Service> resServiceType = Service.class;
+        try {
+            if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
+                return null;
+            }
+            if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
+                return null; //远程模式不得注入 AutoLoad Service
+            }
+            if (!Service.class.isAssignableFrom(field.getType())) {
+                return null;
+            }
+            resServiceType = (Class) field.getType();
+            if (resServiceType.getAnnotation(Local.class) == null) {
+                return null;
+            }
+            boolean auto = true;
+            AutoLoad al = resServiceType.getAnnotation(AutoLoad.class);
+            if (al != null) {
+                auto = al.value();
+            }
+            org.redkale.util.AutoLoad al2 = resServiceType.getAnnotation(org.redkale.util.AutoLoad.class);
+            if (al2 != null) {
+                auto = al2.value();
+            }
+            if (auto) {
+                return null;
+            }
+
+            //ResourceFactory resfactory = (isSNCP() ? appResFactory : resourceFactory);
+            Service service = Modifier.isFinal(resServiceType.getModifiers()) || Sncp.isComponent(resServiceType)
+                ? (Service) resServiceType.getConstructor().newInstance()
+                : Sncp.createLocalService(serverClassLoader, resourceName, resServiceType,
+                    appResFactory, application.getSncpRpcGroups(), sncpClient, null, null, null);
+            appResFactory.register(resourceName, resServiceType, service);
+
+            field.set(srcObj, service);
+            rf.inject(resourceName, service, self); // 给其可能包含@Resource的字段赋值;
+            if (!application.isCompileMode()) {
+                service.init(null);
+            }
+            logger.info("Load Service(@Local @AutoLoad service = " + resServiceType.getSimpleName() + ", resourceName = '" + resourceName + "')");
+            return service;
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Load @Local @AutoLoad(false) Service inject " + resServiceType + " to " + srcObj + " error", e);
+            return null;
+        }
     }
 
     @SuppressWarnings("unchecked")

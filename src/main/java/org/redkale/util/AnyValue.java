@@ -33,29 +33,32 @@ public abstract class AnyValue {
      * merge两节点是否覆盖的判断函数
      *
      */
-    public static interface MergeFunction {
-
+    public static enum MergeEnum {
         /**
-         * 追加
+         * 异常
          */
-        public static final int NONE = 0;
-
+        DEFAULT,
         /**
          * 替换
          */
-        public static final int REPLACE = 1;
-
+        REPLACE,
         /**
          * 合并
          */
-        public static final int MERGE = 2;
-
+        MERGE,
         /**
          * 丢弃
          */
-        public static final int SKIP = 3;
+        IGNORE;
+    }
 
-        public int apply(String path, String name, AnyValue val1, AnyValue val2);
+    /**
+     * merge两节点是否覆盖的判断函数
+     *
+     */
+    public static interface MergeStrategy {
+
+        public MergeEnum apply(String path, String name, AnyValue val1, AnyValue val2);
     }
 
     /**
@@ -623,7 +626,7 @@ public abstract class AnyValue {
      *
      * @return AnyValue
      */
-    public abstract AnyValue merge(AnyValue node, MergeFunction func);
+    public abstract AnyValue merge(AnyValue node, MergeStrategy func);
 
     /**
      * 回调子节点

@@ -21,13 +21,13 @@ import org.redkale.boot.NodeServer;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.RestException;
 import org.redkale.util.AnyValue;
+import org.redkale.util.AnyValueWriter;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.ResourceAnnotationProvider;
 import org.redkale.util.ResourceEvent;
 import org.redkale.util.ResourceFactory;
 import org.redkale.util.ResourceTypeLoader;
-import org.redkale.util.AnyValueWriter;
 import org.redkale.util.Utility;
 
 /**
@@ -46,6 +46,28 @@ public class MessageModuleEngine extends ModuleEngine {
 
     public MessageModuleEngine(Application application) {
         super(application);
+    }
+
+    /**
+     * 判断模块的配置项合并策略， 返回null表示模块不识别此配置项
+     *
+     * @param path 配置项路径
+     * @param key  配置项名称
+     * @param val1 配置项原值
+     * @param val2 配置项新值
+     *
+     * @return MergeEnum
+     */
+    @Override
+    public AnyValue.MergeEnum mergeAppConfigStrategy(String path, String key, AnyValue val1, AnyValue val2) {
+        if ("".equals(path) && "mq".equals(key)) {
+            if (Objects.equals(val1.getValue("name"), val2.getValue("name"))) {
+                return AnyValue.MergeEnum.REPLACE;
+            } else {
+                return AnyValue.MergeEnum.DEFAULT;
+            }
+        }
+        return null;
     }
 
     /**
@@ -79,7 +101,7 @@ public class MessageModuleEngine extends ModuleEngine {
             Set<String> mqnames = new HashSet<>();
             for (int i = 0; i < mqConfs.length; i++) {
                 AnyValue mqConf = mqConfs[i];
-                String names = application.getPropertyValue(mqConf.getValue("name")); //含,或者;表示多个别名使用同一mq对象
+                String names = environment.getPropertyValue(mqConf.getValue("name")); //含,或者;表示多个别名使用同一mq对象
                 if (names != null && !names.isEmpty()) {
                     for (String n : names.replace(',', ';').split(";")) {
                         if (n.trim().isEmpty()) {
@@ -98,7 +120,7 @@ public class MessageModuleEngine extends ModuleEngine {
                     mqnames.add(n);
                 }
                 try {
-                    String classVal = application.getPropertyValue(mqConf.getValue("type", mqConf.getValue("value"))); //兼容value字段
+                    String classVal = environment.getPropertyValue(mqConf.getValue("type", mqConf.getValue("value"))); //兼容value字段
                     if (classVal == null || classVal.isEmpty() || classVal.indexOf('.') < 0) { //不包含.表示非类名，比如值: kafka, pulsar
                         Iterator<MessageAgentProvider> it = ServiceLoader.load(MessageAgentProvider.class, application.getClassLoader()).iterator();
                         RedkaleClassLoader.putServiceLoader(MessageAgentProvider.class);
@@ -343,7 +365,7 @@ public class MessageModuleEngine extends ModuleEngine {
                     for (ClassFilter.FilterEntry<? extends MessageConsumer> en : entrys) {
                         Class<? extends MessageConsumer> clazz = en.getType();
                         ResourceConsumer res = clazz.getAnnotation(ResourceConsumer.class);
-                        if (!Objects.equals(agent.getName(), application.getPropertyValue(res.mq()))) {
+                        if (!Objects.equals(agent.getName(), environment.getPropertyValue(res.mq()))) {
                             continue;
                         }
                         RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());

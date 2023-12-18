@@ -46,7 +46,7 @@ public class ClusterModuleEngine extends ModuleEngine {
         AnyValue clusterConf = application.getAppConfig().getAnyValue("cluster");
         if (clusterConf != null) {
             try {
-                String classVal = application.getPropertyValue(clusterConf.getValue("type", clusterConf.getValue("value"))); //兼容value字段
+                String classVal = environment.getPropertyValue(clusterConf.getValue("type", clusterConf.getValue("value"))); //兼容value字段
                 if (classVal == null || classVal.isEmpty() || classVal.indexOf('.') < 0) { //不包含.表示非类名，比如值: consul, nacos
                     Iterator<ClusterAgentProvider> it = ServiceLoader.load(ClusterAgentProvider.class, application.getClassLoader()).iterator();
                     RedkaleClassLoader.putServiceLoader(ClusterAgentProvider.class);
@@ -185,8 +185,27 @@ public class ClusterModuleEngine extends ModuleEngine {
     }
 
     /**
+     * 判断模块的配置项合并策略， 返回null表示模块不识别此配置项
+     *
+     * @param path 配置项路径
+     * @param key  配置项名称
+     * @param val1 配置项原值
+     * @param val2 配置项新值
+     *
+     * @return MergeEnum
+     */
+    @Override
+    public AnyValue.MergeEnum mergeAppConfigStrategy(String path, String key, AnyValue val1, AnyValue val2) {
+        if ("".equals(path) && "cluster".equals(key)) {
+            return AnyValue.MergeEnum.REPLACE;
+        }
+        return null;
+    }
+
+    /**
      * 进入Application.start方法被调用
      */
+    @Override
     public void onAppPreStart() {
         if (!application.isSingletonMode() && !application.isCompileMode() && this.clusterAgent != null) {
             this.clusterAgent.register(application);
