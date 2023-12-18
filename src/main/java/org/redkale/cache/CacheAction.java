@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.cache.support;
+package org.redkale.cache;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentHashMap;

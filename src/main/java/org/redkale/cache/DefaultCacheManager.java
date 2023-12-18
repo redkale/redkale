@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.cache.support;
+package org.redkale.cache;
 
 import java.lang.reflect.Type;
 import java.time.Duration;
@@ -40,7 +40,7 @@ import org.redkale.util.Utility;
 @Component
 @AutoLoad(false)
 @ResourceType(CacheManager.class)
-public class CacheManagerService implements CacheManager, Service {
+public class DefaultCacheManager implements CacheManager, Service {
 
     //是否开启缓存
     protected boolean enabled = true;
@@ -69,20 +69,20 @@ public class CacheManagerService implements CacheManager, Service {
     //远程缓存Source
     protected CacheSource remoteSource;
 
-    protected CacheManagerService(@Nullable CacheSource remoteSource) {
+    protected DefaultCacheManager(@Nullable CacheSource remoteSource) {
         this.remoteSource = remoteSource;
     }
 
     //一般用于独立组件
-    public static CacheManagerService create(@Nullable CacheSource remoteSource) {
-        return new CacheManagerService(remoteSource);
+    public static DefaultCacheManager create(@Nullable CacheSource remoteSource) {
+        return new DefaultCacheManager(remoteSource);
     }
 
     public boolean enabled() {
         return this.enabled;
     }
 
-    public CacheManagerService enabled(boolean val) {
+    public DefaultCacheManager enabled(boolean val) {
         this.enabled = val;
         return this;
     }
@@ -123,7 +123,7 @@ public class CacheManagerService implements CacheManager, Service {
         return enabled;
     }
 
-    public CacheManagerService addHash(String hash) {
+    public DefaultCacheManager addHash(String hash) {
         this.hashNames.add(hash);
         return this;
     }
