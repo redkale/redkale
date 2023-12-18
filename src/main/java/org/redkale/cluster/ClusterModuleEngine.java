@@ -14,10 +14,10 @@ import java.util.Set;
 import java.util.logging.Level;
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
+import org.redkale.inject.ResourceEvent;
 import org.redkale.util.AnyValue;
 import org.redkale.util.AnyValueWriter;
 import org.redkale.util.RedkaleClassLoader;
-import org.redkale.util.ResourceEvent;
 
 /**
  *

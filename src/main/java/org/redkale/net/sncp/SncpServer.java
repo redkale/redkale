@@ -8,6 +8,7 @@ package org.redkale.net.sncp;
 import java.util.List;
 import java.util.concurrent.atomic.LongAdder;
 import org.redkale.boot.Application;
+import org.redkale.inject.ResourceFactory;
 import org.redkale.net.Server;
 import org.redkale.net.sncp.SncpContext.SncpContextConfig;
 import org.redkale.service.Service;

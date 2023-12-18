@@ -11,11 +11,11 @@ import java.nio.channels.CompletionHandler;
 import java.util.concurrent.CompletableFuture;
 import org.redkale.annotation.ResourceType;
 import org.redkale.boot.Application;
+import org.redkale.inject.ResourceFactory;
 import org.redkale.net.AsyncIOGroup;
 import org.redkale.net.client.ClientAddress;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
-import org.redkale.util.ResourceFactory;
 
 /**
  *

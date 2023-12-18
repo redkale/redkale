@@ -19,6 +19,8 @@ import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
 import static org.redkale.boot.Application.RESNAME_APP_EXECUTOR;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.inject.Resourcable;
+import org.redkale.inject.ResourceEvent;
 import org.redkale.net.WorkThread;
 import org.redkale.persistence.Entity;
 import org.redkale.service.*;

@@ -8,10 +8,9 @@ package org.redkale.test.util;
 import java.math.BigInteger;
 import java.util.Properties;
 import org.junit.jupiter.api.Test;
-import org.redkale.annotation.ConstructorParameters;
 import org.redkale.annotation.*;
-import org.redkale.annotation.ResourceListener;
-import org.redkale.util.*;
+import org.redkale.inject.ResourceEvent;
+import org.redkale.inject.ResourceFactory;
 
 /**
  *

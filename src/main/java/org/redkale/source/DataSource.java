@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import org.redkale.annotation.Component;
+import org.redkale.inject.Resourcable;
 import org.redkale.util.*;
 
 /**

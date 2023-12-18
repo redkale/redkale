@@ -19,6 +19,9 @@ import java.util.logging.Level;
 import org.redkale.annotation.Resource;
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
+import org.redkale.inject.ResourceEvent;
+import org.redkale.inject.ResourceFactory;
+import org.redkale.inject.ResourceTypeLoader;
 import org.redkale.net.Servlet;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.service.Service;
@@ -27,9 +30,6 @@ import org.redkale.util.AnyValueWriter;
 import org.redkale.util.InstanceProvider;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
-import org.redkale.util.ResourceEvent;
-import org.redkale.util.ResourceFactory;
-import org.redkale.util.ResourceTypeLoader;
 import org.redkale.util.Utility;
 
 /**

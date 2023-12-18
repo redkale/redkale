@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
+import org.redkale.inject.ResourceEvent;
 import org.redkale.service.Local;
 import org.redkale.util.*;
 

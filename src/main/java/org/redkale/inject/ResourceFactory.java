@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.util;
+package org.redkale.inject;
 
 import java.lang.annotation.Annotation;
 import java.lang.ref.WeakReference;
@@ -16,9 +16,11 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import java.util.logging.*;
 import org.redkale.annotation.*;
-import org.redkale.annotation.ResourceListener;
-import org.redkale.annotation.ResourceType;
 import org.redkale.convert.*;
+import org.redkale.util.Creator;
+import org.redkale.util.RedkaleClassLoader;
+import org.redkale.util.RedkaleException;
+import org.redkale.util.TypeToken;
 
 /**
  *
@@ -1222,7 +1224,8 @@ public final class ResourceFactory {
                             RedkaleClassLoader.putReflectionMethod(loop.getName(), method);
                             break;
                         } else {
-                            logger.log(Level.SEVERE, "@" + ResourceListener.class.getSimpleName() + " must on method with " + ResourceEvent.class.getSimpleName() + "[] parameter type");
+                            logger.log(Level.SEVERE, "@" + ResourceListener.class.getSimpleName()
+                                + " must on method with " + ResourceEvent.class.getSimpleName() + "[] parameter type");
                         }
                     }
                 } while ((loop = loop.getSuperclass()) != Object.class);

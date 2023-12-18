@@ -1,11 +1,12 @@
 /*
  */
-package org.redkale.util;
+package org.redkale.inject;
 
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import org.redkale.annotation.ConstructorParameters;
+import org.redkale.util.Utility;
 
 /**
  * 详情见: https://redkale.org

@@ -5,6 +5,7 @@ package org.redkale.schedule.support;
 
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
+import org.redkale.schedule.ScheduleManager;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
 
@@ -45,12 +46,12 @@ public class ScheduleModuleEngine extends ModuleEngine {
     public void onAppPostInit() {
         //设置定时管理器
         this.scheduleManager = ScheduleManagerService.create(null).enabled(false);
-        final AnyValue scheduleConf = application.getAppConfig().getAnyValue("schedule", true);
-        this.resourceFactory.inject(this.scheduleManager);
-        if (!application.isCompileMode()) {
+        final AnyValue scheduleConf = application.getAppConfig().getAnyValue("schedule");
+        if (scheduleConf != null && !application.isCompileMode()) {
+            this.resourceFactory.inject(this.scheduleManager);
             this.scheduleManager.init(scheduleConf);
         }
-        this.resourceFactory.register("", this.scheduleManager);
+        this.resourceFactory.register("", ScheduleManager.class, this.scheduleManager);
     }
 
     /**

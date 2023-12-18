@@ -14,6 +14,8 @@ import org.redkale.annotation.*;
 import org.redkale.annotation.ResourceListener;
 import org.redkale.boot.*;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.inject.Resourcable;
+import org.redkale.inject.ResourceEvent;
 import org.redkale.service.Service;
 import org.redkale.source.CacheSource;
 import org.redkale.util.*;

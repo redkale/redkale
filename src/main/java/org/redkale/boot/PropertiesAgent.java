@@ -4,6 +4,7 @@ package org.redkale.boot;
 
 import java.util.*;
 import java.util.logging.Logger;
+import org.redkale.inject.ResourceEvent;
 import org.redkale.util.*;
 
 /**

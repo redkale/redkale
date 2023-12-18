@@ -23,6 +23,7 @@ import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
+import org.redkale.inject.ResourceEvent;
 import org.redkale.service.Local;
 import org.redkale.util.*;
 

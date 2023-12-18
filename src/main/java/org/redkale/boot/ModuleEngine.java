@@ -6,11 +6,11 @@ package org.redkale.boot;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
+import org.redkale.inject.ResourceEvent;
+import org.redkale.inject.ResourceFactory;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
 import org.redkale.util.Environment;
-import org.redkale.util.ResourceEvent;
-import org.redkale.util.ResourceFactory;
 
 /**
  *

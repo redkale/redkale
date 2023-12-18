@@ -5,6 +5,7 @@ package org.redkale.cache.support;
 
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
+import org.redkale.cache.CacheManager;
 import org.redkale.util.AnyValue;
 
 /**
@@ -44,12 +45,12 @@ public class CacheModuleEngine extends ModuleEngine {
     public void onAppPostInit() {
         //设置缓存管理器
         this.cacheManager = CacheManagerService.create(null).enabled(false);
-        final AnyValue cacheConf = application.getAppConfig().getAnyValue("cache");;
-        this.resourceFactory.inject(this.cacheManager);
-        if (!application.isCompileMode() && cacheConf != null) {
+        final AnyValue cacheConf = application.getAppConfig().getAnyValue("cache");
+        if (cacheConf != null && !application.isCompileMode()) {
+            this.resourceFactory.inject(this.cacheManager);
             this.cacheManager.init(cacheConf);
         }
-        this.resourceFactory.register("", this.cacheManager);
+        this.resourceFactory.register("", CacheManager.class, this.cacheManager);
     }
 
     /**

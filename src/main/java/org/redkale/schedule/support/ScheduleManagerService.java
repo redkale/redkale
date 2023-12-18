@@ -21,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.UnaryOperator;
 import java.util.logging.Level;
@@ -58,6 +59,8 @@ public class ScheduleManagerService implements ScheduleManager, Service {
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     private final ConcurrentHashMap<WeakReference, List<ScheduledTask>> refTaskMap = new ConcurrentHashMap<>();
+
+    private final AtomicBoolean inited = new AtomicBoolean();
 
     private final ReentrantLock lock = new ReentrantLock();
 
@@ -97,18 +100,24 @@ public class ScheduleManagerService implements ScheduleManager, Service {
 
     @Override
     public void init(AnyValue conf) {
-        this.config = conf;
         if (conf == null) {
             conf = AnyValue.create();
         }
-        this.enabled = conf.getBoolValue("enabled", true);
-        if (this.enabled) {
-            if (this.propertyFunc == null && application != null) {
-                UnaryOperator<String> func = application.getEnvironment()::getPropertyValue;
-                this.propertyFunc = func;
+        this.config = conf;
+        init();
+    }
+
+    private void init() {
+        if (inited.compareAndSet(false, true)) {
+            this.enabled = config.getBoolValue("enabled", true);
+            if (this.enabled) {
+                if (this.propertyFunc == null && application != null) {
+                    UnaryOperator<String> func = application.getEnvironment()::getPropertyValue;
+                    this.propertyFunc = func;
+                }
+                this.scheduler = new ScheduledThreadPoolExecutor(Utility.cpus(), Utility.newThreadFactory("Scheduled-Task-Thread-%s"));
+                this.scheduler.setRemoveOnCancelPolicy(true);
             }
-            this.scheduler = new ScheduledThreadPoolExecutor(Utility.cpus(), Utility.newThreadFactory("Scheduled-Task-Thread-%s"));
-            this.scheduler.setRemoveOnCancelPolicy(true);
         }
     }
 
@@ -117,39 +126,21 @@ public class ScheduleManagerService implements ScheduleManager, Service {
         if (scheduler != null) {
             scheduler.shutdown();
         }
+        inited.set(false);
+    }
+
+    public boolean isInited() {
+        return inited.get();
     }
 
     @Override
-    public void unschedule(Object service) {
-        lock.lock();
-        try {
-            Map.Entry<WeakReference, List<ScheduledTask>> entry = null;
-            for (Map.Entry<WeakReference, List<ScheduledTask>> item : refTaskMap.entrySet()) {
-                if (item.getKey().get() == service) {
-                    entry = item;
-                    break;
-                }
-            }
-            if (entry == null) {
-                return;
-            }
-            refTaskMap.remove(entry.getKey());
-            for (ScheduledTask task : entry.getValue()) {
-                task.cancel();
-            }
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    @Override
-    public void schedule(Object service) {
+    public boolean schedule(Object service) {
         lock.lock();
         try {
             for (WeakReference item : refTaskMap.keySet()) {
                 if (item.get() == service) {
                     logger.log(Level.WARNING, service + " repeat schedule");
-                    return;
+                    return false;
                 }
             }
             Map<String, ScheduledTask> tasks = new LinkedHashMap<>();
@@ -178,6 +169,30 @@ public class ScheduleManagerService implements ScheduleManager, Service {
             if (enabled && !tasks.isEmpty()) {
                 tasks.forEach((name, task) -> task.start());
                 refTaskMap.put(ref, new ArrayList<>(tasks.values()));
+            }
+            return !tasks.isEmpty();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public void unschedule(Object service) {
+        lock.lock();
+        try {
+            Map.Entry<WeakReference, List<ScheduledTask>> entry = null;
+            for (Map.Entry<WeakReference, List<ScheduledTask>> item : refTaskMap.entrySet()) {
+                if (item.getKey().get() == service) {
+                    entry = item;
+                    break;
+                }
+            }
+            if (entry == null) {
+                return;
+            }
+            refTaskMap.remove(entry.getKey());
+            for (ScheduledTask task : entry.getValue()) {
+                task.cancel();
             }
         } finally {
             lock.unlock();

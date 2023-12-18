@@ -11,9 +11,9 @@ import org.redkale.annotation.Comment;
 import org.redkale.annotation.*;
 import org.redkale.boot.*;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.inject.ResourceFactory;
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
-import org.redkale.util.ResourceFactory;
 
 /**
  * <p>

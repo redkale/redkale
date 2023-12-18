@@ -17,6 +17,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import org.redkale.boot.Application;
+import org.redkale.inject.ResourceFactory;
 import org.redkale.mq.*;
 import org.redkale.net.Server;
 import org.redkale.net.http.HttpContext.HttpContextConfig;

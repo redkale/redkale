@@ -9,6 +9,7 @@ import org.junit.jupiter.api.*;
 import org.redkale.boot.Application;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.inject.ResourceFactory;
 import org.redkale.net.AsyncIOGroup;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.Sncp;

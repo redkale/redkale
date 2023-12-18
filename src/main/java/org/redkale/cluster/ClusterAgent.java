@@ -18,6 +18,7 @@ import org.redkale.boot.*;
 import static org.redkale.boot.Application.*;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.inject.ResourceEvent;
 import org.redkale.net.Server;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;

@@ -17,6 +17,8 @@ import org.redkale.annotation.*;
 import static org.redkale.boot.Application.RESNAME_SNCP_ADDRESS;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.cluster.ClusterAgent;
+import org.redkale.inject.ResourceFactory;
+import org.redkale.inject.ResourceTypeLoader;
 import org.redkale.mq.MessageAgent;
 import org.redkale.net.*;
 import org.redkale.net.http.*;

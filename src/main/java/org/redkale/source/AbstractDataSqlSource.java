@@ -19,6 +19,7 @@ import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
 import static org.redkale.boot.Application.*;
+import org.redkale.inject.ResourceEvent;
 import org.redkale.net.AsyncGroup;
 import org.redkale.persistence.Table;
 import org.redkale.service.Local;

@@ -17,9 +17,9 @@ import java.util.Set;
 import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.SimpleFormatter;
+import org.redkale.inject.ResourceEvent;
 import org.redkale.net.sncp.SncpClient;
 import org.redkale.util.Environment;
-import org.redkale.util.ResourceEvent;
 
 /**
  *

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.util;
+package org.redkale.inject;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;

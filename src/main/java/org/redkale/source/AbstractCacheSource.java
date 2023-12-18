@@ -6,6 +6,9 @@ import java.util.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
+import org.redkale.inject.Resourcable;
+import org.redkale.inject.ResourceEvent;
+import org.redkale.inject.ResourceFactory;
 import org.redkale.service.*;
 import org.redkale.util.*;
 

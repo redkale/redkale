@@ -16,11 +16,14 @@ package org.redkale.schedule;
 public interface ScheduleManager {
 
     /**
-     * 开启宿主对象中所有的定时任务方法
+     * 开启宿主对象中所有的定时任务方法.
+     * 存在定时任务方法返回true，否则返回false
      *
      * @param service 宿主对象
+     *
+     * @return 存在定时任务方法返回true，否则返回false
      */
-    public void schedule(Object service);
+    public boolean schedule(Object service);
 
     /**
      * 关闭宿主对象中所有的定时任务方法

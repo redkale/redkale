@@ -1,6 +1,6 @@
 /*
  */
-package org.redkale.util;
+package org.redkale.inject;
 
 import java.lang.reflect.Field;
 

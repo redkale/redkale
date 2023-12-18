@@ -15,6 +15,7 @@ import org.redkale.annotation.*;
 import org.redkale.convert.Convert;
 import org.redkale.convert.TextConvert;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.inject.Resourcable;
 import org.redkale.util.*;
 
 /**

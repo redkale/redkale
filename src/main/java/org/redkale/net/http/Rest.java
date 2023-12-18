@@ -22,6 +22,7 @@ import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
+import org.redkale.inject.ResourceFactory;
 import org.redkale.mq.*;
 import org.redkale.net.*;
 import org.redkale.net.sncp.Sncp;

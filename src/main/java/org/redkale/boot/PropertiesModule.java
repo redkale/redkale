@@ -16,11 +16,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.redkale.inject.ResourceEvent;
 import org.redkale.util.AnyValue;
 import org.redkale.util.Environment;
 import org.redkale.util.InstanceProvider;
 import org.redkale.util.RedkaleClassLoader;
-import org.redkale.util.ResourceEvent;
 import org.redkale.util.Utility;
 
 /**

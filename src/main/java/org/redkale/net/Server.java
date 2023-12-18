@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.*;
 import javax.net.ssl.SSLContext;
 import org.redkale.boot.Application;
+import org.redkale.inject.ResourceFactory;
 import static org.redkale.net.AsyncGroup.UDP_BUFFER_CAPACITY;
 import org.redkale.net.Filter;
 import org.redkale.util.*;

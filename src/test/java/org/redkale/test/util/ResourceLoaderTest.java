@@ -5,7 +5,7 @@ package org.redkale.test.util;
 import org.junit.jupiter.api.*;
 import org.redkale.annotation.Resource;
 import org.redkale.convert.json.JsonFactory;
-import org.redkale.util.ResourceFactory;
+import org.redkale.inject.ResourceFactory;
 
 /**
  *

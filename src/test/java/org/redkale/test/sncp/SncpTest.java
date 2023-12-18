@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.redkale.boot.*;
 import org.redkale.convert.bson.*;
+import org.redkale.inject.ResourceFactory;
 import org.redkale.net.*;
 import org.redkale.net.client.ClientAddress;
 import org.redkale.net.sncp.*;

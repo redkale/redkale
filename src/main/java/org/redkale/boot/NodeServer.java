@@ -21,6 +21,8 @@ import org.redkale.annotation.Command;
 import static org.redkale.boot.Application.*;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.cluster.ClusterAgent;
+import org.redkale.inject.ResourceFactory;
+import org.redkale.inject.ResourceTypeLoader;
 import org.redkale.mq.*;
 import org.redkale.net.*;
 import org.redkale.net.Filter;

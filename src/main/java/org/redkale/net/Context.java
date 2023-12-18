@@ -12,6 +12,7 @@ import java.util.logging.*;
 import javax.net.ssl.SSLContext;
 import org.redkale.convert.bson.*;
 import org.redkale.convert.json.*;
+import org.redkale.inject.ResourceFactory;
 import org.redkale.util.*;
 
 /**

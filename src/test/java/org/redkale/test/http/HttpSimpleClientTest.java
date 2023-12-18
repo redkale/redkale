@@ -8,12 +8,12 @@ import java.util.concurrent.CountDownLatch;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.redkale.boot.Application;
+import org.redkale.inject.ResourceFactory;
 import org.redkale.net.AsyncIOGroup;
 import org.redkale.net.http.HttpServer;
 import org.redkale.net.http.HttpSimpleClient;
 import org.redkale.net.http.HttpSimpleRequest;
 import org.redkale.util.AnyValueWriter;
-import org.redkale.util.ResourceFactory;
 
 /**
  *

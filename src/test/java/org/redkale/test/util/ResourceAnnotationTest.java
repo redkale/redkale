@@ -12,7 +12,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.reflect.Field;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.util.*;
+import org.redkale.inject.ResourceAnnotationProvider;
+import org.redkale.inject.ResourceFactory;
 
 /**
  *

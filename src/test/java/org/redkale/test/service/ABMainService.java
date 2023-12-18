@@ -17,6 +17,7 @@ import org.redkale.annotation.Resource;
 import org.redkale.boot.*;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.inject.ResourceFactory;
 import org.redkale.net.AsyncIOGroup;
 import org.redkale.net.client.ClientAddress;
 import org.redkale.net.http.*;

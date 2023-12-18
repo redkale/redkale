@@ -21,6 +21,8 @@ import org.redkale.annotation.Comment;
 import org.redkale.boot.Application;
 import static org.redkale.boot.Application.RESNAME_SERVER_RESFACTORY;
 import org.redkale.convert.Convert;
+import org.redkale.inject.Resourcable;
+import org.redkale.inject.ResourceFactory;
 import org.redkale.mq.MessageAgent;
 import org.redkale.net.*;
 import org.redkale.util.*;

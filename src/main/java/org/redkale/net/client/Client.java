@@ -13,6 +13,7 @@ import java.util.function.*;
 import java.util.logging.Logger;
 import org.redkale.annotation.Nonnull;
 import org.redkale.annotation.Nullable;
+import org.redkale.inject.Resourcable;
 import org.redkale.net.*;
 import org.redkale.util.*;
 
