@@ -4,7 +4,7 @@
 package org.redkale.test.schedule;
 
 import org.junit.jupiter.api.Test;
-import org.redkale.schedule.DefaultScheduleManager;
+import org.redkale.schedule.spi.ScheduleManagerService;
 import org.redkale.util.Utility;
 
 /**
@@ -20,7 +20,7 @@ public class SchedulingTest {
 
     @Test
     public void run() throws Exception {
-        DefaultScheduleManager manager = DefaultScheduleManager.create(null);
+        ScheduleManagerService manager = ScheduleManagerService.create(null);
         manager.init(null);
         ScheduleService service = new ScheduleService();
         manager.schedule(service);

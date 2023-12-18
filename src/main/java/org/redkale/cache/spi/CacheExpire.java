@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.cache;
+package org.redkale.cache.spi;
 
 import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.ConvertDisabled;

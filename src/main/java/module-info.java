@@ -18,6 +18,7 @@ module org.redkale {
     exports org.redkale.boot;
     exports org.redkale.boot.watch;
     exports org.redkale.cache;
+    exports org.redkale.cache.spi;
     exports org.redkale.cluster;
     exports org.redkale.convert;
     exports org.redkale.convert.bson;
@@ -33,6 +34,7 @@ module org.redkale {
     exports org.redkale.net.sncp;
     exports org.redkale.persistence;
     exports org.redkale.schedule;
+    exports org.redkale.schedule.spi;
     exports org.redkale.service;
     exports org.redkale.source;
     exports org.redkale.util;

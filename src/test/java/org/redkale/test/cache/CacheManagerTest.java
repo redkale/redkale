@@ -7,7 +7,7 @@ import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.*;
-import org.redkale.cache.DefaultCacheManager;
+import org.redkale.cache.spi.CacheManagerService;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.source.CacheMemorySource;
 import org.redkale.util.Utility;
@@ -18,7 +18,7 @@ import org.redkale.util.Utility;
  */
 public class CacheManagerTest {
 
-    private static DefaultCacheManager manager;
+    private static CacheManagerService manager;
 
     public static void main(String[] args) throws Throwable {
         CacheManagerTest test = new CacheManagerTest();
@@ -31,7 +31,7 @@ public class CacheManagerTest {
     public static void init() throws Exception {
         CacheMemorySource remoteSource = new CacheMemorySource("cache-remote");
         remoteSource.init(null);
-        manager = DefaultCacheManager.create(remoteSource);
+        manager = CacheManagerService.create(remoteSource);
         manager.init(null);
     }
 

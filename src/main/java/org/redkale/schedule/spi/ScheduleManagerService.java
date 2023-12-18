@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.schedule;
+package org.redkale.schedule.spi;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -54,7 +54,7 @@ import org.redkale.util.Utility;
 @Component
 @AutoLoad(false)
 @ResourceType(ScheduleManager.class)
-public class DefaultScheduleManager implements ScheduleManager, Service {
+public class ScheduleManagerService implements ScheduleManager, Service {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
@@ -76,20 +76,20 @@ public class DefaultScheduleManager implements ScheduleManager, Service {
 
     private AnyValue config;
 
-    protected DefaultScheduleManager(UnaryOperator<String> propertyFunc) {
+    protected ScheduleManagerService(UnaryOperator<String> propertyFunc) {
         this.propertyFunc = propertyFunc;
     }
 
     //一般用于独立组件
-    public static DefaultScheduleManager create(UnaryOperator<String> propertyFunc) {
-        return new DefaultScheduleManager(propertyFunc);
+    public static ScheduleManagerService create(UnaryOperator<String> propertyFunc) {
+        return new ScheduleManagerService(propertyFunc);
     }
 
     public boolean enabled() {
         return this.enabled;
     }
 
-    public DefaultScheduleManager enabled(boolean val) {
+    public ScheduleManagerService enabled(boolean val) {
         this.enabled = val;
         return this;
     }

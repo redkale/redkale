@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.cache;
+package org.redkale.cache.spi;
 
 import java.time.Duration;
 import org.redkale.convert.ConvertColumn;
