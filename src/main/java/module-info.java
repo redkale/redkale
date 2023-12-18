@@ -24,7 +24,7 @@ module org.redkale {
     exports org.redkale.convert.bson;
     exports org.redkale.convert.ext;
     exports org.redkale.convert.json;
-    exports org.redkale.convert.protobuf;
+    exports org.redkale.convert.proto;
     exports org.redkale.inject;
     exports org.redkale.lock;
     exports org.redkale.mq;

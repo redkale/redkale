@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.convert.protobuf;
+package org.redkale.convert.proto;
 
 import java.lang.reflect.Type;
 import java.util.concurrent.atomic.*;
@@ -14,7 +14,7 @@ import org.redkale.convert.*;
  * @author zhangjx
  * @param <T> T
  */
-public class ProtobufArrayDecoder<T> extends ArrayDecoder<T> {
+public class ProtobufCollectionDecoder<T> extends CollectionDecoder<T> {
 
     protected final boolean simple;
 
@@ -22,7 +22,7 @@ public class ProtobufArrayDecoder<T> extends ArrayDecoder<T> {
 
     private final boolean enumtostring;
 
-    public ProtobufArrayDecoder(ConvertFactory factory, Type type) {
+    public ProtobufCollectionDecoder(ConvertFactory factory, Type type) {
         super(factory, type);
         this.enumtostring = ((ProtobufFactory) factory).enumtostring;
         Type comtype = this.getComponentType();
@@ -38,5 +38,4 @@ public class ProtobufArrayDecoder<T> extends ArrayDecoder<T> {
         if (simple) return in;
         return ProtobufFactory.getItemReader(string, simple, in, member, enumtostring, first);
     }
-
 }

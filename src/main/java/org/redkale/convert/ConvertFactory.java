@@ -21,7 +21,7 @@ import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.ext.*;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.convert.protobuf.ProtobufConvert;
+import org.redkale.convert.proto.ProtobufConvert;
 import org.redkale.util.*;
 
 /**

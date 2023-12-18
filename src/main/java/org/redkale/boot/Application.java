@@ -27,7 +27,7 @@ import org.redkale.cluster.*;
 import org.redkale.convert.Convert;
 import org.redkale.convert.bson.BsonFactory;
 import org.redkale.convert.json.*;
-import org.redkale.convert.protobuf.ProtobufFactory;
+import org.redkale.convert.proto.ProtobufFactory;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;

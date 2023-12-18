@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.convert.protobuf;
+package org.redkale.convert.proto;
 
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;

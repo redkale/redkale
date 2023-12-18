@@ -1,6 +1,6 @@
 /*
  */
-package org.redkale.test.convert.protobuf;
+package org.redkale.test.convert.proto;
 
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
@@ -10,11 +10,11 @@ import java.util.function.*;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.convert.protobuf.ProtobufConvert;
-import org.redkale.convert.protobuf.ProtobufFactory;
-import org.redkale.convert.protobuf.ProtobufObjectDecoder;
-import org.redkale.convert.protobuf.ProtobufObjectEncoder;
-import org.redkale.convert.protobuf.ProtobufReader;
+import org.redkale.convert.proto.ProtobufConvert;
+import org.redkale.convert.proto.ProtobufFactory;
+import org.redkale.convert.proto.ProtobufObjectDecoder;
+import org.redkale.convert.proto.ProtobufObjectEncoder;
+import org.redkale.convert.proto.ProtobufReader;
 import org.redkale.util.*;
 
 /**

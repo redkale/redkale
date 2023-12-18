@@ -3,11 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.test.convert.protobuf;
+package org.redkale.test.convert.proto;
 
 import java.util.*;
 import org.redkale.util.Utility;
-import org.redkale.convert.protobuf.ProtobufConvert;
+import org.redkale.convert.proto.ProtobufConvert;
 
 /**
  *

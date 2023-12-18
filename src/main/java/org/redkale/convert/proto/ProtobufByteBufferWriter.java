@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.convert.protobuf;
+package org.redkale.convert.proto;
 
 import java.nio.ByteBuffer;
 import java.util.function.Supplier;

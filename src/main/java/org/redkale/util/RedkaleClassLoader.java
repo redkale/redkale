@@ -54,7 +54,7 @@ public class RedkaleClassLoader extends URLClassLoader {
         "org.redkale.convert.bson",
         "org.redkale.convert.ext",
         "org.redkale.convert.json",
-        "org.redkale.convert.protobuf",
+        "org.redkale.convert.proto",
         "org.redkale.inject",
         "org.redkale.lock",
         "org.redkale.mq",
