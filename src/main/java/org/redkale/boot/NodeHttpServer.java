@@ -14,6 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 import org.redkale.annotation.*;
+import org.redkale.asm.AsmMethodBoost;
 import static org.redkale.boot.Application.RESNAME_SNCP_ADDRESS;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.cluster.ClusterAgent;
@@ -170,7 +171,9 @@ public class NodeHttpServer extends NodeServer {
                         } catch (Exception ex) {
                             logger.log(Level.WARNING, "WebSocketServlet getMessageAgent error", ex);
                         }
-                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, org.redkale.net.http.WebSocketNodeService.class, application.getResourceFactory(), application.getSncpRpcGroups(), sncpClient, messageAgent, (String) null, (AnyValue) null);
+                        AsmMethodBoost methodBoost = application.createAsmMethodBoost(WebSocketNodeService.class);
+                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, WebSocketNodeService.class, methodBoost,
+                            application.getResourceFactory(), application.getSncpRpcGroups(), sncpClient, messageAgent, (String) null, (AnyValue) null);
                         regFactory.register(resourceName, WebSocketNode.class, nodeService);
                     }
                     resourceFactory.inject(resourceName, nodeService, self);

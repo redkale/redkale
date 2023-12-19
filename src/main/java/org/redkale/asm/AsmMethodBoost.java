@@ -4,6 +4,7 @@
 package org.redkale.asm;
 
 import java.lang.reflect.Method;
+import java.util.Collection;
 import org.redkale.annotation.Nullable;
 
 /**
@@ -14,6 +15,14 @@ import org.redkale.annotation.Nullable;
  * @since 2.8.0
  */
 public interface AsmMethodBoost<T> {
+
+    public static AsmMethodBoost create(Collection<AsmMethodBoost> list) {
+        return new AsmMethodBoosts(list);
+    }
+
+    public static AsmMethodBoost create(AsmMethodBoost... items) {
+        return new AsmMethodBoosts(items);
+    }
 
     /**
      * 对方法进行动态加强处理

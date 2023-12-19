@@ -71,6 +71,7 @@ public abstract class Sncp {
     }
 
     private Sncp() {
+        //do nothing
     }
 
     //key: actionid
@@ -459,11 +460,13 @@ public abstract class Sncp {
      * @param classLoader      ClassLoader
      * @param name             资源名
      * @param serviceImplClass Service类
+     * @param methodBoost      方法扩展
      *
      * @return Service实例
      */
     @SuppressWarnings("unchecked")
-    protected static <T extends Service> Class<? extends T> createLocalServiceClass(ClassLoader classLoader, final String name, final Class<T> serviceImplClass) {
+    protected static <T extends Service> Class<? extends T> createLocalServiceClass(ClassLoader classLoader,
+        final String name, final Class<T> serviceImplClass, final AsmMethodBoost methodBoost) {
         Objects.requireNonNull(serviceImplClass);
         if (!Service.class.isAssignableFrom(serviceImplClass)) {
             throw new SncpException(serviceImplClass + " is not Service type");
@@ -576,7 +579,7 @@ public abstract class Sncp {
     }
 
     public static <T extends Service> T createSimpleLocalService(Class<T> serviceImplClass, ResourceFactory resourceFactory) {
-        return createLocalService(null, "", serviceImplClass, resourceFactory, null, null, null, null, null);
+        return createLocalService(null, "", serviceImplClass, null, resourceFactory, null, null, null, null, null);
     }
 
     /**
@@ -587,6 +590,7 @@ public abstract class Sncp {
      * @param classLoader      ClassLoader
      * @param name             资源名
      * @param serviceImplClass Service类
+     * @param methodBoost      方法扩展
      * @param resourceFactory  ResourceFactory
      * @param sncpRpcGroups    SncpRpcGroups
      * @param client           SncpClient
@@ -601,6 +605,7 @@ public abstract class Sncp {
         final RedkaleClassLoader classLoader,
         final String name,
         final Class<T> serviceImplClass,
+        final AsmMethodBoost methodBoost,
         final ResourceFactory resourceFactory,
         final SncpRpcGroups sncpRpcGroups,
         final SncpClient client,
@@ -608,7 +613,7 @@ public abstract class Sncp {
         final String remoteGroup,
         final AnyValue conf) {
         try {
-            final Class newClazz = createLocalServiceClass(classLoader, name, serviceImplClass);
+            final Class newClazz = createLocalServiceClass(classLoader, name, serviceImplClass, methodBoost);
             T service = (T) newClazz.getDeclaredConstructor().newInstance();
             //--------------------------------------            
             Service remoteService = null;
@@ -630,7 +635,8 @@ public abstract class Sncp {
                         field.setAccessible(true);
                         RedkaleClassLoader.putReflectionField(loop.getName(), field);
                         if (remoteService == null && sncpRpcGroups != null && client != null) {
-                            remoteService = createRemoteService(classLoader, name, serviceImplClass, resourceFactory, sncpRpcGroups, client, agent, remoteGroup, conf);
+                            remoteService = createRemoteService(classLoader, name, serviceImplClass,
+                                methodBoost, resourceFactory, sncpRpcGroups, client, agent, remoteGroup, conf);
                         }
                         if (remoteService != null) {
                             field.set(service, remoteService);
@@ -648,6 +654,9 @@ public abstract class Sncp {
                 c.setAccessible(true);
                 c.set(service, agent == null ? null : agent.getName());
             }
+            if (methodBoost != null) {
+                methodBoost.doInstance(service);
+            }
             return service;
         } catch (RuntimeException rex) {
             throw rex;
@@ -656,15 +665,15 @@ public abstract class Sncp {
         }
     }
 
-    public static <T extends Service> T createSimpleRemoteService(Class<T> serviceImplClass, ResourceFactory resourceFactory,
-        SncpRpcGroups sncpRpcGroups, SncpClient client, String group) {
+    public static <T extends Service> T createSimpleRemoteService(Class<T> serviceImplClass,
+        ResourceFactory resourceFactory, SncpRpcGroups sncpRpcGroups, SncpClient client, String group) {
         if (sncpRpcGroups == null) {
             throw new SncpException("SncpRpcGroups is null");
         }
         if (client == null) {
             throw new SncpException("SncpClient is null");
         }
-        return createRemoteService(null, "", serviceImplClass, resourceFactory, sncpRpcGroups, client, null, group, null);
+        return createRemoteService(null, "", serviceImplClass, null, resourceFactory, sncpRpcGroups, client, null, group, null);
     }
 
     /**
@@ -703,6 +712,7 @@ public abstract class Sncp {
      * @param classLoader            ClassLoader
      * @param name                   资源名
      * @param serviceTypeOrImplClass Service类
+     * @param methodBoost            方法扩展
      * @param resourceFactory        ResourceFactory
      * @param sncpRpcGroups          SncpRpcGroups
      * @param client                 SncpClient
@@ -717,6 +727,7 @@ public abstract class Sncp {
         final ClassLoader classLoader,
         final String name,
         final Class<T> serviceTypeOrImplClass,
+        final AsmMethodBoost methodBoost,
         final ResourceFactory resourceFactory,
         final SncpRpcGroups sncpRpcGroups,
         final SncpClient client,
@@ -779,6 +790,9 @@ public abstract class Sncp {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_sncp");
                 c.setAccessible(true);
                 c.set(service, info);
+            }
+            if (methodBoost != null) {
+                methodBoost.doInstance(service);
             }
             return service;
         } catch (Throwable ex) {
@@ -983,6 +997,9 @@ public abstract class Sncp {
                 c.setAccessible(true);
                 c.set(service, info);
                 RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), c);
+            }
+            if (methodBoost != null) {
+                methodBoost.doInstance(service);
             }
             return service;
         } catch (Exception ex) {

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.logging.Logger;
+import org.redkale.asm.AsmMethodBoost;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.service.Service;
@@ -51,6 +52,17 @@ public abstract class ModuleEngine {
      * @return MergeEnum
      */
     public AnyValue.MergeEnum mergeAppConfigStrategy(String path, String key, AnyValue val1, AnyValue val2) {
+        return null;
+    }
+
+    /**
+     * 动态扩展类的方法
+     *
+     * @param serviceClass 类
+     *
+     * @return 方法动态扩展器
+     */
+    public AsmMethodBoost createAsmMethodBoost(Class serviceClass) {
         return null;
     }
 

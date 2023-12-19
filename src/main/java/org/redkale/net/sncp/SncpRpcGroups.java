@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.redkale.boot.ClassFilter;
 
 /**
- * 协议地址组合对象, 对应application.xml 中 resources-&#62;group 节点信息
+ * 协议地址组合对象, 对应application.xml中group节点信息
  *
  * <p>
  * 详情见: https://redkale.org

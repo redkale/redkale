@@ -18,6 +18,7 @@ import java.util.logging.*;
 import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Command;
+import org.redkale.asm.AsmMethodBoost;
 import static org.redkale.boot.Application.*;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.cluster.ClusterAgent;
@@ -28,6 +29,7 @@ import org.redkale.net.*;
 import org.redkale.net.Filter;
 import org.redkale.net.client.ClientAddress;
 import org.redkale.net.http.*;
+import org.redkale.net.http.WebSocketNodeService;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.source.*;
@@ -262,7 +264,8 @@ public abstract class NodeServer {
                         if (groups.isEmpty() && isSNCP() && NodeServer.this.sncpGroup != null) {
                             groups.add(NodeServer.this.sncpGroup);
                         }
-                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, org.redkale.net.http.WebSocketNodeService.class,
+                        AsmMethodBoost methodBoost = application.createAsmMethodBoost(WebSocketNodeService.class);
+                        nodeService = Sncp.createLocalService(serverClassLoader, resourceName, WebSocketNodeService.class, methodBoost,
                             application.getResourceFactory(), application.getSncpRpcGroups(), sncpClient, null, (String) null, (AnyValue) null);
                         (isSNCP() ? appResFactory : resourceFactory).register(resourceName, WebSocketNode.class, nodeService);
                         ((org.redkale.net.http.WebSocketNodeService) nodeService).setName(resourceName);
@@ -324,10 +327,14 @@ public abstract class NodeServer {
             }
 
             //ResourceFactory resfactory = (isSNCP() ? appResFactory : resourceFactory);
-            Service service = Modifier.isFinal(resServiceType.getModifiers()) || Sncp.isComponent(resServiceType)
-                ? (Service) resServiceType.getConstructor().newInstance()
-                : Sncp.createLocalService(serverClassLoader, resourceName, resServiceType,
-                    appResFactory, application.getSncpRpcGroups(), sncpClient, null, null, null);
+            Service service;
+            if (Modifier.isFinal(resServiceType.getModifiers()) || Sncp.isComponent(resServiceType)) {
+                service = (Service) resServiceType.getConstructor().newInstance();
+            } else {
+                AsmMethodBoost methodBoost = application.createAsmMethodBoost(resServiceType);
+                service = Sncp.createLocalService(serverClassLoader, resourceName, resServiceType,
+                    methodBoost, appResFactory, application.getSncpRpcGroups(), sncpClient, null, null, null);
+            }
             appResFactory.register(resourceName, resServiceType, service);
 
             field.set(srcObj, service);
@@ -415,10 +422,14 @@ public abstract class NodeServer {
                             return null;
                         }
                         service = serviceImplClass.getDeclaredConstructor().newInstance();
-                    } else if (ws || localMode) { //本地模式
-                        service = Sncp.createLocalService(serverClassLoader, resourceName, serviceImplClass, appResourceFactory, rpcGroups, this.sncpClient, agent, group, entry.getProperty());
+                    } else if (ws || localMode) { //本地模式                        
+                        AsmMethodBoost methodBoost = application.createAsmMethodBoost(serviceImplClass);
+                        service = Sncp.createLocalService(serverClassLoader, resourceName, serviceImplClass,
+                            methodBoost, appResourceFactory, rpcGroups, this.sncpClient, agent, group, entry.getProperty());
                     } else {
-                        service = Sncp.createRemoteService(serverClassLoader, resourceName, serviceImplClass, appResourceFactory, rpcGroups, this.sncpClient, agent, group, entry.getProperty());
+                        AsmMethodBoost methodBoost = application.createAsmMethodBoost(serviceImplClass);
+                        service = Sncp.createRemoteService(serverClassLoader, resourceName, serviceImplClass,
+                            methodBoost, appResourceFactory, rpcGroups, this.sncpClient, agent, group, entry.getProperty());
                     }
                     final Class restype = Sncp.getResourceType(service);
                     if (rf.find(resourceName, restype) == null) {

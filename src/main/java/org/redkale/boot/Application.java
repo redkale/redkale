@@ -21,6 +21,7 @@ import java.util.function.Consumer;
 import java.util.logging.*;
 import org.redkale.annotation.Nonnull;
 import org.redkale.annotation.Resource;
+import org.redkale.asm.AsmMethodBoost;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.cache.spi.CacheModuleEngine;
 import org.redkale.cluster.*;
@@ -839,6 +840,23 @@ public final class Application {
             }
             throw e;
         }
+    }
+
+    AsmMethodBoost createAsmMethodBoost(Class serviceClass) {
+        List<AsmMethodBoost> list = null;
+        for (ModuleEngine item : moduleEngines) {
+            AsmMethodBoost boost = item.createAsmMethodBoost(serviceClass);
+            if (boost != null) {
+                if (list == null) {
+                    list = new ArrayList<>();
+                }
+                list.add(boost);
+            }
+        }
+        if (list == null) {
+            return null;
+        }
+        return list.size() == 1 ? list.get(0) : AsmMethodBoost.create(list);
     }
 
     /**

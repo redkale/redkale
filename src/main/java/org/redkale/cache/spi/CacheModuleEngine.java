@@ -56,7 +56,7 @@ public class CacheModuleEngine extends ModuleEngine {
         //设置缓存管理器
         this.config = application.getAppConfig().getAnyValue("cache");
         this.cacheManager = createManager(this.config);
-        if (this.config != null && !application.isCompileMode()) {
+        if (!application.isCompileMode()) {
             this.resourceFactory.inject(this.cacheManager);
             if (this.cacheManager instanceof Service) {
                 ((Service) this.cacheManager).init(this.config);
