@@ -94,10 +94,6 @@ public class ScheduleManagerService implements ScheduleManager, Service {
         return this;
     }
 
-    public AnyValue getConfig() {
-        return config;
-    }
-
     @Override
     public void init(AnyValue conf) {
         if (conf == null) {

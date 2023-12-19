@@ -41,10 +41,12 @@ module org.redkale {
     exports org.redkale.watch;
     
     uses org.redkale.boot.PropertiesAgentProvider;
+    uses org.redkale.cache.spi.CacheManagerProvider;
     uses org.redkale.cluster.ClusterAgentProvider;
     uses org.redkale.convert.ConvertProvider;
     uses org.redkale.inject.ResourceAnnotationProvider;
     uses org.redkale.mq.MessageAgentProvider;
+    uses org.redkale.schedule.spi.ScheduleManagerProvider;
     uses org.redkale.source.CacheSourceProvider;
     uses org.redkale.source.DataSourceProvider;
     uses org.redkale.source.DataNativeSqlParserProvider;

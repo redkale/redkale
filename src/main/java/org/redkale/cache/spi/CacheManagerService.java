@@ -87,10 +87,6 @@ public class CacheManagerService implements CacheManager, Service {
         return this;
     }
 
-    public AnyValue getConfig() {
-        return config;
-    }
-
     @Override
     public void init(AnyValue conf) {
         this.config = conf;

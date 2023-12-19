@@ -3,11 +3,17 @@
  */
 package org.redkale.schedule.spi;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ServiceLoader;
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
 import org.redkale.schedule.ScheduleManager;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
+import org.redkale.util.InstanceProvider;
+import org.redkale.util.RedkaleClassLoader;
 
 /**
  *
@@ -16,7 +22,10 @@ import org.redkale.util.AnyValue;
 public class ScheduleModuleEngine extends ModuleEngine {
 
     //全局定时任务管理器
-    private ScheduleManagerService scheduleManager;
+    private ScheduleManager scheduleManager;
+
+    //配置
+    protected AnyValue config;
 
     public ScheduleModuleEngine(Application application) {
         super(application);
@@ -43,13 +52,16 @@ public class ScheduleModuleEngine extends ModuleEngine {
     /**
      * 结束Application.init方法前被调用
      */
+    @Override
     public void onAppPostInit() {
         //设置定时管理器
-        this.scheduleManager = ScheduleManagerService.create(null).enabled(false);
-        final AnyValue scheduleConf = application.getAppConfig().getAnyValue("schedule");
-        if (scheduleConf != null && !application.isCompileMode()) {
+        this.config = application.getAppConfig().getAnyValue("schedule");
+        this.scheduleManager = createManager(this.config);
+        if (this.config != null && !application.isCompileMode()) {
             this.resourceFactory.inject(this.scheduleManager);
-            this.scheduleManager.init(scheduleConf);
+            if (this.scheduleManager instanceof Service) {
+                ((Service) this.scheduleManager).init(this.config);
+            }
         }
         this.resourceFactory.register("", ScheduleManager.class, this.scheduleManager);
     }
@@ -59,6 +71,7 @@ public class ScheduleModuleEngine extends ModuleEngine {
      *
      * @param service Service
      */
+    @Override
     public void onServicePostInit(Service service) {
         this.scheduleManager.schedule(service);
     }
@@ -76,9 +89,27 @@ public class ScheduleModuleEngine extends ModuleEngine {
     /**
      * 进入Application.shutdown方法被调用
      */
+    @Override
     public void onAppPreShutdown() {
-        if (!application.isCompileMode()) {
-            this.scheduleManager.destroy(this.scheduleManager.getConfig());
+        if (!application.isCompileMode() && this.scheduleManager instanceof Service) {
+            ((Service) this.scheduleManager).destroy(this.config);
         }
+    }
+
+    private ScheduleManager createManager(AnyValue conf) {
+        Iterator<ScheduleManagerProvider> it = ServiceLoader.load(ScheduleManagerProvider.class, application.getClassLoader()).iterator();
+        RedkaleClassLoader.putServiceLoader(ScheduleManagerProvider.class);
+        List<ScheduleManagerProvider> providers = new ArrayList<>();
+        while (it.hasNext()) {
+            ScheduleManagerProvider provider = it.next();
+            if (provider != null && provider.acceptsConf(conf)) {
+                RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
+                providers.add(provider);
+            }
+        }
+        for (ScheduleManagerProvider provider : InstanceProvider.sort(providers)) {
+            return provider.createInstance();
+        }
+        return ScheduleManagerService.create(null).enabled(false);
     }
 }

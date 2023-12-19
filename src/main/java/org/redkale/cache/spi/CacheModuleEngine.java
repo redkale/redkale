@@ -3,10 +3,17 @@
  */
 package org.redkale.cache.spi;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ServiceLoader;
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
 import org.redkale.cache.CacheManager;
+import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
+import org.redkale.util.InstanceProvider;
+import org.redkale.util.RedkaleClassLoader;
 
 /**
  *
@@ -15,7 +22,9 @@ import org.redkale.util.AnyValue;
 public class CacheModuleEngine extends ModuleEngine {
 
     //全局缓存管理器
-    private CacheManagerService cacheManager;
+    private CacheManager cacheManager;
+
+    private AnyValue config;
 
     public CacheModuleEngine(Application application) {
         super(application);
@@ -42,13 +51,16 @@ public class CacheModuleEngine extends ModuleEngine {
     /**
      * 结束Application.init方法前被调用
      */
+    @Override
     public void onAppPostInit() {
         //设置缓存管理器
-        this.cacheManager = CacheManagerService.create(null).enabled(false);
-        final AnyValue cacheConf = application.getAppConfig().getAnyValue("cache");
-        if (cacheConf != null && !application.isCompileMode()) {
+        this.config = application.getAppConfig().getAnyValue("cache");
+        this.cacheManager = createManager(this.config);
+        if (this.config != null && !application.isCompileMode()) {
             this.resourceFactory.inject(this.cacheManager);
-            this.cacheManager.init(cacheConf);
+            if (this.cacheManager instanceof Service) {
+                ((Service) this.cacheManager).init(this.config);
+            }
         }
         this.resourceFactory.register("", CacheManager.class, this.cacheManager);
     }
@@ -56,9 +68,27 @@ public class CacheModuleEngine extends ModuleEngine {
     /**
      * 进入Application.shutdown方法被调用
      */
+    @Override
     public void onAppPreShutdown() {
-        if (!application.isCompileMode()) {
-            this.cacheManager.destroy(this.cacheManager.getConfig());
+        if (!application.isCompileMode() && this.cacheManager instanceof Service) {
+            ((Service) this.cacheManager).destroy(this.config);
         }
+    }
+
+    private CacheManager createManager(AnyValue conf) {
+        Iterator<CacheManagerProvider> it = ServiceLoader.load(CacheManagerProvider.class, application.getClassLoader()).iterator();
+        RedkaleClassLoader.putServiceLoader(CacheManagerProvider.class);
+        List<CacheManagerProvider> providers = new ArrayList<>();
+        while (it.hasNext()) {
+            CacheManagerProvider provider = it.next();
+            if (provider != null && provider.acceptsConf(conf)) {
+                RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
+                providers.add(provider);
+            }
+        }
+        for (CacheManagerProvider provider : InstanceProvider.sort(providers)) {
+            return provider.createInstance();
+        }
+        return CacheManagerService.create(null).enabled(false);
     }
 }
