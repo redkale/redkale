@@ -7,7 +7,7 @@ import java.lang.annotation.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 定时任务标记，只能作用于Service的无参数方法上, 功能类似Spring里的Scheduled注解
+ * 定时任务标记，只能作用于Service的无参数或者单一ScheduleEvent参数的方法上, 功能类似Spring里的Scheduled注解
  *
  *
  * <p>

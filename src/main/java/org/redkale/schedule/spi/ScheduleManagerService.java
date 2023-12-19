@@ -22,6 +22,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.UnaryOperator;
 import java.util.logging.Level;
@@ -32,6 +33,7 @@ import org.redkale.annotation.Nullable;
 import org.redkale.annotation.Resource;
 import org.redkale.annotation.ResourceType;
 import org.redkale.boot.Application;
+import org.redkale.schedule.ScheduleEvent;
 import org.redkale.schedule.ScheduleManager;
 import org.redkale.schedule.Scheduled;
 import org.redkale.service.Local;
@@ -142,6 +144,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
             Map<String, ScheduledTask> tasks = new LinkedHashMap<>();
             Class clazz = service.getClass();
             WeakReference ref = new WeakReference(service);
+            AtomicInteger taskCount = new AtomicInteger();
             do {
                 for (final Method method : clazz.getDeclaredMethods()) {
                     if (method.getAnnotation(Scheduled.class) == null) {
@@ -150,10 +153,12 @@ public class ScheduleManagerService implements ScheduleManager, Service {
                     if (tasks.containsKey(method.getName())) {
                         continue;
                     }
-                    if (method.getParameterCount() > 0) {
-                        throw new RedkaleException("@" + Scheduled.class.getSimpleName() + " must be on non-parameter method, but on " + method);
+                    if (method.getParameterCount() != 0
+                        && (method.getParameterCount() == 1 && method.getParameterTypes()[0] == ScheduleEvent.class)) {
+                        throw new RedkaleException("@" + Scheduled.class.getSimpleName()
+                            + " must be on non-parameter or " + ScheduleEvent.class.getSimpleName() + "-parameter method, but on " + method);
                     }
-                    ScheduledTask task = schedule(ref, method);
+                    ScheduledTask task = schedule(ref, method, taskCount);
                     if (task == null) {
                         continue;  //时间都没配置
                     }
@@ -166,7 +171,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
                 tasks.forEach((name, task) -> task.start());
                 refTaskMap.put(ref, new ArrayList<>(tasks.values()));
             }
-            return !tasks.isEmpty();
+            return taskCount.get() > 0;
         } finally {
             lock.unlock();
         }
@@ -195,7 +200,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
         }
     }
 
-    protected ScheduledTask schedule(WeakReference ref, Method method) {
+    protected ScheduledTask schedule(WeakReference ref, Method method, AtomicInteger taskCount) {
         Scheduled ann = method.getAnnotation(Scheduled.class);
         String name = getProperty(ann.name());
         String cron = getProperty(ann.cron());
@@ -204,9 +209,16 @@ public class ScheduleManagerService implements ScheduleManager, Service {
         String initialDelay = getProperty(ann.initialDelay());
         String zone = getProperty(ann.zone());
         TimeUnit timeUnit = ann.timeUnit();
+        return scheduleTask(ref, method, taskCount, name, cron, fixedDelay, fixedRate, initialDelay, zone, timeUnit);
+    }
+
+    protected ScheduledTask scheduleTask(WeakReference ref, Method method, AtomicInteger taskCount,
+        String name, String cron, String fixedDelay, String fixedRate,
+        String initialDelay, String zone, TimeUnit timeUnit) {
         if ((cron.isEmpty() || "-".equals(cron)) && "-1".equals(fixedRate) && "-1".endsWith(fixedDelay)) {
             return null;  //时间都没配置
         }
+        taskCount.incrementAndGet();
         ZoneId zoneId = Utility.isEmpty(zone) ? null : ZoneId.of(zone);
         if (!cron.isEmpty() && !"-".equals(cron)) {
             CronExpression cronExpr = CronExpression.parse(cron);
@@ -225,11 +237,16 @@ public class ScheduleManagerService implements ScheduleManager, Service {
                 method.setAccessible(true);
             }
             MethodHandle mh = MethodHandles.lookup().unreflect(method);
+            ScheduleEvent event = method.getParameterCount() == 1 ? new ScheduleEvent() : null;
             return () -> {
                 try {
                     Object obj = ref.get();
                     if (obj != null) {
-                        mh.invoke(obj);
+                        if (event == null) {
+                            mh.invoke(obj);
+                        } else {
+                            mh.invoke(obj, event.clear());
+                        }
                     }
                 } catch (Throwable t) {
                     logger.log(Level.SEVERE, "schedule task error", t);
