@@ -31,6 +31,7 @@ import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.TypeToken;
 import org.redkale.util.Uint128;
 import org.redkale.util.Utility;
+import static org.redkale.util.Utility.isEmpty;
 
 /**
  * Service Node Communicate Protocol
@@ -271,11 +272,11 @@ public abstract class Sncp {
     //格式: sncp.req.module.user
     public static String generateSncpReqTopic(String resourceName, Class resourceType, int nodeid) {
         if (WebSocketNode.class.isAssignableFrom(resourceType)) {
-            return getSncpReqTopicPrefix() + "module.wsnode" + nodeid + (resourceName.isEmpty() ? "" : ("-" + resourceName));
+            return getSncpReqTopicPrefix() + "module.wsnode" + nodeid + (isEmpty(resourceName) ? "" : ("-" + resourceName));
         }
         return getSncpReqTopicPrefix() + "module."
             + resourceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase()
-            + (resourceName.isEmpty() ? "" : ("-" + resourceName));
+            + (isEmpty(resourceName) ? "" : ("-" + resourceName));
     }
 
     public static String getSncpReqTopicPrefix() {
@@ -729,7 +730,8 @@ public abstract class Sncp {
             throw new SncpException(serviceTypeOrImplClass + " is not Service type");
         }
         if ((sncpRpcGroups == null || client == null) && agent == null) {
-            throw new SncpException("SncpRpcGroups/SncpClient and MessageAgent are both null");
+            throw new SncpException(SncpRpcGroups.class.getSimpleName() + "/" + SncpClient.class.getSimpleName()
+                + " and " + MessageAgent.class.getSimpleName() + " are both null");
         }
         ResourceFactory.checkResourceName(name);
         final int mod = serviceTypeOrImplClass.getModifiers();

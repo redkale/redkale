@@ -7,7 +7,7 @@ import java.lang.annotation.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 定时任务标记，只能作用于Service的protected且无参数方法上, 功能类似Spring里的Scheduled注解
+ * 定时任务标记，只能作用于Service的无参数方法上, 功能类似Spring里的Scheduled注解
  *
  *
  * <p>
@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 public @interface Scheduled {
 
     /**
-     * 名称
+     * 名称, 也可以用于第三方实现的定时任务组件的key
      *
      * @return 名称
      */

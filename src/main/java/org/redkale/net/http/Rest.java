@@ -594,7 +594,7 @@ public final class Rest {
                 {
                     av0 = fv.visitAnnotation(resDesc, true);
                     av0.visit("name", res != null ? res.name() : res2.name());
-                    av0.visit("required", res != null ? res.required() : true);
+                    av0.visit("required", res == null || res.required());
                     av0.visitEnd();
                 }
                 fv.visitEnd();
