@@ -21,7 +21,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.UnaryOperator;
@@ -62,8 +61,6 @@ public class ScheduleManagerService implements ScheduleManager, Service {
 
     private final ConcurrentHashMap<WeakReference, List<ScheduledTask>> refTaskMap = new ConcurrentHashMap<>();
 
-    private final AtomicBoolean inited = new AtomicBoolean();
-
     private final ReentrantLock lock = new ReentrantLock();
 
     @Resource(required = false)
@@ -76,7 +73,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
 
     private boolean enabled = true;
 
-    private AnyValue config;
+    protected AnyValue config;
 
     protected ScheduleManagerService(UnaryOperator<String> propertyFunc) {
         this.propertyFunc = propertyFunc;
@@ -102,20 +99,14 @@ public class ScheduleManagerService implements ScheduleManager, Service {
             conf = AnyValue.create();
         }
         this.config = conf;
-        init();
-    }
-
-    private void init() {
-        if (inited.compareAndSet(false, true)) {
-            this.enabled = config.getBoolValue("enabled", true);
-            if (this.enabled) {
-                if (this.propertyFunc == null && application != null) {
-                    UnaryOperator<String> func = application.getEnvironment()::getPropertyValue;
-                    this.propertyFunc = func;
-                }
-                this.scheduler = new ScheduledThreadPoolExecutor(Utility.cpus(), Utility.newThreadFactory("Scheduled-Task-Thread-%s"));
-                this.scheduler.setRemoveOnCancelPolicy(true);
+        this.enabled = config.getBoolValue("enabled", true);
+        if (this.enabled) {
+            if (this.propertyFunc == null && application != null) {
+                UnaryOperator<String> func = application.getEnvironment()::getPropertyValue;
+                this.propertyFunc = func;
             }
+            this.scheduler = new ScheduledThreadPoolExecutor(Utility.cpus(), Utility.newThreadFactory("Redkale-Scheduled-Task-Thread-%s"));
+            this.scheduler.setRemoveOnCancelPolicy(true);
         }
     }
 
@@ -124,11 +115,6 @@ public class ScheduleManagerService implements ScheduleManager, Service {
         if (scheduler != null) {
             scheduler.shutdown();
         }
-        inited.set(false);
-    }
-
-    public boolean isInited() {
-        return inited.get();
     }
 
     @Override
@@ -151,19 +137,20 @@ public class ScheduleManagerService implements ScheduleManager, Service {
                         continue;
                     }
                     if (tasks.containsKey(method.getName())) {
+                        //跳过已处理的继承方法
                         continue;
                     }
                     if (method.getParameterCount() != 0
                         && (method.getParameterCount() == 1 && method.getParameterTypes()[0] == ScheduleEvent.class)) {
-                        throw new RedkaleException("@" + Scheduled.class.getSimpleName()
-                            + " must be on non-parameter or " + ScheduleEvent.class.getSimpleName() + "-parameter method, but on " + method);
+                        throw new RedkaleException("@" + Scheduled.class.getSimpleName() + " must be on non-parameter or "
+                            + ScheduleEvent.class.getSimpleName() + "-parameter method, but on " + method);
                     }
                     ScheduledTask task = schedule(ref, method, taskCount);
-                    if (task == null) {
-                        continue;  //时间都没配置
+                    //时间没配置: task=null
+                    if (task != null) {
+                        tasks.put(method.getName(), task);
+                        RedkaleClassLoader.putReflectionMethod(clazz.getName(), method);
                     }
-                    tasks.put(method.getName(), task);
-                    RedkaleClassLoader.putReflectionMethod(clazz.getName(), method);
                 }
             } while ((clazz = clazz.getSuperclass()) != Object.class);
             //开始执行定时任务
@@ -181,19 +168,13 @@ public class ScheduleManagerService implements ScheduleManager, Service {
     public void unschedule(Object service) {
         lock.lock();
         try {
-            Map.Entry<WeakReference, List<ScheduledTask>> entry = null;
             for (Map.Entry<WeakReference, List<ScheduledTask>> item : refTaskMap.entrySet()) {
                 if (item.getKey().get() == service) {
-                    entry = item;
-                    break;
+                    refTaskMap.remove(item.getKey());
+                    for (ScheduledTask task : item.getValue()) {
+                        task.cancel();
+                    }
                 }
-            }
-            if (entry == null) {
-                return;
-            }
-            refTaskMap.remove(entry.getKey());
-            for (ScheduledTask task : entry.getValue()) {
-                task.cancel();
             }
         } finally {
             lock.unlock();

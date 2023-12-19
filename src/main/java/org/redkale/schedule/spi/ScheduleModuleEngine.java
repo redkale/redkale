@@ -57,7 +57,7 @@ public class ScheduleModuleEngine extends ModuleEngine {
         //设置定时管理器
         this.config = application.getAppConfig().getAnyValue("schedule");
         this.scheduleManager = createManager(this.config);
-        if (this.config != null && !application.isCompileMode()) {
+        if (!application.isCompileMode()) {
             this.resourceFactory.inject(this.scheduleManager);
             if (this.scheduleManager instanceof Service) {
                 ((Service) this.scheduleManager).init(this.config);
