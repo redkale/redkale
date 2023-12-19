@@ -118,10 +118,8 @@ public class SourceModuleEngine extends ModuleEngine {
             break;  //only first provider
         }
 
-        //------------------------------------- 注册 DataSource --------------------------------------------------------        
+        //--------------------------------- 注册 DataSource、CacheSource ---------------------------------        
         resourceFactory.register(new DataSourceLoader(), DataSource.class);
-
-        //------------------------------------- 注册 CacheSource --------------------------------------------------------
         resourceFactory.register(new CacheSourceLoader(), CacheSource.class);
     }
 

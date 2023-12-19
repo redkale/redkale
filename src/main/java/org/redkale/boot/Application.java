@@ -156,18 +156,20 @@ public final class Application {
     //本地IP地址
     final InetSocketAddress localAddress;
 
-    //日志组件
-    //@since 2.8.0
-    final LoggingModule loggingModule = new LoggingModule(this);
+    //配置信息，只读版Properties
+    private final Environment environment;
 
-    //数据源组件
-    private final SourceModuleEngine sourceModule = new SourceModuleEngine(this);
+    //全局根ResourceFactory
+    final ResourceFactory resourceFactory = ResourceFactory.create();
 
     //NodeServer 资源, 顺序必须是sncps, others, watchs
     final List<NodeServer> servers = new CopyOnWriteArrayList<>();
 
     //配置项里的group信息, 注意： 只给SNCP使用
     private final SncpRpcGroups sncpRpcGroups = new SncpRpcGroups();
+
+    //除logging配置之外的所有配置项，包含本地和远程配置项
+    final Properties envProperties = new Properties();
 
     //业务逻辑线程池
     //@since 2.3.0
@@ -177,25 +179,24 @@ public final class Application {
     //给客户端使用，包含SNCP客户端、自定义数据库客户端连接池
     private AsyncIOGroup clientAsyncGroup;
 
-    //配置组件
-    final PropertiesModule propertiesModule = new PropertiesModule(this);
-
-    //除logging配置之外的所有配置项，包含本地和远程配置项
-    final Properties envProperties = new Properties();
-
-    //配置信息，只读版Properties
-    private final Environment environment;
-
-    //全局根ResourceFactory
-    final ResourceFactory resourceFactory = ResourceFactory.create();
-
     //服务配置项
     final AnyValue config;
 
     //是否启动了WATCH协议服务
     boolean watching;
 
-    //--------------------------------------------------------------------------------------------    
+    //------------- 模块组件(必须靠后放,否则new Module时resourceFactory会为null) ------------- 
+    //日志组件
+    //@since 2.8.0
+    final LoggingModule loggingModule;
+
+    //配置组件
+    final PropertiesModule propertiesModule;
+
+    //数据源组件
+    private final SourceModuleEngine sourceModule;
+
+    //-----------------------------------------------------------------------------------   
     //是否用于main方法运行
     private final boolean singletonMode;
 
@@ -255,6 +256,10 @@ public final class Application {
         this.classLoader = appConfig.classLoader;
         this.serverClassLoader = appConfig.serverClassLoader;
 
+        this.loggingModule = new LoggingModule(this);
+        this.propertiesModule = new PropertiesModule(this);
+        this.sourceModule = new SourceModuleEngine(this);
+
         //设置基础信息资源
         this.resourceFactory.register(RESNAME_APP_NAME, String.class, this.name);
 
@@ -306,7 +311,7 @@ public final class Application {
         this.resourceFactory.register("protobufconvert", Convert.class, ProtobufFactory.root().getConvert());
 
         //系统内部模块组件
-        moduleEngines.add(sourceModule); //放第一，很多module依赖于source
+        moduleEngines.add(this.sourceModule); //放第一，很多module依赖于source
         moduleEngines.add(new MessageModuleEngine(this));
         moduleEngines.add(new ClusterModuleEngine(this));
         moduleEngines.add(new CacheModuleEngine(this));

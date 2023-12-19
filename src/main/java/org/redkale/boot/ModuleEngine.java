@@ -4,6 +4,7 @@
 package org.redkale.boot;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.logging.Logger;
 import org.redkale.inject.ResourceEvent;
@@ -35,8 +36,8 @@ public abstract class ModuleEngine {
 
     public ModuleEngine(Application application) {
         this.application = application;
-        this.resourceFactory = application.getResourceFactory();
-        this.environment = application.getEnvironment();
+        this.resourceFactory = Objects.requireNonNull(application.resourceFactory);
+        this.environment = Objects.requireNonNull(application.getEnvironment());
     }
 
     /**
