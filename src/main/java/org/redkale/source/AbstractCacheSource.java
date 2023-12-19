@@ -4,13 +4,13 @@ package org.redkale.source;
 
 import java.util.*;
 import org.redkale.annotation.AutoLoad;
-import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
 import org.redkale.inject.Resourcable;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.service.*;
 import org.redkale.util.*;
+import org.redkale.annotation.ResourceChanged;
 
 /**
  * CacheSource的S抽象实现类 <br>
@@ -54,7 +54,7 @@ public abstract class AbstractCacheSource extends AbstractService implements Cac
     //@since 2.7.0
     public static final String CACHE_SOURCE_PIPELINES = "pipelines";
 
-    @ResourceListener
+    @ResourceChanged
     public abstract void onResourceChange(ResourceEvent[] events);
 
     //从Properties配置中创建DataSource

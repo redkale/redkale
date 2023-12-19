@@ -31,7 +31,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *    }
  *
  *    public static void main(String[] args) throws Exception {
- *        ResourceFactory factory = ResourceFactory.root();
+ *        ResourceFactory factory = ResourceFactory.create();
  *        factory.register("record.id", "2345");
  *        factory.register("record.name", "my old name");
  *        Record record = new Record();
@@ -45,10 +45,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * 详情见: https://redkale.org
  * 
- * @see org.redkale.annotation.ResourceListener
+ * @see org.redkale.annotation.ResourceChanged
  *
  * @author zhangjx
- * @deprecated replaced by org.redkale.annotation.ResourceListener
+ * @deprecated replaced by org.redkale.annotation.ResourceChanged
  */
 @Deprecated(since = "2.8.0")
 @Documented

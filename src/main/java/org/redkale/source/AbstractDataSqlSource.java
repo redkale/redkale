@@ -16,7 +16,6 @@ import java.util.logging.*;
 import java.util.stream.Stream;
 import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
-import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
 import static org.redkale.boot.Application.*;
 import org.redkale.inject.ResourceEvent;
@@ -27,6 +26,7 @@ import static org.redkale.source.DataSources.*;
 import org.redkale.source.EntityInfo.EntityColumn;
 import org.redkale.util.*;
 import static org.redkale.util.Utility.isEmpty;
+import org.redkale.annotation.ResourceChanged;
 
 /**
  * DataSource的SQL抽象实现类 <br>
@@ -148,7 +148,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     @Override
-    @ResourceListener
+    @ResourceChanged
     public void onResourceChange(ResourceEvent[] events) {
         if (events == null || events.length < 1) {
             return;

@@ -11,7 +11,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.Level;
 import org.redkale.annotation.*;
-import org.redkale.annotation.ResourceListener;
 import org.redkale.boot.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.inject.Resourcable;
@@ -19,6 +18,7 @@ import org.redkale.inject.ResourceEvent;
 import org.redkale.service.Service;
 import org.redkale.source.CacheSource;
 import org.redkale.util.*;
+import org.redkale.annotation.ResourceChanged;
 
 /**
  * 使用CacheSource实现的第三方服务发现管理接口cluster
@@ -60,7 +60,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     }
 
     @Override
-    @ResourceListener
+    @ResourceChanged
     public void onResourceChange(ResourceEvent[] events) {
         StringBuilder sb = new StringBuilder();
         int newTtls = this.ttls;

@@ -19,13 +19,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
-import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.service.Local;
 import org.redkale.util.*;
+import org.redkale.annotation.ResourceChanged;
 
 /**
  * CacheSource的默认实现--内存缓存
@@ -77,7 +77,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    @ResourceListener
+    @ResourceChanged
     public void onResourceChange(ResourceEvent[] events) {
         //do nothing
     }

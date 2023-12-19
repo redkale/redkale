@@ -15,12 +15,12 @@ import java.util.logging.Level;
 import java.util.stream.Stream;
 import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
-import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.service.Local;
 import static org.redkale.source.DataSources.*;
 import org.redkale.util.*;
+import org.redkale.annotation.ResourceChanged;
 
 /**
  * DataSource的JDBC实现类
@@ -2902,7 +2902,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             resetMaxConnection();
         }
 
-        @ResourceListener
+        @ResourceChanged
         public void onResourceChange(ResourceEvent[] events) {
             int newConnectTimeoutSeconds = this.connectTimeoutSeconds;
             int newMaxconns = this.maxConns;

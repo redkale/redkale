@@ -15,7 +15,6 @@ import java.util.stream.Stream;
 import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Comment;
-import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
 import static org.redkale.boot.Application.RESNAME_APP_EXECUTOR;
 import org.redkale.convert.json.JsonConvert;
@@ -26,6 +25,7 @@ import org.redkale.persistence.Entity;
 import org.redkale.service.*;
 import static org.redkale.source.DataSources.*;
 import org.redkale.util.*;
+import org.redkale.annotation.ResourceChanged;
 
 /**
  * DataSource的S抽象实现类 <br>
@@ -69,7 +69,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         return name;
     }
 
-    @ResourceListener
+    @ResourceChanged
     public abstract void onResourceChange(ResourceEvent[] events);
 
     protected void setSourceExecutor(ExecutorService executor) {

@@ -1,15 +1,15 @@
 /*
  */
-package org.redkale.test.util;
+package org.redkale.test.inject;
 
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.*;
 import org.redkale.annotation.Resource;
-import org.redkale.annotation.ResourceListener;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.util.*;
+import org.redkale.annotation.ResourceChanged;
 
 /**
  *
@@ -71,7 +71,7 @@ public class ResourceListenerTest {
         @Resource(name = "property.desc", required = false)
         private String desc;
 
-        @ResourceListener
+        @ResourceChanged
         private void changeResource(ResourceEvent[] events) {
             for (ResourceEvent event : events) {
                 counter.incrementAndGet();
@@ -92,7 +92,7 @@ public class ResourceListenerTest {
         @Resource
         private Environment env;
 
-        @ResourceListener
+        @ResourceChanged
         private void changeResource(ResourceEvent[] events) {
             for (ResourceEvent event : events) {
                 counter.incrementAndGet();
@@ -116,7 +116,7 @@ public class ResourceListenerTest {
         @Resource
         private Environment env;
 
-        @ResourceListener
+        @ResourceChanged
         private void changeResource(ResourceEvent[] events) {
             for (ResourceEvent event : events) {
                 counter.incrementAndGet();

@@ -13,7 +13,6 @@ import java.util.concurrent.*;
 import java.util.logging.*;
 import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
-import org.redkale.annotation.ResourceListener;
 import org.redkale.boot.*;
 import static org.redkale.boot.Application.*;
 import org.redkale.convert.ConvertDisabled;
@@ -24,6 +23,7 @@ import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.util.*;
+import org.redkale.annotation.ResourceChanged;
 
 /**
  * 服务注册中心管理类cluster
@@ -103,7 +103,7 @@ public abstract class ClusterAgent {
         }
     }
 
-    @ResourceListener
+    @ResourceChanged
     public abstract void onResourceChange(ResourceEvent[] events);
 
     public void destroy(AnyValue config) {

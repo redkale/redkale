@@ -16,7 +16,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.*;
 import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
-import org.redkale.annotation.ResourceListener;
 import org.redkale.boot.*;
 import static org.redkale.boot.Application.RESNAME_APP_NAME;
 import static org.redkale.boot.Application.RESNAME_APP_NODEID;
@@ -32,6 +31,7 @@ import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.util.*;
+import org.redkale.annotation.ResourceChanged;
 
 /**
  * MQ管理器
@@ -392,7 +392,7 @@ public abstract class MessageAgent implements Resourcable {
     protected abstract MessageClientProducer startMessageClientProducer();
 
     //---------------------------------------------------
-    @ResourceListener
+    @ResourceChanged
     public abstract void onResourceChange(ResourceEvent[] events);
 
     //

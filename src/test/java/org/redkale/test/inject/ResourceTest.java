@@ -3,7 +3,7 @@
  * To change this template bigint, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.test.util;
+package org.redkale.test.inject;
 
 import java.math.BigInteger;
 import java.util.Properties;
@@ -77,7 +77,7 @@ class BService {
 
     private String name = "";
 
-    @ResourceListener
+    @ResourceChanged
     private void changeResource(ResourceEvent[] events) {
         for (ResourceEvent event : events) {
             System.out.println(getClass().getSimpleName() + " @Resource = " + event.name() + " 资源变更:  newVal = " + event.newValue() + ", oldVal = " + event.oldValue());

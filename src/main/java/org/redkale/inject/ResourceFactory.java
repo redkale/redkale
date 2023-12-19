@@ -114,10 +114,16 @@ public final class ResourceFactory {
         this.store.clear();
     }
 
+    /**
+     * inject时的锁
+     */
     public void lock() {
         lock.lock();
     }
 
+    /**
+     * inject时的锁
+     */
     public void unlock() {
         lock.unlock();
     }
@@ -139,6 +145,13 @@ public final class ResourceFactory {
         }
     }
 
+    /**
+     * 获取资源的注入类型，class存在ResourceType注解的优先用ResourceType.value, 没有则使用type本身的class
+     *
+     * @param type 资源类型
+     *
+     * @return 注入的Type
+     */
     public static Class getResourceType(Type type) {
         Class<?> clazz = TypeToken.typeToClass(type);
         ResourceType rt = clazz.getAnnotation(ResourceType.class);
@@ -201,7 +214,7 @@ public final class ResourceFactory {
         if (rs == null) {
             return null;
         }
-        return (A) register(autoSync, "", rs);
+        return register(autoSync, "", rs);
     }
 
     /**
@@ -494,8 +507,8 @@ public final class ResourceFactory {
             if (entry != null && entry.elements != null) {
                 for (ResourceElement element : entry.elements) {
                     Object dest = element.dest.get();
-                    if (dest != null && element.listener != null) {
-                        envListenMap.put(dest, element.listener);
+                    if (dest != null && element.changedMethod != null) {
+                        envListenMap.put(dest, element.changedMethod);
                     }
                 }
             }
@@ -512,7 +525,7 @@ public final class ResourceFactory {
                 if (envListenMap.containsKey(dest)) {
                     return; //跳过含有@Resource Environment字段的对象
                 }
-                Method listener = list.get(0).listener;
+                Method listener = list.get(0).method;
                 try {
                     ResourceEvent[] events = new ResourceEvent[list.size()];
                     for (int i = 0; i < list.size(); i++) {
@@ -618,7 +631,10 @@ public final class ResourceFactory {
      */
     public <A> boolean contains(boolean recursive, String name, Class<? extends A> clazz) {
         Map<String, ResourceEntry> map = this.store.get(clazz);
-        return map == null ? ((recursive && parent != null) ? parent.contains(recursive, name, clazz) : false) : map.containsKey(name);
+        if (map != null) {
+            return map.containsKey(name);
+        }
+        return recursive && parent != null && parent.contains(recursive, name, clazz);
     }
 
     /**
@@ -1009,6 +1025,7 @@ public final class ResourceFactory {
                     }
                     if (rs != null) {
                         field.set(srcObj, rs);
+                        onResourceInjected(srcObj, field, rs);
                     }
                     if (rs == null && rc1 != null && rc1.required()) {
                         String t = srcObj.getClass().getName();
@@ -1050,6 +1067,11 @@ public final class ResourceFactory {
         return parent == null ? null : parent.findResourceTypeLoader(clazz);
     }
 
+    public ResourceTypeLoader findTypeLoader(Type ft, Field field) {
+        ResourceTypeLoader it = this.findMatchTypeLoader(ft, field);
+        return it == null ? findRegxTypeLoader(ft, field) : it;
+    }
+
     private ResourceFactory parentRoot() {
         if (parent == null) {
             return this;
@@ -1078,16 +1100,46 @@ public final class ResourceFactory {
             if (t == ft) {
                 return en.getValue();
             }
-            if (t instanceof Class && (((Class) t)).isAssignableFrom(c)) {
+            if (t instanceof Class && ((Class) t).isAssignableFrom(c)) {
                 return en.getValue();
             }
         }
         return parent == null ? null : parent.findRegxTypeLoader(ft, field);
     }
 
-    public ResourceTypeLoader findTypeLoader(Type ft, Field field) {
-        ResourceTypeLoader it = this.findMatchTypeLoader(ft, field);
-        return it == null ? findRegxTypeLoader(ft, field) : it;
+    private void onResourceInjected(Object src, Field field, Object res) {
+        if (res == null || res.getClass().isPrimitive()
+            || res.getClass().getName().startsWith("java.")
+            || res.getClass().getName().startsWith("javax.")) {
+            return;
+        }
+        for (Method method : res.getClass().getDeclaredMethods()) {
+            ResourceInjected inj = method.getAnnotation(ResourceInjected.class);
+            if (inj == null) {
+                continue;
+            }
+            Class[] paramTypes = method.getParameterTypes();
+            Object[] params = new Object[paramTypes.length];
+            for (int i = 0; i < params.length; i++) {
+                if (paramTypes[i] == Object.class) {
+                    params[i] = src;
+                } else if (paramTypes[i] == String.class) {
+                    params[i] = field.getName();
+                } else if (paramTypes[i] == Field.class) {
+                    params[i] = field;
+                } else {
+                    throw new RedkaleException("illegal @" + ResourceInjected.class.getSimpleName() + " on method(" + method.getName() + ")");
+                }
+            }
+            try {
+                if (!Modifier.isPublic(method.getModifiers())) {
+                    method.setAccessible(true);
+                }
+                method.invoke(res, params);
+            } catch (Exception e) {
+                throw new RedkaleException(e);
+            }
+        }
     }
 
     private static class ResourceEntry<T> {
@@ -1143,7 +1195,7 @@ public final class ResourceFactory {
                         newVal = Array.get(Creator.newArray(classType, 1), 0);
                     }
                     Object oldVal = null;
-                    if (element.listener != null) {
+                    if (element.changedMethod != null) {
                         try {
                             oldVal = element.field.get(dest);
                         } catch (Throwable e) {
@@ -1155,14 +1207,14 @@ public final class ResourceFactory {
                     } catch (Throwable e) {
                         e.printStackTrace();
                     }
-                    if (element.listener != null) {
+                    if (element.changedMethod != null) {
                         try {
                             if (!element.different || !Objects.equals(newVal, oldVal)) {
                                 if (wrappers == null) {
                                     Object[] ps = new Object[]{new ResourceEvent[]{ResourceEvent.create(name, newVal, oldVal)}};
-                                    element.listener.invoke(dest, ps);
+                                    element.changedMethod.invoke(dest, ps);
                                 } else {
-                                    wrappers.add(new ResourceChangeWrapper(dest, element.listener, ResourceEvent.create(name, newVal, oldVal)));
+                                    wrappers.add(new ResourceChangeWrapper(dest, element.changedMethod, ResourceEvent.create(name, newVal, oldVal)));
                                 }
                             }
                         } catch (Throwable e) {
@@ -1178,7 +1230,7 @@ public final class ResourceFactory {
 
         private static final ReentrantLock syncLock = new ReentrantLock();
 
-        private static final HashMap<String, Method> listenerMethods = new HashMap<>(); //不使用ConcurrentHashMap是因为value不能存null
+        private static final HashMap<String, Method> changedMethods = new HashMap<>(); //不使用ConcurrentHashMap是因为value不能存null
 
         public final WeakReference<T> dest;
 
@@ -1186,7 +1238,7 @@ public final class ResourceFactory {
 
         public final Class fieldType;
 
-        public final Method listener;
+        public final Method changedMethod;
 
         public final boolean different;
 
@@ -1197,22 +1249,22 @@ public final class ResourceFactory {
             Class t = dest.getClass();
             String tn = t.getName();
             AtomicBoolean diff = new AtomicBoolean();
-            this.listener = tn.startsWith("java.") || tn.startsWith("javax.") ? null : findListener(t, field.getType(), diff);
+            this.changedMethod = tn.startsWith("java.") || tn.startsWith("javax.") ? null : findChangedMethod(t, field.getType(), diff);
             this.different = diff.get();
         }
 
-        private static Method findListener(Class clazz, Class fieldType, AtomicBoolean diff) {
+        private static Method findChangedMethod(Class clazz, Class fieldType, AtomicBoolean diff) {
             syncLock.lock();
             try {
                 Class loop = clazz;
-                Method m = listenerMethods.get(clazz.getName() + "-" + fieldType.getName());
+                Method m = changedMethods.get(clazz.getName() + "-" + fieldType.getName());
                 if (m != null) {
                     return m;
                 }
                 do {
                     RedkaleClassLoader.putReflectionDeclaredMethods(loop.getName());
                     for (Method method : loop.getDeclaredMethods()) {
-                        ResourceListener rl = method.getAnnotation(ResourceListener.class);
+                        ResourceChanged rl = method.getAnnotation(ResourceChanged.class);
                         org.redkale.util.ResourceListener rl2 = method.getAnnotation(org.redkale.util.ResourceListener.class);
                         if (rl == null && rl2 == null) {
                             continue;
@@ -1224,12 +1276,12 @@ public final class ResourceFactory {
                             RedkaleClassLoader.putReflectionMethod(loop.getName(), method);
                             break;
                         } else {
-                            logger.log(Level.SEVERE, "@" + ResourceListener.class.getSimpleName()
+                            logger.log(Level.SEVERE, "@" + ResourceChanged.class.getSimpleName()
                                 + " must on method with " + ResourceEvent.class.getSimpleName() + "[] parameter type");
                         }
                     }
                 } while ((loop = loop.getSuperclass()) != Object.class);
-                listenerMethods.put(clazz.getName() + "-" + fieldType.getName(), m);
+                changedMethods.put(clazz.getName() + "-" + fieldType.getName(), m);
                 return m;
             } finally {
                 syncLock.unlock();
@@ -1241,13 +1293,13 @@ public final class ResourceFactory {
 
         public Object dest;
 
-        public Method listener;
+        public Method method;
 
         public ResourceEvent event;
 
         public ResourceChangeWrapper(Object dest, Method listener, ResourceEvent event) {
             this.dest = dest;
-            this.listener = listener;
+            this.method = listener;
             this.event = event;
         }
 
@@ -1259,7 +1311,7 @@ public final class ResourceFactory {
         public int hashCode() {
             int hash = 7;
             hash = 97 * hash + Objects.hashCode(this.dest);
-            hash = 97 * hash + Objects.hashCode(this.listener);
+            hash = 97 * hash + Objects.hashCode(this.method);
             return hash;
         }
 
@@ -1278,7 +1330,7 @@ public final class ResourceFactory {
             if (!Objects.equals(this.dest, other.dest)) {
                 return false;
             }
-            return Objects.equals(this.listener, other.listener);
+            return Objects.equals(this.method, other.method);
         }
 
     }

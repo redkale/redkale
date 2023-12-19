@@ -1,6 +1,6 @@
 /*
  */
-package org.redkale.test.util;
+package org.redkale.test.inject;
 
 import org.junit.jupiter.api.*;
 import org.redkale.annotation.Resource;

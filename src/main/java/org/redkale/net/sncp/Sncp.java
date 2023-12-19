@@ -99,7 +99,7 @@ public abstract class Sncp {
             if (method.getAnnotation(Local.class) != null) {
                 continue;
             }
-            if (method.getAnnotation(ResourceListener.class) != null) {
+            if (method.getAnnotation(ResourceChanged.class) != null) {
                 continue;
             }
             if (method.getName().equals("getClass") || method.getName().equals("toString")) {

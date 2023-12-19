@@ -10,11 +10,11 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import org.redkale.annotation.AutoLoad;
-import org.redkale.annotation.ResourceListener;
 import org.redkale.annotation.ResourceType;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.service.Local;
 import org.redkale.util.*;
+import org.redkale.annotation.ResourceChanged;
 
 /**
  *
@@ -47,7 +47,7 @@ public class DataMemorySource extends AbstractDataSource {
     }
 
     @Override
-    @ResourceListener
+    @ResourceChanged
     public void onResourceChange(ResourceEvent[] events) {
         //do nothing
     }
