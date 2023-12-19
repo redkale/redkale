@@ -332,7 +332,7 @@ public class SourceModuleEngine extends ModuleEngine {
         }
     }
 
-    private CacheSource loadCacheSource(final String sourceName, boolean autoMemory) {
+    public CacheSource loadCacheSource(final String sourceName, boolean autoMemory) {
         cacheSourceLock.lock();
         try {
             long st = System.currentTimeMillis();
@@ -380,7 +380,7 @@ public class SourceModuleEngine extends ModuleEngine {
         }
     }
 
-    private DataSource loadDataSource(final String sourceName, boolean autoMemory) {
+    public DataSource loadDataSource(final String sourceName, boolean autoMemory) {
         dataSourceLock.lock();
         try {
             DataSource old = resourceFactory.find(sourceName, DataSource.class);

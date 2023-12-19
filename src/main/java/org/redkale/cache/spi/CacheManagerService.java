@@ -96,9 +96,9 @@ public class CacheManagerService implements CacheManager, Service {
         this.enabled = conf.getBoolValue("enabled", true);
         if (this.enabled) {
             this.localSource.init(conf);
-            String remoteSourceName = conf.getValue("source");
+            String remoteSourceName = conf.getValue("remote");
             if (remoteSource == null && application != null && Utility.isNotBlank(remoteSourceName)) {
-                CacheSource source = application.getResourceFactory().find(remoteSourceName, CacheSource.class);
+                CacheSource source = application.loadCacheSource(remoteSourceName, false);
                 if (source == null) {
                     throw new RedkaleException("Not found CacheSource '" + remoteSourceName + "'");
                 }
@@ -156,6 +156,7 @@ public class CacheManagerService implements CacheManager, Service {
      *
      * @return 数据值
      */
+    @Override
     public <T> T localGet(final String hash, final String key, final Type type, boolean nullable, Duration expire, Supplier<T> supplier) {
         return get(localSource::hget, localSource::hset, hash, key, type, nullable, expire, supplier);
     }
@@ -261,6 +262,7 @@ public class CacheManagerService implements CacheManager, Service {
      *
      * @return 数据值
      */
+    @Override
     public <T> T remoteGet(final String hash, final String key, final Type type, boolean nullable, Duration expire, Supplier<T> supplier) {
         return get(remoteSource::hget, remoteSource::hset, hash, key, type, nullable, expire, supplier);
     }
@@ -278,6 +280,7 @@ public class CacheManagerService implements CacheManager, Service {
      *
      * @return 数据值
      */
+    @Override
     public <T> CompletableFuture<T> remoteGetAsync(String hash, String key, Type type, boolean nullable, Duration expire, Supplier<CompletableFuture<T>> supplier) {
         return getAsync(remoteSource::hgetAsync, remoteSource::hsetAsync, hash, key, type, nullable, expire, supplier);
     }
@@ -292,6 +295,7 @@ public class CacheManagerService implements CacheManager, Service {
      * @param value  数据值
      * @param expire 过期时长，Duration.ZERO为永不过期
      */
+    @Override
     public <T> void remoteSet(final String hash, final String key, final Type type, final T value, Duration expire) {
         checkEnable();
         Objects.requireNonNull(expire);
@@ -310,6 +314,7 @@ public class CacheManagerService implements CacheManager, Service {
      * @param value  数据值
      * @param expire 过期时长，Duration.ZERO为永不过期
      */
+    @Override
     public <T> CompletableFuture<Void> remoteSetAsync(String hash, String key, Type type, T value, Duration expire) {
         checkEnable();
         Objects.requireNonNull(expire);
@@ -326,6 +331,7 @@ public class CacheManagerService implements CacheManager, Service {
      *
      * @return 删除数量
      */
+    @Override
     public long remoteDel(String hash, String key) {
         checkEnable();
         return remoteSource.hdel(hash, key);
@@ -339,6 +345,7 @@ public class CacheManagerService implements CacheManager, Service {
      *
      * @return 删除数量
      */
+    @Override
     public CompletableFuture<Long> remoteDelAsync(String hash, String key) {
         checkEnable();
         return remoteSource.hdelAsync(hash, key);
@@ -453,6 +460,7 @@ public class CacheManagerService implements CacheManager, Service {
      * @param localExpire  本地过期时长，Duration.ZERO为永不过期，为null表示不本地缓存
      * @param remoteExpire 远程过期时长，Duration.ZERO为永不过期，为null表示不远程缓存
      */
+    @Override
     public <T> void bothSet(final String hash, final String key, final Type type, final T value, Duration localExpire, Duration remoteExpire) {
         checkEnable();
         Type cacheType = loadCacheType(type, value);
@@ -477,6 +485,7 @@ public class CacheManagerService implements CacheManager, Service {
      *
      * @return void
      */
+    @Override
     public <T> CompletableFuture<Void> bothSetAsync(String hash, String key, Type type, T value, Duration localExpire, Duration remoteExpire) {
         checkEnable();
         Type cacheType = loadCacheType(type, value);
@@ -498,6 +507,7 @@ public class CacheManagerService implements CacheManager, Service {
      *
      * @return 删除数量
      */
+    @Override
     public long bothDel(String hash, String key) {
         checkEnable();
         long v = localSource.hdel(hash, key);
@@ -516,6 +526,7 @@ public class CacheManagerService implements CacheManager, Service {
      *
      * @return 删除数量
      */
+    @Override
     public CompletableFuture<Long> bothDelAsync(String hash, String key) {
         checkEnable();
         long v = localSource.hdel(hash, key); //内存操作，无需异步
