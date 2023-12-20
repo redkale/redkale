@@ -3,8 +3,10 @@
  */
 package org.redkale.asm;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.redkale.convert.json.JsonConvert;
 
 /**
@@ -36,6 +38,10 @@ public class AsmMethodBean {
         this.signature = signature;
         this.exceptions = exceptions;
         this.fieldNames = new ArrayList<>();
+    }
+
+    public static AsmMethodBean get(Map<String, AsmMethodBean> map, Method method) {
+        return map == null ? null : map.get(method.getName() + ":" + Type.getMethodDescriptor(method));
     }
 
     void removeEmptyNames() {

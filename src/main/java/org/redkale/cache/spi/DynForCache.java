@@ -18,5 +18,5 @@ import java.lang.annotation.Target;
 @Documented
 @Target({METHOD})
 @Retention(RUNTIME)
-public @interface CacheDyn {
+public @interface DynForCache {
 }

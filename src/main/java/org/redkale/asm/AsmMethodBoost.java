@@ -30,15 +30,16 @@ public interface AsmMethodBoost<T> {
     }
 
     /**
-     * 返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
      *
-     * @param map
-     * @param clazz
+     * 返回一个类所有方法的字节信息， key为: method.getName+':'+Type.getMethodDescriptor(method)
      *
-     * @return
+     * @param clazz Class
+     *
+     * @return Map
      */
-    public static Map<String, AsmMethodBean> getMethodBean(Class clazz) {
+    public static Map<String, AsmMethodBean> getMethodBeans(Class clazz) {
         Map<String, AsmMethodBean> rs = MethodParamClassVisitor.getMethodParamNames(new HashMap<>(), clazz);
+        //返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
         rs.values().forEach(AsmMethodBean::removeEmptyNames);
         return rs;
     }

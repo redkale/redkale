@@ -560,7 +560,7 @@ public abstract class Sncp {
             Class clazz = serviceImplClass;
             Set<String> methodKeys = new HashSet<>();
             do {
-                Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBean(clazz);
+                Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBeans(clazz);
                 for (final Method method : clazz.getDeclaredMethods()) {
                     String mk = Utility.methodKey(method);
                     if (methodKeys.contains(mk)) {
@@ -571,7 +571,7 @@ public abstract class Sncp {
                     String newMethodName = methodBoost.doMethod(cw, newDynName, FIELDPREFIX, method, null);
                     if (newMethodName != null) {
                         String desc = Type.getMethodDescriptor(method);
-                        AsmMethodBean methodBean = methodBeans.get(method.getName() + ":" + desc);
+                        AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
                         String signature = null;
                         String[] exceptions = null;
                         if (methodBean == null) {

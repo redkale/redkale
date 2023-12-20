@@ -113,64 +113,6 @@ public final class Rest {
     private Rest() {
     }
 
-    static class MethodParamClassVisitor extends ClassVisitor {
-
-        private final Map<String, List<String>> fieldMap;
-
-        public MethodParamClassVisitor(int api, final Map<String, List<String>> fieldmap) {
-            super(api);
-            this.fieldMap = fieldmap;
-        }
-
-        @Override
-        public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-            if (java.lang.reflect.Modifier.isStatic(access)) {
-                return null;
-            }
-            List<String> fieldnames = new ArrayList<>();
-            String key = name + ":" + desc;
-            if (fieldMap.containsKey(key)) {
-                return null;
-            }
-            fieldMap.put(key, fieldnames);
-            return new MethodVisitor(Opcodes.ASM6) {
-                @Override
-                public void visitLocalVariable(String name, String description, String signature, Label start, Label end, int index) {
-                    if (index < 1) {
-                        return;
-                    }
-                    int size = fieldnames.size();
-                    //index并不会按顺序执行的
-                    if (index > size) {
-                        for (int i = size; i < index; i++) {
-                            fieldnames.add(" ");
-                        }
-                        fieldnames.set(index - 1, name);
-                    }
-                    fieldnames.set(index - 1, name);
-                }
-            };
-        }
-
-        //返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
-        public static Map<String, List<String>> getMethodParamNames(Map<String, List<String>> map, Class clazz) {
-            String n = clazz.getName();
-            InputStream in = clazz.getResourceAsStream(n.substring(n.lastIndexOf('.') + 1) + ".class");
-            if (in == null) {
-                return map;
-            }
-            try {
-                new ClassReader(Utility.readBytesThenClose(in)).accept(new MethodParamClassVisitor(Opcodes.ASM6, map), 0);
-            } catch (Exception e) { //无需理会
-            }
-            Class superClass = clazz.getSuperclass();
-            if (superClass == Object.class) {
-                return map;
-            }
-            return getMethodParamNames(map, superClass);
-        }
-    }
-
     public static JsonFactory createJsonFactory(RestConvert[] converts, RestConvertCoder[] coders) {
         return createJsonFactory(-1, converts, coders);
     }
@@ -428,7 +370,7 @@ public final class Rest {
         } catch (Exception e) {
             //do nothing
         }
-        final Map<String, List<String>> asmParamMap = namePresent ? null : MethodParamClassVisitor.getMethodParamNames(new HashMap<>(), webSocketType);
+        final Map<String, AsmMethodBean> asmParamMap = namePresent ? null : AsmMethodBoost.getMethodBeans(webSocketType);
         final Set<String> messageNames = new HashSet<>();
         Method wildcardMethod = null;
         List<Method> mmethods = new ArrayList<>();
@@ -681,11 +623,8 @@ public final class Rest {
             cw2.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynSuperMessageFullName, null, "java/lang/Object", new String[]{webSocketParamName, "java/lang/Runnable"});
             cw2.visitInnerClass(newDynSuperMessageFullName, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
             Set<String> paramnames = new HashSet<>();
-            String methodesc = method.getName() + ":" + Type.getMethodDescriptor(method);
-            List<String> names = asmParamMap == null ? null : asmParamMap.get(methodesc);
-            if (names != null) {
-                while (names.remove(" ")); //删掉空元素
-            }
+            AsmMethodBean methodBean = asmParamMap == null ? null : AsmMethodBean.get(asmParamMap, method);
+            List<String> names = methodBean == null ? null : methodBean.getFieldNames();
             Parameter[] params = method.getParameters();
             final LinkedHashMap<String, Parameter> paramap = new LinkedHashMap(); //必须使用LinkedHashMap确保顺序
             for (int j = 0; j < params.length; j++) { //字段列表
@@ -1896,7 +1835,7 @@ public final class Rest {
         } catch (Exception e) {
             //do nothing
         }
-        final Map<String, List<String>> asmParamMap = namePresent ? null : MethodParamClassVisitor.getMethodParamNames(new HashMap<>(), serviceType);
+        final Map<String, AsmMethodBean> asmParamMap = namePresent ? null : AsmMethodBoost.getMethodBeans(serviceType);
 
         Map<String, byte[]> innerClassBytesMap = new LinkedHashMap<>();
         boolean containsMupload = false;
@@ -1949,11 +1888,9 @@ public final class Rest {
             final int maxStack = 3 + params.length;
             List<int[]> varInsns = new ArrayList<>();
             int maxLocals = 4;
-
-            List<String> asmParamNames = asmParamMap == null ? null : asmParamMap.get(method.getName() + ":" + Type.getMethodDescriptor(method));
-            if (asmParamNames != null) {
-                while (asmParamNames.remove(" ")); //删掉空元素
-            }
+            
+            AsmMethodBean methodBean = asmParamMap == null ? null : AsmMethodBean.get(asmParamMap, method);
+            List<String> asmParamNames = methodBean == null ? null : methodBean.getFieldNames();
             List<Object[]> paramlist = new ArrayList<>();
             //解析方法中的每个参数
             for (int i = 0; i < params.length; i++) {

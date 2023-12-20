@@ -57,6 +57,7 @@ public class RedkaleClassLoader extends URLClassLoader {
         "org.redkale.convert.proto",
         "org.redkale.inject",
         "org.redkale.lock",
+        "org.redkale.lock.spi",
         "org.redkale.mq",
         "org.redkale.net",
         "org.redkale.net.client",

@@ -32,6 +32,7 @@ import org.redkale.convert.proto.ProtobufFactory;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
+import org.redkale.lock.spi.LockModuleEngine;
 import org.redkale.mq.*;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
@@ -315,8 +316,9 @@ public final class Application {
         moduleEngines.add(this.sourceModule); //放第一，很多module依赖于source
         moduleEngines.add(new MessageModuleEngine(this));
         moduleEngines.add(new ClusterModuleEngine(this));
-        moduleEngines.add(new CacheModuleEngine(this));
         moduleEngines.add(new ScheduleModuleEngine(this));
+        moduleEngines.add(new CacheModuleEngine(this));
+        moduleEngines.add(new LockModuleEngine(this));
 
         //根据本地日志配置文件初始化日志
         loggingModule.reconfigLogging(true, appConfig.locaLogProperties);

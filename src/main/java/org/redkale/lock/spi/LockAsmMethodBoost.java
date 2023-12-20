@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.cache.spi;
+package org.redkale.lock.spi;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -16,48 +16,34 @@ import org.redkale.asm.Asms;
 import org.redkale.asm.ClassWriter;
 import org.redkale.asm.Label;
 import org.redkale.asm.MethodDebugVisitor;
-import static org.redkale.asm.Opcodes.ACC_PRIVATE;
-import static org.redkale.asm.Opcodes.ACC_PROTECTED;
-import static org.redkale.asm.Opcodes.ACC_PUBLIC;
-import static org.redkale.asm.Opcodes.ALOAD;
-import static org.redkale.asm.Opcodes.ARETURN;
-import static org.redkale.asm.Opcodes.DLOAD;
-import static org.redkale.asm.Opcodes.DRETURN;
-import static org.redkale.asm.Opcodes.FLOAD;
-import static org.redkale.asm.Opcodes.FRETURN;
-import static org.redkale.asm.Opcodes.ILOAD;
-import static org.redkale.asm.Opcodes.INVOKESPECIAL;
-import static org.redkale.asm.Opcodes.IRETURN;
-import static org.redkale.asm.Opcodes.LLOAD;
-import static org.redkale.asm.Opcodes.LRETURN;
-import static org.redkale.asm.Opcodes.RETURN;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
-import org.redkale.cache.Cached;
+import org.redkale.lock.Locked;
 import org.redkale.util.RedkaleException;
 
 /**
  *
  * @author zhangjx
  */
-public class CacheAsmMethodBoost implements AsmMethodBoost {
+public class LockAsmMethodBoost implements AsmMethodBoost {
 
     protected final Class serviceType;
 
-    public CacheAsmMethodBoost(Class serviceType) {
+    public LockAsmMethodBoost(Class serviceType) {
         this.serviceType = serviceType;
     }
 
     @Override
     public String doMethod(ClassWriter cw, String newDynName, String fieldPrefix, Method method, final String newMethodName) {
-        Cached cached = method.getAnnotation(Cached.class);
+        Locked cached = method.getAnnotation(Locked.class);
         if (cached == null) {
             return newMethodName;
         }
         if (Modifier.isFinal(method.getModifiers()) || Modifier.isStatic(method.getModifiers())) {
-            throw new RedkaleException("@" + Cached.class.getSimpleName() + " can not on final or static method, but on " + method);
+            throw new RedkaleException("@" + Locked.class.getSimpleName() + " can not on final or static method, but on " + method);
         }
         if (!Modifier.isProtected(method.getModifiers()) && !Modifier.isPublic(method.getModifiers())) {
-            throw new RedkaleException("@" + Cached.class.getSimpleName() + " must on protected or public method, but on " + method);
+            throw new RedkaleException("@" + Locked.class.getSimpleName() + " must on protected or public method, but on " + method);
         }
         int acc;
         String nowMethodName;
@@ -69,12 +55,12 @@ public class CacheAsmMethodBoost implements AsmMethodBoost {
             nowMethodName = newMethodName;
         }
 
-        final String rsMethodName = method.getName() + "_cache";
+        final String rsMethodName = method.getName() + "_lock";
         {
             Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBeans(serviceType);
             AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
 
-            final String cacheDynDesc = Type.getDescriptor(DynForCache.class);
+            final String cacheDynDesc = Type.getDescriptor(DynForLock.class);
             MethodDebugVisitor mv;
             AnnotationVisitor av;
             String signature = null;
@@ -101,7 +87,7 @@ public class CacheAsmMethodBoost implements AsmMethodBoost {
                 av.visitEnd();
                 final Annotation[] anns = method.getAnnotations();
                 for (Annotation ann : anns) {
-                    if (ann.annotationType() != Cached.class) {
+                    if (ann.annotationType() != Locked.class) {
                         Asms.visitAnnotation(mv.visitAnnotation(Type.getDescriptor(ann.annotationType()), true), ann);
                     }
                 }
