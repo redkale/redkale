@@ -556,6 +556,84 @@ public abstract class Sncp {
             mv.visitMaxs(1, 1);
             mv.visitEnd();
         }
+        if (methodBoost != null) {
+            Class clazz = serviceImplClass;
+            Set<String> methodKeys = new HashSet<>();
+            do {
+                for (final Method method : clazz.getDeclaredMethods()) {
+                    String mk = Utility.methodKey(method);
+                    if (methodKeys.contains(mk)) {
+                        //跳过已处理的继承方法
+                        continue;
+                    }
+                    methodKeys.add(mk);
+                    String newMethodName = methodBoost.doMethod(cw, newDynName, FIELDPREFIX, method, null);
+                    if (newMethodName != null) {
+                        String[] exps = null;
+                        Class<?>[] expTypes = method.getExceptionTypes();
+                        if (expTypes.length > 0) {
+                            exps = new String[expTypes.length];
+                            for (int i = 0; i < expTypes.length; i++) {
+                                exps[i] = expTypes[i].getName().replace('.', '/');
+                            }
+                        }
+                        //需要定义一个新方法调用 super.method
+                        mv = new MethodDebugVisitor(cw.visitMethod(ACC_PRIVATE, newMethodName, Type.getMethodDescriptor(method), null, exps));
+                        //mv.setDebug(true);
+                        { //给参数加上原有的Annotation
+                            final Annotation[][] anns = method.getParameterAnnotations();
+                            for (int k = 0; k < anns.length; k++) {
+                                for (Annotation ann : anns[k]) {
+                                    Asms.visitAnnotation(mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true), ann);
+                                }
+                            }
+                        }
+                        mv.visitVarInsn(ALOAD, 0);
+                        //传参数
+                        Class[] paramTypes = method.getParameterTypes();
+                        int insn = 0;
+                        for (Class pt : paramTypes) {
+                            insn++;
+                            if (pt.isPrimitive()) {
+                                if (pt == long.class) {
+                                    mv.visitVarInsn(LLOAD, insn++);
+                                } else if (pt == float.class) {
+                                    mv.visitVarInsn(FLOAD, insn++);
+                                } else if (pt == double.class) {
+                                    mv.visitVarInsn(DLOAD, insn++);
+                                } else {
+                                    mv.visitVarInsn(ILOAD, insn);
+                                }
+                            } else {
+                                mv.visitVarInsn(ALOAD, insn);
+                            }
+                        }
+                        mv.visitMethodInsn(INVOKESPECIAL, supDynName, method.getName(), Type.getMethodDescriptor(method), false);
+                        if (method.getGenericReturnType() == void.class) {
+                            mv.visitInsn(RETURN);
+                        } else {
+                            Class returnclz = method.getReturnType();
+                            if (returnclz.isPrimitive()) {
+                                if (returnclz == long.class) {
+                                    mv.visitInsn(LRETURN);
+                                } else if (returnclz == float.class) {
+                                    mv.visitInsn(FRETURN);
+                                } else if (returnclz == double.class) {
+                                    mv.visitInsn(DRETURN);
+                                } else {
+                                    mv.visitInsn(IRETURN);
+                                }
+                            } else {
+                                mv.visitInsn(ARETURN);
+                            }
+                        }
+                        mv.visitMaxs(20, 20);
+                        mv.visitEnd();
+                    }
+                }
+            } while ((clazz = clazz.getSuperclass()) != Object.class);
+            methodBoost.doAfterMethods(cw, newDynName, FIELDPREFIX);
+        }
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();
         Class<?> newClazz = new ClassLoader(loader) {

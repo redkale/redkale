@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
+import org.redkale.asm.AsmMethodBoost;
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
 import org.redkale.cache.CacheManager;
@@ -46,6 +47,17 @@ public class CacheModuleEngine extends ModuleEngine {
             return AnyValue.MergeEnum.REPLACE;
         }
         return null;
+    }
+
+    /**
+     * 动态扩展类的方法
+     *
+     * @param serviceClass 类
+     *
+     * @return 方法动态扩展器
+     */
+    public AsmMethodBoost createAsmMethodBoost(Class serviceClass) {
+        return new CacheAsmMethodBoost(serviceClass);
     }
 
     /**

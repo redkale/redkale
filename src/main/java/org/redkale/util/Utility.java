@@ -445,6 +445,23 @@ public final class Utility {
     }
 
     /**
+     * 构建method的唯一key，用于遍历类及父类的所有方法，key过滤重载方法
+     *
+     * @param method 方法
+     *
+     * @return key
+     */
+    public static String methodKey(Method method) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(method.getName());
+        sb.append('-').append(method.getParameterCount());
+        for (Class c : method.getParameterTypes()) {
+            sb.append('-').append(c.getName());
+        }
+        return sb.toString();
+    }
+
+    /**
      * 返回第一个不为null的对象
      *
      * @param <T>  泛型

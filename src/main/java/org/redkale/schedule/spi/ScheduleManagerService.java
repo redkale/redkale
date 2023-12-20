@@ -13,10 +13,12 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -131,15 +133,18 @@ public class ScheduleManagerService implements ScheduleManager, Service {
             Class clazz = service.getClass();
             WeakReference ref = new WeakReference(service);
             AtomicInteger taskCount = new AtomicInteger();
+            Set<String> methodKeys = new HashSet<>();
             do {
                 for (final Method method : clazz.getDeclaredMethods()) {
                     if (method.getAnnotation(Scheduled.class) == null) {
                         continue;
                     }
-                    if (tasks.containsKey(method.getName())) {
+                    String mk = Utility.methodKey(method);
+                    if (methodKeys.contains(mk)) {
                         //跳过已处理的继承方法
                         continue;
                     }
+                    methodKeys.add(mk);
                     if (method.getParameterCount() != 0
                         && (method.getParameterCount() == 1 && method.getParameterTypes()[0] == ScheduleEvent.class)) {
                         throw new RedkaleException("@" + Scheduled.class.getSimpleName() + " must be on non-parameter or "

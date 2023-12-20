@@ -7,7 +7,6 @@ package org.redkale.boot.watch;
 
 import java.lang.reflect.*;
 import java.util.List;
-import org.redkale.annotation.Comment;
 import org.redkale.annotation.*;
 import org.redkale.boot.*;
 import org.redkale.convert.json.JsonConvert;
@@ -69,7 +68,7 @@ public class ServiceWatchService extends AbstractWatchService {
                 }
             } while ((clazz = clazz.getSuperclass()) != Object.class);
             if (fieldObj == null) {
-                return new RetResult(RET_WATCH_RUN_EXCEPTION, "run exception (" + String.valueOf(t) + ")");
+                return new RetResult(RET_WATCH_RUN_EXCEPTION, "run exception (" + t + ")");
             }
             fieldObj.setAccessible(true);
             fieldObj.set(dest, JsonConvert.root().convertFrom(fieldObj.getGenericType(), value));
@@ -117,7 +116,7 @@ public class ServiceWatchService extends AbstractWatchService {
                 }
             } while ((clazz = clazz.getSuperclass()) != Object.class);
             if (fieldObj == null) {
-                return new RetResult(RET_WATCH_RUN_EXCEPTION, "run exception (" + String.valueOf(t) + ")");
+                return new RetResult(RET_WATCH_RUN_EXCEPTION, "run exception (" + t + ")");
             }
             fieldObj.setAccessible(true);
             return new RetResult(fieldObj.get(dest));
