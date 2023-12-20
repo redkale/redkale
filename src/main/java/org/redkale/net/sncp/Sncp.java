@@ -560,6 +560,7 @@ public abstract class Sncp {
             Class clazz = serviceImplClass;
             Set<String> methodKeys = new HashSet<>();
             do {
+                Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBean(clazz);
                 for (final Method method : clazz.getDeclaredMethods()) {
                     String mk = Utility.methodKey(method);
                     if (methodKeys.contains(mk)) {
@@ -569,16 +570,27 @@ public abstract class Sncp {
                     methodKeys.add(mk);
                     String newMethodName = methodBoost.doMethod(cw, newDynName, FIELDPREFIX, method, null);
                     if (newMethodName != null) {
-                        String[] exps = null;
-                        Class<?>[] expTypes = method.getExceptionTypes();
-                        if (expTypes.length > 0) {
-                            exps = new String[expTypes.length];
-                            for (int i = 0; i < expTypes.length; i++) {
-                                exps[i] = expTypes[i].getName().replace('.', '/');
+                        String desc = Type.getMethodDescriptor(method);
+                        AsmMethodBean methodBean = methodBeans.get(method.getName() + ":" + desc);
+                        String signature = null;
+                        String[] exceptions = null;
+                        if (methodBean == null) {
+                            Class<?>[] expTypes = method.getExceptionTypes();
+                            if (expTypes.length > 0) {
+                                exceptions = new String[expTypes.length];
+                                for (int i = 0; i < expTypes.length; i++) {
+                                    exceptions[i] = expTypes[i].getName().replace('.', '/');
+                                }
                             }
+                        } else {
+                            signature = methodBean.getSignature();
+                            exceptions = methodBean.getExceptions();
                         }
+                        //注意: 新方法会丢失原方法中的泛型信息signature 
                         //需要定义一个新方法调用 super.method
-                        mv = new MethodDebugVisitor(cw.visitMethod(ACC_PRIVATE, newMethodName, Type.getMethodDescriptor(method), null, exps));
+                        mv = new MethodDebugVisitor(cw.visitMethod(ACC_PRIVATE, newMethodName, desc, signature, exceptions));
+                        Label l0 = new Label();
+                        mv.visitLabel(l0);
                         //mv.setDebug(true);
                         { //给参数加上原有的Annotation
                             final Annotation[][] anns = method.getParameterAnnotations();
@@ -591,6 +603,7 @@ public abstract class Sncp {
                         mv.visitVarInsn(ALOAD, 0);
                         //传参数
                         Class[] paramTypes = method.getParameterTypes();
+                        List<Integer> insns = new ArrayList<>();
                         int insn = 0;
                         for (Class pt : paramTypes) {
                             insn++;
@@ -607,6 +620,7 @@ public abstract class Sncp {
                             } else {
                                 mv.visitVarInsn(ALOAD, insn);
                             }
+                            insns.add(insn);
                         }
                         mv.visitMethodInsn(INVOKESPECIAL, supDynName, method.getName(), Type.getMethodDescriptor(method), false);
                         if (method.getGenericReturnType() == void.class) {
@@ -625,6 +639,15 @@ public abstract class Sncp {
                                 }
                             } else {
                                 mv.visitInsn(ARETURN);
+                            }
+                        }
+                        if (methodBean != null && paramTypes.length > 0) {
+                            Label l2 = new Label();
+                            mv.visitLabel(l2);
+                            //mv.visitLocalVariable("this", thisClassDesc, null, l0, l2, 0);
+                            List<String> fieldNames = methodBean.getFieldNames();
+                            for (int i = 0; i < paramTypes.length; i++) {
+                                mv.visitLocalVariable(fieldNames.get(i), Type.getDescriptor(paramTypes[i]), null, l0, l2, insns.get(i));
                             }
                         }
                         mv.visitMaxs(20, 20);

@@ -3,9 +3,14 @@
  */
 package org.redkale.asm;
 
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.redkale.annotation.Nullable;
+import org.redkale.util.Utility;
 
 /**
  * 生产动态字节码的方法扩展器， 可以进行方法加强动作
@@ -22,6 +27,20 @@ public interface AsmMethodBoost<T> {
 
     public static AsmMethodBoost create(AsmMethodBoost... items) {
         return new AsmMethodBoosts(items);
+    }
+
+    /**
+     * 返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
+     *
+     * @param map
+     * @param clazz
+     *
+     * @return
+     */
+    public static Map<String, AsmMethodBean> getMethodBean(Class clazz) {
+        Map<String, AsmMethodBean> rs = MethodParamClassVisitor.getMethodParamNames(new HashMap<>(), clazz);
+        rs.values().forEach(AsmMethodBean::removeEmptyNames);
+        return rs;
     }
 
     /**
@@ -100,5 +119,64 @@ public interface AsmMethodBoost<T> {
             }
         }
 
+    }
+
+    static class MethodParamClassVisitor extends ClassVisitor {
+
+        private final Map<String, AsmMethodBean> fieldMap;
+
+        public MethodParamClassVisitor(int api, final Map<String, AsmMethodBean> fieldmap) {
+            super(api);
+            this.fieldMap = fieldmap;
+        }
+
+        @Override
+        public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+            if (java.lang.reflect.Modifier.isStatic(access)) {
+                return null;
+            }
+            String key = name + ":" + desc;
+            if (fieldMap.containsKey(key)) {
+                return null;
+            }
+            AsmMethodBean bean = new AsmMethodBean(access, name, desc, signature, exceptions);
+            List<String> fieldNames = bean.getFieldNames();
+            fieldMap.put(key, bean);
+            return new MethodVisitor(Opcodes.ASM6) {
+                @Override
+                public void visitLocalVariable(String name, String description, String signature, Label start, Label end, int index) {
+                    if (index < 1) {
+                        return;
+                    }
+                    int size = fieldNames.size();
+                    //index并不会按顺序执行的
+                    if (index > size) {
+                        for (int i = size; i < index; i++) {
+                            fieldNames.add(" ");
+                        }
+                        fieldNames.set(index - 1, name);
+                    }
+                    fieldNames.set(index - 1, name);
+                }
+            };
+        }
+
+        //返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
+        static Map<String, AsmMethodBean> getMethodParamNames(Map<String, AsmMethodBean> map, Class clazz) {
+            String n = clazz.getName();
+            InputStream in = clazz.getResourceAsStream(n.substring(n.lastIndexOf('.') + 1) + ".class");
+            if (in == null) {
+                return map;
+            }
+            try {
+                new ClassReader(Utility.readBytesThenClose(in)).accept(new MethodParamClassVisitor(Opcodes.ASM6, map), 0);
+            } catch (Exception e) { //无需理会
+            }
+            Class superClass = clazz.getSuperclass();
+            if (superClass == Object.class) {
+                return map;
+            }
+            return getMethodParamNames(map, superClass);
+        }
     }
 }
