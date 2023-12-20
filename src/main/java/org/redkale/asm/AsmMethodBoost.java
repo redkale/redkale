@@ -28,6 +28,7 @@ import static org.redkale.asm.Opcodes.IRETURN;
 import static org.redkale.asm.Opcodes.LLOAD;
 import static org.redkale.asm.Opcodes.LRETURN;
 import static org.redkale.asm.Opcodes.RETURN;
+import org.redkale.inject.ResourceFactory;
 import org.redkale.util.Utility;
 
 /**
@@ -54,6 +55,61 @@ public abstract class AsmMethodBoost<T> {
     public static AsmMethodBoost create(AsmMethodBoost... items) {
         return new AsmMethodBoosts(items);
     }
+
+    /**
+     *
+     * 返回一个类所有方法的字节信息， key为: method.getName+':'+Type.getMethodDescriptor(method)
+     *
+     * @param clazz Class
+     *
+     * @return Map
+     */
+    public static Map<String, AsmMethodBean> getMethodBeans(Class clazz) {
+        Map<String, AsmMethodBean> rs = MethodParamClassVisitor.getMethodParamNames(new HashMap<>(), clazz);
+        //返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
+        rs.values().forEach(AsmMethodBean::removeEmptyNames);
+        return rs;
+    }
+
+    /**
+     * 获取需屏蔽的方法上的注解
+     *
+     * @param method 方法
+     *
+     * @return 需要屏蔽的注解
+     */
+    public abstract List<Class<? extends Annotation>> filterMethodAnnotations(Method method);
+
+    /**
+     * 对方法进行动态加强处理
+     *
+     * @param cw            动态字节码Writer
+     * @param newDynName    动态新类名
+     * @param fieldPrefix   动态字段的前缀
+     * @param filterAnns    需要过滤的注解
+     * @param method        操作的方法
+     * @param newMethodName 新的方法名, 可能为null
+     *
+     * @return 下一个新的方法名，不做任何处理应返回参数newMethodName
+     */
+    public abstract String doMethod(ClassWriter cw, String newDynName, String fieldPrefix,
+        List<Class<? extends Annotation>> filterAnns, Method method, @Nullable String newMethodName);
+
+    /** 处理所有动态方法后调用
+     *
+     * @param cw          动态字节码Writer
+     * @param newDynName  动态新类名
+     * @param fieldPrefix 动态字段的前缀
+     */
+    public abstract void doAfterMethods(ClassWriter cw, String newDynName, String fieldPrefix);
+
+    /**
+     * 实例对象进行操作，通常用于给动态的字段赋值
+     *
+     * @param resourceFactory ResourceFactory
+     * @param service         实例对象
+     */
+    public abstract void doInstance(ResourceFactory resourceFactory, T service);
 
     protected AsmMethodBean getMethodBean(Method method) {
         Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBeans(serviceType);
@@ -174,60 +230,6 @@ public abstract class AsmMethodBoost<T> {
     }
 
     /**
-     *
-     * 返回一个类所有方法的字节信息， key为: method.getName+':'+Type.getMethodDescriptor(method)
-     *
-     * @param clazz Class
-     *
-     * @return Map
-     */
-    public static Map<String, AsmMethodBean> getMethodBeans(Class clazz) {
-        Map<String, AsmMethodBean> rs = MethodParamClassVisitor.getMethodParamNames(new HashMap<>(), clazz);
-        //返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
-        rs.values().forEach(AsmMethodBean::removeEmptyNames);
-        return rs;
-    }
-
-    /**
-     * 获取需屏蔽的方法上的注解
-     *
-     * @param method 方法
-     *
-     * @return 需要屏蔽的注解
-     */
-    public abstract List<Class<? extends Annotation>> filterMethodAnnotations(Method method);
-
-    /**
-     * 对方法进行动态加强处理
-     *
-     * @param cw            动态字节码Writer
-     * @param newDynName    动态新类名
-     * @param fieldPrefix   动态字段的前缀
-     * @param filterAnns    需要过滤的注解
-     * @param method        操作的方法
-     * @param newMethodName 新的方法名, 可能为null
-     *
-     * @return 下一个新的方法名，不做任何处理应返回参数newMethodName
-     */
-    public abstract String doMethod(ClassWriter cw, String newDynName, String fieldPrefix,
-        List<Class<? extends Annotation>> filterAnns, Method method, @Nullable String newMethodName);
-
-    /** 处理所有动态方法后调用
-     *
-     * @param cw          动态字节码Writer
-     * @param newDynName  动态新类名
-     * @param fieldPrefix 动态字段的前缀
-     */
-    public abstract void doAfterMethods(ClassWriter cw, String newDynName, String fieldPrefix);
-
-    /**
-     * 实例对象进行操作，通常用于给动态的字段赋值
-     *
-     * @param service 实例对象
-     */
-    public abstract void doInstance(T service);
-
-    /**
      * 生产动态字节码的方法扩展器， 可以进行方法加强动作
      *
      * @param <T> 泛型
@@ -287,10 +289,10 @@ public abstract class AsmMethodBoost<T> {
         }
 
         @Override
-        public void doInstance(T service) {
+        public void doInstance(ResourceFactory resourceFactory, T service) {
             for (AsmMethodBoost item : items) {
                 if (item != null) {
-                    item.doInstance(service);
+                    item.doInstance(resourceFactory, service);
                 }
             }
         }

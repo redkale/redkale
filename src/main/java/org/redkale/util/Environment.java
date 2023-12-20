@@ -75,8 +75,7 @@ public class Environment implements java.io.Serializable {
                 }
                 throw new RedkaleException("Not found '" + key + "' value");
             }
-
-        } else if ((pos1 >= 0 && pos2 < 0) || (pos1 < 0 && pos2 >= 0)) {
+        } else if ((pos1 >= 0 && pos2 < 0) || (pos1 < 0 && pos2 >= 0 && val.indexOf("#{") < 0)) {
             throw new RedkaleException(val + " is illegal naming");
         }
         return val;

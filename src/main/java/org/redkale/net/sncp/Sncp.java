@@ -748,7 +748,7 @@ public abstract class Sncp {
                 c.set(service, agent == null ? null : agent.getName());
             }
             if (methodBoost != null) {
-                methodBoost.doInstance(service);
+                methodBoost.doInstance(resourceFactory, service);
             }
             return service;
         } catch (RuntimeException rex) {
@@ -885,7 +885,7 @@ public abstract class Sncp {
                 c.set(service, info);
             }
             if (methodBoost != null) {
-                methodBoost.doInstance(service);
+                methodBoost.doInstance(resourceFactory, service);
             }
             return service;
         } catch (Throwable ex) {
@@ -1092,7 +1092,7 @@ public abstract class Sncp {
                 RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), c);
             }
             if (methodBoost != null) {
-                methodBoost.doInstance(service);
+                methodBoost.doInstance(resourceFactory, service);
             }
             return service;
         } catch (Exception ex) {

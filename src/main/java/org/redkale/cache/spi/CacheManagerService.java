@@ -400,6 +400,9 @@ public class CacheManagerService implements CacheManager, Service {
     @Override
     public <T> T bothGet(final String hash, final String key, final Type type, boolean nullable,
         Duration localExpire, Duration remoteExpire, Supplier<T> supplier) {
+        if (!enabled) {
+            return supplier.get();
+        }
         if (localExpire == null) {  //只有远程缓存
             Objects.requireNonNull(remoteExpire);
             return remoteGet(hash, key, type, nullable, remoteExpire, supplier);
@@ -432,6 +435,9 @@ public class CacheManagerService implements CacheManager, Service {
     @Override
     public <T> CompletableFuture<T> bothGetAsync(String hash, String key, Type type, boolean nullable,
         Duration localExpire, Duration remoteExpire, Supplier<CompletableFuture<T>> supplier) {
+        if (!enabled) {
+            return supplier.get();
+        }
         if (localExpire == null) {  //只有远程缓存
             Objects.requireNonNull(remoteExpire);
             return remoteGetAsync(hash, key, type, nullable, remoteExpire, supplier);

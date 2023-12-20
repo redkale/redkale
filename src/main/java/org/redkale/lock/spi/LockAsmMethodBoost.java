@@ -16,6 +16,7 @@ import org.redkale.asm.Label;
 import org.redkale.asm.MethodVisitor;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
+import org.redkale.inject.ResourceFactory;
 import org.redkale.lock.Locked;
 import org.redkale.util.RedkaleException;
 
@@ -81,7 +82,7 @@ public class LockAsmMethodBoost extends AsmMethodBoost {
     }
 
     @Override
-    public void doInstance(Object service) {
+    public void doInstance(ResourceFactory resourceFactory, Object service) {
         //do nothing
     }
 
