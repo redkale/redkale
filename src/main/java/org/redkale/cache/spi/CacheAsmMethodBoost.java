@@ -7,6 +7,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import org.redkale.asm.AnnotationVisitor;
 import org.redkale.asm.AsmMethodBean;
 import org.redkale.asm.AsmMethodBoost;
@@ -19,12 +20,16 @@ import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.cache.Cached;
 import org.redkale.util.RedkaleException;
+import org.redkale.util.TypeToken;
 
 /**
  *
  * @author zhangjx
  */
 public class CacheAsmMethodBoost extends AsmMethodBoost {
+
+    private static final java.lang.reflect.Type FUTURE_VOID = new TypeToken<CompletableFuture<Void>>() {
+    }.getType();
 
     private static final List<Class<? extends Annotation>> FILTER_ANN = List.of(Cached.class, DynForCache.class);
 
@@ -47,10 +52,13 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
             return newMethodName;
         }
         if (Modifier.isFinal(method.getModifiers()) || Modifier.isStatic(method.getModifiers())) {
-            throw new RedkaleException("@" + Cached.class.getSimpleName() + " can not on final or static method, but on " + method);
+            throw new RedkaleException("@" + Cached.class.getSimpleName() + " cannot on final or static method, but on " + method);
         }
         if (!Modifier.isProtected(method.getModifiers()) && !Modifier.isPublic(method.getModifiers())) {
             throw new RedkaleException("@" + Cached.class.getSimpleName() + " must on protected or public method, but on " + method);
+        }
+        if (method.getReturnType() == void.class || FUTURE_VOID.equals(method.getGenericReturnType())) {
+            throw new RedkaleException("@" + Cached.class.getSimpleName() + " cannot on void method, but on " + method);
         }
 
         final String rsMethodName = method.getName() + "_afterCache";
