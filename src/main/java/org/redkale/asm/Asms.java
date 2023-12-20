@@ -12,6 +12,7 @@ import static org.redkale.asm.Opcodes.ICONST_0;
 import static org.redkale.asm.Opcodes.INVOKESTATIC;
 import static org.redkale.asm.Opcodes.INVOKEVIRTUAL;
 import static org.redkale.asm.Opcodes.SIPUSH;
+import org.redkale.util.RedkaleException;
 
 /**
  * ASM简单的工具方法 <br>
@@ -72,7 +73,7 @@ public final class Asms {
             }
             av.visitEnd();
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RedkaleException(e);
         }
     }
 

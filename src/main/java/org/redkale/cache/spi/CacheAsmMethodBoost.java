@@ -9,28 +9,16 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.redkale.asm.AnnotationVisitor;
 import org.redkale.asm.AsmMethodBean;
 import org.redkale.asm.AsmMethodBoost;
 import org.redkale.asm.Asms;
 import org.redkale.asm.ClassWriter;
+import org.redkale.asm.FieldVisitor;
 import org.redkale.asm.Label;
 import org.redkale.asm.MethodDebugVisitor;
-import static org.redkale.asm.Opcodes.ACC_PRIVATE;
-import static org.redkale.asm.Opcodes.ACC_PROTECTED;
-import static org.redkale.asm.Opcodes.ACC_PUBLIC;
-import static org.redkale.asm.Opcodes.ALOAD;
-import static org.redkale.asm.Opcodes.ARETURN;
-import static org.redkale.asm.Opcodes.DLOAD;
-import static org.redkale.asm.Opcodes.DRETURN;
-import static org.redkale.asm.Opcodes.FLOAD;
-import static org.redkale.asm.Opcodes.FRETURN;
-import static org.redkale.asm.Opcodes.ILOAD;
-import static org.redkale.asm.Opcodes.INVOKESPECIAL;
-import static org.redkale.asm.Opcodes.IRETURN;
-import static org.redkale.asm.Opcodes.LLOAD;
-import static org.redkale.asm.Opcodes.LRETURN;
-import static org.redkale.asm.Opcodes.RETURN;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.cache.Cached;
 import org.redkale.util.RedkaleException;
@@ -41,7 +29,9 @@ import org.redkale.util.RedkaleException;
  */
 public class CacheAsmMethodBoost implements AsmMethodBoost {
 
-    private static final List<Class<? extends Annotation>> FILTER_ANN = List.of(Cached.class);
+    private static final List<Class<? extends Annotation>> FILTER_ANN = List.of(Cached.class, DynForCache.class);
+
+    private final AtomicInteger fieldIndex = new AtomicInteger();
 
     protected final Class serviceType;
 
@@ -75,8 +65,8 @@ public class CacheAsmMethodBoost implements AsmMethodBoost {
             acc = ACC_PRIVATE;
             nowMethodName = newMethodName;
         }
-
         final String rsMethodName = method.getName() + "_afterCache";
+        final String dynFieldName = fieldPrefix + "_" + method.getName() + "CacheAction" + fieldIndex.incrementAndGet();
         {
             Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBeans(serviceType);
             AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
@@ -104,7 +94,8 @@ public class CacheAsmMethodBoost implements AsmMethodBoost {
             Label l0 = new Label();
             mv.visitLabel(l0);
             av = mv.visitAnnotation(cacheDynDesc, true);
-            av.visitEnd();
+            av.visit("dynField", dynFieldName);
+            Asms.visitAnnotation(av, cached);
             if (newMethodName == null) {
                 //给方法加上原有的Annotation
                 final Annotation[] anns = method.getAnnotations();
@@ -174,6 +165,10 @@ public class CacheAsmMethodBoost implements AsmMethodBoost {
             }
             mv.visitMaxs(20, 20);
             mv.visitEnd();
+        }
+        {
+            FieldVisitor fv = cw.visitField(ACC_PRIVATE, dynFieldName, Type.getDescriptor(CacheAction.class), null, null);
+            fv.visitEnd();
         }
         return rsMethodName;
     }

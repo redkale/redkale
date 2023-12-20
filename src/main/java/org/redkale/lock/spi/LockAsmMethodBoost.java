@@ -9,6 +9,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.redkale.asm.AnnotationVisitor;
 import org.redkale.asm.AsmMethodBean;
 import org.redkale.asm.AsmMethodBoost;
@@ -27,7 +28,9 @@ import org.redkale.util.RedkaleException;
  */
 public class LockAsmMethodBoost implements AsmMethodBoost {
 
-    private static final List<Class<? extends Annotation>> FILTER_ANN = List.of(Locked.class);
+    private static final List<Class<? extends Annotation>> FILTER_ANN = List.of(Locked.class, DynForLock.class);
+
+    private final AtomicInteger fieldIndex = new AtomicInteger();
 
     protected final Class serviceType;
 
@@ -63,6 +66,7 @@ public class LockAsmMethodBoost implements AsmMethodBoost {
         }
 
         final String rsMethodName = method.getName() + "_afterLock";
+        final String dynFieldName = fieldPrefix + "_" + method.getName() + "LockAction" + fieldIndex.incrementAndGet();
         {
             Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBeans(serviceType);
             AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
@@ -90,7 +94,8 @@ public class LockAsmMethodBoost implements AsmMethodBoost {
             Label l0 = new Label();
             mv.visitLabel(l0);
             av = mv.visitAnnotation(lockDynDesc, true);
-            av.visitEnd();
+            av.visit("dynField", dynFieldName);
+            Asms.visitAnnotation(av, cached);
             if (newMethodName == null) {
                 //给方法加上原有的Annotation
                 final Annotation[] anns = method.getAnnotations();
