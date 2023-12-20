@@ -568,7 +568,8 @@ public abstract class Sncp {
                         continue;
                     }
                     methodKeys.add(mk);
-                    String newMethodName = methodBoost.doMethod(cw, newDynName, FIELDPREFIX, method, null);
+                    List<Class<? extends Annotation>> filterAnns = methodBoost.filterMethodAnnotations(method);
+                    String newMethodName = methodBoost.doMethod(cw, newDynName, FIELDPREFIX, filterAnns, method, null);
                     if (newMethodName != null) {
                         String desc = Type.getMethodDescriptor(method);
                         AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
@@ -586,20 +587,11 @@ public abstract class Sncp {
                             signature = methodBean.getSignature();
                             exceptions = methodBean.getExceptions();
                         }
-                        //注意: 新方法会丢失原方法中的泛型信息signature 
                         //需要定义一个新方法调用 super.method
                         mv = new MethodDebugVisitor(cw.visitMethod(ACC_PRIVATE, newMethodName, desc, signature, exceptions));
                         Label l0 = new Label();
                         mv.visitLabel(l0);
                         //mv.setDebug(true);
-                        { //给参数加上原有的Annotation
-                            final Annotation[][] anns = method.getParameterAnnotations();
-                            for (int k = 0; k < anns.length; k++) {
-                                for (Annotation ann : anns[k]) {
-                                    Asms.visitAnnotation(mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true), ann);
-                                }
-                            }
-                        }
                         mv.visitVarInsn(ALOAD, 0);
                         //传参数
                         Class[] paramTypes = method.getParameterTypes();

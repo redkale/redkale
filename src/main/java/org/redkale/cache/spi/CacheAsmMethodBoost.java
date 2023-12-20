@@ -41,6 +41,8 @@ import org.redkale.util.RedkaleException;
  */
 public class CacheAsmMethodBoost implements AsmMethodBoost {
 
+    private static final List<Class<? extends Annotation>> FILTER_ANN = List.of(Cached.class);
+
     protected final Class serviceType;
 
     public CacheAsmMethodBoost(Class serviceType) {
@@ -48,7 +50,12 @@ public class CacheAsmMethodBoost implements AsmMethodBoost {
     }
 
     @Override
-    public String doMethod(ClassWriter cw, String newDynName, String fieldPrefix, Method method, final String newMethodName) {
+    public List<Class<? extends Annotation>> filterMethodAnnotations(Method method) {
+        return FILTER_ANN;
+    }
+
+    @Override
+    public String doMethod(ClassWriter cw, String newDynName, String fieldPrefix, List filterAnns, Method method, final String newMethodName) {
         Cached cached = method.getAnnotation(Cached.class);
         if (cached == null) {
             return newMethodName;
@@ -69,7 +76,7 @@ public class CacheAsmMethodBoost implements AsmMethodBoost {
             nowMethodName = newMethodName;
         }
 
-        final String rsMethodName = method.getName() + "_cache";
+        final String rsMethodName = method.getName() + "_afterCache";
         {
             Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBeans(serviceType);
             AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
@@ -96,20 +103,21 @@ public class CacheAsmMethodBoost implements AsmMethodBoost {
             //mv.setDebug(true);
             Label l0 = new Label();
             mv.visitLabel(l0);
-            {
-                av = mv.visitAnnotation(cacheDynDesc, true);
-                av.visitEnd();
+            av = mv.visitAnnotation(cacheDynDesc, true);
+            av.visitEnd();
+            if (newMethodName == null) {
+                //给方法加上原有的Annotation
                 final Annotation[] anns = method.getAnnotations();
                 for (Annotation ann : anns) {
-                    if (ann.annotationType() != Cached.class) {
+                    if (ann.annotationType() != Cached.class
+                        && (filterAnns == null || !filterAnns.contains(ann.annotationType()))) {
                         Asms.visitAnnotation(mv.visitAnnotation(Type.getDescriptor(ann.annotationType()), true), ann);
                     }
                 }
-            }
-            { //给参数加上原有的Annotation
-                final Annotation[][] anns = method.getParameterAnnotations();
-                for (int k = 0; k < anns.length; k++) {
-                    for (Annotation ann : anns[k]) {
+                //给参数加上原有的Annotation
+                final Annotation[][] annss = method.getParameterAnnotations();
+                for (int k = 0; k < annss.length; k++) {
+                    for (Annotation ann : annss[k]) {
                         Asms.visitAnnotation(mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true), ann);
                     }
                 }

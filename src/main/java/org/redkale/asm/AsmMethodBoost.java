@@ -4,7 +4,9 @@
 package org.redkale.asm;
 
 import java.io.InputStream;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -45,17 +47,28 @@ public interface AsmMethodBoost<T> {
     }
 
     /**
+     * 获取需屏蔽的方法上的注解
+     *
+     * @param method 方法
+     *
+     * @return 需要屏蔽的注解
+     */
+    public List<Class<? extends Annotation>> filterMethodAnnotations(Method method);
+
+    /**
      * 对方法进行动态加强处理
      *
      * @param cw            动态字节码Writer
      * @param newDynName    动态新类名
      * @param fieldPrefix   动态字段的前缀
+     * @param filterAnns    需要过滤的注解
      * @param method        操作的方法
      * @param newMethodName 新的方法名, 可能为null
      *
      * @return 下一个新的方法名，不做任何处理应返回参数newMethodName
      */
-    public String doMethod(ClassWriter cw, String newDynName, String fieldPrefix, Method method, @Nullable String newMethodName);
+    public String doMethod(ClassWriter cw, String newDynName, String fieldPrefix,
+        List<Class<? extends Annotation>> filterAnns, Method method, @Nullable String newMethodName);
 
     /** 处理所有动态方法后调用
      *
@@ -92,11 +105,29 @@ public interface AsmMethodBoost<T> {
         }
 
         @Override
-        public String doMethod(ClassWriter cw, String newDynName, String fieldPrefix, Method method, String newMethodName) {
+        public List<Class<? extends Annotation>> filterMethodAnnotations(Method method) {
+            List<Class<? extends Annotation>> list = null;
+            for (AsmMethodBoost item : items) {
+                if (item != null) {
+                    List<Class<? extends Annotation>> sub = item.filterMethodAnnotations(method);
+                    if (sub != null) {
+                        if (list == null) {
+                            list = new ArrayList<>();
+                        }
+                        list.addAll(sub);
+                    }
+                }
+            }
+            return list;
+        }
+
+        @Override
+        public String doMethod(ClassWriter cw, String newDynName, String fieldPrefix,
+            List<Class<? extends Annotation>> filterAnns, Method method, String newMethodName) {
             String newName = newMethodName;
             for (AsmMethodBoost item : items) {
                 if (item != null) {
-                    newName = item.doMethod(cw, newDynName, fieldPrefix, method, newName);
+                    newName = item.doMethod(cw, newDynName, fieldPrefix, filterAnns, method, newName);
                 }
             }
             return newName;
