@@ -40,7 +40,7 @@ public @interface Cached {
      *
      * @return hash
      */
-    String map() default "";
+    String hash() default "";
 
     /**
      * 本地缓存过期时长， 0表示永不过期， -1表示不作本地缓存。<br>

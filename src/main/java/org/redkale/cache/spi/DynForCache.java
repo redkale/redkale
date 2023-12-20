@@ -29,7 +29,7 @@ public @interface DynForCache {
 
     String key();
 
-    String map();
+    String hash();
 
     String localExpire();
 
