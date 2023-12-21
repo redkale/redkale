@@ -223,9 +223,10 @@ public abstract class AsmMethodBoost<T> {
             Label l2 = new Label();
             mv.visitLabel(l2);
             //mv.visitLocalVariable("this", thisClassDesc, null, l0, l2, 0);
-            List<String> fieldNames = methodBean.getFieldNames();
+            List<AsmMethodParam> params = methodBean.getParams();
             for (int i = 0; i < paramTypes.length; i++) {
-                mv.visitLocalVariable(fieldNames.get(i), Type.getDescriptor(paramTypes[i]), null, l0, l2, insns.get(i));
+                AsmMethodParam param = params.get(i);
+                mv.visitLocalVariable(param.getName(), param.getDescription(), param.getSignature(), l0, l2, insns.get(i));
             }
         }
     }
@@ -302,11 +303,11 @@ public abstract class AsmMethodBoost<T> {
 
     static class MethodParamClassVisitor extends ClassVisitor {
 
-        private final Map<String, AsmMethodBean> fieldMap;
+        private final Map<String, AsmMethodBean> methodBeanMap;
 
         public MethodParamClassVisitor(int api, final Map<String, AsmMethodBean> fieldmap) {
             super(api);
-            this.fieldMap = fieldmap;
+            this.methodBeanMap = fieldmap;
         }
 
         @Override
@@ -315,27 +316,27 @@ public abstract class AsmMethodBoost<T> {
                 return null;
             }
             String key = name + ":" + desc;
-            if (fieldMap.containsKey(key)) {
+            if (methodBeanMap.containsKey(key)) {
                 return null;
             }
             AsmMethodBean bean = new AsmMethodBean(access, name, desc, signature, exceptions);
-            List<String> fieldNames = bean.getFieldNames();
-            fieldMap.put(key, bean);
+            List<AsmMethodParam> paramList = bean.getParams();
+            methodBeanMap.put(key, bean);
             return new MethodVisitor(Opcodes.ASM6) {
                 @Override
                 public void visitLocalVariable(String name, String description, String signature, Label start, Label end, int index) {
                     if (index < 1) {
                         return;
                     }
-                    int size = fieldNames.size();
-                    //index并不会按顺序执行的
+                    int size = paramList.size();
+                    //index并不会按顺序执行
                     if (index > size) {
                         for (int i = size; i < index; i++) {
-                            fieldNames.add(" ");
+                            paramList.add(new AsmMethodParam(" ", description, signature));
                         }
-                        fieldNames.set(index - 1, name);
+                        paramList.set(index - 1, new AsmMethodParam(name, description, signature));
                     }
-                    fieldNames.set(index - 1, name);
+                    paramList.set(index - 1, new AsmMethodParam(name, description, signature));
                 }
             };
         }

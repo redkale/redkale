@@ -12,11 +12,13 @@ import org.redkale.convert.json.JsonConvert;
 /**
  * 存放方法的字节信息
  *
+ * @see org.redkale.asm.AsmMethodBoost
+ * 
  * @since 2.8.0
  */
 public class AsmMethodBean {
 
-    private List<String> fieldNames;
+    private List<AsmMethodParam> params;
 
     private int access;
 
@@ -37,7 +39,7 @@ public class AsmMethodBean {
         this.desc = desc;
         this.signature = signature;
         this.exceptions = exceptions;
-        this.fieldNames = new ArrayList<>();
+        this.params = new ArrayList<>();
     }
 
     public static AsmMethodBean get(Map<String, AsmMethodBean> map, Method method) {
@@ -45,21 +47,41 @@ public class AsmMethodBean {
     }
 
     void removeEmptyNames() {
-        if (fieldNames != null) {
-            while (fieldNames.remove(" "));
+        if (params != null) {
+            List<AsmMethodParam> dels = null;
+            for (AsmMethodParam p : params) {
+                if (" ".equals(p.getName())) {
+                    if (dels == null) {
+                        dels = new ArrayList<>();
+                    }
+                    dels.add(p);
+                }
+            }
+            if (dels != null) {
+                for (AsmMethodParam p : dels) {
+                    params.remove(p);
+                }
+            }
         }
     }
 
     public String[] fieldNameArray() {
-        return fieldNames == null ? null : fieldNames.toArray(new String[fieldNames.size()]);
+        if (params == null) {
+            return null;
+        }
+        String[] rs = new String[params.size()];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = params.get(i).getName();
+        }
+        return rs;
     }
 
-    public List<String> getFieldNames() {
-        return fieldNames;
+    public List<AsmMethodParam> getParams() {
+        return params;
     }
 
-    public void setFieldNames(List<String> fieldNames) {
-        this.fieldNames = fieldNames;
+    public void setParams(List<AsmMethodParam> params) {
+        this.params = params;
     }
 
     public int getAccess() {

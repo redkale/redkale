@@ -622,26 +622,26 @@ public final class Rest {
             ClassWriter cw2 = new ClassWriter(COMPUTE_FRAMES);
             cw2.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynSuperMessageFullName, null, "java/lang/Object", new String[]{webSocketParamName, "java/lang/Runnable"});
             cw2.visitInnerClass(newDynSuperMessageFullName, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
-            Set<String> paramnames = new HashSet<>();
+            Set<String> paramNames = new HashSet<>();
             AsmMethodBean methodBean = asmParamMap == null ? null : AsmMethodBean.get(asmParamMap, method);
-            List<String> names = methodBean == null ? null : methodBean.getFieldNames();
+            List<AsmMethodParam> names = methodBean == null ? null : methodBean.getParams();
             Parameter[] params = method.getParameters();
             final LinkedHashMap<String, Parameter> paramap = new LinkedHashMap(); //必须使用LinkedHashMap确保顺序
             for (int j = 0; j < params.length; j++) { //字段列表
                 Parameter param = params[j];
-                String paramname = param.getName();
+                String paramName = param.getName();
                 RestParam rp = param.getAnnotation(RestParam.class);
                 if (rp != null && !rp.name().isEmpty()) {
-                    paramname = rp.name();
+                    paramName = rp.name();
                 } else if (names != null && names.size() > j) {
-                    paramname = names.get(j);
+                    paramName = names.get(j).getName();
                 }
-                if (paramnames.contains(paramname)) {
+                if (paramNames.contains(paramName)) {
                     throw new RestException(method + " has same @RestParam.name");
                 }
-                paramnames.add(paramname);
-                paramap.put(paramname, param);
-                fv = cw2.visitField(ACC_PUBLIC, paramname, Type.getDescriptor(param.getType()),
+                paramNames.add(paramName);
+                paramap.put(paramName, param);
+                fv = cw2.visitField(ACC_PUBLIC, paramName, Type.getDescriptor(param.getType()),
                     param.getType() == param.getParameterizedType() ? null : Utility.getTypeDescriptor(param.getParameterizedType()), null);
                 fv.visitEnd();
             }
@@ -1888,9 +1888,9 @@ public final class Rest {
             final int maxStack = 3 + params.length;
             List<int[]> varInsns = new ArrayList<>();
             int maxLocals = 4;
-            
+
             AsmMethodBean methodBean = asmParamMap == null ? null : AsmMethodBean.get(asmParamMap, method);
-            List<String> asmParamNames = methodBean == null ? null : methodBean.getFieldNames();
+            List<AsmMethodParam> asmParamNames = methodBean == null ? null : methodBean.getParams();
             List<Object[]> paramlist = new ArrayList<>();
             //解析方法中的每个参数
             for (int i = 0; i < params.length; i++) {
@@ -2180,7 +2180,7 @@ public final class Rest {
                     n = "?"; //Http参数类型特殊处理
                 }
                 if (n == null && asmParamNames != null && asmParamNames.size() > i) {
-                    n = asmParamNames.get(i);
+                    n = asmParamNames.get(i).getName();
                 }
                 if (n == null) {
                     if (param.isNamePresent()) {

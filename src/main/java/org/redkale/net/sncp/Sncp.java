@@ -637,9 +637,10 @@ public abstract class Sncp {
                             Label l2 = new Label();
                             mv.visitLabel(l2);
                             //mv.visitLocalVariable("this", thisClassDesc, null, l0, l2, 0);
-                            List<String> fieldNames = methodBean.getFieldNames();
+                            List<AsmMethodParam> params = methodBean.getParams();
                             for (int i = 0; i < paramTypes.length; i++) {
-                                mv.visitLocalVariable(fieldNames.get(i), Type.getDescriptor(paramTypes[i]), null, l0, l2, insns.get(i));
+                                AsmMethodParam param = params.get(i);
+                                mv.visitLocalVariable(param.getName(), param.getDescription(), param.getSignature(), l0, l2, insns.get(i));
                             }
                         }
                         mv.visitMaxs(20, 20);
