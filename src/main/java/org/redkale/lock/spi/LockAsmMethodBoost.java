@@ -67,7 +67,7 @@ public class LockAsmMethodBoost extends AsmMethodBoost {
             Asms.visitAnnotation(av, locked);
             visitRawAnnotation(method, newMethodName, mv, Locked.class, filterAnns);
             mv.visitVarInsn(ALOAD, 0);
-            List<Integer> insns = visitVarInsnParamTypes(mv, method);
+            List<Integer> insns = visitVarInsnParamTypes(mv, method, 0);
             mv.visitMethodInsn(INVOKESPECIAL, newDynName, rsMethodName, Type.getMethodDescriptor(method), false);
             visitInsnReturn(mv, method, l0, insns, methodBean);
             mv.visitMaxs(20, 20);

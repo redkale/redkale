@@ -174,11 +174,10 @@ public abstract class AsmMethodBoost<T> {
         }
     }
 
-    protected List<Integer> visitVarInsnParamTypes(MethodVisitor mv, Method method) {
+    protected List<Integer> visitVarInsnParamTypes(MethodVisitor mv, Method method, int insn) {
         //传参数
         Class[] paramTypes = method.getParameterTypes();
         List<Integer> insns = new ArrayList<>();
-        int insn = 0;
         for (Class pt : paramTypes) {
             insn++;
             if (pt.isPrimitive()) {
@@ -197,6 +196,18 @@ public abstract class AsmMethodBoost<T> {
             insns.add(insn);
         }
         return insns;
+    }
+
+    protected void visitParamTypesLocalVariable(MethodVisitor mv, Method method, Label l0, Label l2, List<Integer> insns, AsmMethodBean methodBean) {
+        Class[] paramTypes = method.getParameterTypes();
+        if (methodBean != null && paramTypes.length > 0) {
+            mv.visitLabel(l2);
+            List<AsmMethodParam> params = methodBean.getParams();
+            for (int i = 0; i < paramTypes.length; i++) {
+                AsmMethodParam param = params.get(i);
+                mv.visitLocalVariable(param.getName(), param.getDescription(), param.getSignature(), l0, l2, insns.get(i));
+            }
+        }
     }
 
     protected void visitInsnReturn(MethodVisitor mv, Method method, Label l0, List<Integer> insns, AsmMethodBean methodBean) {
@@ -218,17 +229,7 @@ public abstract class AsmMethodBoost<T> {
                 mv.visitInsn(ARETURN);
             }
         }
-        Class[] paramTypes = method.getParameterTypes();
-        if (methodBean != null && paramTypes.length > 0) {
-            Label l2 = new Label();
-            mv.visitLabel(l2);
-            //mv.visitLocalVariable("this", thisClassDesc, null, l0, l2, 0);
-            List<AsmMethodParam> params = methodBean.getParams();
-            for (int i = 0; i < paramTypes.length; i++) {
-                AsmMethodParam param = params.get(i);
-                mv.visitLocalVariable(param.getName(), param.getDescription(), param.getSignature(), l0, l2, insns.get(i));
-            }
-        }
+        visitParamTypesLocalVariable(mv, method, l0, new Label(), insns, methodBean);
     }
 
     /**

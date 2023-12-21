@@ -10,6 +10,7 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import org.redkale.annotation.Nullable;
 import org.redkale.annotation.Resource;
+import org.redkale.asm.AsmDepends;
 import org.redkale.cache.CacheManager;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.sncp.Sncp;
@@ -29,6 +30,7 @@ import org.redkale.util.TypeToken;
  *
  * @since 2.8.0
  */
+@AsmDepends
 public class CacheAction {
 
     @Resource
@@ -100,6 +102,7 @@ public class CacheAction {
         this.remoteExpire = createDuration(cached.getRemoteExpire());
     }
 
+    @AsmDepends
     public <T> T get(ThrowSupplier<T> supplier, Object... args) {
         if (async) {
             ThrowSupplier supplier0 = supplier;

@@ -3,6 +3,8 @@
  */
 package org.redkale.util;
 
+import org.redkale.asm.AsmDepends;
+
 /**
  * 抛异常版的Supplier
  *
@@ -13,6 +15,7 @@ package org.redkale.util;
  *
  * @since 2.8.0
  */
+@AsmDepends
 @FunctionalInterface
 public interface ThrowSupplier<T> {
 

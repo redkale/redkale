@@ -56,7 +56,7 @@ public class CacheInstanceTest {
         SncpClient client = new SncpClient("", iGroup, 0, new InetSocketAddress("127.0.0.1", 8080), new ClientAddress(), "TCP", 1, 16);
         CacheInstance instance = Sncp.createLocalService(null, "", serviceClass, boost, resourceFactory,
             grous, client, null, null, null);
-        System.out.println(instance.getName());
+        //System.out.println(instance.getName());
     }
 
     @Test

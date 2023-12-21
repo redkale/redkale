@@ -183,6 +183,20 @@ public class MethodDebugVisitor extends MethodVisitor {
         }
     }
 
+    public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object... bsmArgs) {
+        visitor.visitInvokeDynamicInsn(name, desc, bsm, bsmArgs);
+        if (debug) {
+            System.out.println("mv.visitInvokeDynamicInsn(\"" + name + "\", \"" + desc + "\", null, null);");
+        }
+    }
+
+    public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
+        visitor.visitLocalVariable(name, desc, signature, start, end, index);
+        if (debug) {
+            System.out.println("mv.visitLocalVariable(\"" + name + "\", \"" + desc + "\", \"" + signature + "\", null, null, -1);");
+        }
+    }
+
     public void visitFieldInsn(int opcode, String owner, String name, String desc) {
         visitor.visitFieldInsn(opcode, owner, name, desc);
         if (debug) {
