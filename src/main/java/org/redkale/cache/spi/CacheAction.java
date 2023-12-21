@@ -17,7 +17,7 @@ import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.util.Environment;
 import org.redkale.util.TypeToken;
-import org.redkale.util.CombinedKey;
+import org.redkale.util.MultiHashKey;
 
 /**
  *
@@ -70,7 +70,7 @@ public class CacheAction {
     private String key;
 
     //缓存的key
-    private CombinedKey dynKey;
+    private MultiHashKey dynKey;
 
     //本地缓存过期时长
     private Duration localExpire;
@@ -94,7 +94,7 @@ public class CacheAction {
             ? Sncp.getResourceType(serviceClass).getSimpleName()
             : environment.getPropertyValue(cached.hash());
         this.key = environment.getPropertyValue(cached.key());
-        this.dynKey = CombinedKey.create(paramTypes, paramNames, key);
+        this.dynKey = MultiHashKey.create(paramNames, key);
         this.localExpire = createDuration(cached.localExpire());
         this.remoteExpire = createDuration(cached.remoteExpire());
     }

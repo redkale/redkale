@@ -14,20 +14,19 @@ package org.redkale.util;
  *
  * @since 2.8.0
  */
-public interface CombinedKey {
+public interface MultiHashKey {
 
     public String keyFor(Object... args);
 
     /**
-     * 生成Key, paramTypes与paramNames长度必须一致
+     * key只支持带#{}的表达式， 且不能嵌套, 如:name_#{key_#{id}}
      *
-     * @param paramTypes 参数类型
      * @param paramNames 参数名
      * @param key        key表达式
      *
-     * @return CombinedKey
+     * @return MultiHashKey
      */
-    public static CombinedKey create(Class[] paramTypes, String[] paramNames, String key) {
-        return CombinedKeys.create(paramTypes, paramNames, key);
+    public static MultiHashKey create(String[] paramNames, String key) {
+        return MultiHashKeys.create(paramNames, key);
     }
 }
