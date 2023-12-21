@@ -169,7 +169,7 @@ public final class EntityCache<T> {
                     ConcurrentHashMap newmap2 = new ConcurrentHashMap();
                     List<T> all2 = info.fullLoader.apply(info.source, info).join();
                     if (all2 != null) {
-                        all2.stream().filter(x -> x != null).forEach(x -> {
+                        all2.stream().filter(Objects::nonNull).forEach(x -> {
                             newmap2.put(this.primary.get(x), x);
                         });
                     }
@@ -228,7 +228,7 @@ public final class EntityCache<T> {
             return null;
         }
         T rs = map.get(pk);
-        return rs == null ? null : (needCopy ? newCopier.apply(this.creator.create(), rs) : rs);
+        return rs == null ? null : (needCopy ? newCopier.apply(rs, this.creator.create()) : rs);
     }
 
     public T[] finds(Serializable... pks) {
@@ -242,7 +242,7 @@ public final class EntityCache<T> {
                 T[] result = arrayer.apply(ids.length);
                 for (int i = 0; i < result.length; i++) {
                     T rs = map.get(ids[i]);
-                    result[i] = rs == null ? null : (needCopy ? newCopier.apply(this.creator.create(), rs) : rs);
+                    result[i] = rs == null ? null : (needCopy ? newCopier.apply(rs, this.creator.create()) : rs);
                 }
                 return result;
             } else if (t == long[].class) {
@@ -250,7 +250,7 @@ public final class EntityCache<T> {
                 T[] result = arrayer.apply(ids.length);
                 for (int i = 0; i < result.length; i++) {
                     T rs = map.get(ids[i]);
-                    result[i] = rs == null ? null : (needCopy ? newCopier.apply(this.creator.create(), rs) : rs);
+                    result[i] = rs == null ? null : (needCopy ? newCopier.apply(rs, this.creator.create()) : rs);
                 }
                 return result;
             }
@@ -259,7 +259,7 @@ public final class EntityCache<T> {
         if (needCopy) {
             for (int i = 0; i < result.length; i++) {
                 T rs = map.get(pks[i]);
-                result[i] = rs == null ? null : newCopier.apply(this.creator.create(), rs);
+                result[i] = rs == null ? null : newCopier.apply(rs, this.creator.create());
             }
         } else {
             for (int i = 0; i < result.length; i++) {
@@ -278,7 +278,7 @@ public final class EntityCache<T> {
             return null;
         }
         if (selects == null) {
-            return needCopy ? newCopier.apply(this.creator.create(), rs) : rs;
+            return needCopy ? newCopier.apply(rs, this.creator.create()) : rs;
         }
         T t = this.creator.create();
         for (Attribute attr : this.info.attributes) {
@@ -317,7 +317,7 @@ public final class EntityCache<T> {
             }
             if (selects == null) {
                 if (needCopy) {
-                    rs = newCopier.apply(ctr.create(), rs);
+                    rs = newCopier.apply(rs, ctr.create());
                 }
             } else {
                 T t = ctr.create();
@@ -344,7 +344,7 @@ public final class EntityCache<T> {
             return null;
         }
         if (selects == null) {
-            return (needCopy ? newCopier.apply(this.creator.create(), opt.get()) : opt.get());
+            return needCopy ? newCopier.apply(opt.get(), this.creator.create()) : opt.get();
         }
         T rs = opt.get();
         T t = this.creator.create();
@@ -650,7 +650,7 @@ public final class EntityCache<T> {
         return defResult;
     }
 
-    public <V> Number getNumberResult(final FilterFunc func, final Number defResult, final String column, final FilterNode node) {
+    public Number getNumberResult(final FilterFunc func, final Number defResult, final String column, final FilterNode node) {
         final Attribute<T, Serializable> attr = column == null ? null : info.getAttribute(column); //COUNT的column=null
         final Function<T, Number> attrFunc = attr == null ? null : x -> (Number) attr.get(x);
         return getNumberResult(this.list, func, defResult, attr == null ? null : attr.type(), attrFunc, node);
@@ -725,7 +725,7 @@ public final class EntityCache<T> {
         }
         final List<T> rs = new ArrayList<>();
         if (selects == null) {
-            Consumer<? super T> action = x -> rs.add(needCopy ? newCopier.apply(creator.create(), x) : x);
+            Consumer<? super T> action = x -> rs.add(needCopy ? newCopier.apply(x, creator.create()) : x);
             if (comparator != null) {
                 stream.forEachOrdered(action);
             } else {
@@ -761,7 +761,7 @@ public final class EntityCache<T> {
         if (entity == null) {
             return 0;
         }
-        final T rs = newCopier.apply(this.creator.create(), entity);  //确保同一主键值的map与list中的对象必须共用。
+        final T rs = newCopier.apply(entity, this.creator.create());  //确保同一主键值的map与list中的对象必须共用。
         T old = this.map.putIfAbsent(this.primary.get(rs), rs);
         if (old == null) {
             this.list.add(rs);
@@ -825,7 +825,7 @@ public final class EntityCache<T> {
         }
         tableLock.lock(); //表锁, 可优化成行锁
         try {
-            this.uptCopier.apply(rs, entity);
+            this.uptCopier.apply(entity, rs);
         } finally {
             tableLock.unlock();
         }
