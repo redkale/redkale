@@ -1210,15 +1210,15 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     /**
      * 将指定文件句柄或文件内容按指定文件名输出，若fileBody不为null则只输出fileBody内容
      * file 与 fileBody 不能同时为空
-     * file 与 filename 也不能同时为空
+     * file 与 fileName 也不能同时为空
      *
-     * @param filename 输出文件名
+     * @param fileName 输出文件名
      * @param file     输出文件
      * @param fileBody 文件内容， 没有则输出file
      *
      * @throws IOException IO异常
      */
-    protected void finishFile(final String filename, final File file, ByteArray fileBody) throws IOException {
+    protected void finishFile(final String fileName, final File file, ByteArray fileBody) throws IOException {
         if ((file == null || !file.isFile() || !file.canRead()) && fileBody == null) {
             finish404();
             return;
@@ -1231,14 +1231,12 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             //return;
         }
         this.contentLength = length;
-        if (filename != null && !filename.isEmpty() && file != null) {
+        if (Utility.isNotEmpty(fileName) && file != null) {
             if (this.header.getValue("Content-Disposition") == null) {
-                addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(filename, "UTF-8"));
+                addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(fileName, "UTF-8"));
             }
         }
-        if (this.contentType == null) {
-            this.contentType = MimeType.getByFilename(filename == null || filename.isEmpty() ? file.getName() : filename);
-        }
+        this.contentType = MimeType.getByFilename(Utility.isEmpty(fileName) && file != null ? file.getName() : fileName);
         if (this.contentType == null) {
             this.contentType = "application/octet-stream";
         }

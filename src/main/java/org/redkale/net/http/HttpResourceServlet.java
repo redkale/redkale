@@ -250,7 +250,7 @@ public class HttpResourceServlet extends HttpServlet {
         if (watchThread == null && files.isEmpty()) {
             entry = createFileEntry(uri);
         } else {  //有缓存
-            entry = files.computeIfAbsent(uri, x -> createFileEntry(x));
+            entry = files.computeIfAbsent(uri, this::createFileEntry);
         }
         if (entry == null) {
             if (logger.isLoggable(Level.FINER)) {
@@ -259,8 +259,8 @@ public class HttpResourceServlet extends HttpServlet {
             finish404(request, response);
         } else {
             //file = null 表示资源内容在内存而不是在File中
-            //file = null 时必须传 filename
-            response.finishFile(entry.file == null ? entry.filename : null, entry.file, entry.content);
+            //file = null 时必须传 fileName
+            response.finishFile(entry.file == null ? entry.fileName : null, entry.file, entry.content);
         }
     }
 
@@ -291,7 +291,7 @@ public class HttpResourceServlet extends HttpServlet {
 
     protected static class FileEntry {
 
-        protected final String filename;
+        protected final String fileName;
 
         protected final File file; //如果所有资源文件打包成zip文件则file=null
 
@@ -303,14 +303,14 @@ public class HttpResourceServlet extends HttpServlet {
         public FileEntry(final HttpResourceServlet servlet, File file) {
             this.servlet = servlet;
             this.file = file;
-            this.filename = file.getName();
+            this.fileName = file.getName();
             update();
         }
 
-        public FileEntry(final HttpResourceServlet servlet, String filename, ByteArray content) {
+        public FileEntry(final HttpResourceServlet servlet, String fileName, ByteArray content) {
             this.servlet = servlet;
             this.file = null;
-            this.filename = filename;
+            this.fileName = fileName;
             this.content = content;
             this.servlet.cachedLength.add(this.content.length());
         }
@@ -324,7 +324,7 @@ public class HttpResourceServlet extends HttpServlet {
             }
             this.servlet = servlet;
             this.file = null;
-            this.filename = filename;
+            this.fileName = filename;
             this.content = out;
             this.servlet.cachedLength.add(this.content.length());
         }
