@@ -687,7 +687,7 @@ public interface DataSource extends Resourcable {
     default <T, V extends Serializable> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final LambdaSupplier<V> func, final FilterNode node) {
         return updateColumnAsync(clazz, LambdaSupplier.readColumn(func), func.get(), node);
     }
-    
+
     /**
      * 更新指定主键值记录的部分字段   <br>
      * 字段赋值操作选项见 ColumnExpress   <br>
@@ -1804,6 +1804,34 @@ public interface DataSource extends Resourcable {
      * @return Entity对象CompletableFuture
      */
     public <T> CompletableFuture<T> findAsync(final Class<T> clazz, final String column, final Serializable colval);
+
+    /**
+     * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key}  <br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param func  更新值Lambda
+     *
+     * @return Entity对象
+     */
+    default <T> T find(final Class<T> clazz, final LambdaSupplier<Serializable> func) {
+        return find(clazz, LambdaSupplier.readColumn(func), func.get());
+    }
+
+    /**
+     * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key}  <br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param func  更新值Lambda
+     *
+     * @return Entity对象
+     */
+    default <T> CompletableFuture<T> findAsync(final Class<T> clazz, final LambdaSupplier<Serializable> func) {
+        return findAsync(clazz, LambdaSupplier.readColumn(func), func.get());
+    }
 
     /**
      * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
