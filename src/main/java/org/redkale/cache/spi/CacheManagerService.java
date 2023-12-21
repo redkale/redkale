@@ -157,8 +157,8 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 数据值
      */
     @Override
-    public <T> T localGet(final String hash, final String key, final Type type, boolean nullable, Duration expire, Supplier<T> supplier) {
-        return get(localSource::hget, localSource::hset, hash, key, type, nullable, expire, supplier);
+    public <T> T localGetSet(final String hash, final String key, final Type type, boolean nullable, Duration expire, Supplier<T> supplier) {
+        return getSet(localSource::hget, localSource::hset, hash, key, type, nullable, expire, supplier);
     }
 
     /**
@@ -175,8 +175,8 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 数据值
      */
     @Override
-    public <T> CompletableFuture<T> localGetAsync(String hash, String key, Type type, boolean nullable, Duration expire, Supplier<CompletableFuture<T>> supplier) {
-        return getAsync(localSource::hgetAsync, localSource::hsetAsync, hash, key, type, nullable, expire, supplier);
+    public <T> CompletableFuture<T> localGetSetAsync(String hash, String key, Type type, boolean nullable, Duration expire, Supplier<CompletableFuture<T>> supplier) {
+        return getSetAsync(localSource::hgetAsync, localSource::hsetAsync, hash, key, type, nullable, expire, supplier);
     }
 
     /**
@@ -263,8 +263,8 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 数据值
      */
     @Override
-    public <T> T remoteGet(final String hash, final String key, final Type type, boolean nullable, Duration expire, Supplier<T> supplier) {
-        return get(remoteSource::hget, remoteSource::hset, hash, key, type, nullable, expire, supplier);
+    public <T> T remoteGetSet(final String hash, final String key, final Type type, boolean nullable, Duration expire, Supplier<T> supplier) {
+        return getSet(remoteSource::hget, remoteSource::hset, hash, key, type, nullable, expire, supplier);
     }
 
     /**
@@ -281,8 +281,8 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 数据值
      */
     @Override
-    public <T> CompletableFuture<T> remoteGetAsync(String hash, String key, Type type, boolean nullable, Duration expire, Supplier<CompletableFuture<T>> supplier) {
-        return getAsync(remoteSource::hgetAsync, remoteSource::hsetAsync, hash, key, type, nullable, expire, supplier);
+    public <T> CompletableFuture<T> remoteGetSetAsync(String hash, String key, Type type, boolean nullable, Duration expire, Supplier<CompletableFuture<T>> supplier) {
+        return getSetAsync(remoteSource::hgetAsync, remoteSource::hsetAsync, hash, key, type, nullable, expire, supplier);
     }
 
     /**
@@ -398,19 +398,19 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 数据值
      */
     @Override
-    public <T> T bothGet(final String hash, final String key, final Type type, boolean nullable,
+    public <T> T bothGetSet(final String hash, final String key, final Type type, boolean nullable,
         Duration localExpire, Duration remoteExpire, Supplier<T> supplier) {
         if (!enabled) {
             return supplier.get();
         }
         if (localExpire == null) {  //只有远程缓存
             Objects.requireNonNull(remoteExpire);
-            return remoteGet(hash, key, type, nullable, remoteExpire, supplier);
+            return remoteGetSet(hash, key, type, nullable, remoteExpire, supplier);
         }
         if (remoteExpire == null) { //只有本地缓存
-            return localGet(hash, key, type, nullable, localExpire, supplier);
+            return localGetSet(hash, key, type, nullable, localExpire, supplier);
         }
-        return get(this::bothGetCache, (h, k, t, v) -> {
+        return getSet(this::bothGetCache, (h, k, t, v) -> {
             localSource.hset(h, k, t, v);
             if (remoteSource != null) {
                 remoteSource.hset(h, k, t, CacheValue.create(v.getValue(), remoteExpire));
@@ -433,19 +433,19 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 数据值
      */
     @Override
-    public <T> CompletableFuture<T> bothGetAsync(String hash, String key, Type type, boolean nullable,
+    public <T> CompletableFuture<T> bothGetSetAsync(String hash, String key, Type type, boolean nullable,
         Duration localExpire, Duration remoteExpire, Supplier<CompletableFuture<T>> supplier) {
         if (!enabled) {
             return supplier.get();
         }
         if (localExpire == null) {  //只有远程缓存
             Objects.requireNonNull(remoteExpire);
-            return remoteGetAsync(hash, key, type, nullable, remoteExpire, supplier);
+            return remoteGetSetAsync(hash, key, type, nullable, remoteExpire, supplier);
         }
         if (remoteExpire == null) { //只有本地缓存
-            return localGetAsync(hash, key, type, nullable, localExpire, supplier);
+            return localGetSetAsync(hash, key, type, nullable, localExpire, supplier);
         }
-        return getAsync(this::bothGetCacheAsync, (h, k, t, v) -> {
+        return getSetAsync(this::bothGetCacheAsync, (h, k, t, v) -> {
             localSource.hset(h, k, t, v);
             if (remoteSource != null) {
                 return remoteSource.hsetAsync(h, k, t, CacheValue.create(v.getValue(), remoteExpire));
@@ -559,7 +559,7 @@ public class CacheManagerService implements CacheManager, Service {
      *
      * @return 数据值
      */
-    protected <T> T get(GetterFunc<CacheValue<T>> getter, SetterSyncFunc setter,
+    protected <T> T getSet(GetterFunc<CacheValue<T>> getter, SetterSyncFunc setter,
         String hash, String key, Type type, boolean nullable, Duration expire, Supplier<T> supplier) {
         checkEnable();
         Objects.requireNonNull(expire);
@@ -604,7 +604,7 @@ public class CacheManagerService implements CacheManager, Service {
      *
      * @return 数据值
      */
-    protected <T> CompletableFuture<T> getAsync(GetterFunc<CompletableFuture<CacheValue<T>>> getter, SetterAsyncFunc setter,
+    protected <T> CompletableFuture<T> getSetAsync(GetterFunc<CompletableFuture<CacheValue<T>>> getter, SetterAsyncFunc setter,
         String hash, String key, Type type, boolean nullable, Duration expire, Supplier<CompletableFuture<T>> supplier) {
         checkEnable();
         Objects.requireNonNull(supplier);

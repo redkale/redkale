@@ -16,8 +16,8 @@ import org.redkale.cache.Cached;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.util.Environment;
-import org.redkale.util.TypeToken;
 import org.redkale.util.MultiHashKey;
+import org.redkale.util.TypeToken;
 
 /**
  *
@@ -102,9 +102,9 @@ public class CacheAction {
     public <T> T get(Supplier<T> supplier, Object... args) {
         if (async) {
             Supplier supplier0 = supplier;
-            return (T) manager.bothGetAsync(hash, dynKey.keyFor(args), resultType, nullable, localExpire, remoteExpire, supplier0);
+            return (T) manager.bothGetSetAsync(hash, dynKey.keyFor(args), resultType, nullable, localExpire, remoteExpire, supplier0);
         } else {
-            return manager.bothGet(hash, dynKey.keyFor(args), resultType, nullable, localExpire, remoteExpire, supplier);
+            return manager.bothGetSet(hash, dynKey.keyFor(args), resultType, nullable, localExpire, remoteExpire, supplier);
         }
     }
 

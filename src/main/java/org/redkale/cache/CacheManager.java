@@ -58,7 +58,7 @@ public interface CacheManager {
      *
      * @return 数据值
      */
-    public <T> T localGet(final String hash, final String key, final Type type, boolean nullable, Duration expire, Supplier<T> supplier);
+    public <T> T localGetSet(final String hash, final String key, final Type type, boolean nullable, Duration expire, Supplier<T> supplier);
 
     /**
      * 本地异步获取缓存数据, 过期返回null
@@ -73,7 +73,7 @@ public interface CacheManager {
      *
      * @return 数据值
      */
-    public <T> CompletableFuture<T> localGetAsync(String hash, String key, Type type, boolean nullable, Duration expire, Supplier<CompletableFuture<T>> supplier);
+    public <T> CompletableFuture<T> localGetSetAsync(String hash, String key, Type type, boolean nullable, Duration expire, Supplier<CompletableFuture<T>> supplier);
 
     /**
      * 本地缓存数据
@@ -171,7 +171,7 @@ public interface CacheManager {
      *
      * @return 数据值
      */
-    public <T> T remoteGet(final String hash, final String key, final Type type, boolean nullable,
+    public <T> T remoteGetSet(final String hash, final String key, final Type type, boolean nullable,
         Duration expire, Supplier<T> supplier);
 
     /**
@@ -187,7 +187,7 @@ public interface CacheManager {
      *
      * @return 数据值
      */
-    public <T> CompletableFuture<T> remoteGetAsync(String hash, String key, Type type, boolean nullable,
+    public <T> CompletableFuture<T> remoteGetSetAsync(String hash, String key, Type type, boolean nullable,
         Duration expire, Supplier<CompletableFuture<T>> supplier);
 
     /**
@@ -325,7 +325,7 @@ public interface CacheManager {
      *
      * @return 数据值
      */
-    public <T> T bothGet(String hash, String key, Type type, boolean nullable,
+    public <T> T bothGetSet(String hash, String key, Type type, boolean nullable,
         Duration localExpire, Duration remoteExpire, Supplier<T> supplier);
 
     /**
@@ -342,7 +342,7 @@ public interface CacheManager {
      *
      * @return 数据值
      */
-    public <T> CompletableFuture<T> bothGetAsync(String hash, String key, Type type, boolean nullable,
+    public <T> CompletableFuture<T> bothGetSetAsync(String hash, String key, Type type, boolean nullable,
         Duration localExpire, Duration remoteExpire, Supplier<CompletableFuture<T>> supplier);
 
     /**

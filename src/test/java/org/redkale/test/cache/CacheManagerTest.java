@@ -64,7 +64,7 @@ public class CacheManagerTest {
             CountDownLatch cdl = new CountDownLatch(count);
             for (int i = 0; i < count; i++) {
                 new Thread(() -> {
-                    manager.bothGet("ParallelBean", "name", String.class, false, localExpire, remoteExpire, () -> bean.getName());
+                    manager.bothGetSet("ParallelBean", "name", String.class, false, localExpire, remoteExpire, () -> bean.getName());
                     cdl.countDown();
                 }).start();
             }
@@ -72,14 +72,14 @@ public class CacheManagerTest {
         }
         Assertions.assertEquals(1, ParallelBean.c1.get());
         Utility.sleep(200);
-        manager.bothGet("ParallelBean", "name", String.class, false, localExpire, remoteExpire, () -> bean.getName());
+        manager.bothGetSet("ParallelBean", "name", String.class, false, localExpire, remoteExpire, () -> bean.getName());
         Assertions.assertEquals(1, ParallelBean.c1.get());
         Utility.sleep(200);
         {
             CountDownLatch cdl = new CountDownLatch(count);
             for (int i = 0; i < count; i++) {
                 new Thread(() -> {
-                    manager.bothGet("ParallelBean", "name", String.class, false, localExpire, remoteExpire, () -> bean.getName());
+                    manager.bothGetSet("ParallelBean", "name", String.class, false, localExpire, remoteExpire, () -> bean.getName());
                     cdl.countDown();
                 }).start();
             }
