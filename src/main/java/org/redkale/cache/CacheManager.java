@@ -6,7 +6,7 @@ package org.redkale.cache;
 import java.lang.reflect.Type;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
+import org.redkale.util.ThrowSupplier;
 
 /**
  * 缓存管理器
@@ -58,7 +58,7 @@ public interface CacheManager {
      *
      * @return 数据值
      */
-    public <T> T localGetSet(final String hash, final String key, final Type type, boolean nullable, Duration expire, Supplier<T> supplier);
+    public <T> T localGetSet(final String hash, final String key, final Type type, boolean nullable, Duration expire, ThrowSupplier<T> supplier);
 
     /**
      * 本地异步获取缓存数据, 过期返回null
@@ -73,7 +73,7 @@ public interface CacheManager {
      *
      * @return 数据值
      */
-    public <T> CompletableFuture<T> localGetSetAsync(String hash, String key, Type type, boolean nullable, Duration expire, Supplier<CompletableFuture<T>> supplier);
+    public <T> CompletableFuture<T> localGetSetAsync(String hash, String key, Type type, boolean nullable, Duration expire, ThrowSupplier<CompletableFuture<T>> supplier);
 
     /**
      * 本地缓存数据
@@ -172,7 +172,7 @@ public interface CacheManager {
      * @return 数据值
      */
     public <T> T remoteGetSet(final String hash, final String key, final Type type, boolean nullable,
-        Duration expire, Supplier<T> supplier);
+        Duration expire, ThrowSupplier<T> supplier);
 
     /**
      * 远程异步获取缓存数据, 过期返回null
@@ -188,7 +188,7 @@ public interface CacheManager {
      * @return 数据值
      */
     public <T> CompletableFuture<T> remoteGetSetAsync(String hash, String key, Type type, boolean nullable,
-        Duration expire, Supplier<CompletableFuture<T>> supplier);
+        Duration expire, ThrowSupplier<CompletableFuture<T>> supplier);
 
     /**
      * 远程缓存数据
@@ -326,7 +326,7 @@ public interface CacheManager {
      * @return 数据值
      */
     public <T> T bothGetSet(String hash, String key, Type type, boolean nullable,
-        Duration localExpire, Duration remoteExpire, Supplier<T> supplier);
+        Duration localExpire, Duration remoteExpire, ThrowSupplier<T> supplier);
 
     /**
      * 本地或远程异步获取缓存数据, 过期返回null
@@ -343,7 +343,7 @@ public interface CacheManager {
      * @return 数据值
      */
     public <T> CompletableFuture<T> bothGetSetAsync(String hash, String key, Type type, boolean nullable,
-        Duration localExpire, Duration remoteExpire, Supplier<CompletableFuture<T>> supplier);
+        Duration localExpire, Duration remoteExpire, ThrowSupplier<CompletableFuture<T>> supplier);
 
     /**
      * 本地和远程缓存数据

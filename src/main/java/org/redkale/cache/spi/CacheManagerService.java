@@ -14,7 +14,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Component;
 import org.redkale.annotation.Nullable;
@@ -28,6 +27,7 @@ import org.redkale.source.CacheMemorySource;
 import org.redkale.source.CacheSource;
 import org.redkale.util.AnyValue;
 import org.redkale.util.RedkaleException;
+import org.redkale.util.ThrowSupplier;
 import org.redkale.util.TypeToken;
 import org.redkale.util.Utility;
 
@@ -157,7 +157,7 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 数据值
      */
     @Override
-    public <T> T localGetSet(final String hash, final String key, final Type type, boolean nullable, Duration expire, Supplier<T> supplier) {
+    public <T> T localGetSet(final String hash, final String key, final Type type, boolean nullable, Duration expire, ThrowSupplier<T> supplier) {
         return getSet(localSource::hget, localSource::hset, hash, key, type, nullable, expire, supplier);
     }
 
@@ -175,7 +175,7 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 数据值
      */
     @Override
-    public <T> CompletableFuture<T> localGetSetAsync(String hash, String key, Type type, boolean nullable, Duration expire, Supplier<CompletableFuture<T>> supplier) {
+    public <T> CompletableFuture<T> localGetSetAsync(String hash, String key, Type type, boolean nullable, Duration expire, ThrowSupplier<CompletableFuture<T>> supplier) {
         return getSetAsync(localSource::hgetAsync, localSource::hsetAsync, hash, key, type, nullable, expire, supplier);
     }
 
@@ -263,7 +263,7 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 数据值
      */
     @Override
-    public <T> T remoteGetSet(final String hash, final String key, final Type type, boolean nullable, Duration expire, Supplier<T> supplier) {
+    public <T> T remoteGetSet(final String hash, final String key, final Type type, boolean nullable, Duration expire, ThrowSupplier<T> supplier) {
         return getSet(remoteSource::hget, remoteSource::hset, hash, key, type, nullable, expire, supplier);
     }
 
@@ -281,7 +281,7 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 数据值
      */
     @Override
-    public <T> CompletableFuture<T> remoteGetSetAsync(String hash, String key, Type type, boolean nullable, Duration expire, Supplier<CompletableFuture<T>> supplier) {
+    public <T> CompletableFuture<T> remoteGetSetAsync(String hash, String key, Type type, boolean nullable, Duration expire, ThrowSupplier<CompletableFuture<T>> supplier) {
         return getSetAsync(remoteSource::hgetAsync, remoteSource::hsetAsync, hash, key, type, nullable, expire, supplier);
     }
 
@@ -399,9 +399,15 @@ public class CacheManagerService implements CacheManager, Service {
      */
     @Override
     public <T> T bothGetSet(final String hash, final String key, final Type type, boolean nullable,
-        Duration localExpire, Duration remoteExpire, Supplier<T> supplier) {
+        Duration localExpire, Duration remoteExpire, ThrowSupplier<T> supplier) {
         if (!enabled) {
-            return supplier.get();
+            try {
+                return supplier.get();
+            } catch (RuntimeException e) {
+                throw e;
+            } catch (Throwable t) {
+                throw new RedkaleException(t);
+            }
         }
         if (localExpire == null) {  //只有远程缓存
             Objects.requireNonNull(remoteExpire);
@@ -434,9 +440,13 @@ public class CacheManagerService implements CacheManager, Service {
      */
     @Override
     public <T> CompletableFuture<T> bothGetSetAsync(String hash, String key, Type type, boolean nullable,
-        Duration localExpire, Duration remoteExpire, Supplier<CompletableFuture<T>> supplier) {
+        Duration localExpire, Duration remoteExpire, ThrowSupplier<CompletableFuture<T>> supplier) {
         if (!enabled) {
-            return supplier.get();
+            try {
+                return supplier.get();
+            } catch (Throwable t) {
+                return CompletableFuture.failedFuture(t);
+            }
         }
         if (localExpire == null) {  //只有远程缓存
             Objects.requireNonNull(remoteExpire);
@@ -560,7 +570,7 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 数据值
      */
     protected <T> T getSet(GetterFunc<CacheValue<T>> getter, SetterSyncFunc setter,
-        String hash, String key, Type type, boolean nullable, Duration expire, Supplier<T> supplier) {
+        String hash, String key, Type type, boolean nullable, Duration expire, ThrowSupplier<T> supplier) {
         checkEnable();
         Objects.requireNonNull(expire);
         Objects.requireNonNull(supplier);
@@ -574,7 +584,14 @@ public class CacheManagerService implements CacheManager, Service {
             if (CacheValue.isValid(oldCacheVal)) {
                 return oldCacheVal;
             }
-            CacheValue<T> newCacheVal = toCacheSupplier(nullable, expire, supplier).get();
+            CacheValue<T> newCacheVal;
+            try {
+                newCacheVal = toCacheSupplier(nullable, expire, supplier).get();
+            } catch (RuntimeException e) {
+                throw e;
+            } catch (Throwable t) {
+                throw new RedkaleException(t);
+            }
             if (CacheValue.isValid(newCacheVal)) {
                 setter.set(hash, key, cacheType, newCacheVal);
             }
@@ -605,7 +622,7 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 数据值
      */
     protected <T> CompletableFuture<T> getSetAsync(GetterFunc<CompletableFuture<CacheValue<T>>> getter, SetterAsyncFunc setter,
-        String hash, String key, Type type, boolean nullable, Duration expire, Supplier<CompletableFuture<T>> supplier) {
+        String hash, String key, Type type, boolean nullable, Duration expire, ThrowSupplier<CompletableFuture<T>> supplier) {
         checkEnable();
         Objects.requireNonNull(supplier);
         final Type cacheType = loadCacheType(type);
@@ -722,7 +739,7 @@ public class CacheManagerService implements CacheManager, Service {
      *
      * @return CacheValue函数
      */
-    protected <T> Supplier<CacheValue<T>> toCacheSupplier(boolean nullable, Duration expire, Supplier<T> supplier) {
+    protected <T> ThrowSupplier<CacheValue<T>> toCacheSupplier(boolean nullable, Duration expire, ThrowSupplier<T> supplier) {
         return () -> toCacheValue(nullable, expire, supplier.get());
     }
 

@@ -22,7 +22,7 @@ public class CacheManagerTest {
 
     public static void main(String[] args) throws Throwable {
         CacheManagerTest test = new CacheManagerTest();
-        test.init();
+        init();
         test.run1();
         test.run2();
     }
