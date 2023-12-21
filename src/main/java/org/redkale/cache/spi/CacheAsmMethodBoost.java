@@ -4,9 +4,12 @@
 package org.redkale.cache.spi;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import org.redkale.asm.AnnotationVisitor;
 import org.redkale.asm.AsmMethodBean;
@@ -20,6 +23,7 @@ import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.cache.Cached;
 import org.redkale.inject.ResourceFactory;
+import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.TypeToken;
 
@@ -34,6 +38,8 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
 
     private static final List<Class<? extends Annotation>> FILTER_ANN = List.of(Cached.class, DynForCache.class);
 
+    private Map<String, CacheAction> actionMap;
+
     public CacheAsmMethodBoost(Class serviceType) {
         super(serviceType);
     }
@@ -45,6 +51,11 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
 
     @Override
     public String doMethod(ClassWriter cw, String newDynName, String fieldPrefix, List filterAnns, Method method, final String newMethodName) {
+        Map<String, CacheAction> actions = this.actionMap;
+        if (actions == null) {
+            actions = new LinkedHashMap<>();
+            this.actionMap = actions;
+        }
         Cached cached = method.getAnnotation(Cached.class);
         if (cached == null) {
             return newMethodName;
@@ -61,7 +72,6 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
         if (method.getReturnType() == void.class || FUTURE_VOID.equals(method.getGenericReturnType())) {
             throw new RedkaleException("@" + Cached.class.getSimpleName() + " cannot on void method, but on " + method);
         }
-
         final String rsMethodName = method.getName() + "_afterCache";
         final String dynFieldName = fieldPrefix + "_" + method.getName() + "CacheAction" + fieldIndex.incrementAndGet();
         { //定义一个新方法调用 this.rsMethodName
@@ -82,6 +92,9 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
             visitInsnReturn(mv, method, l0, insns, methodBean);
             mv.visitMaxs(20, 20);
             mv.visitEnd();
+            CacheAction action = new CacheAction(new CacheEntry(cached), method.getGenericReturnType(), serviceType,
+                method.getParameterTypes(), methodBean.fieldNameArray(), method.getName(), dynFieldName);
+            actions.put(dynFieldName, action);
         }
         { //定义字段
             FieldVisitor fv = cw.visitField(ACC_PRIVATE, dynFieldName, Type.getDescriptor(CacheAction.class), null, null);
@@ -91,12 +104,34 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
     }
 
     @Override
-    public void doAfterMethods(ClassWriter cw, String newDynName, String fieldPrefix) {
-        //do nothing
-    }
-
-    @Override
     public void doInstance(ResourceFactory resourceFactory, Object service) {
+        Class clazz = service.getClass();
+        if (actionMap == null) { //为null表示没有调用过doMethod， 动态类在编译是已经生成好了
+            actionMap = new LinkedHashMap<>();
+            Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBeans(clazz);
+            for (final Method method : clazz.getDeclaredMethods()) {
+                DynForCache cached = method.getAnnotation(DynForCache.class);
+                if (cached != null) {
+                    String dynFieldName = cached.dynField();
+                    AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
+                    CacheAction action = new CacheAction(new CacheEntry(cached), method.getGenericReturnType(), serviceType,
+                        method.getParameterTypes(), methodBean.fieldNameArray(), method.getName(), dynFieldName);
+                    actionMap.put(dynFieldName, action);
+                }
+            }
+        }
+        actionMap.forEach((field, action) -> {
+            try {
+                Field c = clazz.getDeclaredField(field);
+                c.setAccessible(true);
+                resourceFactory.inject(action);
+                action.init();
+                c.set(service, action);
+                RedkaleClassLoader.putReflectionField(clazz.getName(), c);
+            } catch (Exception e) {
+                throw new RedkaleException("field (" + field + ") in " + clazz.getName() + " set error", e);
+            }
+        });
         //do nothing
     }
 

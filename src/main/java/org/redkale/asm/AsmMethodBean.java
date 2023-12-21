@@ -50,6 +50,10 @@ public class AsmMethodBean {
         }
     }
 
+    public String[] fieldNameArray() {
+        return fieldNames == null ? null : fieldNames.toArray(new String[fieldNames.size()]);
+    }
+
     public List<String> getFieldNames() {
         return fieldNames;
     }

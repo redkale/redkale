@@ -101,7 +101,8 @@ public abstract class AsmMethodBoost<T> {
      * @param newDynName  动态新类名
      * @param fieldPrefix 动态字段的前缀
      */
-    public abstract void doAfterMethods(ClassWriter cw, String newDynName, String fieldPrefix);
+    public void doAfterMethods(ClassWriter cw, String newDynName, String fieldPrefix) {
+    }
 
     /**
      * 实例对象进行操作，通常用于给动态的字段赋值
