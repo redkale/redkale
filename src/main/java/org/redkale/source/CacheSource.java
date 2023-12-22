@@ -171,6 +171,15 @@ public interface CacheSource extends Resourcable {
         msetAsync(map).join();
     }
 
+    //MSETNX key value [key value ...]
+    default void msetnx(Serializable... keyVals) {
+        msetnxAsync(keyVals).join();
+    }
+
+    default void msetnx(Map map) {
+        msetnxAsync(map).join();
+    }
+
     //------------------------ setnx ------------------------
     default <T> boolean setnx(String key, Convert convert, Type type, T value) {
         return setnxAsync(key, convert, type, value).join();
@@ -1056,6 +1065,11 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<Void> msetAsync(Serializable... keyVals);
 
     public CompletableFuture<Void> msetAsync(Map map);
+
+    //MSET key value [key value ...]
+    public CompletableFuture<Void> msetnxAsync(Serializable... keyVals);
+
+    public CompletableFuture<Void> msetnxAsync(Map map);
 
     //------------------------ setnx ------------------------
     public <T> CompletableFuture<Boolean> setnxAsync(String key, Convert convert, Type type, T value);

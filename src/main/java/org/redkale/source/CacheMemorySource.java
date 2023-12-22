@@ -25,7 +25,6 @@ import org.redkale.convert.json.*;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.service.Local;
 import org.redkale.util.*;
-import org.redkale.annotation.ResourceChanged;
 
 /**
  * CacheSource的默认实现--内存缓存
@@ -301,18 +300,28 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public CompletableFuture<Void> msetAsync(Serializable... keyVals) {
-        return runFuture(() -> mset(keyVals));
-    }
-
-    @Override
     public void mset(Map map) {
         map.forEach((key, val) -> set0(key.toString(), 0, null, null, val));
     }
 
     @Override
+    public CompletableFuture<Void> msetAsync(Serializable... keyVals) {
+        return runFuture(() -> mset(keyVals));
+    }
+
+    @Override
+    public CompletableFuture<Void> msetnxAsync(Serializable... keyVals) {
+        return runFuture(() -> msetnx(keyVals));
+    }
+
+    @Override
     public CompletableFuture<Void> msetAsync(Map map) {
         return runFuture(() -> mset(map));
+    }
+
+    @Override
+    public CompletableFuture<Void> msetnxAsync(Map map) {
+        return runFuture(() -> msetnx(map));
     }
 
     @Override
@@ -417,6 +426,34 @@ public final class CacheMemorySource extends AbstractCacheSource {
             entry.lastAccessed = System.currentTimeMillis();
         } finally {
             entry.unlock();
+        }
+    }
+
+    @Override
+    public void msetnx(Serializable... keyVals) {
+        if (keyVals.length % 2 != 0) {
+            throw new SourceException("key value must be paired");
+        }
+        msetnx(Utility.ofMap(keyVals));
+    }
+
+    @Override
+    public void msetnx(Map map) {
+        containerLock.lock();
+        try {
+            for (Object key : map.keySet()) {
+                if (find(key.toString(), CacheEntryType.OBJECT) != null) {
+                    return;
+                }
+            }
+            for (Map.Entry<String, Object> en : (Set<Map.Entry<String, Object>>) map.entrySet()) {
+                CacheEntry entry = new CacheEntry(CacheEntryType.OBJECT, en.getKey());
+                container.put(en.getKey(), entry);
+                entry.setObjectValue(this.convert, null, en.getValue());
+                entry.lastAccessed = System.currentTimeMillis();
+            }
+        } finally {
+            containerLock.unlock();
         }
     }
 
