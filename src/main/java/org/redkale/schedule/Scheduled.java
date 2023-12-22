@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 public @interface Scheduled {
 
     /**
-     * 名称, 也可以用于第三方实现的定时任务组件的key
+     * 名称, 可用于第三方实现的定时任务组件的key
      *
      * @return 名称
      */
@@ -32,6 +32,7 @@ public @interface Scheduled {
      * cron表达式, 特殊值: <br>
      * yearly、annually、monthly、weekly、daily、midnight、hourly、minutely
      * 1m、2m、3m、5m、10m、15m、30m、1h、2h、3h、6h
+     * ${env.scheduling.cron}: 读取系统配置项
      *
      * @return cron表达式
      */
@@ -51,6 +52,8 @@ public @interface Scheduled {
      * 5*60: 乘法表达式，值为30
      * ${env.scheduling.fixedDelay}: 读取系统配置项
      * #delays: 读取宿主对象的delays字段值作为值，字段类型必须是int、long数值类型
+     * 
+     * 值大于0且fixedRate小于0则使用 ScheduledThreadPoolExecutor.scheduleWithFixedDelay
      *
      * @return 延迟时间
      */
@@ -63,6 +66,8 @@ public @interface Scheduled {
      * 5*60: 乘法表达式，值为30
      * ${env.scheduling.fixedRate}: 读取系统配置项
      * #intervals: 读取宿主对象的intervals字段值作为值，字段类型必须是int、long数值类型
+     * 
+     * 值大于0则使用 ScheduledThreadPoolExecutor.scheduleAtFixedRate
      *
      * @return 周期时间
      */
@@ -75,7 +80,8 @@ public @interface Scheduled {
      * 5*60: 乘法表达式，值为30
      * ${env.scheduling.initialDelay}: 读取系统配置项
      * #inits: 读取宿主对象的inits字段值作为值，字段类型必须是int、long数值类型
-     *
+     * 
+     * 值大于0且fixedRate和fixedDelay小于0则使用 ScheduledThreadPoolExecutor.schedule
      * @return 起始延迟时间
      */
     String initialDelay() default "-1";

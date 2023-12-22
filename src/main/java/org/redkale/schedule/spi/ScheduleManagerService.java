@@ -61,9 +61,9 @@ public class ScheduleManagerService implements ScheduleManager, Service {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
-    private final ConcurrentHashMap<WeakReference, List<ScheduledTask>> refTaskMap = new ConcurrentHashMap<>();
+    protected final ConcurrentHashMap<WeakReference, List<ScheduledTask>> refTaskMap = new ConcurrentHashMap<>();
 
-    private final ReentrantLock lock = new ReentrantLock();
+    protected final ReentrantLock lock = new ReentrantLock();
 
     @Resource(required = false)
     protected Application application;
@@ -73,7 +73,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
 
     private ScheduledThreadPoolExecutor scheduler;
 
-    private boolean enabled = true;
+    protected boolean enabled = true;
 
     protected AnyValue config;
 
@@ -202,7 +202,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
         String name, String cron, String fixedDelay, String fixedRate,
         String initialDelay, String zone, TimeUnit timeUnit) {
         if ((cron.isEmpty() || "-".equals(cron)) && "-1".equals(fixedRate) && "-1".endsWith(fixedDelay)) {
-            return null;  //时间都没配置
+            return createdOnlyNameTask(ref, method, taskCount, name, cron, fixedDelay, fixedRate, initialDelay, zone, timeUnit);  //时间都没配置
         }
         taskCount.incrementAndGet();
         ZoneId zoneId = Utility.isEmpty(zone) ? null : ZoneId.of(zone);
@@ -215,6 +215,12 @@ public class ScheduleManagerService implements ScheduleManager, Service {
             long initialDelayLong = getLongValue(ref.get(), initialDelay);
             return new FixedTask(ref, name, method, fixedDelayLong, fixedRateLong, initialDelayLong, timeUnit);
         }
+    }
+
+    protected ScheduledTask createdOnlyNameTask(WeakReference ref, Method method, AtomicInteger taskCount,
+        String name, String cron, String fixedDelay, String fixedRate,
+        String initialDelay, String zone, TimeUnit timeUnit) {
+        return null;
     }
 
     protected Runnable createRunnable(final WeakReference ref, Method method) {
