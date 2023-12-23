@@ -16,20 +16,11 @@
 
 ## 文档目录
 * [快速入门](docs/quick-start.md)
-* [基本Cache API](docs/CacheAPI.md)
-* [通过CacheManager注解创建```Cache```实例](docs/CreateCache.md)
-* [通过注解实现方法缓存](docs/MethodCache.md)
-* [配置详解](docs/Config.md)
-* [高级Cache API](docs/AdvancedCacheAPI.md)
-* Redis支持(redis客户端任选一即可)
-  * [使用jedis客户端连接redis](docs/RedisWithJedis.md)
-  * [使用lettuce客户端连接redis](docs/RedisWithLettuce.md)
-  * Spring data redis (文档待写)
-* [内存缓存```LinkedHashMapCache```和```CaffeineCache```](docs/Embedded.md)
-* [统计](docs/Stat.md)
-* [Builder](Builder.md)：未使用Spring4（或未使用Spring）的时候，或通过Builder手工构造```Cache```
-* [开发者文档](docs/DevNote.md)
-* [FAQ](docs/FAQ.md)
+* [对象序列化](docs/convert.md)
+* [Json序列化](docs/convert-json.md)
+* [基本配置](docs/config.md)
+* [方法缓存```Cached```](docs/cached.md)
+* [FAQ](docs/faq.md)
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>详情请访问:&nbsp;&nbsp;&nbsp;&nbsp;<a href='https://redkale.org' target='_blank'>https://redkale.org</a></b>
 
