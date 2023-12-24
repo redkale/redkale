@@ -3,8 +3,6 @@
  */
 package org.redkale.mq.spi;
 
-import org.redkale.mq.spi.MessageAgent;
-import org.redkale.mq.spi.MessageAgentProvider;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -26,6 +24,7 @@ import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
 import org.redkale.mq.MessageConsumer;
+import org.redkale.mq.MessageManager;
 import org.redkale.mq.MessageProducer;
 import org.redkale.mq.ResourceConsumer;
 import org.redkale.mq.ResourceProducer;
@@ -202,6 +201,7 @@ public class MessageModuleEngine extends ModuleEngine {
         for (MessageAgent agent : this.messageAgents) {
             this.resourceFactory.inject(agent);
             agent.init(agent.getConfig());
+            this.resourceFactory.register(agent.getName(), MessageManager.class, agent);
             this.resourceFactory.register(agent.getName(), MessageAgent.class, agent);
         }
         logger.info("MessageAgent init in " + (System.currentTimeMillis() - s) + " ms");

@@ -24,10 +24,10 @@ import org.redkale.convert.Convert;
 import org.redkale.convert.ConvertFactory;
 import org.redkale.convert.ConvertType;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.inject.Resourcable;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.mq.MessageConext;
 import org.redkale.mq.MessageConsumer;
+import org.redkale.mq.MessageManager;
 import org.redkale.mq.MessageProducer;
 import org.redkale.mq.ResourceConsumer;
 import org.redkale.mq.ResourceProducer;
@@ -47,7 +47,7 @@ import org.redkale.util.*;
  *
  * @since 2.1.0
  */
-public abstract class MessageAgent implements Resourcable {
+public abstract class MessageAgent implements MessageManager {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
