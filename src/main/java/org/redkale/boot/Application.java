@@ -5,6 +5,8 @@
  */
 package org.redkale.boot;
 
+import org.redkale.mq.spi.MessageModuleEngine;
+import org.redkale.mq.spi.MessageAgent;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;

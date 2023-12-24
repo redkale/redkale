@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.mq;
+package org.redkale.mq.spi;
 
 /**
  *

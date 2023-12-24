@@ -5,6 +5,7 @@
  */
 package org.redkale.net.http;
 
+import org.redkale.mq.spi.MessageAgent;
 import java.io.*;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;

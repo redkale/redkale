@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.mq;
+package org.redkale.mq.spi;
 
 import java.net.HttpCookie;
 import java.nio.ByteBuffer;
@@ -11,7 +11,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.redkale.convert.Convert;
 import org.redkale.convert.json.JsonConvert;
-import static org.redkale.mq.MessageCoder.*;
+import static org.redkale.mq.spi.MessageCoder.*;
 import org.redkale.net.http.HttpResult;
 import org.redkale.util.Utility;
 

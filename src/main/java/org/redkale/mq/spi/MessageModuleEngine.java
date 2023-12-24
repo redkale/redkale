@@ -1,8 +1,10 @@
 /*
  *
  */
-package org.redkale.mq;
+package org.redkale.mq.spi;
 
+import org.redkale.mq.spi.MessageAgent;
+import org.redkale.mq.spi.MessageAgentProvider;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -23,6 +25,10 @@ import org.redkale.inject.ResourceAnnotationProvider;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
+import org.redkale.mq.MessageConsumer;
+import org.redkale.mq.MessageProducer;
+import org.redkale.mq.ResourceConsumer;
+import org.redkale.mq.ResourceProducer;
 import org.redkale.net.http.RestException;
 import org.redkale.util.AnyValue;
 import org.redkale.util.AnyValueWriter;

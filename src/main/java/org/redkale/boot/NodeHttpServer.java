@@ -20,7 +20,7 @@ import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.cluster.ClusterAgent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
-import org.redkale.mq.MessageAgent;
+import org.redkale.mq.spi.MessageAgent;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.Sncp;

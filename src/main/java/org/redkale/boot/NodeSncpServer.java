@@ -9,7 +9,7 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.logging.Level;
 import org.redkale.boot.ClassFilter.FilterEntry;
-import org.redkale.mq.MessageAgent;
+import org.redkale.mq.spi.MessageAgent;
 import org.redkale.net.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.Local;

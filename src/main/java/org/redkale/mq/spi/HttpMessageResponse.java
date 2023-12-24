@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.mq;
+package org.redkale.mq.spi;
 
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.function.*;
 import java.util.logging.Level;
 import org.redkale.convert.Convert;
-import static org.redkale.mq.MessageRecord.CTYPE_HTTP_RESULT;
+import static org.redkale.mq.spi.MessageRecord.CTYPE_HTTP_RESULT;
 import org.redkale.net.Response;
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;

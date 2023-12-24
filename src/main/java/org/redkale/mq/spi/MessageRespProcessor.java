@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.mq;
+package org.redkale.mq.spi;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;

@@ -5,6 +5,7 @@
  */
 package org.redkale.net.http;
 
+import org.redkale.mq.spi.MessageAgent;
 import java.lang.reflect.Field;
 import java.net.HttpCookie;
 import java.text.*;

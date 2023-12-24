@@ -25,7 +25,7 @@ public class MessageConext {
     @ConvertColumn(index = 2)
     protected Integer partition;
 
-    protected MessageConext(String topic, Integer partition) {
+    public MessageConext(String topic, Integer partition) {
         this.topic = topic;
         this.partition = partition;
     }

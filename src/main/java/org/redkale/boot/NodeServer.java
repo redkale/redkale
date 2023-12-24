@@ -5,6 +5,7 @@
  */
 package org.redkale.boot;
 
+import org.redkale.mq.spi.MessageAgent;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;

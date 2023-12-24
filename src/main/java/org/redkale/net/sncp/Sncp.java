@@ -21,7 +21,7 @@ import org.redkale.convert.Convert;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.inject.Resourcable;
 import org.redkale.inject.ResourceFactory;
-import org.redkale.mq.MessageAgent;
+import org.redkale.mq.spi.MessageAgent;
 import org.redkale.net.http.WebSocketNode;
 import org.redkale.net.sncp.SncpRemoteInfo.SncpRemoteAction;
 import org.redkale.schedule.Scheduled;

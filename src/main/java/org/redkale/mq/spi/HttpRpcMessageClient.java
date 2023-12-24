@@ -1,12 +1,15 @@
 /*
  *
  */
-package org.redkale.mq;
+package org.redkale.mq.spi;
 
+import org.redkale.mq.spi.HttpResultCoder;
+import org.redkale.mq.spi.MessageCoder;
+import org.redkale.mq.spi.HttpSimpleRequestCoder;
 import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 import org.redkale.cluster.HttpRpcClient;
-import static org.redkale.mq.MessageRecord.CTYPE_HTTP_REQUEST;
+import static org.redkale.mq.spi.MessageRecord.CTYPE_HTTP_REQUEST;
 import org.redkale.net.http.HttpResult;
 import org.redkale.net.http.HttpSimpleRequest;
 

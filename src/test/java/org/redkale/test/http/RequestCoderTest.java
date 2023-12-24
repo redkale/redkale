@@ -6,7 +6,7 @@ package org.redkale.test.http;
 import java.lang.reflect.Field;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.redkale.mq.HttpSimpleRequestCoder;
+import org.redkale.mq.spi.HttpSimpleRequestCoder;
 import org.redkale.net.client.ClientRequest;
 import org.redkale.net.http.HttpSimpleRequest;
 

@@ -3,6 +3,9 @@
  */
 package org.redkale.net.sncp;
 
+import org.redkale.mq.spi.MessageRecord;
+import org.redkale.mq.spi.MessageClient;
+import org.redkale.mq.spi.MessageAgent;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.*;

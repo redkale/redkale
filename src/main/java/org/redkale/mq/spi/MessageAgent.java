@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.mq;
+package org.redkale.mq.spi;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -26,12 +26,16 @@ import org.redkale.convert.ConvertType;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.inject.Resourcable;
 import org.redkale.inject.ResourceEvent;
+import org.redkale.mq.MessageConext;
+import org.redkale.mq.MessageConsumer;
+import org.redkale.mq.MessageProducer;
+import org.redkale.mq.ResourceConsumer;
+import org.redkale.mq.ResourceProducer;
 import org.redkale.net.WorkThread;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.util.*;
-import org.redkale.annotation.ResourceChanged;
 
 /**
  * MQ管理器
@@ -52,7 +56,7 @@ public abstract class MessageAgent implements Resourcable {
 
     @Resource(required = false)
     protected Environment environment;
-    
+
     @Resource(name = RESNAME_APP_NODEID)
     protected int nodeid;
 
