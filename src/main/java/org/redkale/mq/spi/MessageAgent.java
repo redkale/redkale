@@ -218,7 +218,7 @@ public abstract class MessageAgent implements MessageManager {
         if (this.timeoutExecutor != null) {
             this.timeoutExecutor.shutdownNow();
         }
-        if (this.workExecutor != null && this.workExecutor != application.getWorkExecutor()) {
+        if (this.workExecutor != application.getWorkExecutor()) {
             this.workExecutor.shutdown();
         }
     }
@@ -400,12 +400,15 @@ public abstract class MessageAgent implements MessageManager {
     public abstract void onResourceChange(ResourceEvent[] events);
 
     //
+    @Override
     public abstract boolean createTopic(String... topics);
 
     //删除topic，如果不存在则跳过
+    @Override
     public abstract boolean deleteTopic(String... topics);
 
     //查询所有topic
+    @Override
     public abstract List<String> queryTopic();
 
     //ServiceLoader时判断配置是否符合当前实现类

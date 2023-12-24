@@ -88,6 +88,8 @@ public interface Invoker<C, R> {
             returnDesc = Type.getDescriptor(Long.class);
         } else if (returnType == double.class) {
             returnDesc = Type.getDescriptor(Double.class);
+        } else if (returnType == void.class) {
+            returnDesc = Type.getDescriptor(Void.class);
         }
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
         StringBuilder sbpts = new StringBuilder();
@@ -144,7 +146,11 @@ public interface Invoker<C, R> {
             }
 
             mv.visitMethodInsn(staticFlag ? INVOKESTATIC : (clazz.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL), interName, method.getName(), "(" + paramDescs + ")" + returnPrimiveDesc, !staticFlag && clazz.isInterface());
-            Asms.visitPrimitiveValueOf(mv, returnType);
+            if (returnType == void.class) {
+                mv.visitInsn(ACONST_NULL);
+            } else {
+                Asms.visitPrimitiveValueOf(mv, returnType);
+            }
             mv.visitLabel(label1);
             mv.visitInsn(ARETURN);
             if (throwFlag) {

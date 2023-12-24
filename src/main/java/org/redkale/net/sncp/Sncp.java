@@ -85,11 +85,6 @@ public abstract class Sncp {
                 continue;
             }
             if (method.getAnnotation(Scheduled.class) != null) {
-                if (Modifier.isStatic(method.getModifiers())
-                    || method.getParameterCount() > 0) {
-                    throw new SncpException(Scheduled.class.getSimpleName() + " must be on protected and non-parameter method, but on " + method);
-                }
-                RedkaleClassLoader.putReflectionMethod(serviceTypeOrImplClass.getName(), method);
                 continue;
             }
             if (Modifier.isStatic(method.getModifiers())) {
