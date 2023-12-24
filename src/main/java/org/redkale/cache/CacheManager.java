@@ -20,6 +20,11 @@ import org.redkale.util.ThrowSupplier;
  */
 public interface CacheManager {
 
+    /**
+     * 默认的hash
+     */
+    public static final String DEFAULT_HASH = "cache";
+
     //-------------------------------------- 本地缓存 --------------------------------------
     /**
      * 本地获取缓存数据, 过期返回null

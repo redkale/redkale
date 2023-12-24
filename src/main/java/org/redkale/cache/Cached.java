@@ -36,11 +36,11 @@ public @interface Cached {
     String key();
 
     /**
-     * 缓存的hash, 默认值用当前Service类的SimpleName, 不能含有':'、'#'、'@'字符
+     * 缓存的hash, 不能含有':'、'#'、'@'字符
      *
      * @return hash
      */
-    String hash() default "";
+    String hash() default CacheManager.DEFAULT_HASH;
 
     /**
      * 本地缓存过期时长， 0表示永不过期， -1表示不作本地缓存。<br>

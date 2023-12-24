@@ -13,7 +13,6 @@ import org.redkale.annotation.Resource;
 import org.redkale.asm.AsmDepends;
 import org.redkale.cache.CacheManager;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.net.sncp.Sncp;
 import org.redkale.util.Environment;
 import org.redkale.util.MultiHashKey;
 import org.redkale.util.ThrowSupplier;
@@ -94,7 +93,8 @@ public class CacheAction {
 
     void init() {
         this.hash = cached.getHash().trim().isEmpty()
-            ? Sncp.getResourceType(serviceClass).getSimpleName()
+            || CacheManager.DEFAULT_HASH.equals(cached.getHash())
+            ? CacheManager.DEFAULT_HASH
             : environment.getPropertyValue(cached.getHash());
         String key = environment.getPropertyValue(cached.getKey());
         this.dynKey = MultiHashKey.create(paramNames, key);
