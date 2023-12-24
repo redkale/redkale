@@ -9,10 +9,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import org.redkale.boot.Application;
 import org.redkale.boot.ClassFilter;
@@ -44,6 +47,9 @@ public class MessageModuleEngine extends ModuleEngine {
     //MQ管理配置资源
     //@since 2.8.0
     private Properties messageProperties = new Properties();
+
+    //
+    private final Map<String, List<MessageConsumer>> agentConsumers = new ConcurrentHashMap<>();
 
     //MQ管理接口
     //@since 2.1.0
@@ -352,7 +358,7 @@ public class MessageModuleEngine extends ModuleEngine {
         }, Object.class);
         for (MessageAgent agent : this.messageAgents) {
             names.add(agent.getName());
-            List<MessageConsumer> consumers = new ArrayList<>();
+            List<MessageConsumer> consumers = agentConsumers.getOrDefault(agent.getName(), new CopyOnWriteArrayList<>());
             AnyValue consumerConf = agent.getConfig().getAnyValue("consumer");
             if (consumerConf != null) {  //加载 MessageConsumer
                 ClassFilter filter = new ClassFilter(application.getServerClassLoader(), ResourceConsumer.class, MessageConsumer.class, null, null);

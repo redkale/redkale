@@ -4,6 +4,7 @@
 package org.redkale.mq;
 
 import org.redkale.annotation.Component;
+import org.redkale.asm.AsmDepends;
 import org.redkale.service.Local;
 import org.redkale.util.AnyValue;
 
@@ -20,6 +21,7 @@ import org.redkale.util.AnyValue;
  */
 @Local
 @Component
+@AsmDepends
 public interface MessageConsumer<T> {
 
     default void init(AnyValue config) {
