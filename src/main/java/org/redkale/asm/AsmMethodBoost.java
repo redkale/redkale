@@ -208,7 +208,7 @@ public abstract class AsmMethodBoost<T> {
             List<AsmMethodParam> params = methodBean.getParams();
             for (int i = 0; i < paramTypes.length; i++) {
                 AsmMethodParam param = params.get(i);
-                mv.visitLocalVariable(param.getName(), param.getDescription(), param.getSignature(), l0, l2, insns.get(i));
+                mv.visitLocalVariable(param.getName(), param.description(paramTypes[i]), param.signature(paramTypes[i]), l0, l2, insns.get(i));
             }
         }
     }
@@ -307,40 +307,49 @@ public abstract class AsmMethodBoost<T> {
 
     static class MethodParamClassVisitor extends ClassVisitor {
 
+        private Class serviceType;
+
         private final Map<String, AsmMethodBean> methodBeanMap;
 
-        public MethodParamClassVisitor(int api, final Map<String, AsmMethodBean> fieldmap) {
+        public MethodParamClassVisitor(int api, Class serviceType, final Map<String, AsmMethodBean> methodBeanMap) {
             super(api);
-            this.methodBeanMap = fieldmap;
+            this.serviceType = serviceType;
+            this.methodBeanMap = methodBeanMap;
         }
 
         @Override
-        public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-            if (java.lang.reflect.Modifier.isStatic(access)) {
+        public MethodVisitor visitMethod(int methodAccess, String methodName, String methodDesc, String methodSignature, String[] methodExceptions) {
+            super.visitMethod(api, methodName, methodDesc, methodSignature, methodExceptions);
+            if (java.lang.reflect.Modifier.isStatic(methodAccess)) {
                 return null;
             }
-            String key = name + ":" + desc;
+            String key = methodName + ":" + methodDesc;
             if (methodBeanMap.containsKey(key)) {
                 return null;
             }
-            AsmMethodBean bean = new AsmMethodBean(access, name, desc, signature, exceptions);
+            AsmMethodBean bean = new AsmMethodBean(methodAccess, methodName, methodDesc, methodSignature, methodExceptions);
             List<AsmMethodParam> paramList = bean.getParams();
             methodBeanMap.put(key, bean);
             return new MethodVisitor(Opcodes.ASM6) {
                 @Override
-                public void visitLocalVariable(String name, String description, String signature, Label start, Label end, int index) {
-                    if (index < 1) {
+                public void visitParameter(String paramName, int paramAccess) {
+                    paramList.add(new AsmMethodParam(paramName));
+                }
+
+                @Override
+                public void visitLocalVariable(String varName, String varDesc, String varSignature, Label start, Label end, int varIndex) {
+                    if (varIndex < 1) {
                         return;
                     }
                     int size = paramList.size();
                     //index并不会按顺序执行
-                    if (index > size) {
-                        for (int i = size; i < index; i++) {
-                            paramList.add(new AsmMethodParam(" ", description, signature));
+                    if (varIndex > size) {
+                        for (int i = size; i < varIndex; i++) {
+                            paramList.add(new AsmMethodParam(" ", varDesc, varSignature));
                         }
-                        paramList.set(index - 1, new AsmMethodParam(name, description, signature));
+                        paramList.set(varIndex - 1, new AsmMethodParam(varName, varDesc, varSignature));
                     }
-                    paramList.set(index - 1, new AsmMethodParam(name, description, signature));
+                    paramList.set(varIndex - 1, new AsmMethodParam(varName, varDesc, varSignature));
                 }
             };
         }
@@ -353,11 +362,11 @@ public abstract class AsmMethodBoost<T> {
                 return map;
             }
             try {
-                new ClassReader(Utility.readBytesThenClose(in)).accept(new MethodParamClassVisitor(Opcodes.ASM6, map), 0);
+                new ClassReader(Utility.readBytesThenClose(in)).accept(new MethodParamClassVisitor(Opcodes.ASM6, clazz, map), 0);
             } catch (Exception e) { //无需理会
             }
             Class superClass = clazz.getSuperclass();
-            if (superClass == Object.class) {
+            if (superClass == null || superClass == Object.class) { //接口的getSuperclass为null
                 return map;
             }
             return getMethodParamNames(map, superClass);

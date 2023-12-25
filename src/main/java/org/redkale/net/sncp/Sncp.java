@@ -635,7 +635,7 @@ public abstract class Sncp {
                             List<AsmMethodParam> params = methodBean.getParams();
                             for (int i = 0; i < paramTypes.length; i++) {
                                 AsmMethodParam param = params.get(i);
-                                mv.visitLocalVariable(param.getName(), param.getDescription(), param.getSignature(), l0, l2, insns.get(i));
+                                mv.visitLocalVariable(param.getName(), param.description(paramTypes[i]), param.signature(paramTypes[i]), l0, l2, insns.get(i));
                             }
                         }
                         mv.visitMaxs(20, 20);
@@ -974,10 +974,13 @@ public abstract class Sncp {
 //            mv.visitMaxs(1, 1);
 //            mv.visitEnd();
 //        }
+        Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBeans(serviceTypeOrImplClass);
         for (final SncpRemoteAction entry : info.getActions()) {
             final java.lang.reflect.Method method = entry.method;
             {
                 mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, method.getName(), Type.getMethodDescriptor(method), null, null));
+                Label l0 = new Label();
+                mv.visitLabel(l0);
                 //mv.setDebug(true);
                 { //给参数加上 Annotation
                     final Annotation[][] anns = method.getParameterAnnotations();
@@ -992,14 +995,16 @@ public abstract class Sncp {
 
                 mv.visitLdcInsn(entry.actionid.toString());
 
+                AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
+                List<Integer> insns = new ArrayList<>();
+                java.lang.reflect.Type[] paramTypes = entry.paramTypes;
                 {  //传参数
                     int paramlen = entry.paramTypes.length;
                     Asms.visitInsn(mv, paramlen);
                     mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
-                    java.lang.reflect.Type[] paramtypes = entry.paramTypes;
                     int insn = 0;
-                    for (int j = 0; j < paramtypes.length; j++) {
-                        final java.lang.reflect.Type pt = paramtypes[j];
+                    for (int j = 0; j < paramTypes.length; j++) {
+                        final java.lang.reflect.Type pt = paramTypes[j];
                         mv.visitInsn(DUP);
                         insn++;
                         Asms.visitInsn(mv, j);
@@ -1020,6 +1025,7 @@ public abstract class Sncp {
                             mv.visitVarInsn(ALOAD, insn);
                         }
                         mv.visitInsn(AASTORE);
+                        insns.add(insn);
                     }
                 }
 
@@ -1051,6 +1057,16 @@ public abstract class Sncp {
                         }
                     } else {
                         mv.visitInsn(ARETURN);
+                    }
+                }
+                if (methodBean != null && paramTypes.length > 0) {
+                    Label l2 = new Label();
+                    mv.visitLabel(l2);
+                    //mv.visitLocalVariable("this", thisClassDesc, null, l0, l2, 0);
+                    List<AsmMethodParam> params = methodBean.getParams();
+                    for (int i = 0; i < paramTypes.length; i++) {
+                        AsmMethodParam param = params.get(i);
+                        mv.visitLocalVariable(param.getName(), param.description(paramTypes[i]), param.signature(paramTypes[i]), l0, l2, insns.get(i));
                     }
                 }
                 mv.visitMaxs(20, 20);

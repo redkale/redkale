@@ -4,10 +4,11 @@
 package org.redkale.asm;
 
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.util.TypeToken;
 
 /**
  * 存放方法参数的字节信息
- * 
+ *
  * @see org.redkale.asm.AsmMethodBean
  * @see org.redkale.asm.AsmMethodBoost
  *
@@ -24,10 +25,22 @@ public class AsmMethodParam {
     public AsmMethodParam() {
     }
 
+    public AsmMethodParam(String name) {
+        this.name = name;
+    }
+
     public AsmMethodParam(String name, String description, String signature) {
         this.name = name;
         this.description = description;
         this.signature = signature;
+    }
+
+    public String description(java.lang.reflect.Type type) {
+        return description == null ? Type.getDescriptor(TypeToken.typeToClass(type)) : description;
+    }
+
+    public String signature(java.lang.reflect.Type type) {
+        return signature;
     }
 
     public String getName() {
