@@ -403,10 +403,12 @@ public abstract class NodeServer {
                 continue; //本地模式或Component不能实例化接口和抽象类的Service类
             }
 
-            final ResourceTypeLoader resourceLoader = (ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) -> {
+            final ResourceTypeLoader resourceLoader = (ResourceFactory rf, String srcResourceName, 
+                final Object srcObj, final String resourceName, Field field, final Object attachment) -> {
                 try {
-                    if (Sncp.loadMethodActions(Sncp.getResourceType(serviceImplClass)).isEmpty()
-                        && (serviceImplClass.getAnnotation(Priority.class) == null && serviceImplClass.getAnnotation(javax.annotation.Priority.class) == null)) {  //class没有可用的方法且没有标记启动优先级的， 通常为BaseService
+                    if (Sncp.loadRemoteMethodActions(Sncp.getResourceType(serviceImplClass)).isEmpty()
+                        && (serviceImplClass.getAnnotation(Priority.class) == null 
+                        && serviceImplClass.getAnnotation(javax.annotation.Priority.class) == null)) {  //class没有可用的方法且没有标记启动优先级的， 通常为BaseService
                         if (!serviceImplClass.getName().startsWith("org.redkale.") && !serviceImplClass.getSimpleName().contains("Base")) {
                             logger.log(Level.FINE, serviceImplClass + " cannot load because not found less one public non-final method");
                         }

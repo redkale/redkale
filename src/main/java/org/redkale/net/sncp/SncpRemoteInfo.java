@@ -3,9 +3,6 @@
  */
 package org.redkale.net.sncp;
 
-import org.redkale.mq.spi.MessageRecord;
-import org.redkale.mq.spi.MessageClient;
-import org.redkale.mq.spi.MessageAgent;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.*;
@@ -16,8 +13,10 @@ import java.util.concurrent.*;
 import java.util.logging.*;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.mq.*;
-import static org.redkale.net.sncp.Sncp.loadMethodActions;
+import org.redkale.mq.spi.MessageAgent;
+import org.redkale.mq.spi.MessageClient;
+import org.redkale.mq.spi.MessageRecord;
+import static org.redkale.net.sncp.Sncp.loadRemoteMethodActions;
 import static org.redkale.net.sncp.SncpHeader.HEADER_SUBSIZE;
 import org.redkale.service.*;
 import org.redkale.util.*;
@@ -90,7 +89,7 @@ public class SncpRemoteInfo<S extends Service> {
         this.messageClient = messageAgent == null ? null : messageAgent.getSncpMessageClient();
         this.topic = messageAgent == null ? null : Sncp.generateSncpReqTopic(resourceName, resourceType, messageAgent.getNodeid());
 
-        for (Map.Entry<Uint128, Method> en : loadMethodActions(Sncp.getServiceType(serviceImplClass)).entrySet()) {
+        for (Map.Entry<Uint128, Method> en : loadRemoteMethodActions(Sncp.getServiceType(serviceImplClass)).entrySet()) {
             this.actions.put(en.getKey().toString(), new SncpRemoteAction(serviceImplClass, resourceType, en.getValue(), serviceid, en.getKey(), sncpClient));
         }
     }

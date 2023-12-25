@@ -60,7 +60,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
         this.serviceid = Sncp.serviceid(resourceName, resourceType);
 
         Class serviceImplClass = Sncp.getServiceType(service);
-        for (Map.Entry<Uint128, Method> en : Sncp.loadMethodActions(serviceImplClass).entrySet()) {
+        for (Map.Entry<Uint128, Method> en : Sncp.loadRemoteMethodActions(serviceImplClass).entrySet()) {
             SncpActionServlet action;
             try {
                 action = SncpActionServlet.create(resourceName, resourceType, serviceImplClass, service, serviceid, en.getKey(), en.getValue());

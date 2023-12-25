@@ -100,7 +100,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        for (Method method : Sncp.loadMethodActions(service.getClass()).values()) {
+        for (Method method : Sncp.loadRemoteMethodActions(service.getClass()).values()) {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
@@ -109,7 +109,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        for (Method method : Sncp.loadMethodActions(service.getClass()).values()) {
+        for (Method method : Sncp.loadRemoteMethodActions(service.getClass()).values()) {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
@@ -118,7 +118,7 @@ public class SncpTestServiceImpl implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        for (Method method : Sncp.loadMethodActions(service.getClass()).values()) {
+        for (Method method : Sncp.loadRemoteMethodActions(service.getClass()).values()) {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");

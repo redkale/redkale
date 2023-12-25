@@ -75,7 +75,7 @@ public abstract class Sncp {
     }
 
     //key: actionid
-    public static LinkedHashMap<Uint128, Method> loadMethodActions(final Class serviceTypeOrImplClass) {
+    public static LinkedHashMap<Uint128, Method> loadRemoteMethodActions(final Class serviceTypeOrImplClass) {
         final List<Method> list = new ArrayList<>();
         final List<Method> multis = new ArrayList<>();
         final Map<Uint128, Method> actionids = new LinkedHashMap<>();
@@ -552,97 +552,7 @@ public abstract class Sncp {
             mv.visitEnd();
         }
         if (methodBoost != null) {
-            Class clazz = serviceImplClass;
-            Set<String> methodKeys = new HashSet<>();
-            do {
-                Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBeans(clazz);
-                for (final Method method : clazz.getDeclaredMethods()) {
-                    String mk = Utility.methodKey(method);
-                    if (methodKeys.contains(mk)) {
-                        //跳过已处理的继承方法
-                        continue;
-                    }
-                    methodKeys.add(mk);
-                    List<Class<? extends Annotation>> filterAnns = methodBoost.filterMethodAnnotations(method);
-                    String newMethodName = methodBoost.doMethod(cw, newDynName, FIELDPREFIX, filterAnns, method, null);
-                    if (newMethodName != null) {
-                        String desc = Type.getMethodDescriptor(method);
-                        AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
-                        String signature = null;
-                        String[] exceptions = null;
-                        if (methodBean == null) {
-                            Class<?>[] expTypes = method.getExceptionTypes();
-                            if (expTypes.length > 0) {
-                                exceptions = new String[expTypes.length];
-                                for (int i = 0; i < expTypes.length; i++) {
-                                    exceptions[i] = expTypes[i].getName().replace('.', '/');
-                                }
-                            }
-                        } else {
-                            signature = methodBean.getSignature();
-                            exceptions = methodBean.getExceptions();
-                        }
-                        //需要定义一个新方法调用 super.method
-                        mv = new MethodDebugVisitor(cw.visitMethod(ACC_PRIVATE, newMethodName, desc, signature, exceptions));
-                        Label l0 = new Label();
-                        mv.visitLabel(l0);
-                        //mv.setDebug(true);
-                        mv.visitVarInsn(ALOAD, 0);
-                        //传参数
-                        Class[] paramTypes = method.getParameterTypes();
-                        List<Integer> insns = new ArrayList<>();
-                        int insn = 0;
-                        for (Class pt : paramTypes) {
-                            insn++;
-                            if (pt.isPrimitive()) {
-                                if (pt == long.class) {
-                                    mv.visitVarInsn(LLOAD, insn++);
-                                } else if (pt == float.class) {
-                                    mv.visitVarInsn(FLOAD, insn++);
-                                } else if (pt == double.class) {
-                                    mv.visitVarInsn(DLOAD, insn++);
-                                } else {
-                                    mv.visitVarInsn(ILOAD, insn);
-                                }
-                            } else {
-                                mv.visitVarInsn(ALOAD, insn);
-                            }
-                            insns.add(insn);
-                        }
-                        mv.visitMethodInsn(INVOKESPECIAL, supDynName, method.getName(), Type.getMethodDescriptor(method), false);
-                        if (method.getGenericReturnType() == void.class) {
-                            mv.visitInsn(RETURN);
-                        } else {
-                            Class returnclz = method.getReturnType();
-                            if (returnclz.isPrimitive()) {
-                                if (returnclz == long.class) {
-                                    mv.visitInsn(LRETURN);
-                                } else if (returnclz == float.class) {
-                                    mv.visitInsn(FRETURN);
-                                } else if (returnclz == double.class) {
-                                    mv.visitInsn(DRETURN);
-                                } else {
-                                    mv.visitInsn(IRETURN);
-                                }
-                            } else {
-                                mv.visitInsn(ARETURN);
-                            }
-                        }
-                        if (methodBean != null && paramTypes.length > 0) {
-                            Label l2 = new Label();
-                            mv.visitLabel(l2);
-                            //mv.visitLocalVariable("this", thisClassDesc, null, l0, l2, 0);
-                            List<AsmMethodParam> params = methodBean.getParams();
-                            for (int i = 0; i < paramTypes.length; i++) {
-                                AsmMethodParam param = params.get(i);
-                                mv.visitLocalVariable(param.getName(), param.description(paramTypes[i]), param.signature(paramTypes[i]), l0, l2, insns.get(i));
-                            }
-                        }
-                        mv.visitMaxs(20, 20);
-                        mv.visitEnd();
-                    }
-                }
-            } while ((clazz = clazz.getSuperclass()) != Object.class);
+            createNewMethods(serviceImplClass, methodBoost, new HashSet<>(), cw, newDynName, supDynName);
             methodBoost.doAfterMethods(cw, newDynName, FIELDPREFIX);
         }
         cw.visitEnd();
@@ -669,6 +579,102 @@ public abstract class Sncp {
 
     public static <T extends Service> T createSimpleLocalService(Class<T> serviceImplClass, ResourceFactory resourceFactory) {
         return createLocalService(null, "", serviceImplClass, null, resourceFactory, null, null, null, null, null);
+    }
+
+    private static void createNewMethods(Class clazz, final AsmMethodBoost methodBoost, Set<String> methodKeys, ClassWriter cw, String newDynName, String supDynName) {
+        if (methodBoost == null) {
+            return;
+        }
+        MethodDebugVisitor mv = null;
+        do {
+            Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBeans(clazz);
+            for (final Method method : clazz.getDeclaredMethods()) {
+                String mk = Utility.methodKey(method);
+                if (methodKeys.contains(mk)) {
+                    //跳过已处理的继承方法
+                    continue;
+                }
+                methodKeys.add(mk);
+                List<Class<? extends Annotation>> filterAnns = methodBoost.filterMethodAnnotations(method);
+                String newMethodName = methodBoost.doMethod(cw, newDynName, FIELDPREFIX, filterAnns, method, null);
+                if (newMethodName != null) {
+                    String desc = Type.getMethodDescriptor(method);
+                    AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
+                    String signature = null;
+                    String[] exceptions = null;
+                    if (methodBean == null) {
+                        Class<?>[] expTypes = method.getExceptionTypes();
+                        if (expTypes.length > 0) {
+                            exceptions = new String[expTypes.length];
+                            for (int i = 0; i < expTypes.length; i++) {
+                                exceptions[i] = expTypes[i].getName().replace('.', '/');
+                            }
+                        }
+                    } else {
+                        signature = methodBean.getSignature();
+                        exceptions = methodBean.getExceptions();
+                    }
+                    //需要定义一个新方法调用 super.method
+                    mv = new MethodDebugVisitor(cw.visitMethod(ACC_PRIVATE, newMethodName, desc, signature, exceptions));
+                    Label l0 = new Label();
+                    mv.visitLabel(l0);
+                    //mv.setDebug(true);
+                    mv.visitVarInsn(ALOAD, 0);
+                    //传参数
+                    Class[] paramTypes = method.getParameterTypes();
+                    List<Integer> insns = new ArrayList<>();
+                    int insn = 0;
+                    for (Class pt : paramTypes) {
+                        insn++;
+                        if (pt.isPrimitive()) {
+                            if (pt == long.class) {
+                                mv.visitVarInsn(LLOAD, insn++);
+                            } else if (pt == float.class) {
+                                mv.visitVarInsn(FLOAD, insn++);
+                            } else if (pt == double.class) {
+                                mv.visitVarInsn(DLOAD, insn++);
+                            } else {
+                                mv.visitVarInsn(ILOAD, insn);
+                            }
+                        } else {
+                            mv.visitVarInsn(ALOAD, insn);
+                        }
+                        insns.add(insn);
+                    }
+                    mv.visitMethodInsn(INVOKESPECIAL, supDynName, method.getName(), Type.getMethodDescriptor(method), false);
+                    if (method.getGenericReturnType() == void.class) {
+                        mv.visitInsn(RETURN);
+                    } else {
+                        Class returnclz = method.getReturnType();
+                        if (returnclz.isPrimitive()) {
+                            if (returnclz == long.class) {
+                                mv.visitInsn(LRETURN);
+                            } else if (returnclz == float.class) {
+                                mv.visitInsn(FRETURN);
+                            } else if (returnclz == double.class) {
+                                mv.visitInsn(DRETURN);
+                            } else {
+                                mv.visitInsn(IRETURN);
+                            }
+                        } else {
+                            mv.visitInsn(ARETURN);
+                        }
+                    }
+                    if (methodBean != null && paramTypes.length > 0) {
+                        Label l2 = new Label();
+                        mv.visitLabel(l2);
+                        //mv.visitLocalVariable("this", thisClassDesc, null, l0, l2, 0);
+                        List<AsmMethodParam> params = methodBean.getParams();
+                        for (int i = 0; i < paramTypes.length; i++) {
+                            AsmMethodParam param = params.get(i);
+                            mv.visitLocalVariable(param.getName(), param.description(paramTypes[i]), param.signature(paramTypes[i]), l0, l2, insns.get(i));
+                        }
+                    }
+                    mv.visitMaxs(20, 20);
+                    mv.visitEnd();
+                }
+            }
+        } while ((clazz = clazz.getSuperclass()) != Object.class);
     }
 
     /**
@@ -757,10 +763,10 @@ public abstract class Sncp {
     public static <T extends Service> T createSimpleRemoteService(Class<T> serviceImplClass,
         ResourceFactory resourceFactory, SncpRpcGroups sncpRpcGroups, SncpClient client, String group) {
         if (sncpRpcGroups == null) {
-            throw new SncpException("SncpRpcGroups is null");
+            throw new SncpException(SncpRpcGroups.class.getSimpleName() + " is null");
         }
         if (client == null) {
-            throw new SncpException("SncpClient is null");
+            throw new SncpException(SncpClient.class.getSimpleName() + " is null");
         }
         return createRemoteService(null, "", serviceImplClass, null, resourceFactory, sncpRpcGroups, client, null, group, null);
     }
@@ -974,104 +980,125 @@ public abstract class Sncp {
 //            mv.visitMaxs(1, 1);
 //            mv.visitEnd();
 //        }
+        Set<String> methodKeys = new HashSet<>();
         Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBeans(serviceTypeOrImplClass);
         for (final SncpRemoteAction entry : info.getActions()) {
             final java.lang.reflect.Method method = entry.method;
-            {
-                mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, method.getName(), Type.getMethodDescriptor(method), null, null));
-                Label l0 = new Label();
-                mv.visitLabel(l0);
-                //mv.setDebug(true);
-                { //给参数加上 Annotation
-                    final Annotation[][] anns = method.getParameterAnnotations();
-                    for (int k = 0; k < anns.length; k++) {
-                        for (Annotation ann : anns[k]) {
-                            Asms.visitAnnotation(mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true), ann);
-                        }
-                    }
-                }
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_sncp", sncpInfoDesc);
-
-                mv.visitLdcInsn(entry.actionid.toString());
-
-                AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
-                List<Integer> insns = new ArrayList<>();
-                java.lang.reflect.Type[] paramTypes = entry.paramTypes;
-                {  //传参数
-                    int paramlen = entry.paramTypes.length;
-                    Asms.visitInsn(mv, paramlen);
-                    mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
-                    int insn = 0;
-                    for (int j = 0; j < paramTypes.length; j++) {
-                        final java.lang.reflect.Type pt = paramTypes[j];
-                        mv.visitInsn(DUP);
-                        insn++;
-                        Asms.visitInsn(mv, j);
-                        if (pt instanceof Class && ((Class) pt).isPrimitive()) {
-                            if (pt == long.class) {
-                                mv.visitVarInsn(LLOAD, insn++);
-                            } else if (pt == float.class) {
-                                mv.visitVarInsn(FLOAD, insn++);
-                            } else if (pt == double.class) {
-                                mv.visitVarInsn(DLOAD, insn++);
-                            } else {
-                                mv.visitVarInsn(ILOAD, insn);
-                            }
-                            Class bigclaz = TypeToken.primitiveToWrapper((Class) pt);
-                            mv.visitMethodInsn(INVOKESTATIC, bigclaz.getName().replace('.', '/'), "valueOf",
-                                "(" + Type.getDescriptor((Class) pt) + ")" + Type.getDescriptor(bigclaz), false);
-                        } else {
-                            mv.visitVarInsn(ALOAD, insn);
-                        }
-                        mv.visitInsn(AASTORE);
-                        insns.add(insn);
-                    }
-                }
-
-                mv.visitMethodInsn(INVOKEVIRTUAL, sncpInfoName, "remote", "(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object;", false);
-                //mv.visitCheckCast(INVOKEVIRTUAL, convertName, "convertFrom", convertFromDesc, false);
-                if (method.getGenericReturnType() == void.class) {
-                    mv.visitInsn(POP);
-                    mv.visitInsn(RETURN);
-                } else {
-                    Class returnclz = method.getReturnType();
-                    Class bigPrimitiveClass = returnclz.isPrimitive() ? TypeToken.primitiveToWrapper(returnclz) : returnclz;
-                    mv.visitTypeInsn(CHECKCAST, (returnclz.isPrimitive() ? bigPrimitiveClass : returnclz).getName().replace('.', '/'));
-                    if (returnclz.isPrimitive()) {
-                        String bigPrimitiveName = bigPrimitiveClass.getName().replace('.', '/');
-                        try {
-                            java.lang.reflect.Method pm = bigPrimitiveClass.getMethod(returnclz.getSimpleName() + "Value");
-                            mv.visitMethodInsn(INVOKEVIRTUAL, bigPrimitiveName, pm.getName(), Type.getMethodDescriptor(pm), false);
-                        } catch (Exception ex) {
-                            throw new SncpException(ex); //不可能会发生
-                        }
-                        if (returnclz == long.class) {
-                            mv.visitInsn(LRETURN);
-                        } else if (returnclz == float.class) {
-                            mv.visitInsn(FRETURN);
-                        } else if (returnclz == double.class) {
-                            mv.visitInsn(DRETURN);
-                        } else {
-                            mv.visitInsn(IRETURN);
-                        }
-                    } else {
-                        mv.visitInsn(ARETURN);
-                    }
-                }
-                if (methodBean != null && paramTypes.length > 0) {
-                    Label l2 = new Label();
-                    mv.visitLabel(l2);
-                    //mv.visitLocalVariable("this", thisClassDesc, null, l0, l2, 0);
-                    List<AsmMethodParam> params = methodBean.getParams();
-                    for (int i = 0; i < paramTypes.length; i++) {
-                        AsmMethodParam param = params.get(i);
-                        mv.visitLocalVariable(param.getName(), param.description(paramTypes[i]), param.signature(paramTypes[i]), l0, l2, insns.get(i));
-                    }
-                }
-                mv.visitMaxs(20, 20);
-                mv.visitEnd();
+            String mk = Utility.methodKey(method);
+            if (methodKeys.contains(mk)) {
+                //跳过已处理的继承方法
+                continue;
             }
+            methodKeys.add(mk);
+
+            int acc = ACC_PUBLIC;
+            String newMethodName = null;
+            if (methodBoost != null) {
+                List<Class<? extends Annotation>> filterAnns = methodBoost.filterMethodAnnotations(method);
+                newMethodName = methodBoost.doMethod(cw, newDynName, FIELDPREFIX, filterAnns, method, null);
+            }
+            if (newMethodName != null) {
+                acc = ACC_PRIVATE;
+            } else {
+                newMethodName = method.getName();
+            }
+            mv = new MethodDebugVisitor(cw.visitMethod(acc, newMethodName, Type.getMethodDescriptor(method), null, null));
+            Label l0 = new Label();
+            mv.visitLabel(l0);
+            //mv.setDebug(true);
+            { //给参数加上 Annotation
+                final Annotation[][] anns = method.getParameterAnnotations();
+                for (int k = 0; k < anns.length; k++) {
+                    for (Annotation ann : anns[k]) {
+                        Asms.visitAnnotation(mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true), ann);
+                    }
+                }
+            }
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_sncp", sncpInfoDesc);
+
+            mv.visitLdcInsn(entry.actionid.toString());
+
+            AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
+            List<Integer> insns = new ArrayList<>();
+            java.lang.reflect.Type[] paramTypes = entry.paramTypes;
+            {  //传参数
+                int paramlen = entry.paramTypes.length;
+                Asms.visitInsn(mv, paramlen);
+                mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
+                int insn = 0;
+                for (int j = 0; j < paramTypes.length; j++) {
+                    final java.lang.reflect.Type pt = paramTypes[j];
+                    mv.visitInsn(DUP);
+                    insn++;
+                    Asms.visitInsn(mv, j);
+                    if (pt instanceof Class && ((Class) pt).isPrimitive()) {
+                        if (pt == long.class) {
+                            mv.visitVarInsn(LLOAD, insn++);
+                        } else if (pt == float.class) {
+                            mv.visitVarInsn(FLOAD, insn++);
+                        } else if (pt == double.class) {
+                            mv.visitVarInsn(DLOAD, insn++);
+                        } else {
+                            mv.visitVarInsn(ILOAD, insn);
+                        }
+                        Class bigclaz = TypeToken.primitiveToWrapper((Class) pt);
+                        mv.visitMethodInsn(INVOKESTATIC, bigclaz.getName().replace('.', '/'), "valueOf",
+                            "(" + Type.getDescriptor((Class) pt) + ")" + Type.getDescriptor(bigclaz), false);
+                    } else {
+                        mv.visitVarInsn(ALOAD, insn);
+                    }
+                    mv.visitInsn(AASTORE);
+                    insns.add(insn);
+                }
+            }
+
+            mv.visitMethodInsn(INVOKEVIRTUAL, sncpInfoName, "remote", "(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object;", false);
+            //mv.visitCheckCast(INVOKEVIRTUAL, convertName, "convertFrom", convertFromDesc, false);
+            if (method.getGenericReturnType() == void.class) {
+                mv.visitInsn(POP);
+                mv.visitInsn(RETURN);
+            } else {
+                Class returnclz = method.getReturnType();
+                Class bigPrimitiveClass = returnclz.isPrimitive() ? TypeToken.primitiveToWrapper(returnclz) : returnclz;
+                mv.visitTypeInsn(CHECKCAST, (returnclz.isPrimitive() ? bigPrimitiveClass : returnclz).getName().replace('.', '/'));
+                if (returnclz.isPrimitive()) {
+                    String bigPrimitiveName = bigPrimitiveClass.getName().replace('.', '/');
+                    try {
+                        java.lang.reflect.Method pm = bigPrimitiveClass.getMethod(returnclz.getSimpleName() + "Value");
+                        mv.visitMethodInsn(INVOKEVIRTUAL, bigPrimitiveName, pm.getName(), Type.getMethodDescriptor(pm), false);
+                    } catch (Exception ex) {
+                        throw new SncpException(ex); //不可能会发生
+                    }
+                    if (returnclz == long.class) {
+                        mv.visitInsn(LRETURN);
+                    } else if (returnclz == float.class) {
+                        mv.visitInsn(FRETURN);
+                    } else if (returnclz == double.class) {
+                        mv.visitInsn(DRETURN);
+                    } else {
+                        mv.visitInsn(IRETURN);
+                    }
+                } else {
+                    mv.visitInsn(ARETURN);
+                }
+            }
+            if (methodBean != null && paramTypes.length > 0) {
+                Label l2 = new Label();
+                mv.visitLabel(l2);
+                //mv.visitLocalVariable("this", thisClassDesc, null, l0, l2, 0);
+                List<AsmMethodParam> params = methodBean.getParams();
+                for (int i = 0; i < paramTypes.length; i++) {
+                    AsmMethodParam param = params.get(i);
+                    mv.visitLocalVariable(param.getName(), param.description(paramTypes[i]), param.signature(paramTypes[i]), l0, l2, insns.get(i));
+                }
+            }
+            mv.visitMaxs(20, 20);
+            mv.visitEnd();
+        }
+        if (methodBoost != null) {
+            createNewMethods(serviceTypeOrImplClass, methodBoost, methodKeys, cw, newDynName, supDynName);
+            methodBoost.doAfterMethods(cw, newDynName, FIELDPREFIX);
         }
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();
