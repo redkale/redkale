@@ -42,9 +42,11 @@ import org.redkale.mq.spi.MessageModuleEngine;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
+import org.redkale.props.spi.PropertiesModule;
 import org.redkale.schedule.spi.ScheduleModuleEngine;
 import org.redkale.service.Service;
 import org.redkale.source.*;
+import org.redkale.source.spi.SourceModuleEngine;
 import org.redkale.util.*;
 import org.redkale.watch.WatchServlet;
 

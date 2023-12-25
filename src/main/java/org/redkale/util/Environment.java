@@ -27,6 +27,10 @@ public class Environment implements java.io.Serializable {
         this.properties = properties;
     }
 
+    public Properties newProperties() {
+        return new Properties(properties);
+    }
+
     public Set<String> keySet() {
         return (Set) properties.keySet();
     }

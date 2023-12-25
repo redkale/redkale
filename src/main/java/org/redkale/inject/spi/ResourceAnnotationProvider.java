@@ -3,10 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.inject;
+package org.redkale.inject.spi;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import org.redkale.inject.ResourceFactory;
 
 /**
  * 自定义注入加载器

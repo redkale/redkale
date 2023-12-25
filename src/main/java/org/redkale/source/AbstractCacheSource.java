@@ -4,13 +4,14 @@ package org.redkale.source;
 
 import java.util.*;
 import org.redkale.annotation.AutoLoad;
+import org.redkale.annotation.ResourceChanged;
 import org.redkale.annotation.ResourceType;
 import org.redkale.inject.Resourcable;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.service.*;
+import org.redkale.source.spi.CacheSourceProvider;
 import org.redkale.util.*;
-import org.redkale.annotation.ResourceChanged;
 
 /**
  * CacheSource的S抽象实现类 <br>

@@ -32,15 +32,13 @@ import org.redkale.util.Environment;
  *
  * @since 2.8.0
  */
-class LoggingModule {
-
-    private final Application application;
+class LoggingModule extends BootModule {
 
     //日志配置资源
     private final Properties loggingProperties = new Properties();
 
     LoggingModule(Application application) {
-        this.application = application;
+        super(application);
     }
 
     /**
@@ -78,11 +76,11 @@ class LoggingModule {
         String searchRawHandler = "java.util.logging.SearchHandler";
         String searchReadHandler = LoggingSearchHandler.class.getName();
         Properties onlyLogProps = new Properties();
-        Environment environment = application.getEnvironment();
+        Environment envs = this.environment;
         allProps.entrySet().forEach(x -> {
             String key = x.getKey().toString();
             if (key.startsWith("java.util.logging.") || key.contains(".level") || key.equals("handlers")) {
-                String val = environment.getPropertyValue(x.getValue().toString()
+                String val = envs.getPropertyValue(x.getValue().toString()
                     .replace("%m", "%tY%tm").replace("%d", "%tY%tm%td") //兼容旧时间格式
                     .replace(searchRawHandler, searchReadHandler));
                 onlyLogProps.put(key.replace(searchRawHandler, searchReadHandler), val);

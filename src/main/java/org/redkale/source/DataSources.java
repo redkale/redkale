@@ -10,6 +10,7 @@ import java.net.*;
 import java.util.*;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.service.Service;
+import org.redkale.source.spi.DataSourceProvider;
 import org.redkale.util.*;
 import static org.redkale.util.Utility.isEmpty;
 

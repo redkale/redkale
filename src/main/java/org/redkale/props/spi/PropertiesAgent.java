@@ -1,10 +1,12 @@
 /*
  */
-package org.redkale.boot;
+package org.redkale.props.spi;
 
 import java.util.*;
 import java.util.logging.Logger;
+import org.redkale.boot.Application;
 import org.redkale.inject.ResourceEvent;
+import org.redkale.props.spi.PropertiesModule;
 import org.redkale.util.*;
 
 /**
@@ -22,6 +24,8 @@ import org.redkale.util.*;
 public abstract class PropertiesAgent {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
+
+    PropertiesModule bootModule;
 
     /**
      * 编译时进行的操作
@@ -65,7 +69,7 @@ public abstract class PropertiesAgent {
      * @param events      变更项集合
      */
     protected final void onEnvironmentUpdated(Application application, String namespace, List<ResourceEvent> events) {
-        application.propertiesModule.onEnvironmentUpdated(namespace, events);
+        bootModule.onEnvironmentUpdated(namespace, events);
     }
 
 }

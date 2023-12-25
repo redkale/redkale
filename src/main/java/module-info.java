@@ -26,7 +26,9 @@ module org.redkale {
     exports org.redkale.convert.ext;
     exports org.redkale.convert.json;
     exports org.redkale.convert.proto;
+    exports org.redkale.convert.spi;
     exports org.redkale.inject;
+    exports org.redkale.inject.spi;
     exports org.redkale.lock;
     exports org.redkale.lock.spi;
     exports org.redkale.mq;
@@ -36,22 +38,24 @@ module org.redkale {
     exports org.redkale.net.http;
     exports org.redkale.net.sncp;
     exports org.redkale.persistence;
+    exports org.redkale.props.spi;
     exports org.redkale.schedule;
     exports org.redkale.schedule.spi;
     exports org.redkale.service;
     exports org.redkale.source;
+    exports org.redkale.source.spi;
     exports org.redkale.util;
     exports org.redkale.watch;
     
-    uses org.redkale.boot.PropertiesAgentProvider;
+    uses org.redkale.props.spi.PropertiesAgentProvider;
     uses org.redkale.cache.spi.CacheManagerProvider;
     uses org.redkale.cluster.spi.ClusterAgentProvider;
-    uses org.redkale.convert.ConvertProvider;
-    uses org.redkale.inject.ResourceAnnotationProvider;
+    uses org.redkale.convert.spi.ConvertProvider;
+    uses org.redkale.inject.spi.ResourceAnnotationProvider;
     uses org.redkale.mq.spi.MessageAgentProvider;
     uses org.redkale.schedule.spi.ScheduleManagerProvider;
-    uses org.redkale.source.CacheSourceProvider;
-    uses org.redkale.source.DataSourceProvider;
-    uses org.redkale.source.DataNativeSqlParserProvider;
+    uses org.redkale.source.spi.CacheSourceProvider;
+    uses org.redkale.source.spi.DataSourceProvider;
+    uses org.redkale.source.spi.DataNativeSqlParserProvider;
     
 }

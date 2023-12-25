@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.boot;
+package org.redkale.props.spi;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -16,6 +16,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.redkale.boot.Application;
+import org.redkale.boot.BootModule;
+import org.redkale.boot.ModuleEngine;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.util.AnyValue;
 import org.redkale.util.Environment;
@@ -34,11 +37,9 @@ import org.redkale.util.Utility;
  *
  * @since 2.8.0
  */
-class PropertiesModule {
+public class PropertiesModule extends BootModule {
 
     private final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
-
-    private final Application application;
 
     //配置源管理接口
     //@since 2.7.0
@@ -47,14 +48,14 @@ class PropertiesModule {
     //envProperties更新锁
     private final ReentrantLock updateLock = new ReentrantLock();
 
-    PropertiesModule(Application application) {
-        this.application = application;
+    public PropertiesModule(Application application) {
+        super(application);
     }
 
     public void destroy() {
         if (this.propertiesAgent != null) {
             long s = System.currentTimeMillis();
-            this.propertiesAgent.destroy(application.config.getAnyValue("properties"));
+            this.propertiesAgent.destroy(application.getAppConfig().getAnyValue("properties"));
             logger.info(this.propertiesAgent.getClass().getSimpleName() + " destroy in " + (System.currentTimeMillis() - s) + " ms");
         }
     }
@@ -92,7 +93,8 @@ class PropertiesModule {
             for (PropertiesAgentProvider provider : InstanceProvider.sort(providers)) {
                 long s = System.currentTimeMillis();
                 this.propertiesAgent = provider.createInstance();
-                application.resourceFactory.inject(this.propertiesAgent);
+                this.propertiesAgent.bootModule = this;
+                application.getResourceFactory().inject(this.propertiesAgent);
                 if (application.isCompileMode()) {
                     this.propertiesAgent.compile(propsConf);
                 } else {
@@ -121,7 +123,7 @@ class PropertiesModule {
 
         //重置远程日志配置
         if (Utility.isNotEmpty(logProps)) {
-            application.loggingModule.reconfigLogging(false, logProps);
+            reconfigLogging(false, logProps);
         }
 
         if (!remoteEnvs.isEmpty()) {
@@ -138,11 +140,11 @@ class PropertiesModule {
         try {
             if (namespace != null && namespace.contains("logging")) {
                 //日志配置单独处理
-                application.loggingModule.onEnvironmentUpdated(events);
+                onEnvironmentUpdated(namespace, events);
                 return;
             }
             Set<String> removedKeys = new HashSet<>();
-            Properties newEnvs = new Properties(application.envProperties);
+            Properties newEnvs = environment.newProperties();
             for (ResourceEvent<String> event : events) {
                 if (event.newValue() != null) {
                     newEnvs.put(event.name(), event.newValue());
@@ -152,7 +154,7 @@ class PropertiesModule {
                 }
             }
             mergeEnvProperties(newEnvs, removedKeys);
-            application.onEnvironmentChanged(namespace, events);
+            onEnvironmentChanged(namespace, events);
         } finally {
             updateLock.unlock();
         }
@@ -186,49 +188,49 @@ class PropertiesModule {
                 newMergeProps.put(k, v);
             } else { //其他视为普通配置项
                 if (key.startsWith("system.property.")) {
-                    application.envProperties.put(k, v);
+                    putEnvValue(k, v);
                 } else if (key.startsWith("mimetype.property.")) {
-                    application.envProperties.put(k, v);
+                    putEnvValue(k, v);
                 } else if (key.startsWith("redkale.properties.property.")) {
                     newMergeProps.put(k, v);
                     String name = key.substring("redkale.properties.".length());
-                    application.envProperties.put(name, v);
+                    putEnvValue(name, v);
                 } else if (key.startsWith("redkale.properties.property[")) {
                     newMergeProps.put(k, v);
                     String name = key.substring("redkale.properties[".length());
                     name = name.substring(0, name.indexOf(']'));
-                    application.envProperties.put(name, v);
+                    putEnvValue(name, v);
                 } else if (key.startsWith("redkale.properties.")) { //支持 -Dredkale.properties.mykey = myvalue
                     String prefix = "redkale.properties.property[" + propertyIndex.getAndIncrement() + "]";
                     String name = key.substring("redkale.properties.".length());
                     newMergeProps.put(prefix + ".name", name);
                     newMergeProps.put(prefix + ".value", v);
-                    application.envProperties.put(name, v);
+                    putEnvValue(name, v);
                 } else { //独立的普通配置项文件，比如：config.properties文件中的配置项
                     String prefix = "redkale.properties.property[" + propertyIndex.getAndIncrement() + "]";
                     newMergeProps.put(prefix + ".name", k);
                     newMergeProps.put(prefix + ".value", v);
-                    application.envProperties.put(k, v);
+                    putEnvValue(k, v);
                 }
             }
         });
-        if (Utility.isNotEmpty(removedKeys)) {
-            removedKeys.forEach(application.envProperties::remove);
+        if (removedKeys != null && !removedKeys.isEmpty()) {
+            removedKeys.forEach(this::removeEnvValue);
         }
         if (!newMergeProps.isEmpty()) {
             Properties newDyncProps = new Properties();
             newMergeProps.forEach((k, v) -> newDyncProps.put(k.toString(), application.getEnvironment().getPropertyValue(v.toString(), newMergeProps)));
             //合并配置
-            application.getAppConfig().merge(AnyValue.loadFromProperties(newDyncProps).getAnyValue("redkale"), createMergeStrategy(application));
+            application.getAppConfig().merge(AnyValue.loadFromProperties(newDyncProps).getAnyValue("redkale"), createMergeStrategy());
         }
     }
 
     /**
      * 合并系统配置项的策略
      */
-    static final AnyValue.MergeStrategy createMergeStrategy(final Application application) {
+    AnyValue.MergeStrategy createMergeStrategy() {
         return (path, key, val1, val2) -> {
-            for (ModuleEngine m : application.getModuleEngines()) {
+            for (ModuleEngine m : getModuleEngines()) {
                 AnyValue.MergeEnum rs = m.mergeAppConfigStrategy(path, key, val1, val2);
                 if (rs != null) {
                     return rs;

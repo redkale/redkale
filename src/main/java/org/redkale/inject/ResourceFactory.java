@@ -17,6 +17,7 @@ import java.util.function.*;
 import java.util.logging.*;
 import org.redkale.annotation.*;
 import org.redkale.convert.*;
+import org.redkale.inject.spi.ResourceAnnotationProvider;
 import org.redkale.util.Creator;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;

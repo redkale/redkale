@@ -56,6 +56,7 @@ public class RedkaleClassLoader extends URLClassLoader {
         "org.redkale.convert.ext",
         "org.redkale.convert.json",
         "org.redkale.convert.proto",
+        "org.redkale.convert.spi",
         "org.redkale.inject",
         "org.redkale.lock",
         "org.redkale.lock.spi",
@@ -70,6 +71,7 @@ public class RedkaleClassLoader extends URLClassLoader {
         "org.redkale.schedule.spi",
         "org.redkale.service",
         "org.redkale.source",
+        "org.redkale.source.spi",
         "org.redkale.util",
         "org.redkale.watch"
     };

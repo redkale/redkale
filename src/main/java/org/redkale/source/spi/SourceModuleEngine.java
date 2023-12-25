@@ -1,14 +1,16 @@
 /*
  *
  */
-package org.redkale.source;
+package org.redkale.source.spi;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.ServiceLoader;
@@ -25,6 +27,18 @@ import org.redkale.inject.ResourceTypeLoader;
 import org.redkale.net.Servlet;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.service.Service;
+import org.redkale.source.AbstractCacheSource;
+import org.redkale.source.AbstractDataSource;
+import org.redkale.source.CacheMemorySource;
+import org.redkale.source.CacheSource;
+import org.redkale.source.DataJdbcSource;
+import org.redkale.source.DataMemorySource;
+import org.redkale.source.DataNativeSqlParser;
+import org.redkale.source.DataSource;
+import org.redkale.source.DataSources;
+import org.redkale.source.DataSqlSource;
+import org.redkale.source.SearchSource;
+import org.redkale.source.SourceManager;
 import org.redkale.util.AnyValue;
 import org.redkale.util.AnyValueWriter;
 import org.redkale.util.InstanceProvider;
@@ -36,7 +50,7 @@ import org.redkale.util.Utility;
  *
  * @author zhangjx
  */
-public class SourceModuleEngine extends ModuleEngine {
+public class SourceModuleEngine extends ModuleEngine implements SourceManager {
 
     //Source 原始的配置资源, 只会存在redkale.datasource(.|[) redkale.cachesource(.|[)开头的配置项
     private final Properties sourceProperties = new Properties();
@@ -117,7 +131,7 @@ public class SourceModuleEngine extends ModuleEngine {
             this.resourceFactory.register(DataNativeSqlParser.class, this.nativeSqlParser);
             break;  //only first provider
         }
-
+        resourceFactory.register(SourceManager.class, this);
         //--------------------------------- 注册 DataSource、CacheSource ---------------------------------        
         resourceFactory.register(new DataSourceLoader(), DataSource.class);
         resourceFactory.register(new CacheSourceLoader(), CacheSource.class);
@@ -330,6 +344,17 @@ public class SourceModuleEngine extends ModuleEngine {
         }
     }
 
+    /**
+     * 获取所有CacheSource, 不同资源名可能指向同一个CacheSource
+     *
+     * @return CacheSource集合
+     */
+    public Map<String, CacheSource> getCacheSources() {
+        Map<String, CacheSource> sources = new HashMap<>();
+        cacheSources.forEach(v -> sources.put(v.resourceName(), v));
+        return sources;
+    }
+
     public CacheSource loadCacheSource(final String sourceName, boolean autoMemory) {
         cacheSourceLock.lock();
         try {
@@ -376,6 +401,17 @@ public class SourceModuleEngine extends ModuleEngine {
         } finally {
             cacheSourceLock.unlock();
         }
+    }
+
+    /**
+     * 获取所有DataSource, 不同资源名可能指向同一个DataSource
+     *
+     * @return DataSource集合
+     */
+    public Map<String, DataSource> getDataSources() {
+        Map<String, DataSource> sources = new HashMap<>();
+        dataSources.forEach(v -> sources.put(v.resourceName(), v));
+        return sources;
     }
 
     public DataSource loadDataSource(final String sourceName, boolean autoMemory) {

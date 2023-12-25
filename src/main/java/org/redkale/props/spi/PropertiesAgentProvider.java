@@ -1,6 +1,6 @@
 /*
  */
-package org.redkale.boot;
+package org.redkale.props.spi;
 
 import org.redkale.util.*;
 
