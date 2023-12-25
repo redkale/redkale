@@ -50,6 +50,7 @@ public class RedkaleClassLoader extends URLClassLoader {
         "org.redkale.cache",
         "org.redkale.cache.spi",
         "org.redkale.cluster",
+        "org.redkale.cluster.spi",
         "org.redkale.convert",
         "org.redkale.convert.bson",
         "org.redkale.convert.ext",

@@ -20,6 +20,7 @@ module org.redkale {
     exports org.redkale.cache;
     exports org.redkale.cache.spi;
     exports org.redkale.cluster;
+    exports org.redkale.cluster.spi;
     exports org.redkale.convert;
     exports org.redkale.convert.bson;
     exports org.redkale.convert.ext;
@@ -44,7 +45,7 @@ module org.redkale {
     
     uses org.redkale.boot.PropertiesAgentProvider;
     uses org.redkale.cache.spi.CacheManagerProvider;
-    uses org.redkale.cluster.ClusterAgentProvider;
+    uses org.redkale.cluster.spi.ClusterAgentProvider;
     uses org.redkale.convert.ConvertProvider;
     uses org.redkale.inject.ResourceAnnotationProvider;
     uses org.redkale.mq.spi.MessageAgentProvider;

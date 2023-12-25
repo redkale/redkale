@@ -9,7 +9,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import org.redkale.convert.ConvertType;
 
 /**
- * MQ资源注解, 只能标记在MessageProducer类型字段上
+ * MQ资源注解, 只能标记在{@link org.redkale.mq.MessageProducer}类型字段上
  *
  * <p>
  * 详情见: https://redkale.org

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.cluster;
+package org.redkale.cluster.spi;
 
 import java.lang.ref.WeakReference;
 import java.net.*;
@@ -23,7 +23,6 @@ import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.util.*;
-import org.redkale.annotation.ResourceChanged;
 
 /**
  * 服务注册中心管理类cluster

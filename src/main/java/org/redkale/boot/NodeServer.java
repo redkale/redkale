@@ -21,7 +21,7 @@ import org.redkale.annotation.Command;
 import org.redkale.asm.AsmMethodBoost;
 import static org.redkale.boot.Application.*;
 import org.redkale.boot.ClassFilter.FilterEntry;
-import org.redkale.cluster.ClusterAgent;
+import org.redkale.cluster.spi.ClusterAgent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
 import org.redkale.mq.spi.MessageAgent;

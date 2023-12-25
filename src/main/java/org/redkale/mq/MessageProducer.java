@@ -8,7 +8,7 @@ import java.util.concurrent.CompletableFuture;
 import org.redkale.convert.Convert;
 
 /**
- * MQ消息发送器
+ * MQ消息发送器 {@link org.redkale.mq.ResourceProducer}
  *
  * <p>
  * 详情见: https://redkale.org

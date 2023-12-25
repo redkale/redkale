@@ -1,4 +1,4 @@
-package org.redkale.cluster;
+package org.redkale.cluster.spi;
 
 import java.io.Serializable;
 import java.net.*;
@@ -10,6 +10,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.redkale.annotation.Resource;
 import org.redkale.boot.Application;
+import org.redkale.cluster.HttpRpcClient;
 import org.redkale.net.http.*;
 import org.redkale.util.Traces;
 import org.redkale.util.Utility;

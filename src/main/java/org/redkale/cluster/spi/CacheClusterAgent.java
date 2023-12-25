@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.cluster;
+package org.redkale.cluster.spi;
 
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -18,7 +18,6 @@ import org.redkale.inject.ResourceEvent;
 import org.redkale.service.Service;
 import org.redkale.source.CacheSource;
 import org.redkale.util.*;
-import org.redkale.annotation.ResourceChanged;
 
 /**
  * 使用CacheSource实现的第三方服务发现管理接口cluster

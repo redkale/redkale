@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.cluster;
+package org.redkale.cluster.spi;
 
 import java.util.ArrayList;
 import java.util.HashSet;

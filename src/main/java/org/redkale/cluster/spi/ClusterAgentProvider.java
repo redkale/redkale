@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.cluster;
+package org.redkale.cluster.spi;
 
 import org.redkale.util.*;
 
