@@ -552,8 +552,8 @@ public abstract class Sncp {
             mv.visitEnd();
         }
         if (methodBoost != null) {
-            createNewMethods(serviceImplClass, methodBoost, new HashSet<>(), cw, newDynName, supDynName);
-            methodBoost.doAfterMethods(cw, newDynName, FIELDPREFIX);
+            createNewMethods(classLoader, serviceImplClass, methodBoost, new HashSet<>(), cw, newDynName, supDynName);
+            methodBoost.doAfterMethods(classLoader, cw, newDynName, FIELDPREFIX);
         }
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();
@@ -581,7 +581,8 @@ public abstract class Sncp {
         return createLocalService(null, "", serviceImplClass, null, resourceFactory, null, null, null, null, null);
     }
 
-    private static void createNewMethods(Class clazz, final AsmMethodBoost methodBoost, Set<String> methodKeys, ClassWriter cw, String newDynName, String supDynName) {
+    private static void createNewMethods(ClassLoader classLoader, Class clazz,
+        final AsmMethodBoost methodBoost, Set<String> methodKeys, ClassWriter cw, String newDynName, String supDynName) {
         if (methodBoost == null) {
             return;
         }
@@ -596,7 +597,7 @@ public abstract class Sncp {
                 }
                 methodKeys.add(mk);
                 List<Class<? extends Annotation>> filterAnns = methodBoost.filterMethodAnnotations(method);
-                String newMethodName = methodBoost.doMethod(cw, newDynName, FIELDPREFIX, filterAnns, method, null);
+                String newMethodName = methodBoost.doMethod(classLoader, cw, newDynName, FIELDPREFIX, filterAnns, method, null);
                 if (newMethodName != null) {
                     String desc = Type.getMethodDescriptor(method);
                     AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
@@ -995,7 +996,7 @@ public abstract class Sncp {
             String newMethodName = null;
             if (methodBoost != null) {
                 List<Class<? extends Annotation>> filterAnns = methodBoost.filterMethodAnnotations(method);
-                newMethodName = methodBoost.doMethod(cw, newDynName, FIELDPREFIX, filterAnns, method, null);
+                newMethodName = methodBoost.doMethod(classLoader, cw, newDynName, FIELDPREFIX, filterAnns, method, null);
             }
             if (newMethodName != null) {
                 acc = ACC_PRIVATE;
@@ -1097,8 +1098,8 @@ public abstract class Sncp {
             mv.visitEnd();
         }
         if (methodBoost != null) {
-            createNewMethods(serviceTypeOrImplClass, methodBoost, methodKeys, cw, newDynName, supDynName);
-            methodBoost.doAfterMethods(cw, newDynName, FIELDPREFIX);
+            createNewMethods(classLoader, serviceTypeOrImplClass, methodBoost, methodKeys, cw, newDynName, supDynName);
+            methodBoost.doAfterMethods(classLoader, cw, newDynName, FIELDPREFIX);
         }
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();

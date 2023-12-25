@@ -38,7 +38,8 @@ public class LockAsmMethodBoost extends AsmMethodBoost {
     }
 
     @Override
-    public String doMethod(ClassWriter cw, String newDynName, String fieldPrefix, List filterAnns, Method method, final String newMethodName) {
+    public String doMethod(ClassLoader classLoader, ClassWriter cw,
+        String newDynName, String fieldPrefix, List filterAnns, Method method, final String newMethodName) {
         Locked locked = method.getAnnotation(Locked.class);
         if (locked == null) {
             return newMethodName;
@@ -77,7 +78,7 @@ public class LockAsmMethodBoost extends AsmMethodBoost {
     }
 
     @Override
-    public void doAfterMethods(ClassWriter cw, String newDynName, String fieldPrefix) {
+    public void doAfterMethods(ClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {
         //do nothing
     }
 

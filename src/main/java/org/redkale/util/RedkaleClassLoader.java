@@ -67,6 +67,7 @@ public class RedkaleClassLoader extends URLClassLoader {
         "org.redkale.net.http",
         "org.redkale.net.sncp",
         "org.redkale.persistence",
+        "org.redkale.props.spi",
         "org.redkale.schedule",
         "org.redkale.schedule.spi",
         "org.redkale.service",
@@ -562,6 +563,32 @@ public class RedkaleClassLoader extends URLClassLoader {
             if (getParent() instanceof RedkaleClassLoader) {
                 ((RedkaleClassLoader) getParent()).forEachCacheClass(action);
             }
+        }
+    }
+
+    public static class DynBytesClassLoader extends ClassLoader {
+
+        private final Map<String, byte[]> classes = new HashMap<>();
+
+        public DynBytesClassLoader(ClassLoader parent) {
+            super(parent);
+        }
+
+        @Override
+        public Class<?> findClass(String name) throws ClassNotFoundException {
+            byte[] classData = classes.get(name);
+            if (classData == null) {
+                return super.findClass(name);
+            }
+            return super.defineClass(name, classData, 0, classData.length);
+        }
+
+        public final Class<?> loadClass(String name, byte[] b) {
+            return defineClass(name, b, 0, b.length);
+        }
+
+        public final void addClass(String name, byte[] b) {
+            classes.put(name, b);
         }
     }
 }

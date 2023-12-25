@@ -5,7 +5,6 @@
  */
 package org.redkale.net.http;
 
-import org.redkale.mq.spi.MessageAgent;
 import java.io.*;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
@@ -24,12 +23,13 @@ import org.redkale.asm.Type;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.inject.ResourceFactory;
-import org.redkale.mq.*;
+import org.redkale.mq.spi.MessageAgent;
 import org.redkale.net.*;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;
 import org.redkale.source.Flipper;
 import org.redkale.util.*;
+import org.redkale.util.RedkaleClassLoader.DynBytesClassLoader;
 import static org.redkale.util.Utility.isEmpty;
 
 /**
@@ -612,7 +612,7 @@ public final class Rest {
             mv.visitEnd();
         }
 
-        RestClassLoader newLoader = new RestClassLoader(loader);
+        DynBytesClassLoader newLoader = new DynBytesClassLoader(loader);
         Map<String, Annotation[]> msgclassToAnnotations = new HashMap<>();
         for (int i = 0; i < messageMethods.size(); i++) {  // _DyncXXXWebSocketMessage 子消息List
             final Method method = messageMethods.get(i);
@@ -1608,6 +1608,7 @@ public final class Rest {
         final String defModuleName = getWebModuleNameLowerCase(serviceType);
         final String bigModuleName = getWebModuleName(serviceType);
         final String catalog = controller == null ? "" : controller.catalog();
+        final String httpDesc = Type.getDescriptor(HttpServlet.class);
         if (!checkName(catalog)) {
             throw new RestException(serviceType.getName() + " have illegal " + RestService.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
         }
@@ -1725,7 +1726,7 @@ public final class Rest {
             return null; //没有可HttpMapping的方法
         }
         Collections.sort(entrys);
-        RestClassLoader newLoader = new RestClassLoader(loader);
+        DynBytesClassLoader newLoader = new DynBytesClassLoader(loader);
         final int moduleid = controller == null ? 0 : controller.moduleid();
         { //注入 @WebServlet 注解
             String urlpath = "";
@@ -3391,7 +3392,7 @@ public final class Rest {
                 mv.visitInsn(DUP);
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitMethodInsn(INVOKESPECIAL, newDynName + "$" + entry.newActionClassName, "<init>", "(L" + newDynName + ";)V", false);
-                mv.visitMethodInsn(INVOKESPECIAL, actionEntryName, "<init>", "(IILjava/lang/String;[Ljava/lang/String;Ljava/lang/reflect/Method;ZZILorg/redkale/net/http/HttpServlet;)V", false);
+                mv.visitMethodInsn(INVOKESPECIAL, actionEntryName, "<init>", "(IILjava/lang/String;[Ljava/lang/String;Ljava/lang/reflect/Method;ZZI" + httpDesc + ")V", false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", false);
                 mv.visitInsn(POP);
             }
@@ -3477,7 +3478,7 @@ public final class Rest {
                 try {
                     RedkaleClassLoader.putDynClass(n, bs, newLoader.findClass(n));
                     RedkaleClassLoader.putReflectionClass(n);
-                } catch (ClassNotFoundException e) {
+                } catch (Exception e) {
                     throw new RestException(e);
                 }
             });
@@ -3624,32 +3625,6 @@ public final class Rest {
             }
         }
         return true;
-    }
-
-    private static class RestClassLoader extends ClassLoader {
-
-        private final Map<String, byte[]> classes = new HashMap<>();
-
-        public RestClassLoader(ClassLoader parent) {
-            super(parent);
-        }
-
-        @Override
-        protected Class<?> findClass(String name) throws ClassNotFoundException {
-            byte[] classData = classes.get(name);
-            if (classData == null) {
-                return super.findClass(name);
-            }
-            return super.defineClass(name, classData, 0, classData.length);
-        }
-
-        public final Class<?> loadClass(String name, byte[] b) {
-            return defineClass(name, b, 0, b.length);
-        }
-
-        public final void addClass(String name, byte[] b) {
-            classes.put(name, b);
-        }
     }
 
     private static class MappingEntry implements Comparable<MappingEntry> {

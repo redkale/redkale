@@ -53,7 +53,8 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
     }
 
     @Override
-    public String doMethod(ClassWriter cw, String newDynName, String fieldPrefix, List filterAnns, Method method, final String newMethodName) {
+    public String doMethod(ClassLoader classLoader, ClassWriter cw,
+        String newDynName, String fieldPrefix, List filterAnns, Method method, final String newMethodName) {
         Map<String, CacheAction> actions = this.actionMap;
         if (actions == null) {
             actions = new LinkedHashMap<>();
@@ -134,8 +135,8 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
                 }
                 mv.visitInsn(AASTORE);
             }
-
-            mv.visitMethodInsn(INVOKEVIRTUAL, CacheAction.class.getName().replace('.', '/'), "get", "(Lorg/redkale/util/ThrowSupplier;[Ljava/lang/Object;)Ljava/lang/Object;", false);
+            String throwFuncDesc = Type.getDescriptor(ThrowSupplier.class);
+            mv.visitMethodInsn(INVOKEVIRTUAL, CacheAction.class.getName().replace('.', '/'), "get", "(" + throwFuncDesc + "[Ljava/lang/Object;)Ljava/lang/Object;", false);
             mv.visitTypeInsn(CHECKCAST, method.getReturnType().getName().replace('.', '/'));
             mv.visitInsn(ARETURN);
             Label l2 = new Label();

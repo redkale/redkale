@@ -167,6 +167,9 @@ public abstract class MessageAgent implements MessageManager {
         if (loginfo.length() > 0) {
             logger.log(Level.INFO, loginfo.toString());
         }
+        if (application.isCompileMode()) {
+            return;
+        }
         //----------------- MessageClient -----------------
         if (this.httpRpcClient != null || !this.httpMessageClient.isEmpty()) {
             this.httpMessageClient.putMessageRespProcessor();

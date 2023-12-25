@@ -86,6 +86,7 @@ public abstract class AsmMethodBoost<T> {
     /**
      * 对方法进行动态加强处理
      *
+     * @param classLoader   ClassLoader
      * @param cw            动态字节码Writer
      * @param newDynName    动态新类名
      * @param fieldPrefix   动态字段的前缀
@@ -95,16 +96,17 @@ public abstract class AsmMethodBoost<T> {
      *
      * @return 下一个新的方法名，不做任何处理应返回参数newMethodName
      */
-    public abstract String doMethod(ClassWriter cw, String newDynName, String fieldPrefix,
-        List<Class<? extends Annotation>> filterAnns, Method method, @Nullable String newMethodName);
+    public abstract String doMethod(ClassLoader classLoader, ClassWriter cw, String newDynName,
+        String fieldPrefix, List<Class<? extends Annotation>> filterAnns, Method method, @Nullable String newMethodName);
 
     /** 处理所有动态方法后调用
      *
+     * @param classLoader ClassLoader
      * @param cw          动态字节码Writer
      * @param newDynName  动态新类名
      * @param fieldPrefix 动态字段的前缀
      */
-    public void doAfterMethods(ClassWriter cw, String newDynName, String fieldPrefix) {
+    public void doAfterMethods(ClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {
     }
 
     /**
@@ -274,22 +276,22 @@ public abstract class AsmMethodBoost<T> {
         }
 
         @Override
-        public String doMethod(ClassWriter cw, String newDynName, String fieldPrefix,
+        public String doMethod(ClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix,
             List<Class<? extends Annotation>> filterAnns, Method method, String newMethodName) {
             String newName = newMethodName;
             for (AsmMethodBoost item : items) {
                 if (item != null) {
-                    newName = item.doMethod(cw, newDynName, fieldPrefix, filterAnns, method, newName);
+                    newName = item.doMethod(classLoader, cw, newDynName, fieldPrefix, filterAnns, method, newName);
                 }
             }
             return newName;
         }
 
         @Override
-        public void doAfterMethods(ClassWriter cw, String newDynName, String fieldPrefix) {
+        public void doAfterMethods(ClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {
             for (AsmMethodBoost item : items) {
                 if (item != null) {
-                    item.doAfterMethods(cw, newDynName, fieldPrefix);
+                    item.doAfterMethods(classLoader, cw, newDynName, fieldPrefix);
                 }
             }
         }

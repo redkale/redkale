@@ -467,6 +467,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
             final String responseName = SncpResponse.class.getName().replace('.', '/');
             final String requestDesc = Type.getDescriptor(SncpRequest.class);
             final String responseDesc = Type.getDescriptor(SncpResponse.class);
+            final String serviceDesc = Type.getDescriptor(Service.class);
             final boolean boolReturnTypeFuture = Future.class.isAssignableFrom(method.getReturnType());
             final String newDynName = "org/redkaledyn/sncp/servlet/action/_DynSncpActionServlet__" + resourceType.getSimpleName() + "_" + method.getName() + "_" + actionid;
 
@@ -488,7 +489,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
 
                 cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
                 {
-                    mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "(Ljava/lang/String;Ljava/lang/Class;Lorg/redkale/service/Service;" + uint128Desc + uint128Desc + "Ljava/lang/reflect/Method;)V", null, null));
+                    mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "(Ljava/lang/String;Ljava/lang/Class;" + serviceDesc + uint128Desc + uint128Desc + "Ljava/lang/reflect/Method;)V", null, null));
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitVarInsn(ALOAD, 2);
@@ -496,7 +497,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
                     mv.visitVarInsn(ALOAD, 4);
                     mv.visitVarInsn(ALOAD, 5);
                     mv.visitVarInsn(ALOAD, 6);
-                    mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "(Ljava/lang/String;Ljava/lang/Class;Lorg/redkale/service/Service;" + uint128Desc + uint128Desc + "Ljava/lang/reflect/Method;)V", false);
+                    mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "(Ljava/lang/String;Ljava/lang/Class;" + serviceDesc + uint128Desc + uint128Desc + "Ljava/lang/reflect/Method;)V", false);
                     mv.visitInsn(RETURN);
                     mv.visitMaxs(7, 7);
                     mv.visitEnd();
@@ -608,7 +609,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
                     }
                     {  //调用service
                         mv.visitVarInsn(ALOAD, 0);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "service", "()Lorg/redkale/service/Service;", false);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "service", "()" + serviceDesc, false);
                         mv.visitTypeInsn(CHECKCAST, serviceImpTypeName);
                         mv.visitVarInsn(ASTORE, store);
 

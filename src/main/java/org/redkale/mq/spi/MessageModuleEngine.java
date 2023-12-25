@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
+import org.redkale.asm.AsmMethodBoost;
 import org.redkale.boot.Application;
 import org.redkale.boot.ClassFilter;
 import org.redkale.boot.ModuleEngine;
@@ -57,6 +58,23 @@ public class MessageModuleEngine extends ModuleEngine {
 
     public MessageModuleEngine(Application application) {
         super(application);
+    }
+
+    /**
+     * 动态扩展类的方法
+     *
+     * @param remote       是否远程模式
+     * @param serviceClass 类
+     *
+     * @return 方法动态扩展器
+     */
+    public AsmMethodBoost createAsmMethodBoost(boolean remote, Class serviceClass) {
+        return new MessageAsmMethodBoost(remote, serviceClass, this);
+    }
+
+    void addMessageConsumer(MessageConsumer consumer) {
+        String agentName = consumer.getClass().getAnnotation(ResourceConsumer.class).mq();
+        agentConsumers.computeIfAbsent(agentName, v -> new CopyOnWriteArrayList<>()).add(consumer);
     }
 
     /**
@@ -205,10 +223,17 @@ public class MessageModuleEngine extends ModuleEngine {
         }
         long s = System.currentTimeMillis();
         for (MessageAgent agent : this.messageAgents) {
-            this.resourceFactory.inject(agent);
-            agent.init(agent.getConfig());
-            this.resourceFactory.register(agent.getName(), MessageManager.class, agent);
-            this.resourceFactory.register(agent.getName(), MessageAgent.class, agent);
+            String agentName = agent.getConfig().getValue("name", "");
+            if (!application.isCompileMode()) {
+                this.resourceFactory.inject(agent);
+                agent.init(agent.getConfig());
+                agentName = agent.getName();
+            } else {
+                agent.name = agentName;
+                agent.application = application;
+            }
+            this.resourceFactory.register(agentName, MessageManager.class, agent);
+            this.resourceFactory.register(agentName, MessageAgent.class, agent);
         }
         logger.info("MessageAgent init in " + (System.currentTimeMillis() - s) + " ms");
     }
@@ -409,7 +434,9 @@ public class MessageModuleEngine extends ModuleEngine {
             long s = System.currentTimeMillis();
             for (MessageAgent agent : this.messageAgents) {
                 names.add(agent.getName());
-                agent.stop();
+                if (!application.isCompileMode()) {
+                    agent.stop();
+                }
             }
             logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") stop in " + (System.currentTimeMillis() - s) + " ms");
         }
@@ -427,7 +454,9 @@ public class MessageModuleEngine extends ModuleEngine {
             long s = System.currentTimeMillis();
             for (MessageAgent agent : this.messageAgents) {
                 names.add(agent.getName());
-                agent.destroy(agent.getConfig());
+                if (!application.isCompileMode()) {
+                    agent.destroy(agent.getConfig());
+                }
             }
             logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") destroy in " + (System.currentTimeMillis() - s) + " ms");
         }

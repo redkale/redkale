@@ -165,4 +165,23 @@ public final class Asms {
         }
     }
 
+    public static void visitPrimitiveVirtual(MethodVisitor mv, Class clazz) {
+        if (clazz == boolean.class) {
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z", false);
+        } else if (clazz == byte.class) {
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Byte", "byteValue", "()B", false);
+        } else if (clazz == short.class) {
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Short", "shortValue", "()S", false);
+        } else if (clazz == char.class) {
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Character", "charValue", "()C", false);
+        } else if (clazz == int.class) {
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer", "intValue", "()I", false);
+        } else if (clazz == float.class) {
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Float", "floatValue", "()F", false);
+        } else if (clazz == long.class) {
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Long", "longValue", "()J", false);
+        } else if (clazz == double.class) {
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Double", "doubleValue", "()D", false);
+        }
+    }
 }
