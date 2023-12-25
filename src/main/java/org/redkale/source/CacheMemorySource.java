@@ -310,8 +310,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public CompletableFuture<Void> msetnxAsync(Serializable... keyVals) {
-        return runFuture(() -> msetnx(keyVals));
+    public CompletableFuture<Boolean> msetnxAsync(Serializable... keyVals) {
+        return supplyFuture(() -> msetnx(keyVals));
     }
 
     @Override
@@ -320,8 +320,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public CompletableFuture<Void> msetnxAsync(Map map) {
-        return runFuture(() -> msetnx(map));
+    public CompletableFuture<Boolean> msetnxAsync(Map map) {
+        return supplyFuture(() -> msetnx(map));
     }
 
     @Override
@@ -430,20 +430,20 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public void msetnx(Serializable... keyVals) {
+    public boolean msetnx(Serializable... keyVals) {
         if (keyVals.length % 2 != 0) {
             throw new SourceException("key value must be paired");
         }
-        msetnx(Utility.ofMap(keyVals));
+        return msetnx(Utility.ofMap(keyVals));
     }
 
     @Override
-    public void msetnx(Map map) {
+    public boolean msetnx(Map map) {
         containerLock.lock();
         try {
             for (Object key : map.keySet()) {
                 if (find(key.toString(), CacheEntryType.OBJECT) != null) {
-                    return;
+                    return false;
                 }
             }
             for (Map.Entry<String, Object> en : (Set<Map.Entry<String, Object>>) map.entrySet()) {
@@ -452,6 +452,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
                 entry.setObjectValue(this.convert, null, en.getValue());
                 entry.lastAccessed = System.currentTimeMillis();
             }
+            return true;
         } finally {
             containerLock.unlock();
         }
