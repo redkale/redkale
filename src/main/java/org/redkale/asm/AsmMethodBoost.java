@@ -42,18 +42,21 @@ public abstract class AsmMethodBoost<T> {
 
     protected final AtomicInteger fieldIndex = new AtomicInteger();
 
+    protected final boolean remote;
+
     protected final Class serviceType;
 
-    protected AsmMethodBoost(Class serviceType) {
+    protected AsmMethodBoost(boolean remote, Class serviceType) {
+        this.remote = remote;
         this.serviceType = serviceType;
     }
 
-    public static AsmMethodBoost create(Collection<AsmMethodBoost> list) {
-        return new AsmMethodBoosts(list);
+    public static AsmMethodBoost create(boolean remote, Collection<AsmMethodBoost> list) {
+        return new AsmMethodBoosts(remote, list);
     }
 
-    public static AsmMethodBoost create(AsmMethodBoost... items) {
-        return new AsmMethodBoosts(items);
+    public static AsmMethodBoost create(boolean remote, AsmMethodBoost... items) {
+        return new AsmMethodBoosts(remote, items);
     }
 
     /**
@@ -243,13 +246,13 @@ public abstract class AsmMethodBoost<T> {
 
         private final AsmMethodBoost[] items;
 
-        public AsmMethodBoosts(Collection<AsmMethodBoost> list) {
-            super(null);
+        public AsmMethodBoosts(boolean remote, Collection<AsmMethodBoost> list) {
+            super(remote, null);
             this.items = list.toArray(new AsmMethodBoost[list.size()]);
         }
 
-        public AsmMethodBoosts(AsmMethodBoost... items) {
-            super(null);
+        public AsmMethodBoosts(boolean remote, AsmMethodBoost... items) {
+            super(remote, null);
             this.items = items;
         }
 

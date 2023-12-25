@@ -5,7 +5,6 @@
  */
 package org.redkale.boot;
 
-import org.redkale.mq.spi.MessageAgent;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
@@ -25,7 +24,7 @@ import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.cluster.ClusterAgent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
-import org.redkale.mq.*;
+import org.redkale.mq.spi.MessageAgent;
 import org.redkale.net.*;
 import org.redkale.net.Filter;
 import org.redkale.net.client.ClientAddress;
@@ -265,7 +264,7 @@ public abstract class NodeServer {
                         if (groups.isEmpty() && isSNCP() && NodeServer.this.sncpGroup != null) {
                             groups.add(NodeServer.this.sncpGroup);
                         }
-                        AsmMethodBoost methodBoost = application.createAsmMethodBoost(WebSocketNodeService.class);
+                        AsmMethodBoost methodBoost = application.createAsmMethodBoost(false, WebSocketNodeService.class);
                         nodeService = Sncp.createLocalService(serverClassLoader, resourceName, WebSocketNodeService.class, methodBoost,
                             application.getResourceFactory(), application.getSncpRpcGroups(), sncpClient, null, (String) null, (AnyValue) null);
                         (isSNCP() ? appResFactory : resourceFactory).register(resourceName, WebSocketNode.class, nodeService);
@@ -332,7 +331,7 @@ public abstract class NodeServer {
             if (Modifier.isFinal(resServiceType.getModifiers()) || Sncp.isComponent(resServiceType)) {
                 service = (Service) resServiceType.getConstructor().newInstance();
             } else {
-                AsmMethodBoost methodBoost = application.createAsmMethodBoost(resServiceType);
+                AsmMethodBoost methodBoost = application.createAsmMethodBoost(false, resServiceType);
                 service = Sncp.createLocalService(serverClassLoader, resourceName, resServiceType,
                     methodBoost, appResFactory, application.getSncpRpcGroups(), sncpClient, null, null, null);
             }
@@ -385,7 +384,7 @@ public abstract class NodeServer {
             if (entry.getName().contains(Resource.PARENT_NAME)) {
                 throw new RedkaleException("<name> value cannot contains '" + Resource.PARENT_NAME + "' in " + entry.getProperty());
             }
-            if (!entry.isEmptyGroup() && !entry.isRemote() && rpcGroups.containsGroup(entry.getGroup())) {
+            if (!entry.isEmptyGroup() && !entry.isRemote() && !rpcGroups.containsGroup(entry.getGroup())) {
                 throw new RedkaleException("Not found group(" + entry.getGroup() + ")");
             }
             Service oldOther = resourceFactory.find(entry.getName(), serviceImplClass);
@@ -424,11 +423,11 @@ public abstract class NodeServer {
                         }
                         service = serviceImplClass.getDeclaredConstructor().newInstance();
                     } else if (ws || localMode) { //本地模式                        
-                        AsmMethodBoost methodBoost = application.createAsmMethodBoost(serviceImplClass);
+                        AsmMethodBoost methodBoost = application.createAsmMethodBoost(false, serviceImplClass);
                         service = Sncp.createLocalService(serverClassLoader, resourceName, serviceImplClass,
                             methodBoost, appResourceFactory, rpcGroups, this.sncpClient, agent, group, entry.getProperty());
                     } else {
-                        AsmMethodBoost methodBoost = application.createAsmMethodBoost(serviceImplClass);
+                        AsmMethodBoost methodBoost = application.createAsmMethodBoost(true, serviceImplClass);
                         service = Sncp.createRemoteService(serverClassLoader, resourceName, serviceImplClass,
                             methodBoost, appResourceFactory, rpcGroups, this.sncpClient, agent, group, entry.getProperty());
                     }
@@ -482,10 +481,11 @@ public abstract class NodeServer {
         new ArrayList<>(localServices).forEach(y -> {
             resourceFactory.inject(Sncp.getResourceName(y), y, NodeServer.this);
         });
-        new ArrayList<>(remoteServices).forEach(y -> {
-            resourceFactory.inject(Sncp.getResourceName(y), y, NodeServer.this);
-            calcMaxLength(y);
-        });
+        //远程模式不可inject， 里面存在@Resource.required=true依赖
+//        new ArrayList<>(remoteServices).forEach(y -> {
+//            resourceFactory.inject(Sncp.getResourceName(y), y, NodeServer.this);
+//            calcMaxLength(y);
+//        });
 
         if (sb != null) {
             remoteServices.forEach(y -> {

@@ -171,7 +171,7 @@ public class NodeHttpServer extends NodeServer {
                         } catch (Exception ex) {
                             logger.log(Level.WARNING, "WebSocketServlet getMessageAgent error", ex);
                         }
-                        AsmMethodBoost methodBoost = application.createAsmMethodBoost(WebSocketNodeService.class);
+                        AsmMethodBoost methodBoost = application.createAsmMethodBoost(false, WebSocketNodeService.class);
                         nodeService = Sncp.createLocalService(serverClassLoader, resourceName, WebSocketNodeService.class, methodBoost,
                             application.getResourceFactory(), application.getSncpRpcGroups(), sncpClient, messageAgent, (String) null, (AnyValue) null);
                         regFactory.register(resourceName, WebSocketNode.class, nodeService);

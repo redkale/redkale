@@ -50,7 +50,7 @@ public class CacheInstanceTest {
     @Test
     public void run1() throws Exception {
         Class<CacheInstance> serviceClass = CacheInstance.class;
-        CacheAsmMethodBoost boost = new CacheAsmMethodBoost(serviceClass);
+        CacheAsmMethodBoost boost = new CacheAsmMethodBoost(false, serviceClass);
         SncpRpcGroups grous = new SncpRpcGroups();
         AsyncGroup iGroup = AsyncGroup.create("", Utility.newScheduledExecutor(1), 0, 0);
         SncpClient client = new SncpClient("", iGroup, 0, new InetSocketAddress("127.0.0.1", 8080), new ClientAddress(), "TCP", 1, 16);

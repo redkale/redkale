@@ -43,8 +43,8 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
 
     private Map<String, CacheAction> actionMap;
 
-    public CacheAsmMethodBoost(Class serviceType) {
-        super(serviceType);
+    public CacheAsmMethodBoost(boolean remote, Class serviceType) {
+        super(remote, serviceType);
     }
 
     @Override

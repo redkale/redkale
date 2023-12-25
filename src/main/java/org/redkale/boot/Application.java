@@ -5,8 +5,6 @@
  */
 package org.redkale.boot;
 
-import org.redkale.mq.spi.MessageModuleEngine;
-import org.redkale.mq.spi.MessageAgent;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
@@ -35,7 +33,8 @@ import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
 import org.redkale.lock.spi.LockModuleEngine;
-import org.redkale.mq.*;
+import org.redkale.mq.spi.MessageAgent;
+import org.redkale.mq.spi.MessageModuleEngine;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
@@ -846,10 +845,10 @@ public final class Application {
         }
     }
 
-    AsmMethodBoost createAsmMethodBoost(Class serviceClass) {
+    AsmMethodBoost createAsmMethodBoost(boolean remote, Class serviceClass) {
         List<AsmMethodBoost> list = null;
         for (ModuleEngine item : moduleEngines) {
-            AsmMethodBoost boost = item.createAsmMethodBoost(serviceClass);
+            AsmMethodBoost boost = item.createAsmMethodBoost(remote, serviceClass);
             if (boost != null) {
                 if (list == null) {
                     list = new ArrayList<>();
@@ -860,7 +859,7 @@ public final class Application {
         if (list == null) {
             return null;
         }
-        return list.size() == 1 ? list.get(0) : AsmMethodBoost.create(list);
+        return list.size() == 1 ? list.get(0) : AsmMethodBoost.create(remote, list);
     }
 
     /**

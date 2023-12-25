@@ -24,8 +24,8 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
 
     private static final List<Class<? extends Annotation>> FILTER_ANN = List.of(Messaged.class);
 
-    public MessageAsmMethodBoost(Class serviceType) {
-        super(serviceType);
+    public MessageAsmMethodBoost(boolean remote, Class serviceType) {
+        super(remote, serviceType);
     }
 
     @Override

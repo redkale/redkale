@@ -52,12 +52,13 @@ public class LockModuleEngine extends ModuleEngine {
     /**
      * 动态扩展类的方法
      *
+     * @param remote       是否远程模式
      * @param serviceClass 类
      *
      * @return 方法动态扩展器
      */
-    public AsmMethodBoost createAsmMethodBoost(Class serviceClass) {
-        return new LockAsmMethodBoost(serviceClass);
+    public AsmMethodBoost createAsmMethodBoost(boolean remote, Class serviceClass) {
+        return new LockAsmMethodBoost(remote, serviceClass);
     }
 
     /**

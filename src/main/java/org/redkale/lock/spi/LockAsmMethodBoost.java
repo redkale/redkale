@@ -28,8 +28,8 @@ public class LockAsmMethodBoost extends AsmMethodBoost {
 
     private static final List<Class<? extends Annotation>> FILTER_ANN = List.of(Locked.class, DynForLock.class);
 
-    public LockAsmMethodBoost(Class serviceType) {
-        super(serviceType);
+    public LockAsmMethodBoost(boolean remote, Class serviceType) {
+        super(remote, serviceType);
     }
 
     @Override
