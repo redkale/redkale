@@ -43,7 +43,7 @@ public class ABMainService implements Service {
         final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
         asyncGroup.start();
         InetSocketAddress sncpAddress = new InetSocketAddress("127.0.0.1", abport);
-        final SncpClient client = new SncpClient("", asyncGroup, 0, sncpAddress, new ClientAddress(sncpAddress), "TCP", 16, 100);
+        final SncpClient client = new SncpClient("", asyncGroup, "0", sncpAddress, new ClientAddress(sncpAddress), "TCP", 16, 100);
         final ResourceFactory resFactory = ResourceFactory.create();
         resFactory.register(JsonConvert.root());
         resFactory.register(BsonConvert.root());
@@ -94,7 +94,7 @@ public class ABMainService implements Service {
         server.init(AnyValueWriter.create("port", abport));
         server.addRestServlet(null, service, null, HttpServlet.class, "/pipes");
         server.start();
-        Thread.sleep(100);
+        Utility.sleep(100);
         System.out.println("开始请求");
 
         //不声明一个新的HttpClient会导致Utility.postHttpContent操作

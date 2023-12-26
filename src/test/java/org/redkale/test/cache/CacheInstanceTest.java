@@ -53,7 +53,7 @@ public class CacheInstanceTest {
         CacheAsmMethodBoost boost = new CacheAsmMethodBoost(false, serviceClass);
         SncpRpcGroups grous = new SncpRpcGroups();
         AsyncGroup iGroup = AsyncGroup.create("", Utility.newScheduledExecutor(1), 0, 0);
-        SncpClient client = new SncpClient("", iGroup, 0, new InetSocketAddress("127.0.0.1", 8080), new ClientAddress(), "TCP", 1, 16);
+        SncpClient client = new SncpClient("", iGroup, "0", new InetSocketAddress("127.0.0.1", 8080), new ClientAddress(), "TCP", 1, 16);
         CacheInstance instance = Sncp.createLocalService(null, "", serviceClass, boost, resourceFactory,
             grous, client, null, null, null);
         //System.out.println(instance.getName());

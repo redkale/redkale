@@ -23,11 +23,11 @@ public class SncpClient extends Client<SncpClientConnection, SncpClientRequest, 
 
     private final AtomicLong seqno = new AtomicLong();
 
-    final int nodeid;
+    final String nodeid;
 
     final InetSocketAddress clientSncpAddress;
 
-    public SncpClient(String name, AsyncGroup group, int nodeid,
+    public SncpClient(String name, AsyncGroup group, String nodeid,
         InetSocketAddress clientSncpAddress, ClientAddress address, String netprotocol, int maxConns, int maxPipelines) {
         super(name, group, "TCP".equalsIgnoreCase(netprotocol), address, maxConns, maxPipelines, null, null, null); //maxConns
         this.clientSncpAddress = clientSncpAddress;
@@ -46,7 +46,7 @@ public class SncpClient extends Client<SncpClientConnection, SncpClientRequest, 
         return clientSncpAddress;
     }
 
-    public int getNodeid() {
+    public String getNodeid() {
         return nodeid;
     }
 

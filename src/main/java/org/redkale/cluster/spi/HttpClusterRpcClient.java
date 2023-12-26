@@ -54,7 +54,7 @@ public class HttpClusterRpcClient extends HttpRpcClient {
     }
 
     @Override
-    protected int getNodeid() {
+    protected String getNodeid() {
         return localClient.getNodeid();
     }
 

@@ -119,6 +119,6 @@ public abstract class HttpRpcClient implements ClusterRpcClient<HttpSimpleReques
 
     public abstract CompletableFuture<Void> produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request);
 
-    protected abstract int getNodeid();
+    protected abstract String getNodeid();
 
 }

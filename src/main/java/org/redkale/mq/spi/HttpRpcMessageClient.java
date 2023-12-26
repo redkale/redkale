@@ -18,11 +18,11 @@ final class HttpRpcMessageClient extends HttpRpcClient {
 
     private final MessageCoder<HttpSimpleRequest> requestCoder = HttpSimpleRequestCoder.getInstance();
 
-    private final int nodeid;
+    private final String nodeid;
 
     private final MessageClient messageClient;
 
-    public HttpRpcMessageClient(MessageClient messageClient, final int nodeid) {
+    public HttpRpcMessageClient(MessageClient messageClient, final String nodeid) {
         this.messageClient = messageClient;
         this.nodeid = nodeid;
     }
@@ -42,7 +42,7 @@ final class HttpRpcMessageClient extends HttpRpcClient {
     }
 
     @Override
-    protected int getNodeid() {
+    protected String getNodeid() {
         return nodeid;
     }
 

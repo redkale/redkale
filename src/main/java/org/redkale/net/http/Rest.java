@@ -269,16 +269,16 @@ public final class Rest {
     }
 
     //格式: http.req.module.user
-    public static String generateHttpReqTopic(String module, int nodeid) {
+    public static String generateHttpReqTopic(String module, String nodeid) {
         return getHttpReqTopicPrefix() + "module." + module.toLowerCase();
     }
 
     //格式: http.req.module.user
-    public static String generateHttpReqTopic(String module, String resname, int nodeid) {
+    public static String generateHttpReqTopic(String module, String resname, String nodeid) {
         return getHttpReqTopicPrefix() + "module." + module.toLowerCase() + (resname == null || resname.isEmpty() ? "" : ("-" + resname));
     }
 
-    public static String generateHttpReqTopic(Service service, int nodeid) {
+    public static String generateHttpReqTopic(Service service, String nodeid) {
         String resname = Sncp.getResourceName(service);
         String module = getRestModule(service).toLowerCase();
         return getHttpReqTopicPrefix() + "module." + module + (resname.isEmpty() ? "" : ("-" + resname));

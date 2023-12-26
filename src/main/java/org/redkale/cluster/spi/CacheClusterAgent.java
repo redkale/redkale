@@ -354,7 +354,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
 
         public InetSocketAddress addr;
 
-        public int nodeid;
+        public String nodeid;
 
         public long time;
 

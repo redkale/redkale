@@ -43,7 +43,7 @@ public abstract class WebSocketNode implements Service {
     protected final Logger logger = Logger.getLogger(WebSocketNode.class.getSimpleName());
 
     @Resource(name = RESNAME_APP_NODEID)
-    protected int nodeid;
+    protected String nodeid;
 
     //"SNCP_ADDR" 如果不是分布式(没有SNCP) 值为null
     @Resource(name = Application.RESNAME_SNCP_ADDRESS, required = false)

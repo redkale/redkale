@@ -39,7 +39,7 @@ public abstract class ClusterAgent {
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     @Resource(name = RESNAME_APP_NODEID)
-    protected int nodeid;
+    protected String nodeid;
 
     @Resource(name = RESNAME_APP_NAME)
     protected String appName = "";

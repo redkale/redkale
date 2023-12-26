@@ -73,7 +73,7 @@ public class HttpLocalRpcClient extends HttpRpcClient {
     }
 
     @Override
-    protected int getNodeid() {
+    protected String getNodeid() {
         return application.getNodeid();
     }
 

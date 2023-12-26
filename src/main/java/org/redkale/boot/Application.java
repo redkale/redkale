@@ -88,7 +88,7 @@ public final class Application {
     public static final String RESNAME_APP_CONF_DIR = "APP_CONF_DIR";
 
     /**
-     * 当前进程节点的nodeid， 类型：int
+     * 当前进程节点的nodeid， 类型：String
      */
     public static final String RESNAME_APP_NODEID = "APP_NODEID";
 
@@ -156,7 +156,7 @@ public final class Application {
     private final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     //本进程节点ID
-    final int nodeid;
+    final String nodeid;
 
     //本进程节点ID
     final String name;
@@ -271,8 +271,10 @@ public final class Application {
         //设置基础信息资源
         this.resourceFactory.register(RESNAME_APP_NAME, String.class, this.name);
 
-        this.resourceFactory.register(RESNAME_APP_NODEID, int.class, this.nodeid);
-        this.resourceFactory.register(RESNAME_APP_NODEID, Integer.class, this.nodeid);
+        this.resourceFactory.register(RESNAME_APP_NODEID, String.class, this.nodeid);
+        if (Utility.isNumeric(this.nodeid)) {
+            this.resourceFactory.register(RESNAME_APP_NODEID, int.class, Integer.parseInt(this.nodeid));
+        }
 
         this.resourceFactory.register(RESNAME_APP_TIME, long.class, this.startTime);
         this.resourceFactory.register(RESNAME_APP_TIME, Long.class, this.startTime);
@@ -1437,7 +1439,7 @@ public final class Application {
         return sncpRpcGroups;
     }
 
-    public int getNodeid() {
+    public String getNodeid() {
         return nodeid;
     }
 

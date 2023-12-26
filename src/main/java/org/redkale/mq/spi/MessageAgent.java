@@ -58,7 +58,7 @@ public abstract class MessageAgent implements MessageManager {
     protected Environment environment;
 
     @Resource(name = RESNAME_APP_NODEID)
-    protected int nodeid;
+    protected String nodeid;
 
     @Resource(name = RESNAME_APP_NAME)
     protected String nodeName;
@@ -432,7 +432,7 @@ public abstract class MessageAgent implements MessageManager {
                 return;
             }
         }
-        if (WebSocketNode.class.isAssignableFrom(Sncp.getResourceType(service)) && nodeid == 0) {
+        if (WebSocketNode.class.isAssignableFrom(Sncp.getResourceType(service)) && Utility.isEmpty(nodeid)) {
             throw new RedkaleException("Application.node not config in WebSocket Cluster");
         }
         String topic = Rest.generateHttpReqTopic(service, this.nodeid);
@@ -449,7 +449,7 @@ public abstract class MessageAgent implements MessageManager {
         if (al2 != null && !al2.value() && service.getClass().getAnnotation(Local.class) != null) {
             return;
         }
-        if (WebSocketNode.class.isAssignableFrom(Sncp.getResourceType(service)) && nodeid == 0) {
+        if (WebSocketNode.class.isAssignableFrom(Sncp.getResourceType(service)) && Utility.isEmpty(nodeid)) {
             throw new RedkaleException("Application.node not config in WebSocket Cluster");
         }
         String topic = Sncp.generateSncpReqTopic(service, this.nodeid);
@@ -486,7 +486,7 @@ public abstract class MessageAgent implements MessageManager {
         return this.sncpAppRespTopic;
     }
 
-    public final int getNodeid() {
+    public final String getNodeid() {
         return this.nodeid;
     }
 

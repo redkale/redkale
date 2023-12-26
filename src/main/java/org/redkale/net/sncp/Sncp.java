@@ -261,12 +261,12 @@ public abstract class Sncp {
     }
 
     //格式: sncp.req.module.user
-    public static String generateSncpReqTopic(Service service, int nodeid) {
+    public static String generateSncpReqTopic(Service service, String nodeid) {
         return generateSncpReqTopic(getResourceName(service), getResourceType(service), nodeid);
     }
 
     //格式: sncp.req.module.user
-    public static String generateSncpReqTopic(String resourceName, Class resourceType, int nodeid) {
+    public static String generateSncpReqTopic(String resourceName, Class resourceType, String nodeid) {
         if (WebSocketNode.class.isAssignableFrom(resourceType)) {
             return getSncpReqTopicPrefix() + "module.wsnode" + nodeid + (isEmpty(resourceName) ? "" : ("-" + resourceName));
         }

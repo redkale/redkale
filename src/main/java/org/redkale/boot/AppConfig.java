@@ -54,7 +54,7 @@ class AppConfig {
     boolean configFromCache;
 
     //本进程节点ID
-    int nodeid;
+    String nodeid;
 
     //本进程节点ID
     String name;
@@ -97,7 +97,7 @@ class AppConfig {
     private void init(AnyValue conf) {
         this.config = conf;
         this.name = checkName(config.getValue("name", ""));
-        this.nodeid = config.getIntValue("nodeid", 0);
+        this.nodeid = config.getValue("nodeid", String.valueOf(Math.abs(System.nanoTime())));
         this.configFromCache = "true".equals(config.getValue("[config-from-cache]"));
         //初始化classLoader、serverClassLoader
         this.initClassLoader();
