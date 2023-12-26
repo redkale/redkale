@@ -23,7 +23,7 @@ public interface CacheManager {
     /**
      * 默认的hash
      */
-    public static final String DEFAULT_HASH = "cache";
+    public static final String DEFAULT_HASH = "cache-hash";
 
     //-------------------------------------- 本地缓存 --------------------------------------
     /**
