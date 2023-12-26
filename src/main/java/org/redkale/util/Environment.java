@@ -65,6 +65,15 @@ public class Environment implements java.io.Serializable {
         int pos1 = val.lastIndexOf("${", pos2);
         if (pos1 >= 0 && pos2 > 0) {
             String key = val.substring(pos1 + 2, pos2);
+            int pos3 = key.lastIndexOf(':');
+            String defVal = null;
+            if (pos3 > 0) {
+                key = key.substring(0, pos3);
+                defVal = key.substring(pos3 + 1);
+                if ("null".equals(defVal)) {
+                    defVal = null;
+                }
+            }
             String subVal = properties.getProperty(key);
             if (subVal != null) {
                 String newVal = getPropertyValue(subVal, envs);
@@ -76,6 +85,9 @@ public class Environment implements java.io.Serializable {
                         String newVal = getPropertyValue(subVal, envs);
                         return getPropertyValue(val.substring(0, pos1) + newVal + val.substring(pos2 + 1));
                     }
+                }
+                if (pos3 > 0) {
+                    return defVal;
                 }
                 throw new RedkaleException("Not found '" + key + "' value");
             }

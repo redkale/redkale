@@ -41,7 +41,7 @@ package org.redkalex.example;
 import org.redkale.net.http.*;
 import org.redkale.service.Service;
 
-@RestService(automapping = true)
+@RestService(autoMapping = true)
 public class HelloService implements Service {
 
     public String sayHello() {
