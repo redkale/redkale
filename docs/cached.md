@@ -4,20 +4,21 @@
 &emsp;&emsp;&emsp;&emsp; 2、返回类型必须是可json序列化的  <br>
 &emsp;&emsp;&emsp;&emsp; 3、修饰必须是```protected```/```public```  <br>
 &emsp;&emsp;&emsp;&emsp; 4、修饰不能是```final```/```static```  <br>
+&emsp;&emsp;本地缓存和远程缓存可同时设置，```expire```设置为0，表示永不过期。
 
-&emsp;&emsp;将结果进行本地缓存30秒
+&emsp;&emsp;将结果进行本地缓存30秒且远程缓存60秒
 ```java
-    @Cached(key = "name", localExpire = "30")
+    @Cached(key = "name", localExpire = "30", remoteExpire = "60")
     public String getName() {
         return "haha";
     }
 ```
 
-&emsp;&emsp;以参数code为key将结果进行本地缓存(时长由环境变量```env.cache.expire```配置，没有配置采用默认值30秒)、远程缓存60秒
+&emsp;&emsp;以参数code为key将结果进行本地缓存(时长由环境变量```env.cache.expire```配置，没配置采用默认值30秒)
 ```java
-    @Cached(key = "#{code}", localExpire = "${env.cache.expire:30}", remoteExpire = "60")
+    @Cached(key = "#{code}", localExpire = "${env.cache.expire:30}")
     public CompletableFuture<String> getNameAsync(String code) {
-        return CompletableFuture.completedFuture(code);
+        return redis.getStringAsync(code);
     }
 ```
 
