@@ -97,7 +97,7 @@ class AppConfig {
     private void init(AnyValue conf) {
         this.config = conf;
         this.name = checkName(config.getValue("name", ""));
-        this.nodeid = config.getValue("nodeid", String.valueOf(Math.abs(System.nanoTime())));
+        this.nodeid = checkNodeid(config.getValue("nodeid", String.valueOf(Math.abs(System.nanoTime()))));
         this.configFromCache = "true".equals(config.getValue("[config-from-cache]"));
         //初始化classLoader、serverClassLoader
         this.initClassLoader();
@@ -419,16 +419,45 @@ class AppConfig {
      *
      * @return
      */
-    private String checkName(String name) {
+    private static String checkName(String name) {
         if (name == null || name.isEmpty()) {
             return name;
         }
         for (char ch : name.toCharArray()) {
-            if (!((ch >= '0' && ch <= '9') || ch == '_' || ch == '.' || ch == '-' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
-                throw new RedkaleException("name only 0-9 a-z A-Z _ - . cannot begin 0-9");
+            if (!((ch >= '0' && ch <= '9')
+                || (ch >= 'a' && ch <= 'z')
+                || (ch >= 'A' && ch <= 'Z')
+                || ch == '_'
+                || ch == '.'
+                || ch == '-')) { //不能含特殊字符
+                throw new RedkaleException("name only 0-9 a-z A-Z _ - .");
             }
         }
         return name;
+    }
+
+    /**
+     * 检查node是否含特殊字符
+     *
+     * @param name
+     *
+     * @return
+     */
+    private static String checkNodeid(String nodeid) {
+        if (nodeid == null || nodeid.isEmpty()) {
+            return nodeid;
+        }
+        for (char ch : nodeid.toCharArray()) {
+            if (!((ch >= '0' && ch <= '9')
+                || (ch >= 'a' && ch <= 'z')
+                || (ch >= 'A' && ch <= 'Z')
+                || ch == '_'
+                || ch == '.'
+                || ch == '-')) { //不能含特殊字符
+                throw new RedkaleException("nodeid only 0-9 a-z A-Z _ - .");
+            }
+        }
+        return nodeid;
     }
 
     private String getCanonicalPath(File file) {
