@@ -20,7 +20,7 @@
 * [WebSocket](docs/websocket.md)
 * [native-image](docs/native-image.md)
 * [方法缓存```Cached```](docs/cached.md)
-* [方法锁```Locked```](docs/locked.md)
+* [定时任务```Scheduled```](docs/scheduled.md)
 * [基本配置](docs/config.md)
 * [FAQ](docs/faq.md)
 
