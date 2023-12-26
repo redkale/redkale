@@ -15,6 +15,7 @@ import java.util.logging.Level;
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
 import org.redkale.inject.ResourceEvent;
+import org.redkale.source.SourceManager;
 import org.redkale.util.AnyValue;
 import org.redkale.util.AnyValueWriter;
 import org.redkale.util.RedkaleClassLoader;
@@ -96,7 +97,8 @@ public class ClusterModuleEngine extends ModuleEngine {
             long s = System.currentTimeMillis();
             if (this.clusterAgent instanceof CacheClusterAgent) {
                 String sourceName = ((CacheClusterAgent) clusterAgent).getSourceName(); //必须在inject前调用，需要赋值Resourcable.name
-                //loadCacheSource(sourceName, false);
+                SourceManager sourceManager = application.getResourceFactory().find(SourceManager.class);
+                sourceManager.loadCacheSource(sourceName, false);
             }
             this.resourceFactory.inject(clusterAgent);
             clusterAgent.init(clusterAgent.getConfig());

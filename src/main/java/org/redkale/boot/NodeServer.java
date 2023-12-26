@@ -252,12 +252,6 @@ public abstract class NodeServer {
             @Override
             public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
                 try {
-                    if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
-                        return null;
-                    }
-                    if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
-                        return null; //远程模式不需要注入 WebSocketNode 
-                    }
                     Service nodeService = rf.find(resourceName, WebSocketNode.class);
                     if (nodeService == null) {
                         final HashSet<String> groups = new HashSet<>();
@@ -300,15 +294,6 @@ public abstract class NodeServer {
         final ResourceFactory appResFactory = application.getResourceFactory();
         Class<Service> resServiceType = Service.class;
         try {
-            if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
-                return null;
-            }
-            if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
-                return null; //远程模式不得注入 AutoLoad Service
-            }
-            if (!Service.class.isAssignableFrom(field.getType())) {
-                return null;
-            }
             resServiceType = (Class) field.getType();
             if (resServiceType.getAnnotation(Local.class) == null) {
                 return null;

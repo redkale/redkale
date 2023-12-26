@@ -129,9 +129,6 @@ public class NodeHttpServer extends NodeServer {
         final ResourceFactory regFactory = application.getResourceFactory();
         resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, Object attachment) -> { //主要用于单点的服务
             try {
-                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
-                    return null;
-                }
                 if (!(srcObj instanceof WebSocketServlet)) {
                     return null;
                 }
