@@ -10,6 +10,7 @@ import java.lang.annotation.Retention;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Target;
 import java.util.concurrent.TimeUnit;
+import org.redkale.service.LoadMode;
 
 /**
  * //TODO 待实现
@@ -80,4 +81,10 @@ public @interface Cached {
      */
     boolean nullable() default false;
 
+    /**
+     * Service加载模式
+     *
+     * @return 模式
+     */
+    LoadMode mode() default LoadMode.ANY;
 }

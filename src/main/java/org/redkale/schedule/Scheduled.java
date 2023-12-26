@@ -5,6 +5,7 @@ package org.redkale.schedule;
 
 import java.lang.annotation.*;
 import java.util.concurrent.TimeUnit;
+import org.redkale.service.LoadMode;
 
 /**
  * 定时任务标记，只能作用于Service的无参数或者单一ScheduleEvent参数的方法上, 功能类似Spring里的Scheduled注解
@@ -52,7 +53,7 @@ public @interface Scheduled {
      * 5*60: 乘法表达式，值为30
      * ${env.scheduling.fixedDelay}: 读取系统配置项
      * #delays: 读取宿主对象的delays字段值作为值，字段类型必须是int、long数值类型
-     * 
+     *
      * 值大于0且fixedRate小于0则使用 ScheduledThreadPoolExecutor.scheduleWithFixedDelay
      *
      * @return 延迟时间
@@ -66,7 +67,7 @@ public @interface Scheduled {
      * 5*60: 乘法表达式，值为30
      * ${env.scheduling.fixedRate}: 读取系统配置项
      * #intervals: 读取宿主对象的intervals字段值作为值，字段类型必须是int、long数值类型
-     * 
+     *
      * 值大于0则使用 ScheduledThreadPoolExecutor.scheduleAtFixedRate
      *
      * @return 周期时间
@@ -80,8 +81,9 @@ public @interface Scheduled {
      * 5*60: 乘法表达式，值为30
      * ${env.scheduling.initialDelay}: 读取系统配置项
      * #inits: 读取宿主对象的inits字段值作为值，字段类型必须是int、long数值类型
-     * 
+     *
      * 值大于0且fixedRate和fixedDelay小于0则使用 ScheduledThreadPoolExecutor.schedule
+     *
      * @return 起始延迟时间
      */
     String initialDelay() default "-1";
@@ -100,4 +102,10 @@ public @interface Scheduled {
      */
     String comment() default "";
 
+    /**
+     * Service加载模式
+     *
+     * @return 模式
+     */
+    LoadMode mode() default LoadMode.LOCAL;
 }

@@ -10,6 +10,7 @@ import java.lang.annotation.Retention;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Target;
 import java.util.concurrent.TimeUnit;
+import org.redkale.service.LoadMode;
 
 /**
  * {@link org.redkale.cache.Cached}注解的动态扩展版，会多一个字段信息
@@ -38,4 +39,6 @@ public @interface DynForCache {
     TimeUnit timeUnit();
 
     boolean nullable();
+
+    LoadMode mode() default LoadMode.ANY;
 }

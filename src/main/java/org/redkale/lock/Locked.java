@@ -9,6 +9,7 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Target;
+import org.redkale.service.LoadMode;
 
 /**
  * //TODO 待实现
@@ -31,4 +32,10 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 public @interface Locked {
 
+    /**
+     * Service加载模式
+     *
+     * @return 模式
+     */
+    LoadMode mode() default LoadMode.ANY;
 }

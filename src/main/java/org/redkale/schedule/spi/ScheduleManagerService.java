@@ -34,9 +34,11 @@ import org.redkale.annotation.Nullable;
 import org.redkale.annotation.Resource;
 import org.redkale.annotation.ResourceType;
 import org.redkale.boot.Application;
+import org.redkale.net.sncp.Sncp;
 import org.redkale.schedule.ScheduleEvent;
 import org.redkale.schedule.ScheduleManager;
 import org.redkale.schedule.Scheduled;
+import org.redkale.service.LoadMode;
 import org.redkale.service.Local;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
@@ -123,6 +125,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
     public boolean schedule(Object service) {
         lock.lock();
         try {
+            boolean remoteMode = service instanceof Service && Sncp.isRemote((Service) service);
             for (WeakReference item : refTaskMap.keySet()) {
                 if (item.get() == service) {
                     logger.log(Level.WARNING, service + " repeat schedule");
@@ -150,7 +153,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
                         throw new RedkaleException("@" + Scheduled.class.getSimpleName() + " must be on non-parameter or "
                             + ScheduleEvent.class.getSimpleName() + "-parameter method, but on " + method);
                     }
-                    ScheduledTask task = schedule(ref, method, taskCount);
+                    ScheduledTask task = schedule(ref, method, remoteMode, taskCount);
                     //时间没配置: task=null
                     if (task != null) {
                         tasks.put(method.getName(), task);
@@ -186,8 +189,11 @@ public class ScheduleManagerService implements ScheduleManager, Service {
         }
     }
 
-    protected ScheduledTask schedule(WeakReference ref, Method method, AtomicInteger taskCount) {
+    protected ScheduledTask schedule(WeakReference ref, Method method, boolean remoteMode, AtomicInteger taskCount) {
         Scheduled ann = method.getAnnotation(Scheduled.class);
+        if (!LoadMode.matches(remoteMode, ann.mode())) {
+            return null;
+        }
         String name = getProperty(ann.name());
         String cron = getProperty(ann.cron());
         String fixedDelay = getProperty(ann.fixedDelay());

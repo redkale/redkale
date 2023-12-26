@@ -18,6 +18,7 @@ import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.lock.Locked;
+import org.redkale.service.LoadMode;
 import org.redkale.util.RedkaleException;
 
 /**
@@ -42,6 +43,9 @@ public class LockAsmMethodBoost extends AsmMethodBoost {
         String newDynName, String fieldPrefix, List filterAnns, Method method, final String newMethodName) {
         Locked locked = method.getAnnotation(Locked.class);
         if (locked == null) {
+            return newMethodName;
+        }
+        if (!LoadMode.matches(remote, locked.mode())) {
             return newMethodName;
         }
         if (method.getAnnotation(DynForLock.class) != null) {

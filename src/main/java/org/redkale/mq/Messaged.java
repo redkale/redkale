@@ -9,6 +9,7 @@ import java.lang.annotation.Retention;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Target;
 import org.redkale.convert.ConvertType;
+import org.redkale.service.LoadMode;
 
 /**
  * MQ资源注解, 只能标记在Service类方法上
@@ -34,4 +35,11 @@ public @interface Messaged {
     String[] topics();
 
     ConvertType convertType() default ConvertType.JSON;
+
+    /**
+     * Service加载模式
+     *
+     * @return 模式
+     */
+    LoadMode mode() default LoadMode.LOCAL;
 }

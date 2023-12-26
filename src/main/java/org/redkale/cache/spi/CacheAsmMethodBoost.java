@@ -25,6 +25,7 @@ import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.cache.Cached;
 import org.redkale.inject.ResourceFactory;
+import org.redkale.service.LoadMode;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.ThrowSupplier;
@@ -62,6 +63,9 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
         }
         Cached cached = method.getAnnotation(Cached.class);
         if (cached == null) {
+            return newMethodName;
+        }
+        if (!LoadMode.matches(remote, cached.mode())) {
             return newMethodName;
         }
         if (method.getAnnotation(DynForCache.class) != null) {

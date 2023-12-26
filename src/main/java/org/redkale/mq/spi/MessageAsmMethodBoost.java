@@ -47,6 +47,7 @@ import org.redkale.mq.MessageConext;
 import org.redkale.mq.MessageConsumer;
 import org.redkale.mq.Messaged;
 import org.redkale.mq.ResourceConsumer;
+import org.redkale.service.LoadMode;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.TypeToken;
@@ -88,6 +89,9 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
         }
         Messaged messaged = method.getAnnotation(Messaged.class);
         if (messaged == null) {
+            return newMethodName;
+        }
+        if (!LoadMode.matches(remote, messaged.mode())) {
             return newMethodName;
         }
         if (Modifier.isFinal(method.getModifiers()) || Modifier.isStatic(method.getModifiers())) {
