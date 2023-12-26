@@ -12,6 +12,7 @@ import org.redkale.asm.AsmDepends;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ * @param <T> 泛型
  *
  * @since 2.8.0
  */
@@ -23,6 +24,7 @@ public interface ThrowSupplier<T> {
      * Gets a result.
      *
      * @return a result
+     * @throws java.lang.Throwable
      */
     T get() throws Throwable;
 

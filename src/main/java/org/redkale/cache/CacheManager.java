@@ -66,8 +66,7 @@ public interface CacheManager {
     /**
      * 本地获取字符串缓存数据, 过期返回null
      *
-     * @param hash 缓存hash
-     * @param key  缓存键
+     * @param key 缓存键
      *
      * @return 数据值
      */
@@ -94,7 +93,6 @@ public interface CacheManager {
      * 本地获取缓存数据, 过期返回null
      *
      * @param <T>      泛型
-     * @param hash     缓存hash
      * @param key      缓存键
      * @param type     数据类型
      * @param nullable 是否缓存null值
@@ -444,7 +442,7 @@ public interface CacheManager {
      * @return void
      */
     default <T> CompletableFuture<Void> remoteSetAsync(String key, Type type, T value, Duration expire) {
-        return remoteSetAsync(DEFAULT_HASH, type, value, expire);
+        return remoteSetAsync(DEFAULT_HASH, key, type, value, expire);
     }
 
     /**
