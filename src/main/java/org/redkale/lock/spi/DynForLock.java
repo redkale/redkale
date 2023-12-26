@@ -9,6 +9,7 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Target;
+import org.redkale.service.LoadMode;
 
 /**
  * {@link org.redkale.lock.Locked}注解的动态扩展版，会多一个字段信息
@@ -25,4 +26,6 @@ import java.lang.annotation.Target;
 public @interface DynForLock {
 
     String dynField();
+
+    LoadMode mode() default LoadMode.ANY;
 }

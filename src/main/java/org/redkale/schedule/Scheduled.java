@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 import org.redkale.service.LoadMode;
 
 /**
- * 定时任务标记，只能作用于Service的无参数或者单一ScheduleEvent参数的方法上, 功能类似Spring里的Scheduled注解
+ * 定时任务标记，只能作用于Service的无参数或者单一ScheduleEvent参数的菲static方法上, 功能类似Spring里的Scheduled注解
  *
  *
  * <p>
@@ -18,6 +18,7 @@ import org.redkale.service.LoadMode;
  *
  * @since 2.8.0
  */
+@Documented
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Scheduled {

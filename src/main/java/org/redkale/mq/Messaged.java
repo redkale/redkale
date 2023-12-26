@@ -14,7 +14,7 @@ import org.redkale.service.LoadMode;
 /**
  * MQ资源注解, 只能标记在Service类方法上
  * 1、方法必须是protected/public
- * 2、方法不能是final
+ * 2、方法不能是final/static
  *
  * <p>
  * 详情见: https://redkale.org
