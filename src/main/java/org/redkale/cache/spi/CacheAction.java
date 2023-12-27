@@ -43,7 +43,7 @@ public class CacheAction {
     //Supplier对象的类型
     private final Type resultType;
 
-    //对象是否异步
+    //缓存方法是否异步
     private final boolean async;
 
     //是否可以缓存null
@@ -72,10 +72,10 @@ public class CacheAction {
     //缓存的key
     private MultiHashKey dynKey;
 
-    //本地缓存过期时长
+    //本地缓存过期时长，Duration.ZERO为永不过期，为null表示不本地缓存
     private Duration localExpire;
 
-    //远程缓存过期时长
+    //远程缓存过期时长，Duration.ZERO为永不过期，为null表示不远程缓存
     private Duration remoteExpire;
 
     CacheAction(CacheEntry cached, Type returnType, Class serviceClass, Class[] paramTypes,
@@ -131,6 +131,7 @@ public class CacheAction {
             + ",\"fieldName\":\"" + fieldName + "\""
             + ",\"paramTypes\":" + JsonConvert.root().convertTo(paramTypes)
             + ",\"paramNames\":" + JsonConvert.root().convertTo(paramNames)
+            + ",\"resultType\":\"" + resultType + "\""
             + ",\"cache\":" + cached
             + "}";
     }

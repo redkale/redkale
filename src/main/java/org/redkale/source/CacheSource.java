@@ -214,20 +214,20 @@ public interface CacheSource extends Resourcable {
         setex(key, expireSeconds, Long.class, value);
     }
 
-    default <T> void setpx(String key, long milliSeconds, Convert convert, Type type, T value) {
-        setpxAsync(key, milliSeconds, convert, type, value).join();
+    default <T> void psetex(String key, long milliSeconds, Convert convert, Type type, T value) {
+        psetexAsync(key, milliSeconds, convert, type, value).join();
     }
 
-    default <T> void setpx(String key, long milliSeconds, Type type, T value) {
-        setpx(key, milliSeconds, (Convert) null, type, value);
+    default <T> void psetex(String key, long milliSeconds, Type type, T value) {
+        psetex(key, milliSeconds, (Convert) null, type, value);
     }
 
-    default void setpxString(String key, long milliSeconds, String value) {
-        setpx(key, milliSeconds, String.class, value);
+    default void psetexString(String key, long milliSeconds, String value) {
+        psetex(key, milliSeconds, String.class, value);
     }
 
-    default void setpxLong(String key, long milliSeconds, long value) {
-        setpx(key, milliSeconds, Long.class, value);
+    default void psetexLong(String key, long milliSeconds, long value) {
+        psetex(key, milliSeconds, Long.class, value);
     }
 
     //------------------------ setnxex ------------------------
@@ -1137,18 +1137,18 @@ public interface CacheSource extends Resourcable {
         return setexAsync(key, expireSeconds, Long.class, value);
     }
 
-    public <T> CompletableFuture<Void> setpxAsync(String key, long milliSeconds, Convert convert, Type type, T value);
+    public <T> CompletableFuture<Void> psetexAsync(String key, long milliSeconds, Convert convert, Type type, T value);
 
-    default <T> CompletableFuture<Void> setpxAsync(String key, long milliSeconds, Type type, T value) {
-        return setpxAsync(key, milliSeconds, (Convert) null, type, value);
+    default <T> CompletableFuture<Void> psetexAsync(String key, long milliSeconds, Type type, T value) {
+        return psetexAsync(key, milliSeconds, (Convert) null, type, value);
     }
 
-    default CompletableFuture<Void> setpxStringAsync(String key, long milliSeconds, String value) {
-        return setpxAsync(key, milliSeconds, String.class, value);
+    default CompletableFuture<Void> psetexStringAsync(String key, long milliSeconds, String value) {
+        return psetexAsync(key, milliSeconds, String.class, value);
     }
 
-    default CompletableFuture<Void> setpxLongAsync(String key, long milliSeconds, long value) {
-        return setpxAsync(key, milliSeconds, Long.class, value);
+    default CompletableFuture<Void> psetexLongAsync(String key, long milliSeconds, long value) {
+        return psetexAsync(key, milliSeconds, Long.class, value);
     }
 
     //------------------------ setnxex ------------------------

@@ -479,13 +479,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> void setpx(String key, long milliSeconds, Convert convert, Type type, T value) {
+    public <T> void psetex(String key, long milliSeconds, Convert convert, Type type, T value) {
         set0(key, milliSeconds, convert, type, value);
     }
 
     @Override
-    public <T> CompletableFuture<Void> setpxAsync(String key, long milliSeconds, Convert convert, Type type, T value) {
-        return runFuture(() -> setpx(key, milliSeconds, convert, type, value));
+    public <T> CompletableFuture<Void> psetexAsync(String key, long milliSeconds, Convert convert, Type type, T value) {
+        return runFuture(() -> psetex(key, milliSeconds, convert, type, value));
     }
 
     @Override
