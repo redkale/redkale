@@ -346,6 +346,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> boolean setnxex(String key, int expireSeconds, Convert convert, Type type, T value) {
+        return setnxpx(key, expireSeconds * 1000, convert, type, value);
+    }
+
+    @Override
+    public <T> boolean setnxpx(String key, int milliSeconds, Convert convert, Type type, T value) {
         CacheEntry entry = find(key);
         if (entry == null) {
             containerLock.lock();
@@ -355,7 +360,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
                     entry = new CacheEntry(CacheEntryType.OBJECT, key);
                     container.put(key, entry);
                     entry.setObjectValue(convert == null ? this.convert : convert, type, value);
-                    entry.expireSeconds(expireSeconds);
+                    entry.milliSeconds(milliSeconds);
                     entry.lastAccessed = System.currentTimeMillis();
                     return true;
                 }
@@ -370,6 +375,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public <T> CompletableFuture<Boolean> setnxexAsync(String key, int expireSeconds, Convert convert, Type type, T value) {
         return supplyFuture(() -> setnxex(key, expireSeconds, convert, type, value));
+    }
+
+    @Override
+    public <T> CompletableFuture<Boolean> setnxpxAsync(String key, int milliSeconds, Convert convert, Type type, T value) {
+        return supplyFuture(() -> setnxpx(key, milliSeconds, convert, type, value));
     }
 
     @Override
@@ -405,7 +415,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         return supplyFuture(() -> getDel(key, type));
     }
 
-    private void set0(String key, int expireSeconds, Convert convert, Type type, Object value) {
+    private void set0(String key, int milliSeconds, Convert convert, Type type, Object value) {
         CacheEntry entry = find(key, CacheEntryType.OBJECT);
         if (entry == null) {
             containerLock.lock();
@@ -422,7 +432,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         entry.lock();
         try {
             entry.setObjectValue(convert == null ? this.convert : convert, type, value);
-            entry.expireSeconds(expireSeconds);
+            entry.milliSeconds(milliSeconds);
             entry.lastAccessed = System.currentTimeMillis();
         } finally {
             entry.unlock();
@@ -460,7 +470,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> void setex(String key, int expireSeconds, Convert convert, Type type, T value) {
-        set0(key, expireSeconds, convert, type, value);
+        set0(key, expireSeconds * 1000, convert, type, value);
     }
 
     @Override
@@ -469,14 +479,29 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public <T> void setpx(String key, int milliSeconds, Convert convert, Type type, T value) {
+        set0(key, milliSeconds, convert, type, value);
+    }
+
+    @Override
+    public <T> CompletableFuture<Void> setpxAsync(String key, int milliSeconds, Convert convert, Type type, T value) {
+        return runFuture(() -> setpx(key, milliSeconds, convert, type, value));
+    }
+
+    @Override
     public void expire(String key, int expireSeconds) {
+        pexpire(key, expireSeconds * 1000);
+    }
+
+    @Override
+    public void pexpire(String key, int milliSeconds) {
         CacheEntry entry = find(key);
         if (entry == null) {
             return;
         }
         entry.lock();
         try {
-            entry.expireSeconds(expireSeconds);
+            entry.milliSeconds(milliSeconds);
         } finally {
             entry.unlock();
         }
@@ -485,6 +510,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public CompletableFuture<Void> expireAsync(String key, int expireSeconds) {
         return runFuture(() -> expire(key, expireSeconds));
+    }
+
+    @Override
+    public CompletableFuture<Void> pexpireAsync(String key, int milliSeconds) {
+        return runFuture(() -> pexpire(key, milliSeconds));
     }
 
     @Override
@@ -735,7 +765,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             return null;
         }
         if (expireSeconds > 0) {
-            entry.expireSeconds(expireSeconds);
+            entry.milliSeconds(expireSeconds * 1000);
         }
         final Convert c = convert == null ? this.convert : convert;
         // OBJECT, ATOMIC, DOUBLE, SSET, ZSET, LIST, MAP;
@@ -2327,8 +2357,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
             }
         }
 
-        public CacheEntry expireSeconds(int expireSeconds) {
-            this.expireMills = expireSeconds > 0 ? expireSeconds * 1000 : 0;
+        public CacheEntry milliSeconds(int milliSeconds) {
+            this.expireMills = milliSeconds > 0 ? milliSeconds : 0;
             return this;
         }
 
