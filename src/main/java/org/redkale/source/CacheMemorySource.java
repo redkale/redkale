@@ -2341,6 +2341,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
         //<=0表示永久保存
         private long expireMills;
 
+        private long initTime;
+
         private final ReentrantLock lock = new ReentrantLock();
 
         public CacheEntry(CacheEntryType cacheType, String key) {
@@ -2358,6 +2360,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
 
         public CacheEntry milliSeconds(long milliSeconds) {
+            this.initTime = System.currentTimeMillis();
             this.expireMills = milliSeconds > 0 ? milliSeconds : 0;
             return this;
         }
@@ -2369,7 +2372,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
         @ConvertColumn(ignore = true)
         public boolean isExpired() {
-            return expireMills > 0 && (lastAccessed + expireMills) < System.currentTimeMillis();
+            return expireMills > 0 && (initTime + expireMills) < System.currentTimeMillis();
         }
 
         //value类型只能是byte[]/String/AtomicLong

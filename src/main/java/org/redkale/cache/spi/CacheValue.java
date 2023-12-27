@@ -3,7 +3,6 @@
  */
 package org.redkale.cache.spi;
 
-import java.time.Duration;
 import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.JsonConvert;
 
@@ -19,39 +18,39 @@ import org.redkale.convert.json.JsonConvert;
  *
  * @since 2.8.0
  */
-public class CacheValue<T> extends CacheExpire {
+public class CacheValue<T> {
 
-    @ConvertColumn(index = 2)
-    private T value;
+    @ConvertColumn(index = 1)
+    private T val;
 
     public CacheValue() {
     }
 
-    protected CacheValue(T value, Duration expire) {
-        this.value = value;
-        this.time = expire == null ? 0 : (System.currentTimeMillis() + expire.toMillis());
+    protected CacheValue(T value) {
+        this.val = value;
     }
 
-    public static <T> CacheValue<T> create(T value, Duration expire) {
-        return new CacheValue(value, expire);
+    public static <T> CacheValue<T> create(T value) {
+        return new CacheValue(value);
     }
 
     public static boolean isValid(CacheValue val) {
-        return val != null && !val.isExpired();
+        return val != null;
     }
 
     public static <T> T get(CacheValue val) {
-        return isValid(val) ? (T) val.getValue() : null;
+        return isValid(val) ? (T) val.getVal() : null;
     }
 
-    public T getValue() {
-        return value;
+    public T getVal() {
+        return val;
     }
 
-    public void setValue(T value) {
-        this.value = value;
+    public void setVal(T val) {
+        this.val = val;
     }
 
+    @Override
     public String toString() {
         return JsonConvert.root().convertTo(this);
     }
