@@ -214,19 +214,19 @@ public interface CacheSource extends Resourcable {
         setex(key, expireSeconds, Long.class, value);
     }
 
-    default <T> void setpx(String key, int milliSeconds, Convert convert, Type type, T value) {
+    default <T> void setpx(String key, long milliSeconds, Convert convert, Type type, T value) {
         setpxAsync(key, milliSeconds, convert, type, value).join();
     }
 
-    default <T> void setpx(String key, int milliSeconds, Type type, T value) {
+    default <T> void setpx(String key, long milliSeconds, Type type, T value) {
         setpx(key, milliSeconds, (Convert) null, type, value);
     }
 
-    default void setpxString(String key, int milliSeconds, String value) {
+    default void setpxString(String key, long milliSeconds, String value) {
         setpx(key, milliSeconds, String.class, value);
     }
 
-    default void setpxLong(String key, int milliSeconds, long value) {
+    default void setpxLong(String key, long milliSeconds, long value) {
         setpx(key, milliSeconds, Long.class, value);
     }
 
@@ -247,19 +247,19 @@ public interface CacheSource extends Resourcable {
         return setnxex(key, expireSeconds, Long.class, value);
     }
 
-    default <T> boolean setnxpx(String key, int milliSeconds, Convert convert, Type type, T value) {
+    default <T> boolean setnxpx(String key, long milliSeconds, Convert convert, Type type, T value) {
         return setnxpxAsync(key, milliSeconds, convert, type, value).join();
     }
 
-    default <T> boolean setnxpx(String key, int milliSeconds, Type type, T value) {
+    default <T> boolean setnxpx(String key, long milliSeconds, Type type, T value) {
         return setnxpx(key, milliSeconds, (Convert) null, type, value);
     }
 
-    default boolean setnxpxString(String key, int milliSeconds, String value) {
+    default boolean setnxpxString(String key, long milliSeconds, String value) {
         return setnxpx(key, milliSeconds, String.class, value);
     }
 
-    default boolean setnxpxLong(String key, int milliSeconds, long value) {
+    default boolean setnxpxLong(String key, long milliSeconds, long value) {
         return setnxpx(key, milliSeconds, Long.class, value);
     }
 
@@ -377,7 +377,7 @@ public interface CacheSource extends Resourcable {
         expireAsync(key, expireSeconds).join();
     }
 
-    default void pexpire(String key, int milliSeconds) {
+    default void pexpire(String key, long milliSeconds) {
         pexpireAsync(key, milliSeconds).join();
     }
 
@@ -1137,17 +1137,17 @@ public interface CacheSource extends Resourcable {
         return setexAsync(key, expireSeconds, Long.class, value);
     }
 
-    public <T> CompletableFuture<Void> setpxAsync(String key, int milliSeconds, Convert convert, Type type, T value);
+    public <T> CompletableFuture<Void> setpxAsync(String key, long milliSeconds, Convert convert, Type type, T value);
 
-    default <T> CompletableFuture<Void> setpxAsync(String key, int milliSeconds, Type type, T value) {
+    default <T> CompletableFuture<Void> setpxAsync(String key, long milliSeconds, Type type, T value) {
         return setpxAsync(key, milliSeconds, (Convert) null, type, value);
     }
 
-    default CompletableFuture<Void> setpxStringAsync(String key, int milliSeconds, String value) {
+    default CompletableFuture<Void> setpxStringAsync(String key, long milliSeconds, String value) {
         return setpxAsync(key, milliSeconds, String.class, value);
     }
 
-    default CompletableFuture<Void> setpxLongAsync(String key, int milliSeconds, long value) {
+    default CompletableFuture<Void> setpxLongAsync(String key, long milliSeconds, long value) {
         return setpxAsync(key, milliSeconds, Long.class, value);
     }
 
@@ -1166,17 +1166,17 @@ public interface CacheSource extends Resourcable {
         return setnxexAsync(key, expireSeconds, Long.class, value);
     }
 
-    public <T> CompletableFuture<Boolean> setnxpxAsync(String key, int milliSeconds, Convert convert, Type type, T value);
+    public <T> CompletableFuture<Boolean> setnxpxAsync(String key, long milliSeconds, Convert convert, Type type, T value);
 
-    default <T> CompletableFuture<Boolean> setnxpxAsync(String key, int milliSeconds, Type type, T value) {
+    default <T> CompletableFuture<Boolean> setnxpxAsync(String key, long milliSeconds, Type type, T value) {
         return setnxpxAsync(key, milliSeconds, (Convert) null, type, value);
     }
 
-    default CompletableFuture<Boolean> setnxpxStringAsync(String key, int milliSeconds, String value) {
+    default CompletableFuture<Boolean> setnxpxStringAsync(String key, long milliSeconds, String value) {
         return setnxpxAsync(key, milliSeconds, String.class, value);
     }
 
-    default CompletableFuture<Boolean> setnxpxLongAsync(String key, int milliSeconds, long value) {
+    default CompletableFuture<Boolean> setnxpxLongAsync(String key, long milliSeconds, long value) {
         return setnxpxAsync(key, milliSeconds, Long.class, value);
     }
 
@@ -1283,7 +1283,7 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Void> expireAsync(String key, int seconds);
 
-    public CompletableFuture<Void> pexpireAsync(String key, int mills);
+    public CompletableFuture<Void> pexpireAsync(String key, long milliSeconds);
 
     public CompletableFuture<List<String>> keysAsync(String pattern);
 
