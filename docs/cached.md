@@ -4,7 +4,7 @@
 &emsp;&emsp;&emsp;&emsp; 2、返回类型必须是可json序列化的  <br>
 &emsp;&emsp;&emsp;&emsp; 3、修饰必须是```protected```/```public```  <br>
 &emsp;&emsp;&emsp;&emsp; 4、修饰不能是```final```/```static```  <br>
-&emsp;&emsp;本地缓存和远程缓存可同时设置，```expire```设置为0，表示永不过期。
+&emsp;&emsp;本地缓存和远程缓存可同时设置，```expire```设置为0，表示永不过期, 支持异步方法(返回类型为```CompletableFuture```)。
 
 &emsp;&emsp;将结果进行本地缓存30秒且远程缓存60秒
 ```java

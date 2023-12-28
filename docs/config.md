@@ -30,21 +30,21 @@
 <application nodeid="1000" port="6560" lib="">  
     
     <!--
-       【节点全局唯一】 @since 2.3.0
+       【节点全局唯一】
         全局Serivce执行的线程池， Application.workExecutor, 没配置该节点将自动创建一个。
         threads： 线程数，为0表示不启用workExecutor，只用IO线程。默认: CPU核数, 核数=1的情况下默认值为2
     -->
     <executor threads="4"/>
 
     <!--
-       【节点全局唯一】 @since 2.8.0
+       【节点全局唯一】
         全局Serivce的定时任务设置，没配置该节点将自动创建一个。
         enabled： 是否开启缓存功能。默认: true
     -->
     <schedule enabled="true"/>
     
     <!--
-       【节点全局唯一】 @since 2.8.0
+       【节点全局唯一】
         全局Serivce的缓存设置，没配置该节点将自动创建一个。
         enabled： 是否开启缓存功能。默认: true
         source: 远程CacheSource的资源名

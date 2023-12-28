@@ -272,8 +272,8 @@ public final class Application {
         this.resourceFactory.register(RESNAME_APP_NAME, String.class, this.name);
 
         this.resourceFactory.register(RESNAME_APP_NODEID, String.class, this.nodeid);
-        if (Utility.isNumeric(this.nodeid)) {
-            this.resourceFactory.register(RESNAME_APP_NODEID, int.class, Integer.parseInt(this.nodeid));
+        if (Utility.isNumeric(this.nodeid)) { //兼容旧类型
+            this.resourceFactory.register(RESNAME_APP_NODEID, int.class, Math.abs(((Long) Long.parseLong(this.nodeid)).intValue()));
         }
 
         this.resourceFactory.register(RESNAME_APP_TIME, long.class, this.startTime);
