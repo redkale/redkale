@@ -707,6 +707,23 @@ public interface DataSource extends Resourcable {
      * 字段赋值操作选项见 ColumnExpress   <br>
      * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node}   <br>
      *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param pk    主键
+     * @param func  更新字段
+     * @param value 更新字段值
+     *
+     * @return 影响的记录条数
+     */
+    default <T> int updateColumn(final Class<T> clazz, final Serializable pk, LambdaFunction<T, ?> func, Serializable value) {
+        return updateColumn(clazz, pk, ColumnValue.set(func, value));
+    }
+
+    /**
+     * 更新指定主键值记录的部分字段   <br>
+     * 字段赋值操作选项见 ColumnExpress   <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node}   <br>
+     *
      * @param <T>    Entity泛型
      * @param clazz  Entity类
      * @param pk     主键
@@ -715,6 +732,23 @@ public interface DataSource extends Resourcable {
      * @return 影响的记录条数CompletableFuture
      */
     public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final Serializable pk, final ColumnValue... values);
+
+    /**
+     * 更新指定主键值记录的部分字段   <br>
+     * 字段赋值操作选项见 ColumnExpress   <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node}   <br>
+     *
+     * @param <T>   Entity泛型
+     * @param clazz Entity类
+     * @param pk    主键
+     * @param func  更新字段
+     * @param value 更新字段值
+     *
+     * @return 影响的记录条数CompletableFuture
+     */
+    default <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final Serializable pk, LambdaFunction<T, ?> func, Serializable value) {
+        return updateColumnAsync(clazz, pk, ColumnValue.set(func, value));
+    }
 
     /**
      * 更新符合过滤条件记录的部分字段   <br>
