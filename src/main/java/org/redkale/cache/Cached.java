@@ -65,6 +65,13 @@ public @interface Cached {
     String remoteExpire() default "-1";
 
     /**
+     * 是否可以缓存null值
+     *
+     * @return 是否可以缓存null
+     */
+    boolean nullable() default false;
+
+    /**
      * 过期时长的时间单位
      *
      * @return 时间单位
@@ -72,11 +79,11 @@ public @interface Cached {
     TimeUnit timeUnit() default TimeUnit.SECONDS;
 
     /**
-     * 是否可以缓存null值
+     * 备注
      *
-     * @return 是否可以缓存null
+     * @return 备注
      */
-    boolean nullable() default false;
+    String comment() default "";
 
     /**
      * Service加载模式

@@ -14,7 +14,7 @@
 |comment|未定义|备注描述|
 |mode|```LoadMode.LOCAL```|作用于Service模式，默认值为：LOCAL，<br> LOCAL: 表示远程模式的Service对象中的定时任务不起作用|
 
-# 用法
+# 基本用法
 &emsp;&emsp;每秒执行
 ```java
     @Scheduled(cron = "0/1 * * * * ?")

@@ -6,6 +6,19 @@
 &emsp;&emsp;&emsp;&emsp; 4、修饰不能是```final```/```static```  <br>
 &emsp;&emsp;本地缓存和远程缓存可同时设置，```expire```设置为0，表示永不过期, 支持异步方法(返回类型为```CompletableFuture```)。
 
+# 属性说明
+|属性|默认值|说明|
+| --- | --- | --- |
+|key|未定义|缓存的key，支持参数动态组合，比如"key_#{id}"|
+|hash|```DEFAULT_HASH```|缓存的hash, 不能含有':'、'#'、'@'字符|
+|localExpire|-1|本地缓存过期时长， 0表示永不过期， -1表示不作本地缓存。 <br> 参数值支持方式:<br> 100: 设置数值 <br> 5*60: 乘法表达式，值为30 <br> ${env.cache.expires}: 读取系统配置项 <br> #delays: 读取宿主对象的delays字段值作为值，字段类型必须是int、long数值类型, <br> &emsp;&emsp;&emsp;&emsp;&emsp; 字段类型必须是int、long数值类型 <br> 值大于0且fixedRate小于0则使用 ScheduledThreadPoolExecutor.scheduleWithFixedDelay |
+|remoteExpire|-1|远程缓存过期时长， 0表示永不过期， -1表示不作远程缓存。 <br> 参数值支持方式:<br> 100: 设置数值 <br> 5*60: 乘法表达式，值为30 <br> ${env.cache.expires}: 读取系统配置项 <br> #delays: 读取宿主对象的delays字段值作为值，字段类型必须是int、long数值类型, <br> &emsp;&emsp;&emsp;&emsp;&emsp; 字段类型必须是int、long数值类型 <br> 值大于0且fixedRate小于0则使用 ScheduledThreadPoolExecutor.scheduleAtFixedRate |
+|nullable|false|是否可以缓存null值|
+|timeUnit|```TimeUnit.SECONDS```|时间单位TimeUnit|
+|comment|未定义|备注描述|
+|mode|```LoadMode.ANY```|作用于Service模式，默认值为：ANY，作用于所有模式Service，<br> LOCAL: 表示远程模式的Service对象中的缓存功能不起作用|
+
+# 基本用法
 &emsp;&emsp;将结果进行本地缓存30秒且远程缓存60秒
 ```java
     @Cached(key = "name", localExpire = "30", remoteExpire = "60")
