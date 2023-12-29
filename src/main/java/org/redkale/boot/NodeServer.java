@@ -651,7 +651,7 @@ public abstract class NodeServer {
     protected ClassFilter createClassFilter(final String localGroup, Class<? extends Annotation> ref,
         Class inter, Class[] excludeSuperClasses, Class<? extends Annotation> ref2, String properties, String property) {
         ClassFilter cf = new ClassFilter(this.serverClassLoader, ref, inter, excludeSuperClasses, null);
-        if (properties == null && properties == null) {
+        if (properties == null) {
             cf.setRefused(true);
             return cf;
         }
@@ -687,7 +687,7 @@ public abstract class NodeServer {
             ClassFilter filter = new ClassFilter(this.serverClassLoader, ref, inter, excludeSuperClasses, prop);
             for (AnyValue av : list.getAnyValues(property)) { // <service>、<filter>、<servlet> 节点
                 final AnyValue[] items = av.getAnyValues("property");
-                if (av instanceof AnyValueWriter && items.length > 0) { //存在 <property>节点
+                if (items.length > 0) { //存在 <property>节点
                     AnyValueWriter dav = AnyValueWriter.create();
                     final AnyValue.Entry<String>[] strings = av.getStringEntrys();
                     if (strings != null) {  //将<service>、<filter>、<servlet>节点的属性值传给dav

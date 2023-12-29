@@ -22,12 +22,14 @@ public class UserService implements Service {
     @Resource(name = "platf")
     private DataSource source;
 
-    @RestMapping(auth = true, comment = "更改密码")
+    //请求url:  /user/updatePwd?bean={}
+    @RestMapping(auth = true, methods = "POST", comment = "更改密码(只能POST请求)")
     public RetResult<String> updatePwd(@RestUserid long userid, UserPwdBean bean) {
         //逻辑处理
         return RetResult.success();
     }
 
+    //请求url:  /user/updateIntro?intro=xxx
     @RestMapping(auth = true, comment = "更新用户介绍")
     public RetResult<String> updateIntro(@RestUserid long userid, String intro) {
         intro = Utility.orElse(intro, "");  //为null则用""
@@ -36,6 +38,7 @@ public class UserService implements Service {
         return RetResult.success();
     }
 
+    //请求url:  /user/updateGender?gender=1
     @RestMapping(auth = true, comment = "修改用户性别(异步方法)")
     public CompletableFuture<RetResult<String>> updateGender(@RestUserid long userid, short gender) {
         if (gender != GENDER_MALE && gender != GENDER_FEMALE) {
