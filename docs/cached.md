@@ -11,8 +11,8 @@
 | --- | --- | --- |
 |key|未定义|缓存的key，支持参数动态组合，比如"key_#{id}"|
 |hash|```DEFAULT_HASH```|缓存的hash, 不能含有':'、'#'、'@'字符|
-|localExpire|-1|本地缓存过期时长， 0表示永不过期， -1表示不作本地缓存。 <br> 参数值支持方式:<br> 100: 设置数值 <br> 5*60: 乘法表达式，值为30 <br> ${env.cache.expires}: 读取系统配置项 <br> #delays: 读取宿主对象的delays字段值作为值，字段类型必须是int、long数值类型, <br> &emsp;&emsp;&emsp;&emsp;&emsp; 字段类型必须是int、long数值类型 <br> 值大于0且fixedRate小于0则使用 ScheduledThreadPoolExecutor.scheduleWithFixedDelay |
-|remoteExpire|-1|远程缓存过期时长， 0表示永不过期， -1表示不作远程缓存。 <br> 参数值支持方式:<br> 100: 设置数值 <br> 5*60: 乘法表达式，值为30 <br> ${env.cache.expires}: 读取系统配置项 <br> #delays: 读取宿主对象的delays字段值作为值，字段类型必须是int、long数值类型, <br> &emsp;&emsp;&emsp;&emsp;&emsp; 字段类型必须是int、long数值类型 <br> 值大于0且fixedRate小于0则使用 ScheduledThreadPoolExecutor.scheduleAtFixedRate |
+|localExpire|-1|本地缓存过期时长， 0表示永不过期， -1表示不作本地缓存。 <br> 参数值支持方式:<br> 100: 设置数值 <br> 5*60: 乘法表达式，值为30 <br> ${env.cache.expires}: 读取系统配置项 <br> #delays: 读取宿主对象的delays字段值作为值，字段类型必须是int、long数值类型, <br> &emsp;&emsp;&emsp;&emsp;&emsp; 字段类型必须是int、long数值类型 |
+|remoteExpire|-1|远程缓存过期时长， 0表示永不过期， -1表示不作远程缓存。 <br> 参数值支持方式:<br> 100: 设置数值 <br> 5*60: 乘法表达式，值为30 <br> ${env.cache.expires}: 读取系统配置项 <br> #delays: 读取宿主对象的delays字段值作为值，字段类型必须是int、long数值类型, <br> &emsp;&emsp;&emsp;&emsp;&emsp; 字段类型必须是int、long数值类型 |
 |nullable|false|是否可以缓存null值|
 |timeUnit|```TimeUnit.SECONDS```|时间单位TimeUnit|
 |comment|未定义|备注描述|
