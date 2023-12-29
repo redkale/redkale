@@ -518,6 +518,93 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public long ttl(String key) {
+        long v = pttl(key);
+        return v > 0 ? v / 1000 : v;
+    }
+
+    @Override
+    public long pttl(String key) {
+        CacheEntry entry = find(key);
+        if (entry == null) {
+            return -2;
+        }
+        if (entry.expireMills < 1) {
+            return -1;
+        }
+        return entry.initTime + entry.expireMills - System.currentTimeMillis();
+    }
+
+    @Override
+    public CompletableFuture<Long> ttlAsync(String key) {
+        return supplyFuture(() -> ttl(key));
+    }
+
+    @Override
+    public CompletableFuture<Long> pttlAsync(String key) {
+        return supplyFuture(() -> pttl(key));
+    }
+
+    @Override
+    public void expireAt(String key, long secondsTime) {
+        pexpireAt(key, secondsTime * 1000);
+    }
+
+    @Override
+    public void pexpireAt(String key, long milliTime) {
+        CacheEntry entry = find(key);
+        if (entry == null) {
+            return;
+        }
+        if (milliTime > 0) {
+            entry.lock();
+            try {
+                entry.endTime = milliTime;
+            } finally {
+                entry.unlock();
+            }
+        }
+    }
+
+    @Override
+    public CompletableFuture<Void> pexpireAtAsync(String key, long milliTime) {
+        return runFuture(() -> pexpireAt(key, milliTime));
+    }
+
+    @Override
+    public CompletableFuture<Void> expireAtAsync(String key, long secondsTime) {
+        return runFuture(() -> expireAt(key, secondsTime));
+    }
+
+    @Override
+    public long expireTime(String key) {
+        long v = pexpireTime(key);
+        return v > 0 ? v / 1000 : v;
+    }
+
+    @Override
+    public long pexpireTime(String key) {
+        CacheEntry entry = find(key);
+        if (entry == null) {
+            return -2;
+        }
+        if (entry.endTime < 1) {
+            return -1;
+        }
+        return entry.endTime;
+    }
+
+    @Override
+    public CompletableFuture<Long> expireTimeAsync(String key) {
+        return supplyFuture(() -> expireTime(key));
+    }
+
+    @Override
+    public CompletableFuture<Long> pexpireTimeAsync(String key) {
+        return supplyFuture(() -> pexpireTime(key));
+    }
+
+    @Override
     public boolean persist(final String key) {
         CacheEntry entry = find(key);
         if (entry == null) {
@@ -2343,6 +2430,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
         private long initTime;
 
+        private long endTime;
+
         private final ReentrantLock lock = new ReentrantLock();
 
         public CacheEntry(CacheEntryType cacheType, String key) {
@@ -2365,6 +2454,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
             return this;
         }
 
+        public CacheEntry expireAt(long endtime) {
+            this.endTime = endtime;
+            return this;
+        }
+
         @Override
         public String toString() {
             return JsonFactory.root().getConvert().convertTo(this);
@@ -2372,7 +2466,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
         @ConvertColumn(ignore = true)
         public boolean isExpired() {
-            return expireMills > 0 && (initTime + expireMills) < System.currentTimeMillis();
+            long now = System.currentTimeMillis();
+            if (endTime > 0) {
+                return now >= endTime;
+            }
+            return expireMills > 0 && (initTime + expireMills) < now;
         }
 
         //value类型只能是byte[]/String/AtomicLong

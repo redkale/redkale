@@ -381,6 +381,30 @@ public interface CacheSource extends Resourcable {
         pexpireAsync(key, milliSeconds).join();
     }
 
+    default long ttl(String key) {
+        return ttlAsync(key).join();
+    }
+
+    default long pttl(String key) {
+        return pttlAsync(key).join();
+    }
+
+    default void expireAt(String key, long secondsTime) {
+        expireAtAsync(key, secondsTime).join();
+    }
+
+    default void pexpireAt(String key, long milliTime) {
+        pexpireAtAsync(key, milliTime).join();
+    }
+
+    default long pexpireTime(String key) {
+        return pexpireTimeAsync(key).join();
+    }
+
+    default long expireTime(String key) {
+        return expireTimeAsync(key).join();
+    }
+
     default List<String> keys(String pattern) {
         return keysAsync(pattern).join();
     }
@@ -1284,6 +1308,18 @@ public interface CacheSource extends Resourcable {
     public CompletableFuture<Void> expireAsync(String key, int seconds);
 
     public CompletableFuture<Void> pexpireAsync(String key, long milliSeconds);
+
+    public CompletableFuture<Long> ttlAsync(String key);
+
+    public CompletableFuture<Long> pttlAsync(String key);
+
+    public CompletableFuture<Void> expireAtAsync(String key, long secondsTime);
+
+    public CompletableFuture<Long> expireTimeAsync(String key);
+
+    public CompletableFuture<Void> pexpireAtAsync(String key, long milliTime);
+
+    public CompletableFuture<Long> pexpireTimeAsync(String key);
 
     public CompletableFuture<List<String>> keysAsync(String pattern);
 
