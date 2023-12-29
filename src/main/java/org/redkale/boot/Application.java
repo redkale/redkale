@@ -577,14 +577,25 @@ public final class Application {
         //------------------------------------------------------------------------
         for (AnyValue conf : config.getAnyValues("group")) {
             final String group = conf.getValue("name", "");
-            if (group.indexOf('$') >= 0) {
-                throw new RedkaleException("<group> name cannot contains '$' in " + group);
+            if (group.indexOf('$') >= 0 || group.indexOf('.') >= 0) {
+                throw new RedkaleException("<group> name cannot contains '$', '.' in " + group);
             }
             final String protocol = conf.getValue("protocol", "TCP").toUpperCase();
             if (!"TCP".equalsIgnoreCase(protocol) && !"UDP".equalsIgnoreCase(protocol)) {
                 throw new RedkaleException("Not supported Transport Protocol " + conf.getValue("protocol"));
             }
             SncpRpcGroup rg = sncpRpcGroups.computeIfAbsent(group, protocol);
+            String nodes = conf.getValue("nodes");
+            if (Utility.isNotEmpty(nodes)) {
+                for (String node : nodes.replace(',', ';').split(";")) {
+                    if (Utility.isNotBlank(node)) {
+                        int pos = node.indexOf(':');
+                        String addr = node.substring(0, pos).trim();
+                        int port = Integer.parseInt(node.substring(pos + 1).trim());
+                        rg.putAddress(new InetSocketAddress(addr, port));
+                    }
+                }
+            }
             for (AnyValue node : conf.getAnyValues("node")) {
                 rg.putAddress(new InetSocketAddress(node.getValue("addr"), node.getIntValue("port")));
             }

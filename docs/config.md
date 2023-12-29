@@ -104,11 +104,12 @@
         一个组包含多个node， 同一Service服务可以由多个进程提供，这些进程称为一个GROUP，且同一GROUP内的进程必须在同一机房或局域网内
         name:       服务组ID，长度不能超过11个字节. 默认为空字符串。 注意: name不能包含$符号。
         protocol：  值范围：UDP TCP， 默认TCP
+        nodes:      多个node节点值； 例如:192.168.0.1:6060,192.168.0.2:6060
         注意: 一个node只能所属一个group。只要存在protocol=SNCP的Server节点信息， 就必须有group节点信息。
     -->
-    <group name="" protocol="TCP">
+    <group name="" protocol="TCP" nodes="192.168.0.1:6060,192.168.0.2:6060">
         <!--
-            需要将本地node的addr与port列在此处。
+            需要将本地node的addr与port列在此处, 也可以直接用nodes属性。
             同一个<node>节点值只能存在一个<group>节点内，即同一个addr+port只能属于一个group。
             addr: required IP地址
             port: required 端口
