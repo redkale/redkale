@@ -1,5 +1,5 @@
 # 配置说明
-## application.xml 配置：
+# application.xml 配置：
 ```xml
 <!-- 
     文件说明:
@@ -367,7 +367,7 @@
 </application>
 ```
 
-## source.properties 配置：
+# source.properties 配置：
 ```properties
 
 # CacheSource   @Resource(name="usersession")
@@ -421,7 +421,7 @@ redkale.datasource.platf.write.user = root
 redkale.datasource.platf.write.password = 12345678
 ```
 
-## logging.properties 配置：
+# logging.properties 配置：
 ```properties
 
 handlers = java.util.logging.ConsoleHandler,java.util.logging.FileHandler

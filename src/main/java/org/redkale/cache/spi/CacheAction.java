@@ -118,6 +118,20 @@ public class CacheAction {
             return null;
         } else if ("0".equals(str)) {
             return Duration.ZERO;
+        } else if (str.indexOf('*') > -1) {
+            long rs = 1;
+            for (String v : str.split("\\*")) {
+                if (!v.trim().isEmpty()) {
+                    rs *= Long.parseLong(v.trim());
+                }
+            }
+            if (rs < 0) {
+                return null;
+            } else if (rs == 0) {
+                return Duration.ZERO;
+            } else {
+                return Duration.ofMillis(cached.getTimeUnit().toMillis(rs));
+            }
         } else {
             return Duration.ofMillis(cached.getTimeUnit().toMillis(Long.parseLong(str)));
         }
