@@ -72,7 +72,7 @@ public class HttpHeaders implements RestHeaders, Serializable {
         if (map == null) {
             return defaultValue;
         }
-        Serializable val = map.get(name);
+        Serializable val = get(name);
         if (val == null) {
             return defaultValue;
         }
@@ -90,7 +90,7 @@ public class HttpHeaders implements RestHeaders, Serializable {
         if (this.map == null) {
             return null;
         }
-        Serializable val = this.map.get(name);
+        Serializable val = get(name);
         if (val == null) {
             return null;
         }
@@ -164,13 +164,26 @@ public class HttpHeaders implements RestHeaders, Serializable {
         return this;
     }
 
+    private Serializable get(String name) {
+        Serializable val = this.map.get(name);
+        if (val != null) {
+            return val;
+        }
+        for (Map.Entry<String, Serializable> en : this.map.entrySet()) {
+            if (en.getKey().equalsIgnoreCase(name)) {
+                return en.getValue();
+            }
+        }
+        return null;
+    }
+
     //服务端接收，无需校验参数合法性
     void addValid(String name, String value) {
         if (this.map == null) {
             this.map = new LinkedHashMap<>();
             this.map.put(name, value);
         } else {
-            Serializable old = this.map.get(name);
+            Serializable old = get(name);
             if (old == null) {
                 this.map.put(name, value);
             } else if (old instanceof Collection) {
@@ -190,7 +203,7 @@ public class HttpHeaders implements RestHeaders, Serializable {
             this.map = new LinkedHashMap<>();
             this.map.put(name, value);
         } else {
-            Serializable old = this.map.get(name);
+            Serializable old = get(name);
             if (old == null) {
                 this.map.put(name, value);
             } else if (old instanceof Collection) {
@@ -216,7 +229,7 @@ public class HttpHeaders implements RestHeaders, Serializable {
             this.map = new LinkedHashMap<>();
             this.map.put(name, new ArrayList(value));
         } else {
-            Serializable old = this.map.get(name);
+            Serializable old = get(name);
             if (old == null) {
                 this.map.put(name, new ArrayList(value));
             } else if (old instanceof Collection) {
