@@ -135,15 +135,7 @@ public class HttpHeaders implements RestHeaders, Serializable {
 
     @Override
     public boolean contains(String name) {
-        return this.map != null && this.map.containsKey(name);
-    }
-
-    @Override
-    public boolean containsIgnoreCase(String name) {
-        if (this.map == null || name == null) {
-            return false;
-        }
-        return !this.map.keySet().stream().filter(name::equalsIgnoreCase).findFirst().isEmpty();
+        return this.map != null && name != null && get(name) != null;
     }
 
     public HttpHeaders addAll(HttpHeaders header) {
@@ -178,7 +170,7 @@ public class HttpHeaders implements RestHeaders, Serializable {
     }
 
     //服务端接收，无需校验参数合法性
-    void addValid(String name, String value) {
+    void addValid(String name, Serializable value) {
         if (this.map == null) {
             this.map = new LinkedHashMap<>();
             this.map.put(name, value);
@@ -199,22 +191,7 @@ public class HttpHeaders implements RestHeaders, Serializable {
 
     public HttpHeaders add(String name, String value) {
         check(name, value);
-        if (this.map == null) {
-            this.map = new LinkedHashMap<>();
-            this.map.put(name, value);
-        } else {
-            Serializable old = get(name);
-            if (old == null) {
-                this.map.put(name, value);
-            } else if (old instanceof Collection) {
-                ((Collection) old).add(value);
-            } else {
-                ArrayList list = new ArrayList();
-                list.add(old);
-                list.add(value);
-                this.map.put(name, list);
-            }
-        }
+        addValid(name, value);
         return this;
     }
 
@@ -225,22 +202,7 @@ public class HttpHeaders implements RestHeaders, Serializable {
         for (String val : value) {
             check(name, val);
         }
-        if (this.map == null) {
-            this.map = new LinkedHashMap<>();
-            this.map.put(name, new ArrayList(value));
-        } else {
-            Serializable old = get(name);
-            if (old == null) {
-                this.map.put(name, new ArrayList(value));
-            } else if (old instanceof Collection) {
-                ((Collection) old).addAll(value);
-            } else {
-                ArrayList list = new ArrayList();
-                list.add(old);
-                list.addAll(value);
-                this.map.put(name, list);
-            }
-        }
+        addValid(name, new ArrayList(value));
         return this;
     }
 
@@ -298,19 +260,28 @@ public class HttpHeaders implements RestHeaders, Serializable {
     }
 
     //服务端接收，无需校验参数合法性
-    void setValid(String name, String value) {
+    void setValid(String name, Serializable value) {
         if (this.map == null) {
             this.map = new LinkedHashMap<>();
+            this.map.put(name, value);
+        } else {
+            boolean unfound = true;
+            for (Map.Entry<String, Serializable> en : this.map.entrySet()) {
+                if (en.getKey().equalsIgnoreCase(name)) {
+                    this.map.put(en.getKey(), value);
+                    unfound = false;
+                    break;
+                }
+            }
+            if (unfound) {
+                this.map.put(name, value);
+            }
         }
-        this.map.put(name, value);
     }
 
     public HttpHeaders set(String name, String value) {
         check(name, value);
-        if (this.map == null) {
-            this.map = new LinkedHashMap<>();
-        }
-        this.map.put(name, value);
+        setValid(name, value);
         return this;
     }
 
@@ -321,10 +292,7 @@ public class HttpHeaders implements RestHeaders, Serializable {
         for (String val : value) {
             check(name, val);
         }
-        if (this.map == null) {
-            this.map = new LinkedHashMap<>();
-        }
-        this.map.put(name, new ArrayList(value));
+        setValid(name, new ArrayList(value));
         return this;
     }
 

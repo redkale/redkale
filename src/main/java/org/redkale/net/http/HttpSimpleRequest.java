@@ -185,16 +185,16 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         //写status
         array.put(((method == null ? "GET" : method.toUpperCase()) + " " + requestPath + " HTTP/1.1\r\n").getBytes(StandardCharsets.UTF_8));
         //写header
-        if (traceid != null && !containsHeaderIgnoreCase(Rest.REST_HEADER_TRACEID)) {
+        if (traceid != null && !containsHeader(Rest.REST_HEADER_TRACEID)) {
             array.put((Rest.REST_HEADER_TRACEID + ": " + traceid + "\r\n").getBytes(StandardCharsets.UTF_8));
         }
-        if (currentUserid != null && !containsHeaderIgnoreCase(Rest.REST_HEADER_CURRUSERID)) {
+        if (currentUserid != null && !containsHeader(Rest.REST_HEADER_CURRUSERID)) {
             array.put((Rest.REST_HEADER_CURRUSERID + ": " + currentUserid + "\r\n").getBytes(StandardCharsets.UTF_8));
         }
-        if (!containsHeaderIgnoreCase("User-Agent")) {
+        if (!containsHeader("User-Agent")) {
             array.put(header_bytes_useragent);
         }
-        if (!containsHeaderIgnoreCase("Connection")) {
+        if (!containsHeader("Connection")) {
             array.put(header_bytes_connalive);
         }
         array.put(("Content-Type: " + contentType0 + "\r\n").getBytes(StandardCharsets.UTF_8));
@@ -210,8 +210,8 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         }
     }
 
-    protected boolean containsHeaderIgnoreCase(String name) {
-        return headers != null && headers.containsIgnoreCase(name);
+    protected boolean containsHeader(String name) {
+        return headers != null && headers.contains(name);
     }
 
     protected static byte[] contentLengthBytes(byte[] clientBody) {

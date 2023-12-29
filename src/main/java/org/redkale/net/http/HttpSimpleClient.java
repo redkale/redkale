@@ -262,11 +262,11 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
         array.put(("Host: " + uri.getHost() + "\r\n").getBytes(StandardCharsets.UTF_8));
 
         array.put(HttpSimpleRequest.contentLengthBytes(body));
-        if (headers == null || !headers.containsIgnoreCase("User-Agent")) {
+        if (headers == null || !headers.contains("User-Agent")) {
             array.put(header_bytes_useragent);
         }
         array.put(header_bytes_connclose);
-        if (headers == null || !headers.containsIgnoreCase(Rest.REST_HEADER_TRACEID)) {
+        if (headers == null || !headers.contains(Rest.REST_HEADER_TRACEID)) {
             array.put((Rest.REST_HEADER_TRACEID + ": " + traceid + "\r\n").getBytes(StandardCharsets.UTF_8));
         }
         if (headers != null) {
