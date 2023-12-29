@@ -252,6 +252,9 @@ public abstract class NodeServer {
             @Override
             public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
                 try {
+                    if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
+                        return null; //远程模式不得注入
+                    }
                     Service nodeService = rf.find(resourceName, WebSocketNode.class);
                     if (nodeService == null) {
                         final HashSet<String> groups = new HashSet<>();
@@ -297,6 +300,9 @@ public abstract class NodeServer {
             resServiceType = (Class) field.getType();
             if (resServiceType.getAnnotation(Local.class) == null) {
                 return null;
+            }
+            if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
+                return null; //远程模式不得注入 AutoLoad Service
             }
             boolean auto = true;
             AutoLoad al = resServiceType.getAnnotation(AutoLoad.class);
@@ -388,11 +394,11 @@ public abstract class NodeServer {
                 continue; //本地模式或Component不能实例化接口和抽象类的Service类
             }
 
-            final ResourceTypeLoader resourceLoader = (ResourceFactory rf, String srcResourceName, 
+            final ResourceTypeLoader resourceLoader = (ResourceFactory rf, String srcResourceName,
                 final Object srcObj, final String resourceName, Field field, final Object attachment) -> {
                 try {
                     if (Sncp.loadRemoteMethodActions(Sncp.getResourceType(serviceImplClass)).isEmpty()
-                        && (serviceImplClass.getAnnotation(Priority.class) == null 
+                        && (serviceImplClass.getAnnotation(Priority.class) == null
                         && serviceImplClass.getAnnotation(javax.annotation.Priority.class) == null)) {  //class没有可用的方法且没有标记启动优先级的， 通常为BaseService
                         if (!serviceImplClass.getName().startsWith("org.redkale.") && !serviceImplClass.getSimpleName().contains("Base")) {
                             logger.log(Level.FINE, serviceImplClass + " cannot load because not found less one public non-final method");

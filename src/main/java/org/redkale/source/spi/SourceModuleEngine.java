@@ -512,6 +512,9 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
         @Override
         public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
             try {
+                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
+                    return null; //远程模式不得注入
+                }
                 DataSource source = loadDataSource(resourceName, false);
                 field.set(srcObj, source);
                 return source;
@@ -527,6 +530,9 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
         @Override
         public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
             try {
+                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
+                    return null; //远程模式不得注入
+                }
                 if (srcObj instanceof Servlet) {
                     throw new RedkaleException("CacheSource cannot inject in Servlet " + srcObj);
                 }
