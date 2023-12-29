@@ -14,7 +14,7 @@
 |依赖加载|```@AutoLoad(false)```|此类Service只有被其他服务依赖或者显式的配置时才会被初始化，<br> 主要用于工具类功能服务， <br> 比如```DataSource```、```CacheSource```|
 |本地模式|```@Local```|此类Service无论配不配成远程模式，都不会转成远程模式，<br>主要用于功能依赖本地环境或者参数无法序列化的服务|
 |组件模式|```@Component```|此类Service不会被动态生成协议层Servlet，<br>主要用于无需提供对进程外提供接口的服务，<br> 比如```DataSource```、```CacheSource```的实现|
-# 基本用法
+# 用法
 ```java
 @RestService(comment = "用户服务模块")
 public class UserService implements Service {
@@ -52,7 +52,7 @@ public class UserService implements Service {
 ## 远程模式Service
 &emsp;&emsp;远程Servie其实是提供RPC接口，需要配置文件中显式配置才可使用远程模式。
 ```xml
-    <group name="remote-A" nodes="192.168.10.111:7070,192.168.10.112:7070"/>
+    <group name="remote-A" nodes="192.168.10.11:6060,192.168.10.22:7070"/>
 
     <server protocol="HTTP" host="0.0.0.0" port="8080">  
         <services autoload="true" group="remote-A"/>  
