@@ -1,5 +1,6 @@
 # DB数据源
-&emsp;&emsp; DataSource是数据层操作的抽象接口，
+&emsp;&emsp; DataSource是数据层操作的抽象接口，不仅用于关系型数据库，还支持内存、Mongodb、ElasticSearch等数据源，redkale内置了内存版DataSource，官方扩展包```redkale-plugins```提供了Mongodb、ElasticSearch的实现。<br>
+&emsp;&emsp; DataSource几乎所有操作都提供同步与异步两种方法，对性能要求高的可以采用异步方式，例如使用vertx实现的DataSqlSource。
 ## 注解说明
  |注解类名 | 功能描述|
  | --- | --- |
@@ -33,6 +34,31 @@
 redkale.datasource.platf.url = jdbc:mysql://127.0.0.1:3306/platf?serverTimezone=UTC&characterEncoding=utf8
 redkale.datasource.platf.user = root
 redkale.datasource.platf.password = pwd123
+```
+
+## pom依赖
+&emsp;&emsp; 使用jdbc驱动：
+```xml
+    <dependency>
+        <groupId>com.mysql</groupId>
+        <artifactId>mysql-connector-j</artifactId>
+        <version>8.2.0</version>
+    </dependency> 
+```
+
+&emsp;&emsp; 使用vertx-mysql-client实现, 需要依赖官方扩展包 ```redkale-plugins```：
+```xml
+    <dependency>
+        <groupId>org.redkalex</groupId>
+        <artifactId>redkale-plugins</artifactId>
+        <version>2.8.0</version>
+    </dependency> 
+
+    <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-mysql-client</artifactId>
+        <version>4.5.1</version>
+    </dependency>
 ```
 
 ## 增删改
