@@ -5,6 +5,8 @@ package org.redkale.source;
 
 import java.io.Serializable;
 import java.util.Collection;
+import org.redkale.util.LambdaFunction;
+import org.redkale.util.LambdaSupplier;
 import org.redkale.util.SelectColumn;
 
 /**
@@ -43,15 +45,13 @@ public interface DataBatch {
 
     public <T> DataBatch update(Collection<T> entitys);
 
-    public <T> DataBatch update(Class<T> clazz, Serializable pk, String column, Serializable value);
+    public <T> DataBatch updateColumn(Class<T> clazz, Serializable pk, String column, Serializable value);
 
-    public <T> DataBatch update(Class<T> clazz, Serializable pk, ColumnValue... values);
+    public <T> DataBatch updateColumn(Class<T> clazz, Serializable pk, ColumnValue... values);
 
-    public <T> DataBatch update(Class<T> clazz, FilterNode node, String column, Serializable value);
+    public <T> DataBatch updateColumn(Class<T> clazz, FilterNode node, String column, Serializable value);
 
-    public <T> DataBatch update(Class<T> clazz, FilterNode node, ColumnValue... values);
-
-    public <T> DataBatch update(Class<T> clazz, FilterNode node, Flipper flipper, ColumnValue... values);
+    public <T> DataBatch updateColumn(Class<T> clazz, FilterNode node, Flipper flipper, ColumnValue... values);
 
     public <T> DataBatch updateColumn(T entity, final String... columns);
 
@@ -61,4 +61,23 @@ public interface DataBatch {
 
     public <T> DataBatch updateColumn(T entity, final FilterNode node, SelectColumn selects);
 
+    default <T, V extends Serializable> DataBatch updateColumn(final Class<T> clazz, final Serializable pk, final LambdaSupplier<V> func) {
+        return updateColumn(clazz, pk, LambdaSupplier.readColumn(func), func.get());
+    }
+
+    default <T> DataBatch updateColumn(final Class<T> clazz, final Serializable pk, LambdaFunction<T, ?> func, Serializable value) {
+        return updateColumn(clazz, pk, ColumnValue.set(func, value));
+    }
+
+    default <T> DataBatch updateColumn(final Class<T> clazz, final FilterNode node, final ColumnValue... values) {
+        return updateColumn(clazz, node, (Flipper) null, values);
+    }
+
+    default <T> DataBatch updateColumn(final T entity, final LambdaFunction<T, ?>... funcs) {
+        return updateColumn(entity, (FilterNode) null, LambdaFunction.readColumns(funcs));
+    }
+
+    default <T> DataBatch updateColumn(final T entity, final FilterNode node, final LambdaFunction<T, ?>... funcs) {
+        return updateColumn(entity, node, LambdaFunction.readColumns(funcs));
+    }
 }

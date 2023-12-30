@@ -25,7 +25,6 @@ import org.redkale.persistence.Entity;
 import org.redkale.service.*;
 import static org.redkale.source.DataSources.*;
 import org.redkale.util.*;
-import org.redkale.annotation.ResourceChanged;
 
 /**
  * DataSource的S抽象实现类 <br>
@@ -1244,12 +1243,12 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         }
 
         @Override
-        public <T> DataBatch update(Class<T> clazz, Serializable pk, String column, Serializable value) {
-            return update(clazz, pk, ColumnValue.set(column, value));
+        public <T> DataBatch updateColumn(Class<T> clazz, Serializable pk, String column, Serializable value) {
+            return updateColumn(clazz, pk, ColumnValue.set(column, value));
         }
 
         @Override
-        public <T> DataBatch update(Class<T> clazz, Serializable pk, ColumnValue... values) {
+        public <T> DataBatch updateColumn(Class<T> clazz, Serializable pk, ColumnValue... values) {
             Objects.requireNonNull(clazz);
             if (clazz.getAnnotation(Entity.class) == null) {
                 throw new SourceException("Entity Class " + clazz + " must be on Annotation @Entity");
@@ -1266,17 +1265,17 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         }
 
         @Override
-        public <T> DataBatch update(Class<T> clazz, FilterNode node, String column, Serializable value) {
-            return update(clazz, node, (Flipper) null, ColumnValue.set(column, value));
+        public <T> DataBatch updateColumn(Class<T> clazz, FilterNode node, String column, Serializable value) {
+            return updateColumn(clazz, node, (Flipper) null, ColumnValue.set(column, value));
         }
 
         @Override
-        public <T> DataBatch update(Class<T> clazz, FilterNode node, ColumnValue... values) {
-            return update(clazz, node, (Flipper) null, values);
+        public <T> DataBatch updateColumn(Class<T> clazz, FilterNode node, ColumnValue... values) {
+            return updateColumn(clazz, node, (Flipper) null, values);
         }
 
         @Override
-        public <T> DataBatch update(Class<T> clazz, FilterNode node, Flipper flipper, ColumnValue... values) {
+        public <T> DataBatch updateColumn(Class<T> clazz, FilterNode node, Flipper flipper, ColumnValue... values) {
             Objects.requireNonNull(clazz);
             if (clazz.getAnnotation(Entity.class) == null) {
                 throw new SourceException("Entity Class " + clazz + " must be on Annotation @Entity");

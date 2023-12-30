@@ -61,9 +61,10 @@ redkale.datasource.platf.password = pwd123
     </dependency>
 ```
 
-## 增删改
+## 增删改查
 ```java
 @Data
+@Table(name = "t_account")
 public class Account {
     //男
     public static final short GENDER_MALE = 1;
@@ -115,12 +116,25 @@ public class Account {
     }
 ```
 
+&emsp;&emsp;删除实体：
+```java
+    //根据主键值删除
+    Account account = new Account();
+    account.setAccountid("account1");
+    source.delete(account);
+
+    //过滤删除， 删除16以下男生
+    //等价sql: DELETE FROM t_account WHERE age < 16 AND gender = 1;
+    source.delete(Account.class, FilterNodes.lt(Account::getAge, 16).and("gender", GENDER_MALE));
+```
+
 &emsp;&emsp;修改实体对象：
 ```java
     //更新单个字段
     source.updateColumn(Account.class, "account1", Account::getRemark, "新备注");
 
     //更新多个字段
+    //等价sql: UPDATE t_account SET account_name='新名称', remark='新备注', age=age+2 WHERE account_id='account1';
     source.updateColumn(Account.class, "account1",
         ColumnValue.set(Account::getAccountName, "新名称"),
         ColumnValue.set(Account::getRemark, "新备注"),
@@ -133,6 +147,7 @@ public class Account {
     account.setRemark("新备注");
     source.updateColumn(account, "accountName", "remark");
     //或者
+    //等价sql: UPDATE t_account SET account_name='新名称', remark='新备注' WHERE account_id='account1';
     source.updateColumn(account, Account::getAccountName, Account::getRemark);
 
     //更新整个对象
@@ -143,17 +158,28 @@ public class Account {
     source.update(one); //createTime不会被更新，因字段设置了@Column(updatable=false)
 
     //过滤更新
+    //等价sql: UPDATE t_account SET remark = '不满16岁是青少年' WHERE age < 16;
     source.updateColumn(Account.class, FilterNodes.lt(Account::getAge, 16),
         ColumnValue.set(Account::getRemark, "不满16岁是青少年"));
 ```
 
-&emsp;&emsp;删除实体：
+&emsp;&emsp;批量操作：
 ```java
-    //根据主键值删除
-    Account account = new Account();
-    account.setAccountid("account1");
-    source.delete(account);
+    Account a1 = new Account();
+    a1.setAccountid("account1");
+    a1.setAccountName("Hello1");
+    a1.setCreateTime(System.currentTimeMillis());
 
-    //过滤删除， 删除16以下男生
-    source.delete(Account.class, FilterNodes.lt(Account::getAge, 16).and("gender", GENDER_MALE));
+    //事务性批量操作
+    DataBatch batch = DataBatch.create()
+        .insert(a1)
+        .updateColumn(Account.class, FilterNodes.lt(Account::getAge, 16),
+        ColumnValue.set(Account::getRemark, "不满16岁是青少年"))
+        .delete(Account.class, FilterNodes.lt(Account::getAge, 16).and("gender", GENDER_MALE));
+    source.batch(batch);
+```
+
+&emsp;&emsp;查询实体对象：
+```java
+
 ```
