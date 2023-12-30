@@ -173,8 +173,7 @@ public class Account {
     //事务性批量操作
     DataBatch batch = DataBatch.create()
         .insert(a1)
-        .updateColumn(Account.class, FilterNodes.lt(Account::getAge, 16),
-        ColumnValue.set(Account::getRemark, "不满16岁是青少年"))
+        .updateColumn(Account.class, "account1", ColumnValue.set(Account::getRemark, "不满16岁是青少年"))
         .delete(Account.class, FilterNodes.lt(Account::getAge, 16).and("gender", GENDER_MALE));
     source.batch(batch);
 ```
