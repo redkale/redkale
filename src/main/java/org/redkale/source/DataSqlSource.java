@@ -189,7 +189,7 @@ public interface DataSqlSource extends DataSource {
         });
     }
 
-    default Map<String, String> nativeQueryStrStrMap(String sql) {
+    default Map<String, String> nativeQueryToStrStrMap(String sql) {
         return nativeQueryMap(String.class, String.class, sql);
     }
 
@@ -197,11 +197,11 @@ public interface DataSqlSource extends DataSource {
         return nativeQueryMapAsync(String.class, String.class, sql);
     }
 
-    default Map<Integer, String> nativeQueryIntStrMap(String sql) {
+    default Map<Integer, String> nativeQueryToIntStrMap(String sql) {
         return nativeQueryMap(Integer.class, String.class, sql);
     }
 
-    default CompletableFuture<Map<Integer, String>> nativeQueryIntStrMapAsync(String sql) {
+    default CompletableFuture<Map<Integer, String>> nativeQueryToIntStrMapAsync(String sql) {
         return nativeQueryMapAsync(Integer.class, String.class, sql);
     }
 
@@ -292,19 +292,19 @@ public interface DataSqlSource extends DataSource {
         }, params);
     }
 
-    default Map<String, String> nativeQueryStrStrMap(String sql, Map<String, Object> params) {
+    default Map<String, String> nativeQueryToStrStrMap(String sql, Map<String, Object> params) {
         return nativeQueryMap(String.class, String.class, sql, params);
     }
 
-    default CompletableFuture<Map<String, String>> nativeQueryStrStrMapAsync(String sql, Map<String, Object> params) {
+    default CompletableFuture<Map<String, String>> nativeQueryToStrStrMapAsync(String sql, Map<String, Object> params) {
         return nativeQueryMapAsync(String.class, String.class, sql, params);
     }
 
-    default Map<Integer, String> nativeQueryIntStrMap(String sql, Map<String, Object> params) {
+    default Map<Integer, String> nativeQueryToIntStrMap(String sql, Map<String, Object> params) {
         return nativeQueryMap(Integer.class, String.class, sql, params);
     }
 
-    default CompletableFuture<Map<Integer, String>> nativeQueryIntStrMapAsync(String sql, Map<String, Object> params) {
+    default CompletableFuture<Map<Integer, String>> nativeQueryToIntStrMapAsync(String sql, Map<String, Object> params) {
         return nativeQueryMapAsync(Integer.class, String.class, sql, params);
     }
 
@@ -349,19 +349,19 @@ public interface DataSqlSource extends DataSource {
         return nativeQueryMapAsync(keyType, valType, sql, (Map<String, Object>) Copier.copyToMap(bean, Copier.OPTION_SKIP_NULL_VALUE));
     }
 
-    default Map<String, String> nativeQueryStrStrMap(String sql, Serializable bean) {
+    default Map<String, String> nativeQueryToStrStrMap(String sql, Serializable bean) {
         return nativeQueryMap(String.class, String.class, sql, (Map<String, Object>) Copier.copyToMap(bean, Copier.OPTION_SKIP_NULL_VALUE));
     }
 
-    default CompletableFuture<Map<String, String>> nativeQueryStrStrMapAsync(String sql, Serializable bean) {
+    default CompletableFuture<Map<String, String>> nativeQueryToStrStrMapAsync(String sql, Serializable bean) {
         return nativeQueryMapAsync(String.class, String.class, sql, (Map<String, Object>) Copier.copyToMap(bean, Copier.OPTION_SKIP_NULL_VALUE));
     }
 
-    default Map<Integer, String> nativeQueryIntStrMap(String sql, Serializable bean) {
+    default Map<Integer, String> nativeQueryToIntStrMap(String sql, Serializable bean) {
         return nativeQueryMap(Integer.class, String.class, sql, (Map<String, Object>) Copier.copyToMap(bean, Copier.OPTION_SKIP_NULL_VALUE));
     }
 
-    default CompletableFuture<Map<Integer, String>> nativeQueryIntStrMapAsync(String sql, Serializable bean) {
+    default CompletableFuture<Map<Integer, String>> nativeQueryToIntStrMapAsync(String sql, Serializable bean) {
         return nativeQueryMapAsync(Integer.class, String.class, sql, (Map<String, Object>) Copier.copyToMap(bean, Copier.OPTION_SKIP_NULL_VALUE));
     }
 

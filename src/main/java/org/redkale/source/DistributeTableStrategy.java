@@ -14,6 +14,8 @@ import java.io.Serializable;
  *
  * <p>
  * 详情见: https://redkale.org
+ * 
+ * @see org.redkale.source.DistributeTable
  *
  * @author zhangjx
  * @param <T> Entity类型

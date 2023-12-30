@@ -20,7 +20,7 @@ import org.redkale.util.LambdaSupplier;
 public final class FilterNodes {
 
     private FilterNodes() {
-        //do nothind
+        //do nothing
     }
 
     public static FilterNode create(String column, Serializable value) {
