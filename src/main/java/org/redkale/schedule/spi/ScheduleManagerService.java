@@ -162,7 +162,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
             } while ((clazz = clazz.getSuperclass()) != Object.class);
             //开始执行定时任务
             if (enabled && !tasks.isEmpty()) {
-                tasks.forEach((name, task) -> task.start());
+                tasks.forEach((name, task) -> task.init());
                 refTaskMap.put(ref, new ArrayList<>(tasks.values()));
             }
         } finally {
@@ -358,6 +358,10 @@ public class ScheduleManagerService implements ScheduleManager, Service {
             this.name = name;
             this.method = method;
             this.event = method.getParameterCount() == 0 ? null : new ScheduleEvent();
+        }
+
+        public void init() {
+            start();
         }
 
         public abstract void start();
