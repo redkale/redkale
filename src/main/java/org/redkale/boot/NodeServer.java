@@ -535,7 +535,8 @@ public abstract class NodeServer {
                 long e = System.currentTimeMillis() - s;
                 if (slist != null) {
                     String serstr = Sncp.toSimpleString(y, maxNameLength, maxTypeLength);
-                    slist.add(new StringBuilder().append(serstr).append(" load and init in ").append(e < 10 ? "  " : (e < 100 ? " " : "")).append(e).append(" ms").append(LINE_SEPARATOR).toString());
+                    slist.add(new StringBuilder().append(serstr).append(" load and init in ")
+                        .append(e < 10 ? "  " : (e < 100 ? " " : "")).append(e).append(" ms").append(LINE_SEPARATOR).toString());
                 }
             });
             localServices.stream().forEach(y -> {
@@ -545,7 +546,8 @@ public abstract class NodeServer {
                     long e = System.currentTimeMillis() - s;
                     if (rs && slist != null) {
                         String serstr = Sncp.toSimpleString(y, maxNameLength, maxTypeLength);
-                        slist.add(new StringBuilder().append(serstr).append(" component-start in ").append(e < 10 ? "  " : (e < 100 ? " " : "")).append(e).append(" ms").append(LINE_SEPARATOR).toString());
+                        slist.add(new StringBuilder().append(serstr).append(" component-start in ")
+                            .append(e < 10 ? "  " : (e < 100 ? " " : "")).append(e).append(" ms").append(LINE_SEPARATOR).toString());
                     }
                 }
             });
@@ -645,7 +647,8 @@ public abstract class NodeServer {
     }
 
     protected ClassFilter<Service> createServiceClassFilter() {
-        return createClassFilter(this.sncpGroup, null, Service.class, (!isSNCP() && application.watching) ? null : new Class[]{org.redkale.watch.WatchService.class}, Annotation.class, "services", "service");
+        return createClassFilter(this.sncpGroup, null, Service.class,
+            (!isSNCP() && application.watching) ? null : new Class[]{org.redkale.watch.WatchService.class}, Annotation.class, "services", "service");
     }
 
     protected ClassFilter createClassFilter(final String localGroup, Class<? extends Annotation> ref,

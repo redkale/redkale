@@ -180,5 +180,14 @@ public class Account {
 
 &emsp;&emsp;查询实体对象：
 ```java
+    //主键查询
+    //等价sql: SELECT * FROM t_account WHERE account_id = 'account1';
+    Account account = source.find(Account.class, "account1");
+
+    //等价sql: SELECT * FROM t_account WHERE account_name = 'Hello' AND age = 18 LIMIT 1;
+    Account one = source.find(Account.class, FilterNodes.eq(Account::getAccountName, "Hello").and(Account::getAge, 18));
+
+    //等价sql: SELECT * FROM t_account WHERE account_name = 'Hello' OR age = 18;
+    List<Account> list = source.queryList(Account.class, FilterNodes.eq(Account::getAccountName, "Hello").or(Account::getAge, 18));
 
 ```
