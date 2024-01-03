@@ -41,7 +41,7 @@ public @interface Scheduled {
     String cron() default "";
 
     /**
-     * 时区
+     * 时区, 例如: Asia/Shanghai
      *
      * @return 时区
      */
