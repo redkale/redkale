@@ -19,7 +19,7 @@ import org.redkale.util.Utility;
  *
  * @since 2.8.0
  */
-public class ScheduleEvent {
+public final class ScheduleEvent {
 
     private final Map<String, Object> map;
 
@@ -71,6 +71,6 @@ public class ScheduleEvent {
 
     @Override
     public String toString() {
-        return JsonConvert.root().convertTo(this);
+        return JsonConvert.root().convertTo(map);
     }
 }

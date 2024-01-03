@@ -157,7 +157,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
                     }
                     methodKeys.add(mk);
                     if (method.getParameterCount() != 0
-                        && (method.getParameterCount() == 1 && method.getParameterTypes()[0] == ScheduleEvent.class)) {
+                        && !(method.getParameterCount() == 1 && method.getParameterTypes()[0] == ScheduleEvent.class)) {
                         throw new RedkaleException("@" + Scheduled.class.getSimpleName() + " must be on non-parameter or "
                             + ScheduleEvent.class.getSimpleName() + "-parameter method, but on " + method);
                     }
@@ -247,11 +247,14 @@ public class ScheduleManagerService implements ScheduleManager, Service {
                         if (event == null) {
                             rs = mh.invoke(obj);
                         } else {
-                            rs = mh.invoke(obj, event.clear());
+                            rs = mh.invoke(obj, event);
                         }
                     }
                 } catch (Throwable t) {
                     logger.log(Level.SEVERE, "schedule task error", t);
+                }
+                if (event != null) {
+                    event.clear();
                 }
                 return rs;
             };
