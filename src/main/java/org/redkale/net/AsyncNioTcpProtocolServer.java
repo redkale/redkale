@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.*;
 import java.util.logging.Level;
+import org.redkale.annotation.Nullable;
 import org.redkale.boot.Application;
 import org.redkale.util.*;
 
@@ -81,7 +82,7 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
     }
 
     @Override
-    public void accept(Application application, Server server) throws IOException {
+    public void accept(@Nullable Application application, Server server) throws IOException {
         this.serverChannel.register(this.selector, SelectionKey.OP_ACCEPT);
 
         LongAdder createBufferCounter = new LongAdder();
@@ -103,7 +104,7 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
             ObjectPool<Response> pool = localResponsePool.get();
             return pool == null ? safeResponsePool.get() : pool.get();
         };
-        this.responseConsumer = (v) -> {
+        this.responseConsumer = v -> {
             WorkThread thread = v.channel != null ? v.channel.getWriteIOThread() : v.thread;
             if (thread != null && !thread.inCurrThread()) {
                 thread.execute(() -> {

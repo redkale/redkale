@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import java.util.logging.Level;
+import org.redkale.annotation.Nullable;
 import org.redkale.boot.Application;
 import org.redkale.util.*;
 
@@ -84,7 +85,7 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
     }
 
     @Override
-    public void accept(Application application, Server server) throws IOException {
+    public void accept(@Nullable Application application, Server server) throws IOException {
 
         LongAdder createBufferCounter = new LongAdder();
         LongAdder cycleBufferCounter = new LongAdder();

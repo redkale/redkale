@@ -87,6 +87,26 @@ public class ScheduleModuleEngine extends ModuleEngine {
     }
 
     /**
+     * 服务全部启动前被调用
+     */
+    @Override
+    public void onServersPreStart() {
+        if (this.scheduleManager instanceof ScheduleManagerService) {
+            ((ScheduleManagerService) this.scheduleManager).onServersPreStart();
+        }
+    }
+
+    /**
+     * 服务全部启动后被调用
+     */
+    @Override
+    public void onServersPostStart() {
+        if (this.scheduleManager instanceof ScheduleManagerService) {
+            ((ScheduleManagerService) this.scheduleManager).onServersPostStart();
+        }
+    }
+
+    /**
      * 进入Application.shutdown方法被调用
      */
     @Override

@@ -13,6 +13,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -120,6 +121,14 @@ public class ScheduleManagerService implements ScheduleManager, Service {
         if (scheduler != null) {
             scheduler.shutdown();
         }
+    }
+
+    public void onServersPreStart() {
+        //do nothing
+    }
+
+    public void onServersPostStart() {
+        //do nothing        
     }
 
     @Override
@@ -336,7 +345,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
         return c;
     }
 
-    protected abstract class ScheduledTask implements Runnable {
+    protected abstract class ScheduledTask {
 
         protected final WeakReference ref;
 
@@ -350,6 +359,11 @@ public class ScheduleManagerService implements ScheduleManager, Service {
 
         protected final ScheduleEvent event;
 
+        protected final Map<String, Object> eventMap;
+
+        //任务是否正运行中
+        protected final AtomicBoolean doing = new AtomicBoolean();
+
         protected ScheduledTask(WeakReference ref, String name, Method method) {
             Objects.requireNonNull(ref);
             Objects.requireNonNull(name);
@@ -357,7 +371,8 @@ public class ScheduleManagerService implements ScheduleManager, Service {
             this.ref = ref;
             this.name = name;
             this.method = method;
-            this.event = method.getParameterCount() == 0 ? null : new ScheduleEvent();
+            this.eventMap = method.getParameterCount() == 0 ? null : new HashMap<>();
+            this.event = eventMap == null ? null : new ScheduleEvent(eventMap);
         }
 
         public void init() {
@@ -374,6 +389,14 @@ public class ScheduleManagerService implements ScheduleManager, Service {
             this.started.set(false);
         }
 
+        public boolean doing() {
+            return doing.get();
+        }
+
+        public Map<String, Object> eventMap() {
+            return eventMap;
+        }
+
         public Method method() {
             return method;
         }
@@ -383,7 +406,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
         }
     }
 
-    protected class FixedTask extends ScheduledTask {
+    protected class FixedTask extends ScheduledTask implements Runnable {
 
         private final Function<ScheduleEvent, Object> delegate;
 
@@ -406,10 +429,13 @@ public class ScheduleManagerService implements ScheduleManager, Service {
 
         @Override
         public void run() {
+            doing.set(true);
             try {
                 delegate.apply(event);
             } catch (Throwable t) {
                 logger.log(Level.SEVERE, "schedule task error", t);
+            } finally {
+                doing.set(false);
             }
             if (ref.get() == null) {
                 stop();
@@ -430,7 +456,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
         }
     }
 
-    protected class CronTask extends ScheduledTask {
+    protected class CronTask extends ScheduledTask implements Runnable {
 
         private final Function<ScheduleEvent, Object> delegate;
 
@@ -448,10 +474,13 @@ public class ScheduleManagerService implements ScheduleManager, Service {
 
         @Override
         public void run() {
+            doing.set(true);
             try {
                 delegate.apply(event);
             } catch (Throwable t) {
                 logger.log(Level.SEVERE, "schedule task error", t);
+            } finally {
+                doing.set(false);
             }
             start();
         }

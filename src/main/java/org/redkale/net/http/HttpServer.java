@@ -5,7 +5,7 @@
  */
 package org.redkale.net.http;
 
-import org.redkale.mq.spi.MessageAgent;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.HttpCookie;
 import java.text.*;
@@ -15,11 +15,12 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import org.redkale.boot.Application;
 import org.redkale.inject.ResourceFactory;
-import org.redkale.mq.*;
+import org.redkale.mq.spi.MessageAgent;
 import org.redkale.net.Server;
 import org.redkale.net.http.HttpContext.HttpContextConfig;
 import org.redkale.net.http.HttpResponse.HttpResponseConfig;
@@ -185,6 +186,37 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      */
     public HttpServer addHttpFilter(HttpFilter filter, AnyValue conf) {
         this.dispatcher.addFilter(filter, conf);
+        return this;
+    }
+
+    /**
+     * 添加HttpServlet
+     *
+     * @param mapping 匹配规则
+     * @param servlet HttpServlet
+     *
+     * @return HttpServer
+     */
+    public HttpServer addHttpServlet(String mapping, HttpServlet servlet) {
+        this.dispatcher.addServlet(servlet, null, null, mapping);
+        return this;
+    }
+
+    /**
+     * 添加HttpServlet
+     *
+     * @param mapping  匹配规则
+     * @param consumer HttpServlet
+     *
+     * @return HttpServer
+     */
+    public HttpServer addHttpServlet(String mapping, BiConsumer<HttpRequest, HttpResponse> consumer) {
+        this.dispatcher.addServlet(new HttpServlet() {
+            @Override
+            public void execute(HttpRequest request, HttpResponse response) throws IOException {
+                consumer.accept(request, response);
+            }
+        }, null, null, mapping);
         return this;
     }
 
