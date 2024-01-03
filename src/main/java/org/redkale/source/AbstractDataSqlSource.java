@@ -26,7 +26,6 @@ import static org.redkale.source.DataSources.*;
 import org.redkale.source.EntityInfo.EntityColumn;
 import org.redkale.util.*;
 import static org.redkale.util.Utility.isEmpty;
-import org.redkale.annotation.ResourceChanged;
 
 /**
  * DataSource的SQL抽象实现类 <br>
@@ -167,7 +166,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
             Properties newProps = new Properties();
             newProps.putAll(this.readConfProps);
             for (ResourceEvent event : events) { //可能需要解密
-                String newValue = decryptProperty(event.name(), event.newValue().toString());
+                String newValue = decryptProperty(event.name(), event.newValue() == null ? null : event.newValue().toString());
                 allEvents.add(ResourceEvent.create(event.name(), newValue, event.oldValue()));
                 newProps.put(event.name(), newValue);
                 sb.append("DataSource(name=").append(resourceName()).append(") change '")
