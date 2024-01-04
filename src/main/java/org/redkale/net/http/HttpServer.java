@@ -58,6 +58,10 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         this(null, System.currentTimeMillis(), resourceFactory);
     }
 
+    public HttpServer(Application application) {
+        this(application, System.currentTimeMillis(), application.getResourceFactory().createChild());
+    }
+
     public HttpServer(Application application, long serverStartTime, ResourceFactory resourceFactory) {
         super(application, serverStartTime, "TCP", resourceFactory, new HttpDispatcherServlet());
         this.workExecutor = application == null ? null : application.getWorkExecutor();
