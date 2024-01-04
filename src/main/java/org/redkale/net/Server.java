@@ -57,7 +57,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     protected final ResourceFactory resourceFactory;
 
     //服务的根Servlet
-    protected DispatcherServlet<K, C, R, P, S> dispatcher;
+    protected final DispatcherServlet<K, C, R, P, S> dispatcher;
 
     //ClassLoader
     protected RedkaleClassLoader serverClassLoader;
@@ -137,14 +137,6 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.name = config.getValue("name", "Server-" + config.getValue("protocol", netprotocol).replaceFirst("\\..+", "").toUpperCase() + "-" + this.address.getPort());
         if (!this.name.matches("^[a-zA-Z][\\w_-]{1,64}$")) {
             throw new RedkaleException("server.name (" + this.name + ") is illegal");
-        }
-        String dispatcherImpl = config.getValue("dispatcher");
-        if (Utility.isNotBlank(dispatcherImpl)) {
-            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            Class dispatcherImplClass = classLoader.loadClass(dispatcherImpl);
-            RedkaleClassLoader.putReflectionDeclaredConstructors(dispatcherImplClass, dispatcherImplClass.getName());
-            this.dispatcher = (DispatcherServlet) dispatcherImplClass.getConstructors()[0].newInstance();
-            this.dispatcher.application = application;
         }
         AnyValue sslConf = config.getAnyValue("ssl");
         if (sslConf != null) {
