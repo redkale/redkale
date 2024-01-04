@@ -881,7 +881,7 @@ public final class Application {
             listener.onPreStart(this);
         }
         for (ModuleEngine item : moduleEngines) {
-            item.onAppPostInit();
+            item.onAppPreStart();
         }
     }
 

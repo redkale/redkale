@@ -3,6 +3,7 @@
  */
 package org.redkale.schedule;
 
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 import org.redkale.convert.json.JsonConvert;
@@ -34,6 +35,11 @@ public final class ScheduleEvent {
     @SuppressWarnings("unchecked")
     public <T> T get(String name) {
         return (T) map.get(name);
+    }
+
+    public <T> T getJson(String name, Type type) {
+        Object obj = get(name);
+        return obj == null ? null : JsonConvert.root().convertFrom(type, obj.toString());
     }
 
     public String getString(String name) {

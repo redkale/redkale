@@ -40,11 +40,45 @@
     }
 ```
 
-## 定时配置
+## 基本配置
 ```xml
     <!--
         全局Serivce的定时任务设置，没配置该节点将自动创建一个。
         enabled： 是否开启缓存功能。默认: true
     -->
     <schedule enabled="true"/>
+```
+
+
+## 使用Xxl-Job
+&emsp;&emsp;Schedule可以采用第三方实现, 官方扩展包```redkale-plugins```提供了xxl-job实现，且不依赖xxl-job包。
+
+### pom依赖
+```xml
+    <dependency>
+        <groupId>org.redkalex</groupId>
+        <artifactId>redkale-plugins</artifactId>
+        <version>2.8.0</version>
+    </dependency> 
+```
+
+### 配置文件
+```xml
+    <schedule enabled="true">    
+        <xxljob addresses="http://localhost:8080/xxl-job-admin" 
+                executorName="redkale-examples" 
+                ip="127.0.0.1" <!-- 可选 -->
+                port="5678"    <!-- 可选 -->
+                accessToken="default_token" />
+    </schedule>
+```
+
+### 使用方法
+```java
+    @Scheduled(name = "testTask")
+    public void runTask(ScheduleEvent event) {
+        System.out.println("xxl-job参数param: " + event.getString("param"));
+        System.out.println("xxl-job参数index: " + event.getInteger("index"));
+        System.out.println("xxl-job参数total: " + event.getInteger("total"));
+    }
 ```
