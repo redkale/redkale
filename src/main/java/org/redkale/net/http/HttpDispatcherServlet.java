@@ -113,14 +113,14 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
     }
 
     public HttpServlet removeHttpServlet(final HttpServlet servlet) {
-        Predicate<MappingEntry> predicateEntry = (t) -> t.servlet == servlet;
-        Predicate<Map.Entry<String, WebSocketServlet>> predicateFilter = (t) -> t.getValue() == servlet;
+        Predicate<MappingEntry> predicateEntry = t -> t.servlet == servlet;
+        Predicate<Map.Entry<String, WebSocketServlet>> predicateFilter = t -> t.getValue() == servlet;
         removeHttpServlet(predicateEntry, predicateFilter);
         return servlet;
     }
 
-    public <T extends HttpServlet> HttpServlet removeHttpServlet(Service service) {
-        Predicate<MappingEntry> predicateEntry = (t) -> {
+    public HttpServlet removeHttpServlet(Service service) {
+        Predicate<MappingEntry> predicateEntry = t -> {
             if (!Rest.isRestDyn(t.servlet)) {
                 return false;
             }
@@ -161,7 +161,7 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
 
     @SuppressWarnings("unchecked")
     public <T extends WebSocket> HttpServlet removeHttpServlet(Class<T> websocketOrServletType) {
-        Predicate<MappingEntry> predicateEntry = (t) -> {
+        Predicate<MappingEntry> predicateEntry = t -> {
             Class type = t.servlet.getClass();
             if (type == websocketOrServletType) {
                 return true;
@@ -169,7 +169,7 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
             RestDynSourceType rdt = (RestDynSourceType) type.getAnnotation(RestDynSourceType.class);
             return (rdt != null && rdt.value() == websocketOrServletType);
         };
-        Predicate<Map.Entry<String, WebSocketServlet>> predicateFilter = (t) -> {
+        Predicate<Map.Entry<String, WebSocketServlet>> predicateFilter = t -> {
             Class type = t.getValue().getClass();
             if (type == websocketOrServletType) {
                 return true;

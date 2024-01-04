@@ -5,20 +5,7 @@
     文件说明:
         ${APP_HOME} 指当前程序的根目录APP_HOME
         没注明唯一的节点可多个存在
-        required： 被声明required的属性值不能为空
-        
-                                            group
-                                         /  /  \  \  
-                                      /    /    \   \   
-                                   /     /       \    \                      
-                               node1   node2   node3  node4
-                             /       \                             
-                          /             \
-                       /                   \
-                    /                         \
-             serviceid1                       serviceid2
-            /       \                        /           \
-  serviceid1_name1  serviceid1_name2   serviceid2_name1  serviceid2_name2    
+        required： 被声明required的属性值不能为空 
 -->
 <!--     
     nodeid: int     进程的节点ID，用于分布式环境，一个系统中节点ID必须全局唯一，使用cluster时框架会进行唯一性校验
@@ -28,23 +15,23 @@
     lib:            加上额外的lib路径,多个路径用分号;隔开； 默认为空。  例如: ${APP_HOME}/lib/a.jar;${APP_HOME}/lib2/b.jar;
 -->
 <application nodeid="1000" port="6560" lib="">  
-    
+        
     <!--
-       【节点全局唯一】
+       【节点全局唯一】 @since 2.3.0
         全局Serivce执行的线程池， Application.workExecutor, 没配置该节点将自动创建一个。
         threads： 线程数，为0表示不启用workExecutor，只用IO线程。默认: CPU核数, 核数=1的情况下默认值为2
     -->
     <executor threads="4"/>
 
     <!--
-       【节点全局唯一】
+       【节点全局唯一】 @since 2.8.0
         全局Serivce的定时任务设置，没配置该节点将自动创建一个。
         enabled： 是否开启缓存功能。默认: true
     -->
     <schedule enabled="true"/>
     
     <!--
-       【节点全局唯一】
+       【节点全局唯一】 @since 2.8.0
         全局Serivce的缓存设置，没配置该节点将自动创建一个。
         enabled： 是否开启缓存功能。默认: true
         source: 远程CacheSource的资源名
@@ -162,6 +149,7 @@
         aliveTimeoutSeconds: KeepAlive读操作超时秒数， 默认30， 0表示永久不超时; -1表示禁止KeepAlive
         readTimeoutSeconds:  读操作超时秒数， 默认0， 0表示永久不超时
         writeTimeoutSeconds: 写操作超时秒数， 默认0， 0表示永久不超时
+        dispatcher:          DispatcherServlet的自定义实现类，若是HttpServer，则实现类必须是HttpDispatcherServlet的子类
         interceptor:         启动/关闭NodeServer时被调用的拦截器实现类，必须是org.redkale.boot.NodeInterceptor的子类，默认为null
     -->
     <server protocol="HTTP" host="127.0.0.1" port="6060" root="root" lib=""> 
@@ -365,6 +353,7 @@
     </server>
     
 </application>
+
 ```
 
 # source.properties 配置：
