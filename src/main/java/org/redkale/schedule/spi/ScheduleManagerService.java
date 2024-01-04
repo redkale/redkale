@@ -264,7 +264,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
     }
 
     protected String getProperty(String value) {
-        if (propertyFunc == null || value.indexOf('}') < 0) {
+        if (propertyFunc == null || value == null || value.indexOf('}') < 0) {
             return value;
         }
         return propertyFunc.apply(value);
