@@ -378,6 +378,10 @@ public class AnyValueWriter extends AnyValue {
         this.stringEntrys = stringEntrys;
     }
 
+    public void clearStringEntrys() {
+        this.stringEntrys = new Entry[0];
+    }
+
     @Override
     public Entry<AnyValue>[] getAnyEntrys() {
         return (Entry<AnyValue>[]) (Entry[]) anyEntrys;
@@ -385,6 +389,10 @@ public class AnyValueWriter extends AnyValue {
 
     public void setAnyEntrys(Entry<AnyValueWriter>[] anyEntrys) {
         this.anyEntrys = anyEntrys;
+    }
+
+    public void clearAnyEntrys() {
+        this.anyEntrys = new Entry[0];
     }
 
     public boolean isIgnoreCase() {

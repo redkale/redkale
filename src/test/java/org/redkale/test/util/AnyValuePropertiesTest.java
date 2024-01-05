@@ -13,6 +13,11 @@ import org.redkale.util.AnyValueWriter;
  */
 public class AnyValuePropertiesTest {
 
+    public static void main(String[] args) throws Throwable {
+        AnyValuePropertiesTest test = new AnyValuePropertiesTest();
+        test.run4();
+    }
+
     @Test
     public void run1() {
         Properties properties = new Properties();
@@ -117,4 +122,17 @@ public class AnyValuePropertiesTest {
         Assertions.assertEquals(json, conf.toJsonString());
     }
 
+    @Test
+    public void run4() {
+        Properties prop = new Properties();
+        prop.put("redkale.datasource.url", "jdbc:mysql://127.0.0.1");
+        prop.put("redkale.datasource.user", "user1");
+        prop.put("redkale.datasource.password", "123");
+        prop.put("redkale.datasource.platf.url", "jdbc:mysql://127.0.0.12");
+        prop.put("redkale.datasource.platf.user", "user2");
+        prop.put("redkale.datasource.platf.password", "345");
+
+        AnyValue conf = AnyValue.loadFromProperties(prop);
+        System.out.println(conf);
+    }
 }

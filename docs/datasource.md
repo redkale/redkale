@@ -188,6 +188,7 @@ public class Account {
     Account one = source.find(Account.class, FilterNodes.eq(Account::getAccountName, "Hello").and(Account::getAge, 18));
 
     //等价sql: SELECT * FROM t_account WHERE account_name = 'Hello' OR age = 18;
-    List<Account> list = source.queryList(Account.class, FilterNodes.eq(Account::getAccountName, "Hello").or(Account::getAge, 18));
+    FilterNode filter = FilterNodes.eq(Account::getAccountName, "Hello").or(Account::getAge, 18);
+    List<Account> list = source.queryList(Account.class, filter);
 
 ```

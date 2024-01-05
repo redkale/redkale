@@ -21,6 +21,7 @@ import java.util.logging.Level;
 import org.redkale.annotation.Resource;
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
+import org.redkale.inject.Resourcable;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
@@ -176,137 +177,128 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                 if (key.startsWith("redkale.cachesource[")) {
                     cacheSourceNames.add(key.substring("redkale.cachesource[".length(), key.indexOf(']')));
                 } else if (key.startsWith("redkale.cachesource.")) {
-                    cacheSourceNames.add(key.substring("redkale.cachesource.".length(), key.indexOf('.', "redkale.cachesource.".length())));
+                    String subkey = key.substring("redkale.cachesource.".length());
+                    int pos = subkey.indexOf('.');
+                    if (pos < 1) {
+                        cacheSourceNames.add("");
+                    } else {
+                        cacheSourceNames.add(subkey.substring(0, pos));
+                    }
                 } else if (key.startsWith("redkale.datasource[")) {
                     dataSourceNames.add(key.substring("redkale.datasource[".length(), key.indexOf(']')));
                 } else if (key.startsWith("redkale.datasource.")) {
-                    dataSourceNames.add(key.substring("redkale.datasource.".length(), key.indexOf('.', "redkale.datasource.".length())));
+                    String subkey = key.substring("redkale.datasource.".length());
+                    int pos = subkey.indexOf('.');
+                    if (pos < 1) {
+                        dataSourceNames.add("");
+                    } else {
+                        dataSourceNames.add(subkey.substring(0, pos));
+                    }
                 }
             }
             //更新缓存
-            for (String sourceName : cacheSourceNames) {
-                CacheSource source = Utility.find(cacheSources, s -> Objects.equals(s.resourceName(), sourceName));
-                if (source == null) {
-                    continue;  //多余的数据源
-                }
-                final AnyValueWriter old = (AnyValueWriter) findSourceConfig(sourceName, "cachesource");
-                Properties newProps = new Properties();
-                this.sourceProperties.forEach((k, v) -> {
-                    final String key = k.toString();
-                    String prefix = "redkale.cachesource[" + sourceName + "].";
-                    int pos = key.indexOf(prefix);
-                    if (pos < 0) {
-                        prefix = "redkale.cachesource." + sourceName + ".";
-                        pos = key.indexOf(prefix);
-                    }
-                    if (pos < 0) {
-                        return; //不是同一name数据源配置项
-                    }
-                    newProps.put(k, v);
-                });
-                List<ResourceEvent> changeEvents = new ArrayList<>();
-                sourceChangedProps.forEach((k, v) -> {
-                    final String key = k.toString();
-                    String prefix = "redkale.cachesource[" + sourceName + "].";
-                    int pos = key.indexOf(prefix);
-                    if (pos < 0) {
-                        prefix = "redkale.cachesource." + sourceName + ".";
-                        pos = key.indexOf(prefix);
-                    }
-                    if (pos < 0) {
-                        return; //不是同一name数据源配置项
-                    }
-                    newProps.put(k, v);
-                    changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), v, this.sourceProperties.getProperty(key)));
-                });
-                sourceRemovedKeys.forEach(k -> {
-                    final String key = k;
-                    String prefix = "redkale.cachesource[" + sourceName + "].";
-                    int pos = key.indexOf(prefix);
-                    if (pos < 0) {
-                        prefix = "redkale.cachesource." + sourceName + ".";
-                        pos = key.indexOf(prefix);
-                    }
-                    if (pos < 0) {
-                        return;
-                    }
-                    newProps.remove(k); //不是同一name数据源配置项
-                    changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), null, this.sourceProperties.getProperty(key)));
-                });
-                if (!changeEvents.isEmpty()) {
-                    AnyValueWriter back = old.copy();
-                    try {
-                        old.replace(AnyValue.loadFromProperties(newProps).getAnyValue("redkale").getAnyValue("cachesource").getAnyValue(sourceName));
-                        ((AbstractCacheSource) source).onResourceChange(changeEvents.toArray(new ResourceEvent[changeEvents.size()]));
-                    } catch (RuntimeException e) {
-                        old.replace(back);  //还原配置
-                        throw e;
-                    }
-                }
-            }
-            //更新数据库                
-            for (String sourceName : dataSourceNames) {
-                DataSource source = Utility.find(dataSources, s -> Objects.equals(s.resourceName(), sourceName));
-                if (source == null) {
-                    continue;  //多余的数据源
-                }
-                AnyValueWriter old = (AnyValueWriter) findSourceConfig(sourceName, "datasource");
-                Properties newProps = new Properties();
-                this.sourceProperties.forEach((k, v) -> {
-                    final String key = k.toString();
-                    String prefix = "redkale.datasource[" + sourceName + "].";
-                    int pos = key.indexOf(prefix);
-                    if (pos < 0) {
-                        prefix = "redkale.datasource." + sourceName + ".";
-                        pos = key.indexOf(prefix);
-                    }
-                    if (pos < 0) {
-                        return; //不是同一name数据源配置项
-                    }
-                    newProps.put(k, v);
-                });
-                List<ResourceEvent> changeEvents = new ArrayList<>();
-                sourceChangedProps.forEach((k, v) -> {
-                    final String key = k.toString();
-                    String prefix = "redkale.datasource[" + sourceName + "].";
-                    int pos = key.indexOf(prefix);
-                    if (pos < 0) {
-                        prefix = "redkale.datasource." + sourceName + ".";
-                        pos = key.indexOf(prefix);
-                    }
-                    if (pos < 0) {
-                        return; //不是同一name数据源配置项
-                    }
-                    newProps.put(k, v);
-                    changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), v, this.sourceProperties.getProperty(key)));
-                });
-                sourceRemovedKeys.forEach(k -> {
-                    final String key = k;
-                    String prefix = "redkale.datasource[" + sourceName + "].";
-                    int pos = key.indexOf(prefix);
-                    if (pos < 0) {
-                        prefix = "redkale.datasource." + sourceName + ".";
-                        pos = key.indexOf(prefix);
-                    }
-                    if (pos < 0) {
-                        return;
-                    }
-                    newProps.remove(k); //不是同一name数据源配置项
-                    changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), null, this.sourceProperties.getProperty(key)));
-                });
-                if (!changeEvents.isEmpty()) {
-                    AnyValueWriter back = old.copy();
-                    try {
-                        old.replace(AnyValue.loadFromProperties(newProps).getAnyValue("redkale").getAnyValue("datasource").getAnyValue(sourceName));
-                        ((AbstractDataSource) source).onResourceChange(changeEvents.toArray(new ResourceEvent[changeEvents.size()]));
-                    } catch (RuntimeException e) {
-                        old.replace(back);  //还原配置
-                        throw e;
-                    }
-                }
-            }
+            onSourceChanged("cachesource", cacheSourceNames, cacheSources, sourceRemovedKeys, sourceChangedProps);
+            //更新数据库 
+            onSourceChanged("datasource", dataSourceNames, dataSources, sourceRemovedKeys, sourceChangedProps);
+            //更新到内存配置
             sourceRemovedKeys.forEach(this.sourceProperties::remove);
             this.sourceProperties.putAll(sourceChangedProps);
+        }
+    }
+
+    private void onSourceChanged(String sourceType, Set<String> sourceNames, List<? extends Resourcable> sources,
+        Set<String> sourceRemovedKeys, Properties sourceChangedProps) {
+        for (String sourceName : sourceNames) {
+            Object source = Utility.find(sources, s -> Objects.equals(s.resourceName(), sourceName));
+            if (source == null) {
+                continue;  //多余的数据源
+            }
+            AnyValueWriter old = (AnyValueWriter) findSourceConfig(sourceName, sourceType);
+            Properties newProps = new Properties();
+            this.sourceProperties.forEach((k, v) -> {
+                final String key = k.toString();
+                String prefix = "redkale." + sourceType + "[" + sourceName + "].";
+                int pos = key.indexOf(prefix);
+                if (pos < 0) {
+                    prefix = "redkale." + sourceType + "." + sourceName + ".";
+                    pos = key.indexOf(prefix);
+                }
+                if (pos < 0 && sourceName.isEmpty() && key.startsWith("redkale." + sourceType + ".")) {
+                    String subKey = key.substring(("redkale." + sourceType + ".").length());
+                    if (subKey.indexOf('.') < 0) {
+                        pos = 0;
+                    }
+                }
+                if (pos < 0) {
+                    return; //不是同一name数据源配置项
+                }
+                newProps.put(k, v);
+            });
+            List<ResourceEvent> changeEvents = new ArrayList<>();
+            sourceChangedProps.forEach((k, v) -> {
+                final String key = k.toString();
+                String prefix = "redkale." + sourceType + "[" + sourceName + "].";
+                int pos = key.indexOf(prefix);
+                if (pos < 0) {
+                    prefix = "redkale." + sourceType + "." + sourceName + ".";
+                    pos = key.indexOf(prefix);
+                }
+                if (pos < 0 && sourceName.isEmpty() && key.startsWith("redkale." + sourceType + ".")) {
+                    String subKey = key.substring(("redkale." + sourceType + ".").length());
+                    if (subKey.indexOf('.') < 0) {
+                        pos = 0;
+                    }
+                }
+                if (pos < 0) {
+                    return; //不是同一name数据源配置项
+                }
+                newProps.put(k, v);
+                changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), v, this.sourceProperties.getProperty(key)));
+            });
+            sourceRemovedKeys.forEach(k -> {
+                final String key = k;
+                String prefix = "redkale." + sourceType + "[" + sourceName + "].";
+                int pos = key.indexOf(prefix);
+                if (pos < 0) {
+                    prefix = "redkale." + sourceType + "." + sourceName + ".";
+                    pos = key.indexOf(prefix);
+                }
+                if (pos < 0 && sourceName.isEmpty() && key.startsWith("redkale." + sourceType + ".")) {
+                    String subKey = key.substring(("redkale." + sourceType + ".").length());
+                    if (subKey.indexOf('.') < 0) {
+                        pos = 0;
+                    }
+                }
+                if (pos < 0) {
+                    return;
+                }
+                newProps.remove(k); //不是同一name数据源配置项
+                changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), null, this.sourceProperties.getProperty(key)));
+            });
+            if (!changeEvents.isEmpty()) {
+                AnyValueWriter back = old == null ? null : old.copy();
+                try {
+                    if (old != null) {
+                        AnyValue parent = AnyValue.loadFromProperties(newProps).getAnyValue("redkale").getAnyValue(sourceType);
+                        AnyValue sub = parent.getAnyValue(sourceName);
+                        if (sub == null && sourceName.isEmpty()) {
+                            ((AnyValueWriter) parent).clearAnyEntrys();
+                            sub = parent;
+                        }
+                        old.replace(sub);
+                    }
+                    if (source instanceof AbstractDataSource) {
+                        ((AbstractDataSource) source).onResourceChange(changeEvents.toArray(new ResourceEvent[changeEvents.size()]));
+                    } else if (source instanceof AbstractCacheSource) {
+                        ((AbstractCacheSource) source).onResourceChange(changeEvents.toArray(new ResourceEvent[changeEvents.size()]));
+                    }
+                } catch (RuntimeException e) {
+                    if (old != null) {
+                        old.replace(back);  //还原配置
+                    }
+                    throw e;
+                }
+            }
         }
     }
 
@@ -500,6 +492,13 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
             }
         });
         if (props.isEmpty()) {
+            if (sourceName.isEmpty()) {
+                AnyValueWriter allConf = (AnyValueWriter) AnyValueWriter.loadFromProperties(props);
+                if (allConf.getStringEntrys() != null && allConf.getStringEntrys().length > 0) {
+                    allConf.clearAnyEntrys();
+                    return allConf;
+                }
+            }
             return null;
         }
         AnyValue conf = AnyValueWriter.loadFromProperties(props);
