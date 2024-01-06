@@ -617,12 +617,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         return and(new FilterNode(column, IN, (Serializable) collection));
     }
 
-    public <F extends Serializable> FilterNode in(LambdaSupplier<F> func) {
-        return and(new FilterNode(LambdaSupplier.readColumn(func), IN, func.get()));
+    public FilterNode in(LambdaSupplier func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), IN, (Serializable) func.get()));
     }
 
-    public <T, F extends Serializable> FilterNode in(LambdaFunction<T, F> func, F value) {
-        return and(new FilterNode(LambdaFunction.readColumn(func), IN, value));
+    public <T, F extends Object> FilterNode in(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), IN, (Serializable) value));
     }
 
     public FilterNode notIn(String column, Serializable value) {
@@ -637,12 +637,12 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         return and(new FilterNode(column, NOT_IN, (Serializable) collection));
     }
 
-    public <F extends Serializable> FilterNode notIn(LambdaSupplier<F> func) {
-        return and(new FilterNode(LambdaSupplier.readColumn(func), NOT_IN, func.get()));
+    public FilterNode notIn(LambdaSupplier func) {
+        return and(new FilterNode(LambdaSupplier.readColumn(func), NOT_IN, (Serializable) func.get()));
     }
 
-    public <T, F extends Serializable> FilterNode notIn(LambdaFunction<T, F> func, F value) {
-        return and(new FilterNode(LambdaFunction.readColumn(func), NOT_IN, value));
+    public <T, F extends Object> FilterNode notIn(LambdaFunction<T, F> func, F value) {
+        return and(new FilterNode(LambdaFunction.readColumn(func), NOT_IN, (Serializable) value));
     }
 
     public FilterNode isNull(String column) {

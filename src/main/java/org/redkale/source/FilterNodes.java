@@ -385,12 +385,12 @@ public final class FilterNodes {
         return new FilterNode(column, IN, (Serializable) collection);
     }
 
-    public static <F extends Serializable> FilterNode in(LambdaSupplier<F> func) {
-        return new FilterNode(LambdaSupplier.readColumn(func), IN, func.get());
+    public static FilterNode in(LambdaSupplier func) {
+        return new FilterNode(LambdaSupplier.readColumn(func), IN, (Serializable) func.get());
     }
 
-    public static <T, F extends Serializable> FilterNode in(LambdaFunction<T, F> func, F value) {
-        return new FilterNode(LambdaFunction.readColumn(func), IN, value);
+    public static <T, F extends Object> FilterNode in(LambdaFunction<T, F> func, F value) {
+        return new FilterNode(LambdaFunction.readColumn(func), IN, (Serializable) value);
     }
 
     public static FilterNode notIn(String column, Serializable value) {
@@ -405,12 +405,12 @@ public final class FilterNodes {
         return new FilterNode(column, NOT_IN, (Serializable) collection);
     }
 
-    public static <F extends Serializable> FilterNode notIn(LambdaSupplier<F> func) {
-        return new FilterNode(LambdaSupplier.readColumn(func), NOT_IN, func.get());
+    public static FilterNode notIn(LambdaSupplier func) {
+        return new FilterNode(LambdaSupplier.readColumn(func), NOT_IN, (Serializable) func.get());
     }
 
-    public static <T, F extends Serializable> FilterNode notIn(LambdaFunction<T, F> func, F value) {
-        return new FilterNode(LambdaFunction.readColumn(func), NOT_IN, value);
+    public static <T, F extends Object> FilterNode notIn(LambdaFunction<T, F> func, F value) {
+        return new FilterNode(LambdaFunction.readColumn(func), NOT_IN, (Serializable) value);
     }
 
     public static FilterNode isNull(String column) {
