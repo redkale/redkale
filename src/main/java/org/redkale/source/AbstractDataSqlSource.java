@@ -2951,7 +2951,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
 
     protected <T> CompletableFuture<Boolean> existsDBApply(EntityInfo<T> info, CompletableFuture<? extends DataResultSet> future, boolean onlypk) {
         return future.thenApply((DataResultSet pgset) -> {
-            boolean rs = pgset.next() ? (((Number) pgset.getObject(1)).intValue() > 0) : false;
+            boolean rs = pgset.next() && (((Number) pgset.getObject(1)).intValue() > 0);
             pgset.close();
             return rs;
         });

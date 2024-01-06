@@ -18,6 +18,8 @@ import org.redkale.convert.ConvertDisabled;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ * 
+ * @since 2.8.0
  */
 @SuppressWarnings("unchecked")
 public class AnyValueWriter extends AnyValue {

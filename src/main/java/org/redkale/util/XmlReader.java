@@ -7,7 +7,7 @@ package org.redkale.util;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 
 /**
  * 简单的xml读取器, 只读element节点信息，其他信息(如: namespace、comment、docdecl等)都会丢弃
@@ -31,7 +31,7 @@ public class XmlReader {
 
     protected int columnNumber;
 
-    protected BiFunction<String, String, String> attrFunc;
+    protected BinaryOperator<String> attrFunc;
 
     private static class TagNode {
 
@@ -64,7 +64,7 @@ public class XmlReader {
         this.limit = start + len - 1;
     }
 
-    public XmlReader attrFunc(BiFunction<String, String, String> func) {
+    public XmlReader attrFunc(BinaryOperator<String> func) {
         this.attrFunc = func;
         return this;
     }

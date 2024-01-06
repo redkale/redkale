@@ -1196,6 +1196,48 @@ public final class EntityInfo<T> {
     }
 
     /**
+     * 获取DataSource资源名，为null表示没有分布物理库
+     *
+     * @param primary Entity主键值
+     *
+     * @return String
+     */
+    public String getSource(Serializable primary) {
+        if (tableStrategy == null) {
+            return null;
+        }
+        return tableStrategy.getSource(primary);
+    }
+
+    /**
+     * 获取DataSource资源名，为null表示没有分布物理库
+     *
+     * @param bean Entity实体
+     *
+     * @return String
+     */
+    public String getSource(T bean) {
+        if (tableStrategy == null) {
+            return null;
+        }
+        return tableStrategy.getSource(bean);
+    }
+
+    /**
+     * 获取DataSource资源名，为null表示没有分布物理库
+     *
+     * @param node FilterNode
+     *
+     * @return String
+     */
+    public String getSource(FilterNode node) {
+        if (tableStrategy == null) {
+            return null;
+        }
+        return tableStrategy.getSource(node);
+    }
+
+    /**
      * 根据主键值获取Entity的表名
      *
      * @param primary Entity主键值

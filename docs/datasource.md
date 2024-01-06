@@ -46,7 +46,7 @@ redkale.datasource.platf.password = pwd123
     </dependency> 
 ```
 
-&emsp;&emsp; 使用vertx-mysql-client实现, 需要依赖官方扩展包 ```redkale-plugins```：
+&emsp;&emsp; 异步场景可使用vertx-mysql-client实现, 需要依赖官方扩展包 ```redkale-plugins```：
 ```xml
     <dependency>
         <groupId>org.redkalex</groupId>

@@ -14,13 +14,55 @@ import java.io.Serializable;
  *
  * <p>
  * 详情见: https://redkale.org
- * 
+ *
  * @see org.redkale.source.DistributeTable
  *
  * @author zhangjx
  * @param <T> Entity类型
  */
 public interface DistributeTableStrategy<T> {
+
+    /**
+     * 获取DataSource资源名，为null表示没有分布物理库   <br>
+     * 查询单个对象（DataSource.find）时调用本方法  <br>
+     *
+     * @param primary 记录主键
+     *
+     * @return DataSource资源名
+     *
+     * @since 2.8.0
+     */
+    default String getSource(Serializable primary) {
+        return null;
+    }
+
+    /**
+     * 获取DataSource资源名，为null表示没有分布物理库   <br>
+     * 新增对象或更新单个对象（DataSource.insert、DataSource.update）时调用本方法   <br>
+     *
+     * @param bean 实体对象
+     *
+     * @return DataSource资源名
+     *
+     * @since 2.8.0
+     */
+    default String getSource(T bean) {
+        return null;
+    }
+
+    /**
+     * 获取DataSource资源名，为null表示没有分布物理库   <br>
+     * 查询、修改、删除对象（DataSource.find、DataSource.query、DataSource.delete、DataSource.update）时调用本方法   <br>
+     *
+     * @param node 过滤条件
+     *
+     * @return DataSource资源名
+     *
+     * @since 2.8.0
+     */
+    default String getSource(FilterNode node) {
+        return null;
+    }
 
     /**
      * 获取对象的表名   <br>
@@ -63,7 +105,7 @@ public interface DistributeTableStrategy<T> {
      * 注意： 需保证FilterNode过滤的结果集合必须在一个数据库表中   <br>
      *
      * @deprecated 2.8.0 replaced by getTables(String table, FilterNode node)
-     * @see #getTables(java.lang.String, org.redkale.source.FilterNode) 
+     * @see #getTables(java.lang.String, org.redkale.source.FilterNode)
      *
      * @param table 模板表的表名
      * @param node  过滤条件
