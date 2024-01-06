@@ -296,11 +296,17 @@ public class EntityBuilder<T> {
             obj = creator.create();
             for (String sqlCol : sqlColumns) {
                 Attribute<T, Serializable> attr = attrs.get(sqlCol);
+                boolean sqlFlag = false;
                 if (attr == null && sqlCol.indexOf('_') > -1) {
                     attr = attrs.get(snakeCaseColumn(sqlCol));
+                    sqlFlag = true;
                 }
                 if (attr != null) { //兼容返回的字段不存在类中
-                    attr.set(obj, getFieldValue(attr, row, 0));
+                    if (sqlFlag) {
+                        attr.set(obj, getFieldValue(row, sqlCol));
+                    } else {
+                        attr.set(obj, getFieldValue(attr, row, 0));
+                    }
                 }
             }
         } else {
