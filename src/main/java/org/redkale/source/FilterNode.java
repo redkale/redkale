@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.*;
+import java.util.stream.Stream;
 import org.redkale.convert.ConvertColumn;
 import static org.redkale.source.FilterExpress.*;
 import org.redkale.util.*;
@@ -79,6 +80,9 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                 } else {
                     exp = FilterExpress.IN;
                 }
+            } else if (val instanceof Stream) {
+                val = ((Stream) val).toArray();
+                exp = FilterExpress.IN;
             }
         }
         this.column = col;
@@ -605,6 +609,14 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         return and(new FilterNode(column, IN, value));
     }
 
+    public FilterNode in(String column, Stream stream) {
+        return and(new FilterNode(column, IN, stream == null ? null : (Serializable) stream.toArray()));
+    }
+
+    public FilterNode in(String column, Collection collection) {
+        return and(new FilterNode(column, IN, (Serializable) collection));
+    }
+
     public <F extends Serializable> FilterNode in(LambdaSupplier<F> func) {
         return and(new FilterNode(LambdaSupplier.readColumn(func), IN, func.get()));
     }
@@ -615,6 +627,14 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
     public FilterNode notIn(String column, Serializable value) {
         return and(new FilterNode(column, NOT_IN, value));
+    }
+
+    public FilterNode notIn(String column, Stream stream) {
+        return and(new FilterNode(column, NOT_IN, stream == null ? null : (Serializable) stream.toArray()));
+    }
+
+    public FilterNode notIn(String column, Collection collection) {
+        return and(new FilterNode(column, NOT_IN, (Serializable) collection));
     }
 
     public <F extends Serializable> FilterNode notIn(LambdaSupplier<F> func) {

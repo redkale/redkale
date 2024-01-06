@@ -4,6 +4,8 @@
 package org.redkale.source;
 
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.stream.Stream;
 import static org.redkale.source.FilterExpress.*;
 import org.redkale.util.LambdaFunction;
 import org.redkale.util.LambdaSupplier;
@@ -375,6 +377,14 @@ public final class FilterNodes {
         return new FilterNode(column, IN, value);
     }
 
+    public static FilterNode in(String column, Stream stream) {
+        return new FilterNode(column, IN, stream == null ? null : (Serializable) stream.toArray());
+    }
+
+    public static FilterNode in(String column, Collection collection) {
+        return new FilterNode(column, IN, (Serializable) collection);
+    }
+
     public static <F extends Serializable> FilterNode in(LambdaSupplier<F> func) {
         return new FilterNode(LambdaSupplier.readColumn(func), IN, func.get());
     }
@@ -385,6 +395,14 @@ public final class FilterNodes {
 
     public static FilterNode notIn(String column, Serializable value) {
         return new FilterNode(column, NOT_IN, value);
+    }
+
+    public static FilterNode notIn(String column, Stream stream) {
+        return new FilterNode(column, NOT_IN, stream == null ? null : (Serializable) stream.toArray());
+    }
+
+    public static FilterNode notIn(String column, Collection collection) {
+        return new FilterNode(column, NOT_IN, (Serializable) collection);
     }
 
     public static <F extends Serializable> FilterNode notIn(LambdaSupplier<F> func) {
@@ -502,7 +520,7 @@ public final class FilterNodes {
     public static <T, F extends FilterExpValue> FilterNode fvdiv(LambdaFunction<T, F> func, F value) {
         return new FilterNode(LambdaFunction.readColumn(func), FV_DIV, value);
     }
-    
+
     //----------------------------------------------------------------------------------------------------
     public static FilterJoinNode joinInner(Class joinClass, String joinColumn, String column, Serializable value) {
         return joinInner(joinClass, new String[]{joinColumn}, column, value);
@@ -519,7 +537,7 @@ public final class FilterNodes {
     public static FilterJoinNode joinInner(Class joinClass, String[] joinColumns, String column, FilterExpress express, Serializable value) {
         return new FilterJoinNode(FilterJoinType.INNER, joinClass, joinColumns, column, express, value);
     }
-    
+
     //----------------------------------------------------------------------------------------------------
     static FilterExpress oldExpress(FilterExpress express) {
         switch (express) {
