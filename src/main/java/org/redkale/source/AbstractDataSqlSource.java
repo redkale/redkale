@@ -3075,10 +3075,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
             return new LinkedHashMap<>();
         }
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        final ArrayList<K> ids = new ArrayList<>();
-        keyStream.forEach(k -> ids.add(k));
         final Attribute<T, Serializable> primary = info.getPrimary();
-        List<T> rs = queryList(clazz, FilterNodes.in(primary.field(), ids));
+        List<T> rs = queryList(clazz, FilterNodes.in(primary.field(), keyStream));
         Map<K, T> map = new LinkedHashMap<>();
         if (rs.isEmpty()) {
             return new LinkedHashMap<>();
@@ -3095,10 +3093,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
             return CompletableFuture.completedFuture(new LinkedHashMap<>());
         }
         final EntityInfo<T> info = loadEntityInfo(clazz);
-        final ArrayList<K> pks = new ArrayList<>();
-        keyStream.forEach(k -> pks.add(k));
         final Attribute<T, Serializable> primary = info.getPrimary();
-        return queryListAsync(clazz, FilterNodes.in(primary.field(), pks)).thenApply((List<T> rs) -> {
+        return queryListAsync(clazz, FilterNodes.in(primary.field(), keyStream)).thenApply((List<T> rs) -> {
             Map<K, T> map = new LinkedHashMap<>();
             if (rs.isEmpty()) {
                 return new LinkedHashMap<>();
