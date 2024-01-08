@@ -9,6 +9,10 @@ import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.math.*;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.concurrent.atomic.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.Attribute;
@@ -140,6 +144,38 @@ public interface DataResultSet extends EntityInfo.DataResultSetRow {
                         o = new BigDecimal(new String((byte[]) o));
                     } else {
                         o = new BigDecimal(o.toString());
+                    }
+                }
+            } else if (t == LocalDate.class) {
+                if (o != null && !(o instanceof LocalDate)) {
+                    if (o instanceof java.sql.Date) {
+                        o = ((java.sql.Date) o).toLocalDate();
+                    } else if (o instanceof java.sql.Timestamp) {
+                        o = ((java.sql.Timestamp) o).toLocalDateTime().toLocalDate();
+                    }
+                }
+            } else if (t == LocalTime.class) {
+                if (o != null && !(o instanceof LocalTime)) {
+                    if (o instanceof java.sql.Time) {
+                        o = ((java.sql.Time) o).toLocalTime();
+                    } else if (o instanceof java.sql.Timestamp) {
+                        o = ((java.sql.Timestamp) o).toLocalDateTime().toLocalTime();
+                    }
+                }
+            } else if (t == LocalDateTime.class) {
+                if (o != null && !(o instanceof LocalDateTime)) {
+                    if (o instanceof java.sql.Timestamp) {
+                        o = ((java.sql.Timestamp) o).toLocalDateTime();
+                    }
+                }
+            } else if (t == Instant.class) {
+                if (o != null && !(o instanceof Instant)) {
+                    if (o instanceof java.sql.Date) {
+                        o = ((java.sql.Date) o).toInstant();
+                    } else if (o instanceof java.sql.Time) {
+                        o = ((java.sql.Time) o).toInstant();
+                    } else if (o instanceof java.sql.Timestamp) {
+                        o = ((java.sql.Timestamp) o).toInstant();
                     }
                 }
             } else if (t == String.class) {
