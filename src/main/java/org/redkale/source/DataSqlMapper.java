@@ -22,6 +22,7 @@ import org.redkale.util.Sheet;
  * <p>
  * 详情见: https://redkale.org
  *
+ * @see org.redkale.persistence.Sql
  *
  * @author zhangjx
  * @param <T> T
@@ -3307,99 +3308,6 @@ public interface DataSqlMapper<T> {
      */
     default CompletableFuture<Sheet<T>> querySheetAsync(SelectColumn selects, Flipper flipper, FilterNode node) {
         return dataSource().querySheetAsync(entityType(), selects, flipper, node);
-    }
-
-    //----------------------- native ----------------------------
-    /**
-     * 执行多条原生无参数的sql
-     *
-     * @param sqls 无参数的sql语句
-     *
-     * @return 执行条数
-     */
-    default int[] nativeUpdates(String... sqls) {
-        return dataSource().nativeUpdates(sqls);
-    }
-
-    /**
-     * 执行多条原生无参数的sql
-     *
-     * @param sqls 无参数的sql语句
-     *
-     * @return 执行条数
-     */
-    default CompletableFuture<int[]> nativeUpdatesAsync(String... sqls) {
-        return dataSource().nativeUpdatesAsync(sqls);
-    }
-
-    /**
-     * 执行原生无参数的sql
-     *
-     * @param sql 无参数的sql语句
-     *
-     * @return 执行条数
-     */
-    default int nativeUpdate(String sql) {
-        return dataSource().nativeUpdate(sql);
-    }
-
-    /**
-     * 执行原生无参数的sql
-     *
-     * @param sql 无参数的sql语句
-     *
-     * @return 执行条数
-     */
-    default CompletableFuture<Integer> nativeUpdateAsync(String sql) {
-        return dataSource().nativeUpdateAsync(sql);
-    }
-
-    /**
-     * 执行原生带参数的sql
-     *
-     * @param sql    带参数的sql语句
-     * @param params 参数值集合
-     *
-     * @return 执行条数
-     */
-    default int nativeUpdate(String sql, Map<String, Object> params) {
-        return dataSource().nativeUpdate(sql, params);
-    }
-
-    /**
-     * 执行原生带参数的sql
-     *
-     * @param sql    带参数的sql语句
-     * @param params 参数值集合
-     *
-     * @return 执行条数
-     */
-    default CompletableFuture<Integer> nativeUpdateAsync(String sql, Map<String, Object> params) {
-        return dataSource().nativeUpdateAsync(sql, params);
-    }
-
-    /**
-     * 执行原生带参数的sql
-     *
-     * @param sql  带参数的sql语句
-     * @param bean 参数值集合
-     *
-     * @return 执行条数
-     */
-    default int nativeUpdate(String sql, Serializable bean) {
-        return dataSource().nativeUpdate(sql, bean);
-    }
-
-    /**
-     * 执行原生带参数的sql
-     *
-     * @param sql  带参数的sql语句
-     * @param bean 参数值集合
-     *
-     * @return 执行条数
-     */
-    default CompletableFuture<Integer> nativeUpdateAsync(String sql, Serializable bean) {
-        return dataSource().nativeUpdateAsync(sql, bean);
     }
 
 }

@@ -13,7 +13,7 @@ import org.redkale.convert.json.JsonConvert;
  * 存放方法的字节信息
  *
  * @see org.redkale.asm.AsmMethodBoost
- * 
+ *
  * @since 2.8.0
  */
 public class AsmMethodBean {
@@ -63,6 +63,17 @@ public class AsmMethodBean {
                 }
             }
         }
+    }
+
+    public List<String> fieldNameList() {
+        if (params == null) {
+            return new ArrayList<>();
+        }
+        List<String> rs = new ArrayList<>(params.size());
+        for (AsmMethodParam p : params) {
+            rs.add(p.getName());
+        }
+        return rs;
     }
 
     public String[] fieldNameArray() {

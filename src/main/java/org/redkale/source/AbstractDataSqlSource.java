@@ -18,6 +18,7 @@ import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ResourceType;
 import static org.redkale.boot.Application.*;
+import org.redkale.convert.ConvertDisabled;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.net.AsyncGroup;
 import org.redkale.persistence.Table;
@@ -652,6 +653,11 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
             throw new SourceException("not found DataNativeSqlParser instance");
         }
         return nativeSqlParser.parse(signFunc, dbtype(), nativeSql, params == null ? Collections.emptyMap() : params);
+    }
+
+    @ConvertDisabled
+    public IntFunction<String> getSignFunc() {
+        return signFunc;
     }
 
     @Override

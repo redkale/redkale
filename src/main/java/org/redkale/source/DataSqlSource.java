@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
+import org.redkale.asm.AsmDepends;
 import static org.redkale.source.DataResultSet.formatColumnValue;
 import org.redkale.util.*;
 
@@ -20,6 +21,7 @@ import org.redkale.util.*;
  * @author zhangjx
  * @since 2.8.0
  */
+@AsmDepends
 public interface DataSqlSource extends DataSource {
 
     /**
