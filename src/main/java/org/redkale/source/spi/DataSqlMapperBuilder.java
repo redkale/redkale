@@ -10,6 +10,7 @@ import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.IntFunction;
 import org.redkale.asm.AnnotationVisitor;
 import org.redkale.asm.AsmMethodBean;
@@ -38,6 +39,7 @@ import org.redkale.asm.Type;
 import org.redkale.persistence.Sql;
 import org.redkale.source.AbstractDataSqlSource;
 import org.redkale.source.DataNativeSqlInfo;
+import static org.redkale.source.DataNativeSqlInfo.SqlMode.SELECT;
 import org.redkale.source.DataNativeSqlParser;
 import org.redkale.source.DataSqlMapper;
 import org.redkale.source.DataSqlSource;
@@ -118,6 +120,9 @@ public final class DataSqlMapperBuilder {
             if (!Modifier.isAbstract(method.getModifiers())) {
                 throw new SourceException(method + " is not abstract, but contains @" + Sql.class.getSimpleName());
             }
+            if (method.getExceptionTypes().length > 0) {
+                throw new SourceException("@" + Sql.class.getSimpleName() + " cannot on throw-exception method, but " + method);
+            }
             IntFunction<String> signFunc = null;
             if (source instanceof AbstractDataSqlSource) {
                 signFunc = ((AbstractDataSqlSource) source).getSignFunc();
@@ -126,6 +131,14 @@ public final class DataSqlMapperBuilder {
             AsmMethodBean methodBean = selfMethodBeans.get(AsmMethodBoost.getMethodBeanKey(method));
             if (!Utility.equalsElement(sqlInfo.getRootParamNames(), methodBean.fieldNameList())) {
                 throw new SourceException(method + " parameters not match @" + Sql.class.getSimpleName() + "(" + sql.value() + ")");
+            }
+            Class returnType = returnType(method);
+            if (sqlInfo.getSqlMode() != SELECT) {
+                if (returnType != Integer.class && returnType != int.class
+                    && returnType != Void.class && returnType != void.class) {
+                    throw new SourceException("@" + Sql.class.getSimpleName()
+                        + "(" + sql.value() + ") must on return int or void method, but " + method);
+                }
             }
             items.add(new Item(method, sqlInfo, methodBean));
         }
@@ -157,9 +170,9 @@ public final class DataSqlMapperBuilder {
             mv.visitEnd();
         }
         {
-            mv = cw.visitMethod(ACC_PUBLIC, "dataSource", "()Lorg/redkale/source/DataSqlSource;", null, null);
+            mv = cw.visitMethod(ACC_PUBLIC, "dataSource", "()" + sqlSourceDesc, null, null);
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, "org/redkale/test/source/parser/DynForumInfoMapperImpl", "source", sqlSourceDesc);
+            mv.visitFieldInsn(GETFIELD, newDynName, "_source", sqlSourceDesc);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();
@@ -167,7 +180,7 @@ public final class DataSqlMapperBuilder {
         {
             mv = cw.visitMethod(ACC_PUBLIC, "entityType", "()Ljava/lang/Class;", "()Ljava/lang/Class<" + entityDesc + ">;", null);
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, newDynName, "type", "Ljava/lang/Class;");
+            mv.visitFieldInsn(GETFIELD, newDynName, "_type", "Ljava/lang/Class;");
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();
@@ -180,7 +193,7 @@ public final class DataSqlMapperBuilder {
             AsmMethodBean methodBean = item.methodBean;
             Sql sql = method.getAnnotation(Sql.class);
 
-            mv = cw.visitMethod(ACC_PUBLIC, "queryForumResultAsync", "(Lorg/redkale/test/source/parser/ForumBean;)Ljava/util/concurrent/CompletableFuture;", "(Lorg/redkale/test/source/parser/ForumBean;)Ljava/util/concurrent/CompletableFuture<Ljava/util/List<Lorg/redkale/test/source/parser/ForumResult;>;>;", null);
+            mv = cw.visitMethod(ACC_PUBLIC, method.getName(), methodBean.getDesc(), methodBean.getSignature(), null);
             Label l0 = new Label();
             mv.visitLabel(l0);
             mv.visitLdcInsn(sql.value());
@@ -253,6 +266,15 @@ public final class DataSqlMapperBuilder {
             }
         }
         throw new SourceException("Not found entity class from " + mapperType.getName());
+    }
+
+    private static Class returnType(Method method) {
+        Class type = method.getReturnType();
+        if (type.isAssignableFrom(CompletableFuture.class)) {
+            ParameterizedType pt = (ParameterizedType) method.getGenericReturnType();
+            return TypeToken.typeToClass(pt.getActualTypeArguments()[0]);
+        }
+        return type;
     }
 
     private static class Item {

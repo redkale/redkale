@@ -15,9 +15,9 @@ import org.redkale.source.DataSqlSource;
  */
 public class DynForumInfoMapperImpl implements ForumInfoMapper {
 
-    private DataSqlSource source;
+    private DataSqlSource _source;
 
-    private Class type;
+    private Class _type;
 
     @Override
     public ForumResult findForumResult(ForumBean bean) {
@@ -51,12 +51,12 @@ public class DynForumInfoMapperImpl implements ForumInfoMapper {
 
     @Override
     public DataSqlSource dataSource() {
-        return source;
+        return _source;
     }
 
     @Override
     public Class<ForumInfo> entityType() {
-        return type;
+        return _type;
     }
 
 }
