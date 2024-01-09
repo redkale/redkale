@@ -37,6 +37,7 @@ import org.redkale.source.DataMemorySource;
 import org.redkale.source.DataNativeSqlParser;
 import org.redkale.source.DataSource;
 import org.redkale.source.DataSources;
+import org.redkale.source.DataSqlMapper;
 import org.redkale.source.DataSqlSource;
 import org.redkale.source.SearchSource;
 import org.redkale.source.SourceManager;
@@ -136,6 +137,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
         //--------------------------------- 注册 DataSource、CacheSource ---------------------------------        
         resourceFactory.register(new DataSourceLoader(), DataSource.class);
         resourceFactory.register(new CacheSourceLoader(), CacheSource.class);
+        resourceFactory.register(new DataSqlMapperBuilder(), DataSqlMapper.class);
     }
 
     /**
