@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
+import org.redkale.asm.AsmDepends;
 import org.redkale.util.LambdaFunction;
 import org.redkale.util.LambdaSupplier;
 import org.redkale.util.SelectColumn;
@@ -17,12 +18,10 @@ import org.redkale.util.Sheet;
 
 /**
  * 类似Mybatis的Mapper接口类, 接口系列和DataSource相似度高 <br>
- * 子类需要注解数据源{@link org.redkale.persistence.SourceResource}，没有指定会找资源名为空的默认DataSqlSource
  *
  * <p>
  * 详情见: https://redkale.org
  *
- * @see org.redkale.persistence.SourceResource
  *
  * @author zhangjx
  * @param <T> T
@@ -36,6 +35,7 @@ public interface DataSqlMapper<T> {
      *
      * @return DataSqlSource
      */
+    @AsmDepends
     DataSqlSource dataSource();
 
     /**
@@ -44,6 +44,7 @@ public interface DataSqlMapper<T> {
      *
      * @return Class
      */
+    @AsmDepends
     Class<T> entityType();
 
     /**
@@ -364,7 +365,6 @@ public interface DataSqlMapper<T> {
      * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新   <br>
      * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {filter node}   <br>
      *
-     * @param clazz  Entity类
      * @param column 待更新的字段名
      * @param value  更新值
      * @param node   过滤条件
@@ -1557,8 +1557,6 @@ public interface DataSqlMapper<T> {
      * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
      * 等价SQL: SELECT * FROM {table} WHERE {column} = {key}  <br>
      *
-     * @param <T>    Entity泛型
-     * @param clazz  Entity类
      * @param column 过滤字段名
      * @param colval 过滤字段值
      *

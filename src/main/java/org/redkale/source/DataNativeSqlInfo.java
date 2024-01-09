@@ -25,6 +25,9 @@ public class DataNativeSqlInfo {
     //jdbc版的sql语句, 只有numberSignNames为空时才有值
     protected String jdbcSql;
 
+    //sql类型
+    protected SqlMode sqlMode;
+
     protected final List<String> rootParamNames = new ArrayList<>();
 
     @ConvertDisabled
@@ -40,8 +43,15 @@ public class DataNativeSqlInfo {
         return jdbcSql;
     }
 
+    public SqlMode getSqlMode() {
+        return sqlMode;
+    }
+
     public List<String> getRootParamNames() {
         return rootParamNames;
     }
 
+    public enum SqlMode {
+        SELECT, INSERT, DELETE, UPDATE, UPSERT, OTHERS;
+    }
 }

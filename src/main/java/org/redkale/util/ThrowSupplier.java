@@ -24,7 +24,7 @@ public interface ThrowSupplier<T> {
      * Gets a result.
      *
      * @return a result
-     * @throws java.lang.Throwable
+     * @throws java.lang.Throwable Throwable
      */
     T get() throws Throwable;
 
