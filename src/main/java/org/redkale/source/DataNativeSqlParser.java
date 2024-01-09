@@ -24,7 +24,9 @@ import org.redkale.util.RedkaleClassLoader;
  */
 public interface DataNativeSqlParser {
 
-    DataNativeSqlStatement parse(IntFunction<String> signFunc, String dbtype, String rawSql, Map<String, Object> params);
+    public DataNativeSqlInfo parse(IntFunction<String> signFunc, String dbtype, String rawSql);
+
+    public DataNativeSqlStatement parse(IntFunction<String> signFunc, String dbtype, String rawSql, Map<String, Object> params);
 
     public static DataNativeSqlParser loadFirst() {
         if (DataNativeSqlStatement._first_parser != DataNativeSqlStatement.PARSER_NIL) {

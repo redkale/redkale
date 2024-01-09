@@ -137,7 +137,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
         //--------------------------------- 注册 DataSource、CacheSource ---------------------------------        
         resourceFactory.register(new DataSourceLoader(), DataSource.class);
         resourceFactory.register(new CacheSourceLoader(), CacheSource.class);
-        resourceFactory.register(new DataSqlMapperBuilder(), DataSqlMapper.class);
+        resourceFactory.register(new DataSqlMapperLoader(), DataSqlMapper.class);
     }
 
     /**
@@ -506,6 +506,26 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
         AnyValue conf = AnyValueWriter.loadFromProperties(props);
         ((AnyValueWriter) conf).setValue("name", sourceName);
         return conf;
+    }
+
+    private class DataSqlMapperLoader implements ResourceTypeLoader {
+
+        @Override
+        public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
+            try {
+                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
+                    return null; //远程模式不得注入
+                }
+                DataSource source = loadDataSource(resourceName, false);
+                Class mapperType = field.getType();
+                DataSqlMapper mapper = DataSqlMapperBuilder.createMapper(nativeSqlParser, (DataSqlSource) source, mapperType);
+                field.set(srcObj, mapper);
+                return mapper;
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, DataSqlMapper.class.getSimpleName() + " inject to " + srcObj + " error", e);
+                return null;
+            }
+        }
     }
 
     private class DataSourceLoader implements ResourceTypeLoader {

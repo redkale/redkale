@@ -3,19 +3,17 @@
  */
 package org.redkale.source.spi;
 
-import java.lang.reflect.Field;
-import org.redkale.inject.ResourceFactory;
-import org.redkale.inject.ResourceTypeLoader;
+import org.redkale.source.DataNativeSqlParser;
+import org.redkale.source.DataSqlMapper;
+import org.redkale.source.DataSqlSource;
 
 /**
  *
  * @author zhangjx
  */
-public class DataSqlMapperBuilder implements ResourceTypeLoader {
+public final class DataSqlMapperBuilder {
 
-    @Override
-    public Object load(ResourceFactory factory, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+    public static <T, M extends DataSqlMapper<T>> M createMapper(DataNativeSqlParser nativeSqlParser, DataSqlSource source, Class<M> mapperType) {
         return null;
     }
-
 }

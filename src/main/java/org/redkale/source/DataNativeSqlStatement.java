@@ -23,9 +23,15 @@ public class DataNativeSqlStatement {
 
     static final DataNativeSqlParser PARSER_NIL = new DataNativeSqlParser() {
         @Override
+        public DataNativeSqlInfo parse(IntFunction<String> signFunc, String dbtype, String rawSql) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
         public DataNativeSqlStatement parse(IntFunction<String> signFunc, String dbtype, String rawSql, Map<String, Object> params) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
+
     };
 
     static DataNativeSqlParser _first_parser = PARSER_NIL;

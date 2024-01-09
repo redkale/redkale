@@ -74,6 +74,10 @@ public abstract class AsmMethodBoost<T> {
         return rs;
     }
 
+    public static String getMethodBeanKey(Method method) {
+        return method.getName() + ":" + Type.getMethodDescriptor(method);
+    }
+
     /**
      * 获取需屏蔽的方法上的注解
      *
