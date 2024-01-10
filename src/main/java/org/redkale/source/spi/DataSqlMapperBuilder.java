@@ -23,26 +23,7 @@ import org.redkale.asm.FieldVisitor;
 import org.redkale.asm.Label;
 import org.redkale.asm.MethodDebugVisitor;
 import org.redkale.asm.MethodVisitor;
-import static org.redkale.asm.Opcodes.AASTORE;
-import static org.redkale.asm.Opcodes.ACC_PRIVATE;
-import static org.redkale.asm.Opcodes.ACC_PUBLIC;
-import static org.redkale.asm.Opcodes.ACC_SUPER;
-import static org.redkale.asm.Opcodes.ALOAD;
-import static org.redkale.asm.Opcodes.ANEWARRAY;
-import static org.redkale.asm.Opcodes.ARETURN;
-import static org.redkale.asm.Opcodes.CHECKCAST;
-import static org.redkale.asm.Opcodes.DLOAD;
-import static org.redkale.asm.Opcodes.DUP;
-import static org.redkale.asm.Opcodes.FLOAD;
-import static org.redkale.asm.Opcodes.GETFIELD;
-import static org.redkale.asm.Opcodes.ILOAD;
-import static org.redkale.asm.Opcodes.INVOKEINTERFACE;
-import static org.redkale.asm.Opcodes.INVOKESPECIAL;
-import static org.redkale.asm.Opcodes.INVOKESTATIC;
-import static org.redkale.asm.Opcodes.INVOKEVIRTUAL;
-import static org.redkale.asm.Opcodes.LLOAD;
-import static org.redkale.asm.Opcodes.RETURN;
-import static org.redkale.asm.Opcodes.V11;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.convert.json.JsonObject;
 import org.redkale.persistence.Sql;
@@ -72,8 +53,6 @@ import org.redkale.util.Utility;
  */
 public final class DataSqlMapperBuilder {
 
-    private static Map<String, AsmMethodBean> baseMethodBeans;
-
     private DataSqlMapperBuilder() {
     }
 
@@ -84,7 +63,7 @@ public final class DataSqlMapperBuilder {
         final ClassLoader loader = Thread.currentThread().getContextClassLoader();
         final Class entityType = entityType(mapperType);
         final String supDynName = mapperType.getName().replace('.', '/');
-        final String newDynName = "org/redkaledyn/source/mapper/_DynDataSqlMapper__" + supDynName.replace('$', '_');
+        final String newDynName = "org/redkaledyn/source/mapper/_DynDataSqlMapper_" + mapperType.getName().replace('.', '_').replace('$', '_');
         try {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
             Class newClazz = clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz;
@@ -106,9 +85,6 @@ public final class DataSqlMapperBuilder {
             t.printStackTrace();
         }
 
-        if (baseMethodBeans == null) {
-            baseMethodBeans = AsmMethodBoost.getMethodBeans(DataSqlMapper.class);
-        }
         List<Item> items = new ArrayList<>();
         Map<String, AsmMethodBean> selfMethodBeans = AsmMethodBoost.getMethodBeans(mapperType);
         for (Method method : mapperType.getMethods()) {
@@ -124,12 +100,14 @@ public final class DataSqlMapperBuilder {
             Sql sql = method.getAnnotation(Sql.class);
             if (sql == null) {
                 if (Modifier.isAbstract(method.getModifiers())) {
-                    throw new SourceException(method + " require @" + Sql.class.getSimpleName());
+                    throw new SourceException(mapperType.getSimpleName()
+                        + "." + method.getName() + " require @" + Sql.class.getSimpleName());
                 }
                 continue;
             }
             if (!Modifier.isAbstract(method.getModifiers())) {
-                throw new SourceException(method + " is not abstract, but contains @" + Sql.class.getSimpleName());
+                throw new SourceException(mapperType.getSimpleName() + "." + method.getName()
+                    + " is not abstract, but contains @" + Sql.class.getSimpleName());
             }
             if (method.getExceptionTypes().length > 0) {
                 throw new SourceException("@" + Sql.class.getSimpleName() + " cannot on throw-exception method, but " + method);
@@ -140,18 +118,33 @@ public final class DataSqlMapperBuilder {
             }
             DataNativeSqlInfo sqlInfo = nativeSqlParser.parse(signFunc, source.getType(), sql.value());
             AsmMethodBean methodBean = selfMethodBeans.get(AsmMethodBoost.getMethodBeanKey(method));
-            if (!Utility.equalsElement(sqlInfo.getRootParamNames(), methodBean.fieldNameList())) {
-                throw new SourceException(method + " parameters not match @" + Sql.class.getSimpleName() + "(" + sql.value() + ")");
-            }
+            List<String> fieldNames = methodBean.fieldNameList();
             Class resultClass = resultClass(method);
+            int flipperIndex = -1;
+            if (resultClass.isAssignableFrom(Sheet.class)) {
+                Class[] pts = method.getParameterTypes();
+                for (int i = 0; i < pts.length; i++) {
+                    if (pts[i] == Flipper.class) {
+                        flipperIndex = i;
+                        break;
+                    }
+                }
+                if (flipperIndex < 0) {
+                    throw new SourceException(mapperType.getSimpleName() + "." + method.getName()
+                        + " need Flipper type parameter on @" + Sql.class.getSimpleName() + "(" + sql.value() + ")");
+                }
+                fieldNames.remove(flipperIndex);
+            }
+            if (!Utility.equalsElement(sqlInfo.getRootParamNames(), fieldNames)) {
+                throw new SourceException(mapperType.getSimpleName() + "." + method.getName()
+                    + " parameters not match, fieldNames = " + fieldNames + ", sqlParams = " + sqlInfo.getRootParamNames() + ", methodBean = " + methodBean);
+            }
             if (sqlInfo.getSqlMode() != SELECT) { //非SELECT语句只能返回int或void
-                if (resultClass != Integer.class && resultClass != int.class
-                    && resultClass != Void.class && resultClass != void.class) {
-                    throw new SourceException("@" + Sql.class.getSimpleName()
-                        + "(" + sql.value() + ") must on return int or void method, but " + method);
+                if (resultClass != Integer.class && resultClass != int.class) {
+                    throw new SourceException("Update SQL must on return int method, but " + method);
                 }
             }
-            items.add(new Item(method, sqlInfo, methodBean));
+            items.add(new Item(method, sqlInfo, methodBean, flipperIndex));
         }
         //------------------------------------------------------------------------------
 
@@ -220,6 +213,7 @@ public final class DataSqlMapperBuilder {
             Method method = item.method;
             DataNativeSqlInfo sqlInfo = item.sqlInfo;
             AsmMethodBean methodBean = item.methodBean;
+            int flipperIndex = item.flipperIndex;
             Sql sql = method.getAnnotation(Sql.class);
             Class resultClass = resultClass(method);
             Class[] componentTypes = resultComponentType(method);
@@ -233,44 +227,51 @@ public final class DataSqlMapperBuilder {
             mv.visitLabel(l0);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "dataSource", "()" + sqlSourceDesc, false);
-            //参数：结果类
-            mv.visitLdcInsn(Type.getType(Type.getDescriptor(componentTypes[0])));
-            if (resultClass.isAssignableFrom(Map.class)) {
-                mv.visitLdcInsn(Type.getType(Type.getDescriptor(componentTypes[1])));
+            if (sqlInfo.getSqlMode() == SELECT) {
+                //参数：结果类
+                mv.visitLdcInsn(Type.getType(Type.getDescriptor(componentTypes[0])));
+                if (resultClass.isAssignableFrom(Map.class)) {
+                    mv.visitLdcInsn(Type.getType(Type.getDescriptor(componentTypes[1])));
+                }
             }
             //参数：sql
             mv.visitLdcInsn(sql.value());
+            if (flipperIndex >= 0) {
+                mv.visitVarInsn(ALOAD, flipperIndex + 1);
+            }
             //参数: params
-            Asms.visitInsn(mv, paramTypes.length * 2);
+            Asms.visitInsn(mv, paramTypes.length * 2 - (flipperIndex >= 0 ? 2 : 0));
             mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
             int insn = 0;
             for (int i = 0; i < paramTypes.length; i++) {
                 insn++;
-                Class pt = paramTypes[i];
-                //参数名
-                mv.visitInsn(DUP);
-                Asms.visitInsn(mv, i * 2);
-                mv.visitLdcInsn(methodParams.get(i).getName());
-                mv.visitInsn(AASTORE);
-                //参数值
-                mv.visitInsn(DUP);
-                Asms.visitInsn(mv, i * 2 + 1);
-                if (pt.isPrimitive()) {
-                    if (pt == long.class) {
-                        mv.visitVarInsn(LLOAD, insn++);
-                    } else if (pt == float.class) {
-                        mv.visitVarInsn(FLOAD, insn++);
-                    } else if (pt == double.class) {
-                        mv.visitVarInsn(DLOAD, insn++);
+                if (i != flipperIndex) {
+                    Class pt = paramTypes[i];
+                    //参数名
+                    mv.visitInsn(DUP);
+                    Asms.visitInsn(mv, i * 2);
+                    mv.visitLdcInsn(methodParams.get(i).getName());
+                    mv.visitInsn(AASTORE);
+                    //参数值
+                    mv.visitInsn(DUP);
+                    Asms.visitInsn(mv, i * 2 + 1);
+                    if (pt.isPrimitive()) {
+                        if (pt == long.class) {
+                            mv.visitVarInsn(LLOAD, insn++);
+                        } else if (pt == float.class) {
+                            mv.visitVarInsn(FLOAD, insn++);
+                        } else if (pt == double.class) {
+                            mv.visitVarInsn(DLOAD, insn++);
+                        } else {
+                            mv.visitVarInsn(ILOAD, insn);
+                        }
                     } else {
-                        mv.visitVarInsn(ILOAD, insn);
+                        mv.visitVarInsn(ALOAD, insn);
                     }
-                } else {
-                    mv.visitVarInsn(ALOAD, insn);
+                    Asms.visitPrimitiveValueOf(mv, pt);
+                    mv.visitInsn(AASTORE);
                 }
                 insns.add(insn);
-                Asms.visitPrimitiveValueOf(mv, pt);
-                mv.visitInsn(AASTORE);
             }
 
             mv.visitMethodInsn(INVOKESTATIC, utilClassName, "ofMap", "([Ljava/lang/Object;)Ljava/util/HashMap;", false);
@@ -305,10 +306,23 @@ public final class DataSqlMapperBuilder {
                 if (oneMode) {
                     mv.visitTypeInsn(CHECKCAST, componentTypes[0].getName().replace('.', '/'));
                 }
+                mv.visitInsn(ARETURN);
             } else {
-                //UPDATE
+                String updateMethodName = "nativeUpdate" + (async ? "Async" : "");
+                String updateMethodDesc = "(Ljava/lang/String;Ljava/util/Map;)" + (async ? "Ljava/util/concurrent/CompletableFuture;" : "I");
+                mv.visitMethodInsn(INVOKEINTERFACE, sqlSourceName, updateMethodName, updateMethodDesc, true);
+                if (resultClass == int.class) {
+                    mv.visitInsn(IRETURN);
+                } else if (!async && resultClass == Integer.class) {
+                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+                    mv.visitInsn(ARETURN);
+                } else if (resultClass == void.class) {
+                    mv.visitInsn(POP);
+                    mv.visitInsn(RETURN);
+                } else {
+                    mv.visitInsn(ARETURN);
+                }
             }
-            mv.visitInsn(ARETURN);
             Label l2 = new Label();
             mv.visitLabel(l2);
             mv.visitLocalVariable("this", "L" + newDynName + ";", null, l0, l2, 0);
@@ -408,10 +422,13 @@ public final class DataSqlMapperBuilder {
 
         public AsmMethodBean methodBean;
 
-        public Item(Method method, DataNativeSqlInfo sqlInfo, AsmMethodBean methodBean) {
+        public int flipperIndex = -1;
+
+        public Item(Method method, DataNativeSqlInfo sqlInfo, AsmMethodBean methodBean, int flipperIndex) {
             this.method = method;
             this.sqlInfo = sqlInfo;
             this.methodBean = methodBean;
+            this.flipperIndex = flipperIndex;
         }
 
     }

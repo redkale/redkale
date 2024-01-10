@@ -516,14 +516,14 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                 if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
                     return null; //远程模式不得注入
                 }
-                DataSqlMapper old = resourceFactory.find(resourceName, DataSqlMapper.class);
+                Class<? extends DataSqlMapper> mapperType = (Class) field.getType();
+                DataSqlMapper old = resourceFactory.find(resourceName, mapperType);
                 if (old != null) {
                     return old;
                 }
                 DataSource source = loadDataSource(resourceName, false);
-                Class mapperType = field.getType();
                 DataSqlMapper mapper = DataSqlMapperBuilder.createMapper(nativeSqlParser, (DataSqlSource) source, mapperType);
-                resourceFactory.register(resourceName, DataSqlMapper.class, mapper);
+                resourceFactory.register(resourceName, mapperType, mapper);
                 field.set(srcObj, mapper);
                 return mapper;
             } catch (Exception e) {
