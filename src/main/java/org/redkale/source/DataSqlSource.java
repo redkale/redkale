@@ -130,8 +130,10 @@ public interface DataSqlSource extends DataSource {
      */
     public <V> CompletableFuture<V> nativeQueryAsync(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler, Map<String, Object> params);
 
+    @AsmDepends
     public <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, Flipper flipper, Map<String, Object> params);
 
+    @AsmDepends
     public <V> CompletableFuture<Sheet<V>> nativeQuerySheetAsync(Class<V> type, String sql, Flipper flipper, Map<String, Object> params);
 
     //----------------------------- 无参数 -----------------------------
@@ -143,30 +145,37 @@ public interface DataSqlSource extends DataSource {
         return nativeQueryAsync(sql, null, handler);
     }
 
+    @AsmDepends
     default <V> V nativeQueryOne(Class<V> type, String sql) {
         return nativeQuery(sql, rset -> EntityBuilder.getOneValue(type, rset));
     }
 
+    @AsmDepends
     default <V> CompletableFuture<V> nativeQueryOneAsync(Class<V> type, String sql) {
         return nativeQueryAsync(sql, rset -> EntityBuilder.getOneValue(type, rset));
     }
 
+    @AsmDepends
     default <V> List<V> nativeQueryList(Class<V> type, String sql) {
         return nativeQuery(sql, rset -> EntityBuilder.getListValue(type, rset));
     }
 
+    @AsmDepends
     default <V> CompletableFuture<List<V>> nativeQueryListAsync(Class<V> type, String sql) {
         return nativeQueryAsync(sql, rset -> EntityBuilder.getListValue(type, rset));
     }
 
+    @AsmDepends
     default <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, Flipper flipper) {
         return nativeQuerySheet(type, sql, flipper, Collections.emptyMap());
     }
 
+    @AsmDepends
     default <V> CompletableFuture<Sheet<V>> nativeQuerySheetAsync(Class<V> type, String sql, Flipper flipper) {
         return nativeQuerySheetAsync(type, sql, flipper, Collections.emptyMap());
     }
 
+    @AsmDepends
     default <K, V> Map<K, V> nativeQueryMap(Class<K> keyType, Class<V> valType, String sql) {
         return nativeQuery(sql, rset -> {
             Map<K, V> map = new LinkedHashMap<K, V>();
@@ -179,6 +188,7 @@ public interface DataSqlSource extends DataSource {
         });
     }
 
+    @AsmDepends
     default <K, V> CompletableFuture<Map<K, V>> nativeQueryMapAsync(Class<K> keyType, Class<V> valType, String sql) {
         return nativeQueryAsync(sql, rset -> {
             Map<K, V> map = new LinkedHashMap<K, V>();
@@ -216,6 +226,7 @@ public interface DataSqlSource extends DataSource {
         return nativeQueryAsync(sql, null, handler, params);
     }
 
+    @AsmDepends
     default <V> V nativeQueryOne(Class<V> type, String sql, Map<String, Object> params) {
         return nativeQuery(sql, rset -> {
             if (!rset.next()) {
@@ -229,6 +240,7 @@ public interface DataSqlSource extends DataSource {
         }, params);
     }
 
+    @AsmDepends
     default <V> CompletableFuture<V> nativeQueryOneAsync(Class<V> type, String sql, Map<String, Object> params) {
         return nativeQueryAsync(sql, rset -> {
             if (!rset.next()) {
@@ -242,6 +254,7 @@ public interface DataSqlSource extends DataSource {
         }, params);
     }
 
+    @AsmDepends
     default <V> List<V> nativeQueryList(Class<V> type, String sql, Map<String, Object> params) {
         return nativeQuery(sql, rset -> {
             if (type == byte[].class || type == String.class || type.isPrimitive() || Number.class.isAssignableFrom(type)
@@ -256,6 +269,7 @@ public interface DataSqlSource extends DataSource {
         }, params);
     }
 
+    @AsmDepends
     default <V> CompletableFuture<List<V>> nativeQueryListAsync(Class<V> type, String sql, Map<String, Object> params) {
         return nativeQueryAsync(sql, rset -> {
             if (type == byte[].class || type == String.class || type.isPrimitive() || Number.class.isAssignableFrom(type)
@@ -270,6 +284,7 @@ public interface DataSqlSource extends DataSource {
         }, params);
     }
 
+    @AsmDepends
     default <K, V> Map<K, V> nativeQueryMap(Class<K> keyType, Class<V> valType, String sql, Map<String, Object> params) {
         return nativeQuery(sql, rset -> {
             Map<K, V> map = new LinkedHashMap<K, V>();
@@ -282,6 +297,7 @@ public interface DataSqlSource extends DataSource {
         }, params);
     }
 
+    @AsmDepends
     default <K, V> CompletableFuture<Map<K, V>> nativeQueryMapAsync(Class<K> keyType, Class<V> valType, String sql, Map<String, Object> params) {
         return nativeQueryAsync(sql, rset -> {
             Map<K, V> map = new LinkedHashMap<K, V>();

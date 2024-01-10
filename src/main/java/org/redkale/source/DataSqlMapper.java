@@ -18,6 +18,9 @@ import org.redkale.util.Sheet;
 
 /**
  * 类似Mybatis的Mapper接口类, 接口系列和DataSource相似度高 <br>
+ * 自定义的sql接口的返回结果类型只能是:
+ * void/基本数据类型/JavaBean/Map/List/Sheet <br>
+ * 异步接口返回的是泛型为以上类型的CompletableFuture
  *
  * <p>
  * 详情见: https://redkale.org

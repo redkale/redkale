@@ -15,27 +15,36 @@ import java.util.function.IntFunction;
 import org.redkale.asm.AnnotationVisitor;
 import org.redkale.asm.AsmMethodBean;
 import org.redkale.asm.AsmMethodBoost;
+import org.redkale.asm.AsmMethodParam;
+import org.redkale.asm.Asms;
 import org.redkale.asm.ClassWriter;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.FieldVisitor;
 import org.redkale.asm.Label;
+import org.redkale.asm.MethodDebugVisitor;
 import org.redkale.asm.MethodVisitor;
+import static org.redkale.asm.Opcodes.AASTORE;
 import static org.redkale.asm.Opcodes.ACC_PRIVATE;
 import static org.redkale.asm.Opcodes.ACC_PUBLIC;
 import static org.redkale.asm.Opcodes.ACC_SUPER;
 import static org.redkale.asm.Opcodes.ALOAD;
+import static org.redkale.asm.Opcodes.ANEWARRAY;
 import static org.redkale.asm.Opcodes.ARETURN;
-import static org.redkale.asm.Opcodes.ASTORE;
+import static org.redkale.asm.Opcodes.CHECKCAST;
+import static org.redkale.asm.Opcodes.DLOAD;
 import static org.redkale.asm.Opcodes.DUP;
+import static org.redkale.asm.Opcodes.FLOAD;
 import static org.redkale.asm.Opcodes.GETFIELD;
+import static org.redkale.asm.Opcodes.ILOAD;
 import static org.redkale.asm.Opcodes.INVOKEINTERFACE;
 import static org.redkale.asm.Opcodes.INVOKESPECIAL;
+import static org.redkale.asm.Opcodes.INVOKESTATIC;
 import static org.redkale.asm.Opcodes.INVOKEVIRTUAL;
-import static org.redkale.asm.Opcodes.NEW;
-import static org.redkale.asm.Opcodes.POP;
+import static org.redkale.asm.Opcodes.LLOAD;
 import static org.redkale.asm.Opcodes.RETURN;
 import static org.redkale.asm.Opcodes.V11;
 import org.redkale.asm.Type;
+import org.redkale.convert.json.JsonObject;
 import org.redkale.persistence.Sql;
 import org.redkale.source.AbstractDataSqlSource;
 import org.redkale.source.DataNativeSqlInfo;
@@ -43,8 +52,10 @@ import static org.redkale.source.DataNativeSqlInfo.SqlMode.SELECT;
 import org.redkale.source.DataNativeSqlParser;
 import org.redkale.source.DataSqlMapper;
 import org.redkale.source.DataSqlSource;
+import org.redkale.source.Flipper;
 import org.redkale.source.SourceException;
 import org.redkale.util.RedkaleClassLoader;
+import org.redkale.util.Sheet;
 import org.redkale.util.TypeToken;
 import org.redkale.util.Utility;
 
@@ -132,10 +143,10 @@ public final class DataSqlMapperBuilder {
             if (!Utility.equalsElement(sqlInfo.getRootParamNames(), methodBean.fieldNameList())) {
                 throw new SourceException(method + " parameters not match @" + Sql.class.getSimpleName() + "(" + sql.value() + ")");
             }
-            Class returnType = returnType(method);
-            if (sqlInfo.getSqlMode() != SELECT) {
-                if (returnType != Integer.class && returnType != int.class
-                    && returnType != Void.class && returnType != void.class) {
+            Class resultClass = resultClass(method);
+            if (sqlInfo.getSqlMode() != SELECT) { //非SELECT语句只能返回int或void
+                if (resultClass != Integer.class && resultClass != int.class
+                    && resultClass != Void.class && resultClass != void.class) {
                     throw new SourceException("@" + Sql.class.getSimpleName()
                         + "(" + sql.value() + ") must on return int or void method, but " + method);
                 }
@@ -144,7 +155,11 @@ public final class DataSqlMapperBuilder {
         }
         //------------------------------------------------------------------------------
 
+        final String utilClassName = Utility.class.getName().replace('.', '/');
+        final String sheetDesc = Type.getDescriptor(Sheet.class);
+        final String flipperDesc = Type.getDescriptor(Flipper.class);
         final String entityDesc = Type.getDescriptor(entityType);
+        final String sqlSourceName = DataSqlSource.class.getName().replace('.', '/');
         final String sqlSourceDesc = Type.getDescriptor(DataSqlSource.class);
 
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
@@ -187,46 +202,121 @@ public final class DataSqlMapperBuilder {
         }
 
         //sql系列方法
+        //int nativeUpdate(String sql)
+        //CompletableFuture<Integer> nativeUpdateAsync(String sql)
+        //int nativeUpdate(String sql, Map<String, Object> params)
+        //CompletableFuture<Integer> nativeUpdateAsync(String sql, Map<String, Object> params)
+        //
+        //V nativeQueryOne(Class<V> type, String sql)
+        //CompletableFuture<V> nativeQueryOneAsync(Class<V> type, String sql)
+        //V nativeQueryOne(Class<V> type, String sql, Map<String, Object> params)
+        //CompletableFuture<V> nativeQueryOneAsync(Class<V> type, String sql, Map<String, Object> params)
+        //
+        //Map<K, V> nativeQueryMap(Class<K> keyType, Class<V> valType, String sql, Map<String, Object> params)
+        //CompletableFuture<Map<K, V>> nativeQueryMapAsync(Class<K> keyType, Class<V> valType, String sql, Map<String, Object> params)
+        //
+        //nativeQueryOne、nativeQueryList、nativeQuerySheet
         for (Item item : items) {
             Method method = item.method;
             DataNativeSqlInfo sqlInfo = item.sqlInfo;
             AsmMethodBean methodBean = item.methodBean;
             Sql sql = method.getAnnotation(Sql.class);
+            Class resultClass = resultClass(method);
+            Class[] componentTypes = resultComponentType(method);
+            final boolean async = method.getReturnType().isAssignableFrom(CompletableFuture.class);
+            Class[] paramTypes = method.getParameterTypes();
+            List<AsmMethodParam> methodParams = methodBean.getParams();
+            List<Integer> insns = new ArrayList<>();
 
-            mv = cw.visitMethod(ACC_PUBLIC, method.getName(), methodBean.getDesc(), methodBean.getSignature(), null);
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, method.getName(), methodBean.getDesc(), methodBean.getSignature(), null)).setDebug(false);
             Label l0 = new Label();
             mv.visitLabel(l0);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "dataSource", "()" + sqlSourceDesc, false);
+            //参数：结果类
+            mv.visitLdcInsn(Type.getType(Type.getDescriptor(componentTypes[0])));
+            if (resultClass.isAssignableFrom(Map.class)) {
+                mv.visitLdcInsn(Type.getType(Type.getDescriptor(componentTypes[1])));
+            }
+            //参数：sql
             mv.visitLdcInsn(sql.value());
-            mv.visitVarInsn(ASTORE, 2);
-            Label l1 = new Label();
-            mv.visitLabel(l1);
-            mv.visitTypeInsn(NEW, "java/util/HashMap");
-            mv.visitInsn(DUP);
-            mv.visitMethodInsn(INVOKESPECIAL, "java/util/HashMap", "<init>", "()V", false);
-            mv.visitVarInsn(ASTORE, 3);
+            //参数: params
+            Asms.visitInsn(mv, paramTypes.length * 2);
+            mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
+            int insn = 0;
+            for (int i = 0; i < paramTypes.length; i++) {
+                insn++;
+                Class pt = paramTypes[i];
+                //参数名
+                mv.visitInsn(DUP);
+                Asms.visitInsn(mv, i * 2);
+                mv.visitLdcInsn(methodParams.get(i).getName());
+                mv.visitInsn(AASTORE);
+                //参数值
+                mv.visitInsn(DUP);
+                Asms.visitInsn(mv, i * 2 + 1);
+                if (pt.isPrimitive()) {
+                    if (pt == long.class) {
+                        mv.visitVarInsn(LLOAD, insn++);
+                    } else if (pt == float.class) {
+                        mv.visitVarInsn(FLOAD, insn++);
+                    } else if (pt == double.class) {
+                        mv.visitVarInsn(DLOAD, insn++);
+                    } else {
+                        mv.visitVarInsn(ILOAD, insn);
+                    }
+                } else {
+                    mv.visitVarInsn(ALOAD, insn);
+                }
+                insns.add(insn);
+                Asms.visitPrimitiveValueOf(mv, pt);
+                mv.visitInsn(AASTORE);
+            }
+
+            mv.visitMethodInsn(INVOKESTATIC, utilClassName, "ofMap", "([Ljava/lang/Object;)Ljava/util/HashMap;", false);
+
+            //One:   "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/lang/Object;"
+            //Map:   "(Ljava/lang/Class;Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/util/Map;"
+            //List:  "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/util/List;"
+            //Sheet: "(Ljava/lang/Class;Ljava/lang/String;Lorg/redkale/source/Flipper;Ljava/util/Map;)Lorg/redkale/util/Sheet;"
+            //Async: "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/util/concurrent/CompletableFuture;"
+            if (sqlInfo.getSqlMode() == SELECT) {
+                String queryMethodName = "nativeQueryOne";
+                String queryMethodDesc = "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)"
+                    + (async ? "Ljava/util/concurrent/CompletableFuture;" : "Ljava/lang/Object;");
+                boolean oneMode = !async;
+                if (resultClass.isAssignableFrom(Map.class)) {
+                    oneMode = false;
+                    queryMethodName = "nativeQueryMap";
+                    queryMethodDesc = "(Ljava/lang/Class;Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)"
+                        + (async ? "Ljava/util/concurrent/CompletableFuture;" : "Ljava/util/Map;");
+                } else if (resultClass.isAssignableFrom(List.class)) {
+                    oneMode = false;
+                    queryMethodName = "nativeQueryList";
+                    queryMethodDesc = "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)"
+                        + (async ? "Ljava/util/concurrent/CompletableFuture;" : "Ljava/util/List;");
+                } else if (resultClass.isAssignableFrom(Sheet.class)) {
+                    oneMode = false;
+                    queryMethodName = "nativeQuerySheet";
+                    queryMethodDesc = "(Ljava/lang/Class;Ljava/lang/String;" + flipperDesc + "Ljava/util/Map;)"
+                        + (async ? "Ljava/util/concurrent/CompletableFuture;" : sheetDesc);
+                }
+                mv.visitMethodInsn(INVOKEINTERFACE, sqlSourceName, queryMethodName + (async ? "Async" : ""), queryMethodDesc, true);
+                if (oneMode) {
+                    mv.visitTypeInsn(CHECKCAST, componentTypes[0].getName().replace('.', '/'));
+                }
+            } else {
+                //UPDATE
+            }
+            mv.visitInsn(ARETURN);
             Label l2 = new Label();
             mv.visitLabel(l2);
-            mv.visitVarInsn(ALOAD, 3);
-            mv.visitLdcInsn("bean");
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Map", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", true);
-            mv.visitInsn(POP);
-            Label l3 = new Label();
-            mv.visitLabel(l3);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKEVIRTUAL, "org/redkale/test/source/parser/DynForumInfoMapperImpl", "dataSource", "()Lorg/redkale/source/DataSqlSource;", false);
-            mv.visitLdcInsn(Type.getType("Lorg/redkale/test/source/parser/ForumResult;"));
-            mv.visitVarInsn(ALOAD, 2);
-            mv.visitVarInsn(ALOAD, 3);
-            mv.visitMethodInsn(INVOKEINTERFACE, "org/redkale/source/DataSqlSource", "nativeQueryListAsync", "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/util/concurrent/CompletableFuture;", true);
-            mv.visitInsn(ARETURN);
-            Label l4 = new Label();
-            mv.visitLabel(l4);
-            mv.visitLocalVariable("this", "Lorg/redkale/test/source/parser/DynForumInfoMapperImpl;", null, l0, l4, 0);
-            mv.visitLocalVariable("bean", "Lorg/redkale/test/source/parser/ForumBean;", null, l0, l4, 1);
-            mv.visitLocalVariable("sql", "Ljava/lang/String;", null, l1, l4, 2);
-            mv.visitLocalVariable("params", "Ljava/util/Map;", "Ljava/util/Map<Ljava/lang/String;Ljava/lang/Object;>;", l2, l4, 3);
-            mv.visitMaxs(4, 4);
+            mv.visitLocalVariable("this", "L" + newDynName + ";", null, l0, l2, 0);
+            for (int i = 0; i < paramTypes.length; i++) {
+                AsmMethodParam param = methodParams.get(i);
+                mv.visitLocalVariable(param.getName(), param.description(paramTypes[i]), param.signature(paramTypes[i]), l0, l2, insns.get(i));
+            }
+            mv.visitMaxs(8, 5);
             mv.visitEnd();
         }
 
@@ -268,13 +358,46 @@ public final class DataSqlMapperBuilder {
         throw new SourceException("Not found entity class from " + mapperType.getName());
     }
 
-    private static Class returnType(Method method) {
+    private static Class resultClass(Method method) {
         Class type = method.getReturnType();
         if (type.isAssignableFrom(CompletableFuture.class)) {
             ParameterizedType pt = (ParameterizedType) method.getGenericReturnType();
             return TypeToken.typeToClass(pt.getActualTypeArguments()[0]);
         }
         return type;
+    }
+
+    private static Class[] resultComponentType(Method method) {
+        if (method.getReturnType().isAssignableFrom(CompletableFuture.class)) {
+            ParameterizedType pt = (ParameterizedType) method.getGenericReturnType();
+            return resultComponentType(pt.getActualTypeArguments()[0]);
+        }
+        return resultComponentType(method.getGenericReturnType());
+    }
+
+    private static Class[] resultComponentType(java.lang.reflect.Type type) {
+        Class clzz = TypeToken.typeToClass(type);
+        if (clzz.isAssignableFrom(Map.class)) {
+            if (type instanceof ParameterizedType) {
+                java.lang.reflect.Type[] ts = ((ParameterizedType) type).getActualTypeArguments();
+                return new Class[]{TypeToken.typeToClass(ts[0]), TypeToken.typeToClass(ts[1])};
+            } else {
+                return new Class[]{String.class, JsonObject.class};
+            }
+        } else if (clzz.isAssignableFrom(List.class)) {
+            if (type instanceof ParameterizedType) {
+                clzz = TypeToken.typeToClass(((ParameterizedType) type).getActualTypeArguments()[0]);
+            } else {
+                clzz = JsonObject.class;
+            }
+        } else if (clzz.isAssignableFrom(Sheet.class)) {
+            if (type instanceof ParameterizedType) {
+                clzz = TypeToken.typeToClass(((ParameterizedType) type).getActualTypeArguments()[0]);
+            } else {
+                clzz = JsonObject.class;
+            }
+        }
+        return new Class[]{clzz};
     }
 
     private static class Item {
