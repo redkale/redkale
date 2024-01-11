@@ -28,6 +28,7 @@ public class DataNativeSqlInfo {
     //sql类型
     protected SqlMode sqlMode;
 
+    //根参数名， 如bean.userid、bean.username的根参数名为: bean
     protected final List<String> rootParamNames = new ArrayList<>();
 
     @ConvertDisabled
@@ -52,6 +53,6 @@ public class DataNativeSqlInfo {
     }
 
     public enum SqlMode {
-        SELECT, INSERT, DELETE, UPDATE, UPSERT, OTHERS;
+        SELECT, INSERT, DELETE, UPDATE, OTHERS;
     }
 }
