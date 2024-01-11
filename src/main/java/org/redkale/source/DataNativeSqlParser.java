@@ -11,10 +11,10 @@ import org.redkale.util.RedkaleClassLoader;
 /**
  *
  * 原生的sql解析器 <br>
- * 参数变量有三种方式:  <br>
- * #{xx.xx}: 用于拼接sql的变量， 变量值必需的
- * ${xx.xx}: 用于预编译的sql的参数变量
- * $${xx.xx}: 用于预编译的sql的参数变量， 变量值必需的
+ * 参数变量有三种方式(与Mybatis的占位符类似):  <br>
+ * ${xx.xx}: 用于直接拼接sql的变量，不做任何转义， 变量值必需的
+ * #{xx.xx}: 用于预编译的sql的参数变量
+ * ##{xx.xx}: 用于预编译的sql的参数变量， 变量值必需的
  *
  * <p>
  * 详情见: https://redkale.org

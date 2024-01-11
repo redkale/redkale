@@ -42,7 +42,7 @@ public class DataNativeSqlStatement {
     //根据参数值集合重新生成的带?参数可执行的计算总数sql,用于返回Sheet对象
     protected String nativeCountSql;
 
-    //需要预编译的$${xxx}、${xxx}参数名, 数量与sql中的?数量一致
+    //需要预编译的##{xxx}、#{xxx}参数名, 数量与sql中的?数量一致
     protected List<String> paramNames;
 
     //需要预编译的jdbc参数名, 数量与sql中的?数量一致
