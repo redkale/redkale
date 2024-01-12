@@ -17,6 +17,8 @@ import org.redkale.util.*;
  * 可以是实体类，也可以是查询结果的JavaBean类
  *
  * @author zhangjx
+ * @param <T> T
+ *
  * @since 2.8.0
  */
 public class EntityBuilder<T> {
@@ -54,7 +56,7 @@ public class EntityBuilder<T> {
     private final Attribute<T, Serializable>[] unconstructorAttributes;
 
     //key：类字段名
-    private final Map<String, Attribute<T, Serializable>> attributeMap;
+    final Map<String, Attribute<T, Serializable>> attributeMap;
 
     //key：数据库字段名
     private final Map<String, Attribute<T, Serializable>> sqlAttrMap;
@@ -81,8 +83,13 @@ public class EntityBuilder<T> {
         attributeMap.forEach((k, v) -> sqlAttrMap.put(getSQLColumn(null, k), v));
     }
 
+    public static boolean isSimpleType(Class type) {
+        return type == byte[].class || type == String.class || type.isPrimitive() || Number.class.isAssignableFrom(type)
+            || (!Map.class.isAssignableFrom(type) && type.getName().startsWith("java."));
+    }
+
     public static <T> EntityBuilder<T> load(Class<T> type) {
-        return cacheMap.computeIfAbsent(type, t -> create(t));
+        return cacheMap.computeIfAbsent(type, EntityBuilder::create);
     }
 
     private static <T> EntityBuilder<T> create(Class<T> type) {

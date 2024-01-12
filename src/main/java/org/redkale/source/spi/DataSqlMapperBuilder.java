@@ -33,6 +33,7 @@ import static org.redkale.source.DataNativeSqlInfo.SqlMode.SELECT;
 import org.redkale.source.DataNativeSqlParser;
 import org.redkale.source.DataSqlMapper;
 import org.redkale.source.DataSqlSource;
+import org.redkale.source.EntityBuilder;
 import org.redkale.source.Flipper;
 import org.redkale.source.SourceException;
 import org.redkale.util.RedkaleClassLoader;
@@ -84,7 +85,7 @@ public final class DataSqlMapperBuilder {
         } catch (Throwable t) {
             t.printStackTrace();
         }
-
+        EntityBuilder.load(entityType);
         List<Item> items = new ArrayList<>();
         Map<String, AsmMethodBean> selfMethodBeans = AsmMethodBoost.getMethodBeans(mapperType);
         for (Method method : mapperType.getMethods()) {
@@ -221,7 +222,10 @@ public final class DataSqlMapperBuilder {
             Class[] paramTypes = method.getParameterTypes();
             List<AsmMethodParam> methodParams = methodBean.getParams();
             List<Integer> insns = new ArrayList<>();
-
+            if (!EntityBuilder.isSimpleType(componentTypes[0])) {
+                EntityBuilder.load(componentTypes[0]);
+            }
+            
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, method.getName(), methodBean.getDesc(), methodBean.getSignature(), null)).setDebug(false);
             Label l0 = new Label();
             mv.visitLabel(l0);

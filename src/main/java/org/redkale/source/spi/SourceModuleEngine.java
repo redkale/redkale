@@ -146,6 +146,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
      * @param namespace 命名空间
      * @param events    变更项
      */
+    @Override
     public void onEnvironmentChanged(String namespace, List<ResourceEvent> events) {
         Set<String> sourceRemovedKeys = new HashSet<>();
         Properties sourceChangedProps = new Properties();
@@ -307,6 +308,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
     /**
      * 服务全部停掉后被调用
      */
+    @Override
     public void onServersPostStop() {
         for (DataSource source : dataSources) {
             if (source == null) {
@@ -343,12 +345,14 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
      *
      * @return CacheSource集合
      */
+    @Override
     public Map<String, CacheSource> getCacheSources() {
         Map<String, CacheSource> sources = new HashMap<>();
         cacheSources.forEach(v -> sources.put(v.resourceName(), v));
         return sources;
     }
 
+    @Override
     public CacheSource loadCacheSource(final String sourceName, boolean autoMemory) {
         cacheSourceLock.lock();
         try {
@@ -402,12 +406,14 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
      *
      * @return DataSource集合
      */
+    @Override
     public Map<String, DataSource> getDataSources() {
         Map<String, DataSource> sources = new HashMap<>();
         dataSources.forEach(v -> sources.put(v.resourceName(), v));
         return sources;
     }
 
+    @Override
     public DataSource loadDataSource(final String sourceName, boolean autoMemory) {
         dataSourceLock.lock();
         try {

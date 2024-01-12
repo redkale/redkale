@@ -11,7 +11,7 @@ import org.redkale.util.AnyValue;
 
 /**
  * 协议拦截器类, 类似JavaEE中的javax.servlet.Filter <br>
- * javax.servlet.Filter方法doFilter是同步操作，此Filter.doFilter则是异步操作，方法return前需要调用Response.nextEvent()方可执行下一个Filter <br>
+ * javax.servlet.Filter方法doFilter是同步操作，此Filter.doFilter则是异步操作，方法return前必须调用Response.nextEvent() <br>
  * 通过给Filter标记注解&#064;Priority来确定执行的顺序, Priority.value值越大越先执行 <br>
  * 如果doFilter方法是非阻塞的，需要在Filter类上标记&#064;NonBlocking
  *

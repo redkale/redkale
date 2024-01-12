@@ -232,8 +232,7 @@ public interface DataSqlSource extends DataSource {
             if (!rset.next()) {
                 return null;
             }
-            if (type == byte[].class || type == String.class || type.isPrimitive() || Number.class.isAssignableFrom(type)
-                || (!Map.class.isAssignableFrom(type) && type.getName().startsWith("java."))) {
+            if (EntityBuilder.isSimpleType(type)) {
                 return (V) formatColumnValue(type, rset.getObject(1));
             }
             return EntityBuilder.load(type).getObjectValue(rset);
@@ -246,8 +245,7 @@ public interface DataSqlSource extends DataSource {
             if (!rset.next()) {
                 return null;
             }
-            if (type == byte[].class || type == String.class || type.isPrimitive() || Number.class.isAssignableFrom(type)
-                || (!Map.class.isAssignableFrom(type) && type.getName().startsWith("java."))) {
+            if (EntityBuilder.isSimpleType(type)) {
                 return (V) formatColumnValue(type, rset.getObject(1));
             }
             return EntityBuilder.load(type).getObjectValue(rset);
@@ -257,8 +255,7 @@ public interface DataSqlSource extends DataSource {
     @AsmDepends
     default <V> List<V> nativeQueryList(Class<V> type, String sql, Map<String, Object> params) {
         return nativeQuery(sql, rset -> {
-            if (type == byte[].class || type == String.class || type.isPrimitive() || Number.class.isAssignableFrom(type)
-                || (!Map.class.isAssignableFrom(type) && type.getName().startsWith("java."))) {
+            if (EntityBuilder.isSimpleType(type)) {
                 List<V> list = new ArrayList<>();
                 while (rset.next()) {
                     list.add(rset.wasNull() ? null : (V) formatColumnValue(type, rset.getObject(1)));
@@ -272,8 +269,7 @@ public interface DataSqlSource extends DataSource {
     @AsmDepends
     default <V> CompletableFuture<List<V>> nativeQueryListAsync(Class<V> type, String sql, Map<String, Object> params) {
         return nativeQueryAsync(sql, rset -> {
-            if (type == byte[].class || type == String.class || type.isPrimitive() || Number.class.isAssignableFrom(type)
-                || (!Map.class.isAssignableFrom(type) && type.getName().startsWith("java."))) {
+            if (EntityBuilder.isSimpleType(type)) { 
                 List<V> list = new ArrayList<>();
                 while (rset.next()) {
                     list.add(rset.wasNull() ? null : (V) formatColumnValue(type, rset.getObject(1)));
