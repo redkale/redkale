@@ -14,8 +14,10 @@
  ***************************************************************************** */
 package org.redkale.persistence;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.lang.annotation.Documented;
+import static java.lang.annotation.ElementType.TYPE;
 import java.lang.annotation.Retention;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Target;
 
 /**
@@ -40,7 +42,8 @@ import java.lang.annotation.Target;
  * @since Java Persistence 2.1
  *
  */
-@Target({})
+@Documented
+@Target(TYPE)
 @Retention(RUNTIME)
 public @interface Index {
 
@@ -55,9 +58,9 @@ public @interface Index {
      * (Required) The names of the columns to be included in the index,
      * in order.
      *
-     * @return String
+     * @return String[]
      */
-    String columnList();
+    String[] columns();
 
     /**
      * (Optional) Whether the index is unique.
@@ -66,4 +69,19 @@ public @interface Index {
      */
     boolean unique() default false;
 
+    /**
+     * Index的多用类
+     *
+     * <p>
+     * 详情见: https://redkale.org
+     *
+     * @author zhangjx
+     */
+    @Documented
+    @Target(TYPE)
+    @Retention(RUNTIME)
+    public static @interface Indexs {
+
+        Index[] value();
+    }
 }
