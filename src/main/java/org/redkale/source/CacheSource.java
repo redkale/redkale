@@ -25,7 +25,6 @@ import org.redkale.util.*;
  * Long统一用setLong、getLong、incr等系列方法。<br>
  * 其他则供自定义数据类型使用。
  *
- * param V value的类型 移除 @2.4.0
  * <p>
  * 详情见: https://redkale.org
  *
@@ -367,6 +366,10 @@ public interface CacheSource extends Resourcable {
     //------------------------ 键 Keys ------------------------     
     default long del(String... keys) {
         return delAsync(keys).join();
+    }
+
+    default long delex(String key, String expectedValue) {
+        return delexAsync(key, expectedValue).join();
     }
 
     default boolean exists(String key) {
@@ -1301,6 +1304,8 @@ public interface CacheSource extends Resourcable {
     }
 
     //------------------------ 键 Keys ------------------------  
+    public CompletableFuture<Long> delexAsync(String key, String expectedValue);
+
     public CompletableFuture<Long> delAsync(String... keys);
 
     public CompletableFuture<Boolean> existsAsync(String key);

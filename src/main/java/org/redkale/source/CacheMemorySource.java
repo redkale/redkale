@@ -705,6 +705,38 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    public long delex(String key, String expectedValue) {
+        if (key == null) {
+            return 0L;
+        }
+        containerLock.lock();
+        try {
+            CacheEntry entry = find(key);
+            if (entry == null) {
+                return 0;
+            } else {
+                entry.lock();
+                try {
+                    if (Objects.equals(expectedValue, entry.getObjectValue(convert, String.class))) {
+                        return container.remove(key) == null ? 0 : 1;
+                    } else {
+                        return 0;
+                    }
+                } finally {
+                    entry.unlock();
+                }
+            }
+        } finally {
+            containerLock.unlock();
+        }
+    }
+
+    @Override
+    public CompletableFuture<Long> delexAsync(String key, String expectedValue) {
+        return supplyFuture(() -> delex(key, expectedValue));
+    }
+
+    @Override
     public long incr(final String key) {
         return incrby(key, 1);
     }
