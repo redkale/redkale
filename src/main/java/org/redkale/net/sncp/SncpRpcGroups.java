@@ -21,7 +21,7 @@ public class SncpRpcGroups {
 
     protected final ConcurrentHashMap<String, SncpRpcGroup> sncpRpcGroups = new ConcurrentHashMap<>();
 
-    //key: resourceid
+    //key: resourceid(serviceType:resourceName)
     protected final ConcurrentHashMap<String, Set<InetSocketAddress>> sncpClusters = new ConcurrentHashMap<>();
 
     public SncpRpcGroup getSncpRpcGroup(String group) {

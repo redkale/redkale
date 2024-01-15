@@ -159,6 +159,14 @@ public abstract class Sncp {
         return new SncpRemoteInfo(resourceName, resourceServiceType, serviceImplClass, convert, sncpRpcGroups, sncpClient, messageAgent, remoteGroup);
     }
 
+    /**
+     * 格式：资源类型:资源名
+     *
+     * @param resourceName 资源名
+     * @param resourceType 资源类型
+     *
+     * @return resourceid
+     */
     public static String resourceid(String resourceName, Class resourceType) {
         return resourceType.getName() + ':' + (resourceName == null ? "" : resourceName);
     }

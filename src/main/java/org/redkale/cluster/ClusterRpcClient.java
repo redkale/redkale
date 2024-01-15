@@ -12,6 +12,8 @@ import java.util.concurrent.CompletableFuture;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ * @param <R> message
+ * @param <P> result
  *
  * @since 2.8.0
  */

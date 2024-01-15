@@ -27,7 +27,7 @@ public class NodeInterceptor {
 
     /**
      * Server.shutdown之前调用 <br>
-     * NodeServer.shutdown的部署是先执行NodeInterceptor.preShutdown，再执行 Server.sshutdown 方法
+     * NodeServer.shutdown的部署是先执行NodeInterceptor.preShutdown，再执行 Server.shutdown 方法
      *
      * @param server NodeServer
      */
