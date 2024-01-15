@@ -5,9 +5,9 @@
  */
 package org.redkale.net.http;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * 只能依附在Service实现类的public方法上, 当方法的返回值以JSON输出时对指定类型的转换设定。  <br>
@@ -18,7 +18,6 @@ import static java.lang.annotation.ElementType.*;
  *
  * @author zhangjx
  */
-@Inherited
 @Documented
 @Target({METHOD})
 @Retention(RUNTIME)
@@ -68,7 +67,6 @@ public @interface RestConvert {
      */
     String[] convertColumns() default {};
 
-    @Inherited
     @Documented
     @Target({METHOD})
     @Retention(RUNTIME)

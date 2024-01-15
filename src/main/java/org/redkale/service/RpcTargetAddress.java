@@ -16,7 +16,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * 详情见: https://redkale.org
  * @author zhangjx
  */
-@Inherited
 @Documented
 @Target({PARAMETER})
 @Retention(RUNTIME)

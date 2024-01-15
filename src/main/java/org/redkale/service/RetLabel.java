@@ -28,7 +28,6 @@ import org.redkale.util.RedkaleClassLoader;
  *
  * @author zhangjx
  */
-@Inherited
 @Documented
 @Target({FIELD})
 @Retention(RUNTIME)
@@ -39,7 +38,6 @@ public @interface RetLabel {
 
     String locale() default "";
 
-    @Inherited
     @Documented
     @Target({FIELD})
     @Retention(RUNTIME)

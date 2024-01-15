@@ -5,9 +5,9 @@
  */
 package org.redkale.util;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * 接收命令的标记， 只能标记在本地模式下Service里参数为(String)或(String, String[])的public方法上
@@ -22,7 +22,6 @@ import static java.lang.annotation.ElementType.*;
  * @since 2.1.0
  */
 @Deprecated(since = "2.8.0")
-@Inherited
 @Documented
 @Target({METHOD})
 @Retention(RUNTIME)

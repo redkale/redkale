@@ -19,7 +19,6 @@ import org.redkale.convert.*;
  *
  * @author zhangjx
  */
-@Inherited
 @Documented
 @Target({METHOD})
 @Retention(RUNTIME)
@@ -32,7 +31,6 @@ public @interface RestConvertCoder {
 
     Class<? extends SimpledCoder> coder();
 
-    @Inherited
     @Documented
     @Target({METHOD})
     @Retention(RUNTIME)

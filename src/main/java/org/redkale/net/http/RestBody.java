@@ -5,10 +5,9 @@
  */
 package org.redkale.net.http;
 
-import static java.lang.annotation.ElementType.*;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * 只能注解于RestService类的方法的String/byte[]/JavaBean参数或参数内的String/byte[]/JavaBean字段
@@ -20,7 +19,6 @@ import static java.lang.annotation.ElementType.*;
  *
  * @author zhangjx
  */
-@Inherited
 @Documented
 @Target({PARAMETER, FIELD})
 @Retention(RUNTIME)

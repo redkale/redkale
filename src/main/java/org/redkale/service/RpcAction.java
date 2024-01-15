@@ -3,9 +3,9 @@
  */
 package org.redkale.service;
 
+import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.annotation.*;
 
 /**
  * 用于自定义SncpActionid，默认会根据Method.toString来计算actionid
@@ -16,7 +16,6 @@ import java.lang.annotation.*;
  * @author zhangjx
  * @since 2.8.0
  */
-@Inherited
 @Documented
 @Target({METHOD})
 @Retention(RUNTIME)

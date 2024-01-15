@@ -17,7 +17,6 @@ import static java.lang.annotation.RetentionPolicy.*;
  *
  * @author zhangjx
  */
-@Inherited
 @Documented
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
@@ -60,7 +59,6 @@ public @interface ConvertColumn {
      *
      * @author zhangjx
      */
-    @Inherited
     @Documented
     @Target({METHOD, FIELD})
     @Retention(RUNTIME)

@@ -56,7 +56,6 @@ public abstract class Sncp {
      *
      * @author zhangjx
      */
-    @Inherited
     @Documented
     @Target({METHOD, TYPE})
     @Retention(RUNTIME)

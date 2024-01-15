@@ -36,7 +36,6 @@ public @interface ConvertDisabled {
      *
      * @author zhangjx
      */
-    @Inherited
     @Documented
     @Target({METHOD, FIELD})
     @Retention(RUNTIME)

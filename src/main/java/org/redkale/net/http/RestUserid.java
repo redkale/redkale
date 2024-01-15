@@ -20,7 +20,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @since 2.1.0
  */
-@Inherited
 @Documented
 @Target({PARAMETER, FIELD})
 @Retention(RUNTIME)

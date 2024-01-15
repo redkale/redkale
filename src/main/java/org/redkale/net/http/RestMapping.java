@@ -17,7 +17,6 @@ import static java.lang.annotation.RetentionPolicy.*;
  *
  * @author zhangjx
  */
-@Inherited
 @Documented
 @Target({METHOD})
 @Retention(RUNTIME)
@@ -88,7 +87,6 @@ public @interface RestMapping {
      */
     String example() default "";
 
-    @Inherited
     @Documented
     @Target({METHOD})
     @Retention(RUNTIME)
