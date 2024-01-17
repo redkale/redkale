@@ -10,7 +10,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * 标记在RestWebSocket的接收消息方法上; <br>
+ * 标记在{@link org.redkale.net.http.RestWebSocket}的接收消息方法上; <br>
  * 注意：被标记的方法必须同时符合以下条件: <br>
  * 1、必须修饰为public
  * 2、不能修饰为final和static
@@ -19,6 +19,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * <br><p>
  * 详情见: https://redkale.org
+ * 
+ * @see org.redkale.net.http.RestWebSocket
  *
  * @author zhangjx
  */

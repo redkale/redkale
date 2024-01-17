@@ -54,7 +54,8 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
 
     protected AsyncIOThread ioReadThread;
 
-    public WebSocketReadHandler(HttpContext context, WebSocket webSocket, ObjectPool<ByteArray> byteArrayPool, BiConsumer<WebSocket, Object> messageConsumer) {
+    public WebSocketReadHandler(HttpContext context, WebSocket webSocket, ObjectPool<ByteArray> byteArrayPool,
+        BiConsumer<WebSocket, Object> messageConsumer) {
         this.context = context;
         this.webSocket = webSocket;
         this.byteArrayPool = byteArrayPool;
@@ -299,7 +300,8 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
         boolean debug = context.getLogger().isLoggable(Level.FINEST);
         if (count < 1) {
             if (debug) {
-                logger.log(Level.FINEST, "WebSocket(" + webSocket + ") abort on read buffer count, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreateTime()) / 1000 + " seconds");
+                logger.log(Level.FINEST, "WebSocket(" + webSocket + ") abort on read buffer count, force to close channel, live "
+                    + (System.currentTimeMillis() - webSocket.getCreateTime()) / 1000 + " seconds");
             }
             webSocket.kill(CLOSECODE_ILLPACKET, "read buffer count is " + count);
             return;
@@ -322,7 +324,8 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
                                 if (restMessageConsumer != null && convert != null) { //主要供RestWebSocket使用
                                     restMessageConsumer.accept(webSocket, convert.convertFrom(webSocket._messageRestType, packet.getPayload()));
                                 } else {
-                                    webSocket.onMessage(packet.getPayload() == null ? null : new String(packet.getPayload(), StandardCharsets.UTF_8), packet.last);
+                                    webSocket.onMessage(packet.getPayload() == null ? null
+                                        : new String(packet.getPayload(), StandardCharsets.UTF_8), packet.last);
                                 }
                             } catch (Throwable e) {
                                 logger.log(Level.SEVERE, "WebSocket onTextMessage error (" + packet + ")", e);
@@ -388,7 +391,8 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
         }
         if (exc != null) {
             if (context.getLogger().isLoggable(Level.FINEST)) {
-                context.getLogger().log(Level.FINEST, "WebSocket(" + webSocket + ") read WebSocketPacket failed, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreateTime()) / 1000 + " seconds", exc);
+                context.getLogger().log(Level.FINEST, "WebSocket(" + webSocket + ") read WebSocketPacket failed, force to close channel, live "
+                    + (System.currentTimeMillis() - webSocket.getCreateTime()) / 1000 + " seconds", exc);
             }
             webSocket.kill(CLOSECODE_WSEXCEPTION, "read websocket-packet failed");
         } else {

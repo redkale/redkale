@@ -11,11 +11,12 @@ import org.redkale.net.http.WebSocketNode;
 import org.redkale.util.AnyValue;
 
 /**
- * 由 org.redkale.net.http.WebSocketNodeService 代替
+ * 由 {@link org.redkale.net.http.WebSocketNodeService} 代替
  *
  * <p>
  * 详情见: https://redkale.org
  *
+ * @see org.redkale.net.http.WebSocketNodeService
  * @deprecated 2.6.0
  * @author zhangjx
  */
@@ -27,6 +28,7 @@ public class WebSocketNodeService extends org.redkale.net.http.WebSocketNodeServ
     @Override
     public void init(AnyValue conf) {
         super.init(conf);
-        logger.log(Level.WARNING, WebSocketNodeService.class.getName() + "is replaced by " + org.redkale.net.http.WebSocketNodeService.class.getName());
+        logger.log(Level.WARNING, WebSocketNodeService.class.getName()
+            + "is replaced by " + org.redkale.net.http.WebSocketNodeService.class.getName());
     }
 }

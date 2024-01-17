@@ -100,7 +100,8 @@ public class WebSocketEngine {
         if (conf != null && conf.getAnyValue("properties") != null) {
             props = conf.getAnyValue("properties");
         }
-        this.liveInterval = props == null ? (liveInterval < 0 ? DEFAILT_LIVEINTERVAL : liveInterval) : props.getIntValue(WEBPARAM_LIVEINTERVAL, (liveInterval < 0 ? DEFAILT_LIVEINTERVAL : liveInterval));
+        this.liveInterval = props == null ? (liveInterval < 0 ? DEFAILT_LIVEINTERVAL : liveInterval)
+            : props.getIntValue(WEBPARAM_LIVEINTERVAL, (liveInterval < 0 ? DEFAILT_LIVEINTERVAL : liveInterval));
         if (liveInterval <= 0) {
             return;
         }
@@ -121,19 +122,21 @@ public class WebSocketEngine {
             t.setDaemon(true);
             return t;
         });
-        this.scheduler.setRemoveOnCancelPolicy(true); 
+        this.scheduler.setRemoveOnCancelPolicy(true);
         long delay = (liveInterval - System.currentTimeMillis() / 1000 % liveInterval) + index * 5;
         final int intervalms = liveInterval * 1000;
         scheduler.scheduleWithFixedDelay(() -> {
             try {
                 long now = System.currentTimeMillis();
-                getLocalWebSockets().stream().filter(x -> ((now - x.getLastReadTime()) > intervalms && (now - x.getLastSendTime()) > intervalms)).forEach(x -> x.sendPing());
+                getLocalWebSockets().stream().filter(x -> (now - Math.max(x.getLastReadTime(), x.getLastSendTime())) > intervalms)
+                    .forEach(x -> x.sendPing());
             } catch (Throwable t) {
                 logger.log(Level.SEVERE, "WebSocketEngine schedule(interval=" + liveInterval + "s) ping error", t);
             }
         }, delay, liveInterval, TimeUnit.SECONDS);
         if (logger.isLoggable(Level.FINEST)) {
-            logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")" + " start keeplive(wsmaxconns:" + wsMaxConns + ", delay:" + delay + "s, interval:" + liveInterval + "s) scheduler executor");
+            logger.finest(this.getClass().getSimpleName() + "(" + engineid + ")"
+                + " start keeplive(wsmaxconns:" + wsMaxConns + ", delay:" + delay + "s, interval:" + liveInterval + "s) scheduler executor");
         }
     }
 

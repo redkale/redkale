@@ -99,7 +99,8 @@ public class WebSocketWriteHandler implements CompletionHandler<Integer, Void> {
         }
         webSocket.kill(RETCODE_SENDEXCEPTION, "websocket send message failed on CompletionHandler");
         if (exc != null && context.getLogger().isLoggable(Level.FINER)) {
-            context.getLogger().log(Level.FINER, "WebSocket sendMessage on CompletionHandler failed, force to close channel, live " + (System.currentTimeMillis() - webSocket.getCreateTime()) / 1000 + " seconds", exc);
+            context.getLogger().log(Level.FINER, "WebSocket sendMessage on CompletionHandler failed, force to close channel, live "
+                + (System.currentTimeMillis() - webSocket.getCreateTime()) / 1000 + " seconds", exc);
         }
     }
 

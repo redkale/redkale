@@ -225,7 +225,8 @@ public abstract class WebSocket<G extends Serializable, T> {
     public final CompletableFuture<Integer> send(Convert convert, Object message, boolean last) {
         final Convert c = convert == null ? getSendConvert() : convert;
         if (message instanceof CompletableFuture) {
-            return ((CompletableFuture) message).thenCompose((json) -> sendPacket(new WebSocketPacket(c.isBinary() ? FrameType.BINARY : FrameType.TEXT, c.convertToBytes(json), last)));
+            return ((CompletableFuture) message).thenCompose(json
+                -> sendPacket(new WebSocketPacket(c.isBinary() ? FrameType.BINARY : FrameType.TEXT, c.convertToBytes(json), last)));
         }
         return sendPacket(new WebSocketPacket(c.isBinary() ? FrameType.BINARY : FrameType.TEXT, c.convertToBytes(message), last));
     }
@@ -326,7 +327,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return 为0表示成功， 其他值表示异常
      */
     public final CompletableFuture<Integer> sendMessage(Object message, boolean last, G... userids) {
-        return sendMessage((Convert) null, message, last, userids);
+        return sendMessage((Convert) null, message, last, (Serializable[]) userids);
     }
 
     /**
@@ -363,7 +364,7 @@ public abstract class WebSocket<G extends Serializable, T> {
             return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
         }
         if (message instanceof CompletableFuture) {
-            return ((CompletableFuture) message).thenCompose((json) -> _engine.node.sendMessage(convert, json, last, userids));
+            return ((CompletableFuture) message).thenCompose(json -> _engine.node.sendMessage(convert, json, last, userids));
         }
         CompletableFuture<Integer> rs = _engine.node.sendMessage(convert, message, last, userids);
         if (_engine.logger.isLoggable(Level.FINER)) {
@@ -468,12 +469,12 @@ public abstract class WebSocket<G extends Serializable, T> {
      *
      * @return 为0表示成功， 其他值表示部分发送异常
      */
-    public final CompletableFuture<Integer> broadcastMessage(final WebSocketRange wsrange, final Convert convert, final Object message, final boolean last) {
+    public final CompletableFuture<Integer> broadcastMessage(WebSocketRange wsrange, Convert convert, final Object message, final boolean last) {
         if (_engine.node == null) {
             return CompletableFuture.completedFuture(RETCODE_NODESERVICE_NULL);
         }
         if (message instanceof CompletableFuture) {
-            return ((CompletableFuture) message).thenCompose((json) -> _engine.node.broadcastMessage(wsrange, convert, json, last));
+            return ((CompletableFuture) message).thenCompose(json -> _engine.node.broadcastMessage(wsrange, convert, json, last));
         }
         CompletableFuture<Integer> rs = _engine.node.broadcastMessage(wsrange, convert, message, last);
         if (_engine.logger.isLoggable(Level.FINER)) {
@@ -854,7 +855,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return Future 可以为null, 为null或者Future值为false表示关闭新连接， Future值为true表示关闭旧连接
      */
     public CompletableFuture<Boolean> onSingleRepeatConnect() {
-        return forceCloseWebSocket(getUserid()).thenApply((r) -> true);
+        return forceCloseWebSocket(getUserid()).thenApply(r -> true);
     }
 
     /**

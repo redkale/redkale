@@ -13,6 +13,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * 只能依附在Service类上，name默认为Service的类名小写并去掉Service字样及后面的字符串 (如HelloService/HelloServiceImpl，的默认路径为 hello)。
  * <p>
  * 详情见: https://redkale.org
+ * 
+ * @see org.redkale.net.http.RestMapping
  *
  * @author zhangjx
  */

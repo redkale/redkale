@@ -194,8 +194,9 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             return;
         }
         //存在WebSocketServlet，则此WebSocketNode必须是本地模式Service
-        this.webSocketNode.localEngine = new WebSocketEngine("WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]",
-            this.single, context, liveinterval, wsmaxconns, wsthreads, wsmaxbody, this.cryptor, this.webSocketNode, this.sendConvert, logger);
+        String id = "WebSocketEngine-" + addr.getHostString() + ":" + addr.getPort() + "-[" + resourceName() + "]";
+        this.webSocketNode.localEngine = new WebSocketEngine(id, this.single, context,
+            liveinterval, wsmaxconns, wsthreads, wsmaxbody, this.cryptor, this.webSocketNode, this.sendConvert, logger);
         this.webSocketNode.init(conf);
         this.webSocketNode.localEngine.init(conf);
 
@@ -222,7 +223,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         final boolean debug = logger.isLoggable(Level.FINEST);
         if (!request.isWebSocket()) {
             if (debug) {
-                logger.log(Level.FINEST, "WebSocket connect abort, (Not GET Method) or (Connection != Upgrade) or (Upgrade != websocket). request=" + request);
+                logger.log(Level.FINEST, "WebSocket connect abort, (Not GET Method)/(Connection!=Upgrade)/(Upgrade!=websocket). request=" + request);
             }
             response.finish(true);
             return;
@@ -305,7 +306,8 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                             Traces.currentTraceid(request.getTraceid());
                             if ((userid == null && webSocket.delayPackets == null) || ex2 != null) {
                                 if (debug || ex2 != null) {
-                                    logger.log(ex2 == null ? Level.FINEST : Level.FINE, "WebSocket connect abort, Create userid abort. request = " + request, ex2);
+                                    logger.log(ex2 == null ? Level.FINEST : Level.FINE, 
+                                        "WebSocket connect abort, Create userid abort. request = " + request, ex2);
                                 }
                                 response.finish(true);
                                 return;
@@ -356,7 +358,8 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                 List<WebSocketPacket> delayPackets = webSocket.delayPackets;
                                 webSocket.delayPackets = null;
                                 //CompletableFuture<Integer> cf = webSocket._writeIOThread.send(webSocket, delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
-                                CompletableFuture<Integer> cf = webSocket._writeHandler.send(delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
+                                CompletableFuture<Integer> cf = webSocket._writeHandler
+                                    .send(delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
                                 cf.whenComplete((Integer v, Throwable t) -> {
                                     Traces.currentTraceid(request.getTraceid());
                                     if (userid == null || t != null) {

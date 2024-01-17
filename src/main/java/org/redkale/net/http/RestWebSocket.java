@@ -5,9 +5,9 @@
  */
 package org.redkale.net.http;
 
+import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.annotation.*;
 import org.redkale.net.Cryptor;
 
 /**
@@ -16,6 +16,8 @@ import org.redkale.net.Cryptor;
  * name值支持含{system.property.xxx}模式
  * <p>
  * 详情见: https://redkale.org
+ * 
+ * @see org.redkale.net.http.RestOnMessage
  *
  * @author zhangjx
  */

@@ -7,8 +7,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import org.redkale.annotation.*;
 import static org.redkale.net.http.WebSocket.RETCODE_GROUP_EMPTY;
-import org.redkale.net.http.WebSocketNodeService;
-import org.redkale.service.*;
+import org.redkale.service.RpcTargetAddress;
+import org.redkale.service.RpcTargetTopic;
+import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
 
 /**
@@ -37,8 +38,10 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     }
 
     @Override
-    public CompletableFuture<List<String>> getWebSocketAddresses(@RpcTargetTopic String topic, final @RpcTargetAddress InetSocketAddress targetAddress, final Serializable groupid) {
-        if ((topic == null || !topic.equals(this.wsNodeAddress.getTopic())) && (localSncpAddress == null || !localSncpAddress.equals(targetAddress))) {
+    public CompletableFuture<List<String>> getWebSocketAddresses(@RpcTargetTopic String topic,
+        final @RpcTargetAddress InetSocketAddress targetAddress, final Serializable groupid) {
+        if ((topic == null || !topic.equals(this.wsNodeAddress.getTopic()))
+            && (localSncpAddress == null || !localSncpAddress.equals(targetAddress))) {
             return remoteWebSocketAddresses(topic, targetAddress, groupid);
         }
         if (this.localEngine == null) {
@@ -50,7 +53,8 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     }
 
     @Override
-    public CompletableFuture<Integer> sendMessage(@RpcTargetTopic String topic, @RpcTargetAddress InetSocketAddress targetAddress, Object message, boolean last, Serializable... userids) {
+    public CompletableFuture<Integer> sendMessage(@RpcTargetTopic String topic,
+        @RpcTargetAddress InetSocketAddress targetAddress, Object message, boolean last, Serializable... userids) {
         if (this.localEngine == null) {
             return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
         }
@@ -58,7 +62,8 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     }
 
     @Override
-    public CompletableFuture<Integer> broadcastMessage(@RpcTargetTopic String topic, @RpcTargetAddress InetSocketAddress targetAddress, final WebSocketRange wsrange, Object message, boolean last) {
+    public CompletableFuture<Integer> broadcastMessage(@RpcTargetTopic String topic,
+        @RpcTargetAddress InetSocketAddress targetAddress, final WebSocketRange wsrange, Object message, boolean last) {
         if (this.localEngine == null) {
             return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
         }
@@ -66,7 +71,8 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     }
 
     @Override
-    public CompletableFuture<Integer> sendAction(@RpcTargetTopic String topic, @RpcTargetAddress InetSocketAddress targetAddress, final WebSocketAction action, Serializable... userids) {
+    public CompletableFuture<Integer> sendAction(@RpcTargetTopic String topic,
+        @RpcTargetAddress InetSocketAddress targetAddress, final WebSocketAction action, Serializable... userids) {
         if (this.localEngine == null) {
             return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
         }
@@ -74,7 +80,8 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
     }
 
     @Override
-    public CompletableFuture<Integer> broadcastAction(@RpcTargetTopic String topic, @RpcTargetAddress InetSocketAddress targetAddress, final WebSocketAction action) {
+    public CompletableFuture<Integer> broadcastAction(@RpcTargetTopic String topic,
+        @RpcTargetAddress InetSocketAddress targetAddress, final WebSocketAction action) {
         if (this.localEngine == null) {
             return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
         }
@@ -164,7 +171,8 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
      * @return 无返回值
      */
     @Override
-    public CompletableFuture<Boolean> existsWebSocket(Serializable userid, @RpcTargetTopic String topic, @RpcTargetAddress InetSocketAddress targetAddress) {
+    public CompletableFuture<Boolean> existsWebSocket(Serializable userid,
+        @RpcTargetTopic String topic, @RpcTargetAddress InetSocketAddress targetAddress) {
         if (logger.isLoggable(Level.FINEST)) {
             logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " existsWebSocket from " + targetAddress);
         }
@@ -184,7 +192,8 @@ public class WebSocketNodeService extends WebSocketNode implements Service {
      * @return 无返回值
      */
     @Override
-    public CompletableFuture<Integer> forceCloseWebSocket(Serializable userid, @RpcTargetTopic String topic, @RpcTargetAddress InetSocketAddress targetAddress) {
+    public CompletableFuture<Integer> forceCloseWebSocket(Serializable userid,
+        @RpcTargetTopic String topic, @RpcTargetAddress InetSocketAddress targetAddress) {
         //不能从sncpNodeAddresses中移除，因为engine.forceCloseWebSocket 会调用到disconnect
         if (logger.isLoggable(Level.FINEST)) {
             logger.finest(WebSocketNodeService.class.getSimpleName() + ".event: " + userid + " forceCloseWebSocket from " + targetAddress);

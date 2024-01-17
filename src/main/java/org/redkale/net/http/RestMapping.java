@@ -14,6 +14,8 @@ import static java.lang.annotation.RetentionPolicy.*;
  * value默认为"/" + Service的类名去掉Service字样的小写字符串 (如HelloService，的默认路径为/hello)。  <br>
  * <p>
  * 详情见: https://redkale.org
+ * 
+ * @see org.redkale.net.http.RestService
  *
  * @author zhangjx
  */
