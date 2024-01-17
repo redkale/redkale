@@ -434,10 +434,10 @@ public final class EntityCache<T> {
     }
 
     public boolean exists(final Predicate<T> filter) {
-        return (filter != null) && this.list.stream().filter(filter).findFirst().isPresent();
+        return (filter != null) && this.list.stream().anyMatch(filter);
     }
 
-    public <K, V> Map<Serializable, Number> queryColumnMap(final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
+    public Map<Serializable, Number> queryColumnMap(final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
         final Attribute<T, Serializable> keyAttr = info.getAttribute(keyColumn);
         final Predicate filter = node == null ? null : node.createPredicate(this);
         final Attribute funcAttr = funcColumn == null ? null : info.getAttribute(funcColumn);
@@ -460,7 +460,7 @@ public final class EntityCache<T> {
                     collector = (Collector<T, Map, ?>) Collectors.counting();
                     break;
                 case DISTINCTCOUNT:
-                    collector = (Collector<T, Map, ?>) Collectors.mapping((t) -> funcAttr.get(t), Collectors.toSet());
+                    collector = (Collector<T, Map, ?>) Collectors.mapping(funcAttr::get, Collectors.toSet());
                     break;
                 case MAX:
                 case MIN:
@@ -476,8 +476,8 @@ public final class EntityCache<T> {
                     break;
             }
         }
-        Map rs = collector == null ? stream.collect(Collectors.toMap(t -> keyAttr.get(t), t -> funcAttr.get(t), (key1, key2) -> key2))
-            : stream.collect(Collectors.groupingBy(t -> keyAttr.get(t), LinkedHashMap::new, collector));
+        Map rs = collector == null ? stream.collect(Collectors.toMap(keyAttr::get, funcAttr::get, (key1, key2) -> key2))
+            : stream.collect(Collectors.groupingBy(keyAttr::get, LinkedHashMap::new, collector));
         if (func == MAX || func == MIN) {
             Map rs2 = new LinkedHashMap();
             rs.forEach((x, y) -> {
@@ -565,7 +565,8 @@ public final class EntityCache<T> {
         return null;
     }
 
-    private Number getNumberResult(final Collection<T> entityList, final FilterFunc func, final Number defResult, final Class attrType, final Function<T, Number> attrFunc, final FilterNode node) {
+    private Number getNumberResult(final Collection<T> entityList, final FilterFunc func,
+        final Number defResult, final Class attrType, final Function<T, Number> attrFunc, final FilterNode node) {
         final Predicate<T> filter = node == null ? null : node.createPredicate(this);
         Stream<T> stream = entityList.stream();
         if (filter != null) {
@@ -574,10 +575,10 @@ public final class EntityCache<T> {
         switch (func) {
             case AVG:
                 if (attrType == int.class || attrType == Integer.class || attrType == AtomicInteger.class) {
-                    OptionalDouble rs = stream.mapToInt(x -> ((Number) attrFunc.apply(x)).intValue()).average();
+                    OptionalDouble rs = stream.mapToInt(x -> attrFunc.apply(x).intValue()).average();
                     return rs.isPresent() ? (int) rs.getAsDouble() : defResult;
                 } else if (attrType == long.class || attrType == Long.class || attrType == AtomicLong.class || attrType == LongAdder.class) {
-                    OptionalDouble rs = stream.mapToLong(x -> ((Number) attrFunc.apply(x)).longValue()).average();
+                    OptionalDouble rs = stream.mapToLong(x -> attrFunc.apply(x).longValue()).average();
                     return rs.isPresent() ? (long) rs.getAsDouble() : defResult;
                 } else if (attrType == short.class || attrType == Short.class) {
                     OptionalDouble rs = stream.mapToInt(x -> ((Short) attrFunc.apply(x)).intValue()).average();
@@ -593,14 +594,14 @@ public final class EntityCache<T> {
             case COUNT:
                 return stream.count();
             case DISTINCTCOUNT:
-                return stream.map(x -> attrFunc.apply(x)).distinct().count();
+                return stream.map(attrFunc::apply).distinct().count();
 
             case MAX:
                 if (attrType == int.class || attrType == Integer.class || attrType == AtomicInteger.class) {
-                    OptionalInt rs = stream.mapToInt(x -> ((Number) attrFunc.apply(x)).intValue()).max();
+                    OptionalInt rs = stream.mapToInt(x -> attrFunc.apply(x).intValue()).max();
                     return rs.isPresent() ? rs.getAsInt() : defResult;
                 } else if (attrType == long.class || attrType == Long.class || attrType == AtomicLong.class || attrType == LongAdder.class) {
-                    OptionalLong rs = stream.mapToLong(x -> ((Number) attrFunc.apply(x)).longValue()).max();
+                    OptionalLong rs = stream.mapToLong(x -> attrFunc.apply(x).longValue()).max();
                     return rs.isPresent() ? rs.getAsLong() : defResult;
                 } else if (attrType == short.class || attrType == Short.class) {
                     OptionalInt rs = stream.mapToInt(x -> ((Short) attrFunc.apply(x)).intValue()).max();
@@ -616,10 +617,10 @@ public final class EntityCache<T> {
 
             case MIN:
                 if (attrType == int.class || attrType == Integer.class || attrType == AtomicInteger.class) {
-                    OptionalInt rs = stream.mapToInt(x -> ((Number) attrFunc.apply(x)).intValue()).min();
+                    OptionalInt rs = stream.mapToInt(x -> attrFunc.apply(x).intValue()).min();
                     return rs.isPresent() ? rs.getAsInt() : defResult;
                 } else if (attrType == long.class || attrType == Long.class || attrType == AtomicLong.class || attrType == LongAdder.class) {
-                    OptionalLong rs = stream.mapToLong(x -> ((Number) attrFunc.apply(x)).longValue()).min();
+                    OptionalLong rs = stream.mapToLong(x -> attrFunc.apply(x).longValue()).min();
                     return rs.isPresent() ? rs.getAsLong() : defResult;
                 } else if (attrType == short.class || attrType == Short.class) {
                     OptionalInt rs = stream.mapToInt(x -> ((Short) attrFunc.apply(x)).intValue()).min();
@@ -635,9 +636,9 @@ public final class EntityCache<T> {
 
             case SUM:
                 if (attrType == int.class || attrType == Integer.class || attrType == AtomicInteger.class) {
-                    return stream.mapToInt(x -> ((Number) attrFunc.apply(x)).intValue()).sum();
+                    return stream.mapToInt(x -> attrFunc.apply(x).intValue()).sum();
                 } else if (attrType == long.class || attrType == Long.class || attrType == AtomicLong.class || attrType == LongAdder.class) {
-                    return stream.mapToLong(x -> ((Number) attrFunc.apply(x)).longValue()).sum();
+                    return stream.mapToLong(x -> attrFunc.apply(x).longValue()).sum();
                 } else if (attrType == short.class || attrType == Short.class) {
                     return (short) stream.mapToInt(x -> ((Short) attrFunc.apply(x)).intValue()).sum();
                 } else if (attrType == float.class || attrType == Float.class) {
@@ -660,7 +661,7 @@ public final class EntityCache<T> {
         return querySheet(true, false, selects, flipper, node);
     }
 
-    protected <T> Stream<T> distinctStream(Stream<T> stream, final List<Attribute<T, Serializable>> keyattrs) {
+    protected Stream<T> distinctStream(Stream<T> stream, final List<Attribute<T, Serializable>> keyattrs) {
         if (keyattrs == null) {
             return stream;
         }
@@ -680,7 +681,7 @@ public final class EntityCache<T> {
         return stream.filter(filter);
     }
 
-    public Sheet<T> querySheet(final boolean needtotal, final boolean distinct, final SelectColumn selects, final Flipper flipper, FilterNode node) {
+    public Sheet<T> querySheet(final boolean needTotal, boolean distinct, final SelectColumn selects, final Flipper flipper, FilterNode node) {
         final Predicate<T> filter = node == null ? null : node.createPredicate(this);
         final Comparator<T> comparator = createComparator(flipper);
         long total = 0;
@@ -694,7 +695,7 @@ public final class EntityCache<T> {
             });
             keyattrs = attrs;
         }
-        if (needtotal) {
+        if (needTotal) {
             Stream<T> stream = this.list.stream();
             if (filter != null) {
                 stream = stream.filter(filter);
@@ -704,7 +705,7 @@ public final class EntityCache<T> {
             }
             total = stream.count();
         }
-        if (needtotal && total == 0) {
+        if (needTotal && total == 0) {
             return new Sheet<>(0, new ArrayList());
         }
         Stream<T> stream = this.list.stream();
@@ -751,7 +752,7 @@ public final class EntityCache<T> {
                 stream.forEach(action);
             }
         }
-        if (!needtotal) {
+        if (!needTotal) {
             total = rs.size();
         }
         return new Sheet<>(total, rs);
@@ -1014,7 +1015,8 @@ public final class EntityCache<T> {
             case MOD:
             case AND:
             case ORR:
-                numb = getNumberValue((Number) attr.get(entity), express, val instanceof ColumnNumberNode ? ((ColumnNumberNode) val).getValue() : (Number) val);
+                numb = getNumberValue((Number) attr.get(entity), express,
+                    val instanceof ColumnNumberNode ? ((ColumnNumberNode) val).getValue() : (Number) val);
                 break;
             case SET:
                 if (val instanceof ColumnExpNode) {
@@ -1164,7 +1166,8 @@ public final class EntityCache<T> {
 
     //-------------------------------------------------------------------------------------------------------------------------------
     protected Comparator<T> createComparator(Flipper flipper) {
-        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty() || flipper.getSort().indexOf(';') >= 0 || flipper.getSort().indexOf('\n') >= 0) {
+        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()
+            || flipper.getSort().indexOf(';') >= 0 || flipper.getSort().indexOf('\n') >= 0) {
             return null;
         }
         final String sort = flipper.getSort();
@@ -1189,7 +1192,8 @@ public final class EntityCache<T> {
                     Function getter = null;
                     if (pattr.type() == int.class || pattr.type() == Integer.class || pattr.type() == AtomicInteger.class) {
                         getter = x -> Math.abs(((Number) pattr.get((T) x)).intValue());
-                    } else if (pattr.type() == long.class || pattr.type() == Long.class || pattr.type() == AtomicLong.class || pattr.type() == LongAdder.class) {
+                    } else if (pattr.type() == long.class || pattr.type() == Long.class
+                        || pattr.type() == AtomicLong.class || pattr.type() == LongAdder.class) {
                         getter = x -> Math.abs(((Number) pattr.get((T) x)).longValue());
                     } else if (pattr.type() == float.class || pattr.type() == Float.class) {
                         getter = x -> Math.abs(((Number) pattr.get((T) x)).floatValue());
@@ -1198,7 +1202,8 @@ public final class EntityCache<T> {
                     } else {
                         throw new SourceException("Flipper not supported sort illegal type by ABS (" + flipper.getSort() + ")");
                     }
-                    attr = (Attribute<T, Serializable>) Attribute.create(pattr.declaringClass(), pattr.field(), pattr.type(), getter, (o, v) -> pattr.set(o, v));
+                    attr = (Attribute<T, Serializable>) Attribute.create(pattr.declaringClass(),
+                        pattr.field(), pattr.type(), getter, (o, v) -> pattr.set(o, v));
                 } else if (func.isEmpty()) {
                     attr = pattr;
                 } else {

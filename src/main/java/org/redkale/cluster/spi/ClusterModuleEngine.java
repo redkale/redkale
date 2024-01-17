@@ -125,6 +125,7 @@ public class ClusterModuleEngine extends ModuleEngine {
      * @param namespace 命名空间
      * @param events    变更项
      */
+    @Override
     public void onEnvironmentChanged(String namespace, List<ResourceEvent> events) {
         Set<String> clusterRemovedKeys = new HashSet<>();
         Properties clusterChangedProps = new Properties();
