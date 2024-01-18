@@ -196,16 +196,16 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     @SuppressWarnings("unchecked")
     public void nextEvent() throws IOException {
         if (this.filter != null) {
-            Filter runner = this.filter;
+            Filter f = this.filter;
             this.filter = this.filter._next;
             if (inNonBlocking) {
-                if (runner.isNonBlocking()) {
-                    runner.doFilter(request, this);
+                if (f.isNonBlocking()) {
+                    f.doFilter(request, this);
                 } else {
                     inNonBlocking = false;
                     workExecutor.execute(() -> {
                         try {
-                            runner.doFilter(request, Response.this);
+                            f.doFilter(request, Response.this);
                         } catch (Throwable t) {
                             context.getLogger().log(Level.WARNING, "Filter occur exception. request = " + request, t);
                             finishError(t);
@@ -213,7 +213,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                     });
                 }
             } else {
-                runner.doFilter(request, this);
+                f.doFilter(request, this);
             }
             return;
         }
@@ -397,7 +397,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         }
     }
 
-    public <A> void finish(boolean kill, final byte[] bs1, int offset1, int length1, final byte[] bs2, int offset2, int length2) {
+    public void finish(boolean kill, final byte[] bs1, int offset1, int length1, final byte[] bs2, int offset2, int length2) {
         if (kill) {
             refuseAlive();
         }
