@@ -44,8 +44,11 @@ public class MessageRespFuture implements Runnable {
     public void run() { //timeout
         messageClient.respQueue.remove(this.seqid);
         future.completeExceptionally(new TimeoutException("message-record: " + message));
-        messageClient.logger.log(Level.WARNING, getClass().getSimpleName() + " wait msg: " + message + " timeout " + (System.currentTimeMillis() - createTime) + "ms"
-            + (message.userid != null || (message.groupid != null && !message.groupid.isEmpty()) ? (message.userid != null ? (", userid:" + message.userid) : (", groupid:" + message.groupid)) : ""));
+        messageClient.logger.log(Level.WARNING, getClass().getSimpleName() + " wait msg: " + message 
+            + " timeout " + (System.currentTimeMillis() - createTime) + "ms"
+            + (message.userid != null || (message.groupid != null && !message.groupid.isEmpty()) 
+                ? (message.userid != null ? (", userid:" + message.userid) 
+                    : (", groupid:" + message.groupid)) : ""));
     }
 
     public long getSeqid() {

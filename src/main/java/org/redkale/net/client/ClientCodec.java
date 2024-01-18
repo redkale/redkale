@@ -31,7 +31,8 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
 
     private final ByteArray readArray = new ByteArray();
 
-    private final ObjectPool<ClientResponse<R, P>> respPool = ObjectPool.createUnsafePool(256, t -> new ClientResponse(), ClientResponse::prepare, ClientResponse::recycle);
+    private final ObjectPool<ClientResponse<R, P>> respPool = 
+        ObjectPool.createUnsafePool(256, t -> new ClientResponse(), ClientResponse::prepare, ClientResponse::recycle);
 
     protected final ClientConnection<R, P> connection;
 

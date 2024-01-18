@@ -90,7 +90,8 @@ public class SncpRemoteInfo<S extends Service> {
         this.topic = messageAgent == null ? null : Sncp.generateSncpReqTopic(resourceName, resourceType, messageAgent.getNodeid());
 
         for (Map.Entry<Uint128, Method> en : loadRemoteMethodActions(Sncp.getServiceType(serviceImplClass)).entrySet()) {
-            this.actions.put(en.getKey().toString(), new SncpRemoteAction(serviceImplClass, resourceType, en.getValue(), serviceid, en.getKey(), sncpClient));
+            this.actions.put(en.getKey().toString(), 
+                new SncpRemoteAction(serviceImplClass, resourceType, en.getValue(), serviceid, en.getKey(), sncpClient));
         }
     }
 
@@ -187,8 +188,10 @@ public class SncpRemoteInfo<S extends Service> {
             final int retcode = header.getRetcode();
             if (retcode != 0) {
                 logger.log(Level.SEVERE, action.method + " sncp (params: " + JsonConvert.root().convertTo(params)
-                    + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + "), params=" + JsonConvert.root().convertTo(params));
-                throw new SncpException("remote service(" + action.method + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
+                    + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) 
+                    + "), params=" + JsonConvert.root().convertTo(params));
+                throw new SncpException("remote service(" + action.method + ") deal error (retcode=" + retcode 
+                    + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
             }
             final int respBodyLength = header.getBodyLength();
             byte[] body = new byte[respBodyLength];
@@ -332,7 +335,8 @@ public class SncpRemoteInfo<S extends Service> {
         protected final SncpHeader header;
 
         @SuppressWarnings("unchecked")
-        SncpRemoteAction(final Class serviceImplClass, Class resourceType, Method method, Uint128 serviceid, Uint128 actionid, final SncpClient sncpClient) {
+        SncpRemoteAction(final Class serviceImplClass, Class resourceType, Method method, 
+            Uint128 serviceid, Uint128 actionid, final SncpClient sncpClient) {
             this.actionid = actionid == null ? Sncp.actionid(method) : actionid;
             Type rt = TypeToken.getGenericType(method.getGenericReturnType(), serviceImplClass);
             this.returnObjectType = rt == void.class || rt == Void.class ? null : rt;
@@ -425,7 +429,8 @@ public class SncpRemoteInfo<S extends Service> {
             this.paramHandlerClass = handlerFuncClass;
             this.paramHandlerResultType = handlerResultType;
             this.paramHandlerAttachIndex = handlerAttachIndex;
-            this.header = SncpHeader.create(sncpClient == null ? null : sncpClient.getClientSncpAddress(), serviceid, resourceType.getName(), actionid, method.getName());
+            this.header = SncpHeader.create(sncpClient == null ? null : sncpClient.getClientSncpAddress(), 
+                serviceid, resourceType.getName(), actionid, method.getName());
             if (this.paramHandlerIndex >= 0 && method.getReturnType() != void.class) {
                 throw new SncpException(method + " have CompletionHandler type parameter but return type is not void");
             }

@@ -675,7 +675,8 @@ public abstract class Sncp {
                         List<AsmMethodParam> params = methodBean.getParams();
                         for (int i = 0; i < paramTypes.length; i++) {
                             AsmMethodParam param = params.get(i);
-                            mv.visitLocalVariable(param.getName(), param.description(paramTypes[i]), param.signature(paramTypes[i]), l0, l2, insns.get(i));
+                            mv.visitLocalVariable(param.getName(), param.description(paramTypes[i]), 
+                                param.signature(paramTypes[i]), l0, l2, insns.get(i));
                         }
                     }
                     mv.visitMaxs(20, 20);

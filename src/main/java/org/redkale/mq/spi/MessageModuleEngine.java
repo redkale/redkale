@@ -47,7 +47,7 @@ public class MessageModuleEngine extends ModuleEngine {
 
     //MQ管理配置资源
     //@since 2.8.0
-    private Properties messageProperties = new Properties();
+    private final Properties messageProperties = new Properties();
 
     //
     private final Map<String, List<MessageConsumer>> agentConsumers = new ConcurrentHashMap<>();
@@ -68,6 +68,7 @@ public class MessageModuleEngine extends ModuleEngine {
      *
      * @return 方法动态扩展器
      */
+    @Override
     public AsmMethodBoost createAsmMethodBoost(boolean remote, Class serviceClass) {
         return new MessageAsmMethodBoost(remote, serviceClass, this);
     }
@@ -190,7 +191,8 @@ public class MessageModuleEngine extends ModuleEngine {
             @Override
             public void load(ResourceFactory rf, String srcResourceName, Object srcObj, ResourceProducer annotation, Field field, Object attachment) {
                 if (field.getType() != MessageProducer.class) {
-                    throw new RestException("@" + ResourceProducer.class.getSimpleName() + " must on " + MessageProducer.class.getName() + " type field, but on " + field);
+                    throw new RestException("@" + ResourceProducer.class.getSimpleName() 
+                        + " must on " + MessageProducer.class.getName() + " type field, but on " + field);
                 }
                 MessageAgent agent = resourceFactory.find(annotation.mq(), MessageAgent.class);
                 if (!annotation.required() && agent == null) {
@@ -244,6 +246,7 @@ public class MessageModuleEngine extends ModuleEngine {
      * @param namespace 命名空间
      * @param events    变更项
      */
+    @Override
     public void onEnvironmentChanged(String namespace, List<ResourceEvent> events) {
         Set<String> messageRemovedKeys = new HashSet<>();
         Properties messageChangedProps = new Properties();
@@ -340,7 +343,7 @@ public class MessageModuleEngine extends ModuleEngine {
                     }
                 }
             }
-            messageRemovedKeys.forEach(k -> this.messageProperties.remove(k));
+            messageRemovedKeys.forEach(this.messageProperties::remove);
             this.messageProperties.putAll(messageChangedProps);
         }
 
@@ -349,6 +352,7 @@ public class MessageModuleEngine extends ModuleEngine {
     /**
      * 服务全部启动后被调用
      */
+    @Override
     public void onServersPostStart() {
         if (this.messageAgents == null) {
             return;
@@ -425,6 +429,7 @@ public class MessageModuleEngine extends ModuleEngine {
     /**
      * 服务全部停掉前被调用
      */
+    @Override
     public void onServersPreStop() {
         if (application.isCompileMode() && this.messageAgents != null) {
             Set<String> names = new HashSet<>();
@@ -445,6 +450,7 @@ public class MessageModuleEngine extends ModuleEngine {
     /**
      * 服务全部停掉后被调用
      */
+    @Override
     public void onServersPostStop() {
         if (this.messageAgents != null) {
             Set<String> names = new HashSet<>();

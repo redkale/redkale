@@ -65,7 +65,9 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
             FieldVisitor fv;
             MethodDebugVisitor mv;
             AnnotationVisitor av0;
-            cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, handlerInterface ? "java/lang/Object" : handlerClassName, handlerInterface && handlerClass != sncpHandlerClass ? new String[]{handlerClassName, sncpHandlerName} : new String[]{sncpHandlerName});
+            cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null,
+                handlerInterface ? "java/lang/Object" : handlerClassName,
+                handlerInterface && handlerClass != sncpHandlerClass ? new String[]{handlerClassName, sncpHandlerName} : new String[]{sncpHandlerName});
 
             { //handler 属性
                 fv = cw.visitField(ACC_PRIVATE, "factHandler", realHandlerDesc, null, null);
@@ -182,6 +184,10 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
     static class HandlerInner {
 
         static final Map<Class, Creator<SncpAsyncHandler>> creatorMap = new ConcurrentHashMap<>();
+
+        private HandlerInner() {
+            //do nothing
+        }
     }
 
 }

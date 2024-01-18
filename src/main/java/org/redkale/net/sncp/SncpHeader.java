@@ -135,15 +135,18 @@ public class SncpHeader {
     }
 
     public ByteArray writeTo(ByteArray array, SncpClientRequest clientRequest, byte keepAlive, int bodyLength, int retcode) {
-        return writeTo(array, this.addrBytes, this.addrPort, (Long) clientRequest.getRequestid(), clientRequest.traceBytes(), keepAlive, bodyLength, retcode);
+        return writeTo(array, this.addrBytes, this.addrPort, (Long) clientRequest.getRequestid(), 
+            clientRequest.traceBytes(), keepAlive, bodyLength, retcode);
     }
 
     public ByteArray writeTo(ByteArray array, SncpResponse response, byte keepAlive, int bodyLength, int retcode) {
         SncpRequest request = response.request();
-        return writeTo(array, response.addrBytes, response.addrPort, (Long) request.getRequestid(), request.traceBytes(), keepAlive, bodyLength, retcode);
+        return writeTo(array, response.addrBytes, response.addrPort, (Long) request.getRequestid(), 
+            request.traceBytes(), keepAlive, bodyLength, retcode);
     }
 
-    private ByteArray writeTo(ByteArray array, byte[] newAddrBytes, int newAddrPort, long newSeqid, byte[] traces, byte keepAlive, int bodyLength, int retcode) {
+    private ByteArray writeTo(ByteArray array, byte[] newAddrBytes, int newAddrPort, long newSeqid, 
+        byte[] traces, byte keepAlive, int bodyLength, int retcode) {
         if (newAddrBytes.length != 4) {
             throw new SncpException("address bytes length must be 4, but " + newAddrBytes.length);
         }

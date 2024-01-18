@@ -216,7 +216,7 @@ public interface MessageCoder<T> {
             }
         } else {
             buffer.putShort((short) 0);
-            putBigString(buffer, value == null ? null : value.toString());
+            putBigString(buffer, value.toString());
         }
     }
 
@@ -244,7 +244,7 @@ public interface MessageCoder<T> {
             }
             return c;
         } else {
-            return 4 + (value == null ? 0 : Utility.encodeUTF8Length(value.toString()));
+            return 4 + Utility.encodeUTF8Length(value.toString());
         }
     }
 

@@ -268,7 +268,8 @@ public abstract class MessageAgent implements MessageManager {
                         topics.add(topic);
                         if (map.containsKey(topic.trim())) {
                             throw new RedkaleException(MessageConsumer.class.getSimpleName()
-                                + " consume topic (" + topic + ") repeat with " + map.get(topic).getClass().getName() + " and " + consumer.getClass().getName());
+                                + " consume topic (" + topic + ") repeat with " 
+                                + map.get(topic).getClass().getName() + " and " + consumer.getClass().getName());
                         }
                         for (MessageConsumerWrapper wrapper : map.values()) {
                             if (!Objects.equals(res.convertType(), wrapper.convertType)) {

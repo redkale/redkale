@@ -41,18 +41,22 @@ public class MessageRespProcessor implements MessageProcessor {
         }
         final long deplay = now - msg.createTime;
         if (finest) {
-            logger.log(Level.FINEST, getClass().getSimpleName() + ".MessageRespFuture.receive (mq.delay = " + deplay + "ms, mq.seqid = " + msg.getSeqid() + ")");
+            logger.log(Level.FINEST, getClass().getSimpleName() + ".MessageRespFuture.receive (mq.delay = " + deplay 
+                + "ms, mq.seqid = " + msg.getSeqid() + ")");
         }
         messageClient.getMessageAgent().execute(() -> {
             Traces.currentTraceid(traceid);
             resp.future.complete(msg);
             long comems = System.currentTimeMillis() - now;
             if ((deplay > 1000 || comems > 1000) && logger.isLoggable(Level.FINE)) {
-                logger.log(Level.FINE, getClass().getSimpleName() + ".MessageRespFuture.complete (mq.delay-slower = " + deplay + "ms, mq.complete-slower = " + comems + "ms) mqresp.msg: " + msg);
+                logger.log(Level.FINE, getClass().getSimpleName() + ".MessageRespFuture.complete (mq.delay-slower = " + deplay 
+                    + "ms, mq.complete-slower = " + comems + "ms) mqresp.msg: " + msg);
             } else if ((deplay > 50 || comems > 50) && logger.isLoggable(Level.FINER)) {
-                logger.log(Level.FINER, getClass().getSimpleName() + ".MessageRespFuture.complete (mq.delay-slowly = " + deplay + "ms, mq.complete-slowly = " + comems + "ms) mqresp.msg: " + msg);
+                logger.log(Level.FINER, getClass().getSimpleName() + ".MessageRespFuture.complete (mq.delay-slowly = " + deplay 
+                    + "ms, mq.complete-slowly = " + comems + "ms) mqresp.msg: " + msg);
             } else if (finest) {
-                logger.log(Level.FINEST, getClass().getSimpleName() + ".MessageRespFuture.complete (mq.delay-normal = " + deplay + "ms, mq.complete-normal = " + comems + "ms) mqresp.msg: " + msg);
+                logger.log(Level.FINEST, getClass().getSimpleName() + ".MessageRespFuture.complete (mq.delay-normal = " + deplay 
+                    + "ms, mq.complete-normal = " + comems + "ms) mqresp.msg: " + msg);
             }
             Traces.removeTraceid();
         });

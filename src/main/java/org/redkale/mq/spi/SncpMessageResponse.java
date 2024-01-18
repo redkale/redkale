@@ -36,11 +36,13 @@ public class SncpMessageResponse extends SncpResponse {
         if (out == null) {
             final ByteArray result = new ByteArray(headerSize).putPlaceholder(headerSize);
             writeHeader(result, 0, retcode);
-            messageClient.getProducer().apply(messageClient.createMessageRecord(message.getSeqid(), MessageRecord.CTYPE_BSON, message.getRespTopic(), null, (byte[]) null));
+            messageClient.getProducer().apply(messageClient.createMessageRecord(message.getSeqid(), 
+                MessageRecord.CTYPE_BSON, message.getRespTopic(), null, (byte[]) null));
             return;
         }
         final ByteArray result = out.toByteArray();
         writeHeader(result, result.length() - headerSize, retcode);
-        messageClient.getProducer().apply(messageClient.createMessageRecord(message.getSeqid(), MessageRecord.CTYPE_BSON, message.getRespTopic(), null, result.getBytes()));
+        messageClient.getProducer().apply(messageClient.createMessageRecord(message.getSeqid(), 
+            MessageRecord.CTYPE_BSON, message.getRespTopic(), null, result.getBytes()));
     }
 }

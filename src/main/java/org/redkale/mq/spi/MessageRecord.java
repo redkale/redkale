@@ -102,11 +102,13 @@ public class MessageRecord implements Serializable {
         this(seqid, ctype, 1, 0, System.currentTimeMillis(), 0, null, topic, respTopic, traceid, content);
     }
 
-    protected MessageRecord(long seqid, byte ctype, int flag, Serializable userid, String groupid, String topic, String respTopic, String traceid, byte[] content) {
+    protected MessageRecord(long seqid, byte ctype, int flag, Serializable userid, 
+        String groupid, String topic, String respTopic, String traceid, byte[] content) {
         this(seqid, ctype, 1, flag, System.currentTimeMillis(), userid, groupid, topic, respTopic, traceid, content);
     }
 
-    protected MessageRecord(long seqid, byte ctype, int version, int flag, long createTime, Serializable userid, String groupid, String topic, String respTopic, String traceid, byte[] content) {
+    protected MessageRecord(long seqid, byte ctype, int version, int flag, long createTime, Serializable userid, 
+        String groupid, String topic, String respTopic, String traceid, byte[] content) {
         this.seqid = seqid;
         this.ctype = ctype;
         this.version = version;
@@ -364,7 +366,4 @@ public class MessageRecord implements Serializable {
         return sb.toString();
     }
 
-//    public static void main(String[] args) throws Throwable {
-//        System.out.println(new MessageRecord(333, 2, 3, null, "tt", null, "xxx".getBytes()));
-//    }
 }
