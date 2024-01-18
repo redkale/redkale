@@ -112,14 +112,20 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         httpCodes.put(414, "Request URI Too Long");
         httpCodes.put(415, "Unsupported Media Type");
         httpCodes.put(416, "Requested Range Not Satisfiable");
-        httpCodes.put(417, "Expectation Failed");
-
+        httpCodes.put(417, "Expectation Failed");                
+        httpCodes.put(426, "Upgrade Required");
+        httpCodes.put(428, "Precondition Required");
+        httpCodes.put(429, "Too Many Requests");
+        httpCodes.put(431, "Request Header Fields Too Large");
+        httpCodes.put(451, "Unavailable For Legal Reasons");
+        
         httpCodes.put(500, "Internal Server Error");
         httpCodes.put(501, "Not Implemented");
         httpCodes.put(502, "Bad Gateway");
         httpCodes.put(503, "Service Unavailable");
         httpCodes.put(504, "Gateway Timeout");
         httpCodes.put(505, "HTTP Version Not Supported");
+        httpCodes.put(511, "Network Authentication Required");
 
         for (int i = 0; i < CACHE_MAX_CONTENT_LENGTH; i++) {
             contentLengthArray[i] = ("Content-Length: " + i + "\r\n").getBytes();
