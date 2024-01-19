@@ -20,6 +20,7 @@ import java.util.logging.*;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.net.*;
+import org.redkale.net.Filter;
 import org.redkale.service.RetResult;
 import org.redkale.util.*;
 import org.redkale.util.AnyValue.Entry;
@@ -112,13 +113,13 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         httpCodes.put(414, "Request URI Too Long");
         httpCodes.put(415, "Unsupported Media Type");
         httpCodes.put(416, "Requested Range Not Satisfiable");
-        httpCodes.put(417, "Expectation Failed");                
+        httpCodes.put(417, "Expectation Failed");
         httpCodes.put(426, "Upgrade Required");
         httpCodes.put(428, "Precondition Required");
         httpCodes.put(429, "Too Many Requests");
         httpCodes.put(431, "Request Header Fields Too Large");
         httpCodes.put(451, "Unavailable For Legal Reasons");
-        
+
         httpCodes.put(500, "Internal Server Error");
         httpCodes.put(501, "Not Implemented");
         httpCodes.put(502, "Bad Gateway");
@@ -286,9 +287,18 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    protected void setFilter(Filter filter) {
+        super.setFilter(filter);
+    }
+
+    @Override
     protected void thenEvent(Servlet servlet) {
-        this.servlet = servlet;
+        super.thenEvent(servlet);
+    }
+
+    @Override
+    protected void thenEvent(Filter filter) {
+        super.thenEvent(filter);
     }
 
     protected boolean isAutoOptions() {

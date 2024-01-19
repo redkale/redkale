@@ -19,7 +19,7 @@ import org.redkale.util.AnyValue;
 public abstract class HttpFilter extends Filter<HttpContext, HttpRequest, HttpResponse> {
 
     //Server执行start后运行此方法
-    public void postStart(HttpContext context, AnyValue config) {
+    protected void postStart(HttpContext context, AnyValue config) {
     }
 
     protected void setMethod(HttpRequest request, String method) {
@@ -38,31 +38,44 @@ public abstract class HttpFilter extends Filter<HttpContext, HttpRequest, HttpRe
         request.setLocale(locale);
     }
 
-    protected void setParameter(HttpRequest request, String name, String value) {
-        request.setParameter(name, value);
+    protected <T> T setProperty(HttpRequest request, String name, T value) {
+        return request.setProperty(name, value);
     }
 
-    protected void setHeader(HttpRequest request, String name, String value) {
-        request.setHeader(name, value);
+    protected <T> T getProperty(HttpRequest request, String name) {
+        return request.getProperty(name);
+    }
+
+    protected void removeProperty(HttpRequest request, String name) {
+        request.removeProperty(name);
     }
 
     protected void addHeader(HttpRequest request, String name, String value) {
         request.addHeader(name, value);
     }
 
-    protected void removeParameter(HttpRequest request, String name) {
-        request.removeParameter(name);
+    protected void setHeader(HttpRequest request, String name, String value) {
+        request.setHeader(name, value);
     }
 
     protected void removeHeader(HttpRequest request, String name) {
         request.removeHeader(name);
     }
 
-    protected void removeAttribute(HttpRequest request, String name) {
-        request.removeAttribute(name);
+    protected void setParameter(HttpRequest request, String name, String value) {
+        request.setParameter(name, value);
     }
 
-    protected void removeProperty(HttpRequest request, String name) {
-        request.removeProperty(name);
+    protected void removeParameter(HttpRequest request, String name) {
+        request.removeParameter(name);
     }
+
+    protected void setFilter(HttpResponse response, HttpFilter filter) {
+        response.setFilter(filter);
+    }
+
+    protected void thenEvent(HttpResponse response, HttpFilter filter) {
+        response.thenEvent(filter);
+    }
+
 }

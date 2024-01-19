@@ -189,6 +189,18 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         this.filter = filter;
     }
 
+    protected void thenEvent(Filter<C, R, Response<C, R>> filter) {
+        if (this.filter == null) {
+            this.filter = filter;
+        } else {
+            Filter f = this.filter;
+            while (f._next != null) {
+                f = f._next;
+            }
+            f._next = filter;
+        }
+    }
+
     protected void thenEvent(Servlet servlet) {
         this.servlet = servlet;
     }
