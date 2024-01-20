@@ -593,19 +593,22 @@ public final class ResourceFactory {
                     try {
                         if (rc.name().equals(Resource.SELF_NAME)) {
                             if (classType != String.class) {
-                                throw new RedkaleException("resource(type=" + c.getSimpleName() + ".class, field=" + field.getName() + ", name='" + rc.name() + "') must be String ");
+                                throw new RedkaleException("resource(type=" + c.getSimpleName()
+                                    + ".class, field=" + field.getName() + ", name='" + rc.name() + "') must be String ");
                             }
                             field.setAccessible(true);
                             field.set(val, name);
                         } else if (rc.name().equals(Resource.SELF_TYPE)) {
                             if (classType != Type.class && classType != Class.class) {
-                                throw new RedkaleException("resource(type=" + c.getSimpleName() + ".class, field=" + field.getName() + ", name='" + rc.name() + "') must be Type or Class ");
+                                throw new RedkaleException("resource(type=" + c.getSimpleName()
+                                    + ".class, field=" + field.getName() + ", name='" + rc.name() + "') must be Type or Class ");
                             }
                             field.setAccessible(true);
                             field.set(val, classType == Class.class ? TypeToken.typeToClass(clazz) : clazz);
                         }
                     } catch (IllegalArgumentException | IllegalAccessException e) {
-                        throw new RedkaleException("resource(type=" + c.getSimpleName() + ".class, field=" + field.getName() + ", name='" + rc.name() + "') register error ", e);
+                        throw new RedkaleException("resource(type=" + c.getSimpleName()
+                            + ".class, field=" + field.getName() + ", name='" + rc.name() + "') register error ", e);
                     }
                 }
             } while ((c = c.getSuperclass()) != Object.class);
@@ -818,7 +821,7 @@ public final class ResourceFactory {
         return getResourceName(parent, prefix + System.getProperty(property, "") + postfix);
     }
 
-    private <T> boolean inject(String srcResourceName, final Object srcObj, final T attachment, final BiConsumer<Object, Field> consumer, final List<Object> list) {
+    private <T> boolean inject(String srcResourceName, Object srcObj, T attachment, BiConsumer<Object, Field> consumer, List<Object> list) {
         if (srcObj == null) {
             return false;
         }
@@ -933,7 +936,8 @@ public final class ResourceFactory {
                                 re = findEntry(rcname, String.class);
                                 if (re == null && rcname.startsWith("${")) {
                                     if (rcname.charAt(rcname.length() - 1) != '}') {
-                                        throw new RedkaleException("resource(type=" + field.getType().getSimpleName() + ".class, field=" + field.getName() + ", name='" + rcname + "') not endWith } ");
+                                        throw new RedkaleException("resource(type=" + field.getType().getSimpleName()
+                                            + ".class, field=" + field.getName() + ", name='" + rcname + "') not endWith } ");
                                     }
                                     re = findEntry(rcname.substring(2, rcname.length() - 1), String.class);
                                 } else if (re == null && rcname.startsWith("property.")) { //兼容2.8.0之前版本自动追加property.开头的配置项
@@ -941,7 +945,8 @@ public final class ResourceFactory {
                                 }
                             } else if (re == null && rcname.startsWith("${")) {
                                 if (rcname.charAt(rcname.length() - 1) != '}') {
-                                    throw new RedkaleException("resource(type=" + field.getType().getSimpleName() + ".class, field=" + field.getName() + ", name='" + rcname + "') not endWith } ");
+                                    throw new RedkaleException("resource(type=" + field.getType().getSimpleName()
+                                        + ".class, field=" + field.getName() + ", name='" + rcname + "') not endWith } ");
                                 }
                                 re = findEntry(rcname.substring(2, rcname.length() - 1), String.class);
                             } else if (classType == String.class && rcname.startsWith("property.")) {//兼容2.8.0之前版本自动追加property.开头的配置项
@@ -1033,7 +1038,8 @@ public final class ResourceFactory {
                         if (srcObj.getClass().getSimpleName().startsWith("_Dyn") && !srcObj.getClass().getSimpleName().contains("__")) {
                             t = srcObj.getClass().getSuperclass().getName();
                         }
-                        throw new RedkaleException("resource(type=" + field.getType().getSimpleName() + ".class, field=" + field.getName() + ", name='" + rcname + "') must exists in " + t);
+                        throw new RedkaleException("resource(type=" + field.getType().getSimpleName()
+                            + ".class, field=" + field.getName() + ", name='" + rcname + "') must exists in " + t);
                     }
                 }
             } while ((clazz = clazz.getSuperclass()) != Object.class);
