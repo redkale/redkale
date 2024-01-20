@@ -66,7 +66,8 @@ public abstract class AbstractCacheSource extends AbstractService implements Cac
     }
 
     //根据配置中创建DataSource
-    public static CacheSource createCacheSource(ClassLoader serverClassLoader, ResourceFactory resourceFactory, AnyValue sourceConf, String sourceName, boolean compileMode) throws Exception {
+    public static CacheSource createCacheSource(ClassLoader serverClassLoader, ResourceFactory resourceFactory, 
+        AnyValue sourceConf, String sourceName, boolean compileMode) throws Exception {
         CacheSource source = null;
         if (serverClassLoader == null) {
             serverClassLoader = Thread.currentThread().getContextClassLoader();
