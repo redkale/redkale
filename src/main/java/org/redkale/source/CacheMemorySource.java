@@ -160,6 +160,15 @@ public final class CacheMemorySource extends AbstractCacheSource {
                             expireHandler.accept(entry);
                         }
                     }
+                    long now2 = System.currentTimeMillis();
+                    rateLimitContainer.forEach((k, x) -> {
+                        if (x.expireMills > 0 && (now2 > (x.lastAccessed + x.expireMills))) {
+                            keys.add(x.key);
+                        }
+                    });
+                    for (String key : keys) {
+                        rateLimitContainer.remove(key);
+                    }
                 } catch (Throwable t) {
                     logger.log(Level.SEVERE, "CacheMemorySource schedule(interval=" + 10 + "s) error", t);
                 }
