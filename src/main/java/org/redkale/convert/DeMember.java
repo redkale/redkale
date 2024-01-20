@@ -89,7 +89,7 @@ public final class DeMember<R extends Reader, T, F> {
         this.decoder = decoder;
     }
 
-    public static <R extends Reader, T, F> DeMember<R, T, F> create(final ConvertFactory factory, final Class<T> clazz, final String fieldName) {
+    public static <R extends Reader, T, F> DeMember<R, T, F> create(ConvertFactory factory, Class<T> clazz, String fieldName) {
         try {
             Field field = clazz.getDeclaredField(fieldName);
             return new DeMember<>(Attribute.create(field), factory.loadDecoder(field.getGenericType()), field, null);
@@ -98,7 +98,7 @@ public final class DeMember<R extends Reader, T, F> {
         }
     }
 
-    public static <R extends Reader, T, F> DeMember<R, T, F> create(final ConvertFactory factory, final Class<T> clazz, final String fieldName, final Class<F> fieldType) {
+    public static <R extends Reader, T, F> DeMember<R, T, F> create(ConvertFactory factory, Class<T> clazz, String fieldName, Class<F> fieldType) {
         try {
             Field field = clazz.getDeclaredField(fieldName);
             return new DeMember<>(Attribute.create(clazz, fieldName, fieldType), factory.loadDecoder(fieldType), field, null);
@@ -107,7 +107,7 @@ public final class DeMember<R extends Reader, T, F> {
         }
     }
 
-    public static <R extends Reader, T, F> DeMember<R, T, F> create(final Attribute<T, F> attribute, final ConvertFactory factory, final Class<F> fieldType) {
+    public static <R extends Reader, T, F> DeMember<R, T, F> create(Attribute<T, F> attribute, ConvertFactory factory, Class<F> fieldType) {
         return new DeMember<>(attribute, factory.loadDecoder(fieldType), null, null);
     }
 
@@ -166,7 +166,8 @@ public final class DeMember<R extends Reader, T, F> {
             return (this.index == 0 ? Integer.MAX_VALUE : this.index) - (o.index == 0 ? Integer.MAX_VALUE : o.index);
         }
         if (this.index != 0) {
-            throw new ConvertException("fields (" + attribute.field() + ", " + o.attribute.field() + ") have same ConvertColumn.index(" + this.index + ") in " + attribute.declaringClass());
+            throw new ConvertException("fields (" + attribute.field() + ", " + o.attribute.field() 
+                + ") have same ConvertColumn.index(" + this.index + ") in " + attribute.declaringClass());
         }
         return fieldSort ? this.attribute.field().compareTo(o.attribute.field()) : 0;
     }
@@ -190,6 +191,7 @@ public final class DeMember<R extends Reader, T, F> {
 
     @Override
     public String toString() {
-        return "DeMember{" + "attribute=" + attribute.field() + ", position=" + position + ", tag=" + tag + ", decoder=" + (decoder == null ? null : decoder.getClass().getName()) + '}';
+        return "DeMember{" + "attribute=" + attribute.field() + ", position=" + position +
+            ", tag=" + tag + ", decoder=" + (decoder == null ? null : decoder.getClass().getName()) + '}';
     }
 }

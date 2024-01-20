@@ -202,7 +202,7 @@ public class HttpLocalRpcClient extends HttpRpcClient {
 
     public static class HttpMessageLocalResponse extends HttpResponse {
 
-        private CompletableFuture future;
+        private final CompletableFuture future;
 
         public HttpMessageLocalResponse(HttpRequest req, CompletableFuture future) {
             super(req.getContext(), req, null);

@@ -54,6 +54,7 @@ public abstract class ClusterAgent {
 
     protected boolean waits;
 
+    @Nullable
     protected String[] protocols; //必须全大写
 
     protected int[] ports;
@@ -70,13 +71,9 @@ public abstract class ClusterAgent {
         this.config = config;
         this.name = config.getValue("name", "");
         this.waits = config.getBoolValue("waits", false);
-        {
-            String ps = config.getValue("protocols", "").toUpperCase();
-            if (ps == null || ps.isEmpty()) {
-                ps = "SNCP;HTTP";
-            }
-            this.protocols = ps.split(";");
-        }
+        String ps = config.getValue("protocols", "").toUpperCase();
+        this.protocols = Utility.isEmpty(ps) ? null : ps.split(";");
+
         String ts = config.getValue("ports", "");
         if (ts != null && !ts.isEmpty()) {
             String[] its = ts.split(";");
@@ -118,7 +115,7 @@ public abstract class ClusterAgent {
     public abstract boolean acceptsConf(AnyValue config);
 
     public boolean containsProtocol(String protocol) {
-        if (protocol == null || protocol.isEmpty()) {
+        if (Utility.isEmpty(protocol)) {
             return false;
         }
         return protocols == null || Utility.contains(protocols, protocol.toUpperCase());
@@ -336,6 +333,7 @@ public abstract class ClusterAgent {
         this.name = name;
     }
 
+    @Nullable
     public String[] getProtocols() {
         return protocols;
     }
