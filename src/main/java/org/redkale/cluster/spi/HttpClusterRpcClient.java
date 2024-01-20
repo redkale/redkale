@@ -79,8 +79,7 @@ public class HttpClusterRpcClient extends HttpRpcClient {
     private CompletableFuture<HttpResult<byte[]>> httpAsync(boolean produce, Serializable userid, HttpSimpleRequest req) {
         req.setTraceid(Traces.computeIfAbsent(req.getTraceid(), Traces.currentTraceid()));
         String module = req.getPath();
-        module = module.substring(1); //去掉/
-        module = module.substring(0, module.indexOf('/'));
+        module = module.substring(1, module.indexOf('/', 1));
         HttpHeaders headers = req.getHeaders();
         String resname = req.getHeader(Rest.REST_HEADER_RESNAME, "");
         final String localModule = module;

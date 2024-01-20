@@ -233,13 +233,16 @@ public class HttpRequest extends Request<HttpContext> {
         return this;
     }
 
-    public HttpSimpleRequest createSimpleRequest(String prefixPath) {
+    public HttpSimpleRequest createSimpleRequest(String contextPath) {
         HttpSimpleRequest req = new HttpSimpleRequest();
         req.setBody(array.length() == 0 ? null : array.getBytes());
         if (!getHeaders().isEmpty()) {
             req.setHeaders(headers);
             if (headers.contains(Rest.REST_HEADER_RPC)) { //外部request不能包含RPC的header信息
                 req.removeHeader(Rest.REST_HEADER_RPC);
+            }
+            if (headers.contains(Rest.REST_HEADER_RESNAME)) { //外部request不能包含RPC的header信息
+                req.removeHeader(Rest.REST_HEADER_RESNAME);
             }
             if (headers.contains(Rest.REST_HEADER_CURRUSERID)) { //外部request不能包含RPC的header信息
                 req.removeHeader(Rest.REST_HEADER_CURRUSERID);
@@ -250,11 +253,11 @@ public class HttpRequest extends Request<HttpContext> {
         req.setRemoteAddr(getRemoteAddr());
         req.setLocale(getLocale());
         req.setContentType(getContentType());
-        req.setContextPath(prefixPath);
+        req.setContextPath(contextPath);
         req.setMethod(this.method);
         String path0 = this.requestPath;
-        if (isNotEmpty(prefixPath) && path0.startsWith(prefixPath)) {
-            path0 = path0.substring(prefixPath.length());
+        if (isNotEmpty(contextPath) && path0.startsWith(contextPath)) {
+            path0 = path0.substring(contextPath.length());
         }
         req.setPath(path0);
         req.setSessionid(getSessionid(false));
@@ -353,7 +356,7 @@ public class HttpRequest extends Request<HttpContext> {
                 this.keepAlive = false; //文件上传必须设置keepAlive为false，因为文件过大时用户不一定会skip掉多余的数据
             }
             //completed=true时ProtocolCodec会继续读下一个request
-            this.completed = !this.boundary && !maybews && this.headerParsed; 
+            this.completed = !this.boundary && !maybews && this.headerParsed;
             this.readState = READ_STATE_BODY;
         }
         if (this.readState == READ_STATE_BODY) {
