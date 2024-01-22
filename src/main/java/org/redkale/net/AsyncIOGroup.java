@@ -315,8 +315,7 @@ public class AsyncIOGroup extends AsyncGroup {
         } catch (IOException e) {
             return CompletableFuture.failedFuture(e);
         }
-        int seconds = connectTimeoutSeconds > 0 ? connectTimeoutSeconds : 6;
-        final CompletableFuture future = Utility.orTimeout(new CompletableFuture(), () -> address + " connect timeout", seconds, TimeUnit.SECONDS);
+        final CompletableFuture future = new CompletableFuture();
         conn.connect(address, null, new CompletionHandler<Void, Void>() {
             @Override
             public void completed(Void result, Void attachment) {
@@ -338,7 +337,9 @@ public class AsyncIOGroup extends AsyncGroup {
                 future.completeExceptionally(exc);
             }
         });
-        return future;
+        int seconds = connectTimeoutSeconds > 0 ? connectTimeoutSeconds : 6;
+        final Supplier<String> timeoutMsg = () -> address + " udp-connect timeout";
+        return Utility.orTimeout(future, timeoutMsg, seconds, TimeUnit.SECONDS);
     }
 
 }
