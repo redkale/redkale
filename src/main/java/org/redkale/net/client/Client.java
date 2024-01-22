@@ -388,9 +388,9 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
             });
         } else {
             int seconds = connectTimeoutSeconds > 0 ? connectTimeoutSeconds : 6;
-            CompletableFuture rs = Utility.orTimeout(new CompletableFuture(), () -> addr + " connect timeout", seconds, TimeUnit.SECONDS);
+            CompletableFuture rs = new CompletableFuture();
             waitQueue.offer(rs);
-            return rs;
+            return Utility.orTimeout(rs, () -> addr + " connect timeout", seconds, TimeUnit.SECONDS);
         }
     }
 

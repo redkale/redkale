@@ -237,9 +237,7 @@ public class AsyncIOGroup extends AsyncGroup {
         } catch (IOException e) {
             return CompletableFuture.failedFuture(e);
         }
-        int seconds = connectTimeoutSeconds > 0 ? connectTimeoutSeconds : 6;
-        final Supplier<String> timeoutMsg = () -> address + " connect timeout";
-        final CompletableFuture future = Utility.orTimeout(new CompletableFuture(), timeoutMsg, seconds, TimeUnit.SECONDS);
+        final CompletableFuture future = new CompletableFuture();
         conn.connect(address, null, new CompletionHandler<Void, Void>() {
             @Override
             public void completed(Void result, Void attachment) {
@@ -265,7 +263,9 @@ public class AsyncIOGroup extends AsyncGroup {
                 future.completeExceptionally(exc);
             }
         });
-        return Utility.orTimeout(future, timeoutMsg, 30, TimeUnit.SECONDS);
+        int seconds = connectTimeoutSeconds > 0 ? connectTimeoutSeconds : 6;
+        final Supplier<String> timeoutMsg = () -> address + " tcp-connect timeout";
+        return Utility.orTimeout(future, timeoutMsg, seconds, TimeUnit.SECONDS);
     }
 
     //创建一个AsyncConnection对象，只给测试代码使用
