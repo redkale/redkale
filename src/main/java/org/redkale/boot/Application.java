@@ -539,7 +539,7 @@ public final class Application {
         final AnyValue executorConf = config.getAnyValue("executor", true);
         StringBuilder executorLog = new StringBuilder();
 
-        final int workThreads = Math.max(Utility.cpus(), executorConf.getIntValue("threads", Utility.cpus() * 4));
+        final int workThreads = Math.max(Utility.cpus(), executorConf.getIntValue("threads", Utility.cpus() * 10));
         //指定threads则不使用虚拟线程池
         this.workExecutor = executorConf.getValue("threads") != null
             ? WorkThread.createExecutor(workThreads, "Redkale-WorkThread-%s")
