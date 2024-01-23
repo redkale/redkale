@@ -632,8 +632,11 @@ public final class Rest {
                 Parameter param = params[j];
                 String paramName = param.getName();
                 RestParam rp = param.getAnnotation(RestParam.class);
+                Param pm = param.getAnnotation(Param.class);
                 if (rp != null && !rp.name().isEmpty()) {
                     paramName = rp.name();
+                } else if (pm != null && !pm.value().isEmpty()) {
+                    paramName = pm.value();
                 } else if (names != null && names.size() > j) {
                     paramName = names.get(j).getName();
                 }
@@ -3686,7 +3689,16 @@ public final class Rest {
             Parameter[] params = method.getParameters();
             for (Parameter param : params) {
                 RestParam rp = param.getAnnotation(RestParam.class);
-                if (rp != null && !rp.name().isEmpty() && rp.name().charAt(0) == '#') {
+                String pn = null;
+                if (rp != null && !rp.name().isEmpty()) {
+                    pn = rp.name();
+                } else {
+                    Param pm = param.getAnnotation(Param.class);
+                    if (pm != null && !pm.value().isEmpty()) {
+                        pn = pm.value();
+                    }
+                }
+                if (pn != null && pn.charAt(0) == '#') {
                     pound = true;
                     break;
                 }
