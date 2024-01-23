@@ -130,17 +130,17 @@ public class Account {
 
 &emsp;&emsp;修改实体对象：
 ```java
-    //更新单个字段
+    //根据主键更新单个字段
     source.updateColumn(Account.class, "account1", Account::getRemark, "新备注");
 
-    //更新多个字段
+    //根据主键更新多个字段
     //等价sql: UPDATE t_account SET account_name='新名称', remark='新备注', age=age+2 WHERE account_id='account1';
     source.updateColumn(Account.class, "account1",
         ColumnValue.set(Account::getAccountName, "新名称"),
         ColumnValue.set(Account::getRemark, "新备注"),
         ColumnValue.inc(Account::getAge, 2)); //年龄+2
 
-    //更新多个字段
+    //根据主键更新多个字段
     Account account = new Account();
     account.setAccountid("account1");
     account.setAccountName("新名称");
@@ -150,7 +150,7 @@ public class Account {
     //等价sql: UPDATE t_account SET account_name='新名称', remark='新备注' WHERE account_id='account1';
     source.updateColumn(account, Account::getAccountName, Account::getRemark);
 
-    //更新整个对象
+    //根据主键更新整个对象
     Account one = new Account();
     one.setAccountid("account1");
     one.setAccountName("Hello1");
