@@ -164,7 +164,7 @@ public interface DataSource extends Resourcable {
     //-------------------------deleteAsync--------------------------
     /**
      * 删除指定主键值的记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
-     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id}  <br>
+ 等价SQL: DELETE FROM {table} WHERE {primary} IN {getValues.id}  <br>
      *
      * @param <T>     泛型
      * @param entitys Entity对象
@@ -175,7 +175,7 @@ public interface DataSource extends Resourcable {
 
     /**
      * 删除指定主键值的记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
-     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id}  <br>
+ 等价SQL: DELETE FROM {table} WHERE {primary} IN {getValues.id}  <br>
      *
      * @param <T>     泛型
      * @param entitys Entity对象
@@ -191,7 +191,7 @@ public interface DataSource extends Resourcable {
 
     /**
      * 删除指定主键值的记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
-     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id}  <br>
+ 等价SQL: DELETE FROM {table} WHERE {primary} IN {getValues.id}  <br>
      *
      * @param <T>     泛型
      * @param entitys Entity对象
@@ -207,7 +207,7 @@ public interface DataSource extends Resourcable {
 
     /**
      * 删除指定主键值的记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
-     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id}  <br>
+ 等价SQL: DELETE FROM {table} WHERE {primary} IN {getValues.id}  <br>
      *
      * @param <T>     泛型
      * @param entitys Entity对象
@@ -218,7 +218,7 @@ public interface DataSource extends Resourcable {
 
     /**
      * 删除指定主键值的记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
-     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id}  <br>
+ 等价SQL: DELETE FROM {table} WHERE {primary} IN {getValues.id}  <br>
      *
      * @param <T>     泛型
      * @param entitys Entity对象
@@ -234,7 +234,7 @@ public interface DataSource extends Resourcable {
 
     /**
      * 删除指定主键值的记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
-     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id}  <br>
+ 等价SQL: DELETE FROM {table} WHERE {primary} IN {getValues.id}  <br>
      *
      * @param <T>     泛型
      * @param entitys Entity对象
@@ -707,6 +707,22 @@ public interface DataSource extends Resourcable {
      * 字段赋值操作选项见 ColumnExpress   <br>
      * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node}   <br>
      *
+     * @param <T>    Entity泛型
+     * @param clazz  Entity类
+     * @param pk     主键
+     * @param values 更新字段
+     *
+     * @return 影响的记录条数
+     */
+    default <T> int updateColumn(final Class<T> clazz, final Serializable pk, final ColumnValues values) {
+        return updateColumn(clazz, pk, values.getValues());
+    }
+
+    /**
+     * 更新指定主键值记录的部分字段   <br>
+     * 字段赋值操作选项见 ColumnExpress   <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node}   <br>
+     *
      * @param <T>   Entity泛型
      * @param clazz Entity类
      * @param pk    主键
@@ -732,6 +748,22 @@ public interface DataSource extends Resourcable {
      * @return 影响的记录条数CompletableFuture
      */
     public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final Serializable pk, final ColumnValue... values);
+
+    /**
+     * 更新指定主键值记录的部分字段   <br>
+     * 字段赋值操作选项见 ColumnExpress   <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node}   <br>
+     *
+     * @param <T>    Entity泛型
+     * @param clazz  Entity类
+     * @param pk     主键
+     * @param values 更新字段
+     *
+     * @return 影响的记录条数CompletableFuture
+     */
+    default <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final Serializable pk, final ColumnValues values) {
+        return updateColumnAsync(clazz, pk, values.getValues());
+    }
 
     /**
      * 更新指定主键值记录的部分字段   <br>
@@ -778,6 +810,23 @@ public interface DataSource extends Resourcable {
      * @param node   过滤条件
      * @param values 更新字段
      *
+     * @return 影响的记录条数
+     */
+    default <T> int updateColumn(final Class<T> clazz, final FilterNode node, final ColumnValues values) {
+        return updateColumn(clazz, node, (Flipper) null, values.getValues());
+    }
+
+    /**
+     * 更新符合过滤条件记录的部分字段   <br>
+     * 字段赋值操作选项见 ColumnExpress   <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node}   <br>
+     *
+     * @param <T>    Entity泛型
+     * @param clazz  Entity类
+     * @param node   过滤条件
+     * @param values 更新字段
+     *
      * @return 影响的记录条数CompletableFuture
      */
     default <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final FilterNode node, final ColumnValue... values) {
@@ -785,10 +834,28 @@ public interface DataSource extends Resourcable {
     }
 
     /**
+     * 更新符合过滤条件记录的部分字段   <br>
+     * 字段赋值操作选项见 ColumnExpress   <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node}   <br>
+     *
+     * @param <T>    Entity泛型
+     * @param clazz  Entity类
+     * @param node   过滤条件
+     * @param values 更新字段
+     *
+     * @return 影响的记录条数CompletableFuture
+     */
+    default <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final FilterNode node, final ColumnValues values) {
+        return updateColumnAsync(clazz, node, (Flipper) null, values.getValues());
+    }
+
+    /**
      * 更新符合过滤条件的记录的指定字段   <br>
      * Flipper中offset字段将被忽略   <br>
      * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node} ORDER BY {flipper.sort}  <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node} ORDER BY
+     * {flipper.sort}  <br>
      *
      * @param <T>     Entity泛型
      * @param clazz   Entity类
@@ -804,7 +871,27 @@ public interface DataSource extends Resourcable {
      * 更新符合过滤条件的记录的指定字段   <br>
      * Flipper中offset字段将被忽略   <br>
      * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node} ORDER BY {flipper.sort}  <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node} ORDER BY
+     * {flipper.sort}  <br>
+     *
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param node    过滤条件
+     * @param flipper 翻页对象
+     * @param values  更新字段
+     *
+     * @return 影响的记录条数
+     */
+    default <T> int updateColumn(final Class<T> clazz, final FilterNode node, final Flipper flipper, final ColumnValues values) {
+        return updateColumn(clazz, node, flipper, values.getValues());
+    }
+
+    /**
+     * 更新符合过滤条件的记录的指定字段   <br>
+     * Flipper中offset字段将被忽略   <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node} ORDER BY
+     * {flipper.sort}  <br>
      *
      * @param <T>     Entity泛型
      * @param clazz   Entity类
@@ -815,6 +902,25 @@ public interface DataSource extends Resourcable {
      * @return 影响的记录条数CompletableFuture
      */
     public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final FilterNode node, final Flipper flipper, final ColumnValue... values);
+
+    /**
+     * 更新符合过滤条件的记录的指定字段   <br>
+     * Flipper中offset字段将被忽略   <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node} ORDER BY
+     * {flipper.sort}  <br>
+     *
+     * @param <T>     Entity泛型
+     * @param clazz   Entity类
+     * @param node    过滤条件
+     * @param flipper 翻页对象
+     * @param values  更新字段
+     *
+     * @return 影响的记录条数CompletableFuture
+     */
+    default <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final FilterNode node, final Flipper flipper, final ColumnValues values) {
+        return updateColumnAsync(clazz, node, flipper, values.getValues());
+    }
 
     /**
      * 更新单个记录的指定字段   <br>
@@ -1393,7 +1499,8 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE GROUP BY {col1}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid")
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
+     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid")
      * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
      *
      * @param <T>           Entity泛型
@@ -1412,7 +1519,8 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} GROUP BY {col1}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid")
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
+     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid")
      * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
      *
      * @param <T>           Entity泛型
@@ -1431,7 +1539,8 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter bean} GROUP BY {col1}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid", (FilterBean)null)
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
+     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid", (FilterBean)null)
      * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
      *
      * @param <T>           Entity泛型
@@ -1451,7 +1560,8 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter bean} GROUP BY {col1}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid", (FilterBean)null)
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
+     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid", (FilterBean)null)
      * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
      *
      * @param <T>           Entity泛型
@@ -1471,7 +1581,8 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter node} GROUP BY {col1}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid", (FilterNode)null)
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
+     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid", (FilterNode)null)
      * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
      *
      * @param <T>           Entity泛型
@@ -1489,7 +1600,8 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter node} GROUP BY {col1}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid", (FilterNode)null)
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
+     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid", (FilterNode)null)
      * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
      *
      * @param <T>           Entity泛型
@@ -1507,7 +1619,8 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} GROUP BY {col1}, {col2}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"))
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
+     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"))
      * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
      *
      * @param <T>            Entity泛型
@@ -1526,7 +1639,8 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} GROUP BY {col1}, {col2}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"))
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
+     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"))
      * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
      *
      * @param <T>            Entity泛型
@@ -1545,7 +1659,8 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter bean} GROUP BY {col1}, {col2}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterBean)null)
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
+     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterBean)null)
      * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
      *
      * @param <T>            Entity泛型
@@ -1565,7 +1680,8 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter bean} GROUP BY {col1}, {col2}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterBean)null)
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
+     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterBean)null)
      * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
      *
      * @param <T>            Entity泛型
@@ -1585,7 +1701,8 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter node} GROUP BY {col1}, {col2}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterNode)null)
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
+     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterNode)null)
      * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
      *
      * @param <T>            Entity泛型
@@ -1603,7 +1720,8 @@ public interface DataSource extends Resourcable {
     /**
      * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
      * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter node} GROUP BY {col1}, {col2}  <br>
-     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100), ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterNode)null)
+     * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
+     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterNode)null)
      * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
      *
      * @param <T>            Entity泛型

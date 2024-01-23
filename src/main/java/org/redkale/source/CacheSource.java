@@ -1298,6 +1298,16 @@ public interface CacheSource extends Resourcable {
     }
 
     //------------------------ getex ------------------------  
+    /**
+     * 获取key的值并可选择设置其过期时间
+     *
+     * @param <T>           泛型
+     * @param key           键
+     * @param expireSeconds 过期秒数
+     * @param type          key值的类型
+     *
+     * @return key的值
+     */
     public <T> CompletableFuture<T> getexAsync(String key, int expireSeconds, Type type);
 
     default CompletableFuture<String> getexStringAsync(String key, int expireSeconds) {
