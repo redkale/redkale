@@ -332,12 +332,16 @@ public final class Application {
         loggingModule.reconfigLogging(true, appConfig.locaLogProperties);
 
         //打印基础信息日志
-        logger.log(Level.INFO, colorMessage(logger, 36, 1, "-------------------------------- Redkale " + Redkale.getDotedVersion() + " --------------------------------"));
+        logger.log(Level.INFO, colorMessage(logger, 36, 1,
+            "-------------------------------- Redkale " + Redkale.getDotedVersion() + " --------------------------------"));
 
         final String confDirStr = this.confDir.toString();
-        logger.log(Level.INFO, "APP_OS       = " + System.getProperty("os.name") + " " + System.getProperty("os.version") + " " + System.getProperty("os.arch") + "\r\n"
-            + "APP_JAVA     = " + System.getProperty("java.runtime.name", System.getProperty("org.graalvm.nativeimage.kind") != null ? "Nativeimage" : "")
-            + " " + System.getProperty("java.runtime.version", System.getProperty("java.vendor.version", System.getProperty("java.vm.version"))) + "\r\n" //graalvm.nativeimage 模式下无 java.runtime.xxx 属性
+        logger.log(Level.INFO, "APP_OS       = " + System.getProperty("os.name") + " "
+            + System.getProperty("os.version") + " " + System.getProperty("os.arch") + "\r\n"
+            + "APP_JAVA     = " + System.getProperty("java.runtime.name",
+                System.getProperty("org.graalvm.nativeimage.kind") != null ? "Nativeimage" : "")
+            + " " + System.getProperty("java.runtime.version",
+                System.getProperty("java.vendor.version", System.getProperty("java.vm.version"))) + "\r\n" //graalvm.nativeimage 模式下无 java.runtime.xxx 属性
             + "APP_PID      = " + ProcessHandle.current().pid() + "\r\n"
             + RESNAME_APP_NAME + "     = " + this.name + "\r\n"
             + RESNAME_APP_NODEID + "   = " + this.nodeid + "\r\n"
@@ -377,7 +381,7 @@ public final class Application {
         this.resourceFactory.register(new ResourceTypeLoader() {
 
             @Override
-            public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) {
+            public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
                 try {
                     Class type = field.getType();
                     if (type == Application.class) {
@@ -446,7 +450,7 @@ public final class Application {
         }, Application.class, ResourceFactory.class, NodeSncpServer.class, NodeHttpServer.class, NodeWatchServer.class);
 
         //------------------------------------ 注册 java.net.http.HttpClient ------------------------------------        
-        resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
+        resourceFactory.register((ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) -> {
             try {
                 java.net.http.HttpClient.Builder builder = java.net.http.HttpClient.newBuilder();
                 if (resourceName.endsWith(".1.1")) {
@@ -465,7 +469,7 @@ public final class Application {
             }
         }, java.net.http.HttpClient.class);
         //------------------------------------ 注册 HttpSimpleClient ------------------------------------       
-        resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
+        resourceFactory.register((ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) -> {
             try {
                 HttpSimpleClient httpClient = HttpSimpleClient.create(workExecutor, clientAsyncGroup);
                 field.set(srcObj, httpClient);
@@ -478,7 +482,7 @@ public final class Application {
             }
         }, HttpSimpleClient.class);
         //------------------------------------ 注册 HttpRpcClient ------------------------------------        
-        resourceFactory.register((ResourceFactory rf, String srcResourceName, final Object srcObj, String resourceName, Field field, final Object attachment) -> {
+        resourceFactory.register((ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) -> {
             try {
                 ClusterAgent clusterAgent = resourceFactory.find("", ClusterAgent.class);
                 MessageAgent messageAgent = resourceFactory.find(resourceName, MessageAgent.class);
@@ -1079,7 +1083,8 @@ public final class Application {
         long intms = System.currentTimeMillis() - startTime;
         String ms = String.valueOf(intms);
         int repeat = ms.length() > 7 ? 0 : (7 - ms.length()) / 2;
-        logger.info(colorMessage(logger, 36, 1, "-".repeat(repeat) + "------------------------ Redkale started in " + ms + " ms " + (ms.length() / 2 == 0 ? " " : "") + "-".repeat(repeat) + "------------------------") + "\r\n");
+        logger.info(colorMessage(logger, 36, 1, "-".repeat(repeat) + "------------------------ Redkale started in "
+            + ms + " ms " + (ms.length() / 2 == 0 ? " " : "") + "-".repeat(repeat) + "------------------------") + "\r\n");
         LoggingBaseHandler.traceEnable = true;
 
         if (!singletonMode && !compileMode) {
@@ -1250,7 +1255,8 @@ public final class Application {
         long intms = System.currentTimeMillis() - f;
         String ms = String.valueOf(intms);
         int repeat = ms.length() > 7 ? 0 : (7 - ms.length()) / 2;
-        logger.info(colorMessage(logger, 36, 1, "-".repeat(repeat) + "------------------------ Redkale shutdown in " + ms + " ms " + (ms.length() / 2 == 0 ? " " : "") + "-".repeat(repeat) + "------------------------") + "\r\n" + "\r\n");
+        logger.info(colorMessage(logger, 36, 1, "-".repeat(repeat) + "------------------------ Redkale shutdown in "
+            + ms + " ms " + (ms.length() / 2 == 0 ? " " : "") + "-".repeat(repeat) + "------------------------") + "\r\n" + "\r\n");
         LoggingBaseHandler.traceEnable = true;
     }
 
@@ -1280,7 +1286,8 @@ public final class Application {
         for (final AnyValue serconf : serverConfs) {
             Thread thread = new Thread() {
                 {
-                    setName("Redkale-" + serconf.getValue("protocol", "Server").toUpperCase().replaceFirst("\\..+", "") + ":" + serconf.getIntValue("port") + "-Thread");
+                    setName("Redkale-" + serconf.getValue("protocol", "Server").toUpperCase().replaceFirst("\\..+", "")
+                        + ":" + serconf.getIntValue("port") + "-Thread");
                     this.setDaemon(true);
                 }
 
