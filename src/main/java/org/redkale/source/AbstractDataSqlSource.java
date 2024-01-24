@@ -710,28 +710,36 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     protected abstract <T> CompletableFuture<Integer> updateColumnDBAsync(final EntityInfo<T> info, Flipper flipper, final UpdateSqlInfo sql);
 
     //查询Number Map数据
-    protected abstract <T, N extends Number> CompletableFuture<Map<String, N>> getNumberMapDBAsync(final EntityInfo<T> info, String[] tables, final String sql, final FilterNode node, final FilterFuncColumn... columns);
+    protected abstract <T, N extends Number> CompletableFuture<Map<String, N>> getNumberMapDBAsync(final EntityInfo<T> info, 
+        String[] tables, final String sql, final FilterNode node, final FilterFuncColumn... columns);
 
     //查询Number数据
-    protected abstract <T> CompletableFuture<Number> getNumberResultDBAsync(final EntityInfo<T> info, String[] tables, final String sql, final FilterFunc func, final Number defVal, final String column, final FilterNode node);
+    protected abstract <T> CompletableFuture<Number> getNumberResultDBAsync(final EntityInfo<T> info, 
+        String[] tables, final String sql, final FilterFunc func, final Number defVal, final String column, final FilterNode node);
 
     //查询Map数据
-    protected abstract <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapDBAsync(final EntityInfo<T> info, String[] tables, final String sql, final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node);
+    protected abstract <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapDBAsync(final EntityInfo<T> info, 
+        String[] tables, final String sql, final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node);
 
     //查询Map数据
-    protected abstract <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDBAsync(final EntityInfo<T> info, String[] tables, final String sql, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterNode node);
+    protected abstract <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDBAsync(final EntityInfo<T> info, 
+        String[] tables, final String sql, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterNode node);
 
     //查询单条记录
-    protected abstract <T> CompletableFuture<T> findDBAsync(final EntityInfo<T> info, String[] tables, final String sql, final boolean onlypk, final SelectColumn selects, final Serializable pk, final FilterNode node);
+    protected abstract <T> CompletableFuture<T> findDBAsync(final EntityInfo<T> info, String[] tables, 
+        final String sql, final boolean onlypk, final SelectColumn selects, final Serializable pk, final FilterNode node);
 
     //查询单条记录的单个字段
-    protected abstract <T> CompletableFuture<Serializable> findColumnDBAsync(final EntityInfo<T> info, String[] tables, final String sql, final boolean onlypk, final String column, final Serializable defValue, final Serializable pk, final FilterNode node);
+    protected abstract <T> CompletableFuture<Serializable> findColumnDBAsync(final EntityInfo<T> info, String[] tables, 
+        final String sql, final boolean onlypk, final String column, final Serializable defValue, final Serializable pk, final FilterNode node);
 
     //判断记录是否存在
-    protected abstract <T> CompletableFuture<Boolean> existsDBAsync(final EntityInfo<T> info, final String[] tables, final String sql, final boolean onlypk, final Serializable pk, final FilterNode node);
+    protected abstract <T> CompletableFuture<Boolean> existsDBAsync(final EntityInfo<T> info, final String[] tables, 
+        final String sql, final boolean onlypk, final Serializable pk, final FilterNode node);
 
     //查询一页数据
-    protected abstract <T> CompletableFuture<Sheet<T>> querySheetDBAsync(final EntityInfo<T> info, final boolean readcache, final boolean needtotal, final boolean distinct, final SelectColumn selects, final Flipper flipper, final FilterNode node);
+    protected abstract <T> CompletableFuture<Sheet<T>> querySheetDBAsync(final EntityInfo<T> info, final boolean readcache, 
+        final boolean needtotal, final boolean distinct, final SelectColumn selects, final Flipper flipper, final FilterNode node);
 
     //插入纪录
     protected <T> int insertDB(final EntityInfo<T> info, T... entitys) {
@@ -739,7 +747,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     //删除记录
-    protected <T> int deleteDB(final EntityInfo<T> info, String[] tables, Flipper flipper, FilterNode node, Map<String, List<Serializable>> pkmap, final String... sqls) {
+    protected <T> int deleteDB(final EntityInfo<T> info, String[] tables, Flipper flipper, FilterNode node, 
+        Map<String, List<Serializable>> pkmap, final String... sqls) {
         return deleteDBAsync(info, tables, flipper, node, pkmap, sqls).join();
     }
 
@@ -769,46 +778,55 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     //查询Number Map数据
-    protected <T, N extends Number> Map<String, N> getNumberMapDB(final EntityInfo<T> info, String[] tables, final String sql, final FilterNode node, final FilterFuncColumn... columns) {
+    protected <T, N extends Number> Map<String, N> getNumberMapDB(final EntityInfo<T> info, String[] tables, 
+        final String sql, final FilterNode node, final FilterFuncColumn... columns) {
         return (Map) getNumberMapDBAsync(info, tables, sql, node, columns).join();
     }
 
     //查询Number数据
-    protected <T> Number getNumberResultDB(final EntityInfo<T> info, String[] tables, final String sql, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
+    protected <T> Number getNumberResultDB(final EntityInfo<T> info, String[] tables, final String sql, 
+        final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
         return getNumberResultDBAsync(info, tables, sql, func, defVal, column, node).join();
     }
 
     //查询Map数据
-    protected <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMapDB(final EntityInfo<T> info, String[] tables, final String sql, final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
+    protected <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMapDB(final EntityInfo<T> info, String[] tables, 
+        final String sql, final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
         return (Map) queryColumnMapDBAsync(info, tables, sql, keyColumn, func, funcColumn, node).join();
     }
 
     //查询Map数据
-    protected <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMapDB(final EntityInfo<T> info, String[] tables, final String sql, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterNode node) {
+    protected <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMapDB(final EntityInfo<T> info, String[] tables, 
+        final String sql, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterNode node) {
         return (Map) queryColumnMapDBAsync(info, tables, sql, funcNodes, groupByColumns, node).join();
     }
 
     //查询单条记录
-    protected <T> T findDB(final EntityInfo<T> info, String[] tables, final String sql, final boolean onlypk, final SelectColumn selects, final Serializable pk, final FilterNode node) {
+    protected <T> T findDB(final EntityInfo<T> info, String[] tables, final String sql, final boolean onlypk, 
+        final SelectColumn selects, final Serializable pk, final FilterNode node) {
         return findDBAsync(info, tables, sql, onlypk, selects, pk, node).join();
     }
 
     //查询单条记录的单个字段
-    protected <T> Serializable findColumnDB(final EntityInfo<T> info, String[] tables, final String sql, final boolean onlypk, final String column, final Serializable defValue, final Serializable pk, final FilterNode node) {
+    protected <T> Serializable findColumnDB(final EntityInfo<T> info, String[] tables, final String sql, final boolean onlypk, 
+        final String column, final Serializable defValue, final Serializable pk, final FilterNode node) {
         return findColumnDBAsync(info, tables, sql, onlypk, column, defValue, pk, node).join();
     }
 
     //判断记录是否存在
-    protected <T> boolean existsDB(final EntityInfo<T> info, final String[] tables, final String sql, final boolean onlypk, final Serializable pk, final FilterNode node) {
+    protected <T> boolean existsDB(final EntityInfo<T> info, final String[] tables, final String sql, final boolean onlypk, 
+        final Serializable pk, final FilterNode node) {
         return existsDBAsync(info, tables, sql, onlypk, pk, node).join();
     }
 
     //查询一页数据
-    protected <T> Sheet<T> querySheetDB(final EntityInfo<T> info, final boolean readcache, final boolean needtotal, final boolean distinct, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
+    protected <T> Sheet<T> querySheetDB(final EntityInfo<T> info, final boolean readcache, final boolean needtotal, 
+        final boolean distinct, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
         return querySheetDBAsync(info, readcache, needtotal, distinct, selects, flipper, node).join();
     }
 
-    protected <T> CharSequence createSQLJoin(FilterNode node, final Function<Class, EntityInfo> func, final boolean update, final Map<Class, String> joinTabalis, final Set<String> haset, final EntityInfo<T> info) {
+    protected <T> CharSequence createSQLJoin(FilterNode node, final Function<Class, EntityInfo> func, final boolean update, 
+        final Map<Class, String> joinTabalis, final Set<String> haset, final EntityInfo<T> info) {
         return node == null ? null : node.createSQLJoin(func, update, joinTabalis, haset, info);
     }
 
@@ -869,7 +887,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
                 return new StringBuilder().append('\'').append(value.toString().replace("\\", "\\\\").replace("'", "\\'")).append('\'').toString();
             } else if (!(value instanceof Number) && !(value instanceof java.util.Date)
                 && !value.getClass().getName().startsWith("java.sql.") && !value.getClass().getName().startsWith("java.time.")) {
-                return new StringBuilder().append('\'').append(info.getJsonConvert().convertTo(value).replace("\\", "\\\\").replace("'", "\\'")).append('\'').toString();
+                return new StringBuilder().append('\'').append(info.getJsonConvert().convertTo(value)
+                    .replace("\\", "\\\\").replace("'", "\\'")).append('\'').toString();
             }
             return String.valueOf(value);
         } else if (value != null && value instanceof CharSequence && "postgresql".equals(dbtype)) {
@@ -1162,7 +1181,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         if ("postgresql".equals(dbtype()) && flipper != null && flipper.getLimit() > 0) {
             List<String> sqls = new ArrayList<>();
             for (String table : tables) {
-                String sql = "DELETE FROM " + table + " a" + (join1 == null ? "" : (", " + join1)) + " WHERE " + info.getPrimarySQLColumn() + " IN (SELECT " + info.getPrimaryField() + " FROM " + table
+                String sql = "DELETE FROM " + table + " a" + (join1 == null ? "" : (", " + join1)) 
+                    + " WHERE " + info.getPrimarySQLColumn() + " IN (SELECT " + info.getPrimaryField() + " FROM " + table
                     + join2AndWhere + info.createSQLOrderby(flipper) + " OFFSET 0 LIMIT " + flipper.getLimit() + ")";
                 sqls.add(sql);
             }
@@ -1171,7 +1191,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
             boolean mysql = "mysql".equals(dbtype());
             List<String> sqls = new ArrayList<>();
             for (String table : tables) {
-                String sql = "DELETE " + (mysql ? "a" : "") + " FROM " + table + " a" + (join1 == null ? "" : (", " + join1)) + join2AndWhere + info.createSQLOrderby(flipper)
+                String sql = "DELETE " + (mysql ? "a" : "") + " FROM " + table + " a" 
+                    + (join1 == null ? "" : (", " + join1)) + join2AndWhere + info.createSQLOrderby(flipper)
                     + ((mysql && flipper != null && flipper.getLimit() > 0) ? (" LIMIT " + flipper.getLimit()) : "");
                 sqls.add(sql);
             }
@@ -1537,10 +1558,12 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         Attribute attr = info.getAttribute(column);
         Serializable val = getSQLAttrValue(info, attr, colval);
         if (val instanceof byte[]) {
-            return new UpdateSqlInfo(true, "UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + "=" + prepareParamSign(1) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter), (byte[]) val);
+            return new UpdateSqlInfo(true, "UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + "=" + prepareParamSign(1) 
+                + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter), (byte[]) val);
         } else {
             return new UpdateSqlInfo(false, "UPDATE " + info.getTable(pk) + " SET " + info.getSQLColumn(null, column) + "="
-                + info.formatSQLValue(column, val, sqlFormatter) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter));
+                + info.formatSQLValue(column, val, sqlFormatter) 
+                + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter));
         }
     }
 
@@ -1722,7 +1745,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         if (setsql.length() < 1) {
             throw new SourceException("update non column-value array");
         }
-        String sql = "UPDATE " + info.getTable(pk) + " SET " + setsql + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
+        String sql = "UPDATE " + info.getTable(pk) + " SET " + setsql 
+            + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
         return new UpdateSqlInfo(false, sql, blobs);
     }
 
@@ -1977,7 +2001,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         }
     }
 
-    protected <T> UpdateSqlInfo updateColumnSql(final EntityInfo<T> info, final boolean needNode, final T entity, final FilterNode node, final SelectColumn selects) {
+    protected <T> UpdateSqlInfo updateColumnSql(final EntityInfo<T> info, boolean needNode, T entity, FilterNode node, final SelectColumn selects) {
         StringBuilder setsql = new StringBuilder();
         List<byte[]> blobs = null;
         int index = 0;
@@ -2171,7 +2195,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     @Override
-    public <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(final Class entityClass, final FilterNode node, final FilterFuncColumn... columns) {
+    public <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(Class entityClass, FilterNode node, FilterFuncColumn... columns) {
         final EntityInfo info = loadEntityInfo(entityClass);
         final EntityCache cache = info.getCache();
         if (cache != null && (isOnlyCache(info) || cache.isFullLoaded())) {
@@ -2216,7 +2240,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return sql;
     }
 
-    protected <T, N extends Number> CompletableFuture<Map<String, N>> getNumberMapDBApply(EntityInfo<T> info, CompletableFuture<? extends DataResultSet> future, FilterFuncColumn... columns) {
+    protected <T, N extends Number> CompletableFuture<Map<String, N>> getNumberMapDBApply(EntityInfo<T> info, 
+        CompletableFuture<? extends DataResultSet> future, FilterFuncColumn... columns) {
         return future.thenApply((DataResultSet dataset) -> {
             final Map map = new HashMap<>();
             if (dataset.next()) {
@@ -2239,7 +2264,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
 
     //------------------------ getNumberResultCompose -----------------------
     @Override
-    public Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
+    public Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, 
+        final String column, final FilterNode node) {
         final EntityInfo<?> info = loadEntityInfo(entityClass);
         final EntityCache cache = info.getCache();
         if (cache != null && (isOnlyCache(info) || cache.isFullLoaded())) {
@@ -2261,7 +2287,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     @Override
-    public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
+    public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, 
+        final Number defVal, final String column, final FilterNode node) {
         final EntityInfo info = loadEntityInfo(entityClass);
         final EntityCache cache = info.getCache();
         if (cache != null && (isOnlyCache(info) || cache.isFullLoaded())) {
@@ -2281,7 +2308,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         }
     }
 
-    protected <T> String getNumberResultSql(final EntityInfo<T> info, final Class entityClass, final String[] tables, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
+    protected <T> String getNumberResultSql(final EntityInfo<T> info, final Class entityClass, 
+        final String[] tables, final FilterFunc func, final Number defVal, final String column, final FilterNode node) {
         final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
         final Set<String> haset = new HashSet<>();
         final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, haset, info);
@@ -2291,7 +2319,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return sql;
     }
 
-    protected <T> CompletableFuture<Number> getNumberResultDBApply(EntityInfo<T> info, CompletableFuture<? extends DataResultSet> future, Number defVal, String column) {
+    protected <T> CompletableFuture<Number> getNumberResultDBApply(EntityInfo<T> info, 
+        CompletableFuture<? extends DataResultSet> future, Number defVal, String column) {
         return future.thenApply((DataResultSet dataset) -> {
             Number rs = defVal;
             if (dataset.next()) {
@@ -2307,7 +2336,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
 
     //------------------------ queryColumnMapCompose ------------------------
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, 
+        final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
         final EntityInfo info = loadEntityInfo(entityClass);
         final EntityCache cache = info.getCache();
         if (cache != null && (isOnlyCache(info) || cache.isFullLoaded())) {
@@ -2329,7 +2359,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(final Class<T> entityClass, 
+        final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
         final EntityInfo info = loadEntityInfo(entityClass);
         final EntityCache cache = info.getCache();
         if (cache != null && (isOnlyCache(info) || cache.isFullLoaded())) {
@@ -2349,13 +2380,15 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         }
     }
 
-    protected <T> String queryColumnMapSql(final EntityInfo<T> info, final String[] tables, final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
+    protected <T> String queryColumnMapSql(final EntityInfo<T> info, final String[] tables, final String keyColumn, 
+        final FilterFunc func, final String funcColumn, FilterNode node) {
         final String keySqlColumn = info.getSQLColumn(null, keyColumn);
         final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
         final Set<String> haset = new HashSet<>();
         final CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, haset, info);
         final CharSequence where = node == null ? null : node.createSQLExpress(this, info, joinTabalis);
-        final String funcSqlColumn = func == null ? info.getSQLColumn("a", funcColumn) : func.getColumn((funcColumn == null || funcColumn.isEmpty() ? "*" : info.getSQLColumn("a", funcColumn)));
+        final String funcSqlColumn = func == null ? info.getSQLColumn("a", funcColumn) 
+            : func.getColumn((funcColumn == null || funcColumn.isEmpty() ? "*" : info.getSQLColumn("a", funcColumn)));
 
         String joinAndWhere = (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
         String sql;
@@ -2376,7 +2409,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return sql;
     }
 
-    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapDBApply(EntityInfo<T> info, CompletableFuture<? extends DataResultSet> future, final String keyColumn) {
+    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapDBApply(EntityInfo<T> info, 
+        CompletableFuture<? extends DataResultSet> future, final String keyColumn) {
         return future.thenApply((DataResultSet dataset) -> {
             Map<K, N> rs = new LinkedHashMap<>();
             while (dataset.next()) {
@@ -2388,7 +2422,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn, final FilterNode node) {
+    public <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(final Class<T> entityClass, 
+        final ColumnNode[] funcNodes, final String groupByColumn, final FilterNode node) {
         Map<K[], N[]> map = queryColumnMap(entityClass, funcNodes, Utility.ofArray(groupByColumn), node);
         final Map<K, N[]> rs = new LinkedHashMap<>();
         map.forEach((keys, values) -> rs.put(keys[0], values));
@@ -2396,7 +2431,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn, final FilterNode node) {
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(final Class<T> entityClass, 
+        final ColumnNode[] funcNodes, final String groupByColumn, final FilterNode node) {
         CompletableFuture<Map<K[], N[]>> future = queryColumnMapAsync(entityClass, funcNodes, Utility.ofArray(groupByColumn), node);
         return future.thenApply(map -> {
             final Map<K, N[]> rs = new LinkedHashMap<>();
@@ -2406,7 +2442,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterNode node) {
+    public <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(final Class<T> entityClass, 
+        final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterNode node) {
         final EntityInfo info = loadEntityInfo(entityClass);
         final EntityCache cache = info.getCache();
         if (cache != null && (isOnlyCache(info) || cache.isFullLoaded())) {
@@ -2427,7 +2464,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterNode node) {
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(final Class<T> entityClass, 
+        final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterNode node) {
         final EntityInfo info = loadEntityInfo(entityClass);
         final EntityCache cache = info.getCache();
         if (cache != null && (isOnlyCache(info) || cache.isFullLoaded())) {
@@ -2447,7 +2485,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         }
     }
 
-    protected <T> String queryColumnMapSql(final EntityInfo<T> info, final String[] tables, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterNode node) {
+    protected <T> String queryColumnMapSql(final EntityInfo<T> info, final String[] tables, final ColumnNode[] funcNodes, 
+        final String[] groupByColumns, final FilterNode node) {
         final StringBuilder groupBySqlColumns = new StringBuilder();
         if (groupByColumns != null && groupByColumns.length > 0) {
             for (int i = 0; i < groupByColumns.length; i++) {
@@ -2506,7 +2545,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return sql;
     }
 
-    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDBApply(EntityInfo<T> info, CompletableFuture<? extends DataResultSet> future, final ColumnNode[] funcNodes, final String[] groupByColumns) {
+    protected <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapDBApply(EntityInfo<T> info, 
+        CompletableFuture<? extends DataResultSet> future, final ColumnNode[] funcNodes, final String[] groupByColumns) {
         return future.thenApply((DataResultSet dataset) -> {
             Map rs = new LinkedHashMap<>();
             while (dataset.next()) {
@@ -2644,7 +2684,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
 
     protected <T> String findSql(final EntityInfo<T> info, final SelectColumn selects, Serializable pk) {
         String column = info.getPrimarySQLColumn();
-        final String sql = "SELECT " + info.getQueryColumns(null, selects) + " FROM " + info.getTable(pk) + " WHERE " + column + "=" + info.formatSQLValue(column, pk, sqlFormatter);
+        final String sql = "SELECT " + info.getQueryColumns(null, selects) + " FROM " + info.getTable(pk) 
+            + " WHERE " + column + "=" + info.formatSQLValue(column, pk, sqlFormatter);
         return sql;
     }
 
@@ -2707,7 +2748,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return sql;
     }
 
-    protected <T> CompletableFuture<T> findDBApply(EntityInfo<T> info, CompletableFuture<? extends DataResultSet> future, boolean onlypk, SelectColumn selects) {
+    protected <T> CompletableFuture<T> findDBApply(EntityInfo<T> info, CompletableFuture<? extends DataResultSet> future, 
+        boolean onlypk, SelectColumn selects) {
         return future.thenApply((DataResultSet pgset) -> {
             T rs = pgset.next() ? (onlypk && selects == null ? getEntityValue(info, null, pgset) : getEntityValue(info, selects, pgset)) : null;
             pgset.close();
@@ -2760,7 +2802,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     protected <T> String findColumnSql(final EntityInfo<T> info, String column, final Serializable defValue, final Serializable pk) {
-        return "SELECT " + info.getSQLColumn(null, column) + " FROM " + info.getTable(pk) + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
+        return "SELECT " + info.getSQLColumn(null, column) + " FROM " + info.getTable(pk) 
+            + " WHERE " + info.getPrimarySQLColumn() + "=" + info.formatSQLValue(info.getPrimarySQLColumn(), pk, sqlFormatter);
     }
 
     @Override
@@ -2828,7 +2871,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return sql;
     }
 
-    protected <T> CompletableFuture<Serializable> findColumnDBApply(EntityInfo<T> info, CompletableFuture<? extends DataResultSet> future, boolean onlypk, String column, Serializable defValue) {
+    protected <T> CompletableFuture<Serializable> findColumnDBApply(EntityInfo<T> info, 
+        CompletableFuture<? extends DataResultSet> future, boolean onlypk, String column, Serializable defValue) {
         return future.thenApply((DataResultSet dataset) -> {
             Serializable val = defValue;
             if (dataset.next()) {
@@ -2980,7 +3024,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, 
+        final Class<T> clazz, final Flipper flipper, final FilterNode node) {
         return querySetAsync(clazz, SelectColumn.includes(selectedColumn), flipper, node).thenApply((Set<T> list) -> {
             final Set<V> rs = new LinkedHashSet<>();
             if (list.isEmpty()) {
@@ -2996,7 +3041,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     @Override
-    public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+    public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, 
+        final Flipper flipper, final FilterNode node) {
         final List<T> list = queryList(clazz, SelectColumn.includes(selectedColumn), flipper, node);
         final List<V> rs = new ArrayList<>();
         if (list.isEmpty()) {
@@ -3011,7 +3057,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, 
+        final Class<T> clazz, final Flipper flipper, final FilterNode node) {
         return queryListAsync(clazz, SelectColumn.includes(selectedColumn), flipper, node).thenApply((List<T> list) -> {
             final List<V> rs = new ArrayList<>();
             if (list.isEmpty()) {
@@ -3027,7 +3074,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     @Override
-    public <T, V extends Serializable> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+    public <T, V extends Serializable> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, 
+        final Flipper flipper, final FilterNode node) {
         Sheet<T> sheet = querySheet(clazz, SelectColumn.includes(selectedColumn), flipper, node);
         final Sheet<V> rs = new Sheet<>();
         if (sheet.isEmpty()) {
@@ -3045,7 +3093,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+    public <T, V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(final String selectedColumn, 
+        final Class<T> clazz, final Flipper flipper, final FilterNode node) {
         return querySheetAsync(clazz, SelectColumn.includes(selectedColumn), flipper, node).thenApply((Sheet<T> sheet) -> {
             final Sheet<V> rs = new Sheet<>();
             if (sheet.isEmpty()) {
@@ -3094,7 +3143,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     @Override
-    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final SelectColumn selects, final Stream<K> keyStream) {
+    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, 
+        final SelectColumn selects, final Stream<K> keyStream) {
         if (keyStream == null) {
             return CompletableFuture.completedFuture(new LinkedHashMap<>());
         }
@@ -3140,7 +3190,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     @Override
-    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final SelectColumn selects, final FilterNode node) {
+    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, 
+        final SelectColumn selects, final FilterNode node) {
         return queryListAsync(clazz, selects, node).thenApply((List<T> rs) -> {
             final EntityInfo<T> info = loadEntityInfo(clazz);
             final Attribute<T, Serializable> primary = info.getPrimary();
@@ -3209,7 +3260,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         }
     }
 
-    protected <T> Sheet<T> querySheet(final boolean readCache, final boolean needTotal, final boolean distinct, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
+    protected <T> Sheet<T> querySheet(final boolean readCache, final boolean needTotal, final boolean distinct, 
+        final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
         if (readCache && cache != null && cache.isFullLoaded()) {
@@ -3223,7 +3275,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return querySheetDB(info, readCache, needTotal, distinct, selects, flipper, node);
     }
 
-    protected <T> CompletableFuture<Sheet<T>> querySheetAsync(final boolean readCache, final boolean needTotal, final boolean distinct, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
+    protected <T> CompletableFuture<Sheet<T>> querySheetAsync(final boolean readCache, final boolean needTotal, 
+        final boolean distinct, final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
         if (readCache && cache != null && cache.isFullLoaded()) {

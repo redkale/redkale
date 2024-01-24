@@ -259,7 +259,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
      *
      * @return EntityInfo
      */
-    protected <T> EntityInfo<T> loadEntityInfo(Class<T> clazz, final boolean cacheForbidden, final Properties props, BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader) {
+    protected <T> EntityInfo<T> loadEntityInfo(Class<T> clazz, final boolean cacheForbidden, 
+        final Properties props, BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader) {
         return EntityInfo.load(clazz, cacheForbidden, props, this, fullloader);
     }
 
@@ -402,7 +403,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(final Class entityClass, final FilterBean bean, final FilterFuncColumn... columns) {
+    public <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(final Class entityClass, 
+        final FilterBean bean, final FilterFuncColumn... columns) {
         return getNumberMapAsync(entityClass, FilterNodeBean.createFilterNode(bean), columns);
     }
 
@@ -452,68 +454,81 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final Number defVal, final String column, FilterBean bean) {
+    public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, 
+        final Number defVal, final String column, FilterBean bean) {
         return getNumberResultAsync(entityClass, func, defVal, column, FilterNodeBean.createFilterNode(bean));
     }
 
     //------------------------ queryColumnMapCompose ------------------------
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn) {
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, 
+        final FilterFunc func, final String funcColumn) {
         return queryColumnMap(entityClass, keyColumn, func, funcColumn, (FilterNode) null);
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn) {
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(final Class<T> entityClass, 
+        final String keyColumn, final FilterFunc func, final String funcColumn) {
         return queryColumnMapAsync(entityClass, keyColumn, func, funcColumn, (FilterNode) null);
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean) {
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, 
+        final FilterFunc func, final String funcColumn, final FilterBean bean) {
         return queryColumnMap(entityClass, keyColumn, func, funcColumn, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean) {
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(final Class<T> entityClass, 
+        final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean) {
         return queryColumnMapAsync(entityClass, keyColumn, func, funcColumn, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn) {
+    public <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(final Class<T> entityClass, 
+        final ColumnNode[] funcNodes, final String groupByColumn) {
         return queryColumnMap(entityClass, funcNodes, groupByColumn, (FilterNode) null);
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn) {
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(final Class<T> entityClass, 
+        final ColumnNode[] funcNodes, final String groupByColumn) {
         return queryColumnMapAsync(entityClass, funcNodes, groupByColumn, (FilterNode) null);
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn, final FilterBean bean) {
+    public <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(final Class<T> entityClass, 
+        final ColumnNode[] funcNodes, final String groupByColumn, final FilterBean bean) {
         return queryColumnMap(entityClass, funcNodes, groupByColumn, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn, final FilterBean bean) {
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(final Class<T> entityClass, 
+        final ColumnNode[] funcNodes, final String groupByColumn, final FilterBean bean) {
         return queryColumnMapAsync(entityClass, funcNodes, groupByColumn, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns) {
+    public <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(final Class<T> entityClass, 
+        final ColumnNode[] funcNodes, final String[] groupByColumns) {
         return queryColumnMap(entityClass, funcNodes, groupByColumns, (FilterNode) null);
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns) {
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(final Class<T> entityClass, 
+        final ColumnNode[] funcNodes, final String[] groupByColumns) {
         return queryColumnMapAsync(entityClass, funcNodes, groupByColumns, (FilterNode) null);
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterBean bean) {
+    public <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(final Class<T> entityClass, 
+        final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterBean bean) {
         return queryColumnMap(entityClass, funcNodes, groupByColumns, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterBean bean) {
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(final Class<T> entityClass, 
+        final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterBean bean) {
         return queryColumnMapAsync(entityClass, funcNodes, groupByColumns, FilterNodeBean.createFilterNode(bean));
     }
 
@@ -613,7 +628,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, final Serializable defValue, final FilterBean bean) {
+    public <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, 
+        final Serializable defValue, final FilterBean bean) {
         return findColumnAsync(clazz, column, defValue, FilterNodeBean.createFilterNode(bean));
     }
 
@@ -629,12 +645,14 @@ public abstract class AbstractDataSource extends AbstractService implements Data
 
     //-----------------------list set----------------------------
     @Override
-    public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval) {
+    public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, 
+        final String column, final Serializable colval) {
         return queryColumnSet(selectedColumn, clazz, null, FilterNodes.create(column, colval));
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval) {
+    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, 
+        final Class<T> clazz, final String column, final Serializable colval) {
         return queryColumnSetAsync(selectedColumn, clazz, null, FilterNodes.create(column, colval));
     }
 
@@ -644,7 +662,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
+    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, 
+        final Class<T> clazz, final FilterBean bean) {
         return queryColumnSetAsync(selectedColumn, clazz, null, FilterNodeBean.createFilterNode(bean));
     }
 
@@ -654,27 +673,32 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final FilterNode node) {
+    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, 
+        final Class<T> clazz, final FilterNode node) {
         return queryColumnSetAsync(selectedColumn, clazz, null, node);
     }
 
     @Override
-    public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+    public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, 
+        final Flipper flipper, final FilterBean bean) {
         return queryColumnSet(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, 
+        final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
         return queryColumnSetAsync(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval) {
+    public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, 
+        final String column, final Serializable colval) {
         return queryColumnList(selectedColumn, clazz, null, FilterNodes.create(column, colval));
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval) {
+    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, 
+        final Class<T> clazz, final String column, final Serializable colval) {
         return queryColumnListAsync(selectedColumn, clazz, null, FilterNodes.create(column, colval));
     }
 
@@ -684,7 +708,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
+    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, 
+        final Class<T> clazz, final FilterBean bean) {
         return queryColumnListAsync(selectedColumn, clazz, null, FilterNodeBean.createFilterNode(bean));
     }
 
@@ -694,17 +719,20 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final FilterNode node) {
+    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, 
+        final Class<T> clazz, final FilterNode node) {
         return queryColumnListAsync(selectedColumn, clazz, null, node);
     }
 
     @Override
-    public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+    public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, 
+        final Flipper flipper, final FilterBean bean) {
         return queryColumnList(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, 
+        final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
         return queryColumnListAsync(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
@@ -721,12 +749,14 @@ public abstract class AbstractDataSource extends AbstractService implements Data
      * @return 字段集合
      */
     @Override
-    public <T, V extends Serializable> Sheet<V> queryColumnSheet(final String selectedColumn, Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+    public <T, V extends Serializable> Sheet<V> queryColumnSheet(final String selectedColumn, Class<T> clazz, 
+        final Flipper flipper, final FilterBean bean) {
         return queryColumnSheet(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+    public <T, V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(final String selectedColumn, 
+        final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
         return queryColumnSheetAsync(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
