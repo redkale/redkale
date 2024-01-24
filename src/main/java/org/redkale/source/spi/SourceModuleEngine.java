@@ -417,6 +417,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
     public DataSource loadDataSource(final String sourceName, boolean autoMemory) {
         dataSourceLock.lock();
         try {
+            long st = System.currentTimeMillis();
             DataSource old = resourceFactory.find(sourceName, DataSource.class);
             if (old != null) {
                 return old;
@@ -433,7 +434,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                 }
                 dataSources.add(source);
                 resourceFactory.register(sourceName, DataSource.class, source);
-                logger.info("Load DataSource resourceName = '" + sourceName + "', source = " + source);
+                logger.info("Load DataSource resourceName = '" + sourceName + "', source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
                 return source;
             }
             if (!sourceConf.getValue(DataSources.DATA_SOURCE_RESOURCE, "").isEmpty()) {
@@ -473,7 +474,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                         resourceFactory.register(sourceName, DataJdbcSource.class, source);
                     }
                 }
-                logger.info("Load DataSource resourceName = '" + sourceName + "', source = " + source);
+                logger.info("Load DataSource resourceName = '" + sourceName + "', source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
                 return source;
             } catch (RuntimeException ex) {
                 throw ex;
