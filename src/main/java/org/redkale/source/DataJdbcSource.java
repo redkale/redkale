@@ -415,6 +415,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             }
         } catch (SQLException se) {
             conn.rollback(prestmt, prestmts);
+            stmtsRef.clear();
             if (!isTableNotExist(info, se.getSQLState())) {
                 throw se;
             }
@@ -3033,14 +3034,13 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 return conn;
             } else {
                 offerConnection(conn);
-                conn = null;
             }
             return newConnection(this.queue);
         }
 
         //用于事务的连接
         public JdbcConnection pollTransConnection() {
-            return pollTransConnection();
+            return pollConnection();
         }
 
         private JdbcConnection newConnection(ArrayBlockingQueue<JdbcConnection> queue) {

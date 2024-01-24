@@ -32,8 +32,9 @@ public @interface Scheduled {
 
     /**
      * cron表达式, 特殊值: <br>
-     * yearly、annually、monthly、weekly、daily、midnight、hourly、minutely
-     * 1m、2m、3m、5m、10m、15m、30m、1h、2h、3h、6h
+     * &#64;yearly、&#64;annually、&#64;monthly、&#64;weekly、&#64;daily、&#64;midnight、&#64;hourly、&#64;minutely
+     * &#64;1m、&#64;2m、&#64;3m、&#64;5m、&#64;10m、&#64;15m、&#64;30m、
+     * &#64;1h、&#64;2h、&#64;3h、&#64;6h
      * ${env.scheduling.cron}: 读取系统配置项
      *
      * @return cron表达式
