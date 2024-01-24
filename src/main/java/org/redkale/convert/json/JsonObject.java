@@ -5,6 +5,7 @@ package org.redkale.convert.json;
 
 import java.math.*;
 import java.util.*;
+import org.redkale.annotation.Nullable;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.util.*;
 
@@ -365,6 +366,7 @@ public class JsonObject extends LinkedHashMap<String, Object> implements JsonEle
         }
     }
 
+    @Nullable
     public Boolean getBoolean(String key) {
         final Object val = get(key);
         if (val == null) {

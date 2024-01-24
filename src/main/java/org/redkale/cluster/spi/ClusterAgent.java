@@ -207,11 +207,7 @@ public abstract class ClusterAgent {
         }
         int s = intervalCheckSeconds();
         if (s > 0) {  //暂停，弥补其他依赖本进程服务的周期偏差
-            try {
-                Thread.sleep(s * 1000);
-            } catch (InterruptedException ex) {
-                //do nothing
-            }
+            Utility.sleep(s * 1000);
             logger.info(this.getClass().getSimpleName() + " wait for " + s * 1000 + "ms after deregister");
         }
     }

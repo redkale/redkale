@@ -175,7 +175,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      */
     public final CompletableFuture<Integer> send(Object message, boolean last) {
         if (message instanceof CompletableFuture) {
-            return ((CompletableFuture) message).thenCompose((json) -> {
+            return ((CompletableFuture) message).thenCompose(json -> {
                 if (json instanceof CharSequence) {
                     return sendPacket(new WebSocketPacket(json.toString(), last));
                 } else if (json == null || json instanceof byte[]) {

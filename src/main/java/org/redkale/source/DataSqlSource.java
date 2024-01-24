@@ -178,7 +178,7 @@ public interface DataSqlSource extends DataSource {
     @AsmDepends
     default <K, V> Map<K, V> nativeQueryMap(Class<K> keyType, Class<V> valType, String sql) {
         return nativeQuery(sql, rset -> {
-            Map<K, V> map = new LinkedHashMap<K, V>();
+            Map<K, V> map = new LinkedHashMap<>();
             while (rset.next()) {
                 if (!rset.wasNull()) {
                     map.put((K) formatColumnValue(keyType, rset.getObject(1)), (V) formatColumnValue(valType, rset.getObject(2)));
@@ -191,7 +191,7 @@ public interface DataSqlSource extends DataSource {
     @AsmDepends
     default <K, V> CompletableFuture<Map<K, V>> nativeQueryMapAsync(Class<K> keyType, Class<V> valType, String sql) {
         return nativeQueryAsync(sql, rset -> {
-            Map<K, V> map = new LinkedHashMap<K, V>();
+            Map<K, V> map = new LinkedHashMap<>();
             while (rset.next()) {
                 if (!rset.wasNull()) {
                     map.put((K) formatColumnValue(keyType, rset.getObject(1)), (V) formatColumnValue(valType, rset.getObject(2)));
@@ -283,7 +283,7 @@ public interface DataSqlSource extends DataSource {
     @AsmDepends
     default <K, V> Map<K, V> nativeQueryMap(Class<K> keyType, Class<V> valType, String sql, Map<String, Object> params) {
         return nativeQuery(sql, rset -> {
-            Map<K, V> map = new LinkedHashMap<K, V>();
+            Map<K, V> map = new LinkedHashMap<>();
             while (rset.next()) {
                 if (!rset.wasNull()) {
                     map.put((K) formatColumnValue(keyType, rset.getObject(1)), (V) formatColumnValue(valType, rset.getObject(2)));
@@ -296,7 +296,7 @@ public interface DataSqlSource extends DataSource {
     @AsmDepends
     default <K, V> CompletableFuture<Map<K, V>> nativeQueryMapAsync(Class<K> keyType, Class<V> valType, String sql, Map<String, Object> params) {
         return nativeQueryAsync(sql, rset -> {
-            Map<K, V> map = new LinkedHashMap<K, V>();
+            Map<K, V> map = new LinkedHashMap<>();
             while (rset.next()) {
                 if (!rset.wasNull()) {
                     map.put((K) formatColumnValue(keyType, rset.getObject(1)), (V) formatColumnValue(valType, rset.getObject(2)));

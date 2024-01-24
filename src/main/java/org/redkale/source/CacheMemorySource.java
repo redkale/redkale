@@ -359,7 +359,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> boolean setnxex(String key, int expireSeconds, Convert convert, Type type, T value) {
-        return setnxpx(key, expireSeconds * 1000, convert, type, value);
+        return setnxpx(key, expireSeconds * 1000L, convert, type, value);
     }
 
     @Override
@@ -483,7 +483,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public <T> void setex(String key, int expireSeconds, Convert convert, Type type, T value) {
-        set0(key, expireSeconds * 1000, convert, type, value);
+        set0(key, expireSeconds * 1000L, convert, type, value);
     }
 
     @Override
@@ -503,7 +503,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public void expire(String key, int expireSeconds) {
-        pexpire(key, expireSeconds * 1000);
+        pexpire(key, expireSeconds * 1000L);
     }
 
     @Override
@@ -966,7 +966,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             return null;
         }
         if (expireSeconds > 0) {
-            entry.milliSeconds(expireSeconds * 1000);
+            entry.milliSeconds(expireSeconds * 1000L);
         }
         final Convert c = convert == null ? this.convert : convert;
         // OBJECT, ATOMIC, DOUBLE, SSET, ZSET, LIST, MAP;

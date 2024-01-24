@@ -163,21 +163,21 @@ public abstract class Request<C extends Context> {
         return this.context;
     }
 
+    public long getCreateTime() {
+        return createTime;
+    }
+
     /**
      *
      * @see #getCreateTime()
      *
      * @return long
-     * @deprecated
+     * @deprecated replace by {@link #getCreateTime() }
      */
-    @Deprecated(since = "2.7.0") //replace by getCreateTime()
+    @Deprecated(since = "2.7.0")
     @ConvertDisabled
     public long getCreatetime() {
         return getCreateTime();
-    }
-
-    public long getCreateTime() {
-        return createTime;
     }
 
     public String getTraceid() {

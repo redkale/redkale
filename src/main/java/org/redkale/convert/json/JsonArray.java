@@ -5,6 +5,7 @@ package org.redkale.convert.json;
 
 import java.math.*;
 import java.util.*;
+import org.redkale.annotation.Nullable;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.util.*;
 
@@ -340,6 +341,7 @@ public class JsonArray extends ArrayList<Object> implements JsonElement {
         }
     }
 
+    @Nullable
     public Boolean getBoolean(int index) {
         final Object val = get(index);
         if (val == null) {

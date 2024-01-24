@@ -1574,7 +1574,7 @@ public final class Rest {
                         urlpath = urlpath.substring(1);
                     }
                 } else {
-                    urlpath = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + defmodulename + "/*";
+                    urlpath = (catalog.isEmpty() ? "/" : ("/" + catalog + '/')) + defmodulename + "/*";
                 }
 
                 classMap.put("type", serviceType.getName());
