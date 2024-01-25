@@ -15,17 +15,17 @@ import org.redkale.util.ByteArray;
  *
  * @author zhangjx
  */
-class HttpSimpleCodec extends ClientCodec<HttpSimpleRequest, HttpSimpleResult> {
+class WebCodec extends ClientCodec<WebRequest, WebResult> {
 
-    protected static final Logger logger = Logger.getLogger(HttpSimpleCodec.class.getSimpleName());
+    protected static final Logger logger = Logger.getLogger(WebCodec.class.getSimpleName());
 
     private ByteArray recyclableArray;
 
     private ByteArray halfBytes;
 
-    private HttpSimpleResult lastResult = null;
+    private WebResult lastResult = null;
 
-    public HttpSimpleCodec(HttpSimpleConnection connection) {
+    public WebCodec(WebConnection connection) {
         super(connection);
     }
 
@@ -45,9 +45,9 @@ class HttpSimpleCodec extends ClientCodec<HttpSimpleRequest, HttpSimpleResult> {
         int rs;
         final ByteBuffer buffer = realBuf;
         while (buffer.hasRemaining()) {
-            HttpSimpleResult result = this.lastResult;
+            WebResult result = this.lastResult;
             if (result == null) {
-                result = new HttpSimpleResult();
+                result = new WebResult();
                 result.readState = READ_STATE_ROUTE;
                 this.lastResult = result;
             }
@@ -95,7 +95,7 @@ class HttpSimpleCodec extends ClientCodec<HttpSimpleRequest, HttpSimpleResult> {
     }
 
     //解析 HTTP/1.1 200 OK  
-    private int readStatusLine(final HttpSimpleResult result, final ByteBuffer buffer, final ByteArray array) {
+    private int readStatusLine(final WebResult result, final ByteBuffer buffer, final ByteArray array) {
         int remain = buffer.remaining();
         if (array.length() > 0 && array.getLastByte() == '\r') { //array存在半截数据
             if (buffer.get() != '\n') {
@@ -129,7 +129,7 @@ class HttpSimpleCodec extends ClientCodec<HttpSimpleRequest, HttpSimpleResult> {
 
     //解析Header Connection: keep-alive
     //返回0表示解析完整，非0表示还需继续读数据
-    private int readHeaderBytes(final HttpSimpleResult result, final ByteBuffer buffer, final ByteArray array) {
+    private int readHeaderBytes(final WebResult result, final ByteBuffer buffer, final ByteArray array) {
         byte b;
         while (buffer.hasRemaining()) {
             b = buffer.get();
@@ -147,7 +147,7 @@ class HttpSimpleCodec extends ClientCodec<HttpSimpleRequest, HttpSimpleResult> {
         return 1;
     }
 
-    private int readBody(final HttpSimpleResult result, final ByteBuffer buffer, final ByteArray array) {
+    private int readBody(final WebResult result, final ByteBuffer buffer, final ByteArray array) {
         if (result.contentLength >= 0) {
             array.put(buffer, Math.min((int) result.contentLength, buffer.remaining()));
             int lr = (int) result.contentLength - array.length();
@@ -159,7 +159,7 @@ class HttpSimpleCodec extends ClientCodec<HttpSimpleRequest, HttpSimpleResult> {
         return -1;
     }
 
-    private void readHeaderLines(final HttpSimpleResult result, ByteArray bytes) {
+    private void readHeaderLines(final WebResult result, ByteArray bytes) {
         int start = 0;
         int posC, posR;
         Charset charset = StandardCharsets.UTF_8;

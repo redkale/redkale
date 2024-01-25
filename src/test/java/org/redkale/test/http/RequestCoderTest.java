@@ -6,9 +6,9 @@ package org.redkale.test.http;
 import java.lang.reflect.Field;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.redkale.mq.spi.HttpSimpleRequestCoder;
+import org.redkale.mq.spi.WebRequestCoder;
 import org.redkale.net.client.ClientRequest;
-import org.redkale.net.http.HttpSimpleRequest;
+import org.redkale.net.http.WebRequest;
 
 /**
  *
@@ -28,10 +28,10 @@ public class RequestCoderTest {
 
     @Test
     public void run1() throws Exception {
-        HttpSimpleRequest req1 = HttpSimpleRequest.createPostPath("/aaa");
+        WebRequest req1 = WebRequest.createPostPath("/aaa");
         System.out.println("simpleRequest1: " + req1);
-        byte[] bytes = HttpSimpleRequestCoder.getInstance().encode(req1);
-        HttpSimpleRequest req2 = HttpSimpleRequestCoder.getInstance().decode(bytes);
+        byte[] bytes = WebRequestCoder.getInstance().encode(req1);
+        WebRequest req2 = WebRequestCoder.getInstance().decode(bytes);
         Field timeFiedl = ClientRequest.class.getDeclaredField("createTime");
         timeFiedl.setAccessible(true);
         timeFiedl.set(req2, req1.getCreateTime());
@@ -41,12 +41,12 @@ public class RequestCoderTest {
 
     @Test
     public void run2() throws Exception {
-        HttpSimpleRequest req1 = HttpSimpleRequest.createPostPath("/aaa");
+        WebRequest req1 = WebRequest.createPostPath("/aaa");
         req1.addHeader("X-aaa", "aaa");
         req1.param("bean", "{}");
         System.out.println("simpleRequest1: " + req1);
-        byte[] bytes = HttpSimpleRequestCoder.getInstance().encode(req1);
-        HttpSimpleRequest req2 = HttpSimpleRequestCoder.getInstance().decode(bytes);
+        byte[] bytes = WebRequestCoder.getInstance().encode(req1);
+        WebRequest req2 = WebRequestCoder.getInstance().decode(bytes);
         Field timeFiedl = ClientRequest.class.getDeclaredField("createTime");
         timeFiedl.setAccessible(true);
         timeFiedl.set(req2, req1.getCreateTime());
@@ -56,14 +56,14 @@ public class RequestCoderTest {
 
     @Test
     public void run3() throws Exception {
-        HttpSimpleRequest req1 = HttpSimpleRequest.createPostPath("/aaa");
+        WebRequest req1 = WebRequest.createPostPath("/aaa");
         req1.addHeader("X-aaa", "aaa");
         req1.addHeader("X-bbb", "bbb1");
         req1.addHeader("X-bbb", "bbb2");
         req1.param("bean", "{}");
         System.out.println("simpleRequest1: " + req1);
-        byte[] bytes = HttpSimpleRequestCoder.getInstance().encode(req1);
-        HttpSimpleRequest req2 = HttpSimpleRequestCoder.getInstance().decode(bytes);
+        byte[] bytes = WebRequestCoder.getInstance().encode(req1);
+        WebRequest req2 = WebRequestCoder.getInstance().decode(bytes);
         Field timeFiedl = ClientRequest.class.getDeclaredField("createTime");
         timeFiedl.setAccessible(true);
         timeFiedl.set(req2, req1.getCreateTime());

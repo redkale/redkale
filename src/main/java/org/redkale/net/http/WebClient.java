@@ -34,7 +34,7 @@ import org.redkale.util.*;
  * @since 2.3.0
  *
  */
-public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleRequest, HttpSimpleResult> {
+public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
 
     public static final String USER_AGENT = "Redkale-http-client/" + Redkale.getDotedVersion();
 
@@ -48,7 +48,7 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
 
     protected ExecutorService workExecutor;
 
-    protected HttpSimpleClient(ExecutorService workExecutor, AsyncGroup asyncGroup) {
+    protected WebClient(ExecutorService workExecutor, AsyncGroup asyncGroup) {
         super("Redkale-http-client", asyncGroup, new ClientAddress(new InetSocketAddress("127.0.0.1", 0)));
         this.workExecutor = workExecutor;
         this.asyncGroup = asyncGroup;
@@ -57,30 +57,30 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
         this.writeTimeoutSeconds = 6;
     }
 
-    public static HttpSimpleClient create(ExecutorService workExecutor, AsyncGroup asyncGroup) {
-        return new HttpSimpleClient(workExecutor, asyncGroup);
+    public static WebClient create(ExecutorService workExecutor, AsyncGroup asyncGroup) {
+        return new WebClient(workExecutor, asyncGroup);
     }
 
-    public static HttpSimpleClient create(AsyncGroup asyncGroup) {
+    public static WebClient create(AsyncGroup asyncGroup) {
         return create(null, asyncGroup);
     }
 
     @Override
-    protected HttpSimpleConnection createClientConnection(AsyncConnection channel) {
-        return new HttpSimpleConnection(this, channel);
+    protected WebConnection createClientConnection(AsyncConnection channel) {
+        return new WebConnection(this, channel);
     }
 
     @Override
-    protected CompletableFuture<HttpSimpleResult> writeChannel(ClientConnection conn, HttpSimpleRequest request) {
+    protected CompletableFuture<WebResult> writeChannel(ClientConnection conn, WebRequest request) {
         return super.writeChannel(conn, request);
     }
 
-    public HttpSimpleClient readTimeoutSeconds(int readTimeoutSeconds) {
+    public WebClient readTimeoutSeconds(int readTimeoutSeconds) {
         this.readTimeoutSeconds = readTimeoutSeconds;
         return this;
     }
 
-    public HttpSimpleClient writeTimeoutSeconds(int writeTimeoutSeconds) {
+    public WebClient writeTimeoutSeconds(int writeTimeoutSeconds) {
         this.writeTimeoutSeconds = writeTimeoutSeconds;
         return this;
     }
@@ -213,11 +213,11 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
         return sendAsync("POST", url, headers, body);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> sendAsync(String url, HttpSimpleRequest req) {
+    public CompletableFuture<HttpResult<byte[]>> sendAsync(String url, WebRequest req) {
         return sendAsync(req.getMethod(), url, req.getHeaders(), req.getBody(), (Convert) null, null);
     }
 
-    public <T> CompletableFuture<HttpResult<T>> sendAsync(String url, HttpSimpleRequest req, Type valueType) {
+    public <T> CompletableFuture<HttpResult<T>> sendAsync(String url, WebRequest req, Type valueType) {
         return sendAsync(req.getMethod(), url, req.getHeaders(), req.getBody(), (Convert) null, null);
     }
 
@@ -244,9 +244,9 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
         int urlpos = url.indexOf("/", url.indexOf("//") + 3);
         final String path = (urlpos > 0 ? url.substring(urlpos) : "/");
         if (!url.startsWith("https:")) {
-            HttpSimpleRequest req = HttpSimpleRequest.createPath(path, headers).method(method).body(body);
+            WebRequest req = WebRequest.createPath(path, headers).method(method).body(body);
             return (CompletableFuture) sendAsync(new InetSocketAddress(host, port), req)
-                .thenApply((HttpSimpleResult rs) -> {
+                .thenApply((WebResult rs) -> {
                     if (valueType == null) {
                         return rs;
                     } else {
@@ -261,7 +261,7 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
         array.put((method.toUpperCase() + " " + path + " HTTP/1.1\r\n").getBytes(StandardCharsets.UTF_8));
         array.put(("Host: " + uri.getHost() + "\r\n").getBytes(StandardCharsets.UTF_8));
 
-        array.put(HttpSimpleRequest.contentLengthBytes(body));
+        array.put(WebRequest.contentLengthBytes(body));
         if (headers == null || !headers.contains("User-Agent")) {
             array.put(header_bytes_useragent);
         }
@@ -318,7 +318,7 @@ public class HttpSimpleClient extends Client<HttpSimpleConnection, HttpSimpleReq
 //        final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
 //        asyncGroup.start();
 //        String url = "http://redkale.org";
-//        HttpSimpleClient client = HttpSimpleClient.createPostPath(asyncGroup);
+//        WebClient client = WebClient.createPostPath(asyncGroup);
 //        (System.out).println(client.getAsync(url).join());
 //    }
 //    

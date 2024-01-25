@@ -22,43 +22,43 @@ import org.redkale.util.RedkaleException;
  *
  * @since 2.1.0
  */
-public abstract class HttpRpcClient implements ClusterRpcClient<HttpSimpleRequest, HttpResult<byte[]>> {
+public abstract class HttpRpcClient implements ClusterRpcClient<WebRequest, HttpResult<byte[]>> {
 
     @Override
-    public final CompletableFuture<Void> produceMessage(HttpSimpleRequest request) {
+    public final CompletableFuture<Void> produceMessage(WebRequest request) {
         return produceMessage(generateHttpReqTopic(request, null), 0, null, request);
     }
 
-    public final CompletableFuture<Void> produceMessage(Serializable userid, HttpSimpleRequest request) {
+    public final CompletableFuture<Void> produceMessage(Serializable userid, WebRequest request) {
         return produceMessage(generateHttpReqTopic(request, null), userid, null, request);
     }
 
-    public final CompletableFuture<Void> produceMessage(Serializable userid, String groupid, HttpSimpleRequest request) {
+    public final CompletableFuture<Void> produceMessage(Serializable userid, String groupid, WebRequest request) {
         return produceMessage(generateHttpReqTopic(request, null), userid, groupid, request);
     }
 
-    public final CompletableFuture<Void> produceMessage(String topic, HttpSimpleRequest request) {
+    public final CompletableFuture<Void> produceMessage(String topic, WebRequest request) {
         return produceMessage(topic, 0, null, request);
     }
 
     @Override
-    public final CompletableFuture<HttpResult<byte[]>> sendMessage(HttpSimpleRequest request) {
+    public final CompletableFuture<HttpResult<byte[]>> sendMessage(WebRequest request) {
         return sendMessage(generateHttpReqTopic(request, null), 0, null, request);
     }
 
-    public final CompletableFuture<HttpResult<byte[]>> sendMessage(Serializable userid, HttpSimpleRequest request) {
+    public final CompletableFuture<HttpResult<byte[]>> sendMessage(Serializable userid, WebRequest request) {
         return sendMessage(generateHttpReqTopic(request, null), userid, null, request);
     }
 
-    public final CompletableFuture<HttpResult<byte[]>> sendMessage(Serializable userid, String groupid, HttpSimpleRequest request) {
+    public final CompletableFuture<HttpResult<byte[]>> sendMessage(Serializable userid, String groupid, WebRequest request) {
         return sendMessage(generateHttpReqTopic(request, null), userid, groupid, request);
     }
 
-    public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, HttpSimpleRequest request) {
+    public final CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, WebRequest request) {
         return sendMessage(topic, 0, null, request);
     }
 
-    public <T> CompletableFuture<T> sendMessage(HttpSimpleRequest request, Type type) {
+    public <T> CompletableFuture<T> sendMessage(WebRequest request, Type type) {
         return sendMessage(generateHttpReqTopic(request, null), 0, null, request).thenApply((HttpResult<byte[]> httbs) -> {
             if (!httbs.isSuccess()) {
                 throw new RedkaleException(httbs.getHeader("retinfo", "Internal Server Error"));
@@ -70,7 +70,7 @@ public abstract class HttpRpcClient implements ClusterRpcClient<HttpSimpleReques
         });
     }
 
-    public <T> CompletableFuture<T> sendMessage(Serializable userid, HttpSimpleRequest request, Type type) {
+    public <T> CompletableFuture<T> sendMessage(Serializable userid, WebRequest request, Type type) {
         return sendMessage(generateHttpReqTopic(request, null), userid, null, request).thenApply((HttpResult<byte[]> httbs) -> {
             if (!httbs.isSuccess()) {
                 throw new RedkaleException(httbs.getHeader("retinfo", "Internal Server Error"));
@@ -82,7 +82,7 @@ public abstract class HttpRpcClient implements ClusterRpcClient<HttpSimpleReques
         });
     }
 
-    public <T> CompletableFuture<T> sendMessage(Serializable userid, String groupid, HttpSimpleRequest request, Type type) {
+    public <T> CompletableFuture<T> sendMessage(Serializable userid, String groupid, WebRequest request, Type type) {
         return sendMessage(generateHttpReqTopic(request, null), userid, groupid, request).thenApply((HttpResult<byte[]> httbs) -> {
             if (!httbs.isSuccess()) {
                 throw new RedkaleException(httbs.getHeader("retinfo", "Internal Server Error"));
@@ -104,7 +104,7 @@ public abstract class HttpRpcClient implements ClusterRpcClient<HttpSimpleReques
         return Rest.generateHttpReqTopic(module, resname, getNodeid());
     }
 
-    public String generateHttpReqTopic(HttpSimpleRequest request, String path) {
+    public String generateHttpReqTopic(WebRequest request, String path) {
         String module = request.getPath();
         if (path != null && !path.isEmpty() && module.startsWith(path)) {
             module = module.substring(path.length());
@@ -115,9 +115,9 @@ public abstract class HttpRpcClient implements ClusterRpcClient<HttpSimpleReques
         return Rest.generateHttpReqTopic(module, resname, getNodeid());
     }
 
-    public abstract CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request);
+    public abstract CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, WebRequest request);
 
-    public abstract CompletableFuture<Void> produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request);
+    public abstract CompletableFuture<Void> produceMessage(String topic, Serializable userid, String groupid, WebRequest request);
 
     protected abstract String getNodeid();
 

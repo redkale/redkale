@@ -26,14 +26,14 @@ public class HttpMessageRequest extends HttpRequest {
     }
 
     public HttpMessageRequest(HttpContext context, MessageRecord message) {
-        super(context, (HttpSimpleRequest) null);
+        super(context, (WebRequest) null);
         if (message != null) {
             prepare(message);
         }
     }
 
     protected HttpMessageRequest prepare(MessageRecord message) {
-        super.initSimpleRequest(message.decodeContent(HttpSimpleRequestCoder.getInstance()), false);
+        super.initSimpleRequest(message.decodeContent(WebRequestCoder.getInstance()), false);
         this.message = message;
         this.currentUserid = message.getUserid();
         this.createTime = System.currentTimeMillis();

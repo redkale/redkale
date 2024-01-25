@@ -468,19 +468,19 @@ public final class Application {
                 return null;
             }
         }, java.net.http.HttpClient.class);
-        //------------------------------------ 注册 HttpSimpleClient ------------------------------------       
+        //------------------------------------ 注册 WebClient ------------------------------------       
         resourceFactory.register((ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) -> {
             try {
-                HttpSimpleClient httpClient = HttpSimpleClient.create(workExecutor, clientAsyncGroup);
+                WebClient httpClient = WebClient.create(workExecutor, clientAsyncGroup);
                 field.set(srcObj, httpClient);
                 rf.inject(resourceName, httpClient, null); // 给其可能包含@Resource的字段赋值;
-                rf.register(resourceName, HttpSimpleClient.class, httpClient);
+                rf.register(resourceName, WebClient.class, httpClient);
                 return httpClient;
             } catch (Exception e) {
-                logger.log(Level.SEVERE, HttpSimpleClient.class.getSimpleName() + " inject error", e);
+                logger.log(Level.SEVERE, WebClient.class.getSimpleName() + " inject error", e);
                 return null;
             }
-        }, HttpSimpleClient.class);
+        }, WebClient.class);
         //------------------------------------ 注册 HttpRpcClient ------------------------------------        
         resourceFactory.register((ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) -> {
             try {

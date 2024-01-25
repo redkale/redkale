@@ -89,22 +89,22 @@ public class HttpLocalRpcClient extends HttpRpcClient {
         return dispatcherServlet().findServletByTopic(topic);
     }
 
-    public HttpServlet findHttpServlet(HttpSimpleRequest request) {
+    public HttpServlet findHttpServlet(WebRequest request) {
         return dispatcherServlet().findServletByTopic(generateHttpReqTopic(request, request.getContextPath()));
     }
 
     @Override
-    public <T> CompletableFuture<T> sendMessage(HttpSimpleRequest request, Type type) {
+    public <T> CompletableFuture<T> sendMessage(WebRequest request, Type type) {
         return sendMessage((Serializable) null, (String) null, request, type);
     }
 
     @Override
-    public <T> CompletableFuture<T> sendMessage(Serializable userid, HttpSimpleRequest request, Type type) {
+    public <T> CompletableFuture<T> sendMessage(Serializable userid, WebRequest request, Type type) {
         return sendMessage(userid, (String) null, request, type);
     }
 
     @Override
-    public <T> CompletableFuture<T> sendMessage(Serializable userid, String groupid, HttpSimpleRequest request, Type type) {
+    public <T> CompletableFuture<T> sendMessage(Serializable userid, String groupid, WebRequest request, Type type) {
         if (isEmpty(request.getTraceid())) {
             request.setTraceid(Traces.currentTraceid());
         }
@@ -129,7 +129,7 @@ public class HttpLocalRpcClient extends HttpRpcClient {
     }
 
     @Override
-    public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request) {
+    public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, WebRequest request) {
         if (isEmpty(request.getTraceid())) {
             request.setTraceid(Traces.currentTraceid());
         }
@@ -166,7 +166,7 @@ public class HttpLocalRpcClient extends HttpRpcClient {
     }
 
     @Override
-    public CompletableFuture<Void> produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request) {
+    public CompletableFuture<Void> produceMessage(String topic, Serializable userid, String groupid, WebRequest request) {
         CompletableFuture future = new CompletableFuture();
         HttpDispatcherServlet ps = dispatcherServlet();
         HttpServlet servlet = ps.findServletByTopic(topic);
@@ -192,7 +192,7 @@ public class HttpLocalRpcClient extends HttpRpcClient {
 
     public static class HttpMessageLocalRequest extends HttpRequest {
 
-        public HttpMessageLocalRequest(HttpContext context, HttpSimpleRequest req, Serializable userid) {
+        public HttpMessageLocalRequest(HttpContext context, WebRequest req, Serializable userid) {
             super(context, req);
             if (userid != null) {
                 this.currentUserid = userid;

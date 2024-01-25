@@ -16,7 +16,7 @@ import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.client.ClientConnection;
 import org.redkale.net.client.ClientRequest;
-import static org.redkale.net.http.HttpSimpleClient.*;
+import static org.redkale.net.http.WebClient.*;
 import org.redkale.util.ByteArray;
 import org.redkale.util.Copier;
 import org.redkale.util.RedkaleException;
@@ -34,9 +34,9 @@ import static org.redkale.util.Utility.isNotEmpty;
  *
  * @since 2.1.0
  */
-public class HttpSimpleRequest extends ClientRequest implements java.io.Serializable {
+public class WebRequest extends ClientRequest implements java.io.Serializable {
 
-    private static final Function<HttpSimpleRequest, HttpSimpleRequest> copyFunc = Copier.func(HttpSimpleRequest.class, HttpSimpleRequest.class);
+    private static final Function<WebRequest, WebRequest> copyFunc = Copier.func(WebRequest.class, WebRequest.class);
 
     @ConvertColumn(index = 12)
     @Comment("是否RPC请求, 该类通常是为RPC创建的，故默认是true")
@@ -97,20 +97,20 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
     @Comment("http body信息")
     protected byte[] body; //对应HttpRequest.array
 
-    public static HttpSimpleRequest createPath(String path) {
-        return new HttpSimpleRequest().path(path).traceid(Traces.currentTraceid());
+    public static WebRequest createPath(String path) {
+        return new WebRequest().path(path).traceid(Traces.currentTraceid());
     }
 
-    public static HttpSimpleRequest createPath(String path, HttpHeaders header) {
+    public static WebRequest createPath(String path, HttpHeaders header) {
         return createPath(path).headers(header);
     }
 
-    public static HttpSimpleRequest createPath(String path, Object... params) {
+    public static WebRequest createPath(String path, Object... params) {
         return createPath(path, (HttpHeaders) null, params);
     }
 
-    public static HttpSimpleRequest createPath(String path, HttpHeaders header, Object... params) {
-        HttpSimpleRequest req = createPath(path).headers(header);
+    public static WebRequest createPath(String path, HttpHeaders header, Object... params) {
+        WebRequest req = createPath(path).headers(header);
         if (params.length > 0) {
             int len = params.length / 2;
             for (int i = 0; i < len; i++) {
@@ -120,40 +120,40 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return req;
     }
 
-    public static HttpSimpleRequest createGetPath(String path) {
+    public static WebRequest createGetPath(String path) {
         return createPath(path).method("GET");
     }
 
-    public static HttpSimpleRequest createGetPath(String path, HttpHeaders header) {
+    public static WebRequest createGetPath(String path, HttpHeaders header) {
         return createPath(path, header).method("GET");
     }
 
-    public static HttpSimpleRequest createGetPath(String path, Object... params) {
+    public static WebRequest createGetPath(String path, Object... params) {
         return createPath(path, params).method("GET");
     }
 
-    public static HttpSimpleRequest createGetPath(String path, HttpHeaders header, Object... params) {
+    public static WebRequest createGetPath(String path, HttpHeaders header, Object... params) {
         return createPath(path, header, params).method("GET");
     }
 
-    public static HttpSimpleRequest createPostPath(String path) {
+    public static WebRequest createPostPath(String path) {
         return createPath(path).method("POST");
     }
 
-    public static HttpSimpleRequest createPostPath(String path, HttpHeaders header) {
+    public static WebRequest createPostPath(String path, HttpHeaders header) {
         return createPath(path, header).method("POST");
     }
 
-    public static HttpSimpleRequest createPostPath(String path, Object... params) {
+    public static WebRequest createPostPath(String path, Object... params) {
         return createPath(path, params).method("POST");
     }
 
-    public static HttpSimpleRequest createPostPath(String path, HttpHeaders header, Object... params) {
+    public static WebRequest createPostPath(String path, HttpHeaders header, Object... params) {
         return createPath(path, header, params).method("POST");
     }
 
-    public HttpSimpleRequest copy() {
-        HttpSimpleRequest rs = copyFunc.apply(this);
+    public WebRequest copy() {
+        WebRequest rs = copyFunc.apply(this);
         rs.workThread = this.workThread;
         rs.createTime = this.createTime;
         return rs;
@@ -247,17 +247,17 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return this.contextPath + this.path;
     }
 
-    public HttpSimpleRequest formUrlencoded() {
+    public WebRequest formUrlencoded() {
         this.headers.set("Content-Type", "x-www-form-urlencoded");
         return this;
     }
 
-    public HttpSimpleRequest rpc(boolean rpc) {
+    public WebRequest rpc(boolean rpc) {
         this.rpc = rpc;
         return this;
     }
 
-    public HttpSimpleRequest traceid(String traceid) {
+    public WebRequest traceid(String traceid) {
         if (traceid != null) {
             if (traceid.indexOf(' ') >= 0 || traceid.indexOf('\r') >= 0 || traceid.indexOf('\n') >= 0) {
                 throw new RedkaleException("http-traceid(" + traceid + ") is illegal");
@@ -267,7 +267,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return this;
     }
 
-    public HttpSimpleRequest path(String path) {
+    public WebRequest path(String path) {
         if (path != null) {
             if (path.indexOf(' ') >= 0 || path.indexOf('\r') >= 0 || path.indexOf('\n') >= 0) {
                 throw new RedkaleException("http-path(" + path + ") is illegal");
@@ -277,7 +277,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return this;
     }
 
-    public HttpSimpleRequest contextPath(String contextPath) {
+    public WebRequest contextPath(String contextPath) {
         if (contextPath != null) {
             if (contextPath.indexOf(' ') >= 0 || contextPath.indexOf('\r') >= 0 || contextPath.indexOf('\n') >= 0) {
                 throw new RedkaleException("http-context-path(" + contextPath + ") is illegal");
@@ -287,72 +287,72 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return this;
     }
 
-    public HttpSimpleRequest bothConvertType(ConvertType convertType) {
+    public WebRequest bothConvertType(ConvertType convertType) {
         this.reqConvertType = convertType;
         this.respConvertType = convertType;
         return this;
     }
 
-    public HttpSimpleRequest reqConvertType(ConvertType reqConvertType) {
+    public WebRequest reqConvertType(ConvertType reqConvertType) {
         this.reqConvertType = reqConvertType;
         return this;
     }
 
-    public HttpSimpleRequest respConvertType(ConvertType respConvertType) {
+    public WebRequest respConvertType(ConvertType respConvertType) {
         this.respConvertType = respConvertType;
         return this;
     }
 
-    public HttpSimpleRequest remoteAddr(String remoteAddr) {
+    public WebRequest remoteAddr(String remoteAddr) {
         this.remoteAddr = remoteAddr;
         return this;
     }
 
-    public HttpSimpleRequest locale(String locale) {
+    public WebRequest locale(String locale) {
         this.locale = locale;
         return this;
     }
 
-    public HttpSimpleRequest sessionid(String sessionid) {
+    public WebRequest sessionid(String sessionid) {
         this.sessionid = sessionid;
         return this;
     }
 
-    public HttpSimpleRequest contentType(String contentType) {
+    public WebRequest contentType(String contentType) {
         this.contentType = contentType;
         return this;
     }
 
-    public HttpSimpleRequest currentUserid(Serializable userid) {
+    public WebRequest currentUserid(Serializable userid) {
         this.currentUserid = userid;
         return this;
     }
 
-    public HttpSimpleRequest removeHeader(String name) {
+    public WebRequest removeHeader(String name) {
         if (this.headers != null) {
             this.headers.remove(name);
         }
         return this;
     }
 
-    public HttpSimpleRequest removeParam(String name) {
+    public WebRequest removeParam(String name) {
         if (this.params != null) {
             this.params.remove(name);
         }
         return this;
     }
 
-    public HttpSimpleRequest headers(HttpHeaders header) {
+    public WebRequest headers(HttpHeaders header) {
         this.headers = header;
         return this;
     }
 
-    public HttpSimpleRequest params(HttpParameters params) {
+    public WebRequest params(HttpParameters params) {
         this.params = params;
         return this;
     }
 
-    public HttpSimpleRequest method(String method) {
+    public WebRequest method(String method) {
         if (method != null) {
             if (method.indexOf(' ') >= 0 || method.indexOf('\r') >= 0 || method.indexOf('\n') >= 0) {
                 throw new RedkaleException("http-method(" + method + ") is illegal");
@@ -362,7 +362,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return this;
     }
 
-    public HttpSimpleRequest addHeader(String key, String value) {
+    public WebRequest addHeader(String key, String value) {
         if (this.headers == null) {
             this.headers = HttpHeaders.create();
         }
@@ -370,23 +370,23 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return this;
     }
 
-    public HttpSimpleRequest addHeader(String key, TextConvert convert, Object value) {
+    public WebRequest addHeader(String key, TextConvert convert, Object value) {
         return addHeader(key, (convert == null ? JsonConvert.root() : convert).convertTo(value));
     }
 
-    public HttpSimpleRequest addHeader(String key, Object value) {
+    public WebRequest addHeader(String key, Object value) {
         return addHeader(key, JsonConvert.root().convertTo(value));
     }
 
-    public HttpSimpleRequest addHeader(String key, int value) {
+    public WebRequest addHeader(String key, int value) {
         return addHeader(key, String.valueOf(value));
     }
 
-    public HttpSimpleRequest addHeader(String key, long value) {
+    public WebRequest addHeader(String key, long value) {
         return addHeader(key, String.valueOf(value));
     }
 
-    public HttpSimpleRequest setHeader(String key, String value) {
+    public WebRequest setHeader(String key, String value) {
         if (this.headers == null) {
             this.headers = HttpHeaders.create();
         }
@@ -394,23 +394,23 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return this;
     }
 
-    public HttpSimpleRequest setHeader(String key, TextConvert convert, Object value) {
+    public WebRequest setHeader(String key, TextConvert convert, Object value) {
         return setHeader(key, (convert == null ? JsonConvert.root() : convert).convertTo(value));
     }
 
-    public HttpSimpleRequest setHeader(String key, Object value) {
+    public WebRequest setHeader(String key, Object value) {
         return setHeader(key, JsonConvert.root().convertTo(value));
     }
 
-    public HttpSimpleRequest setHeader(String key, int value) {
+    public WebRequest setHeader(String key, int value) {
         return setHeader(key, String.valueOf(value));
     }
 
-    public HttpSimpleRequest setHeader(String key, long value) {
+    public WebRequest setHeader(String key, long value) {
         return setHeader(key, String.valueOf(value));
     }
 
-    public HttpSimpleRequest param(String key, String value) {
+    public WebRequest param(String key, String value) {
         if (this.params == null) {
             this.params = HttpParameters.create();
         }
@@ -418,7 +418,7 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return this;
     }
 
-    public HttpSimpleRequest param(String key, TextConvert convert, Object value) {
+    public WebRequest param(String key, TextConvert convert, Object value) {
         if (this.params == null) {
             this.params = HttpParameters.create();
         }
@@ -429,41 +429,41 @@ public class HttpSimpleRequest extends ClientRequest implements java.io.Serializ
         return this;
     }
 
-    public HttpSimpleRequest param(String key, Object value) {
+    public WebRequest param(String key, Object value) {
         return param(key, JsonConvert.root(), value);
     }
 
-    public HttpSimpleRequest body(byte[] body) {
+    public WebRequest body(byte[] body) {
         this.body = body;
         return this;
     }
 
-    public HttpSimpleRequest clearParams() {
+    public WebRequest clearParams() {
         this.params = null;
         return this;
     }
 
-    public HttpSimpleRequest clearHeaders() {
+    public WebRequest clearHeaders() {
         this.headers = null;
         return this;
     }
 
-    public HttpSimpleRequest clearRemoteAddr() {
+    public WebRequest clearRemoteAddr() {
         this.remoteAddr = null;
         return this;
     }
 
-    public HttpSimpleRequest clearLocale() {
+    public WebRequest clearLocale() {
         this.locale = null;
         return this;
     }
 
-    public HttpSimpleRequest clearSessionid() {
+    public WebRequest clearSessionid() {
         this.sessionid = null;
         return this;
     }
 
-    public HttpSimpleRequest clearContentType() {
+    public WebRequest clearContentType() {
         this.contentType = null;
         return this;
     }

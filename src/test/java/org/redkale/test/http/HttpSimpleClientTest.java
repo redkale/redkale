@@ -11,8 +11,8 @@ import org.redkale.boot.Application;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.net.AsyncIOGroup;
 import org.redkale.net.http.HttpServer;
-import org.redkale.net.http.HttpSimpleClient;
-import org.redkale.net.http.HttpSimpleRequest;
+import org.redkale.net.http.WebClient;
+import org.redkale.net.http.WebRequest;
 import org.redkale.util.AnyValueWriter;
 
 /**
@@ -43,10 +43,10 @@ public class HttpSimpleClientTest {
         //Utility.sleep(50000); 
         final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
         asyncGroup.start();
-        HttpSimpleClient client = HttpSimpleClient.create(asyncGroup);
+        WebClient client = WebClient.create(asyncGroup);
         InetSocketAddress addr = new InetSocketAddress("127.0.0.1", port);
         {
-            HttpSimpleRequest req = HttpSimpleRequest.createPostPath("/test").param("id", 100);
+            WebRequest req = WebRequest.createPostPath("/test").param("id", 100);
             System.out.println(client.getAsync("http://127.0.0.1:" + port + req.getPath() + "?id=100").join());
             System.out.println(client.sendAsync(addr, req).join());
         }
@@ -55,7 +55,7 @@ public class HttpSimpleClientTest {
             final CountDownLatch cdl = new CountDownLatch(count);
             for (int i = 100; i < 100 + count; i++) {
                 final int index = i;
-                HttpSimpleRequest req = HttpSimpleRequest.createPostPath("/test").param("id", index);
+                WebRequest req = WebRequest.createPostPath("/test").param("id", index);
                 client.getAsync("http://127.0.0.1:" + port + req.getPath() + "?id=" + index).whenComplete((v, t) -> {
                     cdl.countDown();
                     Assertions.assertEquals("ok-" + index, new String((byte[]) v.getResult()));
@@ -68,7 +68,7 @@ public class HttpSimpleClientTest {
             final CountDownLatch cdl = new CountDownLatch(count);
             for (int i = 100; i < 100 + count; i++) {
                 final int index = i;
-                HttpSimpleRequest req = HttpSimpleRequest.createPostPath("/test").param("id", index);
+                WebRequest req = WebRequest.createPostPath("/test").param("id", index);
                 client.sendAsync(addr, req).whenComplete((v, t) -> {
                     cdl.countDown();
                     System.out.println("输出: " + new String((byte[]) v.getResult()));

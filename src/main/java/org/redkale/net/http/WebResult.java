@@ -14,10 +14,11 @@ import org.redkale.net.client.ClientResult;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ * @param <T> T
  *
  * @since 2.8.0
  */
-public class HttpSimpleResult<T> extends HttpResult<T> implements ClientResult {
+public class WebResult<T> extends HttpResult<T> implements ClientResult {
 
     int readState;
 

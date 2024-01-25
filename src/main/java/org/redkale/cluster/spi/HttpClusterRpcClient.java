@@ -42,7 +42,7 @@ public class HttpClusterRpcClient extends HttpRpcClient {
     protected ClusterAgent clusterAgent;
 
     @Resource(name = "cluster.httpClient", required = false)
-    protected HttpSimpleClient httpSimpleClient;
+    protected WebClient webClient;
 
     @Resource(name = "cluster.httpClient", required = false)
     protected java.net.http.HttpClient httpClient;
@@ -59,7 +59,7 @@ public class HttpClusterRpcClient extends HttpRpcClient {
     }
 
     @Override
-    public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request) {
+    public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, WebRequest request) {
         if (topicServletMap.computeIfAbsent(topic, t -> localClient.findHttpServlet(t) != null)) {
             return localClient.sendMessage(topic, userid, groupid, request);
         } else {
@@ -68,7 +68,7 @@ public class HttpClusterRpcClient extends HttpRpcClient {
     }
 
     @Override
-    public CompletableFuture<Void> produceMessage(String topic, Serializable userid, String groupid, HttpSimpleRequest request) {
+    public CompletableFuture<Void> produceMessage(String topic, Serializable userid, String groupid, WebRequest request) {
         if (topicServletMap.computeIfAbsent(topic, t -> localClient.findHttpServlet(t) != null)) {
             return localClient.produceMessage(topic, userid, groupid, request);
         } else {
@@ -76,7 +76,7 @@ public class HttpClusterRpcClient extends HttpRpcClient {
         }
     }
 
-    private CompletableFuture<HttpResult<byte[]>> httpAsync(boolean produce, Serializable userid, HttpSimpleRequest req) {
+    private CompletableFuture<HttpResult<byte[]>> httpAsync(boolean produce, Serializable userid, WebRequest req) {
         req.setTraceid(Traces.computeIfAbsent(req.getTraceid(), Traces.currentTraceid()));
         String module = req.getPath();
         module = module.substring(1, module.indexOf('/', 1));
@@ -123,13 +123,13 @@ public class HttpClusterRpcClient extends HttpRpcClient {
                 clientHeaders.set(Rest.REST_HEADER_RESP_CONVERT, req.getRespConvertType().toString());
             }
 
-            if (httpSimpleClient != null) {
-                HttpSimpleRequest newReq = req.copy().headers(clientHeaders);
+            if (webClient != null) {
+                WebRequest newReq = req.copy().headers(clientHeaders);
                 InetSocketAddress addr = randomAddress(newReq, addrs);
                 if (logger.isLoggable(Level.FINEST)) {
                     logger.log(Level.FINEST, "httpAsync: module=" + localModule + ", resname=" + resname + ", addr=" + addr);
                 }
-                return (CompletableFuture) httpSimpleClient.sendAsync(addr, newReq);
+                return (CompletableFuture) webClient.sendAsync(addr, newReq);
             }
             byte[] clientBody = null;
             if (isNotEmpty(req.getBody())) {
@@ -155,12 +155,12 @@ public class HttpClusterRpcClient extends HttpRpcClient {
         });
     }
 
-    protected InetSocketAddress randomAddress(HttpSimpleRequest req, Set<InetSocketAddress> addrs) {
+    protected InetSocketAddress randomAddress(WebRequest req, Set<InetSocketAddress> addrs) {
         InetSocketAddress[] array = addrs.toArray(new InetSocketAddress[addrs.size()]);
         return array[ThreadLocalRandom.current().nextInt(array.length)];
     }
 
-    protected CompletableFuture<HttpResult<byte[]>> sendEachAddressAsync(HttpSimpleRequest req,
+    protected CompletableFuture<HttpResult<byte[]>> sendEachAddressAsync(WebRequest req,
         String requestPath, final HttpHeaders clientHeaders, byte[] clientBody, Iterator<InetSocketAddress> it) {
         if (!it.hasNext()) {
             return new HttpResult<byte[]>().status(404).toFuture();

@@ -189,7 +189,7 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
-    protected HttpRequest(HttpContext context, HttpSimpleRequest req) {
+    protected HttpRequest(HttpContext context, WebRequest req) {
         super(context);
         this.array = new ByteArray();
         this.remoteAddrHeader = null;
@@ -201,7 +201,7 @@ public class HttpRequest extends Request<HttpContext> {
         }
     }
 
-    protected HttpRequest initSimpleRequest(HttpSimpleRequest req, boolean needPath) {
+    protected HttpRequest initSimpleRequest(WebRequest req, boolean needPath) {
         if (req != null) {
             this.rpc = req.rpc;
             this.traceid = req.traceid;
@@ -233,8 +233,8 @@ public class HttpRequest extends Request<HttpContext> {
         return this;
     }
 
-    public HttpSimpleRequest createSimpleRequest(String contextPath) {
-        HttpSimpleRequest req = new HttpSimpleRequest();
+    public WebRequest createSimpleRequest(String contextPath) {
+        WebRequest req = new WebRequest();
         req.setBody(array.length() == 0 ? null : array.getBytes());
         if (!getHeaders().isEmpty()) {
             req.setHeaders(headers);

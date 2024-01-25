@@ -11,7 +11,7 @@ import java.util.Arrays;
 import org.redkale.annotation.Comment;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.net.http.HttpSimpleRequest;
+import org.redkale.net.http.WebRequest;
 import org.redkale.net.http.WebSocketPacket;
 import org.redkale.net.sncp.SncpHeader;
 import org.redkale.util.RedkaleException;
@@ -38,7 +38,7 @@ public class MessageRecord implements Serializable {
     //Bson bytes
     public static final byte CTYPE_BSON = 2;
 
-    //HttpSimpleRequest
+    //WebRequest
     public static final byte CTYPE_HTTP_REQUEST = 3;
 
     //HttpResult<byte[]>
@@ -336,7 +336,7 @@ public class MessageRecord implements Serializable {
                 //SncpHeader包含不确定长度的信息，故不能再直接偏移读取
                 sb.append(",\"content\":").append("bytes[" + this.content.length + "]");
             } else if (this.ctype == CTYPE_HTTP_REQUEST) {
-                HttpSimpleRequest req = HttpSimpleRequestCoder.getInstance().decode(this.content);
+                WebRequest req = WebRequestCoder.getInstance().decode(this.content);
                 if (req != null) {
                     if (req.getCurrentUserid() == null) {
                         req.setCurrentUserid(this.userid);

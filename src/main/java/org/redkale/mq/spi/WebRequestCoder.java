@@ -12,11 +12,11 @@ import java.util.Map;
 import org.redkale.convert.ConvertType;
 import org.redkale.net.http.HttpHeaders;
 import org.redkale.net.http.HttpParameters;
-import org.redkale.net.http.HttpSimpleRequest;
+import org.redkale.net.http.WebRequest;
 import org.redkale.util.Utility;
 
 /**
- * HttpSimpleRequest的MessageCoder实现
+ * WebRequest的MessageCoder实现
  *
  * <p>
  * 详情见: https://redkale.org
@@ -25,11 +25,11 @@ import org.redkale.util.Utility;
  *
  * @since 2.1.0
  */
-public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
+public class WebRequestCoder implements MessageCoder<WebRequest> {
 
-    private static final HttpSimpleRequestCoder instance = new HttpSimpleRequestCoder();
+    private static final WebRequestCoder instance = new WebRequestCoder();
 
-    public static HttpSimpleRequestCoder getInstance() {
+    public static WebRequestCoder getInstance() {
         return instance;
     }
 
@@ -40,7 +40,7 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
     }
 
     @Override
-    public byte[] encode(HttpSimpleRequest data) {
+    public byte[] encode(WebRequest data) {
         byte[] traceid = MessageCoder.getBytes(data.getTraceid());//short-string
         byte[] path = MessageCoder.getBytes(data.getPath()); //long-string
         byte[] contextPath = MessageCoder.getBytes(data.getContextPath()); //short-string
@@ -141,12 +141,12 @@ public class HttpSimpleRequestCoder implements MessageCoder<HttpSimpleRequest> {
     }
 
     @Override
-    public HttpSimpleRequest decode(byte[] data) {
+    public WebRequest decode(byte[] data) {
         if (data == null) {
             return null;
         }
         ByteBuffer buffer = ByteBuffer.wrap(data);
-        HttpSimpleRequest req = new HttpSimpleRequest();
+        WebRequest req = new WebRequest();
         byte opt = buffer.get();
         req.setRpc((opt & 0b01) > 0);
         int reqformat = buffer.getInt();

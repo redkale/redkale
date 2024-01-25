@@ -17,15 +17,15 @@ import org.redkale.net.client.ClientConnection;
  *
  * @since 2.8.0
  */
-class HttpSimpleConnection extends ClientConnection<HttpSimpleRequest, HttpSimpleResult> {
+class WebConnection extends ClientConnection<WebRequest, WebResult> {
 
-    public HttpSimpleConnection(HttpSimpleClient client, AsyncConnection channel) {
+    public WebConnection(WebClient client, AsyncConnection channel) {
         super(client, channel);
     }
 
     @Override
     protected ClientCodec createCodec() {
-        return new HttpSimpleCodec(this);
+        return new WebCodec(this);
     }
 
 }
