@@ -197,14 +197,14 @@ public class HttpRequest extends Request<HttpContext> {
         this.localParameter = null;
         this.rpcAuthenticator = null;
         if (req != null) {
-            initSimpleRequest(req, true);
+            initWebRequest(req, true);
         }
     }
 
-    protected HttpRequest initSimpleRequest(WebRequest req, boolean needPath) {
+    protected HttpRequest initWebRequest(WebRequest req, boolean needPath) {
         if (req != null) {
             this.rpc = req.rpc;
-            this.traceid = req.traceid;
+            this.traceid = req.getTraceid();
             if (req.getBody() != null) {
                 this.array.put(req.getBody());
             }

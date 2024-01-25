@@ -33,7 +33,7 @@ public class HttpMessageRequest extends HttpRequest {
     }
 
     protected HttpMessageRequest prepare(MessageRecord message) {
-        super.initSimpleRequest(message.decodeContent(WebRequestCoder.getInstance()), false);
+        super.initWebRequest(message.decodeContent(WebRequestCoder.getInstance()), false);
         this.message = message;
         this.currentUserid = message.getUserid();
         this.createTime = System.currentTimeMillis();

@@ -85,22 +85,6 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
         return this;
     }
 
-    public int getReadTimeoutSeconds() {
-        return readTimeoutSeconds;
-    }
-
-    public void setReadTimeoutSeconds(int readTimeoutSeconds) {
-        this.readTimeoutSeconds = readTimeoutSeconds;
-    }
-
-    public int getWriteTimeoutSeconds() {
-        return writeTimeoutSeconds;
-    }
-
-    public void setWriteTimeoutSeconds(int writeTimeoutSeconds) {
-        this.writeTimeoutSeconds = writeTimeoutSeconds;
-    }
-
     public CompletableFuture<HttpResult<byte[]>> getAsync(String url) {
         return sendAsync("GET", url, null, (byte[]) null);
     }
@@ -425,7 +409,7 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
             }
             if (this.readState == READ_STATE_BODY) {
                 if (this.contentLength > 0) {
-                    array.put(buffer, Math.min((int) this.contentLength, buffer.remaining()));
+                    array.put(buffer, Math.min(this.contentLength, buffer.remaining()));
                     int lr = (int) this.contentLength - array.length();
                     if (lr == 0) {
                         this.readState = READ_STATE_END;

@@ -38,13 +38,9 @@ public class WebRequest extends ClientRequest implements java.io.Serializable {
 
     private static final Function<WebRequest, WebRequest> copyFunc = Copier.func(WebRequest.class, WebRequest.class);
 
-    @ConvertColumn(index = 12)
+    @ConvertColumn(index = 13)
     @Comment("是否RPC请求, 该类通常是为RPC创建的，故默认是true")
     protected boolean rpc = true;
-
-    @ConvertColumn(index = 13)
-    @Comment("链路ID")
-    protected String traceid;
 
     @ConvertColumn(index = 14)
     @Comment("请求参数的ConvertType")
@@ -257,6 +253,7 @@ public class WebRequest extends ClientRequest implements java.io.Serializable {
         return this;
     }
 
+    @Override
     public WebRequest traceid(String traceid) {
         if (traceid != null) {
             if (traceid.indexOf(' ') >= 0 || traceid.indexOf('\r') >= 0 || traceid.indexOf('\n') >= 0) {
@@ -482,10 +479,6 @@ public class WebRequest extends ClientRequest implements java.io.Serializable {
 
     public void setRpc(boolean rpc) {
         rpc(rpc);
-    }
-
-    public String getTraceid() {
-        return traceid;
     }
 
     public void setTraceid(String traceid) {
