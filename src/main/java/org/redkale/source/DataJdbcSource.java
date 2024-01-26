@@ -450,10 +450,14 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     try {
                         //执行一遍创建分表操作
                         Statement stmt = conn.createUpdateStatement();
-                        for (String copySql : tableCopys) {
-                            stmt.addBatch(copySql);
+                        if (tableCopys.size() == 1) {
+                            stmt.execute(tableCopys.get(0));
+                        } else {
+                            for (String copySql : tableCopys) {
+                                stmt.addBatch(copySql);
+                            }
+                            stmt.executeBatch();
                         }
-                        stmt.executeBatch();
                         conn.offerUpdateStatement(stmt);
                     } catch (SQLException sqle) { //多进程并发时可能会出现重复建表
                         if (isTableNotExist(info, sqle.getSQLState())) {
@@ -473,10 +477,14 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                                     conn.offerUpdateStatement(stmt);
                                     //再执行一遍创建分表操作
                                     stmt = conn.createUpdateStatement();
-                                    for (String copySql : tableCopys) {
-                                        stmt.addBatch(copySql);
+                                    if (tableCopys.size() == 1) {
+                                        stmt.execute(tableCopys.get(0));
+                                    } else {
+                                        for (String copySql : tableCopys) {
+                                            stmt.addBatch(copySql);
+                                        }
+                                        stmt.executeBatch();
                                     }
-                                    stmt.executeBatch();
                                     conn.offerUpdateStatement(stmt);
                                 }
                             } else { //需要先建库
@@ -496,10 +504,14 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                                 try {
                                     //再执行一遍创建分表操作
                                     stmt = conn.createUpdateStatement();
-                                    for (String copySql : tableCopys) {
-                                        stmt.addBatch(copySql);
+                                    if (tableCopys.size() == 1) {
+                                        stmt.execute(tableCopys.get(0));
+                                    } else {
+                                        for (String copySql : tableCopys) {
+                                            stmt.addBatch(copySql);
+                                        }
+                                        stmt.executeBatch();
                                     }
-                                    stmt.executeBatch();
                                     conn.offerUpdateStatement(stmt);
                                 } catch (SQLException sqle2) {
                                     if (isTableNotExist(info, sqle2.getSQLState())) {
@@ -517,10 +529,14 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                                             conn.offerUpdateStatement(stmt);
                                             //再执行一遍创建分表操作
                                             stmt = conn.createUpdateStatement();
-                                            for (String copySql : tableCopys) {
-                                                stmt.addBatch(copySql);
+                                            if (tableCopys.size() == 1) {
+                                                stmt.execute(tableCopys.get(0));
+                                            } else {
+                                                for (String copySql : tableCopys) {
+                                                    stmt.addBatch(copySql);
+                                                }
+                                                stmt.executeBatch();
                                             }
-                                            stmt.executeBatch();
                                             conn.offerUpdateStatement(stmt);
                                         }
                                     } else {
@@ -528,6 +544,8 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                                     }
                                 }
                             }
+                        } else {
+                            logger.log(Level.INFO, "executeBatch error, sqls: " + tableCopys, sqle);
                         }
                     }
                 } finally {
