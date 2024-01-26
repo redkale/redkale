@@ -63,8 +63,10 @@ public abstract class ClusterAgent {
 
     protected Set<String> tags;
 
+    //key: serviceid
     protected final ConcurrentHashMap<String, ClusterEntry> localEntrys = new ConcurrentHashMap<>();
 
+    //key: serviceid
     protected final ConcurrentHashMap<String, ClusterEntry> remoteEntrys = new ConcurrentHashMap<>();
 
     public void init(AnyValue config) {
