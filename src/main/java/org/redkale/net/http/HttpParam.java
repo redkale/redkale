@@ -99,7 +99,7 @@ public @interface HttpParam {
      *
      * @author zhangjx
      */
-    public static enum HttpParameterStyle {
+    public enum HttpParameterStyle {
 
         QUERY, HEADER, COOKIE, BODY;
     }

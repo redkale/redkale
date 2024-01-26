@@ -23,11 +23,11 @@ public final class WebSocketPacket {
 
     public static final WebSocketPacket DEFAULT_PING_PACKET = new WebSocketPacket(FrameType.PING, new byte[0]);
 
-    public static enum MessageType {
+    public enum MessageType {
         STRING, BYTES, OBJECT;
     }
 
-    public static enum FrameType {
+    public enum FrameType {
 
         SERIES(0x00), TEXT(0x01), BINARY(0x02), CLOSE(0x08), PING(0x09), PONG(0x0A);
 

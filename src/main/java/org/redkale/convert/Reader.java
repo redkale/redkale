@@ -17,7 +17,7 @@ import java.util.Map;
  */
 public abstract class Reader {
 
-    public static enum ValueType {
+    public enum ValueType {
         STRING, ARRAY, MAP;
     }
 

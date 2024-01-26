@@ -2579,7 +2579,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     }
 
-    public static enum CacheEntryType {
+    public enum CacheEntryType {
         OBJECT, ATOMIC, DOUBLE, SSET, ZSET, LIST, MAP;
     }
 

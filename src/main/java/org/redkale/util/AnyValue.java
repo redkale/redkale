@@ -33,7 +33,7 @@ public abstract class AnyValue {
      * merge两节点是否覆盖的判断函数
      *
      */
-    public static enum MergeEnum {
+    public enum MergeEnum {
         /**
          * 异常
          */
