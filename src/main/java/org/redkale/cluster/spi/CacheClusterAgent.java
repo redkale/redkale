@@ -131,6 +131,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     private Runnable newTask() {
         return () -> {
             try {
+                long s = System.currentTimeMillis();
                 localEntrys.values().stream()
                     .filter(e -> !e.canceled)
                     .forEach(this::checkLocalHealth);
@@ -140,8 +141,16 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
                 checkApplicationHealth();
                 checkHttpAddressHealth();
                 loadSncpAddressHealth();
+                long e = System.currentTimeMillis() - s;
+                if (e >= ttls * 9 / 10) {
+                    logger.log(Level.WARNING, getClass().getSimpleName() + ".schedule check-slower cost " + e + " ms");
+                } else if (e >= ttls / 2) {
+                    logger.log(Level.FINE, getClass().getSimpleName() + ".schedule check-slowly cost " + e + " ms");
+                } else {
+                    logger.log(Level.FINEST, getClass().getSimpleName() + ".schedule check cost " + e + " ms");
+                }
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "scheduleAtFixedRate check error", e);
+                logger.log(Level.SEVERE, getClass().getSimpleName() + ".schedule check error", e);
             }
         };
     }
