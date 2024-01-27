@@ -9,7 +9,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
 import static org.redkale.source.DataResultSet.formatColumnValue;
 import org.redkale.util.*;
-import org.redkale.annotation.DynClassDepends;
+import org.redkale.annotation.ClassDepends;
 
 /**
  *
@@ -21,7 +21,7 @@ import org.redkale.annotation.DynClassDepends;
  * @author zhangjx
  * @since 2.8.0
  */
-@DynClassDepends
+@ClassDepends
 public interface DataSqlSource extends DataSource {
 
     /**
@@ -130,10 +130,10 @@ public interface DataSqlSource extends DataSource {
      */
     public <V> CompletableFuture<V> nativeQueryAsync(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler, Map<String, Object> params);
 
-    @DynClassDepends
+    @ClassDepends
     public <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, Flipper flipper, Map<String, Object> params);
 
-    @DynClassDepends
+    @ClassDepends
     public <V> CompletableFuture<Sheet<V>> nativeQuerySheetAsync(Class<V> type, String sql, Flipper flipper, Map<String, Object> params);
 
     //----------------------------- 无参数 -----------------------------
@@ -145,37 +145,37 @@ public interface DataSqlSource extends DataSource {
         return nativeQueryAsync(sql, null, handler);
     }
 
-    @DynClassDepends
+    @ClassDepends
     default <V> V nativeQueryOne(Class<V> type, String sql) {
         return nativeQuery(sql, rset -> EntityBuilder.getOneValue(type, rset));
     }
 
-    @DynClassDepends
+    @ClassDepends
     default <V> CompletableFuture<V> nativeQueryOneAsync(Class<V> type, String sql) {
         return nativeQueryAsync(sql, rset -> EntityBuilder.getOneValue(type, rset));
     }
 
-    @DynClassDepends
+    @ClassDepends
     default <V> List<V> nativeQueryList(Class<V> type, String sql) {
         return nativeQuery(sql, rset -> EntityBuilder.getListValue(type, rset));
     }
 
-    @DynClassDepends
+    @ClassDepends
     default <V> CompletableFuture<List<V>> nativeQueryListAsync(Class<V> type, String sql) {
         return nativeQueryAsync(sql, rset -> EntityBuilder.getListValue(type, rset));
     }
 
-    @DynClassDepends
+    @ClassDepends
     default <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, Flipper flipper) {
         return nativeQuerySheet(type, sql, flipper, Collections.emptyMap());
     }
 
-    @DynClassDepends
+    @ClassDepends
     default <V> CompletableFuture<Sheet<V>> nativeQuerySheetAsync(Class<V> type, String sql, Flipper flipper) {
         return nativeQuerySheetAsync(type, sql, flipper, Collections.emptyMap());
     }
 
-    @DynClassDepends
+    @ClassDepends
     default <K, V> Map<K, V> nativeQueryMap(Class<K> keyType, Class<V> valType, String sql) {
         return nativeQuery(sql, rset -> {
             Map<K, V> map = new LinkedHashMap<>();
@@ -188,7 +188,7 @@ public interface DataSqlSource extends DataSource {
         });
     }
 
-    @DynClassDepends
+    @ClassDepends
     default <K, V> CompletableFuture<Map<K, V>> nativeQueryMapAsync(Class<K> keyType, Class<V> valType, String sql) {
         return nativeQueryAsync(sql, rset -> {
             Map<K, V> map = new LinkedHashMap<>();
@@ -226,7 +226,7 @@ public interface DataSqlSource extends DataSource {
         return nativeQueryAsync(sql, null, handler, params);
     }
 
-    @DynClassDepends
+    @ClassDepends
     default <V> V nativeQueryOne(Class<V> type, String sql, Map<String, Object> params) {
         return nativeQuery(sql, rset -> {
             if (!rset.next()) {
@@ -239,7 +239,7 @@ public interface DataSqlSource extends DataSource {
         }, params);
     }
 
-    @DynClassDepends
+    @ClassDepends
     default <V> CompletableFuture<V> nativeQueryOneAsync(Class<V> type, String sql, Map<String, Object> params) {
         return nativeQueryAsync(sql, rset -> {
             if (!rset.next()) {
@@ -252,7 +252,7 @@ public interface DataSqlSource extends DataSource {
         }, params);
     }
 
-    @DynClassDepends
+    @ClassDepends
     default <V> List<V> nativeQueryList(Class<V> type, String sql, Map<String, Object> params) {
         return nativeQuery(sql, rset -> {
             if (EntityBuilder.isSimpleType(type)) {
@@ -266,7 +266,7 @@ public interface DataSqlSource extends DataSource {
         }, params);
     }
 
-    @DynClassDepends
+    @ClassDepends
     default <V> CompletableFuture<List<V>> nativeQueryListAsync(Class<V> type, String sql, Map<String, Object> params) {
         return nativeQueryAsync(sql, rset -> {
             if (EntityBuilder.isSimpleType(type)) { 
@@ -280,7 +280,7 @@ public interface DataSqlSource extends DataSource {
         }, params);
     }
 
-    @DynClassDepends
+    @ClassDepends
     default <K, V> Map<K, V> nativeQueryMap(Class<K> keyType, Class<V> valType, String sql, Map<String, Object> params) {
         return nativeQuery(sql, rset -> {
             Map<K, V> map = new LinkedHashMap<>();
@@ -293,7 +293,7 @@ public interface DataSqlSource extends DataSource {
         }, params);
     }
 
-    @DynClassDepends
+    @ClassDepends
     default <K, V> CompletableFuture<Map<K, V>> nativeQueryMapAsync(Class<K> keyType, Class<V> valType, String sql, Map<String, Object> params) {
         return nativeQueryAsync(sql, rset -> {
             Map<K, V> map = new LinkedHashMap<>();

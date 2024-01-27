@@ -31,7 +31,7 @@ import org.redkale.source.Flipper;
 import org.redkale.util.*;
 import org.redkale.util.RedkaleClassLoader.DynBytesClassLoader;
 import static org.redkale.util.Utility.isEmpty;
-import org.redkale.annotation.DynClassDepends;
+import org.redkale.annotation.ClassDepends;
 
 /**
  * <p>
@@ -294,7 +294,7 @@ public final class Rest {
     }
 
     //仅供Rest动态构建里 currentUserid() 使用
-    @DynClassDepends
+    @ClassDepends
     public static <T> T orElse(T t, T defValue) {
         return t == null ? defValue : t;
     }

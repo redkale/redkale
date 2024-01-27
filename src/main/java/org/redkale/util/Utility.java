@@ -26,7 +26,7 @@ import java.util.zip.GZIPInputStream;
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.annotation.DynClassDepends;
+import org.redkale.annotation.ClassDepends;
 
 /**
  *
@@ -1545,7 +1545,7 @@ public final class Utility {
      *
      * @return Map
      */
-    @DynClassDepends
+    @ClassDepends
     public static <K, V> HashMap<K, V> ofMap(Object... items) {
         HashMap<K, V> map = new LinkedHashMap<>(Math.max(1, items.length / 2));
         int len = items.length / 2;
@@ -3441,7 +3441,7 @@ public final class Utility {
      *
      * @return 对象
      */
-    @DynClassDepends(Copier.class)
+    @ClassDepends(Copier.class)
     public static <T> T convertValue(Type type, Object value) {
         if (type == null || value == null) {
             return (T) value;

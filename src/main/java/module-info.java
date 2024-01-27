@@ -14,7 +14,6 @@ module org.redkale {
     requires jdk.unsupported;  //sun.misc.Unsafe
 
     exports org.redkale.annotation;
-    exports org.redkale.asm;
     exports org.redkale.boot;
     exports org.redkale.boot.watch;
     exports org.redkale.cache;

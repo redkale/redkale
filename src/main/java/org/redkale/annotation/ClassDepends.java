@@ -20,7 +20,7 @@ import static java.lang.annotation.RetentionPolicy.*;
 @Documented
 @Target({TYPE, METHOD, FIELD})
 @Retention(SOURCE)
-public @interface DynClassDepends {
+public @interface ClassDepends {
 
     Class[] value() default {};
 }

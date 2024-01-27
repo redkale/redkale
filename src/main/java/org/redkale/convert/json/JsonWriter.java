@@ -7,7 +7,7 @@ package org.redkale.convert.json;
 
 import java.lang.reflect.Type;
 import org.redkale.convert.*;
-import org.redkale.annotation.DynClassDepends;
+import org.redkale.annotation.ClassDepends;
 
 /**
  *
@@ -29,7 +29,7 @@ public abstract class JsonWriter extends Writer {
         return (JsonWriter) super.withFeatures(features);
     }
 
-    @DynClassDepends
+    @ClassDepends
     public boolean isExtFuncEmpty() {
         return this.objExtFunc == null && this.objFieldFunc == null;
     }
@@ -49,57 +49,57 @@ public abstract class JsonWriter extends Writer {
      * @param quote 是否加双引号
      * @param value 非null且不含需要转义的字符的String值
      */
-    @DynClassDepends
+    @ClassDepends
     public abstract void writeLatin1To(final boolean quote, final String value);
 
-    @DynClassDepends
+    @ClassDepends
     public abstract void writeFieldShortValue(final byte[] fieldBytes, final short value);
 
-    @DynClassDepends
+    @ClassDepends
     public abstract void writeFieldIntValue(final byte[] fieldBytes, final int value);
 
-    @DynClassDepends
+    @ClassDepends
     public abstract void writeFieldLongValue(final byte[] fieldBytes, final long value);
 
-    @DynClassDepends
+    @ClassDepends
     public abstract void writeFieldLatin1Value(final byte[] fieldBytes, final String value);
 
-    @DynClassDepends
+    @ClassDepends
     public abstract void writeLastFieldShortValue(final byte[] fieldBytes, final short value);
 
-    @DynClassDepends
+    @ClassDepends
     public abstract void writeLastFieldIntValue(final byte[] fieldBytes, final int value);
 
-    @DynClassDepends
+    @ClassDepends
     public abstract void writeLastFieldLongValue(final byte[] fieldBytes, final long value);
 
-    @DynClassDepends
+    @ClassDepends
     public abstract void writeLastFieldLatin1Value(final byte[] fieldBytes, final String value);
 
     //firstFieldBytes 必须带{开头
-    @DynClassDepends
+    @ClassDepends
     public abstract void writeObjectByOnlyOneLatin1FieldValue(final byte[] firstFieldBytes, final String value);
 
     //firstFieldBytes 必须带{开头, lastFieldBytes必须,开头
-    @DynClassDepends
+    @ClassDepends
     public abstract void writeObjectByOnlyTwoIntFieldValue(final byte[] firstFieldBytes, final int value1, final byte[] lastFieldBytes, final int value2);
 
     @Override
-    @DynClassDepends
+    @ClassDepends
     public abstract void writeBoolean(boolean value);
 
     @Override
-    @DynClassDepends
+    @ClassDepends
     public abstract void writeInt(int value);
 
     @Override
-    @DynClassDepends
+    @ClassDepends
     public abstract void writeLong(long value);
 
     public abstract void writeString(final boolean quote, String value);
 
     @Override
-    @DynClassDepends
+    @ClassDepends
     public abstract void writeString(String value);
 
     @Override //只容许JsonBytesWriter重写此方法

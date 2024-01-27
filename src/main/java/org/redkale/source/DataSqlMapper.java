@@ -14,7 +14,7 @@ import org.redkale.util.LambdaFunction;
 import org.redkale.util.LambdaSupplier;
 import org.redkale.util.SelectColumn;
 import org.redkale.util.Sheet;
-import org.redkale.annotation.DynClassDepends;
+import org.redkale.annotation.ClassDepends;
 
 /**
  * 类似Mybatis的Mapper接口类, 接口系列和DataSource相似度高 <br>
@@ -39,7 +39,7 @@ public interface DataSqlMapper<T> {
      *
      * @return DataSqlSource
      */
-    @DynClassDepends
+    @ClassDepends
     DataSqlSource dataSource();
 
     /**
@@ -48,7 +48,7 @@ public interface DataSqlMapper<T> {
      *
      * @return Class
      */
-    @DynClassDepends
+    @ClassDepends
     Class<T> entityType();
 
     /**

@@ -20,7 +20,7 @@ import static java.lang.annotation.ElementType.*;
 @Documented
 @Target({METHOD, CONSTRUCTOR})
 @Retention(RUNTIME)
-@DynClassDepends
+@ClassDepends
 public @interface ConstructorParameters {
 
     String[] value();

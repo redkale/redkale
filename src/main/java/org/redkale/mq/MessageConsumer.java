@@ -6,7 +6,7 @@ package org.redkale.mq;
 import org.redkale.annotation.Component;
 import org.redkale.service.Local;
 import org.redkale.util.AnyValue;
-import org.redkale.annotation.DynClassDepends;
+import org.redkale.annotation.ClassDepends;
 
 /**
  * MQ消费器， 实现类必须标记{@link org.redkale.mq.ResourceConsumer}
@@ -21,7 +21,7 @@ import org.redkale.annotation.DynClassDepends;
  */
 @Local
 @Component
-@DynClassDepends
+@ClassDepends
 public interface MessageConsumer<T> {
 
     default void init(AnyValue config) {

@@ -16,7 +16,7 @@ import org.redkale.util.Environment;
 import org.redkale.util.MultiHashKey;
 import org.redkale.util.ThrowSupplier;
 import org.redkale.util.TypeToken;
-import org.redkale.annotation.DynClassDepends;
+import org.redkale.annotation.ClassDepends;
 
 /**
  *
@@ -29,7 +29,7 @@ import org.redkale.annotation.DynClassDepends;
  *
  * @since 2.8.0
  */
-@DynClassDepends
+@ClassDepends
 public class CacheAction {
 
     @Resource
@@ -102,7 +102,7 @@ public class CacheAction {
         this.remoteExpire = createDuration(cached.getRemoteExpire());
     }
 
-    @DynClassDepends
+    @ClassDepends
     public <T> T get(ThrowSupplier<T> supplier, Object... args) {
         if (async) {
             ThrowSupplier supplier0 = supplier;

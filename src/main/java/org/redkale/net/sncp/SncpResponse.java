@@ -14,7 +14,7 @@ import static org.redkale.net.sncp.SncpHeader.KEEPALIVE_OFF;
 import static org.redkale.net.sncp.SncpHeader.KEEPALIVE_ON;
 import org.redkale.util.ByteArray;
 import org.redkale.util.Traces;
-import org.redkale.annotation.DynClassDepends;
+import org.redkale.annotation.ClassDepends;
 
 /**
  *
@@ -86,7 +86,7 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         return this;
     }
 
-    @DynClassDepends
+    @ClassDepends
     public <T extends CompletionHandler> T getParamAsyncHandler() {
         return (T) this.paramAsyncHandler;
     }
