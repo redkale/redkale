@@ -6,7 +6,7 @@
 package org.redkale.convert;
 
 import java.lang.reflect.Type;
-import org.redkale.asm.AsmDepends;
+import org.redkale.annotation.DynClassDepends;
 
 /**
  * 反序列化操作类
@@ -18,7 +18,7 @@ import org.redkale.asm.AsmDepends;
  * @param <R> Reader输入的子类
  * @param <T> 反解析的数据类型
  */
-@AsmDepends
+@DynClassDepends
 public interface Decodeable<R extends Reader, T> {
 
     /**

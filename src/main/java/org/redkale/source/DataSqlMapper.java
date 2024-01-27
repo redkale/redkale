@@ -10,11 +10,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
-import org.redkale.asm.AsmDepends;
 import org.redkale.util.LambdaFunction;
 import org.redkale.util.LambdaSupplier;
 import org.redkale.util.SelectColumn;
 import org.redkale.util.Sheet;
+import org.redkale.annotation.DynClassDepends;
 
 /**
  * 类似Mybatis的Mapper接口类, 接口系列和DataSource相似度高 <br>
@@ -39,7 +39,7 @@ public interface DataSqlMapper<T> {
      *
      * @return DataSqlSource
      */
-    @AsmDepends
+    @DynClassDepends
     DataSqlSource dataSource();
 
     /**
@@ -48,7 +48,7 @@ public interface DataSqlMapper<T> {
      *
      * @return Class
      */
-    @AsmDepends
+    @DynClassDepends
     Class<T> entityType();
 
     /**

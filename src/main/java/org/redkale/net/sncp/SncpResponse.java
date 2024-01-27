@@ -8,13 +8,13 @@ package org.redkale.net.sncp;
 import java.lang.reflect.Type;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.*;
-import org.redkale.asm.AsmDepends;
 import org.redkale.convert.bson.BsonWriter;
 import org.redkale.net.Response;
 import static org.redkale.net.sncp.SncpHeader.KEEPALIVE_OFF;
 import static org.redkale.net.sncp.SncpHeader.KEEPALIVE_ON;
 import org.redkale.util.ByteArray;
 import org.redkale.util.Traces;
+import org.redkale.annotation.DynClassDepends;
 
 /**
  *
@@ -86,7 +86,7 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         return this;
     }
 
-    @AsmDepends
+    @DynClassDepends
     public <T extends CompletionHandler> T getParamAsyncHandler() {
         return (T) this.paramAsyncHandler;
     }

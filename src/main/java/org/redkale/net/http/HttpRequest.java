@@ -14,13 +14,13 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import org.redkale.annotation.Comment;
-import org.redkale.asm.AsmDepends;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.Request;
 import org.redkale.util.*;
 import static org.redkale.util.Utility.isEmpty;
 import static org.redkale.util.Utility.isNotEmpty;
+import org.redkale.annotation.DynClassDepends;
 
 /**
  * Http请求包 与javax.servlet.http.HttpServletRequest 基本类似。  <br>
@@ -1181,7 +1181,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @since 2.4.0
      */
-    @AsmDepends
+    @DynClassDepends
     @SuppressWarnings("unchecked")
     public int currentIntUserid() {
         if (currentUserid == CURRUSERID_NIL || currentUserid == null) {
@@ -1201,7 +1201,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @since 2.7.0
      */
-    @AsmDepends
+    @DynClassDepends
     @SuppressWarnings("unchecked")
     public long currentLongUserid() {
         if (currentUserid == CURRUSERID_NIL || currentUserid == null) {
@@ -1221,7 +1221,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @since 2.8.0
      */
-    @AsmDepends
+    @DynClassDepends
     @SuppressWarnings("unchecked")
     public String currentStringUserid() {
         if (currentUserid == CURRUSERID_NIL || currentUserid == null) {
@@ -1240,7 +1240,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @since 2.1.0
      */
-    @AsmDepends
+    @DynClassDepends
     @SuppressWarnings("unchecked")
     public <T extends Serializable> T currentUserid(Class<T> type) {
         if (currentUserid == CURRUSERID_NIL || currentUserid == null) {
@@ -2163,7 +2163,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return AnyValue
      */
-    @AsmDepends
+    @DynClassDepends
     public HttpHeaders getHeaders() {
         parseHeader();
         return headers;
@@ -2199,7 +2199,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
-    @AsmDepends
+    @DynClassDepends
     public String getHeader(String name, String defaultValue) {
         parseHeader();
         return headers.firstValue(name, defaultValue);
@@ -2214,7 +2214,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
-    @AsmDepends
+    @DynClassDepends
     public <T> T getJsonHeader(java.lang.reflect.Type type, String name) {
         String v = getHeader(name);
         return isEmpty(v) ? null : jsonConvert.convertFrom(type, v);
@@ -2230,7 +2230,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
-    @AsmDepends
+    @DynClassDepends
     public <T> T getJsonHeader(JsonConvert convert, java.lang.reflect.Type type, String name) {
         String v = getHeader(name);
         return isEmpty(v) ? null : convert.convertFrom(type, v);
@@ -2244,7 +2244,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
-    @AsmDepends
+    @DynClassDepends
     public boolean getBooleanHeader(String name, boolean defaultValue) {
         String value = getHeader(name);
         return isEmpty(value) ? defaultValue : Boolean.parseBoolean(value);
@@ -2258,7 +2258,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
-    @AsmDepends
+    @DynClassDepends
     public short getShortHeader(String name, short defaultValue) {
         String value = getHeader(name);
         if (isEmpty(value)) {
@@ -2280,7 +2280,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
-    @AsmDepends
+    @DynClassDepends
     public short getShortHeader(int radix, String name, short defaultValue) {
         String value = getHeader(name);
         if (isEmpty(value)) {
@@ -2301,7 +2301,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
-    @AsmDepends
+    @DynClassDepends
     public short getShortHeader(String name, int defaultValue) {
         String value = getHeader(name);
         if (isEmpty(value)) {
@@ -2323,7 +2323,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
-    @AsmDepends
+    @DynClassDepends
     public short getShortHeader(int radix, String name, int defaultValue) {
         String value = getHeader(name);
         if (isEmpty(value)) {
@@ -2344,7 +2344,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
-    @AsmDepends
+    @DynClassDepends
     public int getIntHeader(String name, int defaultValue) {
         String value = getHeader(name);
         if (isEmpty(value)) {
@@ -2366,7 +2366,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
-    @AsmDepends
+    @DynClassDepends
     public int getIntHeader(int radix, String name, int defaultValue) {
         String value = getHeader(name);
         if (isEmpty(value)) {
@@ -2387,7 +2387,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
-    @AsmDepends
+    @DynClassDepends
     public long getLongHeader(String name, long defaultValue) {
         String value = getHeader(name);
         if (isEmpty(value)) {
@@ -2409,7 +2409,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
-    @AsmDepends
+    @DynClassDepends
     public long getLongHeader(int radix, String name, long defaultValue) {
         String value = getHeader(name);
         if (isEmpty(value)) {
@@ -2430,7 +2430,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
-    @AsmDepends
+    @DynClassDepends
     public float getFloatHeader(String name, float defaultValue) {
         String value = getHeader(name);
         if (isEmpty(value)) {
@@ -2451,7 +2451,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return header值
      */
-    @AsmDepends
+    @DynClassDepends
     public double getDoubleHeader(String name, double defaultValue) {
         String value = getHeader(name);
         if (isEmpty(value)) {
@@ -2470,7 +2470,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return AnyValue
      */
-    @AsmDepends
+    @DynClassDepends
     public HttpParameters getParameters() {
         parseBody();
         return params;

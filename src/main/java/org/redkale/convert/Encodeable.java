@@ -6,7 +6,7 @@
 package org.redkale.convert;
 
 import java.lang.reflect.Type;
-import org.redkale.asm.AsmDepends;
+import org.redkale.annotation.DynClassDepends;
 
 /**
  * 序列化操作类
@@ -18,7 +18,7 @@ import org.redkale.asm.AsmDepends;
  * @param <W> Writer输出的子类
  * @param <T> 序列化的数据类型
  */
-@AsmDepends
+@DynClassDepends
 public interface Encodeable<W extends Writer, T> {
 
     /**

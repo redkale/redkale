@@ -8,7 +8,6 @@ package org.redkale.annotation;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
-import org.redkale.asm.AsmDepends;
 
 /**
  * 类似java.beans.ConstructorProperties, 必须配合Creator使用
@@ -21,7 +20,7 @@ import org.redkale.asm.AsmDepends;
 @Documented
 @Target({METHOD, CONSTRUCTOR})
 @Retention(RUNTIME)
-@AsmDepends
+@DynClassDepends
 public @interface ConstructorParameters {
 
     String[] value();

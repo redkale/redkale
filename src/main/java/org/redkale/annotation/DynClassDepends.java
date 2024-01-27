@@ -1,14 +1,14 @@
 /*
  *
  */
-package org.redkale.asm;
+package org.redkale.annotation;
 
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.*;
 
 /**
- * 被标记的元素表示会被asm动态字节码调用到
+ * 被标记的元素表示会被动态字节码调用
  *
  * <p>
  * 详情见: https://redkale.org
@@ -20,7 +20,7 @@ import static java.lang.annotation.RetentionPolicy.*;
 @Documented
 @Target({TYPE, METHOD, FIELD})
 @Retention(SOURCE)
-public @interface AsmDepends {
+public @interface DynClassDepends {
 
     Class[] value() default {};
 }

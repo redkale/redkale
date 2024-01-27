@@ -7,8 +7,8 @@ package org.redkale.convert;
 
 import java.lang.reflect.*;
 import java.util.function.*;
-import org.redkale.asm.AsmDepends;
 import org.redkale.util.*;
+import org.redkale.annotation.DynClassDepends;
 
 /**
  * 序列化的数据输出流
@@ -131,7 +131,7 @@ public abstract class Writer {
      *
      * @param clazz 对象的类名
      */
-    @AsmDepends
+    @DynClassDepends
     public final void writeObjectNull(final Class clazz) {
         writeClassName(null);
         writeNull();

@@ -6,8 +6,8 @@ package org.redkale.mq;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import org.redkale.asm.AsmDepends;
 import org.redkale.convert.ConvertType;
+import org.redkale.annotation.DynClassDepends;
 
 /**
  * MQ资源注解, 只能标记在{@link org.redkale.mq.MessageConsumer}子类上
@@ -19,7 +19,7 @@ import org.redkale.convert.ConvertType;
  *
  * @since 2.8.0
  */
-@AsmDepends
+@DynClassDepends
 @Documented
 @Target({TYPE})
 @Retention(RUNTIME)
