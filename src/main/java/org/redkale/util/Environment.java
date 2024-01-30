@@ -91,13 +91,15 @@ public class Environment implements java.io.Serializable {
             String subVal = properties.getProperty(key);
             if (subVal != null) {
                 String newVal = getPropertyValue(subVal, envs);
-                return getPropertyValue(val.substring(0, startIndex) + newVal + val.substring(endIndex + 1));
+                newVal = val.substring(0, startIndex) + newVal + val.substring(endIndex + 1);
+                return endIndex == chars.length - 1 ? newVal : getPropertyValue(newVal);
             } else {
                 for (Properties prop : envs) {
                     subVal = prop.getProperty(key);
                     if (subVal != null) {
                         String newVal = getPropertyValue(subVal, envs);
-                        return getPropertyValue(val.substring(0, startIndex) + newVal + val.substring(endIndex + 1));
+                        newVal = val.substring(0, startIndex) + newVal + val.substring(endIndex + 1);
+                        return endIndex == chars.length - 1 ? newVal : getPropertyValue(newVal);
                     }
                 }
                 if (pos3 > 0) {
