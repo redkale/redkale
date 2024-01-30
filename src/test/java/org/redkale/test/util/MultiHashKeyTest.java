@@ -86,7 +86,11 @@ public class MultiHashKeyTest {
 
     @Test
     public void run6() throws Exception {
-
+        String[] paramNames = {"map", "id"};
+        String key = "{key_#{map.name}_#{id}_#{map.index}}";
+        MultiHashKey rs = MultiHashKey.create(paramNames, key);
+        Map<String, Object> map = Utility.ofMap("name", "me", "index", 123);
+        Assertions.assertEquals("{key_me_123_123}", rs.keyFor(map, 123));
     }
 
     @Test

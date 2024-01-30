@@ -29,7 +29,7 @@ class MultiHashKeys {
             for (int i = 0; i < chars.length; i++) {
                 char ch = chars[i];
                 if (ch == '{') {
-                    if (paraming || i < 1) {
+                    if (paraming) {
                         throw new RedkaleException(MultiHashKey.class.getSimpleName() + " parse error, key: " + key);
                     }
                     if (last == '#') {
@@ -43,15 +43,12 @@ class MultiHashKeys {
                         sb.deleteCharAt(sb.length() - 1);
                         sb.append(ch);
                     } else {
-                        throw new RedkaleException(MultiHashKey.class.getSimpleName() + " parse error, key: " + key);
+                        sb.append(ch);
                     }
-                } else if (last == '\\' && ch == '}') {
+                } else if (ch == '}' && last == '\\') {
                     sb.deleteCharAt(sb.length() - 1);
                     sb.append(ch);
-                } else if (ch == '}') {
-                    if (!paraming) {
-                        throw new RedkaleException(MultiHashKey.class.getSimpleName() + " parse error, key: " + key);
-                    }
+                } else if (ch == '}' && paraming) {
                     String name = sb.toString();
                     sb.delete(0, sb.length());
                     if (name.indexOf('.') > 0) {
@@ -64,6 +61,9 @@ class MultiHashKeys {
                     sb.append(ch);
                 }
                 last = ch;
+            }
+            if (sb.length() > 0) {
+                list.add(new StringKey(sb.toString()));
             }
             if (list.size() == 1) {
                 return list.get(0);
