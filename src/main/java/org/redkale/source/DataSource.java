@@ -164,7 +164,7 @@ public interface DataSource extends Resourcable {
     //-------------------------deleteAsync--------------------------
     /**
      * 删除指定主键值的记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
- 等价SQL: DELETE FROM {table} WHERE {primary} IN {getValues.id}  <br>
+     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {getValues.id}  <br>
      *
      * @param <T>     泛型
      * @param entitys Entity对象
@@ -175,7 +175,7 @@ public interface DataSource extends Resourcable {
 
     /**
      * 删除指定主键值的记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
- 等价SQL: DELETE FROM {table} WHERE {primary} IN {getValues.id}  <br>
+     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {getValues.id}  <br>
      *
      * @param <T>     泛型
      * @param entitys Entity对象
@@ -191,7 +191,7 @@ public interface DataSource extends Resourcable {
 
     /**
      * 删除指定主键值的记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
- 等价SQL: DELETE FROM {table} WHERE {primary} IN {getValues.id}  <br>
+     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {getValues.id}  <br>
      *
      * @param <T>     泛型
      * @param entitys Entity对象
@@ -207,7 +207,7 @@ public interface DataSource extends Resourcable {
 
     /**
      * 删除指定主键值的记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
- 等价SQL: DELETE FROM {table} WHERE {primary} IN {getValues.id}  <br>
+     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {getValues.id}  <br>
      *
      * @param <T>     泛型
      * @param entitys Entity对象
@@ -218,7 +218,7 @@ public interface DataSource extends Resourcable {
 
     /**
      * 删除指定主键值的记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
- 等价SQL: DELETE FROM {table} WHERE {primary} IN {getValues.id}  <br>
+     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {getValues.id}  <br>
      *
      * @param <T>     泛型
      * @param entitys Entity对象
@@ -234,7 +234,7 @@ public interface DataSource extends Resourcable {
 
     /**
      * 删除指定主键值的记录， 多对象必须是同一个Entity类且必须在同一张表中  <br>
- 等价SQL: DELETE FROM {table} WHERE {primary} IN {getValues.id}  <br>
+     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {getValues.id}  <br>
      *
      * @param <T>     泛型
      * @param entitys Entity对象

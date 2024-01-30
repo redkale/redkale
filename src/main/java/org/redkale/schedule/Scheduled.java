@@ -52,9 +52,7 @@ public @interface Scheduled {
      * 延迟时间，支持参数配置、乘法表达式和对象字段值 <br>
      * 参数值支持方式:<br>
      * 100: 设置数值
-     * 5*60: 乘法表达式，值为300
      * ${env.scheduling.fixedDelay}: 读取系统配置项
-     * #delays: 读取宿主对象的delays字段值作为值，字段类型必须是int、long数值类型
      *
      * 值大于0且fixedRate小于0则使用 ScheduledThreadPoolExecutor.scheduleWithFixedDelay
      *
@@ -66,9 +64,7 @@ public @interface Scheduled {
      * 周期时间，支持参数配置、乘法表达式和对象字段值 <br>
      * 参数值支持方式:<br>
      * 100: 设置数值
-     * 5*60: 乘法表达式，值为300
      * ${env.scheduling.fixedRate}: 读取系统配置项
-     * #intervals: 读取宿主对象的intervals字段值作为值，字段类型必须是int、long数值类型
      *
      * 值大于0则使用 ScheduledThreadPoolExecutor.scheduleAtFixedRate
      *
@@ -80,9 +76,7 @@ public @interface Scheduled {
      * 起始延迟时间，支持参数配置、乘法表达式和对象字段值 <br>
      * 参数值支持方式:<br>
      * 100: 设置数值
-     * 5*60: 乘法表达式，值为300
      * ${env.scheduling.initialDelay}: 读取系统配置项
-     * #inits: 读取宿主对象的inits字段值作为值，字段类型必须是int、long数值类型
      *
      * 值大于0且fixedRate和fixedDelay小于0则使用 ScheduledThreadPoolExecutor.schedule
      *

@@ -19,7 +19,7 @@ public interface MultiHashKey {
     public String keyFor(Object... args);
 
     /**
-     * key只支持带#{}的表达式， 且不能嵌套, 如:name_#{key_#{id}}
+     * key只支持带#{}的表达式， 且不能嵌套,错误示例:name_#{key_#{id}}
      *
      * @param paramNames 参数名
      * @param key        key表达式

@@ -44,9 +44,7 @@ public @interface Cached {
      * 本地缓存过期时长， 0表示永不过期， -1表示不作本地缓存。<br>
      * 参数值支持方式:<br>
      * 100: 设置数值
-     * 5*60: 乘法表达式，值为300
      * ${env.cache.expires}: 读取系统配置项
-     * #delays: 读取宿主对象的delays字段值作为值，字段类型必须是int、long数值类型
      *
      * @return 过期时长
      */
@@ -56,9 +54,7 @@ public @interface Cached {
      * 远程缓存过期时长， 0表示永不过期， -1表示不作远程缓存。<br>
      * 参数值支持方式:<br>
      * 100: 设置数值
-     * 5*60: 乘法表达式，值为300
      * ${env.cache.expires}: 读取系统配置项
-     * #delays: 读取宿主对象的delays字段值作为值，字段类型必须是int、long数值类型
      *
      * @return 过期时长
      */

@@ -3,10 +3,10 @@
  */
 package org.redkale.mq;
 
+import org.redkale.annotation.ClassDepends;
 import org.redkale.annotation.Component;
 import org.redkale.service.Local;
 import org.redkale.util.AnyValue;
-import org.redkale.annotation.ClassDepends;
 
 /**
  * MQ消费器， 实现类必须标记{@link org.redkale.mq.ResourceConsumer}
@@ -14,8 +14,11 @@ import org.redkale.annotation.ClassDepends;
  * <p>
  * 详情见: https://redkale.org
  *
+ * @see org.redkale.mq.MessageConext
+ * @see org.redkale.mq.ResourceConsumer
+ *
  * @author zhangjx
- * @param <T> 泛型
+ * @param <T> T
  *
  * @since 2.8.0
  */

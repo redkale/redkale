@@ -39,9 +39,15 @@ class MultiHashKeys {
                         }
                         sb.delete(0, sb.length());
                         paraming = true;
+                    } else if (last == '\\') {
+                        sb.deleteCharAt(sb.length() - 1);
+                        sb.append(ch);
                     } else {
                         throw new RedkaleException(MultiHashKey.class.getSimpleName() + " parse error, key: " + key);
                     }
+                } else if (last == '\\' && ch == '}') {
+                    sb.deleteCharAt(sb.length() - 1);
+                    sb.append(ch);
                 } else if (ch == '}') {
                     if (!paraming) {
                         throw new RedkaleException(MultiHashKey.class.getSimpleName() + " parse error, key: " + key);

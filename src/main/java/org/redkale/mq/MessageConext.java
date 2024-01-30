@@ -13,6 +13,8 @@ import org.redkale.convert.json.JsonConvert;
  * <p>
  * 详情见: https://redkale.org
  *
+ * @see org.redkale.mq.MessageConsumer
+ * 
  * @author zhangjx
  *
  * @since 2.8.0

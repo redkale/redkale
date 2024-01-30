@@ -14,6 +14,8 @@ import org.redkale.convert.ConvertType;
  * <p>
  * 详情见: https://redkale.org
  *
+ * @see org.redkale.mq.MessageProducer
+ *
  * @author zhangjx
  *
  * @since 2.8.0

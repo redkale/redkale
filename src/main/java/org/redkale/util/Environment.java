@@ -60,11 +60,25 @@ public class Environment implements java.io.Serializable {
         if (val == null || val.isBlank()) {
             return val;
         }
+        char last = 0;
+        char[] chars = val.toCharArray();
+        int startIndex = -1;
+        int endIndex = -1;
+        for (int i = 0; i < chars.length; i++) {
+            char ch = chars[i];
+            if (ch == '{' && last == '$') {
+                startIndex = i - 1;
+            } else if (last != '\\' && ch == '}' && startIndex >= 0) {
+                endIndex = i;
+                break;
+            }
+            last = ch;
+        }
+
         //${domain}/${path}/xxx    ${aa${bbb}}
-        int pos2 = val.indexOf("}");
-        int pos1 = val.lastIndexOf("${", pos2);
-        if (pos1 >= 0 && pos2 > 0) {
-            String key = val.substring(pos1 + 2, pos2);
+        //school_#{name}_${haha_${age}}_${bb}_#{dd}  -> school_#{name}_xxx_xxx_#{dd}
+        if (startIndex >= 0 && endIndex > 0) {
+            String key = val.substring(startIndex + 2, endIndex);
             int pos3 = key.lastIndexOf(':');
             String defVal = null;
             if (pos3 > 0) {
@@ -77,13 +91,13 @@ public class Environment implements java.io.Serializable {
             String subVal = properties.getProperty(key);
             if (subVal != null) {
                 String newVal = getPropertyValue(subVal, envs);
-                return getPropertyValue(val.substring(0, pos1) + newVal + val.substring(pos2 + 1));
+                return getPropertyValue(val.substring(0, startIndex) + newVal + val.substring(endIndex + 1));
             } else {
                 for (Properties prop : envs) {
                     subVal = prop.getProperty(key);
                     if (subVal != null) {
                         String newVal = getPropertyValue(subVal, envs);
-                        return getPropertyValue(val.substring(0, pos1) + newVal + val.substring(pos2 + 1));
+                        return getPropertyValue(val.substring(0, startIndex) + newVal + val.substring(endIndex + 1));
                     }
                 }
                 if (pos3 > 0) {
@@ -91,8 +105,6 @@ public class Environment implements java.io.Serializable {
                 }
                 throw new RedkaleException("Not found '" + key + "' value");
             }
-        } else if ((pos1 >= 0 && pos2 < 0) || (pos1 < 0 && pos2 >= 0 && val.indexOf("#{") < 0)) {
-            throw new RedkaleException(val + " is illegal naming");
         }
         return val;
     }

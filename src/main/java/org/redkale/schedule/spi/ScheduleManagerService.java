@@ -6,7 +6,6 @@ package org.redkale.schedule.spi;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.time.Duration;
@@ -221,9 +220,9 @@ public class ScheduleManagerService implements ScheduleManager, Service {
             CronExpression cronExpr = CronExpression.parse(cron);
             return new CronTask(ref, name, method, cronExpr, zoneId);
         } else {
-            long fixedDelayLong = getLongValue(ref.get(), fixedDelay);
-            long fixedRateLong = getLongValue(ref.get(), fixedRate);
-            long initialDelayLong = getLongValue(ref.get(), initialDelay);
+            long fixedDelayLong = Long.parseLong(fixedDelay);
+            long fixedRateLong = Long.parseLong(fixedRate);
+            long initialDelayLong = Long.parseLong(initialDelay);
             return new FixedTask(ref, name, method, fixedDelayLong, fixedRateLong, initialDelayLong, timeUnit);
         }
     }
@@ -268,46 +267,6 @@ public class ScheduleManagerService implements ScheduleManager, Service {
             return value;
         }
         return propertyFunc.apply(value);
-    }
-
-    //支持5*60乘法表达式
-    protected long getLongValue(Object service, String value) {
-        if (value.indexOf('*') > -1) {
-            long rs = 1;
-            boolean flag = false;
-            for (String v : value.split("\\*")) {
-                if (!v.trim().isEmpty()) {
-                    rs *= Long.parseLong(v.trim());
-                    flag = true;
-                }
-            }
-            return flag ? rs : -1;
-        } else if (value.indexOf('#') == 0) {
-            try {
-                String fieldName = value.substring(1);
-                Exception ex = null;
-                Field field = null;
-                Class clazz = service.getClass();
-                do {
-                    try {
-                        field = clazz.getDeclaredField(fieldName);
-                        field.setAccessible(true);
-                        RedkaleClassLoader.putReflectionField(clazz.getName(), field);
-                        break;
-                    } catch (NoSuchFieldException fe) {
-                        ex = fe;
-                    }
-                } while ((clazz = clazz.getSuperclass()) != Object.class);
-                if (field == null) {
-                    throw ex;
-                }
-                return ((Number) field.get(service)).longValue();
-            } catch (Exception e) {
-                throw new RedkaleException(e);
-            }
-        } else {
-            return Long.parseLong(value);
-        }
     }
 
     @Override
