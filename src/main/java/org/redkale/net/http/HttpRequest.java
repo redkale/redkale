@@ -13,6 +13,7 @@ import java.nio.charset.*;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.logging.Level;
+import org.redkale.annotation.ClassDepends;
 import org.redkale.annotation.Comment;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
@@ -20,7 +21,6 @@ import org.redkale.net.Request;
 import org.redkale.util.*;
 import static org.redkale.util.Utility.isEmpty;
 import static org.redkale.util.Utility.isNotEmpty;
-import org.redkale.annotation.ClassDepends;
 
 /**
  * Http请求包 与javax.servlet.http.HttpServletRequest 基本类似。  <br>
@@ -1547,7 +1547,8 @@ public class HttpRequest extends Request<HttpContext> {
             + (this.getHost() != null ? (", \r\n    host: " + this.host) : "")
             + (this.getContentLength() >= 0 ? (", \r\n    contentLength: " + this.contentLength) : "")
             + (this.array.length() > 0 ? (", \r\n    bodyLength: " + this.array.length()) : "")
-            + (this.boundary || this.array.isEmpty() ? "" : (", \r\n    bodyContent: " + (this.respConvertType == null || this.respConvertType == ConvertType.JSON ? this.getBodyUTF8() : Arrays.toString(getBody()))))
+            + (this.boundary || this.array.isEmpty() ? "" : (", \r\n    bodyContent: " 
+            + (this.respConvertType == null || this.respConvertType == ConvertType.JSON ? this.getBodyUTF8() : Arrays.toString(getBody()))))
             + ", \r\n    params: " + toMapString(this.params.map, 4)
             + ", \r\n    header: " + toMapString(this.headers.map, 4)
             + "\r\n}"; //this.headers.toString(4)
@@ -1583,7 +1584,7 @@ public class HttpRequest extends Request<HttpContext> {
         final InputStream in = newInputStream();
         return new MultiContext(context.getCharset(), this.getContentType(), this.params.map(),
             new BufferedInputStream(in, Math.max(array.length(), 8192)) {
-            {
+            { 
                 array.copyTo(this.buf);
                 this.count = array.length();
             }

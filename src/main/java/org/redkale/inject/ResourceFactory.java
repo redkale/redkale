@@ -17,6 +17,7 @@ import java.util.function.*;
 import java.util.logging.*;
 import org.redkale.annotation.*;
 import org.redkale.convert.*;
+import org.redkale.convert.json.JsonConvert;
 import org.redkale.inject.spi.ResourceAnnotationProvider;
 import org.redkale.util.Creator;
 import org.redkale.util.RedkaleClassLoader;
@@ -806,6 +807,18 @@ public final class ResourceFactory {
         if (name == null) {
             return null;
         }
+        if (name.startsWith("${")) {
+            String subName = name.substring(2);
+            int pos = subName.lastIndexOf('}');
+            if (pos > 0) {
+                subName = subName.substring(0, pos);
+                pos = subName.indexOf(':');
+                if (pos > 0) {
+                    subName = subName.substring(0, pos);
+                }
+                name = subName;
+            }
+        }
         int pos = name.indexOf("{system.property.");
         if (pos < 0) {
             return (name.contains(Resource.PARENT_NAME) && parent != null) ? name.replace(Resource.PARENT_NAME, parent) : name;
@@ -819,6 +832,22 @@ public final class ResourceFactory {
         String postfix = subName.substring(pos + 1);
         String property = subName.substring(0, pos);
         return getResourceName(parent, prefix + System.getProperty(property, "") + postfix);
+    }
+
+    private static String getResourceDefaultValue(String parent, String name) {
+        if (name.startsWith("${")) {
+            String subName = name.substring(2);
+            int pos = subName.lastIndexOf('}');
+            if (pos > 0) {
+                subName = subName.substring(0, pos);
+                pos = subName.indexOf(':');
+                if (pos > 0) {
+                    String val = subName.substring(pos + 1);
+                    return "null".equals(val) ? null : val;
+                }
+            }
+        }
+        return null;
     }
 
     private <T> boolean inject(String srcResourceName, Object srcObj, T attachment, BiConsumer<Object, Field> consumer, List<Object> list) {
@@ -922,6 +951,7 @@ public final class ResourceFactory {
                     }
                     boolean autoRegNull = true;
                     final String rcname = getResourceName(srcResourceName, tname);
+                    final String defval = getResourceDefaultValue(srcResourceName, tname);
                     Object rs = null;
                     if (rcname.startsWith("system.property.")) {
                         rs = System.getProperty(rcname.substring("system.property.".length()));
@@ -1002,6 +1032,9 @@ public final class ResourceFactory {
                             re.elements.add(new ResourceElement<>(srcObj, field));
                             rs = re.value;
                         }
+                    }
+                    if (rs == null && defval != null) {
+                        rs = gencType == String.class ? defval : JsonConvert.root().convertFrom(gencType, defval);
                     }
                     if (rs != null && !rs.getClass().isPrimitive() && (classType.isPrimitive()
                         || classType == Integer.class

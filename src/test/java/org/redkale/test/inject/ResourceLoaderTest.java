@@ -13,11 +13,9 @@ import org.redkale.inject.ResourceFactory;
  */
 public class ResourceLoaderTest {
 
-    private boolean main;
 
     public static void main(String[] args) throws Throwable {
         ResourceLoaderTest test = new ResourceLoaderTest();
-        test.main = true;
         test.run();
     }
 
@@ -34,7 +32,7 @@ public class ResourceLoaderTest {
 
         ParentBean pb = new ParentBean();
         factory.inject(pb);
-        if (!main) Assertions.assertEquals(new Bean(1234, "my a name").toString(), pb.bean.toString());
+        Assertions.assertEquals(new Bean(1234, "my a name").toString(), pb.bean.toString());
         System.out.println(pb.bean);
     }
 

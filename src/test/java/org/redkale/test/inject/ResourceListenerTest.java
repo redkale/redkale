@@ -6,10 +6,10 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.*;
 import org.redkale.annotation.Resource;
+import org.redkale.annotation.ResourceChanged;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.util.*;
-import org.redkale.annotation.ResourceChanged;
 
 /**
  *
@@ -22,12 +22,12 @@ public class ResourceListenerTest {
     public static void main(String[] args) throws Throwable {
         ResourceListenerTest test = new ResourceListenerTest();
         test.main = true;
-        test.run();
+        test.run1();
+        test.run2();
     }
 
     @Test
-    public void run() throws Exception {
-        AtomicInteger aCounter = new AtomicInteger();
+    public void run1() throws Exception {
         Properties env = new Properties();
         env.put("property.id", "2345");
         ResourceFactory factory = ResourceFactory.create();
@@ -46,26 +46,35 @@ public class ResourceListenerTest {
         prop.put("property.name", "my name");
         factory.register(prop, "", Environment.class);
 
-        if (!main) {
-            Assertions.assertTrue(aservice.counter.get() == 1);
-            Assertions.assertTrue(bservice.counter.get() == 2);
-            Assertions.assertTrue(abservice.counter.get() == 2);
-        }
-                
+        Assertions.assertEquals("7890", aservice.id);
+        Assertions.assertTrue(aservice.counter.get() == 1);
+        Assertions.assertTrue(bservice.counter.get() == 2);
+        Assertions.assertTrue(abservice.counter.get() == 2);
+
         factory.register("property.id", "7777");
-        
-        if (!main) {
-            Assertions.assertTrue(aservice.counter.get() == 2);
-            Assertions.assertTrue(bservice.counter.get() == 2);
-            Assertions.assertTrue(abservice.counter.get() == 3);
-        }
+
+        Assertions.assertTrue(aservice.counter.get() == 2);
+        Assertions.assertTrue(bservice.counter.get() == 2);
+        Assertions.assertTrue(abservice.counter.get() == 3);
+    }
+
+    @Test
+    public void run2() throws Exception {
+        Properties env = new Properties();
+        ResourceFactory factory = ResourceFactory.create();
+        factory.register(new Environment(env));
+        AService aservice = new AService();
+        factory.inject(aservice);
+        Assertions.assertEquals("33", aservice.id);
+        factory.register("property.id", "7777");
+        Assertions.assertEquals("7777", aservice.id);
     }
 
     class AService {
 
         public final AtomicInteger counter = new AtomicInteger();
 
-        @Resource(name = "property.id", required = false)
+        @Resource(name = "${property.id:33}", required = false)
         private String id;
 
         @Resource(name = "property.desc", required = false)
