@@ -1316,7 +1316,7 @@ public final class Application {
                                 nodeLock.lock();
                                 try {
                                     if (!inited.getAndSet(true)) { //加载自定义的协议，如：SOCKS
-                                        ClassFilter profilter = new ClassFilter(classLoader, NodeProtocol.class, NodeServer.class, (Class[]) null);
+                                        ClassFilter profilter = new ClassFilter(classLoader, NodeProtocol.class, NodeServer.class);
                                         loadClassByFilters(profilter);
                                         final Set<FilterEntry<NodeServer>> entrys = profilter.getFilterEntrys();
                                         for (FilterEntry<NodeServer> entry : entrys) {

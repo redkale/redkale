@@ -36,11 +36,11 @@ public class PrepareCompiler {
         application.start();
         final boolean hasSncp = application.getNodeServers().stream().filter(NodeSncpServer.class::isInstance).findFirst().isPresent();
 
-        final ClassFilter<?> entityFilter = new ClassFilter(application.getClassLoader(), Entity.class, Object.class, (Class[]) null);
-        final ClassFilter<?> entityFilter2 = new ClassFilter(application.getClassLoader(), javax.persistence.Entity.class, Object.class, (Class[]) null);
-        final ClassFilter<?> beanFilter = new ClassFilter(application.getClassLoader(), Bean.class, Object.class, (Class[]) null);
-        final ClassFilter<?> beanFilter2 = new ClassFilter(application.getClassLoader(), org.redkale.util.Bean.class, Object.class, (Class[]) null);
-        final ClassFilter<?> filterFilter = new ClassFilter(application.getClassLoader(), null, FilterBean.class, (Class[]) null);
+        final ClassFilter<?> entityFilter = new ClassFilter(application.getClassLoader(), Entity.class, Object.class);
+        final ClassFilter<?> entityFilter2 = new ClassFilter(application.getClassLoader(), javax.persistence.Entity.class, Object.class);
+        final ClassFilter<?> beanFilter = new ClassFilter(application.getClassLoader(), Bean.class, Object.class);
+        final ClassFilter<?> beanFilter2 = new ClassFilter(application.getClassLoader(), org.redkale.util.Bean.class, Object.class);
+        final ClassFilter<?> filterFilter = new ClassFilter(application.getClassLoader(), null, FilterBean.class);
 
         application.loadClassByFilters(entityFilter, beanFilter, filterFilter);
 
