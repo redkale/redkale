@@ -226,7 +226,7 @@ public abstract class NodeServer {
             filters.addAll(otherFilters);
         }
         long s = System.currentTimeMillis();
-        application.loadClassesByFilters(filters.toArray(new ClassFilter[filters.size()]));
+        application.loadClassByFilters(filters.toArray(new ClassFilter[filters.size()]));
         long e = System.currentTimeMillis() - s;
         logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
         loadService(serviceFilter); //必须在servlet之前

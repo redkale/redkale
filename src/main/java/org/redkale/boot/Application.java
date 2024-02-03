@@ -1317,7 +1317,7 @@ public final class Application {
                                 try {
                                     if (!inited.getAndSet(true)) { //加载自定义的协议，如：SOCKS
                                         ClassFilter profilter = new ClassFilter(classLoader, NodeProtocol.class, NodeServer.class, (Class[]) null);
-                                        ClassFilter.Loader.load(home, classLoader, profilter);
+                                        loadClassByFilters(profilter);
                                         final Set<FilterEntry<NodeServer>> entrys = profilter.getFilterEntrys();
                                         for (FilterEntry<NodeServer> entry : entrys) {
                                             final Class<? extends NodeServer> type = entry.getType();
@@ -1408,12 +1408,16 @@ public final class Application {
         });
     }
 
-    void loadClassesByFilters(final ClassFilter... filters) throws IOException {
-        ClassFilter.Loader.load(getHome(), this.serverClassLoader, filters);
-    }
-
     List<ModuleEngine> getModuleEngines() {
         return moduleEngines;
+    }
+
+    public void loadClassByFilters(final ClassFilter... filters) throws IOException {
+        ClassFilter.Loader.load(getHome(), getClassLoader(), filters);
+    }
+
+    public void loadServerClassFilters(final ClassFilter... filters) throws IOException {
+        ClassFilter.Loader.load(getHome(), getServerClassLoader(), filters);
     }
 
     public DataSource loadDataSource(final String sourceName, boolean autoMemory) {

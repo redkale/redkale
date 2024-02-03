@@ -401,7 +401,7 @@ public class MessageModuleEngine extends ModuleEngine {
                 }
 
                 try {
-                    ClassFilter.Loader.load(application.getHome(), application.getServerClassLoader(), filter);
+                    application.loadServerClassFilters(filter);
                     List<ClassFilter.FilterEntry<? extends MessageConsumer>> entrys = new ArrayList(filter.getFilterEntrys());
                     for (ClassFilter.FilterEntry<? extends MessageConsumer> en : entrys) {
                         Class<? extends MessageConsumer> clazz = en.getType();

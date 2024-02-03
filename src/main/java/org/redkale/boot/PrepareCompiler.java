@@ -42,7 +42,7 @@ public class PrepareCompiler {
         final ClassFilter<?> beanFilter2 = new ClassFilter(application.getClassLoader(), org.redkale.util.Bean.class, Object.class, (Class[]) null);
         final ClassFilter<?> filterFilter = new ClassFilter(application.getClassLoader(), null, FilterBean.class, (Class[]) null);
 
-        ClassFilter.Loader.load(application.getHome(), application.getClassLoader(), entityFilter, beanFilter, filterFilter);
+        application.loadClassByFilters(entityFilter, beanFilter, filterFilter);
 
         for (FilterEntry en : entityFilter.getFilterEntrys()) {
             Class clz = en.getType();

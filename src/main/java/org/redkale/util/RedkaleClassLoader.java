@@ -27,17 +27,7 @@ public class RedkaleClassLoader extends URLClassLoader {
 
     public static final String RESOURCE_CACHE_CONF_PATH = "/META-INF/redkale/conf";
 
-    public static final URL URL_NONE;
-
-    static {
-        URL url = null;
-        try {
-            url = URI.create("file://redkale/uri").toURL(); //不能是jar结尾，否则会视为jar文件url
-        } catch (MalformedURLException e) {
-            //do nothing
-        }
-        URL_NONE = url;
-    }
+    public static final URI URI_NONE = URI.create("file://redkale/uri"); //不能是jar结尾，否则会视为jar文件url
 
     private static final String[] buildClasses = {};
 
@@ -487,60 +477,64 @@ public class RedkaleClassLoader extends URLClassLoader {
         return super.getURLs();
     }
 
-    public URL[] getAllURLs() {
+    public URI[] getAllURIs() {
         ClassLoader loader = this;
-        HashSet<URL> set = new HashSet<>();
+        HashSet<URI> set = new HashSet<>();
         String appPath = System.getProperty("java.class.path");
         if (appPath != null && !appPath.isEmpty()) {
             for (String path : appPath.replace("://", "&&").replace(":\\", "##").replace(':', ';').split(";")) {
                 try {
-                    set.add(Paths.get(path.replace("&&", "://").replace("##", ":\\")).toRealPath().toFile().toURI().toURL());
+                    set.add(Paths.get(path.replace("&&", "://").replace("##", ":\\")).toRealPath().toFile().toURI());
                 } catch (Exception e) {
                     //do nothing
                 }
             }
         }
-        do {
-            String loaderName = loader.getClass().getName();
-            if (loaderName.startsWith("sun.") && loaderName.contains("ExtClassLoader")) {
-                continue;
-            }
-            if (loader instanceof URLClassLoader) {
-                for (URL url : ((URLClassLoader) loader).getURLs()) {
-                    set.add(url);
+        try {
+            do {
+                String loaderName = loader.getClass().getName();
+                if (loaderName.startsWith("sun.") && loaderName.contains("ExtClassLoader")) {
+                    continue;
                 }
-            } else { //可能JDK9及以上
-                loader.getResource("org.redkale"); //必须要运行一次，确保URLClassPath的值被填充完毕
-                Class loaderClazz = loader.getClass();
-                Object ucp = null;
-                do { //读取 java.base/jdk.internal.loader.BuiltinClassLoader的URLClassPath ucp值
-                    try {
-                        //需要在命令行里加入：  --add-opens java.base/jdk.internal.loader=ALL-UNNAMED
-                        Field field = loaderClazz.getDeclaredField("ucp");
-                        field.setAccessible(true);
-                        ucp = field.get(loader);
-                        break;
-                    } catch (Throwable e) {
-                        //do nothing
+                if (loader instanceof URLClassLoader) {
+                    for (URL url : ((URLClassLoader) loader).getURLs()) {
+                        set.add(url.toURI());
                     }
-                } while ((loaderClazz = loaderClazz.getSuperclass()) != Object.class);
-                if (ucp != null) { //URLClassPath
-                    URL[] urls = null;
-                    try {  //读取 java.base/jdk.internal.loader.URLClassPath的urls值
-                        Method method = ucp.getClass().getMethod("getURLs");
-                        urls = (URL[]) method.invoke(ucp);
-                    } catch (Exception e) {
-                        //do nothing
-                    }
-                    if (urls != null) {
-                        for (URL url : urls) {
-                            set.add(url);
+                } else { //可能JDK9及以上
+                    loader.getResource("org.redkale"); //必须要运行一次，确保URLClassPath的值被填充完毕
+                    Class loaderClazz = loader.getClass();
+                    Object ucp = null;
+                    do { //读取 java.base/jdk.internal.loader.BuiltinClassLoader的URLClassPath ucp值
+                        try {
+                            //需要在命令行里加入：  --add-opens java.base/jdk.internal.loader=ALL-UNNAMED
+                            Field field = loaderClazz.getDeclaredField("ucp");
+                            field.setAccessible(true);
+                            ucp = field.get(loader);
+                            break;
+                        } catch (Throwable e) {
+                            //do nothing
+                        }
+                    } while ((loaderClazz = loaderClazz.getSuperclass()) != Object.class);
+                    if (ucp != null) { //URLClassPath
+                        URL[] urls = null;
+                        try {  //读取 java.base/jdk.internal.loader.URLClassPath的urls值
+                            Method method = ucp.getClass().getMethod("getURLs");
+                            urls = (URL[]) method.invoke(ucp);
+                        } catch (Exception e) {
+                            //do nothing
+                        }
+                        if (urls != null) {
+                            for (URL url : urls) {
+                                set.add(url.toURI());
+                            }
                         }
                     }
                 }
-            }
-        } while ((loader = loader.getParent()) != null);
-        return set.toArray(new URL[set.size()]);
+            } while ((loader = loader.getParent()) != null);
+        } catch (URISyntaxException e) {
+            throw new RedkaleException(e);
+        }
+        return set.toArray(new URI[set.size()]);
     }
 
     public static class RedkaleCacheClassLoader extends RedkaleClassLoader {
@@ -553,8 +547,8 @@ public class RedkaleClassLoader extends URLClassLoader {
         }
 
         @Override
-        public URL[] getAllURLs() {
-            return new URL[]{URL_NONE};
+        public URI[] getAllURIs() {
+            return new URI[]{URI_NONE};
         }
 
         @Override

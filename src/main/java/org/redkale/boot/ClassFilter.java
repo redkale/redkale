@@ -160,7 +160,7 @@ public final class ClassFilter<T> {
      * @param url       URL
      */
     @SuppressWarnings("unchecked")
-    public final void filter(AnyValue property, String clazzName, URL url) {
+    public final void filter(AnyValue property, String clazzName, URI url) {
         filter(property, clazzName, true, url);
     }
 
@@ -183,7 +183,7 @@ public final class ClassFilter<T> {
      * @param autoScan  为true表示自动扫描的， false表示显著调用filter， AutoLoad的注解将被忽略
      * @param url       URL
      */
-    public final void filter(AnyValue property, String clazzName, boolean autoScan, URL url) {
+    public final void filter(AnyValue property, String clazzName, boolean autoScan, URI url) {
         boolean r = accept0(property, clazzName);
         ClassFilter cf = r ? this : null;
         if (r && ands != null) {
@@ -242,8 +242,10 @@ public final class ClassFilter<T> {
                         return;
                     }
                 }
-                //&& (!(cfe instanceof NoClassDefFoundError) || (cfe instanceof UnsupportedClassVersionError) || ((NoClassDefFoundError) cfe).getMessage().startsWith("java.lang.NoClassDefFoundError: java"))) {
-                logger.log(Level.FINEST, ClassFilter.class.getSimpleName() + " filter error for class: " + clazzName + (url == null ? "" : (" in " + url)), cfe);
+                //&& (!(cfe instanceof NoClassDefFoundError) || (cfe instanceof UnsupportedClassVersionError) 
+                //|| ((NoClassDefFoundError) cfe).getMessage().startsWith("java.lang.NoClassDefFoundError: java"))) {
+                logger.log(Level.FINEST, ClassFilter.class.getSimpleName()
+                    + " filter error for class: " + clazzName + (url == null ? "" : (" in " + url)), cfe);
             }
         }
     }
@@ -559,7 +561,11 @@ public final class ClassFilter<T> {
 
         protected static final Logger logger = Logger.getLogger(Loader.class.getName());
 
-        protected static final ConcurrentMap<URL, Set<String>> cache = new ConcurrentHashMap<>();
+        protected static final ConcurrentMap<URI, Set<String>> cache = new ConcurrentHashMap<>();
+
+        private Loader() {
+            //do nothng
+        }
 
         public static void close() {
             cache.clear();
@@ -575,11 +581,11 @@ public final class ClassFilter<T> {
          * @throws IOException 异常
          */
         public static void load(final File excludeFile, RedkaleClassLoader loader, final ClassFilter... filters) throws IOException {
-            List<URL> urlFiles = new ArrayList<>(2);
-            List<URL> urlJares = new ArrayList<>(2);
-            final URL exurl = excludeFile != null ? excludeFile.toURI().toURL() : null;
-            for (URL url : loader.getAllURLs()) {
-                if (exurl != null && exurl.sameFile(url)) {
+            List<URI> urlFiles = new ArrayList<>(2);
+            List<URI> urlJares = new ArrayList<>(2);
+            final URI exurl = excludeFile != null ? excludeFile.toURI() : null;
+            for (URI url : loader.getAllURIs()) {
+                if (exurl != null && exurl.equals(url)) {
                     continue;
                 }
                 if (url.getPath().endsWith(".jar")) {
@@ -591,11 +597,11 @@ public final class ClassFilter<T> {
             List<File> files = new ArrayList<>();
             boolean debug = logger.isLoggable(Level.FINEST);
             StringBuilder debugstr = new StringBuilder();
-            for (final URL url : urlJares) {
+            for (final URI url : urlJares) {
                 Set<String> classes = cache.get(url);
                 if (classes == null) {
                     classes = new LinkedHashSet<>();
-                    try (JarFile jar = new JarFile(URLDecoder.decode(url.getFile(), StandardCharsets.UTF_8))) {
+                    try (JarFile jar = new JarFile(URLDecoder.decode(url.toURL().getFile(), StandardCharsets.UTF_8))) {
                         Enumeration<JarEntry> it = jar.entries();
                         while (it.hasMoreElements()) {
                             String entryName = it.nextElement().getName().replace('/', '.');
@@ -632,6 +638,18 @@ public final class ClassFilter<T> {
                                 if (className.startsWith("org.apache.")) {
                                     break;
                                 }
+                                if (className.startsWith("org.redisson.")) {
+                                    break;
+                                }
+                                if (className.startsWith("com.fasterxml.")) {
+                                    break;
+                                }
+                                if (className.startsWith("org.yaml.")) {
+                                    break;
+                                }
+                                if (className.startsWith("reactor.")) {
+                                    break;
+                                }
                                 if (className.startsWith("io.netty.")) {
                                     break;
                                 }
@@ -661,17 +679,17 @@ public final class ClassFilter<T> {
                     }
                 }
             }
-            for (final URL url : urlFiles) {
+            for (final URI url : urlFiles) {
                 Set<String> classes = cache.get(url);
                 if (classes == null) {
                     classes = new LinkedHashSet<>();
                     final Set<String> cs = classes;
-                    if (url == RedkaleClassLoader.URL_NONE) {
+                    if (url == RedkaleClassLoader.URI_NONE) {
                         loader.forEachCacheClass(v -> cs.add(v));
                     }
                     if (cs.isEmpty()) {
                         files.clear();
-                        File root = new File(url.getFile());
+                        File root = new File(url.toURL().getFile());
                         String rootPath = root.getPath();
                         loadClassFiles(excludeFile, root, files);
                         for (File f : files) {
