@@ -74,7 +74,7 @@ public class MessageModuleEngine extends ModuleEngine {
     }
 
     void addMessageConsumer(MessageConsumer consumer) {
-        String agentName = consumer.getClass().getAnnotation(ResourceConsumer.class).mq();
+        String agentName = environment.getPropertyValue(consumer.getClass().getAnnotation(ResourceConsumer.class).mq());
         agentConsumers.computeIfAbsent(agentName, v -> new CopyOnWriteArrayList<>()).add(consumer);
     }
 
@@ -191,7 +191,7 @@ public class MessageModuleEngine extends ModuleEngine {
             @Override
             public void load(ResourceFactory rf, String srcResourceName, Object srcObj, ResourceProducer annotation, Field field, Object attachment) {
                 if (field.getType() != MessageProducer.class) {
-                    throw new RestException("@" + ResourceProducer.class.getSimpleName() 
+                    throw new RestException("@" + ResourceProducer.class.getSimpleName()
                         + " must on " + MessageProducer.class.getName() + " type field, but on " + field);
                 }
                 MessageAgent agent = resourceFactory.find(annotation.mq(), MessageAgent.class);
