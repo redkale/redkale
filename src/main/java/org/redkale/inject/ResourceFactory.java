@@ -19,10 +19,10 @@ import org.redkale.annotation.*;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.inject.spi.ResourceAnnotationProvider;
-import org.redkale.util.Creator;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.TypeToken;
+import org.redkale.util.Utility;
 
 /**
  *
@@ -1036,31 +1036,8 @@ public final class ResourceFactory {
                     if (rs == null && defval != null) {
                         rs = gencType == String.class ? defval : JsonConvert.root().convertFrom(gencType, defval);
                     }
-                    if (rs != null && !rs.getClass().isPrimitive() && (classType.isPrimitive()
-                        || classType == Integer.class
-                        || classType == Long.class || classType == Short.class
-                        || classType == Boolean.class || classType == Byte.class
-                        || classType == Float.class || classType == Double.class
-                        || classType == BigInteger.class || classType == BigDecimal.class)) {
-                        if (classType == int.class || classType == Integer.class) {
-                            rs = Integer.decode(rs.toString());
-                        } else if (classType == long.class || classType == Long.class) {
-                            rs = Long.decode(rs.toString());
-                        } else if (classType == short.class || classType == Short.class) {
-                            rs = Short.decode(rs.toString());
-                        } else if (classType == boolean.class || classType == Boolean.class) {
-                            rs = "true".equalsIgnoreCase(rs.toString());
-                        } else if (classType == byte.class || classType == Byte.class) {
-                            rs = Byte.decode(rs.toString());
-                        } else if (classType == float.class || classType == Float.class) {
-                            rs = Float.parseFloat(rs.toString());
-                        } else if (classType == double.class || classType == Double.class) {
-                            rs = Double.parseDouble(rs.toString());
-                        } else if (classType == BigInteger.class) {
-                            rs = new BigInteger(rs.toString());
-                        } else if (classType == BigDecimal.class) {
-                            rs = new BigDecimal(rs.toString());
-                        }
+                    if (rs != null && !Objects.equals(rs.getClass(), classType)) {
+                        rs = Utility.convertValue(gencType, rs);
                     }
                     if (rs != null) {
                         field.set(srcObj, rs);
@@ -1202,38 +1179,13 @@ public final class ResourceFactory {
             this.name = name;
             this.value = value;
             this.elements = elements == null ? new CopyOnWriteArrayList<>() : elements;
-            if (sync && elements != null && !elements.isEmpty()) {
+            if (sync && Utility.isNotEmpty(elements)) {
                 for (ResourceElement element : elements) {
                     Object dest = element.dest.get();
                     if (dest == null) {
                         continue;  //依赖对象可能被销毁了
                     }
-                    Object newVal = value;
-                    final Class classType = element.fieldType;
-                    if (newVal != null && !newVal.getClass().isPrimitive() && (classType.isPrimitive() || Number.class.isAssignableFrom(classType))) {
-                        if (classType == int.class || classType == Integer.class) {
-                            newVal = Integer.decode(newVal.toString());
-                        } else if (classType == long.class || classType == Long.class) {
-                            newVal = Long.decode(newVal.toString());
-                        } else if (classType == short.class || classType == Short.class) {
-                            newVal = Short.decode(newVal.toString());
-                        } else if (classType == boolean.class || classType == Boolean.class) {
-                            newVal = "true".equalsIgnoreCase(newVal.toString());
-                        } else if (classType == byte.class || classType == Byte.class) {
-                            newVal = Byte.decode(newVal.toString());
-                        } else if (classType == float.class || classType == Float.class) {
-                            newVal = Float.parseFloat(newVal.toString());
-                        } else if (classType == double.class || classType == Double.class) {
-                            newVal = Double.parseDouble(newVal.toString());
-                        } else if (classType == BigInteger.class) {
-                            newVal = new BigInteger(newVal.toString());
-                        } else if (classType == BigDecimal.class) {
-                            newVal = new BigDecimal(newVal.toString());
-                        }
-                    }
-                    if (newVal == null && classType.isPrimitive()) {
-                        newVal = Array.get(Creator.newArray(classType, 1), 0);
-                    }
+                    Object newVal = Utility.convertValue(element.fieldType, value);
                     Object oldVal = null;
                     if (element.changedMethod != null) {
                         try {

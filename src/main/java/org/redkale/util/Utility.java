@@ -25,8 +25,8 @@ import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
-import org.redkale.convert.json.JsonConvert;
 import org.redkale.annotation.ClassDepends;
+import org.redkale.convert.json.JsonConvert;
 
 /**
  *
@@ -3443,10 +3443,31 @@ public final class Utility {
      */
     @ClassDepends(Copier.class)
     public static <T> T convertValue(Type type, Object value) {
-        if (type == null || value == null) {
+        if (type == null) {
             return (T) value;
         }
         final Class typeClazz = TypeToken.typeToClass(type);
+        if (value == null) {
+            if (typeClazz == boolean.class) {
+                return (T) Boolean.FALSE;
+            } else if (typeClazz == byte.class) {
+                return (T) (Byte) (byte) 0;
+            } else if (typeClazz == char.class) {
+                return (T) (Character) (char) 0;
+            } else if (typeClazz == short.class) {
+                return (T) (Short) (short) 0;
+            } else if (typeClazz == int.class) {
+                return (T) (Integer) 0;
+            } else if (typeClazz == long.class) {
+                return (T) (Long) 0L;
+            } else if (typeClazz == float.class) {
+                return (T) (Float) 0F;
+            } else if (typeClazz == double.class) {
+                return (T) (Double) 0D;
+            }
+            return (T) value;
+        }
+
         final Class valClazz = value.getClass();
         if (typeClazz == valClazz || typeClazz.isAssignableFrom(valClazz)) {
             return (T) value;
