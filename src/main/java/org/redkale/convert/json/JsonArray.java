@@ -3,6 +3,7 @@
  */
 package org.redkale.convert.json;
 
+import java.lang.reflect.Type;
 import java.math.*;
 import java.util.*;
 import org.redkale.annotation.Nullable;
@@ -45,6 +46,11 @@ public class JsonArray extends ArrayList<Object> implements JsonElement {
 
     public static JsonArray create() {
         return new JsonArray();
+    }
+
+    public <T> List<T> toList(Type componentType) {
+        Type listType = TypeToken.createParameterizedType(null, ArrayList.class, componentType);
+        return (List) JsonConvert.root().convertFrom(listType, JsonConvert.root().convertTo(this));
     }
 
     public JsonArray append(Object value) {

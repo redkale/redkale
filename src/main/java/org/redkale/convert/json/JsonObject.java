@@ -3,6 +3,7 @@
  */
 package org.redkale.convert.json;
 
+import java.lang.reflect.Type;
 import java.math.*;
 import java.util.*;
 import org.redkale.annotation.Nullable;
@@ -54,6 +55,10 @@ public class JsonObject extends LinkedHashMap<String, Object> implements JsonEle
             return new JsonObject((Map) bean);
         }
         return convertFrom(JsonConvert.root().convertTo(bean));
+    }
+
+    public <T> T toObject(Type type) {
+        return (T) JsonConvert.root().convertFrom(type, JsonConvert.root().convertTo(this));
     }
 
     public JsonObject append(String key, Object value) {

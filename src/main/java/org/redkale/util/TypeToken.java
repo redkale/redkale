@@ -568,7 +568,7 @@ public abstract class TypeToken<T> {
     /**
      * 动态创建 ParameterizedType
      *
-     * @param ownerType0           ParameterizedType 的 ownerType
+     * @param ownerType0           ParameterizedType 的 ownerType, 一般为null
      * @param rawType0             ParameterizedType 的 rawType
      * @param actualTypeArguments0 ParameterizedType 的 actualTypeArguments
      *
