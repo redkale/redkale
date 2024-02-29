@@ -581,7 +581,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     }
 
     protected boolean isTableNotExist(EntityInfo info, Throwable exp, String sqlCode) {
-        if (exp instanceof java.sql.SQLSyntaxErrorException) {
+        if (exp.getMessage().contains("syntax")) {
             return false;
         }
         return sqlCode != null && !sqlCode.isEmpty() && tableNotExistSqlstates.contains(';' + sqlCode + ';');
