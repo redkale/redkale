@@ -416,7 +416,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         } catch (SQLException se) {
             conn.rollback(prestmt, prestmts);
             stmtsRef.clear();
-            if (!isTableNotExist(info, se.getSQLState())) {
+            if (!isTableNotExist(info, se, se.getSQLState())) {
                 throw se;
             }
             if (info.getTableStrategy() == null) { //单库单表
@@ -460,7 +460,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         }
                         conn.offerUpdateStatement(stmt);
                     } catch (SQLException sqle) { //多进程并发时可能会出现重复建表
-                        if (isTableNotExist(info, sqle.getSQLState())) {
+                        if (isTableNotExist(info, sqle, sqle.getSQLState())) {
                             if (newCatalogs.isEmpty()) { //分表的原始表不存在
                                 String[] tableSqls = createTableSqls(info);
                                 if (tableSqls != null) {
@@ -514,7 +514,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                                     }
                                     conn.offerUpdateStatement(stmt);
                                 } catch (SQLException sqle2) {
-                                    if (isTableNotExist(info, sqle2.getSQLState())) {
+                                    if (isTableNotExist(info, sqle2, sqle2.getSQLState())) {
                                         String[] tableSqls = createTableSqls(info);
                                         if (tableSqls != null) { //创建原始表
                                             stmt = conn.createUpdateStatement();
@@ -719,7 +719,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             return c;
         } catch (SQLException e) {
             conn.rollback(stmt);
-            if (isTableNotExist(info, e.getSQLState())) {
+            if (isTableNotExist(info, e, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
                     String[] tableSqls = createTableSqls(info);
                     if (tableSqls != null) {
@@ -819,7 +819,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             slowLog(s, sqls);
             return c;
         } catch (SQLException e) {
-            if (isTableNotExist(info, e.getSQLState())) {
+            if (isTableNotExist(info, e, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
                     //单表结构不存在
                     return 0;
@@ -910,7 +910,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     stmt = conn.createUpdateStatement();
                     c = stmt.executeUpdate(copyTableSql);
                 } catch (SQLException se) {
-                    if (isTableNotExist(info, se.getSQLState())) { //分表的原始表不存在
+                    if (isTableNotExist(info, se, se.getSQLState())) { //分表的原始表不存在
                         conn.offerUpdateStatement(stmt);
                         final String newTable = info.getTable(pk);
                         if (newTable.indexOf('.') <= 0) { //分表的原始表不存在
@@ -958,7 +958,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                                 c = stmt.executeUpdate(copyTableSql);
                             } catch (SQLException sqle2) {
                                 conn.offerUpdateStatement(stmt);
-                                if (isTableNotExist(info, sqle2.getSQLState())) {
+                                if (isTableNotExist(info, sqle2, sqle2.getSQLState())) {
                                     if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
                                         logger.finest(info.getType().getSimpleName() + " createTable sql=" + Arrays.toString(sqls));
                                     }
@@ -1021,7 +1021,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             slowLog(s, sqls);
             return c;
         } catch (SQLException e) {
-            if (isTableNotExist(info, e.getSQLState())) {
+            if (isTableNotExist(info, e, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
                     //单表结构不存在
                     return 0;
@@ -1136,7 +1136,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             }
         } catch (SQLException se) {
             conn.rollback(prestmt, prestmts);
-            if (isTableNotExist(info, se.getSQLState())) {
+            if (isTableNotExist(info, se, se.getSQLState())) {
                 if (info.getTableStrategy() == null) {
                     String[] tableSqls = createTableSqls(info);
                     if (tableSqls != null) {
@@ -1350,7 +1350,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             }
         } catch (SQLException se) {
             conn.rollback(onestmt, prestmts);
-            if (isTableNotExist(info, se.getSQLState())) {
+            if (isTableNotExist(info, se, se.getSQLState())) {
                 if (info.getTableStrategy() == null) {
                     String[] tableSqls = createTableSqls(info);
                     if (tableSqls != null) {
@@ -1467,7 +1467,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             return map;
         } catch (SQLException e) {
             map.clear();
-            if (isTableNotExist(info, e.getSQLState())) {
+            if (isTableNotExist(info, e, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
                     //读操作不自动创建表，可能存在读写分离
                     return map;
@@ -1563,7 +1563,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             slowLog(s, sql);
             return rs;
         } catch (SQLException e) {
-            if (isTableNotExist(info, e.getSQLState())) {
+            if (isTableNotExist(info, e, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
                     //读操作不自动创建表，可能存在读写分离
                     return defVal;
@@ -1654,7 +1654,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             return rs;
         } catch (SQLException e) {
             rs.clear();
-            if (isTableNotExist(info, e.getSQLState())) {
+            if (isTableNotExist(info, e, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
                     //读操作不自动创建表，可能存在读写分离
                     return rs;
@@ -1757,7 +1757,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             return rs;
         } catch (SQLException e) {
             rs.clear();
-            if (isTableNotExist(info, e.getSQLState())) {
+            if (isTableNotExist(info, e, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
                     //读操作不自动创建表，可能存在读写分离
                     return rs;
@@ -1851,7 +1851,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             slowLog(s, prepareSQL);
             return rs;
         } catch (SQLException e) {
-            if (isTableNotExist(info, e.getSQLState())) {
+            if (isTableNotExist(info, e, e.getSQLState())) {
                 return null;
             }
             throw new SourceException(e);
@@ -1884,7 +1884,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             slowLog(s, sql);
             return rs;
         } catch (SQLException e) {
-            if (isTableNotExist(info, e.getSQLState())) {
+            if (isTableNotExist(info, e, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
                     //读操作不自动创建表，可能存在读写分离
                     return null;
@@ -1968,7 +1968,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             slowLog(s, sql);
             return val == null ? defValue : val;
         } catch (SQLException e) {
-            if (isTableNotExist(info, e.getSQLState())) {
+            if (isTableNotExist(info, e, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
                     //读操作不自动创建表，可能存在读写分离
                     return defValue;
@@ -2054,7 +2054,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             slowLog(s, sql);
             return rs;
         } catch (SQLException e) {
-            if (isTableNotExist(info, e.getSQLState())) {
+            if (isTableNotExist(info, e, e.getSQLState())) {
                 if (info.getTableStrategy() == null) {
                     //读操作不自动创建表，可能存在读写分离
                     return false;
@@ -2142,7 +2142,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     slowLog(s, prepareSQL);
                     return list;
                 } catch (SQLException se) {
-                    if (isTableNotExist(info, se.getSQLState())) {
+                    if (isTableNotExist(info, se, se.getSQLState())) {
                         return list;
                     }
                     throw new SourceException(se);
@@ -2190,7 +2190,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 slowLog(s, prepareSQL);
                 return Sheet.asSheet(list);
             } catch (SQLException se) {
-                if (isTableNotExist(info, se.getSQLState())) {
+                if (isTableNotExist(info, se, se.getSQLState())) {
                     return Sheet.asSheet(list);
                 }
                 throw new SourceException(se);
@@ -2228,7 +2228,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             try {
                 return executeQuerySheet(info, needTotal, flipper, sels, s, conn, mysqlOrPgsql, listSql, countSql);
             } catch (SQLException se) {
-                if (isTableNotExist(info, se.getSQLState())) {
+                if (isTableNotExist(info, se, se.getSQLState())) {
                     if (info.getTableStrategy() == null) {
                         //读操作不自动创建表，可能存在读写分离
                         return new Sheet<>(0, new ArrayList());
