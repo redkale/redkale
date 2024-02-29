@@ -27,7 +27,6 @@ module org.redkale {
     exports org.redkale.convert.proto;
     exports org.redkale.convert.spi;
     exports org.redkale.inject;
-    exports org.redkale.inject.spi;
     exports org.redkale.lock;
     exports org.redkale.lock.spi;
     exports org.redkale.mq;
@@ -50,7 +49,6 @@ module org.redkale {
     uses org.redkale.cache.spi.CacheManagerProvider;
     uses org.redkale.cluster.spi.ClusterAgentProvider;
     uses org.redkale.convert.spi.ConvertProvider;
-    uses org.redkale.inject.spi.ResourceAnnotationProvider;
     uses org.redkale.mq.spi.MessageAgentProvider;
     uses org.redkale.schedule.spi.ScheduleManagerProvider;
     uses org.redkale.source.spi.CacheSourceProvider;

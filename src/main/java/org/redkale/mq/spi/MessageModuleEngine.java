@@ -23,10 +23,10 @@ import org.redkale.boot.ClassFilter;
 import org.redkale.boot.ModuleEngine;
 import org.redkale.boot.NodeServer;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.inject.ResourceAnnotationLoader;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
-import org.redkale.inject.spi.ResourceAnnotationProvider;
 import org.redkale.mq.MessageConsumer;
 import org.redkale.mq.MessageManager;
 import org.redkale.mq.MessageProducer;
@@ -187,7 +187,7 @@ public class MessageModuleEngine extends ModuleEngine {
         }
         this.messageAgents = mqs;
         //------------------------------------ 注册 ResourceProducer MessageProducer ------------------------------------       
-        resourceFactory.register(new ResourceAnnotationProvider<ResourceProducer>() {
+        resourceFactory.register(new ResourceAnnotationLoader<ResourceProducer>() {
             @Override
             public void load(ResourceFactory rf, String srcResourceName, Object srcObj, ResourceProducer annotation, Field field, Object attachment) {
                 if (field.getType() != MessageProducer.class) {

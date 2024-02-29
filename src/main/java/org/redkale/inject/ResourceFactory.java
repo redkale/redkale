@@ -18,7 +18,6 @@ import java.util.logging.*;
 import org.redkale.annotation.*;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.inject.spi.ResourceAnnotationProvider;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.TypeToken;
@@ -52,7 +51,7 @@ public final class ResourceFactory {
 
     private final List<WeakReference<ResourceFactory>> chidren = new CopyOnWriteArrayList<>();
 
-    private final ConcurrentHashMap<Class<? extends Annotation>, ResourceAnnotationProvider> resAnnotationProviderMap = new ConcurrentHashMap();
+    private final ConcurrentHashMap<Class<? extends Annotation>, ResourceAnnotationLoader> resAnnotationLoaderMap = new ConcurrentHashMap();
 
     private final ConcurrentHashMap<Type, ResourceTypeLoader> resTypeLoaderMap = new ConcurrentHashMap();
 
@@ -60,16 +59,6 @@ public final class ResourceFactory {
 
     private ResourceFactory(ResourceFactory parent) {
         this.parent = parent;
-        if (parent == null) {
-            ServiceLoader<ResourceAnnotationProvider> loaders = ServiceLoader.load(ResourceAnnotationProvider.class);
-            RedkaleClassLoader.putServiceLoader(ResourceAnnotationProvider.class);
-            Iterator<ResourceAnnotationProvider> it = loaders.iterator();
-            while (it.hasNext()) {
-                ResourceAnnotationProvider ril = it.next();
-                RedkaleClassLoader.putReflectionPublicConstructors(ril.getClass(), ril.getClass().getName());
-                this.resAnnotationProviderMap.put(ril.annotationType(), ril);
-            }
-        }
     }
 
     /**
@@ -857,7 +846,7 @@ public final class ResourceFactory {
         try {
             list.add(srcObj);
             Class clazz = srcObj.getClass();
-            final boolean diyLoaderFlag = !parentRoot().resAnnotationProviderMap.isEmpty();
+            final boolean diyLoaderFlag = !parentRoot().resAnnotationLoaderMap.isEmpty();
             do {
                 if (java.lang.Enum.class.isAssignableFrom(clazz)) {
                     break;
@@ -897,7 +886,7 @@ public final class ResourceFactory {
                             }
                         }
                         if (flag && diyLoaderFlag) {
-                            parentRoot().resAnnotationProviderMap.values().stream().forEach(iloader -> {
+                            parentRoot().resAnnotationLoaderMap.values().stream().forEach(iloader -> {
                                 Annotation ann = field.getAnnotation(iloader.annotationType());
                                 if (ann != null) {
                                     iloader.load(this, srcResourceName, srcObj, ann, field, attachment);
@@ -1062,9 +1051,9 @@ public final class ResourceFactory {
         }
     }
 
-    public <T extends Annotation> void register(final ResourceAnnotationProvider<T> loader) {
+    public <T extends Annotation> void register(final ResourceAnnotationLoader<T> loader) {
         Objects.requireNonNull(loader);
-        parentRoot().resAnnotationProviderMap.put(loader.annotationType(), loader);
+        parentRoot().resAnnotationLoaderMap.put(loader.annotationType(), loader);
     }
 
     public void register(final ResourceTypeLoader rs, final Type... clazzs) {

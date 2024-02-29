@@ -12,8 +12,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.reflect.Field;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.inject.ResourceAnnotationLoader;
 import org.redkale.inject.ResourceFactory;
-import org.redkale.inject.spi.ResourceAnnotationProvider;
 
 /**
  *
@@ -38,7 +38,7 @@ public class ResourceAnnotationTest {
         if (!main) Assertions.assertEquals(new File("conf/test.xml").toString(), bean.conf.toString());
     }
 
-    public static class CustomConfProvider implements ResourceAnnotationProvider<CustomConf> {
+    public static class CustomConfProvider implements ResourceAnnotationLoader<CustomConf> {
 
         @Override
         public void load(ResourceFactory factory, String srcResourceName, Object srcObj, CustomConf annotation, Field field, Object attachment) {
