@@ -4,6 +4,7 @@
 package org.redkale.source.spi;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -135,9 +136,9 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
         }
         resourceFactory.register(SourceManager.class, this);
         //--------------------------------- 注册 DataSource、CacheSource ---------------------------------        
-        resourceFactory.register(new DataSourceLoader(), DataSource.class);
-        resourceFactory.register(new CacheSourceLoader(), CacheSource.class);
-        resourceFactory.register(new DataSqlMapperLoader(), DataSqlMapper.class);
+        resourceFactory.register(new DataSourceLoader());
+        resourceFactory.register(new CacheSourceLoader());
+        resourceFactory.register(new DataSqlMapperLoader());
     }
 
     /**
@@ -538,6 +539,11 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                 return null;
             }
         }
+
+        @Override
+        public Type resourceType() {
+            return DataSqlMapper.class;
+        }
     }
 
     private class DataSourceLoader implements ResourceTypeLoader {
@@ -555,6 +561,11 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                 logger.log(Level.SEVERE, "DataSource inject to " + srcObj + " error", e);
                 return null;
             }
+        }
+
+        @Override
+        public Type resourceType() {
+            return DataSource.class;
         }
     }
 
@@ -583,6 +594,11 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                 logger.log(Level.SEVERE, "DataSource inject error", e);
                 return null;
             }
+        }
+
+        @Override
+        public Type resourceType() {
+            return CacheSource.class;
         }
 
         @Override

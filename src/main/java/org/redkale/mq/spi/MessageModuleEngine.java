@@ -4,6 +4,7 @@
 package org.redkale.mq.spi;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -370,7 +371,7 @@ public class MessageModuleEngine extends ModuleEngine {
         }
         serResourceFactory.register(new ResourceTypeLoader() {
             @Override
-            public Object load(ResourceFactory factory, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+            public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
                 for (ResourceFactory f : factorys) {
                     Object val = f.find(resourceName, field.getGenericType());
                     if (val != null) {
@@ -381,10 +382,15 @@ public class MessageModuleEngine extends ModuleEngine {
             }
 
             @Override
+            public Type resourceType() {
+                return Object.class;
+            }
+
+            @Override
             public boolean autoNone() {
                 return false;
             }
-        }, Object.class);
+        });
         for (MessageAgent agent : this.messageAgents) {
             names.add(agent.getName());
             List<MessageConsumer> consumers = agentConsumers.getOrDefault(agent.getName(), new CopyOnWriteArrayList<>());

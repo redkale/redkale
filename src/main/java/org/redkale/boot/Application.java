@@ -383,59 +383,8 @@ public final class Application {
             @Override
             public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
                 try {
-                    Class type = field.getType();
-                    if (type == Application.class) {
-                        field.set(srcObj, application);
-                        return application;
-                    } else if (type == ResourceFactory.class) {
-                        boolean serv = RESNAME_SERVER_RESFACTORY.equals(resourceName) || resourceName.equalsIgnoreCase("server");
-                        ResourceFactory rs = serv ? rf : (resourceName.isEmpty() ? application.resourceFactory : null);
-                        field.set(srcObj, rs);
-                        return rs;
-                    } else if (type == NodeSncpServer.class) {
-                        NodeServer server = null;
-                        for (NodeServer ns : application.getNodeServers()) {
-                            if (ns.getClass() != NodeSncpServer.class) {
-                                continue;
-                            }
-                            if (resourceName.equals(ns.server.getName())) {
-                                server = ns;
-                                break;
-                            }
-                        }
-                        field.set(srcObj, server);
-                        return server;
-                    } else if (type == NodeHttpServer.class) {
-                        NodeServer server = null;
-                        for (NodeServer ns : application.getNodeServers()) {
-                            if (ns.getClass() != NodeHttpServer.class) {
-                                continue;
-                            }
-                            if (resourceName.equals(ns.server.getName())) {
-                                server = ns;
-                                break;
-                            }
-                        }
-                        field.set(srcObj, server);
-                        return server;
-                    } else if (type == NodeWatchServer.class) {
-                        NodeServer server = null;
-                        for (NodeServer ns : application.getNodeServers()) {
-                            if (ns.getClass() != NodeWatchServer.class) {
-                                continue;
-                            }
-                            if (resourceName.equals(ns.server.getName())) {
-                                server = ns;
-                                break;
-                            }
-                        }
-                        field.set(srcObj, server);
-                        return server;
-                    }
-//                    if (type == WatchFactory.class) {
-//                        field.setex(src, application.watchFactory);
-//                    }
-                    return null;
+                    field.set(srcObj, application);
+                    return application;
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Resource inject error", e);
                     return null;
@@ -443,76 +392,231 @@ public final class Application {
             }
 
             @Override
+            public Type resourceType() {
+                return Application.class;
+            }
+
+            @Override
             public boolean autoNone() {
                 return false;
             }
+        });
+        this.resourceFactory.register(new ResourceTypeLoader() {
 
-        }, Application.class, ResourceFactory.class, NodeSncpServer.class, NodeHttpServer.class, NodeWatchServer.class);
+            @Override
+            public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+                try {
+                    boolean serv = RESNAME_SERVER_RESFACTORY.equals(resourceName) || resourceName.equalsIgnoreCase("server");
+                    ResourceFactory rs = serv ? rf : (resourceName.isEmpty() ? application.resourceFactory : null);
+                    field.set(srcObj, rs);
+                    return rs;
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, "Resource inject error", e);
+                    return null;
+                }
+            }
+
+            @Override
+            public Type resourceType() {
+                return ResourceFactory.class;
+            }
+
+            @Override
+            public boolean autoNone() {
+                return false;
+            }
+        });
+        this.resourceFactory.register(new ResourceTypeLoader() {
+
+            @Override
+            public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+                try {
+                    NodeServer server = null;
+                    for (NodeServer ns : application.getNodeServers()) {
+                        if (ns.getClass() != NodeSncpServer.class) {
+                            continue;
+                        }
+                        if (resourceName.equals(ns.server.getName())) {
+                            server = ns;
+                            break;
+                        }
+                    }
+                    field.set(srcObj, server);
+                    return server;
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, "Resource inject error", e);
+                    return null;
+                }
+            }
+
+            @Override
+            public Type resourceType() {
+                return NodeSncpServer.class;
+            }
+
+            @Override
+            public boolean autoNone() {
+                return false;
+            }
+        });
+        this.resourceFactory.register(new ResourceTypeLoader() {
+
+            @Override
+            public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+                try {
+                    NodeServer server = null;
+                    for (NodeServer ns : application.getNodeServers()) {
+                        if (ns.getClass() != NodeHttpServer.class) {
+                            continue;
+                        }
+                        if (resourceName.equals(ns.server.getName())) {
+                            server = ns;
+                            break;
+                        }
+                    }
+                    field.set(srcObj, server);
+                    return server;
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, "Resource inject error", e);
+                    return null;
+                }
+            }
+
+            @Override
+            public Type resourceType() {
+                return NodeHttpServer.class;
+            }
+
+            @Override
+            public boolean autoNone() {
+                return false;
+            }
+        });
+        this.resourceFactory.register(new ResourceTypeLoader() {
+
+            @Override
+            public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+                try {
+                    NodeServer server = null;
+                    for (NodeServer ns : application.getNodeServers()) {
+                        if (ns.getClass() != NodeWatchServer.class) {
+                            continue;
+                        }
+                        if (resourceName.equals(ns.server.getName())) {
+                            server = ns;
+                            break;
+                        }
+                    }
+                    field.set(srcObj, server);
+                    return server;
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, "Resource inject error", e);
+                    return null;
+                }
+            }
+
+            @Override
+            public Type resourceType() {
+                return NodeWatchServer.class;
+            }
+
+            @Override
+            public boolean autoNone() {
+                return false;
+            }
+        });
 
         //------------------------------------ 注册 java.net.http.HttpClient ------------------------------------        
-        resourceFactory.register((ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) -> {
-            try {
-                java.net.http.HttpClient.Builder builder = java.net.http.HttpClient.newBuilder();
-                if (resourceName.endsWith(".1.1")) {
-                    builder.version(HttpClient.Version.HTTP_1_1);
-                } else if (resourceName.endsWith(".2")) {
-                    builder.version(HttpClient.Version.HTTP_2);
+        resourceFactory.register(new ResourceTypeLoader() {
+
+            @Override
+            public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+                try {
+                    java.net.http.HttpClient.Builder builder = java.net.http.HttpClient.newBuilder();
+                    if (resourceName.endsWith(".1.1")) {
+                        builder.version(HttpClient.Version.HTTP_1_1);
+                    } else if (resourceName.endsWith(".2")) {
+                        builder.version(HttpClient.Version.HTTP_2);
+                    }
+                    java.net.http.HttpClient httpClient = builder.build();
+                    field.set(srcObj, httpClient);
+                    rf.inject(resourceName, httpClient, null); // 给其可能包含@Resource的字段赋值;
+                    rf.register(resourceName, java.net.http.HttpClient.class, httpClient);
+                    return httpClient;
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, java.net.http.HttpClient.class.getSimpleName() + " inject error", e);
+                    return null;
                 }
-                java.net.http.HttpClient httpClient = builder.build();
-                field.set(srcObj, httpClient);
-                rf.inject(resourceName, httpClient, null); // 给其可能包含@Resource的字段赋值;
-                rf.register(resourceName, java.net.http.HttpClient.class, httpClient);
-                return httpClient;
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, java.net.http.HttpClient.class.getSimpleName() + " inject error", e);
-                return null;
             }
-        }, java.net.http.HttpClient.class);
+
+            @Override
+            public Type resourceType() {
+                return java.net.http.HttpClient.class;
+            }
+        });
         //------------------------------------ 注册 WebClient ------------------------------------       
-        resourceFactory.register((ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) -> {
-            try {
-                WebClient httpClient = WebClient.create(workExecutor, clientAsyncGroup);
-                field.set(srcObj, httpClient);
-                rf.inject(resourceName, httpClient, null); // 给其可能包含@Resource的字段赋值;
-                rf.register(resourceName, WebClient.class, httpClient);
-                return httpClient;
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, WebClient.class.getSimpleName() + " inject error", e);
-                return null;
+        resourceFactory.register(new ResourceTypeLoader() {
+
+            @Override
+            public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+                try {
+                    WebClient httpClient = WebClient.create(workExecutor, clientAsyncGroup);
+                    field.set(srcObj, httpClient);
+                    rf.inject(resourceName, httpClient, null); // 给其可能包含@Resource的字段赋值;
+                    rf.register(resourceName, WebClient.class, httpClient);
+                    return httpClient;
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, WebClient.class.getSimpleName() + " inject error", e);
+                    return null;
+                }
             }
-        }, WebClient.class);
+
+            @Override
+            public Type resourceType() {
+                return WebClient.class;
+            }
+        });
         //------------------------------------ 注册 HttpRpcClient ------------------------------------        
-        resourceFactory.register((ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) -> {
-            try {
-                ClusterAgent clusterAgent = resourceFactory.find("", ClusterAgent.class);
-                MessageAgent messageAgent = resourceFactory.find(resourceName, MessageAgent.class);
-                if (messageAgent != null) {
-                    if (clusterAgent == null || !Objects.equals(clusterAgent.getName(), resourceName)
-                        || messageAgent.isRpcFirst()) {
-                        HttpRpcClient rpcClient = messageAgent.getHttpRpcClient();
+        resourceFactory.register(new ResourceTypeLoader() {
+
+            @Override
+            public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+                try {
+                    ClusterAgent clusterAgent = resourceFactory.find("", ClusterAgent.class);
+                    MessageAgent messageAgent = resourceFactory.find(resourceName, MessageAgent.class);
+                    if (messageAgent != null) {
+                        if (clusterAgent == null || !Objects.equals(clusterAgent.getName(), resourceName)
+                            || messageAgent.isRpcFirst()) {
+                            HttpRpcClient rpcClient = messageAgent.getHttpRpcClient();
+                            field.set(srcObj, rpcClient);
+                            rf.inject(resourceName, rpcClient, null); // 给其可能包含@Resource的字段赋值;
+                            rf.register(resourceName, HttpRpcClient.class, rpcClient);
+                            return rpcClient;
+                        }
+                    }
+                    if (clusterAgent == null) {
+                        HttpRpcClient rpcClient = new HttpLocalRpcClient(application, resourceName);
                         field.set(srcObj, rpcClient);
                         rf.inject(resourceName, rpcClient, null); // 给其可能包含@Resource的字段赋值;
                         rf.register(resourceName, HttpRpcClient.class, rpcClient);
                         return rpcClient;
                     }
-                }
-                if (clusterAgent == null) {
-                    HttpRpcClient rpcClient = new HttpLocalRpcClient(application, resourceName);
+                    HttpRpcClient rpcClient = new HttpClusterRpcClient(application, resourceName, clusterAgent);
                     field.set(srcObj, rpcClient);
                     rf.inject(resourceName, rpcClient, null); // 给其可能包含@Resource的字段赋值;
                     rf.register(resourceName, HttpRpcClient.class, rpcClient);
                     return rpcClient;
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, HttpRpcClient.class.getSimpleName() + " inject error", e);
+                    return null;
                 }
-                HttpRpcClient rpcClient = new HttpClusterRpcClient(application, resourceName, clusterAgent);
-                field.set(srcObj, rpcClient);
-                rf.inject(resourceName, rpcClient, null); // 给其可能包含@Resource的字段赋值;
-                rf.register(resourceName, HttpRpcClient.class, rpcClient);
-                return rpcClient;
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, HttpRpcClient.class.getSimpleName() + " inject error", e);
-                return null;
             }
-        }, HttpRpcClient.class);
+
+            @Override
+            public Type resourceType() {
+                return HttpRpcClient.class;
+            }
+        });
     }
 
     private void registerResourceEnvs(boolean first, Properties... envs) {

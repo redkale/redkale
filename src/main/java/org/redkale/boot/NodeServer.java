@@ -250,7 +250,17 @@ public abstract class NodeServer {
 
     private void registerResTypeLoader() {
         //--------------------- 注册 Local AutoLoad(false) Service ---------------------        
-        resourceFactory.register(this::loadResourceService, Service.class);
+        resourceFactory.register(new ResourceTypeLoader() {
+            @Override
+            public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
+                return loadResourceService(rf, srcResourceName, srcObj, resourceName, field, attachment);
+            }
+
+            @Override
+            public Type resourceType() {
+                return Service.class;
+            }
+        });
         //----------------------------- 注册 WebSocketNode -----------------------------
         final NodeServer self = this;
         final ResourceFactory appResFactory = application.getResourceFactory();
@@ -292,10 +302,15 @@ public abstract class NodeServer {
             }
 
             @Override
+            public Type resourceType() {
+                return WebSocketNode.class;
+            }
+
+            @Override
             public boolean autoNone() {
                 return false;
             }
-        }, WebSocketNode.class);
+        });
     }
 
     //Service.class的ResourceTypeLoader
@@ -354,13 +369,107 @@ public abstract class NodeServer {
         }
     }
 
+    private class ExpectServiceLoader implements ResourceTypeLoader {
+
+        private final Class type;
+
+        private final Class<? extends Service> serviceImplClass;
+
+        private final AtomicInteger serviceCount;
+
+        private final SncpRpcGroups rpcGroups;
+
+        private final FilterEntry<? extends Service> entry;
+
+        private final String group;
+
+        private final boolean localMode;
+
+        public ExpectServiceLoader(Class type, Class<? extends Service> serviceImplClass, AtomicInteger serviceCount,
+            SncpRpcGroups rpcGroups, FilterEntry<? extends Service> entry, String group, boolean localMode) {
+            this.type = type;
+            this.serviceImplClass = serviceImplClass;
+            this.serviceCount = serviceCount;
+            this.rpcGroups = rpcGroups;
+            this.entry = entry;
+            this.group = group;
+            this.localMode = localMode;
+        }
+
+        @Override
+        public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
+            try {
+                final ResourceFactory appResourceFactory = application.getResourceFactory();
+                ResourceFactory regFactory = isSNCP() ? application.getResourceFactory() : resourceFactory;
+
+                if (Sncp.loadRemoteMethodActions(Sncp.getResourceType(serviceImplClass)).isEmpty()
+                    && (serviceImplClass.getAnnotation(Priority.class) == null
+                    && serviceImplClass.getAnnotation(javax.annotation.Priority.class) == null)) {  //class没有可用的方法且没有标记启动优先级的， 通常为BaseService
+                    if (!serviceImplClass.getName().startsWith("org.redkale.") && !serviceImplClass.getSimpleName().contains("Base")) {
+                        logger.log(Level.FINE, serviceImplClass + " cannot load because not found less one public non-final method");
+                    }
+                    return null;
+                }
+                RedkaleClassLoader.putReflectionPublicMethods(serviceImplClass.getName());
+                MessageAgent mqAgent = getMessageAgent(entry.getProperty());
+                Service service;
+                if (Sncp.isComponent(serviceImplClass)) { //Component
+                    RedkaleClassLoader.putReflectionPublicConstructors(serviceImplClass, serviceImplClass.getName());
+                    if (!acceptsComponent(serviceImplClass)) {
+                        return null;
+                    }
+                    service = serviceImplClass.getDeclaredConstructor().newInstance();
+                } else if (srcObj instanceof WebSocketServlet || localMode) { //本地模式                        
+                    AsmMethodBoost methodBoost = application.createAsmMethodBoost(false, serviceImplClass);
+                    service = Sncp.createLocalService(serverClassLoader, resourceName, serviceImplClass,
+                        methodBoost, appResourceFactory, rpcGroups, sncpClient, mqAgent, group, entry.getProperty());
+                } else {
+                    AsmMethodBoost methodBoost = application.createAsmMethodBoost(true, serviceImplClass);
+                    service = Sncp.createRemoteService(serverClassLoader, resourceName, serviceImplClass,
+                        methodBoost, appResourceFactory, rpcGroups, sncpClient, mqAgent, group, entry.getProperty());
+                }
+                final Class restype = Sncp.getResourceType(service);
+                if (rf.find(resourceName, restype) == null) {
+                    regFactory.register(resourceName, restype, service);
+                } else if (isSNCP() && !entry.isAutoload()) {
+                    throw new RedkaleException(restype.getSimpleName()
+                        + "(class:" + serviceImplClass.getName() + ", name:" + resourceName + ", group:" + group + ") is repeat.");
+                }
+                if (Sncp.isRemote(service)) {
+                    remoteServices.add(service);
+                    if (mqAgent != null) {
+                        sncpRemoteAgents.put(mqAgent.getName(), mqAgent);
+                    }
+                } else {
+                    if (field != null) {
+                        rf.inject(resourceName, service); //动态加载的Service也存在按需加载的注入资源
+                    }
+                    localServices.add(service);
+                    if (!Sncp.isComponent(service)) {
+                        servletServices.add(service);
+                    }
+                }
+                serviceCount.incrementAndGet();
+                return service;
+            } catch (RuntimeException ex) {
+                throw ex;
+            } catch (Exception e) {
+                throw new RedkaleException(e);
+            }
+        }
+
+        @Override
+        public Type resourceType() {
+            return type;
+        }
+
+    }
+
     @SuppressWarnings("unchecked")
     protected void loadService(ClassFilter<? extends Service> serviceFilter) throws Exception {
         Objects.requireNonNull(serviceFilter);
         final long starts = System.currentTimeMillis();
         final Set<FilterEntry<? extends Service>> entrys = (Set) serviceFilter.getAllFilterEntrys();
-        ResourceFactory regFactory = isSNCP() ? application.getResourceFactory() : resourceFactory;
-        final ResourceFactory appResourceFactory = application.getResourceFactory();
         final SncpRpcGroups rpcGroups = application.getSncpRpcGroups();
         final AtomicInteger serviceCount = new AtomicInteger();
         for (FilterEntry<? extends Service> entry : entrys) { //service实现类
@@ -406,71 +515,14 @@ public abstract class NodeServer {
             if ((localMode || Sncp.isComponent(serviceImplClass)) && Utility.isAbstractOrInterface(serviceImplClass)) {
                 continue; //本地模式或Component不能实例化接口和抽象类的Service类
             }
-
-            final ResourceTypeLoader resourceLoader = (ResourceFactory rf, String srcResourceName,
-                final Object srcObj, final String resourceName, Field field, final Object attachment) -> {
-                try {
-                    if (Sncp.loadRemoteMethodActions(Sncp.getResourceType(serviceImplClass)).isEmpty()
-                        && (serviceImplClass.getAnnotation(Priority.class) == null
-                        && serviceImplClass.getAnnotation(javax.annotation.Priority.class) == null)) {  //class没有可用的方法且没有标记启动优先级的， 通常为BaseService
-                        if (!serviceImplClass.getName().startsWith("org.redkale.") && !serviceImplClass.getSimpleName().contains("Base")) {
-                            logger.log(Level.FINE, serviceImplClass + " cannot load because not found less one public non-final method");
-                        }
-                        return null;
-                    }
-                    RedkaleClassLoader.putReflectionPublicMethods(serviceImplClass.getName());
-                    MessageAgent mqAgent = getMessageAgent(entry.getProperty());
-                    Service service;
-                    if (Sncp.isComponent(serviceImplClass)) { //Component
-                        RedkaleClassLoader.putReflectionPublicConstructors(serviceImplClass, serviceImplClass.getName());
-                        if (!acceptsComponent(serviceImplClass)) {
-                            return null;
-                        }
-                        service = serviceImplClass.getDeclaredConstructor().newInstance();
-                    } else if (srcObj instanceof WebSocketServlet || localMode) { //本地模式                        
-                        AsmMethodBoost methodBoost = application.createAsmMethodBoost(false, serviceImplClass);
-                        service = Sncp.createLocalService(serverClassLoader, resourceName, serviceImplClass,
-                            methodBoost, appResourceFactory, rpcGroups, this.sncpClient, mqAgent, group, entry.getProperty());
-                    } else {
-                        AsmMethodBoost methodBoost = application.createAsmMethodBoost(true, serviceImplClass);
-                        service = Sncp.createRemoteService(serverClassLoader, resourceName, serviceImplClass,
-                            methodBoost, appResourceFactory, rpcGroups, this.sncpClient, mqAgent, group, entry.getProperty());
-                    }
-                    final Class restype = Sncp.getResourceType(service);
-                    if (rf.find(resourceName, restype) == null) {
-                        regFactory.register(resourceName, restype, service);
-                    } else if (isSNCP() && !entry.isAutoload()) {
-                        throw new RedkaleException(restype.getSimpleName()
-                            + "(class:" + serviceImplClass.getName() + ", name:" + resourceName + ", group:" + group + ") is repeat.");
-                    }
-                    if (Sncp.isRemote(service)) {
-                        remoteServices.add(service);
-                        if (mqAgent != null) {
-                            sncpRemoteAgents.put(mqAgent.getName(), mqAgent);
-                        }
-                    } else {
-                        if (field != null) {
-                            rf.inject(resourceName, service); //动态加载的Service也存在按需加载的注入资源
-                        }
-                        localServices.add(service);
-                        if (!Sncp.isComponent(service)) {
-                            servletServices.add(service);
-                        }
-                    }
-                    serviceCount.incrementAndGet();
-                    return service;
-                } catch (RuntimeException ex) {
-                    throw ex;
-                } catch (Exception e) {
-                    throw new RedkaleException(e);
-                }
-            };
             if (entry.isExpect()) {
                 Class t = ResourceFactory.getResourceType(entry.getType());
                 if (resourceFactory.findResourceTypeLoader(t) == null) {
-                    resourceFactory.register(resourceLoader, t);
+                    resourceFactory.register(new ExpectServiceLoader(t, serviceImplClass, serviceCount, rpcGroups, entry, group, localMode));
                 }
             } else {
+                ExpectServiceLoader resourceLoader = new ExpectServiceLoader(serviceImplClass,
+                    serviceImplClass, serviceCount, rpcGroups, entry, group, localMode);
                 resourceLoader.load(resourceFactory, null, null, entry.getName(), null, false);
             }
 

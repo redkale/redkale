@@ -892,8 +892,8 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         if (!items) {
             if (val0.getClass().isArray()) {
                 Class comp = val0.getClass().getComponentType();
-                if (comp == java.io.Serializable.class) {
-                    comp = ((Object[]) val0)[0].getClass();
+                if (Array.getLength(val0) > 0) {
+                    comp = Array.get(val0, 0).getClass();
                 }
                 if (!(comp.isPrimitive() || CharSequence.class.isAssignableFrom(comp) || Number.class.isAssignableFrom(comp))) {
                     items = true;

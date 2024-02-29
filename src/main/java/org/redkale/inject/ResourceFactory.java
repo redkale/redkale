@@ -1056,13 +1056,8 @@ public final class ResourceFactory {
         parentRoot().resAnnotationLoaderMap.put(loader.annotationType(), loader);
     }
 
-    public void register(final ResourceTypeLoader rs, final Type... clazzs) {
-        if (clazzs == null || rs == null) {
-            return;
-        }
-        for (Type clazz : clazzs) {
-            resTypeLoaderMap.put(clazz, rs);
-        }
+    public void register(final ResourceTypeLoader rs) {
+        resTypeLoaderMap.put(rs.resourceType(), rs);
     }
 
     public ResourceTypeLoader findResourceTypeLoader(Type clazz) {
