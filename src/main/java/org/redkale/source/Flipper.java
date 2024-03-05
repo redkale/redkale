@@ -7,8 +7,8 @@ package org.redkale.source;
 
 import java.io.Serializable;
 import java.util.Objects;
-import org.redkale.convert.ConvertColumn;
 import org.redkale.annotation.Comment;
+import org.redkale.convert.ConvertColumn;
 
 /**
  * 翻页对象, offset从0开始, limit必须大于0
@@ -62,7 +62,9 @@ public final class Flipper implements Serializable, Cloneable {
     }
 
     public Flipper copyTo(Flipper copy) {
-        if (copy == null) return copy;
+        if (copy == null) {
+            return copy;
+        }
         copy.offset = this.offset;
         copy.limit = this.limit;
         copy.sort = this.sort;
@@ -70,15 +72,34 @@ public final class Flipper implements Serializable, Cloneable {
     }
 
     public Flipper copyFrom(Flipper copy) {
-        if (copy == null) return this;
+        if (copy == null) {
+            return this;
+        }
         this.offset = copy.offset;
         this.limit = copy.limit;
         this.sort = copy.sort;
         return this;
     }
 
+    /**
+     * 翻下一页
+     *
+     * @return Flipper
+     */
     public Flipper next() {
         this.offset = getOffset() + this.limit;
+        return this;
+    }
+
+    /**
+     * 设置当前页号，页号从1开始
+     *
+     * @param current 页号， 从1开始
+     *
+     * @return Flipper
+     */
+    public Flipper current(int current) {
+        this.offset = (current - 1) * this.limit;
         return this;
     }
 
@@ -90,7 +111,8 @@ public final class Flipper implements Serializable, Cloneable {
 
     @Override
     public String toString() {
-        return "{offset:" + this.offset + ",limit:" + this.limit + ((sort == null || sort.isEmpty()) ? "" : (",sort:\"" + this.sort.replace('"', '\'') + "\"")) + "}";
+        return "{offset:" + this.offset + ",limit:" + this.limit
+            + ((sort == null || sort.isEmpty()) ? "" : (",sort:\"" + this.sort.replace('"', '\'') + "\"")) + "}";
     }
 
     @Override
@@ -104,12 +126,22 @@ public final class Flipper implements Serializable, Cloneable {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null) return false;
-        if (getClass() != obj.getClass()) return false;
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
         final Flipper other = (Flipper) obj;
-        if (this.offset != other.offset) return false;
-        if (this.limit != other.limit) return false;
+        if (this.offset != other.offset) {
+            return false;
+        }
+        if (this.limit != other.limit) {
+            return false;
+        }
         return Objects.equals(this.sort, other.sort);
     }
 
@@ -163,7 +195,9 @@ public final class Flipper implements Serializable, Cloneable {
     }
 
     public static Flipper sortIfAbsent(Flipper flipper, String sort) {
-        if (flipper != null) return flipper.sortIfAbsent(sort);
+        if (flipper != null) {
+            return flipper.sortIfAbsent(sort);
+        }
         return flipper;
     }
 

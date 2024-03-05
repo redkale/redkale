@@ -164,7 +164,9 @@ public interface DataResultSet extends EntityInfo.DataResultSetRow {
                 }
             } else if (t == LocalDateTime.class) {
                 if (o != null && !(o instanceof LocalDateTime)) {
-                    if (o instanceof java.sql.Timestamp) {
+                    if (o instanceof java.sql.Date) {
+                        o = ((java.sql.Date) o).toLocalDate().atStartOfDay();
+                    } else if (o instanceof java.sql.Timestamp) {
                         o = ((java.sql.Timestamp) o).toLocalDateTime();
                     }
                 }
