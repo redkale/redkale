@@ -67,7 +67,8 @@ public class CacheInstance implements Service {
     }
 
     @Cached(key = "info_#{id}_file#{files.one}", localExpire = "30", remoteExpire = "60", timeUnit = TimeUnit.MILLISECONDS)
-    public CompletableFuture<Map<String, Integer>> getInfo2Async(ParamBean bean, int id, List<String> idList, Map<String, File> files) throws IOException, InstantiationException {
+    public CompletableFuture<Map<String, Integer>> getInfo2Async(ParamBean bean, 
+        int id, List<String> idList, Map<String, File> files) throws IOException, InstantiationException {
         return CompletableFuture.completedFuture(null);
     }
 

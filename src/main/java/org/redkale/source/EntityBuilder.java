@@ -25,6 +25,8 @@ public class EntityBuilder<T> {
 
     private static final ConcurrentHashMap<Class, EntityBuilder> cacheMap = new ConcurrentHashMap<>();
 
+    private static final ConcurrentHashMap<String, String> lowerMap = new ConcurrentHashMap<>();
+
     private static final ConcurrentHashMap<String, String> snakeMap = new ConcurrentHashMap<>();
 
     private static final ConcurrentHashMap<String, String> camelMap = new ConcurrentHashMap<>();
@@ -61,6 +63,9 @@ public class EntityBuilder<T> {
     //key：数据库字段名
     private final Map<String, Attribute<T, Serializable>> sqlAttrMap;
 
+    //key：数据库字段名去掉下划线并小写
+    private final Map<String, Attribute<T, Serializable>> sqlLowerAttrMap;
+
     //数据库中所有字段, 顺序必须与querySqlColumns、querySqlColumnSequence一致
     private final Attribute<T, Serializable>[] attributes;
 
@@ -79,8 +84,13 @@ public class EntityBuilder<T> {
         this.attributeMap = attributeMap;
         this.attributes = queryAttributes;
         this.sqlAttrMap = new HashMap<>();
+        this.sqlLowerAttrMap = new HashMap<>();
         this.entityIsMap = Map.class.isAssignableFrom(type);
-        attributeMap.forEach((k, v) -> sqlAttrMap.put(getSQLColumn(null, k), v));
+        attributeMap.forEach((k, v) -> {
+            String col = getSQLColumn(null, k);
+            sqlAttrMap.put(col, v);
+            sqlLowerAttrMap.put(lowerCaseColumn(col), v);
+        });
     }
 
     public static boolean isSimpleType(Class type) {
@@ -248,6 +258,24 @@ public class EntityBuilder<T> {
         return getObjectValue(null, row);
     }
 
+    //去掉字段名中的下划线并转出小写
+    protected String lowerCaseColumn(String sqlCol) {
+        return lowerMap.computeIfAbsent(sqlCol, col -> {
+            char ch;
+            char[] chs = col.toCharArray();
+            StringBuilder sb = new StringBuilder(chs.length);
+            for (int i = 0; i < chs.length; i++) {
+                ch = chs[i];
+                if ((ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')) {
+                    sb.append(ch);
+                } else if (ch >= 'A' && ch <= 'Z') {
+                    sb.append(Character.toLowerCase(ch));
+                }
+            }
+            return sb.toString();
+        });
+    }
+
     //带下划线的字段名替换成驼峰式
     protected String snakeCaseColumn(String sqlCol) {
         return snakeMap.computeIfAbsent(sqlCol, col -> {
@@ -306,6 +334,10 @@ public class EntityBuilder<T> {
                 boolean sqlFlag = false;
                 if (attr == null && sqlCol.indexOf('_') > -1) {
                     attr = attrs.get(snakeCaseColumn(sqlCol));
+                    sqlFlag = true;
+                }
+                if (attr == null) {
+                    attr = sqlLowerAttrMap.get(lowerCaseColumn(sqlCol));
                     sqlFlag = true;
                 }
                 if (attr != null) { //兼容返回的字段不存在类中
