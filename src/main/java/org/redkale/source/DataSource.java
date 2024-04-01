@@ -2630,7 +2630,8 @@ public interface DataSource extends Resourcable {
      *
      * @return 字段值的集合CompletableFuture
      */
-    default <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+    default <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz,
+        final Flipper flipper, final FilterBean bean) {
         return queryColumnListAsync(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
@@ -2662,7 +2663,8 @@ public interface DataSource extends Resourcable {
      *
      * @return 字段值的集合CompletableFuture
      */
-    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node);
+    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, final Class<T> clazz,
+        final Flipper flipper, final FilterNode node);
 
     /**
      * 查询符合过滤条件记录的某个字段Sheet集合   <br>
@@ -2677,7 +2679,8 @@ public interface DataSource extends Resourcable {
      *
      * @return 字段值的集合
      */
-    default <T, V extends Serializable> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+    default <T, V extends Serializable> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz,
+        final Flipper flipper, final FilterBean bean) {
         return queryColumnSheet(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
@@ -2687,6 +2690,25 @@ public interface DataSource extends Resourcable {
      *
      * @param <T>            Entity泛型
      * @param <V>            字段类型
+     * @param <F>            过滤类型
+     * @param selectedColumn 指定字段
+     * @param clazz          Entity类
+     * @param pageBean       过滤翻页条件
+     *
+     * @return 字段值的集合
+     */
+    default <T, V extends Serializable, F extends FilterBean> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz,
+        final PageBean<F> pageBean) {
+        return queryColumnSheet(selectedColumn, clazz, pageBean == null ? null : pageBean.getFlipper(),
+            pageBean == null ? null : FilterNodeBean.createFilterNode(pageBean.getBean()));
+    }
+
+    /**
+     * 查询符合过滤条件记录的某个字段Sheet集合   <br>
+     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <T>            Entity泛型
+     * @param <V>            字段类型
      * @param selectedColumn 指定字段
      * @param clazz          Entity类
      * @param flipper        翻页对象
@@ -2694,8 +2716,28 @@ public interface DataSource extends Resourcable {
      *
      * @return 字段值的集合CompletableFuture
      */
-    default <T, V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+    default <T, V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(final String selectedColumn, final Class<T> clazz,
+        final Flipper flipper, final FilterBean bean) {
         return queryColumnSheetAsync(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
+    }
+
+    /**
+     * 查询符合过滤条件记录的某个字段Sheet集合   <br>
+     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <T>            Entity泛型
+     * @param <V>            字段类型
+     * @param <F>            过滤类型
+     * @param selectedColumn 指定字段
+     * @param clazz          Entity类
+     * @param pageBean       过滤翻页条件
+     *
+     * @return 字段值的集合CompletableFuture
+     */
+    default <T, V extends Serializable, F extends FilterBean> CompletableFuture<Sheet<V>> queryColumnSheetAsync(final String selectedColumn,
+        final Class<T> clazz, final PageBean<F> pageBean) {
+        return queryColumnSheetAsync(selectedColumn, clazz, pageBean == null ? null : pageBean.getFlipper(),
+            pageBean == null ? null : FilterNodeBean.createFilterNode(pageBean.getBean()));
     }
 
     /**
@@ -2711,7 +2753,8 @@ public interface DataSource extends Resourcable {
      *
      * @return 字段值的集合
      */
-    public <T, V extends Serializable> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node);
+    public <T, V extends Serializable> Sheet<V> queryColumnSheet(final String selectedColumn, final Class<T> clazz,
+        final Flipper flipper, final FilterNode node);
 
     /**
      * 查询符合过滤条件记录的某个字段Sheet集合   <br>
@@ -2726,7 +2769,8 @@ public interface DataSource extends Resourcable {
      *
      * @return 字段值的集合CompletableFuture
      */
-    public <T, V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterNode node);
+    public <T, V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(final String selectedColumn, final Class<T> clazz,
+        final Flipper flipper, final FilterNode node);
 
     /**
      * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
@@ -3628,6 +3672,22 @@ public interface DataSource extends Resourcable {
      * 查询符合过滤条件记录的Sheet集合   <br>
      * 等价SQL: SELECT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
      *
+     * @param <T>      Entity泛型
+     * @param <F>      过滤类型
+     * @param clazz    Entity类
+     * @param pageBean 过滤翻页条件
+     *
+     * @return Entity的集合
+     */
+    default <T, F extends FilterBean> Sheet<T> querySheet(final Class<T> clazz, final PageBean<F> pageBean) {
+        return querySheet(clazz, (SelectColumn) null, pageBean == null ? null : pageBean.getFlipper(),
+            pageBean == null ? null : FilterNodeBean.createFilterNode(pageBean.getBean()));
+    }
+
+    /**
+     * 查询符合过滤条件记录的Sheet集合   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
      * @param <T>     Entity泛型
      * @param clazz   Entity类
      * @param flipper 翻页对象
@@ -3637,6 +3697,22 @@ public interface DataSource extends Resourcable {
      */
     default <T> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
         return querySheetAsync(clazz, (SelectColumn) null, flipper, FilterNodeBean.createFilterNode(bean));
+    }
+
+    /**
+     * 查询符合过滤条件记录的Sheet集合   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <T>      Entity泛型
+     * @param <F>      过滤类型
+     * @param clazz    Entity类
+     * @param pageBean 过滤翻页条件
+     *
+     * @return Entity的集合CompletableFuture
+     */
+    default <T, F extends FilterBean> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final PageBean<F> pageBean) {
+        return querySheetAsync(clazz, (SelectColumn) null, pageBean == null ? null : pageBean.getFlipper(),
+            pageBean == null ? null : FilterNodeBean.createFilterNode(pageBean.getBean()));
     }
 
     /**
@@ -3689,6 +3765,23 @@ public interface DataSource extends Resourcable {
      * 查询符合过滤条件记录的Sheet集合   <br>
      * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
      *
+     * @param <T>      Entity泛型
+     * @param <F>      过滤类型
+     * @param clazz    Entity类
+     * @param selects  指定字段
+     * @param pageBean 过滤翻页条件
+     *
+     * @return Entity的集合
+     */
+    default <T, F extends FilterBean> Sheet<T> querySheet(final Class<T> clazz, final SelectColumn selects, final PageBean<F> pageBean) {
+        return querySheet(clazz, selects, pageBean == null ? null : pageBean.getFlipper(),
+            pageBean == null ? null : FilterNodeBean.createFilterNode(pageBean.getBean()));
+    }
+
+    /**
+     * 查询符合过滤条件记录的Sheet集合   <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
      * @param <T>     Entity泛型
      * @param clazz   Entity类
      * @param selects 指定字段
@@ -3699,6 +3792,23 @@ public interface DataSource extends Resourcable {
      */
     default <T> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
         return querySheetAsync(clazz, selects, flipper, FilterNodeBean.createFilterNode(bean));
+    }
+
+    /**
+     * 查询符合过滤条件记录的Sheet集合   <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     * @param <T>      Entity泛型
+     * @param <F>      过滤类型
+     * @param clazz    Entity类
+     * @param selects  指定字段
+     * @param pageBean 过滤翻页条件
+     *
+     * @return Entity的集合CompletableFuture
+     */
+    default <T, F extends FilterBean> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final SelectColumn selects, final PageBean<F> pageBean) {
+        return querySheetAsync(clazz, selects, pageBean == null ? null : pageBean.getFlipper(),
+            pageBean == null ? null : FilterNodeBean.createFilterNode(pageBean.getBean()));
     }
 
     /**

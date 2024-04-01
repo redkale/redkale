@@ -7,9 +7,9 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
+import org.redkale.annotation.ClassDepends;
 import static org.redkale.source.DataResultSet.formatColumnValue;
 import org.redkale.util.*;
-import org.redkale.annotation.ClassDepends;
 
 /**
  *
@@ -269,7 +269,7 @@ public interface DataSqlSource extends DataSource {
     @ClassDepends
     default <V> CompletableFuture<List<V>> nativeQueryListAsync(Class<V> type, String sql, Map<String, Object> params) {
         return nativeQueryAsync(sql, rset -> {
-            if (EntityBuilder.isSimpleType(type)) { 
+            if (EntityBuilder.isSimpleType(type)) {
                 List<V> list = new ArrayList<>();
                 while (rset.next()) {
                     list.add(rset.wasNull() ? null : (V) formatColumnValue(type, rset.getObject(1)));
@@ -387,4 +387,13 @@ public interface DataSqlSource extends DataSource {
         return nativeQuerySheetAsync(type, sql, flipper, (Map<String, Object>) Copier.copyToMap(bean, Copier.OPTION_SKIP_NULL_VALUE));
     }
 
+    default <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, PageBean pageBean) {
+        return nativeQuerySheet(type, sql, pageBean == null ? null : pageBean.getFlipper(),
+            pageBean == null ? null : (Map<String, Object>) Copier.copyToMap(pageBean.getBean(), Copier.OPTION_SKIP_NULL_VALUE));
+    }
+
+    default <V> CompletableFuture<Sheet<V>> nativeQuerySheetAsync(Class<V> type, String sql, PageBean pageBean) {
+        return nativeQuerySheetAsync(type, sql, pageBean == null ? null : pageBean.getFlipper(),
+            pageBean == null ? null : (Map<String, Object>) Copier.copyToMap(pageBean.getBean(), Copier.OPTION_SKIP_NULL_VALUE));
+    }
 }

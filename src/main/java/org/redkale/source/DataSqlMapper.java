@@ -10,11 +10,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
+import org.redkale.annotation.ClassDepends;
 import org.redkale.util.LambdaFunction;
 import org.redkale.util.LambdaSupplier;
 import org.redkale.util.SelectColumn;
 import org.redkale.util.Sheet;
-import org.redkale.annotation.ClassDepends;
 
 /**
  * 类似Mybatis的Mapper接口类, 接口系列和DataSource相似度高 <br>
@@ -3210,6 +3210,21 @@ public interface DataSqlMapper<T> {
      *
      *
      *
+     * @param <F>      过滤类型
+     * @param pageBean 过滤翻页条件
+     *
+     * @return Entity的集合
+     */
+    default <F extends FilterBean> Sheet<T> querySheet(PageBean<F> pageBean) {
+        return dataSource().querySheet(entityType(), pageBean);
+    }
+
+    /**
+     * 查询符合过滤条件记录的Sheet集合   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     *
+     *
      * @param flipper 翻页对象
      * @param bean    过滤条件
      *
@@ -3217,6 +3232,21 @@ public interface DataSqlMapper<T> {
      */
     default CompletableFuture<Sheet<T>> querySheetAsync(Flipper flipper, FilterBean bean) {
         return dataSource().querySheetAsync(entityType(), flipper, bean);
+    }
+
+    /**
+     * 查询符合过滤条件记录的Sheet集合   <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     *
+     *
+     * @param <F>      过滤类型
+     * @param pageBean 过滤翻页条件
+     *
+     * @return Entity的集合
+     */
+    default <F extends FilterBean> CompletableFuture<Sheet<T>> querySheetAsync(PageBean<F> pageBean) {
+        return dataSource().querySheetAsync(entityType(), pageBean);
     }
 
     /**
@@ -3270,6 +3300,21 @@ public interface DataSqlMapper<T> {
      * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
      *
      *
+     * @param <F>      过滤类型
+     * @param selects  指定字段
+     * @param pageBean 过滤翻页条件
+     *
+     * @return Entity的集合
+     */
+    default <F extends FilterBean> Sheet<T> querySheet(SelectColumn selects, PageBean<F> pageBean) {
+        return dataSource().querySheet(entityType(), selects, pageBean);
+    }
+
+    /**
+     * 查询符合过滤条件记录的Sheet集合   <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     *
      *
      * @param selects 指定字段
      * @param flipper 翻页对象
@@ -3279,6 +3324,21 @@ public interface DataSqlMapper<T> {
      */
     default CompletableFuture<Sheet<T>> querySheetAsync(SelectColumn selects, Flipper flipper, FilterBean bean) {
         return dataSource().querySheetAsync(entityType(), selects, flipper, bean);
+    }
+
+    /**
+     * 查询符合过滤条件记录的Sheet集合   <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     *
+     *
+     * @param <F>      过滤类型
+     * @param selects  指定字段
+     * @param pageBean 过滤翻页条件
+     *
+     * @return Entity的集合
+     */
+    default <F extends FilterBean> CompletableFuture<Sheet<T>> querySheetAsync(SelectColumn selects, PageBean<F> pageBean) {
+        return dataSource().querySheetAsync(entityType(), selects, pageBean);
     }
 
     /**
