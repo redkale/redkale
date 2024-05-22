@@ -6,6 +6,7 @@ package org.redkale.source;
 import java.util.List;
 import java.util.Map;
 import java.util.function.IntFunction;
+import org.redkale.annotation.Nullable;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
 
@@ -40,6 +41,7 @@ public class DataNativeSqlStatement {
     protected String nativeSql;
 
     //根据参数值集合重新生成的带?参数可执行的计算总数sql,用于返回Sheet对象
+    @Nullable
     protected String nativeCountSql;
 
     //需要预编译的##{xxx}、#{xxx}参数名, 数量与sql中的?数量一致

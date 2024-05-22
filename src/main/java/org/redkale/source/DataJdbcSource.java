@@ -2629,16 +2629,17 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             }
             long total = -1;
             List<V> list;
+            final String countSql = sinfo.getNativeCountSql();
             if (sinfo.isEmptyNamed()) {
                 Statement stmt = conn.createQueryStatement();
-                ResultSet set = stmt.executeQuery(sinfo.getNativeCountSql());
+                ResultSet set = stmt.executeQuery(countSql);
                 if (set.next()) {
                     total = set.getLong(1);
                 }
                 set.close();
                 conn.offerQueryStatement(stmt);
             } else {
-                final PreparedStatement prestmt = conn.prepareQueryStatement(sinfo.getNativeCountSql());
+                final PreparedStatement prestmt = conn.prepareQueryStatement(countSql);
                 Map<String, Object> paramValues = sinfo.getParamValues();
                 int index = 0;
                 for (String n : sinfo.getParamNames()) {
@@ -2651,7 +2652,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 set.close();
                 conn.offerQueryStatement(prestmt);
             }
-            slowLog(s, sinfo.getNativeCountSql());
+            slowLog(s, countSql);
             if (total > 0) {
                 String listSql = sinfo.getNativeSql();
                 if (mysqlOrPgsql) {

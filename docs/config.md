@@ -42,15 +42,15 @@
     <!--
        【节点全局唯一】
         第三方服务发现管理接口
-        type：          类名，必须是org.redkale.cluster.ClusterAgent的子类
-        waits:          注销服务后是否需要等待检查周期时间后再进行Service销毁，默认值为：false
-                        当一个Service进行服务注销后，不能立刻销毁Service，因为健康检测是有间隔时间差的，
-                        需要等待一个健康检测周期时间，让其他进程都更新完服务列表。
-                        如果使用MQ，可以设置为false，如果对服务健壮性要求高，建议设置为true
-        protocols:      服务发现可以处理的协议， 默认值为: SNCP, 多个协议用分号;隔开
-        ports:          服务发现可以处理的端口， 多个端口用分号;隔开
-        ttls:           心跳频率，多少秒一次
-        xxxx:           自定义的字段属性，例如：CacheClusterAgent有source字段; ConsulClusterAgent有apiurl字段;
+        type：      类名，必须是org.redkale.cluster.ClusterAgent的子类
+        waits:      注销服务后是否需要等待检查周期时间后再进行Service销毁，默认值为：false
+                    当一个Service进行服务注销后，不能立刻销毁Service，因为健康检测是有间隔时间差的，
+                    需要等待一个健康检测周期时间，让其他进程都更新完服务列表。
+                    如果使用MQ，可以设置为false，如果对服务健壮性要求高，建议设置为true
+        protocols:  服务发现可以处理的协议， 默认值为: SNCP, 多个协议用分号;隔开
+        ports:      服务发现可以处理的端口， 多个端口用分号;隔开
+        ttls:       心跳频率，多少秒一次
+        xxxx:       自定义的字段属性，例如：CacheClusterAgent有source字段; ConsulClusterAgent有apiurl字段;
     -->
     <cluster type="org.redkalex.cluster.consul.ConsulClusterAgent" waits="false" protocols="SNCP" ports="7070;7071" xxx="xxx" />
 
@@ -58,11 +58,11 @@
         MQ管理接口配置
         不同MQ节点所配置的MQ集群不能重复。
         MQ跟着协议走，所以mq的属性值需要被赋值在rest节点上, 由于SncpServlet是自动生成的，故SNCP协议下，mq属性值被赋值在service/services节点上
-        name:    服务的名称，用于监控识别，多个mq节点时只能有一个name为空的节点，mq.name不能重复,命名规则: 字母、数字、下划线
-        type：   实现类名，必须是org.redkale.mq.MessageAgent的子类
-        threads：线程数，为0表示使用workExecutor。默认: CPU核数, 核数=1的情况下默认值为2，JDK 21以上版本默认使用虚拟线程池
+        name:     服务的名称，用于监控识别，多个mq节点时只能有一个name为空的节点，mq.name不能重复,命名规则: 字母、数字、下划线
+        type：    实现类名，必须是org.redkale.mq.MessageAgent的子类
+        threads： 线程数，为0表示使用workExecutor。默认: CPU核数, 核数=1的情况下默认值为2，JDK 21以上版本默认使用虚拟线程池
         rpcfirst：cluster和mq同名组件时，HttpRpcClient优先使用MQ，默认不优先走MQ。
-        coder:   MessageRecord的解析器类，必须是org.redkale.mq.MessageCoder<MessageRecord>的实现类, 
+        coder:    MessageRecord的解析器类，必须是org.redkale.mq.MessageCoder<MessageRecord>的实现类, 
              可对数据包进行加密解密，默认值：org.redkale.mq.MessageRecordCoder
         MQ节点下的子节点配置没有固定格式, 根据MessageAgent实现方的定义来配置
     -->
@@ -236,7 +236,7 @@
            当Server为HTTP协议时, rest节点才有效。存在[rest]节点则Server启动时会加载REST服务, 节点可以多个,(WATCH协议不需要设置，系统会自动生成)
            path:     servlet的ContextPath前缀 默认为空 【注: 开启MQ时,该字段失效】
            base:     REST服务的BaseServlet，必须是 org.redkale.net.http.HttpServlet 的子类，且子类必须标记@HttpUserType。
-           mq:        所属的MQ管理器, 存在该属性表示RestService的请求来自于消息总线 【注: 开启MQ时,path字段失效】
+           mq:       所属的MQ管理器, 存在该属性表示RestService的请求来自于消息总线 【注: 开启MQ时,path字段失效】
            autoload：默认值"true"  默认值. 加载当前server所能使用的Servce对象;    
            includes：当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
            excludes：当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
@@ -295,7 +295,7 @@
         <!-- 
            【节点在<server>中唯一】
            当Server为HTTP协议时，render才有效. 指定输出引擎的实现类
-           value: 输出引擎的实现类, 必须是org.redkale.net.http.HttpRender的子类
+           value:   输出引擎的实现类, 必须是org.redkale.net.http.HttpRender的子类
            suffixs: 引擎文件名后缀，多个用;隔开，默认值为: .htel
         -->
         <render value="org.redkalex.htel.HttpTemplateRender" suffixs=".htel"/>
