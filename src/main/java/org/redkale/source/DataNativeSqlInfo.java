@@ -5,6 +5,7 @@ package org.redkale.source;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.redkale.annotation.Nullable;
 import org.redkale.convert.ConvertDisabled;
 
 /**
@@ -22,8 +23,9 @@ public class DataNativeSqlInfo {
     //原始sql语句
     protected String rawSql;
 
-    //jdbc版的sql语句, 只有numberSignNames为空时才有值
-    protected String jdbcSql;
+    //不包含${}且参数为:arg0xx格式的jdbc版sql语句, 只有dollarNames为空时才有值
+    @Nullable
+    protected String templetSql;
 
     //sql类型
     protected SqlMode sqlMode;
@@ -33,15 +35,15 @@ public class DataNativeSqlInfo {
 
     @ConvertDisabled
     public boolean isDynamic() {
-        return jdbcSql == null;
+        return templetSql == null;
     }
 
     public String getRawSql() {
         return rawSql;
     }
 
-    public String getJdbcSql() {
-        return jdbcSql;
+    public String getTempletSql() {
+        return templetSql;
     }
 
     public SqlMode getSqlMode() {
