@@ -387,7 +387,7 @@ public final class Application {
                     return application;
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Resource inject error", e);
-                    return null;
+                    throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
                 }
             }
 
@@ -412,7 +412,7 @@ public final class Application {
                     return rs;
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Resource inject error", e);
-                    return null;
+                    throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
                 }
             }
 
@@ -445,7 +445,7 @@ public final class Application {
                     return server;
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Resource inject error", e);
-                    return null;
+                    throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
                 }
             }
 
@@ -478,7 +478,7 @@ public final class Application {
                     return server;
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Resource inject error", e);
-                    return null;
+                    throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
                 }
             }
 
@@ -511,7 +511,7 @@ public final class Application {
                     return server;
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Resource inject error", e);
-                    return null;
+                    throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
                 }
             }
 
@@ -567,7 +567,7 @@ public final class Application {
                     return httpClient;
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, WebClient.class.getSimpleName() + " inject error", e);
-                    return null;
+                    throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
                 }
             }
 
@@ -608,7 +608,7 @@ public final class Application {
                     return rpcClient;
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, HttpRpcClient.class.getSimpleName() + " inject error", e);
-                    return null;
+                    throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
                 }
             }
 

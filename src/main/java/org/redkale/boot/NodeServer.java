@@ -297,7 +297,7 @@ public abstract class NodeServer {
                     return nodeService;
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "WebSocketNode inject error", e);
-                    return null;
+                    throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
                 }
             }
 
@@ -451,10 +451,8 @@ public abstract class NodeServer {
                 }
                 serviceCount.incrementAndGet();
                 return service;
-            } catch (RuntimeException ex) {
-                throw ex;
             } catch (Exception e) {
-                throw new RedkaleException(e);
+                throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
             }
         }
 

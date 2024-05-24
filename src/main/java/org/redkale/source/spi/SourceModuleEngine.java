@@ -156,7 +156,8 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
             if (event.name().startsWith("redkale.datasource.") || event.name().startsWith("redkale.datasource[")
                 || event.name().startsWith("redkale.cachesource.") || event.name().startsWith("redkale.cachesource[")) {
                 if (event.name().endsWith(".name")) {
-                    logger.log(Level.WARNING, "skip illegal key " + event.name() + " in source config " + (namespace == null ? "" : namespace) + ", key cannot endsWith '.name'");
+                    logger.log(Level.WARNING, "skip illegal key " + event.name()
+                        + " in source config " + (namespace == null ? "" : namespace) + ", key cannot endsWith '.name'");
                 } else {
                     if (!Objects.equals(event.newValue(), this.sourceProperties.getProperty(event.name()))) {
                         if (event.newValue() == null) {
@@ -373,7 +374,8 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                 if (!application.isCompileMode() && source instanceof Service) {
                     ((Service) source).init(sourceConf);
                 }
-                logger.info("Load CacheSource resourceName = '" + sourceName + "', source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
+                logger.info("Load CacheSource resourceName = '" + sourceName
+                    + "', source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
                 return source;
             }
             if (!sourceConf.getValue(AbstractCacheSource.CACHE_SOURCE_RESOURCE, "").isEmpty()) {
@@ -389,7 +391,8 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
 
                 cacheSources.add(source);
                 resourceFactory.register(sourceName, CacheSource.class, source);
-                logger.info("Load CacheSource resourceName = '" + sourceName + "', source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
+                logger.info("Load CacheSource resourceName = '" + sourceName
+                    + "', source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
                 return source;
             } catch (RuntimeException ex) {
                 throw ex;
@@ -435,7 +438,8 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                 }
                 dataSources.add(source);
                 resourceFactory.register(sourceName, DataSource.class, source);
-                logger.info("Load DataSource resourceName = '" + sourceName + "', source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
+                logger.info("Load DataSource resourceName = '" + sourceName
+                    + "', source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
                 return source;
             }
             if (!sourceConf.getValue(DataSources.DATA_SOURCE_RESOURCE, "").isEmpty()) {
@@ -475,7 +479,8 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                         resourceFactory.register(sourceName, DataJdbcSource.class, source);
                     }
                 }
-                logger.info("Load DataSource resourceName = '" + sourceName + "', source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
+                logger.info("Load DataSource resourceName = '" + sourceName
+                    + "', source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
                 return source;
             } catch (RuntimeException ex) {
                 throw ex;
@@ -519,7 +524,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
     private class DataSqlMapperLoader implements ResourceTypeLoader {
 
         @Override
-        public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
+        public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
             try {
                 if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
                     return null; //远程模式不得注入
@@ -536,7 +541,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                 return mapper;
             } catch (Exception e) {
                 logger.log(Level.SEVERE, DataSqlMapper.class.getSimpleName() + " inject to " + srcObj + " error", e);
-                return null;
+                throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
             }
         }
 
@@ -549,7 +554,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
     private class DataSourceLoader implements ResourceTypeLoader {
 
         @Override
-        public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
+        public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
             try {
                 if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
                     return null; //远程模式不得注入
@@ -559,7 +564,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                 return source;
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "DataSource inject to " + srcObj + " error", e);
-                return null;
+                throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
             }
         }
 
@@ -572,7 +577,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
     private class CacheSourceLoader implements ResourceTypeLoader {
 
         @Override
-        public Object load(ResourceFactory rf, String srcResourceName, final Object srcObj, final String resourceName, Field field, final Object attachment) {
+        public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
             try {
                 if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
                     return null; //远程模式不得注入
@@ -587,12 +592,13 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                 if (res != null && res.required() && source == null) {
                     throw new RedkaleException("CacheSource (resourceName = '" + resourceName + "') not found");
                 } else {
-                    logger.info("Load CacheSource (type = " + (source == null ? null : source.getClass().getSimpleName()) + ", resourceName = '" + resourceName + "')");
+                    logger.info("Load CacheSource (type = " + (source == null ? null : source.getClass().getSimpleName())
+                        + ", resourceName = '" + resourceName + "')");
                 }
                 return source;
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "DataSource inject error", e);
-                return null;
+                throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
             }
         }
 

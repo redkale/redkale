@@ -185,7 +185,7 @@ public class NodeHttpServer extends NodeServer {
                     }
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "WebSocketNode inject error", e);
-                    return null;
+                    throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
                 }
             }
 
