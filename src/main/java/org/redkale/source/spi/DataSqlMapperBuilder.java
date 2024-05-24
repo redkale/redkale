@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.IntFunction;
-import org.redkale.asm.AnnotationVisitor;
 import org.redkale.asm.AsmMethodBean;
 import org.redkale.asm.AsmMethodBoost;
 import org.redkale.asm.AsmMethodParam;
@@ -159,7 +158,6 @@ public final class DataSqlMapperBuilder {
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
         MethodVisitor mv;
-        AnnotationVisitor av0;
 
         cw.visit(V11, ACC_PUBLIC + ACC_SUPER, newDynName, null, "java/lang/Object", new String[]{supDynName});
         {
