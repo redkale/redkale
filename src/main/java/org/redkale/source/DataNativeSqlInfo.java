@@ -27,6 +27,9 @@ public class DataNativeSqlInfo {
     @Nullable
     protected String templetSql;
 
+    //包含IN表达式的参数, 例如: name IN #{names}、status IN (1,2,#{status.normal})
+    protected boolean containsInExpr;
+
     //sql类型
     protected SqlMode sqlMode;
 
@@ -35,7 +38,11 @@ public class DataNativeSqlInfo {
 
     @ConvertDisabled
     public boolean isDynamic() {
-        return templetSql == null;
+        return templetSql == null || containsInExpr;
+    }
+
+    public boolean isContainsInExpr() {
+        return containsInExpr;
     }
 
     public String getRawSql() {
