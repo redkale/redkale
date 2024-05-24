@@ -2502,7 +2502,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     @Local
     @Override
     public int nativeUpdate(String sql, Map<String, Object> params) {
-        DataNativeSqlStatement sinfo = super.nativeParse(sql, params);
+        DataNativeSqlStatement sinfo = super.nativeParse(sql, false, params);
         final long s = System.currentTimeMillis();
         JdbcConnection conn = writePool.pollConnection();
         Statement stmt = null;
@@ -2575,7 +2575,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     @Local
     @Override
     public <V> V nativeQuery(String sql, BiConsumer<Object, Object> consumer, Function<DataResultSet, V> handler, Map<String, Object> params) {
-        DataNativeSqlStatement sinfo = super.nativeParse(sql, params);
+        DataNativeSqlStatement sinfo = super.nativeParse(sql, false, params);
         final long s = System.currentTimeMillis();
         final JdbcConnection conn = readPool.pollConnection();
         try {
@@ -2619,7 +2619,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
     public <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, Flipper flipper, Map<String, Object> params) {
         final boolean mysqlOrPgsql = "mysql".equals(dbtype()) || "postgresql".equals(dbtype());
-        DataNativeSqlStatement sinfo = super.nativeParse(sql, params);
+        DataNativeSqlStatement sinfo = super.nativeParse(sql, true, params);
         final long s = System.currentTimeMillis();
         final JdbcConnection conn = readPool.pollConnection();
         try {

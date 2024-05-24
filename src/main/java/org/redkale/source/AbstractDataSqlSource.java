@@ -651,11 +651,11 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
         return getSQLAttrValue(info, attr, val);
     }
 
-    protected DataNativeSqlStatement nativeParse(String nativeSql, Map<String, Object> params) {
+    protected DataNativeSqlStatement nativeParse(String nativeSql, boolean countable, Map<String, Object> params) {
         if (nativeSqlParser == null) {
             throw new SourceException("not found DataNativeSqlParser instance");
         }
-        return nativeSqlParser.parse(signFunc, dbtype(), nativeSql, params == null ? Collections.emptyMap() : params);
+        return nativeSqlParser.parse(signFunc, dbtype(), nativeSql, countable, params == null ? Collections.emptyMap() : params);
     }
 
     @ConvertDisabled
@@ -695,7 +695,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource implement
     protected abstract <T> CompletableFuture<Integer> insertDBAsync(final EntityInfo<T> info, T... entitys);
 
     //删除记录
-    protected abstract <T> CompletableFuture<Integer> deleteDBAsync(final EntityInfo<T> info, String[] tables, Flipper flipper, FilterNode node, Map<String, List<Serializable>> pkmap, final String... sqls);
+    protected abstract <T> CompletableFuture<Integer> deleteDBAsync(final EntityInfo<T> info, 
+        String[] tables, Flipper flipper, FilterNode node, Map<String, List<Serializable>> pkmap, final String... sqls);
 
     //清空表
     protected abstract <T> CompletableFuture<Integer> clearTableDBAsync(final EntityInfo<T> info, String[] tables, FilterNode node, final String... sqls);
