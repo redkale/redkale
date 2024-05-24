@@ -25,13 +25,13 @@ public class DataNativeSqlStatement {
     static final DataNativeSqlParser PARSER_NIL = new DataNativeSqlParser() {
         @Override
         public DataNativeSqlInfo parse(IntFunction<String> signFunc, String dbType, String rawSql) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            throw new UnsupportedOperationException("No available instances found");
         }
 
         @Override
         public DataNativeSqlStatement parse(IntFunction<String> signFunc, String dbType,
             String rawSql, boolean countable, Map<String, Object> params) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            throw new UnsupportedOperationException("No available instances found");
         }
 
     };

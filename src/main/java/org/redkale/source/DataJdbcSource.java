@@ -2539,9 +2539,10 @@ public class DataJdbcSource extends AbstractDataSqlSource {
      * 直接本地执行SQL语句进行查询，远程模式不可用   <br>
      * 通常用于复杂的关联查询   <br>
      *
-     * @param <V>     泛型
-     * @param sql     SQL语句
-     * @param handler 回调函数
+     * @param <V>      泛型
+     * @param sql      SQL语句
+     * @param consumer 连接处理函数
+     * @param handler  回调函数
      *
      * @return 结果
      */
