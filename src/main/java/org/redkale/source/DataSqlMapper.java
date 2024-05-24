@@ -44,14 +44,14 @@ import org.redkale.util.Sheet;
  *      + " WHERE f.forumid = s.forumid AND "
  *      + "s.forum_sectionid = #{bean.forumSectionid} AND "
  *      + "f.forumid = #{bean.forumid} AND s.forum_section_color = #{bean.forumSectionColor}")
- *   public List&lt;ForumResult&gt; queryForumResult(ForumBean bean);
+ *   public List&lt;ForumResult&gt; queryForumResult(&#64;Param("bean") ForumBean bean0);
  *
  *   &#64;Sql("SELECT f.forum_groupid, s.forum_section_color "
  *      + "FROM forum_info f, forum_section s "
  *      + " WHERE f.forumid = s.forumid AND "
  *      + "s.forum_sectionid = #{bean.forumSectionid} AND "
  *      + "f.forumid = #{bean.forumid} AND s.forum_section_color = #{bean.forumSectionColor}")
- *   public CompletableFuture&lt;List&lt;ForumResult&gt;&gt; queryForumResultAsync(&#64;Param("bean") ForumBean bean0);
+ *   public CompletableFuture&lt;List&lt;ForumResult&gt;&gt; queryForumResultAsync(ForumBean bean);
  *}
  * </pre></blockquote>
  * <p>

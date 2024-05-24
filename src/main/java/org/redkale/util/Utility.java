@@ -465,9 +465,22 @@ public final class Utility {
      * 返回第一个不为null的对象
      *
      * @param <T>  泛型
+     * @param val1 对象1
+     * @param val2 对象2
+     *
+     * @return 可用对象，可能返回null
+     */
+    public static <T> T orElse(T val1, T val2) {
+        return val1 == null ? val2 : val1;
+    }
+
+    /**
+     * 返回第一个不为null的对象
+     *
+     * @param <T>  泛型
      * @param vals 对象集合
      *
-     * @return 可用对象，没有返回null
+     * @return 可用对象，可能返回null
      */
     public static <T> T orElse(T... vals) {
         for (T t : vals) {
