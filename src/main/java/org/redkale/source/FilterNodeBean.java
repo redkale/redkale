@@ -247,7 +247,8 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
                 fields.add(field.getName());
 
                 final Attribute<T, Serializable> beanAttr = pubmod ? Attribute.create(field) : Attribute.create(getter, null);
-                FilterNodeBean<T> nodeBean = new FilterNodeBean(field.getAnnotation(FilterJoinColumn.class), field.getAnnotation(FilterColumn.class), beanAttr, field.getGenericType());
+                FilterNodeBean<T> nodeBean = new FilterNodeBean(field.getAnnotation(FilterJoinColumn.class),
+                    field.getAnnotation(FilterColumn.class), beanAttr, field.getGenericType());
 
                 //------------------------------------
                 {

@@ -8,7 +8,6 @@ package org.redkale.convert;
 import java.lang.reflect.*;
 import org.redkale.annotation.Comment;
 import org.redkale.persistence.Column;
-import org.redkale.source.FilterColumn;
 import org.redkale.util.Attribute;
 
 /**
@@ -64,16 +63,7 @@ public final class EnMember<W extends Writer, T, F> {
             Comment ct = field.getAnnotation(Comment.class);
             if (ct == null) {
                 Column col = field.getAnnotation(Column.class);
-                if (col == null) {
-                    FilterColumn fc = field.getAnnotation(FilterColumn.class);
-                    if (fc == null) {
-                        this.comment = "";
-                    } else {
-                        this.comment = fc.comment();
-                    }
-                } else {
-                    this.comment = col.comment();
-                }
+                this.comment = col == null ? "":col.comment();
             } else {
                 this.comment = ct.value();
             }
@@ -81,16 +71,7 @@ public final class EnMember<W extends Writer, T, F> {
             Comment ct = method.getAnnotation(Comment.class);
             if (ct == null) {
                 Column col = method.getAnnotation(Column.class);
-                if (col == null) {
-                    FilterColumn fc = method.getAnnotation(FilterColumn.class);
-                    if (fc == null) {
-                        this.comment = "";
-                    } else {
-                        this.comment = fc.comment();
-                    }
-                } else {
-                    this.comment = col.comment();
-                }
+                this.comment = col == null ? "":col.comment();
             } else {
                 this.comment = ct.value();
             }

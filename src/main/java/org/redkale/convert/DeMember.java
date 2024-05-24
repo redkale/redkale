@@ -8,7 +8,6 @@ package org.redkale.convert;
 import java.lang.reflect.*;
 import org.redkale.annotation.Comment;
 import org.redkale.persistence.Column;
-import org.redkale.source.FilterColumn;
 import org.redkale.util.Attribute;
 
 /**
@@ -49,16 +48,7 @@ public final class DeMember<R extends Reader, T, F> {
             Comment ct = field.getAnnotation(Comment.class);
             if (ct == null) {
                 Column col = field.getAnnotation(Column.class);
-                if (col == null) {
-                    FilterColumn fc = field.getAnnotation(FilterColumn.class);
-                    if (fc == null) {
-                        this.comment = "";
-                    } else {
-                        this.comment = fc.comment();
-                    }
-                } else {
-                    this.comment = col.comment();
-                }
+                this.comment = col == null ? "" : col.comment();
             } else {
                 this.comment = ct.value();
             }
@@ -66,16 +56,7 @@ public final class DeMember<R extends Reader, T, F> {
             Comment ct = method.getAnnotation(Comment.class);
             if (ct == null) {
                 Column col = method.getAnnotation(Column.class);
-                if (col == null) {
-                    FilterColumn fc = method.getAnnotation(FilterColumn.class);
-                    if (fc == null) {
-                        this.comment = "";
-                    } else {
-                        this.comment = fc.comment();
-                    }
-                } else {
-                    this.comment = col.comment();
-                }
+                this.comment = col == null ? "" : col.comment();
             } else {
                 this.comment = ct.value();
             }
@@ -166,7 +147,7 @@ public final class DeMember<R extends Reader, T, F> {
             return (this.index == 0 ? Integer.MAX_VALUE : this.index) - (o.index == 0 ? Integer.MAX_VALUE : o.index);
         }
         if (this.index != 0) {
-            throw new ConvertException("fields (" + attribute.field() + ", " + o.attribute.field() 
+            throw new ConvertException("fields (" + attribute.field() + ", " + o.attribute.field()
                 + ") have same ConvertColumn.index(" + this.index + ") in " + attribute.declaringClass());
         }
         return fieldSort ? this.attribute.field().compareTo(o.attribute.field()) : 0;
@@ -191,7 +172,7 @@ public final class DeMember<R extends Reader, T, F> {
 
     @Override
     public String toString() {
-        return "DeMember{" + "attribute=" + attribute.field() + ", position=" + position +
-            ", tag=" + tag + ", decoder=" + (decoder == null ? null : decoder.getClass().getName()) + '}';
+        return "DeMember{" + "attribute=" + attribute.field() + ", position=" + position
+            + ", tag=" + tag + ", decoder=" + (decoder == null ? null : decoder.getClass().getName()) + '}';
     }
 }

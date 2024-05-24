@@ -25,6 +25,8 @@ import org.redkale.source.DataSources;
 import org.redkale.util.AnyValue;
 import org.redkale.util.AnyValueWriter;
 import org.redkale.util.RedkaleClassLoader;
+import static org.redkale.util.RedkaleClassLoader.putReflectionClass;
+import static org.redkale.util.RedkaleClassLoader.putReflectionPublicConstructors;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Utility;
 
@@ -173,7 +175,8 @@ class AppConfig {
             this.confDir = confFile.toURI();
         }
         String localaddr = config.getValue("address", "").trim();
-        InetAddress addr = localaddr.isEmpty() ? Utility.localInetAddress() : new InetSocketAddress(localaddr, config.getIntValue("port")).getAddress();
+        InetAddress addr = localaddr.isEmpty() ? Utility.localInetAddress() 
+            : new InetSocketAddress(localaddr, config.getIntValue("port")).getAddress();
         this.localAddress = new InetSocketAddress(addr, config.getIntValue("port"));
     }
 
@@ -310,13 +313,13 @@ class AppConfig {
             }
         }
         if (compileMode) {
-            RedkaleClassLoader.putReflectionClass(java.lang.Class.class.getName());
-            RedkaleClassLoader.putReflectionPublicConstructors(SimpleFormatter.class, SimpleFormatter.class.getName());
-            RedkaleClassLoader.putReflectionPublicConstructors(LoggingSearchHandler.class, LoggingSearchHandler.class.getName());
-            RedkaleClassLoader.putReflectionPublicConstructors(LoggingFileHandler.class, LoggingFileHandler.class.getName());
-            RedkaleClassLoader.putReflectionPublicConstructors(LoggingFileHandler.LoggingFormater.class, LoggingFileHandler.LoggingFormater.class.getName());
-            RedkaleClassLoader.putReflectionPublicConstructors(LoggingFileHandler.LoggingConsoleHandler.class, LoggingFileHandler.LoggingConsoleHandler.class.getName());
-            RedkaleClassLoader.putReflectionPublicConstructors(LoggingFileHandler.LoggingSncpFileHandler.class, LoggingFileHandler.LoggingSncpFileHandler.class.getName());
+            putReflectionClass(java.lang.Class.class.getName());
+            putReflectionPublicConstructors(SimpleFormatter.class, SimpleFormatter.class.getName());
+            putReflectionPublicConstructors(LoggingSearchHandler.class, LoggingSearchHandler.class.getName());
+            putReflectionPublicConstructors(LoggingFileHandler.class, LoggingFileHandler.class.getName());
+            putReflectionPublicConstructors(LoggingFileHandler.LoggingFormater.class, LoggingFileHandler.LoggingFormater.class.getName());
+            putReflectionPublicConstructors(LoggingFileHandler.LoggingConsoleHandler.class, LoggingFileHandler.LoggingConsoleHandler.class.getName());
+            putReflectionPublicConstructors(LoggingFileHandler.LoggingSncpFileHandler.class, LoggingFileHandler.LoggingSncpFileHandler.class.getName());
         }
     }
 

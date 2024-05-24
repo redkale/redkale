@@ -235,7 +235,8 @@ public final class ApiDocCommand {
                                     f.setAccessible(true);
                                     paramGenericType = (Type) f.get(servlet);
                                 }
-                                simpleSchemaType(null, node.getLogger(), swaggerComponentsMap, param.type(), paramGenericType, paramSchemaMap, true);
+                                simpleSchemaType(null, node.getLogger(), swaggerComponentsMap, 
+                                    param.type(), paramGenericType, paramSchemaMap, true);
                                 if (param.style() == HttpParam.HttpParameterStyle.BODY) {
                                     swaggerRequestBody.put("description", param.comment());
                                     swaggerRequestBody.put("content", Utility.ofMap(plainContentType, Utility.ofMap("schema", paramSchemaMap)));
@@ -249,7 +250,8 @@ public final class ApiDocCommand {
                                         swaggerParamMap.put("deprecated", param.deprecated());
                                     }
                                     //https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#parameterStyle
-                                    swaggerParamMap.put("style", param.style() == HttpParam.HttpParameterStyle.HEADER || param.name().indexOf('#') == 0 ? "simple" : "form");
+                                    swaggerParamMap.put("style", param.style() == HttpParam.HttpParameterStyle.HEADER
+                                        || param.name().indexOf('#') == 0 ? "simple" : "form");
                                     swaggerParamMap.put("explode", true);
                                     swaggerParamMap.put("schema", paramSchemaMap);
                                     Object example = formatExample(null, param.example(), param.type(), paramGenericType);
@@ -293,10 +295,10 @@ public final class ApiDocCommand {
                                     }
 
                                     Map<String, Object> fieldmap = new LinkedHashMap<>();
-                                    fieldmap.put("type", field.getType().isArray() ? (field.getType().getComponentType().getName() + "[]") : field.getGenericType().getTypeName());
+                                    fieldmap.put("type", field.getType().isArray() 
+                                        ? (field.getType().getComponentType().getName() + "[]") : field.getGenericType().getTypeName());
 
                                     Column col = field.getAnnotation(Column.class);
-                                    FilterColumn fc = field.getAnnotation(FilterColumn.class);
                                     Comment comment = field.getAnnotation(Comment.class);
                                     org.redkale.util.Comment comment2 = field.getAnnotation(org.redkale.util.Comment.class);
                                     if (comment != null) {
@@ -305,10 +307,9 @@ public final class ApiDocCommand {
                                         fieldmap.put("comment", comment2.value());
                                     } else if (col != null) {
                                         fieldmap.put("comment", col.comment());
-                                    } else if (fc != null) {
-                                        fieldmap.put("comment", fc.comment());
                                     }
-                                    fieldmap.put("primary", !filter && (field.getAnnotation(Id.class) != null || field.getAnnotation(javax.persistence.Id.class) != null));
+                                    fieldmap.put("primary", !filter && (field.getAnnotation(Id.class) != null 
+                                        || field.getAnnotation(javax.persistence.Id.class) != null));
                                     fieldmap.put("updatable", (filter || col == null || col.updatable()));
 
                                     if (servlet.getClass().getAnnotation(Rest.RestDyn.class) != null) {
@@ -333,7 +334,8 @@ public final class ApiDocCommand {
                             swaggerOperatMap.put("deprecated", true);
                         }
                         Map<String, Object> respSchemaMap = new LinkedHashMap<>();
-                        JsonFactory returnFactory = Rest.createJsonFactory(0, method.getAnnotationsByType(RestConvert.class), method.getAnnotationsByType(RestConvertCoder.class));
+                        JsonFactory returnFactory = Rest.createJsonFactory(0, 
+                            method.getAnnotationsByType(RestConvert.class), method.getAnnotationsByType(RestConvertCoder.class));
                         simpleSchemaType(returnFactory, node.getLogger(), swaggerComponentsMap, action.result(), resultType, respSchemaMap, true);
 
                         Map<String, Object> respMap = new LinkedHashMap<>();
@@ -350,7 +352,8 @@ public final class ApiDocCommand {
                         if (action.rpcOnly()) {
                             actiondesc = "[Only for RPC API] " + actiondesc;
                         }
-                        swaggerOperatMap.put("responses", Utility.ofMap("200", Utility.ofMap("description", actiondesc, "content", Utility.ofMap("application/json", respMap))));
+                        swaggerOperatMap.put("responses", Utility.ofMap("200",
+                            Utility.ofMap("description", actiondesc, "content", Utility.ofMap("application/json", respMap))));
 
                         String m = action.methods() == null || action.methods().length == 0 ? null : action.methods()[0].toLowerCase();
                         if (m == null) {
@@ -414,7 +417,8 @@ public final class ApiDocCommand {
         return "apidoc success";
     }
 
-    private static void simpleSchemaType(JsonFactory factory, Logger logger, Map<String, Map<String, Object>> componentsMap, Class type, Type genericType, Map<String, Object> schemaMap, boolean recursive) {
+    private static void simpleSchemaType(JsonFactory factory, Logger logger, 
+        Map<String, Map<String, Object>> componentsMap, Class type, Type genericType, Map<String, Object> schemaMap, boolean recursive) {
         if (type == int.class || type == Integer.class || type == AtomicInteger.class) {
             schemaMap.put("type", "integer");
             schemaMap.put("format", "int32");
@@ -464,7 +468,8 @@ public final class ApiDocCommand {
         }
     }
 
-    private static String simpleComponentType(JsonFactory factory, Logger logger, Map<String, Map<String, Object>> componentsMap, Class type, Type genericType) {
+    private static String simpleComponentType(JsonFactory factory, Logger logger, 
+        Map<String, Map<String, Object>> componentsMap, Class type, Type genericType) {
         try {
             Set<Type> types = new HashSet<>();
             Encodeable encodeable = JsonFactory.root().loadEncoder(genericType);
@@ -484,19 +489,13 @@ public final class ApiDocCommand {
             if (encodeable instanceof ObjectEncoder) {
                 for (EnMember member : ((ObjectEncoder) encodeable).getMembers()) {
                     Map<String, Object> schemaMap = new LinkedHashMap<>();
-                    simpleSchemaType(factory, logger, componentsMap, TypeToken.typeToClassOrElse(member.getEncoder().getType(), Object.class), member.getEncoder().getType(), schemaMap, true);
+                    simpleSchemaType(factory, logger, componentsMap,
+                        TypeToken.typeToClassOrElse(member.getEncoder().getType(), Object.class),
+                        member.getEncoder().getType(), schemaMap, true);
                     String desc = "";
                     if (member.getField() != null) {
                         Column col = member.getField().getAnnotation(Column.class);
-                        if (col == null) {
-                            FilterColumn fcol = member.getField().getAnnotation(FilterColumn.class);
-                            if (fcol != null) {
-                                desc = fcol.comment();
-                                if (fcol.required()) {
-                                    requireds.add(member.getAttribute().field());
-                                }
-                            }
-                        } else {
+                        if (col != null) {
                             desc = col.comment();
                             if (!col.nullable()) {
                                 requireds.add(member.getAttribute().field());
@@ -509,15 +508,7 @@ public final class ApiDocCommand {
                         }
                     } else if (member.getMethod() != null) {
                         Column col = member.getMethod().getAnnotation(Column.class);
-                        if (col == null) {
-                            FilterColumn fcol = member.getMethod().getAnnotation(FilterColumn.class);
-                            if (fcol != null) {
-                                desc = fcol.comment();
-                                if (fcol.required()) {
-                                    requireds.add(member.getAttribute().field());
-                                }
-                            }
-                        } else {
+                        if (col != null) {
                             desc = col.comment();
                             if (!col.nullable()) {
                                 requireds.add(member.getAttribute().field());
@@ -546,7 +537,8 @@ public final class ApiDocCommand {
         }
     }
 
-    private static String componentKey(JsonFactory factory, Logger logger, Set<Type> types, Map<String, Map<String, Object>> componentsMap, EnMember field, Encodeable encodeable, boolean first) {
+    private static String componentKey(JsonFactory factory, Logger logger, Set<Type> types, 
+        Map<String, Map<String, Object>> componentsMap, EnMember field, Encodeable encodeable, boolean first) {
         if (encodeable instanceof ObjectEncoder) {
             if (types.contains(encodeable.getType())) {
                 return "";
@@ -587,9 +579,11 @@ public final class ApiDocCommand {
                     }
                     types.add(member.getEncoder().getType());
                     if (member.getEncoder() instanceof SimpledCoder) {
-                        simpleSchemaType(factory, logger, componentsMap, ((SimpledCoder) member.getEncoder()).getType(), ((SimpledCoder) member.getEncoder()).getType(), new LinkedHashMap<>(), true);
+                        simpleSchemaType(factory, logger, componentsMap, ((SimpledCoder) member.getEncoder()).getType(), 
+                            ((SimpledCoder) member.getEncoder()).getType(), new LinkedHashMap<>(), true);
                     } else {
-                        simpleSchemaType(factory, logger, componentsMap, ((ObjectEncoder) member.getEncoder()).getTypeClass(), ((ObjectEncoder) member.getEncoder()).getType(), new LinkedHashMap<>(), true);
+                        simpleSchemaType(factory, logger, componentsMap, ((ObjectEncoder) member.getEncoder()).getTypeClass(), 
+                            ((ObjectEncoder) member.getEncoder()).getType(), new LinkedHashMap<>(), true);
                     }
                     Class cz = real instanceof Field ? ((Field) real).getType() : ((Method) real).getReturnType();
                     Type ct = real instanceof Field ? ((Field) real).getGenericType() : ((Method) real).getGenericReturnType();
@@ -616,7 +610,8 @@ public final class ApiDocCommand {
             return sb.toString();
         } else if (encodeable instanceof ArrayEncoder || encodeable instanceof CollectionEncoder) {
             final boolean array = (encodeable instanceof ArrayEncoder);
-            Encodeable subEncodeable = array ? ((ArrayEncoder) encodeable).getComponentEncoder() : ((CollectionEncoder) encodeable).getComponentEncoder();
+            Encodeable subEncodeable = array ? ((ArrayEncoder) encodeable).getComponentEncoder() 
+                : ((CollectionEncoder) encodeable).getComponentEncoder();
             if (subEncodeable instanceof SimpledCoder && field != null) {
                 return "";
             }
@@ -630,7 +625,8 @@ public final class ApiDocCommand {
             return sb + (array ? "_Array" : "_Collection");
         } else if (encodeable instanceof SimpledCoder) {
             Class stype = ((SimpledCoder) encodeable).getType();
-            if (stype.isPrimitive() || stype == Boolean.class || Number.class.isAssignableFrom(stype) || CharSequence.class.isAssignableFrom(stype)) {
+            if (stype.isPrimitive() || stype == Boolean.class 
+                || Number.class.isAssignableFrom(stype) || CharSequence.class.isAssignableFrom(stype)) {
                 return stype.getSimpleName();
             }
             return "";
@@ -685,9 +681,10 @@ public final class ApiDocCommand {
                 try {
                     ParameterizedType pt = (ParameterizedType) genericType;
                     Type valType = pt.getActualTypeArguments()[0];
-                    return formatExample(factory, example, valType instanceof ParameterizedType ? (Class) ((ParameterizedType) valType).getRawType() : ((Class) valType), valType);
+                    return formatExample(factory, example, valType instanceof ParameterizedType 
+                        ? (Class) ((ParameterizedType) valType).getRawType() : ((Class) valType), valType);
                 } catch (Throwable t) {
-            //do nothing
+                    //do nothing
                 }
             }
         } else if (Sheet.class.isAssignableFrom(type)) { //要在Collection前面
@@ -697,17 +694,19 @@ public final class ApiDocCommand {
                     Type valType = pt.getActualTypeArguments()[0];
                     Class valClass = valType instanceof ParameterizedType ? (Class) ((ParameterizedType) valType).getRawType() : (Class) valType;
                     Object val = formatExample(factory, example, valClass, valType);
-                    return new StringWrapper(jsonFactory.getConvert().convertTo(jsonFactory.getConvert().convertFrom(genericType, "{'rows':[" + val + "," + val + "]}")));
+                    return new StringWrapper(jsonFactory.getConvert()
+                        .convertTo(jsonFactory.getConvert().convertFrom(genericType, "{'rows':[" + val + "," + val + "]}")));
                 } catch (Throwable t) {
-            //do nothing
+                    //do nothing
                 }
             }
         } else if (type.isArray()) {
             try {
                 Object val = formatExample(factory, example, type.getComponentType(), type.getComponentType());
-                return new StringWrapper(jsonFactory.getConvert().convertTo(jsonFactory.getConvert().convertFrom(genericType, "[" + val + "," + val + "]")));
+                return new StringWrapper(jsonFactory.getConvert()
+                    .convertTo(jsonFactory.getConvert().convertFrom(genericType, "[" + val + "," + val + "]")));
             } catch (Throwable t) {
-            //do nothing
+                //do nothing
             }
         } else if (Collection.class.isAssignableFrom(type)) {
             if (genericType instanceof ParameterizedType) {
@@ -716,9 +715,10 @@ public final class ApiDocCommand {
                     Type valType = pt.getActualTypeArguments()[0];
                     Class valClass = valType instanceof ParameterizedType ? (Class) ((ParameterizedType) valType).getRawType() : (Class) valType;
                     Object val = formatExample(factory, example, valClass, valType);
-                    return new StringWrapper(jsonFactory.getConvert().convertTo(jsonFactory.getConvert().convertFrom(genericType, "[" + val + "," + val + "]")));
+                    return new StringWrapper(jsonFactory.getConvert()
+                        .convertTo(jsonFactory.getConvert().convertFrom(genericType, "[" + val + "," + val + "]")));
                 } catch (Throwable t) {
-            //do nothing
+                    //do nothing
                 }
             }
         } else if (type == RetResult.class) {
@@ -728,9 +728,10 @@ public final class ApiDocCommand {
                     Type valType = pt.getActualTypeArguments()[0];
                     Class valClass = valType instanceof ParameterizedType ? (Class) ((ParameterizedType) valType).getRawType() : (Class) valType;
                     Object val = formatExample(factory, example, valClass, valType);
-                    return new StringWrapper(jsonFactory.getConvert().convertTo(jsonFactory.getConvert().convertFrom(genericType, "{'result':" + val + "}")));
+                    return new StringWrapper(jsonFactory.getConvert()
+                        .convertTo(jsonFactory.getConvert().convertFrom(genericType, "{'result':" + val + "}")));
                 } catch (Throwable t) {
-            //do nothing
+                    //do nothing
                 }
             }
         } else if (type != void.class) {
@@ -757,7 +758,7 @@ public final class ApiDocCommand {
                 Creator creator = Creator.create(type);
                 return new StringWrapper(jsonFactory.getConvert().convertTo(creator.create()));
             } catch (Throwable t) {
-            //do nothing
+                //do nothing
             }
         }
         return example;

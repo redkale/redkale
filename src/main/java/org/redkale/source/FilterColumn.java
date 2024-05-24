@@ -14,7 +14,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * <p>
  * 详情见: https://redkale.org
- * 
+ *
  * @see org.redkale.source.FilterBean
  *
  * @author zhangjx
@@ -57,7 +57,6 @@ public @interface FilterColumn {
      */
     FilterExpress express() default FilterExpress.EQ;
 
-
     /**
      * 判断字段是否必需，for OpenAPI Specification 3.1.0
      *
@@ -75,8 +74,11 @@ public @interface FilterColumn {
     /**
      * 备注描述
      *
+     * @see org.redkale.annotation.Comment
      * @return 备注描述
+     * @deprecated
      */
+    @Deprecated(since = "2.8.0")
     String comment() default "";
 
 }
