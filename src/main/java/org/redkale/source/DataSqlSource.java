@@ -68,6 +68,7 @@ public interface DataSqlSource extends DataSource {
      *
      * @return 执行条数
      */
+    @ClassDepends
     public int nativeUpdate(String sql, Map<String, Object> params);
 
     /**
@@ -78,6 +79,7 @@ public interface DataSqlSource extends DataSource {
      *
      * @return 执行条数
      */
+    @ClassDepends
     public CompletableFuture<Integer> nativeUpdateAsync(String sql, Map<String, Object> params);
 
     /**

@@ -6,12 +6,14 @@ package org.redkale.source.spi;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.IntFunction;
+import org.redkale.annotation.Param;
 import org.redkale.asm.AsmMethodBean;
 import org.redkale.asm.AsmMethodBoost;
 import org.redkale.asm.AsmMethodParam;
@@ -217,13 +219,14 @@ public final class DataSqlMapperBuilder {
             Class resultClass = resultClass(method);
             Class[] componentTypes = resultComponentType(method);
             final boolean async = method.getReturnType().isAssignableFrom(CompletableFuture.class);
+            Parameter[] params = method.getParameters();
             Class[] paramTypes = method.getParameterTypes();
             List<AsmMethodParam> methodParams = methodBean.getParams();
             List<Integer> insns = new ArrayList<>();
             if (!EntityBuilder.isSimpleType(componentTypes[0])) {
                 EntityBuilder.load(componentTypes[0]);
             }
-            
+
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, method.getName(), methodBean.getDesc(), methodBean.getSignature(), null)).setDebug(false);
             Label l0 = new Label();
             mv.visitLabel(l0);
@@ -252,7 +255,9 @@ public final class DataSqlMapperBuilder {
                     //参数名
                     mv.visitInsn(DUP);
                     Asms.visitInsn(mv, i * 2);
-                    mv.visitLdcInsn(methodParams.get(i).getName());
+                    Param p = params[i].getAnnotation(Param.class);
+                    String k = p == null ? methodParams.get(i).getName() : p.value();
+                    mv.visitLdcInsn(k);
                     mv.visitInsn(AASTORE);
                     //参数值
                     mv.visitInsn(DUP);

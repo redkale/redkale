@@ -5,6 +5,7 @@ package org.redkale.test.source.parser;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import org.redkale.annotation.Param;
 import org.redkale.persistence.Sql;
 
 /**
@@ -39,5 +40,5 @@ public interface ForumInfoMapper extends BaseMapper<ForumInfo> {
         + " WHERE f.forumid = s.forumid AND "
         + "s.forum_sectionid = #{bean.forumSectionid} AND "
         + "f.forumid = #{bean.forumid} AND s.forum_section_color = #{bean.forumSectionColor}")
-    public CompletableFuture<List<ForumResult>> queryForumResultAsync(ForumBean bean);
+    public CompletableFuture<List<ForumResult>> queryForumResultAsync(@Param("bean") ForumBean bean0);
 }

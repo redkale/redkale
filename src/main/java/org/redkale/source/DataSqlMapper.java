@@ -22,10 +22,43 @@ import org.redkale.util.Sheet;
  * void/基本数据类型/JavaBean/Map/List/Sheet <br>
  * 异步接口返回的是泛型为以上类型的CompletableFuture
  *
+ * <blockquote><pre>
+ * public interface ForumInfoMapper extends BaseMapper&lt;ForumInfo&gt; {
+ *
+ *   &#64;Sql("SELECT f.forum_groupid, s.forum_section_color "
+ *      + "FROM forum_info f, forum_section s "
+ *      + " WHERE f.forumid = s.forumid AND "
+ *      + "s.forum_sectionid = #{bean.forumSectionid} AND "
+ *      + "f.forumid = #{bean.forumid} AND s.forum_section_color = #{bean.forumSectionColor}")
+ *   public ForumResult findForumResult(ForumBean bean);
+ *
+ *   &#64;Sql("SELECT f.forum_groupid, s.forum_section_color "
+ *      + "FROM forum_info f, forum_section s "
+ *      + " WHERE f.forumid = s.forumid AND "
+ *      + "s.forum_sectionid = #{bean.forumSectionid} AND "
+ *      + "f.forumid = #{bean.forumid} AND s.forum_section_color = #{bean.forumSectionColor}")
+ *   public CompletableFuture&lt;ForumResult&gt; findForumResultAsync(ForumBean bean);
+ *
+ *   &#64;Sql("SELECT f.forum_groupid, s.forum_section_color "
+ *      + "FROM forum_info f, forum_section s "
+ *      + " WHERE f.forumid = s.forumid AND "
+ *      + "s.forum_sectionid = #{bean.forumSectionid} AND "
+ *      + "f.forumid = #{bean.forumid} AND s.forum_section_color = #{bean.forumSectionColor}")
+ *   public List&lt;ForumResult&gt; queryForumResult(ForumBean bean);
+ *
+ *   &#64;Sql("SELECT f.forum_groupid, s.forum_section_color "
+ *      + "FROM forum_info f, forum_section s "
+ *      + " WHERE f.forumid = s.forumid AND "
+ *      + "s.forum_sectionid = #{bean.forumSectionid} AND "
+ *      + "f.forumid = #{bean.forumid} AND s.forum_section_color = #{bean.forumSectionColor}")
+ *   public CompletableFuture&lt;List&lt;ForumResult&gt;&gt; queryForumResultAsync(&#64;Param("bean") ForumBean bean0);
+ *}
+ * </pre></blockquote>
  * <p>
  * 详情见: https://redkale.org
  *
  * @see org.redkale.source.spi.DataSqlMapperBuilder
+ * @see org.redkale.persistence.Sql
  *
  * @author zhangjx
  * @param <T> T

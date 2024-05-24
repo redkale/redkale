@@ -10,7 +10,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 原始sql语句
+ * 原始sql语句, 标记在{@link org.redkale.source.DataSqlMapper}方法上
  *
  *
  * <p>
