@@ -16,13 +16,10 @@ import org.redkale.util.AnyValue;
 import org.redkale.util.InstanceProvider;
 import org.redkale.util.RedkaleClassLoader;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class CacheModuleEngine extends ModuleEngine {
 
-    //全局缓存管理器
+    // 全局缓存管理器
     private CacheManager cacheManager;
 
     private AnyValue config;
@@ -35,10 +32,9 @@ public class CacheModuleEngine extends ModuleEngine {
      * 判断模块的配置项合并策略， 返回null表示模块不识别此配置项
      *
      * @param path 配置项路径
-     * @param key  配置项名称
+     * @param key 配置项名称
      * @param val1 配置项原值
      * @param val2 配置项新值
-     *
      * @return MergeEnum
      */
     @Override
@@ -52,9 +48,8 @@ public class CacheModuleEngine extends ModuleEngine {
     /**
      * 动态扩展类的方法
      *
-     * @param remote       是否远程模式
+     * @param remote 是否远程模式
      * @param serviceClass 类
-     *
      * @return 方法动态扩展器
      */
     @Override
@@ -62,12 +57,10 @@ public class CacheModuleEngine extends ModuleEngine {
         return new CacheAsmMethodBoost(remote, serviceClass);
     }
 
-    /**
-     * 结束Application.init方法前被调用
-     */
+    /** 结束Application.init方法前被调用 */
     @Override
     public void onAppPostInit() {
-        //设置缓存管理器
+        // 设置缓存管理器
         this.config = application.getAppConfig().getAnyValue("cache");
         this.cacheManager = createManager(this.config);
         if (!application.isCompileMode()) {
@@ -79,9 +72,7 @@ public class CacheModuleEngine extends ModuleEngine {
         this.resourceFactory.register("", CacheManager.class, this.cacheManager);
     }
 
-    /**
-     * 进入Application.shutdown方法被调用
-     */
+    /** 进入Application.shutdown方法被调用 */
     @Override
     public void onAppPreShutdown() {
         if (!application.isCompileMode() && this.cacheManager instanceof Service) {
@@ -90,13 +81,15 @@ public class CacheModuleEngine extends ModuleEngine {
     }
 
     private CacheManager createManager(AnyValue conf) {
-        Iterator<CacheManagerProvider> it = ServiceLoader.load(CacheManagerProvider.class, application.getClassLoader()).iterator();
+        Iterator<CacheManagerProvider> it = ServiceLoader.load(CacheManagerProvider.class, application.getClassLoader())
+                .iterator();
         RedkaleClassLoader.putServiceLoader(CacheManagerProvider.class);
         List<CacheManagerProvider> providers = new ArrayList<>();
         while (it.hasNext()) {
             CacheManagerProvider provider = it.next();
             if (provider != null && provider.acceptsConf(conf)) {
-                RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
+                RedkaleClassLoader.putReflectionPublicConstructors(
+                        provider.getClass(), provider.getClass().getName());
                 providers.add(provider);
             }
         }

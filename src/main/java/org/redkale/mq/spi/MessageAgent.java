@@ -5,6 +5,9 @@
  */
 package org.redkale.mq.spi;
 
+import static org.redkale.boot.Application.RESNAME_APP_NAME;
+import static org.redkale.boot.Application.RESNAME_APP_NODEID;
+
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
@@ -17,8 +20,6 @@ import java.util.logging.*;
 import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.boot.*;
-import static org.redkale.boot.Application.RESNAME_APP_NAME;
-import static org.redkale.boot.Application.RESNAME_APP_NODEID;
 import org.redkale.cluster.HttpRpcClient;
 import org.redkale.convert.Convert;
 import org.redkale.convert.ConvertFactory;
@@ -40,11 +41,9 @@ import org.redkale.util.*;
 /**
  * MQ管理器
  *
- *
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.1.0
  */
 public abstract class MessageAgent implements MessageManager {
@@ -74,7 +73,7 @@ public abstract class MessageAgent implements MessageManager {
 
     final AtomicLong msgSeqno = new AtomicLong(Math.abs(System.nanoTime()));
 
-    //-------------------------- MessageConsumer、MessageProducer --------------------------
+    // -------------------------- MessageConsumer、MessageProducer --------------------------
     protected final ReentrantLock messageProducerLock = new ReentrantLock();
 
     protected MessageProducer messageBaseProducer;
@@ -83,10 +82,10 @@ public abstract class MessageAgent implements MessageManager {
 
     protected final CopyOnWriteArrayList<MessageConsumer> messageConsumerList = new CopyOnWriteArrayList<>();
 
-    //key: group, sub-key: topic
+    // key: group, sub-key: topic
     protected final Map<String, Map<String, MessageConsumerWrapper>> messageConsumerMap = new HashMap<>();
 
-    //-------------------------- HttpRpcClient、SncpMessageClient --------------------------
+    // -------------------------- HttpRpcClient、SncpMessageClient --------------------------
     private boolean rpcFirst;
 
     private HttpRpcMessageClient httpRpcClient;
@@ -120,8 +119,10 @@ public abstract class MessageAgent implements MessageManager {
         }
         if (this.workExecutor == null) {
             String namePrefix = Utility.isEmpty(name) ? "" : ("-" + name);
-            this.workExecutor = threads > 0 ? WorkThread.createExecutor(threads, "Redkale-MessageConsumerThread" + namePrefix + "-%s")
-                : WorkThread.createWorkExecutor(Utility.cpus(), "Redkale-MessageConsumerThread" + namePrefix + "-%s");
+            this.workExecutor = threads > 0
+                    ? WorkThread.createExecutor(threads, "Redkale-MessageConsumerThread" + namePrefix + "-%s")
+                    : WorkThread.createWorkExecutor(
+                            Utility.cpus(), "Redkale-MessageConsumerThread" + namePrefix + "-%s");
         }
         this.httpMessageClient = new MessageClient("http", this, this.httpAppRespTopic);
         this.sncpMessageClient = new MessageClient("sncp", this, this.sncpAppRespTopic);
@@ -129,7 +130,8 @@ public abstract class MessageAgent implements MessageManager {
         String coderType = config.getValue("coder", "");
         if (!coderType.trim().isEmpty()) {
             try {
-                Class<MessageCoder<MessageRecord>> coderClass = (Class) Thread.currentThread().getContextClassLoader().loadClass(coderType);
+                Class<MessageCoder<MessageRecord>> coderClass =
+                        (Class) Thread.currentThread().getContextClassLoader().loadClass(coderType);
                 RedkaleClassLoader.putReflectionPublicConstructors(coderClass, coderClass.getName());
                 MessageCoder<MessageRecord> coder = coderClass.getConstructor().newInstance();
                 application.getResourceFactory().inject(coder);
@@ -170,7 +172,7 @@ public abstract class MessageAgent implements MessageManager {
         if (application.isCompileMode()) {
             return;
         }
-        //----------------- MessageClient -----------------
+        // ----------------- MessageClient -----------------
         if (this.httpRpcClient != null || !this.httpMessageClient.isEmpty()) {
             this.httpMessageClient.putMessageRespProcessor();
         }
@@ -184,7 +186,7 @@ public abstract class MessageAgent implements MessageManager {
         if (!this.sncpMessageClient.isEmpty()) {
             topics.addAll(this.sncpMessageClient.getTopics());
         }
-        if (!topics.isEmpty()) { //存在需要订阅的主题
+        if (!topics.isEmpty()) { // 存在需要订阅的主题
             this.messageClientProducer = startMessageClientProducer();
             this.startMessageClientConsumer();
             Collections.sort(topics);
@@ -197,21 +199,21 @@ public abstract class MessageAgent implements MessageManager {
         }
     }
 
-    //Application.stop  在执行server.shutdown之前执行
+    // Application.stop  在执行server.shutdown之前执行
     public void stop() {
         this.stopMessageConsumer();
         this.stopMessageProducer();
         this.stopMessageClientConsumer();
     }
 
-    //Application.stop 在所有server.shutdown执行后执行
+    // Application.stop 在所有server.shutdown执行后执行
     public void destroy(AnyValue config) {
         for (MessageConsumer consumer : messageConsumerList) {
             consumer.destroy(config);
         }
         this.messageConsumerList.clear();
         this.messageConsumerMap.clear();
-        //-------------- MessageClient --------------
+        // -------------- MessageClient --------------
         if (this.messageClientProducer != null) {
             this.messageClientProducer.stop();
         }
@@ -243,7 +245,8 @@ public abstract class MessageAgent implements MessageManager {
         }
         MessageProducer producer = baseProducer;
         Objects.requireNonNull(producer);
-        return messageProducerMap.computeIfAbsent(ann.convertType(), t -> new MessageProducerWrapper(producer, ConvertFactory.findConvert(t)));
+        return messageProducerMap.computeIfAbsent(
+                ann.convertType(), t -> new MessageProducerWrapper(producer, ConvertFactory.findConvert(t)));
     }
 
     protected StringBuilder initMessageConsumer(List<MessageConsumer> consumers) {
@@ -268,14 +271,17 @@ public abstract class MessageAgent implements MessageManager {
                         topics.add(topic);
                         if (map.containsKey(topic.trim())) {
                             throw new RedkaleException(MessageConsumer.class.getSimpleName()
-                                + " consume topic (" + topic + ") repeat with " 
-                                + map.get(topic).getClass().getName() + " and " + consumer.getClass().getName());
+                                    + " consume topic (" + topic + ") repeat with "
+                                    + map.get(topic).getClass().getName() + " and "
+                                    + consumer.getClass().getName());
                         }
                         for (MessageConsumerWrapper wrapper : map.values()) {
                             if (!Objects.equals(res.convertType(), wrapper.convertType)) {
                                 throw new RedkaleException(MessageConsumer.class.getSimpleName()
-                                    + " " + consumer.getClass().getName() + " convertType(" + res.convertType() + ") differ in "
-                                    + wrapper.consumer.getClass().getName() + " convertType(" + wrapper.convertType + ")");
+                                        + " " + consumer.getClass().getName() + " convertType(" + res.convertType()
+                                        + ") differ in "
+                                        + wrapper.consumer.getClass().getName() + " convertType(" + wrapper.convertType
+                                        + ")");
                             }
                         }
                         map.put(topic.trim(), new MessageConsumerWrapper(this, consumer, res.convertType()));
@@ -293,9 +299,11 @@ public abstract class MessageAgent implements MessageManager {
             }
             views.forEach((typestr, topicstr) -> {
                 sb.append(MessageConsumer.class.getSimpleName())
-                    .append(" (type=").append(alignString(typestr, typeMax.get()))
-                    .append(", topics=").append(alignString(topicstr, topicMax.get()))
-                    .append(") startuped\r\n");
+                        .append(" (type=")
+                        .append(alignString(typestr, typeMax.get()))
+                        .append(", topics=")
+                        .append(alignString(topicstr, topicMax.get()))
+                        .append(") startuped\r\n");
             });
             messageConsumerList.addAll(consumers);
             messageConsumerMap.putAll(maps);
@@ -360,7 +368,7 @@ public abstract class MessageAgent implements MessageManager {
         return rpcFirst;
     }
 
-    protected String checkName(String name) {  //不能含特殊字符
+    protected String checkName(String name) { // 不能含特殊字符
         if (name.isEmpty()) {
             return name;
         }
@@ -368,7 +376,10 @@ public abstract class MessageAgent implements MessageManager {
             throw new RedkaleException("name only 0-9 a-z A-Z _ cannot begin 0-9");
         }
         for (char ch : name.toCharArray()) {
-            if (!((ch >= '0' && ch <= '9') || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
+            if (!((ch >= '0' && ch <= '9')
+                    || ch == '_'
+                    || (ch >= 'a' && ch <= 'z')
+                    || (ch >= 'A' && ch <= 'Z'))) { // 不能含特殊字符
                 throw new RedkaleException("name only 0-9 a-z A-Z _ cannot begin 0-9");
             }
         }
@@ -383,7 +394,7 @@ public abstract class MessageAgent implements MessageManager {
         return this.messageClientProducer;
     }
 
-    //    
+    //
     protected abstract void startMessageConsumer();
 
     protected abstract void stopMessageConsumer();
@@ -392,14 +403,14 @@ public abstract class MessageAgent implements MessageManager {
 
     protected abstract void stopMessageProducer();
 
-    //----------------- MessageClient -----------------
+    // ----------------- MessageClient -----------------
     protected abstract void startMessageClientConsumer();
 
     protected abstract void stopMessageClientConsumer();
 
     protected abstract MessageClientProducer startMessageClientProducer();
 
-    //---------------------------------------------------
+    // ---------------------------------------------------
     @ResourceChanged
     public abstract void onResourceChange(ResourceEvent[] events);
 
@@ -407,15 +418,15 @@ public abstract class MessageAgent implements MessageManager {
     @Override
     public abstract boolean createTopic(String... topics);
 
-    //删除topic，如果不存在则跳过
+    // 删除topic，如果不存在则跳过
     @Override
     public abstract boolean deleteTopic(String... topics);
 
-    //查询所有topic
+    // 查询所有topic
     @Override
     public abstract List<String> queryTopic();
 
-    //ServiceLoader时判断配置是否符合当前实现类
+    // ServiceLoader时判断配置是否符合当前实现类
     public abstract boolean acceptsConf(AnyValue config);
 
     public final void putService(NodeHttpServer ns, Service service, HttpServlet servlet) {
@@ -427,7 +438,7 @@ public abstract class MessageAgent implements MessageManager {
         if (al2 != null && !al2.value() && service.getClass().getAnnotation(Local.class) != null) {
             return;
         }
-        { //标记@RestService(name = " ") 需要跳过， 一般作为模板引擎
+        { // 标记@RestService(name = " ") 需要跳过， 一般作为模板引擎
             RestService rest = service.getClass().getAnnotation(RestService.class);
             if (rest != null && !rest.name().isEmpty() && rest.name().trim().isEmpty()) {
                 return;
@@ -437,7 +448,8 @@ public abstract class MessageAgent implements MessageManager {
             throw new RedkaleException("Application.node not config in WebSocket Cluster");
         }
         String topic = Rest.generateHttpReqTopic(service, this.nodeid);
-        MessageServlet processor = new HttpMessageServlet(this.httpMessageClient, ns.getHttpServer().getContext(), service, servlet, topic);
+        MessageServlet processor = new HttpMessageServlet(
+                this.httpMessageClient, ns.getHttpServer().getContext(), service, servlet, topic);
         this.httpMessageClient.putMessageServlet(processor);
     }
 
@@ -454,18 +466,19 @@ public abstract class MessageAgent implements MessageManager {
             throw new RedkaleException("Application.node not config in WebSocket Cluster");
         }
         String topic = Sncp.generateSncpReqTopic(service, this.nodeid);
-        MessageServlet processor = new SncpMessageServlet(this.sncpMessageClient, ns.getSncpServer().getContext(), service, servlet, topic);
+        MessageServlet processor = new SncpMessageServlet(
+                this.sncpMessageClient, ns.getSncpServer().getContext(), service, servlet, topic);
         this.sncpMessageClient.putMessageServlet(processor);
     }
 
-    //格式: sncp.resp.app.node10
-    //格式参考Rest.generateHttpReqTopic
+    // 格式: sncp.resp.app.node10
+    // 格式参考Rest.generateHttpReqTopic
     private String generateSncpAppRespTopic() {
         return Sncp.getSncpRespTopicPrefix() + "app." + (Utility.isEmpty(nodeName) ? "node" : nodeName) + "-" + nodeid;
     }
 
-    //格式: http.resp.app.node10
-    //格式参考Rest.generateHttpReqTopic
+    // 格式: http.resp.app.node10
+    // 格式参考Rest.generateHttpReqTopic
     private String generateHttpAppRespTopic() {
         return Rest.getHttpRespTopicPrefix() + "app." + (Utility.isEmpty(nodeName) ? "node" : nodeName) + "-" + nodeid;
     }
@@ -544,9 +557,13 @@ public abstract class MessageAgent implements MessageManager {
                 try {
                     m.onMessage(context, (T) c.convertFrom(messageType, message));
                 } catch (Throwable t) {
-                    messageAgent.getLogger().log(Level.SEVERE, m.getClass().getSimpleName()
-                        + " onMessage error, topic: " + context.getTopic()
-                        + ", messages: " + new String(message, StandardCharsets.UTF_8));
+                    messageAgent
+                            .getLogger()
+                            .log(
+                                    Level.SEVERE,
+                                    m.getClass().getSimpleName()
+                                            + " onMessage error, topic: " + context.getTopic()
+                                            + ", messages: " + new String(message, StandardCharsets.UTF_8));
                 }
                 Traces.removeTraceid();
             });
@@ -572,7 +589,6 @@ public abstract class MessageAgent implements MessageManager {
             final MessageConsumerWrapper other = (MessageConsumerWrapper) obj;
             return Objects.equals(this.consumer.getClass(), other.consumer.getClass());
         }
-
     }
 
     protected static class MessageProducerWrapper implements MessageProducer {
@@ -587,10 +603,9 @@ public abstract class MessageAgent implements MessageManager {
         }
 
         @Override
-        public CompletableFuture<Void> sendMessage(String topic, Integer partition, Convert convert0, Type type, Object value) {
+        public CompletableFuture<Void> sendMessage(
+                String topic, Integer partition, Convert convert0, Type type, Object value) {
             return producer.sendMessage(topic, partition, convert0 == null ? this.convert : convert0, type, value);
         }
-
     }
-
 }

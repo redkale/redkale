@@ -5,6 +5,9 @@
  */
 package org.redkale.net.sncp;
 
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
+
 import java.io.IOException;
 import java.lang.reflect.*;
 import java.nio.channels.CompletionHandler;
@@ -13,8 +16,6 @@ import java.util.concurrent.*;
 import java.util.logging.Level;
 import org.redkale.annotation.NonBlocking;
 import org.redkale.asm.*;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.convert.*;
 import org.redkale.convert.bson.BsonFactory;
@@ -23,8 +24,6 @@ import org.redkale.service.Service;
 import org.redkale.util.*;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -60,12 +59,15 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
         this.serviceid = Sncp.serviceid(resourceName, resourceType);
 
         Class serviceImplClass = Sncp.getServiceType(service);
-        for (Map.Entry<Uint128, Method> en : Sncp.loadRemoteMethodActions(serviceImplClass).entrySet()) {
+        for (Map.Entry<Uint128, Method> en :
+                Sncp.loadRemoteMethodActions(serviceImplClass).entrySet()) {
             SncpActionServlet action;
             try {
-                action = SncpActionServlet.create(resourceName, resourceType, serviceImplClass, service, serviceid, en.getKey(), en.getValue());
+                action = SncpActionServlet.create(
+                        resourceName, resourceType, serviceImplClass, service, serviceid, en.getKey(), en.getValue());
             } catch (RuntimeException e) {
-                throw new SncpException(en.getValue() + " create " + SncpActionServlet.class.getSimpleName() + " error", e);
+                throw new SncpException(
+                        en.getValue() + " create " + SncpActionServlet.class.getSimpleName() + " error", e);
             }
             actions.put(en.getKey(), action);
         }
@@ -76,9 +78,9 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
     public void execute(SncpRequest request, SncpResponse response) throws IOException {
         SncpHeader reqHeader = request.getHeader();
         final SncpActionServlet action = actions.get(reqHeader.getActionid());
-        //logger.log(Level.FINEST, "sncpdyn.execute: " + request + ", " + (action == null ? "null" : action.method));
+        // logger.log(Level.FINEST, "sncpdyn.execute: " + request + ", " + (action == null ? "null" : action.method));
         if (action == null) {
-            response.finish(SncpResponse.RETCODE_ILLACTIONID, null);  //无效actionid
+            response.finish(SncpResponse.RETCODE_ILLACTIONID, null); // 无效actionid
         } else {
             try {
                 reqHeader.serviceName = action.resourceType.getName();
@@ -93,7 +95,9 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
                                 Traces.computeIfAbsent(request.getTraceid());
                                 action.execute(request, response);
                             } catch (Throwable t) {
-                                response.getContext().getLogger().log(Level.WARNING, "Servlet occur exception. request = " + request, t);
+                                response.getContext()
+                                        .getLogger()
+                                        .log(Level.WARNING, "Servlet occur exception. request = " + request, t);
                                 response.finishError(t);
                             }
                             Traces.removeTraceid();
@@ -113,8 +117,15 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(this.getClass().getSimpleName()).append(" (type=").append(resourceType.getName());
-        sb.append(", serviceid=").append(serviceid).append(", name='").append(resourceName).append("'");
-        sb.append(", actions.size=").append(actions.size() > 9 ? "" : " ").append(actions.size()).append(")");
+        sb.append(", serviceid=")
+                .append(serviceid)
+                .append(", name='")
+                .append(resourceName)
+                .append("'");
+        sb.append(", actions.size=")
+                .append(actions.size() > 9 ? "" : " ")
+                .append(actions.size())
+                .append(")");
         return sb.toString();
     }
 
@@ -185,7 +196,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
         return Objects.hashCode(getServiceid());
     }
 
-    public static abstract class SncpActionServlet extends SncpServlet {
+    public abstract static class SncpActionServlet extends SncpServlet {
 
         protected final Method method;
 
@@ -193,19 +204,25 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
 
         protected final boolean nonBlocking;
 
-        protected final java.lang.reflect.Type[] paramTypes;  //第一个元素存放返回类型return type， void的返回参数类型为null, 数组长度为:1+参数个数
+        protected final java.lang.reflect.Type[] paramTypes; // 第一个元素存放返回类型return type， void的返回参数类型为null, 数组长度为:1+参数个数
 
-        protected final java.lang.reflect.Type returnObjectType; //返回结果类型 void必须设为null
+        protected final java.lang.reflect.Type returnObjectType; // 返回结果类型 void必须设为null
 
-        protected final int paramHandlerIndex;  //>=0表示存在CompletionHandler参数
+        protected final int paramHandlerIndex; // >=0表示存在CompletionHandler参数
 
-        protected final Class<? extends CompletionHandler> paramHandlerClass; //CompletionHandler参数的类型
+        protected final Class<? extends CompletionHandler> paramHandlerClass; // CompletionHandler参数的类型
 
-        protected final java.lang.reflect.Type paramHandlerResultType; //CompletionHandler.completed第一个参数的类型
+        protected final java.lang.reflect.Type paramHandlerResultType; // CompletionHandler.completed第一个参数的类型
 
-        protected final java.lang.reflect.Type returnFutureResultType; //返回结果的CompletableFuture的结果泛型类型
+        protected final java.lang.reflect.Type returnFutureResultType; // 返回结果的CompletableFuture的结果泛型类型
 
-        protected SncpActionServlet(String resourceName, Class resourceType, Service service, Uint128 serviceid, Uint128 actionid, final Method method) {
+        protected SncpActionServlet(
+                String resourceName,
+                Class resourceType,
+                Service service,
+                Uint128 serviceid,
+                Uint128 actionid,
+                final Method method) {
             super(resourceName, resourceType, service, serviceid);
             Objects.requireNonNull(method);
             this.actionid = actionid;
@@ -217,29 +234,34 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
             try {
                 final Class[] paramClasses = method.getParameterTypes();
                 java.lang.reflect.Type[] genericParams = method.getGenericParameterTypes();
-                for (int i = 0; i < paramClasses.length; i++) { //反序列化方法的每个参数
+                for (int i = 0; i < paramClasses.length; i++) { // 反序列化方法的每个参数
                     if (CompletionHandler.class.isAssignableFrom(paramClasses[i])) {
                         handlerFuncIndex = i;
                         handlerFuncClass = paramClasses[i];
-                        java.lang.reflect.Type handlerType = TypeToken.getGenericType(genericParams[i], service.getClass());
+                        java.lang.reflect.Type handlerType =
+                                TypeToken.getGenericType(genericParams[i], service.getClass());
                         if (handlerType instanceof Class) {
                             handlerResultType = Object.class;
                         } else if (handlerType instanceof ParameterizedType) {
-                            handlerResultType = TypeToken.getGenericType(((ParameterizedType) handlerType).getActualTypeArguments()[0], handlerType);
+                            handlerResultType = TypeToken.getGenericType(
+                                    ((ParameterizedType) handlerType).getActualTypeArguments()[0], handlerType);
                         } else {
                             throw new SncpException(service.getClass() + " had unknown genericType in " + method);
                         }
                         if (method.getReturnType() != void.class) {
-                            throw new SncpException(method + " have CompletionHandler type parameter but return type is not void");
+                            throw new SncpException(
+                                    method + " have CompletionHandler type parameter but return type is not void");
                         }
                         break;
                     }
                 }
             } catch (Throwable ex) {
-                //do nothing
+                // do nothing
             }
-            java.lang.reflect.Type[] originalParamTypes = TypeToken.getGenericType(method.getGenericParameterTypes(), service.getClass());
-            java.lang.reflect.Type originalReturnType = TypeToken.getGenericType(method.getGenericReturnType(), service.getClass());
+            java.lang.reflect.Type[] originalParamTypes =
+                    TypeToken.getGenericType(method.getGenericParameterTypes(), service.getClass());
+            java.lang.reflect.Type originalReturnType =
+                    TypeToken.getGenericType(method.getGenericReturnType(), service.getClass());
             java.lang.reflect.Type[] types = new java.lang.reflect.Type[originalParamTypes.length + 1];
             types[0] = originalReturnType;
             System.arraycopy(originalParamTypes, 0, types, 1, originalParamTypes.length);
@@ -247,14 +269,17 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
             this.paramHandlerIndex = handlerFuncIndex;
             this.paramHandlerClass = handlerFuncClass;
             this.paramHandlerResultType = handlerResultType;
-            this.returnObjectType = originalReturnType == void.class || originalReturnType == Void.class ? null : originalReturnType;
+            this.returnObjectType =
+                    originalReturnType == void.class || originalReturnType == Void.class ? null : originalReturnType;
             if (Future.class.isAssignableFrom(method.getReturnType())) {
-                java.lang.reflect.Type futureType = TypeToken.getGenericType(method.getGenericReturnType(), service.getClass());
+                java.lang.reflect.Type futureType =
+                        TypeToken.getGenericType(method.getGenericReturnType(), service.getClass());
                 java.lang.reflect.Type returnType = null;
                 if (futureType instanceof Class) {
                     returnType = Object.class;
                 } else if (futureType instanceof ParameterizedType) {
-                    returnType = TypeToken.getGenericType(((ParameterizedType) futureType).getActualTypeArguments()[0], futureType);
+                    returnType = TypeToken.getGenericType(
+                            ((ParameterizedType) futureType).getActualTypeArguments()[0], futureType);
                 } else {
                     throw new SncpException(service.getClass() + " had unknown return genericType in " + method);
                 }
@@ -266,8 +291,10 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
             if (non == null) {
                 non = service.getClass().getAnnotation(NonBlocking.class);
             }
-            //Future代替CompletionStage 不容易判断异步
-            this.nonBlocking = non == null ? (CompletionStage.class.isAssignableFrom(method.getReturnType()) || this.paramHandlerIndex >= 0) : false;
+            // Future代替CompletionStage 不容易判断异步
+            this.nonBlocking = non == null
+                    ? (CompletionStage.class.isAssignableFrom(method.getReturnType()) || this.paramHandlerIndex >= 0)
+                    : false;
         }
 
         @Override
@@ -304,7 +331,11 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
         }
 
         /**
-         * <blockquote><pre>
+         *
+         *
+         * <blockquote>
+         *
+         * <pre>
          *      public interface TestService extends Service {
          *
          *     public boolean change(TestBean bean, String name, int id);
@@ -433,27 +464,28 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
          *     }
          * }
          *
-         * </pre></blockquote>
+         * </pre>
          *
-         * @param resourceName     资源名
-         * @param resourceType     资源类
+         * </blockquote>
+         *
+         * @param resourceName 资源名
+         * @param resourceType 资源类
          * @param serviceImplClass Service实现类
-         * @param service          Service
-         * @param serviceid        类ID
-         * @param actionid         操作ID
-         * @param method           方法
-         *
+         * @param service Service
+         * @param serviceid 类ID
+         * @param actionid 操作ID
+         * @param method 方法
          * @return SncpActionServlet
          */
         @SuppressWarnings("unchecked")
         public static SncpActionServlet create(
-            final String resourceName,
-            final Class resourceType,
-            final Class serviceImplClass,
-            final Service service,
-            final Uint128 serviceid,
-            final Uint128 actionid,
-            final Method method) {
+                final String resourceName,
+                final Class resourceType,
+                final Class serviceImplClass,
+                final Service service,
+                final Uint128 serviceid,
+                final Uint128 actionid,
+                final Method method) {
 
             final Class serviceClass = service.getClass();
             final String supDynName = SncpActionServlet.class.getName().replace('.', '/');
@@ -469,27 +501,38 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
             final String responseDesc = Type.getDescriptor(SncpResponse.class);
             final String serviceDesc = Type.getDescriptor(Service.class);
             final boolean boolReturnTypeFuture = Future.class.isAssignableFrom(method.getReturnType());
-            final String newDynName = "org/redkaledyn/sncp/servlet/action/_DynSncpActionServlet__" + resourceType.getSimpleName() + "_" + method.getName() + "_" + actionid;
+            final String newDynName = "org/redkaledyn/sncp/servlet/action/_DynSncpActionServlet__"
+                    + resourceType.getSimpleName() + "_" + method.getName() + "_" + actionid;
 
             Class<?> newClazz = null;
             try {
                 Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-                newClazz = clz == null ? Thread.currentThread().getContextClassLoader().loadClass(newDynName.replace('/', '.')) : clz;
+                newClazz = clz == null
+                        ? Thread.currentThread().getContextClassLoader().loadClass(newDynName.replace('/', '.'))
+                        : clz;
             } catch (Throwable ex) {
-                //do nothing
+                // do nothing
             }
 
-            final java.lang.reflect.Type[] originalParamTypes = TypeToken.getGenericType(method.getGenericParameterTypes(), serviceClass);
-            final java.lang.reflect.Type originalReturnType = TypeToken.getGenericType(method.getGenericReturnType(), serviceClass);
+            final java.lang.reflect.Type[] originalParamTypes =
+                    TypeToken.getGenericType(method.getGenericParameterTypes(), serviceClass);
+            final java.lang.reflect.Type originalReturnType =
+                    TypeToken.getGenericType(method.getGenericReturnType(), serviceClass);
             if (newClazz == null) {
-                //-------------------------------------------------------------
+                // -------------------------------------------------------------
                 ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
                 FieldVisitor fv;
                 MethodDebugVisitor mv;
 
                 cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
                 {
-                    mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "(Ljava/lang/String;Ljava/lang/Class;" + serviceDesc + uint128Desc + uint128Desc + "Ljava/lang/reflect/Method;)V", null, null));
+                    mv = new MethodDebugVisitor(cw.visitMethod(
+                            ACC_PUBLIC,
+                            "<init>",
+                            "(Ljava/lang/String;Ljava/lang/Class;" + serviceDesc + uint128Desc + uint128Desc
+                                    + "Ljava/lang/reflect/Method;)V",
+                            null,
+                            null));
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitVarInsn(ALOAD, 2);
@@ -497,51 +540,68 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
                     mv.visitVarInsn(ALOAD, 4);
                     mv.visitVarInsn(ALOAD, 5);
                     mv.visitVarInsn(ALOAD, 6);
-                    mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "(Ljava/lang/String;Ljava/lang/Class;" + serviceDesc + uint128Desc + uint128Desc + "Ljava/lang/reflect/Method;)V", false);
+                    mv.visitMethodInsn(
+                            INVOKESPECIAL,
+                            supDynName,
+                            "<init>",
+                            "(Ljava/lang/String;Ljava/lang/Class;" + serviceDesc + uint128Desc + uint128Desc
+                                    + "Ljava/lang/reflect/Method;)V",
+                            false);
                     mv.visitInsn(RETURN);
                     mv.visitMaxs(7, 7);
                     mv.visitEnd();
                 }
                 String convertFromDesc = "(Ljava/lang/reflect/Type;" + readerDesc + ")Ljava/lang/Object;";
                 try {
-                    convertFromDesc = Type.getMethodDescriptor(Convert.class.getMethod("convertFrom", java.lang.reflect.Type.class, Reader.class));
+                    convertFromDesc = Type.getMethodDescriptor(
+                            Convert.class.getMethod("convertFrom", java.lang.reflect.Type.class, Reader.class));
                 } catch (Exception ex) {
-                    throw new SncpException(ex); //不可能会发生
+                    throw new SncpException(ex); // 不可能会发生
                 }
                 { // action方法
-                    mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "action", "(" + requestDesc + responseDesc + ")V", null, new String[]{"java/lang/Throwable"}));
-                    //mv.setDebug(true);
-                    { //Convert
+                    mv = new MethodDebugVisitor(cw.visitMethod(
+                            ACC_PUBLIC, "action", "(" + requestDesc + responseDesc + ")V", null, new String[] {
+                                "java/lang/Throwable"
+                            }));
+                    // mv.setDebug(true);
+                    { // Convert
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitMethodInsn(INVOKEVIRTUAL, requestName, "getConvert", "()" + convertDesc, false);
                         mv.visitVarInsn(ASTORE, 3);
                     }
-                    { //Reader
+                    { // Reader
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitMethodInsn(INVOKEVIRTUAL, requestName, "getReader", "()" + readerDesc, false);
                         mv.visitVarInsn(ASTORE, 4);
                     }
                     int iconst = ICONST_1;
                     int intconst = 1;
-                    int store = 5; //action的参数个数+2
+                    int store = 5; // action的参数个数+2
                     final Class[] paramClasses = method.getParameterTypes();
                     int[][] codes = new int[paramClasses.length][2];
                     int handlerFuncIndex = -1;
-                    for (int i = 0; i < paramClasses.length; i++) { //反序列化方法的每个参数
+                    for (int i = 0; i < paramClasses.length; i++) { // 反序列化方法的每个参数
                         if (CompletionHandler.class.isAssignableFrom(paramClasses[i])) {
                             if (boolReturnTypeFuture) {
                                 throw new SncpException(method + " have both CompletionHandler and CompletableFuture");
                             }
                             if (handlerFuncIndex >= 0) {
-                                throw new SncpException(method + " have more than one CompletionHandler type parameter");
+                                throw new SncpException(
+                                        method + " have more than one CompletionHandler type parameter");
                             }
                             Sncp.checkAsyncModifier(paramClasses[i], method);
                             handlerFuncIndex = i;
                             mv.visitVarInsn(ALOAD, 2);
-                            mv.visitMethodInsn(INVOKEVIRTUAL, responseName, "getParamAsyncHandler", "()Ljava/nio/channels/CompletionHandler;", false);
-                            mv.visitTypeInsn(CHECKCAST, paramClasses[i].getName().replace('.', '/'));
+                            mv.visitMethodInsn(
+                                    INVOKEVIRTUAL,
+                                    responseName,
+                                    "getParamAsyncHandler",
+                                    "()Ljava/nio/channels/CompletionHandler;",
+                                    false);
+                            mv.visitTypeInsn(
+                                    CHECKCAST, paramClasses[i].getName().replace('.', '/'));
                             mv.visitVarInsn(ASTORE, store);
-                            codes[i] = new int[]{ALOAD, store};
+                            codes[i] = new int[] {ALOAD, store};
                             store++;
                             iconst++;
                             intconst++;
@@ -588,26 +648,33 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
                                 v = 1;
                             }
                             Class bigPrimitiveClass = TypeToken.primitiveToWrapper(paramClasses[i]);
-                            String bigPrimitiveName = bigPrimitiveClass.getName().replace('.', '/');
+                            String bigPrimitiveName =
+                                    bigPrimitiveClass.getName().replace('.', '/');
                             try {
                                 Method pm = bigPrimitiveClass.getMethod(paramClasses[i].getSimpleName() + "Value");
                                 mv.visitTypeInsn(CHECKCAST, bigPrimitiveName);
-                                mv.visitMethodInsn(INVOKEVIRTUAL, bigPrimitiveName, pm.getName(), Type.getMethodDescriptor(pm), false);
+                                mv.visitMethodInsn(
+                                        INVOKEVIRTUAL,
+                                        bigPrimitiveName,
+                                        pm.getName(),
+                                        Type.getMethodDescriptor(pm),
+                                        false);
                             } catch (Exception ex) {
-                                throw new SncpException(ex); //不可能会发生
+                                throw new SncpException(ex); // 不可能会发生
                             }
                             mv.visitVarInsn(storecode, store);
                         } else {
-                            mv.visitTypeInsn(CHECKCAST, paramClasses[i].getName().replace('.', '/'));
-                            mv.visitVarInsn(ASTORE, store);  //
+                            mv.visitTypeInsn(
+                                    CHECKCAST, paramClasses[i].getName().replace('.', '/'));
+                            mv.visitVarInsn(ASTORE, store); //
                         }
-                        codes[i] = new int[]{load, store};
+                        codes[i] = new int[] {load, store};
                         store += v;
                         iconst++;
                         intconst++;
                         store++;
                     }
-                    {  //调用service
+                    { // 调用service
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "service", "()" + serviceDesc, false);
                         mv.visitTypeInsn(CHECKCAST, serviceImpTypeName);
@@ -617,7 +684,12 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
                         for (int[] j : codes) {
                             mv.visitVarInsn(j[0], j[1]);
                         }
-                        mv.visitMethodInsn(serviceImplClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, serviceImpTypeName, method.getName(), Type.getMethodDescriptor(method), serviceImplClass.isInterface());
+                        mv.visitMethodInsn(
+                                serviceImplClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                serviceImpTypeName,
+                                method.getName(),
+                                Type.getMethodDescriptor(method),
+                                serviceImplClass.isInterface());
                         store++;
                     }
                     if (method.getReturnType() != void.class) {
@@ -626,30 +698,46 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
                             Class bigClass = TypeToken.primitiveToWrapper(returnClass);
                             try {
                                 Method vo = bigClass.getMethod("valueOf", returnClass);
-                                mv.visitMethodInsn(INVOKESTATIC, bigClass.getName().replace('.', '/'), vo.getName(), Type.getMethodDescriptor(vo), false);
+                                mv.visitMethodInsn(
+                                        INVOKESTATIC,
+                                        bigClass.getName().replace('.', '/'),
+                                        vo.getName(),
+                                        Type.getMethodDescriptor(vo),
+                                        false);
                             } catch (Exception ex) {
-                                throw new SncpException(ex); //不可能会发生
+                                throw new SncpException(ex); // 不可能会发生
                             }
                         }
-                        mv.visitVarInsn(ASTORE, store);  //11
+                        mv.visitVarInsn(ASTORE, store); // 11
 
-                        if (boolReturnTypeFuture) { //返回类型为Future
+                        if (boolReturnTypeFuture) { // 返回类型为Future
                             mv.visitVarInsn(ALOAD, 2);
                             mv.visitVarInsn(ALOAD, 0);
-                            mv.visitFieldInsn(GETFIELD, newDynName, "returnFutureResultType", "Ljava/lang/reflect/Type;");
+                            mv.visitFieldInsn(
+                                    GETFIELD, newDynName, "returnFutureResultType", "Ljava/lang/reflect/Type;");
                             mv.visitVarInsn(ALOAD, store);
-                            mv.visitMethodInsn(INVOKEVIRTUAL, responseName, "finishFuture", "(Ljava/lang/reflect/Type;Ljava/util/concurrent/Future;)V", false);
-                        } else if (handlerFuncIndex >= 0) { //参数有CompletionHandler
+                            mv.visitMethodInsn(
+                                    INVOKEVIRTUAL,
+                                    responseName,
+                                    "finishFuture",
+                                    "(Ljava/lang/reflect/Type;Ljava/util/concurrent/Future;)V",
+                                    false);
+                        } else if (handlerFuncIndex >= 0) { // 参数有CompletionHandler
                             mv.visitVarInsn(ALOAD, 2);
                             mv.visitMethodInsn(INVOKEVIRTUAL, responseName, "finishVoid", "()V", false);
-                        } else { //普通对象
+                        } else { // 普通对象
                             mv.visitVarInsn(ALOAD, 2);
                             mv.visitVarInsn(ALOAD, 0);
                             mv.visitFieldInsn(GETFIELD, newDynName, "returnObjectType", "Ljava/lang/reflect/Type;");
                             mv.visitVarInsn(ALOAD, store);
-                            mv.visitMethodInsn(INVOKEVIRTUAL, responseName, "finish", "(Ljava/lang/reflect/Type;Ljava/lang/Object;)V", false);
+                            mv.visitMethodInsn(
+                                    INVOKEVIRTUAL,
+                                    responseName,
+                                    "finish",
+                                    "(Ljava/lang/reflect/Type;Ljava/lang/Object;)V",
+                                    false);
                         }
-                    } else { //void返回类型
+                    } else { // void返回类型
                         mv.visitVarInsn(ALOAD, 2);
                         mv.visitMethodInsn(INVOKEVIRTUAL, responseName, "finishVoid", "()V", false);
                     }
@@ -670,7 +758,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
                 try {
                     RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), newClazz.getField("service"));
                 } catch (Exception e) {
-                    //do nothing
+                    // do nothing
                 }
                 for (java.lang.reflect.Type t : originalParamTypes) {
                     if (t.toString().startsWith("java.lang.")) {
@@ -680,7 +768,8 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
                 }
                 if (originalReturnType != void.class && originalReturnType != Void.class) {
                     if (boolReturnTypeFuture && method.getReturnType() != method.getGenericReturnType()) {
-                        java.lang.reflect.Type t = ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[0];
+                        java.lang.reflect.Type t =
+                                ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[0];
                         if (t != Void.class && t != java.lang.reflect.Type.class) {
                             BsonFactory.root().loadEncoder(t);
                         }
@@ -694,10 +783,10 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
                 }
             }
             try {
-                return (SncpActionServlet) newClazz.getConstructors()[0]
-                    .newInstance(resourceName, resourceType, service, serviceid, actionid, method);
+                return (SncpActionServlet) newClazz.getConstructors()[0].newInstance(
+                        resourceName, resourceType, service, serviceid, actionid, method);
             } catch (Exception ex) {
-                throw new SncpException(ex); //不可能会发生
+                throw new SncpException(ex); // 不可能会发生
             }
         }
     }

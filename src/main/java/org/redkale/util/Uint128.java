@@ -9,11 +9,9 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
- * 16bytes数据结构
- * 注意： 为了提高性能， Uint128中的bytes是直接返回， 不得对bytes的内容进行修改。
+ * 16bytes数据结构 注意： 为了提高性能， Uint128中的bytes是直接返回， 不得对bytes的内容进行修改。
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -23,11 +21,12 @@ public final class Uint128 extends Number implements Comparable<Uint128> {
 
     final byte[] value;
 
-//    private Uint128(long v1, long v2) {  //暂时不用
-//        this.value = new byte[]{(byte) (v1 >> 56), (byte) (v1 >> 48), (byte) (v1 >> 40), (byte) (v1 >> 32),
-//            (byte) (v1 >> 24), (byte) (v1 >> 16), (byte) (v1 >> 8), (byte) v1, (byte) (v2 >> 56), (byte) (v2 >> 48), (byte) (v2 >> 40), (byte) (v2 >> 32),
-//            (byte) (v2 >> 24), (byte) (v2 >> 16), (byte) (v2 >> 8), (byte) v2};
-//    }
+    //    private Uint128(long v1, long v2) {  //暂时不用
+    //        this.value = new byte[]{(byte) (v1 >> 56), (byte) (v1 >> 48), (byte) (v1 >> 40), (byte) (v1 >> 32),
+    //            (byte) (v1 >> 24), (byte) (v1 >> 16), (byte) (v1 >> 8), (byte) v1, (byte) (v2 >> 56), (byte) (v2 >>
+    // 48), (byte) (v2 >> 40), (byte) (v2 >> 32),
+    //            (byte) (v2 >> 24), (byte) (v2 >> 16), (byte) (v2 >> 8), (byte) v2};
+    //    }
     private Uint128(byte[] bytes) {
         if (bytes == null || bytes.length != 16) {
             throw new NumberFormatException("Not 16 length bytes");
@@ -40,10 +39,22 @@ public final class Uint128 extends Number implements Comparable<Uint128> {
     }
 
     public static Uint128 create(byte[] bs) {
-        if (bs[15] == 0 && bs[14] == 0 && bs[13] == 0 && bs[12] == 0
-            && bs[11] == 0 && bs[10] == 0 && bs[9] == 0 && bs[8] == 0
-            && bs[7] == 0 && bs[6] == 0 && bs[5] == 0 && bs[4] == 0
-            && bs[3] == 0 && bs[2] == 0 && bs[1] == 0 && bs[0] == 0) {
+        if (bs[15] == 0
+                && bs[14] == 0
+                && bs[13] == 0
+                && bs[12] == 0
+                && bs[11] == 0
+                && bs[10] == 0
+                && bs[9] == 0
+                && bs[8] == 0
+                && bs[7] == 0
+                && bs[6] == 0
+                && bs[5] == 0
+                && bs[4] == 0
+                && bs[3] == 0
+                && bs[2] == 0
+                && bs[1] == 0
+                && bs[0] == 0) {
             return ZERO;
         }
         return new Uint128(bs);
@@ -52,10 +63,22 @@ public final class Uint128 extends Number implements Comparable<Uint128> {
     public static Uint128 read(ByteBuffer buffer) {
         byte[] bs = new byte[16];
         buffer.get(bs);
-        if (bs[15] == 0 && bs[14] == 0 && bs[13] == 0 && bs[12] == 0
-            && bs[11] == 0 && bs[10] == 0 && bs[9] == 0 && bs[8] == 0
-            && bs[7] == 0 && bs[6] == 0 && bs[5] == 0 && bs[4] == 0
-            && bs[3] == 0 && bs[2] == 0 && bs[1] == 0 && bs[0] == 0) {
+        if (bs[15] == 0
+                && bs[14] == 0
+                && bs[13] == 0
+                && bs[12] == 0
+                && bs[11] == 0
+                && bs[10] == 0
+                && bs[9] == 0
+                && bs[8] == 0
+                && bs[7] == 0
+                && bs[6] == 0
+                && bs[5] == 0
+                && bs[4] == 0
+                && bs[3] == 0
+                && bs[2] == 0
+                && bs[1] == 0
+                && bs[0] == 0) {
             return ZERO;
         }
         return new Uint128(bs);
@@ -106,13 +129,13 @@ public final class Uint128 extends Number implements Comparable<Uint128> {
     @Override
     public long longValue() {
         return ((((long) value[8] & 0xff) << 56)
-            | (((long) value[9] & 0xff) << 48)
-            | (((long) value[10] & 0xff) << 40)
-            | (((long) value[11] & 0xff) << 32)
-            | (((long) value[12] & 0xff) << 24)
-            | (((long) value[13] & 0xff) << 16)
-            | (((long) value[14] & 0xff) << 8)
-            | (((long) value[15] & 0xff)));
+                | (((long) value[9] & 0xff) << 48)
+                | (((long) value[10] & 0xff) << 40)
+                | (((long) value[11] & 0xff) << 32)
+                | (((long) value[12] & 0xff) << 24)
+                | (((long) value[13] & 0xff) << 16)
+                | (((long) value[14] & 0xff) << 8)
+                | (((long) value[15] & 0xff)));
     }
 
     @Override
@@ -137,5 +160,4 @@ public final class Uint128 extends Number implements Comparable<Uint128> {
         }
         return 0;
     }
-
 }

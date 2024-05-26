@@ -5,6 +5,9 @@
  */
 package org.redkale.source;
 
+import static org.redkale.boot.Application.RESNAME_APP_EXECUTOR;
+import static org.redkale.source.DataSources.*;
+
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -16,22 +19,19 @@ import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Comment;
 import org.redkale.annotation.ResourceType;
-import static org.redkale.boot.Application.RESNAME_APP_EXECUTOR;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.inject.Resourcable;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.net.WorkThread;
 import org.redkale.persistence.Entity;
 import org.redkale.service.*;
-import static org.redkale.source.DataSources.*;
 import org.redkale.util.*;
 
 /**
  * DataSource的S抽象实现类 <br>
  * 注意: 所有的操作只能作用在一张表上，不能同时变更多张表
  *
- *
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.5.0
@@ -57,9 +57,11 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     public void init(AnyValue conf) {
         super.init(conf);
         if (conf.getAnyValue("read") == null) {
-            this.sourceThreads = conf.getIntValue(DATA_SOURCE_THREADS, conf.getIntValue(DATA_SOURCE_MAXCONNS, Utility.cpus()));
+            this.sourceThreads =
+                    conf.getIntValue(DATA_SOURCE_THREADS, conf.getIntValue(DATA_SOURCE_MAXCONNS, Utility.cpus()));
         } else {
-            this.sourceThreads = conf.getAnyValue("read").getIntValue(DATA_SOURCE_THREADS, conf.getIntValue(DATA_SOURCE_MAXCONNS, Utility.cpus()));
+            this.sourceThreads = conf.getAnyValue("read")
+                    .getIntValue(DATA_SOURCE_THREADS, conf.getIntValue(DATA_SOURCE_MAXCONNS, Utility.cpus()));
         }
     }
 
@@ -82,7 +84,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             return info;
         }
         String url0 = url.substring(url.indexOf("://") + 3);
-        int pos = url0.indexOf('?'); //127.0.0.1:5432/db?charset=utr8&xxx=yy
+        int pos = url0.indexOf('?'); // 127.0.0.1:5432/db?charset=utr8&xxx=yy
         if (pos > 0) {
             String params = url0.substring(pos + 1).replace("&amp;", "&");
             for (String param : params.split("&")) {
@@ -94,7 +96,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             }
             url0 = url0.substring(0, pos);
         }
-        pos = url0.indexOf('/'); //127.0.0.1:5432/db
+        pos = url0.indexOf('/'); // 127.0.0.1:5432/db
         if (pos > 0) {
             info.database = url0.substring(pos + 1);
             url0 = url0.substring(0, pos);
@@ -141,7 +143,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             executorLock.lock();
             try {
                 if (this.sourceExecutor == null) {
-                    this.sourceExecutor = WorkThread.createWorkExecutor(sourceThreads, "Redkale-DataSource-WorkThread-" + resourceName() + "-%s");
+                    this.sourceExecutor = WorkThread.createWorkExecutor(
+                            sourceThreads, "Redkale-DataSource-WorkThread-" + resourceName() + "-%s");
                 }
             } finally {
                 executorLock.unlock();
@@ -178,7 +181,6 @@ public abstract class AbstractDataSource extends AbstractService implements Data
      * 是否虚拟化的持久对象
      *
      * @param info EntityInfo
-     *
      * @return boolean
      */
     protected boolean isOnlyCache(EntityInfo info) {
@@ -188,9 +190,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     /**
      * 是否可以使用缓存，一般包含关联查询就不使用缓存
      *
-     * @param node          过滤条件
+     * @param node 过滤条件
      * @param entityApplyer 函数
-     *
      * @return boolean
      */
     protected boolean isCacheUseable(FilterNode node, Function<Class, EntityInfo> entityApplyer) {
@@ -200,10 +201,9 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     /**
      * 生成过滤函数
      *
-     * @param <T>   泛型
-     * @param node  过滤条件
+     * @param <T> 泛型
+     * @param node 过滤条件
      * @param cache 缓存
-     *
      * @return Predicate
      */
     protected <T> Predicate<T> createPredicate(FilterNode node, EntityCache<T> cache) {
@@ -213,11 +213,10 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     /**
      * 根据ResultSet获取对象
      *
-     * @param <T>  泛型
+     * @param <T> 泛型
      * @param info EntityInfo
      * @param sels 过滤字段
-     * @param row  ResultSet
-     *
+     * @param row ResultSet
      * @return 对象
      */
     protected <T> T getEntityValue(EntityInfo<T> info, final SelectColumn sels, final EntityInfo.DataResultSetRow row) {
@@ -227,10 +226,9 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     /**
      * 根据翻页参数构建排序SQL
      *
-     * @param <T>     泛型
-     * @param info    EntityInfo
+     * @param <T> 泛型
+     * @param info EntityInfo
      * @param flipper 翻页参数
-     *
      * @return SQL
      */
     protected <T> String createSQLOrderby(EntityInfo<T> info, Flipper flipper) {
@@ -241,7 +239,6 @@ public abstract class AbstractDataSource extends AbstractService implements Data
      * 根据过滤条件生成关联表与别名的映射关系
      *
      * @param node 过滤条件
-     *
      * @return Map
      */
     protected Map<Class, String> getJoinTabalis(FilterNode node) {
@@ -251,37 +248,40 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     /**
      * 加载指定类的EntityInfo
      *
-     * @param <T>            泛型
-     * @param clazz          类
+     * @param <T> 泛型
+     * @param clazz 类
      * @param cacheForbidden 是否屏蔽缓存
-     * @param props          配置信息
-     * @param fullloader     加载器
-     *
+     * @param props 配置信息
+     * @param fullloader 加载器
      * @return EntityInfo
      */
-    protected <T> EntityInfo<T> loadEntityInfo(Class<T> clazz, final boolean cacheForbidden, 
-        final Properties props, BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader) {
+    protected <T> EntityInfo<T> loadEntityInfo(
+            Class<T> clazz,
+            final boolean cacheForbidden,
+            final Properties props,
+            BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader) {
         return EntityInfo.load(clazz, cacheForbidden, props, this, fullloader);
     }
 
     /**
      * 检查对象是否都是同一个Entity类
      *
-     * @param <T>     泛型
-     * @param action  操作
+     * @param <T> 泛型
+     * @param action 操作
      * @param entitys 对象集合
-     *
      */
     protected <T> void checkEntity(String action, T... entitys) {
         Class clazz = null;
         for (T val : entitys) {
             if (clazz == null) {
                 clazz = val.getClass();
-                if (clazz.getAnnotation(Entity.class) == null && clazz.getAnnotation(javax.persistence.Entity.class) == null) {
+                if (clazz.getAnnotation(Entity.class) == null
+                        && clazz.getAnnotation(javax.persistence.Entity.class) == null) {
                     throw new SourceException("Entity Class " + clazz + " must be on Annotation @Entity");
                 }
             } else if (clazz != val.getClass()) {
-                throw new SourceException("DataSource." + action + " must the same Class Entity, but diff is " + clazz + " and " + val.getClass());
+                throw new SourceException("DataSource." + action + " must the same Class Entity, but diff is " + clazz
+                        + " and " + val.getClass());
             }
         }
     }
@@ -350,11 +350,10 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     /**
      * 根据主键值更新对象的多个column对应的值， 必须是Entity Class
      *
-     * @param <T>    Entity类的泛型
-     * @param clazz  Entity类
-     * @param node   过滤条件
+     * @param <T> Entity类的泛型
+     * @param clazz Entity类
+     * @param node 过滤条件
      * @param values 字段值
-     *
      * @return 更新的数据条数
      */
     @Override
@@ -363,7 +362,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T> CompletableFuture<Integer> updateColumnAsync(final Class<T> clazz, final FilterNode node, final ColumnValue... values) {
+    public <T> CompletableFuture<Integer> updateColumnAsync(
+            final Class<T> clazz, final FilterNode node, final ColumnValue... values) {
         return updateColumnAsync(clazz, node, null, values);
     }
 
@@ -383,7 +383,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T> CompletableFuture<Integer> updateColumnAsync(final T entity, final FilterNode node, final String... columns) {
+    public <T> CompletableFuture<Integer> updateColumnAsync(
+            final T entity, final FilterNode node, final String... columns) {
         return updateColumnAsync(entity, node, SelectColumn.includes(columns));
     }
 
@@ -393,18 +394,20 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(final Class entityClass, final FilterFuncColumn... columns) {
+    public <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(
+            final Class entityClass, final FilterFuncColumn... columns) {
         return getNumberMapAsync(entityClass, (FilterNode) null, columns);
     }
 
     @Override
-    public <N extends Number> Map<String, N> getNumberMap(final Class entityClass, final FilterBean bean, final FilterFuncColumn... columns) {
+    public <N extends Number> Map<String, N> getNumberMap(
+            final Class entityClass, final FilterBean bean, final FilterFuncColumn... columns) {
         return getNumberMap(entityClass, FilterNodeBean.createFilterNode(bean), columns);
     }
 
     @Override
-    public <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(final Class entityClass, 
-        final FilterBean bean, final FilterFuncColumn... columns) {
+    public <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(
+            final Class entityClass, final FilterBean bean, final FilterFuncColumn... columns) {
         return getNumberMapAsync(entityClass, FilterNodeBean.createFilterNode(bean), columns);
     }
 
@@ -414,132 +417,159 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final String column) {
+    public CompletableFuture<Number> getNumberResultAsync(
+            final Class entityClass, final FilterFunc func, final String column) {
         return getNumberResultAsync(entityClass, func, null, column, (FilterNode) null);
     }
 
     @Override
-    public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column, FilterBean bean) {
+    public Number getNumberResult(
+            final Class entityClass, final FilterFunc func, final String column, FilterBean bean) {
         return getNumberResult(entityClass, func, null, column, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final String column, final FilterBean bean) {
+    public CompletableFuture<Number> getNumberResultAsync(
+            final Class entityClass, final FilterFunc func, final String column, final FilterBean bean) {
         return getNumberResultAsync(entityClass, func, null, column, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public Number getNumberResult(final Class entityClass, final FilterFunc func, final String column, final FilterNode node) {
+    public Number getNumberResult(
+            final Class entityClass, final FilterFunc func, final String column, final FilterNode node) {
         return getNumberResult(entityClass, func, null, column, node);
     }
 
     @Override
-    public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final String column, final FilterNode node) {
+    public CompletableFuture<Number> getNumberResultAsync(
+            final Class entityClass, final FilterFunc func, final String column, final FilterNode node) {
         return getNumberResultAsync(entityClass, func, null, column, node);
     }
 
     @Override
-    public Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, final String column) {
+    public Number getNumberResult(
+            final Class entityClass, final FilterFunc func, final Number defVal, final String column) {
         return getNumberResult(entityClass, func, defVal, column, (FilterNode) null);
     }
 
     @Override
-    public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, final Number defVal, final String column) {
+    public CompletableFuture<Number> getNumberResultAsync(
+            final Class entityClass, final FilterFunc func, final Number defVal, final String column) {
         return getNumberResultAsync(entityClass, func, defVal, column, (FilterNode) null);
     }
 
     @Override
-    public Number getNumberResult(final Class entityClass, final FilterFunc func, final Number defVal, final String column, FilterBean bean) {
+    public Number getNumberResult(
+            final Class entityClass, final FilterFunc func, final Number defVal, final String column, FilterBean bean) {
         return getNumberResult(entityClass, func, defVal, column, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public CompletableFuture<Number> getNumberResultAsync(final Class entityClass, final FilterFunc func, 
-        final Number defVal, final String column, FilterBean bean) {
+    public CompletableFuture<Number> getNumberResultAsync(
+            final Class entityClass, final FilterFunc func, final Number defVal, final String column, FilterBean bean) {
         return getNumberResultAsync(entityClass, func, defVal, column, FilterNodeBean.createFilterNode(bean));
     }
 
-    //------------------------ queryColumnMapCompose ------------------------
+    // ------------------------ queryColumnMapCompose ------------------------
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, 
-        final FilterFunc func, final String funcColumn) {
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(
+            final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn) {
         return queryColumnMap(entityClass, keyColumn, func, funcColumn, (FilterNode) null);
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(final Class<T> entityClass, 
-        final String keyColumn, final FilterFunc func, final String funcColumn) {
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(
+            final Class<T> entityClass, final String keyColumn, final FilterFunc func, final String funcColumn) {
         return queryColumnMapAsync(entityClass, keyColumn, func, funcColumn, (FilterNode) null);
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(final Class<T> entityClass, final String keyColumn, 
-        final FilterFunc func, final String funcColumn, final FilterBean bean) {
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(
+            final Class<T> entityClass,
+            final String keyColumn,
+            final FilterFunc func,
+            final String funcColumn,
+            final FilterBean bean) {
         return queryColumnMap(entityClass, keyColumn, func, funcColumn, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(final Class<T> entityClass, 
-        final String keyColumn, final FilterFunc func, final String funcColumn, final FilterBean bean) {
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(
+            final Class<T> entityClass,
+            final String keyColumn,
+            final FilterFunc func,
+            final String funcColumn,
+            final FilterBean bean) {
         return queryColumnMapAsync(entityClass, keyColumn, func, funcColumn, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(final Class<T> entityClass, 
-        final ColumnNode[] funcNodes, final String groupByColumn) {
+    public <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(
+            final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn) {
         return queryColumnMap(entityClass, funcNodes, groupByColumn, (FilterNode) null);
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(final Class<T> entityClass, 
-        final ColumnNode[] funcNodes, final String groupByColumn) {
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(
+            final Class<T> entityClass, final ColumnNode[] funcNodes, final String groupByColumn) {
         return queryColumnMapAsync(entityClass, funcNodes, groupByColumn, (FilterNode) null);
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(final Class<T> entityClass, 
-        final ColumnNode[] funcNodes, final String groupByColumn, final FilterBean bean) {
+    public <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(
+            final Class<T> entityClass,
+            final ColumnNode[] funcNodes,
+            final String groupByColumn,
+            final FilterBean bean) {
         return queryColumnMap(entityClass, funcNodes, groupByColumn, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(final Class<T> entityClass, 
-        final ColumnNode[] funcNodes, final String groupByColumn, final FilterBean bean) {
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(
+            final Class<T> entityClass,
+            final ColumnNode[] funcNodes,
+            final String groupByColumn,
+            final FilterBean bean) {
         return queryColumnMapAsync(entityClass, funcNodes, groupByColumn, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(final Class<T> entityClass, 
-        final ColumnNode[] funcNodes, final String[] groupByColumns) {
+    public <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(
+            final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns) {
         return queryColumnMap(entityClass, funcNodes, groupByColumns, (FilterNode) null);
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(final Class<T> entityClass, 
-        final ColumnNode[] funcNodes, final String[] groupByColumns) {
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(
+            final Class<T> entityClass, final ColumnNode[] funcNodes, final String[] groupByColumns) {
         return queryColumnMapAsync(entityClass, funcNodes, groupByColumns, (FilterNode) null);
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(final Class<T> entityClass, 
-        final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterBean bean) {
+    public <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(
+            final Class<T> entityClass,
+            final ColumnNode[] funcNodes,
+            final String[] groupByColumns,
+            final FilterBean bean) {
         return queryColumnMap(entityClass, funcNodes, groupByColumns, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(final Class<T> entityClass, 
-        final ColumnNode[] funcNodes, final String[] groupByColumns, final FilterBean bean) {
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(
+            final Class<T> entityClass,
+            final ColumnNode[] funcNodes,
+            final String[] groupByColumns,
+            final FilterBean bean) {
         return queryColumnMapAsync(entityClass, funcNodes, groupByColumns, FilterNodeBean.createFilterNode(bean));
     }
 
-    //----------------------------- findCompose -----------------------------
+    // ----------------------------- findCompose -----------------------------
     /**
      * 根据主键获取对象
      *
-     * @param <T>   Entity类的泛型
+     * @param <T> Entity类的泛型
      * @param clazz Entity类
-     * @param pk    主键值
-     *
+     * @param pk 主键值
      * @return Entity对象
      */
     @Override
@@ -598,7 +628,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, final Serializable pk) {
+    public <T> CompletableFuture<Serializable> findColumnAsync(
+            final Class<T> clazz, final String column, final Serializable pk) {
         return findColumnAsync(clazz, column, null, pk);
     }
 
@@ -608,7 +639,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, final FilterBean bean) {
+    public <T> CompletableFuture<Serializable> findColumnAsync(
+            final Class<T> clazz, final String column, final FilterBean bean) {
         return findColumnAsync(clazz, column, null, FilterNodeBean.createFilterNode(bean));
     }
 
@@ -618,18 +650,20 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, final FilterNode node) {
+    public <T> CompletableFuture<Serializable> findColumnAsync(
+            final Class<T> clazz, final String column, final FilterNode node) {
         return findColumnAsync(clazz, column, null, node);
     }
 
     @Override
-    public <T> Serializable findColumn(final Class<T> clazz, final String column, final Serializable defValue, final FilterBean bean) {
+    public <T> Serializable findColumn(
+            final Class<T> clazz, final String column, final Serializable defValue, final FilterBean bean) {
         return findColumn(clazz, column, defValue, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T> CompletableFuture<Serializable> findColumnAsync(final Class<T> clazz, final String column, 
-        final Serializable defValue, final FilterBean bean) {
+    public <T> CompletableFuture<Serializable> findColumnAsync(
+            final Class<T> clazz, final String column, final Serializable defValue, final FilterBean bean) {
         return findColumnAsync(clazz, column, defValue, FilterNodeBean.createFilterNode(bean));
     }
 
@@ -643,132 +677,134 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         return existsAsync(clazz, FilterNodeBean.createFilterNode(bean));
     }
 
-    //-----------------------list set----------------------------
+    // -----------------------list set----------------------------
     @Override
-    public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, 
-        final String column, final Serializable colval) {
+    public <T, V extends Serializable> Set<V> queryColumnSet(
+            final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval) {
         return queryColumnSet(selectedColumn, clazz, null, FilterNodes.create(column, colval));
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, 
-        final Class<T> clazz, final String column, final Serializable colval) {
+    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(
+            final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval) {
         return queryColumnSetAsync(selectedColumn, clazz, null, FilterNodes.create(column, colval));
     }
 
     @Override
-    public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
+    public <T, V extends Serializable> Set<V> queryColumnSet(
+            final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
         return queryColumnSet(selectedColumn, clazz, null, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, 
-        final Class<T> clazz, final FilterBean bean) {
+    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(
+            final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
         return queryColumnSetAsync(selectedColumn, clazz, null, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, final FilterNode node) {
+    public <T, V extends Serializable> Set<V> queryColumnSet(
+            final String selectedColumn, final Class<T> clazz, final FilterNode node) {
         return queryColumnSet(selectedColumn, clazz, null, node);
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, 
-        final Class<T> clazz, final FilterNode node) {
+    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(
+            final String selectedColumn, final Class<T> clazz, final FilterNode node) {
         return queryColumnSetAsync(selectedColumn, clazz, null, node);
     }
 
     @Override
-    public <T, V extends Serializable> Set<V> queryColumnSet(final String selectedColumn, final Class<T> clazz, 
-        final Flipper flipper, final FilterBean bean) {
+    public <T, V extends Serializable> Set<V> queryColumnSet(
+            final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
         return queryColumnSet(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(final String selectedColumn, 
-        final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(
+            final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
         return queryColumnSetAsync(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, 
-        final String column, final Serializable colval) {
+    public <T, V extends Serializable> List<V> queryColumnList(
+            final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval) {
         return queryColumnList(selectedColumn, clazz, null, FilterNodes.create(column, colval));
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, 
-        final Class<T> clazz, final String column, final Serializable colval) {
+    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(
+            final String selectedColumn, final Class<T> clazz, final String column, final Serializable colval) {
         return queryColumnListAsync(selectedColumn, clazz, null, FilterNodes.create(column, colval));
     }
 
     @Override
-    public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
+    public <T, V extends Serializable> List<V> queryColumnList(
+            final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
         return queryColumnList(selectedColumn, clazz, null, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, 
-        final Class<T> clazz, final FilterBean bean) {
+    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(
+            final String selectedColumn, final Class<T> clazz, final FilterBean bean) {
         return queryColumnListAsync(selectedColumn, clazz, null, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, final FilterNode node) {
+    public <T, V extends Serializable> List<V> queryColumnList(
+            final String selectedColumn, final Class<T> clazz, final FilterNode node) {
         return queryColumnList(selectedColumn, clazz, null, node);
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, 
-        final Class<T> clazz, final FilterNode node) {
+    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(
+            final String selectedColumn, final Class<T> clazz, final FilterNode node) {
         return queryColumnListAsync(selectedColumn, clazz, null, node);
     }
 
     @Override
-    public <T, V extends Serializable> List<V> queryColumnList(final String selectedColumn, final Class<T> clazz, 
-        final Flipper flipper, final FilterBean bean) {
+    public <T, V extends Serializable> List<V> queryColumnList(
+            final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
         return queryColumnList(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(final String selectedColumn, 
-        final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(
+            final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
         return queryColumnListAsync(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     /**
      * 根据指定参数查询对象某个字段的集合
      *
-     * @param <T>            Entity类的泛型
-     * @param <V>            字段值的类型
+     * @param <T> Entity类的泛型
+     * @param <V> 字段值的类型
      * @param selectedColumn 字段名
-     * @param clazz          Entity类
-     * @param flipper        翻页对象
-     * @param bean           过滤Bean
-     *
+     * @param clazz Entity类
+     * @param flipper 翻页对象
+     * @param bean 过滤Bean
      * @return 字段集合
      */
     @Override
-    public <T, V extends Serializable> Sheet<V> queryColumnSheet(final String selectedColumn, Class<T> clazz, 
-        final Flipper flipper, final FilterBean bean) {
+    public <T, V extends Serializable> Sheet<V> queryColumnSheet(
+            final String selectedColumn, Class<T> clazz, final Flipper flipper, final FilterBean bean) {
         return queryColumnSheet(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(final String selectedColumn, 
-        final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+    public <T, V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(
+            final String selectedColumn, final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
         return queryColumnSheetAsync(selectedColumn, clazz, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     /**
-     * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的Map集合, 主键值为key <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
-     * @param <K>       主键泛型
-     * @param <T>       Entity泛型
-     * @param clazz     Entity类
+     * @param <K> 主键泛型
+     * @param <T> Entity泛型
+     * @param clazz Entity类
      * @param keyStream 主键Stream
-     *
      * @return Entity的集合
      */
     @Override
@@ -777,19 +813,19 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final Stream<K> keyStream) {
+    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(
+            final Class<T> clazz, final Stream<K> keyStream) {
         return queryMapAsync(clazz, null, keyStream);
     }
 
     /**
-     * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的Map集合, 主键值为key <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
-     * @param <K>   主键泛型
-     * @param <T>   Entity泛型
+     * @param <K> 主键泛型
+     * @param <T> Entity泛型
      * @param clazz Entity类
-     * @param bean  FilterBean
-     *
+     * @param bean FilterBean
      * @return Entity的集合
      */
     @Override
@@ -798,19 +834,19 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final FilterBean bean) {
+    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(
+            final Class<T> clazz, final FilterBean bean) {
         return queryMapAsync(clazz, null, FilterNodeBean.createFilterNode(bean));
     }
 
     /**
-     * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的Map集合, 主键值为key <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
-     * @param <K>   主键泛型
-     * @param <T>   Entity泛型
+     * @param <K> 主键泛型
+     * @param <T> Entity泛型
      * @param clazz Entity类
-     * @param node  FilterNode
-     *
+     * @param node FilterNode
      * @return Entity的集合
      */
     @Override
@@ -819,40 +855,41 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final FilterNode node) {
+    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(
+            final Class<T> clazz, final FilterNode node) {
         return queryMapAsync(clazz, null, node);
     }
 
     /**
-     * 查询符合过滤条件记录的Map集合, 主键值为key   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的Map集合, 主键值为key <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
-     * @param <K>     主键泛型
-     * @param <T>     Entity泛型
-     * @param clazz   Entity类
+     * @param <K> 主键泛型
+     * @param <T> Entity泛型
+     * @param clazz Entity类
      * @param selects 指定字段
-     * @param bean    FilterBean
-     *
+     * @param bean FilterBean
      * @return Entity的集合
      */
     @Override
-    public <K extends Serializable, T> Map<K, T> queryMap(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
+    public <K extends Serializable, T> Map<K, T> queryMap(
+            final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
         return queryMap(clazz, selects, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
+    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(
+            final Class<T> clazz, final SelectColumn selects, final FilterBean bean) {
         return queryMapAsync(clazz, selects, FilterNodeBean.createFilterNode(bean));
     }
 
     /**
      * 根据指定字段值查询对象集合
      *
-     * @param <T>    Entity类的泛型
-     * @param clazz  Entity类
+     * @param <T> Entity类的泛型
+     * @param clazz Entity类
      * @param column 过滤字段名
      * @param colval 过滤字段值
-     *
      * @return Entity对象的集合
      */
     @Override
@@ -861,7 +898,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final String column, final Serializable colval) {
+    public <T> CompletableFuture<Set<T>> querySetAsync(
+            final Class<T> clazz, final String column, final Serializable colval) {
         return querySetAsync(clazz, (SelectColumn) null, null, FilterNodes.create(column, colval));
     }
 
@@ -878,10 +916,9 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     /**
      * 根据过滤对象FilterBean查询对象集合
      *
-     * @param <T>   Entity类的泛型
+     * @param <T> Entity类的泛型
      * @param clazz Entity类
-     * @param bean  过滤Bean
-     *
+     * @param bean 过滤Bean
      * @return Entity对象集合
      */
     @Override
@@ -907,11 +944,10 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     /**
      * 根据过滤对象FilterBean查询对象集合， 对象只填充或排除SelectField指定的字段
      *
-     * @param <T>     Entity类的泛型
-     * @param clazz   Entity类
+     * @param <T> Entity类的泛型
+     * @param clazz Entity类
      * @param selects 收集的字段
-     * @param bean    过滤Bean
-     *
+     * @param bean 过滤Bean
      * @return Entity对象的集合
      */
     @Override
@@ -920,7 +956,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, SelectColumn selects, final FilterBean bean) {
+    public <T> CompletableFuture<Set<T>> querySetAsync(
+            final Class<T> clazz, SelectColumn selects, final FilterBean bean) {
         return querySetAsync(clazz, selects, null, FilterNodeBean.createFilterNode(bean));
     }
 
@@ -930,17 +967,20 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, SelectColumn selects, final FilterNode node) {
+    public <T> CompletableFuture<Set<T>> querySetAsync(
+            final Class<T> clazz, SelectColumn selects, final FilterNode node) {
         return querySetAsync(clazz, selects, null, node);
     }
 
     @Override
-    public <T> Set<T> querySet(final Class<T> clazz, final Flipper flipper, final String column, final Serializable colval) {
+    public <T> Set<T> querySet(
+            final Class<T> clazz, final Flipper flipper, final String column, final Serializable colval) {
         return querySet(clazz, null, flipper, FilterNodes.create(column, colval));
     }
 
     @Override
-    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final Flipper flipper, final String column, final Serializable colval) {
+    public <T> CompletableFuture<Set<T>> querySetAsync(
+            final Class<T> clazz, final Flipper flipper, final String column, final Serializable colval) {
         return querySetAsync(clazz, null, flipper, FilterNodes.create(column, colval));
     }
 
@@ -950,7 +990,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+    public <T> CompletableFuture<Set<T>> querySetAsync(
+            final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
         return querySetAsync(clazz, null, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
@@ -960,28 +1001,30 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+    public <T> CompletableFuture<Set<T>> querySetAsync(
+            final Class<T> clazz, final Flipper flipper, final FilterNode node) {
         return querySetAsync(clazz, null, flipper, node);
     }
 
     @Override
-    public <T> Set<T> querySet(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
+    public <T> Set<T> querySet(
+            final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
         return querySet(clazz, selects, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T> CompletableFuture<Set<T>> querySetAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
+    public <T> CompletableFuture<Set<T>> querySetAsync(
+            final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
         return querySetAsync(clazz, selects, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     /**
      * 根据指定字段值查询对象集合
      *
-     * @param <T>    Entity类的泛型
-     * @param clazz  Entity类
+     * @param <T> Entity类的泛型
+     * @param clazz Entity类
      * @param column 过滤字段名
      * @param colval 过滤字段值
-     *
      * @return Entity对象的集合
      */
     @Override
@@ -990,7 +1033,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final String column, final Serializable colval) {
+    public <T> CompletableFuture<List<T>> queryListAsync(
+            final Class<T> clazz, final String column, final Serializable colval) {
         return queryListAsync(clazz, (SelectColumn) null, null, FilterNodes.create(column, colval));
     }
 
@@ -1007,10 +1051,9 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     /**
      * 根据过滤对象FilterBean查询对象集合
      *
-     * @param <T>   Entity类的泛型
+     * @param <T> Entity类的泛型
      * @param clazz Entity类
-     * @param bean  过滤Bean
-     *
+     * @param bean 过滤Bean
      * @return Entity对象集合
      */
     @Override
@@ -1036,11 +1079,10 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     /**
      * 根据过滤对象FilterBean查询对象集合， 对象只填充或排除SelectField指定的字段
      *
-     * @param <T>     Entity类的泛型
-     * @param clazz   Entity类
+     * @param <T> Entity类的泛型
+     * @param clazz Entity类
      * @param selects 收集的字段
-     * @param bean    过滤Bean
-     *
+     * @param bean 过滤Bean
      * @return Entity对象的集合
      */
     @Override
@@ -1049,7 +1091,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, SelectColumn selects, final FilterBean bean) {
+    public <T> CompletableFuture<List<T>> queryListAsync(
+            final Class<T> clazz, SelectColumn selects, final FilterBean bean) {
         return queryListAsync(clazz, selects, null, FilterNodeBean.createFilterNode(bean));
     }
 
@@ -1059,17 +1102,20 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, SelectColumn selects, final FilterNode node) {
+    public <T> CompletableFuture<List<T>> queryListAsync(
+            final Class<T> clazz, SelectColumn selects, final FilterNode node) {
         return queryListAsync(clazz, selects, null, node);
     }
 
     @Override
-    public <T> List<T> queryList(final Class<T> clazz, final Flipper flipper, final String column, final Serializable colval) {
+    public <T> List<T> queryList(
+            final Class<T> clazz, final Flipper flipper, final String column, final Serializable colval) {
         return queryList(clazz, null, flipper, FilterNodes.create(column, colval));
     }
 
     @Override
-    public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final Flipper flipper, final String column, final Serializable colval) {
+    public <T> CompletableFuture<List<T>> queryListAsync(
+            final Class<T> clazz, final Flipper flipper, final String column, final Serializable colval) {
         return queryListAsync(clazz, null, flipper, FilterNodes.create(column, colval));
     }
 
@@ -1079,7 +1125,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+    public <T> CompletableFuture<List<T>> queryListAsync(
+            final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
         return queryListAsync(clazz, null, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
@@ -1089,29 +1136,31 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+    public <T> CompletableFuture<List<T>> queryListAsync(
+            final Class<T> clazz, final Flipper flipper, final FilterNode node) {
         return queryListAsync(clazz, null, flipper, node);
     }
 
     @Override
-    public <T> List<T> queryList(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
+    public <T> List<T> queryList(
+            final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
         return queryList(clazz, selects, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T> CompletableFuture<List<T>> queryListAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
+    public <T> CompletableFuture<List<T>> queryListAsync(
+            final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
         return queryListAsync(clazz, selects, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
-    //-----------------------sheet----------------------------
+    // -----------------------sheet----------------------------
     /**
      * 根据过滤对象FilterBean和翻页对象Flipper查询一页的数据
      *
-     * @param <T>     Entity类的泛型
-     * @param clazz   Entity类
+     * @param <T> Entity类的泛型
+     * @param clazz Entity类
      * @param flipper 翻页对象
-     * @param bean    过滤Bean
-     *
+     * @param bean 过滤Bean
      * @return Entity对象的集合
      */
     @Override
@@ -1120,7 +1169,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
+    public <T> CompletableFuture<Sheet<T>> querySheetAsync(
+            final Class<T> clazz, final Flipper flipper, final FilterBean bean) {
         return querySheetAsync(clazz, null, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
@@ -1130,28 +1180,30 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
-    public <T> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final Flipper flipper, final FilterNode node) {
+    public <T> CompletableFuture<Sheet<T>> querySheetAsync(
+            final Class<T> clazz, final Flipper flipper, final FilterNode node) {
         return querySheetAsync(clazz, null, flipper, node);
     }
 
     /**
      * 根据过滤对象FilterBean和翻页对象Flipper查询一页的数据， 对象只填充或排除SelectField指定的字段
      *
-     * @param <T>     Entity类的泛型
-     * @param clazz   Entity类
+     * @param <T> Entity类的泛型
+     * @param clazz Entity类
      * @param selects 收集的字段集合
      * @param flipper 翻页对象
-     * @param bean    过滤Bean
-     *
+     * @param bean 过滤Bean
      * @return Entity对象的集合
      */
     @Override
-    public <T> Sheet<T> querySheet(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
+    public <T> Sheet<T> querySheet(
+            final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
         return querySheet(clazz, selects, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
     @Override
-    public <T> CompletableFuture<Sheet<T>> querySheetAsync(final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
+    public <T> CompletableFuture<Sheet<T>> querySheetAsync(
+            final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterBean bean) {
         return querySheetAsync(clazz, selects, flipper, FilterNodeBean.createFilterNode(bean));
     }
 
@@ -1160,8 +1212,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         @Comment("操作对象")
         public final List<BatchAction> actions = new ArrayList();
 
-        protected DefaultDataBatch() {
-        }
+        protected DefaultDataBatch() {}
 
         public DataBatch run(Runnable task) {
             Objects.requireNonNull(task);
@@ -1169,7 +1220,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             return this;
         }
 
-        @Override  //entitys不一定是同一表的数据
+        @Override // entitys不一定是同一表的数据
         public <T> DataBatch insert(T... entitys) {
             for (T t : entitys) {
                 Objects.requireNonNull(t);
@@ -1181,7 +1232,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             return this;
         }
 
-        @Override  //entitys不一定是同一表的数据
+        @Override // entitys不一定是同一表的数据
         public <T> DataBatch insert(Collection<T> entitys) {
             for (T t : entitys) {
                 Objects.requireNonNull(t);
@@ -1193,7 +1244,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             return this;
         }
 
-        @Override  //entitys不一定是同一表的数据
+        @Override // entitys不一定是同一表的数据
         public <T> DataBatch delete(T... entitys) {
             for (T t : entitys) {
                 Objects.requireNonNull(t);
@@ -1205,7 +1256,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             return this;
         }
 
-        @Override  //entitys不一定是同一表的数据
+        @Override // entitys不一定是同一表的数据
         public <T> DataBatch delete(Collection<T> entitys) {
             for (T t : entitys) {
                 Objects.requireNonNull(t);
@@ -1248,7 +1299,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             return this;
         }
 
-        @Override  //entitys不一定是同一表的数据
+        @Override // entitys不一定是同一表的数据
         public <T> DataBatch update(T... entitys) {
             for (T t : entitys) {
                 Objects.requireNonNull(t);
@@ -1260,7 +1311,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             return this;
         }
 
-        @Override  //entitys不一定是同一表的数据
+        @Override // entitys不一定是同一表的数据
         public <T> DataBatch update(Collection<T> entitys) {
             for (T t : entitys) {
                 Objects.requireNonNull(t);
@@ -1351,12 +1402,9 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             this.actions.add(new UpdateBatchAction4(entity, node, selects));
             return this;
         }
-
     }
 
-    protected abstract static class BatchAction {
-
-    }
+    protected abstract static class BatchAction {}
 
     protected static class RunnableBatchAction extends BatchAction {
 

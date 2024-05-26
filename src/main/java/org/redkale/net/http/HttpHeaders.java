@@ -20,19 +20,17 @@ import org.redkale.util.RedkaleException;
 /**
  * Http Header Object
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.8.0
  */
 public class HttpHeaders implements RestHeaders, Serializable {
 
-    //value值只能是String、List<String>
+    // value值只能是String、List<String>
     protected LinkedHashMap<String, Serializable> map;
 
-    protected HttpHeaders() {
-    }
+    protected HttpHeaders() {}
 
     public static HttpHeaders create() {
         return new HttpHeaders();
@@ -51,7 +49,6 @@ public class HttpHeaders implements RestHeaders, Serializable {
      * 无需校验参数合法性
      *
      * @param map 参数
-     *
      * @return HttpHeaders
      */
     public static HttpHeaders ofValid(Map<String, Serializable> map) {
@@ -78,7 +75,7 @@ public class HttpHeaders implements RestHeaders, Serializable {
         }
         if (val instanceof Collection) {
             for (Object item : (Collection) val) {
-                return String.valueOf(item); //return fisrt value
+                return String.valueOf(item); // return fisrt value
             }
             return defaultValue;
         }
@@ -169,7 +166,7 @@ public class HttpHeaders implements RestHeaders, Serializable {
         return null;
     }
 
-    //服务端接收，无需校验参数合法性
+    // 服务端接收，无需校验参数合法性
     void addValid(String name, Serializable value) {
         if (this.map == null) {
             this.map = new LinkedHashMap<>();
@@ -259,7 +256,7 @@ public class HttpHeaders implements RestHeaders, Serializable {
         return this;
     }
 
-    //服务端接收，无需校验参数合法性
+    // 服务端接收，无需校验参数合法性
     void setValid(String name, Serializable value) {
         if (this.map == null) {
             this.map = new LinkedHashMap<>();

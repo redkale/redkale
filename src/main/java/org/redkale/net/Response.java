@@ -17,8 +17,7 @@ import org.redkale.util.*;
 /**
  * 协议响应对象
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <C> Context的子类型
@@ -29,9 +28,9 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected final C context;
 
-    protected Supplier<Response> responseSupplier; //虚拟构建的Response可能不存在responseSupplier
+    protected Supplier<Response> responseSupplier; // 虚拟构建的Response可能不存在responseSupplier
 
-    protected Consumer<Response> responseConsumer; //虚拟构建的Response可能不存在responseConsumer
+    protected Consumer<Response> responseConsumer; // 虚拟构建的Response可能不存在responseConsumer
 
     protected final ExecutorService workExecutor;
 
@@ -45,7 +44,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected boolean inNonBlocking = true;
 
-    protected Object output; //输出的结果对象
+    protected Object output; // 输出的结果对象
 
     protected BiConsumer<R, Response<C, R>> recycleListener;
 
@@ -70,7 +69,6 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         public void failed(Throwable exc, Void attachment) {
             completeInIOThread(true);
         }
-
     };
 
     private final CompletionHandler finishBufferIOThreadHandler = new CompletionHandler<Integer, ByteBuffer>() {
@@ -94,7 +92,6 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             }
             completeInIOThread(true);
         }
-
     };
 
     private final CompletionHandler finishBuffersIOThreadHandler = new CompletionHandler<Integer, ByteBuffer[]>() {
@@ -118,7 +115,6 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             }
             completeInIOThread(true);
         }
-
     };
 
     protected Response(C context, final R request) {
@@ -126,7 +122,8 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         this.request = request;
         this.thread = WorkThread.currentWorkThread();
         this.writeBuffer = context != null ? ByteBuffer.allocateDirect(context.getBufferCapacity()) : null;
-        this.workExecutor = context == null || context.workExecutor == null ? ForkJoinPool.commonPool() : context.workExecutor;
+        this.workExecutor =
+                context == null || context.workExecutor == null ? ForkJoinPool.commonPool() : context.workExecutor;
     }
 
     protected AsyncConnection removeChannel() {
@@ -283,7 +280,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     /**
      * Servlet.execute执行时报错
      *
-     * 被重载后kill不一定为true
+     * <p>被重载后kill不一定为true
      *
      * @param t Throwable
      */
@@ -321,9 +318,9 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     private void completeInIOThread(boolean kill) {
         if (!this.inited) {
-            return; //避免重复关闭
+            return; // 避免重复关闭
         }
-        //System.println("耗时: " + (System.currentTimeMillis() - request.createtime));
+        // System.println("耗时: " + (System.currentTimeMillis() - request.createtime));
         if (kill) {
             refuseAlive();
         }
@@ -353,7 +350,9 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                 Supplier<Response> poolSupplier = this.responseSupplier;
                 Consumer<Response> poolConsumer = this.responseConsumer;
                 this.recycle();
-                new ProtocolCodec(context, poolSupplier, poolConsumer, conn).response(this).run(null);
+                new ProtocolCodec(context, poolSupplier, poolConsumer, conn)
+                        .response(this)
+                        .run(null);
             }
         } else {
             this.responseConsumer.accept(this);
@@ -385,7 +384,8 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             refuseAlive();
         }
         if (request.pipelineIndex > 0) {
-            boolean allCompleted = this.channel.appendPipeline(request.pipelineIndex, request.pipelineCount, bs, offset, length);
+            boolean allCompleted =
+                    this.channel.appendPipeline(request.pipelineIndex, request.pipelineCount, bs, offset, length);
             if (allCompleted) {
                 request.pipelineCompleted = true;
                 this.channel.writePipelineInIOThread(this.finishBytesIOThreadHandler);
@@ -409,12 +409,14 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         }
     }
 
-    public void finish(boolean kill, final byte[] bs1, int offset1, int length1, final byte[] bs2, int offset2, int length2) {
+    public void finish(
+            boolean kill, final byte[] bs1, int offset1, int length1, final byte[] bs2, int offset2, int length2) {
         if (kill) {
             refuseAlive();
         }
         if (request.pipelineIndex > 0) {
-            boolean allCompleted = this.channel.appendPipeline(request.pipelineIndex, request.pipelineCount, bs1, offset1, length1, bs2, offset2, length2);
+            boolean allCompleted = this.channel.appendPipeline(
+                    request.pipelineIndex, request.pipelineCount, bs1, offset1, length1, bs2, offset2, length2);
             if (allCompleted) {
                 request.pipelineCompleted = true;
                 this.channel.writePipelineInIOThread(this.finishBytesIOThreadHandler);
@@ -423,7 +425,8 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                 this.responseConsumer.accept(this);
             }
         } else if (this.channel.hasPipelineData()) {
-            this.channel.appendPipeline(request.pipelineIndex, request.pipelineCount, bs1, offset1, length1, bs2, offset2, length2);
+            this.channel.appendPipeline(
+                    request.pipelineIndex, request.pipelineCount, bs1, offset1, length1, bs2, offset2, length2);
             this.channel.writePipelineInIOThread(this.finishBytesIOThreadHandler);
         } else {
             this.channel.writeInIOThread(bs1, offset1, length1, bs2, offset2, length2, finishBytesIOThreadHandler);
@@ -451,7 +454,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                 this.responseConsumer.accept(this);
             }
         } else if (this.channel.hasPipelineData()) {
-            //先将pipeline数据写入完再写入buffers
+            // 先将pipeline数据写入完再写入buffers
             this.channel.writePipelineInIOThread(new CompletionHandler<Integer, Void>() {
 
                 @Override
@@ -500,7 +503,6 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                     attachment.clear();
                     handler.failed(exc, null);
                 }
-
             });
         } else {
             this.channel.write(array, handler);
@@ -533,7 +535,6 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                     handler.failed(exc, attachment);
                 }
             }
-
         });
     }
 
@@ -557,7 +558,6 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                     handler.failed(exc, attachment);
                 }
             }
-
         });
     }
 

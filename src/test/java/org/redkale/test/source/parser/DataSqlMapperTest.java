@@ -8,10 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.redkale.source.DataJdbcSource;
 import org.redkale.source.DataSqlSource;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class DataSqlMapperTest {
 
     private static DataSqlSource source = new DataJdbcSource();
@@ -24,11 +21,11 @@ public class DataSqlMapperTest {
 
     @BeforeAll
     public static void init() throws Exception {
-        //do
+        // do
     }
 
     @Test
     public void run() throws Exception {
-        //do
+        // do
     }
 }

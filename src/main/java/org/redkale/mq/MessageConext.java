@@ -10,13 +10,10 @@ import org.redkale.convert.json.JsonConvert;
 /**
  * MessageConsumer回调的上下文
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @see org.redkale.mq.MessageConsumer
- * 
  * @author zhangjx
- *
  * @since 2.8.0
  */
 public class MessageConext {
@@ -54,13 +51,11 @@ public class MessageConext {
             return false;
         }
         final MessageConext other = (MessageConext) obj;
-        return Objects.equals(this.topic, other.topic)
-            && Objects.equals(this.partition, other.partition);
+        return Objects.equals(this.topic, other.topic) && Objects.equals(this.partition, other.partition);
     }
 
     @Override
     public String toString() {
         return JsonConvert.root().convertTo(this);
     }
-
 }

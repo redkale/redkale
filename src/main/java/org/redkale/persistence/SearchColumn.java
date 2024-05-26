@@ -5,17 +5,16 @@
  */
 package org.redkale.persistence;
 
-import java.lang.annotation.Target;
-import java.lang.annotation.Retention;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
 /**
+ * 搜索引擎的数据Entity依附在setter、getter方法、字段进行简单的配置 <br>
  *
- * 搜索引擎的数据Entity依附在setter、getter方法、字段进行简单的配置  <br>
- *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.4.0
@@ -24,13 +23,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface SearchColumn {
 
-    //高亮显示参数
+    // 高亮显示参数
     public static class HighLights {
 
         public static final String HIGHLIGHT_NAME_ID = "#[id]";
 
         public static final String HIGHLIGHT_NAME_INDEX = "#[index]";
-
     }
 
     /**
@@ -97,5 +95,4 @@ public @interface SearchColumn {
      * @return String
      */
     String searchAnalyzer() default "";
-
 }

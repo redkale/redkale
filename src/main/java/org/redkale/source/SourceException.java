@@ -8,11 +8,9 @@ import org.redkale.util.RedkaleException;
 /**
  * 数据源自定义异常类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- * 
  * @since 2.8.0
  */
 public class SourceException extends RedkaleException {

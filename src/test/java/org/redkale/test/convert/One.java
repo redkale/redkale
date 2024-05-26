@@ -9,19 +9,16 @@ import java.util.Arrays;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class One {
 
     protected String key;
 
     protected int code;
 
-    protected byte[] bytes = new byte[]{3, 4, 5};
+    protected byte[] bytes = new byte[] {3, 4, 5};
 
-    protected int[] ints = new int[]{3000, 4000, 5000};
+    protected int[] ints = new int[] {3000, 4000, 5000};
 
     public One(int code) {
         this.code = code;
@@ -66,7 +63,7 @@ public class One {
     public static void main(String[] args) throws Throwable {
         int count = 100_0000;
         One one = new One(234);
-        one.bytes = new byte[]{1, 2, 3};
+        one.bytes = new byte[] {1, 2, 3};
         one.key = "哈哈";
 
         System.out.println(Arrays.toString(Utility.encodeUTF8(JsonConvert.root().convertTo(one))));
@@ -84,6 +81,5 @@ public class One {
         long e2 = System.currentTimeMillis() - s2;
         System.out.println(e);
         System.out.println(e2);
-
     }
 }

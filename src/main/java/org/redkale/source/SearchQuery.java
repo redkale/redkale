@@ -11,14 +11,11 @@ import org.redkale.convert.json.JsonConvert;
 
 /**
  * SearchQuery用于构建搜索过滤条件<br>
+ * 不被标记为&#64;org.redkale.persistence.Transient 的字段均视为过滤条件 <br>
  *
- * 不被标记为&#64;org.redkale.persistence.Transient 的字段均视为过滤条件   <br>
- *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.7.0
  */
 @ConvertImpl(SearchQuery.SearchSimpleQuery.class)
@@ -136,8 +133,7 @@ public interface SearchQuery extends java.io.Serializable {
         @FilterColumn(ignore = true)
         private Map<String, Object> extras;
 
-        public SearchSimpleQuery() {
-        }
+        public SearchSimpleQuery() {}
 
         public SearchSimpleQuery(String keyword, String... fields) {
             this.keyword = keyword;
@@ -270,7 +266,6 @@ public interface SearchQuery extends java.io.Serializable {
         public String toString() {
             return JsonConvert.root().convertTo(this);
         }
-
     }
 
     public static class SearchSimpleHighlight implements SearchHighlight {
@@ -410,7 +405,5 @@ public interface SearchQuery extends java.io.Serializable {
         public String toString() {
             return JsonConvert.root().convertTo(this);
         }
-
     }
-
 }

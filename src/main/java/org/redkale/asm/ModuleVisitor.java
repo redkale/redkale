@@ -59,36 +59,29 @@
 package org.redkale.asm;
 
 /**
- * A visitor to visit a Java module. The methods of this class must be called in
- * the following order: &#60;tt&#62;visitMainClass&#60;/tt&#62; | ( &#60;tt&#62;visitPackage&#60;/tt&#62; |
+ * A visitor to visit a Java module. The methods of this class must be called in the following order:
+ * &#60;tt&#62;visitMainClass&#60;/tt&#62; | ( &#60;tt&#62;visitPackage&#60;/tt&#62; |
  * &#60;tt&#62;visitRequire&#60;/tt&#62; | &#60;tt&#62;visitExport&#60;/tt&#62; | &#60;tt&#62;visitOpen&#60;/tt&#62; |
  * &#60;tt&#62;visitUse&#60;/tt&#62; | &#60;tt&#62;visitProvide&#60;/tt&#62; )* &#60;tt&#62;visitEnd&#60;/tt&#62;.
  *
- * The methods {@link #visitRequire(String, int, String)}, {@link #visitExport(String, int, String...)},
- * {@link #visitOpen(String, int, String...)} and {@link #visitPackage(String)}
- * take as parameter a package name or a module name. Unlike the other names which are internal names
- * (names separated by slash), module and package names are qualified names (names separated by dot).
+ * <p>The methods {@link #visitRequire(String, int, String)}, {@link #visitExport(String, int, String...)},
+ * {@link #visitOpen(String, int, String...)} and {@link #visitPackage(String)} take as parameter a package name or a
+ * module name. Unlike the other names which are internal names (names separated by slash), module and package names are
+ * qualified names (names separated by dot).
  *
  * @author Remi Forax
  */
 public abstract class ModuleVisitor {
-    /**
-     * The ASM API version implemented by this visitor. The value of this field
-     * must be {@link Opcodes#ASM6}.
-     */
+    /** The ASM API version implemented by this visitor. The value of this field must be {@link Opcodes#ASM6}. */
     protected final int api;
 
-    /**
-     * The module visitor to which this visitor must delegate method calls. May
-     * be null.
-     */
+    /** The module visitor to which this visitor must delegate method calls. May be null. */
     protected ModuleVisitor mv;
 
     /**
      * Constructs a new {@link ModuleVisitor}.
      *
-     * @param api
-     *            the ASM API version implemented by this visitor. Must be {@link Opcodes#ASM6}.
+     * @param api the ASM API version implemented by this visitor. Must be {@link Opcodes#ASM6}.
      */
     public ModuleVisitor(final int api) {
         this(api, null);
@@ -97,11 +90,8 @@ public abstract class ModuleVisitor {
     /**
      * Constructs a new {@link ModuleVisitor}.
      *
-     * @param api
-     *            the ASM API version implemented by this visitor. Must be {@link Opcodes#ASM6}.
-     * @param mv
-     *            the module visitor to which this visitor must delegate method
-     *            calls. May be null.
+     * @param api the ASM API version implemented by this visitor. Must be {@link Opcodes#ASM6}.
+     * @param mv the module visitor to which this visitor must delegate method calls. May be null.
      */
     public ModuleVisitor(final int api, final ModuleVisitor mv) {
         if (api != Opcodes.ASM6) {
@@ -137,9 +127,8 @@ public abstract class ModuleVisitor {
      * Visits a dependence of the current module.
      *
      * @param module the qualified name of the dependence.
-     * @param access the access flag of the dependence among
-     *        ACC_TRANSITIVE, ACC_STATIC_PHASE, ACC_SYNTHETIC
-     *        and ACC_MANDATED.
+     * @param access the access flag of the dependence among ACC_TRANSITIVE, ACC_STATIC_PHASE, ACC_SYNTHETIC and
+     *     ACC_MANDATED.
      * @param version the module version at compile time or null.
      */
     public void visitRequire(String module, int access, String version) {
@@ -152,12 +141,10 @@ public abstract class ModuleVisitor {
      * Visit an exported package of the current module.
      *
      * @param packaze the qualified name of the exported package.
-     * @param access the access flag of the exported package,
-     *        valid values are among {@code ACC_SYNTHETIC} and
-     *        {@code ACC_MANDATED}.
-     * @param modules the qualified names of the modules that can access to
-     *        the public classes of the exported package or
-     *        &#60;tt&#62;null&#60;/tt&#62;.
+     * @param access the access flag of the exported package, valid values are among {@code ACC_SYNTHETIC} and
+     *     {@code ACC_MANDATED}.
+     * @param modules the qualified names of the modules that can access to the public classes of the exported package
+     *     or &#60;tt&#62;null&#60;/tt&#62;.
      */
     public void visitExport(String packaze, int access, String... modules) {
         if (mv != null) {
@@ -169,12 +156,10 @@ public abstract class ModuleVisitor {
      * Visit an open package of the current module.
      *
      * @param packaze the qualified name of the opened package.
-     * @param access the access flag of the opened package,
-     *        valid values are among {@code ACC_SYNTHETIC} and
-     *        {@code ACC_MANDATED}.
-     * @param modules the qualified names of the modules that can use deep
-     *        reflection to the classes of the open package or
-     *        &#60;tt&#62;null&#60;/tt&#62;.
+     * @param access the access flag of the opened package, valid values are among {@code ACC_SYNTHETIC} and
+     *     {@code ACC_MANDATED}.
+     * @param modules the qualified names of the modules that can use deep reflection to the classes of the open package
+     *     or &#60;tt&#62;null&#60;/tt&#62;.
      */
     public void visitOpen(String packaze, int access, String... modules) {
         if (mv != null) {
@@ -183,8 +168,7 @@ public abstract class ModuleVisitor {
     }
 
     /**
-     * Visit a service used by the current module.
-     * The name must be the internal name of an interface or a class.
+     * Visit a service used by the current module. The name must be the internal name of an interface or a class.
      *
      * @param service the internal name of the service.
      */
@@ -198,8 +182,7 @@ public abstract class ModuleVisitor {
      * Visit an implementation of a service.
      *
      * @param service the internal name of the service
-     * @param providers the internal names of the implementations
-     *        of the service (there is at least one provider).
+     * @param providers the internal names of the implementations of the service (there is at least one provider).
      */
     public void visitProvide(String service, String... providers) {
         if (mv != null) {
@@ -208,8 +191,8 @@ public abstract class ModuleVisitor {
     }
 
     /**
-     * Visits the end of the module. This method, which is the last one to be
-     * called, is used to inform the visitor that everything have been visited.
+     * Visits the end of the module. This method, which is the last one to be called, is used to inform the visitor that
+     * everything have been visited.
      */
     public void visitEnd() {
         if (mv != null) {

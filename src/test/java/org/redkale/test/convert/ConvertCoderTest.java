@@ -10,10 +10,7 @@ import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.ext.BigIntegerSimpledCoder.BigIntegerHexJsonSimpledCoder;
 import org.redkale.convert.json.JsonConvert;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class ConvertCoderTest {
 
     private boolean main;

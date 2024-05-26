@@ -8,13 +8,12 @@ import org.redkale.convert.*;
 
 /**
  * 数组数据中包含不同Type的反序列化解析器 <br>
- * 如: ['aaa',{'name':'hahah'}], 需要两个Type来反序列化(String, Map&#60;String, String&#62;)  <br>
+ * 如: ['aaa',{'name':'hahah'}], 需要两个Type来反序列化(String, Map&#60;String, String&#62;) <br>
  * <b>注意: type的个数必须大于或等于结果数组元素个数， 此解析器对象不会被缓存，每次都会创建新实例</b>
  *
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.7.0
  */
 public class JsonMultiArrayDecoder implements Decodeable<JsonReader, Object[]> {
@@ -44,7 +43,7 @@ public class JsonMultiArrayDecoder implements Decodeable<JsonReader, Object[]> {
         if (len == Reader.SIGN_NULL) {
             return null;
         }
-        //len must be Reader.SIGN_NOLENGTH
+        // len must be Reader.SIGN_NOLENGTH
         final List<Object> result = new ArrayList();
         int startPosition = in.position();
         int index = -1;
@@ -60,5 +59,4 @@ public class JsonMultiArrayDecoder implements Decodeable<JsonReader, Object[]> {
     public Type getType() {
         return Object[].class;
     }
-
 }

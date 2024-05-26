@@ -12,8 +12,7 @@ import org.redkale.convert.Writer;
 /**
  * String 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -33,7 +32,8 @@ public final class StringSimpledCoder<R extends Reader, W extends Writer> extend
         return in.readString();
     }
 
-    public final static class SmallStringSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, String> {
+    public static final class SmallStringSimpledCoder<R extends Reader, W extends Writer>
+            extends SimpledCoder<R, W, String> {
 
         public static final SmallStringSimpledCoder instance = new SmallStringSimpledCoder();
 
@@ -46,6 +46,5 @@ public final class StringSimpledCoder<R extends Reader, W extends Writer> extend
         public String convertFrom(R in) {
             return in.readSmallString();
         }
-
     }
 }

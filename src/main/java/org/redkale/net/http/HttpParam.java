@@ -5,17 +5,16 @@
  */
 package org.redkale.net.http;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import java.lang.annotation.*;
+
 /**
- * 配合 &#64;HttpMapping 使用。
- * 用于对&#64;HttpMapping方法中参数描述 <br>
+ * 配合 &#64;HttpMapping 使用。 用于对&#64;HttpMapping方法中参数描述 <br>
  * 从RestService生成过来的HttpMapping，标记为&#64;RestUserid、&#64;RestAddress、&#64;RestLocale的参数不会生成HttpParam
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -91,17 +90,17 @@ public @interface HttpParam {
     String example() default "";
 
     /**
-     * 配合 &#64;HttpParam 使用。
-     * 用于对&#64;HttpParam中参数的来源类型
+     * 配合 &#64;HttpParam 使用。 用于对&#64;HttpParam中参数的来源类型
      *
-     * <p>
-     * 详情见: https://redkale.org
+     * <p>详情见: https://redkale.org
      *
      * @author zhangjx
      */
     public enum HttpParameterStyle {
-
-        QUERY, HEADER, COOKIE, BODY;
+        QUERY,
+        HEADER,
+        COOKIE,
+        BODY;
     }
 
     @Documented
@@ -111,5 +110,4 @@ public @interface HttpParam {
 
         HttpParam[] value();
     }
-
 }

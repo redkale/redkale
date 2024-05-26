@@ -13,10 +13,7 @@ import org.redkale.net.client.*;
 import org.redkale.net.sncp.*;
 import org.redkale.util.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class SncpClientCodecTest {
 
     private boolean main;
@@ -32,7 +29,8 @@ public class SncpClientCodecTest {
         InetSocketAddress sncpAddress = new InetSocketAddress("127.0.0.1", 3389);
         InetSocketAddress remoteAddress = new InetSocketAddress("127.0.0.1", 3344);
         final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
-        SncpClient client = new SncpClient("test", asyncGroup, "0", sncpAddress, new ClientAddress(remoteAddress), "TCP", Utility.cpus(), 16);
+        SncpClient client = new SncpClient(
+                "test", asyncGroup, "0", sncpAddress, new ClientAddress(remoteAddress), "TCP", Utility.cpus(), 16);
         SncpClientConnection conn = client.createClientConnection(asyncGroup.newTCPClientConnection());
         SncpClientCodec codec = new SncpClientCodec(conn);
         List respResults = new ArrayList();
@@ -44,7 +42,7 @@ public class SncpClientCodecTest {
             e.printStackTrace();
         }
         ByteBuffer realBuf;
-        //----------------------------------------------
+        // ----------------------------------------------
         respResults.clear();
         {
             SncpHeader header = SncpHeader.create(sncpAddress, Uint128.ZERO, "", Uint128.ZERO, "");
@@ -53,12 +51,14 @@ public class SncpClientCodecTest {
             request.prepare(header, 1, "aa", new byte[20]);
             request.writeTo(conn, writeArray1);
             System.out.println("request.1 = " + request);
-            System.out.println("headerSize = " + SncpHeader.calcHeaderSize(request) + ", arraySzie = " + writeArray1.getBytes().length);
+            System.out.println("headerSize = " + SncpHeader.calcHeaderSize(request) + ", arraySzie = "
+                    + writeArray1.getBytes().length);
             ByteArray writeArray2 = new ByteArray();
             request.prepare(header, 2, "bb", new byte[25]);
             request.writeTo(conn, writeArray2);
             System.out.println("request.2 = " + request);
-            System.out.println("headerSize = " + SncpHeader.calcHeaderSize(request) + ", arraySzie = " + writeArray2.getBytes().length);
+            System.out.println("headerSize = " + SncpHeader.calcHeaderSize(request) + ", arraySzie = "
+                    + writeArray2.getBytes().length);
             writeArray1.put(writeArray2);
             realBuf = ByteBuffer.wrap(writeArray1.getBytes());
         }
@@ -66,7 +66,7 @@ public class SncpClientCodecTest {
         codec.decodeMessages(realBuf, new ByteArray());
         System.out.println("respResults.size = " + respResults.size());
         Assertions.assertEquals(2, respResults.size());
-        //----------------------------------------------
+        // ----------------------------------------------
         respResults.clear();
         {
             SncpHeader header = SncpHeader.create(sncpAddress, Uint128.ZERO, "", Uint128.ZERO, "");
@@ -75,12 +75,14 @@ public class SncpClientCodecTest {
             request.prepare(header, 1, "", new byte[20]);
             request.writeTo(conn, writeArray1);
             System.out.println("request.1 = " + request);
-            System.out.println("headerSize = " + SncpHeader.calcHeaderSize(request) + ", arraySzie = " + writeArray1.getBytes().length);
+            System.out.println("headerSize = " + SncpHeader.calcHeaderSize(request) + ", arraySzie = "
+                    + writeArray1.getBytes().length);
             ByteArray writeArray2 = new ByteArray();
             request.prepare(header, 2, "", new byte[25]);
             request.writeTo(conn, writeArray2);
             System.out.println("request.2 = " + request);
-            System.out.println("headerSize = " + SncpHeader.calcHeaderSize(request) + ", arraySzie = " + writeArray2.getBytes().length);
+            System.out.println("headerSize = " + SncpHeader.calcHeaderSize(request) + ", arraySzie = "
+                    + writeArray2.getBytes().length);
             writeArray1.put(writeArray2);
             realBuf = ByteBuffer.wrap(writeArray1.getBytes());
         }

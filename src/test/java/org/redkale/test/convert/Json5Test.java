@@ -7,10 +7,7 @@ import org.junit.jupiter.api.*;
 import org.redkale.convert.Convert;
 import org.redkale.convert.json.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class Json5Test {
 
     private boolean main;
@@ -101,6 +98,5 @@ public class Json5Test {
             }
             return true;
         }
-
     }
 }

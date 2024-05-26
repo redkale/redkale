@@ -5,6 +5,8 @@
  */
 package org.redkale.cluster.spi;
 
+import static org.redkale.boot.Application.*;
+
 import java.lang.ref.WeakReference;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
@@ -14,7 +16,6 @@ import java.util.logging.*;
 import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.boot.*;
-import static org.redkale.boot.Application.*;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.inject.ResourceEvent;
@@ -27,11 +28,9 @@ import org.redkale.util.*;
 /**
  * 服务注册中心管理类cluster
  *
- *
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.1.0
  */
 public abstract class ClusterAgent {
@@ -55,7 +54,7 @@ public abstract class ClusterAgent {
     protected boolean waits;
 
     @Nullable
-    protected String[] protocols; //必须全大写
+    protected String[] protocols; // 必须全大写
 
     protected int[] ports;
 
@@ -63,10 +62,10 @@ public abstract class ClusterAgent {
 
     protected Set<String> tags;
 
-    //key: serviceid
+    // key: serviceid
     protected final ConcurrentHashMap<String, ClusterEntry> localEntrys = new ConcurrentHashMap<>();
 
-    //key: serviceid
+    // key: serviceid
     protected final ConcurrentHashMap<String, ClusterEntry> remoteEntrys = new ConcurrentHashMap<>();
 
     public void init(AnyValue config) {
@@ -104,14 +103,12 @@ public abstract class ClusterAgent {
     @ResourceChanged
     public abstract void onResourceChange(ResourceEvent[] events);
 
-    public void destroy(AnyValue config) {
-    }
+    public void destroy(AnyValue config) {}
 
     /**
      * ServiceLoader时判断配置是否符合当前实现类
      *
      * @param config 节点配置
-     *
      * @return boolean
      */
     public abstract boolean acceptsConf(AnyValue config);
@@ -130,8 +127,7 @@ public abstract class ClusterAgent {
         return Utility.contains(ports, port);
     }
 
-    public void start() {
-    }
+    public void start() {}
 
     public int intervalCheckSeconds() {
         return 10;
@@ -141,12 +137,17 @@ public abstract class ClusterAgent {
 
     public abstract void deregister(Application application);
 
-    //注册服务, 在NodeService调用Service.init方法之前调用
-    public void register(NodeServer ns, String protocol, Set<Service> localServices, Set<Service> remoteServices, Set<Service> servletServices) {
+    // 注册服务, 在NodeService调用Service.init方法之前调用
+    public void register(
+            NodeServer ns,
+            String protocol,
+            Set<Service> localServices,
+            Set<Service> remoteServices,
+            Set<Service> servletServices) {
         if (servletServices.isEmpty()) {
             return;
         }
-        //注册本地模式
+        // 注册本地模式
         for (Service service : servletServices) {
             if (!canRegister(ns, protocol, service)) {
                 continue;
@@ -154,7 +155,7 @@ public abstract class ClusterAgent {
             ClusterEntry htentry = register(ns, protocol, service);
             localEntrys.put(htentry.serviceid, htentry);
         }
-        //远程模式加载IP列表, 只支持SNCP协议    
+        // 远程模式加载IP列表, 只支持SNCP协议
         if (ns.isSNCP()) {
             for (Service service : remoteServices) {
                 ClusterEntry entry = new ClusterEntry(ns, protocol, service);
@@ -164,9 +165,14 @@ public abstract class ClusterAgent {
         }
     }
 
-    //注销服务, 在NodeService调用Service.destroy 方法之前调用
-    public void deregister(NodeServer ns, String protocol, Set<Service> localServices, Set<Service> remoteServices, Set<Service> servletServices) {
-        //注销本地模式  远程模式不注册
+    // 注销服务, 在NodeService调用Service.destroy 方法之前调用
+    public void deregister(
+            NodeServer ns,
+            String protocol,
+            Set<Service> localServices,
+            Set<Service> remoteServices,
+            Set<Service> servletServices) {
+        // 注销本地模式  远程模式不注册
         for (Service service : servletServices) {
             if (!canRegister(ns, protocol, service)) {
                 continue;
@@ -208,28 +214,30 @@ public abstract class ClusterAgent {
             return;
         }
         int s = intervalCheckSeconds();
-        if (s > 0) {  //暂停，弥补其他依赖本进程服务的周期偏差
+        if (s > 0) { // 暂停，弥补其他依赖本进程服务的周期偏差
             Utility.sleep(s * 1000);
             logger.info(this.getClass().getSimpleName() + " wait for " + s * 1000 + "ms after deregister");
         }
     }
 
-    //获取HTTP远程服务的可用ip列表
-    public abstract CompletableFuture<Set<InetSocketAddress>> queryHttpAddress(String protocol, String module, String resname);
+    // 获取HTTP远程服务的可用ip列表
+    public abstract CompletableFuture<Set<InetSocketAddress>> queryHttpAddress(
+            String protocol, String module, String resname);
 
-    //获取SNCP远程服务的可用ip列表 restype: resourceType.getName()
-    public abstract CompletableFuture<Set<InetSocketAddress>> querySncpAddress(String protocol, String restype, String resname);
+    // 获取SNCP远程服务的可用ip列表 restype: resourceType.getName()
+    public abstract CompletableFuture<Set<InetSocketAddress>> querySncpAddress(
+            String protocol, String restype, String resname);
 
-    //获取远程服务的可用ip列表
+    // 获取远程服务的可用ip列表
     protected abstract CompletableFuture<Set<InetSocketAddress>> queryAddress(ClusterEntry entry);
 
-    //注册服务
+    // 注册服务
     protected abstract ClusterEntry register(NodeServer ns, String protocol, Service service);
 
-    //注销服务
+    // 注销服务
     protected abstract void deregister(NodeServer ns, String protocol, Service service);
 
-    //格式: protocol:classtype-resourcename
+    // 格式: protocol:classtype-resourcename
     protected void updateSncpAddress(ClusterEntry entry) {
         if (application == null) {
             return;
@@ -283,14 +291,15 @@ public abstract class ClusterAgent {
         return protocol.toLowerCase() + ":" + restype + (Utility.isEmpty(resname) ? "" : ("-" + resname));
     }
 
-    //也会提供给HttpMessageClusterAgent适用
+    // 也会提供给HttpMessageClusterAgent适用
     public String generateHttpServiceName(String protocol, String module, String resname) {
         return protocol.toLowerCase() + ":" + module + (Utility.isEmpty(resname) ? "" : ("-" + resname));
     }
 
-    //格式: protocol:classtype-resourcename
+    // 格式: protocol:classtype-resourcename
     protected String generateServiceName(NodeServer ns, String protocol, Service service) {
-        if (protocol.toLowerCase().startsWith("http")) {  //HTTP使用RestService.name方式是为了与MessageClient中的module保持一致, 因为HTTP依靠的url中的module，无法知道Service类名
+        if (protocol.toLowerCase().startsWith("http")) { // HTTP使用RestService.name方式是为了与MessageClient中的module保持一致,
+            // 因为HTTP依靠的url中的module，无法知道Service类名
             String resname = Sncp.getResourceName(service);
             String module = Rest.getRestModule(service).toLowerCase();
             return protocol.toLowerCase() + ":" + module + (resname.isEmpty() ? "" : ("-" + resname));
@@ -299,10 +308,11 @@ public abstract class ClusterAgent {
             return protocol.toLowerCase() + ":" + service.getClass().getName();
         }
         String resname = Sncp.getResourceName(service);
-        return protocol.toLowerCase() + ":" + Sncp.getResourceType(service).getName() + (resname.isEmpty() ? "" : ("-" + resname));
+        return protocol.toLowerCase() + ":" + Sncp.getResourceType(service).getName()
+                + (resname.isEmpty() ? "" : ("-" + resname));
     }
 
-    //格式: protocol:classtype-resourcename:nodeid
+    // 格式: protocol:classtype-resourcename:nodeid
     protected String generateServiceId(NodeServer ns, String protocol, Service service) {
         return generateServiceName(ns, protocol, service) + "@" + this.nodeid;
     }
@@ -358,10 +368,10 @@ public abstract class ClusterAgent {
 
     public class ClusterEntry {
 
-        //serviceName+nodeid为主  服务的单个实例
+        // serviceName+nodeid为主  服务的单个实例
         public String serviceid;
 
-        //以协议+Rest资源名为主  服务类名
+        // 以协议+Rest资源名为主  服务类名
         public String serviceName;
 
         public final String resourceType;
@@ -374,10 +384,10 @@ public abstract class ClusterAgent {
 
         public String checkName;
 
-        //http or sncp
+        // http or sncp
         public String protocol;
 
-        //TCP or UDP
+        // TCP or UDP
         public String netProtocol;
 
         @ConvertDisabled

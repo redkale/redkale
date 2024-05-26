@@ -9,11 +9,9 @@ import java.util.List;
 /**
  * 简单的http代理器
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.7.0
  */
 public class SimpleProxySelector extends ProxySelector {

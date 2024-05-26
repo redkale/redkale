@@ -11,11 +11,9 @@ import org.redkale.util.ByteArray;
 /**
  * client版请求
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.8.0
  */
 public class SncpClientRequest extends ClientRequest {
@@ -27,7 +25,7 @@ public class SncpClientRequest extends ClientRequest {
     private byte[] bodyContent;
 
     public SncpClientRequest() {
-        //do nothing
+        // do nothing
     }
 
     public SncpClientRequest prepare(SncpHeader header, long seqid, String traceid, byte[] bodyContent) {
@@ -41,7 +39,7 @@ public class SncpClientRequest extends ClientRequest {
 
     @Override
     protected void prepare() {
-        //do nothing
+        // do nothing
     }
 
     @Override
@@ -73,9 +71,9 @@ public class SncpClientRequest extends ClientRequest {
     @Override
     public String toString() {
         return getClass().getSimpleName() + "_" + Objects.hashCode(this) + "{"
-            + "header=" + header + ", seqid =" + seqid + ", traceid =" + traceid
-            + ", body=[" + (bodyContent == null ? -1 : bodyContent.length) + "]"
-            + "}";
+                + "header=" + header + ", seqid =" + seqid + ", traceid =" + traceid
+                + ", body=[" + (bodyContent == null ? -1 : bodyContent.length) + "]"
+                + "}";
     }
 
     public SncpHeader getHeader() {
@@ -89,5 +87,4 @@ public class SncpClientRequest extends ClientRequest {
     public byte[] getBodyContent() {
         return bodyContent;
     }
-
 }

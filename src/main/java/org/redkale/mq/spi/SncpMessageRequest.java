@@ -9,12 +9,9 @@ import java.nio.ByteBuffer;
 import org.redkale.net.sncp.*;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.1.0
  */
 public class SncpMessageRequest extends SncpRequest {
@@ -28,5 +25,4 @@ public class SncpMessageRequest extends SncpRequest {
         this.createTime = System.currentTimeMillis();
         readHeader(ByteBuffer.wrap(message.getContent()), null);
     }
-
 }

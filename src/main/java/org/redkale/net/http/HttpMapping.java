@@ -7,14 +7,13 @@ package org.redkale.net.http;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 import java.lang.annotation.*;
 
 /**
- * 配合 HttpServlet 使用。
- * 用于对&#64;WebServlet对应的url进行细分。 其url必须是包含WebServlet中定义的前缀， 且不能是正则表达式
+ * 配合 HttpServlet 使用。 用于对&#64;WebServlet对应的url进行细分。 其url必须是包含WebServlet中定义的前缀， 且不能是正则表达式
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -46,7 +45,7 @@ public @interface HttpMapping {
 
     /**
      * 结果缓存的秒数, 为0表示不缓存 <br>
-     *  * 当值大于0，将被缓存一段时间(默认值 seconds=15秒)。 <br>
+     * * 当值大于0，将被缓存一段时间(默认值 seconds=15秒)。 <br>
      * 通常情况下需要 auth() == true 才使用，没有标记auth==true方法一般输出的结果与当前用户信息有关。 <br>
      *
      * @return int
@@ -99,8 +98,8 @@ public @interface HttpMapping {
 
     /**
      * 输出结果的数据类型集合，由于结果类型可能是泛型而注解的参数值不支持泛型，因此加入明细数据类型集合
-     * @see #resultRef() 
      *
+     * @see #resultRef()
      * @deprecated
      * @return Class[]
      */
@@ -108,8 +107,7 @@ public @interface HttpMapping {
     Class[] results() default {};
 
     /**
-     * 返回结果的样例
-     * for OpenAPI Specification 3.1.0
+     * 返回结果的样例 for OpenAPI Specification 3.1.0
      *
      * @return String
      */

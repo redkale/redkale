@@ -10,11 +10,9 @@ import org.redkale.net.WorkThread;
 /**
  * WebSocket连接的IO写线程
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.8.0
  */
 public class WebSocketFuture extends CompletableFuture<Integer> implements Runnable {
@@ -40,7 +38,7 @@ public class WebSocketFuture extends CompletableFuture<Integer> implements Runna
         }
     }
 
-    @Override //JDK9+
+    @Override // JDK9+
     public WebSocketFuture newIncompleteFuture() {
         WebSocketFuture future = new WebSocketFuture(workThread, websocket, packets);
         future.timeout = timeout;
@@ -55,6 +53,7 @@ public class WebSocketFuture extends CompletableFuture<Integer> implements Runna
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "_" + Objects.hash(this) + "{websocket = " + websocket + ", packets = " + Arrays.toString(packets) + "}";
+        return getClass().getSimpleName() + "_" + Objects.hash(this) + "{websocket = " + websocket + ", packets = "
+                + Arrays.toString(packets) + "}";
     }
 }

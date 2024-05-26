@@ -10,11 +10,9 @@ import org.redkale.util.ObjectPool;
 /**
  * client版连接
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.8.0
  */
 public class SncpClientConnection extends ClientConnection<SncpClientRequest, SncpClientResult> {
@@ -23,9 +21,11 @@ public class SncpClientConnection extends ClientConnection<SncpClientRequest, Sn
 
     public SncpClientConnection(SncpClient client, AsyncConnection channel) {
         super(client, channel);
-        requestPool = ObjectPool.createUnsafePool(Thread.currentThread(), 256,
-            ObjectPool.createSafePool(256, t -> new SncpClientRequest(), SncpClientRequest::prepare, SncpClientRequest::recycle)
-        );
+        requestPool = ObjectPool.createUnsafePool(
+                Thread.currentThread(),
+                256,
+                ObjectPool.createSafePool(
+                        256, t -> new SncpClientRequest(), SncpClientRequest::prepare, SncpClientRequest::recycle));
     }
 
     @Override
@@ -38,5 +38,4 @@ public class SncpClientConnection extends ClientConnection<SncpClientRequest, Sn
         c.offerResult(rs);
         requestPool.accept(req);
     }
-
 }

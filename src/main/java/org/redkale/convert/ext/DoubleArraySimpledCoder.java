@@ -11,8 +11,7 @@ import org.redkale.convert.*;
 /**
  * double[] 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -78,7 +77,8 @@ public final class DoubleArraySimpledCoder<R extends Reader, W extends Writer> e
         }
     }
 
-    public final static class DoubleStreamSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, DoubleStream> {
+    public static final class DoubleStreamSimpledCoder<R extends Reader, W extends Writer>
+            extends SimpledCoder<R, W, DoubleStream> {
 
         public static final DoubleStreamSimpledCoder instance = new DoubleStreamSimpledCoder();
 
@@ -98,6 +98,5 @@ public final class DoubleArraySimpledCoder<R extends Reader, W extends Writer> e
             double[] value = DoubleArraySimpledCoder.instance.convertFrom(in);
             return value == null ? null : DoubleStream.of(value);
         }
-
     }
 }

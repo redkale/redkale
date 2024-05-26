@@ -5,10 +5,7 @@ import org.redkale.convert.*;
 import org.redkale.persistence.*;
 import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @Table(name = "forum_info", comment = "论坛信息表")
 public class ForumInfo extends BaseEntity implements Comparable<ForumInfo> {
 
@@ -255,5 +252,4 @@ public class ForumInfo extends BaseEntity implements Comparable<ForumInfo> {
     public void setForumBarHtml(String forumBarHtml) {
         this.forumBarHtml = forumBarHtml;
     }
-
 }

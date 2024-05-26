@@ -5,10 +5,5 @@
  */
 package org.redkale.test.service;
 
-/**
- *
- * @author zhangjx
- */
-public class TestBean {
-    
-}
+/** @author zhangjx */
+public class TestBean {}

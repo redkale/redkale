@@ -9,7 +9,6 @@ import java.io.*;
 import org.redkale.convert.*;
 
 /**
- *
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -25,7 +24,7 @@ class JsonStreamReader extends JsonByteBufferReader {
 
     @Override
     protected boolean recycle() {
-        super.recycle();   // this.position 初始化值为-1
+        super.recycle(); // this.position 初始化值为-1
         this.in = null;
         return false;
     }

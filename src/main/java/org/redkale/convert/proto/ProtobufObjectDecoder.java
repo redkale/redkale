@@ -11,7 +11,6 @@ import org.redkale.util.Attribute;
 import org.redkale.util.Utility;
 
 /**
- *
  * @author zhangjx
  * @param <T> T
  */
@@ -23,11 +22,18 @@ public class ProtobufObjectDecoder<T> extends ObjectDecoder<ProtobufReader, T> {
 
     @Override
     protected void initForEachDeMember(ConvertFactory factory, DeMember member) {
-        if(member.getIndex() < 1) {
-            throw new ConvertException(Utility.orElse(member.getField(), member.getMethod()) + " not found @" + ConvertColumn.class.getSimpleName() + ".index");
+        if (member.getIndex() < 1) {
+            throw new ConvertException(Utility.orElse(member.getField(), member.getMethod()) + " not found @"
+                    + ConvertColumn.class.getSimpleName() + ".index");
         }
         Attribute attr = member.getAttribute();
-        setTag(member, ProtobufFactory.getTag(attr.field(), attr.genericType(), member.getPosition(), ((ProtobufFactory) factory).enumtostring));
+        setTag(
+                member,
+                ProtobufFactory.getTag(
+                        attr.field(),
+                        attr.genericType(),
+                        member.getPosition(),
+                        ((ProtobufFactory) factory).enumtostring));
     }
 
     @Override

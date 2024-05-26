@@ -16,18 +16,21 @@ import org.redkale.util.TypeToken;
 /**
  * BSON的ConvertFactory
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
 public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
 
-    private static final BsonFactory instance = new BsonFactory(null,
-        getSystemPropertyInt("redkale.convert.bson.tiny", "redkale.convert.tiny", true, Convert.FEATURE_TINY)
-        | getSystemPropertyInt("redkale.convert.bson.nullable", "redkale.convert.nullable", false, Convert.FEATURE_NULLABLE)
-    );
+    private static final BsonFactory instance = new BsonFactory(
+            null,
+            getSystemPropertyInt("redkale.convert.bson.tiny", "redkale.convert.tiny", true, Convert.FEATURE_TINY)
+                    | getSystemPropertyInt(
+                            "redkale.convert.bson.nullable",
+                            "redkale.convert.nullable",
+                            false,
+                            Convert.FEATURE_NULLABLE));
 
     static final Decodeable objectDecoder = instance.loadDecoder(Object.class);
 
@@ -35,11 +38,11 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
 
     static final Decodeable skipArrayDecoder = new SkipArrayDecoder(instance, Object[].class);
 
-    static final Decodeable skipCollectionDecoder = new SkipCollectionDecoder(instance, new TypeToken<Collection<Object>>() {
-    }.getType());
+    static final Decodeable skipCollectionDecoder =
+            new SkipCollectionDecoder(instance, new TypeToken<Collection<Object>>() {}.getType());
 
-    static final Decodeable skipStreamDecoder = new SkipStreamDecoder(instance, new TypeToken<Stream<Object>>() {
-    }.getType());
+    static final Decodeable skipStreamDecoder =
+            new SkipStreamDecoder(instance, new TypeToken<Stream<Object>>() {}.getType());
 
     static final Decodeable skipMapDecoder = new SkipMapDecoder(instance, Map.class);
 
@@ -47,8 +50,8 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
         instance.register(Serializable.class, objectDecoder);
         instance.register(Serializable.class, objectEncoder);
 
-        //instance.register(AnyValue.class, instance.loadDecoder(SimpleAnyValue.class));
-        //instance.register(AnyValue.class, instance.loadEncoder(SimpleAnyValue.class));
+        // instance.register(AnyValue.class, instance.loadDecoder(SimpleAnyValue.class));
+        // instance.register(AnyValue.class, instance.loadEncoder(SimpleAnyValue.class));
     }
 
     private BsonFactory(BsonFactory parent, int features) {
@@ -133,7 +136,7 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
 
     protected static byte typeEnum(final Class type) {
         Objects.requireNonNull(type);
-        byte typeval = 127;  //字段的类型值
+        byte typeval = 127; // 字段的类型值
         if (type == boolean.class || type == Boolean.class) {
             typeval = 11;
         } else if (type == byte.class || type == Byte.class) {

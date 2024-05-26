@@ -59,122 +59,90 @@
 
 package org.redkale.asm;
 
-/**
- * @author Remi Forax
- */
+/** @author Remi Forax */
 final class ModuleWriter extends ModuleVisitor {
-    /**
-     * The class writer to which this Module attribute must be added.
-     */
+    /** The class writer to which this Module attribute must be added. */
     private final ClassWriter cw;
 
-    /**
-     * size in byte of the Module attribute.
-     */
+    /** size in byte of the Module attribute. */
     int size;
 
-    /**
-     * Number of attributes associated with the current module
-     * (Version, ConcealPackages, etc)
-     */
+    /** Number of attributes associated with the current module (Version, ConcealPackages, etc) */
     int attributeCount;
 
-    /**
-     * Size in bytes of the attributes associated with the current module
-     */
+    /** Size in bytes of the attributes associated with the current module */
     int attributesSize;
 
-    /**
-     * module name index in the constant pool
-     */
+    /** module name index in the constant pool */
     private final int name;
 
-    /**
-     * module access flags
-     */
+    /** module access flags */
     private final int access;
 
-    /**
-     * module version index in the constant pool or 0
-     */
+    /** module version index in the constant pool or 0 */
     private final int version;
 
-    /**
-     * module main class index in the constant pool or 0
-     */
+    /** module main class index in the constant pool or 0 */
     private int mainClass;
 
-    /**
-     * number of packages
-     */
+    /** number of packages */
     private int packageCount;
 
     /**
-     * The packages in bytecode form. This byte vector only contains
-     * the items themselves, the number of items is store in packageCount
+     * The packages in bytecode form. This byte vector only contains the items themselves, the number of items is store
+     * in packageCount
      */
     private ByteVector packages;
 
-    /**
-     * number of requires items
-     */
+    /** number of requires items */
     private int requireCount;
 
     /**
-     * The requires items in bytecode form. This byte vector only contains
-     * the items themselves, the number of items is store in requireCount
+     * The requires items in bytecode form. This byte vector only contains the items themselves, the number of items is
+     * store in requireCount
      */
     private ByteVector requires;
 
-    /**
-     * number of exports items
-     */
+    /** number of exports items */
     private int exportCount;
 
     /**
-     * The exports items in bytecode form. This byte vector only contains
-     * the items themselves, the number of items is store in exportCount
+     * The exports items in bytecode form. This byte vector only contains the items themselves, the number of items is
+     * store in exportCount
      */
     private ByteVector exports;
 
-    /**
-     * number of opens items
-     */
+    /** number of opens items */
     private int openCount;
 
     /**
-     * The opens items in bytecode form. This byte vector only contains
-     * the items themselves, the number of items is store in openCount
+     * The opens items in bytecode form. This byte vector only contains the items themselves, the number of items is
+     * store in openCount
      */
     private ByteVector opens;
 
-    /**
-     * number of uses items
-     */
+    /** number of uses items */
     private int useCount;
 
     /**
-     * The uses items in bytecode form. This byte vector only contains
-     * the items themselves, the number of items is store in useCount
+     * The uses items in bytecode form. This byte vector only contains the items themselves, the number of items is
+     * store in useCount
      */
     private ByteVector uses;
 
-    /**
-     * number of provides items
-     */
+    /** number of provides items */
     private int provideCount;
 
     /**
-     * The uses provides in bytecode form. This byte vector only contains
-     * the items themselves, the number of items is store in provideCount
+     * The uses provides in bytecode form. This byte vector only contains the items themselves, the number of items is
+     * store in provideCount
      */
     private ByteVector provides;
 
-    ModuleWriter(final ClassWriter cw, final int name,
-            final int access, final int version) {
+    ModuleWriter(final ClassWriter cw, final int name, final int access, final int version) {
         super(Opcodes.ASM6);
         this.cw = cw;
-        this.size = 16;  // name + access + version + 5 counts
+        this.size = 16; // name + access + version + 5 counts
         this.name = name;
         this.access = access;
         this.version = version;
@@ -209,9 +177,7 @@ final class ModuleWriter extends ModuleVisitor {
         if (requires == null) {
             requires = new ByteVector();
         }
-        requires.putShort(cw.newModule(module))
-                .putShort(access)
-                .putShort(version == null? 0: cw.newUTF8(version));
+        requires.putShort(cw.newModule(module)).putShort(access).putShort(version == null ? 0 : cw.newUTF8(version));
         requireCount++;
         size += 6;
     }
@@ -227,7 +193,7 @@ final class ModuleWriter extends ModuleVisitor {
             size += 6;
         } else {
             exports.putShort(modules.length);
-            for(String module: modules) {
+            for (String module : modules) {
                 exports.putShort(cw.newModule(module));
             }
             size += 6 + 2 * modules.length;
@@ -246,7 +212,7 @@ final class ModuleWriter extends ModuleVisitor {
             size += 6;
         } else {
             opens.putShort(modules.length);
-            for(String module: modules) {
+            for (String module : modules) {
                 opens.putShort(cw.newModule(module));
             }
             size += 6 + 2 * modules.length;
@@ -271,7 +237,7 @@ final class ModuleWriter extends ModuleVisitor {
         }
         provides.putShort(cw.newClass(service));
         provides.putShort(providers.length);
-        for(String provider: providers) {
+        for (String provider : providers) {
             provides.putShort(cw.newClass(provider));
         }
         provideCount++;
@@ -289,9 +255,9 @@ final class ModuleWriter extends ModuleVisitor {
         }
         if (packages != null) {
             out.putShort(cw.newUTF8("ModulePackages"))
-               .putInt(2 + 2 * packageCount)
-               .putShort(packageCount)
-               .putByteArray(packages.data, 0, packages.length);
+                    .putInt(2 + 2 * packageCount)
+                    .putShort(packageCount)
+                    .putByteArray(packages.data, 0, packages.length);
         }
     }
 

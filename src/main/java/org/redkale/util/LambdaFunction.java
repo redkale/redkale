@@ -9,12 +9,10 @@ import java.util.function.Function;
 /**
  * Lambda的Function自定义类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.8.0
- *
  * @param <T> 泛型
  * @param <R> 泛型
  */
@@ -32,5 +30,4 @@ public interface LambdaFunction<T, R> extends Function<T, R>, Serializable {
     public static <T> String readColumn(LambdaFunction<T, ?> func) {
         return Utility.readFieldName(func);
     }
-
 }

@@ -10,13 +10,9 @@ import java.util.Objects;
 import java.util.logging.Logger;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
- *
  * @author zhangjx
- *
  * @since 2.1.0
  */
 public abstract class MessageClientConsumer implements MessageProcessor {
@@ -42,5 +38,4 @@ public abstract class MessageClientConsumer implements MessageProcessor {
     public abstract void start();
 
     public abstract void stop();
-
 }

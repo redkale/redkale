@@ -2,9 +2,10 @@
  */
 package org.redkale.test.convert.proto;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 import java.util.*;
 import java.util.function.*;
 import org.junit.jupiter.api.*;
@@ -17,10 +18,7 @@ import org.redkale.convert.proto.ProtobufObjectEncoder;
 import org.redkale.convert.proto.ProtobufReader;
 import org.redkale.util.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class PBCustMessageTest {
 
     private boolean main;
@@ -55,7 +53,8 @@ public class PBCustMessageTest {
         ProtobufConvert convert = ProtobufConvert.root().newConvert(objFieldFunc);
         System.out.println(Arrays.toString(convert.convertTo(msg1)));
         System.out.println(Arrays.toString(convert.convertTo(msg2)));
-        if (!main) Assertions.assertEquals(Arrays.toString(convert.convertTo(msg1)), Arrays.toString(convert.convertTo(msg2)));
+        if (!main)
+            Assertions.assertEquals(Arrays.toString(convert.convertTo(msg1)), Arrays.toString(convert.convertTo(msg2)));
         System.out.println();
     }
 
@@ -80,7 +79,7 @@ public class PBCustMessageTest {
 
         public static Encodeable<Writer, BaseMessage> createConvertCoder(ProtobufFactory factory, Class<?> clazz) {
             Encodeable valEncoder = factory.createEncoder(clazz, true);
-            ObjectEncoder encoder = new ProtobufObjectEncoder< BaseMessage>(clazz) {
+            ObjectEncoder encoder = new ProtobufObjectEncoder<BaseMessage>(clazz) {
                 @Override
                 protected void afterInitEnMember(ConvertFactory factory) {
                     Function func = t -> t;
@@ -89,7 +88,7 @@ public class PBCustMessageTest {
                     setIndex(member, 1);
                     setPosition(member, 1);
                     initForEachEnMember(factory, member);
-                    this.members = new EnMember[]{member};
+                    this.members = new EnMember[] {member};
                 }
             };
             encoder.init(factory);
@@ -98,7 +97,7 @@ public class PBCustMessageTest {
 
         public static Decodeable<Reader, BaseMessage> createConvertDeCoder(ProtobufFactory factory, Class<?> clazz) {
             Decodeable valDecoder = factory.createDecoder(clazz, true);
-            ObjectDecoder decoder = new ProtobufObjectDecoder< BaseMessage>(clazz) {
+            ObjectDecoder decoder = new ProtobufObjectDecoder<BaseMessage>(clazz) {
                 @Override
                 protected void afterInitDeMember(ConvertFactory factory) {
                     this.creator = (Creator) objs -> new Object[1];
@@ -109,7 +108,7 @@ public class PBCustMessageTest {
                     setIndex(member, 1);
                     setPosition(member, 1);
                     initForEachDeMember(factory, member);
-                    this.members = new DeMember[]{member};
+                    this.members = new DeMember[] {member};
                 }
 
                 @Override
@@ -132,8 +131,7 @@ public class PBCustMessageTest {
         @ConvertColumn(index = 2)
         public String retinfo;
 
-        public OnPlayerLeaveMessage2() {
-        }
+        public OnPlayerLeaveMessage2() {}
 
         public OnPlayerLeaveMessage2(int userid, String retinfo) {
             this.userid = userid;
@@ -151,8 +149,7 @@ public class PBCustMessageTest {
         @ConvertColumn(index = 1)
         private OnPlayerLeaveContent onPlayerLeaveMessage;
 
-        public OnPlayerLeaveMessage() {
-        }
+        public OnPlayerLeaveMessage() {}
 
         public OnPlayerLeaveMessage(int userid) {
             this.onPlayerLeaveMessage = new OnPlayerLeaveContent(userid);
@@ -178,8 +175,7 @@ public class PBCustMessageTest {
             @ConvertColumn(index = 2)
             public String retinfo;
 
-            public OnPlayerLeaveContent() {
-            }
+            public OnPlayerLeaveContent() {}
 
             public OnPlayerLeaveContent(int userid) {
                 this.userid = userid;
@@ -201,5 +197,4 @@ public class PBCustMessageTest {
             return JsonConvert.root().convertTo(this);
         }
     }
-
 }

@@ -9,10 +9,7 @@ import org.junit.jupiter.api.*;
 import org.redkale.convert.ConvertImpl;
 import org.redkale.convert.json.JsonConvert;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class ConvertImplTest {
 
     @Test
@@ -40,6 +37,5 @@ public class ConvertImplTest {
         public void setName(String name) {
             this.name = name;
         }
-
     }
 }

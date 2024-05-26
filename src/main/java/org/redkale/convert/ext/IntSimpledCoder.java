@@ -11,8 +11,7 @@ import org.redkale.convert.json.*;
 /**
  * int 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -38,7 +37,8 @@ public final class IntSimpledCoder<R extends Reader, W extends Writer> extends S
      * @param <R> Reader输入的子类型
      * @param <W> Writer输出的子类型
      */
-    public static class IntHexJsonSimpledCoder<R extends JsonReader, W extends JsonWriter> extends SimpledCoder<R, W, Integer> {
+    public static class IntHexJsonSimpledCoder<R extends JsonReader, W extends JsonWriter>
+            extends SimpledCoder<R, W, Integer> {
 
         public static final IntHexJsonSimpledCoder instance = new IntHexJsonSimpledCoder();
 

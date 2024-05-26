@@ -4,18 +4,17 @@
  */
 package org.redkale.util;
 
-import java.lang.reflect.*;
-import java.util.*;
-import java.util.concurrent.locks.ReentrantLock;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
 
+import java.lang.reflect.*;
+import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
+
 /**
- *
  * 获取泛型的Type类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> 泛型
@@ -41,11 +40,10 @@ public abstract class TypeToken<T> {
     }
 
     /**
-     * 判断Type是否能确定最终的class， 是则返回true，存在通配符或者不确定类型则返回false。
-     * 例如: Map&#60; String, String &#62; 返回 ture; Map&#60; ? extends Serializable, String &#62; 返回false;
+     * 判断Type是否能确定最终的class， 是则返回true，存在通配符或者不确定类型则返回false。 例如: Map&#60; String, String &#62; 返回 ture; Map&#60; ? extends
+     * Serializable, String &#62; 返回false;
      *
      * @param type Type对象
-     *
      * @return 是否可反解析
      */
     public static final boolean isClassType(final Type type) {
@@ -62,7 +60,7 @@ public abstract class TypeToken<T> {
             return isClassType(((GenericArrayType) type).getGenericComponentType());
         }
         if (!(type instanceof ParameterizedType)) {
-            return false; //只能是null了
+            return false; // 只能是null了
         }
         final ParameterizedType ptype = (ParameterizedType) type;
         if (ptype.getOwnerType() != null && !isClassType(ptype.getOwnerType())) {
@@ -83,7 +81,6 @@ public abstract class TypeToken<T> {
      * 判断泛型知否包含了不确定的数据类型
      *
      * @param type 类型
-     *
      * @return 是否含不确定类型
      */
     public static final boolean containsUnknownType(final Type type) {
@@ -127,7 +124,6 @@ public abstract class TypeToken<T> {
      * 获取type的主类
      *
      * @param type 类型
-     *
      * @return 主类
      */
     public static final Class typeToClass(final Type type) {
@@ -141,23 +137,23 @@ public abstract class TypeToken<T> {
             return null;
         }
         if (type instanceof GenericArrayType) {
-            return Creator.newArray(typeToClass(((GenericArrayType) type).getGenericComponentType()), 0).getClass();
+            return Creator.newArray(typeToClass(((GenericArrayType) type).getGenericComponentType()), 0)
+                    .getClass();
         }
         if (!(type instanceof ParameterizedType)) {
-            return null; //只能是null了
+            return null; // 只能是null了
         }
         Type owner = ((ParameterizedType) type).getOwnerType();
         Type raw = ((ParameterizedType) type).getRawType();
-        //A$B<C> owner=A  raw=A$B, 所以内部类情况下使用owner是错误的
+        // A$B<C> owner=A  raw=A$B, 所以内部类情况下使用owner是错误的
         return typeToClass(raw != null ? raw : owner);
     }
 
     /**
      * 获取type的主类，如果是不确定类型，则返回defClass
      *
-     * @param type     类型
+     * @param type 类型
      * @param defClass 默认类
-     *
      * @return 确定的类型
      */
     public static final Class typeToClassOrElse(final Type type, final Class defClass) {
@@ -168,9 +164,8 @@ public abstract class TypeToken<T> {
     /**
      * 将泛型中不确定的类型转成确定性类型
      *
-     * @param types          泛型集合
+     * @param types 泛型集合
      * @param declaringClass 宿主类型
-     *
      * @return 确定性类型集合
      */
     public static Type[] getGenericType(final Type[] types, final Type declaringClass) {
@@ -185,7 +180,6 @@ public abstract class TypeToken<T> {
      * 获取primitive类对应的box类型
      *
      * @param clazz primitive类
-     *
      * @return 基础类型box类型
      */
     public static Class primitiveToWrapper(Class clazz) {
@@ -211,81 +205,88 @@ public abstract class TypeToken<T> {
             return clazz;
         }
     }
-//
-//    public static void main(String[] args) throws Throwable {
-//        Method tt0 = C.class.getMethod("getValue");
-//        System.out.println("tt0.type=" + tt0.getReturnType() + "======" + tt0.getGenericReturnType() + "======" + getGenericType(tt0.getGenericReturnType(), C.class));
-//
-//        Method tt3 = C.class.getMethod("getValue3");
-//        System.out.println("tt3.type=" + tt3.getReturnType() + "======" + tt3.getGenericReturnType() + "======" + getGenericType(tt3.getGenericReturnType(), C.class));
-//
-//        Method ttr = AGameService.class.getMethod("getResult");
-//        System.out.println("ttr.type=" + ttr.getReturnType() + "======" + ttr.getGenericReturnType() + "======" + getGenericType(ttr.getGenericReturnType(), AGameService.class));
-//        System.out.println("ttr.应该是: List<AGameTable>, 结果是: " + getGenericType(ttr.getGenericReturnType(), AGameService.class));
-//    }
-//
-//    public static class GamePlayer {
-//    }
-//
-//    public static class GameTable<P extends GamePlayer> {
-//    }
-//
-//    public static class GameService<GT extends GameTable, P extends GamePlayer> {
-//
-//    }
-//
-//    public static class AbstractGamePlayer extends GamePlayer {
-//    }
-//
-//    public static class AbstractGameTable<P extends AbstractGamePlayer> extends GameTable<P> {
-//    }
-//
-//    public static class AbstractGameService<GT extends AbstractGameTable<P>, P extends AbstractGamePlayer> extends GameService<GT, P> {
-//
-//        public List<GT> getResult() {
-//            return null;
-//        }
-//    }
-//
-//    public static class IGamePlayer extends AbstractGamePlayer {
-//    }
-//
-//    public static class IGameTable<P extends IGamePlayer> extends AbstractGameTable<P> {
-//    }
-//
-//    public static class IGameService<GT extends IGameTable<P>, P extends IGamePlayer> extends AbstractGameService<GT, P> {
-//
-//    }
-//
-//    public static class AGamePlayer extends IGamePlayer {
-//    }
-//
-//    public static class AGameTable extends IGameTable<AGamePlayer> {
-//    }
-//
-//    public static class AGameService extends IGameService<AGameTable, AGamePlayer> {
-//
-//    }
-//
-//    public static class A<V, T> {
-//
-//        public List<T> getValue() {
-//            return null;
-//        }
-//
-//        public T getValue3() {
-//            return null;
-//        }
-//    }
-//
-//    public static class B<V, W> extends A<W, V> {
-//    }
-//
-//    public static class C extends B<String, Integer> {
-//    }
+    //
+    //    public static void main(String[] args) throws Throwable {
+    //        Method tt0 = C.class.getMethod("getValue");
+    //        System.out.println("tt0.type=" + tt0.getReturnType() + "======" + tt0.getGenericReturnType() + "======" +
+    // getGenericType(tt0.getGenericReturnType(), C.class));
+    //
+    //        Method tt3 = C.class.getMethod("getValue3");
+    //        System.out.println("tt3.type=" + tt3.getReturnType() + "======" + tt3.getGenericReturnType() + "======" +
+    // getGenericType(tt3.getGenericReturnType(), C.class));
+    //
+    //        Method ttr = AGameService.class.getMethod("getResult");
+    //        System.out.println("ttr.type=" + ttr.getReturnType() + "======" + ttr.getGenericReturnType() + "======" +
+    // getGenericType(ttr.getGenericReturnType(), AGameService.class));
+    //        System.out.println("ttr.应该是: List<AGameTable>, 结果是: " + getGenericType(ttr.getGenericReturnType(),
+    // AGameService.class));
+    //    }
+    //
+    //    public static class GamePlayer {
+    //    }
+    //
+    //    public static class GameTable<P extends GamePlayer> {
+    //    }
+    //
+    //    public static class GameService<GT extends GameTable, P extends GamePlayer> {
+    //
+    //    }
+    //
+    //    public static class AbstractGamePlayer extends GamePlayer {
+    //    }
+    //
+    //    public static class AbstractGameTable<P extends AbstractGamePlayer> extends GameTable<P> {
+    //    }
+    //
+    //    public static class AbstractGameService<GT extends AbstractGameTable<P>, P extends AbstractGamePlayer> extends
+    // GameService<GT, P> {
+    //
+    //        public List<GT> getResult() {
+    //            return null;
+    //        }
+    //    }
+    //
+    //    public static class IGamePlayer extends AbstractGamePlayer {
+    //    }
+    //
+    //    public static class IGameTable<P extends IGamePlayer> extends AbstractGameTable<P> {
+    //    }
+    //
+    //    public static class IGameService<GT extends IGameTable<P>, P extends IGamePlayer> extends
+    // AbstractGameService<GT, P> {
+    //
+    //    }
+    //
+    //    public static class AGamePlayer extends IGamePlayer {
+    //    }
+    //
+    //    public static class AGameTable extends IGameTable<AGamePlayer> {
+    //    }
+    //
+    //    public static class AGameService extends IGameService<AGameTable, AGamePlayer> {
+    //
+    //    }
+    //
+    //    public static class A<V, T> {
+    //
+    //        public List<T> getValue() {
+    //            return null;
+    //        }
+    //
+    //        public T getValue3() {
+    //            return null;
+    //        }
+    //    }
+    //
+    //    public static class B<V, W> extends A<W, V> {
+    //    }
+    //
+    //    public static class C extends B<String, Integer> {
+    //    }
 
     /**
      * 获取TypeVariable对应的实际Type, 如果type不是TypeVariable 直接返回type。
+     *
      * <pre>
      *  public abstract class Key {
      *  }
@@ -309,10 +310,8 @@ public abstract class TypeToken<T> {
      *  }
      * </pre>
      *
-     *
-     * @param paramType      泛型
+     * @param paramType 泛型
      * @param declaringClass 泛型依附类
-     *
      * @return Type
      */
     public static Type getGenericType(final Type paramType, final Type declaringClass) {
@@ -333,7 +332,8 @@ public abstract class TypeToken<T> {
                         return rstype;
                     }
                 }
-                while (superType instanceof Class && superType != Object.class) superType = ((Class) superType).getGenericSuperclass();
+                while (superType instanceof Class && superType != Object.class)
+                    superType = ((Class) superType).getGenericSuperclass();
             } else if (declaringClass instanceof ParameterizedType) {
                 superType = declaringClass;
                 Type rawType = ((ParameterizedType) declaringClass).getRawType();
@@ -387,22 +387,24 @@ public abstract class TypeToken<T> {
                         }
                         if (currt == paramType) {
                             if (atas[i] instanceof Class
-                                && ((TypeVariable) paramType).getBounds().length == 1
-                                && ((TypeVariable) paramType).getBounds()[0] instanceof Class
-                                && ((Class) ((TypeVariable) paramType).getBounds()[0]).isAssignableFrom((Class) atas[i])) {
+                                    && ((TypeVariable) paramType).getBounds().length == 1
+                                    && ((TypeVariable) paramType).getBounds()[0] instanceof Class
+                                    && ((Class) ((TypeVariable) paramType).getBounds()[0])
+                                            .isAssignableFrom((Class) atas[i])) {
                                 return atas[i];
                             }
                             if (atas[i] instanceof Class
-                                && ((TypeVariable) paramType).getBounds().length == 1
-                                && ((TypeVariable) paramType).getBounds()[0] instanceof ParameterizedType) {
+                                    && ((TypeVariable) paramType).getBounds().length == 1
+                                    && ((TypeVariable) paramType).getBounds()[0] instanceof ParameterizedType) {
                                 ParameterizedType pt = (ParameterizedType) ((TypeVariable) paramType).getBounds()[0];
-                                if (pt.getRawType() instanceof Class && ((Class) pt.getRawType()).isAssignableFrom((Class) atas[i])) {
+                                if (pt.getRawType() instanceof Class
+                                        && ((Class) pt.getRawType()).isAssignableFrom((Class) atas[i])) {
                                     return atas[i];
                                 }
                             }
                             if (atas[i] instanceof ParameterizedType
-                                && ((TypeVariable) paramType).getBounds().length == 1
-                                && ((TypeVariable) paramType).getBounds()[0] == Object.class) {
+                                    && ((TypeVariable) paramType).getBounds().length == 1
+                                    && ((TypeVariable) paramType).getBounds()[0] == Object.class) {
                                 return atas[i];
                             }
                         }
@@ -414,8 +416,8 @@ public abstract class TypeToken<T> {
                             for (int i = 0; i < argTypes.length; i++) {
                                 if (argTypes[i] == paramType) {
                                     if (atas[i] instanceof TypeVariable
-                                        && ((TypeVariable) atas[i]).getBounds().length == 1
-                                        && ((TypeVariable) atas[i]).getBounds()[0] instanceof Class) {
+                                            && ((TypeVariable) atas[i]).getBounds().length == 1
+                                            && ((TypeVariable) atas[i]).getBounds()[0] instanceof Class) {
                                         return ((Class) ((TypeVariable) atas[i]).getBounds()[0]);
                                     }
                                 }
@@ -438,9 +440,10 @@ public abstract class TypeToken<T> {
         }
         if (paramType instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) paramType;
-            return createParameterizedType(getGenericType(pt.getOwnerType(), declaringClass),
-                getGenericType(pt.getRawType(), declaringClass),
-                getGenericType(pt.getActualTypeArguments(), declaringClass));
+            return createParameterizedType(
+                    getGenericType(pt.getOwnerType(), declaringClass),
+                    getGenericType(pt.getRawType(), declaringClass),
+                    getGenericType(pt.getActualTypeArguments(), declaringClass));
         }
         return paramType;
     }
@@ -513,16 +516,15 @@ public abstract class TypeToken<T> {
     /**
      * 动态创建类型为ParameterizedType或Class的Type
      *
-     * @param type           当前泛型
+     * @param type 当前泛型
      * @param declaringType0 子类
-     *
      * @return Type
      */
     public static Type createClassType(final Type type, final Type declaringType0) {
         if (isClassType(type)) {
             return type;
         }
-        if (type instanceof ParameterizedType) {  // e.g. Map<String, String>
+        if (type instanceof ParameterizedType) { // e.g. Map<String, String>
             final ParameterizedType pt = (ParameterizedType) type;
             final Type[] paramTypes = pt.getActualTypeArguments();
             for (int i = 0; i < paramTypes.length; i++) {
@@ -539,14 +541,14 @@ public abstract class TypeToken<T> {
                 }
             } while (declaringType instanceof Class);
         }
-        //存在通配符则declaringType 必须是 ParameterizedType
+        // 存在通配符则declaringType 必须是 ParameterizedType
         if (!(declaringType instanceof ParameterizedType)) {
             return Object.class;
         }
         final ParameterizedType declaringPType = (ParameterizedType) declaringType;
         final Type[] virTypes = ((Class) declaringPType.getRawType()).getTypeParameters();
         final Type[] desTypes = declaringPType.getActualTypeArguments();
-        if (type instanceof WildcardType) {   // e.g. <? extends Serializable>
+        if (type instanceof WildcardType) { // e.g. <? extends Serializable>
             final WildcardType wt = (WildcardType) type;
             for (Type f : wt.getUpperBounds()) {
                 for (int i = 0; i < virTypes.length; i++) {
@@ -568,13 +570,13 @@ public abstract class TypeToken<T> {
     /**
      * 动态创建 ParameterizedType
      *
-     * @param ownerType0           ParameterizedType 的 ownerType, 一般为null
-     * @param rawType0             ParameterizedType 的 rawType
+     * @param ownerType0 ParameterizedType 的 ownerType, 一般为null
+     * @param rawType0 ParameterizedType 的 rawType
      * @param actualTypeArguments0 ParameterizedType 的 actualTypeArguments
-     *
      * @return Type
      */
-    public static Type createParameterizedType(final Type ownerType0, final Type rawType0, final Type... actualTypeArguments0) {
+    public static Type createParameterizedType(
+            final Type ownerType0, final Type rawType0, final Type... actualTypeArguments0) {
         if (ownerType0 == null && rawType0 instanceof Class) {
             int count = 0;
             for (Type t : actualTypeArguments0) {
@@ -628,15 +630,16 @@ public abstract class TypeToken<T> {
                     return true;
                 }
                 return Objects.equals(ownerType, that.getOwnerType())
-                    && Objects.equals(rawType, that.getRawType())
-                    && Arrays.equals(actualTypeArguments, that.getActualTypeArguments());
+                        && Objects.equals(rawType, that.getRawType())
+                        && Arrays.equals(actualTypeArguments, that.getActualTypeArguments());
             }
 
             @Override
             public String toString() {
                 StringBuilder sb = new StringBuilder();
                 if (ownerType != null) {
-                    sb.append((ownerType instanceof Class) ? (((Class) ownerType).getName()) : ownerType.toString()).append(".");
+                    sb.append((ownerType instanceof Class) ? (((Class) ownerType).getName()) : ownerType.toString())
+                            .append(".");
                 }
                 sb.append(rawType.getName());
 
@@ -672,16 +675,19 @@ public abstract class TypeToken<T> {
                 nsb.append(ch);
             } else if (ch >= 'A' && ch <= 'Z') {
                 nsb.append(ch);
-            } else { //特殊字符统一使用_
+            } else { // 特殊字符统一使用_
                 nsb.append('_');
             }
         }
         nsb.append("_GenericType");
-        final String newDynName = "org/redkaledyn/typetoken/_Dyn" + TypeToken.class.getSimpleName() + "_" + nsb.toString();
+        final String newDynName =
+                "org/redkaledyn/typetoken/_Dyn" + TypeToken.class.getSimpleName() + "_" + nsb.toString();
         try {
-            return loader.loadClass(newDynName.replace('/', '.')).getField("field").getGenericType();
+            return loader.loadClass(newDynName.replace('/', '.'))
+                    .getField("field")
+                    .getGenericType();
         } catch (Throwable ex) {
-            //do nothing
+            // do nothing
         }
         // ------------------------------------------------------------------------------
         org.redkale.asm.ClassWriter cw = new org.redkale.asm.ClassWriter(COMPUTE_FRAMES);
@@ -699,7 +705,7 @@ public abstract class TypeToken<T> {
             fv = cw.visitField(ACC_PUBLIC, "field", rawTypeDesc, sb.toString(), null);
             fv.visitEnd();
         }
-        {//构造方法
+        { // 构造方法
             mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);

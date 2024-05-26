@@ -5,12 +5,13 @@
  */
 package org.redkale.net.http;
 
+import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
+
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.HttpCookie;
 import java.text.*;
 import java.time.ZoneId;
-import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.LongAdder;
@@ -31,8 +32,7 @@ import org.redkale.util.*;
 /**
  * Http服务器
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -46,8 +46,8 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
     private final ReentrantLock addLock = new ReentrantLock();
 
-    //配置<executor threads="0"> APP_EXECUTOR资源为null
-    //RESNAME_APP_EXECUTOR
+    // 配置<executor threads="0"> APP_EXECUTOR资源为null
+    // RESNAME_APP_EXECUTOR
     protected ExecutorService workExecutor;
 
     public HttpServer() {
@@ -59,7 +59,10 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     }
 
     public HttpServer(Application application) {
-        this(application, System.currentTimeMillis(), application.getResourceFactory().createChild());
+        this(
+                application,
+                System.currentTimeMillis(),
+                application.getResourceFactory().createChild());
     }
 
     public HttpServer(Application application, long serverStartTime, ResourceFactory resourceFactory) {
@@ -127,7 +130,6 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * 删除HttpServlet
      *
      * @param service Service
-     *
      * @return HttpServlet
      */
     public HttpServlet removeHttpServlet(Service service) {
@@ -137,9 +139,8 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     /**
      * 删除HttpServlet
      *
-     * @param <T>                    泛型
+     * @param <T> 泛型
      * @param websocketOrServletType Class
-     *
      * @return HttpServlet
      */
     public <T extends WebSocket> HttpServlet removeHttpServlet(Class<T> websocketOrServletType) {
@@ -150,7 +151,6 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * 屏蔽请求URL的正则表达式
      *
      * @param urlreg 正则表达式
-     *
      * @return 是否成功
      */
     public boolean addForbidURIReg(final String urlreg) {
@@ -161,7 +161,6 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * 删除屏蔽请求URL的正则表达式
      *
      * @param urlreg 正则表达式
-     *
      * @return 是否成功
      */
     public boolean removeForbidURIReg(final String urlreg) {
@@ -171,9 +170,8 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     /**
      * 删除HttpFilter
      *
-     * @param <T>         泛型
+     * @param <T> 泛型
      * @param filterClass HttpFilter类
-     *
      * @return HttpFilter
      */
     public <T extends HttpFilter> T removeHttpFilter(Class<T> filterClass) {
@@ -184,8 +182,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * 添加HttpFilter
      *
      * @param filter HttpFilter
-     * @param conf   AnyValue
-     *
+     * @param conf AnyValue
      * @return HttpServer
      */
     public HttpServer addHttpFilter(HttpFilter filter, AnyValue conf) {
@@ -198,7 +195,6 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      *
      * @param mapping 匹配规则
      * @param servlet HttpServlet
-     *
      * @return HttpServer
      */
     public HttpServer addHttpServlet(String mapping, HttpServlet servlet) {
@@ -209,28 +205,30 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     /**
      * 添加HttpServlet
      *
-     * @param mapping  匹配规则
+     * @param mapping 匹配规则
      * @param consumer HttpServlet
-     *
      * @return HttpServer
      */
     public HttpServer addHttpServlet(String mapping, BiConsumer<HttpRequest, HttpResponse> consumer) {
-        this.dispatcher.addServlet(new HttpServlet() {
-            @Override
-            public void execute(HttpRequest request, HttpResponse response) throws IOException {
-                consumer.accept(request, response);
-            }
-        }, null, null, mapping);
+        this.dispatcher.addServlet(
+                new HttpServlet() {
+                    @Override
+                    public void execute(HttpRequest request, HttpResponse response) throws IOException {
+                        consumer.accept(request, response);
+                    }
+                },
+                null,
+                null,
+                mapping);
         return this;
     }
 
     /**
      * 添加HttpServlet
      *
-     * @param prefix   url前缀
-     * @param servlet  HttpServlet
+     * @param prefix url前缀
+     * @param servlet HttpServlet
      * @param mappings 匹配规则
-     *
      * @return HttpServer
      */
     public HttpServer addHttpServlet(String prefix, HttpServlet servlet, String... mappings) {
@@ -241,9 +239,8 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     /**
      * 添加HttpServlet
      *
-     * @param servlet  HttpServlet
+     * @param servlet HttpServlet
      * @param mappings 匹配规则
-     *
      * @return HttpServer
      */
     public HttpServer addHttpServlet(HttpServlet servlet, String... mappings) {
@@ -254,11 +251,10 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     /**
      * 添加HttpServlet
      *
-     * @param prefix   url前缀
-     * @param servlet  HttpServlet
-     * @param conf     配置信息
+     * @param prefix url前缀
+     * @param servlet HttpServlet
+     * @param conf 配置信息
      * @param mappings 匹配规则
-     *
      * @return HttpServer
      */
     public HttpServer addHttpServlet(HttpServlet servlet, final String prefix, AnyValue conf, String... mappings) {
@@ -269,22 +265,21 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     /**
      * 添加WebSocketServlet
      *
-     * @param <S>           WebSocket
-     * @param <T>           HttpServlet
-     * @param classLoader   ClassLoader
+     * @param <S> WebSocket
+     * @param <T> HttpServlet
+     * @param classLoader ClassLoader
      * @param webSocketType WebSocket的类型
-     * @param messageAgent  MessageAgent
-     * @param prefix        url前缀
-     * @param conf          配置信息
-     *
+     * @param messageAgent MessageAgent
+     * @param prefix url前缀
+     * @param conf 配置信息
      * @return RestServlet
      */
     public <S extends WebSocket, T extends WebSocketServlet> T addRestWebSocketServlet(
-        final ClassLoader classLoader,
-        final Class<S> webSocketType,
-        final MessageAgent messageAgent,
-        final String prefix,
-        final AnyValue conf) {
+            final ClassLoader classLoader,
+            final Class<S> webSocketType,
+            final MessageAgent messageAgent,
+            final String prefix,
+            final AnyValue conf) {
 
         T servlet = Rest.createRestWebSocketServlet(classLoader, webSocketType, messageAgent);
         if (servlet != null) {
@@ -296,22 +291,21 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     /**
      * 添加RestServlet
      *
-     * @param <S>             Service
-     * @param <T>             HttpServlet
-     * @param classLoader     ClassLoader
-     * @param service         Service对象
-     * @param userType        用户数据类型
+     * @param <S> Service
+     * @param <T> HttpServlet
+     * @param classLoader ClassLoader
+     * @param service Service对象
+     * @param userType 用户数据类型
      * @param baseServletType RestServlet基类
-     * @param prefix          url前缀
-     *
+     * @param prefix url前缀
      * @return RestServlet
      */
     public <S extends Service, T extends HttpServlet> T addRestServlet(
-        final ClassLoader classLoader,
-        final S service,
-        final Class userType,
-        final Class<T> baseServletType,
-        final String prefix) {
+            final ClassLoader classLoader,
+            final S service,
+            final Class userType,
+            final Class<T> baseServletType,
+            final String prefix) {
 
         return addRestServlet(classLoader, null, service, userType, baseServletType, prefix);
     }
@@ -319,25 +313,24 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     /**
      * 添加RestServlet
      *
-     * @param <S>             Service
-     * @param <T>             HttpServlet
-     * @param classLoader     ClassLoader
-     * @param name            资源名
-     * @param service         Service对象
-     * @param userType        用户数据类型
+     * @param <S> Service
+     * @param <T> HttpServlet
+     * @param classLoader ClassLoader
+     * @param name 资源名
+     * @param service Service对象
+     * @param userType 用户数据类型
      * @param baseServletType RestServlet基类
-     * @param prefix          url前缀
-     *
+     * @param prefix url前缀
      * @return RestServlet
      */
     @SuppressWarnings("unchecked")
     public <S extends Service, T extends HttpServlet> T addRestServlet(
-        final ClassLoader classLoader,
-        final String name,
-        final S service,
-        final Class userType,
-        final Class<T> baseServletType,
-        final String prefix) {
+            final ClassLoader classLoader,
+            final String name,
+            final S service,
+            final Class userType,
+            final Class<T> baseServletType,
+            final String prefix) {
 
         T servlet = null;
         addLock.lock();
@@ -361,9 +354,9 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                 }
             }
             if (servlet == null) {
-                return null; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null 
+                return null; // 没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null
             }
-            try { //若提供动态变更Service服务功能，则改Rest服务无法做出相应更新
+            try { // 若提供动态变更Service服务功能，则改Rest服务无法做出相应更新
                 Field oneField = servlet.getClass().getDeclaredField(Rest.REST_SERVICE_FIELD_NAME);
                 oneField.setAccessible(true);
 
@@ -401,7 +394,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
     @SuppressWarnings("unchecked")
     protected HttpContext createContext() {
         final int port = this.address.getPort();
-        //this.bufferCapacity = Math.max(this.bufferCapacity, 16 * 1024 + 16); //兼容 HTTP 2.0;
+        // this.bufferCapacity = Math.max(this.bufferCapacity, 16 * 1024 + 16); //兼容 HTTP 2.0;
         this.bufferCapacity = Math.max(this.bufferCapacity, 1024);
         final List<String[]> defaultAddHeaders = new ArrayList<>();
         final List<String[]> defaultSetHeaders = new ArrayList<>();
@@ -436,7 +429,10 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                     } else if (vlocale.startsWith("request.parameters.")) {
                         localParameter = vlocale.substring("request.parameters.".length());
                     } else {
-                        logger.log(Level.SEVERE, "request config locale.value not start with request.headers. or request.parameters. but " + vlocale);
+                        logger.log(
+                                Level.SEVERE,
+                                "request config locale.value not start with request.headers. or request.parameters. but "
+                                        + vlocale);
                     }
                 }
             }
@@ -445,7 +441,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
             if (resps != null) {
                 AnyValue contenttypes = resps.getAnyValue("content-type");
                 if (contenttypes == null) {
-                    contenttypes = resps.getAnyValue("contenttype"); //兼容旧的
+                    contenttypes = resps.getAnyValue("contenttype"); // 兼容旧的
                 }
                 if (contenttypes != null) {
                     plainContentType = contenttypes.getValue("plain");
@@ -459,16 +455,20 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                             continue;
                         }
                         if (val.startsWith("request.parameters.")) {
-                            defaultAddHeaders.add(new String[]{addHeader.getValue("name"), val, val.substring("request.parameters.".length()), null});
+                            defaultAddHeaders.add(new String[] {
+                                addHeader.getValue("name"), val, val.substring("request.parameters.".length()), null
+                            });
                         } else if (val.startsWith("request.headers.")) {
-                            defaultAddHeaders.add(new String[]{addHeader.getValue("name"), val, val.substring("request.headers.".length())});
+                            defaultAddHeaders.add(new String[] {
+                                addHeader.getValue("name"), val, val.substring("request.headers.".length())
+                            });
                         } else if (val.startsWith("system.property.")) {
                             String v = System.getProperty(val.substring("system.property.".length()));
                             if (v != null) {
-                                defaultAddHeaders.add(new String[]{addHeader.getValue("name"), v});
+                                defaultAddHeaders.add(new String[] {addHeader.getValue("name"), v});
                             }
                         } else {
-                            defaultAddHeaders.add(new String[]{addHeader.getValue("name"), val});
+                            defaultAddHeaders.add(new String[] {addHeader.getValue("name"), val});
                         }
                     }
                 }
@@ -480,16 +480,20 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                             continue;
                         }
                         if (val.startsWith("request.parameters.")) {
-                            defaultSetHeaders.add(new String[]{setHeader.getValue("name"), val, val.substring("request.parameters.".length()), null});
+                            defaultSetHeaders.add(new String[] {
+                                setHeader.getValue("name"), val, val.substring("request.parameters.".length()), null
+                            });
                         } else if (val.startsWith("request.headers.")) {
-                            defaultSetHeaders.add(new String[]{setHeader.getValue("name"), val, val.substring("request.headers.".length())});
+                            defaultSetHeaders.add(new String[] {
+                                setHeader.getValue("name"), val, val.substring("request.headers.".length())
+                            });
                         } else if (val.startsWith("system.property.")) {
                             String v = System.getProperty(val.substring("system.property.".length()));
                             if (v != null) {
-                                defaultSetHeaders.add(new String[]{setHeader.getValue("name"), v});
+                                defaultSetHeaders.add(new String[] {setHeader.getValue("name"), v});
                             }
                         } else {
-                            defaultSetHeaders.add(new String[]{setHeader.getValue("name"), val});
+                            defaultSetHeaders.add(new String[] {setHeader.getValue("name"), val});
                         }
                     }
                 }
@@ -509,12 +513,12 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                 AnyValue dates = resps.getAnyValue("date");
                 datePeriod = dates == null ? 0 : dates.getIntValue("period", 0);
             }
-
         }
         Supplier<byte[]> dateSupplier = null;
         if (datePeriod == 0) {
             final ZoneId gmtZone = ZoneId.of("GMT");
-            dateSupplier = () -> ("Date: " + RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(gmtZone)) + "\r\n").getBytes();
+            dateSupplier = () ->
+                    ("Date: " + RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(gmtZone)) + "\r\n").getBytes();
         } else if (datePeriod > 0) {
             if (this.dateScheduler == null) {
                 this.dateScheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
@@ -528,26 +532,34 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                 gmtDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
                 dateRef.set(("Date: " + gmtDateFormat.format(new Date()) + "\r\n").getBytes());
                 final int dp = datePeriod;
-                this.dateScheduler.scheduleAtFixedRate(() -> {
-                    try {
-                        dateRef.set(("Date: " + gmtDateFormat.format(new Date()) + "\r\n").getBytes());
-                    } catch (Throwable t) {
-                        logger.log(Level.SEVERE, "HttpServer schedule(interval=" + dp + "ms) date-format error", t);
-                    }
-                }, 1000 - System.currentTimeMillis() % 1000, datePeriod, TimeUnit.MILLISECONDS);
+                this.dateScheduler.scheduleAtFixedRate(
+                        () -> {
+                            try {
+                                dateRef.set(("Date: " + gmtDateFormat.format(new Date()) + "\r\n").getBytes());
+                            } catch (Throwable t) {
+                                logger.log(
+                                        Level.SEVERE,
+                                        "HttpServer schedule(interval=" + dp + "ms) date-format error",
+                                        t);
+                            }
+                        },
+                        1000 - System.currentTimeMillis() % 1000,
+                        datePeriod,
+                        TimeUnit.MILLISECONDS);
                 dateSupplier = () -> dateRef.get();
             }
         }
         HttpRender httpRender = null;
         AnyValue renderConfig = null;
-        { //设置TemplateEngine            
+        { // 设置TemplateEngine
             renderConfig = config.getAnyValue("render");
             if (renderConfig != null) {
                 String renderType = renderConfig.getValue("value");
                 try {
                     Class clazz = Thread.currentThread().getContextClassLoader().loadClass(renderType);
                     RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());
-                    HttpRender render = (HttpRender) clazz.getDeclaredConstructor().newInstance();
+                    HttpRender render =
+                            (HttpRender) clazz.getDeclaredConstructor().newInstance();
                     getResourceFactory().inject(render);
                     httpRender = render;
                 } catch (Throwable e) {
@@ -561,8 +573,10 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         this.respConfig = new HttpResponseConfig();
         respConfig.plainContentType = plainContentType;
         respConfig.jsonContentType = jsonContentType;
-        respConfig.defaultAddHeaders = defaultAddHeaders.isEmpty() ? null : defaultAddHeaders.toArray(new String[defaultAddHeaders.size()][]);
-        respConfig.defaultSetHeaders = defaultSetHeaders.isEmpty() ? null : defaultSetHeaders.toArray(new String[defaultSetHeaders.size()][]);
+        respConfig.defaultAddHeaders =
+                defaultAddHeaders.isEmpty() ? null : defaultAddHeaders.toArray(new String[defaultAddHeaders.size()][]);
+        respConfig.defaultSetHeaders =
+                defaultSetHeaders.isEmpty() ? null : defaultSetHeaders.toArray(new String[defaultSetHeaders.size()][]);
         respConfig.defaultCookie = defaultCookie;
         respConfig.autoOptions = autoOptions;
         respConfig.dateSupplier = dateSupplier;
@@ -587,7 +601,8 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                     throw new HttpException("" + impl + " not HttpRpcAuthenticator implement class");
                 }
                 RedkaleClassLoader.putReflectionPublicConstructors(implClass, implClass.getName());
-                contextConfig.rpcAuthenticator = (HttpRpcAuthenticator) implClass.getConstructor().newInstance();
+                contextConfig.rpcAuthenticator =
+                        (HttpRpcAuthenticator) implClass.getConstructor().newInstance();
             } catch (RuntimeException ex) {
                 throw ex;
             } catch (Exception e) {
@@ -607,14 +622,18 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
     @Override
     protected ByteBufferPool createSafeBufferPool(LongAdder createCounter, LongAdder cycleCounter, int bufferPoolSize) {
-        this.safeBufferPool = ByteBufferPool.createSafePool(createCounter, cycleCounter, bufferPoolSize, this.bufferCapacity);
+        this.safeBufferPool =
+                ByteBufferPool.createSafePool(createCounter, cycleCounter, bufferPoolSize, this.bufferCapacity);
         return this.safeBufferPool;
     }
 
     @Override
-    protected ObjectPool<HttpResponse> createSafeResponsePool(LongAdder createCounter, LongAdder cycleCounter, int responsePoolSize) {
-        Creator<HttpResponse> creator = (Object... params) -> new HttpResponse(this.context, new HttpRequest(this.context), this.respConfig);
-        ObjectPool<HttpResponse> pool = ObjectPool.createSafePool(createCounter, cycleCounter, responsePoolSize, creator, HttpResponse::prepare, HttpResponse::recycle);
+    protected ObjectPool<HttpResponse> createSafeResponsePool(
+            LongAdder createCounter, LongAdder cycleCounter, int responsePoolSize) {
+        Creator<HttpResponse> creator =
+                (Object... params) -> new HttpResponse(this.context, new HttpRequest(this.context), this.respConfig);
+        ObjectPool<HttpResponse> pool = ObjectPool.createSafePool(
+                createCounter, cycleCounter, responsePoolSize, creator, HttpResponse::prepare, HttpResponse::recycle);
         return pool;
     }
 }

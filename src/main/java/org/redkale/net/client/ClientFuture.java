@@ -12,11 +12,8 @@ import org.redkale.net.*;
 import org.redkale.util.Traces;
 
 /**
- *
  * @author zhangjx
- *
  * @since 2.3.0
- *
  * @param <R> 泛型
  * @param <T> 泛型
  */
@@ -48,7 +45,7 @@ public class ClientFuture<R extends ClientRequest, T> extends CompletableFuture<
         }
     }
 
-    @Override //JDK9+
+    @Override // JDK9+
     public <U> ClientFuture<R, U> newIncompleteFuture() {
         ClientFuture future = new ClientFuture<>(conn, request);
         future.timeout = timeout;
@@ -97,6 +94,7 @@ public class ClientFuture<R extends ClientRequest, T> extends CompletableFuture<
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "_" + Objects.hash(this) + "{conn = " + conn + ", request = " + request + "}";
+        return getClass().getSimpleName() + "_" + Objects.hash(this) + "{conn = " + conn + ", request = " + request
+                + "}";
     }
 }

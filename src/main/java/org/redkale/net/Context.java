@@ -18,76 +18,103 @@ import org.redkale.util.*;
 /**
  * 服务器上下文对象
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
 public class Context {
 
-    //服务启动时间
+    // 服务启动时间
     protected final long serverStartTime;
 
-    //Application节点id
+    // Application节点id
     protected final String nodeid;
 
-    //Server的线程池
+    // Server的线程池
     protected final ExecutorService workExecutor;
 
-    //SSL
+    // SSL
     protected final SSLBuilder sslBuilder;
 
-    //SSL
+    // SSL
     protected final SSLContext sslContext;
 
-    //ByteBuffer的容量，默认8K
+    // ByteBuffer的容量，默认8K
     protected final int bufferCapacity;
 
-    //服务的根Servlet
+    // 服务的根Servlet
     protected final DispatcherServlet dispatcher;
 
-    //日志Logger
+    // 日志Logger
     protected final Logger logger;
 
-    //BSON操作工厂
+    // BSON操作工厂
     protected final BsonFactory bsonFactory;
 
-    //JSON操作工厂
+    // JSON操作工厂
     protected final JsonFactory jsonFactory;
 
-    //依赖注入工厂类
+    // 依赖注入工厂类
     protected final ResourceFactory resourceFactory;
 
-    //最大连接数, 为0表示没限制
+    // 最大连接数, 为0表示没限制
     protected int maxConns;
 
-    //请求内容的大小上限, 默认64K
+    // 请求内容的大小上限, 默认64K
     protected int maxBody;
 
-    //keep alive IO读取的超时时间
+    // keep alive IO读取的超时时间
     protected int aliveTimeoutSeconds;
 
-    //IO读取的超时时间
+    // IO读取的超时时间
     protected int readTimeoutSeconds;
 
-    //IO写入的超时时间
+    // IO写入的超时时间
     protected int writeTimeoutSeconds;
 
-    //服务的监听地址
+    // 服务的监听地址
     protected InetSocketAddress serverAddress;
 
-    //字符集
+    // 字符集
     protected Charset charset;
 
     public Context(ContextConfig config) {
-        this(config.serverStartTime, config.nodeid, config.logger, config.workExecutor, config.sslBuilder, config.sslContext,
-            config.bufferCapacity, config.maxConns, config.maxBody, config.charset, config.serverAddress, config.resourceFactory,
-            config.dispatcher, config.aliveTimeoutSeconds, config.readTimeoutSeconds, config.writeTimeoutSeconds);
+        this(
+                config.serverStartTime,
+                config.nodeid,
+                config.logger,
+                config.workExecutor,
+                config.sslBuilder,
+                config.sslContext,
+                config.bufferCapacity,
+                config.maxConns,
+                config.maxBody,
+                config.charset,
+                config.serverAddress,
+                config.resourceFactory,
+                config.dispatcher,
+                config.aliveTimeoutSeconds,
+                config.readTimeoutSeconds,
+                config.writeTimeoutSeconds);
     }
 
-    public Context(long serverStartTime, String nodeid, Logger logger, ExecutorService workExecutor, SSLBuilder sslBuilder, SSLContext sslContext,
-        int bufferCapacity, final int maxConns, final int maxBody, Charset charset, InetSocketAddress address,
-        ResourceFactory resourceFactory, DispatcherServlet dispatcher, int aliveTimeoutSeconds, int readTimeoutSeconds, int writeTimeoutSeconds) {
+    public Context(
+            long serverStartTime,
+            String nodeid,
+            Logger logger,
+            ExecutorService workExecutor,
+            SSLBuilder sslBuilder,
+            SSLContext sslContext,
+            int bufferCapacity,
+            final int maxConns,
+            final int maxBody,
+            Charset charset,
+            InetSocketAddress address,
+            ResourceFactory resourceFactory,
+            DispatcherServlet dispatcher,
+            int aliveTimeoutSeconds,
+            int readTimeoutSeconds,
+            int writeTimeoutSeconds) {
         this.serverStartTime = serverStartTime;
         this.nodeid = nodeid;
         this.logger = logger;
@@ -121,7 +148,8 @@ public class Context {
                     request.traceid = Traces.computeIfAbsent(request.getTraceid());
                     servlet.execute(request, response);
                 } catch (Throwable t) {
-                    response.context.logger.log(Level.WARNING, "Execute servlet occur exception. request = " + request, t);
+                    response.context.logger.log(
+                            Level.WARNING, "Execute servlet occur exception. request = " + request, t);
                     response.finishError(t);
                 }
                 Traces.removeTraceid();
@@ -135,7 +163,6 @@ public class Context {
                 response.finishError(t);
             }
         }
-
     }
 
     protected void updateReadIOThread(AsyncConnection conn, AsyncIOThread ioReadThread) {
@@ -216,52 +243,52 @@ public class Context {
 
     public static class ContextConfig {
 
-        //服务启动时间
+        // 服务启动时间
         public long serverStartTime;
 
-        //Application节点id
+        // Application节点id
         public String nodeid;
 
-        //Server的线程池
+        // Server的线程池
         public ExecutorService workExecutor;
 
-        //SSL
+        // SSL
         public SSLBuilder sslBuilder;
 
-        //SSL
+        // SSL
         public SSLContext sslContext;
 
-        //ByteBuffer的容量，默认8K
+        // ByteBuffer的容量，默认8K
         public int bufferCapacity;
 
-        //服务的根Servlet
+        // 服务的根Servlet
         public DispatcherServlet dispatcher;
 
-        //服务的监听地址
+        // 服务的监听地址
         public InetSocketAddress serverAddress;
 
-        //字符集
+        // 字符集
         public Charset charset;
 
-        //请求内容的大小上限, 默认64K
+        // 请求内容的大小上限, 默认64K
         public int maxBody;
 
-        //最大连接数, 为0表示没限制
+        // 最大连接数, 为0表示没限制
         public int maxConns;
 
-        //keep alive IO读取的超时时间
+        // keep alive IO读取的超时时间
         public int aliveTimeoutSeconds;
 
-        //IO读取的超时时间
+        // IO读取的超时时间
         public int readTimeoutSeconds;
 
-        //IO写入的超时时间
+        // IO写入的超时时间
         public int writeTimeoutSeconds;
 
-        //日志Logger
+        // 日志Logger
         public Logger logger;
 
-        //依赖注入工厂类
+        // 依赖注入工厂类
         public ResourceFactory resourceFactory;
 
         @Override

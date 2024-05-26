@@ -10,11 +10,10 @@ import java.util.Collection;
 import java.util.concurrent.locks.*;
 
 /**
- * Collection的序列化操作类  <br>
- * 支持一定程度的泛型。  <br>
+ * Collection的序列化操作类 <br>
+ * 支持一定程度的泛型。 <br>
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> 序列化的集合元素类型
@@ -77,7 +76,7 @@ public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
                 try {
                     condition.await();
                 } catch (Exception e) {
-                    //do nothing
+                    // do nothing
                 } finally {
                     lock.unlock();
                 }
@@ -114,7 +113,8 @@ public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "{componentType:" + this.type + ", encoder:" + this.componentEncoder + "}";
+        return this.getClass().getSimpleName() + "{componentType:" + this.type + ", encoder:" + this.componentEncoder
+                + "}";
     }
 
     public Encodeable<Writer, Object> getComponentEncoder() {

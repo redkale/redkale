@@ -18,8 +18,7 @@ import org.redkale.util.*;
 /**
  * SNCP Server节点的配置Server
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -38,7 +37,11 @@ public class NodeSncpServer extends NodeServer {
     }
 
     private static Server createServer(Application application, AnyValue serconf) {
-        return new SncpServer(application, application.getStartTime(), serconf, application.getResourceFactory().createChild());
+        return new SncpServer(
+                application,
+                application.getStartTime(),
+                serconf,
+                application.getResourceFactory().createChild());
     }
 
     @Override
@@ -49,9 +52,9 @@ public class NodeSncpServer extends NodeServer {
     @Override
     public void init(AnyValue config) throws Exception {
         super.init(config);
-        //-------------------------------------------------------------------
+        // -------------------------------------------------------------------
         if (sncpServer == null) {
-            return; //调试时server才可能为null
+            return; // 调试时server才可能为null
         }
         final StringBuilder sb = logger.isLoggable(Level.FINE) ? new StringBuilder() : null;
         List<SncpServlet> servlets = sncpServer.getSncpServlets();
@@ -61,11 +64,14 @@ public class NodeSncpServer extends NodeServer {
         int maxNameLength = 0;
         for (SncpServlet en : servlets) {
             maxNameLength = Math.max(maxNameLength, en.getResourceName().length() + 1);
-            maxTypeLength = Math.max(maxTypeLength, en.getResourceType().getName().length());
+            maxTypeLength =
+                    Math.max(maxTypeLength, en.getResourceType().getName().length());
         }
         for (SncpServlet en : servlets) {
             if (sb != null) {
-                sb.append("Load ").append(toSimpleString(en, maxTypeLength, maxNameLength)).append(LINE_SEPARATOR);
+                sb.append("Load ")
+                        .append(toSimpleString(en, maxTypeLength, maxNameLength))
+                        .append(LINE_SEPARATOR);
             }
         }
         if (sb != null && sb.length() > 0) {
@@ -83,7 +89,11 @@ public class NodeSncpServer extends NodeServer {
         for (int i = 0; i < len; i++) {
             sb.append(' ');
         }
-        sb.append(", serviceid=").append(servlet.getServiceid()).append(", name='").append(serviceName).append("'");
+        sb.append(", serviceid=")
+                .append(servlet.getServiceid())
+                .append(", name='")
+                .append(serviceName)
+                .append("'");
         for (int i = 0; i < maxNameLength - serviceName.length(); i++) {
             sb.append(' ');
         }
@@ -108,7 +118,8 @@ public class NodeSncpServer extends NodeServer {
     }
 
     @SuppressWarnings("unchecked")
-    protected void loadSncpFilter(final AnyValue servletsConf, final ClassFilter<? extends Filter> classFilter) throws Exception {
+    protected void loadSncpFilter(final AnyValue servletsConf, final ClassFilter<? extends Filter> classFilter)
+            throws Exception {
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         List<FilterEntry<? extends Filter>> list = new ArrayList(classFilter.getFilterEntrys());
         for (FilterEntry<? extends Filter> entry : list) {
@@ -116,7 +127,7 @@ public class NodeSncpServer extends NodeServer {
             if (Utility.isAbstractOrInterface(clazz)) {
                 continue;
             }
-            if (entry.isExpect()) { //跳过不自动加载的Filter
+            if (entry.isExpect()) { // 跳过不自动加载的Filter
                 continue;
             }
             RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());
@@ -138,28 +149,35 @@ public class NodeSncpServer extends NodeServer {
         RedkaleClassLoader.putReflectionPublicClasses(SncpServlet.class.getName());
         if (!application.isSingletonMode()) {
             this.servletServices.stream()
-                .filter(x -> x.getClass().getAnnotation(Local.class) == null) //Local模式的Service不生成SncpServlet
-                .forEach(x -> {
-                    SncpServlet servlet = sncpServer.addSncpServlet(x);
-                    dynServletMap.put(x, servlet);
-                    String mq = Sncp.getResourceMQ(x);
-                    if (mq != null) {
-                        MessageAgent agent = application.getResourceFactory().find(mq, MessageAgent.class);
-                        agent.putService(this, x, servlet);
-                    }
-                });
+                    .filter(x -> x.getClass().getAnnotation(Local.class) == null) // Local模式的Service不生成SncpServlet
+                    .forEach(x -> {
+                        SncpServlet servlet = sncpServer.addSncpServlet(x);
+                        dynServletMap.put(x, servlet);
+                        String mq = Sncp.getResourceMQ(x);
+                        if (mq != null) {
+                            MessageAgent agent =
+                                    application.getResourceFactory().find(mq, MessageAgent.class);
+                            agent.putService(this, x, servlet);
+                        }
+                    });
         }
     }
 
     @Override
     @SuppressWarnings("unchecked")
     protected ClassFilter<Filter> createFilterClassFilter() {
-        return createClassFilter(null, null, SncpFilter.class, new Class[]{org.redkale.watch.WatchFilter.class}, null, "filters", "filter");
+        return createClassFilter(
+                null,
+                null,
+                SncpFilter.class,
+                new Class[] {org.redkale.watch.WatchFilter.class},
+                null,
+                "filters",
+                "filter");
     }
 
     @Override
     protected ClassFilter<Servlet> createServletClassFilter() {
         return null;
     }
-
 }

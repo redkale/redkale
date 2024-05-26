@@ -5,10 +5,5 @@
  */
 package org.redkale.test.type;
 
-/**
- *
- * @author zhangjx
- */
-public class TwoRound extends OneRound {
-    
-}
+/** @author zhangjx */
+public class TwoRound extends OneRound {}

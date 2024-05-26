@@ -14,20 +14,24 @@ import javax.net.ssl.SSLContext;
 import org.redkale.util.ByteBufferReader;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.1.0
  */
 class AsyncNioTcpConnection extends AsyncNioConnection {
 
     private final SocketChannel channel;
 
-    public AsyncNioTcpConnection(boolean clientMode, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread,
-        AsyncIOThread ioWriteThread, SocketChannel ch, SSLBuilder sslBuilder, SSLContext sslContext, final SocketAddress address) {
+    public AsyncNioTcpConnection(
+            boolean clientMode,
+            AsyncIOGroup ioGroup,
+            AsyncIOThread ioReadThread,
+            AsyncIOThread ioWriteThread,
+            SocketChannel ch,
+            SSLBuilder sslBuilder,
+            SSLContext sslContext,
+            final SocketAddress address) {
         super(clientMode, ioGroup, ioReadThread, ioWriteThread, ioGroup.bufferCapacity, sslBuilder, sslContext);
         this.channel = ch;
         SocketAddress addr = address;
@@ -35,7 +39,7 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
             try {
                 addr = ch.getRemoteAddress();
             } catch (Exception e) {
-                //do nothing
+                // do nothing
             }
         }
         this.remoteAddress = addr;
@@ -103,7 +107,7 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
 
         AsyncConnection self = this;
         return new ReadableByteChannel() {
-            //ssl解密后的半包数据
+            // ssl解密后的半包数据
             ByteBuffer halfBuffer;
 
             @Override
@@ -125,7 +129,7 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
                 if (netBuffer.hasRemaining()) {
                     ByteBuffer appBuffer = sslUnwrap(false, netBuffer);
                     if (appBuffer == null) {
-                        return -1; //CLOSED，netBuffer已被回收
+                        return -1; // CLOSED，netBuffer已被回收
                     }
                     appBuffer.flip();
                     int pos = bb.position();
@@ -155,7 +159,6 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
                 }
                 self.close();
             }
-
         };
     }
 
@@ -207,7 +210,7 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
     protected SelectionKey keyFor(Selector sel) {
         return this.channel.keyFor(sel);
     }
-    
+
     @Override
     protected SelectionKey implRegister(Selector sel, int ops) throws ClosedChannelException {
         return this.channel.register(sel, ops);
@@ -284,5 +287,4 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
             this.writeKey.cancel();
         }
     }
-
 }

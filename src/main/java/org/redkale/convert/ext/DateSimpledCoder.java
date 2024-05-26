@@ -5,16 +5,15 @@
  */
 package org.redkale.convert.ext;
 
+import java.util.Date;
 import org.redkale.convert.Reader;
 import org.redkale.convert.SimpledCoder;
 import org.redkale.convert.Writer;
-import java.util.Date;
 
 /**
  * java.util.Date 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -34,5 +33,4 @@ public final class DateSimpledCoder<R extends Reader, W extends Writer> extends 
         long t = in.readLong();
         return t == 0 ? null : new Date(t);
     }
-
 }

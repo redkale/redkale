@@ -9,10 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.redkale.util.MultiHashKey;
 import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class MultiHashKeyTest {
 
     public static void main(String[] args) throws Throwable {
@@ -64,9 +61,11 @@ public class MultiHashKeyTest {
         String key = "key_#{name}_#{id}_#{name.index}";
         MultiHashKey rs = MultiHashKey.create(paramNames, key);
         System.out.println(rs);
-        Assertions.assertEquals("ArrayKey[StringKey{key: key_}, ParamKey{field: name, index: 0}, StringKey{key: _}, "
-            + "ParamKey{field: id, index: 1}, StringKey{key: _}, "
-            + "ParamsKey{field: name.index, index: 0}]", rs.toString());
+        Assertions.assertEquals(
+                "ArrayKey[StringKey{key: key_}, ParamKey{field: name, index: 0}, StringKey{key: _}, "
+                        + "ParamKey{field: id, index: 1}, StringKey{key: _}, "
+                        + "ParamsKey{field: name.index, index: 0}]",
+                rs.toString());
         Assertions.assertEquals("key_n124_123_124", rs.keyFor(new Name(124), 123));
     }
 
@@ -76,10 +75,12 @@ public class MultiHashKeyTest {
         String key = "key_#{map.name}_#{id}_#{map.index}";
         MultiHashKey rs = MultiHashKey.create(paramNames, key);
         System.out.println(rs);
-        Assertions.assertEquals("ArrayKey[StringKey{key: key_}, "
-            + "ParamsKey{field: map.name, index: 0}, StringKey{key: _}, "
-            + "ParamKey{field: id, index: 1}, StringKey{key: _}, "
-            + "ParamsKey{field: map.index, index: 0}]", rs.toString());
+        Assertions.assertEquals(
+                "ArrayKey[StringKey{key: key_}, "
+                        + "ParamsKey{field: map.name, index: 0}, StringKey{key: _}, "
+                        + "ParamKey{field: id, index: 1}, StringKey{key: _}, "
+                        + "ParamsKey{field: map.index, index: 0}]",
+                rs.toString());
         Map<String, Object> map = Utility.ofMap("name", "me", "index", 123);
         Assertions.assertEquals("key_me_123_123", rs.keyFor(map, 123));
     }
@@ -94,19 +95,13 @@ public class MultiHashKeyTest {
     }
 
     @Test
-    public void run7() throws Exception {
-
-    }
+    public void run7() throws Exception {}
 
     @Test
-    public void run8() throws Exception {
-
-    }
+    public void run8() throws Exception {}
 
     @Test
-    public void run9() throws Exception {
-
-    }
+    public void run9() throws Exception {}
 
     public static class Name {
 
@@ -128,5 +123,4 @@ public class MultiHashKeyTest {
             return "n" + index;
         }
     }
-
 }

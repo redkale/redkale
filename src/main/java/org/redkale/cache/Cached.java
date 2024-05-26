@@ -3,21 +3,18 @@
  */
 package org.redkale.cache;
 
-import java.lang.annotation.Documented;
 import static java.lang.annotation.ElementType.METHOD;
-import java.lang.annotation.Retention;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.concurrent.TimeUnit;
 import org.redkale.service.LoadMode;
 
 /**
- *
  * 标记在Service的缓存接口, 方法有以下限制: <br>
- * 1、方法返回类型不能是void/CompletableFuture&#60;Void&#62;
- * 2、方法返回类型必须可json序列化
- * 3、方法必须是protected/public
- * 4、方法不能是final/static
+ * 1、方法返回类型不能是void/CompletableFuture&#60;Void&#62; 2、方法返回类型必须可json序列化 3、方法必须是protected/public 4、方法不能是final/static
  *
  * @since 2.8.0
  */
@@ -43,8 +40,7 @@ public @interface Cached {
     /**
      * 本地缓存过期时长， 0表示永不过期， -1表示不作本地缓存。<br>
      * 参数值支持方式:<br>
-     * 100: 设置数值
-     * ${env.cache.expires}: 读取系统配置项
+     * 100: 设置数值 ${env.cache.expires}: 读取系统配置项
      *
      * @return 过期时长
      */
@@ -53,8 +49,7 @@ public @interface Cached {
     /**
      * 远程缓存过期时长， 0表示永不过期， -1表示不作远程缓存。<br>
      * 参数值支持方式:<br>
-     * 100: 设置数值
-     * ${env.cache.expires}: 读取系统配置项
+     * 100: 设置数值 ${env.cache.expires}: 读取系统配置项
      *
      * @return 过期时长
      */

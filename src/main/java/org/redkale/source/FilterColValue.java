@@ -10,12 +10,10 @@ import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.ConvertColumn;
 
 /**
- * 主要用于自身字段间的表达式, 如： a.recordid = a.parentid , a.parentid就需要FilterColValue来表示 new FilterColValue("parentid")
- <br>
+ * 主要用于自身字段间的表达式, 如： a.recordid = a.parentid , a.parentid就需要FilterColValue来表示 new FilterColValue("parentid") <br>
  * 注意：该类型不支持表达式：FV_XXX、BETWEEN、NOTBETWEEN、IN、NOTIN
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -37,5 +35,4 @@ public class FilterColValue implements java.io.Serializable {
     public String toString() {
         return "a." + getColumn();
     }
-
 }

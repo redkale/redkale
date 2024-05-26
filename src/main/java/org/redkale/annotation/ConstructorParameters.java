@@ -5,15 +5,15 @@
  */
 package org.redkale.annotation;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 
 /**
  * 类似java.beans.ConstructorProperties, 必须配合Creator使用
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */

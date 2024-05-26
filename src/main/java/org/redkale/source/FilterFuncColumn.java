@@ -10,8 +10,7 @@ import java.util.Arrays;
 /**
  * FilterFuncColumn用于getNumberMap获取列表似数据, getNumberResult获取单字段值， getNumberMap获取多字段值
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -21,12 +20,11 @@ public class FilterFuncColumn implements java.io.Serializable {
 
     FilterFunc func;
 
-    String[] columns; //为null，将使用*代替
+    String[] columns; // 为null，将使用*代替
 
     Number defvalue;
 
-    public FilterFuncColumn() {
-    }
+    public FilterFuncColumn() {}
 
     public static FilterFuncColumn create(final FilterFunc func) {
         return new FilterFuncColumn(func);
@@ -41,7 +39,7 @@ public class FilterFuncColumn implements java.io.Serializable {
     }
 
     public String[] cols() {
-        return columns == null || columns.length == 0 ? new String[]{COLUMN_NULL} : columns;
+        return columns == null || columns.length == 0 ? new String[] {COLUMN_NULL} : columns;
     }
 
     public String col(String column) {
@@ -88,6 +86,7 @@ public class FilterFuncColumn implements java.io.Serializable {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "{func:" + this.func + ", columns:" + Arrays.toString(this.columns) + ", defvalue:" + this.defvalue + "}";
+        return this.getClass().getSimpleName() + "{func:" + this.func + ", columns:" + Arrays.toString(this.columns)
+                + ", defvalue:" + this.defvalue + "}";
     }
 }

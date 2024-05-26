@@ -9,8 +9,6 @@ import java.net.URI;
 import org.redkale.convert.*;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx

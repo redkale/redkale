@@ -65,48 +65,36 @@ package org.redkale.asm;
  */
 class Handler {
 
-    /**
-     * Beginning of the exception handler's scope (inclusive).
-     */
+    /** Beginning of the exception handler's scope (inclusive). */
     Label start;
 
-    /**
-     * End of the exception handler's scope (exclusive).
-     */
+    /** End of the exception handler's scope (exclusive). */
     Label end;
 
-    /**
-     * Beginning of the exception handler's code.
-     */
+    /** Beginning of the exception handler's code. */
     Label handler;
 
     /**
-     * Internal name of the type of exceptions handled by this handler, or
-     * &#60;tt&#62;null&#60;/tt&#62; to catch any exceptions.
+     * Internal name of the type of exceptions handled by this handler, or &#60;tt&#62;null&#60;/tt&#62; to catch any
+     * exceptions.
      */
     String desc;
 
     /**
-     * Constant pool index of the internal name of the type of exceptions
-     * handled by this handler, or 0 to catch any exceptions.
+     * Constant pool index of the internal name of the type of exceptions handled by this handler, or 0 to catch any
+     * exceptions.
      */
     int type;
 
-    /**
-     * Next exception handler block info.
-     */
+    /** Next exception handler block info. */
     Handler next;
 
     /**
-     * Removes the range between start and end from the given exception
-     * handlers.
+     * Removes the range between start and end from the given exception handlers.
      *
-     * @param h
-     *            an exception handler list.
-     * @param start
-     *            the start of the range to be removed.
-     * @param end
-     *            the end of the range to be removed. Maybe null.
+     * @param h an exception handler list.
+     * @param start the start of the range to be removed.
+     * @param end the end of the range to be removed. Maybe null.
      * @return the exception handler list with the start-end range removed.
      */
     static Handler remove(Handler h, Label start, Label end) {

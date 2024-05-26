@@ -5,21 +5,19 @@
  */
 package org.redkale.service;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 
 /**
  * SNCP协议中用于CompletionHandler回调函数中的attach字段。
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
 @Documented
 @Target({PARAMETER})
 @Retention(RUNTIME)
-public @interface RpcAttachment {
-
-}
+public @interface RpcAttachment {}

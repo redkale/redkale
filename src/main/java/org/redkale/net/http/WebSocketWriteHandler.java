@@ -5,18 +5,16 @@
  */
 package org.redkale.net.http;
 
+import static org.redkale.net.http.WebSocket.*;
+
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
-import static org.redkale.net.http.WebSocket.*;
 import org.redkale.util.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class WebSocketWriteHandler implements CompletionHandler<Integer, Void> {
 
     protected final HttpContext context;
@@ -95,30 +93,34 @@ public class WebSocketWriteHandler implements CompletionHandler<Integer, Void> {
             }
             respList.clear();
         } catch (Exception e) {
-            //do nothing
+            // do nothing
         }
         webSocket.kill(RETCODE_SENDEXCEPTION, "websocket send message failed on CompletionHandler");
         if (exc != null && context.getLogger().isLoggable(Level.FINER)) {
-            context.getLogger().log(Level.FINER, "WebSocket sendMessage on CompletionHandler failed, force to close channel, live "
-                + (System.currentTimeMillis() - webSocket.getCreateTime()) / 1000 + " seconds", exc);
+            context.getLogger()
+                    .log(
+                            Level.FINER,
+                            "WebSocket sendMessage on CompletionHandler failed, force to close channel, live "
+                                    + (System.currentTimeMillis() - webSocket.getCreateTime()) / 1000 + " seconds",
+                            exc);
         }
     }
 
-    //消息编码
+    // 消息编码
     protected void writeEncode(final ByteArray array, final WebSocketPacket packet) {
         final byte opcode = (byte) (packet.type.getValue() | 0x80);
         final byte[] content = packet.getPayload();
         final int len = content.length;
-        if (len <= 0x7D) { //125
+        if (len <= 0x7D) { // 125
             array.put(opcode);
             array.put((byte) len);
         } else if (len <= 0xFFFF) { // 65535
             array.put(opcode);
-            array.put((byte) 0x7E); //126
+            array.put((byte) 0x7E); // 126
             array.putChar((char) len);
         } else {
             array.put(opcode);
-            array.put((byte) 0x7F); //127
+            array.put((byte) 0x7F); // 127
             array.putLong(len);
         }
         array.put(content);

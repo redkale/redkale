@@ -17,8 +17,6 @@ import org.redkale.util.Creator;
 import org.redkale.util.RedkaleException;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -29,12 +27,12 @@ public class HttpResult<T> {
     public static final String SESSIONID_COOKIENAME = HttpRequest.SESSIONID_NAME;
 
     @ConvertColumn(index = 1)
-    protected int status = 200; //不设置则为 200
+    protected int status = 200; // 不设置则为 200
 
     @ConvertColumn(index = 2)
     protected String contentType;
 
-    @ConvertColumn(index = 3)  //不使用HttpHeader因不易反序列化
+    @ConvertColumn(index = 3) // 不使用HttpHeader因不易反序列化
     protected Map<String, String> headers;
 
     @ConvertColumn(index = 4)
@@ -46,8 +44,7 @@ public class HttpResult<T> {
 
     protected Convert convert;
 
-    public HttpResult() {
-    }
+    public HttpResult() {}
 
     public HttpResult(Convert convert, T result) {
         this.convert = convert;
@@ -199,7 +196,7 @@ public class HttpResult<T> {
 
                 @Override
                 public Class[] paramTypes() {
-                    return new Class[]{ConvertFactory.class};
+                    return new Class[] {ConvertFactory.class};
                 }
             };
         }
@@ -221,6 +218,5 @@ public class HttpResult<T> {
         public Type getType() {
             return Object.class;
         }
-
     }
 }

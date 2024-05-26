@@ -5,6 +5,8 @@
  */
 package org.redkale.net.sncp;
 
+import static org.redkale.net.client.ClientRequest.EMPTY_TRACEID;
+
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -13,12 +15,9 @@ import java.util.logging.Level;
 import org.redkale.convert.*;
 import org.redkale.convert.bson.BsonReader;
 import org.redkale.net.Request;
-import static org.redkale.net.client.ClientRequest.EMPTY_TRACEID;
 import org.redkale.util.*;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -51,9 +50,9 @@ public class SncpRequest extends Request<SncpContext> {
         super(context);
     }
 
-    @Override  //request.header与response.header数据格式保持一致
+    @Override // request.header与response.header数据格式保持一致
     protected int readHeader(ByteBuffer buffer, Request last) {
-        //---------------------route----------------------------------
+        // ---------------------route----------------------------------
         if (this.readState == READ_STATE_ROUTE) {
             int remain = buffer.remaining();
             int expect = halfArray == null ? 2 : 2 - halfArray.length();
@@ -65,7 +64,7 @@ public class SncpRequest extends Request<SncpContext> {
                     halfArray.clear().put(buffer.get());
                 }
                 buffer.clear();
-                return expect - remain; //小于2
+                return expect - remain; // 小于2
             } else {
                 if (halfArray == null) {
                     this.headerSize = buffer.getChar();
@@ -76,12 +75,16 @@ public class SncpRequest extends Request<SncpContext> {
                 }
             }
             if (this.headerSize < SncpHeader.HEADER_SUBSIZE) {
-                context.getLogger().log(Level.WARNING, "sncp buffer header.length must more " + SncpHeader.HEADER_SUBSIZE + ", but " + this.headerSize);
+                context.getLogger()
+                        .log(
+                                Level.WARNING,
+                                "sncp buffer header.length must more " + SncpHeader.HEADER_SUBSIZE + ", but "
+                                        + this.headerSize);
                 return -1;
             }
             this.readState = READ_STATE_HEADER;
         }
-        //---------------------head----------------------------------
+        // ---------------------head----------------------------------
         if (this.readState == READ_STATE_HEADER) {
             int remain = buffer.remaining();
             int expect = halfArray == null ? this.headerSize - 2 : this.headerSize - 2 - halfArray.length();
@@ -105,22 +108,28 @@ public class SncpRequest extends Request<SncpContext> {
                 return -1;
             }
             if (this.header.getBodyLength() > context.getMaxBody()) {
-                context.getLogger().log(Level.WARNING, "sncp buffer body.length must lower " + context.getMaxBody() + ", but " + this.header.getBodyLength());
+                context.getLogger()
+                        .log(
+                                Level.WARNING,
+                                "sncp buffer body.length must lower " + context.getMaxBody() + ", but "
+                                        + this.header.getBodyLength());
                 return -1;
             }
             this.traceid = this.header.getTraceid();
-            //completed=true时ProtocolCodec会继续读下一个request
+            // completed=true时ProtocolCodec会继续读下一个request
             this.completed = true;
             this.readState = READ_STATE_BODY;
         }
-        //---------------------body----------------------------------
+        // ---------------------body----------------------------------
         if (this.readState == READ_STATE_BODY) {
             int bodyLength = this.header.getBodyLength();
             if (bodyLength == 0) {
                 this.body = new byte[0];
                 this.readState = READ_STATE_END;
                 halfArray = null;
-                if (this.header.getSeqid() == 0 && this.header.getServiceid() == Uint128.ZERO && this.header.getActionid() == Uint128.ZERO) {
+                if (this.header.getSeqid() == 0
+                        && this.header.getServiceid() == Uint128.ZERO
+                        && this.header.getActionid() == Uint128.ZERO) {
                     this.ping = true;
                 }
                 return 0;
@@ -161,8 +170,8 @@ public class SncpRequest extends Request<SncpContext> {
 
     @Override
     public String toString() {
-        return SncpRequest.class.getSimpleName() + "_" + Objects.hashCode(this)
-            + "{header=" + this.header + ",body=[" + (this.body == null ? -1 : this.body.length) + "]}";
+        return SncpRequest.class.getSimpleName() + "_" + Objects.hashCode(this) + "{header=" + this.header + ",body=["
+                + (this.body == null ? -1 : this.body.length) + "]}";
     }
 
     @Override
@@ -199,5 +208,4 @@ public class SncpRequest extends Request<SncpContext> {
     public SncpHeader getHeader() {
         return header;
     }
-
 }

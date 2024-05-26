@@ -5,10 +5,7 @@
  */
 package org.redkale.test.type;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class TwoBean extends OneBean {
 
     public String name;

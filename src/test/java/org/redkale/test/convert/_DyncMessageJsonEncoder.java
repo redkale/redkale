@@ -8,10 +8,7 @@ package org.redkale.test.convert;
 import java.lang.reflect.Type;
 import org.redkale.convert.json.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class _DyncMessageJsonEncoder extends JsonDynEncoder<Message> {
 
     protected final byte[] messageFieldBytes = "\"message\":".getBytes();
@@ -43,9 +40,8 @@ public class _DyncMessageJsonEncoder extends JsonDynEncoder<Message> {
                 out.writeTo(messageFieldBytes);
                 comma = true;
             }
-            out.writeLatin1To(true, message); //out.writeString(message);
+            out.writeLatin1To(true, message); // out.writeString(message);
         }
         out.writeTo('}');
     }
-
 }

@@ -8,10 +8,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.redkale.util.Environment;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class EnvironmentTest {
 
     public static void main(String[] args) throws Throwable {

@@ -22,11 +22,9 @@ import org.redkale.util.*;
 /**
  * 使用CacheSource实现的第三方服务发现管理接口cluster
  *
- *
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.3.0
  */
 public class CacheClusterAgent extends ClusterAgent implements Resourcable {
@@ -36,16 +34,16 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
 
     private String sourceName;
 
-    protected int ttls = 10; //定时检查的秒数
+    protected int ttls = 10; // 定时检查的秒数
 
     protected ScheduledThreadPoolExecutor scheduler;
 
     protected ScheduledFuture taskFuture;
 
-    //可能被HttpMessageClient用到的服务 key: serviceName，例如: cluster.service.http.user
+    // 可能被HttpMessageClient用到的服务 key: serviceName，例如: cluster.service.http.user
     protected final ConcurrentHashMap<String, Set<InetSocketAddress>> httpAddressMap = new ConcurrentHashMap<>();
 
-    //可能被sncp用到的服务 key: serviceName, 例如: cluster.service.sncp.user
+    // 可能被sncp用到的服务 key: serviceName, 例如: cluster.service.sncp.user
     protected final ConcurrentHashMap<String, Set<InetSocketAddress>> sncpAddressMap = new ConcurrentHashMap<>();
 
     @Override
@@ -53,7 +51,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         super.init(config);
         this.sourceName = getSourceName();
         this.ttls = config.getIntValue("ttls", 10);
-        if (this.ttls < 5) { //值不能太小
+        if (this.ttls < 5) { // 值不能太小
             this.ttls = 10;
         }
     }
@@ -67,15 +65,33 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
             if ("ttls".equals(event.name())) {
                 newTtls = Integer.parseInt(event.newValue().toString());
                 if (newTtls < 5) {
-                    sb.append(CacheClusterAgent.class.getSimpleName()).append("(name=").append(resourceName())
-                        .append(") cannot change '").append(event.name()).append("' to '").append(event.coverNewValue()).append("'\r\n");
+                    sb.append(CacheClusterAgent.class.getSimpleName())
+                            .append("(name=")
+                            .append(resourceName())
+                            .append(") cannot change '")
+                            .append(event.name())
+                            .append("' to '")
+                            .append(event.coverNewValue())
+                            .append("'\r\n");
                 } else {
-                    sb.append(CacheClusterAgent.class.getSimpleName()).append("(name=").append(resourceName())
-                        .append(") change '").append(event.name()).append("' to '").append(event.coverNewValue()).append("'\r\n");
+                    sb.append(CacheClusterAgent.class.getSimpleName())
+                            .append("(name=")
+                            .append(resourceName())
+                            .append(") change '")
+                            .append(event.name())
+                            .append("' to '")
+                            .append(event.coverNewValue())
+                            .append("'\r\n");
                 }
             } else {
-                sb.append(CacheClusterAgent.class.getSimpleName()).append("(name=").append(resourceName())
-                    .append(") skip change '").append(event.name()).append("' to '").append(event.coverNewValue()).append("'\r\n");
+                sb.append(CacheClusterAgent.class.getSimpleName())
+                        .append("(name=")
+                        .append(resourceName())
+                        .append(") skip change '")
+                        .append(event.name())
+                        .append("' to '")
+                        .append(event.coverNewValue())
+                        .append("'\r\n");
             }
         }
         if (newTtls != this.ttls) {
@@ -109,7 +125,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         return sourceName;
     }
 
-    @Override //ServiceLoader时判断配置是否符合当前实现类
+    @Override // ServiceLoader时判断配置是否符合当前实现类
     public boolean acceptsConf(AnyValue config) {
         if (config == null) {
             return false;
@@ -120,7 +136,8 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     @Override
     public void start() {
         if (this.scheduler == null) {
-            this.scheduler = Utility.newScheduledExecutor(1, "Redkale-" + CacheClusterAgent.class.getSimpleName() + "-Check-Thread-%s");
+            this.scheduler = Utility.newScheduledExecutor(
+                    1, "Redkale-" + CacheClusterAgent.class.getSimpleName() + "-Check-Thread-%s");
         }
         if (this.taskFuture != null) {
             this.taskFuture.cancel(true);
@@ -132,12 +149,10 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         return () -> {
             try {
                 long s = System.currentTimeMillis();
-                localEntrys.values().stream()
-                    .filter(e -> !e.canceled)
-                    .forEach(this::checkLocalHealth);
+                localEntrys.values().stream().filter(e -> !e.canceled).forEach(this::checkLocalHealth);
                 remoteEntrys.values().stream()
-                    .filter(entry -> "SNCP".equalsIgnoreCase(entry.protocol))
-                    .forEach(this::updateSncpAddress);
+                        .filter(entry -> "SNCP".equalsIgnoreCase(entry.protocol))
+                        .forEach(this::updateSncpAddress);
                 checkApplicationHealth();
                 checkHttpAddressHealth();
                 loadSncpAddressHealth();
@@ -170,7 +185,8 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         try {
             this.httpAddressMap.keySet().stream().forEach(serviceName -> {
                 try {
-                    this.httpAddressMap.put(serviceName, queryAddress(serviceName).get(3, TimeUnit.SECONDS));
+                    this.httpAddressMap.put(
+                            serviceName, queryAddress(serviceName).get(3, TimeUnit.SECONDS));
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "checkHttpAddressHealth check " + serviceName + " error", e);
                 }
@@ -189,7 +205,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         source.hset(entry.checkName, entry.checkid, AddressEntry.class, newaddr);
     }
 
-    @Override //获取SNCP远程服务的可用ip列表
+    @Override // 获取SNCP远程服务的可用ip列表
     public CompletableFuture<Set<InetSocketAddress>> querySncpAddress(String protocol, String module, String resname) {
         final String serviceName = generateSncpServiceName(protocol, module, resname);
         Set<InetSocketAddress> rs = sncpAddressMap.get(serviceName);
@@ -202,7 +218,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         });
     }
 
-    @Override //获取HTTP远程服务的可用ip列表
+    @Override // 获取HTTP远程服务的可用ip列表
     public CompletableFuture<Set<InetSocketAddress>> queryHttpAddress(String protocol, String module, String resname) {
         final String serviceName = generateHttpServiceName(protocol, module, resname);
         Set<InetSocketAddress> rs = httpAddressMap.get(serviceName);
@@ -224,8 +240,10 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         return queryAddress0(serviceName, new HashSet<>(), new AtomicLong());
     }
 
-    private CompletableFuture<Set<InetSocketAddress>> queryAddress0(String serviceName, Set<InetSocketAddress> set, AtomicLong cursor) {
-        final CompletableFuture<Map<String, AddressEntry>> future = source.hscanAsync(serviceName, AddressEntry.class, cursor, 10000);
+    private CompletableFuture<Set<InetSocketAddress>> queryAddress0(
+            String serviceName, Set<InetSocketAddress> set, AtomicLong cursor) {
+        final CompletableFuture<Map<String, AddressEntry>> future =
+                source.hscanAsync(serviceName, AddressEntry.class, cursor, 10000);
         return future.thenCompose(map -> {
             map.forEach((n, v) -> {
                 if (v != null && (System.currentTimeMillis() - v.time) / 1000 <= ttls) {
@@ -383,5 +401,4 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
             return JsonConvert.root().convertTo(this);
         }
     }
-
 }

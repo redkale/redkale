@@ -10,11 +10,10 @@ import java.util.concurrent.locks.*;
 import java.util.stream.Stream;
 
 /**
- * Stream的序列化操作类  <br>
- * 支持一定程度的泛型。  <br>
+ * Stream的序列化操作类 <br>
+ * 支持一定程度的泛型。 <br>
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> 序列化的集合元素类型
@@ -78,7 +77,7 @@ public class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
                 try {
                     condition.await();
                 } catch (Exception e) {
-                    //do nothing
+                    // do nothing
                 } finally {
                     lock.unlock();
                 }

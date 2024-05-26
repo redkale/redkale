@@ -3,9 +3,9 @@
 package org.redkale.util;
 
 /**
- * 带retcode错误码的异常  <br>
- * <p>
- * 详情见: https://redkale.org
+ * 带retcode错误码的异常 <br>
+ *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -35,5 +35,4 @@ public class RetcodeException extends RedkaleException {
     public int getRetcode() {
         return retcode;
     }
-
 }

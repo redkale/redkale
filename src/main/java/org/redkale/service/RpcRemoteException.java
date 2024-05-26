@@ -10,8 +10,7 @@ import org.redkale.util.RedkaleException;
 /**
  * 供RPC协议使用
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */

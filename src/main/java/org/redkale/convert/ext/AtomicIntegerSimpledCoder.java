@@ -11,8 +11,7 @@ import org.redkale.convert.*;
 /**
  * AtomicInteger 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -31,5 +30,4 @@ public class AtomicIntegerSimpledCoder<R extends Reader, W extends Writer> exten
     public AtomicInteger convertFrom(R in) {
         return new AtomicInteger(in.readInt());
     }
-
 }

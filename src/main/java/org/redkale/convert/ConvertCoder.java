@@ -2,16 +2,16 @@
  */
 package org.redkale.convert;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.*;
+
+import java.lang.annotation.*;
 
 /**
  * 依附在setter、getter方法、字段进行简单的配置 <br>
  * 优先使用coder字段
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.7.0
@@ -23,12 +23,16 @@ import static java.lang.annotation.RetentionPolicy.*;
 public @interface ConvertCoder {
 
     /**
-     * 需要指定的字段类型，类型必须是原字段类型的子类。
-     * 例如: <br>
-     * <blockquote><pre>
+     * 需要指定的字段类型，类型必须是原字段类型的子类。 例如: <br>
+     *
+     * <blockquote>
+     *
+     * <pre>
      * &#64;ConvertCoder(column = String.class)
      * private CharSequence name;
-     * </pre></blockquote>
+     * </pre>
+     *
+     * </blockquote>
      *
      * 通常此字段值与encoder/decoder是二选一，指定了coder字段值则可以不设置此字段。
      *
@@ -38,13 +42,9 @@ public @interface ConvertCoder {
 
     /**
      * 序列化定制化的 Encodeable, 构造函数的参数可以是：<br>
-     * 1、ConvertFactory
-     * 2、Type
-     * 3、Class
-     * 4、ConvertFactory和Type
-     * 5、ConvertFactory和Class
+     * 1、ConvertFactory 2、Type 3、Class 4、ConvertFactory和Type 5、ConvertFactory和Class
      *
-     * 类如果存在instance单实例对象字段值，则优先使用instance对象
+     * <p>类如果存在instance单实例对象字段值，则优先使用instance对象
      *
      * @return Encodeable 类
      */
@@ -52,13 +52,9 @@ public @interface ConvertCoder {
 
     /**
      * 反序列化定制化的 Decodeable, 构造函数的参数可以是：<br>
-     * 1、ConvertFactory
-     * 2、Type
-     * 3、Class
-     * 4、ConvertFactory和Type
-     * 5、ConvertFactory和Class
+     * 1、ConvertFactory 2、Type 3、Class 4、ConvertFactory和Type 5、ConvertFactory和Class
      *
-     * 类如果存在instance单实例对象字段值，则优先使用instance对象
+     * <p>类如果存在instance单实例对象字段值，则优先使用instance对象
      *
      * @return Decodeable 类
      */
@@ -74,8 +70,7 @@ public @interface ConvertCoder {
     /**
      * ConvertCoder 的多用类
      *
-     * <p>
-     * 详情见: https://redkale.org
+     * <p>详情见: https://redkale.org
      *
      * @author zhangjx
      */

@@ -15,8 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * 简单的byte[]操作类。
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -86,7 +85,7 @@ public final class ByteArray implements ByteTuple {
 
             @Override
             public void close() throws IOException {
-                //do nothing
+                // do nothing
             }
         };
     }
@@ -95,7 +94,6 @@ public final class ByteArray implements ByteTuple {
      * 设置count的新位置
      *
      * @param pos 新位置
-     *
      * @return ByteArray
      */
     public ByteArray position(int pos) {
@@ -127,7 +125,6 @@ public final class ByteArray implements ByteTuple {
      * 比较内容是否相同
      *
      * @param bytes 待比较内容
-     *
      * @return 是否相同
      */
     public boolean deepEquals(final byte[] bytes) {
@@ -140,10 +137,9 @@ public final class ByteArray implements ByteTuple {
     /**
      * 比较内容是否相同
      *
-     * @param bytes  待比较内容
+     * @param bytes 待比较内容
      * @param offset 偏移量
      * @param length 长度
-     *
      * @return 是否相同
      */
     public boolean deepEquals(final byte[] bytes, int offset, int length) {
@@ -168,7 +164,6 @@ public final class ByteArray implements ByteTuple {
      * 比较内容是否相同
      *
      * @param tuple 待比较内容
-     *
      * @return 是否相同
      */
     public boolean deepEquals(final ByteTuple tuple) {
@@ -182,7 +177,6 @@ public final class ByteArray implements ByteTuple {
      * 比较内容是否相同
      *
      * @param array 待比较内容
-     *
      * @return 是否相同
      */
     public boolean deepEquals(final ByteArray array) {
@@ -196,7 +190,6 @@ public final class ByteArray implements ByteTuple {
      * 比较内容是否相同
      *
      * @param obj 待比较内容
-     *
      * @return 是否相同
      */
     @Override
@@ -249,7 +242,6 @@ public final class ByteArray implements ByteTuple {
      * 获取指定位置的byte值,须确保0 &lt;= index &lt; length
      *
      * @param index 位置
-     *
      * @return byte值
      */
     public byte get(int index) {
@@ -260,7 +252,6 @@ public final class ByteArray implements ByteTuple {
      * 获取指定位置的char值,须确保0 &lt;= offset+2 &lt; length
      *
      * @param offset 位置
-     *
      * @return short值
      */
     public char getChar(int offset) {
@@ -271,7 +262,6 @@ public final class ByteArray implements ByteTuple {
      * 获取指定位置的short值,须确保0 &lt;= offset+2 &lt; length
      *
      * @param offset 位置
-     *
      * @return short值
      */
     public int getShort(int offset) {
@@ -282,18 +272,19 @@ public final class ByteArray implements ByteTuple {
      * 获取指定位置的int值,须确保0 &lt;= offset+4 &lt; length
      *
      * @param offset 位置
-     *
      * @return int值
      */
     public int getInt(int offset) {
-        return ((content[offset] & 0xff) << 24) | ((content[offset + 1] & 0xff) << 16) | ((content[offset + 2] & 0xff) << 8) | (content[offset + 3] & 0xff);
+        return ((content[offset] & 0xff) << 24)
+                | ((content[offset + 1] & 0xff) << 16)
+                | ((content[offset + 2] & 0xff) << 8)
+                | (content[offset + 3] & 0xff);
     }
 
     /**
      * 获取指定位置的float值,须确保0 &lt;= offset+4 &lt; length
      *
      * @param offset 位置
-     *
      * @return float值
      */
     public float getFloat(int offset) {
@@ -304,19 +295,23 @@ public final class ByteArray implements ByteTuple {
      * 获取指定位置的long值,须确保0 &lt;= offset+8 &lt; length
      *
      * @param offset 位置
-     *
      * @return long值
      */
     public long getLong(int offset) {
-        return (((long) content[offset] & 0xff) << 56) | (((long) content[offset + 1] & 0xff) << 48) | (((long) content[offset + 2] & 0xff) << 40) | (((long) content[offset + 3] & 0xff) << 32)
-            | (((long) content[offset + 4] & 0xff) << 24) | (((long) content[offset + 5] & 0xff) << 16) | (((long) content[offset + 6] & 0xff) << 8) | ((long) content[offset + 7] & 0xff);
+        return (((long) content[offset] & 0xff) << 56)
+                | (((long) content[offset + 1] & 0xff) << 48)
+                | (((long) content[offset + 2] & 0xff) << 40)
+                | (((long) content[offset + 3] & 0xff) << 32)
+                | (((long) content[offset + 4] & 0xff) << 24)
+                | (((long) content[offset + 5] & 0xff) << 16)
+                | (((long) content[offset + 6] & 0xff) << 8)
+                | ((long) content[offset + 7] & 0xff);
     }
 
     /**
      * 获取指定位置的double值,须确保0 &lt;= offset+8 &lt; length
      *
      * @param offset 位置
-     *
      * @return double值
      */
     public double getDouble(int offset) {
@@ -327,11 +322,10 @@ public final class ByteArray implements ByteTuple {
      * 获取指定位置的Uint128值,须确保0 &lt;= offset+16 &lt; length
      *
      * @param offset 位置
-     *
      * @return Uint128值
      */
     public Uint128 getUint128(int offset) {
-        return Uint128.create(new byte[]{
+        return Uint128.create(new byte[] {
             content[offset], content[offset + 1], content[offset + 2], content[offset + 3],
             content[offset + 4], content[offset + 5], content[offset + 6], content[offset + 7],
             content[offset + 8], content[offset + 9], content[offset + 10], content[offset + 11],
@@ -348,10 +342,7 @@ public final class ByteArray implements ByteTuple {
         return content[count - 1];
     }
 
-    /**
-     * count减一,调用前须保证count大于0
-     *
-     */
+    /** count减一,调用前须保证count大于0 */
     public void backCount() {
         count--;
     }
@@ -381,7 +372,7 @@ public final class ByteArray implements ByteTuple {
      * 将content的内容直接给本对象
      *
      * @param content 内容
-     * @param count   长度
+     * @param count 长度
      */
     public void directFrom(byte[] content, int count) {
         this.content = content;
@@ -424,7 +415,6 @@ public final class ByteArray implements ByteTuple {
      *
      * @param offset 偏移位
      * @param length 长度
-     *
      * @return byte[]
      */
     public byte[] getBytes(int offset, int length) {
@@ -440,7 +430,6 @@ public final class ByteArray implements ByteTuple {
      * 查找指定值第一次出现的位置,没有返回-1
      *
      * @param value 查询值
-     *
      * @return 所在位置
      */
     public int indexOf(byte value) {
@@ -451,8 +440,7 @@ public final class ByteArray implements ByteTuple {
      * 从指定的起始位置查询value值出现的位置,没有返回-1
      *
      * @param offset 起始位置
-     * @param value  查询值
-     *
+     * @param value 查询值
      * @return 所在位置
      */
     public int indexOf(int offset, char value) {
@@ -463,8 +451,7 @@ public final class ByteArray implements ByteTuple {
      * 从指定的起始位置查询value值出现的位置,没有返回-1
      *
      * @param offset 起始位置
-     * @param value  查询值
-     *
+     * @param value 查询值
      * @return 所在位置
      */
     public int indexOf(int offset, byte value) {
@@ -475,9 +462,8 @@ public final class ByteArray implements ByteTuple {
      * 从指定的起始位置和长度查询value值出现的位置,没有返回-1
      *
      * @param offset 起始位置
-     * @param limit  长度限制
-     * @param value  查询值
-     *
+     * @param limit 长度限制
+     * @param value 查询值
      * @return 所在位置
      */
     public int indexOf(int offset, int limit, char value) {
@@ -488,9 +474,8 @@ public final class ByteArray implements ByteTuple {
      * 从指定的起始位置和长度查询value值出现的位置,没有返回-1
      *
      * @param offset 起始位置
-     * @param limit  长度限制
-     * @param value  查询值
-     *
+     * @param limit 长度限制
+     * @param value 查询值
      * @return 所在位置
      */
     public int indexOf(int offset, int limit, byte value) {
@@ -508,7 +493,6 @@ public final class ByteArray implements ByteTuple {
      * 查找指定值第一次出现的位置,没有返回-1
      *
      * @param value 查询值
-     *
      * @return 所在位置
      */
     public int lastIndexOf(byte value) {
@@ -519,7 +503,6 @@ public final class ByteArray implements ByteTuple {
      * 查找指定值第一次出现的位置,没有返回-1
      *
      * @param value 查询值
-     *
      * @return 所在位置
      */
     public int lastIndexOf(char value) {
@@ -530,8 +513,7 @@ public final class ByteArray implements ByteTuple {
      * 从指定的起始位置查询value值出现的位置,没有返回-1
      *
      * @param offset 起始位置
-     * @param value  查询值
-     *
+     * @param value 查询值
      * @return 所在位置
      */
     public int lastIndexOf(int offset, char value) {
@@ -542,8 +524,7 @@ public final class ByteArray implements ByteTuple {
      * 从指定的起始位置查询value值出现的位置,没有返回-1
      *
      * @param offset 起始位置
-     * @param value  查询值
-     *
+     * @param value 查询值
      * @return 所在位置
      */
     public int lastIndexOf(int offset, byte value) {
@@ -555,8 +536,7 @@ public final class ByteArray implements ByteTuple {
      *
      * @param offset 起始位置
      * @param length 长度限制
-     * @param value  查询值
-     *
+     * @param value 查询值
      * @return 所在位置
      */
     public int lastIndexOf(int offset, int length, char value) {
@@ -568,8 +548,7 @@ public final class ByteArray implements ByteTuple {
      *
      * @param offset 起始位置
      * @param length 长度限制
-     * @param value  查询值
-     *
+     * @param value 查询值
      * @return 所在位置
      */
     public int lastIndexOf(int offset, int length, byte value) {
@@ -595,7 +574,7 @@ public final class ByteArray implements ByteTuple {
         return this;
     }
 
-    //类似writeTo(new byte[length])
+    // 类似writeTo(new byte[length])
     public ByteArray putPlaceholder(final int length) {
         if (count >= content.length - length) {
             byte[] ns = new byte[content.length + Math.max(16, length)];
@@ -610,121 +589,101 @@ public final class ByteArray implements ByteTuple {
      * 写入一个char值
      *
      * @param value int值
-     *
      * @return ByteArray
      */
     public ByteArray putChar(char value) {
-        return this.put((byte) (value >> 8 & 0xFF),
-            (byte) (value & 0xFF));
+        return this.put((byte) (value >> 8 & 0xFF), (byte) (value & 0xFF));
     }
 
     /**
      * 写入一个char值， content.length 必须不能小于offset+2
      *
      * @param offset 偏移量
-     * @param value  char值
-     *
+     * @param value char值
      * @return ByteArray
      */
     public ByteArray putChar(int offset, char value) {
-        return this.put(offset, (byte) (value >> 8 & 0xFF),
-            (byte) (value & 0xFF));
+        return this.put(offset, (byte) (value >> 8 & 0xFF), (byte) (value & 0xFF));
     }
 
     /**
      * 写入一个short值
      *
      * @param value short值
-     *
      * @return ByteArray
      */
     public ByteArray putShort(short value) {
-        return this.put((byte) (value >> 8 & 0xFF),
-            (byte) (value & 0xFF));
+        return this.put((byte) (value >> 8 & 0xFF), (byte) (value & 0xFF));
     }
 
     /**
      * 写入一个short值
      *
      * @param value short值
-     *
      * @return ByteArray
      */
     public ByteArray putShort(char value) {
         int v = value;
-        return this.put((byte) (v >> 8 & 0xFF),
-            (byte) (v & 0xFF));
+        return this.put((byte) (v >> 8 & 0xFF), (byte) (v & 0xFF));
     }
 
     /**
      * 写入一个short值
      *
      * @param value short值
-     *
      * @return ByteArray
      */
     public ByteArray putShort(int value) {
-        return this.put((byte) (value >> 8 & 0xFF),
-            (byte) (value & 0xFF));
+        return this.put((byte) (value >> 8 & 0xFF), (byte) (value & 0xFF));
     }
 
     /**
      * 写入一个short值
      *
      * @param value short值
-     *
      * @return ByteArray
      */
     public ByteArray putUnsignedShort(int value) {
-        return this.put((byte) (value >> 8 & 0xFF),
-            (byte) (value & 0xFF));
+        return this.put((byte) (value >> 8 & 0xFF), (byte) (value & 0xFF));
     }
 
     /**
      * 写入一个无符号short值， content.length 必须不能小于offset+2
      *
      * @param offset 偏移量
-     * @param value  short值
-     *
+     * @param value short值
      * @return ByteArray
      */
     public ByteArray putUnsignedShort(int offset, int value) {
-        return this.put(offset, (byte) (value >> 8 & 0xFF),
-            (byte) (value & 0xFF));
+        return this.put(offset, (byte) (value >> 8 & 0xFF), (byte) (value & 0xFF));
     }
 
     /**
      * 写入一个short值， content.length 必须不能小于offset+2
      *
      * @param offset 偏移量
-     * @param value  short值
-     *
+     * @param value short值
      * @return ByteArray
      */
     public ByteArray putShort(int offset, short value) {
-        return this.put(offset, (byte) (value >> 8 & 0xFF),
-            (byte) (value & 0xFF));
+        return this.put(offset, (byte) (value >> 8 & 0xFF), (byte) (value & 0xFF));
     }
 
     /**
      * 写入一个3字节的int值
      *
      * @param value int值
-     *
      * @return ByteArray
      */
     public ByteArray putMedium(int value) {
-        return this.put((byte) (value >> 16 & 0xFF),
-            (byte) (value >> 8 & 0xFF),
-            (byte) (value & 0xFF));
+        return this.put((byte) (value >> 16 & 0xFF), (byte) (value >> 8 & 0xFF), (byte) (value & 0xFF));
     }
 
     /**
      * 指定位置写入一个3字节的int值， content.length 必须不能小于offset+3
      *
      * @param offset 偏移量
-     * @param value  int值
-     *
+     * @param value int值
      * @return ByteArray
      */
     public ByteArray putMedium(int offset, int value) {
@@ -738,21 +697,17 @@ public final class ByteArray implements ByteTuple {
      * 写入一个3字节的int值
      *
      * @param value int值
-     *
      * @return ByteArray
      */
     public ByteArray putUnsignedMedium(int value) {
-        return this.put((byte) (value >> 16 & 0xFF),
-            (byte) (value >> 8 & 0xFF),
-            (byte) (value & 0xFF));
+        return this.put((byte) (value >> 16 & 0xFF), (byte) (value >> 8 & 0xFF), (byte) (value & 0xFF));
     }
 
     /**
      * 指定位置写入一个3字节的int值， content.length 必须不能小于offset+3
      *
      * @param offset 偏移量
-     * @param value  int值
-     *
+     * @param value int值
      * @return ByteArray
      */
     public ByteArray putUnsignedMedium(int offset, int value) {
@@ -763,36 +718,29 @@ public final class ByteArray implements ByteTuple {
      * 写入一个int值
      *
      * @param value int值
-     *
      * @return ByteArray
      */
     public ByteArray putInt(int value) {
-        return this.put((byte) (value >> 24 & 0xFF),
-            (byte) (value >> 16 & 0xFF),
-            (byte) (value >> 8 & 0xFF),
-            (byte) (value & 0xFF));
+        return this.put((byte) (value >> 24 & 0xFF), (byte) (value >> 16 & 0xFF), (byte) (value >> 8 & 0xFF), (byte)
+                (value & 0xFF));
     }
 
     /**
      * 写入一个int值
      *
      * @param value int值
-     *
      * @return ByteArray
      */
     public ByteArray putUnsignedInt(long value) {
-        return this.put((byte) (value >> 24 & 0xFF),
-            (byte) (value >> 16 & 0xFF),
-            (byte) (value >> 8 & 0xFF),
-            (byte) (value & 0xFF));
+        return this.put((byte) (value >> 24 & 0xFF), (byte) (value >> 16 & 0xFF), (byte) (value >> 8 & 0xFF), (byte)
+                (value & 0xFF));
     }
 
     /**
      * 指定位置写入一个int值， content.length 必须不能小于offset+4
      *
      * @param offset 偏移量
-     * @param value  int值
-     *
+     * @param value int值
      * @return ByteArray
      */
     public ByteArray putInt(int offset, int value) {
@@ -807,8 +755,7 @@ public final class ByteArray implements ByteTuple {
      * 指定位置写入一个 无符号int值， content.length 必须不能小于offset+4
      *
      * @param offset 偏移量
-     * @param value  int值
-     *
+     * @param value int值
      * @return ByteArray
      */
     public ByteArray putUnsignedInt(int offset, long value) {
@@ -823,7 +770,6 @@ public final class ByteArray implements ByteTuple {
      * 写入一个float值
      *
      * @param value float值
-     *
      * @return ByteArray
      */
     public ByteArray putFloat(float value) {
@@ -834,8 +780,7 @@ public final class ByteArray implements ByteTuple {
      * 指定位置写入一个float值， content.length 必须不能小于offset+4
      *
      * @param offset 偏移量
-     * @param value  float值
-     *
+     * @param value float值
      * @return ByteArray
      */
     public ByteArray putFloat(int offset, float value) {
@@ -846,44 +791,44 @@ public final class ByteArray implements ByteTuple {
      * 写入一个long值
      *
      * @param value long值
-     *
      * @return ByteArray
      */
     public ByteArray putLong(long value) {
-        return this.put((byte) (value >> 56 & 0xFF),
-            (byte) (value >> 48 & 0xFF),
-            (byte) (value >> 40 & 0xFF),
-            (byte) (value >> 32 & 0xFF),
-            (byte) (value >> 24 & 0xFF),
-            (byte) (value >> 16 & 0xFF),
-            (byte) (value >> 8 & 0xFF),
-            (byte) (value & 0xFF));
+        return this.put(
+                (byte) (value >> 56 & 0xFF),
+                (byte) (value >> 48 & 0xFF),
+                (byte) (value >> 40 & 0xFF),
+                (byte) (value >> 32 & 0xFF),
+                (byte) (value >> 24 & 0xFF),
+                (byte) (value >> 16 & 0xFF),
+                (byte) (value >> 8 & 0xFF),
+                (byte) (value & 0xFF));
     }
 
     /**
      * 指定位置写入一个long值， content.length 必须不能小于offset+8
      *
      * @param offset 偏移量
-     * @param value  long值
-     *
+     * @param value long值
      * @return ByteArray
      */
     public ByteArray putLong(int offset, long value) {
-        return this.put(offset, (byte) (value >> 56 & 0xFF),
-            (byte) (value >> 48 & 0xFF),
-            (byte) (value >> 40 & 0xFF),
-            (byte) (value >> 32 & 0xFF),
-            (byte) (value >> 24 & 0xFF),
-            (byte) (value >> 16 & 0xFF),
-            (byte) (value >> 8 & 0xFF),
-            (byte) (value & 0xFF));
+        return this.put(
+                offset,
+                (byte) (value >> 56 & 0xFF),
+                (byte) (value >> 48 & 0xFF),
+                (byte) (value >> 40 & 0xFF),
+                (byte) (value >> 32 & 0xFF),
+                (byte) (value >> 24 & 0xFF),
+                (byte) (value >> 16 & 0xFF),
+                (byte) (value >> 8 & 0xFF),
+                (byte) (value & 0xFF));
     }
 
     /**
      * 写入一个double值
      *
      * @param value double值
-     *
      * @return ByteArray
      */
     public ByteArray putDouble(double value) {
@@ -894,8 +839,7 @@ public final class ByteArray implements ByteTuple {
      * 指定位置写入一个double值， content.length 必须不能小于offset+8
      *
      * @param offset 偏移量
-     * @param value  double值
-     *
+     * @param value double值
      * @return ByteArray
      */
     public ByteArray putDouble(int offset, double value) {
@@ -906,7 +850,6 @@ public final class ByteArray implements ByteTuple {
      * 写入一个Uint128值
      *
      * @param value Uint128值
-     *
      * @return ByteArray
      */
     public ByteArray putUint128(Uint128 value) {
@@ -917,8 +860,7 @@ public final class ByteArray implements ByteTuple {
      * 指定位置写入一个Uint128值， content.length 必须不能小于offset+16
      *
      * @param offset 偏移量
-     * @param value  Uint128值
-     *
+     * @param value Uint128值
      * @return ByteArray
      */
     public ByteArray putUint128(int offset, Uint128 value) {
@@ -941,7 +883,6 @@ public final class ByteArray implements ByteTuple {
      * 写入一个byte值
      *
      * @param value byte值
-     *
      * @return ByteArray
      */
     public ByteArray put(byte value) {
@@ -958,7 +899,6 @@ public final class ByteArray implements ByteTuple {
      * 写入一个byte值
      *
      * @param value byte值
-     *
      */
     public void putWithoutCheck(byte value) {
         content[count++] = value;
@@ -968,8 +908,7 @@ public final class ByteArray implements ByteTuple {
      * 写入一个byte值， content.length 必须不能小于offset+1
      *
      * @param offset 偏移量
-     * @param value  byte值
-     *
+     * @param value byte值
      * @return ByteArray
      */
     public ByteArray putByte(int offset, byte value) {
@@ -981,8 +920,7 @@ public final class ByteArray implements ByteTuple {
      * 写入一个byte值， content.length 必须不能小于offset+1
      *
      * @param offset 偏移量
-     * @param value  byte值
-     *
+     * @param value byte值
      * @return ByteArray
      */
     public ByteArray putByte(int offset, int value) {
@@ -994,7 +932,6 @@ public final class ByteArray implements ByteTuple {
      * 写入一组byte值
      *
      * @param values 一组byte值
-     *
      * @return ByteArray
      */
     public ByteArray put(byte... values) {
@@ -1016,7 +953,6 @@ public final class ByteArray implements ByteTuple {
      *
      * @param offset 偏移量
      * @param values 一组byte值
-     *
      * @return ByteArray
      */
     public ByteArray put(int offset, byte... values) {
@@ -1033,7 +969,6 @@ public final class ByteArray implements ByteTuple {
      * @param values 一组byte值
      * @param offset 偏移量
      * @param length 长度
-     *
      * @return ByteArray
      */
     public ByteArray put(byte[] values, int offset, int length) {
@@ -1051,7 +986,6 @@ public final class ByteArray implements ByteTuple {
      * 写入一组byte值
      *
      * @param tuple 内容
-     *
      * @return ByteArray
      */
     public ByteArray put(ByteTuple tuple) {
@@ -1062,10 +996,9 @@ public final class ByteArray implements ByteTuple {
      * 写入一组byte值， content.length 必须不能小于poffset+length
      *
      * @param poffset 偏移量
-     * @param values  一组byte值
-     * @param offset  偏移量
-     * @param length  长度
-     *
+     * @param values 一组byte值
+     * @param offset 偏移量
+     * @param length 长度
      * @return ByteArray
      */
     public ByteArray put(int poffset, byte[] values, int offset, int length) {
@@ -1101,10 +1034,9 @@ public final class ByteArray implements ByteTuple {
     /**
      * 写入ByteArray中的一部分
      *
-     * @param array  ByteArray
+     * @param array ByteArray
      * @param offset 偏移量
      * @param length 长度
-     *
      * @return ByteArray
      */
     public ByteArray put(ByteArray array, int offset, int length) {
@@ -1123,7 +1055,6 @@ public final class ByteArray implements ByteTuple {
      *
      * @param buffer 数据
      * @param length 指定长度
-     *
      * @return ByteArray
      */
     public ByteArray put(ByteBuffer buffer, int length) {
@@ -1154,7 +1085,6 @@ public final class ByteArray implements ByteTuple {
      * 按指定字符集转成字符串
      *
      * @param charset 字符集
-     *
      * @return 字符串
      */
     public String toString(final Charset charset) {
@@ -1164,9 +1094,8 @@ public final class ByteArray implements ByteTuple {
     /**
      * 按指定字符集转成字符串
      *
-     * @param latin1  是否LATIN1
+     * @param latin1 是否LATIN1
      * @param charset 字符集
-     *
      * @return 字符串
      */
     public String toString(final boolean latin1, final Charset charset) {
@@ -1179,10 +1108,9 @@ public final class ByteArray implements ByteTuple {
     /**
      * 将指定的起始位置和长度按指定字符集转成字符串
      *
-     * @param offset  起始位置
-     * @param len     长度
+     * @param offset 起始位置
+     * @param len 长度
      * @param charset 字符集
-     *
      * @return 字符串
      */
     public String toString(final int offset, int len, final Charset charset) {
@@ -1192,11 +1120,10 @@ public final class ByteArray implements ByteTuple {
     /**
      * 将指定的起始位置和长度按指定字符集转成字符串
      *
-     * @param latin1  是否LATIN1
-     * @param offset  起始位置
-     * @param len     长度
+     * @param latin1 是否LATIN1
+     * @param offset 起始位置
+     * @param len 长度
      * @param charset 字符集
-     *
      * @return 字符串
      */
     public String toString(final boolean latin1, int offset, int len, final Charset charset) {
@@ -1209,9 +1136,8 @@ public final class ByteArray implements ByteTuple {
     /**
      * 将指定的起始位置按指定字符集转成字符串
      *
-     * @param offset  起始位置
+     * @param offset 起始位置
      * @param charset 字符集
-     *
      * @return 字符串
      */
     public String toString(final int offset, final Charset charset) {
@@ -1224,82 +1150,79 @@ public final class ByteArray implements ByteTuple {
     /**
      * 将指定的起始位置和长度按指定字符集转成字符串,并trim
      *
-     * @param offset  起始位置
-     * @param len     长度
+     * @param offset 起始位置
+     * @param len 长度
      * @param charset 字符集
-     *
      * @return 字符串
      */
-//    public String toTrimString(int offset, int len, final Charset charset) {
-//        if (len == 0) return "";
-//        int st = 0;
-//        while (st < len && (content[offset] & 0xff) <= ' ') {
-//            offset++;
-//            st++;
-//        }
-//        while (len > 0 && (content[len - 1] & 0xff) <= ' ') len--;
-//        if (len == 0) return "";
-//        if (charset == null) return new String(content, offset, len - st, StandardCharsets.UTF_8);
-//        return new String(content, offset, len - st, charset);
-//    }
+    //    public String toTrimString(int offset, int len, final Charset charset) {
+    //        if (len == 0) return "";
+    //        int st = 0;
+    //        while (st < len && (content[offset] & 0xff) <= ' ') {
+    //            offset++;
+    //            st++;
+    //        }
+    //        while (len > 0 && (content[len - 1] & 0xff) <= ' ') len--;
+    //        if (len == 0) return "";
+    //        if (charset == null) return new String(content, offset, len - st, StandardCharsets.UTF_8);
+    //        return new String(content, offset, len - st, charset);
+    //    }
     /**
      * 将指定的起始位置和长度按指定字符集并转义后转成字符串
      *
      * @param charset 字符集
-     *
      * @return 字符串
      */
-//    public String toDecodeString(final Charset charset) {
-//        return toDecodeString(0, count, charset);
-//    }
+    //    public String toDecodeString(final Charset charset) {
+    //        return toDecodeString(0, count, charset);
+    //    }
     /**
      * 将指定的起始位置和长度按指定字符集并转义后转成字符串
      *
-     * @param offset  起始位置
-     * @param len     长度
+     * @param offset 起始位置
+     * @param len 长度
      * @param charset 字符集
-     *
      * @return 字符串
      */
-//    public String toDecodeString(final int offset, int len, final Charset charset) {
-//        int start = offset;
-//        final int end = offset + len;
-//        boolean flag = false; //是否需要转义
-//        byte[] bs = content;
-//        for (int i = offset; i < end; i++) {
-//            if (content[i] == '+' || content[i] == '%') {
-//                flag = true;
-//                break;
-//            }
-//        }
-//        if (flag) {
-//            int index = 0;
-//            bs = new byte[len];
-//            for (int i = offset; i < end; i++) {
-//                switch (content[i]) {
-//                    case '+':
-//                        bs[index] = ' ';
-//                        break;
-//                    case '%':
-//                        bs[index] = (byte) ((hexBit(content[++i]) * 16 + hexBit(content[++i])));
-//                        break;
-//                    default:
-//                        bs[index] = content[i];
-//                        break;
-//                }
-//                index++;
-//            }
-//            start = 0;
-//            len = index;
-//        }
-//        if (charset == null) return new String(bs, start, len, StandardCharsets.UTF_8);
-//        return new String(bs, start, len, charset);
-//    }
-//
-//    private static int hexBit(byte b) {
-//        if ('0' <= b && '9' >= b) return b - '0';
-//        if ('a' <= b && 'z' >= b) return b - 'a' + 10;
-//        if ('A' <= b && 'Z' >= b) return b - 'A' + 10;
-//        return b;
-//    }
+    //    public String toDecodeString(final int offset, int len, final Charset charset) {
+    //        int start = offset;
+    //        final int end = offset + len;
+    //        boolean flag = false; //是否需要转义
+    //        byte[] bs = content;
+    //        for (int i = offset; i < end; i++) {
+    //            if (content[i] == '+' || content[i] == '%') {
+    //                flag = true;
+    //                break;
+    //            }
+    //        }
+    //        if (flag) {
+    //            int index = 0;
+    //            bs = new byte[len];
+    //            for (int i = offset; i < end; i++) {
+    //                switch (content[i]) {
+    //                    case '+':
+    //                        bs[index] = ' ';
+    //                        break;
+    //                    case '%':
+    //                        bs[index] = (byte) ((hexBit(content[++i]) * 16 + hexBit(content[++i])));
+    //                        break;
+    //                    default:
+    //                        bs[index] = content[i];
+    //                        break;
+    //                }
+    //                index++;
+    //            }
+    //            start = 0;
+    //            len = index;
+    //        }
+    //        if (charset == null) return new String(bs, start, len, StandardCharsets.UTF_8);
+    //        return new String(bs, start, len, charset);
+    //    }
+    //
+    //    private static int hexBit(byte b) {
+    //        if ('0' <= b && '9' >= b) return b - '0';
+    //        if ('a' <= b && 'z' >= b) return b - 'a' + 10;
+    //        if ('A' <= b && 'Z' >= b) return b - 'A' + 10;
+    //        return b;
+    //    }
 }

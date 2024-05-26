@@ -5,13 +5,10 @@
  */
 package org.redkale.test.convert;
 
-import org.redkale.persistence.Id;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.persistence.Id;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class World implements Comparable<World> {
 
     @Id
@@ -44,13 +41,14 @@ public class World implements Comparable<World> {
     public String toString() {
         return JsonConvert.root().convertTo(this);
     }
+
     public static void main(String[] args) throws Throwable {
         World[] worlds = new World[20];
         int index = 8866;
-        for(int i =0;i<worlds.length;i++){
+        for (int i = 0; i < worlds.length; i++) {
             worlds[i] = new World();
-            worlds[i].setId(8866+i);
-            worlds[i].setRandomNumber(9966+i);
+            worlds[i].setId(8866 + i);
+            worlds[i].setRandomNumber(9966 + i);
         }
         System.out.println(JsonConvert.root().convertTo(worlds));
     }

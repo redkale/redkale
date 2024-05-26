@@ -11,10 +11,7 @@ import org.redkale.annotation.ResourceInjected;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.service.Service;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class ResourceInjectedTest {
 
     public static void main(String[] args) throws Throwable {
@@ -56,7 +53,7 @@ public class ResourceInjectedTest {
         private String name;
 
         @ResourceInjected
-       private void onInjected(Object src, String fieldName) {
+        private void onInjected(Object src, String fieldName) {
             counter.incrementAndGet();
             System.out.println("资源被注入到对象(" + src + ")的字段(" + fieldName + ")上");
         }

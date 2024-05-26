@@ -10,12 +10,9 @@ import java.nio.channels.CompletionHandler;
 import java.util.concurrent.*;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.1.0
  */
 class AsyncNioCompletionHandler<A> implements CompletionHandler<Integer, A>, Runnable {
@@ -117,7 +114,7 @@ class AsyncNioCompletionHandler<A> implements CompletionHandler<Integer, A>, Run
         CompletionHandler<Integer, A> handler0 = handler;
         A attachment0 = attachment;
         clear();
-        if (handler0 == null) { //可能和超时run方法同时执行
+        if (handler0 == null) { // 可能和超时run方法同时执行
             if (exc != null) {
                 exc.printStackTrace();
             }
@@ -148,5 +145,4 @@ class AsyncNioCompletionHandler<A> implements CompletionHandler<Integer, A>, Run
         clear();
         handler0.failed(new TimeoutException(), attachment0);
     }
-
 }

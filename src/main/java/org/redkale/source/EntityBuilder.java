@@ -18,7 +18,6 @@ import org.redkale.util.*;
  *
  * @author zhangjx
  * @param <T> T
- *
  * @since 2.8.0
  */
 public class EntityBuilder<T> {
@@ -31,50 +30,53 @@ public class EntityBuilder<T> {
 
     private static final ConcurrentHashMap<String, String> camelMap = new ConcurrentHashMap<>();
 
-    //实体类名
+    // 实体类名
     private final Class<T> type;
 
-    //是否Map类型的虚拟实体类
+    // 是否Map类型的虚拟实体类
     private final boolean entityIsMap;
 
-    //Entity构建器
+    // Entity构建器
     private final Creator<T> creator;
 
-    //Entity构建器参数
+    // Entity构建器参数
     @Nullable
     private final String[] constructorParameters;
 
-    //key：类字段名， value：数据库字段名
-    //只有field.name 与 Column.name不同才存放在aliasmap里.
+    // key：类字段名， value：数据库字段名
+    // 只有field.name 与 Column.name不同才存放在aliasmap里.
     @Nullable
     private final Map<String, String> aliasmap;
 
-    //Entity构建器参数Attribute， 数组个数与constructorParameters相同
+    // Entity构建器参数Attribute， 数组个数与constructorParameters相同
     @Nullable
     private final Attribute<T, Serializable>[] constructorAttributes;
 
-    //Entity构建器参数Attribute
+    // Entity构建器参数Attribute
     @Nullable
     private final Attribute<T, Serializable>[] unconstructorAttributes;
 
-    //key：类字段名
+    // key：类字段名
     final Map<String, Attribute<T, Serializable>> attributeMap;
 
-    //key：数据库字段名
+    // key：数据库字段名
     private final Map<String, Attribute<T, Serializable>> sqlAttrMap;
 
-    //key：数据库字段名去掉下划线并小写
+    // key：数据库字段名去掉下划线并小写
     private final Map<String, Attribute<T, Serializable>> sqlLowerAttrMap;
 
-    //数据库中所有字段, 顺序必须与querySqlColumns、querySqlColumnSequence一致
+    // 数据库中所有字段, 顺序必须与querySqlColumns、querySqlColumnSequence一致
     private final Attribute<T, Serializable>[] attributes;
 
-    EntityBuilder(Class<T> type, Creator<T> creator,
-        Map<String, String> aliasmap, String[] constructorParameters,
-        Attribute<T, Serializable>[] constructorAttributes,
-        Attribute<T, Serializable>[] unconstructorAttributes,
-        Map<String, Attribute<T, Serializable>> attributeMap,
-        Attribute<T, Serializable>[] queryAttributes) {
+    EntityBuilder(
+            Class<T> type,
+            Creator<T> creator,
+            Map<String, String> aliasmap,
+            String[] constructorParameters,
+            Attribute<T, Serializable>[] constructorAttributes,
+            Attribute<T, Serializable>[] unconstructorAttributes,
+            Map<String, Attribute<T, Serializable>> attributeMap,
+            Attribute<T, Serializable>[] queryAttributes) {
         this.type = type;
         this.creator = creator;
         this.aliasmap = aliasmap;
@@ -94,8 +96,11 @@ public class EntityBuilder<T> {
     }
 
     public static boolean isSimpleType(Class type) {
-        return type == byte[].class || type == String.class || type.isPrimitive() || Number.class.isAssignableFrom(type)
-            || (!Map.class.isAssignableFrom(type) && type.getName().startsWith("java."));
+        return type == byte[].class
+                || type == String.class
+                || type.isPrimitive()
+                || Number.class.isAssignableFrom(type)
+                || (!Map.class.isAssignableFrom(type) && type.getName().startsWith("java."));
     }
 
     public static <T> EntityBuilder<T> load(Class<T> type) {
@@ -110,11 +115,13 @@ public class EntityBuilder<T> {
                 Method cm = creator.getClass().getMethod("create", Object[].class);
                 RedkaleClassLoader.putReflectionPublicMethods(creator.getClass().getName());
                 RedkaleClassLoader.putReflectionMethod(creator.getClass().getName(), cm);
-                org.redkale.annotation.ConstructorParameters cp = cm.getAnnotation(org.redkale.annotation.ConstructorParameters.class);
+                org.redkale.annotation.ConstructorParameters cp =
+                        cm.getAnnotation(org.redkale.annotation.ConstructorParameters.class);
                 if (cp != null && cp.value().length > 0) {
                     constructorParameters = cp.value();
                 } else {
-                    org.redkale.util.ConstructorParameters cp2 = cm.getAnnotation(org.redkale.util.ConstructorParameters.class);
+                    org.redkale.util.ConstructorParameters cp2 =
+                            cm.getAnnotation(org.redkale.util.ConstructorParameters.class);
                     if (cp2 != null && cp2.value().length > 0) {
                         constructorParameters = cp2.value();
                     }
@@ -200,22 +207,31 @@ public class EntityBuilder<T> {
             newQueryAttrs.addAll(unconstructorAttrs);
             queryAttrs = newQueryAttrs;
         }
-        return new EntityBuilder<>(type, creator, aliasmap, constructorParameters, constructorAttributes,
-            unconstructorAttributes, attributeMap, queryAttrs.toArray(new Attribute[queryAttrs.size()]));
+        return new EntityBuilder<>(
+                type,
+                creator,
+                aliasmap,
+                constructorParameters,
+                constructorAttributes,
+                unconstructorAttributes,
+                attributeMap,
+                queryAttrs.toArray(new Attribute[queryAttrs.size()]));
     }
 
     /**
      * 将数据ResultSet转成对象集合
      *
-     * @param <T>  泛型
+     * @param <T> 泛型
      * @param type 实体类或JavaBean
      * @param rset 数据ResultSet
-     *
      * @return 对象集合
      */
     public static <T> List<T> getListValue(Class<T> type, final DataResultSet rset) {
-        if (type == byte[].class || type == String.class || type.isPrimitive() || Number.class.isAssignableFrom(type)
-            || (!Map.class.isAssignableFrom(type) && type.getName().startsWith("java."))) {
+        if (type == byte[].class
+                || type == String.class
+                || type.isPrimitive()
+                || Number.class.isAssignableFrom(type)
+                || (!Map.class.isAssignableFrom(type) && type.getName().startsWith("java."))) {
             List<T> list = new ArrayList<>();
             while (rset.next()) {
                 list.add(rset.wasNull() ? null : (T) DataResultSet.formatColumnValue(type, rset.getObject(1)));
@@ -228,18 +244,20 @@ public class EntityBuilder<T> {
     /**
      * 将数据ResultSet转成单个对象
      *
-     * @param <T>  泛型
+     * @param <T> 泛型
      * @param type 实体类或JavaBean
      * @param rset 数据ResultSet
-     *
      * @return 单个对象
      */
     public static <T> T getOneValue(Class<T> type, final DataResultSet rset) {
         if (!rset.next()) {
             return null;
         }
-        if (type == byte[].class || type == String.class || type.isPrimitive() || Number.class.isAssignableFrom(type)
-            || (!Map.class.isAssignableFrom(type) && type.getName().startsWith("java."))) {
+        if (type == byte[].class
+                || type == String.class
+                || type.isPrimitive()
+                || Number.class.isAssignableFrom(type)
+                || (!Map.class.isAssignableFrom(type) && type.getName().startsWith("java."))) {
             return (T) DataResultSet.formatColumnValue(type, rset.getObject(1));
         }
         return EntityBuilder.load(type).getObjectValue(rset);
@@ -258,7 +276,7 @@ public class EntityBuilder<T> {
         return getObjectValue(null, row);
     }
 
-    //去掉字段名中的下划线并转出小写
+    // 去掉字段名中的下划线并转出小写
     protected String lowerCaseColumn(String sqlCol) {
         return lowerMap.computeIfAbsent(sqlCol, col -> {
             char ch;
@@ -276,7 +294,7 @@ public class EntityBuilder<T> {
         });
     }
 
-    //带下划线的字段名替换成驼峰式
+    // 带下划线的字段名替换成驼峰式
     protected String snakeCaseColumn(String sqlCol) {
         return snakeMap.computeIfAbsent(sqlCol, col -> {
             char ch;
@@ -292,7 +310,7 @@ public class EntityBuilder<T> {
         });
     }
 
-    //驼峰式字段名替换成带下划线的
+    // 驼峰式字段名替换成带下划线的
     protected String camelCaseColumn(String column) {
         return camelMap.computeIfAbsent(column, col -> {
             char ch;
@@ -340,7 +358,7 @@ public class EntityBuilder<T> {
                     attr = sqlLowerAttrMap.get(lowerCaseColumn(sqlCol));
                     sqlFlag = true;
                 }
-                if (attr != null) { //兼容返回的字段不存在类中
+                if (attr != null) { // 兼容返回的字段不存在类中
                     if (sqlFlag) {
                         attr.set(obj, getFieldValue(row, sqlCol));
                     } else {
@@ -390,8 +408,7 @@ public class EntityBuilder<T> {
      * 将一行的ResultSet组装成一个Entity对象
      *
      * @param sels 指定字段
-     * @param row  ResultSet
-     *
+     * @param row ResultSet
      * @return Entity对象
      */
     public T getEntityValue(final SelectColumn sels, final DataResultSetRow row) {
@@ -440,23 +457,27 @@ public class EntityBuilder<T> {
     }
 
     public T getFullEntityValue(final DataResultSetRow row) {
-        return getEntityValue(constructorAttributes, constructorAttributes == null ? attributes : unconstructorAttributes, row);
+        return getEntityValue(
+                constructorAttributes, constructorAttributes == null ? attributes : unconstructorAttributes, row);
     }
 
     public T getFullEntityValue(final Serializable... values) {
-        return getEntityValue(constructorAttributes, constructorAttributes == null ? attributes : unconstructorAttributes, values);
+        return getEntityValue(
+                constructorAttributes, constructorAttributes == null ? attributes : unconstructorAttributes, values);
     }
 
     /**
      * 将一行的ResultSet组装成一个Entity对象
      *
-     * @param constructorAttrs   构建函数的Attribute数组, 大小必须与this.constructorAttributes相同
+     * @param constructorAttrs 构建函数的Attribute数组, 大小必须与this.constructorAttributes相同
      * @param unconstructorAttrs 非构建函数的Attribute数组
-     * @param row                ResultSet
-     *
+     * @param row ResultSet
      * @return Entity对象
      */
-    protected T getEntityValue(final Attribute<T, Serializable>[] constructorAttrs, final Attribute<T, Serializable>[] unconstructorAttrs, final DataResultSetRow row) {
+    protected T getEntityValue(
+            final Attribute<T, Serializable>[] constructorAttrs,
+            final Attribute<T, Serializable>[] unconstructorAttrs,
+            final DataResultSetRow row) {
         if (row.wasNull()) {
             return null;
         }
@@ -496,13 +517,15 @@ public class EntityBuilder<T> {
     /**
      * 将一行的ResultSet组装成一个Entity对象
      *
-     * @param constructorAttrs   构建函数的Attribute数组, 大小必须与this.constructorAttributes相同
+     * @param constructorAttrs 构建函数的Attribute数组, 大小必须与this.constructorAttributes相同
      * @param unconstructorAttrs 非构建函数的Attribute数组
-     * @param values             字段值集合
-     *
+     * @param values 字段值集合
      * @return Entity对象
      */
-    protected T getEntityValue(final Attribute<T, Serializable>[] constructorAttrs, final Attribute<T, Serializable>[] unconstructorAttrs, final Serializable... values) {
+    protected T getEntityValue(
+            final Attribute<T, Serializable>[] constructorAttrs,
+            final Attribute<T, Serializable>[] unconstructorAttrs,
+            final Serializable... values) {
         if (values == null) {
             return null;
         }
@@ -541,14 +564,16 @@ public class EntityBuilder<T> {
     /**
      * 根据field字段名获取数据库对应的字段名
      *
-     * @param tabalis   表别名
+     * @param tabalis 表别名
      * @param fieldname 字段名
-     *
      * @return String
      */
     public String getSQLColumn(String tabalis, String fieldname) {
-        return this.aliasmap == null ? (tabalis == null ? fieldname : (tabalis + '.' + fieldname))
-            : (tabalis == null ? aliasmap.getOrDefault(fieldname, fieldname) : (tabalis + '.' + aliasmap.getOrDefault(fieldname, fieldname)));
+        return this.aliasmap == null
+                ? (tabalis == null ? fieldname : (tabalis + '.' + fieldname))
+                : (tabalis == null
+                        ? aliasmap.getOrDefault(fieldname, fieldname)
+                        : (tabalis + '.' + aliasmap.getOrDefault(fieldname, fieldname)));
     }
 
     public boolean hasConstructorAttribute() {

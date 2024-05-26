@@ -11,10 +11,7 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.*;
 import org.redkale.util.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class UntilTestMain {
 
     public static void main(String[] args) throws Throwable {
@@ -125,7 +122,8 @@ public class UntilTestMain {
         }
         e = System.nanoTime() - s;
         System.out.println("动态Attribute耗时: " + e);
-        System.out.println("TestBean.map: " + Attribute.create(TestBean.class.getDeclaredField("map")).genericType());
+        System.out.println("TestBean.map: "
+                + Attribute.create(TestBean.class.getDeclaredField("map")).genericType());
         System.out.println();
         System.out.println();
     }

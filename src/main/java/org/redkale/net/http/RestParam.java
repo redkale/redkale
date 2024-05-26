@@ -5,18 +5,18 @@
  */
 package org.redkale.net.http;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import java.lang.annotation.*;
+
 /**
+ * 依附在RestService类的方法的参数上 <br>
+ * name='&#38;' 表示当前用户 <br>
+ * name='#'表示截取uri最后一段 <br>
+ * name='#xxx:'表示从uri中/pipes/xxx:v/截取xxx:的值 <br>
  *
- * 依附在RestService类的方法的参数上  <br>
- * name='&#38;' 表示当前用户  <br>
- * name='#'表示截取uri最后一段  <br>
- * name='#xxx:'表示从uri中/pipes/xxx:v/截取xxx:的值  <br>
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -25,12 +25,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface RestParam {
 
-    //name='&'表示当前用户;
+    // name='&'表示当前用户;
     /**
-     * 参数名   <br>
-     * name='&#38;'表示当前用户;  <br>
-     * name='#'表示截取uri最后一段;  <br>
-     * name='#xxx:'表示从uri中/pipes/xxx:v/截取xxx:的值  <br>
+     * 参数名 <br>
+     * name='&#38;'表示当前用户; <br>
+     * name='#'表示截取uri最后一段; <br>
+     * name='#xxx:'表示从uri中/pipes/xxx:v/截取xxx:的值 <br>
      *
      * @return String
      */

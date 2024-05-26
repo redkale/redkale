@@ -5,64 +5,47 @@
  */
 package org.redkale.util;
 
+import static org.redkale.util.Utility.isEmpty;
+
 import java.io.*;
 import java.nio.charset.*;
 import java.util.*;
 import java.util.function.*;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.ConvertColumn;
-import static org.redkale.util.Utility.isEmpty;
 
 /**
  * 该类提供类似JSONObject的数据结构，主要用于读取xml配置文件和http-header存储
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
 public abstract class AnyValue {
 
-    /**
-     * xml的文本节点name
-     */
+    /** xml的文本节点name */
     public static final String XML_TEXT_NODE_NAME = "";
 
-    /**
-     * merge两节点是否覆盖的判断函数
-     *
-     */
+    /** merge两节点是否覆盖的判断函数 */
     public enum MergeEnum {
-        /**
-         * 异常
-         */
+        /** 异常 */
         DEFAULT,
-        /**
-         * 替换
-         */
+        /** 替换 */
         REPLACE,
-        /**
-         * 合并
-         */
+        /** 合并 */
         MERGE,
-        /**
-         * 丢弃
-         */
+        /** 丢弃 */
         IGNORE;
     }
 
-    /**
-     * merge两节点是否覆盖的判断函数
-     *
-     */
+    /** merge两节点是否覆盖的判断函数 */
     public static interface MergeStrategy {
 
         public MergeEnum apply(String path, String name, AnyValue val1, AnyValue val2);
     }
 
     /**
-     *
      * @see org.redkale.util.AnyValueWriter
      * @deprecated replace {@link org.redkale.util.AnyValueWriter}
      */
@@ -73,7 +56,7 @@ public abstract class AnyValue {
             return new DefaultAnyValue();
         }
     }
-//
+    //
 
     /**
      * 字段名和值的组合对象
@@ -82,9 +65,7 @@ public abstract class AnyValue {
      */
     public static final class Entry<T> {
 
-        /**
-         * 字段名
-         */
+        /** 字段名 */
         @ConvertColumn(index = 1)
         public final String name;
 
@@ -115,7 +96,8 @@ public abstract class AnyValue {
             return value;
         }
 
-        static Entry<AnyValue>[] getEntryAnyValueArray(BiPredicate<String, String> comparison, Entry<AnyValueWriter>[] entitys, String name) {
+        static Entry<AnyValue>[] getEntryAnyValueArray(
+                BiPredicate<String, String> comparison, Entry<AnyValueWriter>[] entitys, String name) {
             int len = 0;
             for (Entry en : entitys) {
                 if (comparison.test(en.name, name)) {
@@ -155,7 +137,8 @@ public abstract class AnyValue {
             return rs;
         }
 
-        static AnyValue[] getAnyValueArray(BiPredicate<String, String> comparison, Entry<AnyValueWriter>[] entitys, String name) {
+        static AnyValue[] getAnyValueArray(
+                BiPredicate<String, String> comparison, Entry<AnyValueWriter>[] entitys, String name) {
             int len = 0;
             for (Entry en : entitys) {
                 if (comparison.test(en.name, name)) {
@@ -175,7 +158,8 @@ public abstract class AnyValue {
             return rs;
         }
 
-        static String[] getStringArray(BiPredicate<String, String> comparison, Entry<String>[] entitys, String... names) {
+        static String[] getStringArray(
+                BiPredicate<String, String> comparison, Entry<String>[] entitys, String... names) {
             int len = 0;
             for (Entry en : entitys) {
                 for (String name : names) {
@@ -201,7 +185,8 @@ public abstract class AnyValue {
             return rs;
         }
 
-        static AnyValue[] getAnyValueArray(BiPredicate<String, String> comparison, Entry<AnyValueWriter>[] entitys, String... names) {
+        static AnyValue[] getAnyValueArray(
+                BiPredicate<String, String> comparison, Entry<AnyValueWriter>[] entitys, String... names) {
             int len = 0;
             for (Entry en : entitys) {
                 for (String name : names) {
@@ -238,11 +223,10 @@ public abstract class AnyValue {
     }
 
     /**
-     * Properties内容转换成AnyValue对象， 层级采用key的.分隔  <br>
+     * Properties内容转换成AnyValue对象， 层级采用key的.分隔 <br>
      * key中包含[xx]且xx不是数字且不是位于最后的视为name，会在对应的节点对象中加入name属性
      *
      * @param text 文本内容
-     *
      * @return AnyValue
      */
     public static AnyValue loadFromProperties(String text) {
@@ -250,18 +234,17 @@ public abstract class AnyValue {
         try {
             properties.load(new StringReader(text));
         } catch (IOException e) {
-            //不会发生
+            // 不会发生
         }
         return loadFromProperties(properties);
     }
 
     /**
-     * Properties内容转换成AnyValue对象， 层级采用key的.分隔  <br>
+     * Properties内容转换成AnyValue对象， 层级采用key的.分隔 <br>
      * key中包含[xx]且xx不是数字且不是位于最后的视为name，会在对应的节点对象中加入name属性
      *
-     * @param text     文本内容
+     * @param text 文本内容
      * @param nameName String
-     *
      * @return AnyValue
      */
     public static AnyValue loadFromProperties(String text, String nameName) {
@@ -269,17 +252,16 @@ public abstract class AnyValue {
         try {
             properties.load(new StringReader(text));
         } catch (IOException e) {
-            //不会发生
+            // 不会发生
         }
         return loadFromProperties(properties, nameName);
     }
 
     /**
-     * Properties内容转换成AnyValue对象， 层级采用key的.分隔  <br>
+     * Properties内容转换成AnyValue对象， 层级采用key的.分隔 <br>
      * key中包含[xx]且xx不是数字且不是位于最后的视为name，会在对应的节点对象中加入name属性
      *
      * @param in 内容流
-     *
      * @return AnyValue
      * @throws IOException 异常
      */
@@ -290,12 +272,11 @@ public abstract class AnyValue {
     }
 
     /**
-     * Properties内容转换成AnyValue对象， 层级采用key的.分隔  <br>
+     * Properties内容转换成AnyValue对象， 层级采用key的.分隔 <br>
      * key中包含[xx]且xx不是数字且不是位于最后的视为name，会在对应的节点对象中加入name属性
      *
-     * @param in      内容流
+     * @param in 内容流
      * @param charset 字符编码
-     *
      * @return AnyValue
      * @throws IOException 异常
      */
@@ -306,11 +287,10 @@ public abstract class AnyValue {
     }
 
     /**
-     * Properties内容转换成AnyValue对象， 层级采用key的.分隔  <br>
+     * Properties内容转换成AnyValue对象， 层级采用key的.分隔 <br>
      * key中包含[xx]且xx不是数字且不是位于最后的视为name，会在对应的节点对象中加入name属性
      *
      * @param properties Properties
-     *
      * @return AnyValue
      */
     public static AnyValue loadFromProperties(Properties properties) {
@@ -318,12 +298,11 @@ public abstract class AnyValue {
     }
 
     /**
-     * Properties内容转换成AnyValue对象， 层级采用key的.分隔  <br>
+     * Properties内容转换成AnyValue对象， 层级采用key的.分隔 <br>
      * key中包含[xx]且xx不是数字且不是位于最后的视为name，会在对应的节点对象中加入nameName属性
      *
      * @param properties Properties
-     * @param nameName   String
-     *
+     * @param nameName String
      * @return AnyValue
      */
     public static AnyValue loadFromProperties(Properties properties, String nameName) {
@@ -332,11 +311,11 @@ public abstract class AnyValue {
         }
         AnyValueWriter conf = new AnyValueWriter();
         final char splitChar = (char) 2;
-        Map<String, AnyValueWriter> prefixArray = new TreeMap<>(); //已处理的数组key，如:redkale.source[0].xx存redkale.source[0]
+        Map<String, AnyValueWriter> prefixArray = new TreeMap<>(); // 已处理的数组key，如:redkale.source[0].xx存redkale.source[0]
         properties.forEach((key, value) -> {
             StringBuilder temp = new StringBuilder();
             boolean flag = false;
-            for (char ch : key.toString().toCharArray()) { //替换redkale.properties[my.name]中括号里的'.'
+            for (char ch : key.toString().toCharArray()) { // 替换redkale.properties[my.name]中括号里的'.'
                 if (ch == '[') {
                     flag = true;
                     temp.append(ch);
@@ -363,9 +342,9 @@ public abstract class AnyValue {
                             parent.addValue(item, child);
                         }
                         parent = child;
-                    } else { //数组或Map结构, []中间是数字开头的视为数组，其他视为map
-                        String itemField = item.substring(0, pos);  //[前面一部分'sources[1]'中'sources'
-                        String keyOrIndex = item.substring(pos + 1, item.indexOf(']')); //'sources[1]'中'1'
+                    } else { // 数组或Map结构, []中间是数字开头的视为数组，其他视为map
+                        String itemField = item.substring(0, pos); // [前面一部分'sources[1]'中'sources'
+                        String keyOrIndex = item.substring(pos + 1, item.indexOf(']')); // 'sources[1]'中'1'
                         int realIndex = -1;
                         if (!keyOrIndex.isEmpty() && keyOrIndex.charAt(0) >= '0' && keyOrIndex.charAt(0) <= '9') {
                             try {
@@ -373,39 +352,42 @@ public abstract class AnyValue {
                             } catch (NumberFormatException e) {
                             }
                         }
-                        if (realIndex >= 0) { //数组结构
+                        if (realIndex >= 0) { // 数组结构
                             String prefixKey = "";
                             for (int j = 0; j < i; j++) {
                                 prefixKey += keys[j] + ".";
                             }
-                            AnyValueWriter array = prefixArray.get(prefixKey + item); //item: [1]
+                            AnyValueWriter array = prefixArray.get(prefixKey + item); // item: [1]
                             if (array == null) {
                                 final int ii = i;
                                 String findkey = prefixKey + itemField + "[";
                                 Map<String, AnyValueWriter> keymap = new TreeMap<>();
                                 Map<Integer, AnyValueWriter> sortmap = new TreeMap<>();
-                                properties.keySet().stream().filter(x -> x.toString().startsWith(findkey)).forEach(k -> {
-                                    String[] ks = k.toString().split("\\.");
-                                    String prefixKey2 = "";
-                                    for (int j = 0; j < ii; j++) {
-                                        prefixKey2 += ks[j] + ".";
-                                    }
-                                    prefixKey2 += ks[ii];
-                                    if (!keymap.containsKey(prefixKey2)) {
-                                        AnyValueWriter vv = new AnyValueWriter();
-                                        keymap.put(prefixKey2, vv);
-                                        int aindex = Integer.parseInt(ks[ii].substring(ks[ii].indexOf('[') + 1, ks[ii].lastIndexOf(']')));
-                                        vv.parentArrayIndex = aindex;
-                                        sortmap.put(aindex, vv);
-                                    }
-                                });
+                                properties.keySet().stream()
+                                        .filter(x -> x.toString().startsWith(findkey))
+                                        .forEach(k -> {
+                                            String[] ks = k.toString().split("\\.");
+                                            String prefixKey2 = "";
+                                            for (int j = 0; j < ii; j++) {
+                                                prefixKey2 += ks[j] + ".";
+                                            }
+                                            prefixKey2 += ks[ii];
+                                            if (!keymap.containsKey(prefixKey2)) {
+                                                AnyValueWriter vv = new AnyValueWriter();
+                                                keymap.put(prefixKey2, vv);
+                                                int aindex = Integer.parseInt(ks[ii].substring(
+                                                        ks[ii].indexOf('[') + 1, ks[ii].lastIndexOf(']')));
+                                                vv.parentArrayIndex = aindex;
+                                                sortmap.put(aindex, vv);
+                                            }
+                                        });
                                 prefixArray.putAll(keymap);
                                 AnyValueWriter pv = parent;
                                 sortmap.values().forEach(v -> pv.addValue(itemField, v));
                                 array = prefixArray.get(prefixKey + item);
                             }
                             parent = array;
-                        } else { //Map结构
+                        } else { // Map结构
                             AnyValueWriter field = (AnyValueWriter) parent.getAnyValue(itemField);
                             if (field == null) {
                                 field = new AnyValueWriter();
@@ -430,10 +412,10 @@ public abstract class AnyValue {
             if (pos < 0) {
                 parent.addValue(lastItem, value.toString());
             } else {
-                String itemField = lastItem.substring(0, pos);  //[前面一部分
+                String itemField = lastItem.substring(0, pos); // [前面一部分
                 String itemIndex = lastItem.substring(pos + 1, lastItem.indexOf(']'));
-                if (!itemIndex.isEmpty() && itemIndex.charAt(0) >= '0' && itemIndex.charAt(0) <= '9') { //数组
-                    //parent.addValue(itemField, value.toString());
+                if (!itemIndex.isEmpty() && itemIndex.charAt(0) >= '0' && itemIndex.charAt(0) <= '9') { // 数组
+                    // parent.addValue(itemField, value.toString());
                     String[] tss = parent.getValues(itemField);
                     if (tss == null || tss.length == 0) {
                         String prefixKey = "";
@@ -444,23 +426,28 @@ public abstract class AnyValue {
                         String findkey = prefixKey + itemField + "[";
                         Map<String, String> keymap = new TreeMap<>();
                         Map<Integer, String> sortmap = new TreeMap<>();
-                        properties.keySet().stream().filter(x -> x.toString().startsWith(findkey)).forEach(k -> {
-                            String[] ks = k.toString().split("\\.");
-                            String prefixKey2 = "";
-                            for (int j = 0; j < ii; j++) {
-                                prefixKey2 += ks[j] + ".";
-                            }
-                            prefixKey2 += ks[ii];
-                            if (!keymap.containsKey(prefixKey2)) {
-                                String vv = properties.getProperty(k.toString());
-                                keymap.put(prefixKey2, vv);
-                                sortmap.put(Integer.parseInt(ks[ii].substring(ks[ii].indexOf('[') + 1, ks[ii].lastIndexOf(']'))), vv);
-                            }
-                        });
+                        properties.keySet().stream()
+                                .filter(x -> x.toString().startsWith(findkey))
+                                .forEach(k -> {
+                                    String[] ks = k.toString().split("\\.");
+                                    String prefixKey2 = "";
+                                    for (int j = 0; j < ii; j++) {
+                                        prefixKey2 += ks[j] + ".";
+                                    }
+                                    prefixKey2 += ks[ii];
+                                    if (!keymap.containsKey(prefixKey2)) {
+                                        String vv = properties.getProperty(k.toString());
+                                        keymap.put(prefixKey2, vv);
+                                        sortmap.put(
+                                                Integer.parseInt(ks[ii].substring(
+                                                        ks[ii].indexOf('[') + 1, ks[ii].lastIndexOf(']'))),
+                                                vv);
+                                    }
+                                });
                         AnyValueWriter pv = parent;
                         sortmap.values().forEach(v -> pv.addValue(itemField, v));
                     }
-                } else { //Map
+                } else { // Map
                     AnyValueWriter child = (AnyValueWriter) parent.getAnyValue(itemField);
                     if (child == null) {
                         child = new AnyValueWriter();
@@ -477,7 +464,6 @@ public abstract class AnyValue {
      * xml文本内容转换成AnyValue对象
      *
      * @param text 文本内容
-     *
      * @return AnyValue
      */
     public static AnyValue loadFromXml(String text) {
@@ -488,7 +474,6 @@ public abstract class AnyValue {
      * xml内容流转换成AnyValue对象
      *
      * @param in 内容流
-     *
      * @return AnyValue
      * @throws IOException 异常
      */
@@ -499,9 +484,8 @@ public abstract class AnyValue {
     /**
      * xml内容流转换成AnyValue对象
      *
-     * @param in      内容流
+     * @param in 内容流
      * @param charset 字符编码
-     *
      * @return AnyValue
      * @throws IOException 异常
      */
@@ -512,9 +496,8 @@ public abstract class AnyValue {
     /**
      * xml内容流转换成AnyValue对象
      *
-     * @param text     文本内容
+     * @param text 文本内容
      * @param attrFunc 字段回调函数
-     *
      * @return AnyValue
      * @throws IOException 异常
      */
@@ -525,9 +508,8 @@ public abstract class AnyValue {
     /**
      * xml内容流转换成AnyValue对象
      *
-     * @param in       内容流
+     * @param in 内容流
      * @param attrFunc 字段回调函数
-     *
      * @return AnyValue
      * @throws IOException 异常
      */
@@ -538,26 +520,25 @@ public abstract class AnyValue {
     /**
      * xml内容流转换成AnyValue对象
      *
-     * @param in       内容流
-     * @param charset  字符编码
+     * @param in 内容流
+     * @param charset 字符编码
      * @param attrFunc 字段回调函数
-     *
      * @return AnyValue
      * @throws IOException 异常
      */
-    public static AnyValue loadFromXml(InputStream in, Charset charset, BinaryOperator<String> attrFunc) throws IOException {
+    public static AnyValue loadFromXml(InputStream in, Charset charset, BinaryOperator<String> attrFunc)
+            throws IOException {
         return new XmlReader(Utility.read(in, charset)).attrFunc(attrFunc).read();
     }
 
     /**
      * 当前AnyValue对象字符串化
      *
-     * @param indent     缩进长度
+     * @param indent 缩进长度
      * @param prefixFunc 扩展函数
-     *
      * @return String
      */
-    public String toString(int indent, BiFunction<AnyValue, String, CharSequence> prefixFunc) { //indent: 缩进长度
+    public String toString(int indent, BiFunction<AnyValue, String, CharSequence> prefixFunc) { // indent: 缩进长度
         if (indent < 0) {
             indent = 0;
         }
@@ -579,7 +560,12 @@ public abstract class AnyValue {
                 if (en.value == null) {
                     sb.append(space).append("    '").append(en.name).append("': null");
                 } else {
-                    sb.append(space).append("    '").append(en.name).append("': '").append(en.value).append("'");
+                    sb.append(space)
+                            .append("    '")
+                            .append(en.name)
+                            .append("': '")
+                            .append(en.value)
+                            .append("'");
                 }
                 if (++index >= size) {
                     sb.append("\r\n");
@@ -590,7 +576,11 @@ public abstract class AnyValue {
         }
         if (anyArray != null) {
             for (Entry<AnyValue> en : anyArray) {
-                sb.append(space).append("    '").append(en.name).append("': ").append(en.value.toString(indent + 4, prefixFunc));
+                sb.append(space)
+                        .append("    '")
+                        .append(en.name)
+                        .append("': ")
+                        .append(en.value.toString(indent + 4, prefixFunc));
                 if (++index >= size) {
                     sb.append("\r\n");
                 } else {
@@ -613,7 +603,6 @@ public abstract class AnyValue {
      * 将另一个对象替换本对象
      *
      * @param node 替换的对象
-     *
      * @return AnyValue
      */
     public abstract AnyValue replace(AnyValue node);
@@ -623,7 +612,6 @@ public abstract class AnyValue {
      *
      * @param node 代合并对象
      * @param func 覆盖方式的函数
-     *
      * @return AnyValue
      */
     public abstract AnyValue merge(AnyValue node, MergeStrategy func);
@@ -639,7 +627,7 @@ public abstract class AnyValue {
      * 回调子节点
      *
      * @param stringConsumer 字符串字段的回调函数
-     * @param anyConsumer    字符串对象的回调函数
+     * @param anyConsumer 字符串对象的回调函数
      */
     public abstract void forEach(BiConsumer<String, String> stringConsumer, BiConsumer<String, AnyValue> anyConsumer);
 
@@ -668,7 +656,6 @@ public abstract class AnyValue {
      * 获取同级下同一字段名下所有的String对象
      *
      * @param name 字段名
-     *
      * @return String[]
      */
     public abstract String[] getValues(String name);
@@ -677,7 +664,6 @@ public abstract class AnyValue {
      * 根据字段名集合获取String类型的字段值集合
      *
      * @param names 字段名集合
-     *
      * @return String[]
      */
     public abstract String[] getValues(String... names);
@@ -686,7 +672,6 @@ public abstract class AnyValue {
      * 获取同级下同一字段名下所有的AnyValue对象
      *
      * @param name 字段名
-     *
      * @return AnyValue[]
      */
     public abstract AnyValue[] getAnyValues(String name);
@@ -695,7 +680,6 @@ public abstract class AnyValue {
      * 根据字段名集合获取AnyValue类型的字段值集合
      *
      * @param names 字段名集合
-     *
      * @return AnyValue[]
      */
     public abstract AnyValue[] getAnyValues(String... names);
@@ -704,7 +688,6 @@ public abstract class AnyValue {
      * 根据字段名获取AnyValue类型的字段值
      *
      * @param name 字段名
-     *
      * @return AnyValue
      */
     public abstract AnyValue getAnyValue(String name);
@@ -712,9 +695,8 @@ public abstract class AnyValue {
     /**
      * 根据字段名获取AnyValue类型的字段值
      *
-     * @param name   字段名
+     * @param name 字段名
      * @param create 没有是否创建一个新的对象返回
-     *
      * @return AnyValue
      */
     public abstract AnyValue getAnyValue(String name, boolean create);
@@ -723,7 +705,6 @@ public abstract class AnyValue {
      * 根据字段名获取String类型的字段值
      *
      * @param name 字段名
-     *
      * @return String
      */
     public abstract String getValue(String name);
@@ -732,7 +713,6 @@ public abstract class AnyValue {
      * 根据字段名获取String类型的字段值
      *
      * @param name 字段名
-     *
      * @return String
      */
     public abstract String get(String name);
@@ -741,7 +721,6 @@ public abstract class AnyValue {
      * 获取字段值
      *
      * @param name 字段名
-     *
      * @return 字段值
      */
     public boolean getBoolValue(String name) {
@@ -751,9 +730,8 @@ public abstract class AnyValue {
     /**
      * 获取字段值
      *
-     * @param name         字段名
+     * @param name 字段名
      * @param defaultValue 默认值
-     *
      * @return 字段值
      */
     public boolean getBoolValue(String name, boolean defaultValue) {
@@ -765,7 +743,6 @@ public abstract class AnyValue {
      * 获取字段值
      *
      * @param name 字段名
-     *
      * @return 字段值
      */
     public byte getByteValue(String name) {
@@ -775,9 +752,8 @@ public abstract class AnyValue {
     /**
      * 获取字段值
      *
-     * @param name         字段名
+     * @param name 字段名
      * @param defaultValue 默认值
-     *
      * @return 字段值
      */
     public byte getByteValue(String name, byte defaultValue) {
@@ -795,10 +771,9 @@ public abstract class AnyValue {
     /**
      * 获取字段值
      *
-     * @param radix        进制，默认十进制
-     * @param name         字段名
+     * @param radix 进制，默认十进制
+     * @param name 字段名
      * @param defaultValue 默认值
-     *
      * @return 字段值
      */
     public byte getByteValue(int radix, String name, byte defaultValue) {
@@ -817,7 +792,6 @@ public abstract class AnyValue {
      * 获取字段值
      *
      * @param name 字段名
-     *
      * @return 字段值
      */
     public char getCharValue(String name) {
@@ -827,9 +801,8 @@ public abstract class AnyValue {
     /**
      * 获取字段值
      *
-     * @param name         字段名
+     * @param name 字段名
      * @param defaultValue 默认值
-     *
      * @return 字段值
      */
     public char getCharValue(String name, char defaultValue) {
@@ -841,7 +814,6 @@ public abstract class AnyValue {
      * 获取字段值
      *
      * @param name 字段名
-     *
      * @return String
      */
     public short getShortValue(String name) {
@@ -851,9 +823,8 @@ public abstract class AnyValue {
     /**
      * 获取字段值
      *
-     * @param name         字段名
+     * @param name 字段名
      * @param defaultValue 默认值
-     *
      * @return 字段值
      */
     public short getShortValue(String name, short defaultValue) {
@@ -871,10 +842,9 @@ public abstract class AnyValue {
     /**
      * 获取字段值
      *
-     * @param radix        进制，默认十进制
-     * @param name         字段名
+     * @param radix 进制，默认十进制
+     * @param name 字段名
      * @param defaultValue 默认值
-     *
      * @return 字段值
      */
     public short getShortValue(int radix, String name, short defaultValue) {
@@ -893,7 +863,6 @@ public abstract class AnyValue {
      * 获取字段值
      *
      * @param name 字段名
-     *
      * @return 字段值
      */
     public int getIntValue(String name) {
@@ -903,9 +872,8 @@ public abstract class AnyValue {
     /**
      * 获取字段值
      *
-     * @param name         字段名
+     * @param name 字段名
      * @param defaultValue 默认值
-     *
      * @return String
      */
     public int getIntValue(String name, int defaultValue) {
@@ -923,10 +891,9 @@ public abstract class AnyValue {
     /**
      * 获取字段值
      *
-     * @param radix        进制，默认十进制
-     * @param name         字段名
+     * @param radix 进制，默认十进制
+     * @param name 字段名
      * @param defaultValue 默认值
-     *
      * @return 字段值
      */
     public int getIntValue(int radix, String name, int defaultValue) {
@@ -945,7 +912,6 @@ public abstract class AnyValue {
      * 获取字段值
      *
      * @param name 字段名
-     *
      * @return 字段值
      */
     public long getLongValue(String name) {
@@ -955,9 +921,8 @@ public abstract class AnyValue {
     /**
      * 获取字段值
      *
-     * @param name         字段名
+     * @param name 字段名
      * @param defaultValue 默认值
-     *
      * @return 字段值
      */
     public long getLongValue(String name, long defaultValue) {
@@ -975,10 +940,9 @@ public abstract class AnyValue {
     /**
      * 获取字段值
      *
-     * @param radix        进制，默认十进制
-     * @param name         字段名
+     * @param radix 进制，默认十进制
+     * @param name 字段名
      * @param defaultValue 默认值
-     *
      * @return 字段值
      */
     public long getLongValue(int radix, String name, long defaultValue) {
@@ -997,7 +961,6 @@ public abstract class AnyValue {
      * 获取字段值
      *
      * @param name 字段名
-     *
      * @return String
      */
     public float getFloatValue(String name) {
@@ -1007,9 +970,8 @@ public abstract class AnyValue {
     /**
      * 获取字段值
      *
-     * @param name         字段名
+     * @param name 字段名
      * @param defaultValue 默认值
-     *
      * @return 字段值
      */
     public float getFloatValue(String name, float defaultValue) {
@@ -1028,7 +990,6 @@ public abstract class AnyValue {
      * 获取字段值
      *
      * @param name 字段名
-     *
      * @return 字段值
      */
     public double getDoubleValue(String name) {
@@ -1038,9 +999,8 @@ public abstract class AnyValue {
     /**
      * 获取字段值
      *
-     * @param name         字段名
+     * @param name 字段名
      * @param defaultValue 默认值
-     *
      * @return 字段值
      */
     public double getDoubleValue(String name, double defaultValue) {
@@ -1058,9 +1018,8 @@ public abstract class AnyValue {
     /**
      * 获取字段值
      *
-     * @param name         字段名
+     * @param name 字段名
      * @param defaultValue 默认值
-     *
      * @return 字段值
      */
     public String getValue(String name, String defaultValue) {
@@ -1071,9 +1030,8 @@ public abstract class AnyValue {
     /**
      * 获取字段值
      *
-     * @param name         字段名
+     * @param name 字段名
      * @param defaultValue 默认值
-     *
      * @return 字段值
      */
     public String getOrDefault(String name, String defaultValue) {
@@ -1122,24 +1080,24 @@ public abstract class AnyValue {
      * xml化当前AnyValue对象
      *
      * @param rootName root名称
-     *
      * @return String
      */
     public String toXml(String rootName) {
-        return toXmlString(new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n\r\n"), rootName, this, 0).toString();
+        return toXmlString(new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n\r\n"), rootName, this, 0)
+                .toString();
     }
 
     /**
      * xml化AnyValue对象
      *
-     * @param sb       StringBuilder
+     * @param sb StringBuilder
      * @param nodeName 字段名
-     * @param conf     AnyValue
-     * @param indent   缩进长度
-     *
+     * @param conf AnyValue
+     * @param indent 缩进长度
      * @return StringBuilder
      */
-    protected static StringBuilder toXmlString(StringBuilder sb, String nodeName, AnyValue conf, int indent) { //indent: 缩进长度
+    protected static StringBuilder toXmlString(
+            StringBuilder sb, String nodeName, AnyValue conf, int indent) { // indent: 缩进长度
         if (indent < 0) {
             indent = 0;
         }
@@ -1171,7 +1129,11 @@ public abstract class AnyValue {
                 if (en.value == null) {
                     sb.append('"').append(en.name.replace("\"", "\\\"")).append("\":null");
                 } else {
-                    sb.append('"').append(en.name.replace("\"", "\\\"")).append("\":\"").append(en.value.replace("\"", "\\\"")).append('"');
+                    sb.append('"')
+                            .append(en.name.replace("\"", "\\\""))
+                            .append("\":\"")
+                            .append(en.value.replace("\"", "\\\""))
+                            .append('"');
                 }
                 if (++index < size) {
                     sb.append(',');
@@ -1180,7 +1142,10 @@ public abstract class AnyValue {
         }
         if (anyArray != null) {
             for (Entry<AnyValue> en : anyArray) {
-                sb.append('"').append(en.name.replace("\"", "\\\"")).append("\":").append(en.value.toJsonString());
+                sb.append('"')
+                        .append(en.name.replace("\"", "\\\""))
+                        .append("\":")
+                        .append(en.value.toJsonString());
                 if (++index < size) {
                     sb.append(',');
                 }
@@ -1189,5 +1154,4 @@ public abstract class AnyValue {
         sb.append('}');
         return sb.toString();
     }
-
 }

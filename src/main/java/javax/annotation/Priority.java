@@ -20,13 +20,10 @@ import java.lang.annotation.*;
 
 /**
  * 值越大，优先级越高
- * 
+ *
  * @see org.redkale.annotation.Priority
- *
  * @since Common Annotations 1.2
- *
  * @deprecated replace by {@link org.redkale.annotation.Priority}
- *
  */
 @Deprecated(since = "2.8.0")
 @Target({ElementType.TYPE})

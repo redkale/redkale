@@ -13,15 +13,15 @@ import org.redkale.convert.ext.ByteSimpledCoder;
 import org.redkale.util.*;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
  */
 public class BsonWriter extends Writer implements ByteTuple {
 
-    private static final int DEFAULT_SIZE = Integer.getInteger("redkale.convert.bson.writer.buffer.defsize", Integer.getInteger("redkale.convert.writer.buffer.defsize", 1024));
+    private static final int DEFAULT_SIZE = Integer.getInteger(
+            "redkale.convert.bson.writer.buffer.defsize",
+            Integer.getInteger("redkale.convert.writer.buffer.defsize", 1024));
 
     private byte[] content;
 
@@ -73,7 +73,7 @@ public class BsonWriter extends Writer implements ByteTuple {
     }
 
     public ByteBuffer[] toBuffers() {
-        return new ByteBuffer[]{ByteBuffer.wrap(content, 0, count)};
+        return new ByteBuffer[] {ByteBuffer.wrap(content, 0, count)};
     }
 
     protected BsonWriter(byte[] bs) {
@@ -98,13 +98,12 @@ public class BsonWriter extends Writer implements ByteTuple {
         return (BsonWriter) super.withFeatures(features);
     }
 
-    //-----------------------------------------------------------------------
-    //-----------------------------------------------------------------------
+    // -----------------------------------------------------------------------
+    // -----------------------------------------------------------------------
     /**
      * 扩充指定长度的缓冲区
      *
      * @param len 扩容长度
-     *
      * @return 固定0
      */
     protected int expand(int len) {
@@ -122,7 +121,7 @@ public class BsonWriter extends Writer implements ByteTuple {
         content[count++] = ch;
     }
 
-    //类似writeTo(new byte[length])
+    // 类似writeTo(new byte[length])
     public void writePlaceholderTo(final int length) {
         expand(length);
         count += length;
@@ -159,7 +158,7 @@ public class BsonWriter extends Writer implements ByteTuple {
         return this.getClass().getSimpleName() + "[count=" + this.count + "]";
     }
 
-    //------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     public final int count() {
         return this.count;
     }
@@ -209,8 +208,15 @@ public class BsonWriter extends Writer implements ByteTuple {
 
     @Override
     public final void writeLong(long value) {
-        writeTo((byte) (value >> 56), (byte) (value >> 48), (byte) (value >> 40), (byte) (value >> 32),
-            (byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value);
+        writeTo(
+                (byte) (value >> 56),
+                (byte) (value >> 48),
+                (byte) (value >> 40),
+                (byte) (value >> 32),
+                (byte) (value >> 24),
+                (byte) (value >> 16),
+                (byte) (value >> 8),
+                (byte) value);
     }
 
     @Override
@@ -305,7 +311,8 @@ public class BsonWriter extends Writer implements ByteTuple {
     }
 
     @Override
-    public final int writeArrayB(int size, Encodeable arrayEncoder, Encodeable<Writer, Object> componentEncoder, Object obj) {
+    public final int writeArrayB(
+            int size, Encodeable arrayEncoder, Encodeable<Writer, Object> componentEncoder, Object obj) {
         writeInt(size);
         if (componentEncoder != null && componentEncoder != ByteSimpledCoder.instance) {
             writeByte(BsonFactory.typeEnum(componentEncoder.getType()));
@@ -315,16 +322,17 @@ public class BsonWriter extends Writer implements ByteTuple {
 
     @Override
     public final void writeArrayMark() {
-        //do nothing
+        // do nothing
     }
 
     @Override
     public final void writeArrayE() {
-        //do nothing
+        // do nothing
     }
 
     @Override
-    public int writeMapB(int size, Encodeable<Writer, Object> keyEncoder, Encodeable<Writer, Object> valueEncoder, Object obj) {
+    public int writeMapB(
+            int size, Encodeable<Writer, Object> keyEncoder, Encodeable<Writer, Object> valueEncoder, Object obj) {
         writeInt(size);
         writeByte(BsonFactory.typeEnum(keyEncoder.getType()));
         writeByte(BsonFactory.typeEnum(valueEncoder.getType()));
@@ -333,12 +341,11 @@ public class BsonWriter extends Writer implements ByteTuple {
 
     @Override
     public final void writeMapMark() {
-        //do nothing
+        // do nothing
     }
 
     @Override
     public final void writeMapE() {
-        //do nothing
+        // do nothing
     }
-
 }

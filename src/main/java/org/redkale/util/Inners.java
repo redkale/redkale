@@ -3,6 +3,8 @@
  */
 package org.redkale.util;
 
+import static org.redkale.asm.Opcodes.*;
+
 import java.io.*;
 import java.lang.reflect.*;
 import java.math.*;
@@ -14,16 +16,11 @@ import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Stream;
 import org.redkale.asm.*;
-import static org.redkale.asm.Opcodes.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 class Inners {
 
-    private Inners() {
-    }
+    private Inners() {}
 
     static class CreatorInner {
 
@@ -35,8 +32,7 @@ class Inners {
 
         static final IntFunction<String[]> stringFuncArray = x -> new String[x];
 
-        private CreatorInner() {
-        }
+        private CreatorInner() {}
 
         static {
             creatorCacheMap.put(Object.class, p -> new Object());
@@ -61,7 +57,7 @@ class Inners {
 
                 @Override
                 public Class[] paramTypes() {
-                    return new Class[]{Object.class, Object.class};
+                    return new Class[] {Object.class, Object.class};
                 }
             });
             creatorCacheMap.put(AbstractMap.SimpleEntry.class, new Creator<AbstractMap.SimpleEntry>() {
@@ -73,7 +69,7 @@ class Inners {
 
                 @Override
                 public Class[] paramTypes() {
-                    return new Class[]{Object.class, Object.class};
+                    return new Class[] {Object.class, Object.class};
                 }
             });
 
@@ -110,7 +106,8 @@ class Inners {
             }
 
             @Override
-            public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+            public MethodVisitor visitMethod(
+                    int access, String name, String desc, String signature, String[] exceptions) {
                 if (java.lang.reflect.Modifier.isStatic(access) || !"<init>".equals(name)) {
                     return null;
                 }
@@ -121,15 +118,16 @@ class Inners {
                     return null;
                 }
                 this.started = true;
-                //返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
+                // 返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
                 return new MethodVisitor(Opcodes.ASM6) {
                     @Override
-                    public void visitLocalVariable(String name, String description, String signature, Label start, Label end, int index) {
+                    public void visitLocalVariable(
+                            String name, String description, String signature, Label start, Label end, int index) {
                         if (index < 1) {
                             return;
                         }
                         int size = fieldNames.size();
-                        //index不会按顺序执行的
+                        // index不会按顺序执行的
                         if (index > size) {
                             for (int i = size; i < index; i++) {
                                 fieldNames.add(" ");
@@ -142,7 +140,8 @@ class Inners {
             }
         }
 
-        public static AbstractMap.SimpleEntry<String, Class>[] getConstructorField(Class clazz, int paramCount, String constructorDesc) {
+        public static AbstractMap.SimpleEntry<String, Class>[] getConstructorField(
+                Class clazz, int paramCount, String constructorDesc) {
             String n = clazz.getName();
             InputStream in = clazz.getResourceAsStream(n.substring(n.lastIndexOf('.') + 1) + ".class");
             if (in == null) {
@@ -160,8 +159,10 @@ class Inners {
                 return null;
             }
             final List<String> fieldNames = new ArrayList<>();
-            new ClassReader(out.toByteArray()).accept(new SimpleClassVisitor(Opcodes.ASM6, fieldNames, constructorDesc), 0);
-            while (fieldNames.remove(" ")); //删掉空元素
+            new ClassReader(out.toByteArray())
+                    .accept(new SimpleClassVisitor(Opcodes.ASM6, fieldNames, constructorDesc), 0);
+            while (fieldNames.remove(" "))
+                ; // 删掉空元素
             if (fieldNames.isEmpty()) {
                 return null;
             }
@@ -176,9 +177,10 @@ class Inners {
             }
         }
 
-        public static AbstractMap.SimpleEntry<String, Class>[] getConstructorField(Class clazz, int paramCount, String[] names) {
+        public static AbstractMap.SimpleEntry<String, Class>[] getConstructorField(
+                Class clazz, int paramCount, String[] names) {
             AbstractMap.SimpleEntry<String, Class>[] se = new AbstractMap.SimpleEntry[names.length];
-            for (int i = 0; i < names.length; i++) { //查询参数名对应的Field
+            for (int i = 0; i < names.length; i++) { // 查询参数名对应的Field
                 try {
                     Field field = clazz.getDeclaredField(names[i]);
                     se[i] = new AbstractMap.SimpleEntry<>(field.getName(), field.getType());
@@ -190,7 +192,7 @@ class Inners {
                             field = cz.getDeclaredField(names[i]);
                             break;
                         } catch (NoSuchFieldException nsfe) {
-                            //do nothing
+                            // do nothing
                         }
                     }
                     if (field == null) {
@@ -207,9 +209,10 @@ class Inners {
             return se;
         }
 
-        public static AbstractMap.SimpleEntry<String, Class>[] getConstructorField(Class clazz, int paramCount, Parameter[] params) {
+        public static AbstractMap.SimpleEntry<String, Class>[] getConstructorField(
+                Class clazz, int paramCount, Parameter[] params) {
             AbstractMap.SimpleEntry<String, Class>[] se = new AbstractMap.SimpleEntry[params.length];
-            for (int i = 0; i < params.length; i++) { //查询参数名对应的Field
+            for (int i = 0; i < params.length; i++) { // 查询参数名对应的Field
                 try {
                     Field field = clazz.getDeclaredField(params[i].getName());
                     se[i] = new AbstractMap.SimpleEntry<>(field.getName(), field.getType());
@@ -224,20 +227,29 @@ class Inners {
             final String interName = clazz.getName().replace('.', '/');
             final String interDesc = org.redkale.asm.Type.getDescriptor(clazz);
             final ClassLoader loader = clazz.getClassLoader();
-            final String newDynName = "org/redkaledyn/creator/_DynArrayFunction__" + clazz.getName().replace('.', '_').replace('$', '_');
+            final String newDynName = "org/redkaledyn/creator/_DynArrayFunction__"
+                    + clazz.getName().replace('.', '_').replace('$', '_');
             try {
                 Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-                return (IntFunction) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz).getDeclaredConstructor().newInstance();
+                return (IntFunction) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz)
+                        .getDeclaredConstructor()
+                        .newInstance();
             } catch (Throwable ex) {
-                //do nothing
+                // do nothing
             }
 
-            //-------------------------------------------------------------
+            // -------------------------------------------------------------
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
             MethodVisitor mv;
-            cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, "Ljava/lang/Object;Ljava/util/function/IntFunction<[" + interDesc + ">;", "java/lang/Object", new String[]{"java/util/function/IntFunction"});
+            cw.visit(
+                    V11,
+                    ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
+                    newDynName,
+                    "Ljava/lang/Object;Ljava/util/function/IntFunction<[" + interDesc + ">;",
+                    "java/lang/Object",
+                    new String[] {"java/util/function/IntFunction"});
 
-            {//IntFunction自身的构造方法
+            { // IntFunction自身的构造方法
                 mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
@@ -245,7 +257,7 @@ class Inners {
                 mv.visitMaxs(1, 1);
                 mv.visitEnd();
             }
-            {//apply 方法
+            { // apply 方法
                 mv = cw.visitMethod(ACC_PUBLIC, "apply", "(I)[" + interDesc, null, null);
                 mv.visitVarInsn(ILOAD, 1);
                 mv.visitTypeInsn(ANEWARRAY, interName);
@@ -253,8 +265,9 @@ class Inners {
                 mv.visitMaxs(1, 2);
                 mv.visitEnd();
             }
-            { //虚拟 apply 方法
-                mv = cw.visitMethod(ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC, "apply", "(I)Ljava/lang/Object;", null, null);
+            { // 虚拟 apply 方法
+                mv = cw.visitMethod(
+                        ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC, "apply", "(I)Ljava/lang/Object;", null, null);
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitVarInsn(ILOAD, 1);
                 mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "apply", "(I)[" + interDesc, false);
@@ -274,7 +287,7 @@ class Inners {
                 RedkaleClassLoader.putReflectionDeclaredConstructors(resultClazz, newDynName.replace('/', '.'));
                 return (IntFunction<T[]>) resultClazz.getDeclaredConstructor().newInstance();
             } catch (Throwable ex) {
-                //ex.printStackTrace();  //一般不会发生, native-image在没有预编译情况下会报错
+                // ex.printStackTrace();  //一般不会发生, native-image在没有预编译情况下会报错
                 return t -> (T[]) Array.newInstance(clazz, t);
             }
         }
@@ -282,20 +295,26 @@ class Inners {
 
     static class CopierInner {
 
-        static final ConcurrentHashMap<Integer, ConcurrentHashMap<Class, Copier>> copierOneCaches = new ConcurrentHashMap();
+        static final ConcurrentHashMap<Integer, ConcurrentHashMap<Class, Copier>> copierOneCaches =
+                new ConcurrentHashMap();
 
-        static final ConcurrentHashMap<Integer, ConcurrentHashMap<Class, ConcurrentHashMap<Class, Copier>>> copierTwoCaches = new ConcurrentHashMap();
+        static final ConcurrentHashMap<Integer, ConcurrentHashMap<Class, ConcurrentHashMap<Class, Copier>>>
+                copierTwoCaches = new ConcurrentHashMap();
 
-        static final ConcurrentHashMap<Integer, ConcurrentHashMap<Class, Function>> copierFuncOneCaches = new ConcurrentHashMap();
+        static final ConcurrentHashMap<Integer, ConcurrentHashMap<Class, Function>> copierFuncOneCaches =
+                new ConcurrentHashMap();
 
-        static final ConcurrentHashMap<Integer, ConcurrentHashMap<Class, ConcurrentHashMap<Class, Function>>> copierFuncTwoCaches = new ConcurrentHashMap();
+        static final ConcurrentHashMap<Integer, ConcurrentHashMap<Class, ConcurrentHashMap<Class, Function>>>
+                copierFuncTwoCaches = new ConcurrentHashMap();
 
-        static final ConcurrentHashMap<Class, ConcurrentHashMap<Integer, ConcurrentHashMap<Class, Function>>> copierFuncListOneCaches = new ConcurrentHashMap();
+        static final ConcurrentHashMap<Class, ConcurrentHashMap<Integer, ConcurrentHashMap<Class, Function>>>
+                copierFuncListOneCaches = new ConcurrentHashMap();
 
-        static final ConcurrentHashMap<Class, ConcurrentHashMap<Integer, ConcurrentHashMap<Class, ConcurrentHashMap<Class, Function>>>> copierFuncListTwoCaches = new ConcurrentHashMap();
+        static final ConcurrentHashMap<
+                        Class, ConcurrentHashMap<Integer, ConcurrentHashMap<Class, ConcurrentHashMap<Class, Function>>>>
+                copierFuncListTwoCaches = new ConcurrentHashMap();
 
-        private CopierInner() {
-        }
+        private CopierInner() {}
 
         public static void clearCopierCache() {
             copierOneCaches.clear();
@@ -309,9 +328,9 @@ class Inners {
 
     static class InvokerInner {
 
-        static final ConcurrentHashMap<Class, ConcurrentHashMap<Method, Invoker>> invokerCaches = new ConcurrentHashMap();
+        static final ConcurrentHashMap<Class, ConcurrentHashMap<Method, Invoker>> invokerCaches =
+                new ConcurrentHashMap();
 
-        private InvokerInner() {
-        }
+        private InvokerInner() {}
     }
 }

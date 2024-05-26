@@ -5,16 +5,16 @@
  */
 package org.redkale.net.http;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import java.lang.annotation.*;
+
 /**
- * 只能依附在Service实现类的public方法上, 当方法的返回值以JSON输出时对指定类型的转换设定。  <br>
+ * 只能依附在Service实现类的public方法上, 当方法的返回值以JSON输出时对指定类型的转换设定。 <br>
  * 注意: 如果 type() == void.class 则无视其他参数固定返回 JsonFactory.create().skipAllIgnore(true).getConvert();
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */

@@ -1,9 +1,9 @@
-//package org.redkale.util;
+// package org.redkale.util;
 //
-//import java.lang.reflect.Field;
-//import java.nio.ByteBuffer;
+// import java.lang.reflect.Field;
+// import java.nio.ByteBuffer;
 //
-//public class AnonymousUnsafe implements Unsafe {
+// public class AnonymousUnsafe implements Unsafe {
 //
 //    private final sun.misc.Unsafe unsafe;
 //
@@ -440,4 +440,4 @@
 //    public void invokeCleaner(ByteBuffer directBuffer) {
 //        unsafe.invokeCleaner(directBuffer);
 //    }
-//}
+// }

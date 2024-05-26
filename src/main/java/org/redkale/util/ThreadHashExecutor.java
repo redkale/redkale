@@ -12,12 +12,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * 线程池
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @deprecated
- *
  * @since 2.1.0
  */
 @Deprecated(since = "2.8.0")
@@ -42,14 +40,21 @@ public class ThreadHashExecutor extends AbstractExecutorService {
         for (int i = 0; i < array.length; i++) {
             LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<>();
             ques[i] = queue;
-            array[i] = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, queue,
-                factory == null ? (Runnable r) -> {
-                        Thread t = new Thread(r);
-                        t.setDaemon(true);
-                        int c = counter.incrementAndGet();
-                        t.setName("Redkale-HashThread-" + (c > 9 ? c : ("0" + c)));
-                        return t;
-                    } : factory);
+            array[i] = new ThreadPoolExecutor(
+                    1,
+                    1,
+                    0L,
+                    TimeUnit.MILLISECONDS,
+                    queue,
+                    factory == null
+                            ? (Runnable r) -> {
+                                Thread t = new Thread(r);
+                                t.setDaemon(true);
+                                int c = counter.incrementAndGet();
+                                t.setName("Redkale-HashThread-" + (c > 9 ? c : ("0" + c)));
+                                return t;
+                            }
+                            : factory);
         }
         this.queues = ques;
         this.executors = array;
@@ -167,7 +172,8 @@ public class ThreadHashExecutor extends AbstractExecutorService {
     }
 
     @Override
-    public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+    public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
+            throws InterruptedException, ExecutionException, TimeoutException {
         return hashExecutor(0).invokeAny(tasks, timeout, unit);
     }
 
@@ -177,7 +183,8 @@ public class ThreadHashExecutor extends AbstractExecutorService {
     }
 
     @Override
-    public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
+    public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
+            throws InterruptedException {
         return hashExecutor(0).invokeAll(tasks, timeout, unit);
     }
 }

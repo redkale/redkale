@@ -9,7 +9,9 @@ import org.redkale.service.RetResult;
 import org.redkale.source.Flipper;
 import org.redkale.util.*;
 
-@WebServlet(value = {"/hello/*"}, repair = true)
+@WebServlet(
+        value = {"/hello/*"},
+        repair = true)
 public class _DynHelloRestServlet1 extends SimpleRestServlet {
 
     @Resource
@@ -35,7 +37,7 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         entity.setHelloname("my name");
         Map<String, Serializable> headers = new HashMap<>();
         headers.put("hello-res", "my res");
-        //headers.put(Rest.REST_HEADER_RESNAME, "my-res");
+        // headers.put(Rest.REST_HEADER_RESNAME, "my-res");
         String url = "http://127.0.0.1:" + port + "/pipes/hello/update?entity={}&bean2={}";
         System.out.println(Utility.postHttpContent(url, headers, null));
         url = "http://127.0.0.1:" + port + "/pipes/hello/update2?entity={}&bean2={}";
@@ -56,12 +58,13 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         System.out.println("listmap: " + Utility.postHttpContent(url, headers, null));
         url = "http://127.0.0.1:" + port + "/pipes/hello/asyncfind3/333333";
         System.out.println("listmap: " + Utility.postHttpContent(url, headers, null));
-
     }
 
     @HttpMapping(url = "/hello/create", auth = false)
     public void create(HttpRequest req, HttpResponse resp) throws IOException {
-        HelloService service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
+        HelloService service = _redkale_servicemap == null
+                ? _redkale_service
+                : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
         bean.setClientaddr(req.getRemoteAddr());
         bean.setResname(req.getHeader("hello-res"));
@@ -72,7 +75,9 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
 
     @HttpMapping(url = "/hello/delete/", auth = false)
     public void delete(HttpRequest req, HttpResponse resp) throws IOException {
-        HelloService service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
+        HelloService service = _redkale_servicemap == null
+                ? _redkale_service
+                : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
         int id = Integer.parseInt(req.getPathLastParam());
         service.deleteHello(id);
         resp.finishJson(RetResult.success());
@@ -80,7 +85,9 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
 
     @HttpMapping(url = "/hello/update", auth = false)
     public void update(HttpRequest req, HttpResponse resp) throws IOException {
-        HelloService service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
+        HelloService service = _redkale_servicemap == null
+                ? _redkale_service
+                : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
         String clientaddr = req.getRemoteAddr();
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
         bean.setClientaddr(req.getRemoteAddr());
@@ -91,7 +98,9 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
 
     @HttpMapping(url = "/hello/partupdate", auth = false)
     public void partupdate(HttpRequest req, HttpResponse resp) throws IOException {
-        HelloService service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
+        HelloService service = _redkale_servicemap == null
+                ? _redkale_service
+                : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
         HelloEntity bean = req.getJsonParameter(HelloEntity.class, "bean");
         bean.setClientaddr(req.getRemoteAddr());
         bean.setResname(req.getHeader("hello-res"));
@@ -102,7 +111,9 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
 
     @HttpMapping(url = "/hello/query", auth = false)
     public void query(HttpRequest req, HttpResponse resp) throws IOException {
-        HelloService service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
+        HelloService service = _redkale_servicemap == null
+                ? _redkale_service
+                : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
         HelloBean bean = req.getJsonParameter(HelloBean.class, "bean");
         bean.setClientaddr(req.getRemoteAddr());
         bean.setUseragent(req.getHeader("User-Agent"));
@@ -115,7 +126,9 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
 
     @HttpMapping(url = "/hello/list", auth = false)
     public void list(HttpRequest req, HttpResponse resp) throws IOException {
-        HelloService service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
+        HelloService service = _redkale_servicemap == null
+                ? _redkale_service
+                : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
         HelloBean bean = req.getJsonParameter(HelloBean.class, "bean");
         bean.setClientaddr(req.getRemoteAddr());
         bean.setUseragent(req.getHeader("User-Agent"));
@@ -127,7 +140,9 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
 
     @HttpMapping(url = "/hello/find/", auth = false)
     public void find(HttpRequest req, HttpResponse resp) throws IOException {
-        HelloService service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
+        HelloService service = _redkale_servicemap == null
+                ? _redkale_service
+                : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
         int id = Integer.parseInt(req.getPathLastParam());
         HelloEntity bean = service.findHello(id);
         resp.finishJson(bean);
@@ -135,21 +150,27 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
 
     @HttpMapping(url = "/hello/asyncfind/", auth = false)
     public void asyncfind(HttpRequest req, HttpResponse resp) throws IOException {
-        HelloService service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
+        HelloService service = _redkale_servicemap == null
+                ? _redkale_service
+                : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
         int id = Integer.parseInt(req.getPathLastParam());
         resp.finishJson(service.asyncFindHello(id));
     }
 
     @HttpMapping(url = "/hello/asyncfind2/", auth = false)
     public void asyncfind2(HttpRequest req, HttpResponse resp) throws IOException {
-        HelloService service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
+        HelloService service = _redkale_servicemap == null
+                ? _redkale_service
+                : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
         int id = Integer.parseInt(req.getPathLastParam());
         service.asyncFindHello(resp.createAsyncHandler(), id);
     }
 
     @HttpMapping(url = "/hello/asyncfind3/", auth = false)
     public void asyncfind3(HttpRequest req, HttpResponse resp) throws IOException {
-        HelloService service = _redkale_servicemap == null ? _redkale_service : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
+        HelloService service = _redkale_servicemap == null
+                ? _redkale_service
+                : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
         int id = Integer.parseInt(req.getPathLastParam());
         service.asyncFindHello(resp.createAsyncHandler(HelloAsyncHandler.class), id);
     }

@@ -16,31 +16,28 @@ import org.redkale.persistence.Column;
 import org.redkale.util.*;
 
 /**
- * 通用的结果对象，在常见的HTTP+JSON接口中返回的结果需要含结果码，错误信息，和实体对象。  <br>
+ * 通用的结果对象，在常见的HTTP+JSON接口中返回的结果需要含结果码，错误信息，和实体对象。 <br>
  * 结果码定义通常前四位为模块，后四位为操作。<br>
- * 结果码定义范围:  <br>
- *    // 10000001 - 19999999 预留给Redkale的核心包使用  <br>
- *    // 20000001 - 29999999 预留给Redkale的扩展包使用  <br>
- *    // 30000001 - 99999999 预留给Dev开发系统自身使用  <br>
- * <p>
- * 详情见: https://redkale.org
+ * 结果码定义范围: <br>
+ * // 10000001 - 19999999 预留给Redkale的核心包使用 <br>
+ * // 20000001 - 29999999 预留给Redkale的扩展包使用 <br>
+ * // 30000001 - 99999999 预留给Dev开发系统自身使用 <br>
+ *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> 结果对象的泛型
  */
 public class RetResult<T> implements Serializable {
 
-    public static final Type TYPE_RET_INTEGER = new TypeToken<RetResult<Integer>>() {
-    }.getType();
+    public static final Type TYPE_RET_INTEGER = new TypeToken<RetResult<Integer>>() {}.getType();
 
-    public static final Type TYPE_RET_LONG = new TypeToken<RetResult<Long>>() {
-    }.getType();
+    public static final Type TYPE_RET_LONG = new TypeToken<RetResult<Long>>() {}.getType();
 
-    public static final Type TYPE_RET_STRING = new TypeToken<RetResult<String>>() {
-    }.getType();
+    public static final Type TYPE_RET_STRING = new TypeToken<RetResult<String>>() {}.getType();
 
-    //@ConvertColumn(index = 1)
-    //success
+    // @ConvertColumn(index = 1)
+    // success
     //
     @ConvertColumn(index = 2)
     @Column(nullable = false)
@@ -59,8 +56,7 @@ public class RetResult<T> implements Serializable {
     @ConvertDisabled
     protected Convert convert;
 
-    public RetResult() {
-    }
+    public RetResult() {}
 
     public RetResult(T result) {
         this.result = result;
@@ -125,17 +121,17 @@ public class RetResult<T> implements Serializable {
         return CompletableFuture.completedFuture(new RetResult(result));
     }
 
-    //@since 2.7.0
+    // @since 2.7.0
     public static <T> RetResult<T> fail(int retcode, String retinfo) {
         return new RetResult(retcode, retinfo);
     }
 
-    //@since 2.7.0
+    // @since 2.7.0
     public static <T> CompletableFuture<RetResult<T>> failFuture(int retcode, String retinfo) {
         return CompletableFuture.completedFuture(new RetResult(retcode, retinfo));
     }
 
-    //@since 2.7.0
+    // @since 2.7.0
     public T join() {
         if (isSuccess()) {
             return result;
@@ -165,7 +161,6 @@ public class RetResult<T> implements Serializable {
      * 清空result
      *
      * @param <V> V
-     *
      * @return RetResult
      */
     public <V> RetResult<V> clearResult() {
@@ -176,22 +171,23 @@ public class RetResult<T> implements Serializable {
     /**
      * 将RetResult&#60;X&#62; 转换成一个新的 RetResult&#60;Y&#62;
      *
-     * @param <R>    目标数据类型
+     * @param <R> 目标数据类型
      * @param mapper 转换函数
-     *
      * @return RetResult
-     *
      * @since 2.1.0
      */
     public <R> RetResult<R> mapTo(Function<T, R> mapper) {
-        return new RetResult<>(mapper.apply(this.result)).convert(this.convert).retcode(this.retcode).retinfo(this.retinfo).attach(this.attach);
+        return new RetResult<>(mapper.apply(this.result))
+                .convert(this.convert)
+                .retcode(this.retcode)
+                .retinfo(this.retinfo)
+                .attach(this.attach);
     }
 
     /**
      * 同 setRetcode
      *
      * @param retcode retcode
-     *
      * @return RetResult
      */
     public RetResult<T> retcode(int retcode) {
@@ -203,7 +199,6 @@ public class RetResult<T> implements Serializable {
      * 同 setRetinfo
      *
      * @param retinfo retinfo
-     *
      * @return RetResult
      */
     public RetResult<T> retinfo(String retinfo) {
@@ -215,7 +210,6 @@ public class RetResult<T> implements Serializable {
      * 同 setResult
      *
      * @param result result
-     *
      * @return RetResult
      */
     public RetResult<T> result(T result) {
@@ -227,7 +221,6 @@ public class RetResult<T> implements Serializable {
      * 同 setAttach
      *
      * @param attach attach
-     *
      * @return RetResult
      */
     @Deprecated(since = "2.5.0")
@@ -240,9 +233,8 @@ public class RetResult<T> implements Serializable {
     /**
      * attach添加元素
      *
-     * @param key   String
+     * @param key String
      * @param value String
-     *
      * @return RetResult
      */
     @Deprecated(since = "2.5.0")
@@ -251,14 +243,20 @@ public class RetResult<T> implements Serializable {
         if (this.attach == null) {
             this.attach = new HashMap<>();
         }
-        boolean canstr = value != null && (value instanceof CharSequence || value instanceof Number || value.getClass().isPrimitive());
-        this.attach.put(key, value == null ? null : (canstr ? String.valueOf(value) : JsonConvert.root().convertTo(value)));
+        boolean canstr = value != null
+                && (value instanceof CharSequence
+                        || value instanceof Number
+                        || value.getClass().isPrimitive());
+        this.attach.put(
+                key,
+                value == null
+                        ? null
+                        : (canstr ? String.valueOf(value) : JsonConvert.root().convertTo(value)));
         return this;
     }
 
     /**
      * 清空attach
-     *
      *
      * @return RetResult
      */
@@ -332,9 +330,8 @@ public class RetResult<T> implements Serializable {
     /**
      * 获取附件元素值
      *
-     * @param name     元素名
+     * @param name 元素名
      * @param defValue 默认值
-     *
      * @return 结果值
      */
     @Deprecated(since = "2.5.0")
@@ -375,5 +372,4 @@ public class RetResult<T> implements Serializable {
     public String toString() {
         return JsonConvert.root().convertTo(this);
     }
-
 }

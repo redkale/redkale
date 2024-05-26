@@ -8,7 +8,10 @@ import java.util.concurrent.CompletableFuture;
 /**
  * DataSource的事务类 <br>
  * 示例: <br>
- * <blockquote><pre>
+ *
+ * <blockquote>
+ *
+ * <pre>
  * DataSource source = ...;
  * DataTransaction tran = source.createTransaction();
  * try {
@@ -18,7 +21,9 @@ import java.util.concurrent.CompletableFuture;
  * } catch(Exception e){
  *    tran.rollback(); //回滚
  * }
- * </pre></blockquote>
+ * </pre>
+ *
+ * </blockquote>
  *
  * 详情见: https://redkale.org
  *
@@ -27,18 +32,18 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface DataTransaction {
 
-    //事务版的DataSource
+    // 事务版的DataSource
     DataSource source();
 
-    //同步模式提交
+    // 同步模式提交
     public void commit();
 
-    //同步模式回滚
+    // 同步模式回滚
     public void rollback();
 
-    //异步模式提交
+    // 异步模式提交
     public CompletableFuture<Void> commitAsync();
 
-    //异步模式回滚
+    // 异步模式回滚
     public CompletableFuture<Void> rollbackAsync();
 }

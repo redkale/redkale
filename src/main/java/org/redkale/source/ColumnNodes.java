@@ -8,8 +8,7 @@ import static org.redkale.source.ColumnExpress.*;
 /**
  * 创建ColumnNode的工具类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.8.0
@@ -17,7 +16,7 @@ import static org.redkale.source.ColumnExpress.*;
 public abstract class ColumnNodes {
 
     private ColumnNodes() {
-        //do nothing
+        // do nothing
     }
 
     public static ColumnNameNode column(String column) {
@@ -211,5 +210,4 @@ public abstract class ColumnNodes {
     public static ColumnExpNode orr(ColumnNode left, Number rightValue) {
         return new ColumnExpNode(left, ORR, number(rightValue));
     }
-
 }

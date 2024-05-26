@@ -12,8 +12,7 @@ import org.redkale.convert.json.JsonConvert;
 /**
  * WebSocket.broadcastMessage时的过滤条件
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -23,8 +22,7 @@ public class WebSocketRange implements Serializable {
 
     protected Map<String, String> attach;
 
-    public WebSocketRange() {
-    }
+    public WebSocketRange() {}
 
     public WebSocketRange(String wskey) {
         this.wskey = wskey;

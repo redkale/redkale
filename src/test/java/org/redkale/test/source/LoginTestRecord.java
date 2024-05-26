@@ -9,15 +9,10 @@ import org.redkale.convert.json.*;
 import org.redkale.persistence.Id;
 
 /**
- * CREATE TABLE `LoginTestRecord` (
- * `sessionid` VARCHAR(64) NOT NULL COMMENT '登录会话ID',
- * `userid` INT(11) NOT NULL COMMENT '登录用户ID',
- * `loginagent` VARCHAR(128) NOT NULL COMMENT '登录端信息',
- * `loginip` VARCHAR(255) NOT NULL COMMENT '登录IP',
- * `logintime` BIGINT(20) NOT NULL COMMENT '登录时间',
- * `logouttime` BIGINT(20) NOT NULL COMMENT '注销时间',
- * PRIMARY KEY (`sessionid`)
- * ) ENGINE=INNODB DEFAULT CHARSET=utf8;
+ * CREATE TABLE `LoginTestRecord` ( `sessionid` VARCHAR(64) NOT NULL COMMENT '登录会话ID', `userid` INT(11) NOT NULL COMMENT
+ * '登录用户ID', `loginagent` VARCHAR(128) NOT NULL COMMENT '登录端信息', `loginip` VARCHAR(255) NOT NULL COMMENT '登录IP',
+ * `logintime` BIGINT(20) NOT NULL COMMENT '登录时间', `logouttime` BIGINT(20) NOT NULL COMMENT '注销时间', PRIMARY KEY
+ * (`sessionid`) ) ENGINE=INNODB DEFAULT CHARSET=utf8;
  *
  * @author zhangjx
  */
@@ -88,5 +83,4 @@ public class LoginTestRecord {
     public void setLogouttime(long logouttime) {
         this.logouttime = logouttime;
     }
-
 }

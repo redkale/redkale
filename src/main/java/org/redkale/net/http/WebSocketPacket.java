@@ -11,8 +11,6 @@ import org.redkale.net.http.WebSocketPacket.FrameType;
 import org.redkale.util.ByteArray;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -24,12 +22,18 @@ public final class WebSocketPacket {
     public static final WebSocketPacket DEFAULT_PING_PACKET = new WebSocketPacket(FrameType.PING, new byte[0]);
 
     public enum MessageType {
-        STRING, BYTES, OBJECT;
+        STRING,
+        BYTES,
+        OBJECT;
     }
 
     public enum FrameType {
-
-        SERIES(0x00), TEXT(0x01), BINARY(0x02), CLOSE(0x08), PING(0x09), PONG(0x0A);
+        SERIES(0x00),
+        TEXT(0x01),
+        BINARY(0x02),
+        CLOSE(0x08),
+        PING(0x09),
+        PONG(0x0A);
 
         private final int value;
 
@@ -43,13 +47,20 @@ public final class WebSocketPacket {
 
         public static FrameType valueOf(int v) {
             switch (v) {
-                case 0x00: return SERIES;
-                case 0x01: return TEXT;
-                case 0x02: return BINARY;
-                case 0x08: return CLOSE;
-                case 0x09: return PING;
-                case 0x0A: return PONG;
-                default: return null;
+                case 0x00:
+                    return SERIES;
+                case 0x01:
+                    return TEXT;
+                case 0x02:
+                    return BINARY;
+                case 0x08:
+                    return CLOSE;
+                case 0x09:
+                    return PING;
+                case 0x0A:
+                    return PONG;
+                default:
+                    return null;
             }
         }
     }
@@ -60,8 +71,7 @@ public final class WebSocketPacket {
 
     protected boolean last = true;
 
-    public WebSocketPacket() {
-    }
+    public WebSocketPacket() {}
 
     public WebSocketPacket(FrameType type, byte[] data) {
         this(type, data, true);
@@ -85,21 +95,21 @@ public final class WebSocketPacket {
         this.last = last;
     }
 
-    //消息编码
+    // 消息编码
     public void writeEncode(final ByteArray array) {
         final byte opcode = (byte) (type.getValue() | 0x80);
         final byte[] content = getPayload();
         final int len = content.length;
-        if (len <= 0x7D) { //125
+        if (len <= 0x7D) { // 125
             array.put(opcode);
             array.put((byte) len);
         } else if (len <= 0xFFFF) { // 65535
             array.put(opcode);
-            array.put((byte) 0x7E); //126
+            array.put((byte) 0x7E); // 126
             array.putChar((char) len);
         } else {
             array.put(opcode);
-            array.put((byte) 0x7F); //127
+            array.put((byte) 0x7F); // 127
             array.putLong(len);
         }
         array.put(content);
@@ -138,7 +148,7 @@ public final class WebSocketPacket {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "[type=" + type + ", last=" + last + ", payload=" + toSimpleString() + "]";
+        return this.getClass().getSimpleName() + "[type=" + type + ", last=" + last + ", payload=" + toSimpleString()
+                + "]";
     }
-
 }

@@ -10,12 +10,9 @@ import org.redkale.net.sncp.*;
 import org.redkale.util.ByteArray;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.1.0
  */
 public class SncpMessageResponse extends SncpResponse {
@@ -36,13 +33,17 @@ public class SncpMessageResponse extends SncpResponse {
         if (out == null) {
             final ByteArray result = new ByteArray(headerSize).putPlaceholder(headerSize);
             writeHeader(result, 0, retcode);
-            messageClient.getProducer().apply(messageClient.createMessageRecord(message.getSeqid(), 
-                MessageRecord.CTYPE_BSON, message.getRespTopic(), null, (byte[]) null));
+            messageClient
+                    .getProducer()
+                    .apply(messageClient.createMessageRecord(
+                            message.getSeqid(), MessageRecord.CTYPE_BSON, message.getRespTopic(), null, (byte[]) null));
             return;
         }
         final ByteArray result = out.toByteArray();
         writeHeader(result, result.length() - headerSize, retcode);
-        messageClient.getProducer().apply(messageClient.createMessageRecord(message.getSeqid(), 
-            MessageRecord.CTYPE_BSON, message.getRespTopic(), null, result.getBytes()));
+        messageClient
+                .getProducer()
+                .apply(messageClient.createMessageRecord(
+                        message.getSeqid(), MessageRecord.CTYPE_BSON, message.getRespTopic(), null, result.getBytes()));
     }
 }

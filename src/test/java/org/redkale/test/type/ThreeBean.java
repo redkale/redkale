@@ -5,10 +5,7 @@
  */
 package org.redkale.test.type;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class ThreeBean extends TwoBean {
 
     public String desc;

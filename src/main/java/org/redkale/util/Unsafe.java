@@ -10,8 +10,7 @@ import java.lang.reflect.Field;
 /**
  * sun.misc.Unsafe 封装类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.5.0

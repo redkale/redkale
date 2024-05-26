@@ -14,8 +14,7 @@ import org.redkale.util.Utility;
 /**
  * 协议处理的自定义线程类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -23,11 +22,12 @@ public class WorkThread extends Thread implements Executor {
 
     protected final ExecutorService workExecutor;
 
-    private final int index;   //WorkThread下标，从0开始
+    private final int index; // WorkThread下标，从0开始
 
-    private final int threads; //WorkThread个数
+    private final int threads; // WorkThread个数
 
-    public WorkThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, Runnable target) {
+    public WorkThread(
+            ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, Runnable target) {
         super(g, target);
         if (name != null) {
             setName(name);
@@ -51,9 +51,8 @@ public class WorkThread extends Thread implements Executor {
     /**
      * 创建线程池，当前JDK若支持虚拟线程池，返回虚拟线程池
      *
-     * @param threads          线程数
+     * @param threads 线程数
      * @param threadNameFormat 格式化线程名
-     *
      * @return 线程池
      */
     public static ExecutorService createWorkExecutor(final int threads, final String threadNameFormat) {
@@ -64,9 +63,8 @@ public class WorkThread extends Thread implements Executor {
     /**
      * 创建线程池
      *
-     * @param threads          线程数
+     * @param threads 线程数
      * @param threadNameFormat 格式化线程名
-     *
      * @return 线程池
      */
     public static ExecutorService createExecutor(final int threads, final String threadNameFormat) {
@@ -86,8 +84,7 @@ public class WorkThread extends Thread implements Executor {
      * 根据线程池大小补位序号
      *
      * @param threads 线程池大小
-     * @param index   序号
-     *
+     * @param index 序号
      * @return 返回固定长度的序号
      */
     static String formatIndex(int threads, int index) {
@@ -108,9 +105,7 @@ public class WorkThread extends Thread implements Executor {
 
     /**
      * 按以下优先级顺序的线程池执行给定的任务: <br>
-     * 1、work线程池
-     * 2、虚拟线程
-     * 3、当前线程
+     * 1、work线程池 2、虚拟线程 3、当前线程
      *
      * @param command 任务
      */
@@ -125,9 +120,7 @@ public class WorkThread extends Thread implements Executor {
 
     /**
      * 按以下优先级顺序的线程池执行给定的任务集合: <br>
-     * 1、work线程池
-     * 2、虚拟线程
-     * 3、当前线程
+     * 1、work线程池 2、虚拟线程 3、当前线程
      *
      * @param commands 任务集合
      */
@@ -145,9 +138,7 @@ public class WorkThread extends Thread implements Executor {
 
     /**
      * 按以下优先级顺序的线程池执行给定的任务集合: <br>
-     * 1、work线程池
-     * 2、虚拟线程
-     * 3、当前线程
+     * 1、work线程池 2、虚拟线程 3、当前线程
      *
      * @param commands 任务集合
      */
@@ -168,10 +159,7 @@ public class WorkThread extends Thread implements Executor {
 
     /**
      * 按以下优先级顺序的线程池执行给定的任务: <br>
-     * 1、work线程池
-     * 2、虚拟线程
-     * 3、当前线程
-     * <br>
+     * 1、work线程池 2、虚拟线程 3、当前线程 <br>
      * <b>与execute的区别：子类AsyncIOThread中execute会被重载，确保优先在IO线程中执行</b>
      *
      * @param command 任务
@@ -216,7 +204,6 @@ public class WorkThread extends Thread implements Executor {
      * 判断当前线程是否为指定线程
      *
      * @param thread 线程
-     *
      * @return 是否一致
      */
     public boolean inCurrThread(Thread thread) {
@@ -240,5 +227,4 @@ public class WorkThread extends Thread implements Executor {
     public int threads() {
         return threads;
     }
-
 }

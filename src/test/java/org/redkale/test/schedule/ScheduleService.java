@@ -3,14 +3,11 @@
  */
 package org.redkale.test.schedule;
 
+import org.redkale.schedule.Scheduled;
 import org.redkale.service.Service;
 import org.redkale.util.Times;
-import org.redkale.schedule.Scheduled;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class ScheduleService implements Service {
 
     @Scheduled(cron = "0/1 * * * * ?")

@@ -9,8 +9,7 @@ import java.util.function.Supplier;
 /**
  * 创建traceid工具类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.7.0
@@ -28,7 +27,7 @@ public final class Traces {
     private static final ThreadLocal<String> localTrace = new ThreadLocal<>();
 
     private Traces() {
-        //do nothing
+        // do nothing
     }
 
     /**
@@ -58,9 +57,7 @@ public final class Traces {
         return ENABLE ? localTrace.get() : null;
     }
 
-    /**
-     * 移除当前线程的traceid
-     */
+    /** 移除当前线程的traceid */
     public static void removeTraceid() {
         if (ENABLE) {
             localTrace.remove();
@@ -71,7 +68,6 @@ public final class Traces {
      * 设置当前线程的traceid， 如果参数为空则清除当前线程traceid
      *
      * @param traceid traceid
-     *
      */
     public static void currentTraceid(String traceid) {
         if (ENABLE) {
@@ -87,7 +83,6 @@ public final class Traces {
      * 设置当前线程的traceid， 若参数为空则会创建一个新的traceid
      *
      * @param traceid traceid
-     *
      * @return String
      */
     public static String computeIfAbsent(String traceid) {
@@ -105,9 +100,8 @@ public final class Traces {
     /**
      * 设置当前线程的traceid， 若参数1为空，则使用参数2，若参数2未空，则会创建一个新的traceid
      *
-     * @param traceid  traceid
+     * @param traceid traceid
      * @param traceid2 traceid
-     *
      * @return String
      */
     public static String computeIfAbsent(String traceid, String traceid2) {

@@ -7,12 +7,10 @@ import org.redkale.util.AnyValue;
 /**
  * rpc鉴权验证器Secret key的实现类 <br>
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.7.0
- *
  */
 public class HttpRpcSecretAuthenticator implements HttpRpcAuthenticator {
 
@@ -36,5 +34,4 @@ public class HttpRpcSecretAuthenticator implements HttpRpcAuthenticator {
         }
         return true;
     }
-
 }

@@ -14,20 +14,17 @@ import org.redkale.service.Service;
 import org.redkale.test.util.TestBean;
 import org.redkale.util.Uint128;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public interface TestService extends Service {
 
     public boolean change(TestBean bean, String name, int id);
 
     public void insert(BooleanHandler handler, TestBean bean, String name, int id);
 
-    public void update(long show, short v2, CompletionHandler<Boolean, TestBean> handler, TestBean bean, String name, int id);
+    public void update(
+            long show, short v2, CompletionHandler<Boolean, TestBean> handler, TestBean bean, String name, int id);
 
     public CompletableFuture<String> changeName(TestBean bean, String name, int id);
-
 }
 
 @ResourceType(TestService.class)
@@ -38,16 +35,14 @@ class TestServiceImpl implements TestService {
         return false;
     }
 
-    public void delete(TestBean bean) {
-    }
+    public void delete(TestBean bean) {}
 
     @Override
-    public void insert(BooleanHandler handler, TestBean bean, String name, int id) {
-    }
+    public void insert(BooleanHandler handler, TestBean bean, String name, int id) {}
 
     @Override
-    public void update(long show, short v2, CompletionHandler<Boolean, TestBean> handler, TestBean bean, String name, int id) {
-    }
+    public void update(
+            long show, short v2, CompletionHandler<Boolean, TestBean> handler, TestBean bean, String name, int id) {}
 
     @Override
     public CompletableFuture<String> changeName(TestBean bean, String name, int id) {
@@ -58,18 +53,21 @@ class TestServiceImpl implements TestService {
 class BooleanHandler implements CompletionHandler<Boolean, TestBean> {
 
     @Override
-    public void completed(Boolean result, TestBean attachment) {
-    }
+    public void completed(Boolean result, TestBean attachment) {}
 
     @Override
-    public void failed(Throwable exc, TestBean attachment) {
-    }
-
+    public void failed(Throwable exc, TestBean attachment) {}
 }
 
 class DynActionTestService_change extends SncpActionServlet {
 
-    public DynActionTestService_change(String resourceName, Class resourceType, Service service, Uint128 serviceid, Uint128 actionid, final Method method) {
+    public DynActionTestService_change(
+            String resourceName,
+            Class resourceType,
+            Service service,
+            Uint128 serviceid,
+            Uint128 actionid,
+            final Method method) {
         super(resourceName, resourceType, service, serviceid, actionid, method);
     }
 
@@ -88,7 +86,13 @@ class DynActionTestService_change extends SncpActionServlet {
 
 class DynActionTestService_insert extends SncpActionServlet {
 
-    public DynActionTestService_insert(String resourceName, Class resourceType, Service service, Uint128 serviceid, Uint128 actionid, final Method method) {
+    public DynActionTestService_insert(
+            String resourceName,
+            Class resourceType,
+            Service service,
+            Uint128 serviceid,
+            Uint128 actionid,
+            final Method method) {
         super(resourceName, resourceType, service, serviceid, actionid, method);
     }
 
@@ -109,7 +113,13 @@ class DynActionTestService_insert extends SncpActionServlet {
 
 class DynActionTestService_update extends SncpActionServlet {
 
-    public DynActionTestService_update(String resourceName, Class resourceType, Service service, Uint128 serviceid, Uint128 actionid, final Method method) {
+    public DynActionTestService_update(
+            String resourceName,
+            Class resourceType,
+            Service service,
+            Uint128 serviceid,
+            Uint128 actionid,
+            final Method method) {
         super(resourceName, resourceType, service, serviceid, actionid, method);
     }
 
@@ -132,7 +142,13 @@ class DynActionTestService_update extends SncpActionServlet {
 
 class DynActionTestService_changeName extends SncpActionServlet {
 
-    public DynActionTestService_changeName(String resourceName, Class resourceType, Service service, Uint128 serviceid, Uint128 actionid, final Method method) {
+    public DynActionTestService_changeName(
+            String resourceName,
+            Class resourceType,
+            Service service,
+            Uint128 serviceid,
+            Uint128 actionid,
+            final Method method) {
         super(resourceName, resourceType, service, serviceid, actionid, method);
     }
 

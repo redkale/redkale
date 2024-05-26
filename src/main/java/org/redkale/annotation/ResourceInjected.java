@@ -5,16 +5,19 @@
  */
 package org.redkale.annotation;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 
 /**
  * &#64;Resource资源被依赖注入时的监听事件。<br>
  * 本注解只能标记在空参数或者(String、Object、java.lang.reflect.Field)三个参数类型的任意组合方法上 <br>
  * 方法在资源被依赖注入后调用。
  *
- * <blockquote><pre>
+ * <blockquote>
+ *
+ * <pre>
  * public class ResourceService implements Service {
  *
  *    &#64;Resource(name = "res.id")
@@ -48,16 +51,15 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *      factory.inject(record);
  *  }
  * }
- * </pre></blockquote>
+ * </pre>
  *
- * <p>
- * 详情见: https://redkale.org
+ * </blockquote>
+ *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
 @Documented
 @Target({METHOD})
 @Retention(RUNTIME)
-public @interface ResourceInjected {
-
-}
+public @interface ResourceInjected {}

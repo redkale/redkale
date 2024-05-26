@@ -11,8 +11,7 @@ import org.redkale.convert.*;
 /**
  * Duration 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -39,5 +38,4 @@ public class DurationSimpledCoder<R extends Reader, W extends Writer> extends Si
         }
         return Duration.ofNanos(Long.parseLong(value));
     }
-
 }

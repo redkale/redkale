@@ -11,8 +11,7 @@ import java.util.function.Supplier;
 /**
  * 以ByteBuffer为数据载体的Writer
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -24,7 +23,7 @@ public class ByteBufferWriter {
 
     private int position;
 
-    private int writeBytesCounter = 0; //put(byte[] src, int offset, int length) 调用的次数
+    private int writeBytesCounter = 0; // put(byte[] src, int offset, int length) 调用的次数
 
     private boolean bigEndian = true;
 
@@ -39,7 +38,7 @@ public class ByteBufferWriter {
     public static ByteBufferWriter create(Supplier<ByteBuffer> supplier, ByteBuffer one) {
         ByteBufferWriter writer = new ByteBufferWriter(supplier);
         writer.bigEndian = one.order() == ByteOrder.BIG_ENDIAN;
-        writer.buffers = new ByteBuffer[]{one};
+        writer.buffers = new ByteBuffer[] {one};
         writer.position = one.position();
         return writer;
     }
@@ -102,7 +101,7 @@ public class ByteBufferWriter {
         return this;
     }
 
-    //重新设置指定位置的值
+    // 重新设置指定位置的值
     public ByteBufferWriter putInt(final int index, int value) {
         int start = 0;
         ByteBuffer[] buffs = this.buffers;
@@ -143,24 +142,26 @@ public class ByteBufferWriter {
         throw new ArrayIndexOutOfBoundsException(index);
     }
 
-//    public static void main(String[] args) throws Throwable {
-//        ObjectPool<ByteBuffer> pool = new ObjectPool<>(20, (p) -> ByteBuffer.allocate(10), (ByteBuffer t) -> t.clear(), (ByteBuffer t) -> false);
-//        ByteBufferWriter writer = ByteBufferWriter.create(pool);
-//        for (int i = 1; i <= 18; i++) {
-//            writer.put((byte) i);
-//        }
-//        System.out.println(Arrays.toString(toBytes(writer.toBuffers())));
-//
-//        writer = ByteBufferWriter.create(pool);
-//        for (int i = 1; i <= 18; i++) {
-//            writer.put((byte) i);
-//        }
-//        int value = 0x223344;
-//        byte[] b4 = new byte[]{(byte) ((value >> 24) & 0xFF), (byte) ((value >> 16) & 0xFF), (byte) ((value >> 8) & 0xFF), (byte) (value & 0xFF)};
-//        writer.putInt(9, value);
-//        System.out.println(Arrays.toString(b4));
-//        System.out.println(Arrays.toString(toBytes(writer.toBuffers())));
-//    }
+    //    public static void main(String[] args) throws Throwable {
+    //        ObjectPool<ByteBuffer> pool = new ObjectPool<>(20, (p) -> ByteBuffer.allocate(10), (ByteBuffer t) ->
+    // t.clear(), (ByteBuffer t) -> false);
+    //        ByteBufferWriter writer = ByteBufferWriter.create(pool);
+    //        for (int i = 1; i <= 18; i++) {
+    //            writer.put((byte) i);
+    //        }
+    //        System.out.println(Arrays.toString(toBytes(writer.toBuffers())));
+    //
+    //        writer = ByteBufferWriter.create(pool);
+    //        for (int i = 1; i <= 18; i++) {
+    //            writer.put((byte) i);
+    //        }
+    //        int value = 0x223344;
+    //        byte[] b4 = new byte[]{(byte) ((value >> 24) & 0xFF), (byte) ((value >> 16) & 0xFF), (byte) ((value >> 8)
+    // & 0xFF), (byte) (value & 0xFF)};
+    //        writer.putInt(9, value);
+    //        System.out.println(Arrays.toString(b4));
+    //        System.out.println(Arrays.toString(toBytes(writer.toBuffers())));
+    //    }
     public ByteBufferWriter putFloat(float value) {
         getLastBuffer(4).putFloat(value);
         position += 4;

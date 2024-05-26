@@ -17,11 +17,8 @@ import org.redkale.test.ws.ChatMessage;
 import org.redkale.test.ws.ChatService;
 import org.redkale.test.ws.ChatWebSocket;
 
-/**
- *
- * @author zhangjx
- */
-//@WebServlet("/ws/chat")
+/** @author zhangjx */
+// @WebServlet("/ws/chat")
 public final class _DyncChatWebSocketServlet extends WebSocketServlet {
 
     @Resource
@@ -67,7 +64,7 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
 
         @Override
         public String[] getNames() {
-            return new String[]{"roomid", "name"};
+            return new String[] {"roomid", "name"};
         }
 
         @Override
@@ -79,7 +76,8 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
 
         @Override
         public Annotation[] getAnnotations() {
-            Annotation[] annotations = _redkale_annotations.get("org/redkale/test/wsdync/_DyncChatWebSocketServlet$_DyncChatWebSocketMessage");
+            Annotation[] annotations = _redkale_annotations.get(
+                    "org/redkale/test/wsdync/_DyncChatWebSocketServlet$_DyncChatWebSocketMessage");
             if (annotations == null) return new Annotation[0];
             return Arrays.copyOf(annotations, annotations.length);
         }
@@ -111,7 +109,7 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
 
         @Override
         public String[] getNames() {
-            return new String[]{"message", "extmap"};
+            return new String[] {"message", "extmap"};
         }
 
         @Override
@@ -123,7 +121,8 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
 
         @Override
         public Annotation[] getAnnotations() {
-            Annotation[] annotations = _redkale_annotations.get("org/redkale/test/wsdync/_DyncChatWebSocketServlet$_DyncChatWebSocketMessage_sendmessagee_00");
+            Annotation[] annotations = _redkale_annotations.get(
+                    "org/redkale/test/wsdync/_DyncChatWebSocketServlet$_DyncChatWebSocketMessage_sendmessagee_00");
             if (annotations == null) return new Annotation[0];
             return Arrays.copyOf(annotations, annotations.length);
         }
@@ -153,7 +152,7 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
 
         @Override
         public String[] getNames() {
-            return new String[]{"roomid"};
+            return new String[] {"roomid"};
         }
 
         @Override
@@ -164,7 +163,8 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
 
         @Override
         public Annotation[] getAnnotations() {
-            Annotation[] annotations = _redkale_annotations.get("org/redkale/test/wsdync/_DyncChatWebSocketServlet$_DyncChatWebSocketMessage_joinroom_01");
+            Annotation[] annotations = _redkale_annotations.get(
+                    "org/redkale/test/wsdync/_DyncChatWebSocketServlet$_DyncChatWebSocketMessage_joinroom_01");
             if (annotations == null) return new Annotation[0];
             return Arrays.copyOf(annotations, annotations.length);
         }
@@ -201,6 +201,5 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
             }
             message.execute(websocket);
         }
-
     }
 }

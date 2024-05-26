@@ -12,12 +12,9 @@ import org.redkale.util.Utility;
 /**
  * 定时任务的参数
  *
- *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.8.0
  */
 public final class ScheduleEvent {

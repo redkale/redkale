@@ -7,12 +7,8 @@ import org.redkale.annotation.Resource;
 import org.redkale.convert.json.JsonFactory;
 import org.redkale.inject.ResourceFactory;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class ResourceLoaderTest {
-
 
     public static void main(String[] args) throws Throwable {
         ResourceLoaderTest test = new ResourceLoaderTest();
@@ -50,8 +46,7 @@ public class ResourceLoaderTest {
         @Resource(name = "@.name")
         public String name;
 
-        public Bean() {
-        }
+        public Bean() {}
 
         public Bean(int id, String name) {
             this.id = id;

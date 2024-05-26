@@ -2,19 +2,17 @@
  */
 package org.redkale.test.convert;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 import java.util.function.*;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class CustMessageTest {
 
     private boolean main;
@@ -47,7 +45,6 @@ public class CustMessageTest {
         System.out.println(convert.convertTo(msg1));
         System.out.println(convert.convertTo(msg2));
         if (!main) Assertions.assertEquals(convert.convertTo(msg1), convert.convertTo(msg2));
-
     }
 
     public static interface BaseMessage {
@@ -80,7 +77,7 @@ public class CustMessageTest {
                     setIndex(member, 1);
                     setPosition(member, 1);
                     initForEachEnMember(factory, member);
-                    this.members = new EnMember[]{member};
+                    this.members = new EnMember[] {member};
                 }
             };
             encoder.init(factory);
@@ -100,7 +97,7 @@ public class CustMessageTest {
                     setIndex(member, 1);
                     setPosition(member, 1);
                     initForEachDeMember(factory, member);
-                    this.members = new DeMember[]{member};
+                    this.members = new DeMember[] {member};
                 }
 
                 @Override
@@ -112,7 +109,6 @@ public class CustMessageTest {
             decoder.init(factory);
             return decoder;
         }
-
     }
 
     @BaseMessage.MessageName("onPlayerLeaveMessage")
@@ -124,8 +120,7 @@ public class CustMessageTest {
         @ConvertColumn(index = 2)
         public String retinfo;
 
-        public OnPlayerLeaveMessage2() {
-        }
+        public OnPlayerLeaveMessage2() {}
 
         public OnPlayerLeaveMessage2(int userid, String retinfo) {
             this.userid = userid;
@@ -142,8 +137,7 @@ public class CustMessageTest {
 
         private OnPlayerLeaveContent onPlayerLeaveMessage;
 
-        public OnPlayerLeaveMessage() {
-        }
+        public OnPlayerLeaveMessage() {}
 
         public OnPlayerLeaveMessage(int userid) {
             this.onPlayerLeaveMessage = new OnPlayerLeaveContent(userid);
@@ -169,8 +163,7 @@ public class CustMessageTest {
             @ConvertColumn(index = 2)
             public String retinfo;
 
-            public OnPlayerLeaveContent() {
-            }
+            public OnPlayerLeaveContent() {}
 
             public OnPlayerLeaveContent(int userid) {
                 this.userid = userid;
@@ -192,5 +185,4 @@ public class CustMessageTest {
             return JsonConvert.root().convertTo(this);
         }
     }
-
 }

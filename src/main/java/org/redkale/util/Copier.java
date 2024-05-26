@@ -3,51 +3,43 @@
  */
 package org.redkale.util;
 
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
+
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.*;
 import java.util.stream.Collectors;
 import org.redkale.asm.*;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 
 /**
  * JavaBean类对象的拷贝，相同的字段名会被拷贝 <br>
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <D> 目标对象的数据类型
  * @param <S> 源对象的数据类型
- *
  * @since 2.8.0
  */
 public interface Copier<S, D> extends BiFunction<S, D, D> {
 
-    /**
-     * 是否跳过值为null的字段
-     */
-    public static final int OPTION_SKIP_NULL_VALUE = 1 << 1; //2
+    /** 是否跳过值为null的字段 */
+    public static final int OPTION_SKIP_NULL_VALUE = 1 << 1; // 2
 
-    /**
-     * 是否跳过值为空字符串的字段
-     */
-    public static final int OPTION_SKIP_EMPTY_STRING = 1 << 2; //4
+    /** 是否跳过值为空字符串的字段 */
+    public static final int OPTION_SKIP_EMPTY_STRING = 1 << 2; // 4
 
-    /**
-     * 同名字段类型强制转换
-     */
-    public static final int OPTION_ALLOW_TYPE_CAST = 1 << 3; //8
+    /** 同名字段类型强制转换 */
+    public static final int OPTION_ALLOW_TYPE_CAST = 1 << 3; // 8
 
     /**
      * 将源对象字段复制到目标对象
      *
      * @param dest 目标对象
-     * @param src  源对象
-     *
+     * @param src 源对象
      * @return 目标对象
      */
     @Override
@@ -56,11 +48,10 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
     /**
      * 将源对象字段复制到目标对象
      *
-     * @param <D>  目标类泛型
-     * @param <S>  源类泛型
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
      * @param dest 目标对象
-     * @param src  源对象
-     *
+     * @param src 源对象
      * @return 目标对象
      */
     public static <S, D> D copy(final S src, final D dest) {
@@ -70,29 +61,28 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
     /**
      * 将源对象字段复制到目标对象
      *
-     * @param <D>     目标类泛型
-     * @param <S>     源类泛型
-     * @param dest    目标对象
-     * @param src     源对象
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
+     * @param dest 目标对象
+     * @param src 源对象
      * @param options 可配项
-     *
      * @return 目标对象
      */
     public static <S, D> D copy(final S src, final D dest, final int options) {
         if (src == null || dest == null) {
             return dest;
         }
-        return load((Class<S>) src.getClass(), (Class<D>) dest.getClass(), options).apply(src, dest);
+        return load((Class<S>) src.getClass(), (Class<D>) dest.getClass(), options)
+                .apply(src, dest);
     }
 
     /**
      * 将源对象字段复制到目标对象
      *
-     * @param <D>       目标类泛型
-     * @param <S>       源类泛型
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
      * @param destClass 目标类名
-     * @param src       源对象
-     *
+     * @param src 源对象
      * @return 目标对象
      */
     public static <S, D> D copy(final S src, final Class<D> destClass) {
@@ -102,12 +92,11 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
     /**
      * 将源对象字段复制到目标对象
      *
-     * @param <D>       目标类泛型
-     * @param <S>       源类泛型
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
      * @param destClass 目标类名
-     * @param src       源对象
-     * @param options   可配项
-     *
+     * @param src 源对象
+     * @param options 可配项
      * @return 目标对象
      */
     public static <S, D> D copy(final S src, final Class<D> destClass, final int options) {
@@ -121,10 +110,9 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
     /**
      * 将源对象字段复制到目标对象
      *
-     * @param <S>     源类泛型
-     * @param src     源对象
+     * @param <S> 源类泛型
+     * @param src 源对象
      * @param options 可配项
-     *
      * @return 目标对象
      */
     public static <S> Map copyToMap(final S src, final int options) {
@@ -138,11 +126,10 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
     /**
      * 创建源类到目标类的复制器并缓存
      *
-     * @param <D>       目标类泛型
-     * @param <S>       源类泛型
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
      * @param destClass 目标类名
-     * @param srcClass  源类名
-     *
+     * @param srcClass 源类名
      * @return 复制器
      */
     public static <S, D> Function<S, D> func(final Class<S> srcClass, final Class<D> destClass) {
@@ -152,11 +139,10 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
     /**
      * 创建源类到目标类的复制器并缓存
      *
-     * @param <D>       目标类泛型
-     * @param <S>       源类泛型
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
      * @param destClass 目标类名
-     * @param srcClass  源类名
-     *
+     * @param srcClass 源类名
      * @return 复制器
      */
     public static <S, D> Function<Collection<S>, Set<D>> funcSet(final Class<S> srcClass, final Class<D> destClass) {
@@ -166,11 +152,10 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
     /**
      * 创建源类到目标类的复制器并缓存
      *
-     * @param <D>       目标类泛型
-     * @param <S>       源类泛型
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
      * @param destClass 目标类名
-     * @param srcClass  源类名
-     *
+     * @param srcClass 源类名
      * @return 复制器
      */
     public static <S, D> Function<Collection<S>, List<D>> funcList(final Class<S> srcClass, final Class<D> destClass) {
@@ -180,28 +165,26 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
     /**
      * 创建源类到目标类的复制器并缓存
      *
-     * @param <D>             目标类泛型
-     * @param <S>             源类泛型
-     * @param <C>             集合泛型
-     * @param destClass       目标类名
-     * @param srcClass        源类名
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
+     * @param <C> 集合泛型
+     * @param destClass 目标类名
+     * @param srcClass 源类名
      * @param collectionClass 集合类名
-     *
      * @return 复制器
      */
-    public static <S, D, C extends Collection> Function<Collection<S>, Collection<D>> funcCollection(final Class<S> srcClass,
-        final Class<D> destClass, final Class<C> collectionClass) {
+    public static <S, D, C extends Collection> Function<Collection<S>, Collection<D>> funcCollection(
+            final Class<S> srcClass, final Class<D> destClass, final Class<C> collectionClass) {
         return funcCollection(srcClass, destClass, 0, collectionClass);
     }
 
     /**
      * 创建源类到目标类的复制器并缓存
      *
-     * @param <D>       目标类泛型
-     * @param <S>       源类泛型
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
      * @param destClass 目标类名
-     * @param srcClass  源类名
-     *
+     * @param srcClass 源类名
      * @return 复制器
      */
     public static <S, D> Copier<S, D> load(final Class<S> srcClass, final Class<D> destClass) {
@@ -211,162 +194,158 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
     /**
      * 创建源类到目标类的复制器并缓存
      *
-     * @param <D>       目标类泛型
-     * @param <S>       源类泛型
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
      * @param destClass 目标类名
-     * @param srcClass  源类名
-     * @param options   可配项
-     *
+     * @param srcClass 源类名
+     * @param options 可配项
      * @return 复制器
      */
-    public static <S, D> Function<Collection<S>, Set<D>> funcSet(final Class<S> srcClass, final Class<D> destClass, final int options) {
+    public static <S, D> Function<Collection<S>, Set<D>> funcSet(
+            final Class<S> srcClass, final Class<D> destClass, final int options) {
         return (Function) funcCollection(srcClass, destClass, options, LinkedHashSet.class);
     }
 
     /**
      * 创建源类到目标类的复制器并缓存
      *
-     * @param <D>       目标类泛型
-     * @param <S>       源类泛型
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
      * @param destClass 目标类名
-     * @param srcClass  源类名
-     * @param options   可配项
-     *
+     * @param srcClass 源类名
+     * @param options 可配项
      * @return 复制器
      */
-    public static <S, D> Function<Collection<S>, List<D>> funcList(final Class<S> srcClass, final Class<D> destClass, final int options) {
+    public static <S, D> Function<Collection<S>, List<D>> funcList(
+            final Class<S> srcClass, final Class<D> destClass, final int options) {
         return (Function) funcCollection(srcClass, destClass, options, ArrayList.class);
     }
 
     /**
      * 创建源类到目标类的复制器并缓存
      *
-     * @param <D>             目标类泛型
-     * @param <S>             源类泛型
-     * @param <C>             集合泛型
-     * @param destClass       目标类名
-     * @param srcClass        源类名
-     * @param options         可配项
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
+     * @param <C> 集合泛型
+     * @param destClass 目标类名
+     * @param srcClass 源类名
+     * @param options 可配项
      * @param collectionClass 集合类名
-     *
      * @return 复制器
      */
-    public static <S, D, C extends Collection> Function<Collection<S>, Collection<D>> funcCollection(final Class<S> srcClass, final Class<D> destClass,
-        final int options, final Class<C> collectionClass) {
+    public static <S, D, C extends Collection> Function<Collection<S>, Collection<D>> funcCollection(
+            final Class<S> srcClass, final Class<D> destClass, final int options, final Class<C> collectionClass) {
         if (destClass == srcClass) {
             return Inners.CopierInner.copierFuncListOneCaches
-                .computeIfAbsent(collectionClass, t -> new ConcurrentHashMap<>())
-                .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
-                .computeIfAbsent(srcClass, v -> {
-                    Creator<C> creator = Creator.create(collectionClass);
-                    Function<S, D> func = func(srcClass, destClass, options);
-                    Function<Collection<S>, Collection<D>> funcList = srcs -> {
-                        if (srcs == null) {
-                            return null;
-                        } else if (srcs.isEmpty()) {
-                            return creator.create();
-                        } else {
-                            C list = creator.create();
-                            for (S s : srcs) {
-                                list.add(func.apply(s));
+                    .computeIfAbsent(collectionClass, t -> new ConcurrentHashMap<>())
+                    .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
+                    .computeIfAbsent(srcClass, v -> {
+                        Creator<C> creator = Creator.create(collectionClass);
+                        Function<S, D> func = func(srcClass, destClass, options);
+                        Function<Collection<S>, Collection<D>> funcList = srcs -> {
+                            if (srcs == null) {
+                                return null;
+                            } else if (srcs.isEmpty()) {
+                                return creator.create();
+                            } else {
+                                C list = creator.create();
+                                for (S s : srcs) {
+                                    list.add(func.apply(s));
+                                }
+                                return list;
                             }
-                            return list;
-                        }
-                    };
-                    return funcList;
-                });
+                        };
+                        return funcList;
+                    });
         } else {
             return Inners.CopierInner.copierFuncListTwoCaches
-                .computeIfAbsent(collectionClass, t -> new ConcurrentHashMap<>())
-                .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
-                .computeIfAbsent(srcClass, t -> new ConcurrentHashMap<>())
-                .computeIfAbsent(destClass, v -> {
-                    Creator<C> creator = Creator.create(collectionClass);
-                    Function<S, D> func = func(srcClass, destClass, options);
-                    Function<Collection<S>, Collection<D>> funcList = srcs -> {
-                        if (srcs == null) {
-                            return null;
-                        } else if (srcs.isEmpty()) {
-                            return (C) creator.create();
-                        } else {
-                            C list = creator.create();
-                            for (S s : srcs) {
-                                list.add(func.apply(s));
+                    .computeIfAbsent(collectionClass, t -> new ConcurrentHashMap<>())
+                    .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
+                    .computeIfAbsent(srcClass, t -> new ConcurrentHashMap<>())
+                    .computeIfAbsent(destClass, v -> {
+                        Creator<C> creator = Creator.create(collectionClass);
+                        Function<S, D> func = func(srcClass, destClass, options);
+                        Function<Collection<S>, Collection<D>> funcList = srcs -> {
+                            if (srcs == null) {
+                                return null;
+                            } else if (srcs.isEmpty()) {
+                                return (C) creator.create();
+                            } else {
+                                C list = creator.create();
+                                for (S s : srcs) {
+                                    list.add(func.apply(s));
+                                }
+                                return list;
                             }
-                            return list;
-                        }
-                    };
-                    return funcList;
-                });
+                        };
+                        return funcList;
+                    });
         }
     }
 
     /**
      * 创建源类到目标类的复制器并缓存
      *
-     * @param <D>       目标类泛型
-     * @param <S>       源类泛型
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
      * @param destClass 目标类名
-     * @param srcClass  源类名
-     * @param options   可配项
-     *
+     * @param srcClass 源类名
+     * @param options 可配项
      * @return 复制器
      */
     public static <S, D> Function<S, D> func(final Class<S> srcClass, final Class<D> destClass, final int options) {
         if (destClass == srcClass) {
             return Inners.CopierInner.copierFuncOneCaches
-                .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
-                .computeIfAbsent(srcClass, v -> {
-                    Copier<S, D> copier = load(srcClass, destClass, options);
-                    Creator<D> creator = Creator.load(destClass);
-                    Function<S, D> func = src -> src == null ? null : copier.apply(src, creator.create());
-                    return func;
-                });
+                    .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
+                    .computeIfAbsent(srcClass, v -> {
+                        Copier<S, D> copier = load(srcClass, destClass, options);
+                        Creator<D> creator = Creator.load(destClass);
+                        Function<S, D> func = src -> src == null ? null : copier.apply(src, creator.create());
+                        return func;
+                    });
         } else {
             return Inners.CopierInner.copierFuncTwoCaches
-                .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
-                .computeIfAbsent(srcClass, t -> new ConcurrentHashMap<>())
-                .computeIfAbsent(destClass, v -> {
-                    Copier<S, D> copier = load(srcClass, destClass, options);
-                    Creator<D> creator = Creator.load(destClass);
-                    Function<S, D> func = src -> src == null ? null : copier.apply(src, creator.create());
-                    return func;
-                });
+                    .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
+                    .computeIfAbsent(srcClass, t -> new ConcurrentHashMap<>())
+                    .computeIfAbsent(destClass, v -> {
+                        Copier<S, D> copier = load(srcClass, destClass, options);
+                        Creator<D> creator = Creator.load(destClass);
+                        Function<S, D> func = src -> src == null ? null : copier.apply(src, creator.create());
+                        return func;
+                    });
         }
     }
 
     /**
      * 创建源类到目标类的复制器并缓存
      *
-     * @param <D>       目标类泛型
-     * @param <S>       源类泛型
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
      * @param destClass 目标类名
-     * @param srcClass  源类名
-     * @param options   可配项
-     *
+     * @param srcClass 源类名
+     * @param options 可配项
      * @return 复制器
      */
     public static <S, D> Copier<S, D> load(final Class<S> srcClass, final Class<D> destClass, final int options) {
         if (destClass == srcClass) {
             return Inners.CopierInner.copierOneCaches
-                .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
-                .computeIfAbsent(srcClass, v -> create(srcClass, destClass, options));
+                    .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
+                    .computeIfAbsent(srcClass, v -> create(srcClass, destClass, options));
         } else {
             return Inners.CopierInner.copierTwoCaches
-                .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
-                .computeIfAbsent(srcClass, t -> new ConcurrentHashMap<>())
-                .computeIfAbsent(destClass, v -> create(srcClass, destClass, options));
+                    .computeIfAbsent(options, t -> new ConcurrentHashMap<>())
+                    .computeIfAbsent(srcClass, t -> new ConcurrentHashMap<>())
+                    .computeIfAbsent(destClass, v -> create(srcClass, destClass, options));
         }
     }
 
     /**
      * 创建源类到目标类的复制器
      *
-     * @param <D>       目标类泛型
-     * @param <S>       源类泛型
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
      * @param destClass 目标类名
-     * @param srcClass  源类名
-     *
+     * @param srcClass 源类名
      * @return 复制器
      */
     public static <S, D> Copier<S, D> create(final Class<S> srcClass, final Class<D> destClass) {
@@ -376,96 +355,100 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
     /**
      * 创建源类到目标类的复制器
      *
-     * @param <D>       目标类泛型
-     * @param <S>       源类泛型
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
      * @param destClass 目标类名
-     * @param srcClass  源类名
-     * @param names     源字段名与目标字段名的映射关系
-     *
+     * @param srcClass 源类名
+     * @param names 源字段名与目标字段名的映射关系
      * @return 复制器
      */
-    public static <S, D> Copier<S, D> create(final Class<S> srcClass, final Class<D> destClass, final Map<String, String> names) {
+    public static <S, D> Copier<S, D> create(
+            final Class<S> srcClass, final Class<D> destClass, final Map<String, String> names) {
         return create(srcClass, destClass, (BiPredicate) null, names);
     }
 
     /**
      * 创建源类到目标类的复制器
      *
-     * @param <D>                目标类泛型
-     * @param <S>                源类泛型
-     * @param destClass          目标类名
-     * @param srcClass           源类名
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
+     * @param destClass 目标类名
+     * @param srcClass 源类名
      * @param srcColumnPredicate 需复制源类的字段名判断器
-     *
      * @return 复制器
      */
     @SuppressWarnings("unchecked")
-    public static <S, D> Copier<S, D> create(final Class<S> srcClass, final Class<D> destClass, final Predicate<String> srcColumnPredicate) {
+    public static <S, D> Copier<S, D> create(
+            final Class<S> srcClass, final Class<D> destClass, final Predicate<String> srcColumnPredicate) {
         return create(srcClass, destClass, (sc, m) -> srcColumnPredicate.test(m), (Map<String, String>) null);
     }
 
     /**
      * 创建源类到目标类的复制器
      *
-     * @param <D>                目标类泛型
-     * @param <S>                源类泛型
-     * @param destClass          目标类名
-     * @param srcClass           源类名
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
+     * @param destClass 目标类名
+     * @param srcClass 源类名
      * @param srcColumnPredicate 需复制源类的字段名判断器
-     * @param names              源字段名与目标字段名的映射关系
-     *
+     * @param names 源字段名与目标字段名的映射关系
      * @return 复制器
      */
     @SuppressWarnings("unchecked")
-    public static <S, D> Copier<S, D> create(final Class<S> srcClass, final Class<D> destClass,
-        final Predicate<String> srcColumnPredicate, final Map<String, String> names) {
+    public static <S, D> Copier<S, D> create(
+            final Class<S> srcClass,
+            final Class<D> destClass,
+            final Predicate<String> srcColumnPredicate,
+            final Map<String, String> names) {
         return create(srcClass, destClass, (sc, m) -> srcColumnPredicate.test(m), names);
     }
 
     /**
      * 创建源类到目标类的复制器
      *
-     * @param <D>                目标类泛型
-     * @param <S>                源类泛型
-     * @param destClass          目标类名
-     * @param srcClass           源类名
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
+     * @param destClass 目标类名
+     * @param srcClass 源类名
      * @param srcColumnPredicate 需复制源类的字段名判断器
-     *
      * @return 复制器
      */
     @SuppressWarnings("unchecked")
-    public static <S, D> Copier<S, D> create(final Class<S> srcClass, final Class<D> destClass,
-        final BiPredicate<java.lang.reflect.AccessibleObject, String> srcColumnPredicate) {
+    public static <S, D> Copier<S, D> create(
+            final Class<S> srcClass,
+            final Class<D> destClass,
+            final BiPredicate<java.lang.reflect.AccessibleObject, String> srcColumnPredicate) {
         return create(srcClass, destClass, srcColumnPredicate, (Map<String, String>) null);
     }
 
     /**
      * 创建源类到目标类的复制器
      *
-     * @param <D>                目标类泛型
-     * @param <S>                源类泛型
-     * @param destClass          目标类名
-     * @param srcClass           源类名
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
+     * @param destClass 目标类名
+     * @param srcClass 源类名
      * @param srcColumnPredicate 需复制源类的字段名判断器
-     * @param names              源字段名与目标字段名的映射关系
-     *
+     * @param names 源字段名与目标字段名的映射关系
      * @return 复制器
      */
     @SuppressWarnings("unchecked")
-    public static <S, D> Copier<S, D> create(final Class<S> srcClass, final Class<D> destClass,
-        final BiPredicate<java.lang.reflect.AccessibleObject, String> srcColumnPredicate, final Map<String, String> names) {
+    public static <S, D> Copier<S, D> create(
+            final Class<S> srcClass,
+            final Class<D> destClass,
+            final BiPredicate<java.lang.reflect.AccessibleObject, String> srcColumnPredicate,
+            final Map<String, String> names) {
         return create(srcClass, destClass, 0, srcColumnPredicate, names);
     }
 
     /**
      * 创建源类到目标类的复制器
      *
-     * @param <D>       目标类泛型
-     * @param <S>       源类泛型
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
      * @param destClass 目标类名
-     * @param srcClass  源类名
-     * @param options   可配项
-     *
+     * @param srcClass 源类名
+     * @param options 可配项
      * @return 复制器
      */
     @SuppressWarnings("unchecked")
@@ -476,24 +459,28 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
     /**
      * 创建源类到目标类的复制器
      *
-     * @param <D>                目标类泛型
-     * @param <S>                源类泛型
-     * @param destClass          目标类名
-     * @param srcClass           源类名
-     * @param options            可配项
+     * @param <D> 目标类泛型
+     * @param <S> 源类泛型
+     * @param destClass 目标类名
+     * @param srcClass 源类名
+     * @param options 可配项
      * @param srcColumnPredicate 需复制源类的字段名判断器
-     * @param nameAlias          源字段名与目标字段名的映射关系
-     *
+     * @param nameAlias 源字段名与目标字段名的映射关系
      * @return 复制器
      */
     @SuppressWarnings("unchecked")
-    public static <S, D> Copier<S, D> create(final Class<S> srcClass, final Class<D> destClass, final int options,
-        final BiPredicate<java.lang.reflect.AccessibleObject, String> srcColumnPredicate, final Map<String, String> nameAlias) {
-        final boolean skipNullValue = (options & OPTION_SKIP_NULL_VALUE) > 0 || ConcurrentHashMap.class.isAssignableFrom(destClass);
+    public static <S, D> Copier<S, D> create(
+            final Class<S> srcClass,
+            final Class<D> destClass,
+            final int options,
+            final BiPredicate<java.lang.reflect.AccessibleObject, String> srcColumnPredicate,
+            final Map<String, String> nameAlias) {
+        final boolean skipNullValue =
+                (options & OPTION_SKIP_NULL_VALUE) > 0 || ConcurrentHashMap.class.isAssignableFrom(destClass);
         final boolean skipEmptyString = (options & OPTION_SKIP_EMPTY_STRING) > 0;
         final boolean allowTypeCast = (options & OPTION_ALLOW_TYPE_CAST) > 0;
         final Predicate<Object> valPredicate = v -> !(skipNullValue && v == null)
-            && !(skipEmptyString && v instanceof CharSequence && ((CharSequence) v).length() == 0);
+                && !(skipEmptyString && v instanceof CharSequence && ((CharSequence) v).length() == 0);
 
         if (Map.class.isAssignableFrom(destClass) && Map.class.isAssignableFrom(srcClass)) {
             final Map names0 = nameAlias;
@@ -566,7 +553,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
         final Map<String, AccessibleObject> elements = new TreeMap<>();
         final Map<String, String> destNewNames = new TreeMap<>();
         int ingoreCount = 0;
-        if (srcIsMap) { //Map -> JavaBean
+        if (srcIsMap) { // Map -> JavaBean
             for (java.lang.reflect.Field field : destClass.getFields()) {
                 if (Modifier.isStatic(field.getModifiers())) {
                     continue;
@@ -597,7 +584,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                     continue;
                 }
                 if (Utility.contains(setter.getExceptionTypes(), throwPredicate)) {
-                    continue;  //setter方法带有非RuntimeException异常
+                    continue; // setter方法带有非RuntimeException异常
                 }
                 if (!setter.getName().startsWith("set")) {
                     continue;
@@ -616,7 +603,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                 }
                 elements.put(dfname, setter);
             }
-        } else { //JavaBean -> Map/JavaBean
+        } else { // JavaBean -> Map/JavaBean
             for (java.lang.reflect.Field field : srcClass.getFields()) {
                 if (Modifier.isStatic(field.getModifiers())) {
                     continue;
@@ -649,7 +636,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                     continue;
                 }
                 if (Utility.contains(getter.getExceptionTypes(), throwPredicate)) {
-                    continue;  //setter方法带有非RuntimeException异常
+                    continue; // setter方法带有非RuntimeException异常
                 }
                 if (!getter.getName().startsWith("get") && !getter.getName().startsWith("is")) {
                     continue;
@@ -690,14 +677,18 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
         final ClassLoader loader = Thread.currentThread().getContextClassLoader();
         final String utilClassName = Utility.class.getName().replace('.', '/');
         final String newDynName = "org/redkaledyn/copier/_Dyn" + Copier.class.getSimpleName() + "_" + options
-            + "__" + srcClass.getName().replace('.', '_').replace('$', '_')
-            + (srcClass == destClass ? "" : ("__" + destClass.getName().replace('.', '_').replace('$', '_')))
-            + (extendInfo.length() == 0 ? "" : Utility.md5Hex(extendInfo.toString()));
+                + "__" + srcClass.getName().replace('.', '_').replace('$', '_')
+                + (srcClass == destClass
+                        ? ""
+                        : ("__" + destClass.getName().replace('.', '_').replace('$', '_')))
+                + (extendInfo.length() == 0 ? "" : Utility.md5Hex(extendInfo.toString()));
         try {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-            return (Copier) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz).getDeclaredConstructor().newInstance();
+            return (Copier) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz)
+                    .getDeclaredConstructor()
+                    .newInstance();
         } catch (Throwable ex) {
-            //do nothing
+            // do nothing
         }
 
         // ------------------------------------------------------------------------------
@@ -706,23 +697,29 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
         MethodVisitor mv;
         AnnotationVisitor av0;
 
-        cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, "Ljava/lang/Object;L" + supDynName + "<" + srcDesc + destDesc + ">;", "java/lang/Object", new String[]{supDynName});
+        cw.visit(
+                V11,
+                ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
+                newDynName,
+                "Ljava/lang/Object;L" + supDynName + "<" + srcDesc + destDesc + ">;",
+                "java/lang/Object",
+                new String[] {supDynName});
 
         { // 构造函数
             mv = (cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
-            //mv.setDebug(true);
+            // mv.setDebug(true);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
             mv.visitInsn(RETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();
         }
-        if (srcIsMap) { //Map -> JavaBean
+        if (srcIsMap) { // Map -> JavaBean
             {
                 mv = (cw.visitMethod(ACC_PUBLIC, "apply", "(" + srcDesc + destDesc + ")" + destDesc, null, null));
-                //mv.setDebug(true);
+                // mv.setDebug(true);
                 {
-                    //if(src == null) return null;            
+                    // if(src == null) return null;
                     mv.visitVarInsn(ALOAD, 1);
                     Label ifLabel = new Label();
                     mv.visitJumpInsn(IFNONNULL, ifLabel);
@@ -734,28 +731,53 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
 
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitVarInsn(ALOAD, 2);
-                mv.visitInvokeDynamicInsn("accept",
-                    "(" + destDesc + ")Ljava/util/function/BiConsumer;",
-                    new Handle(Opcodes.H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false),
-                    new Object[]{Type.getType("(Ljava/lang/Object;Ljava/lang/Object;)V"), new Handle(Opcodes.H_INVOKESTATIC, newDynName, "lambda$0", "(" + destDesc + "Ljava/lang/Object;Ljava/lang/Object;)V", false), Type.getType("(Ljava/lang/Object;Ljava/lang/Object;)V")});
-                mv.visitMethodInsn(srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, srcClassName, "forEach", "(Ljava/util/function/BiConsumer;)V", srcClass.isInterface());
+                mv.visitInvokeDynamicInsn(
+                        "accept",
+                        "(" + destDesc + ")Ljava/util/function/BiConsumer;",
+                        new Handle(
+                                Opcodes.H_INVOKESTATIC,
+                                "java/lang/invoke/LambdaMetafactory",
+                                "metafactory",
+                                "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+                                false),
+                        new Object[] {
+                            Type.getType("(Ljava/lang/Object;Ljava/lang/Object;)V"),
+                            new Handle(
+                                    Opcodes.H_INVOKESTATIC,
+                                    newDynName,
+                                    "lambda$0",
+                                    "(" + destDesc + "Ljava/lang/Object;Ljava/lang/Object;)V",
+                                    false),
+                            Type.getType("(Ljava/lang/Object;Ljava/lang/Object;)V")
+                        });
+                mv.visitMethodInsn(
+                        srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                        srcClassName,
+                        "forEach",
+                        "(Ljava/util/function/BiConsumer;)V",
+                        srcClass.isInterface());
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitInsn(ARETURN);
                 mv.visitMaxs(2, 3);
                 mv.visitEnd();
             }
             {
-                mv = cw.visitMethod(ACC_PRIVATE + ACC_STATIC + ACC_SYNTHETIC, "lambda$0", "(" + destDesc + "Ljava/lang/Object;Ljava/lang/Object;)V", null, null);
+                mv = cw.visitMethod(
+                        ACC_PRIVATE + ACC_STATIC + ACC_SYNTHETIC,
+                        "lambda$0",
+                        "(" + destDesc + "Ljava/lang/Object;Ljava/lang/Object;)V",
+                        null,
+                        null);
                 Label goLabel = new Label();
                 int i = 0;
                 for (Map.Entry<String, AccessibleObject> en : elements.entrySet()) {
                     final int index = ++i;
                     final java.lang.reflect.Type fieldType = en.getValue() instanceof Field
-                        ? ((Field) en.getValue()).getGenericType()
-                        : ((Method) en.getValue()).getGenericParameterTypes()[0];
+                            ? ((Field) en.getValue()).getGenericType()
+                            : ((Method) en.getValue()).getGenericParameterTypes()[0];
                     final Class fieldClass = en.getValue() instanceof Field
-                        ? ((Field) en.getValue()).getType()
-                        : ((Method) en.getValue()).getParameterTypes()[0];
+                            ? ((Field) en.getValue()).getType()
+                            : ((Method) en.getValue()).getParameterTypes()[0];
                     final boolean primitive = fieldClass.isPrimitive();
                     final boolean charstr = CharSequence.class.isAssignableFrom(fieldClass);
 
@@ -783,14 +805,24 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                     Asms.visitFieldInsn(mv, fieldClass);
 
                     mv.visitVarInsn(ALOAD, 2);
-                    mv.visitMethodInsn(INVOKESTATIC, utilClassName, "convertValue", "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;", false);
+                    mv.visitMethodInsn(
+                            INVOKESTATIC,
+                            utilClassName,
+                            "convertValue",
+                            "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;",
+                            false);
                     Asms.visitCheckCast(mv, fieldClass);
 
                     if (en.getValue() instanceof Field) {
                         mv.visitFieldInsn(PUTFIELD, destClassName, en.getKey(), Type.getDescriptor(fieldClass));
                     } else {
                         Method setter = (Method) en.getValue();
-                        mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                        mv.visitMethodInsn(
+                                destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                destClassName,
+                                setter.getName(),
+                                Type.getMethodDescriptor(setter),
+                                destClass.isInterface());
                     }
                     if (index == elements.size()) {
                         mv.visitLabel(goLabel);
@@ -805,11 +837,11 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                 mv.visitMaxs(3, 3);
                 mv.visitEnd();
             }
-        } else { //JavaBean -> Map/JavaBean
+        } else { // JavaBean -> Map/JavaBean
             mv = (cw.visitMethod(ACC_PUBLIC, "apply", "(" + srcDesc + destDesc + ")" + destDesc, null, null));
-            //mv.setDebug(true);
+            // mv.setDebug(true);
             {
-                //if(src == null) return null;            
+                // if(src == null) return null;
                 mv.visitVarInsn(ALOAD, 1);
                 Label ifLabel = new Label();
                 mv.visitJumpInsn(IFNONNULL, ifLabel);
@@ -820,7 +852,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
             }
 
             Predicate<Class> simpler = t -> t.isPrimitive() || t == String.class || Number.class.isAssignableFrom(t);
-            //遍历所有字段
+            // 遍历所有字段
             for (Map.Entry<String, AccessibleObject> en : elements.entrySet()) {
                 if (!(en.getValue() instanceof java.lang.reflect.Field)) {
                     continue;
@@ -831,7 +863,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                 final String dfname = destNewNames.getOrDefault(sfname, sfname);
                 final Class srcFieldType = field.getType();
                 final boolean charstr = CharSequence.class.isAssignableFrom(srcFieldType);
-                if (destIsMap) { //JavaBean -> Map
+                if (destIsMap) { // JavaBean -> Map
                     String td = Type.getDescriptor(srcFieldType);
                     if ((!skipNullValue && !(skipEmptyString && charstr)) || srcFieldType.isPrimitive()) {
                         mv.visitVarInsn(ALOAD, 2);
@@ -839,7 +871,12 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitFieldInsn(GETFIELD, srcClassName, sfname, td);
                         Asms.visitPrimitiveValueOf(mv, srcFieldType);
-                        mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", destClass.isInterface());
+                        mv.visitMethodInsn(
+                                destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                destClassName,
+                                "put",
+                                "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+                                destClass.isInterface());
                         mv.visitInsn(POP);
                     } else { // skipNullValue OR (skipEmptyString && charstr)
                         mv.visitVarInsn(ALOAD, 1);
@@ -857,12 +894,17 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                         mv.visitVarInsn(ALOAD, 2);
                         mv.visitLdcInsn(dfname);
                         mv.visitVarInsn(ALOAD, 3);
-                        mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", destClass.isInterface());
+                        mv.visitMethodInsn(
+                                destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                destClassName,
+                                "put",
+                                "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+                                destClass.isInterface());
                         mv.visitInsn(POP);
                         mv.visitLabel(ifLabel);
                         mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
                     }
-                } else { //JavaBean -> JavaBean
+                } else { // JavaBean -> JavaBean
                     boolean needTypeCast = false;
                     java.lang.reflect.Method setter = null;
                     java.lang.reflect.Field setField = null;
@@ -884,7 +926,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                         try {
                             setter = destClass.getMethod(setterMethodName, field.getType());
                             if (Utility.contains(setter.getExceptionTypes(), throwPredicate)) {
-                                continue;  //setter方法带有非RuntimeException异常
+                                continue; // setter方法带有非RuntimeException异常
                             }
                         } catch (Exception e2) {
                             try {
@@ -893,7 +935,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                                         continue;
                                     }
                                     if (Utility.contains(m.getExceptionTypes(), throwPredicate)) {
-                                        continue;  //setter方法带有非RuntimeException异常
+                                        continue; // setter方法带有非RuntimeException异常
                                     }
                                     if (m.getParameterTypes().length != 1) {
                                         continue;
@@ -918,22 +960,33 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                     }
                     String srcFieldDesc = Type.getDescriptor(srcFieldType);
                     final Class destFieldType = setter == null ? setField.getType() : setter.getParameterTypes()[0];
-                    boolean localSkipNull = skipNullValue || (!srcFieldType.isPrimitive() && destFieldType.isPrimitive());
+                    boolean localSkipNull =
+                            skipNullValue || (!srcFieldType.isPrimitive() && destFieldType.isPrimitive());
                     if ((!localSkipNull && !(skipEmptyString && charstr))
-                        || (srcFieldType.isPrimitive() && !allowTypeCast)
-                        || (srcFieldType.isPrimitive() && destFieldType.isPrimitive())) {
+                            || (srcFieldType.isPrimitive() && !allowTypeCast)
+                            || (srcFieldType.isPrimitive() && destFieldType.isPrimitive())) {
                         if (needTypeCast) {
                             mv.visitVarInsn(ALOAD, 2);
                             Asms.visitFieldInsn(mv, destFieldType);
                             mv.visitVarInsn(ALOAD, 1);
                             mv.visitFieldInsn(GETFIELD, srcClassName, sfname, srcFieldDesc);
                             Asms.visitPrimitiveValueOf(mv, srcFieldType);
-                            mv.visitMethodInsn(INVOKESTATIC, utilClassName, "convertValue", "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;", false);
+                            mv.visitMethodInsn(
+                                    INVOKESTATIC,
+                                    utilClassName,
+                                    "convertValue",
+                                    "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;",
+                                    false);
                             Asms.visitCheckCast(mv, destFieldType);
-                            if (setter == null) { //src: field, dest: field
+                            if (setter == null) { // src: field, dest: field
                                 mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
-                            } else { //src: field, dest: method
-                                mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                            } else { // src: field, dest: method
+                                mv.visitMethodInsn(
+                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                        destClassName,
+                                        setter.getName(),
+                                        Type.getMethodDescriptor(setter),
+                                        destClass.isInterface());
                                 if (setter.getReturnType() != void.class) {
                                     mv.visitInsn(POP);
                                 }
@@ -942,10 +995,15 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                             mv.visitVarInsn(ALOAD, 2);
                             mv.visitVarInsn(ALOAD, 1);
                             mv.visitFieldInsn(GETFIELD, srcClassName, sfname, srcFieldDesc);
-                            if (setter == null) {  //src: field, dest: field
+                            if (setter == null) { // src: field, dest: field
                                 mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
-                            } else { //src: field, dest: method
-                                mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                            } else { // src: field, dest: method
+                                mv.visitMethodInsn(
+                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                        destClassName,
+                                        setter.getName(),
+                                        Type.getMethodDescriptor(setter),
+                                        destClass.isInterface());
                                 if (setter.getReturnType() != void.class) {
                                     mv.visitInsn(POP);
                                 }
@@ -969,12 +1027,22 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                             Asms.visitFieldInsn(mv, destFieldType);
                             mv.visitVarInsn(ALOAD, 3);
                             Asms.visitPrimitiveValueOf(mv, srcFieldType);
-                            mv.visitMethodInsn(INVOKESTATIC, utilClassName, "convertValue", "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;", false);
+                            mv.visitMethodInsn(
+                                    INVOKESTATIC,
+                                    utilClassName,
+                                    "convertValue",
+                                    "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;",
+                                    false);
                             Asms.visitCheckCast(mv, destFieldType);
-                            if (setter == null) { //src: field, dest: field
+                            if (setter == null) { // src: field, dest: field
                                 mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
-                            } else { //src: field, dest: method
-                                mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                            } else { // src: field, dest: method
+                                mv.visitMethodInsn(
+                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                        destClassName,
+                                        setter.getName(),
+                                        Type.getMethodDescriptor(setter),
+                                        destClass.isInterface());
                                 if (setter.getReturnType() != void.class) {
                                     mv.visitInsn(POP);
                                 }
@@ -983,10 +1051,15 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                             mv.visitVarInsn(ALOAD, 2);
                             mv.visitVarInsn(ALOAD, 3);
                             mv.visitTypeInsn(CHECKCAST, srcFieldType.getName().replace('.', '/'));
-                            if (setter == null) {  //src: field, dest: field
+                            if (setter == null) { // src: field, dest: field
                                 mv.visitFieldInsn(PUTFIELD, destClassName, dfname, srcFieldDesc);
-                            } else { //src: field, dest: method
-                                mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                            } else { // src: field, dest: method
+                                mv.visitMethodInsn(
+                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                        destClassName,
+                                        setter.getName(),
+                                        Type.getMethodDescriptor(setter),
+                                        destClass.isInterface());
                                 if (setter.getReturnType() != void.class) {
                                     mv.visitInsn(POP);
                                 }
@@ -997,7 +1070,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                     }
                 }
             }
-            //遍历所有方法
+            // 遍历所有方法
             for (Map.Entry<String, AccessibleObject> en : elements.entrySet()) {
                 if (!(en.getValue() instanceof java.lang.reflect.Method)) {
                     continue;
@@ -1008,18 +1081,33 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                 final String dfname = destNewNames.getOrDefault(sfname, sfname);
                 final Class srcFieldType = getter.getReturnType();
                 final boolean charstr = CharSequence.class.isAssignableFrom(srcFieldType);
-                if (destIsMap) {  //srcClass是JavaBean
+                if (destIsMap) { // srcClass是JavaBean
                     if ((!skipNullValue && !(skipEmptyString && charstr)) || srcFieldType.isPrimitive()) {
                         mv.visitVarInsn(ALOAD, 2);
                         mv.visitLdcInsn(dfname);
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, srcClassName, getter.getName(), Type.getMethodDescriptor(getter), srcClass.isInterface());
+                        mv.visitMethodInsn(
+                                srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                srcClassName,
+                                getter.getName(),
+                                Type.getMethodDescriptor(getter),
+                                srcClass.isInterface());
                         Asms.visitPrimitiveValueOf(mv, srcFieldType);
-                        mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", destClass.isInterface());
+                        mv.visitMethodInsn(
+                                destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                destClassName,
+                                "put",
+                                "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+                                destClass.isInterface());
                         mv.visitInsn(POP);
-                    } else {  // skipNullValue OR (skipEmptyString && charstr)
+                    } else { // skipNullValue OR (skipEmptyString && charstr)
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, srcClassName, getter.getName(), Type.getMethodDescriptor(getter), srcClass.isInterface());
+                        mv.visitMethodInsn(
+                                srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                srcClassName,
+                                getter.getName(),
+                                Type.getMethodDescriptor(getter),
+                                srcClass.isInterface());
                         mv.visitVarInsn(ASTORE, 3);
                         mv.visitVarInsn(ALOAD, 3);
                         Label ifLabel = new Label();
@@ -1033,12 +1121,17 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                         mv.visitVarInsn(ALOAD, 2);
                         mv.visitLdcInsn(dfname);
                         mv.visitVarInsn(ALOAD, 3);
-                        mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", destClass.isInterface());
+                        mv.visitMethodInsn(
+                                destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                destClassName,
+                                "put",
+                                "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+                                destClass.isInterface());
                         mv.visitInsn(POP);
                         mv.visitLabel(ifLabel);
                         mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
                     }
-                } else { //srcClass、destClass是JavaBean
+                } else { // srcClass、destClass是JavaBean
                     boolean needTypeCast = false;
                     java.lang.reflect.Method setter = null;
                     java.lang.reflect.Field setField = null;
@@ -1046,7 +1139,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                     try {
                         setter = destClass.getMethod(setterMethodName, getter.getReturnType());
                         if (Utility.contains(setter.getExceptionTypes(), throwPredicate)) {
-                            continue;  //setter方法带有非RuntimeException异常
+                            continue; // setter方法带有非RuntimeException异常
                         }
                     } catch (Exception e) {
                         if (allowTypeCast) {
@@ -1056,7 +1149,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                                         continue;
                                     }
                                     if (Utility.contains(m.getExceptionTypes(), throwPredicate)) {
-                                        continue;  //setter方法带有非RuntimeException异常
+                                        continue; // setter方法带有非RuntimeException异常
                                     }
                                     if (m.getParameterTypes().length != 1) {
                                         continue;
@@ -1068,7 +1161,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                                     }
                                 }
                             } catch (Exception e2) {
-                                //do nothing
+                                // do nothing
                             }
                         }
                         if (setter == null) {
@@ -1087,22 +1180,38 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                         }
                     }
                     final Class destFieldType = setter == null ? setField.getType() : setter.getParameterTypes()[0];
-                    boolean localSkipNull = skipNullValue || (!srcFieldType.isPrimitive() && destFieldType.isPrimitive());
+                    boolean localSkipNull =
+                            skipNullValue || (!srcFieldType.isPrimitive() && destFieldType.isPrimitive());
                     if ((!localSkipNull && !(skipEmptyString && charstr))
-                        || (srcFieldType.isPrimitive() && !allowTypeCast)
-                        || (srcFieldType.isPrimitive() && destFieldType.isPrimitive())) {
+                            || (srcFieldType.isPrimitive() && !allowTypeCast)
+                            || (srcFieldType.isPrimitive() && destFieldType.isPrimitive())) {
                         if (needTypeCast) {
                             mv.visitVarInsn(ALOAD, 2);
                             Asms.visitFieldInsn(mv, destFieldType);
                             mv.visitVarInsn(ALOAD, 1);
-                            mv.visitMethodInsn(srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, srcClassName, getter.getName(), Type.getMethodDescriptor(getter), srcClass.isInterface());
+                            mv.visitMethodInsn(
+                                    srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                    srcClassName,
+                                    getter.getName(),
+                                    Type.getMethodDescriptor(getter),
+                                    srcClass.isInterface());
                             Asms.visitPrimitiveValueOf(mv, srcFieldType);
-                            mv.visitMethodInsn(INVOKESTATIC, utilClassName, "convertValue", "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;", false);
+                            mv.visitMethodInsn(
+                                    INVOKESTATIC,
+                                    utilClassName,
+                                    "convertValue",
+                                    "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;",
+                                    false);
                             Asms.visitCheckCast(mv, destFieldType);
-                            if (setter == null) { //src: method, dest: field
+                            if (setter == null) { // src: method, dest: field
                                 mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
-                            } else {  //src: method, dest: method
-                                mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                            } else { // src: method, dest: method
+                                mv.visitMethodInsn(
+                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                        destClassName,
+                                        setter.getName(),
+                                        Type.getMethodDescriptor(setter),
+                                        destClass.isInterface());
                                 if (setter.getReturnType() != void.class) {
                                     mv.visitInsn(POP);
                                 }
@@ -1110,19 +1219,34 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                         } else {
                             mv.visitVarInsn(ALOAD, 2);
                             mv.visitVarInsn(ALOAD, 1);
-                            mv.visitMethodInsn(srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, srcClassName, getter.getName(), Type.getMethodDescriptor(getter), srcClass.isInterface());
-                            if (setter == null) { //src: method, dest: field
+                            mv.visitMethodInsn(
+                                    srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                    srcClassName,
+                                    getter.getName(),
+                                    Type.getMethodDescriptor(getter),
+                                    srcClass.isInterface());
+                            if (setter == null) { // src: method, dest: field
                                 mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
-                            } else {  //src: method, dest: method
-                                mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                            } else { // src: method, dest: method
+                                mv.visitMethodInsn(
+                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                        destClassName,
+                                        setter.getName(),
+                                        Type.getMethodDescriptor(setter),
+                                        destClass.isInterface());
                                 if (setter.getReturnType() != void.class) {
                                     mv.visitInsn(POP);
                                 }
                             }
                         }
-                    } else {  // skipNullValue OR (skipEmptyString && charstr)
+                    } else { // skipNullValue OR (skipEmptyString && charstr)
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, srcClassName, getter.getName(), Type.getMethodDescriptor(getter), srcClass.isInterface());
+                        mv.visitMethodInsn(
+                                srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                srcClassName,
+                                getter.getName(),
+                                Type.getMethodDescriptor(getter),
+                                srcClass.isInterface());
                         mv.visitVarInsn(ASTORE, 3);
                         mv.visitVarInsn(ALOAD, 3);
                         Label ifLabel = new Label();
@@ -1138,12 +1262,22 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                             Asms.visitFieldInsn(mv, destFieldType);
                             mv.visitVarInsn(ALOAD, 3);
                             Asms.visitPrimitiveValueOf(mv, srcFieldType);
-                            mv.visitMethodInsn(INVOKESTATIC, utilClassName, "convertValue", "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;", false);
+                            mv.visitMethodInsn(
+                                    INVOKESTATIC,
+                                    utilClassName,
+                                    "convertValue",
+                                    "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;",
+                                    false);
                             Asms.visitCheckCast(mv, destFieldType);
-                            if (setter == null) { //src: method, dest: field
+                            if (setter == null) { // src: method, dest: field
                                 mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
-                            } else { //src: method, dest: method
-                                mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                            } else { // src: method, dest: method
+                                mv.visitMethodInsn(
+                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                        destClassName,
+                                        setter.getName(),
+                                        Type.getMethodDescriptor(setter),
+                                        destClass.isInterface());
                                 if (setter.getReturnType() != void.class) {
                                     mv.visitInsn(POP);
                                 }
@@ -1152,10 +1286,16 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                             mv.visitVarInsn(ALOAD, 2);
                             mv.visitVarInsn(ALOAD, 3);
                             mv.visitTypeInsn(CHECKCAST, srcFieldType.getName().replace('.', '/'));
-                            if (setter == null) { //src: method, dest: field
-                                mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(getter.getReturnType()));
-                            } else { //src: method, dest: method
-                                mv.visitMethodInsn(destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), destClass.isInterface());
+                            if (setter == null) { // src: method, dest: field
+                                mv.visitFieldInsn(
+                                        PUTFIELD, destClassName, dfname, Type.getDescriptor(getter.getReturnType()));
+                            } else { // src: method, dest: method
+                                mv.visitMethodInsn(
+                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                        destClassName,
+                                        setter.getName(),
+                                        Type.getMethodDescriptor(setter),
+                                        destClass.isInterface());
                                 if (setter.getReturnType() != void.class) {
                                     mv.visitInsn(POP);
                                 }
@@ -1172,8 +1312,13 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
             mv.visitEnd();
         }
         {
-            mv = (cw.visitMethod(ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC, "apply", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", null, null));
-            //mv.setDebug(true);
+            mv = (cw.visitMethod(
+                    ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC,
+                    "apply",
+                    "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+                    null,
+                    null));
+            // mv.setDebug(true);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitVarInsn(ALOAD, 1);
             mv.visitTypeInsn(CHECKCAST, srcClassName);
@@ -1200,5 +1345,4 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
             throw new RedkaleException(ex);
         }
     }
-
 }

@@ -10,12 +10,9 @@ import java.io.Serializable;
 /**
  * ColumnFuncNode与ColumnExpNode 的接口
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.0.0
  */
-public interface ColumnNode extends Serializable {
-
-}
+public interface ColumnNode extends Serializable {}

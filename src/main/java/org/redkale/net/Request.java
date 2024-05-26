@@ -15,8 +15,7 @@ import org.redkale.convert.json.JsonConvert;
 /**
  * 协议请求对象
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <C> Context子类型
@@ -33,8 +32,8 @@ public abstract class Request<C extends Context> {
 
     protected boolean keepAlive;
 
-    //请求包是否完成读取完毕，用于ProtocolCodec继续读的判断条件
-    //需要在readHeader方法中设置
+    // 请求包是否完成读取完毕，用于ProtocolCodec继续读的判断条件
+    // 需要在readHeader方法中设置
     protected boolean completed;
 
     protected int pipelineIndex;
@@ -47,15 +46,10 @@ public abstract class Request<C extends Context> {
 
     protected AsyncConnection channel;
 
-    /**
-     * properties 与 attributes 的区别在于：调用recycle时， attributes会被清空而properties会保留;
-     * properties 通常存放需要永久绑定在request里的一些对象
-     */
+    /** properties 与 attributes 的区别在于：调用recycle时， attributes会被清空而properties会保留; properties 通常存放需要永久绑定在request里的一些对象 */
     private final Map<String, Object> properties = new HashMap<>();
 
-    /**
-     * 每次新请求都会清空
-     */
+    /** 每次新请求都会清空 */
     protected final Map<String, Object> attributes = new HashMap<>();
 
     protected Request(C context) {
@@ -91,8 +85,7 @@ public abstract class Request<C extends Context> {
      * 返回值：Integer.MIN_VALUE: 帧数据； -1：数据不合法； 0：解析完毕； &gt;0: 需再读取的字节数。
      *
      * @param buffer ByteBuffer对象
-     * @param last   同一Channel的上一个Request
-     *
+     * @param last 同一Channel的上一个Request
      * @return 缺少的字节数
      */
     protected abstract int readHeader(ByteBuffer buffer, Request last);
@@ -168,9 +161,7 @@ public abstract class Request<C extends Context> {
     }
 
     /**
-     *
      * @see #getCreateTime()
-     *
      * @return long
      * @deprecated replace by {@link #getCreateTime() }
      */

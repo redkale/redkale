@@ -8,10 +8,7 @@ package org.redkale.test.sncp;
 import java.util.concurrent.CompletableFuture;
 import org.redkale.service.Service;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public interface SncpTestIService extends Service {
 
     public String queryResult(SncpTestBean bean);

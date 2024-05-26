@@ -8,13 +8,11 @@ package org.redkale.convert;
 import java.util.function.Consumer;
 
 /**
- *
  * convertToBytes系列的方法的回调
- * <p>
- * 详情见: https://redkale.org
+ *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.3.0
  */
 public interface ConvertBytesHandler {

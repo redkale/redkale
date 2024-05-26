@@ -9,25 +9,22 @@ import java.io.Serializable;
 import org.redkale.persistence.*;
 import org.redkale.source.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @DistributeTable(strategy = LoginUserRecord.TableStrategy.class)
 public class LoginUserRecord extends BaseEntity {
 
     @Id
     @Column(comment = "记录ID; 值=userid+'-'+UUID")
-    private String seqid = ""; //记录ID; 值=userid+'-'+UUID
+    private String seqid = ""; // 记录ID; 值=userid+'-'+UUID
 
     @Column(updatable = false, comment = "C端用户ID")
-    private long userid; //C端用户ID
+    private long userid; // C端用户ID
 
     @Column(comment = "LoginRecord主键")
-    private String loginid = ""; //LoginRecord主键
+    private String loginid = ""; // LoginRecord主键
 
     @Column(updatable = false, comment = "创建时间")
-    private long createtime; //创建时间
+    private long createtime; // 创建时间
 
     /** 以下省略getter setter方法 */
     //
@@ -73,8 +70,8 @@ public class LoginUserRecord extends BaseEntity {
         @Override
         public String[] getTables(String table, FilterNode node) {
             Serializable id = node.findValue("userid");
-            if (id != null) return new String[]{getTable(table, id)};
-            return new String[]{getHashTable(table, (Integer) node.findValue("#hash"))};
+            if (id != null) return new String[] {getTable(table, id)};
+            return new String[] {getHashTable(table, (Integer) node.findValue("#hash"))};
         }
 
         @Override
@@ -87,6 +84,5 @@ public class LoginUserRecord extends BaseEntity {
             int pos = table.indexOf('.');
             return "platf_login." + table.substring(pos + 1) + "_" + (hash > 9 ? hash : ("0" + hash));
         }
-
     }
 }

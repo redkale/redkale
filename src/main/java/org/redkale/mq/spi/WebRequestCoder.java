@@ -18,11 +18,9 @@ import org.redkale.util.Utility;
 /**
  * WebRequest的MessageCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.1.0
  */
 public class WebRequestCoder implements MessageCoder<WebRequest> {
@@ -33,7 +31,7 @@ public class WebRequestCoder implements MessageCoder<WebRequest> {
         return instance;
     }
 
-    //消息内容的类型
+    // 消息内容的类型
     @Override
     public byte ctype() {
         return MessageRecord.CTYPE_HTTP_REQUEST;
@@ -41,37 +39,52 @@ public class WebRequestCoder implements MessageCoder<WebRequest> {
 
     @Override
     public byte[] encode(WebRequest data) {
-        byte[] traceid = MessageCoder.getBytes(data.getTraceid());//short-string
-        byte[] path = MessageCoder.getBytes(data.getPath()); //long-string
-        byte[] contextPath = MessageCoder.getBytes(data.getContextPath()); //short-string
-        byte[] method = MessageCoder.getBytes(data.getMethod());//short-string
-        byte[] remoteAddr = MessageCoder.getBytes(data.getRemoteAddr());//short-string
-        byte[] sessionid = MessageCoder.getBytes(data.getSessionid());//short-string
-        byte[] contentType = MessageCoder.getBytes(data.getContentType());//short-string
+        byte[] traceid = MessageCoder.getBytes(data.getTraceid()); // short-string
+        byte[] path = MessageCoder.getBytes(data.getPath()); // long-string
+        byte[] contextPath = MessageCoder.getBytes(data.getContextPath()); // short-string
+        byte[] method = MessageCoder.getBytes(data.getMethod()); // short-string
+        byte[] remoteAddr = MessageCoder.getBytes(data.getRemoteAddr()); // short-string
+        byte[] sessionid = MessageCoder.getBytes(data.getSessionid()); // short-string
+        byte[] contentType = MessageCoder.getBytes(data.getContentType()); // short-string
         byte[] userid = MessageCoder.encodeUserid(data.getCurrentUserid());
-        byte[] headers = MessageCoder.getSeriMapBytes(data.getHeaders() == null ? null : data.getHeaders().map());
-        byte[] params = MessageCoder.getStringMapBytes(data.getParams() == null ? null : data.getParams().map());
+        byte[] headers = MessageCoder.getSeriMapBytes(
+                data.getHeaders() == null ? null : data.getHeaders().map());
+        byte[] params = MessageCoder.getStringMapBytes(
+                data.getParams() == null ? null : data.getParams().map());
         byte[] body = MessageCoder.getBytes(data.getBody());
-        int count = 1 //rpc
-            + 4 //reqConvertType
-            + 4 //respConvertType
-            + 2 + traceid.length
-            + 4 + path.length
-            + 2 + contextPath.length
-            + 2 + method.length
-            + 2 + remoteAddr.length
-            + 2 + sessionid.length
-            + 2 + contentType.length
-            + 2 + userid.length
-            + headers.length
-            + params.length
-            + 4 + body.length;
+        int count = 1 // rpc
+                + 4 // reqConvertType
+                + 4 // respConvertType
+                + 2
+                + traceid.length
+                + 4
+                + path.length
+                + 2
+                + contextPath.length
+                + 2
+                + method.length
+                + 2
+                + remoteAddr.length
+                + 2
+                + sessionid.length
+                + 2
+                + contentType.length
+                + 2
+                + userid.length
+                + headers.length
+                + params.length
+                + 4
+                + body.length;
 
         byte[] bs = new byte[count];
         ByteBuffer buffer = ByteBuffer.wrap(bs);
         buffer.put((byte) (data.isRpc() ? 0b01 : 0));
-        buffer.putInt(data.getReqConvertType() == null ? 0 : data.getReqConvertType().getValue());
-        buffer.putInt(data.getRespConvertType() == null ? 0 : data.getRespConvertType().getValue());
+        buffer.putInt(
+                data.getReqConvertType() == null ? 0 : data.getReqConvertType().getValue());
+        buffer.putInt(
+                data.getRespConvertType() == null
+                        ? 0
+                        : data.getRespConvertType().getValue());
 
         if (data.getTraceid() == null) {
             buffer.putShort((short) -1);

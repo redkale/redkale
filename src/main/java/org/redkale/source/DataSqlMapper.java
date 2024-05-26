@@ -18,11 +18,12 @@ import org.redkale.util.Sheet;
 
 /**
  * 类似Mybatis的Mapper接口类, 接口系列和DataSource相似度高 <br>
- * 自定义的sql接口的返回结果类型只能是:
- * void/基本数据类型/JavaBean/Map/List/Sheet <br>
+ * 自定义的sql接口的返回结果类型只能是: void/基本数据类型/JavaBean/Map/List/Sheet <br>
  * 异步接口返回的是泛型为以上类型的CompletableFuture
  *
- * <blockquote><pre>
+ * <blockquote>
+ *
+ * <pre>
  * public interface ForumInfoMapper extends BaseMapper&lt;ForumInfo&gt; {
  *
  *   &#64;Sql("SELECT f.forum_groupid, s.forum_section_color "
@@ -52,17 +53,17 @@ import org.redkale.util.Sheet;
  *      + "s.forum_sectionid = #{bean.forumSectionid} AND "
  *      + "f.forumid = #{bean.forumid} AND s.forum_section_color = #{bean.forumSectionColor}")
  *   public CompletableFuture&lt;List&lt;ForumResult&gt;&gt; queryForumResultAsync(ForumBean bean);
- *}
- * </pre></blockquote>
- * <p>
- * 详情见: https://redkale.org
+ * }
+ * </pre>
+ *
+ * </blockquote>
+ *
+ * <p>详情见: https://redkale.org
  *
  * @see org.redkale.source.spi.DataSqlMapperBuilder
  * @see org.redkale.persistence.Sql
- *
  * @author zhangjx
  * @param <T> T
- *
  * @since 2.8.0
  */
 public interface DataSqlMapper<T> {
@@ -78,17 +79,15 @@ public interface DataSqlMapper<T> {
     /**
      * 获取当前实体类型
      *
-     *
      * @return Class
      */
     @ClassDepends
     Class<T> entityType();
 
     /**
-     * 新增记录  <br>
+     * 新增记录 <br>
      *
      * @param entitys Entity对象
-     *
      * @return CompletableFuture
      */
     default int insert(T... entitys) {
@@ -96,10 +95,9 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 新增记录  <br>
+     * 新增记录 <br>
      *
      * @param entitys Entity对象
-     *
      * @return CompletableFuture
      */
     default int insert(Collection<T> entitys) {
@@ -107,10 +105,9 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 新增记录  <br>
+     * 新增记录 <br>
      *
      * @param entitys Entity对象
-     *
      * @return CompletableFuture
      */
     default int insert(Stream<T> entitys) {
@@ -118,10 +115,9 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 新增记录  <br>
+     * 新增记录 <br>
      *
      * @param entitys Entity对象
-     *
      * @return CompletableFuture
      */
     default CompletableFuture<Integer> insertAsync(T... entitys) {
@@ -129,10 +125,9 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 新增记录  <br>
+     * 新增记录 <br>
      *
      * @param entitys Entity对象
-     *
      * @return CompletableFuture
      */
     default CompletableFuture<Integer> insertAsync(Collection<T> entitys) {
@@ -140,10 +135,9 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 新增记录  <br>
+     * 新增记录 <br>
      *
      * @param entitys Entity对象
-     *
      * @return CompletableFuture
      */
     default CompletableFuture<Integer> insertAsync(Stream<T> entitys) {
@@ -151,11 +145,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 删除指定主键值的记录  <br>
-     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id}  <br>
+     * 删除指定主键值的记录 <br>
+     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id} <br>
      *
      * @param entitys Entity对象
-     *
      * @return 影响的记录条数CompletableFuture
      */
     default int delete(T... entitys) {
@@ -163,11 +156,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 删除指定主键值的记录  <br>
-     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id}  <br>
+     * 删除指定主键值的记录 <br>
+     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id} <br>
      *
      * @param entitys Entity对象
-     *
      * @return 影响的记录条数CompletableFuture
      */
     default int delete(Collection<T> entitys) {
@@ -175,11 +167,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 删除指定主键值的记录  <br>
-     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id}  <br>
+     * 删除指定主键值的记录 <br>
+     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id} <br>
      *
      * @param entitys Entity对象
-     *
      * @return 影响的记录条数CompletableFuture
      */
     default int delete(Stream<T> entitys) {
@@ -187,11 +178,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 删除指定主键值的记录  <br>
-     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id}  <br>
+     * 删除指定主键值的记录 <br>
+     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id} <br>
      *
      * @param entitys Entity对象
-     *
      * @return 影响的记录条数CompletableFuture
      */
     default CompletableFuture<Integer> deleteAsync(T... entitys) {
@@ -199,11 +189,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 删除指定主键值的记录  <br>
-     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id}  <br>
+     * 删除指定主键值的记录 <br>
+     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id} <br>
      *
      * @param entitys Entity对象
-     *
      * @return 影响的记录条数CompletableFuture
      */
     default CompletableFuture<Integer> deleteAsync(Collection<T> entitys) {
@@ -211,11 +200,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 删除指定主键值的记录  <br>
-     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id}  <br>
+     * 删除指定主键值的记录 <br>
+     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {values.id} <br>
      *
      * @param entitys Entity对象
-     *
      * @return 影响的记录条数CompletableFuture
      */
     default CompletableFuture<Integer> deleteAsync(Stream<T> entitys) {
@@ -223,11 +211,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 删除指定主键值的记录,多主键值必须在同一张表中  <br>
-     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {ids}  <br>
+     * 删除指定主键值的记录,多主键值必须在同一张表中 <br>
+     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {ids} <br>
      *
      * @param pks 主键值
-     *
      * @return 影响的记录条数
      */
     default int deleteById(Serializable... pks) {
@@ -235,27 +222,25 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 删除指定主键值的记录,多主键值必须在同一张表中  <br>
-     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {ids}  <br>
+     * 删除指定主键值的记录,多主键值必须在同一张表中 <br>
+     * 等价SQL: DELETE FROM {table} WHERE {primary} IN {ids} <br>
      *
      * @param pks 主键值
-     *
      * @return 影响的记录条数CompletableFuture
      */
     default CompletableFuture<Integer> deleteByIdAsync(Serializable... pks) {
         return dataSource().deleteAsync(entityType(), pks);
     }
 
-    //------------------------update---------------------------
+    // ------------------------update---------------------------
     /**
      * 更新记录 <br>
-     * 等价SQL:  <br>
-     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id1}  <br>
-     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id2}  <br>
-     * &#183;&#183;&#183;  <br>
+     * 等价SQL: <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id1} <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id2} <br>
+     * &#183;&#183;&#183; <br>
      *
      * @param entitys Entity对象
-     *
      * @return 影响的记录条数
      */
     default int update(T... entitys) {
@@ -263,14 +248,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新记录  <br>
-     * 等价SQL:  <br>
-     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id1}  <br>
-     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id2}  <br>
-     * &#183;&#183;&#183;  <br>
+     * 更新记录 <br>
+     * 等价SQL: <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id1} <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id2} <br>
+     * &#183;&#183;&#183; <br>
      *
      * @param entitys Entity对象
-     *
      * @return 影响的记录条数
      */
     default int update(Collection<T> entitys) {
@@ -278,14 +262,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新记录  <br>
-     * 等价SQL:  <br>
-     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id1}  <br>
-     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id2}  <br>
-     * &#183;&#183;&#183;  <br>
+     * 更新记录 <br>
+     * 等价SQL: <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id1} <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id2} <br>
+     * &#183;&#183;&#183; <br>
      *
      * @param entitys Entity对象
-     *
      * @return 影响的记录条数
      */
     default int update(Stream<T> entitys) {
@@ -293,14 +276,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新记录  <br>
-     * 等价SQL:  <br>
-     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id1}  <br>
-     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id2}  <br>
-     * &#183;&#183;&#183;  <br>
+     * 更新记录 <br>
+     * 等价SQL: <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id1} <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id2} <br>
+     * &#183;&#183;&#183; <br>
      *
      * @param entitys Entity对象
-     *
      * @return 影响的记录条数CompletableFuture
      */
     default CompletableFuture<Integer> updateAsync(T... entitys) {
@@ -308,14 +290,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新记录  <br>
-     * 等价SQL:  <br>
-     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id1}  <br>
-     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id2}  <br>
-     * &#183;&#183;&#183;  <br>
+     * 更新记录 <br>
+     * 等价SQL: <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id1} <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id2} <br>
+     * &#183;&#183;&#183; <br>
      *
      * @param entitys Entity对象
-     *
      * @return 影响的记录条数CompletableFuture
      */
     default CompletableFuture<Integer> updateAsync(Collection<T> entitys) {
@@ -323,14 +304,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新记录  <br>
-     * 等价SQL:  <br>
-     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id1}  <br>
-     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id2}  <br>
-     * &#183;&#183;&#183;  <br>
+     * 更新记录 <br>
+     * 等价SQL: <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id1} <br>
+     * UPDATE {table} SET column1 = value1, column2 = value2, &#183;&#183;&#183; WHERE {primary} = {id2} <br>
+     * &#183;&#183;&#183; <br>
      *
      * @param entitys Entity对象
-     *
      * @return 影响的记录条数CompletableFuture
      */
     default CompletableFuture<Integer> updateAsync(Stream<T> entitys) {
@@ -338,14 +318,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新单个记录的单个字段  <br>
-     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {primary} = {id}  <br>
+     * 更新单个记录的单个字段 <br>
+     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {primary} = {id} <br>
      *
-     * @param pk     主键
+     * @param pk 主键
      * @param column 待更新的字段名
-     * @param value  更新值
-     *
+     * @param value 更新值
      * @return 影响的记录条数
      */
     default int updateColumn(Serializable pk, String column, Serializable value) {
@@ -353,14 +332,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新单个记录的单个字段  <br>
-     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {primary} = {id}  <br>
+     * 更新单个记录的单个字段 <br>
+     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {primary} = {id} <br>
      *
-     * @param <V>  更新值泛型
-     * @param pk   主键
+     * @param <V> 更新值泛型
+     * @param pk 主键
      * @param func 更新值Lambda
-     *
      * @return 影响的记录条数
      */
     default <V extends Serializable> int updateColumn(Serializable pk, LambdaSupplier<V> func) {
@@ -368,14 +346,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新单个记录的单个字段  <br>
-     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {primary} = {id}  <br>
+     * 更新单个记录的单个字段 <br>
+     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {primary} = {id} <br>
      *
-     * @param pk     主键
+     * @param pk 主键
      * @param column 待更新的字段名
-     * @param value  更新值
-     *
+     * @param value 更新值
      * @return 影响的记录条数CompletableFuture
      */
     default CompletableFuture<Integer> updateColumnAsync(Serializable pk, String column, Serializable value) {
@@ -383,29 +360,28 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新单个记录的单个字段  <br>
-     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {primary} = {id}  <br>
+     * 更新单个记录的单个字段 <br>
+     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {primary} = {id} <br>
      *
-     * @param <V>  更新值泛型
-     * @param pk   主键
+     * @param <V> 更新值泛型
+     * @param pk 主键
      * @param func 更新值Lambda
-     *
      * @return 影响的记录条数
      */
-    default <V extends Serializable> CompletableFuture<Integer> updateColumnAsync(Serializable pk, LambdaSupplier<V> func) {
+    default <V extends Serializable> CompletableFuture<Integer> updateColumnAsync(
+            Serializable pk, LambdaSupplier<V> func) {
         return dataSource().updateColumnAsync(entityType(), pk, func);
     }
 
     /**
-     * 更新符合过滤条件记录的单个字段   <br>
-     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {filter node}   <br>
+     * 更新符合过滤条件记录的单个字段 <br>
+     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {filter node} <br>
      *
      * @param column 待更新的字段名
-     * @param value  更新值
-     * @param node   过滤条件
-     *
+     * @param value 更新值
+     * @param node 过滤条件
      * @return 影响的记录条数
      */
     default int updateColumn(String column, Serializable value, FilterNode node) {
@@ -413,14 +389,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新符合过滤条件记录的单个字段   <br>
-     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {filter node}   <br>
+     * 更新符合过滤条件记录的单个字段 <br>
+     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {filter node} <br>
      *
-     * @param <V>  更新值泛型
+     * @param <V> 更新值泛型
      * @param func 更新值Lambda
      * @param node 过滤条件
-     *
      * @return 影响的记录条数
      */
     default <V extends Serializable> int updateColumn(LambdaSupplier<V> func, FilterNode node) {
@@ -428,14 +403,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新符合过滤条件记录的单个字段   <br>
-     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {filter node}   <br>
+     * 更新符合过滤条件记录的单个字段 <br>
+     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {filter node} <br>
      *
      * @param column 待更新的字段名
-     * @param value  更新值
-     * @param node   过滤条件
-     *
+     * @param value 更新值
+     * @param node 过滤条件
      * @return 影响的记录条数CompletableFuture
      */
     default CompletableFuture<Integer> updateColumnAsync(String column, Serializable value, FilterNode node) {
@@ -443,28 +417,28 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新符合过滤条件记录的单个字段   <br>
-     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {filter node}   <br>
+     * 更新符合过滤条件记录的单个字段 <br>
+     * <b>注意</b>：即使字段标记为&#064;Column(updatable=false)也会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column} = {value} WHERE {filter node} <br>
      *
-     * @param <V>  更新值泛型
+     * @param <V> 更新值泛型
      * @param func 更新值Lambda
      * @param node 过滤条件
-     *
      * @return 影响的记录条数
      */
-    default <V extends Serializable> CompletableFuture<Integer> updateColumnAsync(LambdaSupplier<V> func, FilterNode node) {
+    default <V extends Serializable> CompletableFuture<Integer> updateColumnAsync(
+            LambdaSupplier<V> func, FilterNode node) {
         return dataSource().updateColumnAsync(entityType(), func, node);
     }
 
     /**
-     * 更新指定主键值记录的部分字段   <br>
-     * 字段赋值操作选项见 ColumnExpress   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node}   <br>
+     * 更新指定主键值记录的部分字段 <br>
+     * 字段赋值操作选项见 ColumnExpress <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183;
+     * WHERE {filter node} <br>
      *
-     * @param pk     主键
+     * @param pk 主键
      * @param values 更新字段
-     *
      * @return 影响的记录条数
      */
     default int updateColumn(Serializable pk, ColumnValue... values) {
@@ -472,14 +446,14 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新指定主键值记录的部分字段   <br>
-     * 字段赋值操作选项见 ColumnExpress   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node}   <br>
+     * 更新指定主键值记录的部分字段 <br>
+     * 字段赋值操作选项见 ColumnExpress <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183;
+     * WHERE {filter node} <br>
      *
-     * @param pk    主键
-     * @param func  更新字段
+     * @param pk 主键
+     * @param func 更新字段
      * @param value 更新字段值
-     *
      * @return 影响的记录条数
      */
     default int updateColumn(Serializable pk, LambdaFunction<T, ?> func, Serializable value) {
@@ -487,13 +461,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新指定主键值记录的部分字段   <br>
-     * 字段赋值操作选项见 ColumnExpress   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node}   <br>
+     * 更新指定主键值记录的部分字段 <br>
+     * 字段赋值操作选项见 ColumnExpress <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183;
+     * WHERE {filter node} <br>
      *
-     * @param pk     主键
+     * @param pk 主键
      * @param values 更新字段
-     *
      * @return 影响的记录条数CompletableFuture
      */
     default CompletableFuture<Integer> updateColumnAsync(Serializable pk, ColumnValue... values) {
@@ -501,29 +475,30 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新指定主键值记录的部分字段   <br>
-     * 字段赋值操作选项见 ColumnExpress   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node}   <br>
+     * 更新指定主键值记录的部分字段 <br>
+     * 字段赋值操作选项见 ColumnExpress <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183;
+     * WHERE {filter node} <br>
      *
-     * @param pk    主键
-     * @param func  更新字段
+     * @param pk 主键
+     * @param func 更新字段
      * @param value 更新字段值
-     *
      * @return 影响的记录条数CompletableFuture
      */
-    default CompletableFuture<Integer> updateColumnAsync(Serializable pk, LambdaFunction<T, ?> func, Serializable value) {
+    default CompletableFuture<Integer> updateColumnAsync(
+            Serializable pk, LambdaFunction<T, ?> func, Serializable value) {
         return dataSource().updateColumnAsync(entityType(), pk, func, value);
     }
 
     /**
-     * 更新符合过滤条件记录的部分字段   <br>
-     * 字段赋值操作选项见 ColumnExpress   <br>
-     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node}   <br>
+     * 更新符合过滤条件记录的部分字段 <br>
+     * 字段赋值操作选项见 ColumnExpress <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183;
+     * WHERE {filter node} <br>
      *
-     * @param node   过滤条件
+     * @param node 过滤条件
      * @param values 更新字段
-     *
      * @return 影响的记录条数
      */
     default int updateColumn(FilterNode node, ColumnValue... values) {
@@ -531,14 +506,14 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新符合过滤条件记录的部分字段   <br>
-     * 字段赋值操作选项见 ColumnExpress   <br>
-     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node}   <br>
+     * 更新符合过滤条件记录的部分字段 <br>
+     * 字段赋值操作选项见 ColumnExpress <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183;
+     * WHERE {filter node} <br>
      *
-     * @param node   过滤条件
+     * @param node 过滤条件
      * @param values 更新字段
-     *
      * @return 影响的记录条数CompletableFuture
      */
     default CompletableFuture<Integer> updateColumnAsync(FilterNode node, ColumnValue... values) {
@@ -546,17 +521,15 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新符合过滤条件的记录的指定字段   <br>
-     * Flipper中offset字段将被忽略   <br>
-     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node} ORDER BY
-     * {flipper.sort}  <br>
+     * 更新符合过滤条件的记录的指定字段 <br>
+     * Flipper中offset字段将被忽略 <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183;
+     * WHERE {filter node} ORDER BY {flipper.sort} <br>
      *
-     *
-     * @param node    过滤条件
+     * @param node 过滤条件
      * @param flipper 翻页对象
-     * @param values  更新字段
-     *
+     * @param values 更新字段
      * @return 影响的记录条数
      */
     default int updateColumn(FilterNode node, Flipper flipper, ColumnValue... values) {
@@ -564,16 +537,15 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新符合过滤条件的记录的指定字段   <br>
-     * Flipper中offset字段将被忽略   <br>
-     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183; WHERE {filter node} ORDER BY
-     * {flipper.sort}  <br>
+     * 更新符合过滤条件的记录的指定字段 <br>
+     * Flipper中offset字段将被忽略 <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} += {value2}, {column3} *= {value3}, &#183;&#183;&#183;
+     * WHERE {filter node} ORDER BY {flipper.sort} <br>
      *
-     * @param node    过滤条件
+     * @param node 过滤条件
      * @param flipper 翻页对象
-     * @param values  更新字段
-     *
+     * @param values 更新字段
      * @return 影响的记录条数CompletableFuture
      */
     default CompletableFuture<Integer> updateColumnAsync(FilterNode node, Flipper flipper, ColumnValue... values) {
@@ -581,13 +553,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新单个记录的指定字段   <br>
-     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {primary} = {bean.id}  <br>
+     * 更新单个记录的指定字段 <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183;
+     * WHERE {primary} = {bean.id} <br>
      *
-     * @param entity  待更新的Entity对象
+     * @param entity 待更新的Entity对象
      * @param columns 需更新的字段名
-     *
      * @return 影响的记录条数
      */
     default int updateColumn(T entity, String... columns) {
@@ -595,13 +567,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新单个记录的指定字段   <br>
-     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {primary} = {bean.id}  <br>
+     * 更新单个记录的指定字段 <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183;
+     * WHERE {primary} = {bean.id} <br>
      *
      * @param entity 待更新的Entity对象
-     * @param funcs  需更新的字段名Lambda集合
-     *
+     * @param funcs 需更新的字段名Lambda集合
      * @return 影响的记录条数
      */
     default int updateColumn(T entity, LambdaFunction<T, ?>... funcs) {
@@ -609,13 +581,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新单个记录的指定字段   <br>
-     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {primary} = {bean.id}  <br>
+     * 更新单个记录的指定字段 <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183;
+     * WHERE {primary} = {bean.id} <br>
      *
-     * @param entity  待更新的Entity对象
+     * @param entity 待更新的Entity对象
      * @param columns 需更新的字段名
-     *
      * @return 影响的记录条数CompletableFuture
      */
     default CompletableFuture<Integer> updateColumnAsync(T entity, String... columns) {
@@ -623,13 +595,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新单个记录的指定字段   <br>
-     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {primary} = {bean.id}  <br>
+     * 更新单个记录的指定字段 <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183;
+     * WHERE {primary} = {bean.id} <br>
      *
      * @param entity 待更新的Entity对象
-     * @param funcs  需更新的字段名Lambda集合
-     *
+     * @param funcs 需更新的字段名Lambda集合
      * @return 影响的记录条数CompletableFuture
      */
     default CompletableFuture<Integer> updateColumnAsync(T entity, LambdaFunction<T, ?>... funcs) {
@@ -637,14 +609,14 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新符合过滤条件记录的指定字段   <br>
-     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {filter node}  <br>
+     * 更新符合过滤条件记录的指定字段 <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183;
+     * WHERE {filter node} <br>
      *
-     * @param entity  待更新的Entity对象
-     * @param node    过滤条件
+     * @param entity 待更新的Entity对象
+     * @param node 过滤条件
      * @param columns 需更新的字段名
-     *
      * @return 影响的记录条数
      */
     default int updateColumn(T entity, FilterNode node, String... columns) {
@@ -652,14 +624,14 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新符合过滤条件记录的指定字段   <br>
-     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {filter node}  <br>
+     * 更新符合过滤条件记录的指定字段 <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183;
+     * WHERE {filter node} <br>
      *
      * @param entity 待更新的Entity对象
-     * @param node   过滤条件
-     * @param funcs  需更新的字段名Lambda集合
-     *
+     * @param node 过滤条件
+     * @param funcs 需更新的字段名Lambda集合
      * @return 影响的记录条数
      */
     default int updateColumn(T entity, FilterNode node, LambdaFunction<T, ?>... funcs) {
@@ -667,14 +639,14 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新符合过滤条件记录的指定字段   <br>
-     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {filter node}  <br>
+     * 更新符合过滤条件记录的指定字段 <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183;
+     * WHERE {filter node} <br>
      *
-     * @param entity  待更新的Entity对象
-     * @param node    过滤条件
+     * @param entity 待更新的Entity对象
+     * @param node 过滤条件
      * @param columns 需更新的字段名
-     *
      * @return 影响的记录条数CompletableFuture
      */
     default CompletableFuture<Integer> updateColumnAsync(T entity, FilterNode node, String... columns) {
@@ -682,14 +654,14 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新符合过滤条件记录的指定字段   <br>
-     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {filter node}  <br>
+     * 更新符合过滤条件记录的指定字段 <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183;
+     * WHERE {filter node} <br>
      *
      * @param entity 待更新的Entity对象
-     * @param node   过滤条件
-     * @param funcs  需更新的字段名Lambda集合
-     *
+     * @param node 过滤条件
+     * @param funcs 需更新的字段名Lambda集合
      * @return 影响的记录条数
      */
     default CompletableFuture<Integer> updateColumnAsync(T entity, FilterNode node, LambdaFunction<T, ?>... funcs) {
@@ -697,13 +669,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新单个记录的指定字段   <br>
-     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {primary} = {bean.id}  <br>
+     * 更新单个记录的指定字段 <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183;
+     * WHERE {primary} = {bean.id} <br>
      *
-     * @param entity  待更新的Entity对象
+     * @param entity 待更新的Entity对象
      * @param selects 指定字段
-     *
      * @return 影响的记录条数
      */
     default int updateColumn(T entity, SelectColumn selects) {
@@ -711,13 +683,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新单个记录的指定字段   <br>
-     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {primary} = {bean.id}  <br>
+     * 更新单个记录的指定字段 <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183;
+     * WHERE {primary} = {bean.id} <br>
      *
-     * @param entity  待更新的Entity对象
+     * @param entity 待更新的Entity对象
      * @param selects 指定字段
-     *
      * @return 影响的记录条数CompletableFuture
      */
     default CompletableFuture<Integer> updateColumnAsync(T entity, SelectColumn selects) {
@@ -725,14 +697,14 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新符合过滤条件记录的指定字段   <br>
-     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {filter node}  <br>
+     * 更新符合过滤条件记录的指定字段 <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183;
+     * WHERE {filter node} <br>
      *
-     * @param entity  待更新的Entity对象
-     * @param node    过滤条件
+     * @param entity 待更新的Entity对象
+     * @param node 过滤条件
      * @param selects 指定字段
-     *
      * @return 影响的记录条数
      */
     default int updateColumn(T entity, FilterNode node, SelectColumn selects) {
@@ -740,34 +712,32 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 更新符合过滤条件记录的指定字段   <br>
-     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新   <br>
-     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183; WHERE {filter node}  <br>
+     * 更新符合过滤条件记录的指定字段 <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183;
+     * WHERE {filter node} <br>
      *
-     * @param entity  待更新的Entity对象
-     * @param node    过滤条件
+     * @param entity 待更新的Entity对象
+     * @param node 过滤条件
      * @param selects 指定字段
-     *
      * @return 影响的记录条数CompletableFuture
      */
     default CompletableFuture<Integer> updateColumnAsync(T entity, FilterNode node, SelectColumn selects) {
         return dataSource().updateColumnAsync(entity, node, selects);
     }
 
-    //-----------------------getXXXXResult-----------------------------
+    // -----------------------getXXXXResult-----------------------------
     default Number getNumberResult(FilterFunc func, String column) {
         return dataSource().getNumberResult(entityType(), func, column);
     }
 
     /**
-     * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
-     * 等价SQL: SELECT FUNC{column} FROM {table}  <br>
+     * 获取符合过滤条件记录的聚合结果, 无结果返回null <br>
+     * 等价SQL: SELECT FUNC{column} FROM {table} <br>
      * 如 getNumberResultAsync(User.class, FilterFunc.COUNT, null) 等价于: SELECT COUNT(*) FROM {table} <br>
      *
-     *
-     * @param func   聚合函数
+     * @param func 聚合函数
      * @param column 指定字段
-     *
      * @return 聚合结果CompletableFuture
      */
     default CompletableFuture<Number> getNumberResultAsync(FilterFunc func, String column) {
@@ -775,15 +745,14 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
-     * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter bean}  <br>
-     * 如 getNumberResultAsync(User.class, FilterFunc.COUNT, null, (FilterBean)null) 等价于: SELECT COUNT(*) FROM {table} <br>
+     * 获取符合过滤条件记录的聚合结果, 无结果返回null <br>
+     * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter bean} <br>
+     * 如 getNumberResultAsync(User.class, FilterFunc.COUNT, null, (FilterBean)null) 等价于: SELECT COUNT(*) FROM {table}
+     * <br>
      *
-     *
-     * @param func   聚合函数
+     * @param func 聚合函数
      * @param column 指定字段
-     * @param bean   过滤条件
-     *
+     * @param bean 过滤条件
      * @return 聚合结果
      */
     default Number getNumberResult(FilterFunc func, String column, FilterBean bean) {
@@ -791,15 +760,14 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
-     * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter bean}  <br>
-     * 如 getNumberResultAsync(User.class, FilterFunc.COUNT, null, (FilterBean)null) 等价于: SELECT COUNT(*) FROM {table} <br>
+     * 获取符合过滤条件记录的聚合结果, 无结果返回null <br>
+     * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter bean} <br>
+     * 如 getNumberResultAsync(User.class, FilterFunc.COUNT, null, (FilterBean)null) 等价于: SELECT COUNT(*) FROM {table}
+     * <br>
      *
-     *
-     * @param func   聚合函数
+     * @param func 聚合函数
      * @param column 指定字段
-     * @param bean   过滤条件
-     *
+     * @param bean 过滤条件
      * @return 聚合结果CompletableFuture
      */
     default CompletableFuture<Number> getNumberResultAsync(FilterFunc func, String column, FilterBean bean) {
@@ -807,15 +775,14 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
-     * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter node}  <br>
-     * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 获取符合过滤条件记录的聚合结果, 无结果返回null <br>
+     * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter node} <br>
+     * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime)
+     * FROM {table} <br>
      *
-     *
-     * @param func   聚合函数
+     * @param func 聚合函数
      * @param column 指定字段
-     * @param node   过滤条件
-     *
+     * @param node 过滤条件
      * @return 聚合结果
      */
     default Number getNumberResult(FilterFunc func, String column, FilterNode node) {
@@ -823,15 +790,14 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件记录的聚合结果, 无结果返回null   <br>
-     * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter node}  <br>
-     * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 获取符合过滤条件记录的聚合结果, 无结果返回null <br>
+     * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter node} <br>
+     * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime)
+     * FROM {table} <br>
      *
-     *
-     * @param func   聚合函数
+     * @param func 聚合函数
      * @param column 指定字段
-     * @param node   过滤条件
-     *
+     * @param node 过滤条件
      * @return 聚合结果
      */
     default CompletableFuture<Number> getNumberResultAsync(FilterFunc func, String column, FilterNode node) {
@@ -839,15 +805,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
-     * 等价SQL: SELECT FUNC{column} FROM {table}  <br>
+     * 获取符合过滤条件记录的聚合结果, 无结果返回默认值 <br>
+     * 等价SQL: SELECT FUNC{column} FROM {table} <br>
      * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime") 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
-     *
-     * @param func   聚合函数
+     * @param func 聚合函数
      * @param defVal 默认值
      * @param column 指定字段
-     *
      * @return 聚合结果
      */
     default Number getNumberResult(FilterFunc func, Number defVal, String column) {
@@ -855,15 +819,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
-     * 等价SQL: SELECT FUNC{column} FROM {table}  <br>
+     * 获取符合过滤条件记录的聚合结果, 无结果返回默认值 <br>
+     * 等价SQL: SELECT FUNC{column} FROM {table} <br>
      * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime") 等价于: SELECT MAX(createtime) FROM {table} <br>
      *
-     *
-     * @param func   聚合函数
+     * @param func 聚合函数
      * @param defVal 默认值
      * @param column 指定字段
-     *
      * @return 聚合结果CompletableFuture
      */
     default CompletableFuture<Number> getNumberResultAsync(FilterFunc func, Number defVal, String column) {
@@ -871,16 +833,15 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
-     * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter bean}  <br>
-     * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 获取符合过滤条件记录的聚合结果, 无结果返回默认值 <br>
+     * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter bean} <br>
+     * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime)
+     * FROM {table} <br>
      *
-     *
-     * @param func   聚合函数
+     * @param func 聚合函数
      * @param defVal 默认值
      * @param column 指定字段
-     * @param bean   过滤条件
-     *
+     * @param bean 过滤条件
      * @return 聚合结果
      */
     default Number getNumberResult(FilterFunc func, Number defVal, String column, FilterBean bean) {
@@ -888,33 +849,32 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
-     * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter bean}  <br>
-     * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 获取符合过滤条件记录的聚合结果, 无结果返回默认值 <br>
+     * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter bean} <br>
+     * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime)
+     * FROM {table} <br>
      *
-     *
-     * @param func   聚合函数
+     * @param func 聚合函数
      * @param defVal 默认值
      * @param column 指定字段
-     * @param bean   过滤条件
-     *
+     * @param bean 过滤条件
      * @return 聚合结果CompletableFuture
      */
-    default CompletableFuture<Number> getNumberResultAsync(FilterFunc func, Number defVal, String column, FilterBean bean) {
+    default CompletableFuture<Number> getNumberResultAsync(
+            FilterFunc func, Number defVal, String column, FilterBean bean) {
         return dataSource().getNumberResultAsync(entityType(), func, defVal, column, bean);
     }
 
     /**
-     * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
-     * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter node}  <br>
-     * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 获取符合过滤条件记录的聚合结果, 无结果返回默认值 <br>
+     * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter node} <br>
+     * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime)
+     * FROM {table} <br>
      *
-     *
-     * @param func   聚合函数
+     * @param func 聚合函数
      * @param defVal 默认值
      * @param column 指定字段
-     * @param node   过滤条件
-     *
+     * @param node 过滤条件
      * @return 聚合结果
      */
     default Number getNumberResult(FilterFunc func, Number defVal, String column, FilterNode node) {
@@ -922,31 +882,30 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件记录的聚合结果, 无结果返回默认值   <br>
-     * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter node}  <br>
-     * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 获取符合过滤条件记录的聚合结果, 无结果返回默认值 <br>
+     * 等价SQL: SELECT FUNC{column} FROM {table} WHERE {filter node} <br>
+     * 如 getNumberResultAsync(User.class, FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT MAX(createtime)
+     * FROM {table} <br>
      *
-     *
-     * @param func   聚合函数
+     * @param func 聚合函数
      * @param defVal 默认值
      * @param column 指定字段
-     * @param node   过滤条件
-     *
+     * @param node 过滤条件
      * @return 聚合结果CompletableFuture
      */
-    default CompletableFuture<Number> getNumberResultAsync(FilterFunc func, Number defVal, String column, FilterNode node) {
+    default CompletableFuture<Number> getNumberResultAsync(
+            FilterFunc func, Number defVal, String column, FilterNode node) {
         return dataSource().getNumberResultAsync(entityType(), func, defVal, column, node);
     }
 
     /**
-     * 获取符合过滤条件记录的聚合结果Map   <br>
-     * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table}  <br>
-     * 如 getNumberMapAsync(User.class, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 获取符合过滤条件记录的聚合结果Map <br>
+     * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table} <br>
+     * 如 getNumberMapAsync(User.class, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime)
+     * FROM {table} <br>
      *
-     * @param <N>     Number
-     *
+     * @param <N> Number
      * @param columns 聚合字段
-     *
      * @return 聚合结果Map
      */
     default <N extends Number> Map<String, N> getNumberMap(FilterFuncColumn... columns) {
@@ -954,14 +913,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件记录的聚合结果Map   <br>
-     * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table}  <br>
-     * 如 getNumberMapAsync(User.class, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table} <br>
+     * 获取符合过滤条件记录的聚合结果Map <br>
+     * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table} <br>
+     * 如 getNumberMapAsync(User.class, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime)
+     * FROM {table} <br>
      *
-     * @param <N>     Number
-     *
+     * @param <N> Number
      * @param columns 聚合字段
-     *
      * @return 聚合结果Map CompletableFuture
      */
     default <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(FilterFuncColumn... columns) {
@@ -969,16 +927,14 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件记录的聚合结果Map   <br>
-     * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean}  <br>
-     * 如 getNumberMapAsync(User.class, (FilterBean)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table}
-     * <br>
+     * 获取符合过滤条件记录的聚合结果Map <br>
+     * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} <br>
+     * 如 getNumberMapAsync(User.class, (FilterBean)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT
+     * MAX(createtime) FROM {table} <br>
      *
-     * @param <N>     Number
-     *
-     * @param bean    过滤条件
+     * @param <N> Number
+     * @param bean 过滤条件
      * @param columns 聚合字段
-     *
      * @return 聚合结果Map
      */
     default <N extends Number> Map<String, N> getNumberMap(FilterBean bean, FilterFuncColumn... columns) {
@@ -986,33 +942,30 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件记录的聚合结果Map   <br>
-     * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean}  <br>
-     * 如 getNumberMapAsync(User.class, (FilterBean)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table}
-     * <br>
+     * 获取符合过滤条件记录的聚合结果Map <br>
+     * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} <br>
+     * 如 getNumberMapAsync(User.class, (FilterBean)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT
+     * MAX(createtime) FROM {table} <br>
      *
-     * @param <N>     Number
-     *
-     * @param bean    过滤条件
+     * @param <N> Number
+     * @param bean 过滤条件
      * @param columns 聚合字段
-     *
      * @return 聚合结果Map CompletableFuture
      */
-    default <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(FilterBean bean, FilterFuncColumn... columns) {
+    default <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(
+            FilterBean bean, FilterFuncColumn... columns) {
         return dataSource().getNumberMapAsync(entityType(), bean, columns);
     }
 
     /**
-     * 获取符合过滤条件记录的聚合结果Map   <br>
-     * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node}  <br>
-     * 如 getNumberMapAsync(User.class, (FilterNode)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table}
-     * <br>
+     * 获取符合过滤条件记录的聚合结果Map <br>
+     * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} <br>
+     * 如 getNumberMapAsync(User.class, (FilterNode)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT
+     * MAX(createtime) FROM {table} <br>
      *
-     * @param <N>     Number
-     *
-     * @param node    过滤条件
+     * @param <N> Number
+     * @param node 过滤条件
      * @param columns 聚合字段
-     *
      * @return 聚合结果Map
      */
     default <N extends Number> Map<String, N> getNumberMap(FilterNode node, FilterFuncColumn... columns) {
@@ -1020,381 +973,367 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件记录的聚合结果Map   <br>
-     * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node}  <br>
-     * 如 getNumberMapAsync(User.class, (FilterNode)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT MAX(createtime) FROM {table}
-     * <br>
+     * 获取符合过滤条件记录的聚合结果Map <br>
+     * 等价SQL: SELECT FUNC1{column1}, FUNC2{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} <br>
+     * 如 getNumberMapAsync(User.class, (FilterNode)null, new FilterFuncColumn(FilterFunc.MAX, "createtime")) 等价于: SELECT
+     * MAX(createtime) FROM {table} <br>
      *
-     * @param <N>     Number
-     *
-     * @param node    过滤条件
+     * @param <N> Number
+     * @param node 过滤条件
      * @param columns 聚合字段
-     *
      * @return 聚合结果Map
      */
-    default <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(FilterNode node, FilterFuncColumn... columns) {
+    default <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(
+            FilterNode node, FilterFuncColumn... columns) {
         return dataSource().getNumberMapAsync(entityType(), node, columns);
     }
 
     /**
-     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
-     * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMapAsync(User.class, "name", FilterFunc.MAX, "createtime") 等价于: SELECT name, MAX(createtime) FROM user GROUP BY name<br>
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map <br>
+     * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} GROUP BY {keyColumn} <br>
+     * 如 queryColumnMapAsync(User.class, "name", FilterFunc.MAX, "createtime") 等价于: SELECT name, MAX(createtime) FROM
+     * user GROUP BY name<br>
      *
-     *
-     * @param <K>        Key字段的数据类型
-     * @param <N>        Number
-     *
-     * @param keyColumn  Key字段
-     * @param func       聚合函数
+     * @param <K> Key字段的数据类型
+     * @param <N> Number
+     * @param keyColumn Key字段
+     * @param func 聚合函数
      * @param funcColumn 聚合字段
-     *
      * @return 聚合结果Map
      */
-    default <K extends Serializable, N extends Number> Map<K, N> queryColumnMap(String keyColumn, FilterFunc func, String funcColumn) {
+    default <K extends Serializable, N extends Number> Map<K, N> queryColumnMap(
+            String keyColumn, FilterFunc func, String funcColumn) {
         return dataSource().queryColumnMap(entityType(), keyColumn, func, funcColumn);
     }
 
     /**
-     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
-     * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMapAsync(User.class, "name", FilterFunc.MAX, "createtime") 等价于: SELECT name, MAX(createtime) FROM user GROUP BY name<br>
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map <br>
+     * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} GROUP BY {keyColumn} <br>
+     * 如 queryColumnMapAsync(User.class, "name", FilterFunc.MAX, "createtime") 等价于: SELECT name, MAX(createtime) FROM
+     * user GROUP BY name<br>
      *
-     *
-     * @param <K>        Key字段的数据类型
-     * @param <N>        Number
-     *
-     * @param keyColumn  Key字段
-     * @param func       聚合函数
+     * @param <K> Key字段的数据类型
+     * @param <N> Number
+     * @param keyColumn Key字段
+     * @param func 聚合函数
      * @param funcColumn 聚合字段
-     *
      * @return 聚合结果Map CompletableFuture
      */
-    default < K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(String keyColumn, FilterFunc func, String funcColumn) {
+    default <K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(
+            String keyColumn, FilterFunc func, String funcColumn) {
         return dataSource().queryColumnMapAsync(entityType(), keyColumn, func, funcColumn);
     }
 
     /**
-     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
-     * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} WHERE {filter bean} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMapAsync(User.class, "name", FilterFunc.MAX, "createtime", (FilterBean)null) 等价于: SELECT name, MAX(createtime) FROM user GROUP BY
-     * name<br>
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map <br>
+     * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} WHERE {filter bean} GROUP BY {keyColumn} <br>
+     * 如 queryColumnMapAsync(User.class, "name", FilterFunc.MAX, "createtime", (FilterBean)null) 等价于: SELECT name,
+     * MAX(createtime) FROM user GROUP BY name<br>
      *
-     *
-     * @param <K>        Key字段的数据类型
-     * @param <N>        Number
-     *
-     * @param keyColumn  Key字段
-     * @param func       聚合函数
+     * @param <K> Key字段的数据类型
+     * @param <N> Number
+     * @param keyColumn Key字段
+     * @param func 聚合函数
      * @param funcColumn 聚合字段
-     * @param bean       过滤条件
-     *
+     * @param bean 过滤条件
      * @return 聚合结果Map
      */
-    default <K extends Serializable, N extends Number> Map<K, N> queryColumnMap(String keyColumn, FilterFunc func, String funcColumn, FilterBean bean) {
+    default <K extends Serializable, N extends Number> Map<K, N> queryColumnMap(
+            String keyColumn, FilterFunc func, String funcColumn, FilterBean bean) {
         return dataSource().queryColumnMap(entityType(), keyColumn, func, funcColumn, bean);
     }
 
     /**
-     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
-     * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} WHERE {filter bean} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMapAsync(User.class, "name", FilterFunc.MAX, "createtime", (FilterBean)null) 等价于: SELECT name, MAX(createtime) FROM user GROUP BY
-     * name<br>
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map <br>
+     * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} WHERE {filter bean} GROUP BY {keyColumn} <br>
+     * 如 queryColumnMapAsync(User.class, "name", FilterFunc.MAX, "createtime", (FilterBean)null) 等价于: SELECT name,
+     * MAX(createtime) FROM user GROUP BY name<br>
      *
-     *
-     * @param <K>        Key字段的数据类型
-     * @param <N>        Number
-     *
-     * @param keyColumn  Key字段
-     * @param func       聚合函数
+     * @param <K> Key字段的数据类型
+     * @param <N> Number
+     * @param keyColumn Key字段
+     * @param func 聚合函数
      * @param funcColumn 聚合字段
-     * @param bean       过滤条件
-     *
+     * @param bean 过滤条件
      * @return 聚合结果Map CompletableFuture
      */
-    default <K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(String keyColumn, FilterFunc func, String funcColumn, FilterBean bean) {
+    default <K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(
+            String keyColumn, FilterFunc func, String funcColumn, FilterBean bean) {
         return dataSource().queryColumnMapAsync(entityType(), keyColumn, func, funcColumn, bean);
     }
 
     /**
-     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
-     * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} WHERE {filter node} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMapAsync(User.class, "name", FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT name, MAX(createtime) FROM user GROUP BY
-     * name<br>
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map <br>
+     * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} WHERE {filter node} GROUP BY {keyColumn} <br>
+     * 如 queryColumnMapAsync(User.class, "name", FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT name,
+     * MAX(createtime) FROM user GROUP BY name<br>
      *
-     *
-     * @param <K>        Key字段的数据类型
-     * @param <N>        Number
-     *
-     * @param keyColumn  Key字段
-     * @param func       聚合函数
+     * @param <K> Key字段的数据类型
+     * @param <N> Number
+     * @param keyColumn Key字段
+     * @param func 聚合函数
      * @param funcColumn 聚合字段
-     * @param node       过滤条件
-     *
+     * @param node 过滤条件
      * @return 聚合结果Map
      */
-    default <K extends Serializable, N extends Number> Map<K, N> queryColumnMap(String keyColumn, FilterFunc func, String funcColumn, FilterNode node) {
+    default <K extends Serializable, N extends Number> Map<K, N> queryColumnMap(
+            String keyColumn, FilterFunc func, String funcColumn, FilterNode node) {
         return dataSource().queryColumnMap(entityType(), keyColumn, func, funcColumn, node);
     }
 
     /**
-     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
-     * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} WHERE {filter node} GROUP BY {keyColumn}  <br>
-     * 如 queryColumnMapAsync(User.class, "name", FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT name, MAX(createtime) FROM user GROUP BY
-     * name<br>
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map <br>
+     * 等价SQL: SELECT keyColumn, FUNC{funcColumn} FROM {table} WHERE {filter node} GROUP BY {keyColumn} <br>
+     * 如 queryColumnMapAsync(User.class, "name", FilterFunc.MAX, "createtime", (FilterNode)null) 等价于: SELECT name,
+     * MAX(createtime) FROM user GROUP BY name<br>
      *
-     *
-     * @param <K>        Key字段的数据类型
-     * @param <N>        Number
-     *
-     * @param keyColumn  Key字段
-     * @param func       聚合函数
+     * @param <K> Key字段的数据类型
+     * @param <N> Number
+     * @param keyColumn Key字段
+     * @param func 聚合函数
      * @param funcColumn 聚合字段
-     * @param node       过滤条件
-     *
+     * @param node 过滤条件
      * @return 聚合结果Map CompletableFuture
      */
-    default < K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(String keyColumn, FilterFunc func, String funcColumn, FilterNode node) {
+    default <K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(
+            String keyColumn, FilterFunc func, String funcColumn, FilterNode node) {
         return dataSource().queryColumnMapAsync(entityType(), keyColumn, func, funcColumn, node);
     }
 
     /**
-     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
-     * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE GROUP BY {col1}  <br>
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map <br>
+     * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE GROUP BY {col1} <br>
      * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
-     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid")
-     * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
+     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid") 等价于: SELECT targetid, SUM(money) / 100,
+     * AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
      *
-     * @param <K>           Key字段的数据类型
-     * @param <N>           Number
-     * @param funcNodes     ColumnNode[]
+     * @param <K> Key字段的数据类型
+     * @param <N> Number
+     * @param funcNodes ColumnNode[]
      * @param groupByColumn GROUP BY字段
-     *
      * @return 聚合结果Map CompletableFuture
      */
-    default <K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(ColumnNode[] funcNodes, String groupByColumn) {
+    default <K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(
+            ColumnNode[] funcNodes, String groupByColumn) {
         return dataSource().queryColumnMap(entityType(), funcNodes, groupByColumn);
     }
 
     /**
-     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
-     * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} GROUP BY {col1}  <br>
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map <br>
+     * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} GROUP BY {col1} <br>
      * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
-     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid")
-     * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
+     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid") 等价于: SELECT targetid, SUM(money) / 100,
+     * AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
      *
-     * @param <K>           Key字段的数据类型
-     * @param <N>           Number
-     * @param funcNodes     ColumnNode[]
+     * @param <K> Key字段的数据类型
+     * @param <N> Number
+     * @param funcNodes ColumnNode[]
      * @param groupByColumn GROUP BY字段
-     *
      * @return 聚合结果Map CompletableFuture
      */
-    default < K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(ColumnNode[] funcNodes, String groupByColumn) {
+    default <K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(
+            ColumnNode[] funcNodes, String groupByColumn) {
         return dataSource().queryColumnMapAsync(entityType(), funcNodes, groupByColumn);
     }
 
     /**
-     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
-     * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter bean} GROUP BY {col1}  <br>
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map <br>
+     * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter bean} GROUP BY {col1} <br>
      * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
-     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid", (FilterBean)null)
-     * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
+     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid", (FilterBean)null) 等价于: SELECT targetid,
+     * SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
      *
-     * @param <K>           Key字段的数据类型
-     * @param <N>           Number
-     * @param funcNodes     ColumnNode[]
+     * @param <K> Key字段的数据类型
+     * @param <N> Number
+     * @param funcNodes ColumnNode[]
      * @param groupByColumn GROUP BY字段
-     * @param bean          过滤条件
-     *
+     * @param bean 过滤条件
      * @return 聚合结果Map CompletableFuture
      */
-    default <K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(ColumnNode[] funcNodes, String groupByColumn, FilterBean bean) {
+    default <K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(
+            ColumnNode[] funcNodes, String groupByColumn, FilterBean bean) {
         return dataSource().queryColumnMap(entityType(), funcNodes, groupByColumn, bean);
     }
 
     /**
-     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
-     * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter bean} GROUP BY {col1}  <br>
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map <br>
+     * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter bean} GROUP BY {col1} <br>
      * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
-     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid", (FilterBean)null)
-     * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
+     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid", (FilterBean)null) 等价于: SELECT targetid,
+     * SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
      *
-     *
-     * @param <K>           Key字段的数据类型
-     * @param <N>           Number
-     *
-     * @param funcNodes     ColumnNode[]
+     * @param <K> Key字段的数据类型
+     * @param <N> Number
+     * @param funcNodes ColumnNode[]
      * @param groupByColumn GROUP BY字段
-     * @param bean          过滤条件
-     *
+     * @param bean 过滤条件
      * @return 聚合结果Map CompletableFuture
      */
-    default <K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(ColumnNode[] funcNodes, String groupByColumn, FilterBean bean) {
+    default <K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(
+            ColumnNode[] funcNodes, String groupByColumn, FilterBean bean) {
         return dataSource().queryColumnMapAsync(entityType(), funcNodes, groupByColumn, bean);
     }
 
     /**
-     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
-     * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter node} GROUP BY {col1}  <br>
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map <br>
+     * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter node} GROUP BY {col1} <br>
      * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
-     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid", (FilterNode)null)
-     * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
+     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid", (FilterNode)null) 等价于: SELECT targetid,
+     * SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
      *
-     *
-     * @param <K>           Key字段的数据类型
-     * @param <N>           Number
-     *
-     * @param funcNodes     ColumnNode[]
+     * @param <K> Key字段的数据类型
+     * @param <N> Number
+     * @param funcNodes ColumnNode[]
      * @param groupByColumn GROUP BY字段
-     * @param node          过滤条件
-     *
+     * @param node 过滤条件
      * @return 聚合结果Map CompletableFuture
      */
-    default <K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(ColumnNode[] funcNodes, String groupByColumn, FilterNode node) {
+    default <K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(
+            ColumnNode[] funcNodes, String groupByColumn, FilterNode node) {
         return dataSource().queryColumnMap(entityType(), funcNodes, groupByColumn, node);
     }
 
     /**
-     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
-     * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter node} GROUP BY {col1}  <br>
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map <br>
+     * 等价SQL: SELECT col1, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter node} GROUP BY {col1} <br>
      * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
-     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid", (FilterNode)null)
-     * 等价于: SELECT targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
+     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), "targetid", (FilterNode)null) 等价于: SELECT targetid,
+     * SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY targetid<br>
      *
-     *
-     * @param <K>           Key字段的数据类型
-     * @param <N>           Number
-     *
-     * @param funcNodes     ColumnNode[]
+     * @param <K> Key字段的数据类型
+     * @param <N> Number
+     * @param funcNodes ColumnNode[]
      * @param groupByColumn GROUP BY字段
-     * @param node          过滤条件
-     *
+     * @param node 过滤条件
      * @return 聚合结果Map CompletableFuture
      */
-    default < K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(ColumnNode[] funcNodes, String groupByColumn, FilterNode node) {
+    default <K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(
+            ColumnNode[] funcNodes, String groupByColumn, FilterNode node) {
         return dataSource().queryColumnMapAsync(entityType(), funcNodes, groupByColumn, node);
     }
 
     /**
-     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
-     * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} GROUP BY {col1}, {col2}  <br>
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map <br>
+     * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} GROUP BY {col1}, {col2} <br>
      * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
-     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"))
-     * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
+     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid")) 等价于: SELECT fromid,
+     * targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
      *
-     * @param <K>            Key字段的数据类型
-     * @param <N>            Number
-     * @param funcNodes      ColumnNode[]
+     * @param <K> Key字段的数据类型
+     * @param <N> Number
+     * @param funcNodes ColumnNode[]
      * @param groupByColumns GROUP BY字段
-     *
      * @return 聚合结果Map CompletableFuture
      */
-    default < K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(ColumnNode[] funcNodes, String[] groupByColumns) {
+    default <K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(
+            ColumnNode[] funcNodes, String[] groupByColumns) {
         return dataSource().queryColumnMap(entityType(), funcNodes, groupByColumns);
     }
 
     /**
-     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
-     * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} GROUP BY {col1}, {col2}  <br>
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map <br>
+     * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} GROUP BY {col1}, {col2} <br>
      * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
-     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"))
-     * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
+     * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid")) 等价于: SELECT fromid,
+     * targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
      *
-     * @param <K>            Key字段的数据类型
-     * @param <N>            Number
-     * @param funcNodes      ColumnNode[]
+     * @param <K> Key字段的数据类型
+     * @param <N> Number
+     * @param funcNodes ColumnNode[]
      * @param groupByColumns GROUP BY字段
-     *
      * @return 聚合结果Map CompletableFuture
      */
-    default < K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(ColumnNode[] funcNodes, String[] groupByColumns) {
+    default <K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(
+            ColumnNode[] funcNodes, String[] groupByColumns) {
         return dataSource().queryColumnMapAsync(entityType(), funcNodes, groupByColumns);
     }
 
     /**
-     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
-     * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter bean} GROUP BY {col1}, {col2}  <br>
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map <br>
+     * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter bean} GROUP BY {col1},
+     * {col2} <br>
      * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
      * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterBean)null)
      * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
      *
-     * @param <K>            Key字段的数据类型
-     * @param <N>            Number
-     * @param funcNodes      ColumnNode[]
+     * @param <K> Key字段的数据类型
+     * @param <N> Number
+     * @param funcNodes ColumnNode[]
      * @param groupByColumns GROUP BY字段
-     * @param bean           过滤条件
-     *
+     * @param bean 过滤条件
      * @return 聚合结果Map CompletableFuture
      */
-    default < K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(ColumnNode[] funcNodes, String[] groupByColumns, FilterBean bean) {
+    default <K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(
+            ColumnNode[] funcNodes, String[] groupByColumns, FilterBean bean) {
         return dataSource().queryColumnMap(entityType(), funcNodes, groupByColumns, bean);
     }
 
     /**
-     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
-     * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter bean} GROUP BY {col1}, {col2}  <br>
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map <br>
+     * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter bean} GROUP BY {col1},
+     * {col2} <br>
      * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
      * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterBean)null)
      * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
      *
-     * @param <K>            Key字段的数据类型
-     * @param <N>            Number
-     * @param funcNodes      ColumnNode[]
+     * @param <K> Key字段的数据类型
+     * @param <N> Number
+     * @param funcNodes ColumnNode[]
      * @param groupByColumns GROUP BY字段
-     * @param bean           过滤条件
-     *
+     * @param bean 过滤条件
      * @return 聚合结果Map CompletableFuture
      */
-    default < K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(ColumnNode[] funcNodes, String[] groupByColumns, FilterBean bean) {
+    default <K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(
+            ColumnNode[] funcNodes, String[] groupByColumns, FilterBean bean) {
         return dataSource().queryColumnMapAsync(entityType(), funcNodes, groupByColumns, bean);
     }
 
     /**
-     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
-     * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter node} GROUP BY {col1}, {col2}  <br>
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map <br>
+     * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter node} GROUP BY {col1},
+     * {col2} <br>
      * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
      * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterNode)null)
      * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
      *
-     * @param <K>            Key字段的数据类型
-     * @param <N>            Number
-     * @param funcNodes      ColumnNode[]
+     * @param <K> Key字段的数据类型
+     * @param <N> Number
+     * @param funcNodes ColumnNode[]
      * @param groupByColumns GROUP BY字段
-     * @param node           过滤条件
-     *
+     * @param node 过滤条件
      * @return 聚合结果Map
      */
-    default < K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(ColumnNode[] funcNodes, String[] groupByColumns, FilterNode node) {
+    default <K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(
+            ColumnNode[] funcNodes, String[] groupByColumns, FilterNode node) {
         return dataSource().queryColumnMap(entityType(), funcNodes, groupByColumns, node);
     }
 
     /**
-     * 查询符合过滤条件记录的GROUP BY聚合结果Map   <br>
-     * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter node} GROUP BY {col1}, {col2}  <br>
+     * 查询符合过滤条件记录的GROUP BY聚合结果Map <br>
+     * 等价SQL: SELECT col1, col2, FUNC{funcColumn1}, FUNC{funcColumn2} FROM {table} WHERE {filter node} GROUP BY {col1},
+     * {col2} <br>
      * 如 queryColumnMapAsync(OrderRecord.class, Utility.ofArray(ColumnExpNode.div(ColumnFuncNode.sum("money"), 100),
      * ColumnFuncNode.avg(ColumnExpNode.dec("money", 20)))), Utility.ofArray("fromid", "targetid"), (FilterNode)null)
      * 等价于: SELECT fromid, targetid, SUM(money) / 100, AVG(money - 20) FROM orderrecord GROUP BY fromid, targetid<br>
      *
-     * @param <K>            Key字段的数据类型
-     * @param <N>            Number
-     * @param funcNodes      ColumnNode[]
+     * @param <K> Key字段的数据类型
+     * @param <N> Number
+     * @param funcNodes ColumnNode[]
      * @param groupByColumns GROUP BY字段
-     * @param node           过滤条件
-     *
+     * @param node 过滤条件
      * @return 聚合结果Map CompletableFuture
      */
-    default <K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(ColumnNode[] funcNodes, String[] groupByColumns, FilterNode node) {
+    default <K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(
+            ColumnNode[] funcNodes, String[] groupByColumns, FilterNode node) {
         return dataSource().queryColumnMapAsync(entityType(), funcNodes, groupByColumns, node);
     }
 
-    //-----------------------findAsync----------------------------
+    // -----------------------findAsync----------------------------
     /**
-     * 获取指定主键值的单个记录, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {primary} = {id}  <br>
+     * 获取指定主键值的单个记录, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {primary} = {id} <br>
      *
      * @param pk 主键值
-     *
      * @return Entity对象
      */
     default T find(Serializable pk) {
@@ -1402,11 +1341,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取指定主键值的单个记录, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {primary} = {id}  <br>
+     * 获取指定主键值的单个记录, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {primary} = {id} <br>
      *
      * @param pk 主键值
-     *
      * @return Entity对象 CompletableFuture
      */
     default CompletableFuture<T> findAsync(Serializable pk) {
@@ -1414,12 +1352,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取指定主键值的单个记录, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id}  <br>
+     * 获取指定主键值的单个记录, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id} <br>
      *
      * @param selects 指定字段
-     * @param pk      主键值
-     *
+     * @param pk 主键值
      * @return Entity对象
      */
     default T find(SelectColumn selects, Serializable pk) {
@@ -1427,12 +1364,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取指定主键值的单个记录, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id}  <br>
+     * 获取指定主键值的单个记录, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id} <br>
      *
      * @param selects 指定字段
-     * @param pk      主键值
-     *
+     * @param pk 主键值
      * @return Entity对象CompletableFuture
      */
     default CompletableFuture<T> findAsync(SelectColumn selects, Serializable pk) {
@@ -1440,12 +1376,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {primary} = {id1,id2, &#183;&#183;&#183;}  <br>
-     *
+     * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {primary} = {id1,id2, &#183;&#183;&#183;} <br>
      *
      * @param pks 主键值集合
-     *
      * @return Entity对象
      */
     default T[] finds(Serializable... pks) {
@@ -1453,13 +1387,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {primary} = {id1,id2, &#183;&#183;&#183;}  <br>
+     * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {primary} = {id1,id2, &#183;&#183;&#183;} <br>
      *
      * @param <D> 主键泛型
-     *
      * @param pks 主键值集合
-     *
      * @return Entity对象
      */
     default <D extends Serializable> T[] finds(Stream<D> pks) {
@@ -1467,12 +1399,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {primary} = {id1,id2, &#183;&#183;&#183;}  <br>
-     *
+     * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {primary} = {id1,id2, &#183;&#183;&#183;} <br>
      *
      * @param pks 主键值集合
-     *
      * @return Entity对象 CompletableFuture
      */
     default CompletableFuture<T[]> findsAsync(Serializable... pks) {
@@ -1480,14 +1410,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {primary} = {id1,id2, &#183;&#183;&#183;}  <br>
+     * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {primary} = {id1,id2, &#183;&#183;&#183;} <br>
      *
      * @param <D> 主键泛型
-     *
-     *
      * @param pks 主键值集合
-     *
      * @return Entity对象 CompletableFuture
      */
     default <D extends Serializable> CompletableFuture<T[]> findsAsync(Stream<D> pks) {
@@ -1495,13 +1422,12 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id1,id2, &#183;&#183;&#183;}  <br>
-     *
+     * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id1,id2,
+     * &#183;&#183;&#183;} <br>
      *
      * @param selects 指定字段
-     * @param pks     主键值集合
-     *
+     * @param pks 主键值集合
      * @return Entity对象
      */
     default T[] finds(SelectColumn selects, Serializable... pks) {
@@ -1509,13 +1435,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id1,id2, &#183;&#183;&#183;}  <br>
+     * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id1,id2,
+     * &#183;&#183;&#183;} <br>
      *
      * @param <D>主键泛型
      * @param selects 指定字段
-     * @param pks     主键值集合
-     *
+     * @param pks 主键值集合
      * @return Entity对象
      */
     default <D extends Serializable> T[] finds(SelectColumn selects, Stream<D> pks) {
@@ -1523,12 +1449,12 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id1,id2, &#183;&#183;&#183;}  <br>
+     * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id1,id2,
+     * &#183;&#183;&#183;} <br>
      *
      * @param selects 指定字段
-     * @param pks     主键值集合
-     *
+     * @param pks 主键值集合
      * @return Entity对象CompletableFuture
      */
     default CompletableFuture<T[]> findsAsync(SelectColumn selects, Serializable... pks) {
@@ -1536,13 +1462,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id1,id2, &#183;&#183;&#183;}  <br>
+     * 获取指定主键值的多个记录, 返回数组，数组长度与pks一样 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id1,id2,
+     * &#183;&#183;&#183;} <br>
      *
      * @param <D>主键泛型
      * @param selects 指定字段
-     * @param pks     主键值集合
-     *
+     * @param pks 主键值集合
      * @return Entity对象
      */
     default <D extends Serializable> CompletableFuture<T[]> findsAsync(SelectColumn selects, Stream<D> pks) {
@@ -1550,13 +1476,12 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取指定主键值的多个记录, 返回列表   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id1,id2, &#183;&#183;&#183;}  <br>
+     * 获取指定主键值的多个记录, 返回列表 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id1,id2,
+     * &#183;&#183;&#183;} <br>
      *
      * @param <D>主键泛型
-     *
-     * @param pks     主键值集合
-     *
+     * @param pks 主键值集合
      * @return Entity对象
      */
     default <D extends Serializable> List<T> findsList(Stream<D> pks) {
@@ -1564,13 +1489,12 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取指定主键值的多个记录, 返回列表   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id1,id2, &#183;&#183;&#183;}  <br>
+     * 获取指定主键值的多个记录, 返回列表 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {primary} = {id1,id2,
+     * &#183;&#183;&#183;} <br>
      *
      * @param <D>主键泛型
-     *
-     * @param pks     主键值集合
-     *
+     * @param pks 主键值集合
      * @return Entity对象
      */
     default <D extends Serializable> CompletableFuture<List<T>> findsListAsync(Stream<D> pks) {
@@ -1578,12 +1502,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key}  <br>
+     * 获取符合过滤条件单个记录, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} <br>
      *
      * @param column 过滤字段名
      * @param colval 过滤字段值
-     *
      * @return Entity对象
      */
     default T find(String column, Serializable colval) {
@@ -1591,12 +1514,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key}  <br>
+     * 获取符合过滤条件单个记录, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} <br>
      *
      * @param column 过滤字段名
      * @param colval 过滤字段值
-     *
      * @return Entity对象CompletableFuture
      */
     default CompletableFuture<T> findAsync(String column, Serializable colval) {
@@ -1604,13 +1526,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key}  <br>
-     *
-     *
+     * 获取符合过滤条件单个记录, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} <br>
      *
      * @param func 更新值Lambda
-     *
      * @return Entity对象
      */
     default T find(LambdaSupplier<Serializable> func) {
@@ -1618,13 +1537,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key}  <br>
-     *
-     *
+     * 获取符合过滤条件单个记录, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} <br>
      *
      * @param func 更新值Lambda
-     *
      * @return Entity对象
      */
     default CompletableFuture<T> findAsync(LambdaSupplier<Serializable> func) {
@@ -1632,13 +1548,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter bean}  <br>
-     *
-     *
+     * 获取符合过滤条件单个记录, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter bean} <br>
      *
      * @param bean 过滤条件
-     *
      * @return Entity对象
      */
     default T find(FilterBean bean) {
@@ -1646,13 +1559,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter bean}  <br>
-     *
-     *
+     * 获取符合过滤条件单个记录, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter bean} <br>
      *
      * @param bean 过滤条件
-     *
      * @return Entity对象CompletableFuture
      */
     default CompletableFuture<T> findAsync(FilterBean bean) {
@@ -1660,13 +1570,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter node}  <br>
-     *
-     *
+     * 获取符合过滤条件单个记录, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node} <br>
      *
      * @param node 过滤条件
-     *
      * @return Entity对象
      */
     default T find(FilterNode node) {
@@ -1674,13 +1581,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter node}  <br>
-     *
-     *
+     * 获取符合过滤条件单个记录, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node} <br>
      *
      * @param node 过滤条件
-     *
      * @return Entity对象CompletableFuture
      */
     default CompletableFuture<T> findAsync(FilterNode node) {
@@ -1688,13 +1592,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean}  <br>
-     *
+     * 获取符合过滤条件单个记录, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} <br>
      *
      * @param selects 指定字段
-     * @param bean    过滤条件
-     *
+     * @param bean 过滤条件
      * @return Entity对象
      */
     default T find(SelectColumn selects, FilterBean bean) {
@@ -1702,13 +1604,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean}  <br>
-     *
+     * 获取符合过滤条件单个记录, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} <br>
      *
      * @param selects 指定字段
-     * @param bean    过滤条件
-     *
+     * @param bean 过滤条件
      * @return Entity对象 CompletableFuture
      */
     default CompletableFuture<T> findAsync(SelectColumn selects, FilterBean bean) {
@@ -1716,13 +1616,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node}  <br>
-     *
+     * 获取符合过滤条件单个记录, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} <br>
      *
      * @param selects 指定字段
-     * @param node    过滤条件
-     *
+     * @param node 过滤条件
      * @return Entity对象
      */
     default T find(SelectColumn selects, FilterNode node) {
@@ -1730,13 +1628,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node}  <br>
-     *
+     * 获取符合过滤条件单个记录, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} <br>
      *
      * @param selects 指定字段
-     * @param node    过滤条件
-     *
+     * @param node 过滤条件
      * @return Entity对象 CompletableFuture
      */
     default CompletableFuture<T> findAsync(SelectColumn selects, FilterNode node) {
@@ -1744,12 +1640,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录的单个字段值, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT {column} FROM {table} WHERE {primary} = {id}  <br>
+     * 获取符合过滤条件单个记录的单个字段值, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT {column} FROM {table} WHERE {primary} = {id} <br>
      *
      * @param column 字段名
-     * @param pk     主键值
-     *
+     * @param pk 主键值
      * @return Entity对象
      */
     default Serializable findColumn(String column, Serializable pk) {
@@ -1757,12 +1652,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录的单个字段值, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT {column} FROM {table} WHERE {primary} = {id}  <br>
+     * 获取符合过滤条件单个记录的单个字段值, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT {column} FROM {table} WHERE {primary} = {id} <br>
      *
      * @param column 字段名
-     * @param pk     主键值
-     *
+     * @param pk 主键值
      * @return Entity对象 CompletableFuture
      */
     default CompletableFuture<Serializable> findColumnAsync(String column, Serializable pk) {
@@ -1770,12 +1664,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录的单个字段值, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT {column} FROM {table} WHERE {filter bean}  <br>
+     * 获取符合过滤条件单个记录的单个字段值, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT {column} FROM {table} WHERE {filter bean} <br>
      *
      * @param column 字段名
-     * @param bean   过滤条件
-     *
+     * @param bean 过滤条件
      * @return 字段值
      */
     default Serializable findColumn(String column, FilterBean bean) {
@@ -1783,12 +1676,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录的单个字段值, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT {column} FROM {table} WHERE {filter bean}  <br>
+     * 获取符合过滤条件单个记录的单个字段值, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT {column} FROM {table} WHERE {filter bean} <br>
      *
      * @param column 字段名
-     * @param bean   过滤条件
-     *
+     * @param bean 过滤条件
      * @return 字段值 CompletableFuture
      */
     default CompletableFuture<Serializable> findColumnAsync(String column, FilterBean bean) {
@@ -1796,12 +1688,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录的单个字段值, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT {column} FROM {table} WHERE {filter node}  <br>
+     * 获取符合过滤条件单个记录的单个字段值, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT {column} FROM {table} WHERE {filter node} <br>
      *
      * @param column 字段名
-     * @param node   过滤条件
-     *
+     * @param node 过滤条件
      * @return 字段值
      */
     default Serializable findColumn(String column, FilterNode node) {
@@ -1809,12 +1700,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录的单个字段值, 返回null表示不存在值   <br>
-     * 等价SQL: SELECT {column} FROM {table} WHERE {filter node}  <br>
+     * 获取符合过滤条件单个记录的单个字段值, 返回null表示不存在值 <br>
+     * 等价SQL: SELECT {column} FROM {table} WHERE {filter node} <br>
      *
      * @param column 字段名
-     * @param node   过滤条件
-     *
+     * @param node 过滤条件
      * @return 字段值 CompletableFuture
      */
     default CompletableFuture<Serializable> findColumnAsync(String column, FilterNode node) {
@@ -1822,13 +1712,12 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录的单个字段值, 不存在值则返回默认值   <br>
-     * 等价SQL: SELECT {column} FROM {table} WHERE {primary} = {id}  <br>
+     * 获取符合过滤条件单个记录的单个字段值, 不存在值则返回默认值 <br>
+     * 等价SQL: SELECT {column} FROM {table} WHERE {primary} = {id} <br>
      *
-     * @param column   字段名
+     * @param column 字段名
      * @param defValue 默认值
-     * @param pk       主键值
-     *
+     * @param pk 主键值
      * @return 字段值
      */
     default Serializable findColumn(String column, Serializable defValue, Serializable pk) {
@@ -1836,13 +1725,12 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录的单个字段值, 不存在值则返回默认值   <br>
-     * 等价SQL: SELECT {column} FROM {table} WHERE {primary} = {id}  <br>
+     * 获取符合过滤条件单个记录的单个字段值, 不存在值则返回默认值 <br>
+     * 等价SQL: SELECT {column} FROM {table} WHERE {primary} = {id} <br>
      *
-     * @param column   字段名
+     * @param column 字段名
      * @param defValue 默认值
-     * @param pk       主键值
-     *
+     * @param pk 主键值
      * @return 字段值 CompletableFuture
      */
     default CompletableFuture<Serializable> findColumnAsync(String column, Serializable defValue, Serializable pk) {
@@ -1850,13 +1738,12 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录的单个字段值, 不存在值则返回默认值   <br>
-     * 等价SQL: SELECT {column} FROM {table} WHERE {filter bean}  <br>
+     * 获取符合过滤条件单个记录的单个字段值, 不存在值则返回默认值 <br>
+     * 等价SQL: SELECT {column} FROM {table} WHERE {filter bean} <br>
      *
-     * @param column   字段名
+     * @param column 字段名
      * @param defValue 默认值
-     * @param bean     过滤条件
-     *
+     * @param bean 过滤条件
      * @return 字段值
      */
     default Serializable findColumn(String column, Serializable defValue, FilterBean bean) {
@@ -1864,13 +1751,12 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录的单个字段值, 不存在值则返回默认值   <br>
-     * 等价SQL: SELECT {column} FROM {table} WHERE {filter bean}  <br>
+     * 获取符合过滤条件单个记录的单个字段值, 不存在值则返回默认值 <br>
+     * 等价SQL: SELECT {column} FROM {table} WHERE {filter bean} <br>
      *
-     * @param column   字段名
+     * @param column 字段名
      * @param defValue 默认值
-     * @param bean     过滤条件
-     *
+     * @param bean 过滤条件
      * @return 字段值 CompletableFuture
      */
     default CompletableFuture<Serializable> findColumnAsync(String column, Serializable defValue, FilterBean bean) {
@@ -1878,13 +1764,12 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录的单个字段值, 不存在值则返回默认值   <br>
-     * 等价SQL: SELECT {column} FROM {table} WHERE {filter node}  <br>
+     * 获取符合过滤条件单个记录的单个字段值, 不存在值则返回默认值 <br>
+     * 等价SQL: SELECT {column} FROM {table} WHERE {filter node} <br>
      *
-     * @param column   字段名
+     * @param column 字段名
      * @param defValue 默认值
-     * @param node     过滤条件
-     *
+     * @param node 过滤条件
      * @return 字段值
      */
     default Serializable findColumn(String column, Serializable defValue, FilterNode node) {
@@ -1892,13 +1777,12 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 获取符合过滤条件单个记录的单个字段值, 不存在值则返回默认值   <br>
-     * 等价SQL: SELECT {column} FROM {table} WHERE {filter node}  <br>
+     * 获取符合过滤条件单个记录的单个字段值, 不存在值则返回默认值 <br>
+     * 等价SQL: SELECT {column} FROM {table} WHERE {filter node} <br>
      *
-     * @param column   字段名
+     * @param column 字段名
      * @param defValue 默认值
-     * @param node     过滤条件
-     *
+     * @param node 过滤条件
      * @return 字段值 CompletableFuture
      */
     default CompletableFuture<Serializable> findColumnAsync(String column, Serializable defValue, FilterNode node) {
@@ -1906,13 +1790,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 判断是否存在主键值的记录   <br>
-     * 等价SQL: SELECT COUNT(*) FROM {table} WHERE {primary} = {id}  <br>
-     *
-     *
+     * 判断是否存在主键值的记录 <br>
+     * 等价SQL: SELECT COUNT(*) FROM {table} WHERE {primary} = {id} <br>
      *
      * @param pk 主键值
-     *
      * @return 是否存在
      */
     default boolean exists(Serializable pk) {
@@ -1920,13 +1801,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 判断是否存在主键值的记录   <br>
-     * 等价SQL: SELECT COUNT(*) FROM {table} WHERE {primary} = {id}  <br>
-     *
-     *
+     * 判断是否存在主键值的记录 <br>
+     * 等价SQL: SELECT COUNT(*) FROM {table} WHERE {primary} = {id} <br>
      *
      * @param pk 主键值
-     *
      * @return 是否存在CompletableFuture
      */
     default CompletableFuture<Boolean> existsAsync(Serializable pk) {
@@ -1934,13 +1812,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 判断是否存在符合过滤条件的记录   <br>
-     * 等价SQL: SELECT COUNT(*) FROM {table} WHERE {filter bean}  <br>
-     *
-     *
+     * 判断是否存在符合过滤条件的记录 <br>
+     * 等价SQL: SELECT COUNT(*) FROM {table} WHERE {filter bean} <br>
      *
      * @param bean 过滤条件
-     *
      * @return 是否存在
      */
     default boolean exists(FilterBean bean) {
@@ -1948,13 +1823,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 判断是否存在符合过滤条件的记录   <br>
-     * 等价SQL: SELECT COUNT(*) FROM {table} WHERE {filter bean}  <br>
-     *
-     *
+     * 判断是否存在符合过滤条件的记录 <br>
+     * 等价SQL: SELECT COUNT(*) FROM {table} WHERE {filter bean} <br>
      *
      * @param bean 过滤条件
-     *
      * @return 是否存在CompletableFuture
      */
     default CompletableFuture<Boolean> existsAsync(FilterBean bean) {
@@ -1962,13 +1834,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 判断是否存在符合过滤条件的记录   <br>
-     * 等价SQL: SELECT COUNT(*) FROM {table} WHERE {filter node}  <br>
-     *
-     *
+     * 判断是否存在符合过滤条件的记录 <br>
+     * 等价SQL: SELECT COUNT(*) FROM {table} WHERE {filter node} <br>
      *
      * @param node 过滤条件
-     *
      * @return 是否存在
      */
     default boolean exists(FilterNode node) {
@@ -1976,29 +1845,25 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 判断是否存在符合过滤条件的记录   <br>
-     * 等价SQL: SELECT COUNT(*) FROM {table} WHERE {filter node}  <br>
-     *
-     *
+     * 判断是否存在符合过滤条件的记录 <br>
+     * 等价SQL: SELECT COUNT(*) FROM {table} WHERE {filter node} <br>
      *
      * @param node 过滤条件
-     *
      * @return 是否存在CompletableFuture
      */
     default CompletableFuture<Boolean> existsAsync(FilterNode node) {
         return dataSource().existsAsync(entityType(), node);
     }
 
-    //-----------------------list set----------------------------
+    // -----------------------list set----------------------------
     /**
-     * 查询符合过滤条件记录的某个字段Set集合   <br>
-     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {column} = {key}  <br>
+     * 查询符合过滤条件记录的某个字段Set集合 <br>
+     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {column} = {key} <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param column         过滤字段名
-     * @param colval         过滤字段值
-     *
+     * @param column 过滤字段名
+     * @param colval 过滤字段值
      * @return 字段值的集合
      */
     default <V extends Serializable> Set<V> queryColumnSet(String selectedColumn, String column, Serializable colval) {
@@ -2006,28 +1871,27 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段Set集合   <br>
-     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {column} = {key}  <br>
+     * 查询符合过滤条件记录的某个字段Set集合 <br>
+     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {column} = {key} <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param column         过滤字段名
-     * @param colval         过滤字段值
-     *
+     * @param column 过滤字段名
+     * @param colval 过滤字段值
      * @return 字段值的集合CompletableFuture
      */
-    default <V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(String selectedColumn, String column, Serializable colval) {
+    default <V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(
+            String selectedColumn, String column, Serializable colval) {
         return dataSource().queryColumnSetAsync(selectedColumn, entityType(), column, colval);
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段Set集合   <br>
-     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter bean}  <br>
+     * 查询符合过滤条件记录的某个字段Set集合 <br>
+     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter bean} <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param bean           过滤条件
-     *
+     * @param bean 过滤条件
      * @return 字段值的集合
      */
     default <V extends Serializable> Set<V> queryColumnSet(String selectedColumn, FilterBean bean) {
@@ -2035,27 +1899,26 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段Set集合   <br>
-     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter bean}  <br>
+     * 查询符合过滤条件记录的某个字段Set集合 <br>
+     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter bean} <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param bean           过滤条件
-     *
+     * @param bean 过滤条件
      * @return 字段值的集合CompletableFuture
      */
-    default <V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(String selectedColumn, FilterBean bean) {
+    default <V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(
+            String selectedColumn, FilterBean bean) {
         return dataSource().queryColumnSetAsync(selectedColumn, entityType(), bean);
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段Set集合   <br>
-     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter node}  <br>
+     * 查询符合过滤条件记录的某个字段Set集合 <br>
+     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter node} <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param node           过滤条件
-     *
+     * @param node 过滤条件
      * @return 字段值的集合
      */
     default <V extends Serializable> Set<V> queryColumnSet(String selectedColumn, FilterNode node) {
@@ -2063,28 +1926,28 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段Set集合   <br>
-     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter node}  <br>
+     * 查询符合过滤条件记录的某个字段Set集合 <br>
+     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter node} <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param node           过滤条件
-     *
+     * @param node 过滤条件
      * @return 字段值的集合CompletableFuture
      */
-    default <V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(String selectedColumn, FilterNode node) {
+    default <V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(
+            String selectedColumn, FilterNode node) {
         return dataSource().queryColumnSetAsync(selectedColumn, entityType(), node);
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段Set集合   <br>
-     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的某个字段Set集合 <br>
+     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT
+     * {flipper.limit} <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param flipper        翻页对象
-     * @param bean           过滤条件
-     *
+     * @param flipper 翻页对象
+     * @param bean 过滤条件
      * @return 字段值的集合
      */
     default <V extends Serializable> Set<V> queryColumnSet(String selectedColumn, Flipper flipper, FilterBean bean) {
@@ -2092,29 +1955,30 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段Set集合   <br>
-     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的某个字段Set集合 <br>
+     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT
+     * {flipper.limit} <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param flipper        翻页对象
-     * @param bean           过滤条件
-     *
+     * @param flipper 翻页对象
+     * @param bean 过滤条件
      * @return 字段值的集合CompletableFuture
      */
-    default <V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(String selectedColumn, Flipper flipper, FilterBean bean) {
+    default <V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(
+            String selectedColumn, Flipper flipper, FilterBean bean) {
         return dataSource().queryColumnSetAsync(selectedColumn, entityType(), flipper, bean);
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段Set集合   <br>
-     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的某个字段Set集合 <br>
+     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT
+     * {flipper.limit} <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param flipper        翻页对象
-     * @param node           过滤条件
-     *
+     * @param flipper 翻页对象
+     * @param node 过滤条件
      * @return 字段值的集合
      */
     default <V extends Serializable> Set<V> queryColumnSet(String selectedColumn, Flipper flipper, FilterNode node) {
@@ -2122,58 +1986,58 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段Set集合   <br>
-     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的某个字段Set集合 <br>
+     * 等价SQL: SELECT DISTINCT {selectedColumn} FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT
+     * {flipper.limit} <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param flipper        翻页对象
-     * @param node           过滤条件
-     *
+     * @param flipper 翻页对象
+     * @param node 过滤条件
      * @return 字段值的集合CompletableFuture
      */
-    default <V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(String selectedColumn, Flipper flipper, FilterNode node) {
+    default <V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(
+            String selectedColumn, Flipper flipper, FilterNode node) {
         return dataSource().queryColumnSetAsync(selectedColumn, entityType(), flipper, node);
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段List集合   <br>
-     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {column} = {key}  <br>
+     * 查询符合过滤条件记录的某个字段List集合 <br>
+     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {column} = {key} <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param column         过滤字段名
-     * @param colval         过滤字段值
-     *
+     * @param column 过滤字段名
+     * @param colval 过滤字段值
      * @return 字段值的集合
      */
-    default <V extends Serializable> List<V> queryColumnList(String selectedColumn, String column, Serializable colval) {
+    default <V extends Serializable> List<V> queryColumnList(
+            String selectedColumn, String column, Serializable colval) {
         return dataSource().queryColumnList(selectedColumn, entityType(), column, colval);
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段List集合   <br>
-     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {column} = {key}  <br>
+     * 查询符合过滤条件记录的某个字段List集合 <br>
+     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {column} = {key} <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param column         过滤字段名
-     * @param colval         过滤字段值
-     *
+     * @param column 过滤字段名
+     * @param colval 过滤字段值
      * @return 字段值的集合CompletableFuture
      */
-    default <V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(String selectedColumn, String column, Serializable colval) {
+    default <V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(
+            String selectedColumn, String column, Serializable colval) {
         return dataSource().queryColumnListAsync(selectedColumn, entityType(), column, colval);
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段List集合   <br>
-     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter bean}  <br>
+     * 查询符合过滤条件记录的某个字段List集合 <br>
+     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter bean} <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param bean           过滤条件
-     *
+     * @param bean 过滤条件
      * @return 字段值的集合
      */
     default <V extends Serializable> List<V> queryColumnList(String selectedColumn, FilterBean bean) {
@@ -2181,27 +2045,26 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段List集合   <br>
-     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter bean}  <br>
+     * 查询符合过滤条件记录的某个字段List集合 <br>
+     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter bean} <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param bean           过滤条件
-     *
+     * @param bean 过滤条件
      * @return 字段值的集合CompletableFuture
      */
-    default <V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(String selectedColumn, FilterBean bean) {
+    default <V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(
+            String selectedColumn, FilterBean bean) {
         return dataSource().queryColumnListAsync(selectedColumn, entityType(), bean);
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段List集合   <br>
-     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter node}  <br>
+     * 查询符合过滤条件记录的某个字段List集合 <br>
+     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter node} <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param node           过滤条件
-     *
+     * @param node 过滤条件
      * @return 字段值的集合
      */
     default <V extends Serializable> List<V> queryColumnList(String selectedColumn, FilterNode node) {
@@ -2209,28 +2072,28 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段List集合   <br>
-     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter node}  <br>
+     * 查询符合过滤条件记录的某个字段List集合 <br>
+     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter node} <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param node           过滤条件
-     *
+     * @param node 过滤条件
      * @return 字段值的集合CompletableFuture
      */
-    default <V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(String selectedColumn, FilterNode node) {
+    default <V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(
+            String selectedColumn, FilterNode node) {
         return dataSource().queryColumnListAsync(selectedColumn, entityType(), node);
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段List集合   <br>
-     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的某个字段List集合 <br>
+     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}
+     * <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param flipper        翻页对象
-     * @param bean           过滤条件
-     *
+     * @param flipper 翻页对象
+     * @param bean 过滤条件
      * @return 字段值的集合
      */
     default <V extends Serializable> List<V> queryColumnList(String selectedColumn, Flipper flipper, FilterBean bean) {
@@ -2238,29 +2101,30 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段List集合   <br>
-     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的某个字段List集合 <br>
+     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}
+     * <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param flipper        翻页对象
-     * @param bean           过滤条件
-     *
+     * @param flipper 翻页对象
+     * @param bean 过滤条件
      * @return 字段值的集合CompletableFuture
      */
-    default <V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(String selectedColumn, Flipper flipper, FilterBean bean) {
+    default <V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(
+            String selectedColumn, Flipper flipper, FilterBean bean) {
         return dataSource().queryColumnListAsync(selectedColumn, entityType(), flipper, bean);
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段List集合   <br>
-     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的某个字段List集合 <br>
+     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}
+     * <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param flipper        翻页对象
-     * @param node           过滤条件
-     *
+     * @param flipper 翻页对象
+     * @param node 过滤条件
      * @return 字段值的集合
      */
     default <V extends Serializable> List<V> queryColumnList(String selectedColumn, Flipper flipper, FilterNode node) {
@@ -2268,87 +2132,91 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段List集合   <br>
-     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的某个字段List集合 <br>
+     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}
+     * <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param flipper        翻页对象
-     * @param node           过滤条件
-     *
+     * @param flipper 翻页对象
+     * @param node 过滤条件
      * @return 字段值的集合CompletableFuture
      */
-    default <V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(String selectedColumn, Flipper flipper, FilterNode node) {
+    default <V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(
+            String selectedColumn, Flipper flipper, FilterNode node) {
         return dataSource().queryColumnListAsync(selectedColumn, entityType(), flipper, node);
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段Sheet集合   <br>
-     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的某个字段Sheet集合 <br>
+     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}
+     * <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param flipper        翻页对象
-     * @param bean           过滤条件
-     *
+     * @param flipper 翻页对象
+     * @param bean 过滤条件
      * @return 字段值的集合
      */
-    default <V extends Serializable> Sheet<V> queryColumnSheet(String selectedColumn, Flipper flipper, FilterBean bean) {
+    default <V extends Serializable> Sheet<V> queryColumnSheet(
+            String selectedColumn, Flipper flipper, FilterBean bean) {
         return dataSource().queryColumnSheet(selectedColumn, entityType(), flipper, bean);
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段Sheet集合   <br>
-     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的某个字段Sheet集合 <br>
+     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}
+     * <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param flipper        翻页对象
-     * @param bean           过滤条件
-     *
+     * @param flipper 翻页对象
+     * @param bean 过滤条件
      * @return 字段值的集合CompletableFuture
      */
-    default <V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(String selectedColumn, Flipper flipper, FilterBean bean) {
+    default <V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(
+            String selectedColumn, Flipper flipper, FilterBean bean) {
         return dataSource().queryColumnSheetAsync(selectedColumn, entityType(), flipper, bean);
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段Sheet集合   <br>
-     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的某个字段Sheet集合 <br>
+     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}
+     * <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param flipper        翻页对象
-     * @param node           过滤条件
-     *
+     * @param flipper 翻页对象
+     * @param node 过滤条件
      * @return 字段值的集合
      */
-    default <V extends Serializable> Sheet<V> queryColumnSheet(String selectedColumn, Flipper flipper, FilterNode node) {
+    default <V extends Serializable> Sheet<V> queryColumnSheet(
+            String selectedColumn, Flipper flipper, FilterNode node) {
         return dataSource().queryColumnSheet(selectedColumn, entityType(), flipper, node);
     }
 
     /**
-     * 查询符合过滤条件记录的某个字段Sheet集合   <br>
-     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的某个字段Sheet集合 <br>
+     * 等价SQL: SELECT {selectedColumn} FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}
+     * <br>
      *
-     * @param <V>            字段类型
+     * @param <V> 字段类型
      * @param selectedColumn 指定字段
-     * @param flipper        翻页对象
-     * @param node           过滤条件
-     *
+     * @param flipper 翻页对象
+     * @param node 过滤条件
      * @return 字段值的集合CompletableFuture
      */
-    default <V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(String selectedColumn, Flipper flipper, FilterNode node) {
+    default <V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(
+            String selectedColumn, Flipper flipper, FilterNode node) {
         return dataSource().queryColumnSheetAsync(selectedColumn, entityType(), flipper, node);
     }
 
     /**
-     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE id IN {ids}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE id IN {ids} <br>
      *
-     * @param <K>       主键泛型
+     * @param <K> 主键泛型
      * @param keyStream 主键Stream
-     *
      * @return Entity的集合
      */
     default <K extends Serializable> Map<K, T> queryMap(Stream<K> keyStream) {
@@ -2356,12 +2224,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE id IN {ids}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE id IN {ids} <br>
      *
-     * @param <K>       主键泛型
+     * @param <K> 主键泛型
      * @param keyStream 主键Stream
-     *
      * @return Entity的集合CompletableFuture
      */
     default <K extends Serializable> CompletableFuture<Map<K, T>> queryMapAsync(Stream<K> keyStream) {
@@ -2369,14 +2236,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter node}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node} <br>
      *
-     * @param <K>  主键泛型
-     *
-     *
+     * @param <K> 主键泛型
      * @param bean FilterBean
-     *
      * @return Entity的集合
      */
     default <K extends Serializable> Map<K, T> queryMap(FilterBean bean) {
@@ -2384,14 +2248,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter node}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node} <br>
      *
-     * @param <K>  主键泛型
-     *
-     *
+     * @param <K> 主键泛型
      * @param bean FilterBean
-     *
      * @return Entity的集合CompletableFuture
      */
     default <K extends Serializable> CompletableFuture<Map<K, T>> queryMapAsync(FilterBean bean) {
@@ -2399,14 +2260,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter node}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node} <br>
      *
-     * @param <K>  主键泛型
-     *
-     *
+     * @param <K> 主键泛型
      * @param node FilterNode
-     *
      * @return Entity的集合
      */
     default <K extends Serializable> Map<K, T> queryMap(FilterNode node) {
@@ -2414,14 +2272,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter node}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node} <br>
      *
-     * @param <K>  主键泛型
-     *
-     *
+     * @param <K> 主键泛型
      * @param node FilterNode
-     *
      * @return Entity的集合CompletableFuture
      */
     default <K extends Serializable> CompletableFuture<Map<K, T>> queryMapAsync(FilterNode node) {
@@ -2429,13 +2284,12 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE id IN {ids}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE id IN {ids} <br>
      *
-     * @param <K>       主键泛型
-     * @param selects   指定字段
+     * @param <K> 主键泛型
+     * @param selects 指定字段
      * @param keyStream 主键Stream
-     *
      * @return Entity的集合
      */
     default <K extends Serializable> Map<K, T> queryMap(SelectColumn selects, Stream<K> keyStream) {
@@ -2443,28 +2297,26 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE id IN {ids}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE id IN {ids} <br>
      *
-     * @param <K>       主键泛型
-     * @param selects   指定字段
+     * @param <K> 主键泛型
+     * @param selects 指定字段
      * @param keyStream 主键Stream
-     *
      * @return Entity的集合CompletableFuture
      */
-    default <K extends Serializable> CompletableFuture<Map<K, T>> queryMapAsync(SelectColumn selects, Stream<K> keyStream) {
+    default <K extends Serializable> CompletableFuture<Map<K, T>> queryMapAsync(
+            SelectColumn selects, Stream<K> keyStream) {
         return dataSource().queryMapAsync(entityType(), selects, keyStream);
     }
 
     /**
-     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter node}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node} <br>
      *
-     * @param <K>     主键泛型
-     *
+     * @param <K> 主键泛型
      * @param selects 指定字段
-     * @param bean    FilterBean
-     *
+     * @param bean FilterBean
      * @return Entity的集合
      */
     default <K extends Serializable> Map<K, T> queryMap(SelectColumn selects, FilterBean bean) {
@@ -2472,14 +2324,12 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter node}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node} <br>
      *
-     * @param <K>     主键泛型
-     *
+     * @param <K> 主键泛型
      * @param selects 指定字段
-     * @param bean    FilterBean
-     *
+     * @param bean FilterBean
      * @return Entity的集合CompletableFuture
      */
     default <K extends Serializable> CompletableFuture<Map<K, T>> queryMapAsync(SelectColumn selects, FilterBean bean) {
@@ -2487,14 +2337,12 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter node}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node} <br>
      *
-     * @param <K>     主键泛型
-     *
+     * @param <K> 主键泛型
      * @param selects 指定字段
-     * @param node    FilterNode
-     *
+     * @param node FilterNode
      * @return Entity的集合
      */
     default <K extends Serializable> Map<K, T> queryMap(SelectColumn selects, FilterNode node) {
@@ -2502,13 +2350,12 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter node}  <br>
+     * 查询符合过滤条件记录的List转Map集合， key=主键值, value=Entity对象 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node} <br>
      *
-     * @param <K>     主键泛型
+     * @param <K> 主键泛型
      * @param selects 指定字段
-     * @param node    FilterNode
-     *
+     * @param node FilterNode
      * @return Entity的集合CompletableFuture
      */
     default <K extends Serializable> CompletableFuture<Map<K, T>> queryMapAsync(SelectColumn selects, FilterNode node) {
@@ -2516,12 +2363,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Set集合   <br>
-     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的Set集合 <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param column 过滤字段名
      * @param colval 过滤字段值
-     *
      * @return Entity的集合
      */
     default Set<T> querySet(String column, Serializable colval) {
@@ -2529,12 +2375,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Set集合   <br>
-     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的Set集合 <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param column 过滤字段名
      * @param colval 过滤字段值
-     *
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<Set<T>> querySetAsync(String column, Serializable colval) {
@@ -2542,13 +2387,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Set集合   <br>
-     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter bean}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的Set集合 <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter bean} <br>
      *
      * @param bean 过滤条件
-     *
      * @return Entity的集合
      */
     default Set<T> querySet(FilterBean bean) {
@@ -2556,13 +2398,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Set集合   <br>
-     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter bean}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的Set集合 <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter bean} <br>
      *
      * @param bean 过滤条件
-     *
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<Set<T>> querySetAsync(FilterBean bean) {
@@ -2570,8 +2409,8 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询记录的Set集合   <br>
-     * 等价SQL: SELECT DISTINCT * FROM {table}  <br>
+     * 查询记录的Set集合 <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} <br>
      *
      * @return Entity的集合
      */
@@ -2580,13 +2419,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Set集合   <br>
-     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter node}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的Set集合 <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter node} <br>
      *
      * @param node 过滤条件
-     *
      * @return Entity的集合
      */
     default Set<T> querySet(FilterNode node) {
@@ -2594,11 +2430,8 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询记录的Set集合   <br>
+     * 查询记录的Set集合 <br>
      * 等价SQL: SELECT DISTINCT * FROM {table} <br>
-     *
-     *
-     *
      *
      * @return Entity的集合CompletableFuture
      */
@@ -2607,13 +2440,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Set集合   <br>
-     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter node}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的Set集合 <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter node} <br>
      *
      * @param node 过滤条件
-     *
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<Set<T>> querySetAsync(FilterNode node) {
@@ -2621,13 +2451,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Set集合   <br>
-     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean}  <br>
-     *
+     * 查询符合过滤条件记录的Set集合 <br>
+     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} <br>
      *
      * @param selects 指定字段
-     * @param bean    过滤条件
-     *
+     * @param bean 过滤条件
      * @return Entity的集合
      */
     default Set<T> querySet(SelectColumn selects, FilterBean bean) {
@@ -2635,13 +2463,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Set集合   <br>
-     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean}  <br>
-     *
+     * 查询符合过滤条件记录的Set集合 <br>
+     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} <br>
      *
      * @param selects 指定字段
-     * @param bean    过滤条件
-     *
+     * @param bean 过滤条件
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<Set<T>> querySetAsync(SelectColumn selects, FilterBean bean) {
@@ -2649,13 +2475,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Set集合   <br>
-     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node}  <br>
-     *
+     * 查询符合过滤条件记录的Set集合 <br>
+     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} <br>
      *
      * @param selects 指定字段
-     * @param node    过滤条件
-     *
+     * @param node 过滤条件
      * @return Entity的集合
      */
     default Set<T> querySet(SelectColumn selects, FilterNode node) {
@@ -2663,13 +2487,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Set集合   <br>
-     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node}  <br>
-     *
+     * 查询符合过滤条件记录的Set集合 <br>
+     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} <br>
      *
      * @param selects 指定字段
-     * @param node    过滤条件
-     *
+     * @param node 过滤条件
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<Set<T>> querySetAsync(SelectColumn selects, FilterNode node) {
@@ -2677,14 +2499,12 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Set集合   <br>
-     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
+     * 查询符合过滤条件记录的Set集合 <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param flipper 翻页对象
-     * @param column  过滤字段名
-     * @param colval  过滤字段值
-     *
+     * @param column 过滤字段名
+     * @param colval 过滤字段值
      * @return Entity的集合
      */
     default Set<T> querySet(Flipper flipper, String column, Serializable colval) {
@@ -2692,15 +2512,12 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Set集合   <br>
-     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的Set集合 <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param flipper 翻页对象
-     * @param column  过滤字段名
-     * @param colval  过滤字段值
-     *
+     * @param column 过滤字段名
+     * @param colval 过滤字段值
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<Set<T>> querySetAsync(Flipper flipper, String column, Serializable colval) {
@@ -2708,14 +2525,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Set集合   <br>
-     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的Set集合 <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param flipper 翻页对象
-     * @param bean    过滤条件
-     *
+     * @param bean 过滤条件
      * @return Entity的集合
      */
     default Set<T> querySet(Flipper flipper, FilterBean bean) {
@@ -2723,14 +2537,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Set集合   <br>
-     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的Set集合 <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param flipper 翻页对象
-     * @param bean    过滤条件
-     *
+     * @param bean 过滤条件
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<Set<T>> querySetAsync(Flipper flipper, FilterBean bean) {
@@ -2738,48 +2549,37 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Set集合   <br>
-     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的Set集合 <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param flipper 翻页对象
-     * @param node    过滤条件
-     *
+     * @param node 过滤条件
      * @return Entity的集合
-     *
      */
     default Set<T> querySet(Flipper flipper, FilterNode node) {
         return dataSource().querySet(entityType(), flipper, node);
     }
 
     /**
-     * 查询符合过滤条件记录的Set集合   <br>
-     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的Set集合 <br>
+     * 等价SQL: SELECT DISTINCT * FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param flipper 翻页对象
-     * @param node    过滤条件
-     *
+     * @param node 过滤条件
      * @return Entity的集合
-     *
      */
     default CompletableFuture<Set<T>> querySetAsync(Flipper flipper, FilterNode node) {
         return dataSource().querySetAsync(entityType(), flipper, node);
     }
 
     /**
-     * 查询符合过滤条件记录的Set集合   <br>
-     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}
-     * <br>
-     *
-     *
+     * 查询符合过滤条件记录的Set集合 <br>
+     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY
+     * {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param selects 指定字段
      * @param flipper 翻页对象
-     * @param bean    过滤条件
-     *
+     * @param bean 过滤条件
      * @return Entity的集合
      */
     default Set<T> querySet(SelectColumn selects, Flipper flipper, FilterBean bean) {
@@ -2787,16 +2587,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Set集合   <br>
-     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}
-     * <br>
-     *
-     *
+     * 查询符合过滤条件记录的Set集合 <br>
+     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY
+     * {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param selects 指定字段
      * @param flipper 翻页对象
-     * @param bean    过滤条件
-     *
+     * @param bean 过滤条件
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<Set<T>> querySetAsync(SelectColumn selects, Flipper flipper, FilterBean bean) {
@@ -2804,16 +2601,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Set集合   <br>
-     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}
-     * <br>
-     *
-     *
+     * 查询符合过滤条件记录的Set集合 <br>
+     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} ORDER BY
+     * {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param selects 指定字段
      * @param flipper 翻页对象
-     * @param node    过滤条件
-     *
+     * @param node 过滤条件
      * @return Entity的集合
      */
     default Set<T> querySet(SelectColumn selects, Flipper flipper, FilterNode node) {
@@ -2821,16 +2615,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Set集合   <br>
-     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}
-     * <br>
-     *
-     *
+     * 查询符合过滤条件记录的Set集合 <br>
+     * 等价SQL: SELECT DISTINCT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} ORDER BY
+     * {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param selects 指定字段
      * @param flipper 翻页对象
-     * @param node    过滤条件
-     *
+     * @param node 过滤条件
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<Set<T>> querySetAsync(SelectColumn selects, Flipper flipper, FilterNode node) {
@@ -2838,12 +2629,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param column 过滤字段名
      * @param colval 过滤字段值
-     *
      * @return Entity的集合
      */
     default List<T> queryList(String column, Serializable colval) {
@@ -2851,12 +2641,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param column 过滤字段名
      * @param colval 过滤字段值
-     *
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<List<T>> queryListAsync(String column, Serializable colval) {
@@ -2864,13 +2653,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter bean}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter bean} <br>
      *
      * @param bean 过滤条件
-     *
      * @return Entity的集合
      */
     default List<T> queryList(FilterBean bean) {
@@ -2878,13 +2664,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter bean}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter bean} <br>
      *
      * @param bean 过滤条件
-     *
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<List<T>> queryListAsync(FilterBean bean) {
@@ -2892,11 +2675,8 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询记录的List集合   <br>
-     * 等价SQL: SELECT * FROM {table}  <br>
-     *
-     *
-     *
+     * 查询记录的List集合 <br>
+     * 等价SQL: SELECT * FROM {table} <br>
      *
      * @return Entity的集合
      */
@@ -2905,13 +2685,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter node}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node} <br>
      *
      * @param node 过滤条件
-     *
      * @return Entity的集合
      */
     default List<T> queryList(FilterNode node) {
@@ -2919,11 +2696,8 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询记录的List集合   <br>
+     * 查询记录的List集合 <br>
      * 等价SQL: SELECT * FROM {table} <br>
-     *
-     *
-     *
      *
      * @return Entity的集合CompletableFuture
      */
@@ -2932,13 +2706,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter node}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node} <br>
      *
      * @param node 过滤条件
-     *
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<List<T>> queryListAsync(FilterNode node) {
@@ -2946,14 +2717,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} <br>
      *
      * @param selects 指定字段
-     * @param bean    过滤条件
-     *
+     * @param bean 过滤条件
      * @return Entity的集合
      */
     default List<T> queryList(SelectColumn selects, FilterBean bean) {
@@ -2961,14 +2729,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} <br>
      *
      * @param selects 指定字段
-     * @param bean    过滤条件
-     *
+     * @param bean 过滤条件
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<List<T>> queryListAsync(SelectColumn selects, FilterBean bean) {
@@ -2976,14 +2741,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} <br>
      *
      * @param selects 指定字段
-     * @param node    过滤条件
-     *
+     * @param node 过滤条件
      * @return Entity的集合
      */
     default List<T> queryList(SelectColumn selects, FilterNode node) {
@@ -2991,14 +2753,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} <br>
      *
      * @param selects 指定字段
-     * @param node    过滤条件
-     *
+     * @param node 过滤条件
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<List<T>> queryListAsync(SelectColumn selects, FilterNode node) {
@@ -3006,15 +2765,12 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param flipper 翻页对象
-     * @param column  过滤字段名
-     * @param colval  过滤字段值
-     *
+     * @param column 过滤字段名
+     * @param colval 过滤字段值
      * @return Entity的集合
      */
     default List<T> queryList(Flipper flipper, String column, Serializable colval) {
@@ -3022,15 +2778,12 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {column} = {key} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param flipper 翻页对象
-     * @param column  过滤字段名
-     * @param colval  过滤字段值
-     *
+     * @param column 过滤字段名
+     * @param colval 过滤字段值
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<List<T>> queryListAsync(Flipper flipper, String column, Serializable colval) {
@@ -3038,13 +2791,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT * FROM {table} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT * FROM {table} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param flipper 翻页对象
-     *
      * @return Entity的集合
      */
     default List<T> queryList(Flipper flipper) {
@@ -3052,13 +2802,10 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT * FROM {table} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT * FROM {table} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param flipper 翻页对象
-     *
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<List<T>> queryListAsync(Flipper flipper) {
@@ -3066,14 +2813,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param flipper 翻页对象
-     * @param bean    过滤条件
-     *
+     * @param bean 过滤条件
      * @return Entity的集合
      */
     default List<T> queryList(Flipper flipper, FilterBean bean) {
@@ -3081,14 +2825,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param flipper 翻页对象
-     * @param bean    过滤条件
-     *
+     * @param bean 过滤条件
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<List<T>> queryListAsync(Flipper flipper, FilterBean bean) {
@@ -3096,46 +2837,36 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param flipper 翻页对象
-     * @param node    过滤条件
-     *
+     * @param node 过滤条件
      * @return Entity的集合
-     *
      */
     default List<T> queryList(Flipper flipper, FilterNode node) {
         return dataSource().queryList(entityType(), flipper, node);
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param flipper 翻页对象
-     * @param node    过滤条件
-     *
+     * @param node 过滤条件
      * @return Entity的集合
-     *
      */
     default CompletableFuture<List<T>> queryListAsync(Flipper flipper, FilterNode node) {
         return dataSource().queryListAsync(entityType(), flipper, node);
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} ORDER BY {flipper.sort} LIMIT {flipper.limit}
+     * <br>
      *
      * @param selects 指定字段
      * @param flipper 翻页对象
-     *
      * @return Entity的集合
      */
     default List<T> queryList(SelectColumn selects, Flipper flipper) {
@@ -3143,14 +2874,12 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} ORDER BY {flipper.sort} LIMIT {flipper.limit}
+     * <br>
      *
      * @param selects 指定字段
      * @param flipper 翻页对象
-     *
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<List<T>> queryListAsync(SelectColumn selects, Flipper flipper) {
@@ -3158,15 +2887,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort}
+     * LIMIT {flipper.limit} <br>
      *
      * @param selects 指定字段
      * @param flipper 翻页对象
-     * @param bean    过滤条件
-     *
+     * @param bean 过滤条件
      * @return Entity的集合
      */
     default List<T> queryList(SelectColumn selects, Flipper flipper, FilterBean bean) {
@@ -3174,15 +2901,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort}
+     * LIMIT {flipper.limit} <br>
      *
      * @param selects 指定字段
      * @param flipper 翻页对象
-     * @param bean    过滤条件
-     *
+     * @param bean 过滤条件
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<List<T>> queryListAsync(SelectColumn selects, Flipper flipper, FilterBean bean) {
@@ -3190,15 +2915,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} ORDER BY {flipper.sort}
+     * LIMIT {flipper.limit} <br>
      *
      * @param selects 指定字段
      * @param flipper 翻页对象
-     * @param node    过滤条件
-     *
+     * @param node 过滤条件
      * @return Entity的集合
      */
     default List<T> queryList(SelectColumn selects, Flipper flipper, FilterNode node) {
@@ -3206,31 +2929,26 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的List集合   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的List集合 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} ORDER BY {flipper.sort}
+     * LIMIT {flipper.limit} <br>
      *
      * @param selects 指定字段
      * @param flipper 翻页对象
-     * @param node    过滤条件
-     *
+     * @param node 过滤条件
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<List<T>> queryListAsync(SelectColumn selects, Flipper flipper, FilterNode node) {
         return dataSource().queryListAsync(entityType(), selects, flipper, node);
     }
 
-    //-----------------------sheet----------------------------
+    // -----------------------sheet----------------------------
     /**
-     * 查询符合过滤条件记录的Sheet集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的Sheet集合 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param flipper 翻页对象
-     * @param bean    过滤条件
-     *
+     * @param bean 过滤条件
      * @return Entity的集合
      */
     default Sheet<T> querySheet(Flipper flipper, FilterBean bean) {
@@ -3238,14 +2956,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Sheet集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的Sheet集合 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
-     *
-     *
-     * @param <F>      过滤类型
+     * @param <F> 过滤类型
      * @param pageBean 过滤翻页条件
-     *
      * @return Entity的集合
      */
     default <F extends FilterBean> Sheet<T> querySheet(PageBean<F> pageBean) {
@@ -3253,14 +2968,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Sheet集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的Sheet集合 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param flipper 翻页对象
-     * @param bean    过滤条件
-     *
+     * @param bean 过滤条件
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<Sheet<T>> querySheetAsync(Flipper flipper, FilterBean bean) {
@@ -3268,14 +2980,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Sheet集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的Sheet集合 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
-     *
-     *
-     * @param <F>      过滤类型
+     * @param <F> 过滤类型
      * @param pageBean 过滤翻页条件
-     *
      * @return Entity的集合
      */
     default <F extends FilterBean> CompletableFuture<Sheet<T>> querySheetAsync(PageBean<F> pageBean) {
@@ -3283,14 +2992,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Sheet集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的Sheet集合 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param flipper 翻页对象
-     * @param node    过滤条件
-     *
+     * @param node 过滤条件
      * @return Entity的集合
      */
     default Sheet<T> querySheet(Flipper flipper, FilterNode node) {
@@ -3298,14 +3004,11 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Sheet集合   <br>
-     * 等价SQL: SELECT * FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的Sheet集合 <br>
+     * 等价SQL: SELECT * FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit} <br>
      *
      * @param flipper 翻页对象
-     * @param node    过滤条件
-     *
+     * @param node 过滤条件
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<Sheet<T>> querySheetAsync(Flipper flipper, FilterNode node) {
@@ -3313,15 +3016,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Sheet集合   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的Sheet集合 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort}
+     * LIMIT {flipper.limit} <br>
      *
      * @param selects 指定字段
      * @param flipper 翻页对象
-     * @param bean    过滤条件
-     *
+     * @param bean 过滤条件
      * @return Entity的集合
      */
     default Sheet<T> querySheet(SelectColumn selects, Flipper flipper, FilterBean bean) {
@@ -3329,14 +3030,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Sheet集合   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的Sheet集合 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort}
+     * LIMIT {flipper.limit} <br>
      *
-     *
-     * @param <F>      过滤类型
-     * @param selects  指定字段
+     * @param <F> 过滤类型
+     * @param selects 指定字段
      * @param pageBean 过滤翻页条件
-     *
      * @return Entity的集合
      */
     default <F extends FilterBean> Sheet<T> querySheet(SelectColumn selects, PageBean<F> pageBean) {
@@ -3344,15 +3044,13 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Sheet集合   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的Sheet集合 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort}
+     * LIMIT {flipper.limit} <br>
      *
      * @param selects 指定字段
      * @param flipper 翻页对象
-     * @param bean    过滤条件
-     *
+     * @param bean 过滤条件
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<Sheet<T>> querySheetAsync(SelectColumn selects, Flipper flipper, FilterBean bean) {
@@ -3360,30 +3058,28 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Sheet集合   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
+     * 查询符合过滤条件记录的Sheet集合 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter bean} ORDER BY {flipper.sort}
+     * LIMIT {flipper.limit} <br>
      *
-     *
-     * @param <F>      过滤类型
-     * @param selects  指定字段
+     * @param <F> 过滤类型
+     * @param selects 指定字段
      * @param pageBean 过滤翻页条件
-     *
      * @return Entity的集合
      */
-    default <F extends FilterBean> CompletableFuture<Sheet<T>> querySheetAsync(SelectColumn selects, PageBean<F> pageBean) {
+    default <F extends FilterBean> CompletableFuture<Sheet<T>> querySheetAsync(
+            SelectColumn selects, PageBean<F> pageBean) {
         return dataSource().querySheetAsync(entityType(), selects, pageBean);
     }
 
     /**
-     * 查询符合过滤条件记录的Sheet集合   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的Sheet集合 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} ORDER BY {flipper.sort}
+     * LIMIT {flipper.limit} <br>
      *
      * @param selects 指定字段
      * @param flipper 翻页对象
-     * @param node    过滤条件
-     *
+     * @param node 过滤条件
      * @return Entity的集合
      */
     default Sheet<T> querySheet(SelectColumn selects, Flipper flipper, FilterNode node) {
@@ -3391,19 +3087,16 @@ public interface DataSqlMapper<T> {
     }
 
     /**
-     * 查询符合过滤条件记录的Sheet集合   <br>
-     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} ORDER BY {flipper.sort} LIMIT {flipper.limit}  <br>
-     *
-     *
+     * 查询符合过滤条件记录的Sheet集合 <br>
+     * 等价SQL: SELECT {column1},{column2}, &#183;&#183;&#183; FROM {table} WHERE {filter node} ORDER BY {flipper.sort}
+     * LIMIT {flipper.limit} <br>
      *
      * @param selects 指定字段
      * @param flipper 翻页对象
-     * @param node    过滤条件
-     *
+     * @param node 过滤条件
      * @return Entity的集合CompletableFuture
      */
     default CompletableFuture<Sheet<T>> querySheetAsync(SelectColumn selects, Flipper flipper, FilterNode node) {
         return dataSource().querySheetAsync(entityType(), selects, flipper, node);
     }
-
 }

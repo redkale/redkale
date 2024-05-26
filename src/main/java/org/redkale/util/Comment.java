@@ -5,18 +5,17 @@
  */
 package org.redkale.util;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 
 /**
  * 标记注释，备注
  *
- * <p>
- * 详情见: https://redkale.org
- * 
- * @see org.redkale.annotation.Comment
+ * <p>详情见: https://redkale.org
  *
+ * @see org.redkale.annotation.Comment
  * @author zhangjx
  */
 @Deprecated(since = "2.8.0")

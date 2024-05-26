@@ -11,8 +11,7 @@ import org.redkale.convert.*;
 /**
  * ByteBuffer 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -75,5 +74,4 @@ public final class ByteBufferSimpledCoder<R extends Reader, W extends Writer> ex
             return ByteBuffer.wrap(values);
         }
     }
-
 }

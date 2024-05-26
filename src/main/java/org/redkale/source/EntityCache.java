@@ -5,6 +5,8 @@
  */
 package org.redkale.source;
 
+import static org.redkale.source.FilterFunc.*;
+
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.*;
@@ -14,14 +16,12 @@ import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.*;
 import org.redkale.persistence.*;
-import static org.redkale.source.FilterFunc.*;
 import org.redkale.util.*;
 
 /**
  * Entity数据的缓存类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> Entity类的泛型
@@ -29,53 +29,53 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public final class EntityCache<T> {
 
-    //日志
+    // 日志
     private static final Logger logger = Logger.getLogger(EntityCache.class.getName());
 
-    //主键与对象的键值对
+    // 主键与对象的键值对
     private ConcurrentHashMap<Serializable, T> map = new ConcurrentHashMap();
 
     // CopyOnWriteArrayList 插入慢、查询快; 10w数据插入需要3.2秒; ConcurrentLinkedQueue 插入快、查询慢；10w数据查询需要 0.062秒，  查询慢40%;
     private Collection<T> list = new ConcurrentLinkedQueue();
 
-    //Flipper.sort转换成Comparator的缓存
+    // Flipper.sort转换成Comparator的缓存
     private final Map<String, Comparator<T>> sortComparators = new ConcurrentHashMap<>();
 
     private final ReentrantLock tableLock = new ReentrantLock();
 
-    //Entity类
+    // Entity类
     private final Class<T> type;
 
-    //接口返回的对象是否需要复制一份
+    // 接口返回的对象是否需要复制一份
     private final boolean needCopy;
 
-    //Entity构建器
+    // Entity构建器
     private final Creator<T> creator;
 
-    //Entity数值构建器
+    // Entity数值构建器
     private final IntFunction<T[]> arrayer;
 
-    //主键字段
+    // 主键字段
     private final Attribute<T, Serializable> primary;
 
-    //新增时的复制器， 排除了标记为&#064;Transient的字段
+    // 新增时的复制器， 排除了标记为&#064;Transient的字段
     private final Copier<T, T> newCopier;
 
-    //修改时的复制器， 排除了标记为&#064;Transient或&#064;Column(updatable=false)的字段
+    // 修改时的复制器， 排除了标记为&#064;Transient或&#064;Column(updatable=false)的字段
     private final Copier<T, T> uptCopier;
 
-    //是否已经全量加载过
+    // 是否已经全量加载过
     private volatile boolean fullloaded;
 
     private final AtomicBoolean loading = new AtomicBoolean();
 
-    //Entity信息
+    // Entity信息
     final EntityInfo<T> info;
 
-    //&#064;Cacheable的定时更新秒数，为0表示不定时更新
+    // &#064;Cacheable的定时更新秒数，为0表示不定时更新
     final int interval;
 
-    //&#064;Cacheable的定时器
+    // &#064;Cacheable的定时器
     private ScheduledThreadPoolExecutor scheduler;
 
     private CompletableFuture<List<T>> loadFuture;
@@ -91,12 +91,13 @@ public final class EntityCache<T> {
         this.arrayer = info.getArrayer();
         this.creator = info.getCreator();
         this.primary = info.primary;
-        org.redkale.persistence.VirtualEntity ve = info.getType().getAnnotation(org.redkale.persistence.VirtualEntity.class);
+        org.redkale.persistence.VirtualEntity ve =
+                info.getType().getAnnotation(org.redkale.persistence.VirtualEntity.class);
         boolean direct = cacheDirect;
         if (!direct) {
             direct = ve != null && ve.direct();
         }
-        { //兼容废弃类
+        { // 兼容废弃类
             org.redkale.source.VirtualEntity ve2 = info.getType().getAnnotation(org.redkale.source.VirtualEntity.class);
             if (!direct && ve2 != null) {
                 direct = ve2.direct();
@@ -105,7 +106,8 @@ public final class EntityCache<T> {
         this.needCopy = !direct;
         this.newCopier = Copier.create(type, type, (e, c) -> {
             try {
-                return e.getAnnotation(Transient.class) == null && e.getAnnotation(javax.persistence.Transient.class) == null;
+                return e.getAnnotation(Transient.class) == null
+                        && e.getAnnotation(javax.persistence.Transient.class) == null;
             } catch (Exception ex) {
                 return true;
             }
@@ -164,21 +166,26 @@ public final class EntityCache<T> {
                 return t;
             });
             this.scheduler.setRemoveOnCancelPolicy(true);
-            this.scheduler.scheduleAtFixedRate(() -> {
-                try {
-                    ConcurrentHashMap newmap2 = new ConcurrentHashMap();
-                    List<T> all2 = info.fullLoader.apply(info.source, info).join();
-                    if (all2 != null) {
-                        all2.stream().filter(Objects::nonNull).forEach(x -> {
-                            newmap2.put(this.primary.get(x), x);
-                        });
-                    }
-                    this.list = all2 == null ? new ConcurrentLinkedQueue() : new ConcurrentLinkedQueue(all2);
-                    this.map = newmap2;
-                } catch (Throwable t) {
-                    logger.log(Level.SEVERE, type + " schedule(interval=" + interval + "s) Cacheable error", t);
-                }
-            }, interval - System.currentTimeMillis() / 1000 % interval, interval, TimeUnit.SECONDS);
+            this.scheduler.scheduleAtFixedRate(
+                    () -> {
+                        try {
+                            ConcurrentHashMap newmap2 = new ConcurrentHashMap();
+                            List<T> all2 =
+                                    info.fullLoader.apply(info.source, info).join();
+                            if (all2 != null) {
+                                all2.stream().filter(Objects::nonNull).forEach(x -> {
+                                    newmap2.put(this.primary.get(x), x);
+                                });
+                            }
+                            this.list = all2 == null ? new ConcurrentLinkedQueue() : new ConcurrentLinkedQueue(all2);
+                            this.map = newmap2;
+                        } catch (Throwable t) {
+                            logger.log(Level.SEVERE, type + " schedule(interval=" + interval + "s) Cacheable error", t);
+                        }
+                    },
+                    interval - System.currentTimeMillis() / 1000 % interval,
+                    interval,
+                    TimeUnit.SECONDS);
         }
         allFuture.whenComplete((l, t) -> {
             if (t != null) {
@@ -437,7 +444,8 @@ public final class EntityCache<T> {
         return (filter != null) && this.list.stream().anyMatch(filter);
     }
 
-    public Map<Serializable, Number> queryColumnMap(final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
+    public Map<Serializable, Number> queryColumnMap(
+            final String keyColumn, final FilterFunc func, final String funcColumn, FilterNode node) {
         final Attribute<T, Serializable> keyAttr = info.getAttribute(keyColumn);
         final Predicate filter = node == null ? null : node.createPredicate(this);
         final Attribute funcAttr = funcColumn == null ? null : info.getAttribute(funcColumn);
@@ -450,10 +458,15 @@ public final class EntityCache<T> {
         if (func != null) {
             switch (func) {
                 case AVG:
-                    if (valtype == float.class || valtype == Float.class || valtype == double.class || valtype == Double.class) {
-                        collector = (Collector<T, Map, ?>) Collectors.averagingDouble((T t) -> ((Number) funcAttr.get(t)).doubleValue());
+                    if (valtype == float.class
+                            || valtype == Float.class
+                            || valtype == double.class
+                            || valtype == Double.class) {
+                        collector = (Collector<T, Map, ?>)
+                                Collectors.averagingDouble((T t) -> ((Number) funcAttr.get(t)).doubleValue());
                     } else {
-                        collector = (Collector<T, Map, ?>) Collectors.averagingLong((T t) -> ((Number) funcAttr.get(t)).longValue());
+                        collector = (Collector<T, Map, ?>)
+                                Collectors.averagingLong((T t) -> ((Number) funcAttr.get(t)).longValue());
                     }
                     break;
                 case COUNT:
@@ -464,20 +477,29 @@ public final class EntityCache<T> {
                     break;
                 case MAX:
                 case MIN:
-                    Comparator<T> comp = (o1, o2) -> o1 == null ? (o2 == null ? 0 : -1) : ((Comparable) funcAttr.get(o1)).compareTo(funcAttr.get(o2));
-                    collector = (Collector<T, Map, ?>) ((func == MAX) ? Collectors.maxBy(comp) : Collectors.minBy(comp));
+                    Comparator<T> comp = (o1, o2) -> o1 == null
+                            ? (o2 == null ? 0 : -1)
+                            : ((Comparable) funcAttr.get(o1)).compareTo(funcAttr.get(o2));
+                    collector =
+                            (Collector<T, Map, ?>) ((func == MAX) ? Collectors.maxBy(comp) : Collectors.minBy(comp));
                     break;
                 case SUM:
-                    if (valtype == float.class || valtype == Float.class || valtype == double.class || valtype == Double.class) {
-                        collector = (Collector<T, Map, ?>) Collectors.summingDouble((T t) -> ((Number) funcAttr.get(t)).doubleValue());
+                    if (valtype == float.class
+                            || valtype == Float.class
+                            || valtype == double.class
+                            || valtype == Double.class) {
+                        collector = (Collector<T, Map, ?>)
+                                Collectors.summingDouble((T t) -> ((Number) funcAttr.get(t)).doubleValue());
                     } else {
-                        collector = (Collector<T, Map, ?>) Collectors.summingLong((T t) -> ((Number) funcAttr.get(t)).longValue());
+                        collector = (Collector<T, Map, ?>)
+                                Collectors.summingLong((T t) -> ((Number) funcAttr.get(t)).longValue());
                     }
                     break;
             }
         }
-        Map rs = collector == null ? stream.collect(Collectors.toMap(keyAttr::get, funcAttr::get, (key1, key2) -> key2))
-            : stream.collect(Collectors.groupingBy(keyAttr::get, LinkedHashMap::new, collector));
+        Map rs = collector == null
+                ? stream.collect(Collectors.toMap(keyAttr::get, funcAttr::get, (key1, key2) -> key2))
+                : stream.collect(Collectors.groupingBy(keyAttr::get, LinkedHashMap::new, collector));
         if (func == MAX || func == MIN) {
             Map rs2 = new LinkedHashMap();
             rs.forEach((x, y) -> {
@@ -494,7 +516,8 @@ public final class EntityCache<T> {
         return rs;
     }
 
-    public Map<Serializable[], Number[]> queryColumnMap(final ColumnNode[] funcNodes, final String[] groupByColumns, FilterNode node) {
+    public Map<Serializable[], Number[]> queryColumnMap(
+            final ColumnNode[] funcNodes, final String[] groupByColumns, FilterNode node) {
         final Predicate<T> filter = node == null ? null : node.createPredicate(this);
         Stream<T> stream = this.list.stream();
         if (filter != null) {
@@ -547,7 +570,8 @@ public final class EntityCache<T> {
 
     private Number queryColumnFuncNodeNumber(final List<T> list, final ColumnFuncNode funcNode) {
         if (funcNode.getValue() instanceof ColumnNameNode) {
-            final Attribute<T, Serializable> attr = info.getAttribute(((ColumnNameNode) funcNode.getValue()).getColumn());
+            final Attribute<T, Serializable> attr =
+                    info.getAttribute(((ColumnNameNode) funcNode.getValue()).getColumn());
             final Function<T, Number> attrFunc = x -> (Number) attr.get(x);
             return getNumberResult(list, funcNode.getFunc(), null, attr.type(), attrFunc, (FilterNode) null);
         }
@@ -561,12 +585,17 @@ public final class EntityCache<T> {
     }
 
     private Number queryColumnExpNodeNumber(final List<T> list, final ColumnExpNode nodeValue) {
-        //TODO 尚未实现
+        // TODO 尚未实现
         return null;
     }
 
-    private Number getNumberResult(final Collection<T> entityList, final FilterFunc func,
-        final Number defResult, final Class attrType, final Function<T, Number> attrFunc, final FilterNode node) {
+    private Number getNumberResult(
+            final Collection<T> entityList,
+            final FilterFunc func,
+            final Number defResult,
+            final Class attrType,
+            final Function<T, Number> attrFunc,
+            final FilterNode node) {
         final Predicate<T> filter = node == null ? null : node.createPredicate(this);
         Stream<T> stream = entityList.stream();
         if (filter != null) {
@@ -575,19 +604,27 @@ public final class EntityCache<T> {
         switch (func) {
             case AVG:
                 if (attrType == int.class || attrType == Integer.class || attrType == AtomicInteger.class) {
-                    OptionalDouble rs = stream.mapToInt(x -> attrFunc.apply(x).intValue()).average();
+                    OptionalDouble rs =
+                            stream.mapToInt(x -> attrFunc.apply(x).intValue()).average();
                     return rs.isPresent() ? (int) rs.getAsDouble() : defResult;
-                } else if (attrType == long.class || attrType == Long.class || attrType == AtomicLong.class || attrType == LongAdder.class) {
-                    OptionalDouble rs = stream.mapToLong(x -> attrFunc.apply(x).longValue()).average();
+                } else if (attrType == long.class
+                        || attrType == Long.class
+                        || attrType == AtomicLong.class
+                        || attrType == LongAdder.class) {
+                    OptionalDouble rs =
+                            stream.mapToLong(x -> attrFunc.apply(x).longValue()).average();
                     return rs.isPresent() ? (long) rs.getAsDouble() : defResult;
                 } else if (attrType == short.class || attrType == Short.class) {
-                    OptionalDouble rs = stream.mapToInt(x -> ((Short) attrFunc.apply(x)).intValue()).average();
+                    OptionalDouble rs = stream.mapToInt(x -> ((Short) attrFunc.apply(x)).intValue())
+                            .average();
                     return rs.isPresent() ? (short) rs.getAsDouble() : defResult;
                 } else if (attrType == float.class || attrType == Float.class) {
-                    OptionalDouble rs = stream.mapToDouble(x -> ((Float) attrFunc.apply(x)).doubleValue()).average();
+                    OptionalDouble rs = stream.mapToDouble(x -> ((Float) attrFunc.apply(x)).doubleValue())
+                            .average();
                     return rs.isPresent() ? (float) rs.getAsDouble() : defResult;
                 } else if (attrType == double.class || attrType == Double.class) {
-                    OptionalDouble rs = stream.mapToDouble(x -> (Double) attrFunc.apply(x)).average();
+                    OptionalDouble rs =
+                            stream.mapToDouble(x -> (Double) attrFunc.apply(x)).average();
                     return rs.isPresent() ? rs.getAsDouble() : defResult;
                 }
                 throw new SourceException("getNumberResult error(type:" + type + ", attr.type: " + attrType);
@@ -598,38 +635,54 @@ public final class EntityCache<T> {
 
             case MAX:
                 if (attrType == int.class || attrType == Integer.class || attrType == AtomicInteger.class) {
-                    OptionalInt rs = stream.mapToInt(x -> attrFunc.apply(x).intValue()).max();
+                    OptionalInt rs =
+                            stream.mapToInt(x -> attrFunc.apply(x).intValue()).max();
                     return rs.isPresent() ? rs.getAsInt() : defResult;
-                } else if (attrType == long.class || attrType == Long.class || attrType == AtomicLong.class || attrType == LongAdder.class) {
-                    OptionalLong rs = stream.mapToLong(x -> attrFunc.apply(x).longValue()).max();
+                } else if (attrType == long.class
+                        || attrType == Long.class
+                        || attrType == AtomicLong.class
+                        || attrType == LongAdder.class) {
+                    OptionalLong rs =
+                            stream.mapToLong(x -> attrFunc.apply(x).longValue()).max();
                     return rs.isPresent() ? rs.getAsLong() : defResult;
                 } else if (attrType == short.class || attrType == Short.class) {
-                    OptionalInt rs = stream.mapToInt(x -> ((Short) attrFunc.apply(x)).intValue()).max();
+                    OptionalInt rs = stream.mapToInt(x -> ((Short) attrFunc.apply(x)).intValue())
+                            .max();
                     return rs.isPresent() ? (short) rs.getAsInt() : defResult;
                 } else if (attrType == float.class || attrType == Float.class) {
-                    OptionalDouble rs = stream.mapToDouble(x -> ((Float) attrFunc.apply(x)).doubleValue()).max();
+                    OptionalDouble rs = stream.mapToDouble(x -> ((Float) attrFunc.apply(x)).doubleValue())
+                            .max();
                     return rs.isPresent() ? (float) rs.getAsDouble() : defResult;
                 } else if (attrType == double.class || attrType == Double.class) {
-                    OptionalDouble rs = stream.mapToDouble(x -> (Double) attrFunc.apply(x)).max();
+                    OptionalDouble rs =
+                            stream.mapToDouble(x -> (Double) attrFunc.apply(x)).max();
                     return rs.isPresent() ? rs.getAsDouble() : defResult;
                 }
                 throw new SourceException("getNumberResult error(type:" + type + ", attr.type: " + attrType);
 
             case MIN:
                 if (attrType == int.class || attrType == Integer.class || attrType == AtomicInteger.class) {
-                    OptionalInt rs = stream.mapToInt(x -> attrFunc.apply(x).intValue()).min();
+                    OptionalInt rs =
+                            stream.mapToInt(x -> attrFunc.apply(x).intValue()).min();
                     return rs.isPresent() ? rs.getAsInt() : defResult;
-                } else if (attrType == long.class || attrType == Long.class || attrType == AtomicLong.class || attrType == LongAdder.class) {
-                    OptionalLong rs = stream.mapToLong(x -> attrFunc.apply(x).longValue()).min();
+                } else if (attrType == long.class
+                        || attrType == Long.class
+                        || attrType == AtomicLong.class
+                        || attrType == LongAdder.class) {
+                    OptionalLong rs =
+                            stream.mapToLong(x -> attrFunc.apply(x).longValue()).min();
                     return rs.isPresent() ? rs.getAsLong() : defResult;
                 } else if (attrType == short.class || attrType == Short.class) {
-                    OptionalInt rs = stream.mapToInt(x -> ((Short) attrFunc.apply(x)).intValue()).min();
+                    OptionalInt rs = stream.mapToInt(x -> ((Short) attrFunc.apply(x)).intValue())
+                            .min();
                     return rs.isPresent() ? (short) rs.getAsInt() : defResult;
                 } else if (attrType == float.class || attrType == Float.class) {
-                    OptionalDouble rs = stream.mapToDouble(x -> ((Float) attrFunc.apply(x)).doubleValue()).min();
+                    OptionalDouble rs = stream.mapToDouble(x -> ((Float) attrFunc.apply(x)).doubleValue())
+                            .min();
                     return rs.isPresent() ? (float) rs.getAsDouble() : defResult;
                 } else if (attrType == double.class || attrType == Double.class) {
-                    OptionalDouble rs = stream.mapToDouble(x -> (Double) attrFunc.apply(x)).min();
+                    OptionalDouble rs =
+                            stream.mapToDouble(x -> (Double) attrFunc.apply(x)).min();
                     return rs.isPresent() ? rs.getAsDouble() : defResult;
                 }
                 throw new SourceException("getNumberResult error(type:" + type + ", attr.type: " + attrType);
@@ -637,12 +690,17 @@ public final class EntityCache<T> {
             case SUM:
                 if (attrType == int.class || attrType == Integer.class || attrType == AtomicInteger.class) {
                     return stream.mapToInt(x -> attrFunc.apply(x).intValue()).sum();
-                } else if (attrType == long.class || attrType == Long.class || attrType == AtomicLong.class || attrType == LongAdder.class) {
+                } else if (attrType == long.class
+                        || attrType == Long.class
+                        || attrType == AtomicLong.class
+                        || attrType == LongAdder.class) {
                     return stream.mapToLong(x -> attrFunc.apply(x).longValue()).sum();
                 } else if (attrType == short.class || attrType == Short.class) {
-                    return (short) stream.mapToInt(x -> ((Short) attrFunc.apply(x)).intValue()).sum();
+                    return (short) stream.mapToInt(x -> ((Short) attrFunc.apply(x)).intValue())
+                            .sum();
                 } else if (attrType == float.class || attrType == Float.class) {
-                    return (float) stream.mapToDouble(x -> ((Float) attrFunc.apply(x)).doubleValue()).sum();
+                    return (float) stream.mapToDouble(x -> ((Float) attrFunc.apply(x)).doubleValue())
+                            .sum();
                 } else if (attrType == double.class || attrType == Double.class) {
                     return stream.mapToDouble(x -> (Double) attrFunc.apply(x)).sum();
                 }
@@ -651,8 +709,9 @@ public final class EntityCache<T> {
         return defResult;
     }
 
-    public Number getNumberResult(final FilterFunc func, final Number defResult, final String column, final FilterNode node) {
-        final Attribute<T, Serializable> attr = column == null ? null : info.getAttribute(column); //COUNT的column=null
+    public Number getNumberResult(
+            final FilterFunc func, final Number defResult, final String column, final FilterNode node) {
+        final Attribute<T, Serializable> attr = column == null ? null : info.getAttribute(column); // COUNT的column=null
         final Function<T, Number> attrFunc = attr == null ? null : x -> (Number) attr.get(x);
         return getNumberResult(this.list, func, defResult, attr == null ? null : attr.type(), attrFunc, node);
     }
@@ -681,7 +740,12 @@ public final class EntityCache<T> {
         return stream.filter(filter);
     }
 
-    public Sheet<T> querySheet(final boolean needTotal, boolean distinct, final SelectColumn selects, final Flipper flipper, FilterNode node) {
+    public Sheet<T> querySheet(
+            final boolean needTotal,
+            boolean distinct,
+            final SelectColumn selects,
+            final Flipper flipper,
+            FilterNode node) {
         final Predicate<T> filter = node == null ? null : node.createPredicate(this);
         final Comparator<T> comparator = createComparator(flipper);
         long total = 0;
@@ -762,7 +826,7 @@ public final class EntityCache<T> {
         if (entity == null) {
             return 0;
         }
-        final T rs = newCopier.apply(entity, this.creator.create());  //确保同一主键值的map与list中的对象必须共用。
+        final T rs = newCopier.apply(entity, this.creator.create()); // 确保同一主键值的map与list中的对象必须共用。
         T old = this.map.putIfAbsent(this.primary.get(rs), rs);
         if (old == null) {
             this.list.add(rs);
@@ -824,7 +888,7 @@ public final class EntityCache<T> {
         if (rs == null) {
             return 0;
         }
-        tableLock.lock(); //表锁, 可优化成行锁
+        tableLock.lock(); // 表锁, 可优化成行锁
         try {
             this.uptCopier.apply(entity, rs);
         } finally {
@@ -841,7 +905,7 @@ public final class EntityCache<T> {
         if (rs == null) {
             return rs;
         }
-        tableLock.lock(); //表锁, 可优化成行锁
+        tableLock.lock(); // 表锁, 可优化成行锁
         try {
             for (Attribute attr : attrs) {
                 attr.set(rs, attr.get(entity));
@@ -857,7 +921,7 @@ public final class EntityCache<T> {
             return (T[]) Creator.newArray(type, 0);
         }
         T[] rms = this.list.stream().filter(node.createPredicate(this)).toArray(arrayer);
-        tableLock.lock(); //表锁, 可优化成行锁
+        tableLock.lock(); // 表锁, 可优化成行锁
         try {
             for (T rs : rms) {
                 for (Attribute attr : attrs) {
@@ -892,7 +956,8 @@ public final class EntityCache<T> {
         return rms;
     }
 
-    public T updateColumn(final Serializable pk, List<Attribute<T, Serializable>> attrs, final List<ColumnValue> values) {
+    public T updateColumn(
+            final Serializable pk, List<Attribute<T, Serializable>> attrs, final List<ColumnValue> values) {
         if (pk == null || attrs == null || attrs.isEmpty()) {
             return null;
         }
@@ -900,7 +965,7 @@ public final class EntityCache<T> {
         if (rs == null) {
             return rs;
         }
-        tableLock.lock(); //表锁, 可优化成行锁
+        tableLock.lock(); // 表锁, 可优化成行锁
         try {
             for (int i = 0; i < attrs.size(); i++) {
                 ColumnValue cv = values.get(i);
@@ -912,7 +977,11 @@ public final class EntityCache<T> {
         return rs;
     }
 
-    public T[] updateColumn(final FilterNode node, final Flipper flipper, List<Attribute<T, Serializable>> attrs, final List<ColumnValue> values) {
+    public T[] updateColumn(
+            final FilterNode node,
+            final Flipper flipper,
+            List<Attribute<T, Serializable>> attrs,
+            final List<ColumnValue> values) {
         if (attrs == null || attrs.isEmpty() || node == null) {
             return (T[]) Creator.newArray(type, 0);
         }
@@ -925,7 +994,7 @@ public final class EntityCache<T> {
             stream = stream.limit(flipper.getLimit());
         }
         T[] rms = stream.filter(node.createPredicate(this)).toArray(arrayer);
-        tableLock.lock(); //表锁, 可优化成行锁
+        tableLock.lock(); // 表锁, 可优化成行锁
         try {
             for (T rs : rms) {
                 for (int i = 0; i < attrs.size(); i++) {
@@ -947,7 +1016,7 @@ public final class EntityCache<T> {
         if (rs == null) {
             return rs;
         }
-        tableLock.lock(); //表锁, 可优化成行锁
+        tableLock.lock(); // 表锁, 可优化成行锁
         try {
             return updateColumn(attr, rs, ColumnExpress.ORR, orvalue);
         } finally {
@@ -963,7 +1032,7 @@ public final class EntityCache<T> {
         if (rs == null) {
             return rs;
         }
-        tableLock.lock(); //表锁, 可优化成行锁
+        tableLock.lock(); // 表锁, 可优化成行锁
         try {
             return updateColumn(attr, rs, ColumnExpress.AND, andvalue);
         } finally {
@@ -979,7 +1048,7 @@ public final class EntityCache<T> {
         if (rs == null) {
             return rs;
         }
-        tableLock.lock(); //表锁, 可优化成行锁
+        tableLock.lock(); // 表锁, 可优化成行锁
         try {
             return updateColumn(attr, rs, ColumnExpress.INC, incvalue);
         } finally {
@@ -995,7 +1064,7 @@ public final class EntityCache<T> {
         if (rs == null) {
             return rs;
         }
-        tableLock.lock(); //表锁, 可优化成行锁
+        tableLock.lock(); // 表锁, 可优化成行锁
         try {
             return updateColumn(attr, rs, ColumnExpress.DEC, incvalue);
         } finally {
@@ -1015,8 +1084,10 @@ public final class EntityCache<T> {
             case MOD:
             case AND:
             case ORR:
-                numb = getNumberValue((Number) attr.get(entity), express,
-                    val instanceof ColumnNumberNode ? ((ColumnNumberNode) val).getValue() : (Number) val);
+                numb = getNumberValue(
+                        (Number) attr.get(entity),
+                        express,
+                        val instanceof ColumnNumberNode ? ((ColumnNumberNode) val).getValue() : (Number) val);
                 break;
             case SET:
                 if (val instanceof ColumnExpNode) {
@@ -1068,7 +1139,7 @@ public final class EntityCache<T> {
     private <V> Serializable updateColumnExpNode(Attribute<T, V> attr, final T entity, ColumnExpNode node) {
         Serializable leftVal = null;
         ColumnNode leftNode = node.getLeft();
-        //类型只能是ColumnNameNode、ColumnNumberNode、ColumnExpNode
+        // 类型只能是ColumnNameNode、ColumnNumberNode、ColumnExpNode
         if (leftNode instanceof ColumnNameNode) {
             leftVal = info.getUpdateAttribute(leftNode.toString()).get(entity);
         } else if (leftNode instanceof ColumnNumberNode) {
@@ -1082,7 +1153,7 @@ public final class EntityCache<T> {
 
         Serializable rightVal = null;
         ColumnNode rightNode = node.getRight();
-        //类型只能是ColumnNameNode、ColumnNumberNode、ColumnExpNode
+        // 类型只能是ColumnNameNode、ColumnNumberNode、ColumnExpNode
         if (rightNode instanceof ColumnNameNode) {
             rightVal = info.getUpdateAttribute(rightNode.toString()).get(entity);
         } else if (rightNode instanceof ColumnNumberNode) {
@@ -1164,10 +1235,13 @@ public final class EntityCache<T> {
         return info.getAttribute(fieldname);
     }
 
-    //-------------------------------------------------------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------------------------------------------------------
     protected Comparator<T> createComparator(Flipper flipper) {
-        if (flipper == null || flipper.getSort() == null || flipper.getSort().isEmpty()
-            || flipper.getSort().indexOf(';') >= 0 || flipper.getSort().indexOf('\n') >= 0) {
+        if (flipper == null
+                || flipper.getSort() == null
+                || flipper.getSort().isEmpty()
+                || flipper.getSort().indexOf(';') >= 0
+                || flipper.getSort().indexOf('\n') >= 0) {
             return null;
         }
         final String sort = flipper.getSort();
@@ -1184,41 +1258,49 @@ public final class EntityCache<T> {
             Attribute<T, Serializable> attr;
             if (pos <= 0) {
                 attr = getAttribute(sub[0]);
-            } else {  //含SQL函数
+            } else { // 含SQL函数
                 int pos2 = sub[0].lastIndexOf(')');
                 final Attribute<T, Serializable> pattr = getAttribute(sub[0].substring(pos + 1, pos2));
                 final String func = sub[0].substring(0, pos);
                 if ("ABS".equalsIgnoreCase(func)) {
                     Function getter = null;
-                    if (pattr.type() == int.class || pattr.type() == Integer.class || pattr.type() == AtomicInteger.class) {
+                    if (pattr.type() == int.class
+                            || pattr.type() == Integer.class
+                            || pattr.type() == AtomicInteger.class) {
                         getter = x -> Math.abs(((Number) pattr.get((T) x)).intValue());
-                    } else if (pattr.type() == long.class || pattr.type() == Long.class
-                        || pattr.type() == AtomicLong.class || pattr.type() == LongAdder.class) {
+                    } else if (pattr.type() == long.class
+                            || pattr.type() == Long.class
+                            || pattr.type() == AtomicLong.class
+                            || pattr.type() == LongAdder.class) {
                         getter = x -> Math.abs(((Number) pattr.get((T) x)).longValue());
                     } else if (pattr.type() == float.class || pattr.type() == Float.class) {
                         getter = x -> Math.abs(((Number) pattr.get((T) x)).floatValue());
                     } else if (pattr.type() == double.class || pattr.type() == Double.class) {
                         getter = x -> Math.abs(((Number) pattr.get((T) x)).doubleValue());
                     } else {
-                        throw new SourceException("Flipper not supported sort illegal type by ABS (" + flipper.getSort() + ")");
+                        throw new SourceException(
+                                "Flipper not supported sort illegal type by ABS (" + flipper.getSort() + ")");
                     }
-                    attr = (Attribute<T, Serializable>) Attribute.create(pattr.declaringClass(),
-                        pattr.field(), pattr.type(), getter, (o, v) -> pattr.set(o, v));
+                    attr = (Attribute<T, Serializable>) Attribute.create(
+                            pattr.declaringClass(), pattr.field(), pattr.type(), getter, (o, v) -> pattr.set(o, v));
                 } else if (func.isEmpty()) {
                     attr = pattr;
                 } else {
-                    throw new SourceException("Flipper not supported sort illegal function (" + flipper.getSort() + ")");
+                    throw new SourceException(
+                            "Flipper not supported sort illegal function (" + flipper.getSort() + ")");
                 }
             }
-            Comparator<T> c = (sub.length > 1 && sub[1].equalsIgnoreCase("DESC")) ? (T o1, T o2) -> {
-                Comparable c1 = (Comparable) attr.get(o1);
-                Comparable c2 = (Comparable) attr.get(o2);
-                return c2 == null ? -1 : c2.compareTo(c1);
-            } : (T o1, T o2) -> {
-                Comparable c1 = (Comparable) attr.get(o1);
-                Comparable c2 = (Comparable) attr.get(o2);
-                return c1 == null ? -1 : c1.compareTo(c2);
-            };
+            Comparator<T> c = (sub.length > 1 && sub[1].equalsIgnoreCase("DESC"))
+                    ? (T o1, T o2) -> {
+                        Comparable c1 = (Comparable) attr.get(o1);
+                        Comparable c2 = (Comparable) attr.get(o2);
+                        return c2 == null ? -1 : c2.compareTo(c1);
+                    }
+                    : (T o1, T o2) -> {
+                        Comparable c1 = (Comparable) attr.get(o1);
+                        Comparable c2 = (Comparable) attr.get(o2);
+                        return c1 == null ? -1 : c1.compareTo(c2);
+                    };
 
             if (comparator == null) {
                 comparator = c;
@@ -1262,7 +1344,6 @@ public final class EntityCache<T> {
             }
             return true;
         }
-
     }
 
     private static interface UniqueAttribute<T> extends Predicate<FilterNode> {
@@ -1321,5 +1402,4 @@ public final class EntityCache<T> {
             }
         }
     }
-
 }

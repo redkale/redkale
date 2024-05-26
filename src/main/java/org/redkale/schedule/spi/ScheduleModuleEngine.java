@@ -15,16 +15,13 @@ import org.redkale.util.AnyValue;
 import org.redkale.util.InstanceProvider;
 import org.redkale.util.RedkaleClassLoader;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class ScheduleModuleEngine extends ModuleEngine {
 
-    //全局定时任务管理器
+    // 全局定时任务管理器
     private ScheduleManager scheduleManager;
 
-    //配置
+    // 配置
     protected AnyValue config;
 
     public ScheduleModuleEngine(Application application) {
@@ -35,10 +32,9 @@ public class ScheduleModuleEngine extends ModuleEngine {
      * 判断模块的配置项合并策略， 返回null表示模块不识别此配置项
      *
      * @param path 配置项路径
-     * @param key  配置项名称
+     * @param key 配置项名称
      * @param val1 配置项原值
      * @param val2 配置项新值
-     *
      * @return MergeEnum
      */
     @Override
@@ -49,12 +45,10 @@ public class ScheduleModuleEngine extends ModuleEngine {
         return null;
     }
 
-    /**
-     * 结束Application.init方法前被调用
-     */
+    /** 结束Application.init方法前被调用 */
     @Override
     public void onAppPostInit() {
-        //设置定时管理器
+        // 设置定时管理器
         this.config = application.getAppConfig().getAnyValue("schedule");
         this.scheduleManager = createManager(this.config);
         if (!application.isCompileMode()) {
@@ -86,9 +80,7 @@ public class ScheduleModuleEngine extends ModuleEngine {
         this.scheduleManager.unschedule(service);
     }
 
-    /**
-     * 服务全部启动前被调用
-     */
+    /** 服务全部启动前被调用 */
     @Override
     public void onServersPreStart() {
         if (this.scheduleManager instanceof ScheduleManagerService) {
@@ -96,9 +88,7 @@ public class ScheduleModuleEngine extends ModuleEngine {
         }
     }
 
-    /**
-     * 服务全部启动后被调用
-     */
+    /** 服务全部启动后被调用 */
     @Override
     public void onServersPostStart() {
         if (this.scheduleManager instanceof ScheduleManagerService) {
@@ -106,9 +96,7 @@ public class ScheduleModuleEngine extends ModuleEngine {
         }
     }
 
-    /**
-     * 进入Application.shutdown方法被调用
-     */
+    /** 进入Application.shutdown方法被调用 */
     @Override
     public void onAppPreShutdown() {
         if (!application.isCompileMode() && this.scheduleManager instanceof Service) {
@@ -117,13 +105,16 @@ public class ScheduleModuleEngine extends ModuleEngine {
     }
 
     private ScheduleManager createManager(AnyValue conf) {
-        Iterator<ScheduleManagerProvider> it = ServiceLoader.load(ScheduleManagerProvider.class, application.getClassLoader()).iterator();
+        Iterator<ScheduleManagerProvider> it = ServiceLoader.load(
+                        ScheduleManagerProvider.class, application.getClassLoader())
+                .iterator();
         RedkaleClassLoader.putServiceLoader(ScheduleManagerProvider.class);
         List<ScheduleManagerProvider> providers = new ArrayList<>();
         while (it.hasNext()) {
             ScheduleManagerProvider provider = it.next();
             if (provider != null && provider.acceptsConf(conf)) {
-                RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
+                RedkaleClassLoader.putReflectionPublicConstructors(
+                        provider.getClass(), provider.getClass().getName());
                 providers.add(provider);
             }
         }

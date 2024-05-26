@@ -10,7 +10,6 @@ import java.util.concurrent.atomic.*;
 import org.redkale.convert.*;
 
 /**
- *
  * @author zhangjx
  * @param <T> 泛型
  */
@@ -27,10 +26,15 @@ public class ProtobufStreamDecoder<T> extends StreamDecoder<T> {
         this.enumtostring = ((ProtobufFactory) factory).enumtostring;
         Type comtype = this.getComponentType();
         this.string = String.class == comtype;
-        this.simple = Boolean.class == comtype || Short.class == comtype
-            || Character.class == comtype || Integer.class == comtype || Float.class == comtype
-            || Long.class == comtype || Double.class == comtype
-            || AtomicInteger.class == comtype || AtomicLong.class == comtype;
+        this.simple = Boolean.class == comtype
+                || Short.class == comtype
+                || Character.class == comtype
+                || Integer.class == comtype
+                || Float.class == comtype
+                || Long.class == comtype
+                || Double.class == comtype
+                || AtomicInteger.class == comtype
+                || AtomicLong.class == comtype;
     }
 
     @Override

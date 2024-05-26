@@ -9,10 +9,7 @@ import org.redkale.net.http.HttpRequest;
 import org.redkale.net.http.HttpResponse;
 import org.redkale.net.http.HttpServlet;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class HttpSimpleServlet extends HttpServlet {
 
     @HttpMapping(url = "/test")

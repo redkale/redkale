@@ -16,16 +16,18 @@ import org.redkale.persistence.*;
 /**
  * HTTP输出引擎的对象域 <br>
  * 输出引擎的核心类, 业务开发人员只有通过本类对象才能调用到输出引擎功能。 <br>
- * <p>
- * HttpServlet调用: <br>
+ *
+ * <p>HttpServlet调用: <br>
+ *
  * <pre>
  *    &#064;HttpMapping(url = "/hello.html", auth = false)
  *    public void hello(HttpRequest req, HttpResponse resp) throws IOException {
  *        resp.finish(HttpScope.refer("/hello.html").attr("content", "哈哈"));
  *    }
  * </pre>
- * <p>
- * RestService调用: <br>
+ *
+ * <p>RestService调用: <br>
+ *
  * <pre>
  *    &#064;RestMapping(name = "hello.html", auth = false)
  *    public HttpScope hello() {
@@ -44,22 +46,22 @@ public class HttpScope {
     @ConvertColumn(index = 1)
     protected String referid;
 
-    //@since 2.7.0  
+    // @since 2.7.0
     @ConvertColumn(index = 2)
     protected Object referObj;
 
     @ConvertColumn(index = 3)
     protected Map<String, Object> attributes;
 
-    //@since 2.4.0  
+    // @since 2.4.0
     @Transient
     protected Function<String, Object> attrFunction;
 
-    //@since 2.4.0  
+    // @since 2.4.0
     @ConvertColumn(index = 4)
     protected Map<String, String> headers;
 
-    //@since 2.4.0  
+    // @since 2.4.0
     @ConvertColumn(index = 5)
     protected List<HttpCookie> cookies;
 
@@ -83,24 +85,49 @@ public class HttpScope {
         return rs;
     }
 
-    public static HttpScope create(String template, String name1, Object value1, String name2, Object value2, String name3, Object value3) {
+    public static HttpScope create(
+            String template, String name1, Object value1, String name2, Object value2, String name3, Object value3) {
         HttpScope rs = new HttpScope();
         rs.setReferid(template);
         rs.attr(name1, value1).attr(name2, value2).attr(name3, value3);
         return rs;
     }
 
-    public static HttpScope create(String template, String name1, Object value1, String name2, Object value2, String name3, Object value3, String name4, Object value4) {
+    public static HttpScope create(
+            String template,
+            String name1,
+            Object value1,
+            String name2,
+            Object value2,
+            String name3,
+            Object value3,
+            String name4,
+            Object value4) {
         HttpScope rs = new HttpScope();
         rs.setReferid(template);
         rs.attr(name1, value1).attr(name2, value2).attr(name3, value3).attr(name4, value4);
         return rs;
     }
 
-    public static HttpScope create(String template, String name1, Object value1, String name2, Object value2, String name3, Object value3, String name4, Object value4, String name5, Object value5) {
+    public static HttpScope create(
+            String template,
+            String name1,
+            Object value1,
+            String name2,
+            Object value2,
+            String name3,
+            Object value3,
+            String name4,
+            Object value4,
+            String name5,
+            Object value5) {
         HttpScope rs = new HttpScope();
         rs.setReferid(template);
-        rs.attr(name1, value1).attr(name2, value2).attr(name3, value3).attr(name4, value4).attr(name5, value5);
+        rs.attr(name1, value1)
+                .attr(name2, value2)
+                .attr(name3, value3)
+                .attr(name4, value4)
+                .attr(name5, value5);
         return rs;
     }
 

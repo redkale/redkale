@@ -10,19 +10,16 @@ import org.redkale.convert.json.JsonConvert;
 /**
  * Client连接地址
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.7.0
  */
 public class ClientAddress implements java.io.Serializable {
 
     private SocketAddress[] addresses;
 
-    public ClientAddress() {
-    }
+    public ClientAddress() {}
 
     public ClientAddress(SocketAddress... addresses) {
         if (addresses == null || addresses.length == 0) {
@@ -67,5 +64,4 @@ public class ClientAddress implements java.io.Serializable {
     public String toString() {
         return JsonConvert.root().convertTo(this);
     }
-
 }

@@ -9,18 +9,14 @@ import java.util.*;
 import org.redkale.convert.json.*;
 import org.redkale.test.convert.*;
 
-/**
- *
- * @author redkale
- */
+/** @author redkale */
 public class MediaContent implements java.io.Serializable {
 
     private Media media;
 
     private List<Image> images;
 
-    public MediaContent() {
-    }
+    public MediaContent() {}
 
     public MediaContent(Media media, List<Image> images) {
         this.media = media;

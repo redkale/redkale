@@ -7,12 +7,8 @@ package org.redkale.test.service;
 
 import java.nio.channels.CompletionHandler;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public abstract class MyAsyncInnerHandler<V, A> implements CompletionHandler<V, A> {
 
     protected abstract int id2();
-
 }

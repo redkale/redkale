@@ -10,11 +10,10 @@ import org.redkale.util.LambdaSupplier;
 import org.redkale.util.SelectColumn;
 
 /**
- * DataSource批量操作对象，操作类型只能是增删改   <br>
+ * DataSource批量操作对象，操作类型只能是增删改 <br>
  * 非线程安全类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.8.0
@@ -61,11 +60,13 @@ public interface DataBatch {
 
     public <T> DataBatch updateColumn(T entity, final FilterNode node, SelectColumn selects);
 
-    default <T, V extends Serializable> DataBatch updateColumn(final Class<T> clazz, final Serializable pk, final LambdaSupplier<V> func) {
+    default <T, V extends Serializable> DataBatch updateColumn(
+            final Class<T> clazz, final Serializable pk, final LambdaSupplier<V> func) {
         return updateColumn(clazz, pk, LambdaSupplier.readColumn(func), func.get());
     }
 
-    default <T> DataBatch updateColumn(final Class<T> clazz, final Serializable pk, LambdaFunction<T, ?> func, Serializable value) {
+    default <T> DataBatch updateColumn(
+            final Class<T> clazz, final Serializable pk, LambdaFunction<T, ?> func, Serializable value) {
         return updateColumn(clazz, pk, ColumnValue.set(func, value));
     }
 

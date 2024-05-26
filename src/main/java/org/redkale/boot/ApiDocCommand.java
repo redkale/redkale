@@ -23,37 +23,33 @@ import org.redkale.source.*;
 import org.redkale.util.*;
 
 /**
- * API接口文档生成类，作用：生成Application实例中所有HttpServer的可用HttpServlet的API接口方法   <br>
+ * API接口文档生成类，作用：生成Application实例中所有HttpServer的可用HttpServlet的API接口方法 <br>
  * 继承 HttpBaseServlet 是为了获取 HttpMapping 信息 <br>
  * https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
 public final class ApiDocCommand {
 
-    private static final java.lang.reflect.Type TYPE_RETRESULT_OBJECT = new TypeToken<RetResult<Object>>() {
-    }.getType();
+    private static final java.lang.reflect.Type TYPE_RETRESULT_OBJECT = new TypeToken<RetResult<Object>>() {}.getType();
 
-    private static final java.lang.reflect.Type TYPE_RETRESULT_STRING = new TypeToken<RetResult<String>>() {
-    }.getType();
+    private static final java.lang.reflect.Type TYPE_RETRESULT_STRING = new TypeToken<RetResult<String>>() {}.getType();
 
-    private static final java.lang.reflect.Type TYPE_RETRESULT_INTEGER = new TypeToken<RetResult<Integer>>() {
-    }.getType();
+    private static final java.lang.reflect.Type TYPE_RETRESULT_INTEGER =
+            new TypeToken<RetResult<Integer>>() {}.getType();
 
-    private static final java.lang.reflect.Type TYPE_RETRESULT_LONG = new TypeToken<RetResult<Long>>() {
-    }.getType();
+    private static final java.lang.reflect.Type TYPE_RETRESULT_LONG = new TypeToken<RetResult<Long>>() {}.getType();
 
-    private final Application app; //Application全局对象
+    private final Application app; // Application全局对象
 
     public ApiDocCommand(Application app) {
         this.app = app;
     }
 
     public String command(String cmd, String[] params) throws Exception {
-        //是否跳过RPC接口
+        // 是否跳过RPC接口
         boolean skipRPC = true;
         String apiHost = "http://localhost";
 
@@ -75,7 +71,7 @@ public final class ApiDocCommand {
         Field prefixField = HttpServlet.class.getDeclaredField("_prefix");
         prefixField.setAccessible(true);
         Map<String, Map<String, Map<String, Object>>> typesMap = new LinkedHashMap<>();
-        //https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md
+        // https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md
         Map<String, Object> swaggerPathsMap = new LinkedHashMap<>();
         List<Map> swaggerServers = new ArrayList<>();
         List<Map> swaggerTags = new ArrayList<>();
@@ -88,10 +84,13 @@ public final class ApiDocCommand {
             serverList.add(map);
             HttpServer server = node.getServer();
             map.put("address", server.getSocketAddress());
-            swaggerServers.add(Utility.ofMap("url", apiHost + ":" + server.getSocketAddress().getPort()));
+            swaggerServers.add(Utility.ofMap(
+                    "url", apiHost + ":" + server.getSocketAddress().getPort()));
             List<Map<String, Object>> servletsList = new ArrayList<>();
             map.put("servlets", servletsList);
-            String plainContentType = server.getResponseConfig() == null ? "application/json" : server.getResponseConfig().plainContentType;
+            String plainContentType = server.getResponseConfig() == null
+                    ? "application/json"
+                    : server.getResponseConfig().plainContentType;
             if (plainContentType == null || plainContentType.isEmpty()) {
                 plainContentType = "application/json";
             }
@@ -115,7 +114,12 @@ public final class ApiDocCommand {
                     node.logger.log(Level.INFO, servlet + " be skipped because @WebServlet.name is empty");
                     continue;
                 }
-                final String tag = ws.name().isEmpty() ? servlet.getClass().getSimpleName().replace("Servlet", "").toLowerCase() : ws.name();
+                final String tag = ws.name().isEmpty()
+                        ? servlet.getClass()
+                                .getSimpleName()
+                                .replace("Servlet", "")
+                                .toLowerCase()
+                        : ws.name();
                 final Map<String, Object> servletMap = new LinkedHashMap<>();
                 String prefix = (String) prefixField.get(servlet);
                 String[] urlregs = ws.value();
@@ -147,16 +151,16 @@ public final class ApiDocCommand {
                             continue;
                         }
                         if (!action.inherited() && selfClz != clz) {
-                            continue; //忽略不被继承的方法
+                            continue; // 忽略不被继承的方法
                         }
                         if (actionUrls.contains(action.url())) {
                             continue;
                         }
                         if (HttpScope.class.isAssignableFrom(action.result())) {
-                            continue; //忽略模板引擎的方法
+                            continue; // 忽略模板引擎的方法
                         }
                         if (action.rpcOnly() && skipRPC) {
-                            continue; //不生成RPC接口
+                            continue; // 不生成RPC接口
                         }
                         final List<Map<String, Object>> swaggerParamsList = new ArrayList<>();
 
@@ -175,44 +179,51 @@ public final class ApiDocCommand {
                             f.setAccessible(true);
                             resultType = (Type) f.get(servlet);
                         }
-//                        for (final Class rtype : action.results()) {
-//                            results.add(rtype.getName());
-//                            if (typesMap.containsKey(rtype.getName())) continue;
-//                            if (rtype.getName().startsWith("java.")) continue;
-//                            if (rtype.getName().startsWith("javax.")) continue;
-//                            final boolean filter = FilterBean.class.isAssignableFrom(rtype);
-//                            final Map<String, Map<String, Object>> typeMap = new LinkedHashMap<>();
-//                            Class loop = rtype;
-//                            do {
-//                                if (loop == null || loop.isInterface()) break;
-//                                for (Field field : loop.getDeclaredFields()) {
-//                                    if (Modifier.isFinal(field.getModifiers())) continue;
-//                                    if (Modifier.isStatic(field.getModifiers())) continue;
-//
-//                                    Map<String, Object> fieldmap = new LinkedHashMap<>();
-//                                    fieldmap.put("type", field.getType().isArray() ? (field.getType().getComponentType().getName() + "[]") : field.getGenericType().getTypeName());
-//
-//                                    Comment comment = field.getAnnotation(Comment.class);
-//                                    Column col = field.getAnnotation(Column.class);
-//                                    FilterColumn fc = field.getAnnotation(FilterColumn.class);
-//                                    if (comment != null) {
-//                                        fieldmap.put("comment", comment.value());
-//                                    } else if (col != null) {
-//                                        fieldmap.put("comment", col.comment());
-//                                    } else if (fc != null) {
-//                                        fieldmap.put("comment", fc.comment());
-//                                    }
-//                                    fieldmap.put("primary", !filter && (field.getAnnotation(Id.class) != null));
-//                                    fieldmap.put("updatable", (filter || col == null || col.updatable()));
-//                                    if (servlet.getClass().getAnnotation(Rest.RestDyn.class) != null) {
-//                                        if (field.getAnnotation(RestAddress.class) != null) continue;
-//                                    }
-//
-//                                    typeMap.put(field.getName(), fieldmap);
-//                                }
-//                            } while ((loop = loop.getSuperclass()) != Object.class);
-//                            typesMap.put(rtype.getName(), typeMap);
-//                        }
+                        //                        for (final Class rtype : action.results()) {
+                        //                            results.add(rtype.getName());
+                        //                            if (typesMap.containsKey(rtype.getName())) continue;
+                        //                            if (rtype.getName().startsWith("java.")) continue;
+                        //                            if (rtype.getName().startsWith("javax.")) continue;
+                        //                            final boolean filter = FilterBean.class.isAssignableFrom(rtype);
+                        //                            final Map<String, Map<String, Object>> typeMap = new
+                        // LinkedHashMap<>();
+                        //                            Class loop = rtype;
+                        //                            do {
+                        //                                if (loop == null || loop.isInterface()) break;
+                        //                                for (Field field : loop.getDeclaredFields()) {
+                        //                                    if (Modifier.isFinal(field.getModifiers())) continue;
+                        //                                    if (Modifier.isStatic(field.getModifiers())) continue;
+                        //
+                        //                                    Map<String, Object> fieldmap = new LinkedHashMap<>();
+                        //                                    fieldmap.put("type", field.getType().isArray() ?
+                        // (field.getType().getComponentType().getName() + "[]") :
+                        // field.getGenericType().getTypeName());
+                        //
+                        //                                    Comment comment = field.getAnnotation(Comment.class);
+                        //                                    Column col = field.getAnnotation(Column.class);
+                        //                                    FilterColumn fc = field.getAnnotation(FilterColumn.class);
+                        //                                    if (comment != null) {
+                        //                                        fieldmap.put("comment", comment.value());
+                        //                                    } else if (col != null) {
+                        //                                        fieldmap.put("comment", col.comment());
+                        //                                    } else if (fc != null) {
+                        //                                        fieldmap.put("comment", fc.comment());
+                        //                                    }
+                        //                                    fieldmap.put("primary", !filter &&
+                        // (field.getAnnotation(Id.class) != null));
+                        //                                    fieldmap.put("updatable", (filter || col == null ||
+                        // col.updatable()));
+                        //                                    if (servlet.getClass().getAnnotation(Rest.RestDyn.class)
+                        // != null) {
+                        //                                        if (field.getAnnotation(RestAddress.class) != null)
+                        // continue;
+                        //                                    }
+                        //
+                        //                                    typeMap.put(field.getName(), fieldmap);
+                        //                                }
+                        //                            } while ((loop = loop.getSuperclass()) != Object.class);
+                        //                            typesMap.put(rtype.getName(), typeMap);
+                        //                        }
                         mappingMap.put("results", results);
                         boolean hasBodyParam = false;
                         Map<String, Object> swaggerRequestBody = new LinkedHashMap<>();
@@ -235,26 +246,40 @@ public final class ApiDocCommand {
                                     f.setAccessible(true);
                                     paramGenericType = (Type) f.get(servlet);
                                 }
-                                simpleSchemaType(null, node.getLogger(), swaggerComponentsMap, 
-                                    param.type(), paramGenericType, paramSchemaMap, true);
+                                simpleSchemaType(
+                                        null,
+                                        node.getLogger(),
+                                        swaggerComponentsMap,
+                                        param.type(),
+                                        paramGenericType,
+                                        paramSchemaMap,
+                                        true);
                                 if (param.style() == HttpParam.HttpParameterStyle.BODY) {
                                     swaggerRequestBody.put("description", param.comment());
-                                    swaggerRequestBody.put("content", Utility.ofMap(plainContentType, Utility.ofMap("schema", paramSchemaMap)));
+                                    swaggerRequestBody.put(
+                                            "content",
+                                            Utility.ofMap(plainContentType, Utility.ofMap("schema", paramSchemaMap)));
                                 } else {
                                     final Map<String, Object> swaggerParamMap = new LinkedHashMap<>();
                                     swaggerParamMap.put("name", param.name());
-                                    swaggerParamMap.put("in", param.style().name().toLowerCase());
+                                    swaggerParamMap.put(
+                                            "in", param.style().name().toLowerCase());
                                     swaggerParamMap.put("description", param.comment());
                                     swaggerParamMap.put("required", param.required());
                                     if (param.deprecated()) {
                                         swaggerParamMap.put("deprecated", param.deprecated());
                                     }
-                                    //https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#parameterStyle
-                                    swaggerParamMap.put("style", param.style() == HttpParam.HttpParameterStyle.HEADER
-                                        || param.name().indexOf('#') == 0 ? "simple" : "form");
+                                    // https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#parameterStyle
+                                    swaggerParamMap.put(
+                                            "style",
+                                            param.style() == HttpParam.HttpParameterStyle.HEADER
+                                                            || param.name().indexOf('#') == 0
+                                                    ? "simple"
+                                                    : "form");
                                     swaggerParamMap.put("explode", true);
                                     swaggerParamMap.put("schema", paramSchemaMap);
-                                    Object example = formatExample(null, param.example(), param.type(), paramGenericType);
+                                    Object example =
+                                            formatExample(null, param.example(), param.type(), paramGenericType);
                                     if (example != null) {
                                         swaggerParamMap.put("example", example);
                                     } else if (!param.example().isEmpty()) {
@@ -295,12 +320,18 @@ public final class ApiDocCommand {
                                     }
 
                                     Map<String, Object> fieldmap = new LinkedHashMap<>();
-                                    fieldmap.put("type", field.getType().isArray() 
-                                        ? (field.getType().getComponentType().getName() + "[]") : field.getGenericType().getTypeName());
+                                    fieldmap.put(
+                                            "type",
+                                            field.getType().isArray()
+                                                    ? (field.getType()
+                                                                    .getComponentType()
+                                                                    .getName() + "[]")
+                                                    : field.getGenericType().getTypeName());
 
                                     Column col = field.getAnnotation(Column.class);
                                     Comment comment = field.getAnnotation(Comment.class);
-                                    org.redkale.util.Comment comment2 = field.getAnnotation(org.redkale.util.Comment.class);
+                                    org.redkale.util.Comment comment2 =
+                                            field.getAnnotation(org.redkale.util.Comment.class);
                                     if (comment != null) {
                                         fieldmap.put("comment", comment.value());
                                     } else if (comment2 != null) {
@@ -308,8 +339,12 @@ public final class ApiDocCommand {
                                     } else if (col != null) {
                                         fieldmap.put("comment", col.comment());
                                     }
-                                    fieldmap.put("primary", !filter && (field.getAnnotation(Id.class) != null 
-                                        || field.getAnnotation(javax.persistence.Id.class) != null));
+                                    fieldmap.put(
+                                            "primary",
+                                            !filter
+                                                    && (field.getAnnotation(Id.class) != null
+                                                            || field.getAnnotation(javax.persistence.Id.class)
+                                                                    != null));
                                     fieldmap.put("updatable", (filter || col == null || col.updatable()));
 
                                     if (servlet.getClass().getAnnotation(Rest.RestDyn.class) != null) {
@@ -328,15 +363,24 @@ public final class ApiDocCommand {
                         mappingsList.add(mappingMap);
 
                         final Map<String, Object> swaggerOperatMap = new LinkedHashMap<>();
-                        swaggerOperatMap.put("tags", new String[]{tag});
+                        swaggerOperatMap.put("tags", new String[] {tag});
                         swaggerOperatMap.put("operationId", action.name());
                         if (method.getAnnotation(Deprecated.class) != null) {
                             swaggerOperatMap.put("deprecated", true);
                         }
                         Map<String, Object> respSchemaMap = new LinkedHashMap<>();
-                        JsonFactory returnFactory = Rest.createJsonFactory(0, 
-                            method.getAnnotationsByType(RestConvert.class), method.getAnnotationsByType(RestConvertCoder.class));
-                        simpleSchemaType(returnFactory, node.getLogger(), swaggerComponentsMap, action.result(), resultType, respSchemaMap, true);
+                        JsonFactory returnFactory = Rest.createJsonFactory(
+                                0,
+                                method.getAnnotationsByType(RestConvert.class),
+                                method.getAnnotationsByType(RestConvertCoder.class));
+                        simpleSchemaType(
+                                returnFactory,
+                                node.getLogger(),
+                                swaggerComponentsMap,
+                                action.result(),
+                                resultType,
+                                respSchemaMap,
+                                true);
 
                         Map<String, Object> respMap = new LinkedHashMap<>();
                         respMap.put("schema", respSchemaMap);
@@ -352,16 +396,35 @@ public final class ApiDocCommand {
                         if (action.rpcOnly()) {
                             actiondesc = "[Only for RPC API] " + actiondesc;
                         }
-                        swaggerOperatMap.put("responses", Utility.ofMap("200",
-                            Utility.ofMap("description", actiondesc, "content", Utility.ofMap("application/json", respMap))));
+                        swaggerOperatMap.put(
+                                "responses",
+                                Utility.ofMap(
+                                        "200",
+                                        Utility.ofMap(
+                                                "description",
+                                                actiondesc,
+                                                "content",
+                                                Utility.ofMap("application/json", respMap))));
 
-                        String m = action.methods() == null || action.methods().length == 0 ? null : action.methods()[0].toLowerCase();
+                        String m = action.methods() == null || action.methods().length == 0
+                                ? null
+                                : action.methods()[0].toLowerCase();
                         if (m == null) {
-                            m = hasBodyParam || TYPE_RETRESULT_STRING.equals(resultType) || TYPE_RETRESULT_INTEGER.equals(resultType)
-                                || TYPE_RETRESULT_LONG.equals(resultType) || action.name().contains("create") || action.name().contains("insert")
-                                || action.name().contains("update") || action.name().contains("delete") || action.name().contains("send") ? "post" : "get";
+                            m = hasBodyParam
+                                            || TYPE_RETRESULT_STRING.equals(resultType)
+                                            || TYPE_RETRESULT_INTEGER.equals(resultType)
+                                            || TYPE_RETRESULT_LONG.equals(resultType)
+                                            || action.name().contains("create")
+                                            || action.name().contains("insert")
+                                            || action.name().contains("update")
+                                            || action.name().contains("delete")
+                                            || action.name().contains("send")
+                                    ? "post"
+                                    : "get";
                         }
-                        swaggerPathsMap.put(prefix + action.url(), Utility.ofMap("description", action.comment(), m, swaggerOperatMap));
+                        swaggerPathsMap.put(
+                                prefix + action.url(),
+                                Utility.ofMap("description", action.comment(), m, swaggerOperatMap));
                     }
                 } while ((clz = clz.getSuperclass()) != HttpServlet.class);
                 mappingsList.sort((o1, o2) -> ((String) o1.get("url")).compareTo((String) o2.get("url")));
@@ -376,7 +439,7 @@ public final class ApiDocCommand {
                 return urlregs1.length > 0 ? (urlregs2.length > 0 ? urlregs1[0].compareTo(urlregs2[0]) : 1) : -1;
             });
         }
-        { // https://github.com/OAI/OpenAPI-Specification 
+        { // https://github.com/OAI/OpenAPI-Specification
             Map<String, Object> swaggerResultMap = new LinkedHashMap<>();
             swaggerResultMap.put("openapi", "3.0.0");
             Map<String, Object> infomap = new LinkedHashMap<>();
@@ -417,13 +480,22 @@ public final class ApiDocCommand {
         return "apidoc success";
     }
 
-    private static void simpleSchemaType(JsonFactory factory, Logger logger, 
-        Map<String, Map<String, Object>> componentsMap, Class type, Type genericType, Map<String, Object> schemaMap, boolean recursive) {
+    private static void simpleSchemaType(
+            JsonFactory factory,
+            Logger logger,
+            Map<String, Map<String, Object>> componentsMap,
+            Class type,
+            Type genericType,
+            Map<String, Object> schemaMap,
+            boolean recursive) {
         if (type == int.class || type == Integer.class || type == AtomicInteger.class) {
             schemaMap.put("type", "integer");
             schemaMap.put("format", "int32");
-        } else if (type == long.class || type == Long.class
-            || type == AtomicLong.class || type == LongAdder.class || type == BigInteger.class) {
+        } else if (type == long.class
+                || type == Long.class
+                || type == AtomicLong.class
+                || type == LongAdder.class
+                || type == BigInteger.class) {
             schemaMap.put("type", "integer");
             schemaMap.put("format", "int64");
         } else if (type == float.class || type == Float.class) {
@@ -442,13 +514,28 @@ public final class ApiDocCommand {
             schemaMap.put("type", "array");
             Map<String, Object> sbumap = new LinkedHashMap<>();
             if (type.isArray()) {
-                simpleSchemaType(factory, logger, componentsMap, type.getComponentType(), type.getComponentType(), sbumap, false);
+                simpleSchemaType(
+                        factory,
+                        logger,
+                        componentsMap,
+                        type.getComponentType(),
+                        type.getComponentType(),
+                        sbumap,
+                        false);
             } else if (genericType instanceof ParameterizedType) {
                 Type subpt = ((ParameterizedType) genericType).getActualTypeArguments()[0];
                 if (subpt instanceof Class) {
                     simpleSchemaType(factory, logger, componentsMap, (Class) subpt, subpt, sbumap, false);
-                } else if (subpt instanceof ParameterizedType && ((ParameterizedType) subpt).getOwnerType() instanceof Class) {
-                    simpleSchemaType(factory, logger, componentsMap, (Class) ((ParameterizedType) subpt).getOwnerType(), subpt, sbumap, false);
+                } else if (subpt instanceof ParameterizedType
+                        && ((ParameterizedType) subpt).getOwnerType() instanceof Class) {
+                    simpleSchemaType(
+                            factory,
+                            logger,
+                            componentsMap,
+                            (Class) ((ParameterizedType) subpt).getOwnerType(),
+                            subpt,
+                            sbumap,
+                            false);
                 } else {
                     sbumap.put("type", "object");
                 }
@@ -468,8 +555,12 @@ public final class ApiDocCommand {
         }
     }
 
-    private static String simpleComponentType(JsonFactory factory, Logger logger, 
-        Map<String, Map<String, Object>> componentsMap, Class type, Type genericType) {
+    private static String simpleComponentType(
+            JsonFactory factory,
+            Logger logger,
+            Map<String, Map<String, Object>> componentsMap,
+            Class type,
+            Type genericType) {
         try {
             Set<Type> types = new HashSet<>();
             Encodeable encodeable = JsonFactory.root().loadEncoder(genericType);
@@ -481,7 +572,7 @@ public final class ApiDocCommand {
                 return ct;
             }
             Map<String, Object> cmap = new LinkedHashMap<>();
-            componentsMap.put(ct, cmap); //必须在调用simpleSchemaType之前put，不然嵌套情况下死循环
+            componentsMap.put(ct, cmap); // 必须在调用simpleSchemaType之前put，不然嵌套情况下死循环
 
             cmap.put("type", "object");
             List<String> requireds = new ArrayList<>();
@@ -489,9 +580,14 @@ public final class ApiDocCommand {
             if (encodeable instanceof ObjectEncoder) {
                 for (EnMember member : ((ObjectEncoder) encodeable).getMembers()) {
                     Map<String, Object> schemaMap = new LinkedHashMap<>();
-                    simpleSchemaType(factory, logger, componentsMap,
-                        TypeToken.typeToClassOrElse(member.getEncoder().getType(), Object.class),
-                        member.getEncoder().getType(), schemaMap, true);
+                    simpleSchemaType(
+                            factory,
+                            logger,
+                            componentsMap,
+                            TypeToken.typeToClassOrElse(member.getEncoder().getType(), Object.class),
+                            member.getEncoder().getType(),
+                            schemaMap,
+                            true);
                     String desc = "";
                     if (member.getField() != null) {
                         Column col = member.getField().getAnnotation(Column.class);
@@ -502,9 +598,14 @@ public final class ApiDocCommand {
                             }
                         }
                         if (desc.isEmpty() && member.getField().getAnnotation(Comment.class) != null) {
-                            desc = member.getField().getAnnotation(Comment.class).value();
-                        } else if (desc.isEmpty() && member.getField().getAnnotation(org.redkale.util.Comment.class) != null) {
-                            desc = member.getField().getAnnotation(org.redkale.util.Comment.class).value();
+                            desc = member.getField()
+                                    .getAnnotation(Comment.class)
+                                    .value();
+                        } else if (desc.isEmpty()
+                                && member.getField().getAnnotation(org.redkale.util.Comment.class) != null) {
+                            desc = member.getField()
+                                    .getAnnotation(org.redkale.util.Comment.class)
+                                    .value();
                         }
                     } else if (member.getMethod() != null) {
                         Column col = member.getMethod().getAnnotation(Column.class);
@@ -515,9 +616,14 @@ public final class ApiDocCommand {
                             }
                         }
                         if (desc.isEmpty() && member.getMethod().getAnnotation(Comment.class) != null) {
-                            desc = member.getMethod().getAnnotation(Comment.class).value();
-                        } else if (desc.isEmpty() && member.getMethod().getAnnotation(org.redkale.util.Comment.class) != null) {
-                            desc = member.getMethod().getAnnotation(org.redkale.util.Comment.class).value();
+                            desc = member.getMethod()
+                                    .getAnnotation(Comment.class)
+                                    .value();
+                        } else if (desc.isEmpty()
+                                && member.getMethod().getAnnotation(org.redkale.util.Comment.class) != null) {
+                            desc = member.getMethod()
+                                    .getAnnotation(org.redkale.util.Comment.class)
+                                    .value();
                         }
                     }
                     if (!desc.isEmpty()) {
@@ -537,8 +643,14 @@ public final class ApiDocCommand {
         }
     }
 
-    private static String componentKey(JsonFactory factory, Logger logger, Set<Type> types, 
-        Map<String, Map<String, Object>> componentsMap, EnMember field, Encodeable encodeable, boolean first) {
+    private static String componentKey(
+            JsonFactory factory,
+            Logger logger,
+            Set<Type> types,
+            Map<String, Map<String, Object>> componentsMap,
+            EnMember field,
+            Encodeable encodeable,
+            boolean first) {
         if (encodeable instanceof ObjectEncoder) {
             if (types.contains(encodeable.getType())) {
                 return "";
@@ -547,9 +659,9 @@ public final class ApiDocCommand {
             StringBuilder sb = new StringBuilder();
             sb.append(((ObjectEncoder) encodeable).getTypeClass().getSimpleName());
             for (EnMember member : ((ObjectEncoder) encodeable).getMembers()) {
-                if (member.getEncoder() instanceof ArrayEncoder
-                    || member.getEncoder() instanceof CollectionEncoder) {
-                    String subsb = componentKey(factory, logger, types, componentsMap, member, member.getEncoder(), false);
+                if (member.getEncoder() instanceof ArrayEncoder || member.getEncoder() instanceof CollectionEncoder) {
+                    String subsb =
+                            componentKey(factory, logger, types, componentsMap, member, member.getEncoder(), false);
                     if (subsb == null) {
                         return null;
                     }
@@ -558,7 +670,9 @@ public final class ApiDocCommand {
                         continue;
                     }
                     Class cz = real instanceof Field ? ((Field) real).getType() : ((Method) real).getReturnType();
-                    Type ct = real instanceof Field ? ((Field) real).getGenericType() : ((Method) real).getGenericReturnType();
+                    Type ct = real instanceof Field
+                            ? ((Field) real).getGenericType()
+                            : ((Method) real).getGenericReturnType();
                     if (cz == ct) {
                         continue;
                     }
@@ -569,7 +683,8 @@ public final class ApiDocCommand {
                         sb.append("_");
                     }
                     sb.append(subsb);
-                } else if (member.getEncoder() instanceof ObjectEncoder || member.getEncoder() instanceof SimpledCoder) {
+                } else if (member.getEncoder() instanceof ObjectEncoder
+                        || member.getEncoder() instanceof SimpledCoder) {
                     AccessibleObject real = member.getField() == null ? member.getMethod() : member.getField();
                     if (real == null) {
                         continue;
@@ -579,18 +694,33 @@ public final class ApiDocCommand {
                     }
                     types.add(member.getEncoder().getType());
                     if (member.getEncoder() instanceof SimpledCoder) {
-                        simpleSchemaType(factory, logger, componentsMap, ((SimpledCoder) member.getEncoder()).getType(), 
-                            ((SimpledCoder) member.getEncoder()).getType(), new LinkedHashMap<>(), true);
+                        simpleSchemaType(
+                                factory,
+                                logger,
+                                componentsMap,
+                                ((SimpledCoder) member.getEncoder()).getType(),
+                                ((SimpledCoder) member.getEncoder()).getType(),
+                                new LinkedHashMap<>(),
+                                true);
                     } else {
-                        simpleSchemaType(factory, logger, componentsMap, ((ObjectEncoder) member.getEncoder()).getTypeClass(), 
-                            ((ObjectEncoder) member.getEncoder()).getType(), new LinkedHashMap<>(), true);
+                        simpleSchemaType(
+                                factory,
+                                logger,
+                                componentsMap,
+                                ((ObjectEncoder) member.getEncoder()).getTypeClass(),
+                                ((ObjectEncoder) member.getEncoder()).getType(),
+                                new LinkedHashMap<>(),
+                                true);
                     }
                     Class cz = real instanceof Field ? ((Field) real).getType() : ((Method) real).getReturnType();
-                    Type ct = real instanceof Field ? ((Field) real).getGenericType() : ((Method) real).getGenericReturnType();
+                    Type ct = real instanceof Field
+                            ? ((Field) real).getGenericType()
+                            : ((Method) real).getGenericReturnType();
                     if (cz == ct) {
                         continue;
                     }
-                    String subsb = componentKey(factory, logger, types, componentsMap, member, member.getEncoder(), false);
+                    String subsb =
+                            componentKey(factory, logger, types, componentsMap, member, member.getEncoder(), false);
                     if (subsb == null) {
                         return null;
                     }
@@ -610,8 +740,9 @@ public final class ApiDocCommand {
             return sb.toString();
         } else if (encodeable instanceof ArrayEncoder || encodeable instanceof CollectionEncoder) {
             final boolean array = (encodeable instanceof ArrayEncoder);
-            Encodeable subEncodeable = array ? ((ArrayEncoder) encodeable).getComponentEncoder() 
-                : ((CollectionEncoder) encodeable).getComponentEncoder();
+            Encodeable subEncodeable = array
+                    ? ((ArrayEncoder) encodeable).getComponentEncoder()
+                    : ((CollectionEncoder) encodeable).getComponentEncoder();
             if (subEncodeable instanceof SimpledCoder && field != null) {
                 return "";
             }
@@ -625,8 +756,10 @@ public final class ApiDocCommand {
             return sb + (array ? "_Array" : "_Collection");
         } else if (encodeable instanceof SimpledCoder) {
             Class stype = ((SimpledCoder) encodeable).getType();
-            if (stype.isPrimitive() || stype == Boolean.class 
-                || Number.class.isAssignableFrom(stype) || CharSequence.class.isAssignableFrom(stype)) {
+            if (stype.isPrimitive()
+                    || stype == Boolean.class
+                    || Number.class.isAssignableFrom(stype)
+                    || CharSequence.class.isAssignableFrom(stype)) {
                 return stype.getSimpleName();
             }
             return "";
@@ -657,21 +790,21 @@ public final class ApiDocCommand {
         } else if (type.isPrimitive()) {
             return 0;
         } else if (type == boolean[].class || type == Boolean[].class) {
-            return new boolean[]{true, false};
+            return new boolean[] {true, false};
         } else if (type == byte[].class || type == Byte[].class) {
-            return new byte[]{0, 0};
+            return new byte[] {0, 0};
         } else if (type == char[].class || type == Character[].class) {
-            return new char[]{'a', 'b'};
+            return new char[] {'a', 'b'};
         } else if (type == short[].class || type == Short[].class) {
-            return new short[]{0, 0};
+            return new short[] {0, 0};
         } else if (type == int[].class || type == Integer[].class) {
-            return new int[]{0, 0};
+            return new int[] {0, 0};
         } else if (type == long[].class || type == Long[].class) {
-            return new long[]{0, 0};
+            return new long[] {0, 0};
         } else if (type == float[].class || type == Float[].class) {
-            return new float[]{0, 0};
+            return new float[] {0, 0};
         } else if (type == double[].class || type == Double[].class) {
-            return new double[]{0, 0};
+            return new double[] {0, 0};
         } else if (Number.class.isAssignableFrom(type)) {
             return 0;
         } else if (CharSequence.class.isAssignableFrom(type)) {
@@ -681,44 +814,58 @@ public final class ApiDocCommand {
                 try {
                     ParameterizedType pt = (ParameterizedType) genericType;
                     Type valType = pt.getActualTypeArguments()[0];
-                    return formatExample(factory, example, valType instanceof ParameterizedType 
-                        ? (Class) ((ParameterizedType) valType).getRawType() : ((Class) valType), valType);
+                    return formatExample(
+                            factory,
+                            example,
+                            valType instanceof ParameterizedType
+                                    ? (Class) ((ParameterizedType) valType).getRawType()
+                                    : ((Class) valType),
+                            valType);
                 } catch (Throwable t) {
-                    //do nothing
+                    // do nothing
                 }
             }
-        } else if (Sheet.class.isAssignableFrom(type)) { //要在Collection前面
+        } else if (Sheet.class.isAssignableFrom(type)) { // 要在Collection前面
             if (genericType instanceof ParameterizedType) {
                 try {
                     ParameterizedType pt = (ParameterizedType) genericType;
                     Type valType = pt.getActualTypeArguments()[0];
-                    Class valClass = valType instanceof ParameterizedType ? (Class) ((ParameterizedType) valType).getRawType() : (Class) valType;
+                    Class valClass = valType instanceof ParameterizedType
+                            ? (Class) ((ParameterizedType) valType).getRawType()
+                            : (Class) valType;
                     Object val = formatExample(factory, example, valClass, valType);
-                    return new StringWrapper(jsonFactory.getConvert()
-                        .convertTo(jsonFactory.getConvert().convertFrom(genericType, "{'rows':[" + val + "," + val + "]}")));
+                    return new StringWrapper(jsonFactory
+                            .getConvert()
+                            .convertTo(jsonFactory
+                                    .getConvert()
+                                    .convertFrom(genericType, "{'rows':[" + val + "," + val + "]}")));
                 } catch (Throwable t) {
-                    //do nothing
+                    // do nothing
                 }
             }
         } else if (type.isArray()) {
             try {
                 Object val = formatExample(factory, example, type.getComponentType(), type.getComponentType());
-                return new StringWrapper(jsonFactory.getConvert()
-                    .convertTo(jsonFactory.getConvert().convertFrom(genericType, "[" + val + "," + val + "]")));
+                return new StringWrapper(jsonFactory
+                        .getConvert()
+                        .convertTo(jsonFactory.getConvert().convertFrom(genericType, "[" + val + "," + val + "]")));
             } catch (Throwable t) {
-                //do nothing
+                // do nothing
             }
         } else if (Collection.class.isAssignableFrom(type)) {
             if (genericType instanceof ParameterizedType) {
                 try {
                     ParameterizedType pt = (ParameterizedType) genericType;
                     Type valType = pt.getActualTypeArguments()[0];
-                    Class valClass = valType instanceof ParameterizedType ? (Class) ((ParameterizedType) valType).getRawType() : (Class) valType;
+                    Class valClass = valType instanceof ParameterizedType
+                            ? (Class) ((ParameterizedType) valType).getRawType()
+                            : (Class) valType;
                     Object val = formatExample(factory, example, valClass, valType);
-                    return new StringWrapper(jsonFactory.getConvert()
-                        .convertTo(jsonFactory.getConvert().convertFrom(genericType, "[" + val + "," + val + "]")));
+                    return new StringWrapper(jsonFactory
+                            .getConvert()
+                            .convertTo(jsonFactory.getConvert().convertFrom(genericType, "[" + val + "," + val + "]")));
                 } catch (Throwable t) {
-                    //do nothing
+                    // do nothing
                 }
             }
         } else if (type == RetResult.class) {
@@ -726,12 +873,15 @@ public final class ApiDocCommand {
                 try {
                     ParameterizedType pt = (ParameterizedType) genericType;
                     Type valType = pt.getActualTypeArguments()[0];
-                    Class valClass = valType instanceof ParameterizedType ? (Class) ((ParameterizedType) valType).getRawType() : (Class) valType;
+                    Class valClass = valType instanceof ParameterizedType
+                            ? (Class) ((ParameterizedType) valType).getRawType()
+                            : (Class) valType;
                     Object val = formatExample(factory, example, valClass, valType);
-                    return new StringWrapper(jsonFactory.getConvert()
-                        .convertTo(jsonFactory.getConvert().convertFrom(genericType, "{'result':" + val + "}")));
+                    return new StringWrapper(jsonFactory
+                            .getConvert()
+                            .convertTo(jsonFactory.getConvert().convertFrom(genericType, "{'result':" + val + "}")));
                 } catch (Throwable t) {
-                    //do nothing
+                    // do nothing
                 }
             }
         } else if (type != void.class) {
@@ -758,12 +908,11 @@ public final class ApiDocCommand {
                 Creator creator = Creator.create(type);
                 return new StringWrapper(jsonFactory.getConvert().convertTo(creator.create()));
             } catch (Throwable t) {
-                //do nothing
+                // do nothing
             }
         }
         return example;
     }
 
     private static final JsonFactory exampleFactory = JsonFactory.create().withFeatures(0);
-
 }

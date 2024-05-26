@@ -9,11 +9,10 @@ import java.lang.reflect.Type;
 import org.redkale.convert.*;
 
 /**
- * Collection的反序列化操作类  <br>
- * 支持一定程度的泛型。  <br>
+ * Collection的反序列化操作类 <br>
+ * 支持一定程度的泛型。 <br>
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> 反解析的集合元素类型

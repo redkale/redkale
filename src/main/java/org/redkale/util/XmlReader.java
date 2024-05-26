@@ -12,8 +12,7 @@ import java.util.function.BinaryOperator;
 /**
  * 简单的xml读取器, 只读element节点信息，其他信息(如: namespace、comment、docdecl等)都会丢弃
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -43,7 +42,6 @@ public class XmlReader {
             this.tag = tag;
             this.config = node;
         }
-
     }
 
     public XmlReader(String text) {
@@ -90,7 +88,7 @@ public class XmlReader {
                     }
                 } else if (ch2 == '?') {
                     readXmlDecl(root, array);
-                } else if (ch2 == '/') { //节点结束
+                } else if (ch2 == '/') { // 节点结束
                     String tag = readEndTag();
                     if (tags.isEmpty()) {
                         throw newException("unexpected end tag " + tag);
@@ -102,12 +100,12 @@ public class XmlReader {
                     if (tags.isEmpty()) {
                         break;
                     }
-                } else { //节点开始
+                } else { // 节点开始
                     readStartTag(root);
                 }
             } else {
                 int start = this.position;
-                for (;;) {
+                for (; ; ) {
                     ch = nextChar();
                     if (ch == '<') {
                         backChar(ch);
@@ -153,7 +151,7 @@ public class XmlReader {
         if (c > ' ') {
             return c;
         }
-        for (;;) {
+        for (; ; ) {
             c = nextChar();
             if (c > ' ') {
                 return c;
@@ -170,7 +168,7 @@ public class XmlReader {
         this.position--;
     }
 
-    //返回是否endtag， 即以 />结尾
+    // 返回是否endtag， 即以 />结尾
     protected boolean readTagAttribute(String tag, AnyValueWriter config) {
         boolean first = true;
         boolean endtag = false;
@@ -180,7 +178,7 @@ public class XmlReader {
             return true;
         }
         int start = this.position;
-        for (;;) {
+        for (; ; ) {
             if (ch == '=') {
                 break;
             } else if (ch >= '0' && ch <= '9') {
@@ -188,9 +186,9 @@ public class XmlReader {
                     throw newException("illegal character " + ch);
                 }
             } else if (ch >= 'a' && ch <= 'z') {
-                //do nothing
+                // do nothing
             } else if (ch >= 'A' && ch <= 'Z') {
-                //do nothing
+                // do nothing
             } else if (ch == '.' || ch == '-' || ch == '_' || ch == ':') {
                 if (first) {
                     throw newException("illegal character " + ch);
@@ -207,7 +205,7 @@ public class XmlReader {
         if (ch == '"' || ch == '\'') {
             final char quote = ch;
             start = this.position + 1;
-            for (;;) {
+            for (; ; ) {
                 ch = nextChar();
                 if (ch == quote) {
                     break;
@@ -217,7 +215,7 @@ public class XmlReader {
         } else {
             ch = nextGoodChar();
             start = this.position;
-            for (;;) {
+            for (; ; ) {
                 if (ch == '/') {
                     endtag = true;
                     break;
@@ -259,7 +257,7 @@ public class XmlReader {
         boolean endtag = false;
 
         char ch = nextGoodChar();
-        for (;;) {
+        for (; ; ) {
             if (ch == '>') {
                 break;
             } else if (ch == '/') {
@@ -292,9 +290,9 @@ public class XmlReader {
     }
 
     protected String readEndTag() {
-        final int start = this.position + 1;//跳过'/'
+        final int start = this.position + 1; // 跳过'/'
         char ch;
-        for (;;) {
+        for (; ; ) {
             ch = nextChar();
             if (ch == '>') {
                 break;
@@ -303,13 +301,13 @@ public class XmlReader {
         return new String(this.text, start, this.position - start).trim();
     }
 
-    protected void readComment() { //读取到 <!- 才进入此方法
+    protected void readComment() { // 读取到 <!- 才进入此方法
         char ch = nextChar();
         if (ch != '-') {
             throw newException("expected <!-- for comment start");
         }
         int dash = 0;
-        for (;;) {
+        for (; ; ) {
             ch = nextChar();
             if (ch == '>' && dash >= 2) {
                 break;
@@ -321,7 +319,10 @@ public class XmlReader {
         }
     }
 
-    protected void readDocdecl(AnyValueWriter root, ByteArray array) {//读取到 <!D 才进入此方法  '<!DOCTYPE' S Name (S ExternalID)? S? ('[' (markupdecl | DeclSep)* ']' S?)? '>'
+    protected void readDocdecl(
+            AnyValueWriter root,
+            ByteArray array) { // 读取到 <!D 才进入此方法  '<!DOCTYPE' S Name (S ExternalID)? S? ('[' (markupdecl | DeclSep)* ']'
+        // S?)? '>'
         if (nextChar() != 'O') {
             throw newException("expected <!DOCTYPE");
         }
@@ -343,7 +344,7 @@ public class XmlReader {
         char ch;
         array.clear();
         array.put("<!DOCTYPE".getBytes());
-        for (;;) {
+        for (; ; ) {
             ch = nextChar();
             if (ch == '>') {
                 array.putByte(ch);
@@ -354,7 +355,8 @@ public class XmlReader {
         }
     }
 
-    protected void readCDSect(AnyValueWriter root, ByteArray array) {//读取到 <![ 才进入此方法  '<![CDATA[ (Char* - (Char* ']]>' Char*)) ]]>'
+    protected void readCDSect(
+            AnyValueWriter root, ByteArray array) { // 读取到 <![ 才进入此方法  '<![CDATA[ (Char* - (Char* ']]>' Char*)) ]]>'
         if (nextChar() != 'C') {
             throw newException("expected <![CDATA[ for cdsect start");
         }
@@ -376,7 +378,7 @@ public class XmlReader {
         char ch;
         array.clear();
         array.put("<![CDATA[".getBytes());
-        for (;;) {
+        for (; ; ) {
             ch = nextChar();
             if (ch == '>') {
                 if (this.text[this.position - 1] != ']' && this.text[this.position - 2] != ']') {
@@ -390,12 +392,13 @@ public class XmlReader {
         }
     }
 
-    protected void readXmlDecl(AnyValueWriter root, ByteArray array) {//读取到 <? 才进入此方法  <?xml version="1.0" encoding="UTF-8"?>
+    protected void readXmlDecl(
+            AnyValueWriter root, ByteArray array) { // 读取到 <? 才进入此方法  <?xml version="1.0" encoding="UTF-8"?>
         char ch;
         array.clear();
         array.putByte('<');
         array.putByte('?');
-        for (;;) {
+        for (; ; ) {
             ch = nextChar();
             if (ch == '>') {
                 if (this.text[this.position - 1] != '?') {
@@ -410,8 +413,10 @@ public class XmlReader {
     }
 
     protected static String escape(String value) {
-        return value.replace("&quot;", "/").replace("&lt;", "<")
-            .replace("&gt;", ">").replace("&amp;", "&");
+        return value.replace("&quot;", "/")
+                .replace("&lt;", "<")
+                .replace("&gt;", ">")
+                .replace("&amp;", "&");
     }
 
     protected RedkaleException newException(String msg) {
@@ -420,7 +425,7 @@ public class XmlReader {
 
     protected RedkaleException newException(String msg, Throwable chain) {
         return new RedkaleException((msg == null ? "" : (msg + " "))
-            + "(line: " + this.lineNumber + ", column: " + this.columnNumber + ", position:" + this.position + ") "
-            + (chain == null ? "" : ("caused by: " + chain)));
+                + "(line: " + this.lineNumber + ", column: " + this.columnNumber + ", position:" + this.position + ") "
+                + (chain == null ? "" : ("caused by: " + chain)));
     }
 }

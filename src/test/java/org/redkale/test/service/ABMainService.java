@@ -25,10 +25,7 @@ import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
 import org.redkale.util.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @RestService(name = "abmain")
 public class ABMainService implements Service {
 
@@ -43,7 +40,8 @@ public class ABMainService implements Service {
         final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
         asyncGroup.start();
         InetSocketAddress sncpAddress = new InetSocketAddress("127.0.0.1", abport);
-        final SncpClient client = new SncpClient("", asyncGroup, "0", sncpAddress, new ClientAddress(sncpAddress), "TCP", 16, 100);
+        final SncpClient client =
+                new SncpClient("", asyncGroup, "0", sncpAddress, new ClientAddress(sncpAddress), "TCP", 16, 100);
         final ResourceFactory resFactory = ResourceFactory.create();
         resFactory.register(JsonConvert.root());
         resFactory.register(BsonConvert.root());
@@ -52,16 +50,16 @@ public class ABMainService implements Service {
         rpcGroups.computeIfAbsent("g88", "TCP").putAddress(new InetSocketAddress("127.0.0.1", 5588));
         rpcGroups.computeIfAbsent("g99", "TCP").putAddress(new InetSocketAddress("127.0.0.1", 5599));
 
-        //------------------------ 初始化 CService ------------------------------------
+        // ------------------------ 初始化 CService ------------------------------------
         CService cservice = Sncp.createSimpleLocalService(CService.class, resFactory);
         SncpServer cserver = new SncpServer();
         cserver.getResourceFactory().register(application);
-        //cserver.getLogger().setLevel(Level.WARNING);
+        // cserver.getLogger().setLevel(Level.WARNING);
         cserver.addSncpServlet(cservice);
         cserver.init(AnyValueWriter.create("port", 5577));
         cserver.start();
 
-        //------------------------ 初始化 BCService ------------------------------------
+        // ------------------------ 初始化 BCService ------------------------------------
         BCService bcservice = Sncp.createSimpleLocalService(BCService.class, resFactory);
         CService remoteCService = Sncp.createSimpleRemoteService(CService.class, resFactory, rpcGroups, client, "g77");
         if (remoteCService != null) {
@@ -70,14 +68,15 @@ public class ABMainService implements Service {
         }
         SncpServer bcserver = new SncpServer();
         bcserver.getResourceFactory().register(application);
-        //bcserver.getLogger().setLevel(Level.WARNING);
+        // bcserver.getLogger().setLevel(Level.WARNING);
         bcserver.addSncpServlet(bcservice);
         bcserver.init(AnyValueWriter.create("port", 5588));
         bcserver.start();
 
-        //------------------------ 初始化 ABMainService ------------------------------------
+        // ------------------------ 初始化 ABMainService ------------------------------------
         ABMainService service = Sncp.createSimpleLocalService(ABMainService.class, resFactory);
-        BCService remoteBCService = Sncp.createSimpleRemoteService(BCService.class, resFactory, rpcGroups, client, "g88");
+        BCService remoteBCService =
+                Sncp.createSimpleRemoteService(BCService.class, resFactory, rpcGroups, client, "g88");
         if (remoteBCService != null) {
             resFactory.inject(remoteBCService);
             resFactory.register("", remoteBCService);
@@ -89,7 +88,7 @@ public class ABMainService implements Service {
 
         HttpServer server = new HttpServer();
         server.getResourceFactory().register(application);
-        //server.getLogger().setLevel(Level.WARNING);
+        // server.getLogger().setLevel(Level.WARNING);
 
         server.init(AnyValueWriter.create("port", abport));
         server.addRestServlet(null, service, null, HttpServlet.class, "/pipes");
@@ -97,21 +96,24 @@ public class ABMainService implements Service {
         Utility.sleep(100);
         System.out.println("开始请求");
 
-        //不声明一个新的HttpClient会导致Utility.postHttpContent操作
-        //同一url在Utility里的httpClient会缓存导致调用是吧，应该是httpClient的bug
+        // 不声明一个新的HttpClient会导致Utility.postHttpContent操作
+        // 同一url在Utility里的httpClient会缓存导致调用是吧，应该是httpClient的bug
         java.net.http.HttpClient httpClient = java.net.http.HttpClient.newHttpClient();
         System.out.println("httpclient类: " + httpClient.getClass().getName());
-        //同步方法
+        // 同步方法
         String url = "http://127.0.0.1:" + abport + "/pipes/abmain/sab/张先生";
-        System.out.println(Utility.postHttpContentAsync(httpClient, url, StandardCharsets.UTF_8, null).join());
+        System.out.println(Utility.postHttpContentAsync(httpClient, url, StandardCharsets.UTF_8, null)
+                .join());
 
-        //异步方法
+        // 异步方法
         url = "http://127.0.0.1:" + abport + "/pipes/abmain/abc/张先生";
-        System.out.println(Utility.postHttpContentAsync(httpClient, url, StandardCharsets.UTF_8, null).join());
+        System.out.println(Utility.postHttpContentAsync(httpClient, url, StandardCharsets.UTF_8, null)
+                .join());
 
-        //异步方法
+        // 异步方法
         url = "http://127.0.0.1:" + abport + "/pipes/abmain/abc2/张先生";
-        System.out.println(Utility.postHttpContentAsync(httpClient, url, StandardCharsets.UTF_8, null).join());
+        System.out.println(Utility.postHttpContentAsync(httpClient, url, StandardCharsets.UTF_8, null)
+                .join());
 
         server.shutdown();
         bcserver.shutdown();
@@ -145,20 +147,20 @@ public class ABMainService implements Service {
         Thread.sleep(100);
 
         System.out.println("开始请求");
-        //同步方法
+        // 同步方法
         String url = "http://127.0.0.1:" + abport + "/pipes/abmain/sab/张先生";
         System.out.println(Utility.postHttpContent(url));
 
-        //异步方法
+        // 异步方法
         url = "http://127.0.0.1:" + abport + "/pipes/abmain/abc/张先生";
         System.out.println(Utility.postHttpContent(url));
 
-        //异步方法
+        // 异步方法
         url = "http://127.0.0.1:" + abport + "/pipes/abmain/abc2/张先生";
         System.out.println(Utility.postHttpContent(url));
 
         server.shutdown();
-        //远程模式
+        // 远程模式
         remote(args);
     }
 
@@ -174,14 +176,19 @@ public class ABMainService implements Service {
     }
 
     public static ObjectPool<ByteBuffer> newBufferPool() {
-        return ObjectPool.createSafePool(new LongAdder(), new LongAdder(), 16,
-            (Object... params) -> ByteBuffer.allocateDirect(8192), null, (e) -> {
-                if (e == null || e.isReadOnly() || e.capacity() != 8192) {
-                    return false;
-                }
-                e.clear();
-                return true;
-            });
+        return ObjectPool.createSafePool(
+                new LongAdder(),
+                new LongAdder(),
+                16,
+                (Object... params) -> ByteBuffer.allocateDirect(8192),
+                null,
+                (e) -> {
+                    if (e == null || e.isReadOnly() || e.capacity() != 8192) {
+                        return false;
+                    }
+                    e.clear();
+                    return true;
+                });
     }
 
     @RestMapping(name = "sab")
@@ -194,44 +201,49 @@ public class ABMainService implements Service {
 
     @RestMapping(name = "abc")
     public void abCurrentTime(final CompletionHandler<String, Void> handler, @RestParam(name = "#") final String name) {
-        bcService.bcCurrentTime2(Utility.createAsyncHandler((v, a) -> {
-            System.out.println("执行了 ABMainService.abCurrentTime----异步方法");
-            String rs = "异步abCurrentTime: " + v;
-            if (handler != null) {
-                handler.completed(rs, a);
-            }
-        }, (t, a) -> {
-            if (handler != null) {
-                handler.failed(t, a);
-            }
-        }), name);
+        bcService.bcCurrentTime2(
+                Utility.createAsyncHandler(
+                        (v, a) -> {
+                            System.out.println("执行了 ABMainService.abCurrentTime----异步方法");
+                            String rs = "异步abCurrentTime: " + v;
+                            if (handler != null) {
+                                handler.completed(rs, a);
+                            }
+                        },
+                        (t, a) -> {
+                            if (handler != null) {
+                                handler.failed(t, a);
+                            }
+                        }),
+                name);
     }
 
     @RestMapping(name = "abc2")
     public void abCurrentTime(final MyAsyncHandler<String, Void> handler, @RestParam(name = "#") final String name) {
-        bcService.bcCurrentTime3(new MyAsyncHandler<String, Void>() {
-            @Override
-            public int id() {
-                return 1;
-            }
+        bcService.bcCurrentTime3(
+                new MyAsyncHandler<String, Void>() {
+                    @Override
+                    public int id() {
+                        return 1;
+                    }
 
-            @Override
-            public void completed(String v, Void a) {
-                System.out.println("执行了 ABMainService.abCurrentTime----异步方法2");
-                String rs = "异步abCurrentTime: " + v;
-                if (handler != null) {
-                    handler.completed(rs, a);
-                }
-            }
+                    @Override
+                    public void completed(String v, Void a) {
+                        System.out.println("执行了 ABMainService.abCurrentTime----异步方法2");
+                        String rs = "异步abCurrentTime: " + v;
+                        if (handler != null) {
+                            handler.completed(rs, a);
+                        }
+                    }
 
-            @Override
-            public void failed(Throwable exc, Void attachment) {
-            }
+                    @Override
+                    public void failed(Throwable exc, Void attachment) {}
 
-            @Override
-            public int id2() {
-                return 2;
-            }
-        }, name);
+                    @Override
+                    public int id2() {
+                        return 2;
+                    }
+                },
+                name);
     }
 }

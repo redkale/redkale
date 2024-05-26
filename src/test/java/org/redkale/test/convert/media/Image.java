@@ -5,21 +5,19 @@
  */
 package org.redkale.test.convert.media;
 
-/**
- *
- * @author redkale
- */
+/** @author redkale */
 public class Image implements java.io.Serializable {
 
     private static final long serialVersionUID = 1L;
 
     public enum Size {
-        SMALL, LARGE
+        SMALL,
+        LARGE
     }
 
     private String uri;
 
-    private String title;  // Can be null
+    private String title; // Can be null
 
     private int width;
 
@@ -27,8 +25,7 @@ public class Image implements java.io.Serializable {
 
     private Size size;
 
-    public Image() {
-    }
+    public Image() {}
 
     public Image(String uri, String title, int width, int height, Size size) {
         this.height = height;

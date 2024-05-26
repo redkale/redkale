@@ -7,35 +7,34 @@ package org.redkale.convert;
 
 import java.lang.reflect.*;
 import java.util.function.*;
-import org.redkale.util.*;
 import org.redkale.annotation.ClassDepends;
+import org.redkale.util.*;
 
 /**
  * 序列化的数据输出流
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
 public abstract class Writer {
 
-    //当前对象输出字段名之前是否需要分隔符， JSON字段间的分隔符为,逗号
+    // 当前对象输出字段名之前是否需要分隔符， JSON字段间的分隔符为,逗号
     protected boolean comma;
 
-    //convertTo时是否以指定Type的ObjectEncoder进行处理
+    // convertTo时是否以指定Type的ObjectEncoder进行处理
     protected Type specificObjectType;
 
-    //对某个key值进行动态处理，仅供MapEncoder使用
+    // 对某个key值进行动态处理，仅供MapEncoder使用
     protected BiFunction<Object, Object, Object> mapFieldFunc;
 
-    //对某个字段值进行动态处理
+    // 对某个字段值进行动态处理
     protected BiFunction<Attribute, Object, Object> objFieldFunc;
 
-    //对某个对象进行动态扩展字段值处理
+    // 对某个对象进行动态扩展字段值处理
     protected Function<Object, ConvertField[]> objExtFunc;
 
-    //配置项
+    // 配置项
     protected int features;
 
     /**
@@ -75,7 +74,6 @@ public abstract class Writer {
      * 获取配置属性
      *
      * @return int
-     *
      */
     public final int getFeatures() {
         return features;
@@ -94,9 +92,7 @@ public abstract class Writer {
         return ConvertFactory.checkNullableFeature(features);
     }
 
-    /**
-     * 输出null值
-     */
+    /** 输出null值 */
     public abstract void writeNull();
 
     /**
@@ -114,11 +110,9 @@ public abstract class Writer {
     public abstract void writeClassName(String clazz);
 
     /**
-     * 输出一个对象前的操作
-     * 注： 覆盖此方法必须要先调用父方法 super.writeObjectB(obj);
+     * 输出一个对象前的操作 注： 覆盖此方法必须要先调用父方法 super.writeObjectB(obj);
      *
      * @param obj 写入的对象
-     *
      * @return 返回-1表示还没有写入对象内容，大于-1表示已写入对象内容，返回对象内容大小
      */
     public int writeObjectB(Object obj) {
@@ -141,8 +135,7 @@ public abstract class Writer {
      * 输出一个对象的某个字段
      *
      * @param member 字段
-     *
-     * @param obj    写入的对象
+     * @param obj 写入的对象
      */
     @SuppressWarnings("unchecked")
     public void writeObjectField(final EnMember member, Object obj) {
@@ -181,15 +174,15 @@ public abstract class Writer {
     /**
      * 输出一个对象的某个扩展字段
      *
-     *
-     * @param fieldName  字段名称
-     * @param fieldType  字段类型
-     * @param fieldPos   字段顺序
+     * @param fieldName 字段名称
+     * @param fieldType 字段类型
+     * @param fieldPos 字段顺序
      * @param anyEncoder Encoder
-     * @param value      写入的字段对象
+     * @param value 写入的字段对象
      */
     @SuppressWarnings("unchecked")
-    public void writeObjectField(final String fieldName, Type fieldType, int fieldPos, Encodeable anyEncoder, Object value) {
+    public void writeObjectField(
+            final String fieldName, Type fieldType, int fieldPos, Encodeable anyEncoder, Object value) {
         if (value == null) {
             if (nullable()) {
                 this.writeFieldName(null, fieldName, fieldType, fieldPos);
@@ -238,58 +231,46 @@ public abstract class Writer {
     /**
      * 输出一个数组前的操作
      *
-     * @param size             数组长度
-     * @param arrayEncoder     Encodeable 可能是ArrayEncoder、CollectionEncoder或StreamEncoder
+     * @param size 数组长度
+     * @param arrayEncoder Encodeable 可能是ArrayEncoder、CollectionEncoder或StreamEncoder
      * @param componentEncoder Encodeable
-     * @param obj              对象, 不一定是数组、Collection对象，也可能是伪Collection对象
-     *
+     * @param obj 对象, 不一定是数组、Collection对象，也可能是伪Collection对象
      * @return 返回-1表示还没有写入对象内容，大于-1表示已写入对象内容，返回对象内容大小
      */
-    public abstract int writeArrayB(int size, Encodeable arrayEncoder, Encodeable<Writer, Object> componentEncoder, Object obj);
+    public abstract int writeArrayB(
+            int size, Encodeable arrayEncoder, Encodeable<Writer, Object> componentEncoder, Object obj);
 
-    /**
-     * 输出数组元素间的间隔符
-     *
-     */
+    /** 输出数组元素间的间隔符 */
     public abstract void writeArrayMark();
 
-    /**
-     * 输出一个数组后的操作
-     *
-     */
+    /** 输出一个数组后的操作 */
     public abstract void writeArrayE();
 
     /**
      * 输出一个Map前的操作
      *
-     * @param size         map大小
-     * @param keyEncoder   Encodeable
+     * @param size map大小
+     * @param keyEncoder Encodeable
      * @param valueEncoder Encodeable
-     * @param obj          对象, 不一定是Map对象，也可能是伪Map对象
-     *
+     * @param obj 对象, 不一定是Map对象，也可能是伪Map对象
      * @return 返回-1表示还没有写入对象内容，大于-1表示已写入对象内容，返回对象内容大小
      */
-    public abstract int writeMapB(int size, Encodeable<Writer, Object> keyEncoder, Encodeable<Writer, Object> valueEncoder, Object obj);
+    public abstract int writeMapB(
+            int size, Encodeable<Writer, Object> keyEncoder, Encodeable<Writer, Object> valueEncoder, Object obj);
 
-    /**
-     * 输出一个Map中key与value间的间隔符
-     *
-     */
+    /** 输出一个Map中key与value间的间隔符 */
     public abstract void writeMapMark();
 
-    /**
-     * 输出一个Map后的操作
-     *
-     */
+    /** 输出一个Map后的操作 */
     public abstract void writeMapE();
 
     /**
      * 输出一个字段名
      *
-     * @param member    EnMember
+     * @param member EnMember
      * @param fieldName 字段名称
      * @param fieldType 字段类型
-     * @param fieldPos  字段顺序
+     * @param fieldPos 字段顺序
      */
     public abstract void writeFieldName(EnMember member, String fieldName, Type fieldType, int fieldPos);
 

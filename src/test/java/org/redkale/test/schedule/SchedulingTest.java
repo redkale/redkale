@@ -7,10 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.redkale.schedule.spi.ScheduleManagerService;
 import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class SchedulingTest {
 
     public static void main(String[] args) throws Throwable {
@@ -28,5 +25,4 @@ public class SchedulingTest {
         manager.unschedule(service);
         manager.destroy(null);
     }
-
 }

@@ -6,14 +6,11 @@
 package org.redkale.test.convert;
 
 import java.net.*;
-import org.redkale.util.Creator;
 import java.util.*;
 import org.redkale.convert.json.*;
+import org.redkale.util.Creator;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class SimpleEntity {
 
     private String name;
@@ -36,8 +33,8 @@ public class SimpleEntity {
         SimpleEntity v = new SimpleEntity();
         v.setName("this is name\n \"test");
         v.setId(1000000001);
-        v.setAddrs(new int[]{22222, 33333, 44444, 55555, 66666, 77777, 88888, 99999});
-        v.setStrings(new String[]{"zzz", "yyy", "xxx"});
+        v.setAddrs(new int[] {22222, 33333, 44444, 55555, 66666, 77777, 88888, 99999});
+        v.setStrings(new String[] {"zzz", "yyy", "xxx"});
         List<String> list = new ArrayList<>();
         list.add("aaaa");
         list.add("bbbb");
@@ -54,7 +51,7 @@ public class SimpleEntity {
 
     public static void main(String[] args) throws Exception {
         System.out.println(JsonConvert.root().convertTo(create()));
-        Creator<SimpleEntity> creator = Creator.create(SimpleEntity.class); //Creator.create(10, SimpleEntity.class);
+        Creator<SimpleEntity> creator = Creator.create(SimpleEntity.class); // Creator.create(10, SimpleEntity.class);
         SimpleEntity entry = creator.create();
         System.out.println(entry);
         for (int i = 0; i < 10000000; i++) {
@@ -133,5 +130,4 @@ public class SimpleEntity {
     public void setStrings(String[] strings) {
         this.strings = strings;
     }
-
 }

@@ -1,23 +1,21 @@
 package org.redkale.util;
 
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
+
 import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.function.*;
 import org.redkale.asm.*;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
 
 /**
  * JavaBean类对象的拷贝，相同的字段名会被拷贝 <br>
  *
  * @see org.redkale.util.Copier
- * <p>
- * 详情见: https://redkale.org
- *
+ *     <p>详情见: https://redkale.org
  * @author zhangjx
  * @param <D> 目标对象的数据类型
  * @param <S> 源对象的数据类型
- *
  * @deprecated
  */
 @Deprecated(since = "2.8.0")
@@ -30,27 +28,40 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
         return create(destClass, srcClass, (BiPredicate) null, (Map<String, String>) null);
     }
 
-    public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final Map<String, String> names) {
+    public static <D, S> Reproduce<D, S> create(
+            final Class<D> destClass, final Class<S> srcClass, final Map<String, String> names) {
         return create(destClass, srcClass, (BiPredicate) null, names);
     }
 
     @SuppressWarnings("unchecked")
-    public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final Predicate<String> srcColumnPredicate) {
+    public static <D, S> Reproduce<D, S> create(
+            final Class<D> destClass, final Class<S> srcClass, final Predicate<String> srcColumnPredicate) {
         return create(destClass, srcClass, (sc, m) -> srcColumnPredicate.test(m), (Map<String, String>) null);
     }
 
     @SuppressWarnings("unchecked")
-    public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final Predicate<String> srcColumnPredicate, final Map<String, String> names) {
+    public static <D, S> Reproduce<D, S> create(
+            final Class<D> destClass,
+            final Class<S> srcClass,
+            final Predicate<String> srcColumnPredicate,
+            final Map<String, String> names) {
         return create(destClass, srcClass, (sc, m) -> srcColumnPredicate.test(m), names);
     }
 
     @SuppressWarnings("unchecked")
-    public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final BiPredicate<java.lang.reflect.AccessibleObject, String> srcColumnPredicate) {
+    public static <D, S> Reproduce<D, S> create(
+            final Class<D> destClass,
+            final Class<S> srcClass,
+            final BiPredicate<java.lang.reflect.AccessibleObject, String> srcColumnPredicate) {
         return create(destClass, srcClass, srcColumnPredicate, (Map<String, String>) null);
     }
 
     @SuppressWarnings("unchecked")
-    public static <D, S> Reproduce<D, S> create(final Class<D> destClass, final Class<S> srcClass, final BiPredicate<java.lang.reflect.AccessibleObject, String> srcColumnPredicate, final Map<String, String> names) {
+    public static <D, S> Reproduce<D, S> create(
+            final Class<D> destClass,
+            final Class<S> srcClass,
+            final BiPredicate<java.lang.reflect.AccessibleObject, String> srcColumnPredicate,
+            final Map<String, String> names) {
         // ------------------------------------------------------------------------------
         final String supDynName = Reproduce.class.getName().replace('.', '/');
         final String destClassName = destClass.getName().replace('.', '/');
@@ -59,13 +70,15 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
         final String srcDesc = Type.getDescriptor(srcClass);
         final ClassLoader loader = Thread.currentThread().getContextClassLoader();
         final String newDynName = "org/redkaledyn/reproduce/_Dyn" + Reproduce.class.getSimpleName()
-            + "__" + destClass.getName().replace('.', '_').replace('$', '_')
-            + "__" + srcClass.getName().replace('.', '_').replace('$', '_');
+                + "__" + destClass.getName().replace('.', '_').replace('$', '_')
+                + "__" + srcClass.getName().replace('.', '_').replace('$', '_');
         try {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-            return (Reproduce) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz).getDeclaredConstructor().newInstance();
+            return (Reproduce) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz)
+                    .getDeclaredConstructor()
+                    .newInstance();
         } catch (Throwable ex) {
-            //do nothing
+            // do nothing
         }
         // ------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
@@ -73,11 +86,17 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
         MethodVisitor mv;
         AnnotationVisitor av0;
 
-        cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, "Ljava/lang/Object;L" + supDynName + "<" + destDesc + srcDesc + ">;", "java/lang/Object", new String[]{supDynName});
+        cw.visit(
+                V11,
+                ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
+                newDynName,
+                "Ljava/lang/Object;L" + supDynName + "<" + destDesc + srcDesc + ">;",
+                "java/lang/Object",
+                new String[] {supDynName});
 
         { // 构造函数
             mv = (cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
-            //mv.setDebug(true);
+            // mv.setDebug(true);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
             mv.visitInsn(RETURN);
@@ -86,7 +105,7 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
         }
         {
             mv = (cw.visitMethod(ACC_PUBLIC, "apply", "(" + destDesc + srcDesc + ")" + destDesc, null, null));
-            //mv.setDebug(true);
+            // mv.setDebug(true);
 
             for (java.lang.reflect.Field field : srcClass.getFields()) {
                 if (Modifier.isStatic(field.getModifiers())) {
@@ -126,7 +145,8 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                 if (setter == null) {
                     mv.visitFieldInsn(PUTFIELD, destClassName, dfname, td);
                 } else {
-                    mv.visitMethodInsn(INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), false);
                 }
             }
 
@@ -177,9 +197,11 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                 }
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitVarInsn(ALOAD, 2);
-                mv.visitMethodInsn(INVOKEVIRTUAL, srcClassName, getter.getName(), Type.getMethodDescriptor(getter), false);
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL, srcClassName, getter.getName(), Type.getMethodDescriptor(getter), false);
                 if (srcField == null) {
-                    mv.visitMethodInsn(INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL, destClassName, setter.getName(), Type.getMethodDescriptor(setter), false);
                 } else {
                     mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(getter.getReturnType()));
                 }
@@ -190,8 +212,13 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
             mv.visitEnd();
         }
         {
-            mv = (cw.visitMethod(ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC, "apply", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", null, null));
-            //mv.setDebug(true);
+            mv = (cw.visitMethod(
+                    ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC,
+                    "apply",
+                    "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+                    null,
+                    null));
+            // mv.setDebug(true);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitVarInsn(ALOAD, 1);
             mv.visitTypeInsn(CHECKCAST, destClassName);
@@ -218,5 +245,4 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
             throw new RuntimeException(ex);
         }
     }
-
 }

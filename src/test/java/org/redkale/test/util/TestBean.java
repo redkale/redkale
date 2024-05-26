@@ -8,10 +8,7 @@ package org.redkale.test.util;
 import java.util.Map;
 import org.redkale.convert.json.JsonConvert;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class TestBean extends TestABean implements TestInterface {
 
     private String name;
@@ -21,7 +18,7 @@ public class TestBean extends TestABean implements TestInterface {
     private Map<String, String> map;
 
     public String remark;
-    
+
     private Long seqno;
 
     public String getName() {

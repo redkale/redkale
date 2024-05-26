@@ -5,6 +5,8 @@
  */
 package org.redkale.net.http;
 
+import static org.redkale.net.http.HttpRequest.parseHeaderName;
+
 import java.lang.reflect.Type;
 import java.net.*;
 import java.nio.*;
@@ -17,7 +19,6 @@ import org.redkale.net.*;
 import org.redkale.net.client.Client;
 import org.redkale.net.client.ClientAddress;
 import org.redkale.net.client.ClientConnection;
-import static org.redkale.net.http.HttpRequest.parseHeaderName;
 import org.redkale.util.*;
 
 /**
@@ -27,18 +28,17 @@ import org.redkale.util.*;
  * 3、返回超大响应包；<br>
  * 类似JDK11的 java.net.http.HttpClient <br>
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.3.0
- *
  */
 public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
 
     public static final String USER_AGENT = "Redkale-http-client/" + Redkale.getDotedVersion();
 
-    static final byte[] header_bytes_useragent = ("User-Agent: " + USER_AGENT + "\r\n").getBytes(StandardCharsets.UTF_8);
+    static final byte[] header_bytes_useragent =
+            ("User-Agent: " + USER_AGENT + "\r\n").getBytes(StandardCharsets.UTF_8);
 
     static final byte[] header_bytes_connclose = ("Connection: close\r\n").getBytes(StandardCharsets.UTF_8);
 
@@ -98,7 +98,13 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
     }
 
     public CompletableFuture<HttpResult<byte[]>> getAsync(String url, String body, Type valueType) {
-        return sendAsync("GET", url, null, body == null ? null : body.getBytes(StandardCharsets.UTF_8), (Convert) null, valueType);
+        return sendAsync(
+                "GET",
+                url,
+                null,
+                body == null ? null : body.getBytes(StandardCharsets.UTF_8),
+                (Convert) null,
+                valueType);
     }
 
     public CompletableFuture<HttpResult<byte[]>> getAsync(String url, Convert convert, Type valueType) {
@@ -106,7 +112,8 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
     }
 
     public CompletableFuture<HttpResult<byte[]>> getAsync(String url, String body, Convert convert, Type valueType) {
-        return sendAsync("GET", url, null, body == null ? null : body.getBytes(StandardCharsets.UTF_8), convert, valueType);
+        return sendAsync(
+                "GET", url, null, body == null ? null : body.getBytes(StandardCharsets.UTF_8), convert, valueType);
     }
 
     public CompletableFuture<HttpResult<byte[]>> getAsync(String url, byte[] body) {
@@ -129,7 +136,8 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
         return sendAsync("GET", url, headers, null, (Convert) null, valueType);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> getAsync(String url, HttpHeaders headers, Convert convert, Type valueType) {
+    public CompletableFuture<HttpResult<byte[]>> getAsync(
+            String url, HttpHeaders headers, Convert convert, Type valueType) {
         return sendAsync("GET", url, headers, null, convert, valueType);
     }
 
@@ -154,7 +162,13 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
     }
 
     public CompletableFuture<HttpResult<byte[]>> postAsync(String url, String body, Type valueType) {
-        return sendAsync("POST", url, null, body == null ? null : body.getBytes(StandardCharsets.UTF_8), (Convert) null, valueType);
+        return sendAsync(
+                "POST",
+                url,
+                null,
+                body == null ? null : body.getBytes(StandardCharsets.UTF_8),
+                (Convert) null,
+                valueType);
     }
 
     public CompletableFuture<HttpResult<byte[]>> postAsync(String url, Convert convert, Type valueType) {
@@ -162,7 +176,8 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
     }
 
     public CompletableFuture<HttpResult<byte[]>> postAsync(String url, String body, Convert convert, Type valueType) {
-        return sendAsync("POST", url, null, body == null ? null : body.getBytes(StandardCharsets.UTF_8), convert, valueType);
+        return sendAsync(
+                "POST", url, null, body == null ? null : body.getBytes(StandardCharsets.UTF_8), convert, valueType);
     }
 
     public CompletableFuture<HttpResult<byte[]>> postAsync(String url, byte[] body) {
@@ -185,7 +200,8 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
         return sendAsync("POST", url, headers, null, (Convert) null, valueType);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> postAsync(String url, HttpHeaders headers, Convert convert, Type valueType) {
+    public CompletableFuture<HttpResult<byte[]>> postAsync(
+            String url, HttpHeaders headers, Convert convert, Type valueType) {
         return sendAsync("POST", url, headers, null, convert, valueType);
     }
 
@@ -205,15 +221,18 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
         return sendAsync(req.getMethod(), url, req.getHeaders(), req.getBody(), (Convert) null, null);
     }
 
-    public CompletableFuture<HttpResult<byte[]>> sendAsync(String method, String url, HttpHeaders headers, byte[] body) {
+    public CompletableFuture<HttpResult<byte[]>> sendAsync(
+            String method, String url, HttpHeaders headers, byte[] body) {
         return sendAsync(method, url, headers, body, (Convert) null, null);
     }
 
-    public <T> CompletableFuture<HttpResult<T>> sendAsync(String method, String url, HttpHeaders headers, byte[] body, Type valueType) {
+    public <T> CompletableFuture<HttpResult<T>> sendAsync(
+            String method, String url, HttpHeaders headers, byte[] body, Type valueType) {
         return sendAsync(method, url, headers, body, (Convert) null, valueType);
     }
 
-    public <T> CompletableFuture<HttpResult<T>> sendAsync(String method, String url, HttpHeaders headers, byte[] body, Convert convert, Type valueType) {
+    public <T> CompletableFuture<HttpResult<T>> sendAsync(
+            String method, String url, HttpHeaders headers, byte[] body, Convert convert, Type valueType) {
         final String traceid = Traces.computeIfAbsent(Traces.currentTraceid());
         final WorkThread workThread = WorkThread.currentWorkThread();
         if (method.indexOf(' ') >= 0 || method.indexOf('\r') >= 0 || method.indexOf('\n') >= 0) {
@@ -229,18 +248,18 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
         final String path = (urlpos > 0 ? url.substring(urlpos) : "/");
         if (!url.startsWith("https:")) {
             WebRequest req = WebRequest.createPath(path, headers).method(method).body(body);
-            return (CompletableFuture) sendAsync(new InetSocketAddress(host, port), req)
-                .thenApply((WebResult rs) -> {
-                    if (valueType == null) {
-                        return rs;
-                    } else {
-                        Convert c = convert == null ? JsonConvert.root() : convert;
-                        return rs.result(c.convertToBytes(valueType, (byte[]) rs.result));
-                    }
-                });
+            return (CompletableFuture)
+                    sendAsync(new InetSocketAddress(host, port), req).thenApply((WebResult rs) -> {
+                        if (valueType == null) {
+                            return rs;
+                        } else {
+                            Convert c = convert == null ? JsonConvert.root() : convert;
+                            return rs.result(c.convertToBytes(valueType, (byte[]) rs.result));
+                        }
+                    });
         }
 
-        //以下代码暂废弃
+        // 以下代码暂废弃
         final ByteArray array = new ByteArray();
         array.put((method.toUpperCase() + " " + path + " HTTP/1.1\r\n").getBytes(StandardCharsets.UTF_8));
         array.put(("Host: " + uri.getHost() + "\r\n").getBytes(StandardCharsets.UTF_8));
@@ -254,8 +273,9 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
             array.put((Rest.REST_HEADER_TRACEID + ": " + traceid + "\r\n").getBytes(StandardCharsets.UTF_8));
         }
         if (headers != null) {
-            headers.forEach(k -> !k.equalsIgnoreCase("Connection") && !k.equalsIgnoreCase("Content-Length"),
-                (k, v) -> array.put((k + ": " + v + "\r\n").getBytes(StandardCharsets.UTF_8)));
+            headers.forEach(
+                    k -> !k.equalsIgnoreCase("Connection") && !k.equalsIgnoreCase("Content-Length"),
+                    (k, v) -> array.put((k + ": " + v + "\r\n").getBytes(StandardCharsets.UTF_8)));
         }
         array.put((byte) '\r', (byte) '\n');
         if (body != null) {
@@ -268,7 +288,8 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
             conn.write(array, new CompletionHandler<Integer, Void>() {
                 @Override
                 public void completed(Integer result, Void attachment) {
-                    conn.readInIOThread(new ClientReadCompletionHandler(conn, workThread, traceid, array.clear(), convert, valueType, future));
+                    conn.readInIOThread(new ClientReadCompletionHandler(
+                            conn, workThread, traceid, array.clear(), convert, valueType, future));
                 }
 
                 @Override
@@ -293,19 +314,24 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
     }
 
     protected CompletableFuture<HttpConnection> createConnection(String host, int port) {
-        return asyncGroup.createTCPClient(new InetSocketAddress(host, port), connectTimeoutSeconds, readTimeoutSeconds, writeTimeoutSeconds)
-            .thenApply(conn -> new HttpConnection(conn));
+        return asyncGroup
+                .createTCPClient(
+                        new InetSocketAddress(host, port),
+                        connectTimeoutSeconds,
+                        readTimeoutSeconds,
+                        writeTimeoutSeconds)
+                .thenApply(conn -> new HttpConnection(conn));
     }
 
-//
-//    public static void main(String[] args) throws Throwable {
-//        final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
-//        asyncGroup.start();
-//        String url = "http://redkale.org";
-//        WebClient client = WebClient.createPostPath(asyncGroup);
-//        (System.out).println(client.getAsync(url).join());
-//    }
-//    
+    //
+    //    public static void main(String[] args) throws Throwable {
+    //        final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
+    //        asyncGroup.start();
+    //        String url = "http://redkale.org";
+    //        WebClient client = WebClient.createPostPath(asyncGroup);
+    //        (System.out).println(client.getAsync(url).join());
+    //    }
+    //
     protected static class HttpConnection {
 
         protected final AsyncConnection channel;
@@ -337,7 +363,6 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
         public void write(ByteTuple array, CompletionHandler<Integer, Void> handler) {
             this.channel.write(array, handler);
         }
-
     }
 
     protected class ClientReadCompletionHandler<T> implements CompletionHandler<Integer, ByteBuffer> {
@@ -370,7 +395,14 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
 
         protected int contentLength = -1;
 
-        public ClientReadCompletionHandler(HttpConnection conn, WorkThread workThread, String traceid, ByteArray array, Convert convert, Type valueType, CompletableFuture<HttpResult<T>> future) {
+        public ClientReadCompletionHandler(
+                HttpConnection conn,
+                WorkThread workThread,
+                String traceid,
+                ByteArray array,
+                Convert convert,
+                Type valueType,
+                CompletableFuture<HttpResult<T>> future) {
             this.conn = conn;
             this.workThread = workThread;
             this.traceid = traceid;
@@ -490,11 +522,11 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
             }
         }
 
-        //解析 HTTP/1.1 200 OK  
+        // 解析 HTTP/1.1 200 OK
         private int readStatusLine(final ByteBuffer buffer) {
             int remain = buffer.remaining();
             ByteArray bytes = array;
-            for (;;) {
+            for (; ; ) {
                 if (remain-- < 1) {
                     buffer.clear();
                     return 1;
@@ -520,13 +552,13 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
             return 0;
         }
 
-        //解析Header Connection: keep-alive
-        //返回0表示解析完整，非0表示还需继续读数据
+        // 解析Header Connection: keep-alive
+        // 返回0表示解析完整，非0表示还需继续读数据
         private int readHeaderLines(final ByteBuffer buffer) {
             int remain = buffer.remaining();
             ByteArray bytes = array;
             HttpResult<byte[]> result = responseResult;
-            for (;;) {
+            for (; ; ) {
                 bytes.clear();
                 if (remain-- < 2) {
                     if (remain == 1) {
@@ -552,7 +584,7 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
                     latin1 = false;
                 }
                 bytes.put(b1, b2);
-                for (;;) {  // name
+                for (; ; ) { // name
                     if (remain-- < 1) {
                         buffer.clear();
                         buffer.put(bytes.content(), 0, bytes.length());
@@ -570,7 +602,7 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
                 bytes.clear();
                 boolean first = true;
                 int space = 0;
-                for (;;) {  // value
+                for (; ; ) { // value
                     if (remain-- < 1) {
                         buffer.clear();
                         buffer.put(name.getBytes());
@@ -633,6 +665,5 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
             conn.dispose();
             future.completeExceptionally(exc);
         }
-
     }
 }

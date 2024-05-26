@@ -6,10 +6,7 @@ package org.redkale.test.util;
 import java.util.Map;
 import org.redkale.util.Copier;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class CopierBeanMap implements Copier<TestInterface, Map<String, Object>> {
 
     @Override
@@ -43,8 +40,7 @@ public class CopierBeanMap implements Copier<TestInterface, Map<String, Object>>
         if (v != null) {
             dest.put("name", v);
         }
-//		
+        //
         return dest;
     }
-
 }

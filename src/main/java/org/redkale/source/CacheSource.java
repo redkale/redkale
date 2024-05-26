@@ -25,8 +25,7 @@ import org.redkale.util.*;
  * Long统一用setLong、getLong、incr等系列方法。<br>
  * 其他则供自定义数据类型使用。
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -39,14 +38,14 @@ public interface CacheSource extends Resourcable {
         return isOpenAsync().join();
     }
 
-    //------------------------ 订阅发布 SUB/PUB ------------------------ 
+    // ------------------------ 订阅发布 SUB/PUB ------------------------
     default List<String> pubsubChannels(@Nullable String pattern) {
         return pubsubChannelsAsync(pattern).join();
     }
 
     public CompletableFuture<List<String>> pubsubChannelsAsync(@Nullable String pattern);
 
-    //------------------------ 订阅 SUB ------------------------ 
+    // ------------------------ 订阅 SUB ------------------------
     default <T> void subscribe(Type messageType, CacheEventListener<T> listener, String... topics) {
         subscribe(JsonConvert.root(), messageType, listener, topics);
     }
@@ -64,20 +63,23 @@ public interface CacheSource extends Resourcable {
         unsubscribeAsync(listener, topics).join();
     }
 
-    default <T> CompletableFuture<Void> subscribeAsync(Type messageType, CacheEventListener<T> listener, String... topics) {
+    default <T> CompletableFuture<Void> subscribeAsync(
+            Type messageType, CacheEventListener<T> listener, String... topics) {
         return subscribeAsync(JsonConvert.root(), messageType, listener, topics);
     }
 
-    default <T> CompletableFuture<Void> subscribeAsync(Convert convert, Type messageType, CacheEventListener<T> listener, String... topics) {
+    default <T> CompletableFuture<Void> subscribeAsync(
+            Convert convert, Type messageType, CacheEventListener<T> listener, String... topics) {
         final Convert c = convert == null ? JsonConvert.root() : convert;
-        return subscribeAsync((t, bs) -> listener.onMessage(t, bs == null ? null : (T) c.convertFrom(messageType, bs)), topics);
+        return subscribeAsync(
+                (t, bs) -> listener.onMessage(t, bs == null ? null : (T) c.convertFrom(messageType, bs)), topics);
     }
 
     public CompletableFuture<Void> subscribeAsync(CacheEventListener<byte[]> listener, String... topics);
 
     public CompletableFuture<Integer> unsubscribeAsync(CacheEventListener listener, String... topics);
 
-    //------------------------ 发布 PUB ------------------------ 
+    // ------------------------ 发布 PUB ------------------------
     default <T> int publish(String topic, T message) {
         return publish(topic, null, message.getClass(), message);
     }
@@ -123,7 +125,7 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Integer> publishAsync(String topic, byte[] message);
 
-    //------------------------ 字符串 String ------------------------  
+    // ------------------------ 字符串 String ------------------------
     default long incr(String key) {
         return incrAsync(key).join();
     }
@@ -144,7 +146,7 @@ public interface CacheSource extends Resourcable {
         return decrbyAsync(key, num).join();
     }
 
-    //------------------------ set ------------------------
+    // ------------------------ set ------------------------
     default <T> void set(String key, Convert convert, Type type, T value) {
         setAsync(key, convert, type, value).join();
     }
@@ -161,7 +163,7 @@ public interface CacheSource extends Resourcable {
         set(key, Long.class, value);
     }
 
-    //MSET key value [key value ...]
+    // MSET key value [key value ...]
     default void mset(Serializable... keyVals) {
         msetAsync(keyVals).join();
     }
@@ -170,7 +172,7 @@ public interface CacheSource extends Resourcable {
         msetAsync(map).join();
     }
 
-    //MSETNX key value [key value ...]
+    // MSETNX key value [key value ...]
     default boolean msetnx(Serializable... keyVals) {
         return msetnxAsync(keyVals).join();
     }
@@ -179,7 +181,7 @@ public interface CacheSource extends Resourcable {
         return msetnxAsync(map).join();
     }
 
-    //------------------------ setnx ------------------------
+    // ------------------------ setnx ------------------------
     default <T> boolean setnx(String key, Convert convert, Type type, T value) {
         return setnxAsync(key, convert, type, value).join();
     }
@@ -196,7 +198,7 @@ public interface CacheSource extends Resourcable {
         return setnx(key, Long.class, value);
     }
 
-    //------------------------ setex ------------------------
+    // ------------------------ setex ------------------------
     default <T> void setex(String key, int expireSeconds, Convert convert, Type type, T value) {
         setexAsync(key, expireSeconds, convert, type, value).join();
     }
@@ -229,7 +231,7 @@ public interface CacheSource extends Resourcable {
         psetex(key, milliSeconds, Long.class, value);
     }
 
-    //------------------------ setnxex ------------------------
+    // ------------------------ setnxex ------------------------
     default <T> boolean setnxex(String key, int expireSeconds, Convert convert, Type type, T value) {
         return setnxexAsync(key, expireSeconds, convert, type, value).join();
     }
@@ -262,7 +264,7 @@ public interface CacheSource extends Resourcable {
         return setnxpx(key, milliSeconds, Long.class, value);
     }
 
-    //------------------------ get ------------------------    
+    // ------------------------ get ------------------------
     default <T> T get(String key, Type type) {
         return (T) getAsync(key, type).join();
     }
@@ -280,7 +282,7 @@ public interface CacheSource extends Resourcable {
         return get(key, Long.class);
     }
 
-    //------------------------ mget ------------------------    
+    // ------------------------ mget ------------------------
     default <T> List<T> mget(Type componentType, String... keys) {
         return (List) mgetAsync(componentType, keys).join();
     }
@@ -305,7 +307,7 @@ public interface CacheSource extends Resourcable {
         return mgets(Long.class, keys);
     }
 
-    //------------------------ getex ------------------------
+    // ------------------------ getex ------------------------
     default <T> T getex(String key, int expireSeconds, Type type) {
         return (T) getexAsync(key, expireSeconds, type).join();
     }
@@ -323,7 +325,7 @@ public interface CacheSource extends Resourcable {
         return getex(key, expireSeconds, Long.class);
     }
 
-    //------------------------ getset ------------------------
+    // ------------------------ getset ------------------------
     default <T> T getSet(String key, Convert convert, Type type, T value) {
         return getSetAsync(key, convert, type, value).join();
     }
@@ -345,7 +347,7 @@ public interface CacheSource extends Resourcable {
         return getSet(key, Long.class, value);
     }
 
-    //------------------------ getdel ------------------------
+    // ------------------------ getdel ------------------------
     default <T> T getDel(String key, Type type) {
         return (T) getDelAsync(key, type).join();
     }
@@ -363,9 +365,10 @@ public interface CacheSource extends Resourcable {
         return getDel(key, Long.class);
     }
 
-    //------------------------ 键 Keys ------------------------   
+    // ------------------------ 键 Keys ------------------------
     /**
      * 令牌桶算法限流， 返回负数表示无令牌， 其他为有令牌
+     *
      * <pre>
      * 每秒限制请求1次:     rate:1,     capacity:1,     requested:1
      * 每秒限制请求10次:    rate:10,    capacity:10,    requested:1
@@ -375,11 +378,10 @@ public interface CacheSource extends Resourcable {
      * 每小时限制请求10次:  rate:1,     capacity:3600,  requested:360
      * </pre>
      *
-     * @param key       限流的键
-     * @param rate      令牌桶每秒填充平均速率
-     * @param capacity  令牌桶总容量
+     * @param key 限流的键
+     * @param rate 令牌桶每秒填充平均速率
+     * @param capacity 令牌桶总容量
      * @param requested 需要的令牌数
-     *
      * @return 可用令牌数
      */
     default long rateLimit(String key, long rate, long capacity, long requested) {
@@ -388,6 +390,7 @@ public interface CacheSource extends Resourcable {
 
     /**
      * 令牌桶算法限流， 返回负数表示无令牌， 其他为有令牌
+     *
      * <pre>
      * 每秒限制请求1次:     rate:1,     capacity:1,     requested:1
      * 每秒限制请求10次:    rate:10,    capacity:10,    requested:1
@@ -397,10 +400,9 @@ public interface CacheSource extends Resourcable {
      * 每小时限制请求10次:  rate:1,     capacity:3600,  requested:360
      * </pre>
      *
-     * @param key      限流的键
-     * @param rate     令牌桶每秒填充平均速率
+     * @param key 限流的键
+     * @param rate 令牌桶每秒填充平均速率
      * @param capacity 令牌桶总容量
-     *
      * @return 可用令牌数
      */
     default long rateLimit(String key, long rate, long capacity) {
@@ -483,7 +485,7 @@ public interface CacheSource extends Resourcable {
         return scan(cursor, limit, null);
     }
 
-    //------------------------ 服务器 Server  ------------------------   
+    // ------------------------ 服务器 Server  ------------------------
     default long dbsize() {
         return dbsizeAsync().join();
     }
@@ -496,7 +498,7 @@ public interface CacheSource extends Resourcable {
         flushallAsync().join();
     }
 
-    //------------------------ 哈希表 Hash ------------------------
+    // ------------------------ 哈希表 Hash ------------------------
     default long hdel(String key, String... fields) {
         return hdelAsync(key, fields).join();
     }
@@ -638,7 +640,7 @@ public interface CacheSource extends Resourcable {
         return hvals(key, Long.class);
     }
 
-    //------------------------ 列表 List ------------------------
+    // ------------------------ 列表 List ------------------------
     default <T> T lindex(String key, Type componentType, int index) {
         return (T) lindexAsync(key, componentType, index).join();
     }
@@ -815,7 +817,7 @@ public interface CacheSource extends Resourcable {
         rpush(key, Long.class, values);
     }
 
-    //------------------------ 集合 Set ------------------------   
+    // ------------------------ 集合 Set ------------------------
     default <T> void sadd(String key, Type componentType, T... values) {
         saddAsync(key, componentType, values).join();
     }
@@ -1021,7 +1023,7 @@ public interface CacheSource extends Resourcable {
         return sscan(key, Long.class, cursor, limit, null);
     }
 
-    //------------------------ 有序集合 Sorted Set ------------------------
+    // ------------------------ 有序集合 Sorted Set ------------------------
     default void zadd(String key, CacheScoredValue... values) {
         zaddAsync(key, values).join();
     }
@@ -1138,10 +1140,10 @@ public interface CacheSource extends Resourcable {
         return zscan(key, Double.class, cursor, limit, null);
     }
 
-    //---------------------- CompletableFuture 异步版 ---------------------------------
+    // ---------------------- CompletableFuture 异步版 ---------------------------------
     public CompletableFuture<Boolean> isOpenAsync();
 
-    //------------------------ 键 Keys ------------------------    
+    // ------------------------ 键 Keys ------------------------
     public CompletableFuture<Long> incrAsync(String key);
 
     public CompletableFuture<Long> incrbyAsync(String key, long num);
@@ -1152,7 +1154,7 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Double> incrbyFloatAsync(String key, double num);
 
-    //------------------------ set ------------------------
+    // ------------------------ set ------------------------
     public <T> CompletableFuture<Void> setAsync(String key, Convert convert, Type type, T value);
 
     default <T> CompletableFuture<Void> setAsync(String key, Type type, T value) {
@@ -1167,17 +1169,17 @@ public interface CacheSource extends Resourcable {
         return setAsync(key, Long.class, value);
     }
 
-    //MSET key value [key value ...]
+    // MSET key value [key value ...]
     public CompletableFuture<Void> msetAsync(Serializable... keyVals);
 
     public CompletableFuture<Void> msetAsync(Map map);
 
-    //MSET key value [key value ...]
+    // MSET key value [key value ...]
     public CompletableFuture<Boolean> msetnxAsync(Serializable... keyVals);
 
     public CompletableFuture<Boolean> msetnxAsync(Map map);
 
-    //------------------------ setnx ------------------------
+    // ------------------------ setnx ------------------------
     public <T> CompletableFuture<Boolean> setnxAsync(String key, Convert convert, Type type, T value);
 
     default <T> CompletableFuture<Boolean> setnxAsync(String key, Type type, T value) {
@@ -1192,7 +1194,7 @@ public interface CacheSource extends Resourcable {
         return setnxAsync(key, Long.class, value);
     }
 
-    //------------------------ setex ------------------------
+    // ------------------------ setex ------------------------
     public <T> CompletableFuture<Void> setexAsync(String key, int expireSeconds, Convert convert, Type type, T value);
 
     default <T> CompletableFuture<Void> setexAsync(String key, int expireSeconds, Type type, T value) {
@@ -1221,8 +1223,9 @@ public interface CacheSource extends Resourcable {
         return psetexAsync(key, milliSeconds, Long.class, value);
     }
 
-    //------------------------ setnxex ------------------------
-    public <T> CompletableFuture<Boolean> setnxexAsync(String key, int expireSeconds, Convert convert, Type type, T value);
+    // ------------------------ setnxex ------------------------
+    public <T> CompletableFuture<Boolean> setnxexAsync(
+            String key, int expireSeconds, Convert convert, Type type, T value);
 
     default <T> CompletableFuture<Boolean> setnxexAsync(String key, int expireSeconds, Type type, T value) {
         return setnxexAsync(key, expireSeconds, (Convert) null, type, value);
@@ -1236,7 +1239,8 @@ public interface CacheSource extends Resourcable {
         return setnxexAsync(key, expireSeconds, Long.class, value);
     }
 
-    public <T> CompletableFuture<Boolean> setnxpxAsync(String key, long milliSeconds, Convert convert, Type type, T value);
+    public <T> CompletableFuture<Boolean> setnxpxAsync(
+            String key, long milliSeconds, Convert convert, Type type, T value);
 
     default <T> CompletableFuture<Boolean> setnxpxAsync(String key, long milliSeconds, Type type, T value) {
         return setnxpxAsync(key, milliSeconds, (Convert) null, type, value);
@@ -1250,7 +1254,7 @@ public interface CacheSource extends Resourcable {
         return setnxpxAsync(key, milliSeconds, Long.class, value);
     }
 
-    //------------------------ get ------------------------ 
+    // ------------------------ get ------------------------
     public <T> CompletableFuture<T> getAsync(String key, Type type);
 
     default CompletableFuture<String> getStringAsync(String key) {
@@ -1265,7 +1269,7 @@ public interface CacheSource extends Resourcable {
         return getAsync(key, Long.class);
     }
 
-    //------------------------ mget ------------------------   
+    // ------------------------ mget ------------------------
     public <T> CompletableFuture<List<T>> mgetAsync(Type componentType, String... keys);
 
     default CompletableFuture<List<String>> mgetStringAsync(String... keys) {
@@ -1297,15 +1301,14 @@ public interface CacheSource extends Resourcable {
         return mgetsAsync(Long.class, keys);
     }
 
-    //------------------------ getex ------------------------  
+    // ------------------------ getex ------------------------
     /**
      * 获取key的值并可选择设置其过期时间
      *
-     * @param <T>           泛型
-     * @param key           键
+     * @param <T> 泛型
+     * @param key 键
      * @param expireSeconds 过期秒数
-     * @param type          key值的类型
-     *
+     * @param type key值的类型
      * @return key的值
      */
     public <T> CompletableFuture<T> getexAsync(String key, int expireSeconds, Type type);
@@ -1322,7 +1325,7 @@ public interface CacheSource extends Resourcable {
         return getexAsync(key, expireSeconds, Long.class);
     }
 
-    //------------------------ getset ------------------------  
+    // ------------------------ getset ------------------------
     public <T> CompletableFuture<T> getSetAsync(String key, Convert convert, Type type, T value);
 
     default <T> CompletableFuture<T> getSetAsync(String key, Type type, T value) {
@@ -1341,7 +1344,7 @@ public interface CacheSource extends Resourcable {
         return getSetAsync(key, Long.class, value);
     }
 
-    //------------------------ getdel ------------------------  
+    // ------------------------ getdel ------------------------
     public <T> CompletableFuture<T> getDelAsync(String key, Type type);
 
     default CompletableFuture<String> getDelStringAsync(String key) {
@@ -1356,9 +1359,10 @@ public interface CacheSource extends Resourcable {
         return getDelAsync(key, Long.class);
     }
 
-    //------------------------ 键 Keys ------------------------  
+    // ------------------------ 键 Keys ------------------------
     /**
      * 令牌桶算法限流， 返回负数表示无令牌， 其他为有令牌
+     *
      * <pre>
      * 每秒限制请求1次:     rate:1,     capacity:1,     requested:1
      * 每秒限制请求10次:    rate:10,    capacity:10,    requested:1
@@ -1368,17 +1372,17 @@ public interface CacheSource extends Resourcable {
      * 每小时限制请求10次:  rate:1,     capacity:3600,  requested:360
      * </pre>
      *
-     * @param key       限流的键
-     * @param rate      令牌桶每秒填充平均速率
-     * @param capacity  令牌桶总容量
+     * @param key 限流的键
+     * @param rate 令牌桶每秒填充平均速率
+     * @param capacity 令牌桶总容量
      * @param requested 需要的令牌数
-     *
      * @return 可用令牌数
      */
     public CompletableFuture<Long> rateLimitAsync(String key, long rate, long capacity, long requested);
 
     /**
      * 令牌桶算法限流， 返回负数表示无令牌， 其他为有令牌
+     *
      * <pre>
      * 每秒限制请求1次:     rate:1,     capacity:1,     requested:1
      * 每秒限制请求10次:    rate:10,    capacity:10,    requested:1
@@ -1388,10 +1392,9 @@ public interface CacheSource extends Resourcable {
      * 每小时限制请求10次:  rate:1,     capacity:3600,  requested:360
      * </pre>
      *
-     * @param key      限流的键
-     * @param rate     令牌桶每秒填充平均速率
+     * @param key 限流的键
+     * @param rate 令牌桶每秒填充平均速率
      * @param capacity 令牌桶总容量
-     *
      * @return 可用令牌数
      */
     default CompletableFuture<Long> rateLimitAsync(String key, long rate, long capacity) {
@@ -1442,14 +1445,14 @@ public interface CacheSource extends Resourcable {
         return scanAsync(cursor, limit, null);
     }
 
-    //------------------------ 服务器 Server  ------------------------   
+    // ------------------------ 服务器 Server  ------------------------
     public CompletableFuture<Long> dbsizeAsync();
 
     public CompletableFuture<Void> flushdbAsync();
 
     public CompletableFuture<Void> flushallAsync();
 
-    //------------------------ 哈希表 Hash ------------------------
+    // ------------------------ 哈希表 Hash ------------------------
     public <T> CompletableFuture<T> hgetAsync(String key, String field, Type type);
 
     default CompletableFuture<String> hgetStringAsync(String key, String field) {
@@ -1546,13 +1549,14 @@ public interface CacheSource extends Resourcable {
         return hmgetAsync(key, Long.class, fields);
     }
 
-    public <T> CompletableFuture<Map<String, T>> hscanAsync(String key, Type type, AtomicLong cursor, int limit, String pattern);
+    public <T> CompletableFuture<Map<String, T>> hscanAsync(
+            String key, Type type, AtomicLong cursor, int limit, String pattern);
 
     default <T> CompletableFuture<Map<String, T>> hscanAsync(String key, Type type, AtomicLong cursor, int limit) {
         return hscanAsync(key, type, cursor, limit, null);
     }
 
-    //------------------------ 列表 List ------------------------
+    // ------------------------ 列表 List ------------------------
     public <T> CompletableFuture<T> lindexAsync(String key, Type componentType, int index);
 
     default CompletableFuture<String> lindexStringAsync(String key, int index) {
@@ -1699,7 +1703,7 @@ public interface CacheSource extends Resourcable {
         return rpushAsync(key, Long.class, values);
     }
 
-    //------------------------ 集合 Set ------------------------
+    // ------------------------ 集合 Set ------------------------
     public <T> CompletableFuture<Void> saddAsync(String key, Type componentType, T... values);
 
     default CompletableFuture<Void> saddStringAsync(String key, String... values) {
@@ -1741,7 +1745,8 @@ public interface CacheSource extends Resourcable {
     }
 
     default <T> CompletableFuture<T> srandmemberAsync(String key, Type componentType) {
-        return srandmemberAsync(key, componentType, 1).thenApply(list -> Utility.isNotEmpty(list) ? (T) list.get(0) : null);
+        return srandmemberAsync(key, componentType, 1)
+                .thenApply(list -> Utility.isNotEmpty(list) ? (T) list.get(0) : null);
     }
 
     default CompletableFuture<String> srandmemberStringAsync(String key) {
@@ -1842,7 +1847,8 @@ public interface CacheSource extends Resourcable {
         return spopAsync(key, count, Long.class);
     }
 
-    public <T> CompletableFuture<Set<T>> sscanAsync(String key, Type componentType, AtomicLong cursor, int limit, String pattern);
+    public <T> CompletableFuture<Set<T>> sscanAsync(
+            String key, Type componentType, AtomicLong cursor, int limit, String pattern);
 
     default CompletableFuture<Set<String>> sscanStringAsync(String key, AtomicLong cursor, int limit, String pattern) {
         return sscanAsync(key, String.class, cursor, limit, pattern);
@@ -1864,7 +1870,7 @@ public interface CacheSource extends Resourcable {
         return sscanAsync(key, Long.class, cursor, limit);
     }
 
-    //------------------------ 有序集合 Sorted Set ------------------------
+    // ------------------------ 有序集合 Sorted Set ------------------------
     public CompletableFuture<Void> zaddAsync(String key, CacheScoredValue... values);
 
     default CompletableFuture<Void> zaddAsync(String key, int score, String member) {
@@ -1895,7 +1901,8 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Long> zremAsync(String key, String... members);
 
-    public <T extends Number> CompletableFuture<List<T>> zmscoreAsync(String key, Class<T> scoreType, String... members);
+    public <T extends Number> CompletableFuture<List<T>> zmscoreAsync(
+            String key, Class<T> scoreType, String... members);
 
     public <T extends Number> CompletableFuture<T> zscoreAsync(String key, Class<T> scoreType, String member);
 
@@ -1924,48 +1931,54 @@ public interface CacheSource extends Resourcable {
     }
 
     public CompletableFuture<Long> zcardAsync(String key);
-//
-//    public CompletableFuture<Long> zcountAsync(String key, Range<? extends Number> range);
-//
-//    default CompletableFuture<Long> zcountAsync(String key, long min, long max) {
-//        return zcountAsync(key, new Range.LongRange(min, max));
-//    }
-//
-//    default CompletableFuture<Long> zcountAsync(String key, double min, double max) {
-//        return zcountAsync(key, new Range.DoubleRange(min, max));
-//    }
-//
-//    public <T> CompletableFuture<Set<T>> zdiffAsync(String key, int numkeys, boolean withScores, String... key2s);
-//
-//    public CompletableFuture<Long> zdiffstoreAsync(String key, int numkeys, String srcKey, String... srcKey2s);
-//
-//    public <T> CompletableFuture<Set<T>> zinterAsync(String key, int numkeys, boolean withScores, String... key2s);
-//
-//    public CompletableFuture<Long> zinterstoreAsync(String key, int numkeys, String srcKey, String... srcKey2s);
-//
+    //
+    //    public CompletableFuture<Long> zcountAsync(String key, Range<? extends Number> range);
+    //
+    //    default CompletableFuture<Long> zcountAsync(String key, long min, long max) {
+    //        return zcountAsync(key, new Range.LongRange(min, max));
+    //    }
+    //
+    //    default CompletableFuture<Long> zcountAsync(String key, double min, double max) {
+    //        return zcountAsync(key, new Range.DoubleRange(min, max));
+    //    }
+    //
+    //    public <T> CompletableFuture<Set<T>> zdiffAsync(String key, int numkeys, boolean withScores, String... key2s);
+    //
+    //    public CompletableFuture<Long> zdiffstoreAsync(String key, int numkeys, String srcKey, String... srcKey2s);
+    //
+    //    public <T> CompletableFuture<Set<T>> zinterAsync(String key, int numkeys, boolean withScores, String...
+    // key2s);
+    //
+    //    public CompletableFuture<Long> zinterstoreAsync(String key, int numkeys, String srcKey, String... srcKey2s);
+    //
 
-//
+    //
     public CompletableFuture<Long> zrankAsync(String key, String member);
 
     public CompletableFuture<Long> zrevrankAsync(String key, String member);
 
     public CompletableFuture<List<String>> zrangeAsync(String key, int start, int stop);
 
-    public CompletableFuture<List<CacheScoredValue>> zscanAsync(String key, Type scoreType, AtomicLong cursor, int limit, String pattern);
+    public CompletableFuture<List<CacheScoredValue>> zscanAsync(
+            String key, Type scoreType, AtomicLong cursor, int limit, String pattern);
 
-    default CompletableFuture<List<CacheScoredValue>> zscanIntegerAsync(String key, AtomicLong cursor, int limit, String pattern) {
+    default CompletableFuture<List<CacheScoredValue>> zscanIntegerAsync(
+            String key, AtomicLong cursor, int limit, String pattern) {
         return zscanAsync(key, Integer.class, cursor, limit, pattern);
     }
 
-    default CompletableFuture<List<CacheScoredValue>> zscanLongAsync(String key, AtomicLong cursor, int limit, String pattern) {
+    default CompletableFuture<List<CacheScoredValue>> zscanLongAsync(
+            String key, AtomicLong cursor, int limit, String pattern) {
         return zscanAsync(key, Long.class, cursor, limit, pattern);
     }
 
-    default CompletableFuture<List<CacheScoredValue>> zscanDoubleAsync(String key, AtomicLong cursor, int limit, String pattern) {
+    default CompletableFuture<List<CacheScoredValue>> zscanDoubleAsync(
+            String key, AtomicLong cursor, int limit, String pattern) {
         return zscanAsync(key, Double.class, cursor, limit, pattern);
     }
 
-    default CompletableFuture<List<CacheScoredValue>> zscanAsync(String key, Type scoreType, AtomicLong cursor, int limit) {
+    default CompletableFuture<List<CacheScoredValue>> zscanAsync(
+            String key, Type scoreType, AtomicLong cursor, int limit) {
         return zscanAsync(key, scoreType, cursor, limit, null);
     }
 
@@ -1981,12 +1994,13 @@ public interface CacheSource extends Resourcable {
         return zscanAsync(key, Double.class, cursor, limit, null);
     }
 
-    //-------------------------- 过期方法 ----------------------------------    
+    // -------------------------- 过期方法 ----------------------------------
     @Deprecated(since = "2.8.0")
     public <T> CompletableFuture<Collection<T>> getCollectionAsync(String key, Type componentType);
 
     @Deprecated(since = "2.8.0")
-    public <T> CompletableFuture<Map<String, Collection<T>>> getCollectionMapAsync(boolean set, Type componentType, String... keys);
+    public <T> CompletableFuture<Map<String, Collection<T>>> getCollectionMapAsync(
+            boolean set, Type componentType, String... keys);
 
     @Deprecated(since = "2.8.0")
     public CompletableFuture<Integer> getCollectionSizeAsync(String key);
@@ -2445,7 +2459,8 @@ public interface CacheSource extends Resourcable {
     }
 
     @Deprecated(since = "2.8.0")
-    default <T> CompletableFuture<Map<String, T>> hmapAsync(String key, Type type, int start, int limit, String pattern) {
+    default <T> CompletableFuture<Map<String, T>> hmapAsync(
+            String key, Type type, int start, int limit, String pattern) {
         return hscanAsync(key, type, new AtomicLong(start), limit, pattern);
     }
 
@@ -2496,7 +2511,8 @@ public interface CacheSource extends Resourcable {
 
     @Deprecated(since = "2.8.0")
     default <T> Collection<T> getexCollection(String key, int expireSeconds, Type componentType) {
-        return (Collection) getexCollectionAsync(key, expireSeconds, componentType).join();
+        return (Collection)
+                getexCollectionAsync(key, expireSeconds, componentType).join();
     }
 
     @Deprecated(since = "2.8.0")

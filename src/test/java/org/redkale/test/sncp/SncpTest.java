@@ -18,10 +18,7 @@ import org.redkale.net.sncp.*;
 import org.redkale.service.Service;
 import org.redkale.util.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class SncpTest {
 
     private static final String myhost = "127.0.0.1";
@@ -73,26 +70,44 @@ public class SncpTest {
 
     private void runClient() throws Exception {
         InetSocketAddress addr = new InetSocketAddress(myhost, port);
-        rpcGroups.computeIfAbsent("client", protocol.endsWith(".UDP") ? "UDP" : "TCP").putAddress(addr);
+        rpcGroups
+                .computeIfAbsent("client", protocol.endsWith(".UDP") ? "UDP" : "TCP")
+                .putAddress(addr);
         if (port2 > 0) {
-            rpcGroups.computeIfAbsent("client", protocol.endsWith(".UDP") ? "UDP" : "TCP").putAddress(new InetSocketAddress(myhost, port2));
+            rpcGroups
+                    .computeIfAbsent("client", protocol.endsWith(".UDP") ? "UDP" : "TCP")
+                    .putAddress(new InetSocketAddress(myhost, port2));
         }
         final AsyncIOGroup asyncGroup = new AsyncIOGroup(clientCapacity, 16);
         asyncGroup.start();
 
         InetSocketAddress sncpAddress = addr;
-        final SncpClient client = new SncpClient("", asyncGroup, "0", sncpAddress, new ClientAddress(sncpAddress), protocol.endsWith(".UDP") ? "UDP" : "TCP", 16, 100);
+        final SncpClient client = new SncpClient(
+                "",
+                asyncGroup,
+                "0",
+                sncpAddress,
+                new ClientAddress(sncpAddress),
+                protocol.endsWith(".UDP") ? "UDP" : "TCP",
+                16,
+                100);
 
-        final SncpTestIService service = Sncp.createSimpleRemoteService(SncpTestIService.class, factory, rpcGroups, client, "client");//Sncp.createSimpleRemoteService(SncpTestIService.class, null, transFactory, addr, "client");
+        final SncpTestIService service = Sncp.createSimpleRemoteService(
+                SncpTestIService.class,
+                factory,
+                rpcGroups,
+                client,
+                "client"); // Sncp.createSimpleRemoteService(SncpTestIService.class, null, transFactory, addr,
+        // "client");
         factory.inject(service);
 
-//        SncpTestBean bean = new SncpTestBean();
-//        StringBuilder sb = new StringBuilder();
-//        for (int i = 0; i < 2000; i++) {
-//            sb.append("_").append(i).append("_0123456789");
-//        }
-//        bean.setContent(sb.toString());
-//        bean.setContent("hello sncp");
+        //        SncpTestBean bean = new SncpTestBean();
+        //        StringBuilder sb = new StringBuilder();
+        //        for (int i = 0; i < 2000; i++) {
+        //            sb.append("_").append(i).append("_0123456789");
+        //        }
+        //        bean.setContent(sb.toString());
+        //        bean.setContent("hello sncp");
         SncpTestBean callbean = new SncpTestBean();
         callbean.setId(1);
         callbean.setContent("数据X");
@@ -112,7 +127,7 @@ public class SncpTest {
                 @Override
                 public void run() {
                     try {
-                        //Thread.sleep(k);
+                        // Thread.sleep(k);
                         SncpTestBean bean = new SncpTestBean();
                         bean.setId(k);
                         bean.setContent("数据: " + k);
@@ -124,12 +139,13 @@ public class SncpTest {
                         bean.setContent(sb.toString());
 
                         service.queryResult(bean);
-                        //service.updateBean(bean);
+                        // service.updateBean(bean);
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
                         long a = ai.incrementAndGet();
-                        System.out.println("运行了 " + (a == 100 ? "--------------------------------------------------" : "") + a);
+                        System.out.println(
+                                "运行了 " + (a == 100 ? "--------------------------------------------------" : "") + a);
                         cld.countDown();
                     }
                 }
@@ -148,7 +164,8 @@ public class SncpTest {
         long s2 = System.currentTimeMillis();
         final CompletableFuture<String> future = service.queryResultAsync(callbean);
         future.whenComplete((v, e) -> {
-            System.out.println("异步执行结果: " + v + ", 异常为: " + e + ", 耗时: " + (System.currentTimeMillis() - s2) / 1000.0 + "s");
+            System.out.println(
+                    "异步执行结果: " + v + ", 异常为: " + e + ", 耗时: " + (System.currentTimeMillis() - s2) / 1000.0 + "s");
             cld2.countDown();
         });
         cld2.await();
@@ -175,10 +192,15 @@ public class SncpTest {
                     conf.addValue("maxbody", "" + (100 * 1024 * 1024));
                     SncpServer server = new SncpServer(null, System.currentTimeMillis(), conf, factory);
                     if (port2 > 0) {
-                        rpcGroups.computeIfAbsent("server", protocol.endsWith(".UDP") ? "UDP" : "TCP").putAddress(new InetSocketAddress(myhost, port2));
+                        rpcGroups
+                                .computeIfAbsent("server", protocol.endsWith(".UDP") ? "UDP" : "TCP")
+                                .putAddress(new InetSocketAddress(myhost, port2));
                     }
 
-                    SncpTestIService service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, factory); //Sncp.createSimpleLocalService(SncpTestServiceImpl.class, null, factory, transFactory, addr, "server");
+                    SncpTestIService service = Sncp.createSimpleLocalService(
+                            SncpTestServiceImpl.class,
+                            factory); // Sncp.createSimpleLocalService(SncpTestServiceImpl.class, null, factory,
+                    // transFactory, addr, "server");
                     factory.inject(service);
                     server.addSncpServlet(service);
                     System.out.println(service);
@@ -213,9 +235,14 @@ public class SncpTest {
                     conf.addValue("protocol", protocol);
                     conf.addValue("maxbody", "" + (100 * 1024 * 1024));
                     SncpServer server = new SncpServer(null, System.currentTimeMillis(), conf, factory);
-                    rpcGroups.computeIfAbsent("server", protocol.endsWith(".UDP") ? "UDP" : "TCP").putAddress(new InetSocketAddress(myhost, port));
+                    rpcGroups
+                            .computeIfAbsent("server", protocol.endsWith(".UDP") ? "UDP" : "TCP")
+                            .putAddress(new InetSocketAddress(myhost, port));
 
-                    Service service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, factory); //Sncp.createSimpleLocalService(SncpTestServiceImpl.class, null, factory, transFactory, addr, "server");
+                    Service service = Sncp.createSimpleLocalService(
+                            SncpTestServiceImpl.class,
+                            factory); // Sncp.createSimpleLocalService(SncpTestServiceImpl.class, null, factory,
+                    // transFactory, addr, "server");
                     server.addSncpServlet(service);
                     server.init(conf);
                     server.start();
@@ -228,5 +255,4 @@ public class SncpTest {
         }.start();
         cdl.await();
     }
-
 }

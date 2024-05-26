@@ -12,8 +12,7 @@ import java.util.*;
  * 以ByteBuffer为数据载体的Reader <br>
  * 注意：最小可读空间至少是8
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -45,7 +44,7 @@ public class ByteBufferReader {
 
     public ByteBufferReader(ByteBuffer buffer) {
         Objects.requireNonNull(buffer);
-        this.buffers = new ByteBuffer[]{buffer};
+        this.buffers = new ByteBuffer[] {buffer};
         this.currBuffer = this.buffers[0];
         this.currIndex = 0;
         this.bigEndian = this.currBuffer.order() == ByteOrder.BIG_ENDIAN;
@@ -139,7 +138,7 @@ public class ByteBufferReader {
         return v;
     }
 
-    //提前预读一个字节
+    // 提前预读一个字节
     public byte preget() {
         ByteBuffer buf = this.currBuffer;
         if (!buf.hasRemaining()) {
@@ -187,40 +186,22 @@ public class ByteBufferReader {
         }
         if (bigEndian) {
             if (remain == 1) {
-                return ((buf.get() << 24)
-                    | ((get() & 0xff) << 16)
-                    | ((get() & 0xff) << 8)
-                    | ((get() & 0xff)));
+                return ((buf.get() << 24) | ((get() & 0xff) << 16) | ((get() & 0xff) << 8) | ((get() & 0xff)));
             }
             if (remain == 2) {
-                return ((buf.get() << 24)
-                    | ((buf.get() & 0xff) << 16)
-                    | ((get() & 0xff) << 8)
-                    | ((get() & 0xff)));
+                return ((buf.get() << 24) | ((buf.get() & 0xff) << 16) | ((get() & 0xff) << 8) | ((get() & 0xff)));
             }
-            //remain == 3
-            return ((buf.get() << 24)
-                | ((buf.get() & 0xff) << 16)
-                | ((buf.get() & 0xff) << 8)
-                | ((get() & 0xff)));
+            // remain == 3
+            return ((buf.get() << 24) | ((buf.get() & 0xff) << 16) | ((buf.get() & 0xff) << 8) | ((get() & 0xff)));
         }
         if (remain == 1) {
-            return ((buf.get() & 0xff)
-                | ((get() & 0xff) << 8)
-                | ((get() & 0xff) << 16)
-                | ((get() << 24)));
+            return ((buf.get() & 0xff) | ((get() & 0xff) << 8) | ((get() & 0xff) << 16) | ((get() << 24)));
         }
         if (remain == 2) {
-            return ((buf.get() & 0xff)
-                | ((buf.get() & 0xff) << 8)
-                | ((get() & 0xff) << 16)
-                | ((get() << 24)));
+            return ((buf.get() & 0xff) | ((buf.get() & 0xff) << 8) | ((get() & 0xff) << 16) | ((get() << 24)));
         }
-        //remain == 3
-        return ((buf.get()) & 0xff)
-            | ((buf.get() & 0xff) << 8)
-            | ((buf.get() & 0xff) << 16)
-            | ((get() << 24));
+        // remain == 3
+        return ((buf.get()) & 0xff) | ((buf.get() & 0xff) << 8) | ((buf.get() & 0xff) << 16) | ((get() << 24));
     }
 
     public float getFloat() {
@@ -241,143 +222,143 @@ public class ByteBufferReader {
         if (bigEndian) {
             if (remain == 1) {
                 return ((((long) buf.get()) << 56)
-                    | (((long) get() & 0xff) << 48)
-                    | (((long) get() & 0xff) << 40)
-                    | (((long) get() & 0xff) << 32)
-                    | (((long) get() & 0xff) << 24)
-                    | (((long) get() & 0xff) << 16)
-                    | (((long) get() & 0xff) << 8)
-                    | (((long) get() & 0xff)));
+                        | (((long) get() & 0xff) << 48)
+                        | (((long) get() & 0xff) << 40)
+                        | (((long) get() & 0xff) << 32)
+                        | (((long) get() & 0xff) << 24)
+                        | (((long) get() & 0xff) << 16)
+                        | (((long) get() & 0xff) << 8)
+                        | (((long) get() & 0xff)));
             }
             if (remain == 2) {
                 return ((((long) buf.get()) << 56)
-                    | (((long) buf.get() & 0xff) << 48)
-                    | (((long) get() & 0xff) << 40)
-                    | (((long) get() & 0xff) << 32)
-                    | (((long) get() & 0xff) << 24)
-                    | (((long) get() & 0xff) << 16)
-                    | (((long) get() & 0xff) << 8)
-                    | (((long) get() & 0xff)));
+                        | (((long) buf.get() & 0xff) << 48)
+                        | (((long) get() & 0xff) << 40)
+                        | (((long) get() & 0xff) << 32)
+                        | (((long) get() & 0xff) << 24)
+                        | (((long) get() & 0xff) << 16)
+                        | (((long) get() & 0xff) << 8)
+                        | (((long) get() & 0xff)));
             }
             if (remain == 3) {
                 return ((((long) buf.get()) << 56)
-                    | (((long) buf.get() & 0xff) << 48)
-                    | (((long) buf.get() & 0xff) << 40)
-                    | (((long) get() & 0xff) << 32)
-                    | (((long) get() & 0xff) << 24)
-                    | (((long) get() & 0xff) << 16)
-                    | (((long) get() & 0xff) << 8)
-                    | (((long) get() & 0xff)));
+                        | (((long) buf.get() & 0xff) << 48)
+                        | (((long) buf.get() & 0xff) << 40)
+                        | (((long) get() & 0xff) << 32)
+                        | (((long) get() & 0xff) << 24)
+                        | (((long) get() & 0xff) << 16)
+                        | (((long) get() & 0xff) << 8)
+                        | (((long) get() & 0xff)));
             }
             if (remain == 4) {
                 return ((((long) buf.get()) << 56)
-                    | (((long) buf.get() & 0xff) << 48)
-                    | (((long) buf.get() & 0xff) << 40)
-                    | (((long) buf.get() & 0xff) << 32)
-                    | (((long) get() & 0xff) << 24)
-                    | (((long) get() & 0xff) << 16)
-                    | (((long) get() & 0xff) << 8)
-                    | (((long) get() & 0xff)));
+                        | (((long) buf.get() & 0xff) << 48)
+                        | (((long) buf.get() & 0xff) << 40)
+                        | (((long) buf.get() & 0xff) << 32)
+                        | (((long) get() & 0xff) << 24)
+                        | (((long) get() & 0xff) << 16)
+                        | (((long) get() & 0xff) << 8)
+                        | (((long) get() & 0xff)));
             }
             if (remain == 5) {
                 return ((((long) buf.get()) << 56)
-                    | (((long) buf.get() & 0xff) << 48)
-                    | (((long) buf.get() & 0xff) << 40)
-                    | (((long) buf.get() & 0xff) << 32)
-                    | (((long) buf.get() & 0xff) << 24)
-                    | (((long) get() & 0xff) << 16)
-                    | (((long) get() & 0xff) << 8)
-                    | (((long) get() & 0xff)));
+                        | (((long) buf.get() & 0xff) << 48)
+                        | (((long) buf.get() & 0xff) << 40)
+                        | (((long) buf.get() & 0xff) << 32)
+                        | (((long) buf.get() & 0xff) << 24)
+                        | (((long) get() & 0xff) << 16)
+                        | (((long) get() & 0xff) << 8)
+                        | (((long) get() & 0xff)));
             }
             if (remain == 6) {
                 return ((((long) buf.get()) << 56)
+                        | (((long) buf.get() & 0xff) << 48)
+                        | (((long) buf.get() & 0xff) << 40)
+                        | (((long) buf.get() & 0xff) << 32)
+                        | (((long) buf.get() & 0xff) << 24)
+                        | (((long) buf.get() & 0xff) << 16)
+                        | (((long) get() & 0xff) << 8)
+                        | (((long) get() & 0xff)));
+            }
+            // remain == 7
+            return ((((long) buf.get()) << 56)
                     | (((long) buf.get() & 0xff) << 48)
                     | (((long) buf.get() & 0xff) << 40)
                     | (((long) buf.get() & 0xff) << 32)
                     | (((long) buf.get() & 0xff) << 24)
                     | (((long) buf.get() & 0xff) << 16)
-                    | (((long) get() & 0xff) << 8)
+                    | (((long) buf.get() & 0xff) << 8)
                     | (((long) get() & 0xff)));
-            }
-            //remain == 7
-            return ((((long) buf.get()) << 56)
-                | (((long) buf.get() & 0xff) << 48)
-                | (((long) buf.get() & 0xff) << 40)
-                | (((long) buf.get() & 0xff) << 32)
-                | (((long) buf.get() & 0xff) << 24)
-                | (((long) buf.get() & 0xff) << 16)
-                | (((long) buf.get() & 0xff) << 8)
-                | (((long) get() & 0xff)));
         }
         if (remain == 1) {
             return ((((long) buf.get() & 0xff))
-                | (((long) get() & 0xff) << 8)
-                | (((long) get() & 0xff) << 16)
-                | (((long) get() & 0xff) << 24)
-                | (((long) get() & 0xff) << 32)
-                | (((long) get() & 0xff) << 40)
-                | (((long) get() & 0xff) << 48)
-                | (((long) get()) << 56));
+                    | (((long) get() & 0xff) << 8)
+                    | (((long) get() & 0xff) << 16)
+                    | (((long) get() & 0xff) << 24)
+                    | (((long) get() & 0xff) << 32)
+                    | (((long) get() & 0xff) << 40)
+                    | (((long) get() & 0xff) << 48)
+                    | (((long) get()) << 56));
         }
         if (remain == 2) {
             return ((((long) buf.get() & 0xff))
-                | (((long) buf.get() & 0xff) << 8)
-                | (((long) get() & 0xff) << 16)
-                | (((long) get() & 0xff) << 24)
-                | (((long) get() & 0xff) << 32)
-                | (((long) get() & 0xff) << 40)
-                | (((long) get() & 0xff) << 48)
-                | (((long) get()) << 56));
+                    | (((long) buf.get() & 0xff) << 8)
+                    | (((long) get() & 0xff) << 16)
+                    | (((long) get() & 0xff) << 24)
+                    | (((long) get() & 0xff) << 32)
+                    | (((long) get() & 0xff) << 40)
+                    | (((long) get() & 0xff) << 48)
+                    | (((long) get()) << 56));
         }
         if (remain == 3) {
             return ((((long) buf.get() & 0xff))
-                | (((long) buf.get() & 0xff) << 8)
-                | (((long) buf.get() & 0xff) << 16)
-                | (((long) get() & 0xff) << 24)
-                | (((long) get() & 0xff) << 32)
-                | (((long) get() & 0xff) << 40)
-                | (((long) get() & 0xff) << 48)
-                | (((long) get()) << 56));
+                    | (((long) buf.get() & 0xff) << 8)
+                    | (((long) buf.get() & 0xff) << 16)
+                    | (((long) get() & 0xff) << 24)
+                    | (((long) get() & 0xff) << 32)
+                    | (((long) get() & 0xff) << 40)
+                    | (((long) get() & 0xff) << 48)
+                    | (((long) get()) << 56));
         }
         if (remain == 4) {
             return ((((long) buf.get() & 0xff))
-                | (((long) buf.get() & 0xff) << 8)
-                | (((long) buf.get() & 0xff) << 16)
-                | (((long) buf.get() & 0xff) << 24)
-                | (((long) get() & 0xff) << 32)
-                | (((long) get() & 0xff) << 40)
-                | (((long) get() & 0xff) << 48)
-                | (((long) get()) << 56));
+                    | (((long) buf.get() & 0xff) << 8)
+                    | (((long) buf.get() & 0xff) << 16)
+                    | (((long) buf.get() & 0xff) << 24)
+                    | (((long) get() & 0xff) << 32)
+                    | (((long) get() & 0xff) << 40)
+                    | (((long) get() & 0xff) << 48)
+                    | (((long) get()) << 56));
         }
         if (remain == 5) {
             return ((((long) buf.get() & 0xff))
-                | (((long) buf.get() & 0xff) << 8)
-                | (((long) buf.get() & 0xff) << 16)
-                | (((long) buf.get() & 0xff) << 24)
-                | (((long) buf.get() & 0xff) << 32)
-                | (((long) get() & 0xff) << 40)
-                | (((long) get() & 0xff) << 48)
-                | (((long) get()) << 56));
+                    | (((long) buf.get() & 0xff) << 8)
+                    | (((long) buf.get() & 0xff) << 16)
+                    | (((long) buf.get() & 0xff) << 24)
+                    | (((long) buf.get() & 0xff) << 32)
+                    | (((long) get() & 0xff) << 40)
+                    | (((long) get() & 0xff) << 48)
+                    | (((long) get()) << 56));
         }
         if (remain == 6) {
             return ((((long) buf.get() & 0xff))
+                    | (((long) buf.get() & 0xff) << 8)
+                    | (((long) buf.get() & 0xff) << 16)
+                    | (((long) buf.get() & 0xff) << 24)
+                    | (((long) buf.get() & 0xff) << 32)
+                    | (((long) buf.get() & 0xff) << 40)
+                    | (((long) get() & 0xff) << 48)
+                    | (((long) get()) << 56));
+        }
+        // remain == 7
+        return ((((long) buf.get() & 0xff))
                 | (((long) buf.get() & 0xff) << 8)
                 | (((long) buf.get() & 0xff) << 16)
                 | (((long) buf.get() & 0xff) << 24)
                 | (((long) buf.get() & 0xff) << 32)
                 | (((long) buf.get() & 0xff) << 40)
-                | (((long) get() & 0xff) << 48)
+                | (((long) buf.get() & 0xff) << 48)
                 | (((long) get()) << 56));
-        }
-        //remain == 7
-        return ((((long) buf.get() & 0xff))
-            | (((long) buf.get() & 0xff) << 8)
-            | (((long) buf.get() & 0xff) << 16)
-            | (((long) buf.get() & 0xff) << 24)
-            | (((long) buf.get() & 0xff) << 32)
-            | (((long) buf.get() & 0xff) << 40)
-            | (((long) buf.get() & 0xff) << 48)
-            | (((long) get()) << 56));
     }
 
     public double getDouble() {

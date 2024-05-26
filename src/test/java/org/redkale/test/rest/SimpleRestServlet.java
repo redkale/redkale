@@ -2,7 +2,6 @@ package org.redkale.test.rest;
 
 import java.io.IOException;
 import org.redkale.annotation.Resource;
-
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
 
@@ -25,7 +24,7 @@ public class SimpleRestServlet extends HttpServlet {
         response.nextEvent();
     }
 
-    //普通鉴权
+    // 普通鉴权
     @Override
     public void authenticate(HttpRequest request, HttpResponse response) throws IOException {
         int userid = request.currentUserid(int.class);
@@ -35,5 +34,4 @@ public class SimpleRestServlet extends HttpServlet {
         }
         response.nextEvent();
     }
-
 }

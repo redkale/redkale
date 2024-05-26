@@ -14,11 +14,9 @@ import java.util.function.Predicate;
 /**
  * 用于RestService类的方法的参数获取HttpHeaders
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.8.0
  */
 public interface RestHeaders {

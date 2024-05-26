@@ -10,8 +10,7 @@ import org.redkale.convert.*;
 /**
  * CharSequence 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -31,7 +30,8 @@ public class CharSequenceSimpledCoder<R extends Reader, W extends Writer> extend
         return in.readString();
     }
 
-    public static class StringBuilderSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, StringBuilder> {
+    public static class StringBuilderSimpledCoder<R extends Reader, W extends Writer>
+            extends SimpledCoder<R, W, StringBuilder> {
 
         public static final StringBuilderSimpledCoder instance = new StringBuilderSimpledCoder();
 

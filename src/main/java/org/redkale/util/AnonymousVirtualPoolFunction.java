@@ -1,18 +1,18 @@
-///*
+/// *
 // *
 // */
-//package org.redkale.util;
+// package org.redkale.util;
 //
-//import java.util.concurrent.*;
-//import java.util.function.Function;
+// import java.util.concurrent.*;
+// import java.util.function.Function;
 //
-///**
+/// **
 // * 虚拟线程池
-// * 
+// *
 // * @author zhangjx
 // * @since 2.8.0
 // */
-//public class AnonymousVirtualPoolFunction implements Function<String, ExecutorService> {
+// public class AnonymousVirtualPoolFunction implements Function<String, ExecutorService> {
 //
 //    @Override
 //    public ExecutorService apply(String threadNameFormat) {
@@ -24,4 +24,4 @@
 //            return t;
 //        });
 //    }
-//}
+// }

@@ -5,24 +5,23 @@
  */
 package org.redkale.mq.spi;
 
+import static org.redkale.mq.spi.MessageCoder.*;
+
 import java.net.HttpCookie;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.redkale.convert.Convert;
 import org.redkale.convert.json.JsonConvert;
-import static org.redkale.mq.spi.MessageCoder.*;
 import org.redkale.net.http.HttpResult;
 import org.redkale.util.Utility;
 
 /**
  * HttpResult的MessageCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.1.0
  */
 public class HttpResultCoder implements MessageCoder<HttpResult> {
@@ -33,7 +32,7 @@ public class HttpResultCoder implements MessageCoder<HttpResult> {
         return instance;
     }
 
-    //消息内容的类型
+    // 消息内容的类型
     @Override
     public byte ctype() {
         return MessageRecord.CTYPE_HTTP_RESULT;
@@ -49,7 +48,7 @@ public class HttpResultCoder implements MessageCoder<HttpResult> {
         byte[] cookies = getBytes(data.getCookies());
         byte[] content;
         if (data.getResult() == null) {
-            content = new byte[0]; //""
+            content = new byte[0]; // ""
         } else if (data.getResult() instanceof byte[]) {
             content = (byte[]) data.getResult();
         } else if (data.getResult() instanceof CharSequence) {
@@ -61,7 +60,13 @@ public class HttpResultCoder implements MessageCoder<HttpResult> {
             }
             content = cc.convertToBytes(data.getResult());
         }
-        int count = 4 + 2 + contentType.length + headers.length + cookies.length + 4 + (content == null ? 0 : content.length);
+        int count = 4
+                + 2
+                + contentType.length
+                + headers.length
+                + cookies.length
+                + 4
+                + (content == null ? 0 : content.length);
         final byte[] bs = new byte[count];
         ByteBuffer buffer = ByteBuffer.wrap(bs);
         buffer.putInt(data.getStatus());
@@ -111,7 +116,7 @@ public class HttpResultCoder implements MessageCoder<HttpResult> {
             len.addAndGet(2 + (cookie.getDomain() == null ? 0 : Utility.encodeUTF8Length(cookie.getDomain())));
             len.addAndGet(2 + (cookie.getPath() == null ? 0 : Utility.encodeUTF8Length(cookie.getPath())));
             len.addAndGet(2 + (cookie.getPortlist() == null ? 0 : Utility.encodeUTF8Length(cookie.getPortlist())));
-            len.addAndGet(8 + 1 + 1); //maxage Secure HttpOnly
+            len.addAndGet(8 + 1 + 1); // maxage Secure HttpOnly
         });
         final byte[] bs = new byte[len.get()];
         final ByteBuffer buffer = ByteBuffer.wrap(bs);

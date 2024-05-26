@@ -1,12 +1,12 @@
-///*
+/// *
 // *
 // */
-//package org.redkale.util;
+// package org.redkale.util;
 //
-//import java.util.function.Function;
-//import java.util.function.Supplier;
+// import java.util.function.Function;
+// import java.util.function.Supplier;
 //
-///**
+/// **
 // * ThreadScopedLocal, 兼容虚拟线程的ThreadLocal
 // *
 // * <p>
@@ -15,7 +15,7 @@
 // * @author zhangjx
 // * @since 2.8.0
 // */
-//public class AnonymousThreadLocal<T> extends ThreadLocal<T> implements Function<Supplier<T>, ThreadLocal<T>> {
+// public class AnonymousThreadLocal<T> extends ThreadLocal<T> implements Function<Supplier<T>, ThreadLocal<T>> {
 //
 //    private final Supplier<T> supplier;
 //
@@ -45,4 +45,4 @@
 //        Thread t = Thread.currentThread();
 //        return t.isVirtual() ? initialValue() : super.get();
 //    }
-//}
+// }

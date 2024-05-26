@@ -8,10 +8,7 @@ package org.redkale.test.websocket;
 import java.io.ByteArrayOutputStream;
 import java.net.Socket;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class Flash843 {
 
     public static void main(String[] args) throws Exception {

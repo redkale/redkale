@@ -8,8 +8,7 @@ import java.util.Map;
 /**
  * source组件的基本管理器
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.8.0
@@ -17,9 +16,7 @@ import java.util.Map;
 public interface SourceManager {
 
     /**
-     *
      * @param sourceName 资源名
-     *
      * @return CacheSource
      */
     default CacheSource loadCacheSource(final String sourceName) {
@@ -27,10 +24,8 @@ public interface SourceManager {
     }
 
     /**
-     *
      * @param sourceName 资源名
      * @param autoMemory 不存在是否自动创建内存版CacheSource
-     *
      * @return CacheSource
      */
     public CacheSource loadCacheSource(final String sourceName, boolean autoMemory);
@@ -43,9 +38,7 @@ public interface SourceManager {
     public Map<String, CacheSource> getCacheSources();
 
     /**
-     *
      * @param sourceName 资源名
-     *
      * @return DataSource
      */
     default DataSource loadDataSource(final String sourceName) {
@@ -57,7 +50,6 @@ public interface SourceManager {
      *
      * @param sourceName 资源名
      * @param autoMemory 不存在是否自动创建内存版DataSource
-     *
      * @return DataSource
      */
     public DataSource loadDataSource(final String sourceName, boolean autoMemory);

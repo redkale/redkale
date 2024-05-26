@@ -5,21 +5,20 @@
  */
 package org.redkale.persistence;
 
-import org.redkale.source.DataSource;
-import org.redkale.source.EntityInfo;
-
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 import java.lang.annotation.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
+import org.redkale.source.DataSource;
+import org.redkale.source.EntityInfo;
 
 /**
  * VirtualEntity表示虚拟的数据实体类， 通常Entity都会映射到数据库中的某个表，而标记为&#64;VirtualEntity的Entity类只存在EntityCache中
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -40,12 +39,10 @@ public @interface VirtualEntity {
      *
      * @return Class
      */
-    Class<? extends BiFunction<DataSource, EntityInfo, CompletableFuture<List>>> loader() default DefaultFunctionLoader.class;
+    Class<? extends BiFunction<DataSource, EntityInfo, CompletableFuture<List>>> loader() default
+            DefaultFunctionLoader.class;
 
-    /**
-     * 默认全量加载器
-     *
-     */
+    /** 默认全量加载器 */
     public static class DefaultFunctionLoader implements BiFunction<DataSource, EntityInfo, CompletableFuture<List>> {
 
         @Override

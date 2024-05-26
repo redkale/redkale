@@ -13,8 +13,7 @@ import org.redkale.convert.ConvertColumn;
 /**
  * 页集合。 结构由一个total总数和一个List列表组合而成。
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> 集合元素的数据类型
@@ -168,6 +167,8 @@ public class Sheet<T> implements java.io.Serializable, Iterable<T> {
 
     public <E> E[] toArray(IntFunction<E[]> generator) {
         Collection<T> data = this.rows;
-        return (data == null) ? new ArrayList<E>().toArray(generator.apply(0)) : data.toArray(generator.apply(data.size()));
+        return (data == null)
+                ? new ArrayList<E>().toArray(generator.apply(0))
+                : data.toArray(generator.apply(data.size()));
     }
 }

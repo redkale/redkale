@@ -14,7 +14,11 @@ import org.redkale.convert.*;
 import org.redkale.util.*;
 
 /**
- * <blockquote><pre>
+ *
+ *
+ * <blockquote>
+ *
+ * <pre>
  * BSON协议格式:
  *  1) 基本数据类型: 直接转换成byte[]
  *  2) SmallString(无特殊字符且长度小于256的字符串): length(1 byte) + byte[](utf8); 通常用于类名、字段名、枚举。
@@ -32,9 +36,11 @@ import org.redkale.util.*;
  *      5、 SIGN_NONEXT 标记位，值固定为0 (byte)
  *      6、 SIGN_OBJECTE 标记位，值固定为0xEE (short)
  *
- * </pre></blockquote>
- * <p>
- * 详情见: https://redkale.org
+ * </pre>
+ *
+ * </blockquote>
+ *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -70,12 +76,16 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
     }
 
     @Override
-    public BsonConvert newConvert(final BiFunction<Attribute, Object, Object> objFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
+    public BsonConvert newConvert(
+            final BiFunction<Attribute, Object, Object> objFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
         return newConvert(objFieldFunc, null, objExtFunc);
     }
 
     @Override
-    public BsonConvert newConvert(final BiFunction<Attribute, Object, Object> fieldFunc, BiFunction mapFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
+    public BsonConvert newConvert(
+            final BiFunction<Attribute, Object, Object> fieldFunc,
+            BiFunction mapFieldFunc,
+            Function<Object, ConvertField[]> objExtFunc) {
         return new BsonConvert(getFactory(), features) {
             @Override
             protected <S extends BsonWriter> S configWrite(S writer) {
@@ -84,7 +94,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
         };
     }
 
-    //------------------------------ reader -----------------------------------------------------------
+    // ------------------------------ reader -----------------------------------------------------------
     public BsonReader pollReader(final ByteBuffer... buffers) {
         return new BsonByteBufferReader(buffers);
     }
@@ -112,7 +122,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
         }
     }
 
-    //------------------------------ writer -----------------------------------------------------------
+    // ------------------------------ writer -----------------------------------------------------------
     public BsonByteBufferWriter pollWriter(final Supplier<ByteBuffer> supplier) {
         return configWrite(new BsonByteBufferWriter(features, supplier));
     }
@@ -140,7 +150,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
         }
     }
 
-    //------------------------------ convertFrom -----------------------------------------------------------
+    // ------------------------------ convertFrom -----------------------------------------------------------
     @Override
     public <T> T convertFrom(final Type type, final byte[] bytes) {
         if (bytes == null) {
@@ -189,7 +199,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
         return rs;
     }
 
-    //------------------------------ convertTo -----------------------------------------------------------
+    // ------------------------------ convertTo -----------------------------------------------------------
     @Override
     public byte[] convertTo(final Type type, final Object value) {
         if (type == null && value == null) {
@@ -260,7 +270,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
 
     @Override
     public void convertTo(final BsonWriter writer, final Type type, final Object value) {
-        if (type == null && value == null) { //必须判断type==null
+        if (type == null && value == null) { // 必须判断type==null
             writer.writeNull();
         } else {
             factory.loadEncoder(type == null ? value.getClass() : type).convertTo(writer, value);

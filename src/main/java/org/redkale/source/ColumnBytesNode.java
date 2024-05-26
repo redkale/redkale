@@ -8,8 +8,7 @@ import org.redkale.convert.ConvertColumn;
 /**
  * byte[]的ColumnNode
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.8.0
@@ -19,8 +18,7 @@ public class ColumnBytesNode implements ColumnNode {
     @ConvertColumn(index = 1)
     private byte[] value;
 
-    public ColumnBytesNode() {
-    }
+    public ColumnBytesNode() {}
 
     public ColumnBytesNode(byte[] value) {
         this.value = value;
@@ -42,5 +40,4 @@ public class ColumnBytesNode implements ColumnNode {
     public String toString() {
         return "{\"value\":" + value + "}";
     }
-
 }

@@ -8,13 +8,9 @@ import org.redkale.net.client.ClientCodec;
 import org.redkale.net.client.ClientConnection;
 
 /**
- *
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.8.0
  */
 class WebConnection extends ClientConnection<WebRequest, WebResult> {
@@ -27,5 +23,4 @@ class WebConnection extends ClientConnection<WebRequest, WebResult> {
     protected ClientCodec createCodec() {
         return new WebCodec(this);
     }
-
 }

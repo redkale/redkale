@@ -12,8 +12,7 @@ import org.redkale.convert.json.*;
 /**
  * java.time.LocalTime 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -34,21 +33,22 @@ public final class LocalTimeSimpledCoder<R extends Reader, W extends Writer> ext
         return t == -1 ? null : LocalTime.ofNanoOfDay(t);
     }
 
-//    public static void main(String[] args) throws Throwable {
-//        LocalTime now = LocalTime.now();
-//        System.out.println(now);
-//        BsonWriter writer = new BsonWriter();
-//        LocalTimeSimpledCoder.instance.convertTo(writer, now);
-//        BsonReader reader = new BsonReader(writer.toArray()); 
-//        System.out.println(LocalTimeSimpledCoder.instance.convertFrom(reader));
-//    }
+    //    public static void main(String[] args) throws Throwable {
+    //        LocalTime now = LocalTime.now();
+    //        System.out.println(now);
+    //        BsonWriter writer = new BsonWriter();
+    //        LocalTimeSimpledCoder.instance.convertTo(writer, now);
+    //        BsonReader reader = new BsonReader(writer.toArray());
+    //        System.out.println(LocalTimeSimpledCoder.instance.convertFrom(reader));
+    //    }
     /**
      * java.time.LocalTime 的JsonSimpledCoder实现
      *
      * @param <R> Reader输入的子类型
      * @param <W> Writer输出的子类型
      */
-    public final static class LocalTimeJsonSimpledCoder<R extends JsonReader, W extends JsonWriter> extends SimpledCoder<R, W, LocalTime> {
+    public static final class LocalTimeJsonSimpledCoder<R extends JsonReader, W extends JsonWriter>
+            extends SimpledCoder<R, W, LocalTime> {
 
         public static final LocalTimeJsonSimpledCoder instance = new LocalTimeJsonSimpledCoder();
 

@@ -15,11 +15,8 @@ import org.redkale.convert.json.JsonConvert;
 import org.redkale.persistence.*;
 import org.redkale.util.*;
 
-/**
- * @author zhangjx
- */
+/** @author zhangjx */
 public class BsonMainTest {
-
 
     public static void main(String[] args) throws Throwable {
         BsonMainTest test = new BsonMainTest();
@@ -35,11 +32,14 @@ public class BsonMainTest {
 
     @Test
     public void run1() throws Throwable {
-        Serializable[] sers = new Serializable[]{"aaa", 4};
+        Serializable[] sers = new Serializable[] {"aaa", 4};
         final BsonConvert convert = BsonFactory.root().getConvert();
         byte[] bytes = convert.convertTo(sers);
         Utility.println("---", bytes);
-        byte[] checks = new byte[]{0x00, 0x00, 0x00, 0x02, 0x7f, 0x01, 0x41, 0x00, 0x00, 0x00, 0x03, 0x61, 0x61, 0x61, 0x01, 0x69, 0x00, 0x00, 0x00, 0x04};
+        byte[] checks = new byte[] {
+            0x00, 0x00, 0x00, 0x02, 0x7f, 0x01, 0x41, 0x00, 0x00, 0x00, 0x03, 0x61, 0x61, 0x61, 0x01, 0x69, 0x00, 0x00,
+            0x00, 0x04
+        };
         Assertions.assertArrayEquals(checks, bytes);
         Serializable[] a = convert.convertFrom(Serializable[].class, bytes);
         Assertions.assertEquals("[aaa, 4]", Arrays.toString(a));
@@ -88,7 +88,9 @@ public class BsonMainTest {
         convert.convertTo(writer, bean);
         bytes2 = writer.toArray();
         System.out.println(convert.convertFrom(ComplextEntity.class, bytes2).toString());
-        Assertions.assertEquals("{\"chname\":\"\",\"flag\":true,\"userid\":0}", convert.convertFrom(ComplextEntity.class, bytes2).toString());
+        Assertions.assertEquals(
+                "{\"chname\":\"\",\"flag\":true,\"userid\":0}",
+                convert.convertFrom(ComplextEntity.class, bytes2).toString());
     }
 
     @Test
@@ -129,10 +131,8 @@ public class BsonMainTest {
         bs = convert.convertTo(Object.class, val);
         obj = convert.convertFrom(Object.class, bs);
         Assertions.assertEquals("Optional[haha]", obj.toString());
-        bs = convert.convertTo(new TypeToken<Optional<String>>() {
-        }.getType(), val);
-        obj = convert.convertFrom(new TypeToken<Optional<String>>() {
-        }.getType(), bs);
+        bs = convert.convertTo(new TypeToken<Optional<String>>() {}.getType(), val);
+        obj = convert.convertFrom(new TypeToken<Optional<String>>() {}.getType(), bs);
         Assertions.assertEquals("Optional[haha]", obj.toString());
         System.out.println(JsonConvert.root().convertTo(val));
         Assertions.assertEquals("\"haha\"", JsonConvert.root().convertTo(val));
@@ -162,7 +162,8 @@ public class BsonMainTest {
 
         One one = BsonFactory.root().getConvert().convertFrom(One.class, bs);
         System.out.println(one);
-        Assertions.assertEquals("{\"bytes\":[3,4,5],\"code\":12345,\"ints\":[3000,4000,5000],\"key\":\"key111\"}", one.toString());
+        Assertions.assertEquals(
+                "{\"bytes\":[3,4,5],\"code\":12345,\"ints\":[3000,4000,5000],\"key\":\"key111\"}", one.toString());
     }
 
     @Test
@@ -174,9 +175,11 @@ public class BsonMainTest {
         String json = jsonConvert.convertTo(bean);
         System.out.println(json);
         Assertions.assertEquals("{\"createtime\":12345678901,\"name\":\"哈哈\",\"userid\":12345678}", json);
-        Assertions.assertEquals(jsonConvert.convertFrom(ConstructorArgsEntity.class, json).toString(), json);
+        Assertions.assertEquals(
+                jsonConvert.convertFrom(ConstructorArgsEntity.class, json).toString(), json);
         byte[] bytes = bsonConvert.convertTo(bean);
-        Assertions.assertEquals(bsonConvert.convertFrom(ConstructorArgsEntity.class, bytes).toString(), json);
+        Assertions.assertEquals(
+                bsonConvert.convertFrom(ConstructorArgsEntity.class, bytes).toString(), json);
     }
 
     public static class ComplextEntity {

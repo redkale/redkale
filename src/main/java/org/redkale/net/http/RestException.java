@@ -6,11 +6,9 @@ package org.redkale.net.http;
 /**
  * Rest自定义异常类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.8.0
  */
 public class RestException extends HttpException {

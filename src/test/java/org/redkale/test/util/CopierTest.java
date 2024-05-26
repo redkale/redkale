@@ -10,10 +10,7 @@ import org.junit.jupiter.api.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class CopierTest {
 
     public static void main(String[] args) throws Throwable {
@@ -76,8 +73,11 @@ public class CopierTest {
         map.put("id", "222");
         map.put("map", Utility.ofMap("aa", "bbb"));
         TestBean bean = new TestBean();
-        TestInterface ti = Copier.load(Map.class, TestInterface.class).apply(map, new TestBean());;
-        Assertions.assertEquals("{\"id\":222,\"map\":{\"aa\":\"bbb\"},\"time\":0}", JsonConvert.root().convertTo(ti));
+        TestInterface ti = Copier.load(Map.class, TestInterface.class).apply(map, new TestBean());
+        ;
+        Assertions.assertEquals(
+                "{\"id\":222,\"map\":{\"aa\":\"bbb\"},\"time\":0}",
+                JsonConvert.root().convertTo(ti));
     }
 
     @Test
@@ -105,7 +105,8 @@ public class CopierTest {
         Map rs = new TreeMap();
         Copier.load(Map.class, Map.class).apply(map, rs);
         System.out.println("Map: " + JsonConvert.root().convertTo(rs));
-        Assertions.assertEquals(JsonConvert.root().convertTo(map), JsonConvert.root().convertTo(rs));
+        Assertions.assertEquals(
+                JsonConvert.root().convertTo(map), JsonConvert.root().convertTo(rs));
     }
 
     @Test
@@ -180,7 +181,8 @@ public class CopierTest {
         Assertions.assertTrue(bean.remark == null);
 
         bean.remark = "hehehoho";
-        Copier.load(TestXBean.class, TestBean.class, Copier.OPTION_SKIP_NULL_VALUE).apply(srcBean, bean);
+        Copier.load(TestXBean.class, TestBean.class, Copier.OPTION_SKIP_NULL_VALUE)
+                .apply(srcBean, bean);
         System.out.println(JsonConvert.root().convertTo(bean));
         Assertions.assertTrue(bean.remark != null);
     }
@@ -193,7 +195,8 @@ public class CopierTest {
         srcBean.time = 55555;
         srcBean.remark = null;
         srcBean.setMap(Utility.ofMap("aa", "bbb"));
-        Copier.load(TestXBean.class, TestBean.class, Copier.OPTION_SKIP_EMPTY_STRING).apply(srcBean, bean);
+        Copier.load(TestXBean.class, TestBean.class, Copier.OPTION_SKIP_EMPTY_STRING)
+                .apply(srcBean, bean);
         System.out.println(JsonConvert.root().convertTo(bean));
         Assertions.assertTrue(bean.getName() == null);
     }
@@ -213,7 +216,8 @@ public class CopierTest {
 
         bean.setName(null);
         bean.remark = "hehehoho";
-        Copier.load(TestXBean.class, TestBean.class, Copier.OPTION_SKIP_NULL_VALUE | Copier.OPTION_SKIP_EMPTY_STRING).apply(srcBean, bean);
+        Copier.load(TestXBean.class, TestBean.class, Copier.OPTION_SKIP_NULL_VALUE | Copier.OPTION_SKIP_EMPTY_STRING)
+                .apply(srcBean, bean);
         System.out.println(JsonConvert.root().convertTo(bean));
         Assertions.assertTrue(bean.getName() == null);
     }
@@ -222,13 +226,14 @@ public class CopierTest {
     public void run13() throws Exception {
         TestBean bean = new TestBean();
         bean.setSeqno(6666L);
-        //public String remark;    
-        //private Long seqno;
+        // public String remark;
+        // private Long seqno;
         TestX2Bean destBean = new TestX2Bean();
-        //public int remark;
-        //private String seqno;
+        // public int remark;
+        // private String seqno;
 
-        Copier.load(TestBean.class, TestX2Bean.class, Copier.OPTION_ALLOW_TYPE_CAST).apply(bean, destBean);
+        Copier.load(TestBean.class, TestX2Bean.class, Copier.OPTION_ALLOW_TYPE_CAST)
+                .apply(bean, destBean);
         System.out.println(JsonConvert.root().convertTo(destBean));
         Assertions.assertEquals("6666", destBean.getSeqno());
     }
@@ -238,7 +243,8 @@ public class CopierTest {
         TestBean bean = new TestBean();
         bean.remark = "444";
         TestX2Bean destBean = new TestX2Bean();
-        Copier.load(TestBean.class, TestX2Bean.class, Copier.OPTION_SKIP_NULL_VALUE | Copier.OPTION_ALLOW_TYPE_CAST).apply(bean, destBean);
+        Copier.load(TestBean.class, TestX2Bean.class, Copier.OPTION_SKIP_NULL_VALUE | Copier.OPTION_ALLOW_TYPE_CAST)
+                .apply(bean, destBean);
         System.out.println(JsonConvert.root().convertTo(destBean));
         Assertions.assertTrue(destBean.remark == 444);
     }
@@ -248,7 +254,8 @@ public class CopierTest {
         Bean1 bean1 = new Bean1();
         bean1.intval = "444";
         Bean2 bean2 = new Bean2();
-        Copier.load(Bean1.class, Bean2.class, Copier.OPTION_SKIP_NULL_VALUE | Copier.OPTION_ALLOW_TYPE_CAST).apply(bean1, bean2);
+        Copier.load(Bean1.class, Bean2.class, Copier.OPTION_SKIP_NULL_VALUE | Copier.OPTION_ALLOW_TYPE_CAST)
+                .apply(bean1, bean2);
         System.out.println(JsonConvert.root().convertTo(bean2));
         Assertions.assertTrue(bean2.intval == 444);
     }
@@ -258,7 +265,8 @@ public class CopierTest {
         Bean3 bean1 = new Bean3();
         bean1.setSeqno(444L);
         Bean4 bean2 = new Bean4();
-        Copier.load(Bean3.class, Bean4.class, Copier.OPTION_SKIP_NULL_VALUE | Copier.OPTION_ALLOW_TYPE_CAST).apply(bean1, bean2);
+        Copier.load(Bean3.class, Bean4.class, Copier.OPTION_SKIP_NULL_VALUE | Copier.OPTION_ALLOW_TYPE_CAST)
+                .apply(bean1, bean2);
         System.out.println(JsonConvert.root().convertTo(bean2));
         Assertions.assertEquals("444", bean2.getSeqno());
     }
@@ -268,7 +276,8 @@ public class CopierTest {
         Bean4 bean1 = new Bean4();
         bean1.setSeqno("444");
         Bean5 bean2 = new Bean5();
-        Copier.load(Bean4.class, Bean5.class, Copier.OPTION_SKIP_NULL_VALUE | Copier.OPTION_ALLOW_TYPE_CAST).apply(bean1, bean2);
+        Copier.load(Bean4.class, Bean5.class, Copier.OPTION_SKIP_NULL_VALUE | Copier.OPTION_ALLOW_TYPE_CAST)
+                .apply(bean1, bean2);
         System.out.println(JsonConvert.root().convertTo(bean2));
         Assertions.assertEquals(444, bean2.getSeqno());
     }
@@ -344,7 +353,7 @@ public class CopierTest {
         }
     }
 
-    public static abstract class Large21Page<T> {
+    public abstract static class Large21Page<T> {
 
         private long total;
 
@@ -464,8 +473,7 @@ public class CopierTest {
 
         private String cartitle;
 
-        public Bean0() {
-        }
+        public Bean0() {}
 
         public long getCarid() {
             return carid;
@@ -534,7 +542,6 @@ public class CopierTest {
         public String toString() {
             return JsonConvert.root().convertTo(this);
         }
-
     }
 
     public static class Bean1 {

@@ -27,11 +27,9 @@ import org.redkale.service.Local;
 import org.redkale.util.*;
 
 /**
- * CacheSource的默认实现--内存缓存
- * 注意: url 需要指定为 memory:cachesource
+ * CacheSource的默认实现--内存缓存 注意: url 需要指定为 memory:cachesource
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -63,7 +61,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     private final ReentrantLock rateLimitContainerLock = new ReentrantLock();
 
-    //key: topic
+    // key: topic
     private final Map<String, Set<CacheEventListener<byte[]>>> pubsubListeners = new ConcurrentHashMap<>();
 
     private ExecutorService subExecutor;
@@ -82,7 +80,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     @ResourceChanged
     public void onResourceChange(ResourceEvent[] events) {
-        //do nothing
+        // do nothing
     }
 
     protected ExecutorService subExecutor() {
@@ -96,13 +94,16 @@ public final class CacheMemorySource extends AbstractCacheSource {
                 String threadNameFormat = "CacheSource-" + resourceName() + "-SubThread-%s";
                 Function<String, ExecutorService> func = Utility.virtualExecutorFunction();
                 final AtomicInteger counter = new AtomicInteger();
-                subExecutor = func == null ? Executors.newFixedThreadPool(Utility.cpus(), r -> {
-                    Thread t = new Thread(r);
-                    t.setDaemon(true);
-                    int c = counter.incrementAndGet();
-                    t.setName(String.format(threadNameFormat, "Virtual-" + (c < 10 ? ("00" + c) : (c < 100 ? ("0" + c) : c))));
-                    return t;
-                }) : func.apply(threadNameFormat);
+                subExecutor = func == null
+                        ? Executors.newFixedThreadPool(Utility.cpus(), r -> {
+                            Thread t = new Thread(r);
+                            t.setDaemon(true);
+                            int c = counter.incrementAndGet();
+                            t.setName(String.format(
+                                    threadNameFormat, "Virtual-" + (c < 10 ? ("00" + c) : (c < 100 ? ("0" + c) : c))));
+                            return t;
+                        })
+                        : func.apply(threadNameFormat);
             }
             executor = subExecutor;
         } finally {
@@ -136,49 +137,60 @@ public final class CacheMemorySource extends AbstractCacheSource {
         if (expireHandlerClass != null) {
             try {
                 Class clazz = Thread.currentThread().getContextClassLoader().loadClass(expireHandlerClass);
-                this.expireHandler = (Consumer<CacheEntry>) clazz.getDeclaredConstructor().newInstance();
+                this.expireHandler =
+                        (Consumer<CacheEntry>) clazz.getDeclaredConstructor().newInstance();
                 RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, expireHandlerClass);
             } catch (Throwable e) {
-                logger.log(Level.SEVERE, self.getClass().getSimpleName() + " new expirehandler class (" + expireHandlerClass + ") instance error", e);
+                logger.log(
+                        Level.SEVERE,
+                        self.getClass().getSimpleName() + " new expirehandler class (" + expireHandlerClass
+                                + ") instance error",
+                        e);
             }
         }
         if (scheduler == null) {
-            this.scheduler = Utility.newScheduledExecutor(1, "Redkale-" + CacheMemorySource.class.getSimpleName() + "-" + resourceName() + "-Expirer-Thread");
+            this.scheduler = Utility.newScheduledExecutor(
+                    1, "Redkale-" + CacheMemorySource.class.getSimpleName() + "-" + resourceName() + "-Expirer-Thread");
             final List<String> keys = new ArrayList<>();
-            scheduler.scheduleWithFixedDelay(() -> {
-                try {
-                    keys.clear();
-                    long now = System.currentTimeMillis();
-                    container.forEach((k, x) -> {
-                        if (x.expireMills > 0 && (now > (x.lastAccessed + x.expireMills))) {
-                            keys.add(x.key);
+            scheduler.scheduleWithFixedDelay(
+                    () -> {
+                        try {
+                            keys.clear();
+                            long now = System.currentTimeMillis();
+                            container.forEach((k, x) -> {
+                                if (x.expireMills > 0 && (now > (x.lastAccessed + x.expireMills))) {
+                                    keys.add(x.key);
+                                }
+                            });
+                            for (String key : keys) {
+                                CacheEntry entry = container.remove(key);
+                                if (expireHandler != null && entry != null) {
+                                    expireHandler.accept(entry);
+                                }
+                            }
+                            long now2 = System.currentTimeMillis();
+                            rateLimitContainer.forEach((k, x) -> {
+                                if (x.expireMills > 0 && (now2 > (x.lastAccessed + x.expireMills))) {
+                                    keys.add(x.key);
+                                }
+                            });
+                            for (String key : keys) {
+                                rateLimitContainer.remove(key);
+                            }
+                        } catch (Throwable t) {
+                            logger.log(Level.SEVERE, "CacheMemorySource schedule(interval=" + 10 + "s) error", t);
                         }
-                    });
-                    for (String key : keys) {
-                        CacheEntry entry = container.remove(key);
-                        if (expireHandler != null && entry != null) {
-                            expireHandler.accept(entry);
-                        }
-                    }
-                    long now2 = System.currentTimeMillis();
-                    rateLimitContainer.forEach((k, x) -> {
-                        if (x.expireMills > 0 && (now2 > (x.lastAccessed + x.expireMills))) {
-                            keys.add(x.key);
-                        }
-                    });
-                    for (String key : keys) {
-                        rateLimitContainer.remove(key);
-                    }
-                } catch (Throwable t) {
-                    logger.log(Level.SEVERE, "CacheMemorySource schedule(interval=" + 10 + "s) error", t);
-                }
-            }, 10, 10, TimeUnit.SECONDS);
-            logger.info(self.getClass().getSimpleName() + ":" + self.resourceName() + " start schedule expire executor");
+                    },
+                    10,
+                    10,
+                    TimeUnit.SECONDS);
+            logger.info(
+                    self.getClass().getSimpleName() + ":" + self.resourceName() + " start schedule expire executor");
         }
     }
 
     @Override
-    public void close() throws Exception {  //给Application 关闭时调用
+    public void close() throws Exception { // 给Application 关闭时调用
         destroy(null);
     }
 
@@ -231,11 +243,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
         return CompletableFuture.completedFuture(true);
     }
 
-    //------------------------ 订阅发布 SUB/PUB ------------------------ 
+    // ------------------------ 订阅发布 SUB/PUB ------------------------
     @Override
     public CompletableFuture<List<String>> pubsubChannelsAsync(@Nullable String pattern) {
-        Predicate<String> predicate = Utility.isEmpty(pattern) ? t -> true : Pattern.compile(pattern).asPredicate();
-        return CompletableFuture.completedFuture(pubsubListeners.keySet().stream().filter(predicate).collect(Collectors.toList()));
+        Predicate<String> predicate =
+                Utility.isEmpty(pattern) ? t -> true : Pattern.compile(pattern).asPredicate();
+        return CompletableFuture.completedFuture(
+                pubsubListeners.keySet().stream().filter(predicate).collect(Collectors.toList()));
     }
 
     @Override
@@ -245,7 +259,9 @@ public final class CacheMemorySource extends AbstractCacheSource {
             throw new RedkaleException("topics is empty");
         }
         for (String topic : topics) {
-            pubsubListeners.computeIfAbsent(topic, t -> new CopyOnWriteArraySet<>()).add(listener);
+            pubsubListeners
+                    .computeIfAbsent(topic, t -> new CopyOnWriteArraySet<>())
+                    .add(listener);
         }
         return CompletableFuture.completedFuture(null);
     }
@@ -254,13 +270,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
     public CompletableFuture<Integer> unsubscribeAsync(CacheEventListener listener, String... topics) {
         int c = 0;
         if (listener == null) {
-            if (topics == null || topics.length < 1) {  //清空所有订阅者
+            if (topics == null || topics.length < 1) { // 清空所有订阅者
                 for (Set<CacheEventListener<byte[]>> listeners : pubsubListeners.values()) {
                     c += listeners != null ? listeners.size() : 0;
                 }
                 pubsubListeners.clear();
             } else {
-                for (String topic : topics) {  //清空指定topic的订阅者
+                for (String topic : topics) { // 清空指定topic的订阅者
                     Set<CacheEventListener<byte[]>> listeners = pubsubListeners.remove(topic);
                     c += listeners != null ? listeners.size() : 0;
                 }
@@ -299,7 +315,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         return CompletableFuture.completedFuture(1);
     }
 
-    //------------------------ 字符串 String ------------------------  
+    // ------------------------ 字符串 String ------------------------
     @Override
     public void mset(Serializable... keyVals) {
         if (keyVals.length % 2 != 0) {
@@ -386,12 +402,14 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> CompletableFuture<Boolean> setnxexAsync(String key, int expireSeconds, Convert convert, Type type, T value) {
+    public <T> CompletableFuture<Boolean> setnxexAsync(
+            String key, int expireSeconds, Convert convert, Type type, T value) {
         return supplyFuture(() -> setnxex(key, expireSeconds, convert, type, value));
     }
 
     @Override
-    public <T> CompletableFuture<Boolean> setnxpxAsync(String key, long milliSeconds, Convert convert, Type type, T value) {
+    public <T> CompletableFuture<Boolean> setnxpxAsync(
+            String key, long milliSeconds, Convert convert, Type type, T value) {
         return supplyFuture(() -> setnxpx(key, milliSeconds, convert, type, value));
     }
 
@@ -751,6 +769,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     /**
      * 令牌桶算法限流， 返回负数表示无令牌， 其他为有令牌
+     *
      * <pre>
      * 每秒限制请求1次:     rate:1,     capacity:1,     requested:1
      * 每秒限制请求10次:    rate:10,    capacity:10,    requested:1
@@ -760,11 +779,10 @@ public final class CacheMemorySource extends AbstractCacheSource {
      * 每小时限制请求10次:  rate:1,     capacity:3600,  requested:360
      * </pre>
      *
-     * @param key       限流的键
-     * @param rate      令牌桶每秒填充平均速率
-     * @param capacity  令牌桶总容量
+     * @param key 限流的键
+     * @param rate 令牌桶每秒填充平均速率
+     * @param capacity 令牌桶总容量
      * @param requested 需要的令牌数
-     *
      * @return 可用令牌数
      */
     @Override
@@ -929,7 +947,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         return supplyFuture(() -> mget(componentType, keys));
     }
 
-    //----------- hxxx --------------
+    // ----------- hxxx --------------
     @Override
     public boolean exists(String key) {
         return find(key) != null;
@@ -974,13 +992,20 @@ public final class CacheMemorySource extends AbstractCacheSource {
             case ATOMIC:
                 return CacheEntry.serialToObj(c, type, (AtomicLong) entry.objectValue);
             case DOUBLE:
-                return CacheEntry.serialToObj(c, type, Double.longBitsToDouble(((AtomicLong) entry.objectValue).longValue()));
+                return CacheEntry.serialToObj(
+                        c, type, Double.longBitsToDouble(((AtomicLong) entry.objectValue).longValue()));
             case SSET:
-                return (T) entry.ssetValue.stream().map(v -> CacheEntry.serialToObj(c, type, v)).collect(Collectors.toSet());
+                return (T) entry.ssetValue.stream()
+                        .map(v -> CacheEntry.serialToObj(c, type, v))
+                        .collect(Collectors.toSet());
             case ZSET:
-                return (T) entry.zsetValue.stream().map(v -> new CacheScoredValue(v)).collect(Collectors.toSet());
+                return (T) entry.zsetValue.stream()
+                        .map(v -> new CacheScoredValue(v))
+                        .collect(Collectors.toSet());
             case LIST:
-                return (T) entry.listValue.stream().map(v -> CacheEntry.serialToObj(c, type, v)).collect(Collectors.toList());
+                return (T) entry.listValue.stream()
+                        .map(v -> CacheEntry.serialToObj(c, type, v))
+                        .collect(Collectors.toList());
             case MAP:
                 LinkedHashMap<String, Object> map = new LinkedHashMap();
                 entry.mapValue.forEach((k, v) -> map.put(k, CacheEntry.serialToObj(c, type, v)));
@@ -990,7 +1015,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
     }
 
-    //------------------------ 哈希表 Hash ------------------------
+    // ------------------------ 哈希表 Hash ------------------------
     @Override
     public long hdel(final String key, String... fields) {
         long count = 0;
@@ -1129,19 +1154,21 @@ public final class CacheMemorySource extends AbstractCacheSource {
         return supplyFuture(() -> hexists(key, field));
     }
 
-    //需要给CacheFactory使用
+    // 需要给CacheFactory使用
     @Override
     public <T> void hset(final String key, final String field, final Convert convert, final Type type, final T value) {
         hset0(key, field, convert, type, value);
     }
 
     @Override
-    public <T> CompletableFuture<Void> hsetAsync(final String key, final String field, final Convert convert, final Type type, final T value) {
+    public <T> CompletableFuture<Void> hsetAsync(
+            final String key, final String field, final Convert convert, final Type type, final T value) {
         return runFuture(() -> hset(key, field, type, value));
     }
 
     @Override
-    public <T> boolean hsetnx(final String key, final String field, final Convert convert, final Type type, final T value) {
+    public <T> boolean hsetnx(
+            final String key, final String field, final Convert convert, final Type type, final T value) {
         if (value == null) {
             return false;
         }
@@ -1160,7 +1187,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
         entry.lock();
         try {
-            boolean rs = entry.setMapValueIfAbsent(field, convert == null ? this.convert : convert, type, value) == null;
+            boolean rs =
+                    entry.setMapValueIfAbsent(field, convert == null ? this.convert : convert, type, value) == null;
             entry.lastAccessed = System.currentTimeMillis();
             return rs;
         } finally {
@@ -1169,7 +1197,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> CompletableFuture<Boolean> hsetnxAsync(final String key, final String field, final Convert convert, final Type type, final T value) {
+    public <T> CompletableFuture<Boolean> hsetnxAsync(
+            final String key, final String field, final Convert convert, final Type type, final T value) {
         return supplyFuture(() -> hsetnx(key, field, convert, type, value));
     }
 
@@ -1258,21 +1287,25 @@ public final class CacheMemorySource extends AbstractCacheSource {
         if (Utility.isEmpty(pattern)) {
             Set<Map.Entry<String, Serializable>> set = entry.mapValue.entrySet();
             return set.stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, en -> CacheEntry.serialToObj(convert, type, en.getValue())));
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey, en -> CacheEntry.serialToObj(convert, type, en.getValue())));
         } else {
             Predicate<String> regx = Pattern.compile(pattern.replace("*", ".*")).asPredicate();
             Set<Map.Entry<String, Serializable>> set = entry.mapValue.entrySet();
-            return set.stream().filter(en -> regx.test(en.getKey()))
-                .collect(Collectors.toMap(Map.Entry::getKey, en -> CacheEntry.serialToObj(convert, type, en.getValue())));
+            return set.stream()
+                    .filter(en -> regx.test(en.getKey()))
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey, en -> CacheEntry.serialToObj(convert, type, en.getValue())));
         }
     }
 
     @Override
-    public <T> CompletableFuture<Map<String, T>> hscanAsync(final String key, final Type type, AtomicLong cursor, int limit, String pattern) {
+    public <T> CompletableFuture<Map<String, T>> hscanAsync(
+            final String key, final Type type, AtomicLong cursor, int limit, String pattern) {
         return supplyFuture(() -> hscan(key, type, cursor, limit, pattern));
     }
 
-    //需要给CacheFactory使用
+    // 需要给CacheFactory使用
     @Override
     public <T> T hget(final String key, final String field, final Type type) {
         if (key == null || field == null) {
@@ -1334,7 +1367,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
     }
 
-    //------------------------ 列表 List ------------------------
+    // ------------------------ 列表 List ------------------------
     @Override
     public <T> List<T> lrange(final String key, final Type componentType, int start, int stop) {
         return get(key, componentType);
@@ -1654,7 +1687,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         return supplyFuture(() -> lrem(key, componentType, value));
     }
 
-    //------------------------ 集合 Set ------------------------    
+    // ------------------------ 集合 Set ------------------------
     @Override
     public <T> List<T> srandmember(String key, Type componentType, int count) {
         List<T> list = new ArrayList<>();
@@ -1663,19 +1696,21 @@ public final class CacheMemorySource extends AbstractCacheSource {
             return list;
         }
         List<Serializable> vals = new ArrayList<>(entry.ssetValue);
-        if (count < 0) {  //可以重复
+        if (count < 0) { // 可以重复
             for (int i = 0; i < Math.abs(count); i++) {
                 int index = ThreadLocalRandom.current().nextInt(vals.size());
                 Serializable val = vals.get(index);
                 list.add(CacheEntry.serialToObj(convert, componentType, val));
             }
-        } else { //不可以重复
+        } else { // 不可以重复
             if (count >= vals.size()) {
                 return vals.stream()
-                    .map(val -> (T) CacheEntry.serialToObj(convert, componentType, val)).collect(Collectors.toList());
+                        .map(val -> (T) CacheEntry.serialToObj(convert, componentType, val))
+                        .collect(Collectors.toList());
             }
             return vals.subList(0, count).stream()
-                .map(val -> (T) CacheEntry.serialToObj(convert, componentType, val)).collect(Collectors.toList());
+                    .map(val -> (T) CacheEntry.serialToObj(convert, componentType, val))
+                    .collect(Collectors.toList());
         }
         return list;
     }
@@ -1731,8 +1766,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public <T> Set<T> sdiff(final String key, final Type componentType, final String... key2s) {
         return sdiff0(key, key2s).stream()
-            .map(v -> (T) CacheEntry.serialToObj(convert, componentType, v))
-            .collect(Collectors.toSet());
+                .map(v -> (T) CacheEntry.serialToObj(convert, componentType, v))
+                .collect(Collectors.toSet());
     }
 
     @Override
@@ -1790,12 +1825,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public <T> Set<T> sinter(final String key, final Type componentType, final String... key2s) {
         return sinter0(key, key2s).stream()
-            .map(v -> (T) CacheEntry.serialToObj(convert, componentType, v))
-            .collect(Collectors.toSet());
+                .map(v -> (T) CacheEntry.serialToObj(convert, componentType, v))
+                .collect(Collectors.toSet());
     }
 
     @Override
-    public <T> CompletableFuture<Set<T>> sinterAsync(final String key, final Type componentType, final String... key2s) {
+    public <T> CompletableFuture<Set<T>> sinterAsync(
+            final String key, final Type componentType, final String... key2s) {
         return supplyFuture(() -> sinter(key, componentType, key2s));
     }
 
@@ -1858,12 +1894,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public <T> Set<T> sunion(final String key, final Type componentType, final String... key2s) {
         return sunion0(key, key2s).stream()
-            .map(v -> (T) CacheEntry.serialToObj(convert, componentType, v))
-            .collect(Collectors.toSet());
+                .map(v -> (T) CacheEntry.serialToObj(convert, componentType, v))
+                .collect(Collectors.toSet());
     }
 
     @Override
-    public <T> CompletableFuture<Set<T>> sunionAsync(final String key, final Type componentType, final String... key2s) {
+    public <T> CompletableFuture<Set<T>> sunionAsync(
+            final String key, final Type componentType, final String... key2s) {
         return supplyFuture(() -> sunion(key, componentType, key2s));
     }
 
@@ -1921,8 +1958,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
             return new LinkedHashSet<>();
         }
         return entry.ssetValue.stream()
-            .map(v -> (T) CacheEntry.serialToObj(convert, componentType, v))
-            .collect(Collectors.toSet());
+                .map(v -> (T) CacheEntry.serialToObj(convert, componentType, v))
+                .collect(Collectors.toSet());
     }
 
     @Override
@@ -1936,9 +1973,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
         for (String key : keys) {
             CacheEntry entry = find(key, CacheEntryType.SSET);
             if (entry != null) {
-                map.put(key, entry.ssetValue.stream()
-                    .map(v -> (T) CacheEntry.serialToObj(convert, componentType, v))
-                    .collect(Collectors.toSet()));
+                map.put(
+                        key,
+                        entry.ssetValue.stream()
+                                .map(v -> (T) CacheEntry.serialToObj(convert, componentType, v))
+                                .collect(Collectors.toSet()));
             }
         }
         return map;
@@ -2115,7 +2154,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T> CompletableFuture<Set<T>> sscanAsync(final String key, final Type componentType, AtomicLong cursor, int limit, String pattern) {
+    public <T> CompletableFuture<Set<T>> sscanAsync(
+            final String key, final Type componentType, AtomicLong cursor, int limit, String pattern) {
         return supplyFuture(() -> sscan(key, componentType, cursor, limit, pattern));
     }
 
@@ -2137,7 +2177,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         return supplyFuture(() -> srem(key, type, values));
     }
 
-    //------------------------ 有序集合 Sorted Set ------------------------
+    // ------------------------ 有序集合 Sorted Set ------------------------
     @Override
     public void zadd(String key, CacheScoredValue... values) {
         List<CacheScoredValue> list = new ArrayList<>();
@@ -2188,7 +2228,10 @@ public final class CacheMemorySource extends AbstractCacheSource {
         entry.lock();
         try {
             Set<CacheScoredValue> sets = entry.zsetValue;
-            CacheScoredValue old = sets.stream().filter(v -> Objects.equals(v.getValue(), value.getValue())).findAny().orElse(null);
+            CacheScoredValue old = sets.stream()
+                    .filter(v -> Objects.equals(v.getValue(), value.getValue()))
+                    .findAny()
+                    .orElse(null);
             if (old == null) {
                 sets.add(new CacheScoredValue(value.getScore().doubleValue(), value.getValue()));
                 return (T) value.getScore();
@@ -2318,7 +2361,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public CompletableFuture<List<CacheScoredValue>> zscanAsync(String key, Type scoreType, AtomicLong cursor, int limit, String pattern) {
+    public CompletableFuture<List<CacheScoredValue>> zscanAsync(
+            String key, Type scoreType, AtomicLong cursor, int limit, String pattern) {
         return supplyFuture(() -> zscan(key, scoreType, cursor, limit, pattern));
     }
 
@@ -2362,7 +2406,9 @@ public final class CacheMemorySource extends AbstractCacheSource {
         Set<String> keys = Set.of(members);
         Set<CacheScoredValue> sets = entry.zsetValue;
         Map<String, T> map = new HashMap<>();
-        sets.stream().filter(v -> keys.contains(v.getValue())).forEach(v -> map.put(v.getValue(), formatScore(scoreType, v.getScore())));
+        sets.stream()
+                .filter(v -> keys.contains(v.getValue()))
+                .forEach(v -> map.put(v.getValue(), formatScore(scoreType, v.getScore())));
         for (String m : members) {
             list.add(map.get(m));
         }
@@ -2370,7 +2416,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
-    public <T extends Number> CompletableFuture<List<T>> zmscoreAsync(String key, Class<T> scoreType, String... members) {
+    public <T extends Number> CompletableFuture<List<T>> zmscoreAsync(
+            String key, Class<T> scoreType, String... members) {
         return supplyFuture(() -> zmscore(key, scoreType, members));
     }
 
@@ -2398,11 +2445,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
             return null;
         }
         Set<CacheScoredValue> sets = entry.zsetValue;
-        return formatScore(scoreType, sets.stream()
-            .filter(v -> Objects.equals(member, v.getValue()))
-            .findAny()
-            .map(v -> v.getScore())
-            .orElse(null));
+        return formatScore(
+                scoreType,
+                sets.stream()
+                        .filter(v -> Objects.equals(member, v.getValue()))
+                        .findAny()
+                        .map(v -> v.getScore())
+                        .orElse(null));
     }
 
     @Override
@@ -2443,7 +2492,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public List<String> keys(String pattern) {
         List<String> rs = new ArrayList<>();
-        Predicate<String> filter = Utility.isEmpty(pattern) ? x -> true : Pattern.compile(pattern).asPredicate();
+        Predicate<String> filter =
+                Utility.isEmpty(pattern) ? x -> true : Pattern.compile(pattern).asPredicate();
         container.forEach((k, v) -> {
             if (filter.test(k) && !v.isExpired()) {
                 rs.add(k);
@@ -2519,17 +2569,17 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
         private String key;
 
-        volatile long lastAccessed; //最后刷新时间
+        volatile long lastAccessed; // 最后刷新时间
 
-        //<=0表示永久保存
+        // <=0表示永久保存
         private long expireMills;
 
         private long initTime;
 
-        //令牌数
+        // 令牌数
         private long tokens;
 
-        //时间戳，单位:毫秒
+        // 时间戳，单位:毫秒
         private long timestamp;
 
         private final ReentrantLock lock = new ReentrantLock();
@@ -2576,19 +2626,24 @@ public final class CacheMemorySource extends AbstractCacheSource {
         public String getKey() {
             return key;
         }
-
     }
 
     public enum CacheEntryType {
-        OBJECT, ATOMIC, DOUBLE, SSET, ZSET, LIST, MAP;
+        OBJECT,
+        ATOMIC,
+        DOUBLE,
+        SSET,
+        ZSET,
+        LIST,
+        MAP;
     }
 
-    //Serializable的具体数据类型只能是: String、byte[]、AtomicLong
+    // Serializable的具体数据类型只能是: String、byte[]、AtomicLong
     public static final class CacheEntry {
 
-        volatile long lastAccessed; //最后刷新时间
+        volatile long lastAccessed; // 最后刷新时间
 
-        //CacheEntryType为ATOMIC、DOUBLE时类型为AtomicLong
+        // CacheEntryType为ATOMIC、DOUBLE时类型为AtomicLong
         private Serializable objectValue;
 
         private CopyOnWriteArraySet<Serializable> ssetValue;
@@ -2603,7 +2658,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
         private String key;
 
-        //<=0表示永久保存
+        // <=0表示永久保存
         private long expireMills;
 
         private long initTime;
@@ -2651,14 +2706,14 @@ public final class CacheMemorySource extends AbstractCacheSource {
             return expireMills > 0 && (initTime + expireMills) < now;
         }
 
-        //value类型只能是byte[]/String/AtomicLong
+        // value类型只能是byte[]/String/AtomicLong
         public static <T> T serialToObj(@Nonnull Convert convert, @Nonnull Type type, Serializable value) {
             if (value == null) {
                 return null;
             }
             if (value.getClass() == byte[].class) {
                 return (T) convert.convertFrom(type, (byte[]) value);
-            } else { //String/AtomicLong
+            } else { // String/AtomicLong
                 if (convert instanceof TextConvert) {
                     return (T) ((TextConvert) convert).convertFrom(type, value.toString());
                 } else {
@@ -2667,7 +2722,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             }
         }
 
-        //返回类型只能是byte[]/String/AtomicLong
+        // 返回类型只能是byte[]/String/AtomicLong
         public static Serializable objToSerial(@Nonnull Convert convert, Type type, Object value) {
             if (value == null) {
                 return null;
@@ -2753,7 +2808,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         }
     }
 
-    //-------------------------- 过期方法 ----------------------------------
+    // -------------------------- 过期方法 ----------------------------------
     @Override
     @Deprecated(since = "2.8.0")
     public Collection<Long> getexLongCollection(String key, int expireSeconds) {
@@ -2762,7 +2817,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     @Deprecated(since = "2.8.0")
-    public <T> CompletableFuture<Collection<T>> getexCollectionAsync(final String key, final int expireSeconds, final Type componentType) {
+    public <T> CompletableFuture<Collection<T>> getexCollectionAsync(
+            final String key, final int expireSeconds, final Type componentType) {
         return supplyFuture(() -> getexCollection(key, expireSeconds, componentType));
     }
 
@@ -2780,7 +2836,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     @Deprecated(since = "2.8.0")
-    public <T> CompletableFuture<Map<String, Collection<T>>> getCollectionMapAsync(boolean set, Type componentType, String... keys) {
+    public <T> CompletableFuture<Map<String, Collection<T>>> getCollectionMapAsync(
+            boolean set, Type componentType, String... keys) {
         return supplyFuture(() -> getCollectionMap(set, componentType, keys));
     }
 
@@ -2792,7 +2849,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     @Deprecated(since = "2.8.0")
-    public CompletableFuture<Map<String, Collection<String>>> getStringCollectionMapAsync(final boolean set, final String... keys) {
+    public CompletableFuture<Map<String, Collection<String>>> getStringCollectionMapAsync(
+            final boolean set, final String... keys) {
         return supplyFuture(() -> getStringCollectionMap(set, keys));
     }
 
@@ -2804,7 +2862,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     @Deprecated(since = "2.8.0")
-    public CompletableFuture<Map<String, Collection<Long>>> getLongCollectionMapAsync(final boolean set, final String... keys) {
+    public CompletableFuture<Map<String, Collection<Long>>> getLongCollectionMapAsync(
+            final boolean set, final String... keys) {
         return supplyFuture(() -> getLongCollectionMap(set, keys));
     }
 
@@ -2822,7 +2881,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     @Deprecated(since = "2.8.0")
-    public <T> Map<String, Collection<T>> getCollectionMap(final boolean set, final Type componentType, final String... keys) {
+    public <T> Map<String, Collection<T>> getCollectionMap(
+            final boolean set, final Type componentType, final String... keys) {
         Map<String, Collection<T>> map = new HashMap<>();
         for (String key : keys) {
             Collection<T> s = (Collection<T>) get(key, componentType);
@@ -2981,5 +3041,4 @@ public final class CacheMemorySource extends AbstractCacheSource {
     public Collection<String> getexStringCollection(final String key, final int expireSeconds) {
         return (Collection<String>) getex(key, expireSeconds, String.class);
     }
-
 }

@@ -11,8 +11,7 @@ import org.redkale.annotation.ClassDepends;
 /**
  * 序列化操作类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <W> Writer输出的子类
@@ -24,7 +23,7 @@ public interface Encodeable<W extends Writer, T> {
     /**
      * 序列化操作
      *
-     * @param out   Writer
+     * @param out Writer
      * @param value 对象
      */
     public void convertTo(final W out, T value);
@@ -36,9 +35,8 @@ public interface Encodeable<W extends Writer, T> {
      */
     public Type getType();
 
-    //是否需要检查Writer.specify
+    // 是否需要检查Writer.specify
     default boolean specifyable() {
         return true;
     }
-
 }

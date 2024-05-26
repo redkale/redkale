@@ -12,11 +12,9 @@ import org.redkale.util.ByteArray;
 /**
  * client版响应结果
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.8.0
  */
 public class SncpClientResult implements ClientResult {
@@ -25,9 +23,9 @@ public class SncpClientResult implements ClientResult {
 
     private byte[] bodyContent;
 
-//    protected void prepare() {
-//        //do nothing
-//    }
+    //    protected void prepare() {
+    //        //do nothing
+    //    }
 
     protected boolean recycle() {
         this.header = null;
@@ -64,9 +62,9 @@ public class SncpClientResult implements ClientResult {
     @Override
     public String toString() {
         return getClass().getSimpleName() + "_" + Objects.hashCode(this) + "{"
-            + "header=" + header
-            + ", body=[" + (bodyContent == null ? -1 : bodyContent.length) + "]"
-            + "}";
+                + "header=" + header
+                + ", body=[" + (bodyContent == null ? -1 : bodyContent.length) + "]"
+                + "}";
     }
 
     public int getBodyLength() {
@@ -84,5 +82,4 @@ public class SncpClientResult implements ClientResult {
     public void setBodyContent(byte[] bodyContent) {
         this.bodyContent = bodyContent;
     }
-
 }

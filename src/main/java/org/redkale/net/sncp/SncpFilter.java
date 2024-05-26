@@ -7,10 +7,5 @@ package org.redkale.net.sncp;
 
 import org.redkale.net.Filter;
 
-/**
- *
- * @author zhangjx
- */
-public abstract class SncpFilter extends Filter<SncpContext, SncpRequest, SncpResponse> {
-
-}
+/** @author zhangjx */
+public abstract class SncpFilter extends Filter<SncpContext, SncpRequest, SncpResponse> {}

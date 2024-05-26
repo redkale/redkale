@@ -5,17 +5,17 @@
  */
 package org.redkale.convert.json;
 
+import static org.redkale.convert.Reader.*;
+
 import java.nio.ByteBuffer;
 import java.nio.charset.UnmappableCharacterException;
 import org.redkale.convert.*;
-import static org.redkale.convert.Reader.*;
 
 /**
- * 以ByteBuffer为数据载体的JsonReader   <br>
- *
+ * 以ByteBuffer为数据载体的JsonReader <br>
  * 只支持UTF-8格式
  *
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -38,7 +38,7 @@ public class JsonByteBufferReader extends JsonReader {
 
     @Override
     protected boolean recycle() {
-        super.recycle();   // this.position 初始化值为-1
+        super.recycle(); // this.position 初始化值为-1
         this.currentChar = 0;
         this.buffers = null;
         this.currentIndex = 0;
@@ -51,7 +51,7 @@ public class JsonByteBufferReader extends JsonReader {
             this.position++;
             return this.currentBuffer.get();
         }
-        for (;;) {
+        for (; ; ) {
             this.currentBuffer = this.buffers[++this.currentIndex];
             if (this.currentBuffer.hasRemaining()) {
                 this.position++;
@@ -83,14 +83,19 @@ public class JsonByteBufferReader extends JsonReader {
             }
         }
         byte b = nextByte();
-        if (b >= 0) {// 1 byte, 7 bits: 0xxxxxxx
+        if (b >= 0) { // 1 byte, 7 bits: 0xxxxxxx
             return (char) b;
         } else if ((b >> 5) == -2 && (b & 0x1e) != 0) { // 2 bytes, 11 bits: 110xxxxx 10xxxxxx
             return (char) (((b << 6) ^ nextByte()) ^ (((byte) 0xC0 << 6) ^ ((byte) 0x80)));
         } else if ((b >> 4) == -2) { // 3 bytes, 16 bits: 1110xxxx 10xxxxxx 10xxxxxx
-            return (char) ((b << 12) ^ (nextByte() << 6) ^ (nextByte() ^ (((byte) 0xE0 << 12) ^ ((byte) 0x80 << 6) ^ ((byte) 0x80))));
-        } else if ((b >> 3) == -2) {// 4 bytes, 21 bits: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-            int uc = ((b << 18) ^ (nextByte() << 12) ^ (nextByte() << 6) ^ (nextByte() ^ (((byte) 0xF0 << 18) ^ ((byte) 0x80 << 12) ^ ((byte) 0x80 << 6) ^ ((byte) 0x80))));
+            return (char) ((b << 12)
+                    ^ (nextByte() << 6)
+                    ^ (nextByte() ^ (((byte) 0xE0 << 12) ^ ((byte) 0x80 << 6) ^ ((byte) 0x80))));
+        } else if ((b >> 3) == -2) { // 4 bytes, 21 bits: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+            int uc = ((b << 18)
+                    ^ (nextByte() << 12)
+                    ^ (nextByte() << 6)
+                    ^ (nextByte() ^ (((byte) 0xF0 << 18) ^ ((byte) 0x80 << 12) ^ ((byte) 0x80 << 6) ^ ((byte) 0x80))));
             if (sb != null) {
                 sb.append(Character.highSurrogate(uc));
             }
@@ -117,7 +122,7 @@ public class JsonByteBufferReader extends JsonReader {
      */
     @Override
     public final String readObjectB(final Class clazz) {
-        this.fieldIndex = 0; //必须要重置为0
+        this.fieldIndex = 0; // 必须要重置为0
         char ch = nextGoodChar(true);
         if (ch == '{') {
             return "";
@@ -135,18 +140,18 @@ public class JsonByteBufferReader extends JsonReader {
         try {
             while ((one = nextChar()) != 0) sb.append(one);
         } catch (Exception e) {
-            //do nothing
+            // do nothing
         }
-        throw new ConvertException("a json object text must begin with '{' (position = " + pos + ") but '" + ch + "' in (" + sb + ")");
+        throw new ConvertException(
+                "a json object text must begin with '{' (position = " + pos + ") but '" + ch + "' in (" + sb + ")");
     }
 
     /**
      * 判断下一个非空白字符是否为[
      *
-     * @param member   DeMember
+     * @param member DeMember
      * @param typevals byte[]
-     * @param decoder  Decodeable
-     *
+     * @param decoder Decodeable
      * @return SIGN_NOLENGTH 或 SIGN_NULL
      */
     @Override
@@ -168,14 +173,13 @@ public class JsonByteBufferReader extends JsonReader {
         try {
             while ((one = nextChar()) != 0) sb.append(one);
         } catch (Exception e) {
-            //do nothing
+            // do nothing
         }
-        throw new ConvertException("a json array text must begin with '[' (position = " + pos + ") but '" + ch + "' in (" + sb + ")");
+        throw new ConvertException(
+                "a json array text must begin with '[' (position = " + pos + ") but '" + ch + "' in (" + sb + ")");
     }
 
-    /**
-     * 判断下一个非空白字符是否:
-     */
+    /** 判断下一个非空白字符是否: */
     @Override
     public final void readBlank() {
         char ch = nextGoodChar(true);
@@ -189,7 +193,7 @@ public class JsonByteBufferReader extends JsonReader {
         try {
             while ((one = nextChar()) != 0) sb.append(one);
         } catch (Exception e) {
-            //do nothing
+            // do nothing
         }
         throw new ConvertException("expected a ':' but '" + ch + "'(position = " + pos + ") in (" + sb + ")");
     }
@@ -223,7 +227,7 @@ public class JsonByteBufferReader extends JsonReader {
         final StringBuilder sb = new StringBuilder();
         if (ch == '"' || ch == '\'') {
             final char quote = ch;
-            for (;;) {
+            for (; ; ) {
                 ch = nextChar(sb);
                 if (ch == '\\') {
                     char c = nextChar(sb);
@@ -241,7 +245,8 @@ public class JsonByteBufferReader extends JsonReader {
                             sb.append('\r');
                             break;
                         case 'u':
-                            sb.append((char) Integer.parseInt(new String(new char[]{nextChar(), nextChar(), nextChar(), nextChar()}), 16));
+                            sb.append((char) Integer.parseInt(
+                                    new String(new char[] {nextChar(), nextChar(), nextChar(), nextChar()}), 16));
                             break;
                         case 't':
                             sb.append('\t');
@@ -264,7 +269,7 @@ public class JsonByteBufferReader extends JsonReader {
             return sb.toString();
         } else {
             sb.append(ch);
-            for (;;) {
+            for (; ; ) {
                 ch = nextChar(sb);
                 if (ch == '\\') {
                     char c = nextChar(sb);
@@ -282,7 +287,8 @@ public class JsonByteBufferReader extends JsonReader {
                             sb.append('\r');
                             break;
                         case 'u':
-                            sb.append((char) Integer.parseInt(new String(new char[]{nextChar(), nextChar(), nextChar(), nextChar()}), 16));
+                            sb.append((char) Integer.parseInt(
+                                    new String(new char[] {nextChar(), nextChar(), nextChar(), nextChar()}), 16));
                             break;
                         case 't':
                             sb.append('\t');
@@ -307,5 +313,4 @@ public class JsonByteBufferReader extends JsonReader {
             return "null".equalsIgnoreCase(rs) ? null : rs;
         }
     }
-
 }

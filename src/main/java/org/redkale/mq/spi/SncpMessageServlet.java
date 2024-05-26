@@ -14,18 +14,16 @@ import org.redkale.service.Service;
 /**
  * 一个Service对应一个MessageProcessor
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.1.0
  */
 public class SncpMessageServlet extends MessageServlet {
 
-    public SncpMessageServlet(MessageClient messageClient, Context context,
-        Service service, SncpServlet servlet, String topic) {
-        super(messageClient, context, service, servlet, topic); 
+    public SncpMessageServlet(
+            MessageClient messageClient, Context context, Service service, SncpServlet servlet, String topic) {
+        super(messageClient, context, service, servlet, topic);
     }
 
     @Override
@@ -44,5 +42,4 @@ public class SncpMessageServlet extends MessageServlet {
             ((SncpMessageResponse) response).finish(SncpResponse.RETCODE_ILLSERVICEID, null);
         }
     }
-
 }

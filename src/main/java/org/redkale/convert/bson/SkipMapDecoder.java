@@ -11,8 +11,7 @@ import org.redkale.convert.*;
 /**
  * Map的反序列化操作类 <br>
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <K> Map key的数据类型

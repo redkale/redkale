@@ -11,10 +11,7 @@ import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.Creator;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class CreatorRecord {
 
     private int id = -1;
@@ -36,7 +33,8 @@ public class CreatorRecord {
     private double dval;
 
     @ConstructorParameters({"id", "name", "lval", "tval", "bval", "sval", "cval", "fval", "dval"})
-    public CreatorRecord(int id, String name, long lval, boolean tval, byte bval, short sval, char cval, float fval, double dval) {
+    public CreatorRecord(
+            int id, String name, long lval, boolean tval, byte bval, short sval, char cval, float fval, double dval) {
         this.id = id;
         this.name = name;
         this.lval = lval;
@@ -52,7 +50,8 @@ public class CreatorRecord {
     public void run1() {
         Creator<CreatorRecord> creator = Creator.create(CreatorRecord.class);
         System.out.println(Arrays.toString(creator.paramTypes()));
-        CreatorRecord record = creator.create(new Object[]{null, "ss", null, true, null, (short) 45, null, 4.3f, null});
+        CreatorRecord record =
+                creator.create(new Object[] {null, "ss", null, true, null, (short) 45, null, 4.3f, null});
         String json = record.toString();
         System.out.println(json);
         String json2 = JsonConvert.root().convertFrom(CreatorRecord.class, json).toString();
@@ -100,5 +99,4 @@ public class CreatorRecord {
     public double getDval() {
         return dval;
     }
-
 }

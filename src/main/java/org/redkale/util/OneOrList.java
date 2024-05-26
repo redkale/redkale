@@ -12,36 +12,27 @@ import org.redkale.convert.json.*;
 /**
  * 单个对象或对象数组的合并类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.7.0
- *
  * @param <T> 泛型
  */
 public class OneOrList<T> implements java.io.Serializable {
 
-    public static final Type TYPE_OL_STRING = new TypeToken<OneOrList<String>>() {
-    }.getType();
+    public static final Type TYPE_OL_STRING = new TypeToken<OneOrList<String>>() {}.getType();
 
-    public static final Type TYPE_OL_INTEGER = new TypeToken<OneOrList<Integer>>() {
-    }.getType();
+    public static final Type TYPE_OL_INTEGER = new TypeToken<OneOrList<Integer>>() {}.getType();
 
-    public static final Type TYPE_OL_LONG = new TypeToken<OneOrList<Long>>() {
-    }.getType();
+    public static final Type TYPE_OL_LONG = new TypeToken<OneOrList<Long>>() {}.getType();
 
-    public static final Type TYPE_OL_FLOAT = new TypeToken<OneOrList<Float>>() {
-    }.getType();
+    public static final Type TYPE_OL_FLOAT = new TypeToken<OneOrList<Float>>() {}.getType();
 
-    public static final Type TYPE_OL_DOUBLE = new TypeToken<OneOrList<Double>>() {
-    }.getType();
+    public static final Type TYPE_OL_DOUBLE = new TypeToken<OneOrList<Double>>() {}.getType();
 
-    public static final Type TYPE_OL_BIGINTEGER = new TypeToken<OneOrList<BigInteger>>() {
-    }.getType();
+    public static final Type TYPE_OL_BIGINTEGER = new TypeToken<OneOrList<BigInteger>>() {}.getType();
 
-    public static final Type TYPE_OL_BIGDECIMAL = new TypeToken<OneOrList<BigDecimal>>() {
-    }.getType();
+    public static final Type TYPE_OL_BIGDECIMAL = new TypeToken<OneOrList<BigDecimal>>() {}.getType();
 
     @ConvertColumn(index = 1)
     protected T one;
@@ -49,8 +40,7 @@ public class OneOrList<T> implements java.io.Serializable {
     @ConvertColumn(index = 2)
     protected List<T> list;
 
-    public OneOrList() {
-    }
+    public OneOrList() {}
 
     public OneOrList(T one) {
         this.one = one;
@@ -60,7 +50,7 @@ public class OneOrList<T> implements java.io.Serializable {
         this.list = list;
     }
 
-    //序列化
+    // 序列化
     protected static Encodeable<JsonWriter, OneOrList> createEncoder(final JsonFactory factory, final Type type) {
         Type itemType = parseItemType(type);
         if (itemType == null) {
@@ -84,17 +74,17 @@ public class OneOrList<T> implements java.io.Serializable {
             public Type getType() {
                 return type;
             }
-
         };
     }
 
-    //反序列化
+    // 反序列化
     protected static Decodeable<JsonReader, OneOrList> createDecoder(final JsonFactory factory, final Type type) {
         Type itemType = parseItemType(type);
         if (itemType == null) {
             return null;
         }
-        Creator<OneOrList> creator = Creator.create(type instanceof Class ? (Class) type : (Class) ((ParameterizedType) type).getRawType());
+        Creator<OneOrList> creator =
+                Creator.create(type instanceof Class ? (Class) type : (Class) ((ParameterizedType) type).getRawType());
         Decodeable oneDecoder = factory.loadDecoder(itemType);
         Decodeable listDecoder = factory.loadDecoder(TypeToken.createParameterizedType(null, List.class, itemType));
         return new Decodeable<JsonReader, OneOrList>() {

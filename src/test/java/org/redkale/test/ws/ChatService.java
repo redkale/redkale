@@ -8,15 +8,12 @@ package org.redkale.test.ws;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.redkale.annotation.Comment;
 import org.redkale.annotation.Resource;
 import org.redkale.net.http.WebSocketNode;
 import org.redkale.service.*;
-import org.redkale.annotation.Comment;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class ChatService implements Service {
 
     @Comment("key=用户ID，value=房间ID")
@@ -51,5 +48,4 @@ public class ChatService implements Service {
     public void other(int roomid, String name) {
         System.out.println("其他操作: roomid: " + roomid + ", name: " + name);
     }
-
 }

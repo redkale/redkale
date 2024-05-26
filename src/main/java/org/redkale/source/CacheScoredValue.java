@@ -8,14 +8,11 @@ import java.util.Objects;
 import org.redkale.convert.ConvertColumn;
 
 /**
- *
  * 有序集合的对象类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.8.0
  */
 public class CacheScoredValue implements Serializable, Comparable<CacheScoredValue> {
@@ -26,8 +23,7 @@ public class CacheScoredValue implements Serializable, Comparable<CacheScoredVal
     @ConvertColumn(index = 2)
     private String value;
 
-    public CacheScoredValue() {
-    }
+    public CacheScoredValue() {}
 
     protected CacheScoredValue(Number score, String value) {
         Objects.requireNonNull(score);
@@ -90,5 +86,4 @@ public class CacheScoredValue implements Serializable, Comparable<CacheScoredVal
     public String toString() {
         return "{score:" + score + ", value:" + value + "}";
     }
-
 }

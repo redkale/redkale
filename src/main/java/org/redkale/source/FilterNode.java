@@ -5,27 +5,27 @@
  */
 package org.redkale.source;
 
+import static org.redkale.source.FilterExpress.*;
+
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.Stream;
 import org.redkale.convert.ConvertColumn;
-import static org.redkale.source.FilterExpress.*;
 import org.redkale.util.*;
 
 /**
  * 注意： <br>
  * column的值以#开头的视为虚拟字段，不在过滤范围内 <br>
  * 在调用 createSQLExpress 之前必须先调用 createSQLJoin <br>
- * 在调用 createPredicate 之前必须先调用 isCacheUseable  <br>
+ * 在调用 createPredicate 之前必须先调用 isCacheUseable <br>
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
-public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则DataSource很多重载接口会出现冲突
+public class FilterNode { // FilterNode 不能实现Serializable接口， 否则DataSource很多重载接口会出现冲突
 
     @ConvertColumn(index = 1)
     protected boolean readOnly;
@@ -39,15 +39,14 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     @ConvertColumn(index = 4)
     protected Serializable value;
 
-    //----------------------------------------------
+    // ----------------------------------------------
     @ConvertColumn(index = 5)
     protected boolean or;
 
     @ConvertColumn(index = 6)
     protected FilterNode[] nodes;
 
-    public FilterNode() {
-    }
+    public FilterNode() {}
 
     protected FilterNode(String col, FilterExpress exp, Serializable val) {
         Objects.requireNonNull(col);
@@ -57,20 +56,20 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             } else if (val instanceof Collection) {
                 if (!((Collection) val).isEmpty()) {
                     Object subval = null;
-                    for (Object obj : (Collection) val) {  //取第一个值
+                    for (Object obj : (Collection) val) { // 取第一个值
                         subval = obj;
                         break;
                     }
                     if (subval instanceof Range) {
                         exp = FilterExpress.BETWEEN;
-//                    } else if (subval instanceof Collection) {
-//                        exp = FilterExpress.IN;
-//                    } else if (subval != null && val.getClass().isArray()) {
-//                        exp = FilterExpress.IN;
+                        //                    } else if (subval instanceof Collection) {
+                        //                        exp = FilterExpress.IN;
+                        //                    } else if (subval != null && val.getClass().isArray()) {
+                        //                        exp = FilterExpress.IN;
                     } else {
                         exp = FilterExpress.IN;
                     }
-                } else { //空集合
+                } else { // 空集合
                     exp = FilterExpress.IN;
                 }
             } else if (val != null && val.getClass().isArray()) {
@@ -102,7 +101,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             return this;
         }
         if (this.nodes == null) {
-            this.nodes = new FilterNode[]{node};
+            this.nodes = new FilterNode[] {node};
             this.or = isOr;
             return this;
         }
@@ -113,7 +112,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         FilterNode newNode = new FilterNode(this.column, this.express, this.value);
         newNode.or = this.or;
         newNode.nodes = this.nodes;
-        this.nodes = new FilterNode[]{newNode, node};
+        this.nodes = new FilterNode[] {newNode, node};
         this.column = null;
         this.express = null;
         this.or = isOr;
@@ -121,7 +120,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         return this;
     }
 
-    //----------------------------------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------------------------------
     @Deprecated(since = "2.8.0")
     public static FilterNode create(String column, Serializable value) {
         return FilterNodes.create(column, null, value);
@@ -148,7 +147,8 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     @Deprecated(since = "2.8.0")
-    public static <T, F extends Serializable> FilterNode create(LambdaFunction<T, F> func, FilterExpress express, F value) {
+    public static <T, F extends Serializable> FilterNode create(
+            LambdaFunction<T, F> func, FilterExpress express, F value) {
         return FilterNodes.create(func, express, value);
     }
 
@@ -162,7 +162,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         return FilterNodes.create(column, express, value);
     }
 
-    //----------------------------------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------------------------------
     public FilterNode copy() {
         return copy(new FilterNode());
     }
@@ -753,20 +753,24 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         return and(new FilterNode(LambdaFunction.readColumn(func), FV_DIV, value));
     }
 
-    //-----------------------------------------------------------------------
+    // -----------------------------------------------------------------------
     /**
      * 该方法需要重载
      *
-     * @param <T>         Entity类的泛型
-     * @param func        EntityInfo的加载器
-     * @param update      是否用于更新的JOIN
+     * @param <T> Entity类的泛型
+     * @param func EntityInfo的加载器
+     * @param update 是否用于更新的JOIN
      * @param joinTabalis 关联表集合
-     * @param haset       已拼接过的字段名
-     * @param info        Entity类的EntityInfo
-     *
+     * @param haset 已拼接过的字段名
+     * @param info Entity类的EntityInfo
      * @return SQL的join语句 不存在返回null
      */
-    protected <T> CharSequence createSQLJoin(final Function<Class, EntityInfo> func, final boolean update, final Map<Class, String> joinTabalis, final Set<String> haset, final EntityInfo<T> info) {
+    protected <T> CharSequence createSQLJoin(
+            final Function<Class, EntityInfo> func,
+            final boolean update,
+            final Map<Class, String> joinTabalis,
+            final Set<String> haset,
+            final EntityInfo<T> info) {
         if (joinTabalis == null || this.nodes == null) {
             return null;
         }
@@ -823,7 +827,6 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
      * 该方法需要重载
      *
      * @param entityApplyer EntityInfo的加载器
-     *
      * @return 是否可以使用缓存
      */
     protected boolean isCacheUseable(final Function<Class, EntityInfo> entityApplyer) {
@@ -841,16 +844,17 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     /**
      * 该方法需要重载
      *
-     * @param source      AbstractDataSqlSource
-     * @param <T>         Entity类的泛型
+     * @param source AbstractDataSqlSource
+     * @param <T> Entity类的泛型
      * @param joinTabalis 关联表的集合
-     * @param info        EntityInfo
-     *
+     * @param info EntityInfo
      * @return JOIN的SQL语句
      */
-    protected <T> CharSequence createSQLExpress(AbstractDataSqlSource source, final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
+    protected <T> CharSequence createSQLExpress(
+            AbstractDataSqlSource source, final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
         CharSequence sb0 = this.column == null || this.column.isEmpty() || this.column.charAt(0) == '#' || info == null
-            ? null : createElementSQLExpress(source, info, joinTabalis == null ? null : joinTabalis.get(info.getType()));
+                ? null
+                : createElementSQLExpress(source, info, joinTabalis == null ? null : joinTabalis.get(info.getType()));
         if (this.nodes == null) {
             return sb0;
         }
@@ -879,7 +883,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         return rs;
     }
 
-    //----------------------------------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------------------------------
     private boolean needSplit(final Object val0) {
         return needSplit(express, val0);
     }
@@ -888,14 +892,16 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         if (val0 == null) {
             return false;
         }
-        boolean items = express != IN && express != NOT_IN;  //是否数组集合的表达式
+        boolean items = express != IN && express != NOT_IN; // 是否数组集合的表达式
         if (!items) {
             if (val0.getClass().isArray()) {
                 Class comp = val0.getClass().getComponentType();
                 if (Array.getLength(val0) > 0) {
                     comp = Array.get(val0, 0).getClass();
                 }
-                if (!(comp.isPrimitive() || CharSequence.class.isAssignableFrom(comp) || Number.class.isAssignableFrom(comp))) {
+                if (!(comp.isPrimitive()
+                        || CharSequence.class.isAssignableFrom(comp)
+                        || Number.class.isAssignableFrom(comp))) {
                     items = true;
                 }
             } else if (val0 instanceof Collection) {
@@ -904,17 +910,20 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         continue;
                     }
                     Class comp = fv.getClass();
-                    if (!(comp.isPrimitive() || CharSequence.class.isAssignableFrom(comp) || Number.class.isAssignableFrom(comp))) {
+                    if (!(comp.isPrimitive()
+                            || CharSequence.class.isAssignableFrom(comp)
+                            || Number.class.isAssignableFrom(comp))) {
                         items = true;
                     }
-                    break;  //只需检测第一个值
+                    break; // 只需检测第一个值
                 }
             }
         }
         return items;
     }
 
-    protected final <T> CharSequence createElementSQLExpress(AbstractDataSqlSource source, final EntityInfo<T> info, String talis) {
+    protected final <T> CharSequence createElementSQLExpress(
+            AbstractDataSqlSource source, final EntityInfo<T> info, String talis) {
         final Object val0 = getValue();
         if (needSplit(val0)) {
             if (val0 instanceof Collection) {
@@ -939,7 +948,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                 if (more) {
                     sb.append(')');
                 }
-                return sb.length() > 3 ? sb : null;  //若sb的值只是()，则不过滤
+                return sb.length() > 3 ? sb : null; // 若sb的值只是()，则不过滤
             } else if (val0.getClass().isArray()) {
                 StringBuilder sb = new StringBuilder();
                 Object[] fvs = (Object[]) val0;
@@ -963,14 +972,14 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                 if (more) {
                     sb.append(')');
                 }
-                return sb.length() > 3 ? sb : null;  //若sb的值只是()，则不过滤
+                return sb.length() > 3 ? sb : null; // 若sb的值只是()，则不过滤
             }
         }
         return createElementSQLExpress(source, info, talis, val0);
-
     }
 
-    private <T> CharSequence createElementSQLExpress(AbstractDataSqlSource source, final EntityInfo<T> info, String talis, Object val0) {
+    private <T> CharSequence createElementSQLExpress(
+            AbstractDataSqlSource source, final EntityInfo<T> info, String talis, Object val0) {
         if (column == null || this.column.isEmpty() || this.column.charAt(0) == '#') {
             return null;
         }
@@ -978,40 +987,64 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             talis = "a";
         }
         if (express == IS_NULL || express == NOT_NULL) {
-            return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value());
+            return new StringBuilder()
+                    .append(info.getSQLColumn(talis, column))
+                    .append(' ')
+                    .append(express.value());
         }
         if (express == IS_EMPTY || express == NOT_EMPTY) {
-            return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value()).append(" ''");
+            return new StringBuilder()
+                    .append(info.getSQLColumn(talis, column))
+                    .append(' ')
+                    .append(express.value())
+                    .append(" ''");
         }
         if (val0 == null) {
             return null;
         }
         if (express == FV_MOD || express == FV_DIV) {
             FilterExpValue fv = (FilterExpValue) val0;
-            return new StringBuilder().append(info.getSQLColumn(talis, column)).append(' ').append(express.value()).append(' ').append(fv.getLeft())
-                .append(' ').append(fv.getExpress().value()).append(' ').append(fv.getRight());
+            return new StringBuilder()
+                    .append(info.getSQLColumn(talis, column))
+                    .append(' ')
+                    .append(express.value())
+                    .append(' ')
+                    .append(fv.getLeft())
+                    .append(' ')
+                    .append(fv.getExpress().value())
+                    .append(' ')
+                    .append(fv.getRight());
         }
         final boolean fk = (val0 instanceof FilterColValue);
-        CharSequence val = fk ? info.getSQLColumn(talis, ((FilterColValue) val0).getColumn()) : formatToString(express, info.getSQLValue(column, (Serializable) val0));
+        CharSequence val = fk
+                ? info.getSQLColumn(talis, ((FilterColValue) val0).getColumn())
+                : formatToString(express, info.getSQLValue(column, (Serializable) val0));
         if (val == null) {
             return null;
         }
         StringBuilder sb = new StringBuilder(32);
         if (express == CONTAIN) {
-            return source.containSQL.replace("#{column}", info.getSQLColumn(talis, column)).replace("#{keystr}", val);
+            return source.containSQL
+                    .replace("#{column}", info.getSQLColumn(talis, column))
+                    .replace("#{keystr}", val);
         }
         if (express == IG_CONTAIN) {
-            return source.containSQL.replace("#{column}", "LOWER(" + info.getSQLColumn(talis, column) + ")").replace("#{keystr}", val);
+            return source.containSQL
+                    .replace("#{column}", "LOWER(" + info.getSQLColumn(talis, column) + ")")
+                    .replace("#{keystr}", val);
         }
         if (express == NOT_CONTAIN) {
-            return source.notContainSQL.replace("#{column}", info.getSQLColumn(talis, column)).replace("#{keystr}", val);
+            return source.notContainSQL
+                    .replace("#{column}", info.getSQLColumn(talis, column))
+                    .replace("#{keystr}", val);
         }
         if (express == IG_NOT_CONTAIN) {
-            return source.notContainSQL.replace("#{column}", "LOWER(" + info.getSQLColumn(talis, column) + ")").replace("#{keystr}", val);
+            return source.notContainSQL
+                    .replace("#{column}", "LOWER(" + info.getSQLColumn(talis, column) + ")")
+                    .replace("#{keystr}", val);
         }
 
-        if (express == LEN_EQ || express == LEN_LT || express == LEN_LE
-            || express == LEN_GT || express == LEN_GE) {
+        if (express == LEN_EQ || express == LEN_LT || express == LEN_LE || express == LEN_GT || express == LEN_GE) {
             sb.append("LENGTH(").append(info.getSQLColumn(talis, column)).append(')');
         } else if (express == IG_EQ || express == IG_NE || express == IG_LIKE || express == IG_NOT_LIKE) {
             sb.append("LOWER(").append(info.getSQLColumn(talis, column)).append(')');
@@ -1052,29 +1085,33 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             }
             final Predicate<T> one = filter;
             final Predicate<T> two = f;
-            filter = (filter == null) ? f : (or ? new Predicate<T>() {
+            filter = (filter == null)
+                    ? f
+                    : (or
+                            ? new Predicate<T>() {
 
-                @Override
-                public boolean test(T t) {
-                    return one.test(t) || two.test(t);
-                }
+                                @Override
+                                public boolean test(T t) {
+                                    return one.test(t) || two.test(t);
+                                }
 
-                @Override
-                public String toString() {
-                    return "(" + one + " OR " + two + ")";
-                }
-            } : new Predicate<T>() {
+                                @Override
+                                public String toString() {
+                                    return "(" + one + " OR " + two + ")";
+                                }
+                            }
+                            : new Predicate<T>() {
 
-                @Override
-                public boolean test(T t) {
-                    return one.test(t) && two.test(t);
-                }
+                                @Override
+                                public boolean test(T t) {
+                                    return one.test(t) && two.test(t);
+                                }
 
-                @Override
-                public String toString() {
-                    return "(" + one + " AND " + two + ")";
-                }
-            });
+                                @Override
+                                public String toString() {
+                                    return "(" + one + " AND " + two + ")";
+                                }
+                            });
         }
         return filter;
     }
@@ -1087,7 +1124,8 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     @SuppressWarnings("unchecked")
-    protected final <T> Predicate<T> createElementPredicate(final EntityCache<T> cache, final boolean join, final Attribute<T, Serializable> attr) {
+    protected final <T> Predicate<T> createElementPredicate(
+            final EntityCache<T> cache, final boolean join, final Attribute<T, Serializable> attr) {
         final Object val0 = getValue();
         if (needSplit(val0)) {
             if (val0 instanceof Collection) {
@@ -1102,18 +1140,20 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     }
                     final Predicate<T> one = filter;
                     final Predicate<T> two = f;
-                    filter = (filter == null) ? f : new Predicate<T>() {
+                    filter = (filter == null)
+                            ? f
+                            : new Predicate<T>() {
 
-                        @Override
-                        public boolean test(T t) {
-                            return one.test(t) && two.test(t);
-                        }
+                                @Override
+                                public boolean test(T t) {
+                                    return one.test(t) && two.test(t);
+                                }
 
-                        @Override
-                        public String toString() {
-                            return "(" + one + " AND " + two + ")";
-                        }
-                    };
+                                @Override
+                                public String toString() {
+                                    return "(" + one + " AND " + two + ")";
+                                }
+                            };
                 }
                 return filter;
             } else if (val0.getClass().isArray()) {
@@ -1188,18 +1228,20 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     }
                     final Predicate<T> one = filter;
                     final Predicate<T> two = f;
-                    filter = (filter == null) ? f : new Predicate<T>() {
+                    filter = (filter == null)
+                            ? f
+                            : new Predicate<T>() {
 
-                        @Override
-                        public boolean test(T t) {
-                            return one.test(t) && two.test(t);
-                        }
+                                @Override
+                                public boolean test(T t) {
+                                    return one.test(t) && two.test(t);
+                                }
 
-                        @Override
-                        public String toString() {
-                            return "(" + one + " AND " + two + ")";
-                        }
-                    };
+                                @Override
+                                public String toString() {
+                                    return "(" + one + " AND " + two + ")";
+                                }
+                            };
                 }
                 return filter;
             }
@@ -1208,7 +1250,8 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     }
 
     @SuppressWarnings("unchecked")
-    protected final <T> Predicate<T> createElementPredicate(final EntityCache<T> cache, final boolean join, final Attribute<T, Serializable> attr, Object val0) {
+    protected final <T> Predicate<T> createElementPredicate(
+            final EntityCache<T> cache, final boolean join, final Attribute<T, Serializable> attr, Object val0) {
         if (attr == null) {
             return null;
         }
@@ -1362,7 +1405,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                 } else if (fs == Double.class) {
                     pfs = double.class;
                 }
-                if (Number.class.isAssignableFrom(fs) && atype != fs && atype != pfs) { //需要转换
+                if (Number.class.isAssignableFrom(fs) && atype != fs && atype != pfs) { // 需要转换
                     ArrayList list = new ArrayList(collection.size());
                     if (atype == int.class || atype == Integer.class) {
                         for (Number num : (Collection<Number>) collection) {
@@ -1397,225 +1440,246 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
         final boolean fk = (val instanceof FilterColValue);
         final Attribute<T, Serializable> fkattr = fk ? cache.getAttribute(((FilterColValue) val).getColumn()) : null;
         if (fk && fkattr == null) {
-            throw new SourceException(cache.getType() + " not found column(" + ((FilterColValue) val).getColumn() + ")");
+            throw new SourceException(
+                    cache.getType() + " not found column(" + ((FilterColValue) val).getColumn() + ")");
         }
         switch (express) {
             case EQ:
-                return fk ? new Predicate<T>() {
+                return fk
+                        ? new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        return Objects.equals(fkattr.get(t), attr.get(t));
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                return Objects.equals(fkattr.get(t), attr.get(t));
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + ' ' + express.value() + ' ' + fkattr.field();
-                    }
-                } : new Predicate<T>() {
+                            @Override
+                            public String toString() {
+                                return field + ' ' + express.value() + ' ' + fkattr.field();
+                            }
+                        }
+                        : new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        return val.equals(attr.get(t));
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                return val.equals(attr.get(t));
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + ' ' + express.value() + ' ' + formatToString(val);
-                    }
-                };
+                            @Override
+                            public String toString() {
+                                return field + ' ' + express.value() + ' ' + formatToString(val);
+                            }
+                        };
             case IG_EQ:
-                return fk ? new Predicate<T>() {
+                return fk
+                        ? new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        Object rs = attr.get(t);
-                        Object rs2 = fkattr.get(t);
-                        if (rs == null && rs2 == null) {
-                            return true;
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                Object rs2 = fkattr.get(t);
+                                if (rs == null && rs2 == null) {
+                                    return true;
+                                }
+                                if (rs == null || rs2 == null) {
+                                    return false;
+                                }
+                                return Objects.equals(
+                                        rs.toString().toLowerCase(),
+                                        rs2.toString().toLowerCase());
+                            }
+
+                            @Override
+                            public String toString() {
+                                return "LOWER(" + field + ") " + express.value() + " LOWER(" + fkattr.field() + ')';
+                            }
                         }
-                        if (rs == null || rs2 == null) {
-                            return false;
-                        }
-                        return Objects.equals(rs.toString().toLowerCase(), rs2.toString().toLowerCase());
-                    }
+                        : new Predicate<T>() {
 
-                    @Override
-                    public String toString() {
-                        return "LOWER(" + field + ") " + express.value() + " LOWER(" + fkattr.field() + ')';
-                    }
-                } : new Predicate<T>() {
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                if (rs == null) {
+                                    return false;
+                                }
+                                return val.toString().equalsIgnoreCase(rs.toString());
+                            }
 
-                    @Override
-                    public boolean test(T t) {
-                        Object rs = attr.get(t);
-                        if (rs == null) {
-                            return false;
-                        }
-                        return val.toString().equalsIgnoreCase(rs.toString());
-                    }
-
-                    @Override
-                    public String toString() {
-                        return "LOWER(" + field + ") " + express.value() + ' ' + formatToString(val);
-                    }
-                };
+                            @Override
+                            public String toString() {
+                                return "LOWER(" + field + ") " + express.value() + ' ' + formatToString(val);
+                            }
+                        };
             case NE:
-                return fk ? new Predicate<T>() {
+                return fk
+                        ? new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        return !Objects.equals(fkattr.get(t), attr.get(t));
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                return !Objects.equals(fkattr.get(t), attr.get(t));
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + ' ' + express.value() + ' ' + fkattr.field();
-                    }
-                } : new Predicate<T>() {
+                            @Override
+                            public String toString() {
+                                return field + ' ' + express.value() + ' ' + fkattr.field();
+                            }
+                        }
+                        : new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        return !val.equals(attr.get(t));
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                return !val.equals(attr.get(t));
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + ' ' + express.value() + ' ' + formatToString(val);
-                    }
-                };
+                            @Override
+                            public String toString() {
+                                return field + ' ' + express.value() + ' ' + formatToString(val);
+                            }
+                        };
             case IG_NE:
-                return fk ? new Predicate<T>() {
+                return fk
+                        ? new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        Object rs = attr.get(t);
-                        Object rs2 = fkattr.get(t);
-                        if (rs == null && rs2 == null) {
-                            return false;
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                Object rs2 = fkattr.get(t);
+                                if (rs == null && rs2 == null) {
+                                    return false;
+                                }
+                                if (rs == null || rs2 == null) {
+                                    return true;
+                                }
+                                return !Objects.equals(
+                                        rs.toString().toLowerCase(),
+                                        rs2.toString().toLowerCase());
+                            }
+
+                            @Override
+                            public String toString() {
+                                return "LOWER(" + field + ") " + express.value() + " LOWER(" + fkattr.field() + ')';
+                            }
                         }
-                        if (rs == null || rs2 == null) {
-                            return true;
-                        }
-                        return !Objects.equals(rs.toString().toLowerCase(), rs2.toString().toLowerCase());
-                    }
+                        : new Predicate<T>() {
 
-                    @Override
-                    public String toString() {
-                        return "LOWER(" + field + ") " + express.value() + " LOWER(" + fkattr.field() + ')';
-                    }
-                } : new Predicate<T>() {
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                if (rs == null) {
+                                    return true;
+                                }
+                                return !val.toString().equalsIgnoreCase(rs.toString());
+                            }
 
-                    @Override
-                    public boolean test(T t) {
-                        Object rs = attr.get(t);
-                        if (rs == null) {
-                            return true;
-                        }
-                        return !val.toString().equalsIgnoreCase(rs.toString());
-                    }
-
-                    @Override
-                    public String toString() {
-                        return "LOWER(" + field + ") " + express.value() + ' ' + formatToString(val);
-                    }
-                };
+                            @Override
+                            public String toString() {
+                                return "LOWER(" + field + ") " + express.value() + ' ' + formatToString(val);
+                            }
+                        };
             case GT:
-                return fk ? new Predicate<T>() {
+                return fk
+                        ? new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        return ((Comparable) attr.get(t)).compareTo((Comparable) fkattr.get(t)) > 0;
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                return ((Comparable) attr.get(t)).compareTo((Comparable) fkattr.get(t)) > 0;
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + ' ' + express.value() + ' ' + fkattr.field();
-                    }
-                } : new Predicate<T>() {
+                            @Override
+                            public String toString() {
+                                return field + ' ' + express.value() + ' ' + fkattr.field();
+                            }
+                        }
+                        : new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        return ((Comparable) attr.get(t)).compareTo(((Comparable) val)) > 0;
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                return ((Comparable) attr.get(t)).compareTo(((Comparable) val)) > 0;
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + ' ' + express.value() + ' ' + val;
-                    }
-                };
+                            @Override
+                            public String toString() {
+                                return field + ' ' + express.value() + ' ' + val;
+                            }
+                        };
             case LT:
-                return fk ? new Predicate<T>() {
+                return fk
+                        ? new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        return ((Comparable) attr.get(t)).compareTo((Comparable) fkattr.get(t)) < 0;
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                return ((Comparable) attr.get(t)).compareTo((Comparable) fkattr.get(t)) < 0;
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + ' ' + express.value() + ' ' + fkattr.field();
-                    }
-                } : new Predicate<T>() {
+                            @Override
+                            public String toString() {
+                                return field + ' ' + express.value() + ' ' + fkattr.field();
+                            }
+                        }
+                        : new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        return ((Comparable) attr.get(t)).compareTo(((Comparable) val)) < 0;
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                return ((Comparable) attr.get(t)).compareTo(((Comparable) val)) < 0;
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + ' ' + express.value() + ' ' + val;
-                    }
-                };
+                            @Override
+                            public String toString() {
+                                return field + ' ' + express.value() + ' ' + val;
+                            }
+                        };
             case GE:
-                return fk ? new Predicate<T>() {
+                return fk
+                        ? new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        return ((Comparable) attr.get(t)).compareTo((Comparable) fkattr.get(t)) >= 0;
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                return ((Comparable) attr.get(t)).compareTo((Comparable) fkattr.get(t)) >= 0;
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + ' ' + express.value() + ' ' + fkattr.field();
-                    }
-                } : new Predicate<T>() {
+                            @Override
+                            public String toString() {
+                                return field + ' ' + express.value() + ' ' + fkattr.field();
+                            }
+                        }
+                        : new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        return ((Comparable) attr.get(t)).compareTo(((Comparable) val)) >= 0;
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                return ((Comparable) attr.get(t)).compareTo(((Comparable) val)) >= 0;
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + ' ' + express.value() + ' ' + val;
-                    }
-                };
+                            @Override
+                            public String toString() {
+                                return field + ' ' + express.value() + ' ' + val;
+                            }
+                        };
             case LE:
-                return fk ? new Predicate<T>() {
+                return fk
+                        ? new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        return ((Comparable) attr.get(t)).compareTo((Comparable) fkattr.get(t)) <= 0;
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                return ((Comparable) attr.get(t)).compareTo((Comparable) fkattr.get(t)) <= 0;
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + ' ' + express.value() + ' ' + fkattr.field();
-                    }
-                } : new Predicate<T>() {
+                            @Override
+                            public String toString() {
+                                return field + ' ' + express.value() + ' ' + fkattr.field();
+                            }
+                        }
+                        : new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        return ((Comparable) attr.get(t)).compareTo(((Comparable) val)) <= 0;
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                return ((Comparable) attr.get(t)).compareTo(((Comparable) val)) <= 0;
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + ' ' + express.value() + ' ' + val;
-                    }
-                };
+                            @Override
+                            public String toString() {
+                                return field + ' ' + express.value() + ' ' + val;
+                            }
+                        };
 
             case FV_MOD:
                 FilterExpValue fv0 = (FilterExpValue) val;
@@ -1625,12 +1689,15 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() % fv0.getLeft().longValue()) == fv0.getRight().longValue();
+                                return (((Number) attr.get(t)).longValue()
+                                                % fv0.getLeft().longValue())
+                                        == fv0.getRight().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv0.getLeft() + " " + fv0.getExpress().value() + " " + fv0.getRight();
+                                return field + " " + express.value() + " " + fv0.getLeft() + " "
+                                        + fv0.getExpress().value() + " " + fv0.getRight();
                             }
                         };
                     case NE:
@@ -1638,12 +1705,15 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() % fv0.getLeft().longValue()) != fv0.getRight().longValue();
+                                return (((Number) attr.get(t)).longValue()
+                                                % fv0.getLeft().longValue())
+                                        != fv0.getRight().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv0.getLeft() + " " + fv0.getExpress().value() + " " + fv0.getRight();
+                                return field + " " + express.value() + " " + fv0.getLeft() + " "
+                                        + fv0.getExpress().value() + " " + fv0.getRight();
                             }
                         };
                     case GT:
@@ -1651,12 +1721,15 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() % fv0.getLeft().longValue()) > fv0.getRight().longValue();
+                                return (((Number) attr.get(t)).longValue()
+                                                % fv0.getLeft().longValue())
+                                        > fv0.getRight().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv0.getLeft() + " " + fv0.getExpress().value() + " " + fv0.getRight();
+                                return field + " " + express.value() + " " + fv0.getLeft() + " "
+                                        + fv0.getExpress().value() + " " + fv0.getRight();
                             }
                         };
                     case LT:
@@ -1664,12 +1737,15 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() % fv0.getLeft().longValue()) < fv0.getRight().longValue();
+                                return (((Number) attr.get(t)).longValue()
+                                                % fv0.getLeft().longValue())
+                                        < fv0.getRight().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv0.getLeft() + " " + fv0.getExpress().value() + " " + fv0.getRight();
+                                return field + " " + express.value() + " " + fv0.getLeft() + " "
+                                        + fv0.getExpress().value() + " " + fv0.getRight();
                             }
                         };
                     case GE:
@@ -1677,12 +1753,15 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() % fv0.getLeft().longValue()) >= fv0.getRight().longValue();
+                                return (((Number) attr.get(t)).longValue()
+                                                % fv0.getLeft().longValue())
+                                        >= fv0.getRight().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv0.getLeft() + " " + fv0.getExpress().value() + " " + fv0.getRight();
+                                return field + " " + express.value() + " " + fv0.getLeft() + " "
+                                        + fv0.getExpress().value() + " " + fv0.getRight();
                             }
                         };
                     case LE:
@@ -1690,12 +1769,15 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() % fv0.getLeft().longValue()) <= fv0.getRight().longValue();
+                                return (((Number) attr.get(t)).longValue()
+                                                % fv0.getLeft().longValue())
+                                        <= fv0.getRight().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv0.getLeft() + " " + fv0.getExpress().value() + " " + fv0.getRight();
+                                return field + " " + express.value() + " " + fv0.getLeft() + " "
+                                        + fv0.getExpress().value() + " " + fv0.getRight();
                             }
                         };
                     default:
@@ -1709,12 +1791,15 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() / fv1.getLeft().longValue()) == fv1.getRight().longValue();
+                                return (((Number) attr.get(t)).longValue()
+                                                / fv1.getLeft().longValue())
+                                        == fv1.getRight().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv1.getLeft() + " " + fv1.getExpress().value() + " " + fv1.getRight();
+                                return field + " " + express.value() + " " + fv1.getLeft() + " "
+                                        + fv1.getExpress().value() + " " + fv1.getRight();
                             }
                         };
                     case NE:
@@ -1722,12 +1807,15 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() / fv1.getLeft().longValue()) != fv1.getRight().longValue();
+                                return (((Number) attr.get(t)).longValue()
+                                                / fv1.getLeft().longValue())
+                                        != fv1.getRight().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv1.getLeft() + " " + fv1.getExpress().value() + " " + fv1.getRight();
+                                return field + " " + express.value() + " " + fv1.getLeft() + " "
+                                        + fv1.getExpress().value() + " " + fv1.getRight();
                             }
                         };
                     case GT:
@@ -1735,12 +1823,15 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() / fv1.getLeft().longValue()) > fv1.getRight().longValue();
+                                return (((Number) attr.get(t)).longValue()
+                                                / fv1.getLeft().longValue())
+                                        > fv1.getRight().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv1.getLeft() + " " + fv1.getExpress().value() + " " + fv1.getRight();
+                                return field + " " + express.value() + " " + fv1.getLeft() + " "
+                                        + fv1.getExpress().value() + " " + fv1.getRight();
                             }
                         };
                     case LT:
@@ -1748,12 +1839,15 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() / fv1.getLeft().longValue()) < fv1.getRight().longValue();
+                                return (((Number) attr.get(t)).longValue()
+                                                / fv1.getLeft().longValue())
+                                        < fv1.getRight().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv1.getLeft() + " " + fv1.getExpress().value() + " " + fv1.getRight();
+                                return field + " " + express.value() + " " + fv1.getLeft() + " "
+                                        + fv1.getExpress().value() + " " + fv1.getRight();
                             }
                         };
                     case GE:
@@ -1761,12 +1855,15 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() / fv1.getLeft().longValue()) >= fv1.getRight().longValue();
+                                return (((Number) attr.get(t)).longValue()
+                                                / fv1.getLeft().longValue())
+                                        >= fv1.getRight().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv1.getLeft() + " " + fv1.getExpress().value() + " " + fv1.getRight();
+                                return field + " " + express.value() + " " + fv1.getLeft() + " "
+                                        + fv1.getExpress().value() + " " + fv1.getRight();
                             }
                         };
                     case LE:
@@ -1774,170 +1871,191 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
 
                             @Override
                             public boolean test(T t) {
-                                return (((Number) attr.get(t)).longValue() / fv1.getLeft().longValue()) <= fv1.getRight().longValue();
+                                return (((Number) attr.get(t)).longValue()
+                                                / fv1.getLeft().longValue())
+                                        <= fv1.getRight().longValue();
                             }
 
                             @Override
                             public String toString() {
-                                return field + " " + express.value() + " " + fv1.getLeft() + " " + fv1.getExpress().value() + " " + fv1.getRight();
+                                return field + " " + express.value() + " " + fv1.getLeft() + " "
+                                        + fv1.getExpress().value() + " " + fv1.getRight();
                             }
                         };
                     default:
                         throw new SourceException("(" + fv1 + ")'s express illegal, must be =, !=, <, >, <=, >=");
                 }
             case OPAND:
-                return fk ? new Predicate<T>() {
+                return fk
+                        ? new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        return (((Number) attr.get(t)).longValue() & ((Number) fkattr.get(t)).longValue()) > 0;
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                return (((Number) attr.get(t)).longValue() & ((Number) fkattr.get(t)).longValue()) > 0;
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + " & " + fkattr.field() + " > 0";
-                    }
-                } : new Predicate<T>() {
+                            @Override
+                            public String toString() {
+                                return field + " & " + fkattr.field() + " > 0";
+                            }
+                        }
+                        : new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        return (((Number) attr.get(t)).longValue() & ((Number) val).longValue()) > 0;
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                return (((Number) attr.get(t)).longValue() & ((Number) val).longValue()) > 0;
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + " & " + val + " > 0";
-                    }
-                };
+                            @Override
+                            public String toString() {
+                                return field + " & " + val + " > 0";
+                            }
+                        };
             case OPOR:
-                return fk ? new Predicate<T>() {
+                return fk
+                        ? new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        return (((Number) attr.get(t)).longValue() | ((Number) fkattr.get(t)).longValue()) > 0;
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                return (((Number) attr.get(t)).longValue() | ((Number) fkattr.get(t)).longValue()) > 0;
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + " | " + fkattr.field() + " > 0";
-                    }
-                } : new Predicate<T>() {
+                            @Override
+                            public String toString() {
+                                return field + " | " + fkattr.field() + " > 0";
+                            }
+                        }
+                        : new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        return (((Number) attr.get(t)).longValue() | ((Number) val).longValue()) > 0;
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                return (((Number) attr.get(t)).longValue() | ((Number) val).longValue()) > 0;
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + " | " + val + " > 0";
-                    }
-                };
+                            @Override
+                            public String toString() {
+                                return field + " | " + val + " > 0";
+                            }
+                        };
             case NOT_OPAND:
-                return fk ? new Predicate<T>() {
+                return fk
+                        ? new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        return (((Number) attr.get(t)).longValue() & ((Number) fkattr.get(t)).longValue()) == 0;
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                return (((Number) attr.get(t)).longValue() & ((Number) fkattr.get(t)).longValue()) == 0;
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + " & " + fkattr.field() + " = 0";
-                    }
-                } : new Predicate<T>() {
+                            @Override
+                            public String toString() {
+                                return field + " & " + fkattr.field() + " = 0";
+                            }
+                        }
+                        : new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        return (((Number) attr.get(t)).longValue() & ((Number) val).longValue()) == 0;
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                return (((Number) attr.get(t)).longValue() & ((Number) val).longValue()) == 0;
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + " & " + val + " = 0";
-                    }
-                };
+                            @Override
+                            public String toString() {
+                                return field + " & " + val + " = 0";
+                            }
+                        };
             case LIKE:
-                return fk ? new Predicate<T>() {
+                return fk
+                        ? new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        Object rs = attr.get(t);
-                        Object rs2 = fkattr.get(t);
-                        return rs != null && rs2 != null && rs.toString().contains(rs2.toString());
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                Object rs2 = fkattr.get(t);
+                                return rs != null
+                                        && rs2 != null
+                                        && rs.toString().contains(rs2.toString());
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + ' ' + express.value() + ' ' + fkattr.field();
-                    }
-                } : new Predicate<T>() {
+                            @Override
+                            public String toString() {
+                                return field + ' ' + express.value() + ' ' + fkattr.field();
+                            }
+                        }
+                        : new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        Object rs = attr.get(t);
-                        return rs != null && rs.toString().contains(val.toString());
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                return rs != null && rs.toString().contains(val.toString());
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + ' ' + express.value() + ' ' + formatToString(val);
-                    }
-                };
+                            @Override
+                            public String toString() {
+                                return field + ' ' + express.value() + ' ' + formatToString(val);
+                            }
+                        };
             case STARTS:
-                return fk ? new Predicate<T>() {
+                return fk
+                        ? new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        Object rs = attr.get(t);
-                        Object rs2 = fkattr.get(t);
-                        return rs != null && rs2 != null && rs.toString().startsWith(rs2.toString());
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                Object rs2 = fkattr.get(t);
+                                return rs != null
+                                        && rs2 != null
+                                        && rs.toString().startsWith(rs2.toString());
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + " STARTSWITH " + fkattr.field();
-                    }
-                } : new Predicate<T>() {
+                            @Override
+                            public String toString() {
+                                return field + " STARTSWITH " + fkattr.field();
+                            }
+                        }
+                        : new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        Object rs = attr.get(t);
-                        return rs != null && rs.toString().startsWith(val.toString());
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                return rs != null && rs.toString().startsWith(val.toString());
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + " STARTSWITH " + formatToString(val);
-                    }
-                };
+                            @Override
+                            public String toString() {
+                                return field + " STARTSWITH " + formatToString(val);
+                            }
+                        };
             case ENDS:
-                return fk ? new Predicate<T>() {
+                return fk
+                        ? new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        Object rs = attr.get(t);
-                        Object rs2 = fkattr.get(t);
-                        return rs != null && rs2 != null && rs.toString().endsWith(rs2.toString());
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                Object rs2 = fkattr.get(t);
+                                return rs != null
+                                        && rs2 != null
+                                        && rs.toString().endsWith(rs2.toString());
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + " ENDSWITH " + fkattr.field();
-                    }
-                } : new Predicate<T>() {
+                            @Override
+                            public String toString() {
+                                return field + " ENDSWITH " + fkattr.field();
+                            }
+                        }
+                        : new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        Object rs = attr.get(t);
-                        return rs != null && rs.toString().endsWith(val.toString());
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                return rs != null && rs.toString().endsWith(val.toString());
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + " ENDSWITH " + formatToString(val);
-                    }
-                };
+                            @Override
+                            public String toString() {
+                                return field + " ENDSWITH " + formatToString(val);
+                            }
+                        };
             case IG_LIKE:
                 if (fk) {
                     return new Predicate<T>() {
@@ -1946,7 +2064,11 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         public boolean test(T t) {
                             Object rs = attr.get(t);
                             Object rs2 = fkattr.get(t);
-                            return rs != null && rs2 != null && rs.toString().toLowerCase().contains(rs2.toString().toLowerCase());
+                            return rs != null
+                                    && rs2 != null
+                                    && rs.toString()
+                                            .toLowerCase()
+                                            .contains(rs2.toString().toLowerCase());
                         }
 
                         @Override
@@ -1970,59 +2092,67 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     }
                 };
             case NOT_STARTS:
-                return fk ? new Predicate<T>() {
+                return fk
+                        ? new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        Object rs = attr.get(t);
-                        Object rs2 = fkattr.get(t);
-                        return rs == null || rs2 == null || !rs.toString().startsWith(rs2.toString());
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                Object rs2 = fkattr.get(t);
+                                return rs == null
+                                        || rs2 == null
+                                        || !rs.toString().startsWith(rs2.toString());
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + " NOT STARTSWITH " + fkattr.field();
-                    }
-                } : new Predicate<T>() {
+                            @Override
+                            public String toString() {
+                                return field + " NOT STARTSWITH " + fkattr.field();
+                            }
+                        }
+                        : new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        Object rs = attr.get(t);
-                        return rs == null || !rs.toString().startsWith(val.toString());
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                return rs == null || !rs.toString().startsWith(val.toString());
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + " NOT STARTSWITH " + formatToString(val);
-                    }
-                };
+                            @Override
+                            public String toString() {
+                                return field + " NOT STARTSWITH " + formatToString(val);
+                            }
+                        };
             case NOT_ENDS:
-                return fk ? new Predicate<T>() {
+                return fk
+                        ? new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        Object rs = attr.get(t);
-                        Object rs2 = fkattr.get(t);
-                        return rs == null || rs2 == null || !rs.toString().endsWith(rs2.toString());
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                Object rs2 = fkattr.get(t);
+                                return rs == null
+                                        || rs2 == null
+                                        || !rs.toString().endsWith(rs2.toString());
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + " NOT ENDSWITH " + fkattr.field();
-                    }
-                } : new Predicate<T>() {
+                            @Override
+                            public String toString() {
+                                return field + " NOT ENDSWITH " + fkattr.field();
+                            }
+                        }
+                        : new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        Object rs = attr.get(t);
-                        return rs == null || !rs.toString().endsWith(val.toString());
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                return rs == null || !rs.toString().endsWith(val.toString());
+                            }
 
-                    @Override
-                    public String toString() {
-                        return field + " NOT ENDSWITH " + formatToString(val);
-                    }
-                };
+                            @Override
+                            public String toString() {
+                                return field + " NOT ENDSWITH " + formatToString(val);
+                            }
+                        };
             case IG_NOT_LIKE:
                 if (fk) {
                     return new Predicate<T>() {
@@ -2031,7 +2161,11 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         public boolean test(T t) {
                             Object rs = attr.get(t);
                             Object rs2 = fkattr.get(t);
-                            return rs == null || rs2 == null || !rs.toString().toLowerCase().contains(rs2.toString().toLowerCase());
+                            return rs == null
+                                    || rs2 == null
+                                    || !rs.toString()
+                                            .toLowerCase()
+                                            .contains(rs2.toString().toLowerCase());
                         }
 
                         @Override
@@ -2061,7 +2195,8 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     @Override
                     public boolean test(T t) {
                         Object rs = attr.get(t);
-                        return (rs == null && 0 == intval) || (rs != null && rs.toString().length() == intval);
+                        return (rs == null && 0 == intval)
+                                || (rs != null && rs.toString().length() == intval);
                     }
 
                     @Override
@@ -2076,7 +2211,8 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     @Override
                     public boolean test(T t) {
                         Object rs = attr.get(t);
-                        return (rs == null && 0 < intval2) || (rs != null && rs.toString().length() < intval2);
+                        return (rs == null && 0 < intval2)
+                                || (rs != null && rs.toString().length() < intval2);
                     }
 
                     @Override
@@ -2091,7 +2227,8 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     @Override
                     public boolean test(T t) {
                         Object rs = attr.get(t);
-                        return (rs == null && 0 <= intval3) || (rs != null && rs.toString().length() <= intval3);
+                        return (rs == null && 0 <= intval3)
+                                || (rs != null && rs.toString().length() <= intval3);
                     }
 
                     @Override
@@ -2106,7 +2243,8 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     @Override
                     public boolean test(T t) {
                         Object rs = attr.get(t);
-                        return (rs == null && 0 > intval4) || (rs != null && rs.toString().length() > intval4);
+                        return (rs == null && 0 > intval4)
+                                || (rs != null && rs.toString().length() > intval4);
                     }
 
                     @Override
@@ -2121,7 +2259,8 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     @Override
                     public boolean test(T t) {
                         Object rs = attr.get(t);
-                        return (rs == null && 0 >= intval5) || (rs != null && rs.toString().length() >= intval5);
+                        return (rs == null && 0 >= intval5)
+                                || (rs != null && rs.toString().length() >= intval5);
                     }
 
                     @Override
@@ -2130,32 +2269,36 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     }
                 };
             case CONTAIN:
-                return fk ? new Predicate<T>() {
+                return fk
+                        ? new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        Object rs = attr.get(t);
-                        Object rs2 = fkattr.get(t);
-                        return rs != null && rs2 != null && rs2.toString().contains(rs.toString());
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                Object rs2 = fkattr.get(t);
+                                return rs != null
+                                        && rs2 != null
+                                        && rs2.toString().contains(rs.toString());
+                            }
 
-                    @Override
-                    public String toString() {
-                        return fkattr.field() + ' ' + express.value() + ' ' + field;
-                    }
-                } : new Predicate<T>() {
+                            @Override
+                            public String toString() {
+                                return fkattr.field() + ' ' + express.value() + ' ' + field;
+                            }
+                        }
+                        : new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        Object rs = attr.get(t);
-                        return rs != null && val.toString().contains(rs.toString());
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                return rs != null && val.toString().contains(rs.toString());
+                            }
 
-                    @Override
-                    public String toString() {
-                        return "" + formatToString(val) + ' ' + express.value() + ' ' + field;
-                    }
-                };
+                            @Override
+                            public String toString() {
+                                return "" + formatToString(val) + ' ' + express.value() + ' ' + field;
+                            }
+                        };
             case IG_CONTAIN:
                 if (fk) {
                     return new Predicate<T>() {
@@ -2164,7 +2307,11 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         public boolean test(T t) {
                             Object rs = attr.get(t);
                             Object rs2 = fkattr.get(t);
-                            return rs != null && rs2 != null && rs2.toString().toLowerCase().contains(rs.toString().toLowerCase());
+                            return rs != null
+                                    && rs2 != null
+                                    && rs2.toString()
+                                            .toLowerCase()
+                                            .contains(rs.toString().toLowerCase());
                         }
 
                         @Override
@@ -2188,32 +2335,36 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     }
                 };
             case NOT_CONTAIN:
-                return fk ? new Predicate<T>() {
+                return fk
+                        ? new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        Object rs = attr.get(t);
-                        Object rs2 = fkattr.get(t);
-                        return rs == null || rs2 == null || !rs2.toString().contains(rs.toString());
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                Object rs2 = fkattr.get(t);
+                                return rs == null
+                                        || rs2 == null
+                                        || !rs2.toString().contains(rs.toString());
+                            }
 
-                    @Override
-                    public String toString() {
-                        return fkattr.field() + ' ' + express.value() + ' ' + field;
-                    }
-                } : new Predicate<T>() {
+                            @Override
+                            public String toString() {
+                                return fkattr.field() + ' ' + express.value() + ' ' + field;
+                            }
+                        }
+                        : new Predicate<T>() {
 
-                    @Override
-                    public boolean test(T t) {
-                        Object rs = attr.get(t);
-                        return rs == null || !val.toString().contains(rs.toString());
-                    }
+                            @Override
+                            public boolean test(T t) {
+                                Object rs = attr.get(t);
+                                return rs == null || !val.toString().contains(rs.toString());
+                            }
 
-                    @Override
-                    public String toString() {
-                        return "" + formatToString(val) + ' ' + express.value() + ' ' + field;
-                    }
-                };
+                            @Override
+                            public String toString() {
+                                return "" + formatToString(val) + ' ' + express.value() + ' ' + field;
+                            }
+                        };
             case IG_NOT_CONTAIN:
                 if (fk) {
                     return new Predicate<T>() {
@@ -2222,7 +2373,11 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                         public boolean test(T t) {
                             Object rs = attr.get(t);
                             Object rs2 = fkattr.get(t);
-                            return rs == null || rs2 == null || !rs2.toString().toLowerCase().contains(rs.toString().toLowerCase());
+                            return rs == null
+                                    || rs2 == null
+                                    || !rs2.toString()
+                                            .toLowerCase()
+                                            .contains(rs.toString().toLowerCase());
                         }
 
                         @Override
@@ -2298,7 +2453,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                 Predicate<T> filter;
                 if (val instanceof Collection) {
                     Collection array = (Collection) val;
-                    if (array.isEmpty()) { //express 只会是 IN
+                    if (array.isEmpty()) { // express 只会是 IN
                         filter = new Predicate<T>() {
 
                             @Override
@@ -2328,7 +2483,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                     }
                 } else {
                     Class type = val.getClass();
-                    if (Array.getLength(val) == 0) {//express 只会是 IN
+                    if (Array.getLength(val) == 0) { // express 只会是 IN
                         filter = new Predicate<T>() {
 
                             @Override
@@ -2556,7 +2711,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                 if (more) {
                     sb.append(')');
                 }
-                return sb.length() > 3 ? sb : null;  //若sb的值只是()，则不过滤
+                return sb.length() > 3 ? sb : null; // 若sb的值只是()，则不过滤
             } else if (val0.getClass().isArray()) {
                 StringBuilder sb = new StringBuilder();
                 Object[] fvs = (Object[]) val0;
@@ -2580,7 +2735,7 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                 if (more) {
                     sb.append(')');
                 }
-                return sb.length() > 3 ? sb : null;  //若sb的值只是()，则不过滤
+                return sb.length() > 3 ? sb : null; // 若sb的值只是()，则不过滤
             }
         }
         return toElementString(prefix, val0);
@@ -2595,8 +2750,15 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
             } else if (express == IS_EMPTY || express == NOT_EMPTY) {
                 sb.append(col).append(' ').append(express.value()).append(" ''");
             } else if (ev != null) {
-                boolean lower = (express == IG_LIKE || express == IG_NOT_LIKE || express == IG_CONTAIN || express == IG_NOT_CONTAIN);
-                sb.append(lower ? ("LOWER(" + col + ')') : col).append(' ').append(express.value()).append(' ').append(formatToString(express, ev));
+                boolean lower = (express == IG_LIKE
+                        || express == IG_NOT_LIKE
+                        || express == IG_CONTAIN
+                        || express == IG_NOT_CONTAIN);
+                sb.append(lower ? ("LOWER(" + col + ')') : col)
+                        .append(' ')
+                        .append(express.value())
+                        .append(' ')
+                        .append(formatToString(express, ev));
             }
         }
         return sb;
@@ -2623,23 +2785,29 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
                 value = "%" + value;
             } else if (express == IG_LIKE || express == IG_NOT_LIKE) {
                 value = "%" + value.toString().toLowerCase() + '%';
-            } else if (express == IG_CONTAIN || express == IG_NOT_CONTAIN
-                || express == IG_EQ || express == IG_NE) {
+            } else if (express == IG_CONTAIN || express == IG_NOT_CONTAIN || express == IG_EQ || express == IG_NE) {
                 value = value.toString().toLowerCase();
             }
-            return new StringBuilder().append('\'').append(value.toString().replace("'", "\\'")).append('\'');
+            return new StringBuilder()
+                    .append('\'')
+                    .append(value.toString().replace("'", "\\'"))
+                    .append('\'');
         } else if (value instanceof Range) {
             Range range = (Range) value;
             boolean rangestring = range.getClass() == Range.StringRange.class;
             StringBuilder sb = new StringBuilder();
             if (rangestring) {
-                sb.append('\'').append(range.getMin().toString().replace("'", "\\'")).append('\'');
+                sb.append('\'')
+                        .append(range.getMin().toString().replace("'", "\\'"))
+                        .append('\'');
             } else {
                 sb.append(range.getMin());
             }
             sb.append(" AND ");
             if (rangestring) {
-                sb.append('\'').append(range.getMax().toString().replace("'", "\\'")).append('\'');
+                sb.append('\'')
+                        .append(range.getMax().toString().replace("'", "\\'"))
+                        .append('\'');
             } else {
                 sb.append(range.getMax());
             }
@@ -2738,5 +2906,4 @@ public class FilterNode {  //FilterNode 不能实现Serializable接口， 否则
     public final void setNodes(FilterNode[] nodes) {
         this.nodes = nodes;
     }
-
 }

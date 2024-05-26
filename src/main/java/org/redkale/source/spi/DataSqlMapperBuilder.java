@@ -3,6 +3,10 @@
  */
 package org.redkale.source.spi;
 
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
+import static org.redkale.source.DataNativeSqlInfo.SqlMode.SELECT;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -19,18 +23,15 @@ import org.redkale.asm.AsmMethodBoost;
 import org.redkale.asm.AsmMethodParam;
 import org.redkale.asm.Asms;
 import org.redkale.asm.ClassWriter;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.FieldVisitor;
 import org.redkale.asm.Label;
 import org.redkale.asm.MethodDebugVisitor;
 import org.redkale.asm.MethodVisitor;
-import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.convert.json.JsonObject;
 import org.redkale.persistence.Sql;
 import org.redkale.source.AbstractDataSqlSource;
 import org.redkale.source.DataNativeSqlInfo;
-import static org.redkale.source.DataNativeSqlInfo.SqlMode.SELECT;
 import org.redkale.source.DataNativeSqlParser;
 import org.redkale.source.DataSqlMapper;
 import org.redkale.source.DataSqlSource;
@@ -45,27 +46,25 @@ import org.redkale.util.Utility;
 /**
  * DataSqlMapper工厂类
  *
- * <p>
- * 详情见: https://redkale.org
- *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.8.0
  */
 public final class DataSqlMapperBuilder {
 
-    private DataSqlMapperBuilder() {
-    }
+    private DataSqlMapperBuilder() {}
 
-    public static <T, M extends DataSqlMapper<T>> M createMapper(DataNativeSqlParser nativeSqlParser, DataSqlSource source, Class<M> mapperType) {
+    public static <T, M extends DataSqlMapper<T>> M createMapper(
+            DataNativeSqlParser nativeSqlParser, DataSqlSource source, Class<M> mapperType) {
         if (!mapperType.isInterface()) {
             throw new SourceException(mapperType + " is not interface");
         }
         final ClassLoader loader = Thread.currentThread().getContextClassLoader();
         final Class entityType = entityType(mapperType);
         final String supDynName = mapperType.getName().replace('.', '/');
-        final String newDynName = "org/redkaledyn/source/mapper/_DynDataSqlMapper_" + mapperType.getName().replace('.', '_').replace('$', '_');
+        final String newDynName = "org/redkaledyn/source/mapper/_DynDataSqlMapper_"
+                + mapperType.getName().replace('.', '_').replace('$', '_');
         try {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
             Class newClazz = clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz;
@@ -82,7 +81,7 @@ public final class DataSqlMapperBuilder {
             }
             return mapper;
         } catch (ClassNotFoundException e) {
-            //do nothing
+            // do nothing
         } catch (Throwable t) {
             t.printStackTrace();
         }
@@ -102,17 +101,18 @@ public final class DataSqlMapperBuilder {
             Sql sql = method.getAnnotation(Sql.class);
             if (sql == null) {
                 if (Modifier.isAbstract(method.getModifiers())) {
-                    throw new SourceException(mapperType.getSimpleName()
-                        + "." + method.getName() + " require @" + Sql.class.getSimpleName());
+                    throw new SourceException(mapperType.getSimpleName() + "." + method.getName() + " require @"
+                            + Sql.class.getSimpleName());
                 }
                 continue;
             }
             if (!Modifier.isAbstract(method.getModifiers())) {
                 throw new SourceException(mapperType.getSimpleName() + "." + method.getName()
-                    + " is not abstract, but contains @" + Sql.class.getSimpleName());
+                        + " is not abstract, but contains @" + Sql.class.getSimpleName());
             }
             if (method.getExceptionTypes().length > 0) {
-                throw new SourceException("@" + Sql.class.getSimpleName() + " cannot on throw-exception method, but " + method);
+                throw new SourceException(
+                        "@" + Sql.class.getSimpleName() + " cannot on throw-exception method, but " + method);
             }
             IntFunction<String> signFunc = null;
             if (source instanceof AbstractDataSqlSource) {
@@ -132,23 +132,25 @@ public final class DataSqlMapperBuilder {
                     }
                 }
                 if (flipperIndex < 0) {
-                    throw new SourceException(mapperType.getSimpleName() + "." + method.getName()
-                        + " need Flipper type parameter on @" + Sql.class.getSimpleName() + "(" + sql.value() + ")");
+                    throw new SourceException(
+                            mapperType.getSimpleName() + "." + method.getName() + " need Flipper type parameter on @"
+                                    + Sql.class.getSimpleName() + "(" + sql.value() + ")");
                 }
                 fieldNames.remove(flipperIndex);
             }
             if (!Utility.equalsElement(sqlInfo.getRootParamNames(), fieldNames)) {
                 throw new SourceException(mapperType.getSimpleName() + "." + method.getName()
-                    + " parameters not match, fieldNames = " + fieldNames + ", sqlParams = " + sqlInfo.getRootParamNames() + ", methodBean = " + methodBean);
+                        + " parameters not match, fieldNames = " + fieldNames + ", sqlParams = "
+                        + sqlInfo.getRootParamNames() + ", methodBean = " + methodBean);
             }
-            if (sqlInfo.getSqlMode() != SELECT) { //非SELECT语句只能返回int或void
+            if (sqlInfo.getSqlMode() != SELECT) { // 非SELECT语句只能返回int或void
                 if (resultClass != Integer.class && resultClass != int.class) {
                     throw new SourceException("Update SQL must on return int method, but " + method);
                 }
             }
             items.add(new Item(method, sqlInfo, methodBean, flipperIndex));
         }
-        //------------------------------------------------------------------------------
+        // ------------------------------------------------------------------------------
 
         final String utilClassName = Utility.class.getName().replace('.', '/');
         final String sheetDesc = Type.getDescriptor(Sheet.class);
@@ -161,7 +163,7 @@ public final class DataSqlMapperBuilder {
         FieldVisitor fv;
         MethodVisitor mv;
 
-        cw.visit(V11, ACC_PUBLIC + ACC_SUPER, newDynName, null, "java/lang/Object", new String[]{supDynName});
+        cw.visit(V11, ACC_PUBLIC + ACC_SUPER, newDynName, null, "java/lang/Object", new String[] {supDynName});
         {
             fv = cw.visitField(ACC_PRIVATE, "_source", sqlSourceDesc, null, null);
             fv.visitEnd();
@@ -187,7 +189,8 @@ public final class DataSqlMapperBuilder {
             mv.visitEnd();
         }
         {
-            mv = cw.visitMethod(ACC_PUBLIC, "entityType", "()Ljava/lang/Class;", "()Ljava/lang/Class<" + entityDesc + ">;", null);
+            mv = cw.visitMethod(
+                    ACC_PUBLIC, "entityType", "()Ljava/lang/Class;", "()Ljava/lang/Class<" + entityDesc + ">;", null);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitFieldInsn(GETFIELD, newDynName, "_type", "Ljava/lang/Class;");
             mv.visitInsn(ARETURN);
@@ -195,21 +198,22 @@ public final class DataSqlMapperBuilder {
             mv.visitEnd();
         }
 
-        //sql系列方法
-        //int nativeUpdate(String sql)
-        //CompletableFuture<Integer> nativeUpdateAsync(String sql)
-        //int nativeUpdate(String sql, Map<String, Object> params)
-        //CompletableFuture<Integer> nativeUpdateAsync(String sql, Map<String, Object> params)
+        // sql系列方法
+        // int nativeUpdate(String sql)
+        // CompletableFuture<Integer> nativeUpdateAsync(String sql)
+        // int nativeUpdate(String sql, Map<String, Object> params)
+        // CompletableFuture<Integer> nativeUpdateAsync(String sql, Map<String, Object> params)
         //
-        //V nativeQueryOne(Class<V> type, String sql)
-        //CompletableFuture<V> nativeQueryOneAsync(Class<V> type, String sql)
-        //V nativeQueryOne(Class<V> type, String sql, Map<String, Object> params)
-        //CompletableFuture<V> nativeQueryOneAsync(Class<V> type, String sql, Map<String, Object> params)
+        // V nativeQueryOne(Class<V> type, String sql)
+        // CompletableFuture<V> nativeQueryOneAsync(Class<V> type, String sql)
+        // V nativeQueryOne(Class<V> type, String sql, Map<String, Object> params)
+        // CompletableFuture<V> nativeQueryOneAsync(Class<V> type, String sql, Map<String, Object> params)
         //
-        //Map<K, V> nativeQueryMap(Class<K> keyType, Class<V> valType, String sql, Map<String, Object> params)
-        //CompletableFuture<Map<K, V>> nativeQueryMapAsync(Class<K> keyType, Class<V> valType, String sql, Map<String, Object> params)
+        // Map<K, V> nativeQueryMap(Class<K> keyType, Class<V> valType, String sql, Map<String, Object> params)
+        // CompletableFuture<Map<K, V>> nativeQueryMapAsync(Class<K> keyType, Class<V> valType, String sql, Map<String,
+        // Object> params)
         //
-        //nativeQueryOne、nativeQueryList、nativeQuerySheet
+        // nativeQueryOne、nativeQueryList、nativeQuerySheet
         for (Item item : items) {
             Method method = item.method;
             DataNativeSqlInfo sqlInfo = item.sqlInfo;
@@ -227,24 +231,26 @@ public final class DataSqlMapperBuilder {
                 EntityBuilder.load(componentTypes[0]);
             }
 
-            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, method.getName(), methodBean.getDesc(), methodBean.getSignature(), null)).setDebug(false);
+            mv = new MethodDebugVisitor(cw.visitMethod(
+                            ACC_PUBLIC, method.getName(), methodBean.getDesc(), methodBean.getSignature(), null))
+                    .setDebug(false);
             Label l0 = new Label();
             mv.visitLabel(l0);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "dataSource", "()" + sqlSourceDesc, false);
             if (sqlInfo.getSqlMode() == SELECT) {
-                //参数：结果类
+                // 参数：结果类
                 mv.visitLdcInsn(Type.getType(Type.getDescriptor(componentTypes[0])));
                 if (resultClass.isAssignableFrom(Map.class)) {
                     mv.visitLdcInsn(Type.getType(Type.getDescriptor(componentTypes[1])));
                 }
             }
-            //参数：sql
+            // 参数：sql
             mv.visitLdcInsn(sql.value());
             if (flipperIndex >= 0) {
                 mv.visitVarInsn(ALOAD, flipperIndex + 1);
             }
-            //参数: params
+            // 参数: params
             Asms.visitInsn(mv, paramTypes.length * 2 - (flipperIndex >= 0 ? 2 : 0));
             mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
             int insn = 0;
@@ -252,14 +258,14 @@ public final class DataSqlMapperBuilder {
                 insn++;
                 if (i != flipperIndex) {
                     Class pt = paramTypes[i];
-                    //参数名
+                    // 参数名
                     mv.visitInsn(DUP);
                     Asms.visitInsn(mv, i * 2);
                     Param p = params[i].getAnnotation(Param.class);
                     String k = p == null ? methodParams.get(i).getName() : p.value();
                     mv.visitLdcInsn(k);
                     mv.visitInsn(AASTORE);
-                    //参数值
+                    // 参数值
                     mv.visitInsn(DUP);
                     Asms.visitInsn(mv, i * 2 + 1);
                     if (pt.isPrimitive()) {
@@ -283,40 +289,47 @@ public final class DataSqlMapperBuilder {
 
             mv.visitMethodInsn(INVOKESTATIC, utilClassName, "ofMap", "([Ljava/lang/Object;)Ljava/util/HashMap;", false);
 
-            //One:   "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/lang/Object;"
-            //Map:   "(Ljava/lang/Class;Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/util/Map;"
-            //List:  "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/util/List;"
-            //Sheet: "(Ljava/lang/Class;Ljava/lang/String;Lorg/redkale/source/Flipper;Ljava/util/Map;)Lorg/redkale/util/Sheet;"
-            //Async: "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/util/concurrent/CompletableFuture;"
+            // One:   "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/lang/Object;"
+            // Map:   "(Ljava/lang/Class;Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/util/Map;"
+            // List:  "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/util/List;"
+            // Sheet:
+            // "(Ljava/lang/Class;Ljava/lang/String;Lorg/redkale/source/Flipper;Ljava/util/Map;)Lorg/redkale/util/Sheet;"
+            // Async: "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/util/concurrent/CompletableFuture;"
             if (sqlInfo.getSqlMode() == SELECT) {
                 String queryMethodName = "nativeQueryOne";
                 String queryMethodDesc = "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)"
-                    + (async ? "Ljava/util/concurrent/CompletableFuture;" : "Ljava/lang/Object;");
+                        + (async ? "Ljava/util/concurrent/CompletableFuture;" : "Ljava/lang/Object;");
                 boolean oneMode = !async;
                 if (resultClass.isAssignableFrom(Map.class)) {
                     oneMode = false;
                     queryMethodName = "nativeQueryMap";
                     queryMethodDesc = "(Ljava/lang/Class;Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)"
-                        + (async ? "Ljava/util/concurrent/CompletableFuture;" : "Ljava/util/Map;");
+                            + (async ? "Ljava/util/concurrent/CompletableFuture;" : "Ljava/util/Map;");
                 } else if (resultClass.isAssignableFrom(List.class)) {
                     oneMode = false;
                     queryMethodName = "nativeQueryList";
                     queryMethodDesc = "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)"
-                        + (async ? "Ljava/util/concurrent/CompletableFuture;" : "Ljava/util/List;");
+                            + (async ? "Ljava/util/concurrent/CompletableFuture;" : "Ljava/util/List;");
                 } else if (resultClass.isAssignableFrom(Sheet.class)) {
                     oneMode = false;
                     queryMethodName = "nativeQuerySheet";
                     queryMethodDesc = "(Ljava/lang/Class;Ljava/lang/String;" + flipperDesc + "Ljava/util/Map;)"
-                        + (async ? "Ljava/util/concurrent/CompletableFuture;" : sheetDesc);
+                            + (async ? "Ljava/util/concurrent/CompletableFuture;" : sheetDesc);
                 }
-                mv.visitMethodInsn(INVOKEINTERFACE, sqlSourceName, queryMethodName + (async ? "Async" : ""), queryMethodDesc, true);
+                mv.visitMethodInsn(
+                        INVOKEINTERFACE,
+                        sqlSourceName,
+                        queryMethodName + (async ? "Async" : ""),
+                        queryMethodDesc,
+                        true);
                 if (oneMode) {
                     mv.visitTypeInsn(CHECKCAST, componentTypes[0].getName().replace('.', '/'));
                 }
                 mv.visitInsn(ARETURN);
             } else {
                 String updateMethodName = "nativeUpdate" + (async ? "Async" : "");
-                String updateMethodDesc = "(Ljava/lang/String;Ljava/util/Map;)" + (async ? "Ljava/util/concurrent/CompletableFuture;" : "I");
+                String updateMethodDesc = "(Ljava/lang/String;Ljava/util/Map;)"
+                        + (async ? "Ljava/util/concurrent/CompletableFuture;" : "I");
                 mv.visitMethodInsn(INVOKEINTERFACE, sqlSourceName, updateMethodName, updateMethodDesc, true);
                 if (resultClass == int.class) {
                     mv.visitInsn(IRETURN);
@@ -335,7 +348,13 @@ public final class DataSqlMapperBuilder {
             mv.visitLocalVariable("this", "L" + newDynName + ";", null, l0, l2, 0);
             for (int i = 0; i < paramTypes.length; i++) {
                 AsmMethodParam param = methodParams.get(i);
-                mv.visitLocalVariable(param.getName(), param.description(paramTypes[i]), param.signature(paramTypes[i]), l0, l2, insns.get(i));
+                mv.visitLocalVariable(
+                        param.getName(),
+                        param.description(paramTypes[i]),
+                        param.signature(paramTypes[i]),
+                        l0,
+                        l2,
+                        insns.get(i));
             }
             mv.visitMaxs(8, 5);
             mv.visitEnd();
@@ -401,9 +420,9 @@ public final class DataSqlMapperBuilder {
         if (clzz.isAssignableFrom(Map.class)) {
             if (type instanceof ParameterizedType) {
                 java.lang.reflect.Type[] ts = ((ParameterizedType) type).getActualTypeArguments();
-                return new Class[]{TypeToken.typeToClass(ts[0]), TypeToken.typeToClass(ts[1])};
+                return new Class[] {TypeToken.typeToClass(ts[0]), TypeToken.typeToClass(ts[1])};
             } else {
-                return new Class[]{String.class, JsonObject.class};
+                return new Class[] {String.class, JsonObject.class};
             }
         } else if (clzz.isAssignableFrom(List.class)) {
             if (type instanceof ParameterizedType) {
@@ -418,7 +437,7 @@ public final class DataSqlMapperBuilder {
                 clzz = JsonObject.class;
             }
         }
-        return new Class[]{clzz};
+        return new Class[] {clzz};
     }
 
     private static class Item {
@@ -437,6 +456,5 @@ public final class DataSqlMapperBuilder {
             this.methodBean = methodBean;
             this.flipperIndex = flipperIndex;
         }
-
     }
 }

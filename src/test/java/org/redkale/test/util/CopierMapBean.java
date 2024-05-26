@@ -6,9 +6,7 @@ package org.redkale.test.util;
 import java.util.*;
 import org.redkale.util.*;
 
-/**
- * @author zhangjx
- */
+/** @author zhangjx */
 public class CopierMapBean implements Copier<HashMap, TestBean> {
 
     @Override

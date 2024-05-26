@@ -6,26 +6,22 @@
 package org.redkale.test.convert;
 
 import java.util.*;
-import org.redkale.convert.bson.BsonFactory;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class Two extends One {
 
     public Two() {
         super(90100119);
     }
-    
-   protected List<String> list;
 
-  protected  Map<String, String> stringMap;
-    
-  protected  List<ConvertRecord> records;
+    protected List<String> list;
 
-  protected  Map<String, ConvertRecord> recordMap;
-    
+    protected Map<String, String> stringMap;
+
+    protected List<ConvertRecord> records;
+
+    protected Map<String, ConvertRecord> recordMap;
+
     public Map<String, String> getStringMap() {
         return stringMap;
     }
@@ -67,6 +63,4 @@ public class Two extends One {
     public void setRecordMap(Map<String, ConvertRecord> recordMap) {
         this.recordMap = recordMap;
     }
-
-    
 }

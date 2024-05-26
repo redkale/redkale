@@ -5,6 +5,9 @@
  */
 package org.redkale.net.http;
 
+import static org.redkale.net.http.WebClient.*;
+import static org.redkale.util.Utility.isNotEmpty;
+
 import java.io.Serializable;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -16,22 +19,18 @@ import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.client.ClientConnection;
 import org.redkale.net.client.ClientRequest;
-import static org.redkale.net.http.WebClient.*;
 import org.redkale.util.ByteArray;
 import org.redkale.util.Copier;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Traces;
 import org.redkale.util.Utility;
-import static org.redkale.util.Utility.isNotEmpty;
 
 /**
  * HttpRequest的缩减版, 只提供部分字段
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.1.0
  */
 public class WebRequest extends ClientRequest implements java.io.Serializable {
@@ -78,7 +77,7 @@ public class WebRequest extends ClientRequest implements java.io.Serializable {
     @Comment("Content-Type")
     protected String contentType;
 
-    @ConvertColumn(index = 23) //@since 2.5.0 由int改成Serializable, 具体数据类型只能是int、long、BigInteger、String
+    @ConvertColumn(index = 23) // @since 2.5.0 由int改成Serializable, 具体数据类型只能是int、long、BigInteger、String
     protected Serializable currentUserid;
 
     @ConvertColumn(index = 24)
@@ -91,7 +90,7 @@ public class WebRequest extends ClientRequest implements java.io.Serializable {
 
     @ConvertColumn(index = 26)
     @Comment("http body信息")
-    protected byte[] body; //对应HttpRequest.array
+    protected byte[] body; // 对应HttpRequest.array
 
     public static WebRequest createPath(String path) {
         return new WebRequest().path(path).traceid(Traces.currentTraceid());
@@ -157,7 +156,7 @@ public class WebRequest extends ClientRequest implements java.io.Serializable {
 
     @Override
     public void writeTo(ClientConnection conn, ByteArray array) {
-        //组装path和body
+        // 组装path和body
         String requestPath = requestPath();
         String contentType0 = Utility.orElse(this.contentType, "x-www-form-urlencoded");
         byte[] clientBody = null;
@@ -178,9 +177,10 @@ public class WebRequest extends ClientRequest implements java.io.Serializable {
             }
             contentType0 = "x-www-form-urlencoded";
         }
-        //写status
-        array.put(((method == null ? "GET" : method.toUpperCase()) + " " + requestPath + " HTTP/1.1\r\n").getBytes(StandardCharsets.UTF_8));
-        //写header
+        // 写status
+        array.put(((method == null ? "GET" : method.toUpperCase()) + " " + requestPath + " HTTP/1.1\r\n")
+                .getBytes(StandardCharsets.UTF_8));
+        // 写header
         if (traceid != null && !containsHeader(Rest.REST_HEADER_TRACEID)) {
             array.put((Rest.REST_HEADER_TRACEID + ": " + traceid + "\r\n").getBytes(StandardCharsets.UTF_8));
         }
@@ -196,11 +196,12 @@ public class WebRequest extends ClientRequest implements java.io.Serializable {
         array.put(("Content-Type: " + contentType0 + "\r\n").getBytes(StandardCharsets.UTF_8));
         array.put(contentLengthBytes(clientBody));
         if (headers != null) {
-            headers.forEach(k -> !k.equalsIgnoreCase("Content-Type") && !k.equalsIgnoreCase("Content-Length"),
-                (k, v) -> array.put((k + ": " + v + "\r\n").getBytes(StandardCharsets.UTF_8)));
+            headers.forEach(
+                    k -> !k.equalsIgnoreCase("Content-Type") && !k.equalsIgnoreCase("Content-Length"),
+                    (k, v) -> array.put((k + ": " + v + "\r\n").getBytes(StandardCharsets.UTF_8)));
         }
         array.put((byte) '\r', (byte) '\n');
-        //写body    
+        // 写body
         if (clientBody != null) {
             array.put(clientBody);
         }

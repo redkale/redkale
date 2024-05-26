@@ -10,8 +10,7 @@ import java.util.Arrays;
 /**
  * 简单的byte[]数据接口。
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.3.0

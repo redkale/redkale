@@ -1,27 +1,27 @@
-//package org.redkale.util;
+// package org.redkale.util;
 //
-//import java.util.function.*;
+// import java.util.function.*;
 //
-///**
+/// **
 // *
 // * @author zhangjx
 // * @since 2.7.0
 // */
-//public class SignalShutDown implements Consumer<Consumer<String>>, sun.misc.SignalHandler {
+// public class SignalShutDown implements Consumer<Consumer<String>>, sun.misc.SignalHandler {
 //
 //    private Consumer<String> shutdownConsumer;
 //
 //    @Override
 //    public void accept(Consumer<String> consumer) {
 //        this.shutdownConsumer = consumer;
-//        //Linux: 
+//        //Linux:
 //        //HUP     1    终端断线
 //        //INT     2    中断（同 Ctrl + C）
 //        //QUIT    3    退出（同 Ctrl + \）
 //        //TERM    15   终止
 //        //KILL    9    强制终止
 //        //CONT    18   继续（与STOP相反， fg/bg命令）
-//        //Windows: 
+//        //Windows:
 //        //SIGINT（INT）     Ctrl+C中断
 //        //SIGILL （ILL）      非法指令
 //        //SIGFPE（FPE）      浮点异常
@@ -47,4 +47,4 @@
 //        String sigstr = sig + "," + sig.getName() + "," + sig.getNumber();
 //        shutdownConsumer.accept(sigstr);
 //    }
-//}
+// }

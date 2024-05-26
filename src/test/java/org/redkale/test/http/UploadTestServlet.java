@@ -8,11 +8,8 @@ package org.redkale.test.http;
 import java.io.IOException;
 import org.redkale.net.http.*;
 
-/**
- *
- * @author zhangjx
- */
-//@WebServlet({"/uploadtest/form", "/uploadtest/send"})
+/** @author zhangjx */
+// @WebServlet({"/uploadtest/form", "/uploadtest/send"})
 public class UploadTestServlet extends HttpServlet {
 
     @Override
@@ -26,8 +23,7 @@ public class UploadTestServlet extends HttpServlet {
 
     public void form(HttpRequest req, HttpResponse resp) throws IOException {
         resp.setContentType("text/html");
-        resp.finish(
-                "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"/></head>"
+        resp.finish("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"/></head>"
                 + "<div style='margin-top:150px;margin-left:400px;'><form action=\"/pipes/uploadtest/send\" method=\"post\" enctype=\"multipart/form-data\">"
                 + "描述: <input name=\"desc1\"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;文件1: <input type=\"file\" name=\"filepath1\"/><br/><br/>"
                 + "描述: <input name=\"desc2\"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;文件2: <input type=\"file\" name=\"filepath2\"/><br/><br/>"

@@ -7,10 +7,7 @@ package org.redkale.test.rest;
 
 import org.redkale.convert.json.JsonFactory;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class LoginBean {
 
     private String account = "";

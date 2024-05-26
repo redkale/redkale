@@ -14,25 +14,18 @@ import org.redkale.convert.ConvertDisabled;
 /**
  * AnyValue的可写版
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- * 
  * @since 2.8.0
  */
 @SuppressWarnings("unchecked")
 public class AnyValueWriter extends AnyValue {
 
-    /**
-     * 区分name大小写的比较策略
-     *
-     */
+    /** 区分name大小写的比较策略 */
     public static final BiPredicate<String, String> EQUALS_PREDICATE = (name1, name2) -> name1.equals(name2);
 
-    /**
-     * 不区分name大小写的比较策略
-     */
+    /** 不区分name大小写的比较策略 */
     public static final BiPredicate<String, String> EQUALS_IGNORE = (name1, name2) -> name1.equalsIgnoreCase(name2);
 
     @ConvertColumn(index = 1)
@@ -46,14 +39,13 @@ public class AnyValueWriter extends AnyValue {
     @ConvertColumn(index = 3)
     private Entry<AnyValueWriter>[] anyEntrys = new Entry[0];
 
-    int parentArrayIndex = -1; //只可能被loadFromProperties方法赋值
+    int parentArrayIndex = -1; // 只可能被loadFromProperties方法赋值
 
     /**
      * 创建含name-value值的AnyValueWriter
      *
-     * @param name  name
+     * @param name name
      * @param value value值
-     *
      * @return AnyValueWriter
      */
     public static final AnyValueWriter create(String name, Number value) {
@@ -65,9 +57,8 @@ public class AnyValueWriter extends AnyValue {
     /**
      * 创建含name-value值的AnyValueWriter对象
      *
-     * @param name  name
+     * @param name name
      * @param value value值
-     *
      * @return AnyValueWriter对象
      */
     public static final AnyValueWriter create(String name, String value) {
@@ -79,9 +70,8 @@ public class AnyValueWriter extends AnyValue {
     /**
      * 创建含name-value值的AnyValueWriter对象
      *
-     * @param name  name
+     * @param name name
      * @param value value值
-     *
      * @return AnyValueWriter对象
      */
     public static final AnyValueWriter create(String name, AnyValue value) {
@@ -90,10 +80,7 @@ public class AnyValueWriter extends AnyValue {
         return conf;
     }
 
-    /**
-     * 创建一个区分大小写比较策略的AnyValueWriter对象
-     *
-     */
+    /** 创建一个区分大小写比较策略的AnyValueWriter对象 */
     public AnyValueWriter() {
         this(false);
     }
@@ -157,7 +144,6 @@ public class AnyValueWriter extends AnyValue {
      * 将另一个对象替换本对象
      *
      * @param node 替换的对象
-     *
      * @return AnyValue
      */
     @Override
@@ -178,7 +164,6 @@ public class AnyValueWriter extends AnyValue {
      *
      * @param node 代合并对象
      * @param func 判断覆盖方式的函数
-     *
      * @return AnyValue
      */
     @Override
@@ -216,7 +201,8 @@ public class AnyValueWriter extends AnyValue {
                         if (item == null) {
                             continue;
                         }
-                        if (item.value != null && en.value.parentArrayIndex == ((AnyValueWriter) item.value).parentArrayIndex) {
+                        if (item.value != null
+                                && en.value.parentArrayIndex == ((AnyValueWriter) item.value).parentArrayIndex) {
                             if (func == null) {
                                 item.value.merge(en.value, func);
                                 ok = true;
@@ -252,7 +238,6 @@ public class AnyValueWriter extends AnyValue {
      * 合并两个AnyValue对象， 会去重， 没有的才增加
      *
      * @param av AnyValue
-     *
      * @return AnyValueWriter
      */
     public AnyValueWriter addAllStringSet(final AnyValue av) {
@@ -275,7 +260,6 @@ public class AnyValueWriter extends AnyValue {
      * 合并两个AnyValue对象 不去重
      *
      * @param av AnyValue
-     *
      * @return AnyValueWriter
      */
     public AnyValueWriter addAll(final AnyValue av) {
@@ -315,7 +299,6 @@ public class AnyValueWriter extends AnyValue {
      * 合并两个AnyValue对象 会去重
      *
      * @param av AnyValue
-     *
      * @return AnyValueWriter
      */
     @ConvertDisabled
@@ -450,9 +433,13 @@ public class AnyValueWriter extends AnyValue {
         return toString(0, (any, space) -> {
             int index = ((AnyValueWriter) any).parentArrayIndex;
             if (index < 0) {
-                return null; //不能用"null"
+                return null; // 不能用"null"
             }
-            return new StringBuilder().append(space).append("    '$index': ").append(index).append(",\r\n");
+            return new StringBuilder()
+                    .append(space)
+                    .append("    '$index': ")
+                    .append(index)
+                    .append(",\r\n");
         });
     }
 
@@ -551,7 +538,9 @@ public class AnyValueWriter extends AnyValue {
         if (value == null || this.anyEntrys == null) {
             return this;
         }
-        this.anyEntrys = Utility.remove(this.anyEntrys, t -> name.equals(((Entry) t).name) && ((Entry) t).getValue().equals(value));
+        this.anyEntrys = Utility.remove(
+                this.anyEntrys,
+                t -> name.equals(((Entry) t).name) && ((Entry) t).getValue().equals(value));
         return this;
     }
 
@@ -569,7 +558,9 @@ public class AnyValueWriter extends AnyValue {
         if (value == null || this.stringEntrys == null) {
             return this;
         }
-        this.stringEntrys = Utility.remove(this.stringEntrys, t -> name.equals(((Entry) t).name) && ((Entry) t).getValue().equals(value));
+        this.stringEntrys = Utility.remove(
+                this.stringEntrys,
+                t -> name.equals(((Entry) t).name) && ((Entry) t).getValue().equals(value));
         return this;
     }
 

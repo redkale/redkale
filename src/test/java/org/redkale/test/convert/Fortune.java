@@ -5,13 +5,10 @@
  */
 package org.redkale.test.convert;
 
-import org.redkale.persistence.Id;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.persistence.Id;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class Fortune implements Comparable<Fortune> {
 
     @Id
@@ -19,8 +16,7 @@ public class Fortune implements Comparable<Fortune> {
 
     private String message = "";
 
-    public Fortune() {
-    }
+    public Fortune() {}
 
     public Fortune(int id, String message) {
         this.id = id;
@@ -52,5 +48,4 @@ public class Fortune implements Comparable<Fortune> {
     public String toString() {
         return JsonConvert.root().convertTo(this);
     }
-
 }

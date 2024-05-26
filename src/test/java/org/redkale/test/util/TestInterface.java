@@ -5,10 +5,7 @@ package org.redkale.test.util;
 
 import java.util.Map;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public interface TestInterface {
 
     public int getId();

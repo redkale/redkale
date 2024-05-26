@@ -15,8 +15,7 @@ import org.redkale.util.*;
 /**
  * 协议底层Server
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -24,10 +23,10 @@ public abstract class ProtocolServer {
 
     protected final Context context;
 
-    //最大连接数，小于1表示无限制
+    // 最大连接数，小于1表示无限制
     protected int maxConns;
 
-    @Resource(required = false) //独立创建HttpServer时没有Application
+    @Resource(required = false) // 独立创建HttpServer时没有Application
     protected Application application;
 
     public abstract void open(AnyValue config) throws IOException;
@@ -49,7 +48,7 @@ public abstract class ProtocolServer {
         this.maxConns = context.getMaxConns();
     }
 
-    //---------------------------------------------------------------------
+    // ---------------------------------------------------------------------
     public static ProtocolServer create(String protocol, Context context, ClassLoader classLoader) {
         if ("TCP".equalsIgnoreCase(protocol)) {
             return new AsyncNioTcpProtocolServer(context);

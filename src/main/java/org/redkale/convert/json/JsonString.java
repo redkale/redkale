@@ -8,8 +8,7 @@ import org.redkale.convert.ConvertDisabled;
 /**
  * 常规json字符串
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.8.0
@@ -18,8 +17,7 @@ public class JsonString implements CharSequence, JsonElement, Comparable<JsonStr
 
     private String value;
 
-    public JsonString() {
-    }
+    public JsonString() {}
 
     public JsonString(String value) {
         this.value = value;
@@ -55,7 +53,9 @@ public class JsonString implements CharSequence, JsonElement, Comparable<JsonStr
 
     @Override
     public int compareTo(JsonString o) {
-        return o == null || o.value == null ? (value == null ? 0 : 1) : (this.value == null ? -1 : this.value.compareTo(o.value));
+        return o == null || o.value == null
+                ? (value == null ? 0 : 1)
+                : (this.value == null ? -1 : this.value.compareTo(o.value));
     }
 
     @Override
@@ -80,5 +80,4 @@ public class JsonString implements CharSequence, JsonElement, Comparable<JsonStr
     public String toString() {
         return value;
     }
-
 }

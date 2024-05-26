@@ -7,10 +7,7 @@ import java.util.concurrent.TimeUnit;
 import org.redkale.cache.Cached;
 import org.redkale.convert.json.JsonConvert;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class CacheEntry {
 
     private String key;
@@ -25,8 +22,7 @@ public class CacheEntry {
 
     private boolean nullable;
 
-    public CacheEntry() {
-    }
+    public CacheEntry() {}
 
     public CacheEntry(DynForCache cached) {
         this.key = cached.key();

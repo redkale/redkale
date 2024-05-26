@@ -5,15 +5,18 @@
  */
 package org.redkale.convert;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import java.lang.annotation.*;
+
 /**
- * 用于序列化时接口或抽象类的默认实现类, 被标记的类必须是接口或抽象类  <br>
+ * 用于序列化时接口或抽象类的默认实现类, 被标记的类必须是接口或抽象类 <br>
  * 使用场景: <br>
  *
- * <blockquote><pre>
+ * <blockquote>
+ *
+ * <pre>
  * &#64;ConvertImpl(OneImpl.class)
  * public interface OneEntity {
  *     public String getName();
@@ -31,14 +34,16 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * OneEntity one = JsonConvert.root().convertFrom(OneEntity.class, json);
  * //one instanceof OneImpl
  *
- * </pre></blockquote>
- * <p>
- * 详情见: https://redkale.org
+ * </pre>
+ *
+ * </blockquote>
+ *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.5.0
  */
-//一定不能标记Inherited
+// 一定不能标记Inherited
 @Documented
 @Target({TYPE})
 @Retention(RUNTIME)

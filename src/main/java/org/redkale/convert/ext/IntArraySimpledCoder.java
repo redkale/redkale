@@ -11,8 +11,7 @@ import org.redkale.convert.*;
 /**
  * int[] 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -78,7 +77,8 @@ public final class IntArraySimpledCoder<R extends Reader, W extends Writer> exte
         }
     }
 
-    public final static class IntStreamSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, IntStream> {
+    public static final class IntStreamSimpledCoder<R extends Reader, W extends Writer>
+            extends SimpledCoder<R, W, IntStream> {
 
         public static final IntStreamSimpledCoder instance = new IntStreamSimpledCoder();
 
@@ -98,6 +98,5 @@ public final class IntArraySimpledCoder<R extends Reader, W extends Writer> exte
             int[] value = IntArraySimpledCoder.instance.convertFrom(in);
             return value == null ? null : IntStream.of(value);
         }
-
     }
 }

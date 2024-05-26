@@ -13,11 +13,9 @@ import org.redkale.convert.json.JsonConvert;
 /**
  * 存放用户WS连接的SNCP地址和MQ topic， 当消息使用MQ代理时，topic才会有值
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.1.0
  */
 public class WebSocketAddress implements Serializable {
@@ -26,8 +24,7 @@ public class WebSocketAddress implements Serializable {
 
     protected String topic;
 
-    public WebSocketAddress() {
-    }
+    public WebSocketAddress() {}
 
     public WebSocketAddress(String topic, InetSocketAddress addr) {
         this.topic = topic;

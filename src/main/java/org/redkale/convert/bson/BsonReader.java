@@ -5,18 +5,18 @@
  */
 package org.redkale.convert.bson;
 
+import static org.redkale.convert.Reader.SIGN_NULL;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.redkale.convert.*;
-import static org.redkale.convert.Reader.SIGN_NULL;
 import org.redkale.convert.ext.ByteSimpledCoder;
 import org.redkale.util.ObjectPool;
 
 /**
  * BSON数据源
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -34,14 +34,13 @@ public class BsonReader extends Reader {
 
     public static final byte VERBOSE_YES = 2;
 
-    protected byte typeval;  //字段的类型值  对应  BsonWriter.writeField
+    protected byte typeval; // 字段的类型值  对应  BsonWriter.writeField
 
     protected int position = -1;
 
     private byte[] content;
 
-    public BsonReader() {
-    }
+    public BsonReader() {}
 
     public static ObjectPool<BsonReader> createPool(int max) {
         return ObjectPool.createSafePool(max, (Object... params) -> new BsonReader(), null, (t) -> t.recycle());
@@ -75,7 +74,7 @@ public class BsonReader extends Reader {
         } else {
             this.content = bytes;
             this.position = start - 1;
-            //this.limit = start + len - 1;
+            // this.limit = start + len - 1;
         }
         return this;
     }
@@ -83,7 +82,7 @@ public class BsonReader extends Reader {
     protected boolean recycle() {
         this.position = -1;
         this.typeval = 0;
-        //this.limit = -1;
+        // this.limit = -1;
         this.content = null;
         return true;
     }
@@ -93,9 +92,7 @@ public class BsonReader extends Reader {
         return this;
     }
 
-    /**
-     * 跳过属性的值
-     */
+    /** 跳过属性的值 */
     @Override
     @SuppressWarnings("unchecked")
     public final void skipValue() {
@@ -105,23 +102,32 @@ public class BsonReader extends Reader {
         final byte val = this.typeval;
         this.typeval = 0;
         switch (val) {
-            case 11: readBoolean();
+            case 11:
+                readBoolean();
                 break;
-            case 12: readByte();
+            case 12:
+                readByte();
                 break;
-            case 13: readShort();
+            case 13:
+                readShort();
                 break;
-            case 14: readChar();
+            case 14:
+                readChar();
                 break;
-            case 15: readInt();
+            case 15:
+                readInt();
                 break;
-            case 16: readLong();
+            case 16:
+                readLong();
                 break;
-            case 17: readFloat();
+            case 17:
+                readFloat();
                 break;
-            case 18: readDouble();
+            case 18:
+                readDouble();
                 break;
-            case 19: readString();
+            case 19:
+                readString();
                 break;
             default:
                 Decodeable decoder = BsonFactory.typeEnum(val);
@@ -134,7 +140,7 @@ public class BsonReader extends Reader {
 
     @Override
     public final String readObjectB(final Class clazz) {
-        this.fieldIndex = 0; //必须要重置为0
+        this.fieldIndex = 0; // 必须要重置为0
         final String newcls = readClassName();
         if (newcls != null && !newcls.isEmpty()) {
             return newcls;
@@ -144,8 +150,8 @@ public class BsonReader extends Reader {
             return null;
         }
         if (bt != SIGN_OBJECTB) {
-            throw new ConvertException("a bson object must begin with " + (SIGN_OBJECTB)
-                + " (position = " + position + ") but '" + currentByte() + "'");
+            throw new ConvertException("a bson object must begin with " + (SIGN_OBJECTB) + " (position = " + position
+                    + ") but '" + currentByte() + "'");
         }
         return "";
     }
@@ -153,8 +159,8 @@ public class BsonReader extends Reader {
     @Override
     public final void readObjectE(final Class clazz) {
         if (readShort() != SIGN_OBJECTE) {
-            throw new ConvertException("a bson object must end with " + (SIGN_OBJECTE)
-                + " (position = " + position + ") but '" + currentByte() + "'");
+            throw new ConvertException("a bson object must end with " + (SIGN_OBJECTE) + " (position = " + position
+                    + ") but '" + currentByte() + "'");
         }
     }
 
@@ -180,7 +186,7 @@ public class BsonReader extends Reader {
 
     @Override
     public final void readMapE() {
-        //do nothing
+        // do nothing
     }
 
     /**
@@ -189,7 +195,7 @@ public class BsonReader extends Reader {
      * @return 数组长度或SIGN_NULL
      */
     @Override
-    public int readArrayB(DeMember member, byte[] typevals, Decodeable componentDecoder) { //componentDecoder可能为null
+    public int readArrayB(DeMember member, byte[] typevals, Decodeable componentDecoder) { // componentDecoder可能为null
         short bt = readShort();
         if (bt == Reader.SIGN_NULL) {
             return bt;
@@ -206,15 +212,13 @@ public class BsonReader extends Reader {
 
     @Override
     public final void readArrayE() {
-        //do nothing
+        // do nothing
     }
 
-    /**
-     * 判断下一个非空白字节是否:
-     */
+    /** 判断下一个非空白字节是否: */
     @Override
     public final void readBlank() {
-        //do nothing
+        // do nothing
     }
 
     @Override
@@ -232,7 +236,6 @@ public class BsonReader extends Reader {
      *
      * @param startPosition 起始位置
      * @param contentLength 内容大小， 不确定的传-1
-     *
      * @return 是否存在
      */
     @Override
@@ -242,14 +245,15 @@ public class BsonReader extends Reader {
             return true;
         }
         if (b != SIGN_NONEXT) {
-            throw new ConvertException("hasNext option must be (" + (SIGN_HASNEXT)
-                + " or " + (SIGN_NONEXT) + ") but '" + b + "' at position(" + this.position + ")");
+            throw new ConvertException("hasNext option must be (" + (SIGN_HASNEXT) + " or " + (SIGN_NONEXT) + ") but '"
+                    + b + "' at position(" + this.position + ")");
         }
         return false;
     }
 
     @Override
-    public final DeMember readFieldName(final DeMember[] members, Map<String, DeMember> memberFieldMap, Map<Integer, DeMember> memberTagMap) {
+    public final DeMember readFieldName(
+            final DeMember[] members, Map<String, DeMember> memberFieldMap, Map<Integer, DeMember> memberTagMap) {
         final String exceptedField = readSmallString();
         this.typeval = readByte();
         final int len = members.length;
@@ -271,7 +275,7 @@ public class BsonReader extends Reader {
         return null;
     }
 
-    //------------------------------------------------------------
+    // ------------------------------------------------------------
     @Override
     public boolean readBoolean() {
         return content[++this.position] == 1;
@@ -331,20 +335,22 @@ public class BsonReader extends Reader {
 
     @Override
     public int readInt() {
-        return ((content[++this.position] & 0xff) << 24) | ((content[++this.position] & 0xff) << 16)
-            | ((content[++this.position] & 0xff) << 8) | (content[++this.position] & 0xff);
+        return ((content[++this.position] & 0xff) << 24)
+                | ((content[++this.position] & 0xff) << 16)
+                | ((content[++this.position] & 0xff) << 8)
+                | (content[++this.position] & 0xff);
     }
 
     @Override
     public long readLong() {
         return ((((long) content[++this.position] & 0xff) << 56)
-            | (((long) content[++this.position] & 0xff) << 48)
-            | (((long) content[++this.position] & 0xff) << 40)
-            | (((long) content[++this.position] & 0xff) << 32)
-            | (((long) content[++this.position] & 0xff) << 24)
-            | (((long) content[++this.position] & 0xff) << 16)
-            | (((long) content[++this.position] & 0xff) << 8)
-            | (((long) content[++this.position] & 0xff)));
+                | (((long) content[++this.position] & 0xff) << 48)
+                | (((long) content[++this.position] & 0xff) << 40)
+                | (((long) content[++this.position] & 0xff) << 32)
+                | (((long) content[++this.position] & 0xff) << 24)
+                | (((long) content[++this.position] & 0xff) << 16)
+                | (((long) content[++this.position] & 0xff) << 8)
+                | (((long) content[++this.position] & 0xff)));
     }
 
     @Override
@@ -369,7 +375,7 @@ public class BsonReader extends Reader {
             return "";
         }
         String value = new String(content, ++this.position, len);
-        this.position += len - 1; //上一行已经++this.position，所以此处要-1
+        this.position += len - 1; // 上一行已经++this.position，所以此处要-1
         return value;
     }
 
@@ -383,7 +389,7 @@ public class BsonReader extends Reader {
             return "";
         }
         String value = new String(content, ++this.position, len, StandardCharsets.UTF_8);
-        this.position += len - 1;//上一行已经++this.position，所以此处要-1
+        this.position += len - 1; // 上一行已经++this.position，所以此处要-1
         return value;
     }
 
@@ -391,5 +397,4 @@ public class BsonReader extends Reader {
     public ValueType readType() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
 }

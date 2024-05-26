@@ -1,4 +1,2 @@
-/**
- * MQ服务包
- */
+/** MQ服务包 */
 package org.redkale.mq;

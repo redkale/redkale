@@ -9,12 +9,10 @@ import org.redkale.util.Attribute;
 
 /**
  * 抽象或接口类存在多种实现类的反序列化解析器 <br>
- *
  * 详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> 泛型
- *
  * @since 2.7.0
  */
 public class JsonMultiImplDecoder<T> implements Decodeable<JsonReader, T> {
@@ -56,7 +54,8 @@ public class JsonMultiImplDecoder<T> implements Decodeable<JsonReader, T> {
                 if (t == null) {
                     fieldTypes.put(name, member.getAttribute());
                 } else if (!member.getAttribute().genericType().equals(t.genericType())) {
-                    throw new ConvertException("Field(" + name + ")'s Type is not same in " + member.getAttribute().declaringClass() + " and " + t.declaringClass());
+                    throw new ConvertException("Field(" + name + ")'s Type is not same in "
+                            + member.getAttribute().declaringClass() + " and " + t.declaringClass());
                 }
             }
             this.decoders[i] = decoder;
@@ -83,11 +82,11 @@ public class JsonMultiImplDecoder<T> implements Decodeable<JsonReader, T> {
         }
 
         int min = max + 1;
-        ObjectDecoder first = null; //字段最少的类作为默认反解析器
+        ObjectDecoder first = null; // 字段最少的类作为默认反解析器
         for (int i = 0; i < fields.length; i++) {
             Set<String> fieldSet = fields[i];
             for (String s : movsets[i]) {
-                fieldSet.remove(s);  //移除重复的字段
+                fieldSet.remove(s); // 移除重复的字段
             }
             if (fieldSet.size() < min) {
                 first = this.decoders[i];
@@ -116,7 +115,8 @@ public class JsonMultiImplDecoder<T> implements Decodeable<JsonReader, T> {
         while (in.hasNext()) {
             String fieldName = in.readFieldName();
             DeMember member = decoder.getMember(fieldName);
-            //new Set[]{Utility.ofSet("1", "2", "3"), Utility.ofSet("2", "3"), Utility.ofSet("4", "2", "3"), Utility.ofSet("6", "7", "8"), Utility.ofSet("6", "9")};
+            // new Set[]{Utility.ofSet("1", "2", "3"), Utility.ofSet("2", "3"), Utility.ofSet("4", "2", "3"),
+            // Utility.ofSet("6", "7", "8"), Utility.ofSet("6", "9")};
             if (member == null && !finaled) {
                 ObjectDecoder de = uniques.get(fieldName);
                 if (de == null) {
@@ -124,7 +124,7 @@ public class JsonMultiImplDecoder<T> implements Decodeable<JsonReader, T> {
                     if (de != null) {
                         decoder = de;
                         member = de.getMember(fieldName);
-                        for (int i = 0; i <= index; i++) {  //迁移params中的DeMember.Attribute
+                        for (int i = 0; i <= index; i++) { // 迁移params中的DeMember.Attribute
                             if (params[i] != null) {
                                 DeMember dm = de.getMember(((Attribute) params[i][0]).field());
                                 params[i][0] = dm == null ? null : dm.getAttribute();
@@ -135,7 +135,7 @@ public class JsonMultiImplDecoder<T> implements Decodeable<JsonReader, T> {
                     finaled = true;
                     decoder = de;
                     member = de.getMember(fieldName);
-                    for (int i = 0; i <= index; i++) {  //迁移params中的DeMember.Attribute
+                    for (int i = 0; i <= index; i++) { // 迁移params中的DeMember.Attribute
                         if (params[i] != null) {
                             DeMember dm = de.getMember(((Attribute) params[i][0]).field());
                             params[i][0] = dm == null ? null : dm.getAttribute();
@@ -145,13 +145,13 @@ public class JsonMultiImplDecoder<T> implements Decodeable<JsonReader, T> {
             }
             in.readBlank();
             if (member == null) {
-                in.skipValue(); //跳过不存在的属性的值
+                in.skipValue(); // 跳过不存在的属性的值
             } else {
-                params[++index] = new Object[]{member.getAttribute(), member.read(in)};
+                params[++index] = new Object[] {member.getAttribute(), member.read(in)};
             }
         }
         in.readObjectE(null);
-        if (decoder.getConstructorMembers() == null) {  //空构造函数
+        if (decoder.getConstructorMembers() == null) { // 空构造函数
             T result = (T) decoder.getCreator().create();
             for (int i = 0; i <= index; i++) {
                 ((Attribute) params[i][0]).set(result, params[i][1]);
@@ -162,8 +162,9 @@ public class JsonMultiImplDecoder<T> implements Decodeable<JsonReader, T> {
             final Object[] constructorParams = new Object[constructorFields.length];
             for (int i = 0; i < constructorFields.length; i++) {
                 for (int j = 0; j < params.length; j++) {
-                    if (params[j] != null && params[j][0] != null
-                        && constructorFields[i].getAttribute().field().equals(((Attribute) params[j][0]).field())) {
+                    if (params[j] != null
+                            && params[j][0] != null
+                            && constructorFields[i].getAttribute().field().equals(((Attribute) params[j][0]).field())) {
                         constructorParams[i] = params[j][1];
                         params[j] = null;
                         break;

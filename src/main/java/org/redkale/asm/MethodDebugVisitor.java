@@ -9,8 +9,8 @@ import java.util.*;
 
 /**
  * MethodVisitor 的调试类
- * <p>
- * 详情见: https://redkale.org
+ *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -36,7 +36,7 @@ public class MethodDebugVisitor extends MethodVisitor {
 
     private final Map<Label, Integer> labels = new LinkedHashMap<>();
 
-    private static final String[] opcodes = new String[200]; //0 -18
+    private static final String[] opcodes = new String[200]; // 0 -18
 
     static {
         try {
@@ -66,14 +66,11 @@ public class MethodDebugVisitor extends MethodVisitor {
                 opcodes[(int) (Integer) field.get(null)] = name;
             }
         } catch (Exception ex) {
-            throw new RuntimeException(ex); //不可能会发生
+            throw new RuntimeException(ex); // 不可能会发生
         }
     }
 
-    /**
-     *
-     * @param visitor MethodVisitor
-     */
+    /** @param visitor MethodVisitor */
     public MethodDebugVisitor(MethodVisitor visitor) {
         super(Opcodes.ASM6, visitor);
         this.visitor = visitor;
@@ -105,7 +102,8 @@ public class MethodDebugVisitor extends MethodVisitor {
     public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
         AnnotationVisitor av = visitor.visitTypeAnnotation(typeRef, typePath, desc, visible);
         if (debug) {
-            System.out.println("mv.visitTypeAnnotation(" + typeRef + ", " + typePath + ", \"" + desc + "\", " + visible + ");");
+            System.out.println(
+                    "mv.visitTypeAnnotation(" + typeRef + ", " + typePath + ", \"" + desc + "\", " + visible + ");");
         }
         return av;
     }
@@ -139,11 +137,12 @@ public class MethodDebugVisitor extends MethodVisitor {
             } else if (type == 4) {
                 typestr = "Opcodes.F_SAME1";
             }
-            System.out.println("mv.visitFrame(" + typestr + ", " + nLocal + ", " + Arrays.toString(local) + ", " + nStack + ", " + Arrays.toString(stack) + ");");
+            System.out.println("mv.visitFrame(" + typestr + ", " + nLocal + ", " + Arrays.toString(local) + ", "
+                    + nStack + ", " + Arrays.toString(stack) + ");");
         }
     }
 
-    public void visitJumpInsn(int opcode, Label var) {   //调用此方法的 ClassWriter 必须由 COMPUTE_FRAMES 构建
+    public void visitJumpInsn(int opcode, Label var) { // 调用此方法的 ClassWriter 必须由 COMPUTE_FRAMES 构建
         visitor.visitJumpInsn(opcode, var);
         if (debug) {
             Integer index = labels.get(var);
@@ -179,7 +178,8 @@ public class MethodDebugVisitor extends MethodVisitor {
     public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
         visitor.visitMethodInsn(opcode, owner, name, desc, itf);
         if (debug) {
-            System.out.println("mv.visitMethodInsn(" + opcodes[opcode] + ", \"" + owner + "\", \"" + name + "\", \"" + desc + "\", " + itf + ");");
+            System.out.println("mv.visitMethodInsn(" + opcodes[opcode] + ", \"" + owner + "\", \"" + name + "\", \""
+                    + desc + "\", " + itf + ");");
         }
     }
 
@@ -193,14 +193,16 @@ public class MethodDebugVisitor extends MethodVisitor {
     public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
         visitor.visitLocalVariable(name, desc, signature, start, end, index);
         if (debug) {
-            System.out.println("mv.visitLocalVariable(\"" + name + "\", \"" + desc + "\", \"" + signature + "\", null, null, " + index + ");");
+            System.out.println("mv.visitLocalVariable(\"" + name + "\", \"" + desc + "\", \"" + signature
+                    + "\", null, null, " + index + ");");
         }
     }
 
     public void visitFieldInsn(int opcode, String owner, String name, String desc) {
         visitor.visitFieldInsn(opcode, owner, name, desc);
         if (debug) {
-            System.out.println("mv.visitFieldInsn(" + opcodes[opcode] + ", \"" + owner + "\", \"" + name + "\", \"" + desc + "\");");
+            System.out.println("mv.visitFieldInsn(" + opcodes[opcode] + ", \"" + owner + "\", \"" + name + "\", \""
+                    + desc + "\");");
         }
     }
 
@@ -258,5 +260,4 @@ public class MethodDebugVisitor extends MethodVisitor {
             System.out.println("mv.visitEnd();\r\n\r\n\r\n");
         }
     }
-
 }

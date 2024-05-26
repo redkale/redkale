@@ -1,26 +1,26 @@
 package org.redkale.test.convert.proto;
 
-///*
+/// *
 // * To change this license header, choose License Headers in Project Properties.
 // * To change this template file, choose Tools | Templates
 // * and open the template in the editor.
 // */
-//package org.redkalex.test.protobuf;
+// package org.redkalex.test.protobuf;
 //
-//import org.redkalex.convert.protobuf.ProtobufReader;
-//import org.redkalex.convert.protobuf.ProtobufConvert;
-//import com.google.protobuf.*;
-//import java.util.*;
-//import org.redkale.convert.ConvertColumn;
-//import org.redkale.convert.json.JsonConvert;
-//import org.redkale.service.RetResult;
-//import org.redkale.util.*;
+// import org.redkalex.convert.protobuf.ProtobufReader;
+// import org.redkalex.convert.protobuf.ProtobufConvert;
+// import com.google.protobuf.*;
+// import java.util.*;
+// import org.redkale.convert.ConvertColumn;
+// import org.redkale.convert.json.JsonConvert;
+// import org.redkale.service.RetResult;
+// import org.redkale.util.*;
 //
-///**
+/// **
 // *
 // * @author zhangjx
 // */
-//public class TestBean {
+// public class TestBean {
 //
 //    public static class PTestEntry {
 //
@@ -181,7 +181,8 @@ package org.redkale.test.convert.proto;
 //        System.out.println("原生编译protobuf耗时-------" + e);
 //    }
 //
-//    private static PTestBeanOuterClass.PTestBean createPTestBean(TestBean bean, PTestBeanOuterClass.PTestBean.Builder builder) {
+//    private static PTestBeanOuterClass.PTestBean createPTestBean(TestBean bean, PTestBeanOuterClass.PTestBean.Builder
+// builder) {
 //        if (builder == null) {
 //            builder = PTestBeanOuterClass.PTestBean.newBuilder();
 //        } else {
@@ -195,7 +196,8 @@ package org.redkale.test.convert.proto;
 //            builder.addChars(bean.chars[i]);
 //        }
 //        for (int i = 0; bean.entrys != null && i < bean.entrys.length; i++) {
-//            PTestBeanOuterClass.PTestBean.PTestEntry.Builder entry = PTestBeanOuterClass.PTestBean.PTestEntry.newBuilder();
+//            PTestBeanOuterClass.PTestBean.PTestEntry.Builder entry =
+// PTestBeanOuterClass.PTestBean.PTestEntry.newBuilder();
 //            if (bean.entrys[i] == null) {
 //                builder.addEntrys(entry.build());
 //                continue;
@@ -236,6 +238,7 @@ package org.redkale.test.convert.proto;
 //        PTestBeanOuterClass.PTestBean bean2 = builder.build();
 //        return bean2;
 //    }
-//}
+// }
 //
-////protoc --java_out=D:\Java-Projects\RedkalePluginsProject\test\ --proto_path=D:\Java-Projects\RedkalePluginsProject\test\org\redkalex\test\protobuf\ PTestBean.proto
+//// protoc --java_out=D:\Java-Projects\RedkalePluginsProject\test\
+// --proto_path=D:\Java-Projects\RedkalePluginsProject\test\org\redkalex\test\protobuf\ PTestBean.proto

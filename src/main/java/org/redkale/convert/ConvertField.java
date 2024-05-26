@@ -11,8 +11,7 @@ import org.redkale.convert.json.JsonConvert;
 /**
  * newConvert参数中的Function返回结果的数据类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -26,8 +25,7 @@ public class ConvertField {
 
     protected Object value;
 
-    public ConvertField() {
-    }
+    public ConvertField() {}
 
     public ConvertField(String name, Object value) {
         this.name = name;

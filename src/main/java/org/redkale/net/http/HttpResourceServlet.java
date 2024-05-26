@@ -5,9 +5,10 @@
  */
 package org.redkale.net.http;
 
+import static java.nio.file.StandardWatchEventKinds.*;
+
 import java.io.*;
 import java.nio.file.*;
-import static java.nio.file.StandardWatchEventKinds.*;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,8 +20,7 @@ import org.redkale.util.*;
 /**
  * 静态资源HttpServlet
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -55,8 +55,9 @@ public class HttpResourceServlet extends HttpServlet {
                     key.pollEvents().stream().forEach((event) -> {
                         try {
                             Path path = parent.resolve((Path) event.context());
-                            final String uri = path.toString().substring(rootstr.length()).replace('\\', '/');
-                            //logger.log(Level.FINEST, "file(" + uri + ") happen " + event.kind() + " event");
+                            final String uri =
+                                    path.toString().substring(rootstr.length()).replace('\\', '/');
+                            // logger.log(Level.FINEST, "file(" + uri + ") happen " + event.kind() + " event");
                             if (event.kind() == ENTRY_DELETE) {
                                 FileEntry en = files.remove(uri);
                                 if (en != null) {
@@ -65,8 +66,8 @@ public class HttpResourceServlet extends HttpServlet {
                             } else if (event.kind() == ENTRY_MODIFY) {
                                 FileEntry en = files.get(uri);
                                 if (en != null && en.file != null) {
-                                    long d;  //等待update file完毕
-                                    for (;;) {
+                                    long d; // 等待update file完毕
+                                    for (; ; ) {
                                         d = en.file.lastModified();
                                         Thread.sleep(2000L);
                                         if (d == en.file.lastModified()) {
@@ -83,20 +84,20 @@ public class HttpResourceServlet extends HttpServlet {
                     key.reset();
                 }
             } catch (Exception e) {
-                //do nothing
+                // do nothing
             }
         }
     }
 
     protected final LongAdder cachedLength = new LongAdder();
 
-    //缓存总大小, 默认0
+    // 缓存总大小, 默认0
     protected long cachelimit = 0 * 1024 * 1024L;
 
-    //最大可缓存的文件大小，  大于该值的文件将不被缓存
+    // 最大可缓存的文件大小，  大于该值的文件将不被缓存
     protected long cachelengthmax = 1 * 1024 * 1024;
 
-    //是否监控缓存文件的变化， 默认不监控
+    // 是否监控缓存文件的变化， 默认不监控
     protected boolean watch = false;
 
     protected File root = new File("./root/");
@@ -145,7 +146,7 @@ public class HttpResourceServlet extends HttpServlet {
             this.locationRewrites = locations.isEmpty() ? null : locations.toArray(new SimpleEntry[locations.size()]);
         }
         if (this.cachelimit < 1) {
-            return;  //不缓存不需要开启WatchThread监听
+            return; // 不缓存不需要开启WatchThread监听
         }
         if (this.root != null && this.watch) {
             try {
@@ -235,7 +236,7 @@ public class HttpResourceServlet extends HttpServlet {
         if (uri.length() == 0 || uri.equals("/")) {
             uri = this.indexHtml.indexOf('/') == 0 ? this.indexHtml : ("/" + this.indexHtml);
         }
-        //跳过模板引擎的后缀文件
+        // 跳过模板引擎的后缀文件
         if (renderSuffixs != null) {
             String suri = uri.toLowerCase();
             for (String suffix : renderSuffixs) {
@@ -245,11 +246,11 @@ public class HttpResourceServlet extends HttpServlet {
                 }
             }
         }
-        //System.out.println(request);
+        // System.out.println(request);
         FileEntry entry;
         if (watchThread == null && files.isEmpty()) {
             entry = createFileEntry(uri);
-        } else {  //有缓存
+        } else { // 有缓存
             entry = files.computeIfAbsent(uri, this::createFileEntry);
         }
         if (entry == null) {
@@ -258,8 +259,8 @@ public class HttpResourceServlet extends HttpServlet {
             }
             finish404(request, response);
         } else {
-            //file = null 表示资源内容在内存而不是在File中
-            //file = null 时必须传 fileName
+            // file = null 表示资源内容在内存而不是在File中
+            // file = null 时必须传 fileName
             response.finishFile(entry.file == null ? entry.fileName : null, entry.file, entry.content);
         }
     }
@@ -284,7 +285,10 @@ public class HttpResourceServlet extends HttpServlet {
             Path p = file.getParentFile().toPath();
             keymaps.put(p.register(watchThread.watcher, ENTRY_MODIFY, ENTRY_DELETE), p);
         } catch (IOException e) {
-            logger.log(Level.INFO, HttpResourceServlet.class.getSimpleName() + " watch FileEntry(" + uri + ") erroneous", e);
+            logger.log(
+                    Level.INFO,
+                    HttpResourceServlet.class.getSimpleName() + " watch FileEntry(" + uri + ") erroneous",
+                    e);
         }
         return en;
     }
@@ -293,7 +297,7 @@ public class HttpResourceServlet extends HttpServlet {
 
         protected final String fileName;
 
-        protected final File file; //如果所有资源文件打包成zip文件则file=null
+        protected final File file; // 如果所有资源文件打包成zip文件则file=null
 
         protected final HttpResourceServlet servlet;
 
@@ -342,7 +346,7 @@ public class HttpResourceServlet extends HttpServlet {
                 return;
             }
             if (this.servlet.cachedLength.longValue() + length > this.servlet.cachelimit) {
-                return; //超过缓存总容量
+                return; // 超过缓存总容量
             }
             try (FileInputStream in = new FileInputStream(file)) {
                 ByteArray out = new ByteArray((int) file.length());
@@ -354,7 +358,10 @@ public class HttpResourceServlet extends HttpServlet {
                 this.content = out;
                 this.servlet.cachedLength.add(this.content.length());
             } catch (Exception e) {
-                this.servlet.logger.log(Level.INFO, HttpResourceServlet.class.getSimpleName() + " update FileEntry(" + file + ") erroneous", e);
+                this.servlet.logger.log(
+                        Level.INFO,
+                        HttpResourceServlet.class.getSimpleName() + " update FileEntry(" + file + ") erroneous",
+                        e);
             }
         }
 
@@ -367,6 +374,5 @@ public class HttpResourceServlet extends HttpServlet {
         public long getCachedLength() {
             return this.content == null ? 0L : this.content.length();
         }
-
     }
 }

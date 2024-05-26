@@ -11,8 +11,7 @@ import org.redkale.convert.*;
 /**
  * LongAdder 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -33,5 +32,4 @@ public final class LongAdderSimpledCoder<R extends Reader, W extends Writer> ext
         la.add(in.readLong());
         return la;
     }
-
 }

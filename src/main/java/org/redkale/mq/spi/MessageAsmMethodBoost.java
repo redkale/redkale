@@ -3,24 +3,7 @@
  */
 package org.redkale.mq.spi;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-import org.redkale.asm.AnnotationVisitor;
-import org.redkale.asm.AsmMethodBean;
-import org.redkale.asm.AsmMethodBoost;
-import org.redkale.asm.Asms;
-import org.redkale.asm.ClassWriter;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import org.redkale.asm.FieldVisitor;
-import org.redkale.asm.Label;
-import org.redkale.asm.MethodVisitor;
-import org.redkale.asm.Opcodes;
 import static org.redkale.asm.Opcodes.ACC_BRIDGE;
 import static org.redkale.asm.Opcodes.ACC_PRIVATE;
 import static org.redkale.asm.Opcodes.ACC_PUBLIC;
@@ -41,6 +24,24 @@ import static org.redkale.asm.Opcodes.POP;
 import static org.redkale.asm.Opcodes.PUTFIELD;
 import static org.redkale.asm.Opcodes.RETURN;
 import static org.redkale.asm.Opcodes.V11;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.redkale.asm.AnnotationVisitor;
+import org.redkale.asm.AsmMethodBean;
+import org.redkale.asm.AsmMethodBoost;
+import org.redkale.asm.Asms;
+import org.redkale.asm.ClassWriter;
+import org.redkale.asm.FieldVisitor;
+import org.redkale.asm.Label;
+import org.redkale.asm.MethodVisitor;
+import org.redkale.asm.Opcodes;
 import org.redkale.convert.ConvertFactory;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.mq.MessageConext;
@@ -53,10 +54,7 @@ import org.redkale.util.RedkaleException;
 import org.redkale.util.TypeToken;
 import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class MessageAsmMethodBoost extends AsmMethodBoost {
 
     private static final List<Class<? extends Annotation>> FILTER_ANN = List.of(Messaged.class);
@@ -82,8 +80,14 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
     }
 
     @Override
-    public String doMethod(ClassLoader classLoader, ClassWriter cw,
-        String newDynName, String fieldPrefix, List filterAnns, Method method, String newMethodName) {
+    public String doMethod(
+            ClassLoader classLoader,
+            ClassWriter cw,
+            String newDynName,
+            String fieldPrefix,
+            List filterAnns,
+            Method method,
+            String newMethodName) {
         if (serviceType.getAnnotation(DynForMessage.class) != null) {
             return newMethodName;
         }
@@ -95,14 +99,17 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
             return newMethodName;
         }
         if (Modifier.isFinal(method.getModifiers()) || Modifier.isStatic(method.getModifiers())) {
-            throw new RedkaleException("@" + Messaged.class.getSimpleName() + " cannot on final or static method, but on " + method);
+            throw new RedkaleException(
+                    "@" + Messaged.class.getSimpleName() + " cannot on final or static method, but on " + method);
         }
         if (!Modifier.isProtected(method.getModifiers()) && !Modifier.isPublic(method.getModifiers())) {
-            throw new RedkaleException("@" + Messaged.class.getSimpleName() + " must on protected or public method, but on " + method);
+            throw new RedkaleException(
+                    "@" + Messaged.class.getSimpleName() + " must on protected or public method, but on " + method);
         }
         int paramCount = method.getParameterCount();
         if (paramCount != 1 && paramCount != 2) {
-            throw new RedkaleException("@" + Messaged.class.getSimpleName() + " must on one or two parameter method, but on " + method);
+            throw new RedkaleException(
+                    "@" + Messaged.class.getSimpleName() + " must on one or two parameter method, but on " + method);
         }
         int paramKind = 1; // 1:单个MessageType;  2: MessageConext & MessageType; 3: MessageType & MessageConext;
         Type messageType;
@@ -118,22 +125,32 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
                 messageType = paramTypes[0];
                 paramKind = 3;
             } else {
-                throw new RedkaleException("@" + Messaged.class.getSimpleName() + " on two-parameter method must contains "
-                    + MessageConext.class.getSimpleName() + " parameter type, but on " + method);
+                throw new RedkaleException(
+                        "@" + Messaged.class.getSimpleName() + " on two-parameter method must contains "
+                                + MessageConext.class.getSimpleName() + " parameter type, but on " + method);
             }
         }
-        ConvertFactory factory = ConvertFactory.findConvert(messaged.convertType()).getFactory();
+        ConvertFactory factory =
+                ConvertFactory.findConvert(messaged.convertType()).getFactory();
         factory.loadDecoder(messageType);
         if (newLoader == null) {
-            newLoader = new RedkaleClassLoader.DynBytesClassLoader(classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader);
+            newLoader = new RedkaleClassLoader.DynBytesClassLoader(
+                    classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader);
         }
-        createInnerConsumer(cw, method, paramKind, TypeToken.typeToClass(messageType), messaged, newDynName, newMethodName);
+        createInnerConsumer(
+                cw, method, paramKind, TypeToken.typeToClass(messageType), messaged, newDynName, newMethodName);
         return newMethodName;
     }
 
-    //paramKind:  1:单个MessageType;  2: MessageConext & MessageType; 3: MessageType & MessageConext;
-    private void createInnerConsumer(ClassWriter parentCW, Method method, int paramKind,
-        Class msgType, Messaged messaged, String newDynName, String newMethodName) {
+    // paramKind:  1:单个MessageType;  2: MessageConext & MessageType; 3: MessageType & MessageConext;
+    private void createInnerConsumer(
+            ClassWriter parentCW,
+            Method method,
+            int paramKind,
+            Class msgType,
+            Messaged messaged,
+            String newDynName,
+            String newMethodName) {
         final String newDynDesc = "L" + newDynName + ";";
         final String innerClassName = "Dyn" + MessageConsumer.class.getSimpleName() + index.incrementAndGet();
         final String innerFullName = newDynName + "$" + innerClassName;
@@ -141,7 +158,8 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
         final String messageConsumerName = MessageConsumer.class.getName().replace('.', '/');
         final String messageConsumerDesc = org.redkale.asm.Type.getDescriptor(MessageConsumer.class);
         final String messageConextDesc = org.redkale.asm.Type.getDescriptor(MessageConext.class);
-        final boolean throwFlag = Utility.contains(method.getExceptionTypes(), e -> !RuntimeException.class.isAssignableFrom(e));
+        final boolean throwFlag =
+                Utility.contains(method.getExceptionTypes(), e -> !RuntimeException.class.isAssignableFrom(e));
 
         if (methodBeans == null) {
             methodBeans = AsmMethodBoost.getMethodBeans(serviceType);
@@ -150,7 +168,7 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
         String genericMsgTypeDesc = msgTypeDesc;
         if (!msgType.isPrimitive()) {
             String methodSignature = methodBean.getSignature().replace(messageConextDesc, "");
-            genericMsgTypeDesc = methodSignature.substring(1, methodSignature.lastIndexOf(')')); //获取()中的值
+            genericMsgTypeDesc = methodSignature.substring(1, methodSignature.lastIndexOf(')')); // 获取()中的值
         }
 
         parentCW.visitInnerClass(innerFullName, newDynName, innerClassName, ACC_PUBLIC + ACC_STATIC);
@@ -158,8 +176,13 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
         MethodVisitor mv;
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         //
-        cw.visit(V11, ACC_PUBLIC + ACC_SUPER, innerFullName, "Ljava/lang/Object;" + messageConsumerDesc.replace(";", "<" + genericMsgTypeDesc + ">;"),
-            "java/lang/Object", new String[]{messageConsumerName});
+        cw.visit(
+                V11,
+                ACC_PUBLIC + ACC_SUPER,
+                innerFullName,
+                "Ljava/lang/Object;" + messageConsumerDesc.replace(";", "<" + genericMsgTypeDesc + ">;"),
+                "java/lang/Object",
+                new String[] {messageConsumerName});
         {
             AnnotationVisitor av = cw.visitAnnotation(org.redkale.asm.Type.getDescriptor(ResourceConsumer.class), true);
             Asms.visitAnnotation(av, messaged);
@@ -194,8 +217,14 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
         }
         {
             String methodName = newMethodName == null ? method.getName() : newMethodName;
-            mv = cw.visitMethod(ACC_PUBLIC, "onMessage", "(" + messageConextDesc + msgTypeDesc + ")V",
-                msgTypeDesc.equals(genericMsgTypeDesc) ? null : ("(" + messageConextDesc + genericMsgTypeDesc + ")V"), null);
+            mv = cw.visitMethod(
+                    ACC_PUBLIC,
+                    "onMessage",
+                    "(" + messageConextDesc + msgTypeDesc + ")V",
+                    msgTypeDesc.equals(genericMsgTypeDesc)
+                            ? null
+                            : ("(" + messageConextDesc + genericMsgTypeDesc + ")V"),
+                    null);
             Label l0 = new Label();
             Label l1 = new Label();
             Label l2 = new Label();
@@ -205,19 +234,20 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
             }
             mv.visitVarInsn(ALOAD, 0);
             mv.visitFieldInsn(GETFIELD, innerFullName, "service", newDynDesc);
-            if (paramKind == 1) { //1: 单个MessageType; 
+            if (paramKind == 1) { // 1: 单个MessageType;
                 mv.visitVarInsn(ALOAD, 2);
                 Asms.visitPrimitiveVirtual(mv, msgType);
-            } else if (paramKind == 2) { //2: MessageConext & MessageType;
+            } else if (paramKind == 2) { // 2: MessageConext & MessageType;
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitVarInsn(ALOAD, 2);
                 Asms.visitPrimitiveVirtual(mv, msgType);
-            } else { //3: MessageType & MessageConext;
+            } else { // 3: MessageType & MessageConext;
                 mv.visitVarInsn(ALOAD, 2);
                 Asms.visitPrimitiveVirtual(mv, msgType);
                 mv.visitVarInsn(ALOAD, 1);
             }
-            mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, methodName, org.redkale.asm.Type.getMethodDescriptor(method), false);
+            mv.visitMethodInsn(
+                    INVOKEVIRTUAL, newDynName, methodName, org.redkale.asm.Type.getMethodDescriptor(method), false);
             if (method.getReturnType() != void.class) {
                 mv.visitInsn(POP);
             }
@@ -227,14 +257,15 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
                 l3 = new Label();
                 mv.visitJumpInsn(GOTO, l3);
                 mv.visitLabel(l2);
-                mv.visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[]{"java/lang/Throwable"});
+                mv.visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[] {"java/lang/Throwable"});
                 mv.visitVarInsn(ASTORE, 3);
                 l4 = new Label();
                 mv.visitLabel(l4);
                 mv.visitTypeInsn(NEW, "java/lang/RuntimeException");
                 mv.visitInsn(DUP);
                 mv.visitVarInsn(ALOAD, 3);
-                mv.visitMethodInsn(INVOKESPECIAL, "java/lang/RuntimeException", "<init>", "(Ljava/lang/Throwable;)V", false);
+                mv.visitMethodInsn(
+                        INVOKESPECIAL, "java/lang/RuntimeException", "<init>", "(Ljava/lang/Throwable;)V", false);
                 mv.visitInsn(ATHROW);
                 mv.visitLabel(l3);
                 mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
@@ -244,7 +275,13 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
             mv.visitLabel(l5);
             mv.visitLocalVariable("this", "L" + innerFullName + ";", null, l0, l5, 0);
             mv.visitLocalVariable("context", messageConextDesc, null, l0, l5, 1);
-            mv.visitLocalVariable("message", msgTypeDesc, msgTypeDesc.equals(genericMsgTypeDesc) ? null : genericMsgTypeDesc, l0, l5, 2);
+            mv.visitLocalVariable(
+                    "message",
+                    msgTypeDesc,
+                    msgTypeDesc.equals(genericMsgTypeDesc) ? null : genericMsgTypeDesc,
+                    l0,
+                    l5,
+                    2);
             if (throwFlag) {
                 mv.visitLocalVariable("e", "Ljava/lang/Throwable;", null, l4, l3, 3);
             }
@@ -252,7 +289,12 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
             mv.visitEnd();
         }
         {
-            mv = cw.visitMethod(ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC, "onMessage", "(" + messageConextDesc + "Ljava/lang/Object;)V", null, null);
+            mv = cw.visitMethod(
+                    ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC,
+                    "onMessage",
+                    "(" + messageConextDesc + "Ljava/lang/Object;)V",
+                    null,
+                    null);
             mv.visitCode();
             Label l0 = new Label();
             mv.visitLabel(l0);
@@ -260,7 +302,8 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
             mv.visitVarInsn(ALOAD, 1);
             mv.visitVarInsn(ALOAD, 2);
             mv.visitTypeInsn(CHECKCAST, "java/lang/String");
-            mv.visitMethodInsn(INVOKEVIRTUAL, innerFullName, "onMessage", "(" + messageConextDesc + msgTypeDesc + ")V", false);
+            mv.visitMethodInsn(
+                    INVOKEVIRTUAL, innerFullName, "onMessage", "(" + messageConextDesc + msgTypeDesc + ")V", false);
             mv.visitInsn(RETURN);
             mv.visitMaxs(3, 3);
             mv.visitEnd();
@@ -299,5 +342,4 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
             throw new RedkaleException(e);
         }
     }
-
 }

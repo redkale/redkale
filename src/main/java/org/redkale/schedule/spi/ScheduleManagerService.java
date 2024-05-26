@@ -50,8 +50,7 @@ import org.redkale.util.Utility;
 /**
  * 定时任务管理器
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.8.0
@@ -84,7 +83,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
         this.propertyFunc = propertyFunc;
     }
 
-    //一般用于独立组件
+    // 一般用于独立组件
     public static ScheduleManagerService create(UnaryOperator<String> propertyFunc) {
         return new ScheduleManagerService(propertyFunc);
     }
@@ -110,7 +109,8 @@ public class ScheduleManagerService implements ScheduleManager, Service {
                 UnaryOperator<String> func = application.getEnvironment()::getPropertyValue;
                 this.propertyFunc = func;
             }
-            this.scheduler = new ScheduledThreadPoolExecutor(Utility.cpus(), Utility.newThreadFactory("Redkale-Scheduled-Task-Thread-%s"));
+            this.scheduler = new ScheduledThreadPoolExecutor(
+                    Utility.cpus(), Utility.newThreadFactory("Redkale-Scheduled-Task-Thread-%s"));
             this.scheduler.setRemoveOnCancelPolicy(true);
         }
     }
@@ -123,11 +123,11 @@ public class ScheduleManagerService implements ScheduleManager, Service {
     }
 
     public void onServersPreStart() {
-        //do nothing
+        // do nothing
     }
 
     public void onServersPostStart() {
-        //do nothing        
+        // do nothing
     }
 
     @Override
@@ -151,24 +151,26 @@ public class ScheduleManagerService implements ScheduleManager, Service {
                     }
                     String mk = Utility.methodKey(method);
                     if (methodKeys.contains(mk)) {
-                        //跳过已处理的继承方法
+                        // 跳过已处理的继承方法
                         continue;
                     }
                     methodKeys.add(mk);
                     if (method.getParameterCount() != 0
-                        && !(method.getParameterCount() == 1 && method.getParameterTypes()[0] == ScheduleEvent.class)) {
-                        throw new RedkaleException("@" + Scheduled.class.getSimpleName() + " must be on non-parameter or "
-                            + ScheduleEvent.class.getSimpleName() + "-parameter method, but on " + method);
+                            && !(method.getParameterCount() == 1
+                                    && method.getParameterTypes()[0] == ScheduleEvent.class)) {
+                        throw new RedkaleException(
+                                "@" + Scheduled.class.getSimpleName() + " must be on non-parameter or "
+                                        + ScheduleEvent.class.getSimpleName() + "-parameter method, but on " + method);
                     }
                     ScheduledTask task = schedule(ref, method, remoteMode);
-                    //时间没配置: task=null
+                    // 时间没配置: task=null
                     if (task != null) {
                         tasks.put(method.getName(), task);
                         RedkaleClassLoader.putReflectionMethod(clazz.getName(), method);
                     }
                 }
             } while ((clazz = clazz.getSuperclass()) != Object.class);
-            //开始执行定时任务
+            // 开始执行定时任务
             if (enabled && !tasks.isEmpty()) {
                 tasks.forEach((name, task) -> task.init());
                 refTaskMap.put(ref, new ArrayList<>(tasks.values()));
@@ -210,10 +212,19 @@ public class ScheduleManagerService implements ScheduleManager, Service {
         return scheduleTask(ref, method, name, cron, fixedDelay, fixedRate, initialDelay, zone, timeUnit);
     }
 
-    protected ScheduledTask scheduleTask(WeakReference ref, Method method, String name,
-        String cron, String fixedDelay, String fixedRate, String initialDelay, String zone, TimeUnit timeUnit) {
+    protected ScheduledTask scheduleTask(
+            WeakReference ref,
+            Method method,
+            String name,
+            String cron,
+            String fixedDelay,
+            String fixedRate,
+            String initialDelay,
+            String zone,
+            TimeUnit timeUnit) {
         if ((cron.isEmpty() || "-".equals(cron)) && "-1".equals(fixedRate) && "-1".endsWith(fixedDelay)) {
-            return createdOnlyNameTask(ref, method, name, cron, fixedDelay, fixedRate, initialDelay, zone, timeUnit);  //时间都没配置
+            return createdOnlyNameTask(
+                    ref, method, name, cron, fixedDelay, fixedRate, initialDelay, zone, timeUnit); // 时间都没配置
         }
         ZoneId zoneId = Utility.isEmpty(zone) ? null : ZoneId.of(zone);
         if (!cron.isEmpty() && !"-".equals(cron)) {
@@ -227,8 +238,16 @@ public class ScheduleManagerService implements ScheduleManager, Service {
         }
     }
 
-    protected ScheduledTask createdOnlyNameTask(WeakReference ref, Method method, String name,
-        String cron, String fixedDelay, String fixedRate, String initialDelay, String zone, TimeUnit timeUnit) {
+    protected ScheduledTask createdOnlyNameTask(
+            WeakReference ref,
+            Method method,
+            String name,
+            String cron,
+            String fixedDelay,
+            String fixedRate,
+            String initialDelay,
+            String zone,
+            TimeUnit timeUnit) {
         return null;
     }
 
@@ -323,7 +342,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
 
         protected final Map<String, Object> eventMap;
 
-        //任务是否正运行中
+        // 任务是否正运行中
         protected final AtomicBoolean doing = new AtomicBoolean();
 
         protected ScheduledTask(WeakReference ref, String name, Method method) {
@@ -380,7 +399,14 @@ public class ScheduleManagerService implements ScheduleManager, Service {
 
         private final TimeUnit timeUnit;
 
-        public FixedTask(final WeakReference ref, String name, Method method, long fixedDelay, long fixedRate, long initialDelay, TimeUnit timeUnit) {
+        public FixedTask(
+                final WeakReference ref,
+                String name,
+                Method method,
+                long fixedDelay,
+                long fixedRate,
+                long initialDelay,
+                TimeUnit timeUnit) {
             super(ref, name, method);
             this.delegate = createFuncJob(ref, method);
             this.fixedDelay = fixedDelay;
@@ -408,7 +434,8 @@ public class ScheduleManagerService implements ScheduleManager, Service {
         public void start() {
             if (started.compareAndSet(false, true)) {
                 if (fixedRate > 0) {
-                    this.future = scheduler.scheduleAtFixedRate(this, initialDelay > 0 ? initialDelay : 0, fixedRate, timeUnit);
+                    this.future = scheduler.scheduleAtFixedRate(
+                            this, initialDelay > 0 ? initialDelay : 0, fixedRate, timeUnit);
                 } else if (fixedDelay > 0) {
                     this.future = scheduler.scheduleWithFixedDelay(this, initialDelay, fixedDelay, timeUnit);
                 } else if (initialDelay > 0) {

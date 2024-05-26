@@ -5,14 +5,15 @@
  */
 package org.redkale.net.http;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import java.lang.annotation.*;
+
 /**
  * 只能注解于RestService类的方法的参数或参数内的String、java.net.InetSocketAddress字段
- * <p>
- * 详情见: https://redkale.org
+ *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -34,21 +35,21 @@ public @interface RestHeader {
      * @return int
      */
     int radix() default 10;
-    
+
     /**
      * 参数是否必传, 框架运行中不作验证, only for OpenAPI Specification 3
      *
      * @return boolean
      */
     boolean required() default true;
-    
+
     /**
      * for OpenAPI Specification 3.1.0
-     * 
+     *
      * @return String
      */
-    String example() default  "";
-    
+    String example() default "";
+
     /**
      * 备注描述
      *

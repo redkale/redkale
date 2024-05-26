@@ -8,14 +8,10 @@ import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.client.ClientResult;
 
 /**
- *
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> T
- *
  * @since 2.8.0
  */
 public class WebResult<T> extends HttpResult<T> implements ClientResult {

@@ -7,14 +7,11 @@ package org.redkale.test.ws;
 
 import org.redkale.convert.json.JsonConvert;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class ChatMessage {
 
     public int fromuserid;
-    
+
     public int touserid;
 
     public String fromusername;

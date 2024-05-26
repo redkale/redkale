@@ -2,19 +2,17 @@
  */
 package org.redkale.test.convert;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 import java.util.function.*;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class CustMessage2Test {
 
     private boolean main;
@@ -47,7 +45,6 @@ public class CustMessage2Test {
         System.out.println(convert.convertTo(msg1));
         System.out.println(convert.convertTo(msg2));
         if (!main) Assertions.assertEquals(convert.convertTo(msg1), convert.convertTo(msg2));
-
     }
 
     public static interface BaseMessage {
@@ -69,7 +66,8 @@ public class CustMessage2Test {
             return new String(fieldChars);
         }
 
-        public static Encodeable<Writer, BaseMessage> createConvertEnCoder(final ConvertFactory factory, final Class<? extends BaseMessage> clazz) {
+        public static Encodeable<Writer, BaseMessage> createConvertEnCoder(
+                final ConvertFactory factory, final Class<? extends BaseMessage> clazz) {
             Encodeable valEncoder = factory.createEncoder(clazz, true);
             final String eventName = getMessageName(clazz);
             ObjectEncoder encoder = new ObjectEncoder<Writer, BaseMessage>(clazz) {
@@ -88,14 +86,15 @@ public class CustMessage2Test {
                     setIndex(member2, 2);
                     setPosition(member2, 2);
                     initForEachEnMember(factory, member2);
-                    this.members = new EnMember[]{member1, member2};
+                    this.members = new EnMember[] {member1, member2};
                 }
             };
             encoder.init(factory);
             return encoder;
         }
 
-        public static Decodeable<Reader, BaseMessage> createConvertDeCoder(final ConvertFactory factory, final Class<? extends BaseMessage> clazz) {
+        public static Decodeable<Reader, BaseMessage> createConvertDeCoder(
+                final ConvertFactory factory, final Class<? extends BaseMessage> clazz) {
             Decodeable valDecoder = factory.createDecoder(clazz, true);
             final String eventName = getMessageName(clazz);
             ObjectDecoder decoder = new ObjectDecoder<Reader, BaseMessage>(clazz) {
@@ -116,7 +115,7 @@ public class CustMessage2Test {
                     setIndex(member2, 2);
                     setPosition(member2, 2);
                     initForEachDeMember(factory, member2);
-                    this.members = new DeMember[]{member1, member2};
+                    this.members = new DeMember[] {member1, member2};
                 }
 
                 @Override
@@ -128,7 +127,6 @@ public class CustMessage2Test {
             decoder.init(factory);
             return decoder;
         }
-
     }
 
     @BaseMessage.MessageName("onPlayerLeaveMessage")
@@ -140,8 +138,7 @@ public class CustMessage2Test {
         @ConvertColumn(index = 2)
         public String retinfo;
 
-        public OnPlayerLeaveMessage2() {
-        }
+        public OnPlayerLeaveMessage2() {}
 
         public OnPlayerLeaveMessage2(int userid, String retinfo) {
             this.userid = userid;
@@ -160,8 +157,7 @@ public class CustMessage2Test {
 
         private OnPlayerLeaveContent result;
 
-        public OnPlayerLeaveMessage() {
-        }
+        public OnPlayerLeaveMessage() {}
 
         public OnPlayerLeaveMessage(int userid) {
             this.result = new OnPlayerLeaveContent(userid);
@@ -195,8 +191,7 @@ public class CustMessage2Test {
             @ConvertColumn(index = 2)
             public String retinfo;
 
-            public OnPlayerLeaveContent() {
-            }
+            public OnPlayerLeaveContent() {}
 
             public OnPlayerLeaveContent(int userid) {
                 this.userid = userid;
@@ -218,5 +213,4 @@ public class CustMessage2Test {
             return JsonConvert.root().convertTo(this);
         }
     }
-
 }

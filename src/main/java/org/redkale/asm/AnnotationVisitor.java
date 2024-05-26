@@ -59,9 +59,9 @@
 package org.redkale.asm;
 
 /**
- * A visitor to visit a Java annotation. The methods of this class must be
- * called in the following order: ( &#60;tt&#62;visit&#60;/tt&#62; | &#60;tt&#62;visitEnum&#60;/tt&#62; |
- * &#60;tt&#62;visitAnnotation&#60;/tt&#62; | &#60;tt&#62;visitArray&#60;/tt&#62; )* &#60;tt&#62;visitEnd&#60;/tt&#62;.
+ * A visitor to visit a Java annotation. The methods of this class must be called in the following order: (
+ * &#60;tt&#62;visit&#60;/tt&#62; | &#60;tt&#62;visitEnum&#60;/tt&#62; | &#60;tt&#62;visitAnnotation&#60;/tt&#62; |
+ * &#60;tt&#62;visitArray&#60;/tt&#62; )* &#60;tt&#62;visitEnd&#60;/tt&#62;.
  *
  * @author Eric Bruneton
  * @author Eugene Kuleshov
@@ -69,23 +69,19 @@ package org.redkale.asm;
 public abstract class AnnotationVisitor {
 
     /**
-     * The ASM API version implemented by this visitor. The value of this field
-     * must be one of {@link Opcodes#ASM4}, {@link Opcodes#ASM5} or {@link Opcodes#ASM6}.
+     * The ASM API version implemented by this visitor. The value of this field must be one of {@link Opcodes#ASM4},
+     * {@link Opcodes#ASM5} or {@link Opcodes#ASM6}.
      */
     protected final int api;
 
-    /**
-     * The annotation visitor to which this visitor must delegate method calls.
-     * May be null.
-     */
+    /** The annotation visitor to which this visitor must delegate method calls. May be null. */
     protected AnnotationVisitor av;
 
     /**
      * Constructs a new {@link AnnotationVisitor}.
      *
-     * @param api
-     *            the ASM API version implemented by this visitor. Must be one
-     *            of {@link Opcodes#ASM4}, {@link Opcodes#ASM5} or {@link Opcodes#ASM6}.
+     * @param api the ASM API version implemented by this visitor. Must be one of {@link Opcodes#ASM4},
+     *     {@link Opcodes#ASM5} or {@link Opcodes#ASM6}.
      */
     public AnnotationVisitor(final int api) {
         this(api, null);
@@ -94,12 +90,9 @@ public abstract class AnnotationVisitor {
     /**
      * Constructs a new {@link AnnotationVisitor}.
      *
-     * @param api
-     *            the ASM API version implemented by this visitor. Must be one
-     *            of {@link Opcodes#ASM4}, {@link Opcodes#ASM5} or {@link Opcodes#ASM6}.
-     * @param av
-     *            the annotation visitor to which this visitor must delegate
-     *            method calls. May be null.
+     * @param api the ASM API version implemented by this visitor. Must be one of {@link Opcodes#ASM4},
+     *     {@link Opcodes#ASM5} or {@link Opcodes#ASM6}.
+     * @param av the annotation visitor to which this visitor must delegate method calls. May be null.
      */
     public AnnotationVisitor(final int api, final AnnotationVisitor av) {
         this.api = api;
@@ -109,17 +102,12 @@ public abstract class AnnotationVisitor {
     /**
      * Visits a primitive value of the annotation.
      *
-     * @param name
-     *            the value name.
-     * @param value
-     *            the actual value, whose type must be {@link Byte},
-     *            {@link Boolean}, {@link Character}, {@link Short},
-     *            {@link Integer} , {@link Long}, {@link Float}, {@link Double},
-     *            {@link String} or {@link Type} of OBJECT or ARRAY sort. This
-     *            value can also be an array of byte, boolean, short, char, int,
-     *            long, float or double values (this is equivalent to using
-     *            {@link #visitArray visitArray} and visiting each array element
-     *            in turn, but is more convenient).
+     * @param name the value name.
+     * @param value the actual value, whose type must be {@link Byte}, {@link Boolean}, {@link Character},
+     *     {@link Short}, {@link Integer} , {@link Long}, {@link Float}, {@link Double}, {@link String} or {@link Type}
+     *     of OBJECT or ARRAY sort. This value can also be an array of byte, boolean, short, char, int, long, float or
+     *     double values (this is equivalent to using {@link #visitArray visitArray} and visiting each array element in
+     *     turn, but is more convenient).
      */
     public void visit(String name, Object value) {
         if (av != null) {
@@ -130,12 +118,9 @@ public abstract class AnnotationVisitor {
     /**
      * Visits an enumeration value of the annotation.
      *
-     * @param name
-     *            the value name.
-     * @param desc
-     *            the class descriptor of the enumeration class.
-     * @param value
-     *            the actual enumeration value.
+     * @param name the value name.
+     * @param desc the class descriptor of the enumeration class.
+     * @param value the actual enumeration value.
      */
     public void visitEnum(String name, String desc, String value) {
         if (av != null) {
@@ -146,15 +131,11 @@ public abstract class AnnotationVisitor {
     /**
      * Visits a nested annotation value of the annotation.
      *
-     * @param name
-     *            the value name.
-     * @param desc
-     *            the class descriptor of the nested annotation class.
-     * @return a visitor to visit the actual nested annotation value, or
-     *         &#60;tt&#62;null&#60;/tt&#62; if this visitor is not interested in visiting this
-     *         nested annotation. <i>The nested annotation value must be fully
-     *         visited before calling other methods on this annotation
-     *         visitor</i>.
+     * @param name the value name.
+     * @param desc the class descriptor of the nested annotation class.
+     * @return a visitor to visit the actual nested annotation value, or &#60;tt&#62;null&#60;/tt&#62; if this visitor
+     *     is not interested in visiting this nested annotation. <i>The nested annotation value must be fully visited
+     *     before calling other methods on this annotation visitor</i>.
      */
     public AnnotationVisitor visitAnnotation(String name, String desc) {
         if (av != null) {
@@ -164,18 +145,14 @@ public abstract class AnnotationVisitor {
     }
 
     /**
-     * Visits an array value of the annotation. Note that arrays of primitive
-     * types (such as byte, boolean, short, char, int, long, float or double)
-     * can be passed as value to {@link #visit visit}. This is what
-     * {@link ClassReader} does.
+     * Visits an array value of the annotation. Note that arrays of primitive types (such as byte, boolean, short, char,
+     * int, long, float or double) can be passed as value to {@link #visit visit}. This is what {@link ClassReader}
+     * does.
      *
-     * @param name
-     *            the value name.
-     * @return a visitor to visit the actual array value elements, or
-     *         &#60;tt&#62;null&#60;/tt&#62; if this visitor is not interested in visiting these
-     *         values. The 'name' parameters passed to the methods of this
-     *         visitor are ignored. <i>All the array values must be visited
-     *         before calling other methods on this annotation visitor</i>.
+     * @param name the value name.
+     * @return a visitor to visit the actual array value elements, or &#60;tt&#62;null&#60;/tt&#62; if this visitor is
+     *     not interested in visiting these values. The 'name' parameters passed to the methods of this visitor are
+     *     ignored. <i>All the array values must be visited before calling other methods on this annotation visitor</i>.
      */
     public AnnotationVisitor visitArray(String name) {
         if (av != null) {
@@ -184,9 +161,7 @@ public abstract class AnnotationVisitor {
         return null;
     }
 
-    /**
-     * Visits the end of the annotation.
-     */
+    /** Visits the end of the annotation. */
     public void visitEnd() {
         if (av != null) {
             av.visitEnd();

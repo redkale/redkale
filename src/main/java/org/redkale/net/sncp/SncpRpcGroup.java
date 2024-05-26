@@ -13,8 +13,7 @@ import org.redkale.util.Utility;
 /**
  * 协议地址组合对象, 对应application.xml 中 resources-&#62;group 节点信息
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.8.0
@@ -24,16 +23,15 @@ public class SncpRpcGroup {
     protected final ReentrantLock lock = new ReentrantLock();
 
     @ConvertColumn(index = 1)
-    protected String name;  //地址
+    protected String name; // 地址
 
     @ConvertColumn(index = 2)
-    protected String protocol; //协议 取值范围:  TCP、UDP
+    protected String protocol; // 协议 取值范围:  TCP、UDP
 
     @ConvertColumn(index = 3)
-    protected Set<InetSocketAddress> addresses; //地址列表， 对应 resources-&#62;group-&#62;node节点信息
+    protected Set<InetSocketAddress> addresses; // 地址列表， 对应 resources-&#62;group-&#62;node节点信息
 
-    public SncpRpcGroup() {
-    }
+    public SncpRpcGroup() {}
 
     public SncpRpcGroup(String name, InetSocketAddress... addrs) {
         this(name, "TCP", Utility.ofSet(addrs));

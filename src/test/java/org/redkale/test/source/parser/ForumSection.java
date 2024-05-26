@@ -4,10 +4,7 @@ import java.util.Set;
 import org.redkale.convert.*;
 import org.redkale.persistence.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @Table(name = "forum_section", comment = "论坛小版块信息表")
 public class ForumSection extends BaseEntity {
 
@@ -130,5 +127,4 @@ public class ForumSection extends BaseEntity {
     public void setForumSectionBarHtml(String forumSectionBarHtml) {
         this.forumSectionBarHtml = forumSectionBarHtml;
     }
-
 }

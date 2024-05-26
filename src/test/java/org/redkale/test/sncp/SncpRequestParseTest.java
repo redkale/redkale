@@ -13,10 +13,7 @@ import org.redkale.net.client.ClientAddress;
 import org.redkale.net.sncp.*;
 import org.redkale.util.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class SncpRequestParseTest {
 
     private boolean main;
@@ -32,7 +29,8 @@ public class SncpRequestParseTest {
         InetSocketAddress sncpAddress = new InetSocketAddress("127.0.0.1", 3389);
         InetSocketAddress remoteAddress = new InetSocketAddress("127.0.0.1", 3344);
         final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
-        SncpClient client = new SncpClient("test", asyncGroup, "0", sncpAddress, new ClientAddress(remoteAddress), "TCP", Utility.cpus(), 16);
+        SncpClient client = new SncpClient(
+                "test", asyncGroup, "0", sncpAddress, new ClientAddress(remoteAddress), "TCP", Utility.cpus(), 16);
         SncpClientConnection conn = client.createClientConnection(asyncGroup.newTCPClientConnection());
 
         SncpContext.SncpContextConfig config = new SncpContext.SncpContextConfig();
@@ -53,16 +51,21 @@ public class SncpRequestParseTest {
 
         SncpRequestTest request = new SncpRequestTest(context);
         Assertions.assertEquals(1, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, 0, 1)), null));
-        Assertions.assertEquals(headerSize - 2, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, 1, 2)), null));
+        Assertions.assertEquals(
+                headerSize - 2, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, 1, 2)), null));
         Assertions.assertEquals(0, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, 2, bs.length)), null));
         Assertions.assertEquals("aa", request.getHeader().getTraceid());
 
         System.out.println("测试第二段");
         request = new SncpRequestTest(context);
         Assertions.assertEquals(1, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, 0, 1)), null));
-        Assertions.assertEquals(headerSize - 2, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, 1, 2)), null));
-        Assertions.assertEquals(headerSize - headerSize / 2, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, 2, headerSize / 2)), null));
-        Assertions.assertEquals(0, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, headerSize / 2, bs.length)), null));
+        Assertions.assertEquals(
+                headerSize - 2, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, 1, 2)), null));
+        Assertions.assertEquals(
+                headerSize - headerSize / 2,
+                request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, 2, headerSize / 2)), null));
+        Assertions.assertEquals(
+                0, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, headerSize / 2, bs.length)), null));
         Assertions.assertEquals("aa", request.getHeader().getTraceid());
     }
 

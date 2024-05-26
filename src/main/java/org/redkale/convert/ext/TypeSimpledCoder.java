@@ -10,8 +10,7 @@ import org.redkale.convert.*;
 /**
  * Type 的SimpledCoder实现 只支持Type的子类Class
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -42,5 +41,4 @@ public class TypeSimpledCoder<R extends Reader, W extends Writer> extends Simple
             return null;
         }
     }
-
 }

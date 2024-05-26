@@ -3,6 +3,10 @@
  */
 package org.redkale.boot;
 
+import static org.redkale.boot.Application.*;
+import static org.redkale.util.RedkaleClassLoader.putReflectionClass;
+import static org.redkale.util.RedkaleClassLoader.putReflectionPublicConstructors;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,13 +24,10 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.logging.SimpleFormatter;
-import static org.redkale.boot.Application.*;
 import org.redkale.source.DataSources;
 import org.redkale.util.AnyValue;
 import org.redkale.util.AnyValueWriter;
 import org.redkale.util.RedkaleClassLoader;
-import static org.redkale.util.RedkaleClassLoader.putReflectionClass;
-import static org.redkale.util.RedkaleClassLoader.putReflectionPublicConstructors;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Utility;
 
@@ -43,46 +44,46 @@ class AppConfig {
      */
     static final String PARAM_APP_CONF_FILE = "APP_CONF_FILE";
 
-    //是否用于main方法运行
+    // 是否用于main方法运行
     final boolean singletonMode;
 
-    //是否用于编译模式运行
+    // 是否用于编译模式运行
     final boolean compileMode;
 
-    //application.xml原始配置信息
+    // application.xml原始配置信息
     AnyValue config;
 
-    //是否从/META-INF中读取配置
+    // 是否从/META-INF中读取配置
     boolean configFromCache;
 
-    //本进程节点ID
+    // 本进程节点ID
     String nodeid;
 
-    //本进程节点ID
+    // 本进程节点ID
     String name;
 
-    //本地IP地址
+    // 本地IP地址
     InetSocketAddress localAddress;
 
-    //进程根目录
+    // 进程根目录
     File home;
 
-    //配置文件目录
+    // 配置文件目录
     File confFile;
 
-    //配置文件目录
+    // 配置文件目录
     URI confDir;
 
-    //根ClassLoader
+    // 根ClassLoader
     RedkaleClassLoader classLoader;
 
-    //Server根ClassLoader
+    // Server根ClassLoader
     RedkaleClassLoader serverClassLoader;
 
-    //本地文件日志配置项
+    // 本地文件日志配置项
     final Properties locaLogProperties = new Properties();
 
-    //本地文件除logging配置之外的所有的配置项, 包含system.property.、mimetype.property.开头的
+    // 本地文件除logging配置之外的所有的配置项, 包含system.property.、mimetype.property.开头的
     final Properties localEnvProperties = new Properties();
 
     public AppConfig(boolean singletonMode, boolean compileMode) {
@@ -101,21 +102,19 @@ class AppConfig {
         this.name = checkName(config.getValue("name", ""));
         this.nodeid = checkNodeid(config.getValue("nodeid", String.valueOf(Math.abs(System.nanoTime()))));
         this.configFromCache = "true".equals(config.getValue("[config-from-cache]"));
-        //初始化classLoader、serverClassLoader
+        // 初始化classLoader、serverClassLoader
         this.initClassLoader();
-        //初始化home、confDir、localAddress等信息
+        // 初始化home、confDir、localAddress等信息
         this.initAppHome();
-        //读取本地参数配置
+        // 读取本地参数配置
         this.initLocalProperties();
-        //读取本地日志配置
+        // 读取本地日志配置
         this.initLogProperties();
-        //读取本地数据库配置
+        // 读取本地数据库配置
         this.initSourceProperties();
     }
 
-    /**
-     * 初始化classLoader、serverClassLoader
-     */
+    /** 初始化classLoader、serverClassLoader */
     private void initClassLoader() {
         ClassLoader currClassLoader = Thread.currentThread().getContextClassLoader();
         if (currClassLoader instanceof RedkaleClassLoader) {
@@ -124,9 +123,11 @@ class AppConfig {
             Set<String> cacheClasses = null;
             if (!singletonMode && !compileMode) {
                 try {
-                    InputStream in = Application.class.getResourceAsStream(RedkaleClassLoader.RESOURCE_CACHE_CLASSES_PATH);
+                    InputStream in =
+                            Application.class.getResourceAsStream(RedkaleClassLoader.RESOURCE_CACHE_CLASSES_PATH);
                     if (in != null) {
-                        BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8), 1024);
+                        BufferedReader reader =
+                                new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8), 1024);
                         List<String> list = new ArrayList<>();
                         reader.lines().forEach(list::add);
                         Collections.sort(list);
@@ -136,7 +137,7 @@ class AppConfig {
                         in.close();
                     }
                 } catch (Exception e) {
-                    //do nothing
+                    // do nothing
                 }
             }
             if (cacheClasses == null) {
@@ -153,16 +154,16 @@ class AppConfig {
         }
     }
 
-    /**
-     * 初始化home、confDir、localAddress等信息
-     */
+    /** 初始化home、confDir、localAddress等信息 */
     private void initAppHome() {
         final File root = new File(System.getProperty(RESNAME_APP_HOME, ""));
         final String rootPath = getCanonicalPath(root);
         this.home = new File(rootPath);
         String confDir = System.getProperty(RESNAME_APP_CONF_DIR, "conf");
-        if (confDir.contains("://") || confDir.startsWith("file:")
-            || confDir.startsWith("resource:") || confDir.contains("!")) { //graalvm native-image startwith resource:META-INF
+        if (confDir.contains("://")
+                || confDir.startsWith("file:")
+                || confDir.startsWith("resource:")
+                || confDir.contains("!")) { // graalvm native-image startwith resource:META-INF
             this.confDir = URI.create(confDir);
             if (confDir.startsWith("file:")) {
                 this.confFile = getCanonicalFile(new File(this.confDir.getPath()));
@@ -175,16 +176,15 @@ class AppConfig {
             this.confDir = confFile.toURI();
         }
         String localaddr = config.getValue("address", "").trim();
-        InetAddress addr = localaddr.isEmpty() ? Utility.localInetAddress() 
-            : new InetSocketAddress(localaddr, config.getIntValue("port")).getAddress();
+        InetAddress addr = localaddr.isEmpty()
+                ? Utility.localInetAddress()
+                : new InetSocketAddress(localaddr, config.getIntValue("port")).getAddress();
         this.localAddress = new InetSocketAddress(addr, config.getIntValue("port"));
     }
 
-    /**
-     * 读取本地参数配置
-     */
+    /** 读取本地参数配置 */
     private void initLocalProperties() {
-        //环境变量的优先级最高
+        // 环境变量的优先级最高
         System.getProperties().forEach((k, v) -> {
             if (k.toString().startsWith("redkale.")) {
                 localEnvProperties.put(k, v);
@@ -198,7 +198,7 @@ class AppConfig {
                 propsConf = resources.getAnyValue("properties");
             }
         }
-        if (propsConf != null) { //设置配置文件中的系统变量
+        if (propsConf != null) { // 设置配置文件中的系统变量
             for (AnyValue prop : propsConf.getAnyValues("property")) {
                 String key = prop.getValue("name", "");
                 String value = prop.getValue("value");
@@ -206,12 +206,14 @@ class AppConfig {
                     localEnvProperties.put(key, value);
                 }
             }
-            if (propsConf.getValue("load") != null) { //加载本地配置项文件
-                for (String dfload : propsConf.getValue("load").replace(',', ';').split(";")) {
+            if (propsConf.getValue("load") != null) { // 加载本地配置项文件
+                for (String dfload :
+                        propsConf.getValue("load").replace(',', ';').split(";")) {
                     if (dfload.trim().isEmpty()) {
                         continue;
                     }
-                    final URI df = RedkaleClassLoader.getConfResourceAsURI(configFromCache ? null : this.confDir.toString(), dfload.trim());
+                    final URI df = RedkaleClassLoader.getConfResourceAsURI(
+                            configFromCache ? null : this.confDir.toString(), dfload.trim());
                     if (df == null) {
                         continue;
                     }
@@ -229,20 +231,18 @@ class AppConfig {
                 }
             }
         }
-        //设置Convert默认配置项
+        // 设置Convert默认配置项
         if (System.getProperty("redkale.convert.pool.size") == null
-            && localEnvProperties.getProperty("system.property.redkale.convert.pool.size") == null) {
+                && localEnvProperties.getProperty("system.property.redkale.convert.pool.size") == null) {
             localEnvProperties.put("system.property.redkale.convert.pool.size", "128");
         }
         if (System.getProperty("redkale.convert.writer.buffer.defsize") == null
-            && localEnvProperties.getProperty("system.property.redkale.convert.writer.buffer.defsize") == null) {
+                && localEnvProperties.getProperty("system.property.redkale.convert.writer.buffer.defsize") == null) {
             localEnvProperties.put("system.property.redkale.convert.writer.buffer.defsize", "4096");
         }
     }
 
-    /**
-     * 读取本地DataSource、CacheSource配置
-     */
+    /** 读取本地DataSource、CacheSource配置 */
     private void initSourceProperties() {
         if ("file".equals(this.confDir.getScheme())) {
             File sourceFile = new File(new File(confDir), "source.properties");
@@ -257,7 +257,7 @@ class AppConfig {
                 }
                 this.localEnvProperties.putAll(props);
             } else {
-                //兼容 persistence.xml 【已废弃】
+                // 兼容 persistence.xml 【已废弃】
                 File persist = new File(new File(confDir), "persistence.xml");
                 if (persist.isFile() && persist.canRead()) {
                     System.err.println("persistence.xml is deprecated, replaced by source.properties");
@@ -270,23 +270,22 @@ class AppConfig {
                     }
                 }
             }
-        } else { //从url或jar文件中resources读取
+        } else { // 从url或jar文件中resources读取
             try {
-                final URI sourceURI = RedkaleClassLoader.getConfResourceAsURI(configFromCache ? null : this.confDir.toString(), "source.properties");
+                final URI sourceURI = RedkaleClassLoader.getConfResourceAsURI(
+                        configFromCache ? null : this.confDir.toString(), "source.properties");
                 InputStream in = sourceURI.toURL().openStream();
                 Properties props = new Properties();
                 props.load(in);
                 in.close();
                 this.localEnvProperties.putAll(props);
             } catch (Exception e) {
-                //没有文件 跳过
+                // 没有文件 跳过
             }
         }
     }
 
-    /**
-     * 读取本地日志配置
-     */
+    /** 读取本地日志配置 */
     private void initLogProperties() {
         URI logConfURI;
         File logConfFile = null;
@@ -317,9 +316,14 @@ class AppConfig {
             putReflectionPublicConstructors(SimpleFormatter.class, SimpleFormatter.class.getName());
             putReflectionPublicConstructors(LoggingSearchHandler.class, LoggingSearchHandler.class.getName());
             putReflectionPublicConstructors(LoggingFileHandler.class, LoggingFileHandler.class.getName());
-            putReflectionPublicConstructors(LoggingFileHandler.LoggingFormater.class, LoggingFileHandler.LoggingFormater.class.getName());
-            putReflectionPublicConstructors(LoggingFileHandler.LoggingConsoleHandler.class, LoggingFileHandler.LoggingConsoleHandler.class.getName());
-            putReflectionPublicConstructors(LoggingFileHandler.LoggingSncpFileHandler.class, LoggingFileHandler.LoggingSncpFileHandler.class.getName());
+            putReflectionPublicConstructors(
+                    LoggingFileHandler.LoggingFormater.class, LoggingFileHandler.LoggingFormater.class.getName());
+            putReflectionPublicConstructors(
+                    LoggingFileHandler.LoggingConsoleHandler.class,
+                    LoggingFileHandler.LoggingConsoleHandler.class.getName());
+            putReflectionPublicConstructors(
+                    LoggingFileHandler.LoggingSncpFileHandler.class,
+                    LoggingFileHandler.LoggingSncpFileHandler.class.getName());
         }
     }
 
@@ -330,7 +334,9 @@ class AppConfig {
      * @throws IOException
      */
     static AnyValue loadAppConfig() throws IOException {
-        final String home = new File(System.getProperty(RESNAME_APP_HOME, "")).getCanonicalPath().replace('\\', '/');
+        final String home = new File(System.getProperty(RESNAME_APP_HOME, ""))
+                .getCanonicalPath()
+                .replace('\\', '/');
         String sysConfFile = System.getProperty(PARAM_APP_CONF_FILE);
         if (sysConfFile != null) {
             String text;
@@ -344,20 +350,22 @@ class AppConfig {
                     throw new IOException("Read application conf file (" + sysConfFile + ") error ");
                 }
             }
-            return text.trim().startsWith("<") ? AnyValue.loadFromXml(text, (k, v) -> v.replace("${" + RESNAME_APP_HOME + "}", home))
-                .getAnyValue("application") : AnyValue.loadFromProperties(text).getAnyValue("redkale");
+            return text.trim().startsWith("<")
+                    ? AnyValue.loadFromXml(text, (k, v) -> v.replace("${" + RESNAME_APP_HOME + "}", home))
+                            .getAnyValue("application")
+                    : AnyValue.loadFromProperties(text).getAnyValue("redkale");
         }
         String confDir = System.getProperty(RESNAME_APP_CONF_DIR, "conf");
         URI appConfFile;
         boolean fromCache = false;
-        if (confDir.contains("://")) { //jar内部资源
+        if (confDir.contains("://")) { // jar内部资源
             appConfFile = URI.create(confDir + (confDir.endsWith("/") ? "" : "/") + "application.xml");
             try {
                 appConfFile.toURL().openStream().close();
-            } catch (IOException e) { //没有application.xml就尝试读application.properties
+            } catch (IOException e) { // 没有application.xml就尝试读application.properties
                 appConfFile = URI.create(confDir + (confDir.endsWith("/") ? "" : "/") + "application.properties");
             }
-        } else if (confDir.charAt(0) == '/' || confDir.indexOf(':') > 0) { //绝对路径
+        } else if (confDir.charAt(0) == '/' || confDir.indexOf(':') > 0) { // 绝对路径
             File f = new File(confDir, "application.xml");
             if (f.isFile() && f.canRead()) {
                 appConfFile = f.toURI();
@@ -368,17 +376,20 @@ class AppConfig {
                     appConfFile = f.toURI();
                     confDir = f.getParentFile().getCanonicalPath();
                 } else {
-                    appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.xml"); //不能传confDir
+                    appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.xml"); // 不能传confDir
                     try {
                         appConfFile.toURL().openStream().close();
-                    } catch (IOException e) { //没有application.xml就尝试读application.properties
+                    } catch (IOException e) { // 没有application.xml就尝试读application.properties
                         appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.properties");
                     }
-                    confDir = appConfFile.toString().replace("/application.xml", "").replace("/application.properties", "");
+                    confDir = appConfFile
+                            .toString()
+                            .replace("/application.xml", "")
+                            .replace("/application.properties", "");
                     fromCache = true;
                 }
             }
-        } else { //相对路径
+        } else { // 相对路径
             File f = new File(new File(home, confDir), "application.xml");
             if (f.isFile() && f.canRead()) {
                 appConfFile = f.toURI();
@@ -389,13 +400,16 @@ class AppConfig {
                     appConfFile = f.toURI();
                     confDir = f.getParentFile().getCanonicalPath();
                 } else {
-                    appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.xml"); //不能传confDir
+                    appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.xml"); // 不能传confDir
                     try {
                         appConfFile.toURL().openStream().close();
-                    } catch (IOException e) { //没有application.xml就尝试读application.properties
+                    } catch (IOException e) { // 没有application.xml就尝试读application.properties
                         appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.properties");
                     }
-                    confDir = appConfFile.toString().replace("/application.xml", "").replace("/application.properties", "");
+                    confDir = appConfFile
+                            .toString()
+                            .replace("/application.xml", "")
+                            .replace("/application.properties", "");
                     fromCache = true;
                 }
             }
@@ -404,7 +418,8 @@ class AppConfig {
         String text = Utility.readThenClose(appConfFile.toURL().openStream());
         AnyValue conf;
         if (text.trim().startsWith("<")) {
-            conf = AnyValue.loadFromXml(text, (k, v) -> v.replace("${APP_HOME}", home)).getAnyValue("application");
+            conf = AnyValue.loadFromXml(text, (k, v) -> v.replace("${APP_HOME}", home))
+                    .getAnyValue("application");
         } else {
             conf = AnyValue.loadFromProperties(text).getAnyValue("redkale");
         }
@@ -419,7 +434,6 @@ class AppConfig {
      * 检查name是否含特殊字符
      *
      * @param name
-     *
      * @return
      */
     private static String checkName(String name) {
@@ -428,11 +442,11 @@ class AppConfig {
         }
         for (char ch : name.toCharArray()) {
             if (!((ch >= '0' && ch <= '9')
-                || (ch >= 'a' && ch <= 'z')
-                || (ch >= 'A' && ch <= 'Z')
-                || ch == '_'
-                || ch == '.'
-                || ch == '-')) { //不能含特殊字符
+                    || (ch >= 'a' && ch <= 'z')
+                    || (ch >= 'A' && ch <= 'Z')
+                    || ch == '_'
+                    || ch == '.'
+                    || ch == '-')) { // 不能含特殊字符
                 throw new RedkaleException("name only 0-9 a-z A-Z _ - .");
             }
         }
@@ -443,7 +457,6 @@ class AppConfig {
      * 检查node是否含特殊字符
      *
      * @param name
-     *
      * @return
      */
     private static String checkNodeid(String nodeid) {
@@ -452,11 +465,11 @@ class AppConfig {
         }
         for (char ch : nodeid.toCharArray()) {
             if (!((ch >= '0' && ch <= '9')
-                || (ch >= 'a' && ch <= 'z')
-                || (ch >= 'A' && ch <= 'Z')
-                || ch == '_'
-                || ch == '.'
-                || ch == '-')) { //不能含特殊字符
+                    || (ch >= 'a' && ch <= 'z')
+                    || (ch >= 'A' && ch <= 'Z')
+                    || ch == '_'
+                    || ch == '.'
+                    || ch == '-')) { // 不能含特殊字符
                 throw new RedkaleException("nodeid only 0-9 a-z A-Z _ - .");
             }
         }
@@ -478,5 +491,4 @@ class AppConfig {
             return file;
         }
     }
-
 }

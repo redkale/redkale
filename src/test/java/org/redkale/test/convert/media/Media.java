@@ -7,20 +7,17 @@ package org.redkale.test.convert.media;
 
 import java.util.*;
 
-/**
- *
- * @author redkale
- */
+/** @author redkale */
 public class Media implements java.io.Serializable {
 
     public enum Player {
-        JAVA, FLASH;
-
+        JAVA,
+        FLASH;
     }
 
     private String uri;
 
-    private String title;        // Can be unset.
+    private String title; // Can be unset.
 
     private int width;
 
@@ -32,19 +29,29 @@ public class Media implements java.io.Serializable {
 
     private long size;
 
-    private int bitrate;         // Can be unset.
+    private int bitrate; // Can be unset.
 
     private List<String> persons;
 
     private Player player;
 
-    private String copyright;    // Can be unset.
+    private String copyright; // Can be unset.
 
-    public Media() {
-    }
+    public Media() {}
 
-    public Media(String uri, String title, int width, int height, String format, long duration, long size, 
-            int bitrate, boolean hasBitrate, List<String> persons, Player player, String copyright) {
+    public Media(
+            String uri,
+            String title,
+            int width,
+            int height,
+            String format,
+            long duration,
+            long size,
+            int bitrate,
+            boolean hasBitrate,
+            List<String> persons,
+            Player player,
+            String copyright) {
         this.uri = uri;
         this.title = title;
         this.width = width;

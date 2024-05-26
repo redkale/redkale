@@ -9,8 +9,7 @@ import org.redkale.convert.ConvertColumn;
 /**
  * 数值的ColumnNode
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.8.0
@@ -20,8 +19,7 @@ public class ColumnNumberNode implements ColumnNode {
     @ConvertColumn(index = 1)
     private Number value;
 
-    public ColumnNumberNode() {
-    }
+    public ColumnNumberNode() {}
 
     public ColumnNumberNode(Number value) {
         Objects.requireNonNull(value, "number is null");
@@ -40,5 +38,4 @@ public class ColumnNumberNode implements ColumnNode {
     public String toString() {
         return "{\"value\":" + value + "}";
     }
-
 }

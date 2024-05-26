@@ -16,10 +16,10 @@ import org.redkale.util.RedkaleException;
 import org.redkale.util.Utility;
 
 /**
- * cron定时表达式解析器 <br> 代码复制于org.springframework.scheduling.support.CronExpression
+ * cron定时表达式解析器 <br>
+ * 代码复制于org.springframework.scheduling.support.CronExpression
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.8.0
@@ -28,7 +28,7 @@ public class CronExpression {
 
     static final int MAX_ATTEMPTS = 366;
 
-    private static final String[] MACROS = new String[]{
+    private static final String[] MACROS = new String[] {
         "@yearly", "0 0 0 1 1 *",
         "@annually", "0 0 0 1 1 *",
         "@monthly", "0 0 0 1 * *",
@@ -78,9 +78,15 @@ public class CronExpression {
 
     private final String expression;
 
-    private CronExpression(CronField seconds, CronField minutes, CronField hours,
-        CronField daysOfMonth, CronField months, CronField daysOfWeek, String expression) {
-        this.fields = new CronField[]{daysOfWeek, months, daysOfMonth, hours, minutes, seconds, CronField.zeroNanos()};
+    private CronExpression(
+            CronField seconds,
+            CronField minutes,
+            CronField hours,
+            CronField daysOfMonth,
+            CronField months,
+            CronField daysOfWeek,
+            String expression) {
+        this.fields = new CronField[] {daysOfWeek, months, daysOfMonth, hours, minutes, seconds, CronField.zeroNanos()};
         this.expression = expression;
     }
 
@@ -91,7 +97,8 @@ public class CronExpression {
         expression = resolveMacros(expression);
         String[] fields = expression.split("\\s+");
         if (fields.length != 6) {
-            throw new RedkaleException(String.format("Cron expression must consist of 6 fields (found %d in \"%s\")", fields.length, expression));
+            throw new RedkaleException(String.format(
+                    "Cron expression must consist of 6 fields (found %d in \"%s\")", fields.length, expression));
         }
         try {
             CronField seconds = CronField.parseSeconds(fields[0]);
@@ -169,10 +176,10 @@ public class CronExpression {
 
     abstract static class CronField {
 
-        private static final String[] MONTHS = new String[]{"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP",
-            "OCT", "NOV", "DEC"};
+        private static final String[] MONTHS =
+                new String[] {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
 
-        private static final String[] DAYS = new String[]{"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
+        private static final String[] DAYS = new String[] {"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
 
         private final Type type;
 
@@ -235,7 +242,7 @@ public class CronExpression {
             }
             StringBuilder sb = new StringBuilder(capacity);
 
-            int pos = 0;  // our position in the old string
+            int pos = 0; // our position in the old string
             int patLen = oldPattern.length();
             while (index >= 0) {
                 sb.append(inString, pos, index);
@@ -259,7 +266,7 @@ public class CronExpression {
                 return new String[0];
             }
             if (delimiter == null) {
-                return new String[]{str};
+                return new String[] {str};
             }
 
             List<String> result = new ArrayList<>();
@@ -315,11 +322,39 @@ public class CronExpression {
         protected enum Type {
             NANO(ChronoField.NANO_OF_SECOND, ChronoUnit.SECONDS),
             SECOND(ChronoField.SECOND_OF_MINUTE, ChronoUnit.MINUTES, ChronoField.NANO_OF_SECOND),
-            MINUTE(ChronoField.MINUTE_OF_HOUR, ChronoUnit.HOURS, ChronoField.SECOND_OF_MINUTE, ChronoField.NANO_OF_SECOND),
-            HOUR(ChronoField.HOUR_OF_DAY, ChronoUnit.DAYS, ChronoField.MINUTE_OF_HOUR, ChronoField.SECOND_OF_MINUTE, ChronoField.NANO_OF_SECOND),
-            DAY_OF_MONTH(ChronoField.DAY_OF_MONTH, ChronoUnit.MONTHS, ChronoField.HOUR_OF_DAY, ChronoField.MINUTE_OF_HOUR, ChronoField.SECOND_OF_MINUTE, ChronoField.NANO_OF_SECOND),
-            MONTH(ChronoField.MONTH_OF_YEAR, ChronoUnit.YEARS, ChronoField.DAY_OF_MONTH, ChronoField.HOUR_OF_DAY, ChronoField.MINUTE_OF_HOUR, ChronoField.SECOND_OF_MINUTE, ChronoField.NANO_OF_SECOND),
-            DAY_OF_WEEK(ChronoField.DAY_OF_WEEK, ChronoUnit.WEEKS, ChronoField.HOUR_OF_DAY, ChronoField.MINUTE_OF_HOUR, ChronoField.SECOND_OF_MINUTE, ChronoField.NANO_OF_SECOND);
+            MINUTE(
+                    ChronoField.MINUTE_OF_HOUR,
+                    ChronoUnit.HOURS,
+                    ChronoField.SECOND_OF_MINUTE,
+                    ChronoField.NANO_OF_SECOND),
+            HOUR(
+                    ChronoField.HOUR_OF_DAY,
+                    ChronoUnit.DAYS,
+                    ChronoField.MINUTE_OF_HOUR,
+                    ChronoField.SECOND_OF_MINUTE,
+                    ChronoField.NANO_OF_SECOND),
+            DAY_OF_MONTH(
+                    ChronoField.DAY_OF_MONTH,
+                    ChronoUnit.MONTHS,
+                    ChronoField.HOUR_OF_DAY,
+                    ChronoField.MINUTE_OF_HOUR,
+                    ChronoField.SECOND_OF_MINUTE,
+                    ChronoField.NANO_OF_SECOND),
+            MONTH(
+                    ChronoField.MONTH_OF_YEAR,
+                    ChronoUnit.YEARS,
+                    ChronoField.DAY_OF_MONTH,
+                    ChronoField.HOUR_OF_DAY,
+                    ChronoField.MINUTE_OF_HOUR,
+                    ChronoField.SECOND_OF_MINUTE,
+                    ChronoField.NANO_OF_SECOND),
+            DAY_OF_WEEK(
+                    ChronoField.DAY_OF_WEEK,
+                    ChronoUnit.WEEKS,
+                    ChronoField.HOUR_OF_DAY,
+                    ChronoField.MINUTE_OF_HOUR,
+                    ChronoField.SECOND_OF_MINUTE,
+                    ChronoField.NANO_OF_SECOND);
 
             private final ChronoField field;
 
@@ -379,7 +414,8 @@ public class CronExpression {
             public <T extends Temporal> T reset(T temporal) {
                 for (ChronoField lowerOrder : this.lowerOrders) {
                     if (temporal.isSupported(lowerOrder)) {
-                        temporal = lowerOrder.adjustInto(temporal, temporal.range(lowerOrder).getMinimum());
+                        temporal = lowerOrder.adjustInto(
+                                temporal, temporal.range(lowerOrder).getMinimum());
                     }
                 }
                 return temporal;
@@ -390,7 +426,6 @@ public class CronExpression {
                 return this.field.toString();
             }
         }
-
     }
 
     static class BitsCronField extends CronField {
@@ -473,7 +508,8 @@ public class CronExpression {
                         String deltaStr = field.substring(slashPos + 1);
                         ValueRange range = parseRange(rangeStr, type);
                         if (rangeStr.indexOf('-') == -1) {
-                            range = ValueRange.of(range.getMinimum(), type.range().getMaximum());
+                            range = ValueRange.of(
+                                    range.getMinimum(), type.range().getMaximum());
                         }
                         int delta = Integer.parseInt(deltaStr);
                         if (delta <= 0) {
@@ -552,7 +588,6 @@ public class CronExpression {
             } else {
                 return -1;
             }
-
         }
 
         private void setBits(ValueRange range) {
@@ -617,7 +652,6 @@ public class CronExpression {
             builder.append('}');
             return builder.toString();
         }
-
     }
 
     static class CompositeCronField extends CronField {
@@ -652,8 +686,7 @@ public class CronExpression {
             T result = null;
             for (CronField field : this.fields) {
                 T candidate = field.nextOrSame(temporal);
-                if (result == null
-                    || candidate != null && candidate.compareTo(result) < 0) {
+                if (result == null || candidate != null && candidate.compareTo(result) < 0) {
                     result = candidate;
                 }
             }
@@ -682,5 +715,4 @@ public class CronExpression {
             return type() + " '" + this.value + "'";
         }
     }
-
 }

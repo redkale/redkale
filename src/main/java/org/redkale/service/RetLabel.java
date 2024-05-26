@@ -5,26 +5,27 @@
  */
 package org.redkale.service;
 
-import java.io.*;
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.redkale.boot.Application.SYSNAME_APP_CONF_DIR;
+import static org.redkale.boot.Application.SYSNAME_APP_HOME;
+
+import java.io.*;
+import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.BiFunction;
-import static org.redkale.boot.Application.SYSNAME_APP_CONF_DIR;
-import static org.redkale.boot.Application.SYSNAME_APP_HOME;
 import org.redkale.util.RedkaleClassLoader;
 
 /**
- * 用于定义错误码的注解  <br>
- * 结果码定义范围:  <br>
- *    // 10000001 - 19999999 预留给Redkale的核心包使用  <br>
- *    // 20000001 - 29999999 预留给Redkale的扩展包使用  <br>
- *    // 30000001 - 99999999 预留给Dev开发系统自身使用  <br>
- * <p>
- * 详情见: https://redkale.org
+ * 用于定义错误码的注解 <br>
+ * 结果码定义范围: <br>
+ * // 10000001 - 19999999 预留给Redkale的核心包使用 <br>
+ * // 20000001 - 29999999 预留给Redkale的扩展包使用 <br>
+ * // 30000001 - 99999999 预留给Dev开发系统自身使用 <br>
+ *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -46,11 +47,9 @@ public @interface RetLabel {
         RetLabel[] value();
     }
 
-    public static interface RetInfoTransfer extends BiFunction<Integer, String, String> {
+    public static interface RetInfoTransfer extends BiFunction<Integer, String, String> {}
 
-    }
-
-    public static abstract class RetLoader {
+    public abstract static class RetLoader {
 
         public static Map<String, Map<Integer, String>> loadMap(Class clazz) {
             final Map<String, Map<Integer, String>> rets = new LinkedHashMap<>();
@@ -59,7 +58,8 @@ public @interface RetLabel {
             Iterator<RetInfoTransfer> it = loader.iterator();
             RetInfoTransfer func = it.hasNext() ? it.next() : null;
             if (func != null) {
-                RedkaleClassLoader.putReflectionPublicConstructors(func.getClass(), func.getClass().getName());
+                RedkaleClassLoader.putReflectionPublicConstructors(
+                        func.getClass(), func.getClass().getName());
             }
             RedkaleClassLoader.putReflectionPublicFields(clazz.getName());
             for (Field field : clazz.getFields()) {
@@ -81,7 +81,8 @@ public @interface RetLabel {
                     continue;
                 }
                 for (RetLabel info : infos) {
-                    rets.computeIfAbsent(info.locale(), k -> new LinkedHashMap<>()).put(value, func == null ? info.value() : func.apply(value, info.value()));
+                    rets.computeIfAbsent(info.locale(), k -> new LinkedHashMap<>())
+                            .put(value, func == null ? info.value() : func.apply(value, info.value()));
                 }
             }
             try {
@@ -89,13 +90,17 @@ public @interface RetLabel {
                 File propPath = new File(System.getProperty(SYSNAME_APP_CONF_DIR, homePath.getPath()));
                 if (propPath.isDirectory() && propPath.canRead()) {
                     final String prefix = clazz.getSimpleName().toLowerCase();
-                    for (File propFile : propPath.listFiles(f -> f.getName().startsWith(prefix) && f.getName().endsWith(".properties"))) {
+                    for (File propFile : propPath.listFiles(
+                            f -> f.getName().startsWith(prefix) && f.getName().endsWith(".properties"))) {
                         if (propFile.isFile() && propFile.canRead()) {
-                            String locale = propFile.getName().substring(prefix.length()).replaceAll("\\.\\d+", "");
+                            String locale = propFile.getName()
+                                    .substring(prefix.length())
+                                    .replaceAll("\\.\\d+", "");
                             locale = locale.substring(0, locale.indexOf(".properties"));
                             Map<Integer, String> defrets = rets.get(locale);
                             if (defrets != null) {
-                                InputStreamReader in = new InputStreamReader(new FileInputStream(propFile), StandardCharsets.UTF_8);
+                                InputStreamReader in =
+                                        new InputStreamReader(new FileInputStream(propFile), StandardCharsets.UTF_8);
                                 Properties prop = new Properties();
                                 prop.load(in);
                                 in.close();
@@ -114,6 +119,5 @@ public @interface RetLabel {
             }
             return rets;
         }
-
     }
 }

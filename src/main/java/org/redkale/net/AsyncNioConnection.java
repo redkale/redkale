@@ -16,30 +16,28 @@ import javax.net.ssl.SSLContext;
 import org.redkale.util.ByteBufferWriter;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.3.0
  */
 abstract class AsyncNioConnection extends AsyncConnection {
 
     protected SocketAddress remoteAddress;
 
-    //protected final AtomicLong fastWriteCount = new AtomicLong();
+    // protected final AtomicLong fastWriteCount = new AtomicLong();
     protected final Queue<byte[]> fastWriteQueue = new ConcurrentLinkedQueue<>();
 
-    //-------------------------------- 连操作 --------------------------------------
+    // -------------------------------- 连操作 --------------------------------------
     protected Object connectAttachment;
 
     protected CompletionHandler<Void, Object> connectCompletionHandler;
 
     protected SelectionKey connectKey;
 
-    //-------------------------------- 读操作 --------------------------------------
-    protected final AsyncNioCompletionHandler<ByteBuffer> readTimeoutCompletionHandler = new AsyncNioCompletionHandler<>(true, this);
+    // -------------------------------- 读操作 --------------------------------------
+    protected final AsyncNioCompletionHandler<ByteBuffer> readTimeoutCompletionHandler =
+            new AsyncNioCompletionHandler<>(true, this);
 
     protected int readTimeoutSeconds;
 
@@ -49,8 +47,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     protected SelectionKey readKey;
 
-    //-------------------------------- 写操作 --------------------------------------
-    protected final AsyncNioCompletionHandler<Object> writeTimeoutCompletionHandler = new AsyncNioCompletionHandler<>(false, this);
+    // -------------------------------- 写操作 --------------------------------------
+    protected final AsyncNioCompletionHandler<Object> writeTimeoutCompletionHandler =
+            new AsyncNioCompletionHandler<>(false, this);
 
     protected int writeTimeoutSeconds;
 
@@ -66,7 +65,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     protected int writeByteTuple2Length;
 
-    //写操作, 二选一，要么writeByteBuffer有值，要么writeByteBuffers、writeBuffersOffset、writeBuffersLength有值
+    // 写操作, 二选一，要么writeByteBuffer有值，要么writeByteBuffers、writeBuffersOffset、writeBuffersLength有值
     protected ByteBuffer writeByteBuffer;
 
     protected ByteBuffer[] writeByteBuffers;
@@ -83,9 +82,15 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     protected SelectionKey writeKey;
 
-//    protected CompletionHandler<Integer, Object> writeFastHandler;
-    public AsyncNioConnection(boolean clientMode, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread,
-        AsyncIOThread ioWriteThread, final int bufferCapacity, SSLBuilder sslBuilder, SSLContext sslContext) {
+    //    protected CompletionHandler<Integer, Object> writeFastHandler;
+    public AsyncNioConnection(
+            boolean clientMode,
+            AsyncIOGroup ioGroup,
+            AsyncIOThread ioReadThread,
+            AsyncIOThread ioWriteThread,
+            final int bufferCapacity,
+            SSLBuilder sslBuilder,
+            SSLContext sslContext) {
         super(clientMode, ioGroup, ioReadThread, ioWriteThread, bufferCapacity, sslBuilder, sslContext);
     }
 
@@ -114,12 +119,12 @@ abstract class AsyncNioConnection extends AsyncConnection {
         return this.writeTimeoutSeconds;
     }
 
-//    @Override
-//    public <A> AsyncConnection fastHandler(CompletionHandler<Integer, ? super A> handler) {
-//        Objects.requireNonNull(handler);
-//        this.writeFastHandler = (CompletionHandler) handler;
-//        return this;
-//    }
+    //    @Override
+    //    public <A> AsyncConnection fastHandler(CompletionHandler<Integer, ? super A> handler) {
+    //        Objects.requireNonNull(handler);
+    //        this.writeFastHandler = (CompletionHandler) handler;
+    //        return this;
+    //    }
     @Override
     protected void startHandshake(final Consumer<Throwable> callback) {
         ioReadThread.register(t -> super.startHandshake(callback));
@@ -145,9 +150,11 @@ abstract class AsyncNioConnection extends AsyncConnection {
             this.readPending = true;
             if (this.readTimeoutSeconds > 0) {
                 AsyncNioCompletionHandler newHandler = this.readTimeoutCompletionHandler;
-                newHandler.handler(handler, this.readByteBuffer);   // new AsyncNioCompletionHandler(handler, this.readByteBuffer);
+                newHandler.handler(
+                        handler, this.readByteBuffer); // new AsyncNioCompletionHandler(handler, this.readByteBuffer);
                 this.readCompletionHandler = newHandler;
-                newHandler.timeoutFuture = ioGroup.scheduleTimeout(newHandler, this.readTimeoutSeconds, TimeUnit.SECONDS);
+                newHandler.timeoutFuture =
+                        ioGroup.scheduleTimeout(newHandler, this.readTimeoutSeconds, TimeUnit.SECONDS);
             } else {
                 this.readCompletionHandler = handler;
             }
@@ -193,7 +200,8 @@ abstract class AsyncNioConnection extends AsyncConnection {
         this.readPending = true;
         if (this.readTimeoutSeconds > 0) {
             AsyncNioCompletionHandler newHandler = this.readTimeoutCompletionHandler;
-            newHandler.handler(handler, this.readByteBuffer);   // new AsyncNioCompletionHandler(handler, this.readByteBuffer);
+            newHandler.handler(
+                    handler, this.readByteBuffer); // new AsyncNioCompletionHandler(handler, this.readByteBuffer);
             this.readCompletionHandler = newHandler;
             newHandler.timeoutFuture = ioGroup.scheduleTimeout(newHandler, this.readTimeoutSeconds, TimeUnit.SECONDS);
         } else {
@@ -203,8 +211,14 @@ abstract class AsyncNioConnection extends AsyncConnection {
     }
 
     @Override
-    public void write(byte[] headerContent, int headerOffset, int headerLength,
-        byte[] bodyContent, int bodyOffset, int bodyLength, CompletionHandler<Integer, Void> handler) {
+    public void write(
+            byte[] headerContent,
+            int headerOffset,
+            int headerLength,
+            byte[] bodyContent,
+            int bodyOffset,
+            int bodyLength,
+            CompletionHandler<Integer, Void> handler) {
 
         if (sslEngine != null) {
             super.write(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength, handler);
@@ -230,15 +244,15 @@ abstract class AsyncNioConnection extends AsyncConnection {
         this.writeAttachment = null;
         if (this.writeTimeoutSeconds > 0) {
             AsyncNioCompletionHandler newHandler = this.writeTimeoutCompletionHandler;
-            newHandler.handler(handler, null);   // new AsyncNioCompletionHandler(handler, null);
+            newHandler.handler(handler, null); // new AsyncNioCompletionHandler(handler, null);
             this.writeCompletionHandler = newHandler;
             newHandler.timeoutFuture = ioGroup.scheduleTimeout(newHandler, this.writeTimeoutSeconds, TimeUnit.SECONDS);
         } else {
             AsyncNioCompletionHandler newHandler = this.writeTimeoutCompletionHandler;
-            newHandler.handler(handler, null);   // new AsyncNioCompletionHandler(handler, null);
+            newHandler.handler(handler, null); // new AsyncNioCompletionHandler(handler, null);
             this.writeCompletionHandler = newHandler;
         }
-        doWrite(); //如果不是true，则bodyCallback的执行可能会切换线程
+        doWrite(); // 如果不是true，则bodyCallback的执行可能会切换线程
     }
 
     @Override
@@ -258,7 +272,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
         this.writeAttachment = attachment;
         if (this.writeTimeoutSeconds > 0) {
             AsyncNioCompletionHandler newHandler = this.writeTimeoutCompletionHandler;
-            newHandler.handler(handler, attachment);   // new AsyncNioCompletionHandler(handler, attachment);
+            newHandler.handler(handler, attachment); // new AsyncNioCompletionHandler(handler, attachment);
             this.writeCompletionHandler = newHandler;
             newHandler.timeoutFuture = ioGroup.scheduleTimeout(newHandler, this.writeTimeoutSeconds, TimeUnit.SECONDS);
         } else {
@@ -268,7 +282,8 @@ abstract class AsyncNioConnection extends AsyncConnection {
     }
 
     @Override
-    public <A> void writeImpl(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
+    public <A> void writeImpl(
+            ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
         Objects.requireNonNull(srcs);
         Objects.requireNonNull(handler);
         if (!this.isConnected()) {
@@ -286,7 +301,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
         this.writeAttachment = attachment;
         if (this.writeTimeoutSeconds > 0) {
             AsyncNioCompletionHandler newHandler = this.writeTimeoutCompletionHandler;
-            newHandler.handler(handler, attachment);   // new AsyncNioCompletionHandler(handler, attachment);
+            newHandler.handler(handler, attachment); // new AsyncNioCompletionHandler(handler, attachment);
             this.writeCompletionHandler = newHandler;
             newHandler.timeoutFuture = ioGroup.scheduleTimeout(newHandler, this.writeTimeoutSeconds, TimeUnit.SECONDS);
         } else {
@@ -295,44 +310,44 @@ abstract class AsyncNioConnection extends AsyncConnection {
         doWrite();
     }
 
-//    @Override
-//    public <A> void fastWrite(byte[] data) {
-//        CompletionHandler<Integer, ? super A> handler = this.writeFastHandler;
-//        Objects.requireNonNull(data);
-//        Objects.requireNonNull(handler, "fastHandler is null");
-//        if (!this.isConnected()) {
-//            handler.failed(new NotYetConnectedException(), null);
-//            return;
-//        }
-//        this.writePending = true;
-//        this.fastWriteQueue.offer(data);
-//        this.fastWriteCount.incrementAndGet();
-//        this.writeCompletionHandler = (CompletionHandler) handler;
-//        this.writeAttachment = null;
-//        try {
-//            if (writeKey == null) {
-//                ioWriteThread.register(selector -> {
-//                    try {
-//                        if (writeKey == null) {
-//                            writeKey = keyFor(selector);
-//                        }
-//                        if (writeKey == null) {
-//                            writeKey = implRegister(selector, SelectionKey.OP_WRITE);
-//                            writeKey.attach(this);
-//                        } else {
-//                            writeKey.interestOps(writeKey.interestOps() | SelectionKey.OP_WRITE);
-//                        }
-//                    } catch (ClosedChannelException e) {
-//                        handleWrite(0, e);
-//                    }
-//                });
-//            } else {
-//                ioWriteThread.interestOpsOr(writeKey, SelectionKey.OP_WRITE);
-//            }
-//        } catch (Exception e) {
-//            handleWrite(0, e);
-//        }
-//    }
+    //    @Override
+    //    public <A> void fastWrite(byte[] data) {
+    //        CompletionHandler<Integer, ? super A> handler = this.writeFastHandler;
+    //        Objects.requireNonNull(data);
+    //        Objects.requireNonNull(handler, "fastHandler is null");
+    //        if (!this.isConnected()) {
+    //            handler.failed(new NotYetConnectedException(), null);
+    //            return;
+    //        }
+    //        this.writePending = true;
+    //        this.fastWriteQueue.offer(data);
+    //        this.fastWriteCount.incrementAndGet();
+    //        this.writeCompletionHandler = (CompletionHandler) handler;
+    //        this.writeAttachment = null;
+    //        try {
+    //            if (writeKey == null) {
+    //                ioWriteThread.register(selector -> {
+    //                    try {
+    //                        if (writeKey == null) {
+    //                            writeKey = keyFor(selector);
+    //                        }
+    //                        if (writeKey == null) {
+    //                            writeKey = implRegister(selector, SelectionKey.OP_WRITE);
+    //                            writeKey.attach(this);
+    //                        } else {
+    //                            writeKey.interestOps(writeKey.interestOps() | SelectionKey.OP_WRITE);
+    //                        }
+    //                    } catch (ClosedChannelException e) {
+    //                        handleWrite(0, e);
+    //                    }
+    //                });
+    //            } else {
+    //                ioWriteThread.interestOpsOr(writeKey, SelectionKey.OP_WRITE);
+    //            }
+    //        } catch (Exception e) {
+    //            handleWrite(0, e);
+    //        }
+    //    }
     public void doRead(boolean direct) {
         try {
             this.readTime = System.currentTimeMillis();
@@ -380,40 +395,41 @@ abstract class AsyncNioConnection extends AsyncConnection {
             boolean hasRemain = true;
             boolean writeCompleted = true;
             boolean error = false;
-//            if (writeByteBuffer == null && writeByteBuffers == null && writeByteTuple1Array == null && fastWriteCount.get() > 0) {
-//                final ByteBuffer buffer = pollWriteBuffer();
-//                ByteBufferWriter writer = null;
-//                byte[] item;
-//                while ((item = fastWriteQueue.poll()) != null) {
-//                    fastWriteCount.decrementAndGet();
-//                    if (writer != null) {
-//                        writer.put(item);
-//                    } else if (buffer.remaining() >= item.length) {
-//                        buffer.put(item);
-//                    } else {
-//                        writer = ByteBufferWriter.create(getWriteBufferSupplier(), buffer);
-//                        writer.put(item);
-//                    }
-//                }
-//                this.writeBuffersOffset = 0;
-//                if (writer == null) {
-//                    this.writeByteBuffer = buffer.flip();
-//                    this.writeBuffersLength = 0;
-//                } else {
-//                    this.writeByteBuffers = writer.toBuffers();
-//                    this.writeBuffersLength = this.writeByteBuffers.length;
-//                }
-//                this.writeByteTuple1Array = null;
-//                this.writeByteTuple1Offset = 0;
-//                this.writeByteTuple1Length = 0;
-//                this.writeByteTuple2Array = null;
-//                this.writeByteTuple2Offset = 0;
-//                this.writeByteTuple2Length = 0;
-//            }
+            //            if (writeByteBuffer == null && writeByteBuffers == null && writeByteTuple1Array == null &&
+            // fastWriteCount.get() > 0) {
+            //                final ByteBuffer buffer = pollWriteBuffer();
+            //                ByteBufferWriter writer = null;
+            //                byte[] item;
+            //                while ((item = fastWriteQueue.poll()) != null) {
+            //                    fastWriteCount.decrementAndGet();
+            //                    if (writer != null) {
+            //                        writer.put(item);
+            //                    } else if (buffer.remaining() >= item.length) {
+            //                        buffer.put(item);
+            //                    } else {
+            //                        writer = ByteBufferWriter.create(getWriteBufferSupplier(), buffer);
+            //                        writer.put(item);
+            //                    }
+            //                }
+            //                this.writeBuffersOffset = 0;
+            //                if (writer == null) {
+            //                    this.writeByteBuffer = buffer.flip();
+            //                    this.writeBuffersLength = 0;
+            //                } else {
+            //                    this.writeByteBuffers = writer.toBuffers();
+            //                    this.writeBuffersLength = this.writeByteBuffers.length;
+            //                }
+            //                this.writeByteTuple1Array = null;
+            //                this.writeByteTuple1Offset = 0;
+            //                this.writeByteTuple1Length = 0;
+            //                this.writeByteTuple2Array = null;
+            //                this.writeByteTuple2Offset = 0;
+            //                this.writeByteTuple2Length = 0;
+            //            }
 
             int batchOffset = writeBuffersOffset;
             int batchLength = writeBuffersLength;
-            while (hasRemain) { //必须要将buffer写完为止
+            while (hasRemain) { // 必须要将buffer写完为止
                 if (writeByteTuple1Array != null) {
                     final ByteBuffer buffer = pollWriteBuffer();
                     if (buffer.remaining() >= writeByteTuple1Length + writeByteTuple2Length) {
@@ -475,9 +491,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
                 if (writeCount == 0) {
                     if (hasRemain) {
-                        //writeCompleted = false;
-                        //writeTotal = totalCount;
-                        continue;  //要全部输出完才返回
+                        // writeCompleted = false;
+                        // writeTotal = totalCount;
+                        continue; // 要全部输出完才返回
                     }
                     break;
                 } else if (writeCount < 0) {
@@ -496,9 +512,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
                 handleWrite(totalCount, new ClosedChannelException());
             } else if (writeCompleted && (totalCount != 0 || !hasRemain)) {
                 handleWrite(this.writeTotal + totalCount, null);
-//                if (fastWriteCount.get() > 0) {
-//                    doWrite();
-//                }
+                //                if (fastWriteCount.get() > 0) {
+                //                    doWrite();
+                //                }
             } else if (writeKey == null) {
                 ioWriteThread.register(selector -> {
                     try {
@@ -533,7 +549,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
         this.connectCompletionHandler = null;
         this.connectAttachment = null;
-        this.connectPending = false;//必须放最后
+        this.connectPending = false; // 必须放最后
 
         if (handler != null) {
             if (t == null) {
@@ -547,10 +563,10 @@ abstract class AsyncNioConnection extends AsyncConnection {
     protected void handleRead(final int totalCount, Throwable t) {
         CompletionHandler<Integer, ByteBuffer> handler = this.readCompletionHandler;
         ByteBuffer attach = this.readByteBuffer;
-        //清空读参数
+        // 清空读参数
         this.readCompletionHandler = null;
         this.readByteBuffer = null;
-        this.readPending = false; //必须放最后
+        this.readPending = false; // 必须放最后
 
         if (handler == null) {
             if (t == null) {
@@ -570,7 +586,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
     protected void handleWrite(final int totalCount, Throwable t) {
         CompletionHandler<Integer, Object> handler = this.writeCompletionHandler;
         Object attach = this.writeAttachment;
-        //清空写参数
+        // 清空写参数
         this.writeCompletionHandler = null;
         this.writeAttachment = null;
         this.writeByteBuffer = null;
@@ -578,7 +594,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
         this.writeBuffersOffset = 0;
         this.writeBuffersLength = 0;
         this.writeTotal = 0;
-        this.writePending = false; //必须放最后
+        this.writePending = false; // 必须放最后
 
         if (t == null) {
             handler.completed(totalCount, attach);
@@ -662,9 +678,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
                 } catch (Exception e) {
                     throw new IOException(e);
                 }
-
             }
-
         };
     }
 

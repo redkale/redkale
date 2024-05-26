@@ -11,8 +11,7 @@ import org.redkale.convert.ConvertColumn;
 /**
  * 与ColumnNameNode、ColumnExpNode组合，用于复杂的字段表达式 。
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.0.0
@@ -23,10 +22,9 @@ public class ColumnFuncNode implements ColumnNode {
     protected FilterFunc func;
 
     @ConvertColumn(index = 2)
-    protected ColumnNode value;//类型只能是ColumnNameNode、ColumnExpNode、ColumnFuncNode
+    protected ColumnNode value; // 类型只能是ColumnNameNode、ColumnExpNode、ColumnFuncNode
 
-    public ColumnFuncNode() {
-    }
+    public ColumnFuncNode() {}
 
     public ColumnFuncNode(FilterFunc func, Serializable node) {
         this.func = func;
@@ -48,9 +46,8 @@ public class ColumnFuncNode implements ColumnNode {
     }
 
     /**
-     * @see org.redkale.source.ColumnNodes#avg(org.redkale.source.ColumnNode) 
+     * @see org.redkale.source.ColumnNodes#avg(org.redkale.source.ColumnNode)
      * @param node Serializable
-     *
      * @return ColumnFuncNode
      * @deprecated 2.8.0
      */
@@ -62,7 +59,6 @@ public class ColumnFuncNode implements ColumnNode {
     /**
      * @see org.redkale.source.ColumnNodes#count(org.redkale.source.ColumnNode)
      * @param node Serializable
-     *
      * @return ColumnFuncNode
      * @deprecated 2.8.0
      */
@@ -74,7 +70,6 @@ public class ColumnFuncNode implements ColumnNode {
     /**
      * @see org.redkale.source.ColumnNodes#distinctCount(org.redkale.source.ColumnNode)
      * @param node Serializable
-     *
      * @return ColumnFuncNode
      * @deprecated 2.8.0
      */
@@ -86,7 +81,6 @@ public class ColumnFuncNode implements ColumnNode {
     /**
      * @see org.redkale.source.ColumnNodes#max(org.redkale.source.ColumnNode)
      * @param node Serializable
-     *
      * @return ColumnFuncNode
      * @deprecated 2.8.0
      */
@@ -98,7 +92,6 @@ public class ColumnFuncNode implements ColumnNode {
     /**
      * @see org.redkale.source.ColumnNodes#min(org.redkale.source.ColumnNode)
      * @param node Serializable
-     *
      * @return ColumnFuncNode
      * @deprecated 2.8.0
      */
@@ -110,7 +103,6 @@ public class ColumnFuncNode implements ColumnNode {
     /**
      * @see org.redkale.source.ColumnNodes#sum(org.redkale.source.ColumnNode)
      * @param node Serializable
-     *
      * @return ColumnFuncNode
      * @deprecated 2.8.0
      */

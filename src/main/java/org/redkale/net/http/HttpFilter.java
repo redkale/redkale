@@ -9,18 +9,16 @@ import org.redkale.net.Filter;
 import org.redkale.util.AnyValue;
 
 /**
- * HTTP 过滤器  <br>
+ * HTTP 过滤器 <br>
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
 public abstract class HttpFilter extends Filter<HttpContext, HttpRequest, HttpResponse> {
 
-    //Server执行start后运行此方法
-    protected void postStart(HttpContext context, AnyValue config) {
-    }
+    // Server执行start后运行此方法
+    protected void postStart(HttpContext context, AnyValue config) {}
 
     protected void setMethod(HttpRequest request, String method) {
         request.setMethod(method);
@@ -77,5 +75,4 @@ public abstract class HttpFilter extends Filter<HttpContext, HttpRequest, HttpRe
     protected void thenEvent(HttpResponse response, HttpFilter filter) {
         response.thenEvent(filter);
     }
-
 }

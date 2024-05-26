@@ -7,33 +7,30 @@ package org.redkale.source;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 import java.lang.annotation.*;
 
 /**
+ * 搜索引擎的数据Entity依附在setter、getter方法、字段进行简单的配置 <br>
  *
- * 搜索引擎的数据Entity依附在setter、getter方法、字段进行简单的配置  <br>
- *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.4.0
- * 
- * @deprecated  replaced by org.redkale.persistence.SearchColumn
- * @see  org.redkale.persistence.SearchColumn
+ * @deprecated replaced by org.redkale.persistence.SearchColumn
+ * @see org.redkale.persistence.SearchColumn
  */
 @Deprecated(since = "2.8.0")
 @Target({FIELD})
 @Retention(RUNTIME)
 public @interface SearchColumn {
 
-    //高亮显示参数
+    // 高亮显示参数
     public static class HighLights {
 
         public static final String HIGHLIGHT_NAME_ID = "#[id]";
 
         public static final String HIGHLIGHT_NAME_INDEX = "#[index]";
-
     }
 
     /**
@@ -100,5 +97,4 @@ public @interface SearchColumn {
      * @return String
      */
     String searchAnalyzer() default "";
-
 }

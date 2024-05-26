@@ -5,23 +5,19 @@
  */
 package org.redkale.net.http;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 
 /**
  * 标记在{@link org.redkale.net.http.RestWebSocket}的接收消息方法上; <br>
  * 注意：被标记的方法必须同时符合以下条件: <br>
- * 1、必须修饰为public
- * 2、不能修饰为final和static
- * 3、返回值必须是void
- * 4、不能throws检查型异常
+ * 1、必须修饰为public 2、不能修饰为final和static 3、返回值必须是void 4、不能throws检查型异常 <br>
  *
- * <br><p>
- * 详情见: https://redkale.org
- * 
+ * <p>详情见: https://redkale.org
+ *
  * @see org.redkale.net.http.RestWebSocket
- *
  * @author zhangjx
  */
 @Documented

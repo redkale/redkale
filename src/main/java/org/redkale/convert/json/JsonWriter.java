@@ -6,20 +6,21 @@
 package org.redkale.convert.json;
 
 import java.lang.reflect.Type;
-import org.redkale.convert.*;
 import org.redkale.annotation.ClassDepends;
+import org.redkale.convert.*;
 
 /**
- *
  * writeTo系列的方法输出的字符不能含特殊字符
- * <p>
- * 详情见: https://redkale.org
+ *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
 public abstract class JsonWriter extends Writer {
 
-    protected static final int DEFAULT_SIZE = Integer.getInteger("redkale.convert.json.writer.buffer.defsize", Integer.getInteger("redkale.convert.writer.buffer.defsize", 1024));
+    protected static final int DEFAULT_SIZE = Integer.getInteger(
+            "redkale.convert.json.writer.buffer.defsize",
+            Integer.getInteger("redkale.convert.writer.buffer.defsize", 1024));
 
     protected JsonWriter() {
         this.features = JsonFactory.root().getFeatures();
@@ -34,14 +35,14 @@ public abstract class JsonWriter extends Writer {
         return this.objExtFunc == null && this.objFieldFunc == null;
     }
 
-    //-----------------------------------------------------------------------
-    public abstract void writeTo(final char ch); //只能是 0 - 127 的字符
+    // -----------------------------------------------------------------------
+    public abstract void writeTo(final char ch); // 只能是 0 - 127 的字符
 
-    public abstract void writeTo(final char[] chs, final int start, final int len); //只能是 0 - 127 的字符
+    public abstract void writeTo(final char[] chs, final int start, final int len); // 只能是 0 - 127 的字符
 
-    public abstract void writeTo(final byte ch); //只能是 0 - 127 的字符
+    public abstract void writeTo(final byte ch); // 只能是 0 - 127 的字符
 
-    public abstract void writeTo(final byte[] chs, final int start, final int len); //只能是 0 - 127 的字符
+    public abstract void writeTo(final byte[] chs, final int start, final int len); // 只能是 0 - 127 的字符
 
     /**
      * <b>注意：</b> 该String值不能为null且不会进行转义， 只用于不含需要转义字符的字符串，例如enum、double、BigInteger、BigDecimal转换的String
@@ -76,13 +77,14 @@ public abstract class JsonWriter extends Writer {
     @ClassDepends
     public abstract void writeLastFieldLatin1Value(final byte[] fieldBytes, final String value);
 
-    //firstFieldBytes 必须带{开头
+    // firstFieldBytes 必须带{开头
     @ClassDepends
     public abstract void writeObjectByOnlyOneLatin1FieldValue(final byte[] firstFieldBytes, final String value);
 
-    //firstFieldBytes 必须带{开头, lastFieldBytes必须,开头
+    // firstFieldBytes 必须带{开头, lastFieldBytes必须,开头
     @ClassDepends
-    public abstract void writeObjectByOnlyTwoIntFieldValue(final byte[] firstFieldBytes, final int value1, final byte[] lastFieldBytes, final int value2);
+    public abstract void writeObjectByOnlyTwoIntFieldValue(
+            final byte[] firstFieldBytes, final int value1, final byte[] lastFieldBytes, final int value2);
 
     @Override
     @ClassDepends
@@ -102,7 +104,7 @@ public abstract class JsonWriter extends Writer {
     @ClassDepends
     public abstract void writeString(String value);
 
-    @Override //只容许JsonBytesWriter重写此方法
+    @Override // 只容许JsonBytesWriter重写此方法
     public void writeFieldName(EnMember member, String fieldName, Type fieldType, int fieldPos) {
         if (this.comma) {
             writeTo(',');
@@ -120,8 +122,8 @@ public abstract class JsonWriter extends Writer {
         writeLatin1To(true, value);
     }
 
-    //----------------------------------------------------------------------------------------------
-    public final void writeTo(final char... chs) { //只能是 0 - 127 的字符
+    // ----------------------------------------------------------------------------------------------
+    public final void writeTo(final char... chs) { // 只能是 0 - 127 的字符
         writeTo(chs, 0, chs.length);
     }
 
@@ -130,7 +132,7 @@ public abstract class JsonWriter extends Writer {
         writeInt(value);
     }
 
-    public final void writeTo(final byte[] chs) { //只能是 0 - 127 的字符
+    public final void writeTo(final byte[] chs) { // 只能是 0 - 127 的字符
         writeTo(chs, 0, chs.length);
     }
 
@@ -178,8 +180,7 @@ public abstract class JsonWriter extends Writer {
     }
 
     @Override
-    public final void writeClassName(String clazz) {
-    }
+    public final void writeClassName(String clazz) {}
 
     @Override
     public final int writeObjectB(Object obj) {
@@ -199,7 +200,8 @@ public abstract class JsonWriter extends Writer {
     }
 
     @Override
-    public final int writeArrayB(int size, Encodeable arrayEncoder, Encodeable<Writer, Object> componentEncoder, Object obj) {
+    public final int writeArrayB(
+            int size, Encodeable arrayEncoder, Encodeable<Writer, Object> componentEncoder, Object obj) {
         writeTo('[');
         return -1;
     }
@@ -215,7 +217,8 @@ public abstract class JsonWriter extends Writer {
     }
 
     @Override
-    public final int writeMapB(int size, Encodeable<Writer, Object> keyEncoder, Encodeable<Writer, Object> valueEncoder, Object obj) {
+    public final int writeMapB(
+            int size, Encodeable<Writer, Object> keyEncoder, Encodeable<Writer, Object> valueEncoder, Object obj) {
         writeTo('{');
         return -1;
     }
@@ -230,7 +233,7 @@ public abstract class JsonWriter extends Writer {
         writeTo('}');
     }
 
-    final static char[] DigitTens = {
+    static final char[] DigitTens = {
         '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
         '1', '1', '1', '1', '1', '1', '1', '1', '1', '1',
         '2', '2', '2', '2', '2', '2', '2', '2', '2', '2',
@@ -243,7 +246,7 @@ public abstract class JsonWriter extends Writer {
         '9', '9', '9', '9', '9', '9', '9', '9', '9', '9'
     };
 
-    final static char[] DigitOnes = {
+    static final char[] DigitOnes = {
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -256,7 +259,7 @@ public abstract class JsonWriter extends Writer {
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
     };
 
-    final static char[] digits = {
+    static final char[] digits = {
         '0', '1', '2', '3', '4', '5',
         '6', '7', '8', '9', 'a', 'b',
         'c', 'd', 'e', 'f', 'g', 'h',
@@ -265,5 +268,5 @@ public abstract class JsonWriter extends Writer {
         'u', 'v', 'w', 'x', 'y', 'z'
     };
 
-    final static int[] sizeTable = {9, 99, 999, 9999, 99999, 999999, 9999999, 99999999, 999999999, Integer.MAX_VALUE};
+    static final int[] sizeTable = {9, 99, 999, 9999, 99999, 999999, 9999999, 99999999, 999999999, Integer.MAX_VALUE};
 }

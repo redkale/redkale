@@ -9,15 +9,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 class MultiHashKeys {
 
     public static MultiHashKey create(String[] paramNames, String key) {
         Objects.requireNonNull(key, "key for " + MultiHashKey.class.getSimpleName() + " is null");
-        if (key.indexOf('{') < 0) { //字符串常量
+        if (key.indexOf('{') < 0) { // 字符串常量
             return new StringKey(key);
         } else {
             Objects.requireNonNull(paramNames, "paramNames for " + MultiHashKey.class.getSimpleName() + " is null");
@@ -93,7 +90,6 @@ class MultiHashKeys {
         public String toString() {
             return ArrayKey.class.getSimpleName() + Arrays.toString(keys);
         }
-
     }
 
     static class ParamsKey implements MultiHashKey {
@@ -141,7 +137,8 @@ class MultiHashKeys {
             for (int i = 1; i < subs.length; i++) {
                 String fieldName = subs[i];
                 Class clz = val.getClass();
-                Attribute attr = attrCache.computeIfAbsent(clz.getName() + ":" + fieldName, k -> Attribute.create(clz, fieldName));
+                Attribute attr = attrCache.computeIfAbsent(
+                        clz.getName() + ":" + fieldName, k -> Attribute.create(clz, fieldName));
                 val = attr.get(val);
                 if (val == null) {
                     return val;
@@ -213,7 +210,6 @@ class MultiHashKeys {
     }
 
     private MultiHashKeys() {
-        //do nothing
+        // do nothing
     }
-
 }

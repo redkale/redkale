@@ -11,11 +11,9 @@ import java.nio.ByteBuffer;
 /**
  * MessageRecord的MessageCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.1.0
  */
 public class MessageRecordSerializer implements MessageCoder<MessageRecord> {
@@ -26,7 +24,7 @@ public class MessageRecordSerializer implements MessageCoder<MessageRecord> {
         return instance;
     }
 
-    //消息内容的类型
+    // 消息内容的类型
     @Override
     public byte ctype() {
         return 0;
@@ -42,17 +40,23 @@ public class MessageRecordSerializer implements MessageCoder<MessageRecord> {
         byte[] topic = MessageCoder.getBytes(data.getTopic());
         byte[] respTopic = MessageCoder.getBytes(data.getRespTopic());
         byte[] traceid = MessageCoder.getBytes(data.getTraceid());
-        int count = 8 //seqid
-            + 1 //ctype
-            + 4 //version
-            + 4 //flag
-            + 8 //createTime
-            + 2 + userid.length
-            + 2 + groupid.length
-            + 2 + topic.length
-            + 2 + respTopic.length
-            + 2 + traceid.length
-            + 4 + (data.getContent() == null ? 0 : data.getContent().length);
+        int count = 8 // seqid
+                + 1 // ctype
+                + 4 // version
+                + 4 // flag
+                + 8 // createTime
+                + 2
+                + userid.length
+                + 2
+                + groupid.length
+                + 2
+                + topic.length
+                + 2
+                + respTopic.length
+                + 2
+                + traceid.length
+                + 4
+                + (data.getContent() == null ? 0 : data.getContent().length);
         final byte[] bs = new byte[count];
         ByteBuffer buffer = ByteBuffer.wrap(bs);
         buffer.putLong(data.getSeqid());
@@ -119,7 +123,7 @@ public class MessageRecordSerializer implements MessageCoder<MessageRecord> {
             content = new byte[contentlen];
             buffer.get(content);
         }
-        return new MessageRecord(seqid, ctype, version, flag, createTime, userid, groupid, topic, respTopic, traceid, content);
+        return new MessageRecord(
+                seqid, ctype, version, flag, createTime, userid, groupid, topic, respTopic, traceid, content);
     }
-
 }

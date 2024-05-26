@@ -6,10 +6,7 @@ import org.junit.jupiter.api.*;
 import org.redkale.convert.ConvertImpl;
 import org.redkale.convert.json.JsonConvert;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class JsonMultiObjectDecoderTest {
 
     private boolean main;
@@ -42,9 +39,9 @@ public class JsonMultiObjectDecoderTest {
         }
     }
 
-    //[{"1", "2", "3"}, {"2", "3"}, {"4", "2", "3"}, {"6", "7", "8"}, {"6", "5"}, {"6", "9"}]
+    // [{"1", "2", "3"}, {"2", "3"}, {"4", "2", "3"}, {"6", "7", "8"}, {"6", "5"}, {"6", "9"}]
     @ConvertImpl(types = {Bean123.class, Bean23.class, Bean423.class, Bean678.class, Bean65.class, Bean69.class})
-    public static abstract class AbstractBean {
+    public abstract static class AbstractBean {
 
         @Override
         public String toString() {
@@ -118,6 +115,5 @@ public class JsonMultiObjectDecoderTest {
         public String getA5() {
             return a5;
         }
-
     }
 }

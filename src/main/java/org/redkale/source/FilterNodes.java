@@ -3,18 +3,18 @@
  */
 package org.redkale.source;
 
+import static org.redkale.source.FilterExpress.*;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.stream.Stream;
-import static org.redkale.source.FilterExpress.*;
 import org.redkale.util.LambdaFunction;
 import org.redkale.util.LambdaSupplier;
 
 /**
  * FilterNode的工具类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.8.0
@@ -22,7 +22,7 @@ import org.redkale.util.LambdaSupplier;
 public final class FilterNodes {
 
     private FilterNodes() {
-        //do nothing
+        // do nothing
     }
 
     public static FilterNode create(String column, Serializable value) {
@@ -45,7 +45,8 @@ public final class FilterNodes {
         return new FilterNode(LambdaFunction.readColumn(func), null, value);
     }
 
-    public static <T, F extends Serializable> FilterNode create(LambdaFunction<T, F> func, FilterExpress express, F value) {
+    public static <T, F extends Serializable> FilterNode create(
+            LambdaFunction<T, F> func, FilterExpress express, F value) {
         return new FilterNode(LambdaFunction.readColumn(func), express, value);
     }
 
@@ -521,24 +522,26 @@ public final class FilterNodes {
         return new FilterNode(LambdaFunction.readColumn(func), FV_DIV, value);
     }
 
-    //----------------------------------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------------------------------
     public static FilterJoinNode joinInner(Class joinClass, String joinColumn, String column, Serializable value) {
-        return joinInner(joinClass, new String[]{joinColumn}, column, value);
+        return joinInner(joinClass, new String[] {joinColumn}, column, value);
     }
 
-    public static FilterJoinNode joinInner(Class joinClass, String joinColumn, String column, FilterExpress express, Serializable value) {
-        return joinInner(joinClass, new String[]{joinColumn}, column, express, value);
+    public static FilterJoinNode joinInner(
+            Class joinClass, String joinColumn, String column, FilterExpress express, Serializable value) {
+        return joinInner(joinClass, new String[] {joinColumn}, column, express, value);
     }
 
     public static FilterJoinNode joinInner(Class joinClass, String[] joinColumns, String column, Serializable value) {
         return joinInner(joinClass, joinColumns, column, null, value);
     }
 
-    public static FilterJoinNode joinInner(Class joinClass, String[] joinColumns, String column, FilterExpress express, Serializable value) {
+    public static FilterJoinNode joinInner(
+            Class joinClass, String[] joinColumns, String column, FilterExpress express, Serializable value) {
         return new FilterJoinNode(FilterJoinType.INNER, joinClass, joinColumns, column, express, value);
     }
 
-    //----------------------------------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------------------------------
     static FilterExpress oldExpress(FilterExpress express) {
         switch (express) {
             case EQUAL:
@@ -603,5 +606,4 @@ public final class FilterNodes {
                 return express;
         }
     }
-
 }

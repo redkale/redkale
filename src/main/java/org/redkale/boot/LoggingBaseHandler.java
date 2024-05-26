@@ -8,36 +8,36 @@ import org.redkale.util.Traces;
 
 /**
  * Handler基类
- * <p>
- * 详情见: https://redkale.org
+ *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.7.0
  */
 public abstract class LoggingBaseHandler extends Handler {
 
-    //public static final String FORMATTER_FORMAT = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL %4$s %2$s%n%5$s%6$s%n";
-    //无threadName、TID
+    // public static final String FORMATTER_FORMAT = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL %4$s %2$s%n%5$s%6$s%n";
+    // 无threadName、TID
     public static final String FORMATTER_FORMAT = "[%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL] %4$s %2$s\r\n%5$s%6$s\r\n";
 
-    //有threadName
-    public static final String FORMATTER_FORMAT2 = "[%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL] [%7$s] %4$s %2$s\r\n%5$s%6$s\r\n";
+    // 有threadName
+    public static final String FORMATTER_FORMAT2 =
+            "[%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL] [%7$s] %4$s %2$s\r\n%5$s%6$s\r\n";
 
-    //有threadName、TID
-    public static final String FORMATTER_FORMAT3 = "[%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL] [%7$s] %8$s %4$s %2$s\r\n%5$s%6$s\r\n";
+    // 有threadName、TID
+    public static final String FORMATTER_FORMAT3 =
+            "[%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL] [%7$s] %8$s %4$s %2$s\r\n%5$s%6$s\r\n";
 
-    static boolean traceEnable = false; //防止设置system.property前调用Traces类导致enable提前初始化
+    static boolean traceEnable = false; // 防止设置system.property前调用Traces类导致enable提前初始化
 
-    /**
-     * 默认的日志时间格式化类
-     * 与SimpleFormatter的区别在于level不使用本地化
-     *
-     */
+    /** 默认的日志时间格式化类 与SimpleFormatter的区别在于level不使用本地化 */
     public static class LoggingFormater extends Formatter {
 
         @Override
         public String format(LogRecord log) {
-            if (log.getThrown() == null && log.getMessage() != null && log.getMessage().startsWith("------")) {
+            if (log.getThrown() == null
+                    && log.getMessage() != null
+                    && log.getMessage().startsWith("------")) {
                 return formatMessage(log) + "\r\n";
             }
             String source;
@@ -67,33 +67,36 @@ public abstract class LoggingBaseHandler extends Handler {
             Object[] params = log.getParameters();
             if (params != null) {
                 if (params.length == 1) {
-                    return String.format(FORMATTER_FORMAT2,
-                        log.getInstant().toEpochMilli(),
-                        source,
-                        log.getLoggerName(),
-                        log.getLevel().getName(),
-                        message,
-                        throwable,
-                        params[0]);
+                    return String.format(
+                            FORMATTER_FORMAT2,
+                            log.getInstant().toEpochMilli(),
+                            source,
+                            log.getLoggerName(),
+                            log.getLevel().getName(),
+                            message,
+                            throwable,
+                            params[0]);
                 } else if (params.length == 2) {
-                    return String.format(FORMATTER_FORMAT3,
-                        log.getInstant().toEpochMilli(),
-                        source,
-                        log.getLoggerName(),
-                        log.getLevel().getName(),
-                        message,
-                        throwable,
-                        params[0],
-                        params[1]);
+                    return String.format(
+                            FORMATTER_FORMAT3,
+                            log.getInstant().toEpochMilli(),
+                            source,
+                            log.getLoggerName(),
+                            log.getLevel().getName(),
+                            message,
+                            throwable,
+                            params[0],
+                            params[1]);
                 }
             }
-            return String.format(FORMATTER_FORMAT,
-                log.getInstant().toEpochMilli(),
-                source,
-                log.getLoggerName(),
-                log.getLevel().getName(),
-                message,
-                throwable);
+            return String.format(
+                    FORMATTER_FORMAT,
+                    log.getInstant().toEpochMilli(),
+                    source,
+                    log.getLoggerName(),
+                    log.getLevel().getName(),
+                    message,
+                    throwable);
         }
     }
 
@@ -108,9 +111,9 @@ public abstract class LoggingBaseHandler extends Handler {
             }
         }
         if (traceid == null) {
-            log.setParameters(new String[]{Thread.currentThread().getName()});
+            log.setParameters(new String[] {Thread.currentThread().getName()});
         } else {
-            log.setParameters(new String[]{Thread.currentThread().getName(), traceid});
+            log.setParameters(new String[] {Thread.currentThread().getName(), traceid});
         }
     }
 
@@ -118,7 +121,8 @@ public abstract class LoggingBaseHandler extends Handler {
         try {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             final PrintStream ps = new PrintStream(out);
-            final String handlerName = LoggingFileHandler.LoggingConsoleHandler.class.getName(); //java.util.logging.ConsoleHandler
+            final String handlerName =
+                    LoggingFileHandler.LoggingConsoleHandler.class.getName(); // java.util.logging.ConsoleHandler
             ps.println("handlers = " + handlerName);
             ps.println(".level = FINEST");
             ps.println("jdk.level = INFO");
@@ -131,8 +135,7 @@ public abstract class LoggingBaseHandler extends Handler {
             ps.println(handlerName + ".formatter = " + LoggingFormater.class.getName());
             LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(out.toByteArray()));
         } catch (Exception e) {
-            //do nothing
+            // do nothing
         }
     }
-
 }

@@ -11,12 +11,10 @@ import org.redkale.util.AnyValue;
 /**
  * AnyValue的Decoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
- *
  * @since 2.5.0
  */
 public class AnyValueDecoder<R extends Reader> implements Decodeable<R, AnyValue> {
@@ -36,5 +34,4 @@ public class AnyValueDecoder<R extends Reader> implements Decodeable<R, AnyValue
     public Type getType() {
         return AnyValue.class;
     }
-
 }

@@ -15,10 +15,7 @@ import org.redkale.net.http.WebClient;
 import org.redkale.net.http.WebRequest;
 import org.redkale.util.AnyValueWriter;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class HttpSimpleClientTest {
 
     private static int port = 0;
@@ -40,14 +37,15 @@ public class HttpSimpleClientTest {
     @Test
     public void run() throws Exception {
         runServer();
-        //Utility.sleep(50000); 
+        // Utility.sleep(50000);
         final AsyncIOGroup asyncGroup = new AsyncIOGroup(8192, 16);
         asyncGroup.start();
         WebClient client = WebClient.create(asyncGroup);
         InetSocketAddress addr = new InetSocketAddress("127.0.0.1", port);
         {
             WebRequest req = WebRequest.createPostPath("/test").param("id", 100);
-            System.out.println(client.getAsync("http://127.0.0.1:" + port + req.getPath() + "?id=100").join());
+            System.out.println(client.getAsync("http://127.0.0.1:" + port + req.getPath() + "?id=100")
+                    .join());
             System.out.println(client.sendAsync(addr, req).join());
         }
         final int count = 10;
@@ -56,10 +54,11 @@ public class HttpSimpleClientTest {
             for (int i = 100; i < 100 + count; i++) {
                 final int index = i;
                 WebRequest req = WebRequest.createPostPath("/test").param("id", index);
-                client.getAsync("http://127.0.0.1:" + port + req.getPath() + "?id=" + index).whenComplete((v, t) -> {
-                    cdl.countDown();
-                    Assertions.assertEquals("ok-" + index, new String((byte[]) v.getResult()));
-                });
+                client.getAsync("http://127.0.0.1:" + port + req.getPath() + "?id=" + index)
+                        .whenComplete((v, t) -> {
+                            cdl.countDown();
+                            Assertions.assertEquals("ok-" + index, new String((byte[]) v.getResult()));
+                        });
             }
             cdl.await();
             System.out.println("结束并发1");

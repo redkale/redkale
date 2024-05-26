@@ -17,12 +17,9 @@ import org.redkale.boot.Application;
 import org.redkale.util.*;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.1.0
  */
 class AsyncNioTcpProtocolServer extends ProtocolServer {
@@ -90,15 +87,23 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
         LongAdder createResponseCounter = new LongAdder();
         LongAdder cycleResponseCounter = new LongAdder();
 
-        ByteBufferPool safeBufferPool = server.createSafeBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
-        ObjectPool<Response> safeResponsePool = server.createSafeResponsePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
+        ByteBufferPool safeBufferPool =
+                server.createSafeBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
+        ObjectPool<Response> safeResponsePool =
+                server.createSafeResponsePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
         final int respPoolMax = server.getResponsePoolSize();
         ThreadLocal<ObjectPool<Response>> localResponsePool = Utility.withInitialThreadLocal(() -> {
             if (!(Thread.currentThread() instanceof WorkThread)) {
                 return null;
             }
-            return ObjectPool.createUnsafePool(safeResponsePool, safeResponsePool.getCreatCounter(),
-                safeResponsePool.getCycleCounter(), respPoolMax, safeResponsePool.getCreator(), safeResponsePool.getPrepare(), safeResponsePool.getRecycler());
+            return ObjectPool.createUnsafePool(
+                    safeResponsePool,
+                    safeResponsePool.getCreatCounter(),
+                    safeResponsePool.getCycleCounter(),
+                    respPoolMax,
+                    safeResponsePool.getCreator(),
+                    safeResponsePool.getPrepare(),
+                    safeResponsePool.getRecycler());
         });
         this.responseSupplier = () -> {
             ObjectPool<Response> pool = localResponsePool.get();
@@ -116,8 +121,9 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
             ObjectPool<Response> pool = localResponsePool.get();
             (pool == null ? safeResponsePool : pool).accept(v);
         };
-        final String threadNameFormat = Utility.isEmpty(server.name) ? "Redkale-IOServletThread-%s"
-            : ("Redkale-" + server.name.replace("Server-", "") + "-IOServletThread-%s");
+        final String threadNameFormat = Utility.isEmpty(server.name)
+                ? "Redkale-IOServletThread-%s"
+                : ("Redkale-" + server.name.replace("Server-", "") + "-IOServletThread-%s");
         if (this.ioGroup == null) {
             this.ioGroup = new AsyncIOGroup(threadNameFormat, null, safeBufferPool);
             this.ioGroup.start();
@@ -177,8 +183,15 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
         channel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
         ioGroup.connCreateCounter.increment();
         ioGroup.connLivingCounter.increment();
-        AsyncNioTcpConnection conn = new AsyncNioTcpConnection(false, ioGroup,
-            ioReadThread, ioWriteThread, channel, context.getSSLBuilder(), context.getSSLContext(), null);
+        AsyncNioTcpConnection conn = new AsyncNioTcpConnection(
+                false,
+                ioGroup,
+                ioReadThread,
+                ioWriteThread,
+                channel,
+                context.getSSLBuilder(),
+                context.getSSLContext(),
+                null);
         ProtocolCodec codec = new ProtocolCodec(context, responseSupplier, responseConsumer, conn);
         conn.protocolCodec = codec;
         if (conn.sslEngine == null) {

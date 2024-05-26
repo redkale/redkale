@@ -12,10 +12,7 @@ import java.util.concurrent.atomic.*;
 import org.redkale.convert.*;
 import org.redkale.util.ObjectPool;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class ProtobufReader extends Reader {
 
     protected int position = -1;
@@ -32,8 +29,7 @@ public class ProtobufReader extends Reader {
         return ObjectPool.createSafePool(max, (Object... params) -> new ProtobufReader(), null, (t) -> t.recycle());
     }
 
-    public ProtobufReader() {
-    }
+    public ProtobufReader() {}
 
     public ProtobufReader(byte[] bytes) {
         setBytes(bytes, 0, bytes.length);
@@ -92,9 +88,7 @@ public class ProtobufReader extends Reader {
         return Arrays.copyOfRange(this.content, this.position + 1, this.content.length);
     }
 
-    /**
-     * 跳过属性的值
-     */
+    /** 跳过属性的值 */
     @Override
     @SuppressWarnings("unchecked")
     public final void skipValue() {
@@ -125,7 +119,7 @@ public class ProtobufReader extends Reader {
 
     @Override
     public final void readObjectE(final Class clazz) {
-        //do nothing
+        // do nothing
     }
 
     @Override
@@ -135,16 +129,15 @@ public class ProtobufReader extends Reader {
 
     @Override
     public final void readMapE() {
-        //do nothing
+        // do nothing
     }
 
     /**
      * 判断下一个非空白字符是否为[
      *
-     * @param member           DeMember
-     * @param typevals         byte[]
+     * @param member DeMember
+     * @param typevals byte[]
      * @param componentDecoder Decodeable
-     *
      * @return SIGN_NOLENGTH 或 SIGN_NULL
      */
     @Override
@@ -157,11 +150,17 @@ public class ProtobufReader extends Reader {
             return Reader.SIGN_NOLENBUTBYTES;
         }
         Class clazz = (Class) type;
-        if (clazz.isPrimitive() || clazz == Boolean.class || clazz == Byte.class
-            || clazz == Short.class || clazz == Character.class
-            || clazz == Integer.class || clazz == Float.class
-            || clazz == Long.class || clazz == Double.class
-            || clazz == AtomicInteger.class || clazz == AtomicLong.class) {
+        if (clazz.isPrimitive()
+                || clazz == Boolean.class
+                || clazz == Byte.class
+                || clazz == Short.class
+                || clazz == Character.class
+                || clazz == Integer.class
+                || clazz == Float.class
+                || clazz == Long.class
+                || clazz == Double.class
+                || clazz == AtomicInteger.class
+                || clazz == AtomicLong.class) {
             return Reader.SIGN_NOLENBUTBYTES;
         }
         return Reader.SIGN_NOLENGTH;
@@ -169,16 +168,13 @@ public class ProtobufReader extends Reader {
 
     @Override
     public final void readArrayE() {
-        //do nothing
+        // do nothing
     }
 
-    /**
-     * 判断下一个非空白字节是否:
-     *
-     */
+    /** 判断下一个非空白字节是否: */
     @Override
     public final void readBlank() {
-        //do nothing
+        // do nothing
     }
 
     @Override
@@ -189,7 +185,7 @@ public class ProtobufReader extends Reader {
     @Override
     public final int readMemberContentLength(DeMember member, Decodeable decoder) {
         if (member == null && decoder == null) {
-            return -1; //为byte[]
+            return -1; // 为byte[]
         }
         if (member != null) {
             if (member.getDecoder() instanceof ProtobufArrayDecoder) {
@@ -210,11 +206,12 @@ public class ProtobufReader extends Reader {
             }
             return -1;
         }
-        return readRawVarint32(); //readUInt32
+        return readRawVarint32(); // readUInt32
     }
 
     @Override
-    public final DeMember readFieldName(final DeMember[] members, Map<String, DeMember> memberFieldMap, Map<Integer, DeMember> memberTagMap) {
+    public final DeMember readFieldName(
+            final DeMember[] members, Map<String, DeMember> memberFieldMap, Map<Integer, DeMember> memberTagMap) {
         int tag = readTag();
         for (DeMember member : members) {
             if (member.getTag() == tag) {
@@ -225,7 +222,7 @@ public class ProtobufReader extends Reader {
         return null;
     }
 
-    //------------------------------------------------------------
+    // ------------------------------------------------------------
     @Override
     public final boolean readBoolean() {
         return readRawVarint64() != 0;
@@ -247,13 +244,13 @@ public class ProtobufReader extends Reader {
     }
 
     @Override
-    public final int readInt() { //readSInt32
+    public final int readInt() { // readSInt32
         int n = readRawVarint32();
         return (n >>> 1) ^ -(n & 1);
     }
 
     @Override
-    public final long readLong() { //readSInt64
+    public final long readLong() { // readSInt64
         long n = readRawVarint64();
         return (n >>> 1) ^ -(n & 1);
     }
@@ -305,12 +302,11 @@ public class ProtobufReader extends Reader {
      *
      * @param startPosition 起始位置
      * @param contentLength 内容大小， 不确定的传-1
-     *
      * @return 是否存在
      */
     @Override
     public boolean hasNext(int startPosition, int contentLength) {
-        //("-------------: " + startPosition + ", " + contentLength + ", " + this.position);
+        // ("-------------: " + startPosition + ", " + contentLength + ", " + this.position);
         if (startPosition >= 0 && contentLength >= 0) {
             return (this.position) < (startPosition + contentLength);
         }
@@ -326,7 +322,7 @@ public class ProtobufReader extends Reader {
         return bs;
     }
 
-    protected int readRawVarint32() {  //readUInt32
+    protected int readRawVarint32() { // readUInt32
         fastpath:
         {
             int tempPos = this.position;
@@ -351,11 +347,11 @@ public class ProtobufReader extends Reader {
                 x ^= y << 28;
                 x ^= (~0 << 7) ^ (~0 << 14) ^ (~0 << 21) ^ (~0 << 28);
                 if (y < 0
-                    && content[++tempPos] < 0
-                    && content[++tempPos] < 0
-                    && content[++tempPos] < 0
-                    && content[++tempPos] < 0
-                    && content[++tempPos] < 0) {
+                        && content[++tempPos] < 0
+                        && content[++tempPos] < 0
+                        && content[++tempPos] < 0
+                        && content[++tempPos] < 0
+                        && content[++tempPos] < 0) {
                     break fastpath; // Will throw malformedVarint()
                 }
             }
@@ -393,23 +389,17 @@ public class ProtobufReader extends Reader {
             } else if ((x ^= ((long) content[++tempPos] << 42)) >= 0L) {
                 x ^= (~0L << 7) ^ (~0L << 14) ^ (~0L << 21) ^ (~0L << 28) ^ (~0L << 35) ^ (~0L << 42);
             } else if ((x ^= ((long) content[++tempPos] << 49)) < 0L) {
-                x ^= (~0L << 7)
-                    ^ (~0L << 14)
-                    ^ (~0L << 21)
-                    ^ (~0L << 28)
-                    ^ (~0L << 35)
-                    ^ (~0L << 42)
-                    ^ (~0L << 49);
+                x ^= (~0L << 7) ^ (~0L << 14) ^ (~0L << 21) ^ (~0L << 28) ^ (~0L << 35) ^ (~0L << 42) ^ (~0L << 49);
             } else {
                 x ^= ((long) content[++tempPos] << 56);
                 x ^= (~0L << 7)
-                    ^ (~0L << 14)
-                    ^ (~0L << 21)
-                    ^ (~0L << 28)
-                    ^ (~0L << 35)
-                    ^ (~0L << 42)
-                    ^ (~0L << 49)
-                    ^ (~0L << 56);
+                        ^ (~0L << 14)
+                        ^ (~0L << 21)
+                        ^ (~0L << 28)
+                        ^ (~0L << 35)
+                        ^ (~0L << 42)
+                        ^ (~0L << 49)
+                        ^ (~0L << 56);
                 if (x < 0L) {
                     if (content[++tempPos] < 0L) {
                         break fastpath; // Will throw malformedVarint()
@@ -436,20 +426,20 @@ public class ProtobufReader extends Reader {
 
     protected int readRawLittleEndian32() {
         return ((content[++this.position] & 0xff)
-            | ((content[++this.position] & 0xff) << 8)
-            | ((content[++this.position] & 0xff) << 16)
-            | ((content[++this.position] & 0xff) << 24));
+                | ((content[++this.position] & 0xff) << 8)
+                | ((content[++this.position] & 0xff) << 16)
+                | ((content[++this.position] & 0xff) << 24));
     }
 
     protected long readRawLittleEndian64() {
         return ((content[++this.position] & 0xffL)
-            | ((content[++this.position] & 0xffL) << 8)
-            | ((content[++this.position] & 0xffL) << 16)
-            | ((content[++this.position] & 0xffL) << 24)
-            | ((content[++this.position] & 0xffL) << 32)
-            | ((content[++this.position] & 0xffL) << 40)
-            | ((content[++this.position] & 0xffL) << 48)
-            | ((content[++this.position] & 0xffL) << 56));
+                | ((content[++this.position] & 0xffL) << 8)
+                | ((content[++this.position] & 0xffL) << 16)
+                | ((content[++this.position] & 0xffL) << 24)
+                | ((content[++this.position] & 0xffL) << 32)
+                | ((content[++this.position] & 0xffL) << 40)
+                | ((content[++this.position] & 0xffL) << 48)
+                | ((content[++this.position] & 0xffL) << 56));
     }
 
     @Override

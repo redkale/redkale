@@ -16,10 +16,7 @@ import org.redkale.net.http.WebSocketServlet;
 import org.redkale.util.AnyValueWriter;
 import org.redkale.util.TypeToken;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @WebServlet({"/ws/listen"})
 public class VideoWebSocketServlet extends WebSocketServlet {
 
@@ -34,7 +31,6 @@ public class VideoWebSocketServlet extends WebSocketServlet {
         public String username;
 
         public Serializable userid;
-
     }
 
     public VideoWebSocketServlet() {
@@ -46,8 +42,7 @@ public class VideoWebSocketServlet extends WebSocketServlet {
     protected WebSocket createWebSocket() {
         WebSocket socket = new WebSocket() {
 
-            private final TypeToken<Map<String, String>> mapToken = new TypeToken<Map<String, String>>() {
-            };
+            private final TypeToken<Map<String, String>> mapToken = new TypeToken<Map<String, String>>() {};
 
             private boolean repeat = false;
 
@@ -76,10 +71,16 @@ public class VideoWebSocketServlet extends WebSocketServlet {
                     StringBuilder sb = new StringBuilder();
                     for (Map.Entry<Serializable, Entry> en : sessions.entrySet()) {
                         if (sb.length() > 0) sb.append(',');
-                        sb.append("{'userid':'").append(en.getKey()).append("','username':'").append(en.getValue().username).append("'}");
+                        sb.append("{'userid':'")
+                                .append(en.getKey())
+                                .append("','username':'")
+                                .append(en.getValue().username)
+                                .append("'}");
                     }
                     super.send(("{'type':'user_list','users':[" + sb + "]}").replace('\'', '"'));
-                    String msg = ("{'type':'discover_user','user':{'userid':'" + this.getSessionid() + "','username':'" + users.get(this.getSessionid()) + "'}}").replace('\'', '"');
+                    String msg = ("{'type':'discover_user','user':{'userid':'" + this.getSessionid() + "','username':'"
+                                    + users.get(this.getSessionid()) + "'}}")
+                            .replace('\'', '"');
                     super.broadcastMessage(msg);
                 }
                 return null;
@@ -87,16 +88,18 @@ public class VideoWebSocketServlet extends WebSocketServlet {
 
             @Override
             public void onMessage(Object text, boolean last) {
-                //System.out.println("接收到消息: " + text);
+                // System.out.println("接收到消息: " + text);
                 super.broadcastMessage(text, last);
             }
 
             @Override
             public CompletableFuture onClose(int code, String reason) {
                 sessions.remove(this.getSessionid());
-                String msg = ("{'type':'remove_user','user':{'userid':'" + this.getSessionid() + "','username':'" + users.get(this.getSessionid()) + "'}}").replace('\'', '"');
+                String msg = ("{'type':'remove_user','user':{'userid':'" + this.getSessionid() + "','username':'"
+                                + users.get(this.getSessionid()) + "'}}")
+                        .replace('\'', '"');
                 return super.broadcastMessage(msg);
-            } 
+            }
 
             @Override
             protected CompletableFuture<Serializable> createUserid() {
@@ -109,17 +112,16 @@ public class VideoWebSocketServlet extends WebSocketServlet {
     public static void main(String[] args) throws Throwable {
         CountDownLatch cdl = new CountDownLatch(1);
         AnyValueWriter config = AnyValueWriter.create()
-            .addValue("threads", System.getProperty("threads"))
-            .addValue("bufferPoolSize", System.getProperty("bufferPoolSize"))
-            .addValue("responsePoolSize", System.getProperty("responsePoolSize"))
-            .addValue("host", System.getProperty("host", "0.0.0.0"))
-            .addValue("port", System.getProperty("port", "8070"))
-            .addValue("root", System.getProperty("root", "./root3/"));
+                .addValue("threads", System.getProperty("threads"))
+                .addValue("bufferPoolSize", System.getProperty("bufferPoolSize"))
+                .addValue("responsePoolSize", System.getProperty("responsePoolSize"))
+                .addValue("host", System.getProperty("host", "0.0.0.0"))
+                .addValue("port", System.getProperty("port", "8070"))
+                .addValue("root", System.getProperty("root", "./root3/"));
         HttpServer server = new HttpServer();
         server.addHttpServlet("/pipes", new VideoWebSocketServlet(), "/listen/*");
         server.init(config);
         server.start();
         cdl.await();
     }
-
 }

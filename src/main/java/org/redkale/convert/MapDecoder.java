@@ -13,8 +13,7 @@ import org.redkale.util.Creator;
 /**
  * Map的反序列化操作类 <br>
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <K> Map key的数据类型
@@ -79,9 +78,14 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
         }
     }
 
-    //仅供类似JsonAnyDecoder这种动态创建使用， 不得调用 factory.register
-    public MapDecoder(Type type, Type keyType, Type valueType,
-        Creator<Map<K, V>> creator, final Decodeable<Reader, K> keyDecoder, Decodeable<Reader, V> valueDecoder) {
+    // 仅供类似JsonAnyDecoder这种动态创建使用， 不得调用 factory.register
+    public MapDecoder(
+            Type type,
+            Type keyType,
+            Type valueType,
+            Creator<Map<K, V>> creator,
+            final Decodeable<Reader, K> keyDecoder,
+            Decodeable<Reader, V> valueDecoder) {
         Objects.requireNonNull(keyDecoder);
         Objects.requireNonNull(valueDecoder);
         this.type = type;
@@ -105,7 +109,7 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
                 try {
                     condition.await();
                 } catch (Exception e) {
-                    //do nothing
+                    // do nothing
                 } finally {
                     lock.unlock();
                 }
@@ -195,5 +199,4 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
     public Decodeable<Reader, V> getValueDecoder() {
         return valueDecoder;
     }
-
 }

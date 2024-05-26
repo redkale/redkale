@@ -7,10 +7,7 @@ import org.redkale.net.http.RestService;
 import org.redkale.service.AbstractService;
 import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @RestService(name = "test", autoMapping = true)
 public class RestSleepService extends AbstractService {
 

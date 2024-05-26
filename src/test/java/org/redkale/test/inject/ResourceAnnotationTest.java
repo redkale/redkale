@@ -5,20 +5,18 @@
  */
 package org.redkale.test.inject;
 
-import java.io.File;
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.io.File;
+import java.lang.annotation.*;
 import java.lang.reflect.Field;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.inject.ResourceAnnotationLoader;
 import org.redkale.inject.ResourceFactory;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class ResourceAnnotationTest {
 
     private boolean main;
@@ -41,7 +39,13 @@ public class ResourceAnnotationTest {
     public static class CustomConfProvider implements ResourceAnnotationLoader<CustomConf> {
 
         @Override
-        public void load(ResourceFactory factory, String srcResourceName, Object srcObj, CustomConf annotation, Field field, Object attachment) {
+        public void load(
+                ResourceFactory factory,
+                String srcResourceName,
+                Object srcObj,
+                CustomConf annotation,
+                Field field,
+                Object attachment) {
             try {
                 field.set(srcObj, new File(annotation.path()));
             } catch (Exception e) {
@@ -54,7 +58,6 @@ public class ResourceAnnotationTest {
         public Class<CustomConf> annotationType() {
             return CustomConf.class;
         }
-
     }
 
     public static class InjectBean {
@@ -75,5 +78,4 @@ public class ResourceAnnotationTest {
 
         String path();
     }
-
 }

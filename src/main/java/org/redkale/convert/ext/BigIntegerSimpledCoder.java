@@ -12,8 +12,7 @@ import org.redkale.convert.json.*;
 /**
  * BigInteger 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -46,7 +45,8 @@ public final class BigIntegerSimpledCoder<R extends Reader, W extends Writer> ex
      * @param <R> Reader输入的子类型
      * @param <W> Writer输出的子类型
      */
-    public static class BigIntegerJsonSimpledCoder<R extends JsonReader, W extends JsonWriter> extends SimpledCoder<R, W, BigInteger> {
+    public static class BigIntegerJsonSimpledCoder<R extends JsonReader, W extends JsonWriter>
+            extends SimpledCoder<R, W, BigInteger> {
 
         public static final BigIntegerJsonSimpledCoder instance = new BigIntegerJsonSimpledCoder();
 
@@ -75,7 +75,8 @@ public final class BigIntegerSimpledCoder<R extends Reader, W extends Writer> ex
      * @param <R> Reader输入的子类型
      * @param <W> Writer输出的子类型
      */
-    public static class BigIntegerHexJsonSimpledCoder<R extends JsonReader, W extends JsonWriter> extends SimpledCoder<R, W, BigInteger> {
+    public static class BigIntegerHexJsonSimpledCoder<R extends JsonReader, W extends JsonWriter>
+            extends SimpledCoder<R, W, BigInteger> {
 
         public static final BigIntegerHexJsonSimpledCoder instance = new BigIntegerHexJsonSimpledCoder();
 
@@ -98,7 +99,10 @@ public final class BigIntegerSimpledCoder<R extends Reader, W extends Writer> ex
             if (str.length() > 2) {
                 if (str.charAt(0) == '0' && (str.charAt(1) == 'x' || str.charAt(1) == 'X')) {
                     return new BigInteger(str.substring(2), 16);
-                } else if (str.charAt(0) == '-' && str.length() > 3 && str.charAt(1) == '0' && (str.charAt(2) == 'x' || str.charAt(2) == 'X')) {
+                } else if (str.charAt(0) == '-'
+                        && str.length() > 3
+                        && str.charAt(1) == '0'
+                        && (str.charAt(2) == 'x' || str.charAt(2) == 'X')) {
                     return new BigInteger("-" + str.substring(3), 16);
                 }
             }

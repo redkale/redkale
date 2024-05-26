@@ -5,10 +5,7 @@
  */
 package org.redkale.test.util;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class TestABean {
     public long time;
 }

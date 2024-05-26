@@ -5,20 +5,18 @@
  */
 package org.redkale.util;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 
 /**
  * 接收命令的标记， 只能标记在本地模式下Service里参数为(String)或(String, String[])的public方法上
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @see org.redkale.annotation.Command
- * 
  * @author zhangjx
- *
  * @since 2.1.0
  */
 @Deprecated(since = "2.8.0")
@@ -38,7 +36,6 @@ public @interface Command {
      * 参数帮助说明，在value不为空命令redkale --help时显示
      *
      * @return String
-     *
      * @since 2.7.0
      */
     String description() default "";

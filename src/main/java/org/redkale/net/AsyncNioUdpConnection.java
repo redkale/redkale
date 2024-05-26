@@ -16,8 +16,6 @@ import org.redkale.net.AsyncNioUdpProtocolServer.AsyncNioUdpServerChannel;
 import org.redkale.util.Utility;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -30,8 +28,15 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
 
     AsyncNioUdpServerChannel udpServerChannel;
 
-    public AsyncNioUdpConnection(boolean clientMode, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread,
-        AsyncIOThread ioWriteThread, DatagramChannel ch, SSLBuilder sslBuilder, SSLContext sslContext, final SocketAddress address) {
+    public AsyncNioUdpConnection(
+            boolean clientMode,
+            AsyncIOGroup ioGroup,
+            AsyncIOThread ioReadThread,
+            AsyncIOThread ioWriteThread,
+            DatagramChannel ch,
+            SSLBuilder sslBuilder,
+            SSLContext sslContext,
+            final SocketAddress address) {
         super(clientMode, ioGroup, ioReadThread, ioWriteThread, ioGroup.bufferCapacity, sslBuilder, sslContext);
         this.channel = ch;
         SocketAddress addr = address;
@@ -39,7 +44,7 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
             try {
                 addr = ch.getRemoteAddress();
             } catch (Exception e) {
-                //do nothing
+                // do nothing
             }
         }
         this.remoteAddress = addr;
@@ -159,7 +164,7 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
         if (clientMode) {
             long now = System.currentTimeMillis();
             if (this.writeTime + 1 > now) {
-                Utility.sleep(1); //发送过频会丢包
+                Utility.sleep(1); // 发送过频会丢包
                 this.writeTime = System.currentTimeMillis();
             } else {
                 this.writeTime = now;
@@ -170,7 +175,7 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
             try {
                 long now = System.currentTimeMillis();
                 if (udpServerChannel.writeTime + 1 > now) {
-                    Utility.sleep(1); //发送过频会丢包
+                    Utility.sleep(1); // 发送过频会丢包
                     udpServerChannel.writeTime = System.currentTimeMillis();
                 } else {
                     udpServerChannel.writeTime = now;
@@ -229,5 +234,4 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
             this.writeKey.cancel();
         }
     }
-
 }

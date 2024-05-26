@@ -11,8 +11,7 @@ import org.redkale.boot.ClassFilter;
 /**
  * 协议地址组合对象, 对应application.xml中group节点信息
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.8.0
@@ -21,7 +20,7 @@ public class SncpRpcGroups {
 
     protected final ConcurrentHashMap<String, SncpRpcGroup> sncpRpcGroups = new ConcurrentHashMap<>();
 
-    //key: resourceid(serviceType:resourceName)
+    // key: resourceid(serviceType:resourceName)
     protected final ConcurrentHashMap<String, Set<InetSocketAddress>> sncpClusters = new ConcurrentHashMap<>();
 
     public SncpRpcGroup getSncpRpcGroup(String group) {

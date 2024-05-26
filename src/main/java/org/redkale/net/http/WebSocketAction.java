@@ -12,8 +12,7 @@ import org.redkale.convert.json.JsonConvert;
 /**
  * WebSocket.broadcastAction时的参数
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -23,8 +22,7 @@ public class WebSocketAction implements Serializable {
 
     protected Map<String, String> attach;
 
-    public WebSocketAction() {
-    }
+    public WebSocketAction() {}
 
     public WebSocketAction(String action) {
         this.action = action;

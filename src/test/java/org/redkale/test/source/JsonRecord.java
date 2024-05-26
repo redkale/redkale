@@ -13,11 +13,8 @@ import org.redkale.persistence.Id;
 import org.redkale.source.*;
 import org.redkale.util.AnyValueWriter;
 
-/**
- *
- * @author zhangjx
- */
-//@Cacheable
+/** @author zhangjx */
+// @Cacheable
 public class JsonRecord {
 
     @SourceConvert
@@ -64,7 +61,9 @@ public class JsonRecord {
     public static void main(String[] args) throws Throwable {
         AnyValueWriter conf = AnyValueWriter.create();
         conf.addValue("name", "");
-        conf.addValue("url", "jdbc:mysql://localhost:3306/center?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&rewriteBatchedStatements=true");
+        conf.addValue(
+                "url",
+                "jdbc:mysql://localhost:3306/center?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&rewriteBatchedStatements=true");
         conf.addValue("user", "root");
         conf.addValue("password", "");
         DataJdbcSource source = new DataJdbcSource();
@@ -73,7 +72,8 @@ public class JsonRecord {
         source.insert(record);
         source.updateColumn(JsonRecord.class, record.getRecordid(), ColumnValue.set("recordname", "my name 2"));
         record.getRmap().put("haha", 2222);
-        source.updateColumn(JsonRecord.class, record.getRecordid(), ColumnValue.set("rmap", (Serializable) (Object) record.getRmap()));
+        source.updateColumn(JsonRecord.class, record.getRecordid(), ColumnValue.set("rmap", (Serializable)
+                (Object) record.getRmap()));
         System.out.println(source.find(JsonRecord.class, record.getRecordid()));
         System.out.println(source.findColumn(JsonRecord.class, "rmap", record.getRecordid()));
     }
@@ -122,5 +122,4 @@ public class JsonRecord {
     public void setRset(Set<String> rset) {
         this.rset = rset;
     }
-
 }

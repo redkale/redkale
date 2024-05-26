@@ -18,10 +18,7 @@ import org.redkale.net.sncp.*;
 import org.redkale.service.*;
 import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @ResourceType(SncpTestIService.class)
 public class SncpTestServiceImpl implements SncpTestIService {
 
@@ -33,7 +30,8 @@ public class SncpTestServiceImpl implements SncpTestIService {
             public void run() {
                 try {
                     Utility.sleep(200);
-                    System.out.println(Thread.currentThread().getName() + " sleep 200ms后运行了异步方法-----------queryResultAsync方法");
+                    System.out.println(
+                            Thread.currentThread().getName() + " sleep 200ms后运行了异步方法-----------queryResultAsync方法");
                     future.complete("异步 result: " + bean);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -41,7 +39,6 @@ public class SncpTestServiceImpl implements SncpTestIService {
             }
         }.start();
         return future;
-
     }
 
     @Override
@@ -67,7 +64,8 @@ public class SncpTestServiceImpl implements SncpTestIService {
 
     @Override
     public String queryResult(SncpTestBean bean) {
-        System.out.println(Thread.currentThread().getName() + " 运行了queryResult方法 content-length: " + bean.getContent().length());
+        System.out.println(Thread.currentThread().getName() + " 运行了queryResult方法 content-length: "
+                + bean.getContent().length());
         return "result-content:   " + bean.getContent();
     }
 
@@ -94,7 +92,8 @@ public class SncpTestServiceImpl implements SncpTestIService {
         final SncpRpcGroups rpcGroups = application.getSncpRpcGroups();
         InetSocketAddress sncpAddress = new InetSocketAddress("127.0.0.1", 7070);
         rpcGroups.computeIfAbsent("g70", "TCP").putAddress(sncpAddress);
-        final SncpClient client = new SncpClient("", asyncGroup, "0", sncpAddress, new ClientAddress(sncpAddress), "TCP", 16, 100);
+        final SncpClient client =
+                new SncpClient("", asyncGroup, "0", sncpAddress, new ClientAddress(sncpAddress), "TCP", 16, 100);
 
         Service service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, factory);
         for (Method method : service.getClass().getDeclaredMethods()) {

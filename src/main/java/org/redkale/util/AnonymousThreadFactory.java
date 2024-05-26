@@ -1,18 +1,18 @@
-///*
+/// *
 // *
 // */
-//package org.redkale.util;
+// package org.redkale.util;
 //
-//import java.util.concurrent.ThreadFactory;
-//import java.util.function.Function;
+// import java.util.concurrent.ThreadFactory;
+// import java.util.function.Function;
 //
-///**
+/// **
 // * 虚拟线程工厂
 // *
 // * @author zhangjx
 // * @since 2.8.0
 // */
-//public class AnonymousThreadFactory implements ThreadFactory, Function<String, ThreadFactory> {
+// public class AnonymousThreadFactory implements ThreadFactory, Function<String, ThreadFactory> {
 //
 //    private final ThreadFactory factory = Thread.ofVirtual().factory();
 //
@@ -36,4 +36,4 @@
 //        return t;
 //    }
 //
-//}
+// }

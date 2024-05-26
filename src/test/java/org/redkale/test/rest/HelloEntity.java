@@ -1,9 +1,9 @@
 package org.redkale.test.rest;
 
 import java.util.Map;
-import org.redkale.persistence.Id;
 import org.redkale.convert.json.JsonFactory;
 import org.redkale.net.http.*;
+import org.redkale.persistence.Id;
 import org.redkale.persistence.VirtualEntity;
 
 @VirtualEntity
@@ -41,8 +41,7 @@ public class HelloEntity {
     @RestPath
     private String uri;
 
-    public HelloEntity() {
-    }
+    public HelloEntity() {}
 
     public HelloEntity(int id) {
         this.helloid = id;

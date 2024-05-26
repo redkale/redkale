@@ -10,10 +10,7 @@ import org.redkale.annotation.Resource;
 import org.redkale.service.*;
 import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class BCService implements Service {
 
     @Resource
@@ -41,43 +38,48 @@ public class BCService implements Service {
     }
 
     public void bcCurrentTime2(final CompletionHandler<String, Void> handler, final String name) {
-        cService.ccCurrentTime2(Utility.createAsyncHandler((v, a) -> {
-            System.out.println("执行了 BCService.bcCurrentTime2----异步方法2");
-            String rs = "异步bcCurrentTime2: " + (v == null ? null : v.getResult());
-            if (handler != null) {
-                handler.completed(rs, null);
-            }
-        }, (t, a) -> {
-            if (handler != null) {
-                handler.failed(t, a);
-            }
-        }), name);
+        cService.ccCurrentTime2(
+                Utility.createAsyncHandler(
+                        (v, a) -> {
+                            System.out.println("执行了 BCService.bcCurrentTime2----异步方法2");
+                            String rs = "异步bcCurrentTime2: " + (v == null ? null : v.getResult());
+                            if (handler != null) {
+                                handler.completed(rs, null);
+                            }
+                        },
+                        (t, a) -> {
+                            if (handler != null) {
+                                handler.failed(t, a);
+                            }
+                        }),
+                name);
     }
 
     public void bcCurrentTime3(final MyAsyncHandler<String, Void> handler, final String name) {
-        cService.mcCurrentTime3(new MyAsyncHandler<RetResult<String>, Void>() {
-            @Override
-            public int id() {
-                return 1;
-            }
+        cService.mcCurrentTime3(
+                new MyAsyncHandler<RetResult<String>, Void>() {
+                    @Override
+                    public int id() {
+                        return 1;
+                    }
 
-            @Override
-            public void completed(RetResult<String> v, Void a) {
-                System.out.println("执行了 BCService.bcCurrentTime3----异步方法3");
-                String rs = "异步bcCurrentTime3: " + (v == null ? null : v.getResult());
-                if (handler != null) {
-                    handler.completed(rs, null);
-                }
-            }
+                    @Override
+                    public void completed(RetResult<String> v, Void a) {
+                        System.out.println("执行了 BCService.bcCurrentTime3----异步方法3");
+                        String rs = "异步bcCurrentTime3: " + (v == null ? null : v.getResult());
+                        if (handler != null) {
+                            handler.completed(rs, null);
+                        }
+                    }
 
-            @Override
-            public void failed(Throwable exc, Void attachment) {
-            }
+                    @Override
+                    public void failed(Throwable exc, Void attachment) {}
 
-            @Override
-            public int id2() {
-                return 2;
-            }
-        }, name);
+                    @Override
+                    public int id2() {
+                        return 2;
+                    }
+                },
+                name);
     }
 }

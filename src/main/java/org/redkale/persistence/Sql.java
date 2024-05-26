@@ -12,14 +12,10 @@ import java.lang.annotation.Target;
 /**
  * 原始sql语句, 标记在{@link org.redkale.source.DataSqlMapper}方法上
  *
- *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @see org.redkale.source.DataSqlMapper
- *
  * @author zhangjx
- *
  * @since 2.8.0
  */
 @Documented
@@ -40,5 +36,4 @@ public @interface Sql {
      * @return 备注说明
      */
     String comment() default "";
-
 }

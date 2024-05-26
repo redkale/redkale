@@ -50,8 +50,8 @@ import org.redkale.util.*;
 import org.redkale.watch.WatchServlet;
 
 /**
+ * 进程启动类，全局对象。 <br>
  *
- * 进程启动类，全局对象。  <br>
  * <pre>
  * 程序启动执行步骤:
  *     1、读取application.xml
@@ -59,26 +59,20 @@ import org.redkale.watch.WatchServlet;
  *     3、优先加载所有SNCP协议的服务，再加载其他协议服务， 最后加载WATCH协议的服务
  *     4、最后进行Service、Servlet与其他资源之间的依赖注入
  * </pre>
- * <p>
- * 详情见: https://redkale.org
+ *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
 public final class Application {
 
-    /**
-     * 当前进程启动的时间， 类型： long
-     */
+    /** 当前进程启动的时间， 类型： long */
     public static final String RESNAME_APP_TIME = "APP_TIME";
 
-    /**
-     * 当前进程服务的名称， 类型：String
-     */
+    /** 当前进程服务的名称， 类型：String */
     public static final String RESNAME_APP_NAME = "APP_NAME";
 
-    /**
-     * 当前进程的根目录， 类型：String、File、Path、URI
-     */
+    /** 当前进程的根目录， 类型：String、File、Path、URI */
     public static final String RESNAME_APP_HOME = "APP_HOME";
 
     /**
@@ -87,14 +81,10 @@ public final class Application {
      */
     public static final String RESNAME_APP_CONF_DIR = "APP_CONF_DIR";
 
-    /**
-     * 当前进程节点的nodeid， 类型：String
-     */
+    /** 当前进程节点的nodeid， 类型：String */
     public static final String RESNAME_APP_NODEID = "APP_NODEID";
 
-    /**
-     * 当前进程节点的IP地址， 类型：InetSocketAddress、InetAddress、String
-     */
+    /** 当前进程节点的IP地址， 类型：InetSocketAddress、InetAddress、String */
     public static final String RESNAME_APP_ADDR = "APP_ADDR";
 
     /**
@@ -108,28 +98,19 @@ public final class Application {
      * 使用RESNAME_APP_CLIENT_IOGROUP代替
      *
      * @since 2.3.0
-     *
      */
     public static final String RESNAME_APP_CLIENT_ASYNCGROUP = "APP_CLIENT_ASYNCGROUP";
 
-    /**
-     * 当前Service所属的SNCP Server的地址 类型: SocketAddress、InetSocketAddress、String <br>
-     */
+    /** 当前Service所属的SNCP Server的地址 类型: SocketAddress、InetSocketAddress、String <br> */
     public static final String RESNAME_SNCP_ADDRESS = "SNCP_ADDRESS";
 
-    /**
-     * 当前Service所属的SNCP Server所属的组 类型: String<br>
-     */
+    /** 当前Service所属的SNCP Server所属的组 类型: String<br> */
     public static final String RESNAME_SNCP_GROUP = "SNCP_GROUP";
 
-    /**
-     * "SERVER_ROOT" 当前Server的ROOT目录类型：String、File、Path
-     */
+    /** "SERVER_ROOT" 当前Server的ROOT目录类型：String、File、Path */
     public static final String RESNAME_SERVER_ROOT = Server.RESNAME_SERVER_ROOT;
 
-    /**
-     * 当前Server的ResourceFactory
-     */
+    /** 当前Server的ResourceFactory */
     public static final String RESNAME_SERVER_RESFACTORY = "SERVER_RESFACTORY";
 
     public static final String SYSNAME_APP_NAME = "redkale.application.name";
@@ -141,115 +122,113 @@ public final class Application {
     public static final String SYSNAME_APP_CONF_DIR = "redkale.application.confdir";
 
     public static final Set<String> REDKALE_RESNAMES = Collections.unmodifiableSet(Set.of(
-        RESNAME_APP_NAME,
-        RESNAME_APP_NODEID,
-        RESNAME_APP_TIME,
-        RESNAME_APP_HOME,
-        RESNAME_APP_ADDR,
-        RESNAME_APP_CONF_DIR
-    ));
+            RESNAME_APP_NAME,
+            RESNAME_APP_NODEID,
+            RESNAME_APP_TIME,
+            RESNAME_APP_HOME,
+            RESNAME_APP_ADDR,
+            RESNAME_APP_CONF_DIR));
 
-    //UDP协议的ByteBuffer Capacity
+    // UDP协议的ByteBuffer Capacity
     private static final int UDP_CAPACITY = 1024;
 
-    //日志
+    // 日志
     private final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
-    //本进程节点ID
+    // 本进程节点ID
     final String nodeid;
 
-    //本进程节点ID
+    // 本进程节点ID
     final String name;
 
-    //本地IP地址
+    // 本地IP地址
     final InetSocketAddress localAddress;
 
-    //配置信息，只读版Properties
+    // 配置信息，只读版Properties
     private final Environment environment;
 
-    //全局根ResourceFactory
+    // 全局根ResourceFactory
     final ResourceFactory resourceFactory = ResourceFactory.create();
 
-    //NodeServer 资源, 顺序必须是sncps, others, watchs
+    // NodeServer 资源, 顺序必须是sncps, others, watchs
     final List<NodeServer> servers = new CopyOnWriteArrayList<>();
 
-    //配置项里的group信息, 注意： 只给SNCP使用
+    // 配置项里的group信息, 注意： 只给SNCP使用
     private final SncpRpcGroups sncpRpcGroups = new SncpRpcGroups();
 
-    //除logging配置之外的所有配置项，包含本地和远程配置项
+    // 除logging配置之外的所有配置项，包含本地和远程配置项
     final Properties envProperties = new Properties();
 
-    //业务逻辑线程池
-    //@since 2.3.0
+    // 业务逻辑线程池
+    // @since 2.3.0
     @Nonnull
     private ExecutorService workExecutor;
 
-    //给客户端使用，包含SNCP客户端、自定义数据库客户端连接池
+    // 给客户端使用，包含SNCP客户端、自定义数据库客户端连接池
     private AsyncIOGroup clientAsyncGroup;
 
-    //服务配置项
+    // 服务配置项
     final AnyValue config;
 
-    //是否启动了WATCH协议服务
+    // 是否启动了WATCH协议服务
     boolean watching;
 
-    //------------- 模块组件(必须靠后放,否则new Module时resourceFactory会为null) ------------- 
-    //日志组件
-    //@since 2.8.0
+    // ------------- 模块组件(必须靠后放,否则new Module时resourceFactory会为null) -------------
+    // 日志组件
+    // @since 2.8.0
     final LoggingModule loggingModule;
 
-    //配置组件
+    // 配置组件
     final PropertiesModule propertiesModule;
 
-    //数据源组件
+    // 数据源组件
     private final SourceModuleEngine sourceModule;
 
-    //-----------------------------------------------------------------------------------   
-    //是否用于main方法运行
+    // -----------------------------------------------------------------------------------
+    // 是否用于main方法运行
     private final boolean singletonMode;
 
-    //是否用于编译模式运行
+    // 是否用于编译模式运行
     private final boolean compileMode;
 
-    //进程根目录
+    // 进程根目录
     private final File home;
 
-    //配置文件目录
+    // 配置文件目录
     private final URI confDir;
 
-    //监听事件
+    // 监听事件
     private final List<ApplicationListener> listeners = new CopyOnWriteArrayList<>();
 
-    //服务启动时间
+    // 服务启动时间
     private final long startTime = System.currentTimeMillis();
 
-    //Server启动的计数器，用于确保所有Server都启动完后再进行下一步处理
+    // Server启动的计数器，用于确保所有Server都启动完后再进行下一步处理
     private final CountDownLatch shutdownLatch;
 
-    //根ClassLoader
+    // 根ClassLoader
     private final RedkaleClassLoader classLoader;
 
-    //Server根ClassLoader
+    // Server根ClassLoader
     private final RedkaleClassLoader serverClassLoader;
 
-    //系统模块组件
+    // 系统模块组件
     private final List<ModuleEngine> moduleEngines = new ArrayList<>();
 
     /**
-     * 初始化步骤:  <br>
+     * 初始化步骤: <br>
      * 1、基本环境变量设置 <br>
      * 2、ClassLoader初始化 <br>
      * 3、日志配置初始化 <br>
      * 4、本地和远程配置文件读取 <br>
      * 5、ClusterAgent和MessageAgent实例化 <br>
-     * 6、Work线程池初始化
-     * 7、原生sql解析器初始化 <br>
+     * 6、Work线程池初始化 7、原生sql解析器初始化 <br>
      *
      * @param singletonMode 是否测试模式
-     * @param compileMode   是否编译模式
-     * @param config        启动配置
+     * @param compileMode 是否编译模式
+     * @param config 启动配置
      */
-    @SuppressWarnings("UseSpecificCatch") //config: 不带redkale.前缀的配置项
+    @SuppressWarnings("UseSpecificCatch") // config: 不带redkale.前缀的配置项
     Application(final AppConfig appConfig) {
         this.singletonMode = appConfig.singletonMode;
         this.compileMode = appConfig.compileMode;
@@ -268,12 +247,13 @@ public final class Application {
         this.propertiesModule = new PropertiesModule(this);
         this.sourceModule = new SourceModuleEngine(this);
 
-        //设置基础信息资源
+        // 设置基础信息资源
         this.resourceFactory.register(RESNAME_APP_NAME, String.class, this.name);
 
         this.resourceFactory.register(RESNAME_APP_NODEID, String.class, this.nodeid);
-        if (Utility.isNumeric(this.nodeid)) { //兼容旧类型
-            this.resourceFactory.register(RESNAME_APP_NODEID, int.class, Math.abs(((Long) Long.parseLong(this.nodeid)).intValue()));
+        if (Utility.isNumeric(this.nodeid)) { // 兼容旧类型
+            this.resourceFactory.register(
+                    RESNAME_APP_NODEID, int.class, Math.abs(((Long) Long.parseLong(this.nodeid)).intValue()));
         }
 
         this.resourceFactory.register(RESNAME_APP_TIME, long.class, this.startTime);
@@ -286,7 +266,8 @@ public final class Application {
 
         this.resourceFactory.register(RESNAME_APP_ADDR, InetSocketAddress.class, this.localAddress);
         this.resourceFactory.register(RESNAME_APP_ADDR, InetAddress.class, this.localAddress.getAddress());
-        this.resourceFactory.register(RESNAME_APP_ADDR, String.class, this.localAddress.getAddress().getHostAddress());
+        this.resourceFactory.register(
+                RESNAME_APP_ADDR, String.class, this.localAddress.getAddress().getHostAddress());
 
         this.resourceFactory.register(RESNAME_APP_CONF_DIR, URI.class, this.confDir);
         this.resourceFactory.register(RESNAME_APP_CONF_DIR, File.class, appConfig.confFile);
@@ -305,10 +286,10 @@ public final class Application {
         this.envProperties.put(RESNAME_APP_ADDR, this.localAddress.getAddress().getHostAddress());
         this.envProperties.put(RESNAME_APP_CONF_DIR, this.confDir.toString());
 
-        //初始化本地配置的System.properties、mimetypes
+        // 初始化本地配置的System.properties、mimetypes
         this.registerResourceEnvs(true, appConfig.localEnvProperties);
 
-        //需要在加载properties初始化System.properties之后再注册
+        // 需要在加载properties初始化System.properties之后再注册
         this.resourceFactory.register(Environment.class, environment);
         this.resourceFactory.register(BsonFactory.root());
         this.resourceFactory.register(JsonFactory.root());
@@ -316,42 +297,60 @@ public final class Application {
         this.resourceFactory.register(BsonFactory.root().getConvert());
         this.resourceFactory.register(JsonFactory.root().getConvert());
         this.resourceFactory.register(ProtobufFactory.root().getConvert());
-        this.resourceFactory.register("bsonconvert", Convert.class, BsonFactory.root().getConvert());
-        this.resourceFactory.register("jsonconvert", Convert.class, JsonFactory.root().getConvert());
-        this.resourceFactory.register("protobufconvert", Convert.class, ProtobufFactory.root().getConvert());
+        this.resourceFactory.register(
+                "bsonconvert", Convert.class, BsonFactory.root().getConvert());
+        this.resourceFactory.register(
+                "jsonconvert", Convert.class, JsonFactory.root().getConvert());
+        this.resourceFactory.register(
+                "protobufconvert", Convert.class, ProtobufFactory.root().getConvert());
 
-        //系统内部模块组件
-        moduleEngines.add(this.sourceModule); //放第一，很多module依赖于source
+        // 系统内部模块组件
+        moduleEngines.add(this.sourceModule); // 放第一，很多module依赖于source
         moduleEngines.add(new MessageModuleEngine(this));
         moduleEngines.add(new ClusterModuleEngine(this));
         moduleEngines.add(new ScheduleModuleEngine(this));
         moduleEngines.add(new CacheModuleEngine(this));
         moduleEngines.add(new LockModuleEngine(this));
 
-        //根据本地日志配置文件初始化日志
+        // 根据本地日志配置文件初始化日志
         loggingModule.reconfigLogging(true, appConfig.locaLogProperties);
 
-        //打印基础信息日志
-        logger.log(Level.INFO, colorMessage(logger, 36, 1,
-            "-------------------------------- Redkale " + Redkale.getDotedVersion() + " --------------------------------"));
+        // 打印基础信息日志
+        logger.log(
+                Level.INFO,
+                colorMessage(
+                        logger,
+                        36,
+                        1,
+                        "-------------------------------- Redkale " + Redkale.getDotedVersion()
+                                + " --------------------------------"));
 
         final String confDirStr = this.confDir.toString();
-        logger.log(Level.INFO, "APP_OS       = " + System.getProperty("os.name") + " "
-            + System.getProperty("os.version") + " " + System.getProperty("os.arch") + "\r\n"
-            + "APP_JAVA     = " + System.getProperty("java.runtime.name",
-                System.getProperty("org.graalvm.nativeimage.kind") != null ? "Nativeimage" : "")
-            + " " + System.getProperty("java.runtime.version",
-                System.getProperty("java.vendor.version", System.getProperty("java.vm.version"))) + "\r\n" //graalvm.nativeimage 模式下无 java.runtime.xxx 属性
-            + "APP_PID      = " + ProcessHandle.current().pid() + "\r\n"
-            + RESNAME_APP_NAME + "     = " + this.name + "\r\n"
-            + RESNAME_APP_NODEID + "   = " + this.nodeid + "\r\n"
-            + "APP_LOADER   = " + this.classLoader.getClass().getSimpleName() + "\r\n"
-            + RESNAME_APP_ADDR + "     = " + this.localAddress.getHostString() + ":" + this.localAddress.getPort() + "\r\n"
-            + RESNAME_APP_HOME + "     = " + this.home.getPath().replace('\\', '/') + "\r\n"
-            + RESNAME_APP_CONF_DIR + " = " + confDirStr.substring(confDirStr.indexOf('!') + 1));
+        logger.log(
+                Level.INFO,
+                "APP_OS       = " + System.getProperty("os.name") + " "
+                        + System.getProperty("os.version") + " " + System.getProperty("os.arch") + "\r\n"
+                        + "APP_JAVA     = "
+                        + System.getProperty(
+                                "java.runtime.name",
+                                System.getProperty("org.graalvm.nativeimage.kind") != null ? "Nativeimage" : "")
+                        + " "
+                        + System.getProperty(
+                                "java.runtime.version",
+                                System.getProperty("java.vendor.version", System.getProperty("java.vm.version")))
+                        + "\r\n" // graalvm.nativeimage 模式下无 java.runtime.xxx 属性
+                        + "APP_PID      = " + ProcessHandle.current().pid() + "\r\n"
+                        + RESNAME_APP_NAME + "     = " + this.name + "\r\n"
+                        + RESNAME_APP_NODEID + "   = " + this.nodeid + "\r\n"
+                        + "APP_LOADER   = " + this.classLoader.getClass().getSimpleName() + "\r\n"
+                        + RESNAME_APP_ADDR + "     = " + this.localAddress.getHostString() + ":"
+                        + this.localAddress.getPort() + "\r\n"
+                        + RESNAME_APP_HOME + "     = " + this.home.getPath().replace('\\', '/') + "\r\n"
+                        + RESNAME_APP_CONF_DIR + " = " + confDirStr.substring(confDirStr.indexOf('!') + 1));
 
         if (!compileMode && !(classLoader instanceof RedkaleClassLoader.RedkaleCacheClassLoader)) {
-            String lib = environment.getPropertyValue(config.getValue("lib", "${APP_HOME}/libs/*").trim());
+            String lib = environment.getPropertyValue(
+                    config.getValue("lib", "${APP_HOME}/libs/*").trim());
             lib = Utility.isEmpty(lib) ? confDirStr : (lib + ";" + confDirStr);
             Server.loadLib(classLoader, logger, lib.isEmpty() ? confDirStr : (lib + ";" + confDirStr));
         }
@@ -359,29 +358,35 @@ public final class Application {
     }
 
     public void init() throws Exception {
-        //注册ResourceType
+        // 注册ResourceType
         this.initResourceTypeLoader();
-        //读取远程配置，并合并app.config
+        // 读取远程配置，并合并app.config
         this.propertiesModule.initRemoteProperties();
-        //解析配置
+        // 解析配置
         this.onEnvironmentLoaded();
-        //init起始回调
+        // init起始回调
         this.onAppPreInit();
-        //设置WorkExecutor    
+        // 设置WorkExecutor
         this.initWorkExecutor();
-        //回调Listener
+        // 回调Listener
         initAppListeners();
-        //init结束回调
+        // init结束回调
         this.onAppPostInit();
     }
 
     private void initResourceTypeLoader() {
         final Application application = this;
-        //只有WatchService才能加载Application、WatchFactory
+        // 只有WatchService才能加载Application、WatchFactory
         this.resourceFactory.register(new ResourceTypeLoader() {
 
             @Override
-            public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+            public Object load(
+                    ResourceFactory rf,
+                    String srcResourceName,
+                    Object srcObj,
+                    String resourceName,
+                    Field field,
+                    Object attachment) {
                 try {
                     field.set(srcObj, application);
                     return application;
@@ -404,9 +409,16 @@ public final class Application {
         this.resourceFactory.register(new ResourceTypeLoader() {
 
             @Override
-            public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+            public Object load(
+                    ResourceFactory rf,
+                    String srcResourceName,
+                    Object srcObj,
+                    String resourceName,
+                    Field field,
+                    Object attachment) {
                 try {
-                    boolean serv = RESNAME_SERVER_RESFACTORY.equals(resourceName) || resourceName.equalsIgnoreCase("server");
+                    boolean serv =
+                            RESNAME_SERVER_RESFACTORY.equals(resourceName) || resourceName.equalsIgnoreCase("server");
                     ResourceFactory rs = serv ? rf : (resourceName.isEmpty() ? application.resourceFactory : null);
                     field.set(srcObj, rs);
                     return rs;
@@ -429,7 +441,13 @@ public final class Application {
         this.resourceFactory.register(new ResourceTypeLoader() {
 
             @Override
-            public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+            public Object load(
+                    ResourceFactory rf,
+                    String srcResourceName,
+                    Object srcObj,
+                    String resourceName,
+                    Field field,
+                    Object attachment) {
                 try {
                     NodeServer server = null;
                     for (NodeServer ns : application.getNodeServers()) {
@@ -462,7 +480,13 @@ public final class Application {
         this.resourceFactory.register(new ResourceTypeLoader() {
 
             @Override
-            public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+            public Object load(
+                    ResourceFactory rf,
+                    String srcResourceName,
+                    Object srcObj,
+                    String resourceName,
+                    Field field,
+                    Object attachment) {
                 try {
                     NodeServer server = null;
                     for (NodeServer ns : application.getNodeServers()) {
@@ -495,7 +519,13 @@ public final class Application {
         this.resourceFactory.register(new ResourceTypeLoader() {
 
             @Override
-            public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+            public Object load(
+                    ResourceFactory rf,
+                    String srcResourceName,
+                    Object srcObj,
+                    String resourceName,
+                    Field field,
+                    Object attachment) {
                 try {
                     NodeServer server = null;
                     for (NodeServer ns : application.getNodeServers()) {
@@ -526,11 +556,17 @@ public final class Application {
             }
         });
 
-        //------------------------------------ 注册 java.net.http.HttpClient ------------------------------------        
+        // ------------------------------------ 注册 java.net.http.HttpClient ------------------------------------
         resourceFactory.register(new ResourceTypeLoader() {
 
             @Override
-            public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+            public Object load(
+                    ResourceFactory rf,
+                    String srcResourceName,
+                    Object srcObj,
+                    String resourceName,
+                    Field field,
+                    Object attachment) {
                 try {
                     java.net.http.HttpClient.Builder builder = java.net.http.HttpClient.newBuilder();
                     if (resourceName.endsWith(".1.1")) {
@@ -554,11 +590,17 @@ public final class Application {
                 return java.net.http.HttpClient.class;
             }
         });
-        //------------------------------------ 注册 WebClient ------------------------------------       
+        // ------------------------------------ 注册 WebClient ------------------------------------
         resourceFactory.register(new ResourceTypeLoader() {
 
             @Override
-            public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+            public Object load(
+                    ResourceFactory rf,
+                    String srcResourceName,
+                    Object srcObj,
+                    String resourceName,
+                    Field field,
+                    Object attachment) {
                 try {
                     WebClient httpClient = WebClient.create(workExecutor, clientAsyncGroup);
                     field.set(srcObj, httpClient);
@@ -576,17 +618,24 @@ public final class Application {
                 return WebClient.class;
             }
         });
-        //------------------------------------ 注册 HttpRpcClient ------------------------------------        
+        // ------------------------------------ 注册 HttpRpcClient ------------------------------------
         resourceFactory.register(new ResourceTypeLoader() {
 
             @Override
-            public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+            public Object load(
+                    ResourceFactory rf,
+                    String srcResourceName,
+                    Object srcObj,
+                    String resourceName,
+                    Field field,
+                    Object attachment) {
                 try {
                     ClusterAgent clusterAgent = resourceFactory.find("", ClusterAgent.class);
                     MessageAgent messageAgent = resourceFactory.find(resourceName, MessageAgent.class);
                     if (messageAgent != null) {
-                        if (clusterAgent == null || !Objects.equals(clusterAgent.getName(), resourceName)
-                            || messageAgent.isRpcFirst()) {
+                        if (clusterAgent == null
+                                || !Objects.equals(clusterAgent.getName(), resourceName)
+                                || messageAgent.isRpcFirst()) {
                             HttpRpcClient rpcClient = messageAgent.getHttpRpcClient();
                             field.set(srcObj, rpcClient);
                             rf.inject(resourceName, rpcClient, null); // 给其可能包含@Resource的字段赋值;
@@ -638,9 +687,7 @@ public final class Application {
         }
     }
 
-    /**
-     * 设置WorkExecutor
-     */
+    /** 设置WorkExecutor */
     private void initWorkExecutor() {
         int bufferCapacity = 32 * 1024;
         int bufferPoolSize = Utility.cpus() * 8;
@@ -648,10 +695,10 @@ public final class Application {
         StringBuilder executorLog = new StringBuilder();
 
         final int workThreads = Math.max(Utility.cpus(), executorConf.getIntValue("threads", Utility.cpus() * 10));
-        //指定threads则不使用虚拟线程池
+        // 指定threads则不使用虚拟线程池
         this.workExecutor = executorConf.getValue("threads") != null
-            ? WorkThread.createExecutor(workThreads, "Redkale-WorkThread-%s")
-            : WorkThread.createWorkExecutor(workThreads, "Redkale-WorkThread-%s");
+                ? WorkThread.createExecutor(workThreads, "Redkale-WorkThread-%s")
+                : WorkThread.createWorkExecutor(workThreads, "Redkale-WorkThread-%s");
         String executorName = this.workExecutor.getClass().getSimpleName();
         executorLog.append("defaultWorkExecutor: {type=").append(executorName);
         if (executorName.contains("VirtualExecutor") || executorName.contains("PerTaskExecutor")) {
@@ -664,12 +711,14 @@ public final class Application {
         if (executorName.contains("VirtualExecutor") || executorName.contains("PerTaskExecutor")) {
             executorLog.append(", clientWorkExecutor: [workExecutor]");
         } else {
-            //给所有client给一个新的默认ExecutorService
+            // 给所有client给一个新的默认ExecutorService
             int clientThreads = executorConf.getIntValue("clients", Utility.cpus() * 4);
             clientWorkExecutor = WorkThread.createWorkExecutor(clientThreads, "Redkale-DefaultClient-WorkThread-%s");
             executorLog.append(", threads=").append(clientThreads).append("}");
         }
-        AsyncIOGroup ioGroup = new AsyncIOGroup("Redkale-DefaultClient-IOThread-%s", clientWorkExecutor, bufferCapacity, bufferPoolSize).skipClose(true);
+        AsyncIOGroup ioGroup = new AsyncIOGroup(
+                        "Redkale-DefaultClient-IOThread-%s", clientWorkExecutor, bufferCapacity, bufferPoolSize)
+                .skipClose(true);
         this.clientAsyncGroup = ioGroup.start();
 
         if (executorLog.length() > 0) {
@@ -682,7 +731,7 @@ public final class Application {
     }
 
     private void initAppListeners() throws Exception {
-        //------------------------------------------------------------------------
+        // ------------------------------------------------------------------------
         for (AnyValue conf : config.getAnyValues("group")) {
             final String group = conf.getValue("name", "");
             if (group.indexOf('$') >= 0 || group.indexOf('.') >= 0) {
@@ -719,17 +768,19 @@ public final class Application {
             }
             RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());
             @SuppressWarnings("unchecked")
-            ApplicationListener listener = (ApplicationListener) clazz.getDeclaredConstructor().newInstance();
+            ApplicationListener listener =
+                    (ApplicationListener) clazz.getDeclaredConstructor().newInstance();
             resourceFactory.inject(listener);
             listener.init(config);
             this.listeners.add(listener);
         }
-        //------------------------------------------------------------------------
+        // ------------------------------------------------------------------------
     }
 
     private static String colorMessage(Logger logger, int color, int type, String msg) {
-        final boolean linux = System.getProperty("os.name").toLowerCase(Locale.ENGLISH).contains("linux");
-        if (linux) { //Windows PowerShell 也能正常着色
+        final boolean linux =
+                System.getProperty("os.name").toLowerCase(Locale.ENGLISH).contains("linux");
+        if (linux) { // Windows PowerShell 也能正常着色
             boolean supported = true;
             Logger l = logger;
             do {
@@ -746,9 +797,9 @@ public final class Application {
                     break;
                 }
             } while ((l = l.getParent()) != null);
-            //colour  颜色代号：背景颜色代号(41-46)；前景色代号(31-36)
-            //type    样式代号：0无；1加粗；3斜体；4下划线
-            //String.format("\033[%d;%dm%s\033[0m", colour, type, content)
+            // colour  颜色代号：背景颜色代号(41-46)；前景色代号(31-36)
+            // type    样式代号：0无；1加粗；3斜体；4下划线
+            // String.format("\033[%d;%dm%s\033[0m", colour, type, content)
             if (supported) {
                 msg = "\033[" + color + (type > 0 ? (";" + type) : "") + "m" + msg + "\033[0m";
             }
@@ -758,7 +809,7 @@ public final class Application {
 
     private void startSelfServer() throws Exception {
         if (config.getValue("port", "").isEmpty() || "0".equals(config.getValue("port"))) {
-            return; //没有配置port则不启动进程自身的监听
+            return; // 没有配置port则不启动进程自身的监听
         }
         final Application application = this;
         new Thread() {
@@ -771,7 +822,7 @@ public final class Application {
                 try {
                     DatagramChannel channel = DatagramChannel.open();
                     channel.configureBlocking(true);
-                    channel.socket().setSoTimeout(6000); //单位:毫秒
+                    channel.socket().setSoTimeout(6000); // 单位:毫秒
                     channel.bind(new InetSocketAddress("127.0.0.1", config.getIntValue("port")));
                     if (!singletonMode) {
                         signalShutdownHandle();
@@ -781,16 +832,21 @@ public final class Application {
                     while (loop) {
                         ByteArrayOutputStream out = new ByteArrayOutputStream();
                         SocketAddress address = readUdpData(channel, buffer, out);
-                        String[] args = JsonConvert.root().convertFrom(String[].class, out.toString(StandardCharsets.UTF_8));
+                        String[] args =
+                                JsonConvert.root().convertFrom(String[].class, out.toString(StandardCharsets.UTF_8));
                         final String cmd = args[0];
                         String[] params = args.length == 1 ? new String[0] : Arrays.copyOfRange(args, 1, args.length);
-                        //接收到命令必须要有回应, 无结果输出则回应回车换行符
+                        // 接收到命令必须要有回应, 无结果输出则回应回车换行符
                         if ("SHUTDOWN".equalsIgnoreCase(cmd)) {
                             try {
                                 long s = System.currentTimeMillis();
                                 logger.info(application.getClass().getSimpleName() + " shutdowning");
                                 application.shutdown();
-                                sendUdpData(channel, address, buffer, "--- shutdown finish ---".getBytes(StandardCharsets.UTF_8));
+                                sendUdpData(
+                                        channel,
+                                        address,
+                                        buffer,
+                                        "--- shutdown finish ---".getBytes(StandardCharsets.UTF_8));
                                 long e = System.currentTimeMillis() - s;
                                 logger.info(application.getClass().getSimpleName() + " shutdown in " + e + " ms");
                                 channel.close();
@@ -821,7 +877,8 @@ public final class Application {
                                     if (o instanceof CharSequence) {
                                         sb.append(o).append("\r\n");
                                     } else {
-                                        sb.append(JsonConvert.root().convertTo(o)).append("\r\n");
+                                        sb.append(JsonConvert.root().convertTo(o))
+                                                .append("\r\n");
                                     }
                                 }
                             }
@@ -842,8 +899,9 @@ public final class Application {
         }.start();
     }
 
-    //数据包前4个字节为数据内容的长度
-    private static void sendUdpData(final DatagramChannel channel, SocketAddress dest, ByteBuffer buffer, byte[] bytes) throws IOException {
+    // 数据包前4个字节为数据内容的长度
+    private static void sendUdpData(final DatagramChannel channel, SocketAddress dest, ByteBuffer buffer, byte[] bytes)
+            throws IOException {
         buffer.clear();
         int count = (bytes.length + 4) / UDP_CAPACITY + ((bytes.length + 4) % UDP_CAPACITY > 0 ? 1 : 0);
         int start = 0;
@@ -871,7 +929,8 @@ public final class Application {
         }
     }
 
-    private static SocketAddress readUdpData(final DatagramChannel channel, ByteBuffer buffer, ByteArrayOutputStream out) throws IOException {
+    private static SocketAddress readUdpData(
+            final DatagramChannel channel, ByteBuffer buffer, ByteArrayOutputStream out) throws IOException {
         out.reset();
         buffer.clear();
         SocketAddress src = null;
@@ -901,10 +960,10 @@ public final class Application {
     private static void sendCommand(Logger logger, int port, String cmd, String[] params) throws Exception {
         final DatagramChannel channel = DatagramChannel.open();
         channel.configureBlocking(true);
-        channel.socket().setSoTimeout(6000); //单位:毫秒
+        channel.socket().setSoTimeout(6000); // 单位:毫秒
         SocketAddress dest = new InetSocketAddress("127.0.0.1", port);
         channel.connect(dest);
-        //命令和参数合成一个数组
+        // 命令和参数合成一个数组
         String[] args = new String[1 + (params == null ? 0 : params.length)];
         args[0] = cmd;
         if (params != null) {
@@ -935,11 +994,11 @@ public final class Application {
                     (System.out).println(rs);
                     return;
                 }
-                //if ("SHUTDOWN".equalsIgnoreCase(cmd)) {
+                // if ("SHUTDOWN".equalsIgnoreCase(cmd)) {
                 //    System.out .println("--- application not running ---");
-                //} else {
+                // } else {
                 (System.err).println("--- application not running ---");
-                //}
+                // }
                 return;
             }
             throw e;
@@ -963,27 +1022,21 @@ public final class Application {
         return list.size() == 1 ? list.get(0) : AsmMethodBoost.create(remote, list);
     }
 
-    /**
-     * 进入Application.init方法时被调用
-     */
+    /** 进入Application.init方法时被调用 */
     private void onAppPreInit() {
         for (ModuleEngine item : moduleEngines) {
             item.onAppPreInit();
         }
     }
 
-    /**
-     * 结束Application.init方法前被调用
-     */
+    /** 结束Application.init方法前被调用 */
     private void onAppPostInit() {
         for (ModuleEngine item : moduleEngines) {
             item.onAppPostInit();
         }
     }
 
-    /**
-     * 进入Application.start方法被调用
-     */
+    /** 进入Application.start方法被调用 */
     private void onAppPreStart() {
         for (ApplicationListener listener : this.listeners) {
             listener.onPreStart(this);
@@ -993,9 +1046,7 @@ public final class Application {
         }
     }
 
-    /**
-     * 结束Application.start方法前被调用
-     */
+    /** 结束Application.start方法前被调用 */
     private void onAppPostStart() {
         for (ApplicationListener listener : this.listeners) {
             listener.onPostStart(this);
@@ -1021,7 +1072,7 @@ public final class Application {
      * 配置项变更时被调用
      *
      * @param namespace 命名空间
-     * @param events    变更项
+     * @param events 变更项
      */
     void onEnvironmentChanged(String namespace, List<ResourceEvent> events) {
         for (ModuleEngine item : moduleEngines) {
@@ -1029,63 +1080,49 @@ public final class Application {
         }
     }
 
-    /**
-     * 服务全部启动前被调用
-     */
+    /** 服务全部启动前被调用 */
     private void onServersPreStart() {
         for (ModuleEngine item : moduleEngines) {
             item.onServersPreStart();
         }
     }
 
-    /**
-     * 服务全部启动后被调用
-     */
+    /** 服务全部启动后被调用 */
     private void onServersPostStart() {
         for (ModuleEngine item : moduleEngines) {
             item.onServersPostStart();
         }
     }
 
-    /**
-     * 执行Service.init方法前被调用
-     */
+    /** 执行Service.init方法前被调用 */
     void onServicePreInit(Service service) {
         for (ModuleEngine item : moduleEngines) {
             item.onServicePreInit(service);
         }
     }
 
-    /**
-     * 执行Service.init方法后被调用
-     */
+    /** 执行Service.init方法后被调用 */
     void onServicePostInit(Service service) {
         for (ModuleEngine item : moduleEngines) {
             item.onServicePostInit(service);
         }
     }
 
-    /**
-     * 执行Service.destroy方法前被调用
-     */
+    /** 执行Service.destroy方法前被调用 */
     void onServicePreDestroy(Service service) {
         for (ModuleEngine item : moduleEngines) {
             item.onServicePreDestroy(service);
         }
     }
 
-    /**
-     * 执行Service.destroy方法后被调用
-     */
+    /** 执行Service.destroy方法后被调用 */
     void onServicePostDestroy(Service service) {
         for (ModuleEngine item : moduleEngines) {
             item.onServicePostDestroy(service);
         }
     }
 
-    /**
-     * 服务全部停掉前被调用
-     */
+    /** 服务全部停掉前被调用 */
     private void onServersPreStop() {
         for (ApplicationListener listener : listeners) {
             listener.onServersPreStop(this);
@@ -1095,9 +1132,7 @@ public final class Application {
         }
     }
 
-    /**
-     * 服务全部停掉后被调用
-     */
+    /** 服务全部停掉后被调用 */
     private void onServersPostStop() {
         for (ApplicationListener listener : listeners) {
             listener.onServersPostStop(this);
@@ -1107,9 +1142,7 @@ public final class Application {
         }
     }
 
-    /**
-     * 进入Application.shutdown方法被调用
-     */
+    /** 进入Application.shutdown方法被调用 */
     private void onAppPreShutdown() {
         for (ApplicationListener listener : this.listeners) {
             try {
@@ -1123,9 +1156,7 @@ public final class Application {
         }
     }
 
-    /**
-     * 结束Application.shutdown方法前被调用
-     */
+    /** 结束Application.shutdown方法前被调用 */
     private void onAppPostShutdown() {
         for (ModuleEngine item : moduleEngines) {
             item.onAppPostShutdown();
@@ -1177,9 +1208,9 @@ public final class Application {
         this.watching = !watchs.isEmpty();
 
         this.onServersPreStart();
-        runServers(serverCdl, sncps);  //必须确保SNCP服务都启动后再启动其他服务
+        runServers(serverCdl, sncps); // 必须确保SNCP服务都启动后再启动其他服务
         runServers(serverCdl, others);
-        runServers(serverCdl, watchs); //必须在所有服务都启动后再启动WATCH服务
+        runServers(serverCdl, watchs); // 必须在所有服务都启动后再启动WATCH服务
         serverCdl.await();
         this.onServersPostStart();
 
@@ -1187,8 +1218,13 @@ public final class Application {
         long intms = System.currentTimeMillis() - startTime;
         String ms = String.valueOf(intms);
         int repeat = ms.length() > 7 ? 0 : (7 - ms.length()) / 2;
-        logger.info(colorMessage(logger, 36, 1, "-".repeat(repeat) + "------------------------ Redkale started in "
-            + ms + " ms " + (ms.length() / 2 == 0 ? " " : "") + "-".repeat(repeat) + "------------------------") + "\r\n");
+        logger.info(colorMessage(
+                        logger,
+                        36,
+                        1,
+                        "-".repeat(repeat) + "------------------------ Redkale started in " + ms + " ms "
+                                + (ms.length() / 2 == 0 ? " " : "") + "-".repeat(repeat) + "------------------------")
+                + "\r\n");
         LoggingBaseHandler.traceEnable = true;
 
         if (!singletonMode && !compileMode) {
@@ -1199,29 +1235,29 @@ public final class Application {
     /**
      * 实例化单个Service
      *
-     * @param <T>               泛型
-     * @param serviceClass      指定的service类
+     * @param <T> 泛型
+     * @param serviceClass 指定的service类
      * @param extServiceClasses 需要排除的service类
-     *
      * @return Service对象
      * @throws Exception 异常
      */
-    public static <T extends Service> T singleton(Class<T> serviceClass, Class<? extends Service>... extServiceClasses) throws Exception {
+    public static <T extends Service> T singleton(Class<T> serviceClass, Class<? extends Service>... extServiceClasses)
+            throws Exception {
         return singleton("", serviceClass, extServiceClasses);
     }
 
     /**
      * 实例化单个Service
      *
-     * @param <T>               泛型
-     * @param name              Service的资源名
-     * @param serviceClass      指定的service类
+     * @param <T> 泛型
+     * @param name Service的资源名
+     * @param serviceClass 指定的service类
      * @param extServiceClasses 需要排除的service类
-     *
      * @return Service对象
      * @throws Exception 异常
      */
-    public static <T extends Service> T singleton(String name, Class<T> serviceClass, Class<? extends Service>... extServiceClasses) throws Exception {
+    public static <T extends Service> T singleton(
+            String name, Class<T> serviceClass, Class<? extends Service>... extServiceClasses) throws Exception {
         if (serviceClass == null) {
             throw new IllegalArgumentException("serviceClass is null");
         }
@@ -1259,9 +1295,9 @@ public final class Application {
     }
 
     public static void main(String[] args) throws Exception {
-        Times.midnight(); //先初始化一下Utility
+        Times.midnight(); // 先初始化一下Utility
         Thread.currentThread().setName("Redkale-Application-Main-Thread");
-        //运行主程序
+        // 运行主程序
         String cmd = System.getProperty("cmd", System.getProperty("CMD"));
         String[] params = args;
         if (args != null && args.length > 0) {
@@ -1277,7 +1313,7 @@ public final class Application {
             }
             if (cmd == null) {
                 for (int i = 0; i < args.length; i++) {
-                    if (args[i] != null && !args[i].startsWith("-")) { //非-开头的第一个视为命令号
+                    if (args[i] != null && !args[i].startsWith("-")) { // 非-开头的第一个视为命令号
                         cmd = args[i];
                         if ("start".equalsIgnoreCase(cmd) || "startup".equalsIgnoreCase(cmd)) {
                             cmd = null;
@@ -1311,7 +1347,7 @@ public final class Application {
             }
         }
 
-        //PrepareCompiler.main(args); //测试代码
+        // PrepareCompiler.main(args); //测试代码
         final Application application = Application.create(false);
         application.init();
         application.startSelfServer();
@@ -1322,11 +1358,11 @@ public final class Application {
             Utility.sleep(100);
             System.exit(1);
         }
-        System.exit(0); //必须要有
+        System.exit(0); // 必须要有
     }
 
     public List<Object> command(String cmd, String[] params) {
-        List<NodeServer> localServers = new ArrayList<>(servers); //顺序sncps, others, watchs        
+        List<NodeServer> localServers = new ArrayList<>(servers); // 顺序sncps, others, watchs
         List<Object> results = new ArrayList<>();
         localServers.stream().forEach((server) -> {
             try {
@@ -1359,25 +1395,30 @@ public final class Application {
         long intms = System.currentTimeMillis() - f;
         String ms = String.valueOf(intms);
         int repeat = ms.length() > 7 ? 0 : (7 - ms.length()) / 2;
-        logger.info(colorMessage(logger, 36, 1, "-".repeat(repeat) + "------------------------ Redkale shutdown in "
-            + ms + " ms " + (ms.length() / 2 == 0 ? " " : "") + "-".repeat(repeat) + "------------------------") + "\r\n" + "\r\n");
+        logger.info(colorMessage(
+                        logger,
+                        36,
+                        1,
+                        "-".repeat(repeat) + "------------------------ Redkale shutdown in " + ms + " ms "
+                                + (ms.length() / 2 == 0 ? " " : "") + "-".repeat(repeat) + "------------------------")
+                + "\r\n" + "\r\n");
         LoggingBaseHandler.traceEnable = true;
     }
 
     private static String generateHelp() {
         return ""
-            + "Usage: redkale [command] [arguments]\r\n"
-            + "Command: \r\n"
-            + "   start, startup                            start one process\r\n"
-            + "       --conf-file=[file]                    application config file, eg. application.xml、application.properties\r\n"
-            + "   shutdown, stop                            shutdown one process\r\n"
-            + "       --conf-file=[file]                    application config file, eg. application.xml、application.properties\r\n"
-            + "   restart                                   restart one process\r\n"
-            + "       --conf-file=[file]                    application config file, eg. application.xml、application.properties\r\n"
-            + "   apidoc                                    generate apidoc\r\n"
-            + "       --api-skiprpc=[true|false]            skip @RestService(rpcOnly=true) service or @RestMapping(rpcOnly=true) method, default is true\r\n"
-            + "       --api-host=[url]                      api root url, default is http://localhost\r\n"
-            + "   help, -h, --help                          show this help\r\n";
+                + "Usage: redkale [command] [arguments]\r\n"
+                + "Command: \r\n"
+                + "   start, startup                            start one process\r\n"
+                + "       --conf-file=[file]                    application config file, eg. application.xml、application.properties\r\n"
+                + "   shutdown, stop                            shutdown one process\r\n"
+                + "       --conf-file=[file]                    application config file, eg. application.xml、application.properties\r\n"
+                + "   restart                                   restart one process\r\n"
+                + "       --conf-file=[file]                    application config file, eg. application.xml、application.properties\r\n"
+                + "   apidoc                                    generate apidoc\r\n"
+                + "       --api-skiprpc=[true|false]            skip @RestService(rpcOnly=true) service or @RestMapping(rpcOnly=true) method, default is true\r\n"
+                + "       --api-host=[url]                      api root url, default is http://localhost\r\n"
+                + "   help, -h, --help                          show this help\r\n";
     }
 
     @SuppressWarnings("unchecked")
@@ -1390,17 +1431,21 @@ public final class Application {
         for (final AnyValue serconf : serverConfs) {
             Thread thread = new Thread() {
                 {
-                    setName("Redkale-" + serconf.getValue("protocol", "Server").toUpperCase().replaceFirst("\\..+", "")
-                        + ":" + serconf.getIntValue("port") + "-Thread");
+                    setName("Redkale-"
+                            + serconf.getValue("protocol", "Server")
+                                    .toUpperCase()
+                                    .replaceFirst("\\..+", "") + ":" + serconf.getIntValue("port") + "-Thread");
                     this.setDaemon(true);
                 }
 
                 @Override
                 public void run() {
                     try {
-                        //Thread ctd = Thread.currentThread();
-                        //ctd.setContextClassLoader(new URLClassLoader(new URL[0], ctd.getContextClassLoader()));
-                        final String protocol = serconf.getValue("protocol", "").replaceFirst("\\..+", "").toUpperCase();
+                        // Thread ctd = Thread.currentThread();
+                        // ctd.setContextClassLoader(new URLClassLoader(new URL[0], ctd.getContextClassLoader()));
+                        final String protocol = serconf.getValue("protocol", "")
+                                .replaceFirst("\\..+", "")
+                                .toUpperCase();
                         NodeServer server = null;
                         if ("SNCP".equals(protocol)) {
                             server = NodeSncpServer.createNodeServer(Application.this, serconf);
@@ -1419,8 +1464,9 @@ public final class Application {
                             if (!inited.get()) {
                                 nodeLock.lock();
                                 try {
-                                    if (!inited.getAndSet(true)) { //加载自定义的协议，如：SOCKS
-                                        ClassFilter profilter = new ClassFilter(classLoader, NodeProtocol.class, NodeServer.class);
+                                    if (!inited.getAndSet(true)) { // 加载自定义的协议，如：SOCKS
+                                        ClassFilter profilter =
+                                                new ClassFilter(classLoader, NodeProtocol.class, NodeServer.class);
                                         loadClassByFilters(profilter);
                                         final Set<FilterEntry<NodeServer>> entrys = profilter.getFilterEntrys();
                                         for (FilterEntry<NodeServer> entry : entrys) {
@@ -1433,7 +1479,8 @@ public final class Application {
                                             final Class<? extends NodeServer> old = nodeClasses.get(p);
                                             if (old != null && old != type) {
                                                 throw new RedkaleException("Protocol(" + p + ") had NodeServer-Class("
-                                                    + old.getName() + ") but repeat NodeServer-Class(" + type.getName() + ")");
+                                                        + old.getName() + ") but repeat NodeServer-Class("
+                                                        + type.getName() + ")");
                                             }
                                             nodeClasses.put(p, type);
                                         }
@@ -1448,7 +1495,10 @@ public final class Application {
                             }
                         }
                         if (server == null) {
-                            logger.log(Level.SEVERE, "Not found Server Class for protocol({0})", serconf.getValue("protocol"));
+                            logger.log(
+                                    Level.SEVERE,
+                                    "Not found Server Class for protocol({0})",
+                                    serconf.getValue("protocol"));
                             Utility.sleep(100);
                             System.exit(1);
                         }
@@ -1457,7 +1507,9 @@ public final class Application {
                         if (!singletonMode && !compileMode) {
                             server.start();
                         } else if (compileMode) {
-                            server.getServer().getDispatcherServlet().init(server.getServer().getContext(), serconf);
+                            server.getServer()
+                                    .getDispatcherServlet()
+                                    .init(server.getServer().getContext(), serconf);
                         }
                         servers.add(server);
                         serverCdl.countDown();
@@ -1477,8 +1529,8 @@ public final class Application {
 
     private void stopServers() {
         this.onServersPreStop();
-        List<NodeServer> localServers = new ArrayList<>(servers); //顺序sncps, others, watchs
-        Collections.reverse(localServers); //倒序， 必须让watchs先关闭，watch包含服务发现和注销逻辑
+        List<NodeServer> localServers = new ArrayList<>(servers); // 顺序sncps, others, watchs
+        Collections.reverse(localServers); // 倒序， 必须让watchs先关闭，watch包含服务发现和注销逻辑
         localServers.stream().forEach(server -> {
             try {
                 server.shutdown();
@@ -1491,7 +1543,7 @@ public final class Application {
         this.onServersPostStop();
     }
 
-    //使用了nohup或使用了后台&，Runtime.getRuntime().addShutdownHook失效
+    // 使用了nohup或使用了后台&，Runtime.getRuntime().addShutdownHook失效
     private void signalShutdownHandle() {
         Consumer<Consumer<String>> signalShutdownConsumer = Utility.signalShutdownConsumer();
         if (signalShutdownConsumer == null) {
@@ -1537,7 +1589,7 @@ public final class Application {
     }
 
     public boolean isVirtualWorkExecutor() {
-        //JDK21+
+        // JDK21+
         return workExecutor != null && workExecutor.getClass().getSimpleName().contains("ThreadPerTaskExecutor");
     }
 
@@ -1600,5 +1652,4 @@ public final class Application {
     public boolean isSingletonMode() {
         return singletonMode;
     }
-
 }

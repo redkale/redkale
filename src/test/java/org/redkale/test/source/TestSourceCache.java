@@ -16,10 +16,7 @@ import org.redkale.persistence.VirtualEntity;
 import org.redkale.source.*;
 import org.redkale.util.Sheet;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class TestSourceCache {
 
     public static class TestEntityBean implements FilterBean {
@@ -38,10 +35,11 @@ public class TestSourceCache {
 
     public static void main(String[] args) throws Exception {
         final BiFunction<DataSource, Class, List> fullloader = (DataSource t, Class u) -> null;
-        Method method = EntityInfo.class.getDeclaredMethod("load", Class.class, boolean.class, Properties.class,
-            DataSource.class, BiFunction.class);
+        Method method = EntityInfo.class.getDeclaredMethod(
+                "load", Class.class, boolean.class, Properties.class, DataSource.class, BiFunction.class);
         method.setAccessible(true);
-        final EntityInfo<TestEntity> info = (EntityInfo<TestEntity>) method.invoke(null, TestEntity.class, false, new Properties(), null, fullloader);
+        final EntityInfo<TestEntity> info = (EntityInfo<TestEntity>)
+                method.invoke(null, TestEntity.class, false, new Properties(), null, fullloader);
         TestEntity[] entitys = new TestEntity[10_0000];
         for (int i = 0; i < entitys.length; i++) {
             entitys[i] = new TestEntity(i + 1, "用户_" + (i + 1));
@@ -66,7 +64,8 @@ public class TestSourceCache {
         Assertions.assertEquals(node.toString(), node2.toString());
         Sheet<TestEntity> sheet = info.getCache().querySheet(null, flipper, node);
         System.out.println(sheet);
-        System.out.println(info.getCache().querySheet(null, flipper, FilterNodeBean.createFilterNode(new TestEntityBean(1000, "用户"))));
+        System.out.println(info.getCache()
+                .querySheet(null, flipper, FilterNodeBean.createFilterNode(new TestEntityBean(1000, "用户"))));
         final CountDownLatch cdl = new CountDownLatch(100);
         s = System.currentTimeMillis();
         for (int i = 0; i < 100; i++) {
@@ -82,7 +81,8 @@ public class TestSourceCache {
         }
         cdl.await();
         e = System.currentTimeMillis() - s;
-        System.out.println("十万条数据中100并发查询一页循环10次记录耗时： " + e / 1000.0 + " 秒 " + sheet);  // CopyOnWriteArrayList   0.798    ConcurrentLinkedQueue 1.063
+        System.out.println("十万条数据中100并发查询一页循环10次记录耗时： " + e / 1000.0 + " 秒 "
+                + sheet); // CopyOnWriteArrayList   0.798    ConcurrentLinkedQueue 1.063
     }
 
     @VirtualEntity
@@ -95,9 +95,7 @@ public class TestSourceCache {
 
         private long createtime = System.currentTimeMillis();
 
-        public TestEntity() {
-
-        }
+        public TestEntity() {}
 
         public TestEntity(int userid, String username) {
             this.userid = userid;

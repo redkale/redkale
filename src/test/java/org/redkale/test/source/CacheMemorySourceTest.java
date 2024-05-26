@@ -27,10 +27,7 @@ import org.redkale.source.Flipper;
 import org.redkale.util.TypeToken;
 import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class CacheMemorySourceTest {
 
     public static void main(String[] args) throws Throwable {
@@ -91,7 +88,8 @@ public class CacheMemorySourceTest {
 
         Map<String, Flipper> flippermap = source.mgets(Flipper.class, "objitem1", "objitem2");
         System.out.println("[有值] MGET : " + flippermap);
-        Assertions.assertTrue(Utility.equalsElement(Utility.ofMap("objitem1", new Flipper(10), "objitem2", new Flipper(20)), flippermap));
+        Assertions.assertTrue(Utility.equalsElement(
+                Utility.ofMap("objitem1", new Flipper(10), "objitem2", new Flipper(20)), flippermap));
 
         source.del("key1", "key2", "300");
         source.setex("key1", 1000, String.class, "value1");
@@ -179,7 +177,8 @@ public class CacheMemorySourceTest {
         source.sadd("stringmap", JsonConvert.TYPE_MAP_STRING_STRING, Utility.ofMap("c", "cc", "d", "dd"));
         col = source.smembers("stringmap", JsonConvert.TYPE_MAP_STRING_STRING);
         System.out.println("[两值] stringmap VALUES : " + col);
-        Assertions.assertTrue(Utility.equalsElement(List.of(Utility.ofMap("c", "cc", "d", "dd"), Utility.ofMap("a", "aa", "b", "bb")), col));
+        Assertions.assertTrue(Utility.equalsElement(
+                List.of(Utility.ofMap("c", "cc", "d", "dd"), Utility.ofMap("a", "aa", "b", "bb")), col));
 
         source.del("sets3");
         source.del("sets4");
@@ -247,7 +246,10 @@ public class CacheMemorySourceTest {
             }
         });
         mapcol.putAll(news);
-        Assertions.assertEquals(Utility.ofMap("sets3", List.of("setvals2"), "sets4", List.of("setvals1", "setvals2")).toString(), mapcol.toString());
+        Assertions.assertEquals(
+                Utility.ofMap("sets3", List.of("setvals2"), "sets4", List.of("setvals1", "setvals2"))
+                        .toString(),
+                mapcol.toString());
 
         source.del("sets3");
         source.del("sets4");
@@ -282,7 +284,8 @@ public class CacheMemorySourceTest {
         Assertions.assertIterableEquals(interanswer, interset);
 
         source.del("sets6");
-        Set<String> unionanswer = new TreeSet<>(Set.of("setvals1", "setvals2", "setvals3", "setvals4", "setvals5", "setvals6", "setvals7", "setvals8"));
+        Set<String> unionanswer = new TreeSet<>(
+                Set.of("setvals1", "setvals2", "setvals3", "setvals4", "setvals5", "setvals6", "setvals7", "setvals8"));
         Set<String> unionset = new TreeSet<>(source.sunionString("sets3", "sets4", "sets5"));
         System.out.println("sunion: " + unionset);
         Assertions.assertIterableEquals(unionanswer, unionset);
@@ -349,12 +352,14 @@ public class CacheMemorySourceTest {
             }
         });
         mapcol.putAll(news2);
-        Assertions.assertEquals(Utility.ofMap("myaddrs", List.of(addr99), "myaddrs2", List.of(addr88, addr99)).toString(), mapcol.toString());
+        Assertions.assertEquals(
+                Utility.ofMap("myaddrs", List.of(addr99), "myaddrs2", List.of(addr88, addr99))
+                        .toString(),
+                mapcol.toString());
 
         System.out.println("------------------------------------");
         source.del("myaddrs");
-        Type mapType = new TypeToken<Map<String, Integer>>() {
-        }.getType();
+        Type mapType = new TypeToken<Map<String, Integer>>() {}.getType();
         Map<String, Integer> paramap = new HashMap<>();
         paramap.put("a", 1);
         paramap.put("b", 2);
@@ -369,17 +374,31 @@ public class CacheMemorySourceTest {
         Assertions.assertIterableEquals(List.of("111", "222"), source.hvals("hmapall", String.class));
         Assertions.assertIterableEquals(List.of("111", "222"), source.hvalsString("hmapall"));
         Assertions.assertIterableEquals(List.of(111L, 222L), source.hvalsLong("hmapall"));
-        Assertions.assertIterableEquals(List.of("111", "222"), source.hvalsAsync("hmapall", String.class).join());
-        Assertions.assertIterableEquals(List.of("111", "222"), source.hvalsStringAsync("hmapall").join());
-        Assertions.assertIterableEquals(List.of(111L, 222L), source.hvalsLongAsync("hmapall").join());
+        Assertions.assertIterableEquals(
+                List.of("111", "222"),
+                source.hvalsAsync("hmapall", String.class).join());
+        Assertions.assertIterableEquals(
+                List.of("111", "222"), source.hvalsStringAsync("hmapall").join());
+        Assertions.assertIterableEquals(
+                List.of(111L, 222L), source.hvalsLongAsync("hmapall").join());
         Assertions.assertEquals(Utility.ofMap("k1", "111", "k2", "222"), source.hgetall("hmapall", String.class));
         Assertions.assertEquals(Utility.ofMap("k1", "111", "k2", "222"), source.hgetallString("hmapall"));
-        Assertions.assertEquals(JsonConvert.root().convertTo(Utility.ofMap("k1", 111L, "k2", 222L)), JsonConvert.root().convertTo(source.hgetallLong("hmapall")));
-        Assertions.assertEquals(JsonConvert.root().convertTo(Utility.ofMap("k1", "111", "k2", "222")), JsonConvert.root().convertTo(source.hgetallAsync("hmapall", String.class).join()));
-        Assertions.assertEquals(JsonConvert.root().convertTo(Utility.ofMap("k1", "111", "k2", "222")), JsonConvert.root().convertTo(source.hgetallStringAsync("hmapall").join()));
-        Assertions.assertEquals(JsonConvert.root().convertTo(Utility.ofMap("k1", 111L, "k2", 222L)), JsonConvert.root().convertTo(source.hgetallLongAsync("hmapall").join()));
+        Assertions.assertEquals(
+                JsonConvert.root().convertTo(Utility.ofMap("k1", 111L, "k2", 222L)),
+                JsonConvert.root().convertTo(source.hgetallLong("hmapall")));
+        Assertions.assertEquals(
+                JsonConvert.root().convertTo(Utility.ofMap("k1", "111", "k2", "222")),
+                JsonConvert.root()
+                        .convertTo(source.hgetallAsync("hmapall", String.class).join()));
+        Assertions.assertEquals(
+                JsonConvert.root().convertTo(Utility.ofMap("k1", "111", "k2", "222")),
+                JsonConvert.root()
+                        .convertTo(source.hgetallStringAsync("hmapall").join()));
+        Assertions.assertEquals(
+                JsonConvert.root().convertTo(Utility.ofMap("k1", 111L, "k2", 222L)),
+                JsonConvert.root().convertTo(source.hgetallLongAsync("hmapall").join()));
 
-        //h
+        // h
         source.del("hmap");
         source.hincr("hmap", "key1");
         num = source.hgetLong("hmap", "key1", -1);
@@ -449,7 +468,7 @@ public class CacheMemorySourceTest {
         cursor = new AtomicLong();
         Map<String, String> smap = source.hscan("hmap", String.class, cursor, 5);
         System.out.println("hmap.hscan 长度 : " + smap.size() + ", cursor: " + cursor + ", 内容: " + smap);
-        //smap.size 是不确定的，可能是全量，也可能比5多，也可能比5少
+        // smap.size 是不确定的，可能是全量，也可能比5多，也可能比5少
         Assertions.assertFalse(smap.isEmpty());
         if (smap.size() == ccc) {
             Assertions.assertTrue(cursor.get() == 0);
@@ -477,12 +496,14 @@ public class CacheMemorySourceTest {
         Assertions.assertEquals(1L, source.zrevrank("sortset", "key400"));
         Assertions.assertEquals(List.of("key100", "key200", "key300"), source.zrange("sortset", 0, 2));
         cursor = new AtomicLong();
-        Assertions.assertEquals(List.of(CacheScoredValue.create(100, "key100"),
-            CacheScoredValue.create(200, "key200"),
-            CacheScoredValue.create(300, "key300"),
-            CacheScoredValue.create(400, "key400"),
-            CacheScoredValue.create(500, "key500")
-        ), source.zscanInteger("sortset", cursor, -1));
+        Assertions.assertEquals(
+                List.of(
+                        CacheScoredValue.create(100, "key100"),
+                        CacheScoredValue.create(200, "key200"),
+                        CacheScoredValue.create(300, "key300"),
+                        CacheScoredValue.create(400, "key400"),
+                        CacheScoredValue.create(500, "key500")),
+                source.zscanInteger("sortset", cursor, -1));
 
         size = source.zcard("sortset");
         Assertions.assertEquals(5, size);
@@ -511,7 +532,7 @@ public class CacheMemorySourceTest {
         cursor = new AtomicLong();
         Set<String> sset = source.sscan("popset", String.class, cursor, 3);
         System.out.println("popset.sscan 长度 : " + sset.size() + ", cursor: " + cursor + ", 内容: " + sset);
-        //smap.size 是不确定的，可能是全量，也可能比5多，也可能比5少
+        // smap.size 是不确定的，可能是全量，也可能比5多，也可能比5少
         Assertions.assertFalse(sset.isEmpty());
         if (sset.size() == 5) {
             Assertions.assertTrue(cursor.get() == 0);
@@ -560,7 +581,8 @@ public class CacheMemorySourceTest {
 
         cursor = new AtomicLong();
         List<String> keys = source.scan(cursor, 5);
-        System.out.println("scan 长度 : " + keys.size() + ", dbsize: " + source.dbsize() + ", cursor: " + cursor + ", 内容: " + keys);
+        System.out.println(
+                "scan 长度 : " + keys.size() + ", dbsize: " + source.dbsize() + ", cursor: " + cursor + ", 内容: " + keys);
         Assertions.assertFalse(keys.isEmpty());
         if (keys.size() == source.dbsize()) {
             Assertions.assertTrue(cursor.get() == 0);
@@ -573,7 +595,7 @@ public class CacheMemorySourceTest {
 
         long dbsize = source.dbsize();
         System.out.println("keys总数量 : " + dbsize);
-        //清除
+        // 清除
         long rs = source.del("stritem1");
         System.out.println("删除stritem1个数: " + rs);
         source.del("popset");
@@ -622,7 +644,7 @@ public class CacheMemorySourceTest {
         System.out.println("订阅结束");
         source.publish(channel, content);
         System.out.println("发布结束");
-        if (!source.getClass().getName().contains("Redisson")) { //Redisson不支持
+        if (!source.getClass().getName().contains("Redisson")) { // Redisson不支持
             List<String> channels = source.pubsubChannels(null);
             Assertions.assertEquals(List.of(channel), channels);
         }
@@ -638,5 +660,4 @@ public class CacheMemorySourceTest {
         source.unsubscribe(listener, channel);
         System.out.println("取消订阅结束");
     }
-
 }

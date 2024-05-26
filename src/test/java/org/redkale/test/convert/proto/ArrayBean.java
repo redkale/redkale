@@ -6,13 +6,10 @@
 package org.redkale.test.convert.proto;
 
 import java.util.*;
-import org.redkale.util.Utility;
 import org.redkale.convert.proto.ProtobufConvert;
+import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class ArrayBean {
 
     public static class IntArrayBean {
@@ -32,11 +29,11 @@ public class ArrayBean {
 
     public static void main(String[] args) throws Throwable {
         IntArrayBean bean1 = new IntArrayBean();
-        bean1.values1 = new int[]{2, 3, 4};
+        bean1.values1 = new int[] {2, 3, 4};
         IntListBean bean2 = new IntListBean();
         bean2.values2 = Utility.ofList(2, 3, 4);
         IntegerArrayBean bean3 = new IntegerArrayBean();
-        bean3.values3 = new Integer[]{2, 3, 4};
+        bean3.values3 = new Integer[] {2, 3, 4};
         byte[] bs1 = ProtobufConvert.root().convertTo(bean1);
         byte[] bs2 = ProtobufConvert.root().convertTo(bean2);
         byte[] bs3 = ProtobufConvert.root().convertTo(bean3);

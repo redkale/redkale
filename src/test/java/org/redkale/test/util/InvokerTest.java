@@ -10,10 +10,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.redkale.util.Invoker;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class InvokerTest {
 
     public static void main(String[] args) throws Throwable {
@@ -81,11 +78,9 @@ public class InvokerTest {
 
     public static class Action {
 
-        public void test1() {
-        }
+        public void test1() {}
 
-        public void test2(String name) throws IOException {
-        }
+        public void test2(String name) throws IOException {}
 
         public int test3(String name, int id) {
             return 3;

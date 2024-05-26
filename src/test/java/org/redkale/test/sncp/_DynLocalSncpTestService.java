@@ -7,12 +7,6 @@ package org.redkale.test.sncp;
 
 import org.redkale.annotation.ResourceType;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @ResourceType(SncpTestIService.class)
-public class _DynLocalSncpTestService extends SncpTestServiceImpl {
-
-
-}
+public class _DynLocalSncpTestService extends SncpTestServiceImpl {}

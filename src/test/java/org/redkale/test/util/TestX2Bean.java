@@ -6,10 +6,7 @@ package org.redkale.test.util;
 import java.util.Map;
 import org.redkale.convert.json.JsonConvert;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class TestX2Bean implements TestInterface {
 
     private String name;
@@ -29,7 +26,7 @@ public class TestX2Bean implements TestInterface {
     public void setSeqno(String seqno) {
         this.seqno = seqno;
     }
-    
+
     public String getName() {
         return name;
     }
@@ -53,7 +50,6 @@ public class TestX2Bean implements TestInterface {
     public void setMap(Map<String, String> map) {
         this.map = map;
     }
-
 
     @Override
     public String toString() {

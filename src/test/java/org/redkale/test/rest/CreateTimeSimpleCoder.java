@@ -9,7 +9,6 @@ import java.text.SimpleDateFormat;
 import org.redkale.convert.*;
 
 /**
- * 
  * @author zhangjx
  * @param <R> R
  * @param <W> W

@@ -10,10 +10,7 @@ import org.redkale.convert.*;
 import org.redkale.persistence.*;
 import org.redkale.source.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @DistributeTable(strategy = UserDetail.TableStrategy.class)
 public class UserDetail extends BaseEntity {
 
@@ -27,8 +24,8 @@ public class UserDetail extends BaseEntity {
         @Override
         public String[] getTables(String table, FilterNode node) {
             Serializable id = node.findValue("userid");
-            if (id != null) return new String[]{getTable(table, id)};
-            return new String[]{getHashTable(table, (Integer) node.findValue("#hash"))};
+            if (id != null) return new String[] {getTable(table, id)};
+            return new String[] {getHashTable(table, (Integer) node.findValue("#hash"))};
         }
 
         @Override
@@ -40,27 +37,26 @@ public class UserDetail extends BaseEntity {
             int pos = table.indexOf('.');
             return "platf_user." + table.substring(pos + 1) + "_" + (hash > 9 ? hash : ("0" + hash));
         }
-
     }
 
     @Id
-    private long userid; //用户ID
+    private long userid; // 用户ID
 
     @Column(length = 64, comment = "用户昵称")
-    private String username = ""; //用户昵称
+    private String username = ""; // 用户昵称
 
     @Column(length = 32, comment = "手机号码")
-    private String mobile = ""; //手机号码
+    private String mobile = ""; // 手机号码
 
     @Column(length = 64, comment = "密码")
     @ConvertColumn(ignore = true, type = ConvertType.ALL)
-    private String password = ""; //密码
+    private String password = ""; // 密码
 
     @Column(length = 128, comment = "备注")
-    private String remark = ""; //备注
+    private String remark = ""; // 备注
 
     @Column(updatable = false, comment = "创建时间")
-    private long createtime; //创建时间
+    private long createtime; // 创建时间
 
     /** 以下省略getter setter方法 */
     public long getUserid() {

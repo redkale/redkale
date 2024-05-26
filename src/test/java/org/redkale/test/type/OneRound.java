@@ -5,10 +5,5 @@
  */
 package org.redkale.test.type;
 
-/**
- *
- * @author zhangjx
- */
-public class OneRound {
-    
-}
+/** @author zhangjx */
+public class OneRound {}

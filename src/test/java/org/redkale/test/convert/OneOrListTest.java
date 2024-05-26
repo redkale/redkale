@@ -6,10 +6,7 @@ import org.junit.jupiter.api.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.OneOrList;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class OneOrListTest {
 
     private boolean main;
@@ -44,9 +41,7 @@ public class OneOrListTest {
         }
     }
 
-    public static class StringOneList extends OneOrList<String> {
-    }
+    public static class StringOneList extends OneOrList<String> {}
 
-    public static class String2OneList extends StringOneList {
-    }
+    public static class String2OneList extends StringOneList {}
 }

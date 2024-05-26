@@ -10,8 +10,7 @@ import java.util.*;
 /**
  * MimeType
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -177,8 +176,7 @@ public class MimeType {
         contentTypes.put("zip", "application/zip");
     }
 
-    private MimeType() {
-    }
+    private MimeType() {}
 
     public static String get(String extension) {
         return contentTypes.getOrDefault(extension.toLowerCase(), "text/plain");
@@ -207,5 +205,4 @@ public class MimeType {
         int i = fileName.lastIndexOf('.', newEnd);
         return (i < 0) ? null : get(fileName.substring(i + 1, newEnd).toLowerCase());
     }
-
 }

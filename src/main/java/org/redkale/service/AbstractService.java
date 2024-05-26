@@ -11,13 +11,10 @@ import org.redkale.boot.Application;
 import org.redkale.net.WorkThread;
 import org.redkale.net.sncp.Sncp;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public abstract class AbstractService implements Service {
 
-    //配置<executor threads="0"> APP_EXECUTOR资源为null
+    // 配置<executor threads="0"> APP_EXECUTOR资源为null
     @Resource(name = Application.RESNAME_APP_EXECUTOR, required = false)
     private ExecutorService workExecutor;
 
@@ -37,7 +34,6 @@ public abstract class AbstractService implements Service {
 
     /**
      * 异步执行任务
-     *
      *
      * @param command 任务
      */

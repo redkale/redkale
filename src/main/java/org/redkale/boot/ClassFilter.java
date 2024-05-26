@@ -22,8 +22,8 @@ import org.redkale.util.*;
 
 /**
  * class过滤器， 符合条件的class会保留下来存入FilterEntry。
- * <p>
- * 详情见: https://redkale.org
+ *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> 泛型
@@ -31,35 +31,35 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public final class ClassFilter<T> {
 
-    private static final Logger logger = Logger.getLogger(ClassFilter.class.getName()); //日志对象
+    private static final Logger logger = Logger.getLogger(ClassFilter.class.getName()); // 日志对象
 
-    private final Set<FilterEntry<T>> entrys = new HashSet<>(); //符合条件的结果
+    private final Set<FilterEntry<T>> entrys = new HashSet<>(); // 符合条件的结果
 
-    private final Set<FilterEntry<T>> expectEntrys = new HashSet<>(); //准备符合条件的结果
+    private final Set<FilterEntry<T>> expectEntrys = new HashSet<>(); // 准备符合条件的结果
 
     private Predicate<String> expectPredicate;
 
-    private boolean refused; //是否拒绝所有数据,设置true，则其他规则失效,都是拒绝.
+    private boolean refused; // 是否拒绝所有数据,设置true，则其他规则失效,都是拒绝.
 
-    private Class superClass; //符合的父类型。不为空时，扫描结果的class必须是superClass的子类
+    private Class superClass; // 符合的父类型。不为空时，扫描结果的class必须是superClass的子类
 
-    private Class[] excludeSuperClasses; //不符合的父类型。
+    private Class[] excludeSuperClasses; // 不符合的父类型。
 
-    private Class<? extends Annotation> annotationClass;//符合的注解。不为空时，扫描结果的class必须包含该注解
+    private Class<? extends Annotation> annotationClass; // 符合的注解。不为空时，扫描结果的class必须包含该注解
 
-    private Pattern[] includePatterns; //符合的className正则表达式
+    private Pattern[] includePatterns; // 符合的className正则表达式
 
-    private Pattern[] excludePatterns;//拒绝的className正则表达式
+    private Pattern[] excludePatterns; // 拒绝的className正则表达式
 
-    private Set<String> privilegeIncludes; //特批符合条件的className
+    private Set<String> privilegeIncludes; // 特批符合条件的className
 
-    private Set<String> privilegeExcludes;//特批拒绝条件的className
+    private Set<String> privilegeExcludes; // 特批拒绝条件的className
 
-    private List<ClassFilter> ors; //或关系的其他ClassFilter
+    private List<ClassFilter> ors; // 或关系的其他ClassFilter
 
-    private List<ClassFilter> ands;//与关系的其他ClassFilter
+    private List<ClassFilter> ands; // 与关系的其他ClassFilter
 
-    private AnyValue conf; //基本配置信息, 当符合条件时将conf的属性赋值到FilterEntry中去。
+    private AnyValue conf; // 基本配置信息, 当符合条件时将conf的属性赋值到FilterEntry中去。
 
     private final ClassLoader classLoader;
 
@@ -67,11 +67,20 @@ public final class ClassFilter<T> {
         this(classLoader, annotationClass, superClass, (Class[]) null, null);
     }
 
-    public ClassFilter(RedkaleClassLoader classLoader, Class<? extends Annotation> annotationClass, Class superClass, Class[] excludeSuperClasses) {
+    public ClassFilter(
+            RedkaleClassLoader classLoader,
+            Class<? extends Annotation> annotationClass,
+            Class superClass,
+            Class[] excludeSuperClasses) {
         this(classLoader, annotationClass, superClass, excludeSuperClasses, null);
     }
 
-    public ClassFilter(RedkaleClassLoader classLoader, Class<? extends Annotation> annotationClass, Class superClass, Class[] excludeSuperClasses, AnyValue conf) {
+    public ClassFilter(
+            RedkaleClassLoader classLoader,
+            Class<? extends Annotation> annotationClass,
+            Class superClass,
+            Class[] excludeSuperClasses,
+            AnyValue conf) {
         this.annotationClass = annotationClass;
         this.superClass = superClass;
         this.excludeSuperClasses = excludeSuperClasses;
@@ -83,7 +92,13 @@ public final class ClassFilter<T> {
         return create(null, null, includeRegxs, excludeRegxs, null, null);
     }
 
-    public static ClassFilter create(RedkaleClassLoader classLoader, Class[] excludeSuperClasses, String includeRegxs, String excludeRegxs, Set<String> includeValues, Set<String> excludeValues) {
+    public static ClassFilter create(
+            RedkaleClassLoader classLoader,
+            Class[] excludeSuperClasses,
+            String includeRegxs,
+            String excludeRegxs,
+            Set<String> includeValues,
+            Set<String> excludeValues) {
         ClassFilter filter = new ClassFilter(classLoader, null, null, excludeSuperClasses);
         filter.setIncludePatterns(includeRegxs == null ? null : includeRegxs.split(";"));
         filter.setExcludePatterns(excludeRegxs == null ? null : excludeRegxs.split(";"));
@@ -159,9 +174,9 @@ public final class ClassFilter<T> {
     /**
      * 自动扫描地过滤指定的class
      *
-     * @param property  AnyValue
+     * @param property AnyValue
      * @param clazzName String
-     * @param url       URL
+     * @param url URL
      */
     @SuppressWarnings("unchecked")
     public final void filter(AnyValue property, String clazzName, URI url) {
@@ -171,9 +186,9 @@ public final class ClassFilter<T> {
     /**
      * 过滤指定的class
      *
-     * @param property  application.xml中对应class节点下的property属性项
+     * @param property application.xml中对应class节点下的property属性项
      * @param clazzName class名称
-     * @param autoscan  为true表示自动扫描的， false表示显著调用filter， AutoLoad的注解将被忽略
+     * @param autoscan 为true表示自动扫描的， false表示显著调用filter， AutoLoad的注解将被忽略
      */
     public final void filter(AnyValue property, String clazzName, boolean autoscan) {
         filter(property, clazzName, autoscan, null);
@@ -182,10 +197,10 @@ public final class ClassFilter<T> {
     /**
      * 过滤指定的class
      *
-     * @param property  application.xml中对应class节点下的property属性项
+     * @param property application.xml中对应class节点下的property属性项
      * @param clazzName class名称
-     * @param autoScan  为true表示自动扫描的， false表示显著调用filter， AutoLoad的注解将被忽略
-     * @param url       URL
+     * @param autoScan 为true表示自动扫描的， false表示显著调用filter， AutoLoad的注解将被忽略
+     * @param url URL
      */
     public final void filter(AnyValue property, String clazzName, boolean autoScan, URI url) {
         boolean r = accept0(property, clazzName);
@@ -228,28 +243,40 @@ public final class ClassFilter<T> {
             }
 
             AutoLoad auto = (AutoLoad) clazz.getAnnotation(AutoLoad.class);
-            org.redkale.util.AutoLoad auto2 = (org.redkale.util.AutoLoad) clazz.getAnnotation(org.redkale.util.AutoLoad.class);
-            if ((expectPredicate != null && expectPredicate.test(clazzName)) || (autoScan && auto != null && !auto.value())
-                || (autoScan && auto2 != null && !auto2.value())) { //自动扫描且被标记为@AutoLoad(false)的
+            org.redkale.util.AutoLoad auto2 =
+                    (org.redkale.util.AutoLoad) clazz.getAnnotation(org.redkale.util.AutoLoad.class);
+            if ((expectPredicate != null && expectPredicate.test(clazzName))
+                    || (autoScan && auto != null && !auto.value())
+                    || (autoScan && auto2 != null && !auto2.value())) { // 自动扫描且被标记为@AutoLoad(false)的
                 expectEntrys.add(new FilterEntry(clazz, autoScan, true, property));
             } else {
                 entrys.add(new FilterEntry(clazz, autoScan, false, property));
             }
         } catch (Throwable cfe) {
-            if (logger.isLoggable(Level.FINEST) && !clazzName.startsWith("sun.") && !clazzName.startsWith("javax.")
-                && !clazzName.startsWith("com.sun.") && !clazzName.startsWith("jdk.") && !clazzName.startsWith("META-INF")
-                && !clazzName.startsWith("com.mysql.") && !clazzName.startsWith("com.microsoft.") && !clazzName.startsWith("freemarker.")
-                && !clazzName.startsWith("org.redkale") && (clazzName.contains("Service") || clazzName.contains("Servlet"))) {
+            if (logger.isLoggable(Level.FINEST)
+                    && !clazzName.startsWith("sun.")
+                    && !clazzName.startsWith("javax.")
+                    && !clazzName.startsWith("com.sun.")
+                    && !clazzName.startsWith("jdk.")
+                    && !clazzName.startsWith("META-INF")
+                    && !clazzName.startsWith("com.mysql.")
+                    && !clazzName.startsWith("com.microsoft.")
+                    && !clazzName.startsWith("freemarker.")
+                    && !clazzName.startsWith("org.redkale")
+                    && (clazzName.contains("Service") || clazzName.contains("Servlet"))) {
                 if (cfe instanceof NoClassDefFoundError) {
                     String msg = ((NoClassDefFoundError) cfe).getMessage();
                     if (msg.startsWith("java.lang.NoClassDefFoundError: java") || msg.startsWith("javax/")) {
                         return;
                     }
                 }
-                //&& (!(cfe instanceof NoClassDefFoundError) || (cfe instanceof UnsupportedClassVersionError) 
-                //|| ((NoClassDefFoundError) cfe).getMessage().startsWith("java.lang.NoClassDefFoundError: java"))) {
-                logger.log(Level.FINEST, ClassFilter.class.getSimpleName()
-                    + " filter error for class: " + clazzName + (url == null ? "" : (" in " + url)), cfe);
+                // && (!(cfe instanceof NoClassDefFoundError) || (cfe instanceof UnsupportedClassVersionError)
+                // || ((NoClassDefFoundError) cfe).getMessage().startsWith("java.lang.NoClassDefFoundError: java"))) {
+                logger.log(
+                        Level.FINEST,
+                        ClassFilter.class.getSimpleName() + " filter error for class: " + clazzName
+                                + (url == null ? "" : (" in " + url)),
+                        cfe);
             }
         }
     }
@@ -258,7 +285,6 @@ public final class ClassFilter<T> {
      * 判断class是否有效
      *
      * @param className String
-     *
      * @return boolean
      */
     public boolean accept(String className) {
@@ -268,9 +294,8 @@ public final class ClassFilter<T> {
     /**
      * 判断class是否有效
      *
-     * @param property  AnyValue
+     * @param property AnyValue
      * @param className String
-     *
      * @return boolean
      */
     public boolean accept(AnyValue property, String className) {
@@ -327,9 +352,8 @@ public final class ClassFilter<T> {
      * 判断class是否有效
      *
      * @param property AnyValue
-     * @param clazz    Class
+     * @param clazz Class
      * @param autoscan boolean
-     *
      * @return boolean
      */
     @SuppressWarnings("unchecked")
@@ -374,7 +398,7 @@ public final class ClassFilter<T> {
         return ps;
     }
 
-    //将简化版正则转成标准的正则表达式
+    // 将简化版正则转成标准的正则表达式
     // *.platf.* 转成  ^.*\.platf\..*$
     // .platf. 转成  ^.*\.platf\..*$
     private static String format(String regx) {
@@ -385,7 +409,7 @@ public final class ClassFilter<T> {
         if (regx.startsWith("*") || regx.startsWith(".")) {
             str = "^.*" + str.substring(1);
         }
-        return str.replace(new String(new char[]{8}), "\\.");
+        return str.replace(new String(new char[] {8}), "\\.");
     }
 
     public void setSuperClass(Class superClass) {
@@ -458,7 +482,6 @@ public final class ClassFilter<T> {
 
     public void setPrivilegeExcludes(Set<String> privilegeExcludes) {
         this.privilegeExcludes = privilegeExcludes == null || privilegeExcludes.isEmpty() ? null : privilegeExcludes;
-
     }
 
     /**
@@ -468,7 +491,7 @@ public final class ClassFilter<T> {
      */
     public static final class FilterEntry<T> implements Comparable<FilterEntry<T>> {
 
-        private final String group; //优先级高于remote属性
+        private final String group; // 优先级高于remote属性
 
         private final String name;
 
@@ -489,11 +512,12 @@ public final class ClassFilter<T> {
             this.property = property;
             this.autoload = autoload;
             this.expect = expect;
-            this.group = property == null ? null : property.getValue("group", "").trim();
+            this.group =
+                    property == null ? null : property.getValue("group", "").trim();
             this.name = property == null ? "" : property.getValue("name", "");
         }
 
-        @Override //@Priority值越大，优先级越高, 需要排前面
+        @Override // @Priority值越大，优先级越高, 需要排前面
         public int compareTo(FilterEntry o) {
             if (!(o instanceof FilterEntry)) {
                 return 1;
@@ -505,7 +529,8 @@ public final class ClassFilter<T> {
 
         @Override
         public String toString() {
-            return this.getClass().getSimpleName() + "[type=" + this.type.getSimpleName() + ", name=" + name + ", group=" + this.group + "]";
+            return this.getClass().getSimpleName() + "[type=" + this.type.getSimpleName() + ", name=" + name
+                    + ", group=" + this.group + "]";
         }
 
         @Override
@@ -555,12 +580,9 @@ public final class ClassFilter<T> {
         public boolean isExpect() {
             return expect;
         }
-
     }
 
-    /**
-     * class加载类
-     */
+    /** class加载类 */
     public static class Loader {
 
         protected static final Logger logger = Logger.getLogger(Loader.class.getName());
@@ -568,7 +590,7 @@ public final class ClassFilter<T> {
         protected static final ConcurrentMap<URI, Set<String>> cache = new ConcurrentHashMap<>();
 
         private Loader() {
-            //do nothng
+            // do nothng
         }
 
         public static void close() {
@@ -579,12 +601,12 @@ public final class ClassFilter<T> {
          * 加载当前线程的classpath扫描所有class进行过滤
          *
          * @param excludeFile 不需要扫描的文件夹， 可以为null
-         * @param loader      RedkaleClassloader， 不可为null
-         * @param filters     过滤器
-         *
+         * @param loader RedkaleClassloader， 不可为null
+         * @param filters 过滤器
          * @throws IOException 异常
          */
-        public static void load(final File excludeFile, RedkaleClassLoader loader, final ClassFilter... filters) throws IOException {
+        public static void load(final File excludeFile, RedkaleClassLoader loader, final ClassFilter... filters)
+                throws IOException {
             List<URI> urlFiles = new ArrayList<>(2);
             List<URI> urlJares = new ArrayList<>(2);
             final URI exurl = excludeFile != null ? excludeFile.toURI() : null;
@@ -614,9 +636,9 @@ public final class ClassFilter<T> {
                                 if (className.startsWith("javax.") || className.startsWith("com.sun.")) {
                                     continue;
                                 }
-                                //常见的jar跳过
+                                // 常见的jar跳过
                                 if (className.startsWith("org.redkaledyn.")) {
-                                    break; //redkale动态生成的类
+                                    break; // redkale动态生成的类
                                 }
                                 if (className.startsWith("org.junit.")) {
                                     break;
@@ -697,7 +719,10 @@ public final class ClassFilter<T> {
                         String rootPath = root.getPath();
                         loadClassFiles(excludeFile, root, files);
                         for (File f : files) {
-                            String className = f.getPath().substring(rootPath.length() + 1, f.getPath().length() - 6).replace(File.separatorChar, '.');
+                            String className = f.getPath()
+                                    .substring(
+                                            rootPath.length() + 1, f.getPath().length() - 6)
+                                    .replace(File.separatorChar, '.');
                             if (className.startsWith("javax.") || className.startsWith("com.sun.")) {
                                 continue;
                             }
@@ -731,7 +756,7 @@ public final class ClassFilter<T> {
                     }
                 }
             }
-            //if (debug) logger.log(Level.INFO, "Scan classes: \r\n{0}", debugstr);
+            // if (debug) logger.log(Level.INFO, "Scan classes: \r\n{0}", debugstr);
         }
 
         private static void loadClassFiles(File exclude, File root, List<File> files) {

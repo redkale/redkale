@@ -18,7 +18,7 @@ import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.Attribute;
 
 /**
- * java.sql.ResultSet的简化版。  <br>
+ * java.sql.ResultSet的简化版。 <br>
  * <br>
  * 字段类型支持： <br>
  * 1、boolean/Boolean <br>
@@ -38,8 +38,7 @@ import org.redkale.util.Attribute;
  * 15、java.time.LocalDateTime/java.sql.Timestamp <br>
  * 16、JavaBean/其他可JSON化类型 <br>
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.5.0
@@ -189,13 +188,16 @@ public interface DataResultSet extends EntityInfo.DataResultSetRow {
                     o = o.toString();
                 }
             } else if (o != null && !t.isAssignableFrom(o.getClass()) && o instanceof CharSequence) {
-                o = ((CharSequence) o).length() == 0 ? null : JsonConvert.root().convertFrom(genericType == null ? t : genericType, o.toString());
+                o = ((CharSequence) o).length() == 0
+                        ? null
+                        : JsonConvert.root().convertFrom(genericType == null ? t : genericType, o.toString());
             }
         }
         return (Serializable) o;
     }
 
-    public static <T> Serializable getRowColumnValue(final EntityInfo.DataResultSetRow row, Attribute<T, Serializable> attr, int index, String column) {
+    public static <T> Serializable getRowColumnValue(
+            final EntityInfo.DataResultSetRow row, Attribute<T, Serializable> attr, int index, String column) {
         final Class t = attr.type();
         Serializable o = null;
         try {
@@ -203,26 +205,26 @@ public interface DataResultSet extends EntityInfo.DataResultSetRow {
                 Object blob = index > 0 ? row.getObject(index) : row.getObject(column);
                 if (blob == null) {
                     o = null;
-                } else { //不支持超过2G的数据
-//                if (blob instanceof java.sql.Blob) {
-//                    java.sql.Blob b = (java.sql.Blob) blob;
-//                    try {
-//                        o = b.getBytes(1, (int) b.length());
-//                    } catch (Exception e) { //一般不会发生
-//                        o = null;
-//                    }
-//                } else {
+                } else { // 不支持超过2G的数据
+                    //                if (blob instanceof java.sql.Blob) {
+                    //                    java.sql.Blob b = (java.sql.Blob) blob;
+                    //                    try {
+                    //                        o = b.getBytes(1, (int) b.length());
+                    //                    } catch (Exception e) { //一般不会发生
+                    //                        o = null;
+                    //                    }
+                    //                } else {
                     o = (byte[]) blob;
-                    //}
+                    // }
                 }
             } else {
                 o = (Serializable) (index > 0 ? row.getObject(index) : row.getObject(column));
                 o = formatColumnValue(t, attr.genericType(), o);
             }
         } catch (Exception e) {
-            throw new SourceException(row.getEntityInfo() + "." + attr.field() + ".value=" + o + ": " + e.getMessage(), e.getCause());
+            throw new SourceException(
+                    row.getEntityInfo() + "." + attr.field() + ".value=" + o + ": " + e.getMessage(), e.getCause());
         }
         return o;
     }
-
 }

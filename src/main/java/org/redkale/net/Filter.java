@@ -15,8 +15,7 @@ import org.redkale.util.AnyValue;
  * 通过给Filter标记注解&#064;Priority来确定执行的顺序, Priority.value值越大越先执行 <br>
  * 如果doFilter方法是非阻塞的，需要在Filter类上标记&#064;NonBlocking
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <C> Context的子类型
@@ -25,24 +24,22 @@ import org.redkale.util.AnyValue;
  */
 public abstract class Filter<C extends Context, R extends Request<C>, P extends Response<C, R>> implements Comparable {
 
-    AnyValue _conf; //当前Filter的配置
+    AnyValue _conf; // 当前Filter的配置
 
-    final boolean _nonBlocking; //当前Filter.doFilter方法是否为阻塞模式
+    final boolean _nonBlocking; // 当前Filter.doFilter方法是否为阻塞模式
 
-    Filter<C, R, P> _next; //下一个Filter
+    Filter<C, R, P> _next; // 下一个Filter
 
     protected Filter() {
         NonBlocking a = getClass().getAnnotation(NonBlocking.class);
         this._nonBlocking = a != null && a.value();
     }
 
-    public void init(C context, AnyValue config) {
-    }
+    public void init(C context, AnyValue config) {}
 
     public abstract void doFilter(R request, P response) throws IOException;
 
-    public void destroy(C context, AnyValue config) {
-    }
+    public void destroy(C context, AnyValue config) {}
 
     @Override
     public int compareTo(Object o) {

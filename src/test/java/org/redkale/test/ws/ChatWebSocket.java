@@ -12,15 +12,12 @@ import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
 import org.redkale.test.rest.*;
 
-/**
- *
- * @author zhangjx
- */
-//anyuser = true 表示WebSocket.createUserid返回的值不表示用户登录态
+/** @author zhangjx */
+// anyuser = true 表示WebSocket.createUserid返回的值不表示用户登录态
 @RestWebSocket(name = "chat", catalog = "ws", comment = "文字聊天", anyuser = true)
 public class ChatWebSocket extends WebSocket<Integer, Object> {
 
-    //@Resource标记的Field只能被修饰为public或protected
+    // @Resource标记的Field只能被修饰为public或protected
     @Resource
     protected ChatService service;
 
@@ -33,11 +30,11 @@ public class ChatWebSocket extends WebSocket<Integer, Object> {
     protected CompletableFuture<String> onOpen(final HttpRequest request) {
         LoginBean bean = request.getJsonParameter(LoginBean.class, "bean");
         RetResult<UserInfo> ret = userService.login(bean);
-        if (ret.isSuccess()) { //登录成功
+        if (ret.isSuccess()) { // 登录成功
             user = ret.getResult();
-            //随机创建一个sessionid
+            // 随机创建一个sessionid
             return CompletableFuture.completedFuture(request.getSessionid(true));
-        } else { //登录失败, 返回null
+        } else { // 登录失败, 返回null
             return send("{\"onLoginFailMessage\":" + ret + "}").thenApply(x -> null);
         }
     }
@@ -49,6 +46,7 @@ public class ChatWebSocket extends WebSocket<Integer, Object> {
 
     /**
      * 浏览器WebSocket请求：
+     *
      * <pre>
      * websocket.send(JSON.stringify({
      *      sendmessage:{
@@ -64,7 +62,7 @@ public class ChatWebSocket extends WebSocket<Integer, Object> {
      * </pre>
      *
      * @param message 参数1
-     * @param extmap  参数2
+     * @param extmap 参数2
      */
     @RestOnMessage(name = "sendmessage")
     public void onChatMessage(ChatMessage message, Map<String, String> extmap) {
@@ -76,6 +74,7 @@ public class ChatWebSocket extends WebSocket<Integer, Object> {
 
     /**
      * 浏览器WebSocket请求：
+     *
      * <pre>
      * websocket.send(JSON.stringify({
      *      joinroom:{
@@ -93,6 +92,7 @@ public class ChatWebSocket extends WebSocket<Integer, Object> {
 
     /**
      * 浏览器WebSocket请求：
+     *
      * <pre>
      * websocket.send(JSON.stringify({
      *      roomid: 10212
@@ -101,11 +101,10 @@ public class ChatWebSocket extends WebSocket<Integer, Object> {
      * </pre>
      *
      * @param roomid 参数1
-     * @param name   参数2
+     * @param name 参数2
      */
-    @RestOnMessage(name = "*")  //*为特殊值表示参数中不包含方法名
+    @RestOnMessage(name = "*") // *为特殊值表示参数中不包含方法名
     public void other(int roomid, String name) {
         service.other(roomid, name);
     }
-
 }

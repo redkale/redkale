@@ -10,11 +10,9 @@ import org.redkale.convert.ConvertColumn;
 import org.redkale.util.Times;
 
 /**
- *
  * 取值范围，包含两边的值
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <E> Comparable的子类型
@@ -61,8 +59,7 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
         @ConvertColumn(index = 2)
         private Byte max = Byte.MAX_VALUE;
 
-        public ByteRange() {
-        }
+        public ByteRange() {}
 
         public ByteRange(Byte min, Byte max) {
             if (min != null) this.min = min;
@@ -97,7 +94,6 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
         public String toString() {
             return "{min:" + min + ", max:" + max + "}";
         }
-
     }
 
     public static final class ShortRange implements Range<Short> {
@@ -108,8 +104,7 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
         @ConvertColumn(index = 2)
         private Short max = Short.MAX_VALUE;
 
-        public ShortRange() {
-        }
+        public ShortRange() {}
 
         public ShortRange(Short min, Short max) {
             if (min != null) this.min = min;
@@ -154,8 +149,7 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
         @ConvertColumn(index = 2)
         private Integer max = Integer.MAX_VALUE;
 
-        public IntRange() {
-        }
+        public IntRange() {}
 
         public IntRange(Integer min, Integer max) {
             if (min != null) this.min = min;
@@ -200,8 +194,7 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
         @ConvertColumn(index = 2)
         private Long max = Long.MAX_VALUE;
 
-        public LongRange() {
-        }
+        public LongRange() {}
 
         public LongRange(Long min, Long max) {
             if (min != null) this.min = min;
@@ -256,8 +249,7 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
         @ConvertColumn(index = 2)
         private Float max = Float.MAX_VALUE;
 
-        public FloatRange() {
-        }
+        public FloatRange() {}
 
         public FloatRange(Float min, Float max) {
             if (min != null) this.min = min;
@@ -302,8 +294,7 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
         @ConvertColumn(index = 2)
         private Double max = Double.MAX_VALUE;
 
-        public DoubleRange() {
-        }
+        public DoubleRange() {}
 
         public DoubleRange(Double min, Double max) {
             if (min != null) this.min = min;
@@ -348,8 +339,7 @@ public interface Range<E extends Comparable> extends java.io.Serializable, Predi
         @ConvertColumn(index = 2)
         private String max = "";
 
-        public StringRange() {
-        }
+        public StringRange() {}
 
         public StringRange(String min, String max) {
             this.min = min;

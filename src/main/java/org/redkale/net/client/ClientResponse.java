@@ -9,28 +9,23 @@ import java.io.Serializable;
 import org.redkale.annotation.Nullable;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.3.0
- *
  * @param <R> 请求对象
  * @param <P> message
  */
 public class ClientResponse<R extends ClientRequest, P extends ClientResult> {
 
     @Nullable
-    protected R request; //服务端返回一个不存在的requestid，可能为null
+    protected R request; // 服务端返回一个不存在的requestid，可能为null
 
     protected P message;
 
     protected Throwable cause;
 
-    public ClientResponse() {
-    }
+    public ClientResponse() {}
 
     public ClientResponse(R request, P message) {
         this.request = request;

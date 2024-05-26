@@ -1,47 +1,40 @@
-/** *****************************************************************************
- * Copyright (c) 2011 - 2013 Oracle Corporation. All rights reserved.
+/**
+ * ***************************************************************************** Copyright (c) 2011 - 2013 Oracle
+ * Corporation. All rights reserved.
  *
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License v1.0 and Eclipse Distribution License v. 1.0
- * which accompanies this distribution.
- * The Eclipse Public License is available at http://www.eclipse.org/legal/epl-v10.html
- * and the Eclipse Distribution License is available at
+ * <p>This program and the accompanying materials are made available under the terms of the Eclipse Public License v1.0
+ * and Eclipse Distribution License v. 1.0 which accompanies this distribution. The Eclipse Public License is available
+ * at http://www.eclipse.org/legal/epl-v10.html and the Eclipse Distribution License is available at
  * http://www.eclipse.org/org/documents/edl-v10.php.
  *
- * Contributors:
- *     Linda DeMichiel - Java Persistence 2.1
+ * <p>Contributors: Linda DeMichiel - Java Persistence 2.1
  *
- ***************************************************************************** */
+ * <p>****************************************************************************
+ */
 package javax.persistence;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 
 /**
  * Used in schema generation to specify creation of an index.
- * <p>
- * Note that it is not necessary to specify an index for a primary key,
- * as the primary key index will be created automatically.
  *
- * <p>
- * The syntax of the <code>columnList</code> element is a
- * <code>column_list</code>, as follows:
+ * <p>Note that it is not necessary to specify an index for a primary key, as the primary key index will be created
+ * automatically.
+ *
+ * <p>The syntax of the <code>columnList</code> element is a <code>column_list</code>, as follows:
  *
  * <pre>
  *    column::= index_column [,index_column]*
  *    index_column::= column_name [ASC | DESC]
  * </pre>
  *
- * <p>
- * If <code>ASC</code> or <code>DESC</code> is not specified,
- * <code>ASC</code> (ascending order) is assumed.
+ * <p>If <code>ASC</code> or <code>DESC</code> is not specified, <code>ASC</code> (ascending order) is assumed.
  *
  * @since Java Persistence 2.1
- * 
  * @deprecated replace by {@link org.redkale.persistence.Index}
- * 
  * @see org.redkale.persistence.Index
- *
  */
 @Deprecated(since = "2.8.0")
 @Target({})
@@ -56,8 +49,7 @@ public @interface Index {
     String name() default "";
 
     /**
-     * (Required) The names of the columns to be included in the index,
-     * in order.
+     * (Required) The names of the columns to be included in the index, in order.
      *
      * @return String
      */
@@ -69,5 +61,4 @@ public @interface Index {
      * @return boolean
      */
     boolean unique() default false;
-
 }

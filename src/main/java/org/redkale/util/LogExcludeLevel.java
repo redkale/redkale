@@ -7,12 +7,15 @@ package org.redkale.util;
 
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 import java.lang.annotation.*;
 
 /**
  * 等于level日志级别且包含keys字符串的日志才会被排除 <br>
  *
- * <blockquote><pre>
+ * <blockquote>
+ *
+ * <pre>
  * &#64;LogExcludeLevel(levels = {"FINEST"}, keys = {"SET username ="})
  * public class UserRecord {
  *      public int userid;
@@ -20,11 +23,13 @@ import java.lang.annotation.*;
  * }
  *
  * 这样当调用DataSource对UserRecord对象进行操作时，拼接的SQL语句含"SET username ="字样的都会在FINEST日志级别过滤掉
- * </pre></blockquote>
- * <p>
- * 详情见: https://redkale.org
- * @see org.redkale.annotation.LogExcludeLevel
+ * </pre>
  *
+ * </blockquote>
+ *
+ * <p>详情见: https://redkale.org
+ *
+ * @see org.redkale.annotation.LogExcludeLevel
  * @author zhangjx
  */
 @Deprecated(since = "2.8.0")

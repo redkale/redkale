@@ -6,11 +6,8 @@
 package org.redkale.test.type;
 
 /**
- *
  * @author zhangjx
  * @param <TR>
  * @param <TB>
  */
-public class TwoService<TR extends TwoRound, TB extends TwoBean> extends OneService<TR, TB> {
-      
-}
+public class TwoService<TR extends TwoRound, TB extends TwoBean> extends OneService<TR, TB> {}

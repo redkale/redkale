@@ -5,10 +5,5 @@
  */
 package org.redkale.test.util;
 
-/**
- *
- * @author zhangjx
- */
-public class TestXBean extends TestBean {
-
-}
+/** @author zhangjx */
+public class TestXBean extends TestBean {}

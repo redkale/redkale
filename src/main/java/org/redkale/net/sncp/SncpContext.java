@@ -9,7 +9,6 @@ import java.net.InetSocketAddress;
 import org.redkale.net.Context;
 
 /**
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -33,7 +32,5 @@ public class SncpContext extends Context {
         this.serverAddressPort = addr.getPort();
     }
 
-    public static class SncpContextConfig extends ContextConfig {
-
-    }
+    public static class SncpContextConfig extends ContextConfig {}
 }

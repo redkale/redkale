@@ -13,8 +13,7 @@ import org.redkale.util.*;
 /**
  * 序列化/反序列化操作类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类
@@ -22,13 +21,13 @@ import org.redkale.util.*;
  */
 public abstract class Convert<R extends Reader, W extends Writer> {
 
-    //值为true时 String类型值为""，Boolean类型值为false时不会输出，默认为false
+    // 值为true时 String类型值为""，Boolean类型值为false时不会输出，默认为false
     public static final int FEATURE_TINY = 1 << 1;
 
-    //值为true时 字段值为null时会输出，默认为false
+    // 值为true时 字段值为null时会输出，默认为false
     public static final int FEATURE_NULLABLE = 1 << 2;
 
-    //配置属性集合， 1<<1至1<<10为系统内置
+    // 配置属性集合， 1<<1至1<<10为系统内置
     protected final int features;
 
     protected final ConvertFactory<R, W> factory;
@@ -46,8 +45,11 @@ public abstract class Convert<R extends Reader, W extends Writer> {
         return writer;
     }
 
-    protected <S extends W> S fieldFunc(S writer, BiFunction<Attribute, Object, Object> objFieldFunc,
-        BiFunction mapFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
+    protected <S extends W> S fieldFunc(
+            S writer,
+            BiFunction<Attribute, Object, Object> objFieldFunc,
+            BiFunction mapFieldFunc,
+            Function<Object, ConvertField[]> objExtFunc) {
         writer.mapFieldFunc = mapFieldFunc;
         writer.objFieldFunc = objFieldFunc;
         writer.objExtFunc = objExtFunc;
@@ -62,12 +64,15 @@ public abstract class Convert<R extends Reader, W extends Writer> {
         return newConvert(objFieldFunc, mapFieldFunc, null);
     }
 
-    public Convert<R, W> newConvert(BiFunction<Attribute, Object, Object> objFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
+    public Convert<R, W> newConvert(
+            BiFunction<Attribute, Object, Object> objFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
         return newConvert(objFieldFunc, null, objExtFunc);
     }
 
-    public abstract Convert<R, W> newConvert(BiFunction<Attribute, Object, Object> objFieldFunc,
-        BiFunction mapFieldFunc, Function<Object, ConvertField[]> objExtFunc);
+    public abstract Convert<R, W> newConvert(
+            BiFunction<Attribute, Object, Object> objFieldFunc,
+            BiFunction mapFieldFunc,
+            Function<Object, ConvertField[]> objExtFunc);
 
     public abstract boolean isBinary();
 
@@ -75,7 +80,7 @@ public abstract class Convert<R extends Reader, W extends Writer> {
 
     public abstract void offerReader(final R reader);
 
-    //返回的Writer子类必须实现ByteTuple接口
+    // 返回的Writer子类必须实现ByteTuple接口
     public abstract W pollWriter();
 
     public abstract void offerWriter(final W write);
@@ -84,7 +89,7 @@ public abstract class Convert<R extends Reader, W extends Writer> {
 
     public abstract <T> T convertFrom(final Type type, final R reader);
 
-    //@since 2.2.0
+    // @since 2.2.0
     public abstract <T> T convertFrom(final Type type, final byte[] bytes, final int offset, final int length);
 
     public abstract <T> T convertFrom(final Type type, final ByteBuffer... buffers);
@@ -118,5 +123,4 @@ public abstract class Convert<R extends Reader, W extends Writer> {
     }
 
     public abstract ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value);
-
 }

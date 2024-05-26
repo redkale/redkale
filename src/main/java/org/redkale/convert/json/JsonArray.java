@@ -13,16 +13,14 @@ import org.redkale.util.*;
 /**
  * 常规json数组
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.8.0
  */
 public class JsonArray extends ArrayList<Object> implements JsonElement {
 
-    public JsonArray() {
-    }
+    public JsonArray() {}
 
     public JsonArray(Collection collection) {
         super(collection);
@@ -50,7 +48,8 @@ public class JsonArray extends ArrayList<Object> implements JsonElement {
 
     public <T> List<T> toList(Type componentType) {
         Type listType = TypeToken.createParameterizedType(null, ArrayList.class, componentType);
-        return (List) JsonConvert.root().convertFrom(listType, JsonConvert.root().convertTo(this));
+        return (List)
+                JsonConvert.root().convertFrom(listType, JsonConvert.root().convertTo(this));
     }
 
     public JsonArray append(Object value) {

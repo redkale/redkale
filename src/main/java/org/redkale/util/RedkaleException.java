@@ -4,9 +4,9 @@
 package org.redkale.util;
 
 /**
- * redkale的异常基础类  <br>
- * <p>
- * 详情见: https://redkale.org
+ * redkale的异常基础类 <br>
+ *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.8.0

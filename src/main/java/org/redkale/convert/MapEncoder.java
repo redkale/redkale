@@ -13,8 +13,7 @@ import java.util.function.BiFunction;
 /**
  * Map的序列化操作类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <K> Map key的数据类型
@@ -50,7 +49,8 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
             }
             factory.ignoreMapColumnLock.lock();
             try {
-                this.ignoreMapColumns = factory.ignoreMapColumns.isEmpty() ? null : new HashSet<>(factory.ignoreMapColumns);
+                this.ignoreMapColumns =
+                        factory.ignoreMapColumns.isEmpty() ? null : new HashSet<>(factory.ignoreMapColumns);
             } finally {
                 factory.ignoreMapColumnLock.unlock();
             }
@@ -83,7 +83,7 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
                 try {
                     condition.await();
                 } catch (Exception e) {
-                    //do nothing
+                    // do nothing
                 } finally {
                     lock.unlock();
                 }
@@ -141,5 +141,4 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
     public Encodeable<Writer, V> getValueEncoder() {
         return valueEncoder;
     }
-
 }

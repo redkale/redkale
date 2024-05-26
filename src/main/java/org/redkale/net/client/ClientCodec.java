@@ -17,22 +17,22 @@ import org.redkale.util.*;
 /**
  * 每个ClientConnection绑定一个独立的ClientCodec实例, 只会同一读线程ReadIOThread里运行
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.3.0
  * @param <R> ClientRequest
  * @param <P> 响应对象
  */
-public abstract class ClientCodec<R extends ClientRequest, P extends ClientResult> implements CompletionHandler<Integer, ByteBuffer> {
+public abstract class ClientCodec<R extends ClientRequest, P extends ClientResult>
+        implements CompletionHandler<Integer, ByteBuffer> {
 
     private final List<ClientResponse<R, P>> respResults = new ArrayList<>();
 
     private final ByteArray readArray = new ByteArray();
 
-    private final ObjectPool<ClientResponse<R, P>> respPool = 
-        ObjectPool.createUnsafePool(256, t -> new ClientResponse(), ClientResponse::prepare, ClientResponse::recycle);
+    private final ObjectPool<ClientResponse<R, P>> respPool = ObjectPool.createUnsafePool(
+            256, t -> new ClientResponse(), ClientResponse::prepare, ClientResponse::recycle);
 
     protected final ClientConnection<R, P> connection;
 
@@ -43,7 +43,7 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
         this.connection = connection;
     }
 
-    //buffer之后会clear
+    // buffer之后会clear
     public abstract void decodeMessages(ByteBuffer buffer, ByteArray array);
 
     public ClientCodec<R, P> withMessageListener(ClientMessageListener listener) {
@@ -72,7 +72,7 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
         AsyncConnection channel = connection.channel;
         connection.currRespIterator = null;
         decodeMessages(buffer, readArray);
-        if (!respResults.isEmpty()) { //存在解析结果
+        if (!respResults.isEmpty()) { // 存在解析结果
             connection.currRespIterator = null;
             readArray.clear();
             boolean keepAlive = true;
@@ -103,14 +103,14 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
             if (!keepAlive) {
                 connection.dispose(null);
             }
-            if (buffer.hasRemaining()) { //还有响应数据包
+            if (buffer.hasRemaining()) { // 还有响应数据包
                 decodeResponse(buffer);
-            } else if (keepAlive) { //队列都已处理完了
+            } else if (keepAlive) { // 队列都已处理完了
                 buffer.clear();
                 channel.setReadBuffer(buffer);
                 channel.readRegister(this);
             }
-        } else { //数据不全， 继续读
+        } else { // 数据不全， 继续读
             connection.currRespIterator = null;
             buffer.clear();
             channel.setReadBuffer(buffer);
@@ -127,11 +127,11 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
             if (!halfCompleted && !request.isCompleted()) {
                 if (exc == null) {
                     connection.sendHalfWriteInReadThread(request, exc);
-                    //request没有发送完，respFuture需要再次接收
+                    // request没有发送完，respFuture需要再次接收
                     return;
                 } else {
                     connection.sendHalfWriteInReadThread(request, exc);
-                    //异常了需要清掉半包
+                    // 异常了需要清掉半包
                 }
             }
             connection.respWaitingCounter.decrement();
@@ -139,21 +139,23 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
                 connection.client.incrRespDoneCounter();
             }
             respFuture.cancelTimeout();
-//            if (connection.client.debug) {
-//                connection.client.logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ": " + connection
-//                    + ", 回调处理(" + (request != null ? (System.currentTimeMillis() - request.getCreateTime()) : -1) + "ms), req=" + request + ", message=" + message, exc);
-//            }
+            //            if (connection.client.debug) {
+            //                connection.client.logger.log(Level.FINEST, Utility.nowMillis() + ": " +
+            // Thread.currentThread().getName() + ": " + connection
+            //                    + ", 回调处理(" + (request != null ? (System.currentTimeMillis() -
+            // request.getCreateTime()) : -1) + "ms), req=" + request + ", message=" + message, exc);
+            //            }
             connection.preComplete(message, (R) request, exc);
 
             if (exc == null) {
                 final Object rs = request.respTransfer == null ? message : request.respTransfer.apply(message);
-                //workThread不区分IO线程，respFuture.complete中使用CompletableFuture.join会一直阻塞
+                // workThread不区分IO线程，respFuture.complete中使用CompletableFuture.join会一直阻塞
                 workThread.runWork(() -> {
                     Traces.currentTraceid(request.traceid);
                     respFuture.complete(rs);
                     Traces.removeTraceid();
                 });
-            } else { //异常
+            } else { // 异常
                 workThread.runWork(() -> {
                     Traces.currentTraceid(request.traceid);
                     respFuture.completeExceptionally(exc);
@@ -209,5 +211,4 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
     public String toString() {
         return JsonConvert.root().convertTo(this);
     }
-
 }

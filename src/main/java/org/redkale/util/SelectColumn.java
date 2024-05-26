@@ -12,8 +12,7 @@ import java.util.regex.Pattern;
 /**
  * 判断字符串数组是否包含或排除指定字符串的操作类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -23,10 +22,9 @@ public class SelectColumn implements Predicate<String> {
 
     private String[] columns;
 
-    private boolean excludable; //是否排除
+    private boolean excludable; // 是否排除
 
-    public SelectColumn() {
-    }
+    public SelectColumn() {}
 
     protected SelectColumn(final String[] columns0, final boolean excludable) {
         this.excludable = excludable;
@@ -79,21 +77,19 @@ public class SelectColumn implements Predicate<String> {
      * class中的字段名
      *
      * @param columns 包含的字段名集合
-     *
      * @return SelectColumn
      */
-//    @Deprecated
-//    public static SelectColumn createIncludes(String... columns) {
-//        return new SelectColumn(columns, false);
-//    }
-//
-//    
+    //    @Deprecated
+    //    public static SelectColumn createIncludes(String... columns) {
+    //        return new SelectColumn(columns, false);
+    //    }
+    //
+    //
     /**
      * class中的字段名
      *
      * @param funcs 包含的字段名Lambda集合
-     * @param <T>   泛型
-     *
+     * @param <T> 泛型
      * @return SelectColumn
      */
     public static <T> SelectColumn includes(LambdaFunction<T, ?>... funcs) {
@@ -104,7 +100,6 @@ public class SelectColumn implements Predicate<String> {
      * class中的字段名
      *
      * @param columns 包含的字段名集合
-     *
      * @return SelectColumn
      */
     public static SelectColumn includes(String... columns) {
@@ -114,23 +109,21 @@ public class SelectColumn implements Predicate<String> {
     /**
      * class中的字段名
      *
-     * @param cols    包含的字段名集合
+     * @param cols 包含的字段名集合
      * @param columns 包含的字段名集合
-     *
      * @return SelectColumn
      */
-//    @Deprecated
-//    public static SelectColumn createIncludes(String[] cols, String... columns) {
-//        return new SelectColumn(Utility.append(cols, columns), false);
-//    }
-//
-//    
+    //    @Deprecated
+    //    public static SelectColumn createIncludes(String[] cols, String... columns) {
+    //        return new SelectColumn(Utility.append(cols, columns), false);
+    //    }
+    //
+    //
     /**
      * class中的字段名
      *
-     * @param cols    包含的字段名集合
+     * @param cols 包含的字段名集合
      * @param columns 包含的字段名集合
-     *
      * @return SelectColumn
      */
     public static SelectColumn includes(String[] cols, String... columns) {
@@ -138,25 +131,22 @@ public class SelectColumn implements Predicate<String> {
     }
 
     /**
-     *
      * class中的字段名
      *
      * @param columns 排除的字段名集合
-     *
      * @return SelectColumn
      */
-//    @Deprecated
-//    public static SelectColumn createExcludes(String... columns) {
-//        return new SelectColumn(columns, true);
-//    }
-//
-//    
+    //    @Deprecated
+    //    public static SelectColumn createExcludes(String... columns) {
+    //        return new SelectColumn(columns, true);
+    //    }
+    //
+    //
     /**
      * class中的字段名
      *
      * @param funcs 包含的字段名Lambda集合
-     * @param <T>   泛型
-     *
+     * @param <T> 泛型
      * @return SelectColumn
      */
     public static <T> SelectColumn excludes(LambdaFunction<T, ?>... funcs) {
@@ -167,7 +157,6 @@ public class SelectColumn implements Predicate<String> {
      * class中的字段名
      *
      * @param columns 排除的字段名集合
-     *
      * @return SelectColumn
      */
     public static SelectColumn excludes(String... columns) {
@@ -177,24 +166,21 @@ public class SelectColumn implements Predicate<String> {
     /**
      * class中的字段名
      *
-     * @param cols    排除的字段名集合
+     * @param cols 排除的字段名集合
      * @param columns 排除的字段名集合
-     *
      * @return SelectColumn
      */
-//    @Deprecated
-//    public static SelectColumn createExcludes(String[] cols, String... columns) {
-//        return new SelectColumn(Utility.append(cols, columns), true);
-//    }
-//
-//    
+    //    @Deprecated
+    //    public static SelectColumn createExcludes(String[] cols, String... columns) {
+    //        return new SelectColumn(Utility.append(cols, columns), true);
+    //    }
+    //
+    //
     /**
-     *
      * class中的字段名
      *
-     * @param cols    排除的字段名集合
+     * @param cols 排除的字段名集合
      * @param columns 排除的字段名集合
-     *
      * @return SelectColumn
      */
     public static SelectColumn excludes(String[] cols, String... columns) {
@@ -260,5 +246,4 @@ public class SelectColumn implements Predicate<String> {
         }
         return sb.append('}').toString();
     }
-
 }

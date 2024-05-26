@@ -11,8 +11,7 @@ import org.redkale.annotation.ClassDepends;
 /**
  * 反序列化操作类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类
@@ -25,7 +24,6 @@ public interface Decodeable<R extends Reader, T> {
      * 反序列化操作
      *
      * @param in R
-     *
      * @return T
      */
     public T convertFrom(final R in);
@@ -36,5 +34,4 @@ public interface Decodeable<R extends Reader, T> {
      * @return 反解析的数据类型
      */
     public Type getType();
-
 }

@@ -5,6 +5,8 @@
  */
 package org.redkale.boot;
 
+import static org.redkale.boot.Application.RESNAME_SNCP_ADDRESS;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.*;
@@ -15,7 +17,6 @@ import java.util.logging.Level;
 import java.util.stream.Stream;
 import org.redkale.annotation.*;
 import org.redkale.asm.AsmMethodBoost;
-import static org.redkale.boot.Application.RESNAME_SNCP_ADDRESS;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.cluster.spi.ClusterAgent;
 import org.redkale.inject.ResourceFactory;
@@ -31,15 +32,14 @@ import org.redkale.watch.*;
 /**
  * HTTP Server节点的配置Server
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
 @NodeProtocol("HTTP")
 public class NodeHttpServer extends NodeServer {
 
-    protected final boolean rest; //是否加载REST服务， 为true加载rest节点信息并将所有可REST化的Service生成RestServlet
+    protected final boolean rest; // 是否加载REST服务， 为true加载rest节点信息并将所有可REST化的Service生成RestServlet
 
     protected final HttpServer httpServer;
 
@@ -49,11 +49,13 @@ public class NodeHttpServer extends NodeServer {
         super(application, createServer(application, serconf));
         this.httpServer = (HttpServer) server;
         this.rest = serconf != null && serconf.getAnyValue("rest") != null;
-
     }
 
     private static Server createServer(Application application, AnyValue serconf) {
-        return new HttpServer(application, application.getStartTime(), application.getResourceFactory().createChild());
+        return new HttpServer(
+                application,
+                application.getStartTime(),
+                application.getResourceFactory().createChild());
     }
 
     public HttpServer getHttpServer() {
@@ -68,24 +70,40 @@ public class NodeHttpServer extends NodeServer {
     @Override
     @SuppressWarnings("unchecked")
     protected ClassFilter<Service> createServiceClassFilter() {
-        return createClassFilter(this.sncpGroup, null, Service.class, new Class[]{org.redkale.watch.WatchService.class}, Annotation.class, "services", "service");
+        return createClassFilter(
+                this.sncpGroup,
+                null,
+                Service.class,
+                new Class[] {org.redkale.watch.WatchService.class},
+                Annotation.class,
+                "services",
+                "service");
     }
 
     @Override
     @SuppressWarnings("unchecked")
     protected ClassFilter<Filter> createFilterClassFilter() {
-        return createClassFilter(null, null, HttpFilter.class, new Class[]{WatchFilter.class}, null, "filters", "filter");
+        return createClassFilter(
+                null, null, HttpFilter.class, new Class[] {WatchFilter.class}, null, "filters", "filter");
     }
 
     @Override
     @SuppressWarnings("unchecked")
     protected ClassFilter<Servlet> createServletClassFilter() {
-        return createClassFilter(null, WebServlet.class, HttpServlet.class, new Class[]{WatchServlet.class}, null, "servlets", "servlet");
+        return createClassFilter(
+                null,
+                WebServlet.class,
+                HttpServlet.class,
+                new Class[] {WatchServlet.class},
+                null,
+                "servlets",
+                "servlet");
     }
 
     @Override
     protected List<ClassFilter> createOtherClassFilters() {
-        this.webSocketFilter = createClassFilter(null, RestWebSocket.class, WebSocket.class, null, null, "rest", "websocket");
+        this.webSocketFilter =
+                createClassFilter(null, RestWebSocket.class, WebSocket.class, null, null, "rest", "websocket");
         List<ClassFilter> filters = super.createOtherClassFilters();
         if (filters == null) {
             filters = new ArrayList<>();
@@ -98,7 +116,7 @@ public class NodeHttpServer extends NodeServer {
     protected void loadOthers(List<ClassFilter> otherFilters) throws Exception {
         List<ClassFilter> filters = otherFilters;
         if (filters != null) {
-            filters.remove(this.webSocketFilter); //webSocketFilter会在loadHttpFilter中处理，先剔除
+            filters.remove(this.webSocketFilter); // webSocketFilter会在loadHttpFilter中处理，先剔除
         }
         super.loadOthers(filters);
     }
@@ -130,7 +148,13 @@ public class NodeHttpServer extends NodeServer {
         resourceFactory.register(new ResourceTypeLoader() {
 
             @Override
-            public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) { //主要用于单点的服务
+            public Object load(
+                    ResourceFactory rf,
+                    String srcResourceName,
+                    Object srcObj,
+                    String resourceName,
+                    Field field,
+                    Object attachment) { // 主要用于单点的服务
                 try {
                     if (!(srcObj instanceof WebSocketServlet)) {
                         return null;
@@ -149,17 +173,28 @@ public class NodeHttpServer extends NodeServer {
                     }
                     Service nodeService = null;
                     if (loader != null) {
-                        nodeService = (Service) loader.load(sncpResFactory, srcResourceName, srcObj, resourceName, field, attachment);
+                        nodeService = (Service)
+                                loader.load(sncpResFactory, srcResourceName, srcObj, resourceName, field, attachment);
                     }
                     regFactory.lock();
                     try {
                         if (nodeService == null) {
                             nodeService = (Service) rf.find(resourceName, WebSocketNode.class);
                         }
-                        if (sncpResFactory != null && resourceFactory.find(RESNAME_SNCP_ADDRESS, String.class) == null) {
-                            resourceFactory.register(RESNAME_SNCP_ADDRESS, InetSocketAddress.class, sncpResFactory.find(RESNAME_SNCP_ADDRESS, InetSocketAddress.class));
-                            resourceFactory.register(RESNAME_SNCP_ADDRESS, SocketAddress.class, sncpResFactory.find(RESNAME_SNCP_ADDRESS, SocketAddress.class));
-                            resourceFactory.register(RESNAME_SNCP_ADDRESS, String.class, sncpResFactory.find(RESNAME_SNCP_ADDRESS, String.class));
+                        if (sncpResFactory != null
+                                && resourceFactory.find(RESNAME_SNCP_ADDRESS, String.class) == null) {
+                            resourceFactory.register(
+                                    RESNAME_SNCP_ADDRESS,
+                                    InetSocketAddress.class,
+                                    sncpResFactory.find(RESNAME_SNCP_ADDRESS, InetSocketAddress.class));
+                            resourceFactory.register(
+                                    RESNAME_SNCP_ADDRESS,
+                                    SocketAddress.class,
+                                    sncpResFactory.find(RESNAME_SNCP_ADDRESS, SocketAddress.class));
+                            resourceFactory.register(
+                                    RESNAME_SNCP_ADDRESS,
+                                    String.class,
+                                    sncpResFactory.find(RESNAME_SNCP_ADDRESS, String.class));
                         }
                         if (nodeService == null) {
                             MessageAgent messageAgent = null;
@@ -171,9 +206,19 @@ public class NodeHttpServer extends NodeServer {
                             } catch (Exception ex) {
                                 logger.log(Level.WARNING, "WebSocketServlet getMessageAgent error", ex);
                             }
-                            AsmMethodBoost methodBoost = application.createAsmMethodBoost(false, WebSocketNodeService.class);
-                            nodeService = Sncp.createLocalService(serverClassLoader, resourceName, WebSocketNodeService.class, methodBoost,
-                                application.getResourceFactory(), application.getSncpRpcGroups(), sncpClient, messageAgent, (String) null, (AnyValue) null);
+                            AsmMethodBoost methodBoost =
+                                    application.createAsmMethodBoost(false, WebSocketNodeService.class);
+                            nodeService = Sncp.createLocalService(
+                                    serverClassLoader,
+                                    resourceName,
+                                    WebSocketNodeService.class,
+                                    methodBoost,
+                                    application.getResourceFactory(),
+                                    application.getSncpRpcGroups(),
+                                    sncpClient,
+                                    messageAgent,
+                                    (String) null,
+                                    (AnyValue) null);
                             regFactory.register(resourceName, WebSocketNode.class, nodeService);
                         }
                         resourceFactory.inject(resourceName, nodeService, self);
@@ -205,7 +250,7 @@ public class NodeHttpServer extends NodeServer {
             if (Modifier.isAbstract(clazz.getModifiers())) {
                 continue;
             }
-            if (entry.isExpect()) { //跳过不自动加载的Filter
+            if (entry.isExpect()) { // 跳过不自动加载的Filter
                 continue;
             }
             RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());
@@ -226,7 +271,8 @@ public class NodeHttpServer extends NodeServer {
     protected void loadHttpServlet(final ClassFilter<? extends Servlet> servletFilter) throws Exception {
         RedkaleClassLoader.putReflectionPublicClasses(HttpServlet.class.getName());
         RedkaleClassLoader.putReflectionPublicClasses(HttpDispatcherServlet.class.getName());
-        RedkaleClassLoader.putReflectionDeclaredConstructors(HttpResourceServlet.class, HttpResourceServlet.class.getName());
+        RedkaleClassLoader.putReflectionDeclaredConstructors(
+                HttpResourceServlet.class, HttpResourceServlet.class.getName());
         final AnyValue servletsConf = this.serverConf.getAnyValue("servlets");
         final StringBuilder sb = logger.isLoggable(Level.INFO) ? new StringBuilder() : null;
         String prefix0 = servletsConf == null ? "" : servletsConf.getValue("path", "");
@@ -238,17 +284,22 @@ public class NodeHttpServer extends NodeServer {
         }
         final String prefix = prefix0;
         List<FilterEntry<? extends Servlet>> list = new ArrayList(servletFilter.getFilterEntrys());
-        list.sort((FilterEntry<? extends Servlet> o1, FilterEntry<? extends Servlet> o2) -> {  //必须保证WebSocketServlet优先加载， 因为要确保其他的HttpServlet可以注入本地模式的WebSocketNode
-            boolean ws1 = WebSocketServlet.class.isAssignableFrom(o1.getType());
-            boolean ws2 = WebSocketServlet.class.isAssignableFrom(o2.getType());
-            if (ws1 == ws2) {
-                Priority p1 = o1.getType().getAnnotation(Priority.class);
-                Priority p2 = o2.getType().getAnnotation(Priority.class);
-                int v = (p2 == null ? 0 : p2.value()) - (p1 == null ? 0 : p1.value());
-                return v == 0 ? o1.getType().getName().compareTo(o2.getType().getName()) : 0;
-            }
-            return ws1 ? -1 : 1;
-        });
+        list.sort(
+                (FilterEntry<? extends Servlet> o1,
+                        FilterEntry<? extends Servlet>
+                                o2) -> { // 必须保证WebSocketServlet优先加载， 因为要确保其他的HttpServlet可以注入本地模式的WebSocketNode
+                    boolean ws1 = WebSocketServlet.class.isAssignableFrom(o1.getType());
+                    boolean ws2 = WebSocketServlet.class.isAssignableFrom(o2.getType());
+                    if (ws1 == ws2) {
+                        Priority p1 = o1.getType().getAnnotation(Priority.class);
+                        Priority p2 = o2.getType().getAnnotation(Priority.class);
+                        int v = (p2 == null ? 0 : p2.value()) - (p1 == null ? 0 : p1.value());
+                        return v == 0
+                                ? o1.getType().getName().compareTo(o2.getType().getName())
+                                : 0;
+                    }
+                    return ws1 ? -1 : 1;
+                });
         final long starts = System.currentTimeMillis();
         final List<AbstractMap.SimpleEntry<String, String[]>> ss = sb == null ? null : new ArrayList<>();
         for (FilterEntry<? extends Servlet> entry : list) {
@@ -257,9 +308,9 @@ public class NodeHttpServer extends NodeServer {
                 continue;
             }
             if (clazz.getAnnotation(Rest.RestDyn.class) != null) {
-                continue; //动态生成的跳过
+                continue; // 动态生成的跳过
             }
-            if (entry.isExpect()) { //跳过不自动加载的Servlet
+            if (entry.isExpect()) { // 跳过不自动加载的Servlet
                 continue;
             }
             WebServlet ws = clazz.getAnnotation(WebServlet.class);
@@ -284,8 +335,10 @@ public class NodeHttpServer extends NodeServer {
                 ss.add(new AbstractMap.SimpleEntry<>("HttpServlet (type=" + clazz.getName() + ")", mappings));
             }
         }
-        final CopyOnWriteArrayList<AbstractMap.SimpleEntry<String, String[]>> rests = sb == null ? null : new CopyOnWriteArrayList<>();
-        final CopyOnWriteArrayList<AbstractMap.SimpleEntry<String, String[]>> webss = sb == null ? null : new CopyOnWriteArrayList<>();
+        final CopyOnWriteArrayList<AbstractMap.SimpleEntry<String, String[]>> rests =
+                sb == null ? null : new CopyOnWriteArrayList<>();
+        final CopyOnWriteArrayList<AbstractMap.SimpleEntry<String, String[]>> webss =
+                sb == null ? null : new CopyOnWriteArrayList<>();
         if (rest && serverConf != null) {
             final List<Object> restedObjects = new ArrayList<>();
             final ReentrantLock restedLock = new ReentrantLock();
@@ -356,7 +409,8 @@ public class NodeHttpServer extends NodeServer {
                     ss.add(new AbstractMap.SimpleEntry<>(sub.toString(), en.getValue()));
                 }
             }
-            ss.sort((AbstractMap.SimpleEntry<String, String[]> o1, AbstractMap.SimpleEntry<String, String[]> o2) -> o1.getKey().compareTo(o2.getKey()));
+            ss.sort((AbstractMap.SimpleEntry<String, String[]> o1, AbstractMap.SimpleEntry<String, String[]> o2) ->
+                    o1.getKey().compareTo(o2.getKey()));
             for (AbstractMap.SimpleEntry<String, String[]> as : ss) {
                 if (as.getKey().length() > max) {
                     max = as.getKey().length();
@@ -367,9 +421,14 @@ public class NodeHttpServer extends NodeServer {
                 for (int i = 0; i < max - as.getKey().length(); i++) {
                     sb.append(' ');
                 }
-                sb.append("  mapping to  ").append(Arrays.toString(as.getValue())).append(LINE_SEPARATOR);
+                sb.append("  mapping to  ")
+                        .append(Arrays.toString(as.getValue()))
+                        .append(LINE_SEPARATOR);
             }
-            sb.append("All HttpServlets load in ").append(System.currentTimeMillis() - starts).append(" ms").append(LINE_SEPARATOR);
+            sb.append("All HttpServlets load in ")
+                    .append(System.currentTimeMillis() - starts)
+                    .append(" ms")
+                    .append(LINE_SEPARATOR);
         }
         if (sb != null && sb.length() > 0) {
             logger.log(Level.INFO, sb.toString().trim());
@@ -377,16 +436,20 @@ public class NodeHttpServer extends NodeServer {
     }
 
     @SuppressWarnings("unchecked")
-    protected void loadRestServlet(final ClassFilter<? extends WebSocket> webSocketFilter,
-        final AnyValue restConf, final List<Object> restedObjects,
-        final ReentrantLock restedLock, final StringBuilder sb,
-        final CopyOnWriteArrayList<AbstractMap.SimpleEntry<String, String[]>> rests,
-        final CopyOnWriteArrayList<AbstractMap.SimpleEntry<String, String[]>> webss) throws Exception {
+    protected void loadRestServlet(
+            final ClassFilter<? extends WebSocket> webSocketFilter,
+            final AnyValue restConf,
+            final List<Object> restedObjects,
+            final ReentrantLock restedLock,
+            final StringBuilder sb,
+            final CopyOnWriteArrayList<AbstractMap.SimpleEntry<String, String[]>> rests,
+            final CopyOnWriteArrayList<AbstractMap.SimpleEntry<String, String[]>> webss)
+            throws Exception {
         if (!rest) {
             return;
         }
         if (restConf == null) {
-            return; //不存在REST服务
+            return; // 不存在REST服务
         }
         String prefix0 = restConf.getValue("path", "");
         if (!prefix0.isEmpty() && prefix0.charAt(prefix0.length() - 1) == '/') {
@@ -401,20 +464,22 @@ public class NodeHttpServer extends NodeServer {
         if (mqname != null) {
             agent0 = application.getResourceFactory().find(mqname, MessageAgent.class);
             if (agent0 == null) {
-                throw new RedkaleException("not found " + MessageAgent.class.getSimpleName() + " config for (name=" + mqname + ")");
+                throw new RedkaleException(
+                        "not found " + MessageAgent.class.getSimpleName() + " config for (name=" + mqname + ")");
             }
         }
         final MessageAgent messageAgent = agent0;
         if (messageAgent != null) {
-            prefix0 = ""; //开启MQ时,prefix字段失效
+            prefix0 = ""; // 开启MQ时,prefix字段失效
         }
         final String prefix = prefix0;
         final boolean autoload = restConf.getBoolValue("autoload", true);
-        {  //加载RestService
+        { // 加载RestService
             String userTypeStr = restConf.getValue("usertype");
             final Class userType = userTypeStr == null ? null : this.serverClassLoader.loadClass(userTypeStr);
 
-            final Class baseServletType = this.serverClassLoader.loadClass(restConf.getValue("base", HttpServlet.class.getName()));
+            final Class baseServletType =
+                    this.serverClassLoader.loadClass(restConf.getValue("base", HttpServlet.class.getName()));
             final Set<String> includeValues = new HashSet<>();
             final Set<String> excludeValues = new HashSet<>();
             for (AnyValue item : restConf.getAnyValues("service")) {
@@ -425,11 +490,17 @@ public class NodeHttpServer extends NodeServer {
                 }
             }
 
-            final ClassFilter restFilter = ClassFilter.create(serverClassLoader, null, application.isCompileMode() ? "" : restConf.getValue("includes", ""), application.isCompileMode() ? "" : restConf.getValue("excludes", ""), includeValues, excludeValues);
+            final ClassFilter restFilter = ClassFilter.create(
+                    serverClassLoader,
+                    null,
+                    application.isCompileMode() ? "" : restConf.getValue("includes", ""),
+                    application.isCompileMode() ? "" : restConf.getValue("excludes", ""),
+                    includeValues,
+                    excludeValues);
             final CountDownLatch scdl = new CountDownLatch(super.servletServices.size());
             Stream<Service> stream = super.servletServices.stream();
             if (!application.isCompileMode()) {
-                stream = stream.parallel(); //不能并行，否则在maven plugin运行环境下ClassLoader不对
+                stream = stream.parallel(); // 不能并行，否则在maven plugin运行环境下ClassLoader不对
             }
             stream.forEach((service) -> {
                 try {
@@ -453,13 +524,14 @@ public class NodeHttpServer extends NodeServer {
                             logger.log(Level.WARNING, stype.getName() + " repeat create rest servlet, so ignore");
                             return;
                         }
-                        restedObjects.add(service); //避免重复创建Rest对象
+                        restedObjects.add(service); // 避免重复创建Rest对象
                     } finally {
                         restedLock.unlock();
                     }
-                    HttpServlet servlet = httpServer.addRestServlet(serverClassLoader, service, userType, baseServletType, prefix);
+                    HttpServlet servlet =
+                            httpServer.addRestServlet(serverClassLoader, service, userType, baseServletType, prefix);
                     if (servlet == null) {
-                        return; //没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null
+                        return; // 没有HttpMapping方法的HttpServlet调用Rest.createRestServlet就会返回null
                     }
                     String prefix2 = prefix;
                     WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
@@ -471,13 +543,16 @@ public class NodeHttpServer extends NodeServer {
                     if (messageAgent != null) {
                         messageAgent.putService(this, service, servlet);
                     }
-                    //if (finest) logger.finest("Create RestServlet(resource.name='" + name + "') = " + servlet);
+                    // if (finest) logger.finest("Create RestServlet(resource.name='" + name + "') = " + servlet);
                     if (rests != null) {
-                        String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();
+                        String[] mappings = servlet.getClass()
+                                .getAnnotation(WebServlet.class)
+                                .value();
                         for (int i = 0; i < mappings.length; i++) {
                             mappings[i] = prefix2 + mappings[i];
                         }
-                        rests.add(new AbstractMap.SimpleEntry<>(Sncp.getResourceType(service).getName() + ":" + name, mappings));
+                        rests.add(new AbstractMap.SimpleEntry<>(
+                                Sncp.getResourceType(service).getName() + ":" + name, mappings));
                     }
                 } finally {
                     scdl.countDown();
@@ -485,7 +560,7 @@ public class NodeHttpServer extends NodeServer {
             });
             scdl.await();
         }
-        if (webSocketFilter != null) {  //加载RestWebSocket
+        if (webSocketFilter != null) { // 加载RestWebSocket
             final Set<String> includeValues = new HashSet<>();
             final Set<String> excludeValues = new HashSet<>();
             for (AnyValue item : restConf.getAnyValues("websocket")) {
@@ -495,7 +570,13 @@ public class NodeHttpServer extends NodeServer {
                     includeValues.add(item.getValue("value", ""));
                 }
             }
-            final ClassFilter restFilter = ClassFilter.create(serverClassLoader, null, application.isCompileMode() ? "" : restConf.getValue("includes", ""), application.isCompileMode() ? "" : restConf.getValue("excludes", ""), includeValues, excludeValues);
+            final ClassFilter restFilter = ClassFilter.create(
+                    serverClassLoader,
+                    null,
+                    application.isCompileMode() ? "" : restConf.getValue("includes", ""),
+                    application.isCompileMode() ? "" : restConf.getValue("excludes", ""),
+                    includeValues,
+                    excludeValues);
 
             List<FilterEntry<? extends WebSocket>> list = new ArrayList(webSocketFilter.getFilterEntrys());
             for (FilterEntry<? extends WebSocket> en : list) {
@@ -528,10 +609,11 @@ public class NodeHttpServer extends NodeServer {
                     logger.log(Level.WARNING, stype.getName() + " repeat create rest websocket, so ignore");
                     continue;
                 }
-                restedObjects.add(stype); //避免重复创建Rest对象
-                WebSocketServlet servlet = httpServer.addRestWebSocketServlet(serverClassLoader, stype, messageAgent, prefix, en.getProperty());
+                restedObjects.add(stype); // 避免重复创建Rest对象
+                WebSocketServlet servlet = httpServer.addRestWebSocketServlet(
+                        serverClassLoader, stype, messageAgent, prefix, en.getProperty());
                 if (servlet == null) {
-                    continue; //没有RestOnMessage方法的HttpServlet调用Rest.createRestWebSocketServlet就会返回null 
+                    continue; // 没有RestOnMessage方法的HttpServlet调用Rest.createRestWebSocketServlet就会返回null
                 }
                 String prefix2 = prefix;
                 WebServlet ws = servlet.getClass().getAnnotation(WebServlet.class);
@@ -543,7 +625,8 @@ public class NodeHttpServer extends NodeServer {
                     logger.finest(stype.getName() + " create a RestWebSocketServlet");
                 }
                 if (webss != null) {
-                    String[] mappings = servlet.getClass().getAnnotation(WebServlet.class).value();
+                    String[] mappings =
+                            servlet.getClass().getAnnotation(WebServlet.class).value();
                     for (int i = 0; i < mappings.length; i++) {
                         mappings[i] = prefix2 + mappings[i];
                     }
@@ -556,7 +639,7 @@ public class NodeHttpServer extends NodeServer {
         }
     }
 
-    @Override //loadServlet执行之后调用
+    @Override // loadServlet执行之后调用
     protected void postLoadServlets() {
         final ClusterAgent cluster = application.getResourceFactory().find("", ClusterAgent.class);
         if (!application.isCompileMode() && cluster != null) {

@@ -12,7 +12,6 @@ import org.redkale.util.Utility;
  * 详情见: https://redkale.org
  *
  * @param <T> 泛型
- *
  * @author zhangjx
  * @since 2.7.0
  */
@@ -71,7 +70,8 @@ public interface ResourceEvent<T> {
 
     public static class ResourceChangeEvent<T> implements ResourceEvent<T> {
 
-        private static final Predicate<String> numRegx = Pattern.compile("^(\\-\\+)?\\d+(\\.\\d+)?$").asPredicate();
+        private static final Predicate<String> numRegx =
+                Pattern.compile("^(\\-\\+)?\\d+(\\.\\d+)?$").asPredicate();
 
         protected String name;
 

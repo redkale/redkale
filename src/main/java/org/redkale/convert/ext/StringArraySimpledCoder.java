@@ -10,8 +10,7 @@ import org.redkale.convert.*;
 /**
  * String[] 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -80,5 +79,4 @@ public final class StringArraySimpledCoder<R extends Reader, W extends Writer> e
             return values;
         }
     }
-
 }

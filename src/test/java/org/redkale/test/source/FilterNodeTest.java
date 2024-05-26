@@ -5,6 +5,8 @@
  */
 package org.redkale.test.source;
 
+import static org.redkale.source.FilterExpress.*;
+
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -16,11 +18,8 @@ import org.redkale.persistence.Entity;
 import org.redkale.persistence.Id;
 import org.redkale.persistence.Transient;
 import org.redkale.source.*;
-import static org.redkale.source.FilterExpress.*;
 
-/**
- * @author zhangjx
- */
+/** @author zhangjx */
 public class FilterNodeTest {
 
     private static Function<Class, EntityInfo> func;
@@ -36,16 +35,38 @@ public class FilterNodeTest {
     @BeforeAll
     public static void init() throws Exception {
         final Properties props = new Properties();
-        final BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader = (s, t) -> CompletableFuture.completedFuture(new ArrayList());
+        final BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader =
+                (s, t) -> CompletableFuture.completedFuture(new ArrayList());
         func = (Class t) -> loadEntityInfo(t, false, props, null, fullloader);
-        carEntity = loadEntityInfo(CarTestTable.class, false, props, null, (s, t) -> CompletableFuture.completedFuture(CarTestTable.createList()));
-        final EntityInfo<UserTestTable> userEntity = loadEntityInfo(UserTestTable.class, false, props, null, (s, t) -> CompletableFuture.completedFuture(UserTestTable.createList()));
-        final EntityInfo<CarTypeTable> typeEntity = loadEntityInfo(CarTypeTable.class, false, props, null, (s, t) -> CompletableFuture.completedFuture(CarTypeTable.createList()));
+        carEntity = loadEntityInfo(
+                CarTestTable.class,
+                false,
+                props,
+                null,
+                (s, t) -> CompletableFuture.completedFuture(CarTestTable.createList()));
+        final EntityInfo<UserTestTable> userEntity = loadEntityInfo(
+                UserTestTable.class,
+                false,
+                props,
+                null,
+                (s, t) -> CompletableFuture.completedFuture(UserTestTable.createList()));
+        final EntityInfo<CarTypeTable> typeEntity = loadEntityInfo(
+                CarTypeTable.class,
+                false,
+                props,
+                null,
+                (s, t) -> CompletableFuture.completedFuture(CarTypeTable.createList()));
     }
 
-    private static <T> EntityInfo<T> loadEntityInfo(Class<T> clazz, final boolean cacheForbidden, final Properties conf, DataSource source, BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader) {
+    private static <T> EntityInfo<T> loadEntityInfo(
+            Class<T> clazz,
+            final boolean cacheForbidden,
+            final Properties conf,
+            DataSource source,
+            BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader) {
         try {
-            Method loadMethod = EntityInfo.class.getDeclaredMethod("load", Class.class, boolean.class, Properties.class, DataSource.class, BiFunction.class);
+            Method loadMethod = EntityInfo.class.getDeclaredMethod(
+                    "load", Class.class, boolean.class, Properties.class, DataSource.class, BiFunction.class);
             loadMethod.setAccessible(true);
             return (EntityInfo) loadMethod.invoke(null, clazz, cacheForbidden, conf, source, fullloader);
         } catch (Exception e) {
@@ -63,9 +84,16 @@ public class FilterNodeTest {
         }
     }
 
-    private static <T> CharSequence createSQLJoin(FilterNode node, Function<Class, EntityInfo> func, final boolean update, final Map<Class, String> joinTabalis, final Set<String> haset, final EntityInfo<T> info) {
+    private static <T> CharSequence createSQLJoin(
+            FilterNode node,
+            Function<Class, EntityInfo> func,
+            final boolean update,
+            final Map<Class, String> joinTabalis,
+            final Set<String> haset,
+            final EntityInfo<T> info) {
         try {
-            Method method = FilterNode.class.getDeclaredMethod("createSQLJoin", Function.class, boolean.class, Map.class, Set.class, EntityInfo.class);
+            Method method = FilterNode.class.getDeclaredMethod(
+                    "createSQLJoin", Function.class, boolean.class, Map.class, Set.class, EntityInfo.class);
             method.setAccessible(true);
             return (CharSequence) method.invoke(node, func, update, joinTabalis, haset, info);
         } catch (Exception e) {
@@ -73,9 +101,14 @@ public class FilterNodeTest {
         }
     }
 
-    private static <T> CharSequence createSQLExpress(FilterNode node, AbstractDataSqlSource source, final EntityInfo<T> info, final Map<Class, String> joinTabalis) {
+    private static <T> CharSequence createSQLExpress(
+            FilterNode node,
+            AbstractDataSqlSource source,
+            final EntityInfo<T> info,
+            final Map<Class, String> joinTabalis) {
         try {
-            Method method = FilterNode.class.getDeclaredMethod("createSQLExpress", AbstractDataSqlSource.class, EntityInfo.class, Map.class);
+            Method method = FilterNode.class.getDeclaredMethod(
+                    "createSQLExpress", AbstractDataSqlSource.class, EntityInfo.class, Map.class);
             method.setAccessible(true);
             return (CharSequence) method.invoke(node, source, info, joinTabalis);
         } catch (Exception e) {
@@ -106,14 +139,20 @@ public class FilterNodeTest {
     @Test
     public void run() throws Exception {
         final CarTestBean bean = CarTestBean.create();
-        FilterNode joinNode1 = FilterNodes.joinInner(UserTestTable.class, new String[]{"userid", "username"}, "username", LIKE, bean.username)
-            .or(FilterNodes.joinInner(UserTestTable.class, new String[]{"userid", "username"}, "createtime", GT, bean.createtime));
+        FilterNode joinNode1 = FilterNodes.joinInner(
+                        UserTestTable.class, new String[] {"userid", "username"}, "username", LIKE, bean.username)
+                .or(FilterNodes.joinInner(
+                        UserTestTable.class, new String[] {"userid", "username"}, "createtime", GT, bean.createtime));
         FilterNode joinNode2 = FilterNodes.joinInner(CarTypeTable.class, "cartype", "typename", LIKE, bean.typename);
-        final FilterNode node = CarTestBean.caridTransient() ? (joinNode2.or(joinNode1)) : FilterNodes.gt("carid", bean.carid).and(joinNode1).or(joinNode2);
+        final FilterNode node = CarTestBean.caridTransient()
+                ? (joinNode2.or(joinNode1))
+                : FilterNodes.gt("carid", bean.carid).and(joinNode1).or(joinNode2);
         final FilterNode beanNode = FilterNodeBean.createFilterNode(bean);
         System.out.println("node.string = " + node);
         System.out.println("bean.string = " + beanNode);
-        Assertions.assertEquals("(CarTypeTable.typename LIKE '%法拉利%' OR (UserTestTable.username LIKE '%用户1%' OR UserTestTable.createtime > 500))", node.toString());
+        Assertions.assertEquals(
+                "(CarTypeTable.typename LIKE '%法拉利%' OR (UserTestTable.username LIKE '%用户1%' OR UserTestTable.createtime > 500))",
+                node.toString());
         Assertions.assertEquals(node.toString(), beanNode.toString());
         Map<Class, String> nodeJoinTabalis = getJoinTabalis(node);
         Map<Class, String> beanJoinTabalis = getJoinTabalis(beanNode);
@@ -123,9 +162,14 @@ public class FilterNodeTest {
         CharSequence beanJoinsql = createSQLJoin(beanNode, func, false, beanJoinTabalis, new HashSet<>(), carEntity);
         CharSequence nodeWhere = createSQLExpress(node, null, carEntity, nodeJoinTabalis);
         CharSequence beanWhere = createSQLExpress(beanNode, null, carEntity, beanJoinTabalis);
-        String expect = "SELECT a.* FROM cartesttable a INNER JOIN cartypetable ctt ON a.cartype = ctt.cartype INNER JOIN usertesttable utt ON a.userid = utt.userid AND a.username = utt.username WHERE (ctt.typename LIKE '%法拉利%' OR (utt.username LIKE '%用户1%' OR utt.createtime > 500))";
-        System.out.println("node.sql = SELECT a.* FROM " + CarTestTable.class.getSimpleName().toLowerCase() + " a" + (nodeJoinsql == null ? "" : nodeJoinsql) + " WHERE " + nodeWhere);
-        System.out.println("bean.sql = SELECT a.* FROM " + CarTestTable.class.getSimpleName().toLowerCase() + " a" + (beanJoinsql == null ? "" : beanJoinsql) + " WHERE " + beanWhere);
+        String expect =
+                "SELECT a.* FROM cartesttable a INNER JOIN cartypetable ctt ON a.cartype = ctt.cartype INNER JOIN usertesttable utt ON a.userid = utt.userid AND a.username = utt.username WHERE (ctt.typename LIKE '%法拉利%' OR (utt.username LIKE '%用户1%' OR utt.createtime > 500))";
+        System.out.println("node.sql = SELECT a.* FROM "
+                + CarTestTable.class.getSimpleName().toLowerCase() + " a" + (nodeJoinsql == null ? "" : nodeJoinsql)
+                + " WHERE " + nodeWhere);
+        System.out.println("bean.sql = SELECT a.* FROM "
+                + CarTestTable.class.getSimpleName().toLowerCase() + " a" + (beanJoinsql == null ? "" : beanJoinsql)
+                + " WHERE " + beanWhere);
         boolean r1 = isCacheUseable(node, func);
         Assertions.assertTrue(r1);
         if (!r1) {
@@ -149,17 +193,23 @@ public class FilterNodeTest {
 
         @FilterGroup("[OR].[AND]a.[OR]c")
         @FilterColumn(express = LIKE)
-        @FilterJoinColumn(table = UserTestTable.class, columns = {"userid", "username"})
+        @FilterJoinColumn(
+                table = UserTestTable.class,
+                columns = {"userid", "username"})
         public String username;
 
         @FilterGroup("[OR].[AND]a.[OR]c")
         @FilterColumn(express = GT)
-        @FilterJoinColumn(table = UserTestTable.class, columns = {"userid", "username"})
+        @FilterJoinColumn(
+                table = UserTestTable.class,
+                columns = {"userid", "username"})
         public long createtime;
 
         @FilterGroup("[OR]")
         @FilterColumn(express = LIKE)
-        @FilterJoinColumn(table = CarTypeTable.class, columns = {"cartype"})
+        @FilterJoinColumn(
+                table = CarTypeTable.class,
+                columns = {"cartype"})
         public String typename;
 
         @Override
@@ -220,9 +270,7 @@ public class FilterNodeTest {
 
         private String cartitle;
 
-        public CarTestTable() {
-
-        }
+        public CarTestTable() {}
 
         public CarTestTable(long carid, int cartype, int userid, String cartitle) {
             this.carid = carid;
@@ -276,7 +324,6 @@ public class FilterNodeTest {
         public String toString() {
             return JsonConvert.root().convertTo(this);
         }
-
     }
 
     @AutoLoad
@@ -304,9 +351,7 @@ public class FilterNodeTest {
 
         private String typename;
 
-        public CarTypeTable() {
-
-        }
+        public CarTypeTable() {}
 
         public CarTypeTable(int cartype, String typename) {
             this.cartype = cartype;
@@ -333,7 +378,6 @@ public class FilterNodeTest {
         public void setTypename(String typename) {
             this.typename = typename;
         }
-
     }
 
     @AutoLoad
@@ -356,8 +400,7 @@ public class FilterNodeTest {
 
         private long createtime;
 
-        public UserTestTable() {
-        }
+        public UserTestTable() {}
 
         public UserTestTable(int userid, String username, long createtime) {
             this.userid = userid;
@@ -393,6 +436,5 @@ public class FilterNodeTest {
         public void setCreatetime(long createtime) {
             this.createtime = createtime;
         }
-
     }
 }

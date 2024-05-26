@@ -12,11 +12,9 @@ import org.redkale.net.client.*;
 /**
  * SNCP版Client, 一个SncpServer只能对应一个SncpClient
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.8.0
  */
 public class SncpClient extends Client<SncpClientConnection, SncpClientRequest, SncpClientResult> {
@@ -27,9 +25,25 @@ public class SncpClient extends Client<SncpClientConnection, SncpClientRequest, 
 
     final InetSocketAddress clientSncpAddress;
 
-    public SncpClient(String name, AsyncGroup group, String nodeid,
-        InetSocketAddress clientSncpAddress, ClientAddress address, String netprotocol, int maxConns, int maxPipelines) {
-        super(name, group, "TCP".equalsIgnoreCase(netprotocol), address, maxConns, maxPipelines, null, null, null); //maxConns
+    public SncpClient(
+            String name,
+            AsyncGroup group,
+            String nodeid,
+            InetSocketAddress clientSncpAddress,
+            ClientAddress address,
+            String netprotocol,
+            int maxConns,
+            int maxPipelines) {
+        super(
+                name,
+                group,
+                "TCP".equalsIgnoreCase(netprotocol),
+                address,
+                maxConns,
+                maxPipelines,
+                null,
+                null,
+                null); // maxConns
         this.clientSncpAddress = clientSncpAddress;
         this.nodeid = nodeid;
         this.connectTimeoutSeconds = 10;
@@ -51,7 +65,7 @@ public class SncpClient extends Client<SncpClientConnection, SncpClientRequest, 
     }
 
     protected long nextSeqno() {
-        //System.nanoTime()值并发下会出现重复，windows11 jdk17出现过
+        // System.nanoTime()值并发下会出现重复，windows11 jdk17出现过
         return seqno.incrementAndGet();
     }
 
@@ -59,5 +73,4 @@ public class SncpClient extends Client<SncpClientConnection, SncpClientRequest, 
     protected CompletableFuture<SncpClientResult> writeChannel(ClientConnection conn, SncpClientRequest request) {
         return super.writeChannel(conn, request);
     }
-
 }

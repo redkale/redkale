@@ -8,12 +8,10 @@ import org.redkale.annotation.Priority;
 /**
  * 配置源Agent的Provider
  *
- *
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <V> XXXAgent
- *
  * @since 2.8.0
  */
 public interface InstanceProvider<V> {
@@ -22,7 +20,7 @@ public interface InstanceProvider<V> {
 
     public V createInstance();
 
-    //值大排前面
+    // 值大排前面
     public static <P extends InstanceProvider> List<P> sort(List<P> providers) {
         Collections.sort(providers, (a, b) -> {
             Priority p1 = a == null ? null : a.getClass().getAnnotation(Priority.class);

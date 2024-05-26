@@ -16,51 +16,62 @@ import org.redkale.util.Utility;
 /**
  * 将MessageRecord.content内容加解密
  *
- *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.1.0
- *
  * @param <T> 泛型
  */
 public interface MessageCoder<T> {
 
-    //编码
+    // 编码
     public byte[] encode(T data);
 
-    //解码
+    // 解码
     public T decode(byte[] data);
 
-    //消息内容的类型
+    // 消息内容的类型
     public byte ctype();
 
-    //type: 1:string, 2:int, 3:long, 4:BigInteger
+    // type: 1:string, 2:int, 3:long, 4:BigInteger
     public static byte[] encodeUserid(Serializable value) {
         if (value == null) {
             return MessageRecord.EMPTY_BYTES;
         }
         if (value instanceof Integer) {
             int val = (Integer) value;
-            return new byte[]{(byte) 2, (byte) (val >> 24 & 0xFF), (byte) (val >> 16 & 0xFF), (byte) (val >> 8 & 0xFF), (byte) (val & 0xFF)};
+            return new byte[] {
+                (byte) 2,
+                (byte) (val >> 24 & 0xFF),
+                (byte) (val >> 16 & 0xFF),
+                (byte) (val >> 8 & 0xFF),
+                (byte) (val & 0xFF)
+            };
         } else if (value instanceof Long) {
             long val = (Long) value;
-            return new byte[]{(byte) 3, (byte) (val >> 56 & 0xFF), (byte) (val >> 48 & 0xFF), (byte) (val >> 40 & 0xFF),
-                (byte) (val >> 32 & 0xFF), (byte) (val >> 24 & 0xFF), (byte) (val >> 16 & 0xFF), (byte) (val >> 8 & 0xFF), (byte) (val & 0xFF)};
+            return new byte[] {
+                (byte) 3,
+                (byte) (val >> 56 & 0xFF),
+                (byte) (val >> 48 & 0xFF),
+                (byte) (val >> 40 & 0xFF),
+                (byte) (val >> 32 & 0xFF),
+                (byte) (val >> 24 & 0xFF),
+                (byte) (val >> 16 & 0xFF),
+                (byte) (val >> 8 & 0xFF),
+                (byte) (val & 0xFF)
+            };
         } else if (value instanceof BigInteger) {
             BigInteger val = (BigInteger) value;
-            return Utility.append(new byte[]{4}, val.toByteArray());
+            return Utility.append(new byte[] {4}, val.toByteArray());
         }
         String str = value.toString();
         if (str.isEmpty()) {
             return MessageRecord.EMPTY_BYTES;
         }
-        return Utility.append(new byte[]{(byte) 1}, str.getBytes(StandardCharsets.UTF_8));
+        return Utility.append(new byte[] {(byte) 1}, str.getBytes(StandardCharsets.UTF_8));
     }
 
-    //type: 1:string, 2:int, 3:long, 4:BigInteger
+    // type: 1:string, 2:int, 3:long, 4:BigInteger
     public static Serializable decodeUserid(ByteBuffer buffer) {
         int len = buffer.getShort();
         if (len == -1) {
@@ -181,7 +192,7 @@ public interface MessageCoder<T> {
         return new String(bs, StandardCharsets.UTF_8);
     }
 
-    //一般用于存放类名、字段名、map中的key
+    // 一般用于存放类名、字段名、map中的key
     public static void putSmallString(ByteBuffer buffer, String value) {
         if (value == null) {
             buffer.putShort((short) -1);
@@ -224,7 +235,7 @@ public interface MessageCoder<T> {
         int size = buffer.getShort();
         if (size == -1) {
             return null;
-        } else if (size == 0) {  //单个字符串
+        } else if (size == 0) { // 单个字符串
             return getBigString(buffer);
         }
         ArrayList list = new ArrayList();
@@ -247,5 +258,4 @@ public interface MessageCoder<T> {
             return 4 + Utility.encodeUTF8Length(value.toString());
         }
     }
-
 }

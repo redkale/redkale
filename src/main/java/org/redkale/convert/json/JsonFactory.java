@@ -16,24 +16,27 @@ import org.redkale.util.Uint128;
 /**
  * JSON的ConvertFactory
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
 public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
 
-    private static final JsonFactory instance = new JsonFactory(null,
-        getSystemPropertyInt("redkale.convert.json.tiny", "redkale.convert.tiny", false, Convert.FEATURE_TINY)
-        | getSystemPropertyInt("redkale.convert.json.nullable", "redkale.convert.nullable", false, Convert.FEATURE_NULLABLE)
-    );
+    private static final JsonFactory instance = new JsonFactory(
+            null,
+            getSystemPropertyInt("redkale.convert.json.tiny", "redkale.convert.tiny", false, Convert.FEATURE_TINY)
+                    | getSystemPropertyInt(
+                            "redkale.convert.json.nullable",
+                            "redkale.convert.nullable",
+                            false,
+                            Convert.FEATURE_NULLABLE));
 
     static {
         instance.register(Serializable.class, instance.loadEncoder(Object.class));
 
-        //instance.register(AnyValue.class, instance.loadDecoder(SimpleAnyValue.class));
-        //instance.register(AnyValue.class, instance.loadEncoder(SimpleAnyValue.class));
+        // instance.register(AnyValue.class, instance.loadDecoder(SimpleAnyValue.class));
+        // instance.register(AnyValue.class, instance.loadEncoder(SimpleAnyValue.class));
     }
 
     private JsonFactory(JsonFactory parent, int features) {
@@ -47,7 +50,8 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
             this.register(java.time.Instant.class, InstantSimpledCoder.InstantJsonSimpledCoder.instance);
             this.register(java.time.LocalDate.class, LocalDateSimpledCoder.LocalDateJsonSimpledCoder.instance);
             this.register(java.time.LocalTime.class, LocalTimeSimpledCoder.LocalTimeJsonSimpledCoder.instance);
-            this.register(java.time.LocalDateTime.class, LocalDateTimeSimpledCoder.LocalDateTimeJsonSimpledCoder.instance);
+            this.register(
+                    java.time.LocalDateTime.class, LocalDateTimeSimpledCoder.LocalDateTimeJsonSimpledCoder.instance);
 
             this.register(JsonElement.class, (Decodeable) JsonElementDecoder.instance);
             this.register(JsonString.class, (Decodeable) JsonElementDecoder.instance);

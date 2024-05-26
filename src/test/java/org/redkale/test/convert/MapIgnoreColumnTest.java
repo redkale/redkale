@@ -6,10 +6,7 @@ import java.util.*;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.json.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class MapIgnoreColumnTest {
 
     private boolean main;
@@ -32,12 +29,15 @@ public class MapIgnoreColumnTest {
         String rs = "{\"bbb\":[1,2]}";
         if (!main) Assertions.assertEquals(rs, convert.convertTo(map));
         System.out.println(convert.convertTo(map));
-        JsonConvert convert2 = JsonConvert.root().newConvert(null, (k, v) -> {
-            if ("bbb".equals(k)) return null;
-            return v;
-        }, null);
+        JsonConvert convert2 = JsonConvert.root()
+                .newConvert(
+                        null,
+                        (k, v) -> {
+                            if ("bbb".equals(k)) return null;
+                            return v;
+                        },
+                        null);
         if (!main) Assertions.assertEquals("{\"aaa\":\"123\",\"bbb\":null}", convert2.convertTo(map));
         System.out.println(convert2.convertTo(map));
     }
-
 }

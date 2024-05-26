@@ -12,12 +12,11 @@ import java.util.function.IntFunction;
 import org.redkale.util.Creator;
 
 /**
- * 数组的反序列化操作类  <br>
- * 对象数组的反序列化，不包含int[]、long[]这样的primitive class数组。  <br>
- * 支持一定程度的泛型。  <br>
+ * 数组的反序列化操作类 <br>
+ * 对象数组的反序列化，不包含int[]、long[]这样的primitive class数组。 <br>
+ * 支持一定程度的泛型。 <br>
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> 反解析的数组元素类型
@@ -93,7 +92,7 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
                 try {
                     condition.await();
                 } catch (Exception e) {
-                    //do nothing
+                    // do nothing
                 } finally {
                     lock.unlock();
                 }
@@ -143,7 +142,8 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "{componentType:" + this.componentType + ", decoder:" + this.componentDecoder + "}";
+        return this.getClass().getSimpleName() + "{componentType:" + this.componentType + ", decoder:"
+                + this.componentDecoder + "}";
     }
 
     @Override
@@ -158,5 +158,4 @@ public class ArrayDecoder<T> implements Decodeable<Reader, T[]> {
     public Decodeable<Reader, T> getComponentDecoder() {
         return componentDecoder;
     }
-
 }

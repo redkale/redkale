@@ -5,9 +5,10 @@
  */
 package org.redkale.annotation;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 
 /**
  * 标记参数bean
@@ -18,6 +19,4 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 @Target(TYPE)
 @Retention(RUNTIME)
-public @interface Bean {
-
-}
+public @interface Bean {}

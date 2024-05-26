@@ -6,13 +6,13 @@
 package org.redkale.test.type;
 
 /**
- *
  * @author zhangjx
  * @param <K>
  * @param <ER>
  * @param <EB>
  */
-public class ThreeService<K extends CharSequence, ER extends ThreeRound, EB extends ThreeBean> extends OneService<ER, EB> {
+public class ThreeService<K extends CharSequence, ER extends ThreeRound, EB extends ThreeBean>
+        extends OneService<ER, EB> {
 
     public String key(K key) {
         return "" + key;

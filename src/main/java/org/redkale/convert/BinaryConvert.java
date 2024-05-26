@@ -10,8 +10,7 @@ import java.lang.reflect.Type;
 /**
  * 二进制序列化/反序列化操作类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类
@@ -33,5 +32,4 @@ public abstract class BinaryConvert<R extends Reader, W extends Writer> extends 
     }
 
     public abstract byte[] convertTo(final Type type, final Object value);
-
 }

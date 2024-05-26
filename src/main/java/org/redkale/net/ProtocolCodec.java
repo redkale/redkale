@@ -30,8 +30,11 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
 
     private Response resp;
 
-    public ProtocolCodec(Context context, Supplier<Response> responseSupplier,
-        Consumer<Response> responseConsumer, AsyncConnection channel) {
+    public ProtocolCodec(
+            Context context,
+            Supplier<Response> responseSupplier,
+            Consumer<Response> responseConsumer,
+            AsyncConnection channel) {
         this.context = context;
         this.channel = channel;
         this.responseSupplier = responseSupplier;
@@ -39,7 +42,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
     }
 
     public void prepare() {
-        //do nothing
+        // do nothing
     }
 
     protected boolean recycle() {
@@ -72,17 +75,17 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
             channel.dispose(); // response.init(channel); 在调用之前异常
             return;
         }
-//        {  //测试
-//            buffer.flip();
-//            byte[] bs = new byte[buffer.remaining()];
-//            buffer.get(bs);
-//            System.println(new String(bs));
-//        }
+        //        {  //测试
+        //            buffer.flip();
+        //            byte[] bs = new byte[buffer.remaining()];
+        //            buffer.get(bs);
+        //            System.println(new String(bs));
+        //        }
         buffer.flip();
         final Response response = createResponse();
         try {
             decode(buffer, response, 0, null);
-        } catch (Throwable t) {  //此处不可  context.offerBuffer(buffer); 以免dispatcher.dispatch内部异常导致重复 offerBuffer
+        } catch (Throwable t) { // 此处不可  context.offerBuffer(buffer); 以免dispatcher.dispatch内部异常导致重复 offerBuffer
             context.logger.log(Level.WARNING, "dispatch servlet abort, force to close channel ", t);
             response.codecError(t);
         }
@@ -91,15 +94,16 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
     @Override
     public void failed(Throwable exc, ByteBuffer buffer) {
         channel.offerReadBuffer(buffer);
-        channel.dispose();// response.init(channel); 在调用之前异常
-        if (exc != null && context.logger.isLoggable(Level.FINEST)
-            && !(exc instanceof SocketException && "Connection reset".equals(exc.getMessage()))) {
+        channel.dispose(); // response.init(channel); 在调用之前异常
+        if (exc != null
+                && context.logger.isLoggable(Level.FINEST)
+                && !(exc instanceof SocketException && "Connection reset".equals(exc.getMessage()))) {
             context.logger.log(Level.FINEST, "Servlet Handler read channel erroneous, force to close channel ", exc);
         }
     }
 
     public void start(final ByteBuffer data) {
-        if (data != null) { //pipeline模式或UDP连接创建AsyncConnection时已经获取到ByteBuffer数据了
+        if (data != null) { // pipeline模式或UDP连接创建AsyncConnection时已经获取到ByteBuffer数据了
             final Response response = createResponse();
             try {
                 decode(data, response, 0, null);
@@ -112,7 +116,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
         try {
             channel.readRegisterInIOThread(this);
         } catch (Exception te) {
-            channel.dispose();// response.init(channel); 在调用之前异常
+            channel.dispose(); // response.init(channel); 在调用之前异常
             if (context.logger.isLoggable(Level.FINEST)) {
                 context.logger.log(Level.FINEST, "Servlet start read channel erroneous, force to close channel ", te);
             }
@@ -120,7 +124,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
     }
 
     public void run(final ByteBuffer data) {
-        if (data != null) { //pipeline模式或UDP连接创建AsyncConnection时已经获取到ByteBuffer数据了
+        if (data != null) { // pipeline模式或UDP连接创建AsyncConnection时已经获取到ByteBuffer数据了
             final Response response = createResponse();
             try {
                 decode(data, response, 0, null);
@@ -133,18 +137,19 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
         try {
             channel.read(this);
         } catch (Exception te) {
-            channel.dispose();// response.init(channel); 在调用之前异常
+            channel.dispose(); // response.init(channel); 在调用之前异常
             if (context.logger.isLoggable(Level.FINEST)) {
                 context.logger.log(Level.FINEST, "Servlet run read channel erroneous, force to close channel ", te);
             }
         }
     }
 
-    protected void decode(final ByteBuffer buffer, final Response response, final int pipelineIndex, final Request lastReq) {
+    protected void decode(
+            final ByteBuffer buffer, final Response response, final int pipelineIndex, final Request lastReq) {
         response.init(channel);
         final Request request = response.request;
         final int rs = request.readHeader(buffer, lastReq);
-        if (rs < 0) {  //表示数据格式不正确
+        if (rs < 0) { // 表示数据格式不正确
             final DispatcherServlet dispatcher = context.dispatcher;
             dispatcher.incrExecuteCounter();
             channel.offerReadBuffer(buffer);
@@ -167,14 +172,14 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
                 if (pindex == 0) {
                     pindex++;
                 }
-                if (request.getRequestid() == null) { //存在requestid则无视pipeline模式
+                if (request.getRequestid() == null) { // 存在requestid则无视pipeline模式
                     request.pipeline(pindex, pindex + 1);
                 }
                 if (hreq == null) {
                     hreq = request.copyHeader();
                 }
             } else {
-                if (request.getRequestid() == null) { //存在requestid则无视pipeline模式
+                if (request.getRequestid() == null) { // 存在requestid则无视pipeline模式
                     request.pipeline(pindex, pindex);
                 }
                 channel.setReadBuffer(buffer.clear());
@@ -185,7 +190,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
                 final Response pipelineResponse = createResponse();
                 try {
                     decode(buffer, pipelineResponse, pindex + 1, hreq);
-                } catch (Throwable t) {  //此处不可  offerBuffer(buffer); 以免dispatcher.dispatch内部异常导致重复 offerBuffer
+                } catch (Throwable t) { // 此处不可  offerBuffer(buffer); 以免dispatcher.dispatch内部异常导致重复 offerBuffer
                     context.logger.log(Level.WARNING, "dispatch pipeline servlet abort, force to close channel ", t);
                     pipelineResponse.codecError(t);
                 }
@@ -236,7 +241,8 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
             channel.offerReadBuffer(attachment);
             response.codecError(exc);
             if (exc != null) {
-                request.context.logger.log(Level.FINER, "Servlet continue read channel erroneous, force to close channel ", exc);
+                request.context.logger.log(
+                        Level.FINER, "Servlet continue read channel erroneous, force to close channel ", exc);
             }
         }
     }

@@ -7,10 +7,7 @@ package org.redkale.test.rest;
 
 import java.nio.channels.CompletionHandler;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class HelloAsyncHandler implements CompletionHandler {
 
     @Override
@@ -20,7 +17,7 @@ public class HelloAsyncHandler implements CompletionHandler {
 
     @Override
     public void failed(Throwable exc, Object attachment) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException(
+                "Not supported yet."); // To change body of generated methods, choose Tools | Templates.
     }
-
 }

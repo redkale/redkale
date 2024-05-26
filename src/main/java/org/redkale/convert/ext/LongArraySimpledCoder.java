@@ -11,8 +11,7 @@ import org.redkale.convert.*;
 /**
  * long[] 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -78,7 +77,8 @@ public final class LongArraySimpledCoder<R extends Reader, W extends Writer> ext
         }
     }
 
-    public final static class LongStreamSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, LongStream> {
+    public static final class LongStreamSimpledCoder<R extends Reader, W extends Writer>
+            extends SimpledCoder<R, W, LongStream> {
 
         public static final LongStreamSimpledCoder instance = new LongStreamSimpledCoder();
 
@@ -98,6 +98,5 @@ public final class LongArraySimpledCoder<R extends Reader, W extends Writer> ext
             long[] value = LongArraySimpledCoder.instance.convertFrom(in);
             return value == null ? null : LongStream.of(value);
         }
-
     }
 }

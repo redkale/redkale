@@ -8,8 +8,7 @@ package org.redkale.convert;
 /**
  * ConvertColumn 对应的实体类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -23,8 +22,7 @@ public final class ConvertColumnEntry {
 
     private ConvertType convertType;
 
-    public ConvertColumnEntry() {
-    }
+    public ConvertColumnEntry() {}
 
     public ConvertColumnEntry(ConvertColumn column) {
         if (column == null) return;
@@ -91,7 +89,7 @@ public final class ConvertColumnEntry {
 
     @Override
     public String toString() {
-        return "ConvertColumnEntry{" + "index=" + index + ", name=" + name + ", ignore=" + ignore + ", convertType=" + convertType + '}';
+        return "ConvertColumnEntry{" + "index=" + index + ", name=" + name + ", ignore=" + ignore + ", convertType="
+                + convertType + '}';
     }
-
 }

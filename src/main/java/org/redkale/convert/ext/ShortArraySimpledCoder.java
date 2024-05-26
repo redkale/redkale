@@ -10,8 +10,7 @@ import org.redkale.convert.*;
 /**
  * short[] 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -76,5 +75,4 @@ public final class ShortArraySimpledCoder<R extends Reader, W extends Writer> ex
             return values;
         }
     }
-
 }

@@ -5,21 +5,22 @@
  */
 package org.redkale.source;
 
-import java.io.Serializable;
-import org.redkale.convert.ConvertColumn;
 import static org.redkale.source.ColumnExpress.*;
 
+import java.io.Serializable;
+import org.redkale.convert.ConvertColumn;
+
 /**
- * 作为ColumnValue的value字段值，用于复杂的字段表达式 。  <br>
- * String 视为 字段名  <br>
- * Number 视为 数值   <br>
- * 例如： UPDATE Reord SET updateTime = createTime + 10 WHERE id = 1   <br>
- * source.updateColumn(Record.class, 1, ColumnValue.set("updateTime", ColumnExpNode.inc("createTime", 10)));  <br>
- * 例如： UPDATE Reord SET updateTime = createTime * 10 / createCount WHERE id = 1   <br>
- * source.updateColumn(Record.class, 1, ColumnValue.set("updateTime", ColumnExpNode.div(ColumnExpNode.mul("createTime", 10), "createCount")));  <br>
+ * 作为ColumnValue的value字段值，用于复杂的字段表达式 。 <br>
+ * String 视为 字段名 <br>
+ * Number 视为 数值 <br>
+ * 例如： UPDATE Reord SET updateTime = createTime + 10 WHERE id = 1 <br>
+ * source.updateColumn(Record.class, 1, ColumnValue.set("updateTime", ColumnExpNode.inc("createTime", 10))); <br>
+ * 例如： UPDATE Reord SET updateTime = createTime * 10 / createCount WHERE id = 1 <br>
+ * source.updateColumn(Record.class, 1, ColumnValue.set("updateTime", ColumnExpNode.div(ColumnExpNode.mul("createTime",
+ * 10), "createCount"))); <br>
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.0.0
@@ -27,16 +28,15 @@ import static org.redkale.source.ColumnExpress.*;
 public class ColumnExpNode implements ColumnNode {
 
     @ConvertColumn(index = 1)
-    protected ColumnNode left;//类型只能是ColumnNameNode、ColumnNumberNode、ColumnExpNode
+    protected ColumnNode left; // 类型只能是ColumnNameNode、ColumnNumberNode、ColumnExpNode
 
     @ConvertColumn(index = 2)
-    protected ColumnExpress express; //SET时，left必须是ColumnNameNode, right必须是null
+    protected ColumnExpress express; // SET时，left必须是ColumnNameNode, right必须是null
 
     @ConvertColumn(index = 3)
-    protected ColumnNode right;//类型只能是ColumnNameNode、ColumnNumberNode、ColumnExpNode
+    protected ColumnNode right; // 类型只能是ColumnNameNode、ColumnNumberNode、ColumnExpNode
 
-    public ColumnExpNode() {
-    }
+    public ColumnExpNode() {}
 
     public ColumnExpNode(Serializable left, ColumnExpress express, Serializable right) {
         if (express == null) {
@@ -46,7 +46,8 @@ public class ColumnExpNode implements ColumnNode {
         ColumnNode rightNode = createColumnNode(right);
         if (express == SET) {
             if (!(leftNode instanceof ColumnNameNode) || right != null) {
-                throw new IllegalArgumentException("left value must be ColumnNameNode, right value must be null on ColumnExpress.SET");
+                throw new IllegalArgumentException(
+                        "left value must be ColumnNameNode, right value must be null on ColumnExpress.SET");
             }
         }
         this.left = leftNode;
@@ -65,8 +66,8 @@ public class ColumnExpNode implements ColumnNode {
             return new ColumnNumberNode((Number) value);
         }
         if (!(value instanceof ColumnNameNode)
-            && !(value instanceof ColumnNumberNode)
-            && !(value instanceof ColumnExpNode)) {
+                && !(value instanceof ColumnNumberNode)
+                && !(value instanceof ColumnExpNode)) {
             throw new IllegalArgumentException("value must be ColumnNameNode、ColumnNumberNode、ColumnExpNode");
         }
         return (ColumnNode) value;
@@ -74,9 +75,7 @@ public class ColumnExpNode implements ColumnNode {
 
     /**
      * @see org.redkale.source.ColumnNodes#set(java.lang.String)
-     *
      * @param left Serializable
-     *
      * @return ColumnExpNode
      * @deprecated 2.8.0
      */
@@ -86,10 +85,9 @@ public class ColumnExpNode implements ColumnNode {
     }
 
     /**
-     * @see org.redkale.source.ColumnNodes#inc(org.redkale.source.ColumnNode, org.redkale.source.ColumnNode) 
-     * @param left  Serializable
+     * @see org.redkale.source.ColumnNodes#inc(org.redkale.source.ColumnNode, org.redkale.source.ColumnNode)
+     * @param left Serializable
      * @param right Serializable
-     *
      * @return ColumnExpNode
      * @deprecated 2.8.0
      */
@@ -100,9 +98,8 @@ public class ColumnExpNode implements ColumnNode {
 
     /**
      * @see org.redkale.source.ColumnNodes#dec(org.redkale.source.ColumnNode, org.redkale.source.ColumnNode)
-     * @param left  Serializable
+     * @param left Serializable
      * @param right Serializable
-     *
      * @return ColumnExpNode
      * @deprecated 2.8.0
      */
@@ -113,9 +110,8 @@ public class ColumnExpNode implements ColumnNode {
 
     /**
      * @see org.redkale.source.ColumnNodes#mul(org.redkale.source.ColumnNode, org.redkale.source.ColumnNode)
-     * @param left  Serializable
+     * @param left Serializable
      * @param right Serializable
-     *
      * @return ColumnExpNode
      * @deprecated 2.8.0
      */
@@ -126,9 +122,8 @@ public class ColumnExpNode implements ColumnNode {
 
     /**
      * @see org.redkale.source.ColumnNodes#div(org.redkale.source.ColumnNode, org.redkale.source.ColumnNode)
-     * @param left  Serializable
+     * @param left Serializable
      * @param right Serializable
-     *
      * @return ColumnExpNode
      * @deprecated 2.8.0
      */
@@ -139,9 +134,8 @@ public class ColumnExpNode implements ColumnNode {
 
     /**
      * @see org.redkale.source.ColumnNodes#mod(org.redkale.source.ColumnNode, org.redkale.source.ColumnNode)
-     * @param left  Serializable
+     * @param left Serializable
      * @param right Serializable
-     *
      * @return ColumnExpNode
      * @deprecated 2.8.0
      */
@@ -152,9 +146,8 @@ public class ColumnExpNode implements ColumnNode {
 
     /**
      * @see org.redkale.source.ColumnNodes#and(org.redkale.source.ColumnNode, org.redkale.source.ColumnNode)
-     * @param left  Serializable
+     * @param left Serializable
      * @param right Serializable
-     *
      * @return ColumnExpNode
      * @deprecated 2.8.0
      */
@@ -165,9 +158,8 @@ public class ColumnExpNode implements ColumnNode {
 
     /**
      * @see org.redkale.source.ColumnNodes#orr(org.redkale.source.ColumnNode, org.redkale.source.ColumnNode)
-     * @param left  Serializable
+     * @param left Serializable
      * @param right Serializable
-     *
      * @return ColumnExpNode
      * @deprecated 2.8.0
      */

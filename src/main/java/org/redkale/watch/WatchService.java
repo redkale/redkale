@@ -10,11 +10,8 @@ import org.redkale.service.*;
 /**
  * 只给WATCH协议的Server才能加载的Service，其他协议的Server均不能自动加载WatchService
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
-public interface WatchService extends Service {
-
-}
+public interface WatchService extends Service {}

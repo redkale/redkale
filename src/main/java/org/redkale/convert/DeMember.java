@@ -13,8 +13,7 @@ import org.redkale.util.Attribute;
 /**
  * 字段的反序列化操作类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类
@@ -24,17 +23,17 @@ import org.redkale.util.Attribute;
 @SuppressWarnings("unchecked")
 public final class DeMember<R extends Reader, T, F> {
 
-    final Field field; //对应类成员的Field， 也可能为null
+    final Field field; // 对应类成员的Field， 也可能为null
 
-    final Method method; //对应类成员的Method也可能为null
+    final Method method; // 对应类成员的Method也可能为null
 
     final String comment;
 
     protected int index;
 
-    protected int position; //从1开始
+    protected int position; // 从1开始
 
-    protected int tag; //主要给protobuf使用
+    protected int tag; // 主要给protobuf使用
 
     protected final Attribute<T, F> attribute;
 
@@ -70,7 +69,8 @@ public final class DeMember<R extends Reader, T, F> {
         this.decoder = decoder;
     }
 
-    public static <R extends Reader, T, F> DeMember<R, T, F> create(ConvertFactory factory, Class<T> clazz, String fieldName) {
+    public static <R extends Reader, T, F> DeMember<R, T, F> create(
+            ConvertFactory factory, Class<T> clazz, String fieldName) {
         try {
             Field field = clazz.getDeclaredField(fieldName);
             return new DeMember<>(Attribute.create(field), factory.loadDecoder(field.getGenericType()), field, null);
@@ -79,16 +79,19 @@ public final class DeMember<R extends Reader, T, F> {
         }
     }
 
-    public static <R extends Reader, T, F> DeMember<R, T, F> create(ConvertFactory factory, Class<T> clazz, String fieldName, Class<F> fieldType) {
+    public static <R extends Reader, T, F> DeMember<R, T, F> create(
+            ConvertFactory factory, Class<T> clazz, String fieldName, Class<F> fieldType) {
         try {
             Field field = clazz.getDeclaredField(fieldName);
-            return new DeMember<>(Attribute.create(clazz, fieldName, fieldType), factory.loadDecoder(fieldType), field, null);
+            return new DeMember<>(
+                    Attribute.create(clazz, fieldName, fieldType), factory.loadDecoder(fieldType), field, null);
         } catch (Exception e) {
             throw new ConvertException(e);
         }
     }
 
-    public static <R extends Reader, T, F> DeMember<R, T, F> create(Attribute<T, F> attribute, ConvertFactory factory, Class<F> fieldType) {
+    public static <R extends Reader, T, F> DeMember<R, T, F> create(
+            Attribute<T, F> attribute, ConvertFactory factory, Class<F> fieldType) {
         return new DeMember<>(attribute, factory.loadDecoder(fieldType), null, null);
     }
 
@@ -141,14 +144,15 @@ public final class DeMember<R extends Reader, T, F> {
             return -1;
         }
         if (this.position != o.position) {
-            return (this.position == 0 ? Integer.MAX_VALUE : this.position) - (o.position == 0 ? Integer.MAX_VALUE : o.position);
+            return (this.position == 0 ? Integer.MAX_VALUE : this.position)
+                    - (o.position == 0 ? Integer.MAX_VALUE : o.position);
         }
         if (this.index != o.index) {
             return (this.index == 0 ? Integer.MAX_VALUE : this.index) - (o.index == 0 ? Integer.MAX_VALUE : o.index);
         }
         if (this.index != 0) {
             throw new ConvertException("fields (" + attribute.field() + ", " + o.attribute.field()
-                + ") have same ConvertColumn.index(" + this.index + ") in " + attribute.declaringClass());
+                    + ") have same ConvertColumn.index(" + this.index + ") in " + attribute.declaringClass());
         }
         return fieldSort ? this.attribute.field().compareTo(o.attribute.field()) : 0;
     }
@@ -172,7 +176,7 @@ public final class DeMember<R extends Reader, T, F> {
 
     @Override
     public String toString() {
-        return "DeMember{" + "attribute=" + attribute.field() + ", position=" + position
-            + ", tag=" + tag + ", decoder=" + (decoder == null ? null : decoder.getClass().getName()) + '}';
+        return "DeMember{" + "attribute=" + attribute.field() + ", position=" + position + ", tag=" + tag + ", decoder="
+                + (decoder == null ? null : decoder.getClass().getName()) + '}';
     }
 }

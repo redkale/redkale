@@ -8,10 +8,7 @@ package org.redkale.test.convert;
 import java.lang.reflect.Type;
 import org.redkale.convert.json.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class _DyncFortuneJsonEncoder extends JsonDynEncoder<Fortune> {
 
     protected final byte[] idFieldBytes = "\"id\":".getBytes();
@@ -32,7 +29,7 @@ public class _DyncFortuneJsonEncoder extends JsonDynEncoder<Fortune> {
             objectEncoder.convertTo(out, value);
             return;
         }
-        
+
         out.writeTo('{');
 
         out.writeTo(idFieldBytes);

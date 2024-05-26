@@ -13,10 +13,7 @@ import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
 import org.redkale.watch.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @NodeProtocol("WATCH")
 public class NodeWatchServer extends NodeHttpServer {
 
@@ -27,7 +24,8 @@ public class NodeWatchServer extends NodeHttpServer {
     @Override
     @SuppressWarnings("unchecked")
     protected ClassFilter<Service> createServiceClassFilter() {
-        return createClassFilter(this.sncpGroup, null, WatchService.class, null, Annotation.class, "services", "service");
+        return createClassFilter(
+                this.sncpGroup, null, WatchService.class, null, Annotation.class, "services", "service");
     }
 
     @Override
@@ -44,7 +42,7 @@ public class NodeWatchServer extends NodeHttpServer {
 
     @Override
     protected List<ClassFilter> createOtherClassFilters() {
-        return null;  //不调用 super.createOtherClassFilters()
+        return null; // 不调用 super.createOtherClassFilters()
     }
 
     @Override

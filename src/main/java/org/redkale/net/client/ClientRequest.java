@@ -13,12 +13,9 @@ import org.redkale.net.WorkThread;
 import org.redkale.util.*;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.3.0
  */
 public abstract class ClientRequest {
@@ -33,7 +30,7 @@ public abstract class ClientRequest {
 
     protected WorkThread workThread;
 
-    //只会在ClientCodec的读线程里调用, 将ClientResult转成最终结果对象
+    // 只会在ClientCodec的读线程里调用, 将ClientResult转成最终结果对象
     Function respTransfer;
 
     public abstract void writeTo(ClientConnection conn, ByteArray array);
@@ -49,12 +46,12 @@ public abstract class ClientRequest {
         return null;
     }
 
-    //关闭请求一定要返回false
+    // 关闭请求一定要返回false
     public boolean isCloseType() {
         return false;
     }
 
-    //连接上先从服务器拉取数据构建的虚拟请求一定要返回true
+    // 连接上先从服务器拉取数据构建的虚拟请求一定要返回true
     public boolean isVirtualType() {
         return false;
     }
@@ -81,7 +78,7 @@ public abstract class ClientRequest {
         return (T) this;
     }
 
-    //数据是否全部写入，如果只写部分，返回false, 配合ClientConnection.pauseWriting使用
+    // 数据是否全部写入，如果只写部分，返回false, 配合ClientConnection.pauseWriting使用
     protected boolean isCompleted() {
         return true;
     }

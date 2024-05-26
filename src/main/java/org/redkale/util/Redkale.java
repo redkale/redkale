@@ -7,8 +7,8 @@ package org.redkale.util;
 
 /**
  * 版本
- * <p>
- * 详情见: https://redkale.org
+ *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -16,8 +16,7 @@ public final class Redkale {
 
     private static final String ROOT_PACKAGE = "org.redkale";
 
-    private Redkale() { 
-    }
+    private Redkale() {}
 
     public static String getRootPackage() {
         return ROOT_PACKAGE;

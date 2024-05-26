@@ -1,7 +1,7 @@
 package org.redkale.test.rest;
 
-import org.redkale.persistence.Id;
 import org.redkale.convert.json.JsonFactory;
+import org.redkale.persistence.Id;
 
 /**
  * 当前用户对象
@@ -21,7 +21,7 @@ public class UserInfo {
 
     public boolean checkAuth(int moduleid, int actionid) {
         if (moduleid == 0 || actionid == 0) return true;
-        //权限判断
+        // 权限判断
         return true;
     }
 

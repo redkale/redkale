@@ -20,12 +20,9 @@ import org.redkale.util.Traces;
 import org.redkale.util.Utility;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.1.0
  */
 public class MessageClient implements ClusterRpcClient<MessageRecord, MessageRecord>, MessageProcessor {
@@ -42,7 +39,7 @@ public class MessageClient implements ClusterRpcClient<MessageRecord, MessageRec
 
     protected final String protocol;
 
-    //key: reqTopic
+    // key: reqTopic
     private final HashMap<String, MessageProcessor> messageProcessors = new HashMap<>();
 
     final ConcurrentHashMap<Long, MessageRespFuture> respQueue = new ConcurrentHashMap<>();
@@ -89,7 +86,8 @@ public class MessageClient implements ClusterRpcClient<MessageRecord, MessageRec
             respQueue.put(message.getSeqid(), respNode);
             ScheduledThreadPoolExecutor executor = messageAgent.timeoutExecutor;
             if (executor != null && messageAgent.getTimeoutSeconds() > 0) {
-                respNode.scheduledFuture = executor.schedule(respNode, messageAgent.getTimeoutSeconds(), TimeUnit.SECONDS);
+                respNode.scheduledFuture =
+                        executor.schedule(respNode, messageAgent.getTimeoutSeconds(), TimeUnit.SECONDS);
             }
         } catch (Throwable ex) {
             future.completeExceptionally(ex);
@@ -97,7 +95,7 @@ public class MessageClient implements ClusterRpcClient<MessageRecord, MessageRec
         return future;
     }
 
-    //非线程安全
+    // 非线程安全
     public void putMessageServlet(MessageServlet servlet) {
         String topic = servlet.getTopic();
         processorLock.lock();
@@ -119,7 +117,8 @@ public class MessageClient implements ClusterRpcClient<MessageRecord, MessageRec
         return new MessageRecord(msgSeqno.incrementAndGet(), ctype, topic, respTopic, Traces.currentTraceid(), content);
     }
 
-    public MessageRecord createMessageRecord(byte ctype, String topic, String respTopic, String traceid, byte[] content) {
+    public MessageRecord createMessageRecord(
+            byte ctype, String topic, String respTopic, String traceid, byte[] content) {
         return new MessageRecord(msgSeqno.incrementAndGet(), ctype, topic, respTopic, traceid, content);
     }
 
@@ -127,7 +126,8 @@ public class MessageClient implements ClusterRpcClient<MessageRecord, MessageRec
         return new MessageRecord(seqid, ctype, topic, respTopic, Traces.currentTraceid(), content);
     }
 
-    public MessageRecord createMessageRecord(long seqid, byte ctype, String topic, String respTopic, String traceid, byte[] content) {
+    public MessageRecord createMessageRecord(
+            long seqid, byte ctype, String topic, String respTopic, String traceid, byte[] content) {
         return new MessageRecord(seqid, ctype, topic, respTopic, traceid, content);
     }
 
@@ -150,5 +150,4 @@ public class MessageClient implements ClusterRpcClient<MessageRecord, MessageRec
     public String getAppRespTopic() {
         return appRespTopic;
     }
-
 }

@@ -18,11 +18,9 @@ import org.redkale.util.Traces;
 /**
  * 一个Service对应一个MessageProcessor
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.1.0
  */
 public abstract class MessageServlet implements MessageProcessor {
@@ -39,7 +37,8 @@ public abstract class MessageServlet implements MessageProcessor {
 
     protected final String topic;
 
-    public MessageServlet(MessageClient messageClient, Context context, Service service, Servlet servlet, String topic) {
+    public MessageServlet(
+            MessageClient messageClient, Context context, Service service, Servlet servlet, String topic) {
         this.messageClient = messageClient;
         this.context = context;
         this.service = service;
@@ -57,25 +56,33 @@ public abstract class MessageServlet implements MessageProcessor {
             long block = now - time;
             Request request = createRequest(context, message);
             response = createResponse(context, request);
-            //执行逻辑
+            // 执行逻辑
             context.execute(servlet, request, response);
             long exems = System.currentTimeMillis() - now;
             if ((delay > 1000 || block > 100 || exems > 1000) && logger.isLoggable(Level.FINE)) {
-                logger.log(Level.FINE, getClass().getSimpleName() + ".process (mq.delay-slower = " + delay 
-                    + " ms, mq.block = " + block + " ms, mq.executes = " + exems + " ms) message: " + message);
+                logger.log(
+                        Level.FINE,
+                        getClass().getSimpleName() + ".process (mq.delay-slower = " + delay + " ms, mq.block = " + block
+                                + " ms, mq.executes = " + exems + " ms) message: " + message);
             } else if ((delay > 50 || block > 10 || exems > 50) && logger.isLoggable(Level.FINER)) {
-                logger.log(Level.FINER, getClass().getSimpleName() + ".process (mq.delay-slowly = " + delay 
-                    + " ms, mq.block = " + block + " ms, mq.executes = " + exems + " ms) message: " + message);
+                logger.log(
+                        Level.FINER,
+                        getClass().getSimpleName() + ".process (mq.delay-slowly = " + delay + " ms, mq.block = " + block
+                                + " ms, mq.executes = " + exems + " ms) message: " + message);
             } else if (logger.isLoggable(Level.FINEST)) {
-                logger.log(Level.FINEST, getClass().getSimpleName() + ".process (mq.delay-normal = " + delay 
-                    + " ms, mq.block = " + block + " ms, mq.execute = " + exems + " ms) message: " + message);
+                logger.log(
+                        Level.FINEST,
+                        getClass().getSimpleName() + ".process (mq.delay-normal = " + delay + " ms, mq.block = " + block
+                                + " ms, mq.execute = " + exems + " ms) message: " + message);
             }
         } catch (Throwable ex) {
             if (response != null) {
                 onError(response, message, ex);
             }
-            logger.log(Level.SEVERE, getClass().getSimpleName() + " process error, message=" 
-                + message, ex instanceof CompletionException ? ((CompletionException) ex).getCause() : ex);
+            logger.log(
+                    Level.SEVERE,
+                    getClass().getSimpleName() + " process error, message=" + message,
+                    ex instanceof CompletionException ? ((CompletionException) ex).getCause() : ex);
         } finally {
             Traces.removeTraceid();
         }
@@ -102,5 +109,4 @@ public abstract class MessageServlet implements MessageProcessor {
     public String getTopic() {
         return topic;
     }
-
 }

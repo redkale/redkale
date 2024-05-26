@@ -10,16 +10,15 @@ import org.redkale.convert.Convert;
 /**
  * MQ消息发送器 {@link org.redkale.mq.ResourceProducer}
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.8.0
  */
 public interface MessageProducer {
 
-    public CompletableFuture<Void> sendMessage(String topic, Integer partition, Convert convert, Type type, Object value);
+    public CompletableFuture<Void> sendMessage(
+            String topic, Integer partition, Convert convert, Type type, Object value);
 
     default CompletableFuture<Void> sendMessage(String topic, Integer partition, Convert convert, Object value) {
         return sendMessage(topic, partition, convert, (Type) null, value);
@@ -40,5 +39,4 @@ public interface MessageProducer {
     default CompletableFuture<Void> sendMessage(String topic, Object value) {
         return sendMessage(topic, (Integer) null, value);
     }
-
 }

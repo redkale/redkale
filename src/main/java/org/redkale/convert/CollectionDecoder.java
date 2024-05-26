@@ -11,11 +11,10 @@ import java.util.concurrent.locks.*;
 import org.redkale.util.Creator;
 
 /**
- * Collection的反序列化操作类  <br>
- * 支持一定程度的泛型。  <br>
+ * Collection的反序列化操作类 <br>
+ * 支持一定程度的泛型。 <br>
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> 反解析的集合元素类型
@@ -65,9 +64,12 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
         }
     }
 
-    //仅供类似JsonAnyDecoder这种动态创建使用， 不得调用 factory.register
-    public CollectionDecoder(Type type, Type componentType,
-        Creator<Collection<T>> creator, final Decodeable<Reader, T> componentDecoder) {
+    // 仅供类似JsonAnyDecoder这种动态创建使用， 不得调用 factory.register
+    public CollectionDecoder(
+            Type type,
+            Type componentType,
+            Creator<Collection<T>> creator,
+            final Decodeable<Reader, T> componentDecoder) {
         Objects.requireNonNull(componentDecoder);
         this.type = type;
         this.componentType = componentType;
@@ -98,7 +100,7 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
                 try {
                     condition.await();
                 } catch (Exception e) {
-                    //do nothing
+                    // do nothing
                 } finally {
                     lock.unlock();
                 }
@@ -157,5 +159,4 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
     public Decodeable<Reader, T> getComponentDecoder() {
         return componentDecoder;
     }
-
 }

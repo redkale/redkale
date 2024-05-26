@@ -13,15 +13,15 @@ import org.redkale.util.RedkaleClassLoader;
 /**
  * 枚举 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型
  * @param <E> Enum的子类
  */
-public class ProtobufEnumSimpledCoder<R extends Reader, W extends Writer, E extends Enum> extends SimpledCoder<R, W, E> {
+public class ProtobufEnumSimpledCoder<R extends Reader, W extends Writer, E extends Enum>
+        extends SimpledCoder<R, W, E> {
 
     private final Map<Integer, E> values = new HashMap<>();
 
@@ -68,5 +68,4 @@ public class ProtobufEnumSimpledCoder<R extends Reader, W extends Writer, E exte
     public Class<E> getType() {
         return (Class) type;
     }
-
 }

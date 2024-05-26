@@ -6,12 +6,9 @@ package org.redkale.util;
 /**
  * 简单的boolean值引用
  *
- * <p>
- * 详情见: https://redkale.org
- *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.8.0
  */
 public final class BoolRef {
@@ -22,8 +19,7 @@ public final class BoolRef {
         this.value = initialValue;
     }
 
-    public BoolRef() {
-    }
+    public BoolRef() {}
 
     public boolean get() {
         return this.value;

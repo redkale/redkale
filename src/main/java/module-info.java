@@ -1,17 +1,14 @@
 /**
- * <p>
  * see: https://redkale.org
  *
  * @author zhangjx
- *
  */
 module org.redkale {
-
     requires java.base;
-    requires java.logging;    
+    requires java.logging;
     requires java.net.http;
     requires java.sql;
-    requires jdk.unsupported;  //sun.misc.Unsafe
+    requires jdk.unsupported; // sun.misc.Unsafe
 
     exports org.redkale.annotation;
     exports org.redkale.boot;
@@ -44,7 +41,7 @@ module org.redkale {
     exports org.redkale.source.spi;
     exports org.redkale.util;
     exports org.redkale.watch;
-    
+
     uses org.redkale.props.spi.PropertiesAgentProvider;
     uses org.redkale.cache.spi.CacheManagerProvider;
     uses org.redkale.cluster.spi.ClusterAgentProvider;
@@ -54,5 +51,4 @@ module org.redkale {
     uses org.redkale.source.spi.CacheSourceProvider;
     uses org.redkale.source.spi.DataSourceProvider;
     uses org.redkale.source.spi.DataNativeSqlParserProvider;
-    
 }

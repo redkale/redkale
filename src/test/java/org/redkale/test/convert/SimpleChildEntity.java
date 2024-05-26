@@ -6,13 +6,10 @@
 package org.redkale.test.convert;
 
 import java.net.*;
-import org.redkale.convert.ConvertEntity;
 import java.util.*;
+import org.redkale.convert.ConvertEntity;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @ConvertEntity("myname")
 public class SimpleChildEntity extends SimpleEntity {
 
@@ -24,8 +21,8 @@ public class SimpleChildEntity extends SimpleEntity {
         SimpleChildEntity v = new SimpleChildEntity();
         v.setName("this is name\n \"test");
         v.setId(1000000001);
-        v.setAddrs(new int[]{22222, 33333, 44444, 55555, 66666, 77777, 88888, 99999});
-        v.setStrings(new String[]{"zzz", "yyy", "xxx"});
+        v.setAddrs(new int[] {22222, 33333, 44444, 55555, 66666, 77777, 88888, 99999});
+        v.setStrings(new String[] {"zzz", "yyy", "xxx"});
         List<String> list = new ArrayList<>();
         list.add("aaaa");
         list.add("bbbb");
@@ -56,5 +53,4 @@ public class SimpleChildEntity extends SimpleEntity {
     public void setExtend(String extend) {
         this.extend = extend;
     }
-
 }

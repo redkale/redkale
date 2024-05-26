@@ -9,10 +9,7 @@ import java.lang.reflect.*;
 import org.junit.jupiter.api.*;
 import org.redkale.util.TypeToken;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class TypeTokenTest {
 
     private boolean main;
@@ -33,11 +30,14 @@ public class TypeTokenTest {
 
         for (Method method : declaringClass.getMethods()) {
             if (!"run".equals(method.getName())) continue;
-            if (!main) Assertions.assertEquals(ThreeRound.class, TypeToken.getGenericType(method.getGenericParameterTypes()[0], declaringClass));
+            if (!main)
+                Assertions.assertEquals(
+                        ThreeRound.class,
+                        TypeToken.getGenericType(method.getGenericParameterTypes()[0], declaringClass));
             System.out.println("返回值应该是: " + ThreeRound.class);
-            System.out.println("返回值结果是: " + TypeToken.getGenericType(method.getGenericParameterTypes()[0], declaringClass));
+            System.out.println(
+                    "返回值结果是: " + TypeToken.getGenericType(method.getGenericParameterTypes()[0], declaringClass));
             break;
         }
     }
-
 }

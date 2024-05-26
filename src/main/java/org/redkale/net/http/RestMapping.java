@@ -5,18 +5,18 @@
  */
 package org.redkale.net.http;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.*;
 
+import java.lang.annotation.*;
+
 /**
- * 只能依附在Service实现类的public方法上，且方法如果throws只能是IOException  <br>
- * value默认为"/" + Service的类名去掉Service字样的小写字符串 (如HelloService，的默认路径为/hello)。  <br>
- * <p>
- * 详情见: https://redkale.org
- * 
- * @see org.redkale.net.http.RestService
+ * 只能依附在Service实现类的public方法上，且方法如果throws只能是IOException <br>
+ * value默认为"/" + Service的类名去掉Service字样的小写字符串 (如HelloService，的默认路径为/hello)。 <br>
  *
+ * <p>详情见: https://redkale.org
+ *
+ * @see org.redkale.net.http.RestService
  * @author zhangjx
  */
 @Documented
@@ -82,8 +82,7 @@ public @interface RestMapping {
     String[] methods() default {};
 
     /**
-     * 返回结果的样例
-     * for OpenAPI Specification 3.1.0
+     * 返回结果的样例 for OpenAPI Specification 3.1.0
      *
      * @return String
      */

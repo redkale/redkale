@@ -13,8 +13,7 @@ import org.redkale.util.Attribute;
 /**
  * 字段的序列化操作类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <W> Writer输出的子类
@@ -32,22 +31,22 @@ public final class EnMember<W extends Writer, T, F> {
 
     final boolean string;
 
-    //final boolean isnumber;
+    // final boolean isnumber;
     final boolean bool;
 
     final char[] jsonFieldNameChars;
 
     final byte[] jsonFieldNameBytes;
 
-    final Field field; //对应类成员的Field也可能为null
+    final Field field; // 对应类成员的Field也可能为null
 
-    final Method method; //对应类成员的Method也可能为null
+    final Method method; // 对应类成员的Method也可能为null
 
     int index;
 
-    int position; //从1开始
+    int position; // 从1开始
 
-    int tag; //主要给protobuf使用
+    int tag; // 主要给protobuf使用
 
     public EnMember(Attribute<T, F> attribute, Encodeable<W, F> encoder, Field field, Method method) {
         this.attribute = attribute;
@@ -63,7 +62,7 @@ public final class EnMember<W extends Writer, T, F> {
             Comment ct = field.getAnnotation(Comment.class);
             if (ct == null) {
                 Column col = field.getAnnotation(Column.class);
-                this.comment = col == null ? "":col.comment();
+                this.comment = col == null ? "" : col.comment();
             } else {
                 this.comment = ct.value();
             }
@@ -71,17 +70,18 @@ public final class EnMember<W extends Writer, T, F> {
             Comment ct = method.getAnnotation(Comment.class);
             if (ct == null) {
                 Column col = method.getAnnotation(Column.class);
-                this.comment = col == null ? "":col.comment();
+                this.comment = col == null ? "" : col.comment();
             } else {
                 this.comment = ct.value();
             }
         } else {
             this.comment = "";
         }
-        //this.isnumber = Number.class.isAssignableFrom(t) || (!this.isbool && t.isPrimitive());
+        // this.isnumber = Number.class.isAssignableFrom(t) || (!this.isbool && t.isPrimitive());
     }
 
-    public static <W extends Writer, T, F> EnMember<W, T, F> create(final ConvertFactory factory, final Class<T> clazz, final String fieldname) {
+    public static <W extends Writer, T, F> EnMember<W, T, F> create(
+            final ConvertFactory factory, final Class<T> clazz, final String fieldname) {
         try {
             Field field = clazz.getDeclaredField(fieldname);
             return new EnMember<>(Attribute.create(field), factory.loadEncoder(field.getGenericType()), field, null);
@@ -90,16 +90,19 @@ public final class EnMember<W extends Writer, T, F> {
         }
     }
 
-    public static <W extends Writer, T, F> EnMember<W, T, F> create(final ConvertFactory factory, final Class<T> clazz, final String fieldname, final Class<F> fieldtype) {
+    public static <W extends Writer, T, F> EnMember<W, T, F> create(
+            final ConvertFactory factory, final Class<T> clazz, final String fieldname, final Class<F> fieldtype) {
         try {
             Field field = clazz.getDeclaredField(fieldname);
-            return new EnMember<>(Attribute.create(clazz, fieldname, fieldtype), factory.loadEncoder(fieldtype), field, null);
+            return new EnMember<>(
+                    Attribute.create(clazz, fieldname, fieldtype), factory.loadEncoder(fieldtype), field, null);
         } catch (Exception e) {
             throw new ConvertException(e);
         }
     }
 
-    public static <W extends Writer, T, F> EnMember<W, T, F> create(final Attribute<T, F> attribute, final ConvertFactory factory, final Class<F> fieldtype) {
+    public static <W extends Writer, T, F> EnMember<W, T, F> create(
+            final Attribute<T, F> attribute, final ConvertFactory factory, final Class<F> fieldtype) {
         return new EnMember<>(attribute, factory.loadEncoder(fieldtype), null, null);
     }
 
@@ -160,13 +163,15 @@ public final class EnMember<W extends Writer, T, F> {
             return -1;
         }
         if (this.position != o.position) {
-            return (this.position == 0 ? Integer.MAX_VALUE : this.position) - (o.position == 0 ? Integer.MAX_VALUE : o.position);
+            return (this.position == 0 ? Integer.MAX_VALUE : this.position)
+                    - (o.position == 0 ? Integer.MAX_VALUE : o.position);
         }
         if (this.index != o.index) {
             return (this.index == 0 ? Integer.MAX_VALUE : this.index) - (o.index == 0 ? Integer.MAX_VALUE : o.index);
         }
         if (this.index != 0) {
-            throw new ConvertException("fields (" + attribute.field() + ", " + o.attribute.field() + ") have same ConvertColumn.index(" + this.index + ") in " + attribute.declaringClass());
+            throw new ConvertException("fields (" + attribute.field() + ", " + o.attribute.field()
+                    + ") have same ConvertColumn.index(" + this.index + ") in " + attribute.declaringClass());
         }
         return fieldSort ? this.attribute.field().compareTo(o.attribute.field()) : 0;
     }
@@ -190,6 +195,7 @@ public final class EnMember<W extends Writer, T, F> {
 
     @Override
     public String toString() {
-        return "EnMember{" + "attribute=" + attribute.field() + ", position=" + position + ", encoder=" + (encoder == null ? null : encoder.getClass().getName()) + '}';
+        return "EnMember{" + "attribute=" + attribute.field() + ", position=" + position + ", encoder="
+                + (encoder == null ? null : encoder.getClass().getName()) + '}';
     }
 }

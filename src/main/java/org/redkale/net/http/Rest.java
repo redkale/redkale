@@ -5,20 +5,23 @@
  */
 package org.redkale.net.http;
 
-import java.io.*;
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
+import static org.redkale.util.Utility.isEmpty;
+
+import java.io.*;
+import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.net.InetSocketAddress;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.CompletionStage;
 import org.redkale.annotation.*;
+import org.redkale.annotation.ClassDepends;
 import org.redkale.annotation.Comment;
 import org.redkale.asm.*;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
@@ -30,11 +33,8 @@ import org.redkale.service.*;
 import org.redkale.source.Flipper;
 import org.redkale.util.*;
 import org.redkale.util.RedkaleClassLoader.DynBytesClassLoader;
-import static org.redkale.util.Utility.isEmpty;
-import org.redkale.annotation.ClassDepends;
 
 /**
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -42,39 +42,40 @@ import org.redkale.annotation.ClassDepends;
 @SuppressWarnings("unchecked")
 public final class Rest {
 
-    //请求是否为rpc协议，值类型: 布尔，取值为true、false
+    // 请求是否为rpc协议，值类型: 布尔，取值为true、false
     public static final String REST_HEADER_RPC = "Rest-Rpc";
 
-    //traceid，值类型: 字符串
+    // traceid，值类型: 字符串
     public static final String REST_HEADER_TRACEID = "Rest-Traceid";
 
-    //当前用户ID值，值类型: 字符串
+    // 当前用户ID值，值类型: 字符串
     public static final String REST_HEADER_CURRUSERID = "Rest-Curruserid";
 
-    //请求所需的RestService的资源名，值类型: 字符串
+    // 请求所需的RestService的资源名，值类型: 字符串
     public static final String REST_HEADER_RESNAME = "Rest-Resname";
 
-    //请求参数的反序列化种类，值类型: 字符串，取值为ConvertType枚举值名
+    // 请求参数的反序列化种类，值类型: 字符串，取值为ConvertType枚举值名
     public static final String REST_HEADER_REQ_CONVERT = "Rest-Req-Convert";
 
-    //响应结果的序列化种类，值类型: 字符串，取值为ConvertType枚举值名
+    // 响应结果的序列化种类，值类型: 字符串，取值为ConvertType枚举值名
     public static final String REST_HEADER_RESP_CONVERT = "Rest-Resp-Convert";
 
-    //---------------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------------
     static final String REST_TOSTRINGOBJ_FIELD_NAME = "_redkale_toStringSupplier";
 
     static final String REST_CONVERT_FIELD_PREFIX = "_redkale_restConvert_";
 
     static final String REST_SERVICE_FIELD_NAME = "_redkale_service";
 
-    static final String REST_SERVICEMAP_FIELD_NAME = "_redkale_serviceMap"; //如果只有name=""的Service资源，则实例中_servicemap必须为null
+    static final String REST_SERVICEMAP_FIELD_NAME =
+            "_redkale_serviceMap"; // 如果只有name=""的Service资源，则实例中_servicemap必须为null
 
-    private static final String REST_PARAMTYPES_FIELD_NAME = "_redkale_paramTypes"; //存在泛型的参数数组 Type[][] 第1维度是方法的下标， 第二维度是参数的下标
+    private static final String REST_PARAMTYPES_FIELD_NAME =
+            "_redkale_paramTypes"; // 存在泛型的参数数组 Type[][] 第1维度是方法的下标， 第二维度是参数的下标
 
-    private static final String REST_RETURNTYPES_FIELD_NAME = "_redkale_returnTypes"; //存在泛型的结果数组
+    private static final String REST_RETURNTYPES_FIELD_NAME = "_redkale_returnTypes"; // 存在泛型的结果数组
 
-    private static final java.lang.reflect.Type TYPE_RETRESULT_STRING = new TypeToken<RetResult<String>>() {
-    }.getType();
+    private static final java.lang.reflect.Type TYPE_RETRESULT_STRING = new TypeToken<RetResult<String>>() {}.getType();
 
     private static final Set<String> EXCLUDERMETHODS = new HashSet<>();
 
@@ -84,25 +85,21 @@ public final class Rest {
         }
     }
 
-    /**
-     * 用于标记由Rest.createRestServlet 方法创建的RestServlet
-     */
+    /** 用于标记由Rest.createRestServlet 方法创建的RestServlet */
     @Inherited
     @Documented
     @Target({TYPE})
     @Retention(RUNTIME)
     public static @interface RestDyn {
 
-        //是否不需要解析HttpHeader，对应HttpContext.lazyHeaders
+        // 是否不需要解析HttpHeader，对应HttpContext.lazyHeaders
         boolean simple() default false;
 
-        //动态生成的类的子类需要关联一下，否则在运行过程中可能出现NoClassDefFoundError
+        // 动态生成的类的子类需要关联一下，否则在运行过程中可能出现NoClassDefFoundError
         Class[] types() default {};
     }
 
-    /**
-     * 用于标记由Rest.createRestServlet 方法创建的RestServlet
-     */
+    /** 用于标记由Rest.createRestServlet 方法创建的RestServlet */
     @Inherited
     @Documented
     @Target({TYPE})
@@ -112,8 +109,7 @@ public final class Rest {
         Class value();
     }
 
-    private Rest() {
-    }
+    private Rest() {}
 
     public static JsonFactory createJsonFactory(RestConvert[] converts, RestConvertCoder[] coders) {
         return createJsonFactory(-1, converts, coders);
@@ -132,7 +128,8 @@ public final class Rest {
         if (coders != null) {
             for (RestConvertCoder rcc : coders) {
                 reloadTypes.add(rcc.type());
-                childFactory.register(rcc.type(), rcc.field(), (SimpledCoder) Creator.create(rcc.coder()).create());
+                childFactory.register(rcc.type(), rcc.field(), (SimpledCoder)
+                        Creator.create(rcc.coder()).create());
             }
         }
         if (converts != null) {
@@ -174,7 +171,9 @@ public final class Rest {
         if (controller.ignore()) {
             return null;
         }
-        return (!controller.name().isEmpty()) ? controller.name().trim() : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
+        return (!controller.name().isEmpty())
+                ? controller.name().trim()
+                : serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
     }
 
     static String getWebModuleName(Class<? extends Service> serviceType) {
@@ -185,14 +184,15 @@ public final class Rest {
         if (controller.ignore()) {
             return null;
         }
-        return (!controller.name().isEmpty()) ? controller.name().trim() : serviceType.getSimpleName().replaceAll("Service.*$", "");
+        return (!controller.name().isEmpty())
+                ? controller.name().trim()
+                : serviceType.getSimpleName().replaceAll("Service.*$", "");
     }
 
     /**
      * 判断HttpServlet是否为Rest动态生成的
      *
      * @param servlet 检测的HttpServlet
-     *
      * @return 是否是动态生成的RestHttpServlet
      */
     public static boolean isRestDyn(HttpServlet servlet) {
@@ -203,7 +203,6 @@ public final class Rest {
      * 判断HttpServlet是否为Rest动态生成的,且simple, 不需要读取http-header的方法视为simple=true
      *
      * @param servlet 检测的HttpServlet
-     *
      * @return 是否是动态生成的RestHttpServlet
      */
     static boolean isSimpleRestDyn(HttpServlet servlet) {
@@ -215,7 +214,6 @@ public final class Rest {
      * 获取Rest动态生成HttpServlet里的Service对象，若不是Rest动态生成的HttpServlet，返回null
      *
      * @param servlet HttpServlet
-     *
      * @return Service
      */
     public static Service getService(HttpServlet servlet) {
@@ -269,14 +267,15 @@ public final class Rest {
         return serviceType.getSimpleName().replaceAll("Service.*$", "").toLowerCase();
     }
 
-    //格式: http.req.module.user
+    // 格式: http.req.module.user
     public static String generateHttpReqTopic(String module, String nodeid) {
         return getHttpReqTopicPrefix() + "module." + module.toLowerCase();
     }
 
-    //格式: http.req.module.user
+    // 格式: http.req.module.user
     public static String generateHttpReqTopic(String module, String resname, String nodeid) {
-        return getHttpReqTopicPrefix() + "module." + module.toLowerCase() + (resname == null || resname.isEmpty() ? "" : ("-" + resname));
+        return getHttpReqTopicPrefix() + "module." + module.toLowerCase()
+                + (resname == null || resname.isEmpty() ? "" : ("-" + resname));
     }
 
     public static String generateHttpReqTopic(Service service, String nodeid) {
@@ -293,52 +292,61 @@ public final class Rest {
         return "http.resp.";
     }
 
-    //仅供Rest动态构建里 currentUserid() 使用
+    // 仅供Rest动态构建里 currentUserid() 使用
     @ClassDepends
     public static <T> T orElse(T t, T defValue) {
         return t == null ? defValue : t;
     }
 
-    public static <T extends WebSocketServlet> T createRestWebSocketServlet(final ClassLoader classLoader, final Class<? extends WebSocket> webSocketType, MessageAgent messageAgent) {
+    public static <T extends WebSocketServlet> T createRestWebSocketServlet(
+            final ClassLoader classLoader, final Class<? extends WebSocket> webSocketType, MessageAgent messageAgent) {
         if (webSocketType == null) {
             throw new RestException("Rest WebSocket Class is null on createRestWebSocketServlet");
         }
         if (Modifier.isAbstract(webSocketType.getModifiers())) {
-            throw new RestException("Rest WebSocket Class(" + webSocketType + ") cannot abstract on createRestWebSocketServlet");
+            throw new RestException(
+                    "Rest WebSocket Class(" + webSocketType + ") cannot abstract on createRestWebSocketServlet");
         }
         if (Modifier.isFinal(webSocketType.getModifiers())) {
-            throw new RestException("Rest WebSocket Class(" + webSocketType + ") cannot final on createRestWebSocketServlet");
+            throw new RestException(
+                    "Rest WebSocket Class(" + webSocketType + ") cannot final on createRestWebSocketServlet");
         }
         final RestWebSocket rws = webSocketType.getAnnotation(RestWebSocket.class);
         if (rws == null || rws.ignore()) {
-            throw new RestException("Rest WebSocket Class(" + webSocketType + ") have not @RestWebSocket or @RestWebSocket.ignore=true on createRestWebSocketServlet");
+            throw new RestException("Rest WebSocket Class(" + webSocketType
+                    + ") have not @RestWebSocket or @RestWebSocket.ignore=true on createRestWebSocketServlet");
         }
         boolean valid = false;
         for (Constructor c : webSocketType.getDeclaredConstructors()) {
-            if (c.getParameterCount() == 0 && (Modifier.isPublic(c.getModifiers()) || Modifier.isProtected(c.getModifiers()))) {
+            if (c.getParameterCount() == 0
+                    && (Modifier.isPublic(c.getModifiers()) || Modifier.isProtected(c.getModifiers()))) {
                 valid = true;
                 break;
             }
         }
         if (!valid) {
-            throw new RestException("Rest WebSocket Class(" + webSocketType + ") must have public or protected Constructor on createRestWebSocketServlet");
+            throw new RestException("Rest WebSocket Class(" + webSocketType
+                    + ") must have public or protected Constructor on createRestWebSocketServlet");
         }
         final String rwsname = ResourceFactory.getResourceName(rws.name());
         if (!checkName(rws.catalog())) {
-            throw new RestException(webSocketType.getName() + " have illegal " + RestWebSocket.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
+            throw new RestException(webSocketType.getName() + " have illegal " + RestWebSocket.class.getSimpleName()
+                    + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
         }
         if (!checkName(rwsname)) {
-            throw new RestException(webSocketType.getName() + " have illegal " + RestWebSocket.class.getSimpleName() + ".name, only 0-9 a-z A-Z _ cannot begin 0-9");
+            throw new RestException(webSocketType.getName() + " have illegal " + RestWebSocket.class.getSimpleName()
+                    + ".name, only 0-9 a-z A-Z _ cannot begin 0-9");
         }
 
-        //----------------------------------------------------------------------------------------
+        // ----------------------------------------------------------------------------------------
         final Set<Field> resourcesFieldSet = new LinkedHashSet<>();
         final ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
         final Set<String> resourcesFieldNameSet = new HashSet<>();
         Class clzz = webSocketType;
         do {
             for (Field field : clzz.getDeclaredFields()) {
-                if (field.getAnnotation(Resource.class) == null && field.getAnnotation(javax.annotation.Resource.class) == null) {
+                if (field.getAnnotation(Resource.class) == null
+                        && field.getAnnotation(javax.annotation.Resource.class) == null) {
                     continue;
                 }
                 if (resourcesFieldNameSet.contains(field.getName())) {
@@ -358,7 +366,7 @@ public final class Rest {
             }
         } while ((clzz = clzz.getSuperclass()) != Object.class);
 
-        //----------------------------------------------------------------------------------------
+        // ----------------------------------------------------------------------------------------
         boolean namePresent = false;
         try {
             Method m0 = null;
@@ -370,9 +378,10 @@ public final class Rest {
             }
             namePresent = m0 == null || m0.getParameters()[0].isNamePresent();
         } catch (Exception e) {
-            //do nothing
+            // do nothing
         }
-        final Map<String, AsmMethodBean> asmParamMap = namePresent ? null : AsmMethodBoost.getMethodBeans(webSocketType);
+        final Map<String, AsmMethodBean> asmParamMap =
+                namePresent ? null : AsmMethodBoost.getMethodBeans(webSocketType);
         final Set<String> messageNames = new HashSet<>();
         Method wildcardMethod = null;
         List<Method> mmethods = new ArrayList<>();
@@ -412,11 +421,11 @@ public final class Rest {
         }
         final List<Method> messageMethods = new ArrayList<>();
         messageMethods.addAll(mmethods);
-        //wildcardMethod 必须放最后, _DynRestOnMessageConsumer 是按messageMethods顺序来判断的
+        // wildcardMethod 必须放最后, _DynRestOnMessageConsumer 是按messageMethods顺序来判断的
         if (wildcardMethod != null) {
             messageMethods.add(wildcardMethod);
         }
-        //----------------------------------------------------------------------------------------
+        // ----------------------------------------------------------------------------------------
         final String resDesc = Type.getDescriptor(Resource.class);
         final String wsDesc = Type.getDescriptor(WebSocket.class);
         final String wsParamDesc = Type.getDescriptor(WebSocketParam.class);
@@ -427,7 +436,8 @@ public final class Rest {
         final String webServletDesc = Type.getDescriptor(WebServlet.class);
         final String webSocketInternalName = Type.getInternalName(webSocketType);
 
-        final String newDynName = "org/redkaledyn/http/restws/" + "_DynWebScoketServlet__" + webSocketType.getName().replace('.', '_').replace('$', '_');
+        final String newDynName = "org/redkaledyn/http/restws/" + "_DynWebScoketServlet__"
+                + webSocketType.getName().replace('.', '_').replace('$', '_');
 
         final String newDynWebSokcetSimpleName = "_Dyn" + webSocketType.getSimpleName();
         final String newDynWebSokcetFullName = newDynName + "$" + newDynWebSokcetSimpleName;
@@ -444,7 +454,7 @@ public final class Rest {
             }
             T servlet = (T) clz.getDeclaredConstructor().newInstance();
             Map<String, Annotation[]> msgclassToAnnotations = new HashMap<>();
-            for (int i = 0; i < messageMethods.size(); i++) {  // _DyncXXXWebSocketMessage 子消息List
+            for (int i = 0; i < messageMethods.size(); i++) { // _DyncXXXWebSocketMessage 子消息List
                 Method method = messageMethods.get(i);
                 String endfix = "_" + method.getName() + "_" + (i > 9 ? i : ("0" + i));
                 String newDynSuperMessageFullName = newDynMessageFullName + (method == wildcardMethod ? "" : endfix);
@@ -453,7 +463,7 @@ public final class Rest {
             clz.getField("_redkale_annotations").set(null, msgclassToAnnotations);
             if (rws.cryptor() != Cryptor.class) {
                 Cryptor cryptor = rws.cryptor().getDeclaredConstructor().newInstance();
-                Field cryptorField = clz.getSuperclass().getDeclaredField("cryptor"); //WebSocketServlet
+                Field cryptorField = clz.getSuperclass().getDeclaredField("cryptor"); // WebSocketServlet
                 cryptorField.setAccessible(true);
                 cryptorField.set(servlet, cryptor);
             }
@@ -462,7 +472,7 @@ public final class Rest {
             }
             return servlet;
         } catch (Throwable e) {
-            //do nothing
+            // do nothing
         }
 
         final List<Field> resourcesFields = new ArrayList<>(resourcesFieldSet);
@@ -475,31 +485,34 @@ public final class Rest {
         }
         final String resourceDescriptor = sb1.toString();
         final String resourceGenericDescriptor = sb1.length() == sb2.length() ? null : sb2.toString();
-        //----------------------------------------------------------------------------------------
+        // ----------------------------------------------------------------------------------------
 
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
         MethodDebugVisitor mv;
         AnnotationVisitor av0;
         cw.visit(V11, ACC_PUBLIC + ACC_SUPER, newDynName, null, supDynName, null);
-        { //RestDyn
+        { // RestDyn
             av0 = cw.visitAnnotation(Type.getDescriptor(RestDyn.class), true);
-            av0.visit("simple", false); //WebSocketServlet必须要解析http-header
+            av0.visit("simple", false); // WebSocketServlet必须要解析http-header
             {
                 AnnotationVisitor av1 = av0.visitArray("types");
                 av1.visit(null, Type.getType("L" + newDynConsumerFullName.replace('.', '/') + ";"));
                 av1.visit(null, Type.getType("L" + newDynWebSokcetFullName.replace('.', '/') + ";"));
-                av1.visit(null, Type.getType("L" + newDynMessageFullName.replace('.', '/') + ";")); //位置固定第三个，下面用Message类进行loadDecoder会用到
+                av1.visit(
+                        null,
+                        Type.getType("L" + newDynMessageFullName.replace('.', '/')
+                                + ";")); // 位置固定第三个，下面用Message类进行loadDecoder会用到
                 av1.visitEnd();
             }
             av0.visitEnd();
         }
-        { //RestDynSourceType
+        { // RestDynSourceType
             av0 = cw.visitAnnotation(Type.getDescriptor(RestDynSourceType.class), true);
             av0.visit("value", Type.getType(Type.getDescriptor(webSocketType)));
             av0.visitEnd();
         }
-        { //注入 @WebServlet 注解
+        { // 注入 @WebServlet 注解
             String urlpath = (rws.catalog().isEmpty() ? "/" : ("/" + rws.catalog() + "/")) + rwsname;
             av0 = cw.visitAnnotation(webServletDesc, true);
             {
@@ -513,7 +526,7 @@ public final class Rest {
             av0.visit("comment", rws.comment());
             av0.visitEnd();
         }
-        { //内部类
+        { // 内部类
             cw.visitInnerClass(newDynConsumerFullName, newDynName, newDynConsumerSimpleName, ACC_PUBLIC + ACC_STATIC);
 
             cw.visitInnerClass(newDynWebSokcetFullName, newDynName, newDynWebSokcetSimpleName, ACC_PUBLIC + ACC_STATIC);
@@ -524,17 +537,25 @@ public final class Rest {
                 Method method = messageMethods.get(i);
                 String endfix = "_" + method.getName() + "_" + (i > 9 ? i : ("0" + i));
                 String newDynSuperMessageFullName = newDynMessageFullName + (method == wildcardMethod ? "" : endfix);
-                cw.visitInnerClass(newDynSuperMessageFullName, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
+                cw.visitInnerClass(
+                        newDynSuperMessageFullName,
+                        newDynName,
+                        newDynMessageSimpleName + endfix,
+                        ACC_PUBLIC + ACC_STATIC);
             }
         }
-        { //@Resource
+        { // @Resource
             for (int i = 0; i < resourcesFields.size(); i++) {
                 Field field = resourcesFields.get(i);
                 Resource res = field.getAnnotation(Resource.class);
                 javax.annotation.Resource res2 = field.getAnnotation(javax.annotation.Resource.class);
                 java.lang.reflect.Type fieldType = field.getGenericType();
-                fv = cw.visitField(ACC_PRIVATE, "_redkale_resource_" + i, Type.getDescriptor(field.getType()),
-                    fieldType == field.getType() ? null : Utility.getTypeDescriptor(fieldType), null);
+                fv = cw.visitField(
+                        ACC_PRIVATE,
+                        "_redkale_resource_" + i,
+                        Type.getDescriptor(field.getType()),
+                        fieldType == field.getType() ? null : Utility.getTypeDescriptor(fieldType),
+                        null);
                 {
                     av0 = fv.visitAnnotation(resDesc, true);
                     av0.visit("name", res != null ? res.name() : res2.name());
@@ -544,12 +565,16 @@ public final class Rest {
                 fv.visitEnd();
             }
         }
-        { //_redkale_annotations
-            fv = cw.visitField(ACC_PUBLIC + ACC_STATIC, "_redkale_annotations", "Ljava/util/Map;",
-                "Ljava/util/Map<Ljava/lang/String;[Ljava/lang/annotation/Annotation;>;", null);
+        { // _redkale_annotations
+            fv = cw.visitField(
+                    ACC_PUBLIC + ACC_STATIC,
+                    "_redkale_annotations",
+                    "Ljava/util/Map;",
+                    "Ljava/util/Map<Ljava/lang/String;[Ljava/lang/annotation/Annotation;>;",
+                    null);
             fv.visitEnd();
         }
-        { //_DynWebSocketServlet构造函数
+        { // _DynWebSocketServlet构造函数
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
@@ -581,23 +606,37 @@ public final class Rest {
             mv.visitMaxs(3, 1);
             mv.visitEnd();
         }
-        { //createWebSocket 方法
-            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PROTECTED, "createWebSocket", "()" + wsDesc,
-                "<G::Ljava/io/Serializable;T:Ljava/lang/Object;>()L" + WebSocket.class.getName().replace('.', '/') + "<TG;TT;>;", null));
+        { // createWebSocket 方法
+            mv = new MethodDebugVisitor(cw.visitMethod(
+                    ACC_PROTECTED,
+                    "createWebSocket",
+                    "()" + wsDesc,
+                    "<G::Ljava/io/Serializable;T:Ljava/lang/Object;>()L"
+                            + WebSocket.class.getName().replace('.', '/') + "<TG;TT;>;",
+                    null));
             mv.visitTypeInsn(NEW, newDynName + "$" + newDynWebSokcetSimpleName);
             mv.visitInsn(DUP);
             for (int i = 0; i < resourcesFields.size(); i++) {
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, "_redkale_resource_" + i, Type.getDescriptor(resourcesFields.get(i).getType()));
+                mv.visitFieldInsn(
+                        GETFIELD,
+                        newDynName,
+                        "_redkale_resource_" + i,
+                        Type.getDescriptor(resourcesFields.get(i).getType()));
             }
-            mv.visitMethodInsn(INVOKESPECIAL, newDynWebSokcetFullName, "<init>", "(" + resourceDescriptor + ")V", false);
+            mv.visitMethodInsn(
+                    INVOKESPECIAL, newDynWebSokcetFullName, "<init>", "(" + resourceDescriptor + ")V", false);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(2 + resourcesFields.size(), 1);
             mv.visitEnd();
         }
-        { //createRestOnMessageConsumer
-            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PROTECTED, "createRestOnMessageConsumer",
-                "()Ljava/util/function/BiConsumer;", "()Ljava/util/function/BiConsumer<" + wsDesc + "Ljava/lang/Object;>;", null));
+        { // createRestOnMessageConsumer
+            mv = new MethodDebugVisitor(cw.visitMethod(
+                    ACC_PROTECTED,
+                    "createRestOnMessageConsumer",
+                    "()Ljava/util/function/BiConsumer;",
+                    "()Ljava/util/function/BiConsumer<" + wsDesc + "Ljava/lang/Object;>;",
+                    null));
             mv.visitTypeInsn(NEW, newDynConsumerFullName);
             mv.visitInsn(DUP);
             mv.visitMethodInsn(INVOKESPECIAL, newDynConsumerFullName, "<init>", "()V", false);
@@ -605,7 +644,7 @@ public final class Rest {
             mv.visitMaxs(2, 1);
             mv.visitEnd();
         }
-        { //resourceName
+        { // resourceName
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "resourceName", "()Ljava/lang/String;", null, null));
             mv.visitLdcInsn(rwsname);
             mv.visitInsn(ARETURN);
@@ -615,21 +654,28 @@ public final class Rest {
 
         DynBytesClassLoader newLoader = new DynBytesClassLoader(loader);
         Map<String, Annotation[]> msgclassToAnnotations = new HashMap<>();
-        for (int i = 0; i < messageMethods.size(); i++) {  // _DyncXXXWebSocketMessage 子消息List
+        for (int i = 0; i < messageMethods.size(); i++) { // _DyncXXXWebSocketMessage 子消息List
             final Method method = messageMethods.get(i);
             String endfix = "_" + method.getName() + "_" + (i > 9 ? i : ("0" + i));
             String newDynSuperMessageFullName = newDynMessageFullName + (method == wildcardMethod ? "" : endfix);
             msgclassToAnnotations.put(newDynSuperMessageFullName, method.getAnnotations());
 
             ClassWriter cw2 = new ClassWriter(COMPUTE_FRAMES);
-            cw2.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynSuperMessageFullName, null, "java/lang/Object", new String[]{webSocketParamName, "java/lang/Runnable"});
-            cw2.visitInnerClass(newDynSuperMessageFullName, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
+            cw2.visit(
+                    V11,
+                    ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
+                    newDynSuperMessageFullName,
+                    null,
+                    "java/lang/Object",
+                    new String[] {webSocketParamName, "java/lang/Runnable"});
+            cw2.visitInnerClass(
+                    newDynSuperMessageFullName, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
             Set<String> paramNames = new HashSet<>();
             AsmMethodBean methodBean = asmParamMap == null ? null : AsmMethodBean.get(asmParamMap, method);
             List<AsmMethodParam> names = methodBean == null ? null : methodBean.getParams();
             Parameter[] params = method.getParameters();
-            final LinkedHashMap<String, Parameter> paramap = new LinkedHashMap(); //必须使用LinkedHashMap确保顺序
-            for (int j = 0; j < params.length; j++) { //字段列表
+            final LinkedHashMap<String, Parameter> paramap = new LinkedHashMap(); // 必须使用LinkedHashMap确保顺序
+            for (int j = 0; j < params.length; j++) { // 字段列表
                 Parameter param = params[j];
                 String paramName = param.getName();
                 RestParam rp = param.getAnnotation(RestParam.class);
@@ -646,8 +692,14 @@ public final class Rest {
                 }
                 paramNames.add(paramName);
                 paramap.put(paramName, param);
-                fv = cw2.visitField(ACC_PUBLIC, paramName, Type.getDescriptor(param.getType()),
-                    param.getType() == param.getParameterizedType() ? null : Utility.getTypeDescriptor(param.getParameterizedType()), null);
+                fv = cw2.visitField(
+                        ACC_PUBLIC,
+                        paramName,
+                        Type.getDescriptor(param.getType()),
+                        param.getType() == param.getParameterizedType()
+                                ? null
+                                : Utility.getTypeDescriptor(param.getParameterizedType()),
+                        null);
                 fv.visitEnd();
             }
             if (method == wildcardMethod) {
@@ -657,19 +709,29 @@ public final class Rest {
                         continue;
                     }
                     String endfix2 = "_" + method2.getName() + "_" + (j > 9 ? j : ("0" + j));
-                    String newDynSuperMessageFullName2 = newDynMessageFullName + (method2 == wildcardMethod ? "" : endfix2);
-                    cw2.visitInnerClass(newDynSuperMessageFullName2, newDynName, newDynMessageSimpleName + endfix2, ACC_PUBLIC + ACC_STATIC);
-                    fv = cw2.visitField(ACC_PUBLIC, method2.getAnnotation(RestOnMessage.class).name(), "L" + newDynSuperMessageFullName2 + ";", null, null);
+                    String newDynSuperMessageFullName2 =
+                            newDynMessageFullName + (method2 == wildcardMethod ? "" : endfix2);
+                    cw2.visitInnerClass(
+                            newDynSuperMessageFullName2,
+                            newDynName,
+                            newDynMessageSimpleName + endfix2,
+                            ACC_PUBLIC + ACC_STATIC);
+                    fv = cw2.visitField(
+                            ACC_PUBLIC,
+                            method2.getAnnotation(RestOnMessage.class).name(),
+                            "L" + newDynSuperMessageFullName2 + ";",
+                            null,
+                            null);
                     fv.visitEnd();
                 }
             }
-            { //_redkale_websocket
+            { // _redkale_websocket
                 fv = cw2.visitField(ACC_PUBLIC, "_redkale_websocket", "L" + newDynWebSokcetFullName + ";", null, null);
                 av0 = fv.visitAnnotation(convertDisabledDesc, true);
                 av0.visitEnd();
                 fv.visitEnd();
             }
-            { //空构造函数
+            { // 空构造函数
                 mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
@@ -677,8 +739,9 @@ public final class Rest {
                 mv.visitMaxs(1, 1);
                 mv.visitEnd();
             }
-            { //getNames
-                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "getNames", "()[Ljava/lang/String;", null, null));
+            { // getNames
+                mv = new MethodDebugVisitor(
+                        cw2.visitMethod(ACC_PUBLIC, "getNames", "()[Ljava/lang/String;", null, null));
                 av0 = mv.visitAnnotation(convertDisabledDesc, true);
                 av0.visitEnd();
                 Asms.visitInsn(mv, paramap.size());
@@ -694,8 +757,13 @@ public final class Rest {
                 mv.visitMaxs(paramap.size() + 2, 1);
                 mv.visitEnd();
             }
-            { //getValue
-                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "getValue", "(Ljava/lang/String;)Ljava/lang/Object;", "<T:Ljava/lang/Object;>(Ljava/lang/String;)TT;", null));
+            { // getValue
+                mv = new MethodDebugVisitor(cw2.visitMethod(
+                        ACC_PUBLIC,
+                        "getValue",
+                        "(Ljava/lang/String;)Ljava/lang/Object;",
+                        "<T:Ljava/lang/Object;>(Ljava/lang/String;)TT;",
+                        null));
                 for (Map.Entry<String, Parameter> en : paramap.entrySet()) {
                     Class paramType = en.getValue().getType();
                     mv.visitLdcInsn(en.getKey());
@@ -707,7 +775,12 @@ public final class Rest {
                     mv.visitFieldInsn(GETFIELD, newDynSuperMessageFullName, en.getKey(), Type.getDescriptor(paramType));
                     if (paramType.isPrimitive()) {
                         Class bigclaz = TypeToken.primitiveToWrapper(paramType);
-                        mv.visitMethodInsn(INVOKESTATIC, bigclaz.getName().replace('.', '/'), "valueOf", "(" + Type.getDescriptor(paramType) + ")" + Type.getDescriptor(bigclaz), false);
+                        mv.visitMethodInsn(
+                                INVOKESTATIC,
+                                bigclaz.getName().replace('.', '/'),
+                                "valueOf",
+                                "(" + Type.getDescriptor(paramType) + ")" + Type.getDescriptor(bigclaz),
+                                false);
                     }
                     mv.visitInsn(ARETURN);
                     mv.visitLabel(l1);
@@ -717,13 +790,15 @@ public final class Rest {
                 mv.visitMaxs(2, 2);
                 mv.visitEnd();
             }
-            { //getAnnotations
-                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "getAnnotations", "()[Ljava/lang/annotation/Annotation;", null, null));
+            { // getAnnotations
+                mv = new MethodDebugVisitor(cw2.visitMethod(
+                        ACC_PUBLIC, "getAnnotations", "()[Ljava/lang/annotation/Annotation;", null, null));
                 av0 = mv.visitAnnotation(convertDisabledDesc, true);
                 av0.visitEnd();
                 mv.visitFieldInsn(GETSTATIC, newDynName, "_redkale_annotations", "Ljava/util/Map;");
                 mv.visitLdcInsn(newDynSuperMessageFullName);
-                mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Map", "get", "(Ljava/lang/Object;)Ljava/lang/Object;", true);
+                mv.visitMethodInsn(
+                        INVOKEINTERFACE, "java/util/Map", "get", "(Ljava/lang/Object;)Ljava/lang/Object;", true);
                 mv.visitTypeInsn(CHECKCAST, "[Ljava/lang/annotation/Annotation;");
                 mv.visitVarInsn(ASTORE, 1);
                 mv.visitVarInsn(ALOAD, 1);
@@ -733,50 +808,85 @@ public final class Rest {
                 mv.visitTypeInsn(ANEWARRAY, "java/lang/annotation/Annotation");
                 mv.visitInsn(ARETURN);
                 mv.visitLabel(l2);
-                mv.visitFrame(Opcodes.F_APPEND, 1, new Object[]{"[Ljava/lang/annotation/Annotation;"}, 0, null);
+                mv.visitFrame(Opcodes.F_APPEND, 1, new Object[] {"[Ljava/lang/annotation/Annotation;"}, 0, null);
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitInsn(ARRAYLENGTH);
-                mv.visitMethodInsn(INVOKESTATIC, "java/util/Arrays", "copyOf", "([Ljava/lang/Object;I)[Ljava/lang/Object;", false);
+                mv.visitMethodInsn(
+                        INVOKESTATIC, "java/util/Arrays", "copyOf", "([Ljava/lang/Object;I)[Ljava/lang/Object;", false);
                 mv.visitTypeInsn(CHECKCAST, "[Ljava/lang/annotation/Annotation;");
                 mv.visitInsn(ARETURN);
                 mv.visitMaxs(2, 2);
                 mv.visitEnd();
             }
-            { //execute
-                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "execute", "(L" + newDynWebSokcetFullName + ";)V", null, null));
+            { // execute
+                mv = new MethodDebugVisitor(
+                        cw2.visitMethod(ACC_PUBLIC, "execute", "(L" + newDynWebSokcetFullName + ";)V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitVarInsn(ALOAD, 1);
-                mv.visitFieldInsn(PUTFIELD, newDynSuperMessageFullName, "_redkale_websocket", "L" + newDynWebSokcetFullName + ";");
+                mv.visitFieldInsn(
+                        PUTFIELD,
+                        newDynSuperMessageFullName,
+                        "_redkale_websocket",
+                        "L" + newDynWebSokcetFullName + ";");
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitLdcInsn(method.getAnnotation(RestOnMessage.class).name());
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitMethodInsn(INVOKEVIRTUAL, newDynWebSokcetFullName, "preOnMessage", "(Ljava/lang/String;" + wsParamDesc + "Ljava/lang/Runnable;)V", false);
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL,
+                        newDynWebSokcetFullName,
+                        "preOnMessage",
+                        "(Ljava/lang/String;" + wsParamDesc + "Ljava/lang/Runnable;)V",
+                        false);
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(4, 2);
                 mv.visitEnd();
             }
-            { //run
+            { // run
                 mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "run", "()V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynSuperMessageFullName, "_redkale_websocket", "L" + newDynWebSokcetFullName + ";");
+                mv.visitFieldInsn(
+                        GETFIELD,
+                        newDynSuperMessageFullName,
+                        "_redkale_websocket",
+                        "L" + newDynWebSokcetFullName + ";");
 
                 for (Map.Entry<String, Parameter> en : paramap.entrySet()) {
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, (newDynSuperMessageFullName), en.getKey(), Type.getDescriptor(en.getValue().getType()));
+                    mv.visitFieldInsn(
+                            GETFIELD,
+                            (newDynSuperMessageFullName),
+                            en.getKey(),
+                            Type.getDescriptor(en.getValue().getType()));
                 }
-                mv.visitMethodInsn(INVOKEVIRTUAL, newDynWebSokcetFullName, method.getName(), Type.getMethodDescriptor(method), false);
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL,
+                        newDynWebSokcetFullName,
+                        method.getName(),
+                        Type.getMethodDescriptor(method),
+                        false);
 
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(3, 1);
                 mv.visitEnd();
             }
-            { //toString
-                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
-                mv.visitMethodInsn(INVOKESTATIC, JsonConvert.class.getName().replace('.', '/'), "root", "()" + jsonConvertDesc, false);
+            { // toString
+                mv = new MethodDebugVisitor(
+                        cw2.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
+                mv.visitMethodInsn(
+                        INVOKESTATIC,
+                        JsonConvert.class.getName().replace('.', '/'),
+                        "root",
+                        "()" + jsonConvertDesc,
+                        false);
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitMethodInsn(INVOKEVIRTUAL, JsonConvert.class.getName().replace('.', '/'), "convertTo", "(Ljava/lang/Object;)Ljava/lang/String;", false);
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL,
+                        JsonConvert.class.getName().replace('.', '/'),
+                        "convertTo",
+                        "(Ljava/lang/Object;)Ljava/lang/String;",
+                        false);
                 mv.visitInsn(ARETURN);
                 mv.visitMaxs(2, 1);
                 mv.visitEnd();
@@ -787,7 +897,7 @@ public final class Rest {
             RedkaleClassLoader.putDynClass((newDynSuperMessageFullName).replace('/', '.'), bytes, cz);
         }
 
-        if (wildcardMethod == null) { //_DynXXXWebSocketMessage class
+        if (wildcardMethod == null) { // _DynXXXWebSocketMessage class
             ClassWriter cw2 = new ClassWriter(COMPUTE_FRAMES);
             cw2.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynMessageFullName, null, "java/lang/Object", null);
 
@@ -797,12 +907,21 @@ public final class Rest {
                 Method method = messageMethods.get(i);
                 String endfix = "_" + method.getName() + "_" + (i > 9 ? i : ("0" + i));
                 String newDynSuperMessageFullName = newDynMessageFullName + (method == wildcardMethod ? "" : endfix);
-                cw2.visitInnerClass(newDynSuperMessageFullName, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
+                cw2.visitInnerClass(
+                        newDynSuperMessageFullName,
+                        newDynName,
+                        newDynMessageSimpleName + endfix,
+                        ACC_PUBLIC + ACC_STATIC);
 
-                fv = cw2.visitField(ACC_PUBLIC, method.getAnnotation(RestOnMessage.class).name(), "L" + newDynSuperMessageFullName + ";", null, null);
+                fv = cw2.visitField(
+                        ACC_PUBLIC,
+                        method.getAnnotation(RestOnMessage.class).name(),
+                        "L" + newDynSuperMessageFullName + ";",
+                        null,
+                        null);
                 fv.visitEnd();
             }
-            { //构造函数
+            { // 构造函数
                 mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
@@ -810,11 +929,22 @@ public final class Rest {
                 mv.visitMaxs(1, 1);
                 mv.visitEnd();
             }
-            { //toString
-                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
-                mv.visitMethodInsn(INVOKESTATIC, JsonConvert.class.getName().replace('.', '/'), "root", "()" + jsonConvertDesc, false);
+            { // toString
+                mv = new MethodDebugVisitor(
+                        cw2.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
+                mv.visitMethodInsn(
+                        INVOKESTATIC,
+                        JsonConvert.class.getName().replace('.', '/'),
+                        "root",
+                        "()" + jsonConvertDesc,
+                        false);
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitMethodInsn(INVOKEVIRTUAL, JsonConvert.class.getName().replace('.', '/'), "convertTo", "(Ljava/lang/Object;)Ljava/lang/String;", false);
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL,
+                        JsonConvert.class.getName().replace('.', '/'),
+                        "convertTo",
+                        "(Ljava/lang/Object;)Ljava/lang/String;",
+                        false);
                 mv.visitInsn(ARETURN);
                 mv.visitMaxs(2, 1);
                 mv.visitEnd();
@@ -825,26 +955,39 @@ public final class Rest {
             RedkaleClassLoader.putDynClass(newDynMessageFullName.replace('/', '.'), bytes, cz);
         }
 
-        { //_DynXXXWebSocket class
+        { // _DynXXXWebSocket class
             ClassWriter cw2 = new ClassWriter(COMPUTE_FRAMES);
-            cw2.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynWebSokcetFullName, null, webSocketInternalName, null);
+            cw2.visit(
+                    V11,
+                    ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
+                    newDynWebSokcetFullName,
+                    null,
+                    webSocketInternalName,
+                    null);
 
-            cw2.visitInnerClass(newDynWebSokcetFullName, newDynName, newDynWebSokcetSimpleName, ACC_PUBLIC + ACC_STATIC);
+            cw2.visitInnerClass(
+                    newDynWebSokcetFullName, newDynName, newDynWebSokcetSimpleName, ACC_PUBLIC + ACC_STATIC);
             {
-                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "<init>", "(" + resourceDescriptor + ")V", resourceGenericDescriptor == null ? null : ("(" + resourceGenericDescriptor + ")V"), null));
+                mv = new MethodDebugVisitor(cw2.visitMethod(
+                        ACC_PUBLIC,
+                        "<init>",
+                        "(" + resourceDescriptor + ")V",
+                        resourceGenericDescriptor == null ? null : ("(" + resourceGenericDescriptor + ")V"),
+                        null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitMethodInsn(INVOKESPECIAL, webSocketInternalName, "<init>", "()V", false);
                 for (int i = 0; i < resourcesFields.size(); i++) {
                     Field field = resourcesFields.get(i);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, i + 1);
-                    mv.visitFieldInsn(PUTFIELD, newDynWebSokcetFullName, field.getName(), Type.getDescriptor(field.getType()));
+                    mv.visitFieldInsn(
+                            PUTFIELD, newDynWebSokcetFullName, field.getName(), Type.getDescriptor(field.getType()));
                 }
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(2, 1 + resourcesFields.size());
                 mv.visitEnd();
             }
-            { //RestDyn
+            { // RestDyn
                 av0 = cw2.visitAnnotation(Type.getDescriptor(RestDyn.class), true);
                 av0.visit("simple", false);
                 av0.visitEnd();
@@ -855,9 +998,15 @@ public final class Rest {
             RedkaleClassLoader.putDynClass(newDynWebSokcetFullName.replace('/', '.'), bytes, cz);
         }
 
-        { //_DynRestOnMessageConsumer class
+        { // _DynRestOnMessageConsumer class
             ClassWriter cw2 = new ClassWriter(COMPUTE_FRAMES);
-            cw2.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynConsumerFullName, "Ljava/lang/Object;Ljava/util/function/BiConsumer<" + wsDesc + "Ljava/lang/Object;>;", "java/lang/Object", new String[]{"java/util/function/BiConsumer"});
+            cw2.visit(
+                    V11,
+                    ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
+                    newDynConsumerFullName,
+                    "Ljava/lang/Object;Ljava/util/function/BiConsumer<" + wsDesc + "Ljava/lang/Object;>;",
+                    "java/lang/Object",
+                    new String[] {"java/util/function/BiConsumer"});
 
             cw2.visitInnerClass(newDynConsumerFullName, newDynName, newDynConsumerSimpleName, ACC_PUBLIC + ACC_STATIC);
             cw2.visitInnerClass(newDynMessageFullName, newDynName, newDynMessageSimpleName, ACC_PUBLIC + ACC_STATIC);
@@ -865,10 +1014,14 @@ public final class Rest {
                 Method method = messageMethods.get(i);
                 String endfix = "_" + method.getName() + "_" + (i > 9 ? i : ("0" + i));
                 String newDynSuperMessageFullName = newDynMessageFullName + (method == wildcardMethod ? "" : endfix);
-                cw2.visitInnerClass(newDynSuperMessageFullName, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
+                cw2.visitInnerClass(
+                        newDynSuperMessageFullName,
+                        newDynName,
+                        newDynMessageSimpleName + endfix,
+                        ACC_PUBLIC + ACC_STATIC);
             }
 
-            { //构造函数
+            { // 构造函数
                 mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
@@ -877,8 +1030,9 @@ public final class Rest {
                 mv.visitEnd();
             }
 
-            { //accept函数
-                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "accept", "(" + wsDesc + "Ljava/lang/Object;)V", null, null));
+            { // accept函数
+                mv = new MethodDebugVisitor(
+                        cw2.visitMethod(ACC_PUBLIC, "accept", "(" + wsDesc + "Ljava/lang/Object;)V", null, null));
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitTypeInsn(CHECKCAST, newDynWebSokcetFullName);
                 mv.visitVarInsn(ASTORE, 3);
@@ -890,22 +1044,36 @@ public final class Rest {
                 for (int i = 0; i < messageMethods.size(); i++) {
                     final Method method = messageMethods.get(i);
                     String endfix = "_" + method.getName() + "_" + (i > 9 ? i : ("0" + i));
-                    String newDynSuperMessageFullName = newDynMessageFullName + (method == wildcardMethod ? "" : endfix);
-                    final String messagename = method.getAnnotation(RestOnMessage.class).name();
+                    String newDynSuperMessageFullName =
+                            newDynMessageFullName + (method == wildcardMethod ? "" : endfix);
+                    final String messagename =
+                            method.getAnnotation(RestOnMessage.class).name();
                     if (method == wildcardMethod) {
                         mv.visitVarInsn(ALOAD, 4);
                         mv.visitVarInsn(ALOAD, 3);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, newDynSuperMessageFullName, "execute", "(L" + newDynWebSokcetFullName + ";)V", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL,
+                                newDynSuperMessageFullName,
+                                "execute",
+                                "(L" + newDynWebSokcetFullName + ";)V",
+                                false);
                     } else {
                         mv.visitVarInsn(ALOAD, 4);
-                        mv.visitFieldInsn(GETFIELD, newDynMessageFullName, messagename, "L" + newDynSuperMessageFullName + ";");
+                        mv.visitFieldInsn(
+                                GETFIELD, newDynMessageFullName, messagename, "L" + newDynSuperMessageFullName + ";");
                         Label ifLabel = new Label();
                         mv.visitJumpInsn(IFNULL, ifLabel);
 
                         mv.visitVarInsn(ALOAD, 4);
-                        mv.visitFieldInsn(GETFIELD, newDynMessageFullName, messagename, "L" + newDynSuperMessageFullName + ";");
+                        mv.visitFieldInsn(
+                                GETFIELD, newDynMessageFullName, messagename, "L" + newDynSuperMessageFullName + ";");
                         mv.visitVarInsn(ALOAD, 3);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, newDynSuperMessageFullName, "execute", "(L" + newDynWebSokcetFullName + ";)V", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL,
+                                newDynSuperMessageFullName,
+                                "execute",
+                                "(L" + newDynWebSokcetFullName + ";)V",
+                                false);
                         mv.visitInsn(RETURN);
                         mv.visitLabel(ifLabel);
                     }
@@ -914,14 +1082,20 @@ public final class Rest {
                 mv.visitMaxs(3, 3 + messageMethods.size());
                 mv.visitEnd();
             }
-            {//虚拟accept函数
-                mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC, "accept", "(Ljava/lang/Object;Ljava/lang/Object;)V", null, null));
+            { // 虚拟accept函数
+                mv = new MethodDebugVisitor(cw2.visitMethod(
+                        ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC,
+                        "accept",
+                        "(Ljava/lang/Object;Ljava/lang/Object;)V",
+                        null,
+                        null));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitTypeInsn(CHECKCAST, WebSocket.class.getName().replace('.', '/'));
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitTypeInsn(CHECKCAST, "java/lang/Object");
-                mv.visitMethodInsn(INVOKEVIRTUAL, newDynConsumerFullName, "accept", "(" + wsDesc + "Ljava/lang/Object;)V", false);
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL, newDynConsumerFullName, "accept", "(" + wsDesc + "Ljava/lang/Object;)V", false);
                 mv.visitInsn(RETURN);
                 mv.visitMaxs(3, 3);
                 mv.visitEnd();
@@ -937,7 +1111,7 @@ public final class Rest {
         Class<?> newClazz = newLoader.loadClass(newDynName.replace('/', '.'), bytes);
         RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
-        JsonFactory.root().loadDecoder(newClazz.getAnnotation(RestDyn.class).types()[2]); //固定Message类
+        JsonFactory.root().loadDecoder(newClazz.getAnnotation(RestDyn.class).types()[2]); // 固定Message类
 
         RedkaleClassLoader.putReflectionPublicMethods(webSocketType.getName());
         Class cwt = webSocketType;
@@ -952,9 +1126,10 @@ public final class Rest {
             field.set(null, msgclassToAnnotations);
             RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), field);
             if (rws.cryptor() != Cryptor.class) {
-                RedkaleClassLoader.putReflectionDeclaredConstructors(rws.cryptor(), rws.cryptor().getName());
+                RedkaleClassLoader.putReflectionDeclaredConstructors(
+                        rws.cryptor(), rws.cryptor().getName());
                 Cryptor cryptor = rws.cryptor().getDeclaredConstructor().newInstance();
-                Field cryptorField = newClazz.getSuperclass().getDeclaredField("cryptor"); //WebSocketServlet
+                Field cryptorField = newClazz.getSuperclass().getDeclaredField("cryptor"); // WebSocketServlet
                 RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), cryptorField);
                 cryptorField.setAccessible(true);
                 cryptorField.set(servlet, cryptor);
@@ -968,8 +1143,12 @@ public final class Rest {
         }
     }
 
-    public static <T extends HttpServlet> T createRestServlet(final ClassLoader classLoader, final Class userType0,
-        final Class<T> baseServletType, final Class<? extends Service> serviceType, String serviceResourceName) {
+    public static <T extends HttpServlet> T createRestServlet(
+            final ClassLoader classLoader,
+            final Class userType0,
+            final Class<T> baseServletType,
+            final Class<? extends Service> serviceType,
+            String serviceResourceName) {
 
         if (baseServletType == null || serviceType == null) {
             throw new RestException(" Servlet or Service is null Class on createRestServlet");
@@ -990,19 +1169,23 @@ public final class Rest {
                 Boolean authNonBlocking = null;
                 RedkaleClassLoader.putReflectionDeclaredMethods(baseServletType.getName());
                 for (Method m : baseServletType.getDeclaredMethods()) {
-                    if (java.lang.reflect.Modifier.isAbstract(parentMod) && java.lang.reflect.Modifier.isAbstract(m.getModifiers())) { //@since 2.4.0
-                        throw new RestException(baseServletType + " cannot contains a abstract Method on " + baseServletType);
+                    if (java.lang.reflect.Modifier.isAbstract(parentMod)
+                            && java.lang.reflect.Modifier.isAbstract(m.getModifiers())) { // @since 2.4.0
+                        throw new RestException(
+                                baseServletType + " cannot contains a abstract Method on " + baseServletType);
                     }
                     Class[] paramTypes = m.getParameterTypes();
-                    if (paramTypes.length != 2 || paramTypes[0] != HttpRequest.class || paramTypes[1] != HttpResponse.class) {
+                    if (paramTypes.length != 2
+                            || paramTypes[0] != HttpRequest.class
+                            || paramTypes[1] != HttpResponse.class) {
                         continue;
                     }
-                    //-----------------------------------------------
+                    // -----------------------------------------------
                     Class[] exps = m.getExceptionTypes();
                     if (exps.length > 0 && (exps.length != 1 || exps[0] != IOException.class)) {
                         continue;
                     }
-                    //-----------------------------------------------
+                    // -----------------------------------------------
                     String methodName = m.getName();
                     if ("preExecute".equals(methodName)) {
                         if (preNonBlocking == null) {
@@ -1069,39 +1252,48 @@ public final class Rest {
         final String serviceTypeInternalName = Type.getInternalName(serviceType);
 
         HttpUserType hut = baseServletType.getAnnotation(HttpUserType.class);
-        final Class userType = (userType0 == null || userType0 == Object.class) ? (hut == null ? null : hut.value()) : userType0;
-        if (userType != null && (userType.isPrimitive() || userType.getName().startsWith("java.") || userType.getName().startsWith("javax."))) {
+        final Class userType =
+                (userType0 == null || userType0 == Object.class) ? (hut == null ? null : hut.value()) : userType0;
+        if (userType != null
+                && (userType.isPrimitive()
+                        || userType.getName().startsWith("java.")
+                        || userType.getName().startsWith("javax."))) {
             throw new RestException(HttpUserType.class.getSimpleName() + " must be a JavaBean but found " + userType);
         }
 
         final String supDynName = baseServletType.getName().replace('.', '/');
         final RestService controller = serviceType.getAnnotation(RestService.class);
         if (controller != null && controller.ignore()) {
-            throw new RestException(serviceType + " is ignore Rest Service Class"); //标记为ignore=true不创建Servlet
+            throw new RestException(serviceType + " is ignore Rest Service Class"); // 标记为ignore=true不创建Servlet
         }
         final boolean serRpcOnly = controller != null && controller.rpcOnly();
         final Boolean parentNonBlocking = parentNon0;
 
         ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
         String stname = serviceType.getSimpleName();
-        if (stname.startsWith("Service")) { //类似ServiceWatchService这样的类保留第一个Service字样
+        if (stname.startsWith("Service")) { // 类似ServiceWatchService这样的类保留第一个Service字样
             stname = "Service" + stname.substring("Service".length()).replaceAll("Service.*$", "");
         } else {
             stname = stname.replaceAll("Service.*$", "");
         }
         String namePostfix = Utility.isBlank(serviceResourceName) ? "" : serviceResourceName;
         for (char ch : namePostfix.toCharArray()) {
-            if ((ch == '$' || ch == '_' || (ch >= '0' && ch <= '9')
-                || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) {
+            if ((ch == '$'
+                    || ch == '_'
+                    || (ch >= '0' && ch <= '9')
+                    || (ch >= 'a' && ch <= 'z')
+                    || (ch >= 'A' && ch <= 'Z'))) {
                 continue;
             }
-            //带特殊字符的值不能作为类名的后缀
+            // 带特殊字符的值不能作为类名的后缀
             namePostfix = Utility.md5Hex(namePostfix);
             break;
         }
-        //String newDynName = serviceTypeInternalName.substring(0, serviceTypeInternalName.lastIndexOf('/') + 1) + "_Dyn" + stname + "RestServlet";
-        final String newDynName = "org/redkaledyn/http/rest/" + "_Dyn" + stname + "RestServlet__" + serviceType.getName().replace('.', '_').replace('$', '_')
-            + (namePostfix.isEmpty() ? "" : ("_" + namePostfix) + "DynServlet");
+        // String newDynName = serviceTypeInternalName.substring(0, serviceTypeInternalName.lastIndexOf('/') + 1) +
+        // "_Dyn" + stname + "RestServlet";
+        final String newDynName = "org/redkaledyn/http/rest/" + "_Dyn" + stname + "RestServlet__"
+                + serviceType.getName().replace('.', '_').replace('$', '_')
+                + (namePostfix.isEmpty() ? "" : ("_" + namePostfix) + "DynServlet");
 
         try {
             Class newClazz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
@@ -1124,9 +1316,9 @@ public final class Rest {
             final Map<String, org.redkale.util.Attribute> restAttributes = new LinkedHashMap<>();
             final Map<String, java.lang.reflect.Type> bodyTypes = new HashMap<>();
 
-            {   //entrys、paramTypes赋值
+            { // entrys、paramTypes赋值
                 final Method[] allMethods = serviceType.getMethods();
-                Arrays.sort(allMethods, (m1, m2) -> {  //必须排序，否则paramTypes顺序容易乱
+                Arrays.sort(allMethods, (m1, m2) -> { // 必须排序，否则paramTypes顺序容易乱
                     int s = m1.getName().compareTo(m2.getName());
                     if (s != 0) {
                         return s;
@@ -1171,24 +1363,29 @@ public final class Rest {
                     if (ignore) {
                         continue;
                     }
-                    java.lang.reflect.Type[] ptypes = TypeToken.getGenericType(method.getGenericParameterTypes(), serviceType);
+                    java.lang.reflect.Type[] ptypes =
+                            TypeToken.getGenericType(method.getGenericParameterTypes(), serviceType);
                     for (java.lang.reflect.Type t : ptypes) {
                         if (!TypeToken.isClassType(t)) {
-                            throw new RedkaleException("param type (" + t + ") is not a class in method " + method + ", serviceType is " + serviceType.getName());
+                            throw new RedkaleException("param type (" + t + ") is not a class in method " + method
+                                    + ", serviceType is " + serviceType.getName());
                         }
                     }
                     paramTypes.add(ptypes);
                     java.lang.reflect.Type rtype = formatRestReturnType(method, serviceType);
                     if (!TypeToken.isClassType(rtype)) {
-                        throw new RedkaleException("return type (" + rtype + ") is not a class in method " + method + ", serviceType is " + serviceType.getName());
+                        throw new RedkaleException("return type (" + rtype + ") is not a class in method " + method
+                                + ", serviceType is " + serviceType.getName());
                     }
                     retvalTypes.add(rtype);
-                    if (mappings.length == 0) { //没有Mapping，设置一个默认值
-                        MappingEntry entry = new MappingEntry(serRpcOnly, methodIdex, parentNonBlocking, null, bigModuleName, method);
+                    if (mappings.length == 0) { // 没有Mapping，设置一个默认值
+                        MappingEntry entry = new MappingEntry(
+                                serRpcOnly, methodIdex, parentNonBlocking, null, bigModuleName, method);
                         entrys.add(entry);
                     } else {
                         for (RestMapping mapping : mappings) {
-                            MappingEntry entry = new MappingEntry(serRpcOnly, methodIdex, parentNonBlocking, mapping, defModuleName, method);
+                            MappingEntry entry = new MappingEntry(
+                                    serRpcOnly, methodIdex, parentNonBlocking, mapping, defModuleName, method);
                             entrys.add(entry);
                         }
                     }
@@ -1196,7 +1393,7 @@ public final class Rest {
                 }
                 Collections.sort(entrys);
             }
-            { //restConverts、typeRefs、mappingUrlToMethod、restAttributes、bodyTypes赋值
+            { // restConverts、typeRefs、mappingUrlToMethod、restAttributes、bodyTypes赋值
                 final int headIndex = 10;
                 for (final MappingEntry entry : entrys) {
                     mappingUrlToMethod.put(entry.mappingurl, entry.mappingMethod);
@@ -1206,9 +1403,9 @@ public final class Rest {
                     final RestConvert[] rcs = method.getAnnotationsByType(RestConvert.class);
                     final RestConvertCoder[] rcc = method.getAnnotationsByType(RestConvertCoder.class);
                     if ((rcs != null && rcs.length > 0) || (rcc != null && rcc.length > 0)) {
-                        restConverts.add(new Object[]{rcs, rcc});
+                        restConverts.add(new Object[] {rcs, rcc});
                     }
-                    //解析方法中的每个参数
+                    // 解析方法中的每个参数
                     List<Object[]> paramlist = new ArrayList<>();
                     for (int i = 0; i < params.length; i++) {
                         final Parameter param = params[i];
@@ -1259,12 +1456,12 @@ public final class Rest {
                         boolean annheaders = param.getType() == RestHeaders.class;
                         if (annheaders) {
                             comment = "";
-                            n = "^"; //Http头信息类型特殊处理
+                            n = "^"; // Http头信息类型特殊处理
                         }
                         boolean annparams = param.getType() == RestParams.class;
                         if (annparams) {
                             comment = "";
-                            n = "?"; //Http参数类型特殊处理
+                            n = "?"; // Http参数类型特殊处理
                         }
                         RestParam annpara = param.getAnnotation(RestParam.class);
                         if (annpara != null) {
@@ -1280,7 +1477,7 @@ public final class Rest {
                             n = (annpara == null || annpara.name().isEmpty()) ? null : annpara.name();
                         }
                         if (n == null && ptype == userType) {
-                            n = "&"; //用户类型特殊处理
+                            n = "&"; // 用户类型特殊处理
                         }
                         if (n == null) {
                             if (param.isNamePresent()) {
@@ -1288,20 +1485,45 @@ public final class Rest {
                             } else if (ptype == Flipper.class) {
                                 n = "flipper";
                             }
-                        } //n maybe is null
+                        } // n maybe is null
 
-                        java.lang.reflect.Type paramtype = TypeToken.getGenericType(param.getParameterizedType(), serviceType);
-                        paramlist.add(new Object[]{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annlocale, annhead, anncookie, annbody, annfile, annpath, userid, annheaders, annparams, paramtype});
+                        java.lang.reflect.Type paramtype =
+                                TypeToken.getGenericType(param.getParameterizedType(), serviceType);
+                        paramlist.add(new Object[] {
+                            param,
+                            n,
+                            ptype,
+                            radix,
+                            comment,
+                            required,
+                            annpara,
+                            annsid,
+                            annaddr,
+                            annlocale,
+                            annhead,
+                            anncookie,
+                            annbody,
+                            annfile,
+                            annpath,
+                            userid,
+                            annheaders,
+                            annparams,
+                            paramtype
+                        });
                     }
-                    for (Object[] ps : paramlist) { //{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annlocale, annhead, anncookie, annbody, annfile, annpath, annuserid, annheaders, annparams, paramtype}
-                        final boolean isuserid = ((RestUserid) ps[headIndex + 5]) != null; //是否取userid
+                    for (Object[] ps :
+                            paramlist) { // {param, n, ptype, radix, comment, required, annpara, annsid, annaddr,
+                        // annlocale, annhead, anncookie, annbody, annfile, annpath, annuserid,
+                        // annheaders, annparams, paramtype}
+                        final boolean isuserid = ((RestUserid) ps[headIndex + 5]) != null; // 是否取userid
                         if ((ps[1] != null && ps[1].toString().indexOf('&') >= 0) || isuserid) {
-                            continue;  //@RestUserid 不需要生成 @HttpParam
+                            continue; // @RestUserid 不需要生成 @HttpParam
                         }
                         if (((RestAddress) ps[8]) != null) {
-                            continue;  //@RestAddress 不需要生成 @HttpParam
+                            continue; // @RestAddress 不需要生成 @HttpParam
                         }
-                        java.lang.reflect.Type pgtype = TypeToken.getGenericType(((Parameter) ps[0]).getParameterizedType(), serviceType);
+                        java.lang.reflect.Type pgtype =
+                                TypeToken.getGenericType(((Parameter) ps[0]).getParameterizedType(), serviceType);
                         if (pgtype != (Class) ps[2]) {
                             String refid = typeRefs.get(pgtype);
                             if (refid == null) {
@@ -1310,9 +1532,9 @@ public final class Rest {
                             }
                         }
 
-                        final Parameter param = (Parameter) ps[0]; //参数类型
-                        String pname = (String) ps[1]; //参数名
-                        Class ptype = (Class) ps[2]; //参数类型
+                        final Parameter param = (Parameter) ps[0]; // 参数类型
+                        String pname = (String) ps[1]; // 参数名
+                        Class ptype = (Class) ps[2]; // 参数类型
                         int radix = (Integer) ps[3];
                         String comment = (String) ps[4];
                         boolean required = (Boolean) ps[5];
@@ -1329,33 +1551,35 @@ public final class Rest {
                         boolean annheaders = (Boolean) ps[headIndex + 6];
                         boolean annparams = (Boolean) ps[headIndex + 7];
 
-                        if (CompletionHandler.class.isAssignableFrom(ptype)) { //HttpResponse.createAsyncHandler() or HttpResponse.createAsyncHandler(Class)
-                        } else if (annsid != null) { //HttpRequest.getSessionid(true|false)
-                        } else if (annaddr != null) { //HttpRequest.getRemoteAddr
-                        } else if (annlocale != null) { //HttpRequest.getLocale
-                        } else if (annbody != null) { //HttpRequest.getBodyUTF8 / HttpRequest.getBody
-                        } else if (annfile != null) { //MultiContext.partsFirstBytes / HttpRequest.partsFirstFile / HttpRequest.partsFiles
-                        } else if (annpath != null) { //HttpRequest.getRequestPath
-                        } else if (annuserid != null) { //HttpRequest.currentUserid
-                        } else if (pname != null && pname.charAt(0) == '#') { //从request.getPathParam 中去参数
-                        } else if ("#".equals(pname)) { //从request.getRequstURI 中取参数
-                        } else if ("&".equals(pname) && ptype == userType) { //当前用户对象的类名
-                        } else if ("^".equals(pname) && annheaders) { //HttpRequest.getHeaders Http头信息
-                        } else if ("?".equals(pname) && annparams) { //HttpRequest.getParameters Http参数信息
+                        if (CompletionHandler.class.isAssignableFrom(
+                                ptype)) { // HttpResponse.createAsyncHandler() or HttpResponse.createAsyncHandler(Class)
+                        } else if (annsid != null) { // HttpRequest.getSessionid(true|false)
+                        } else if (annaddr != null) { // HttpRequest.getRemoteAddr
+                        } else if (annlocale != null) { // HttpRequest.getLocale
+                        } else if (annbody != null) { // HttpRequest.getBodyUTF8 / HttpRequest.getBody
+                        } else if (annfile != null) { // MultiContext.partsFirstBytes / HttpRequest.partsFirstFile /
+                            // HttpRequest.partsFiles
+                        } else if (annpath != null) { // HttpRequest.getRequestPath
+                        } else if (annuserid != null) { // HttpRequest.currentUserid
+                        } else if (pname != null && pname.charAt(0) == '#') { // 从request.getPathParam 中去参数
+                        } else if ("#".equals(pname)) { // 从request.getRequstURI 中取参数
+                        } else if ("&".equals(pname) && ptype == userType) { // 当前用户对象的类名
+                        } else if ("^".equals(pname) && annheaders) { // HttpRequest.getHeaders Http头信息
+                        } else if ("?".equals(pname) && annparams) { // HttpRequest.getParameters Http参数信息
                         } else if (ptype.isPrimitive()) {
-                            //do nothing
+                            // do nothing
                         } else if (ptype == String.class) {
-                            //do nothing
+                            // do nothing
                         } else if (ptype == Flipper.class) {
-                            //do nothing
-                        } else { //其他Json对象
-                            //构建 RestHeader、RestCookie、RestAddress 等赋值操作
+                            // do nothing
+                        } else { // 其他Json对象
+                            // 构建 RestHeader、RestCookie、RestAddress 等赋值操作
                             Class loop = ptype;
                             Set<String> fields = new HashSet<>();
                             Map<String, Object[]> attrParaNames = new LinkedHashMap<>();
                             do {
                                 if (loop == null || loop.isInterface()) {
-                                    break; //接口时getSuperclass可能会得到null
+                                    break; // 接口时getSuperclass可能会得到null
                                 }
                                 for (Field field : loop.getDeclaredFields()) {
                                     if (Modifier.isStatic(field.getModifiers())) {
@@ -1375,7 +1599,14 @@ public final class Rest {
                                     RestBody rb = field.getAnnotation(RestBody.class);
                                     RestUploadFile ru = field.getAnnotation(RestUploadFile.class);
                                     RestPath ri = field.getAnnotation(RestPath.class);
-                                    if (rh == null && rc == null && ra == null && rl == null && rb == null && rs == null && ru == null && ri == null) {
+                                    if (rh == null
+                                            && rc == null
+                                            && ra == null
+                                            && rl == null
+                                            && rb == null
+                                            && rs == null
+                                            && ru == null
+                                            && ri == null) {
                                         continue;
                                     }
 
@@ -1383,89 +1614,96 @@ public final class Rest {
                                     String attrFieldName;
                                     String restname = "";
                                     if (rh != null) {
-                                        attrFieldName = "_redkale_attr_header_" + (field.getType() != String.class ? "json_" : "") + restAttributes.size();
+                                        attrFieldName = "_redkale_attr_header_"
+                                                + (field.getType() != String.class ? "json_" : "")
+                                                + restAttributes.size();
                                         restname = rh.name();
                                     } else if (rc != null) {
                                         attrFieldName = "_redkale_attr_cookie_" + restAttributes.size();
                                         restname = rc.name();
                                     } else if (rs != null) {
                                         attrFieldName = "_redkale_attr_sessionid_" + restAttributes.size();
-                                        restname = rs.create() ? "1" : ""; //用于下面区分create值
+                                        restname = rs.create() ? "1" : ""; // 用于下面区分create值
                                     } else if (ra != null) {
                                         attrFieldName = "_redkale_attr_address_" + restAttributes.size();
-                                        //restname = "";
+                                        // restname = "";
                                     } else if (rl != null) {
                                         attrFieldName = "_redkale_attr_locale_" + restAttributes.size();
-                                        //restname = "";
+                                        // restname = "";
                                     } else if (rb != null && field.getType() == String.class) {
                                         attrFieldName = "_redkale_attr_bodystring_" + restAttributes.size();
-                                        //restname = "";
+                                        // restname = "";
                                     } else if (rb != null && field.getType() == byte[].class) {
                                         attrFieldName = "_redkale_attr_bodybytes_" + restAttributes.size();
-                                        //restname = "";
-                                    } else if (rb != null && field.getType() != String.class && field.getType() != byte[].class) {
+                                        // restname = "";
+                                    } else if (rb != null
+                                            && field.getType() != String.class
+                                            && field.getType() != byte[].class) {
                                         attrFieldName = "_redkale_attr_bodyjson_" + restAttributes.size();
-                                        //restname = "";
+                                        // restname = "";
                                     } else if (ru != null && field.getType() == byte[].class) {
                                         attrFieldName = "_redkale_attr_uploadbytes_" + restAttributes.size();
-                                        //restname = "";
+                                        // restname = "";
                                     } else if (ru != null && field.getType() == File.class) {
                                         attrFieldName = "_redkale_attr_uploadfile_" + restAttributes.size();
-                                        //restname = "";
+                                        // restname = "";
                                     } else if (ru != null && field.getType() == File[].class) {
                                         attrFieldName = "_redkale_attr_uploadfiles_" + restAttributes.size();
-                                        //restname = "";
+                                        // restname = "";
                                     } else if (ri != null && field.getType() == String.class) {
                                         attrFieldName = "_redkale_attr_uri_" + restAttributes.size();
-                                        //restname = "";
+                                        // restname = "";
                                     } else {
                                         continue;
                                     }
                                     restAttributes.put(attrFieldName, attr);
-                                    attrParaNames.put(attrFieldName, new Object[]{restname, field.getType(), field.getGenericType(), ru});
+                                    attrParaNames.put(
+                                            attrFieldName,
+                                            new Object[] {restname, field.getType(), field.getGenericType(), ru});
                                     fields.add(field.getName());
                                 }
                             } while ((loop = loop.getSuperclass()) != Object.class);
 
-                            if (!attrParaNames.isEmpty()) { //参数存在 RestHeader、RestCookie、RestSessionid、RestAddress、RestBody字段
+                            if (!attrParaNames
+                                    .isEmpty()) { // 参数存在 RestHeader、RestCookie、RestSessionid、RestAddress、RestBody字段
                                 for (Map.Entry<String, Object[]> en : attrParaNames.entrySet()) {
                                     if (en.getKey().contains("_header_")) {
                                         String headerkey = en.getValue()[0].toString();
                                         if ("Host".equalsIgnoreCase(headerkey)) {
-                                            //do nothing
+                                            // do nothing
                                         } else if ("Content-Type".equalsIgnoreCase(headerkey)) {
-                                            //do nothing
+                                            // do nothing
                                         } else if ("Connection".equalsIgnoreCase(headerkey)) {
-                                            //do nothing
+                                            // do nothing
                                         } else if ("Method".equalsIgnoreCase(headerkey)) {
-                                            //do nothing
+                                            // do nothing
                                         } else if (en.getKey().contains("_header_json_")) {
                                             String typefieldname = "_redkale_body_jsontype_" + bodyTypes.size();
                                             bodyTypes.put(typefieldname, (java.lang.reflect.Type) en.getValue()[2]);
                                         }
                                     } else if (en.getKey().contains("_cookie_")) {
-                                        //do nothing
+                                        // do nothing
                                     } else if (en.getKey().contains("_sessionid_")) {
-                                        //do nothing
+                                        // do nothing
                                     } else if (en.getKey().contains("_address_")) {
-                                        //do nothing
+                                        // do nothing
                                     } else if (en.getKey().contains("_locale_")) {
-                                        //do nothing
+                                        // do nothing
                                     } else if (en.getKey().contains("_uri_")) {
-                                        //do nothing
+                                        // do nothing
                                     } else if (en.getKey().contains("_bodystring_")) {
-                                        //do nothing
+                                        // do nothing
                                     } else if (en.getKey().contains("_bodybytes_")) {
-                                        //do nothing
-                                    } else if (en.getKey().contains("_bodyjson_")) {//JavaBean 转 Json
+                                        // do nothing
+                                    } else if (en.getKey().contains("_bodyjson_")) { // JavaBean 转 Json
                                         String typefieldname = "_redkale_body_jsontype_" + bodyTypes.size();
                                         bodyTypes.put(typefieldname, (java.lang.reflect.Type) en.getValue()[2]);
                                     } else if (en.getKey().contains("_uploadbytes_")) {
-                                        //只需mv.visitVarInsn(ALOAD, 4), 无需处理
+                                        // 只需mv.visitVarInsn(ALOAD, 4), 无需处理
                                     } else if (en.getKey().contains("_uploadfile_")) {
-                                        //只需mv.visitVarInsn(ALOAD, 4), 无需处理
+                                        // 只需mv.visitVarInsn(ALOAD, 4), 无需处理
                                     } else if (en.getKey().contains("_uploadfiles_")) {
-                                        //只需mv.visitVarInsn(ALOAD, 4), 无需处理
+                                        // 只需mv.visitVarInsn(ALOAD, 4), 无需处理
                                     }
                                 }
                             }
@@ -1481,7 +1719,7 @@ public final class Rest {
                         grt = ptgrt.getActualTypeArguments()[0];
                         rtc = TypeToken.typeToClass(grt);
                         if (rtc == null) {
-                            rtc = Object.class; //应该不会发生吧?
+                            rtc = Object.class; // 应该不会发生吧?
                         }
                     } else if (Flows.maybePublisherClass(returnType)) {
                         java.lang.reflect.Type grt0 = Flows.maybePublisherSubType(grt);
@@ -1518,7 +1756,10 @@ public final class Rest {
                 genField.setAccessible(true);
                 Object[] rc = restConverts.get(i);
 
-                genField.set(obj, createJsonFactory((RestConvert[]) rc[0], (RestConvertCoder[]) rc[1]).getConvert());
+                genField.set(
+                        obj,
+                        createJsonFactory((RestConvert[]) rc[0], (RestConvertCoder[]) rc[1])
+                                .getConvert());
             }
             Field typesfield = newClazz.getDeclaredField(REST_PARAMTYPES_FIELD_NAME);
             typesfield.setAccessible(true);
@@ -1534,7 +1775,7 @@ public final class Rest {
 
             Field tostringfield = newClazz.getDeclaredField(REST_TOSTRINGOBJ_FIELD_NAME);
             tostringfield.setAccessible(true);
-            { //注入 @WebServlet 注解
+            { // 注入 @WebServlet 注解
                 String urlpath = "";
                 final String defmodulename = getWebModuleNameLowerCase(serviceType);
                 final int moduleid = controller == null ? 0 : controller.moduleid();
@@ -1551,7 +1792,9 @@ public final class Rest {
                 if (defmodulename.isEmpty() || (!pound && entrys.size() <= 2)) {
                     Set<String> startWiths = new HashSet<>();
                     for (MappingEntry entry : entrys) {
-                        String suburl = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + (defmodulename.isEmpty() ? "" : (defmodulename + "/")) + entry.name;
+                        String suburl = (catalog.isEmpty() ? "/" : ("/" + catalog + "/"))
+                                + (defmodulename.isEmpty() ? "" : (defmodulename + "/"))
+                                + entry.name;
                         if ("//".equals(suburl)) {
                             suburl = "/";
                         } else if (suburl.length() > 2 && suburl.endsWith("/")) {
@@ -1582,9 +1825,10 @@ public final class Rest {
                 classMap.put("url", urlpath);
                 classMap.put("moduleid", moduleid);
                 classMap.put("repair", repair);
-                //classMap.put("comment", comment); //不显示太多信息
+                // classMap.put("comment", comment); //不显示太多信息
             }
-            java.util.function.Supplier<String> sSupplier = () -> JsonConvert.root().convertTo(classMap);
+            java.util.function.Supplier<String> sSupplier =
+                    () -> JsonConvert.root().convertTo(classMap);
             tostringfield.set(obj, sSupplier);
 
             Method restactMethod = newClazz.getDeclaredMethod("_createRestActionEntry");
@@ -1604,20 +1848,22 @@ public final class Rest {
             nonblockField.set(obj, parentNonBlocking == null || parentNonBlocking);
             return obj;
         } catch (ClassNotFoundException e) {
-            //do nothing
+            // do nothing
         } catch (Throwable e) {
             e.printStackTrace();
         }
-        //------------------------------------------------------------------------------
+        // ------------------------------------------------------------------------------
         final String defModuleName = getWebModuleNameLowerCase(serviceType);
         final String bigModuleName = getWebModuleName(serviceType);
         final String catalog = controller == null ? "" : controller.catalog();
         final String httpDesc = Type.getDescriptor(HttpServlet.class);
         if (!checkName(catalog)) {
-            throw new RestException(serviceType.getName() + " have illegal " + RestService.class.getSimpleName() + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
+            throw new RestException(serviceType.getName() + " have illegal " + RestService.class.getSimpleName()
+                    + ".catalog, only 0-9 a-z A-Z _ cannot begin 0-9");
         }
         if (!checkName(defModuleName)) {
-            throw new RestException(serviceType.getName() + " have illegal " + RestService.class.getSimpleName() + ".value, only 0-9 a-z A-Z _ cannot begin 0-9");
+            throw new RestException(serviceType.getName() + " have illegal " + RestService.class.getSimpleName()
+                    + ".value, only 0-9 a-z A-Z _ cannot begin 0-9");
         }
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
@@ -1635,16 +1881,16 @@ public final class Rest {
 
         cw.visit(V11, ACC_PUBLIC + ACC_SUPER, newDynName, null, supDynName, null);
 
-        { //RestDynSourceType
+        { // RestDynSourceType
             av0 = cw.visitAnnotation(Type.getDescriptor(RestDynSourceType.class), true);
             av0.visit("value", Type.getType(Type.getDescriptor(serviceType)));
             av0.visitEnd();
         }
-        boolean dynsimple = baseServletType == HttpServlet.class; //有自定义的BaseServlet会存在读取header的操作
-        //获取所有可以转换成HttpMapping的方法
+        boolean dynsimple = baseServletType == HttpServlet.class; // 有自定义的BaseServlet会存在读取header的操作
+        // 获取所有可以转换成HttpMapping的方法
         int methodidex = 0;
         final Method[] allMethods = serviceType.getMethods();
-        Arrays.sort(allMethods, (m1, m2) -> {  //必须排序，否则paramTypes顺序容易乱
+        Arrays.sort(allMethods, (m1, m2) -> { // 必须排序，否则paramTypes顺序容易乱
             int s = m1.getName().compareTo(m2.getName());
             if (s != 0) {
                 return s;
@@ -1693,33 +1939,40 @@ public final class Rest {
             if (extypes.length > 0) {
                 for (Class exp : extypes) {
                     if (!RuntimeException.class.isAssignableFrom(exp) && !IOException.class.isAssignableFrom(exp)) {
-                        throw new RestException("@" + RestMapping.class.getSimpleName() + " only for method(" + method + ") with throws IOException");
+                        throw new RestException("@" + RestMapping.class.getSimpleName() + " only for method(" + method
+                                + ") with throws IOException");
                     }
                 }
             }
             java.lang.reflect.Type[] ptypes = TypeToken.getGenericType(method.getGenericParameterTypes(), serviceType);
             for (java.lang.reflect.Type t : ptypes) {
                 if (!TypeToken.isClassType(t)) {
-                    throw new RedkaleException("param type (" + t + ") is not a class in method " + method + ", serviceType is " + serviceType.getName());
+                    throw new RedkaleException("param type (" + t + ") is not a class in method " + method
+                            + ", serviceType is " + serviceType.getName());
                 }
             }
             paramTypes.add(ptypes);
             java.lang.reflect.Type rtype = formatRestReturnType(method, serviceType);
             if (!TypeToken.isClassType(rtype)) {
-                throw new RedkaleException("return type (" + rtype + ") is not a class in method " + method + ", serviceType is " + serviceType.getName());
+                throw new RedkaleException("return type (" + rtype + ") is not a class in method " + method
+                        + ", serviceType is " + serviceType.getName());
             }
             retvalTypes.add(rtype);
-            if (mappings.length == 0) { //没有Mapping，设置一个默认值
-                MappingEntry entry = new MappingEntry(serRpcOnly, methodidex, parentNonBlocking, null, bigModuleName, method);
+            if (mappings.length == 0) { // 没有Mapping，设置一个默认值
+                MappingEntry entry =
+                        new MappingEntry(serRpcOnly, methodidex, parentNonBlocking, null, bigModuleName, method);
                 if (entrys.contains(entry)) {
-                    throw new RestException(serviceType.getName() + " on " + method.getName() + " 's mapping(" + entry.name + ") is repeat");
+                    throw new RestException(serviceType.getName() + " on " + method.getName() + " 's mapping("
+                            + entry.name + ") is repeat");
                 }
                 entrys.add(entry);
             } else {
                 for (RestMapping mapping : mappings) {
-                    MappingEntry entry = new MappingEntry(serRpcOnly, methodidex, parentNonBlocking, mapping, defModuleName, method);
+                    MappingEntry entry =
+                            new MappingEntry(serRpcOnly, methodidex, parentNonBlocking, mapping, defModuleName, method);
                     if (entrys.contains(entry)) {
-                        throw new RestException(serviceType.getName() + " on " + method.getName() + " 's mapping(" + entry.name + ") is repeat");
+                        throw new RestException(serviceType.getName() + " on " + method.getName() + " 's mapping("
+                                + entry.name + ") is repeat");
                     }
                     entrys.add(entry);
                 }
@@ -1727,12 +1980,12 @@ public final class Rest {
             methodidex++;
         }
         if (entrys.isEmpty()) {
-            return null; //没有可HttpMapping的方法
+            return null; // 没有可HttpMapping的方法
         }
         Collections.sort(entrys);
         DynBytesClassLoader newLoader = new DynBytesClassLoader(loader);
         final int moduleid = controller == null ? 0 : controller.moduleid();
-        { //注入 @WebServlet 注解
+        { // 注入 @WebServlet 注解
             String urlpath = "";
             boolean repair = controller == null || controller.repair();
             String comment = controller == null ? "" : controller.comment();
@@ -1749,7 +2002,9 @@ public final class Rest {
                 if (isEmpty(defModuleName) || (!pound && entrys.size() <= 2)) {
                     Set<String> startWiths = new HashSet<>();
                     for (MappingEntry entry : entrys) {
-                        String suburl = (isEmpty(catalog) ? "/" : ("/" + catalog + "/")) + (isEmpty(defModuleName) ? "" : (defModuleName + "/")) + entry.name;
+                        String suburl = (isEmpty(catalog) ? "/" : ("/" + catalog + "/"))
+                                + (isEmpty(defModuleName) ? "" : (defModuleName + "/"))
+                                + entry.name;
                         if ("//".equals(suburl)) {
                             suburl = "/";
                         } else if (suburl.length() > 2 && suburl.endsWith("/")) {
@@ -1788,38 +2043,56 @@ public final class Rest {
             classMap.put("url", urlpath);
             classMap.put("moduleid", moduleid);
             classMap.put("repair", repair);
-            //classMap.put("comment", comment); //不显示太多信息
+            // classMap.put("comment", comment); //不显示太多信息
         }
-        { //NonBlocking            
+        { // NonBlocking
             av0 = cw.visitAnnotation(nonblockDesc, true);
             av0.visit("value", true);
             av0.visitEnd();
         }
-        { //内部类
-            cw.visitInnerClass(actionEntryName, httpServletName, HttpServlet.ActionEntry.class.getSimpleName(), ACC_PROTECTED + ACC_FINAL + ACC_STATIC);
+        { // 内部类
+            cw.visitInnerClass(
+                    actionEntryName,
+                    httpServletName,
+                    HttpServlet.ActionEntry.class.getSimpleName(),
+                    ACC_PROTECTED + ACC_FINAL + ACC_STATIC);
 
             for (final MappingEntry entry : entrys) {
-                cw.visitInnerClass(newDynName + "$" + entry.newActionClassName, newDynName, entry.newActionClassName, ACC_PRIVATE + ACC_STATIC);
+                cw.visitInnerClass(
+                        newDynName + "$" + entry.newActionClassName,
+                        newDynName,
+                        entry.newActionClassName,
+                        ACC_PRIVATE + ACC_STATIC);
             }
         }
-        {  //注入 @Resource  private XXXService _service;
+        { // 注入 @Resource  private XXXService _service;
             fv = cw.visitField(ACC_PRIVATE, REST_SERVICE_FIELD_NAME, serviceDesc, null, null);
             av0 = fv.visitAnnotation(resDesc, true);
             av0.visit("name", Utility.isBlank(serviceResourceName) ? "" : serviceResourceName);
             av0.visitEnd();
             fv.visitEnd();
         }
-        { //_serviceMap字段 Map<String, XXXService>
-            fv = cw.visitField(ACC_PRIVATE, REST_SERVICEMAP_FIELD_NAME, "Ljava/util/Map;", "Ljava/util/Map<Ljava/lang/String;" + serviceDesc + ">;", null);
+        { // _serviceMap字段 Map<String, XXXService>
+            fv = cw.visitField(
+                    ACC_PRIVATE,
+                    REST_SERVICEMAP_FIELD_NAME,
+                    "Ljava/util/Map;",
+                    "Ljava/util/Map<Ljava/lang/String;" + serviceDesc + ">;",
+                    null);
             fv.visitEnd();
         }
-        { //_redkale_toStringSupplier字段 Supplier<String>
-            fv = cw.visitField(ACC_PRIVATE, REST_TOSTRINGOBJ_FIELD_NAME, "Ljava/util/function/Supplier;", "Ljava/util/function/Supplier<Ljava/lang/String;>;", null);
+        { // _redkale_toStringSupplier字段 Supplier<String>
+            fv = cw.visitField(
+                    ACC_PRIVATE,
+                    REST_TOSTRINGOBJ_FIELD_NAME,
+                    "Ljava/util/function/Supplier;",
+                    "Ljava/util/function/Supplier<Ljava/lang/String;>;",
+                    null);
             fv.visitEnd();
         }
-        { //构造函数
+        { // 构造函数
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
-            //mv.setDebug(true);
+            // mv.setDebug(true);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
             mv.visitInsn(RETURN);
@@ -1827,7 +2100,7 @@ public final class Rest {
             mv.visitEnd();
         }
 
-        //将每个Service可转换的方法生成HttpServlet对应的HttpMapping方法
+        // 将每个Service可转换的方法生成HttpServlet对应的HttpMapping方法
         boolean namePresent = false;
         try {
             Method m0 = null;
@@ -1839,7 +2112,7 @@ public final class Rest {
             }
             namePresent = m0 == null || m0.getParameters()[0].isNamePresent();
         } catch (Exception e) {
-            //do nothing
+            // do nothing
         }
         final Map<String, AsmMethodBean> asmParamMap = namePresent ? null : AsmMethodBoost.getMethodBeans(serviceType);
 
@@ -1857,14 +2130,17 @@ public final class Rest {
             final RestConvert[] rcs = method.getAnnotationsByType(RestConvert.class);
             final RestConvertCoder[] rcc = method.getAnnotationsByType(RestConvertCoder.class);
             if ((rcs != null && rcs.length > 0) || (rcc != null && rcc.length > 0)) {
-                restConverts.add(new Object[]{rcs, rcc});
+                restConverts.add(new Object[] {rcs, rcc});
             }
-            if (dynsimple && entry.rpcOnly) { //需要读取http header
+            if (dynsimple && entry.rpcOnly) { // 需要读取http header
                 dynsimple = false;
             }
 
-            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, entry.newMethodName, "(" + reqDesc + respDesc + ")V", null, new String[]{"java/io/IOException"}));
-            //mv.setDebug(true);
+            mv = new MethodDebugVisitor(cw.visitMethod(
+                    ACC_PUBLIC, entry.newMethodName, "(" + reqDesc + respDesc + ")V", null, new String[] {
+                        "java/io/IOException"
+                    }));
+            // mv.setDebug(true);
             mv.debugLine();
 
             mv.visitVarInsn(ALOAD, 0);
@@ -1884,11 +2160,16 @@ public final class Rest {
             mv.visitVarInsn(ALOAD, 1);
             mv.visitLdcInsn(REST_HEADER_RESNAME);
             mv.visitLdcInsn("");
-            mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getHeader", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+            mv.visitMethodInsn(
+                    INVOKEVIRTUAL,
+                    reqInternalName,
+                    "getHeader",
+                    "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
+                    false);
             mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Map", "get", "(Ljava/lang/Object;)Ljava/lang/Object;", true);
             mv.visitTypeInsn(CHECKCAST, serviceTypeInternalName);
             mv.visitLabel(lserif);
-            mv.visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[]{serviceTypeInternalName});
+            mv.visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[] {serviceTypeInternalName});
             mv.visitVarInsn(ASTORE, 3);
 
             final int maxStack = 3 + params.length;
@@ -1898,7 +2179,7 @@ public final class Rest {
             AsmMethodBean methodBean = asmParamMap == null ? null : AsmMethodBean.get(asmParamMap, method);
             List<AsmMethodParam> asmParamNames = methodBean == null ? null : methodBean.getParams();
             List<Object[]> paramlist = new ArrayList<>();
-            //解析方法中的每个参数
+            // 解析方法中的每个参数
             for (int i = 0; i < params.length; i++) {
                 final Parameter param = params[i];
                 final Class ptype = param.getType();
@@ -1910,7 +2191,8 @@ public final class Rest {
                 RestHeader annhead = param.getAnnotation(RestHeader.class);
                 if (annhead != null) {
                     if (ptype != String.class && ptype != InetSocketAddress.class) {
-                        throw new RestException("@RestHeader must on String or InetSocketAddress Parameter in " + method);
+                        throw new RestException(
+                                "@RestHeader must on String or InetSocketAddress Parameter in " + method);
                     }
                     n = annhead.name();
                     radix = annhead.radix();
@@ -1923,7 +2205,8 @@ public final class Rest {
                 RestCookie anncookie = param.getAnnotation(RestCookie.class);
                 if (anncookie != null) {
                     if (annhead != null) {
-                        throw new RestException("@RestCookie and @RestHeader cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestCookie and @RestHeader cannot on the same Parameter in " + method);
                     }
                     if (ptype != String.class) {
                         throw new RestException("@RestCookie must on String Parameter in " + method);
@@ -1939,10 +2222,12 @@ public final class Rest {
                 RestSessionid annsid = param.getAnnotation(RestSessionid.class);
                 if (annsid != null) {
                     if (annhead != null) {
-                        throw new RestException("@RestSessionid and @RestHeader cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestSessionid and @RestHeader cannot on the same Parameter in " + method);
                     }
                     if (anncookie != null) {
-                        throw new RestException("@RestSessionid and @RestCookie cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestSessionid and @RestCookie cannot on the same Parameter in " + method);
                     }
                     if (ptype != String.class) {
                         throw new RestException("@RestSessionid must on String Parameter in " + method);
@@ -1952,13 +2237,16 @@ public final class Rest {
                 RestAddress annaddr = param.getAnnotation(RestAddress.class);
                 if (annaddr != null) {
                     if (annhead != null) {
-                        throw new RestException("@RestAddress and @RestHeader cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestAddress and @RestHeader cannot on the same Parameter in " + method);
                     }
                     if (anncookie != null) {
-                        throw new RestException("@RestAddress and @RestCookie cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestAddress and @RestCookie cannot on the same Parameter in " + method);
                     }
                     if (annsid != null) {
-                        throw new RestException("@RestAddress and @RestSessionid cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestAddress and @RestSessionid cannot on the same Parameter in " + method);
                     }
                     if (ptype != String.class) {
                         throw new RestException("@RestAddress must on String Parameter in " + method);
@@ -1969,16 +2257,20 @@ public final class Rest {
                 RestLocale annlocale = param.getAnnotation(RestLocale.class);
                 if (annlocale != null) {
                     if (annhead != null) {
-                        throw new RestException("@RestLocale and @RestHeader cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestLocale and @RestHeader cannot on the same Parameter in " + method);
                     }
                     if (anncookie != null) {
-                        throw new RestException("@RestLocale and @RestCookie cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestLocale and @RestCookie cannot on the same Parameter in " + method);
                     }
                     if (annsid != null) {
-                        throw new RestException("@RestLocale and @RestSessionid cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestLocale and @RestSessionid cannot on the same Parameter in " + method);
                     }
                     if (annaddr != null) {
-                        throw new RestException("@RestLocale and @RestAddress cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestLocale and @RestAddress cannot on the same Parameter in " + method);
                     }
                     if (ptype != String.class) {
                         throw new RestException("@RestAddress must on String Parameter in " + method);
@@ -1995,7 +2287,8 @@ public final class Rest {
                         throw new RestException("@RestBody and @RestCookie cannot on the same Parameter in " + method);
                     }
                     if (annsid != null) {
-                        throw new RestException("@RestBody and @RestSessionid cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestBody and @RestSessionid cannot on the same Parameter in " + method);
                     }
                     if (annaddr != null) {
                         throw new RestException("@RestBody and @RestAddress cannot on the same Parameter in " + method);
@@ -2016,25 +2309,32 @@ public final class Rest {
                     mupload = annfile;
                     muploadType = ptype;
                     if (annhead != null) {
-                        throw new RestException("@RestUploadFile and @RestHeader cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestUploadFile and @RestHeader cannot on the same Parameter in " + method);
                     }
                     if (anncookie != null) {
-                        throw new RestException("@RestUploadFile and @RestCookie cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestUploadFile and @RestCookie cannot on the same Parameter in " + method);
                     }
                     if (annsid != null) {
-                        throw new RestException("@RestUploadFile and @RestSessionid cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestUploadFile and @RestSessionid cannot on the same Parameter in " + method);
                     }
                     if (annaddr != null) {
-                        throw new RestException("@RestUploadFile and @RestAddress cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestUploadFile and @RestAddress cannot on the same Parameter in " + method);
                     }
                     if (annlocale != null) {
-                        throw new RestException("@RestUploadFile and @RestLocale cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestUploadFile and @RestLocale cannot on the same Parameter in " + method);
                     }
                     if (annbody != null) {
-                        throw new RestException("@RestUploadFile and @RestBody cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestUploadFile and @RestBody cannot on the same Parameter in " + method);
                     }
                     if (ptype != byte[].class && ptype != File.class && ptype != File[].class) {
-                        throw new RestException("@RestUploadFile must on byte[] or File or File[] Parameter in " + method);
+                        throw new RestException(
+                                "@RestUploadFile must on byte[] or File or File[] Parameter in " + method);
                     }
                     comment = annfile.comment();
                 }
@@ -2048,7 +2348,8 @@ public final class Rest {
                         throw new RestException("@RestPath and @RestCookie cannot on the same Parameter in " + method);
                     }
                     if (annsid != null) {
-                        throw new RestException("@RestPath and @RestSessionid cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestPath and @RestSessionid cannot on the same Parameter in " + method);
                     }
                     if (annaddr != null) {
                         throw new RestException("@RestPath and @RestAddress cannot on the same Parameter in " + method);
@@ -2060,7 +2361,8 @@ public final class Rest {
                         throw new RestException("@RestPath and @RestBody cannot on the same Parameter in " + method);
                     }
                     if (annfile != null) {
-                        throw new RestException("@RestPath and @RestUploadFile cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestPath and @RestUploadFile cannot on the same Parameter in " + method);
                     }
                     if (ptype != String.class) {
                         throw new RestException("@RestPath must on String Parameter in " + method);
@@ -2071,25 +2373,31 @@ public final class Rest {
                 RestUserid userid = param.getAnnotation(RestUserid.class);
                 if (userid != null) {
                     if (annhead != null) {
-                        throw new RestException("@RestUserid and @RestHeader cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestUserid and @RestHeader cannot on the same Parameter in " + method);
                     }
                     if (anncookie != null) {
-                        throw new RestException("@RestUserid and @RestCookie cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestUserid and @RestCookie cannot on the same Parameter in " + method);
                     }
                     if (annsid != null) {
-                        throw new RestException("@RestUserid and @RestSessionid cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestUserid and @RestSessionid cannot on the same Parameter in " + method);
                     }
                     if (annaddr != null) {
-                        throw new RestException("@RestUserid and @RestAddress cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestUserid and @RestAddress cannot on the same Parameter in " + method);
                     }
                     if (annlocale != null) {
-                        throw new RestException("@RestUserid and @RestLocale cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestUserid and @RestLocale cannot on the same Parameter in " + method);
                     }
                     if (annbody != null) {
                         throw new RestException("@RestUserid and @RestBody cannot on the same Parameter in " + method);
                     }
                     if (annfile != null) {
-                        throw new RestException("@RestUserid and @RestUploadFile cannot on the same Parameter in " + method);
+                        throw new RestException(
+                                "@RestUserid and @RestUploadFile cannot on the same Parameter in " + method);
                     }
                     if (!ptype.isPrimitive() && !java.io.Serializable.class.isAssignableFrom(ptype)) {
                         throw new RestException("@RestUserid must on java.io.Serializable Parameter in " + method);
@@ -2102,62 +2410,80 @@ public final class Rest {
                 boolean annheaders = param.getType() == RestHeaders.class;
                 if (annparams) {
                     if (annhead != null) {
-                        throw new RestException("@RestHeader cannot on the " + RestParams.class.getSimpleName() + " Parameter in " + method);
+                        throw new RestException("@RestHeader cannot on the " + RestParams.class.getSimpleName()
+                                + " Parameter in " + method);
                     }
                     if (anncookie != null) {
-                        throw new RestException("@RestCookie cannot on the " + RestParams.class.getSimpleName() + " Parameter in " + method);
+                        throw new RestException("@RestCookie cannot on the " + RestParams.class.getSimpleName()
+                                + " Parameter in " + method);
                     }
                     if (annsid != null) {
-                        throw new RestException("@RestSessionid cannot on the " + RestParams.class.getSimpleName() + " Parameter in " + method);
+                        throw new RestException("@RestSessionid cannot on the " + RestParams.class.getSimpleName()
+                                + " Parameter in " + method);
                     }
                     if (annaddr != null) {
-                        throw new RestException("@RestAddress cannot on the " + RestParams.class.getSimpleName() + " Parameter in " + method);
+                        throw new RestException("@RestAddress cannot on the " + RestParams.class.getSimpleName()
+                                + " Parameter in " + method);
                     }
                     if (annlocale != null) {
-                        throw new RestException("@RestLocale cannot on the " + RestParams.class.getSimpleName() + " Parameter in " + method);
+                        throw new RestException("@RestLocale cannot on the " + RestParams.class.getSimpleName()
+                                + " Parameter in " + method);
                     }
                     if (annbody != null) {
-                        throw new RestException("@RestBody cannot on the " + RestParams.class.getSimpleName() + " Parameter in " + method);
+                        throw new RestException("@RestBody cannot on the " + RestParams.class.getSimpleName()
+                                + " Parameter in " + method);
                     }
                     if (annfile != null) {
-                        throw new RestException("@RestUploadFile cannot on the " + RestParams.class.getSimpleName() + " Parameter in " + method);
+                        throw new RestException("@RestUploadFile cannot on the " + RestParams.class.getSimpleName()
+                                + " Parameter in " + method);
                     }
                     if (userid != null) {
-                        throw new RestException("@RestUserid cannot on the " + RestParams.class.getSimpleName() + " Parameter in " + method);
+                        throw new RestException("@RestUserid cannot on the " + RestParams.class.getSimpleName()
+                                + " Parameter in " + method);
                     }
                     if (annheaders) {
-                        throw new RestException("@RestHeaders cannot on the " + RestParams.class.getSimpleName() + " Parameter in " + method);
+                        throw new RestException("@RestHeaders cannot on the " + RestParams.class.getSimpleName()
+                                + " Parameter in " + method);
                     }
                     comment = "";
                 }
 
                 if (annheaders) {
                     if (annhead != null) {
-                        throw new RestException("@RestHeader cannot on the " + RestHeaders.class.getSimpleName() + " Parameter in " + method);
+                        throw new RestException("@RestHeader cannot on the " + RestHeaders.class.getSimpleName()
+                                + " Parameter in " + method);
                     }
                     if (anncookie != null) {
-                        throw new RestException("@RestCookie cannot on the " + RestHeaders.class.getSimpleName() + " Parameter in " + method);
+                        throw new RestException("@RestCookie cannot on the " + RestHeaders.class.getSimpleName()
+                                + " Parameter in " + method);
                     }
                     if (annsid != null) {
-                        throw new RestException("@RestSessionid cannot on the " + RestHeaders.class.getSimpleName() + " Parameter in " + method);
+                        throw new RestException("@RestSessionid cannot on the " + RestHeaders.class.getSimpleName()
+                                + " Parameter in " + method);
                     }
                     if (annaddr != null) {
-                        throw new RestException("@RestAddress cannot on the " + RestHeaders.class.getSimpleName() + " Parameter in " + method);
+                        throw new RestException("@RestAddress cannot on the " + RestHeaders.class.getSimpleName()
+                                + " Parameter in " + method);
                     }
                     if (annlocale != null) {
-                        throw new RestException("@RestLocale cannot on the " + RestHeaders.class.getSimpleName() + " Parameter in " + method);
+                        throw new RestException("@RestLocale cannot on the " + RestHeaders.class.getSimpleName()
+                                + " Parameter in " + method);
                     }
                     if (annbody != null) {
-                        throw new RestException("@RestBody cannot on the " + RestHeaders.class.getSimpleName() + " Parameter in " + method);
+                        throw new RestException("@RestBody cannot on the " + RestHeaders.class.getSimpleName()
+                                + " Parameter in " + method);
                     }
                     if (annfile != null) {
-                        throw new RestException("@RestUploadFile cannot on the " + RestHeaders.class.getSimpleName() + " Parameter in " + method);
+                        throw new RestException("@RestUploadFile cannot on the " + RestHeaders.class.getSimpleName()
+                                + " Parameter in " + method);
                     }
                     if (userid != null) {
-                        throw new RestException("@RestUserid cannot on the " + RestHeaders.class.getSimpleName() + " Parameter in " + method);
+                        throw new RestException("@RestUserid cannot on the " + RestHeaders.class.getSimpleName()
+                                + " Parameter in " + method);
                     }
                     if (annparams) {
-                        throw new RestException("@RestParams cannot on the " + RestHeaders.class.getSimpleName() + " Parameter in " + method);
+                        throw new RestException("@RestParams cannot on the " + RestHeaders.class.getSimpleName()
+                                + " Parameter in " + method);
                     }
                     comment = "";
                     required = false;
@@ -2177,13 +2503,13 @@ public final class Rest {
                     n = (annpara == null || annpara.name().isEmpty()) ? null : annpara.name();
                 }
                 if (n == null && ptype == userType) {
-                    n = "&"; //用户类型特殊处理
+                    n = "&"; // 用户类型特殊处理
                 }
                 if (n == null && ptype == RestHeaders.class) {
-                    n = "^"; //Http头信息类型特殊处理
+                    n = "^"; // Http头信息类型特殊处理
                 }
                 if (n == null && ptype == RestParams.class) {
-                    n = "?"; //Http参数类型特殊处理
+                    n = "?"; // Http参数类型特殊处理
                 }
                 if (n == null && asmParamNames != null && asmParamNames.size() > i) {
                     n = asmParamNames.get(i).getName();
@@ -2194,16 +2520,28 @@ public final class Rest {
                     } else if (ptype == Flipper.class) {
                         n = "flipper";
                     } else {
-                        throw new RestException("Parameter " + param.getName() + " not found name by @RestParam  in " + method);
+                        throw new RestException(
+                                "Parameter " + param.getName() + " not found name by @RestParam  in " + method);
                     }
                 }
-                if (annhead == null && anncookie == null && annsid == null && annaddr == null && annlocale == null && annbody == null && annfile == null
-                    && !ptype.isPrimitive() && ptype != String.class && ptype != Flipper.class && !CompletionHandler.class.isAssignableFrom(ptype)
-                    && !ptype.getName().startsWith("java") && n.charAt(0) != '#' && !"&".equals(n)) { //判断Json对象是否包含@RestUploadFile
+                if (annhead == null
+                        && anncookie == null
+                        && annsid == null
+                        && annaddr == null
+                        && annlocale == null
+                        && annbody == null
+                        && annfile == null
+                        && !ptype.isPrimitive()
+                        && ptype != String.class
+                        && ptype != Flipper.class
+                        && !CompletionHandler.class.isAssignableFrom(ptype)
+                        && !ptype.getName().startsWith("java")
+                        && n.charAt(0) != '#'
+                        && !"&".equals(n)) { // 判断Json对象是否包含@RestUploadFile
                     Class loop = ptype;
                     do {
                         if (loop == null || loop.isInterface()) {
-                            break; //接口时getSuperclass可能会得到null
+                            break; // 接口时getSuperclass可能会得到null
                         }
                         for (Field field : loop.getDeclaredFields()) {
                             if (Modifier.isStatic(field.getModifiers())) {
@@ -2225,12 +2563,33 @@ public final class Rest {
                     } while ((loop = loop.getSuperclass()) != Object.class);
                 }
                 java.lang.reflect.Type paramtype = TypeToken.getGenericType(param.getParameterizedType(), serviceType);
-                paramlist.add(new Object[]{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annlocale, annhead, anncookie, annbody, annfile, annpath, userid, annheaders, annparams, paramtype});
+                paramlist.add(new Object[] {
+                    param,
+                    n,
+                    ptype,
+                    radix,
+                    comment,
+                    required,
+                    annpara,
+                    annsid,
+                    annaddr,
+                    annlocale,
+                    annhead,
+                    anncookie,
+                    annbody,
+                    annfile,
+                    annpath,
+                    userid,
+                    annheaders,
+                    annparams,
+                    paramtype
+                });
             }
 
             Map<String, Object> mappingMap = new LinkedHashMap<>();
-            java.lang.reflect.Type returnGenericNoFutureType = TypeToken.getGenericType(method.getGenericReturnType(), serviceType);
-            { //设置 Annotation HttpMapping
+            java.lang.reflect.Type returnGenericNoFutureType =
+                    TypeToken.getGenericType(method.getGenericReturnType(), serviceType);
+            { // 设置 Annotation HttpMapping
                 boolean reqpath = false;
                 for (Object[] ps : paramlist) {
                     if ("#".equals((String) ps[1])) {
@@ -2243,7 +2602,10 @@ public final class Rest {
                     av0.visitEnd();
                 }
                 av0 = mv.visitAnnotation(mappingDesc, true);
-                String url = (catalog.isEmpty() ? "/" : ("/" + catalog + "/")) + (defModuleName.isEmpty() ? "" : (defModuleName + "/")) + entry.name + (reqpath ? "/" : "");
+                String url = (catalog.isEmpty() ? "/" : ("/" + catalog + "/"))
+                        + (defModuleName.isEmpty() ? "" : (defModuleName + "/"))
+                        + entry.name
+                        + (reqpath ? "/" : "");
                 if ("//".equals(url)) {
                     url = "/";
                 }
@@ -2271,7 +2633,7 @@ public final class Rest {
                     returnGenericNoFutureType = ptgrt.getActualTypeArguments()[0];
                     rtc = TypeToken.typeToClass(returnGenericNoFutureType);
                     if (rtc == null) {
-                        rtc = Object.class; //应该不会发生吧?
+                        rtc = Object.class; // 应该不会发生吧?
                     }
                 }
                 av0.visit("result", Type.getType(Type.getDescriptor(rtc)));
@@ -2292,10 +2654,14 @@ public final class Rest {
                 mappingMap.put("actionid", entry.actionid);
                 mappingMap.put("comment", entry.comment);
                 mappingMap.put("methods", entry.methods);
-                mappingMap.put("result", returnGenericNoFutureType == returnType ? returnType.getName() : String.valueOf(returnGenericNoFutureType));
+                mappingMap.put(
+                        "result",
+                        returnGenericNoFutureType == returnType
+                                ? returnType.getName()
+                                : String.valueOf(returnGenericNoFutureType));
                 entry.mappingurl = url;
             }
-            {  //设置 Annotation NonBlocking   
+            { // 设置 Annotation NonBlocking
                 av0 = mv.visitAnnotation(nonblockDesc, true);
                 av0.visit("value", entry.nonBlocking);
                 av0.visitEnd();
@@ -2303,7 +2669,7 @@ public final class Rest {
             if (rcs != null && rcs.length > 0) { // 设置 Annotation RestConvert
                 av0 = mv.visitAnnotation(restConvertsDesc, true);
                 AnnotationVisitor av1 = av0.visitArray("value");
-                //设置 RestConvert
+                // 设置 RestConvert
                 for (RestConvert rc : rcs) {
                     AnnotationVisitor av2 = av1.visitAnnotation(null, restConvertDesc);
                     av2.visit("features", rc.features());
@@ -2332,7 +2698,7 @@ public final class Rest {
             if (rcc != null && rcc.length > 0) { // 设置 Annotation RestConvertCoder
                 av0 = mv.visitAnnotation(restConvertCodersDesc, true);
                 AnnotationVisitor av1 = av0.visitArray("value");
-                //设置 RestConvertCoder
+                // 设置 RestConvertCoder
                 for (RestConvertCoder rc : rcc) {
                     AnnotationVisitor av2 = av1.visitAnnotation(null, restConvertCoderDesc);
                     av2.visit("type", Type.getType(Type.getDescriptor(rc.type())));
@@ -2347,29 +2713,33 @@ public final class Rest {
             { // 设置 Annotation
                 av0 = mv.visitAnnotation(httpParamsDesc, true);
                 AnnotationVisitor av1 = av0.visitArray("value");
-                //设置 HttpParam
-                for (Object[] ps : paramlist) { //{param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annlocale, annhead, anncookie, annbody, annfile, annpath, annuserid, annheaders, annparams, paramtype}
+                // 设置 HttpParam
+                for (Object[] ps :
+                        paramlist) { // {param, n, ptype, radix, comment, required, annpara, annsid, annaddr, annlocale,
+                    // annhead, anncookie, annbody, annfile, annpath, annuserid, annheaders, annparams,
+                    // paramtype}
                     String n = ps[1].toString();
-                    final boolean isuserid = ((RestUserid) ps[headIndex + 5]) != null; //是否取userid
+                    final boolean isuserid = ((RestUserid) ps[headIndex + 5]) != null; // 是否取userid
                     if (n.indexOf('&') >= 0 || isuserid) {
-                        continue;  //@RestUserid 不需要生成 @HttpParam
+                        continue; // @RestUserid 不需要生成 @HttpParam
                     }
                     if (((RestAddress) ps[8]) != null) {
-                        continue;  //@RestAddress 不需要生成 @HttpParam
+                        continue; // @RestAddress 不需要生成 @HttpParam
                     }
                     if (((RestLocale) ps[9]) != null) {
-                        continue;  //@RestLocale 不需要生成 @HttpParam
+                        continue; // @RestLocale 不需要生成 @HttpParam
                     }
-                    final boolean ishead = ((RestHeader) ps[headIndex]) != null; //是否取getHeader 而不是 getParameter
-                    final boolean iscookie = ((RestCookie) ps[headIndex + 1]) != null; //是否取getCookie
-                    final boolean isbody = ((RestBody) ps[headIndex + 2]) != null; //是否取getBody
+                    final boolean ishead = ((RestHeader) ps[headIndex]) != null; // 是否取getHeader 而不是 getParameter
+                    final boolean iscookie = ((RestCookie) ps[headIndex + 1]) != null; // 是否取getCookie
+                    final boolean isbody = ((RestBody) ps[headIndex + 2]) != null; // 是否取getBody
                     AnnotationVisitor av2 = av1.visitAnnotation(null, httpParamDesc);
                     av2.visit("name", (String) ps[1]);
                     if (((Parameter) ps[0]).getAnnotation(Deprecated.class) != null) {
                         av2.visit("deprecated", true);
                     }
                     av2.visit("type", Type.getType(Type.getDescriptor((Class) ps[2])));
-                    java.lang.reflect.Type pgtype = TypeToken.getGenericType(((Parameter) ps[0]).getParameterizedType(), serviceType);
+                    java.lang.reflect.Type pgtype =
+                            TypeToken.getGenericType(((Parameter) ps[0]).getParameterizedType(), serviceType);
                     if (pgtype != (Class) ps[2]) {
                         String refid = typeRefs.get(pgtype);
                         if (refid == null) {
@@ -2400,37 +2770,55 @@ public final class Rest {
                 av0.visitEnd();
             }
             int uploadLocal = 0;
-            if (mupload != null) { //存在文件上传
+            if (mupload != null) { // 存在文件上传
                 containsMupload = true;
                 if (muploadType == byte[].class) {
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()" + multiContextDesc, false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()" + multiContextDesc, false);
                     mv.visitLdcInsn(mupload.maxLength());
                     mv.visitLdcInsn(mupload.fileNameRegx());
                     mv.visitLdcInsn(mupload.contentTypeRegx());
-                    mv.visitMethodInsn(INVOKEVIRTUAL, multiContextName, "partsFirstBytes", "(JLjava/lang/String;Ljava/lang/String;)[B", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL,
+                            multiContextName,
+                            "partsFirstBytes",
+                            "(JLjava/lang/String;Ljava/lang/String;)[B",
+                            false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     uploadLocal = maxLocals;
                 } else if (muploadType == File.class) {
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()" + multiContextDesc, false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()" + multiContextDesc, false);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, "_redkale_home", "Ljava/io/File;");
                     mv.visitLdcInsn(mupload.maxLength());
                     mv.visitLdcInsn(mupload.fileNameRegx());
                     mv.visitLdcInsn(mupload.contentTypeRegx());
-                    mv.visitMethodInsn(INVOKEVIRTUAL, multiContextName, "partsFirstFile", "(Ljava/io/File;JLjava/lang/String;Ljava/lang/String;)Ljava/io/File;", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL,
+                            multiContextName,
+                            "partsFirstFile",
+                            "(Ljava/io/File;JLjava/lang/String;Ljava/lang/String;)Ljava/io/File;",
+                            false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     uploadLocal = maxLocals;
-                } else if (muploadType == File[].class) { //File[]
+                } else if (muploadType == File[].class) { // File[]
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()" + multiContextDesc, false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()" + multiContextDesc, false);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, "_redkale_home", "Ljava/io/File;");
                     mv.visitLdcInsn(mupload.maxLength());
                     mv.visitLdcInsn(mupload.fileNameRegx());
                     mv.visitLdcInsn(mupload.contentTypeRegx());
-                    mv.visitMethodInsn(INVOKEVIRTUAL, multiContextName, "partsFiles", "(Ljava/io/File;JLjava/lang/String;Ljava/lang/String;)[Ljava/io/File;", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL,
+                            multiContextName,
+                            "partsFiles",
+                            "(Ljava/io/File;JLjava/lang/String;Ljava/lang/String;)[Ljava/io/File;",
+                            false);
                     mv.visitVarInsn(ASTORE, maxLocals);
                     uploadLocal = maxLocals;
                 }
@@ -2438,13 +2826,13 @@ public final class Rest {
             }
 
             List<Map<String, Object>> paramMaps = new ArrayList<>();
-            //获取每个参数的值
+            // 获取每个参数的值
             boolean hasAsyncHandler = false;
             for (Object[] ps : paramlist) {
                 Map<String, Object> paramMap = new LinkedHashMap<>();
-                final Parameter param = (Parameter) ps[0]; //参数类型
-                String pname = (String) ps[1]; //参数名
-                Class ptype = (Class) ps[2]; //参数类型
+                final Parameter param = (Parameter) ps[0]; // 参数类型
+                String pname = (String) ps[1]; // 参数名
+                Class ptype = (Class) ps[2]; // 参数类型
                 int radix = (Integer) ps[3];
                 String comment = (String) ps[4];
                 boolean required = (Boolean) ps[5];
@@ -2461,347 +2849,495 @@ public final class Rest {
                 boolean annheaders = (Boolean) ps[headIndex + 6];
                 boolean annparams = (Boolean) ps[headIndex + 7];
                 java.lang.reflect.Type pgentype = (java.lang.reflect.Type) ps[headIndex + 8];
-                if (dynsimple && (annsid != null || annaddr != null || annlocale != null || annhead != null || anncookie != null || annfile != null || annheaders)) {
+                if (dynsimple
+                        && (annsid != null
+                                || annaddr != null
+                                || annlocale != null
+                                || annhead != null
+                                || anncookie != null
+                                || annfile != null
+                                || annheaders)) {
                     dynsimple = false;
                 }
 
-                final boolean ishead = annhead != null; //是否取getHeader 而不是 getParameter
-                final boolean iscookie = anncookie != null; //是否取getCookie
+                final boolean ishead = annhead != null; // 是否取getHeader 而不是 getParameter
+                final boolean iscookie = anncookie != null; // 是否取getCookie
 
                 paramMap.put("name", pname);
                 paramMap.put("type", ptype.getName());
-                if (CompletionHandler.class.isAssignableFrom(ptype)) { //HttpResponse.createAsyncHandler() or HttpResponse.createAsyncHandler(Class)
+                if (CompletionHandler.class.isAssignableFrom(
+                        ptype)) { // HttpResponse.createAsyncHandler() or HttpResponse.createAsyncHandler(Class)
                     if (ptype == CompletionHandler.class) {
                         mv.visitVarInsn(ALOAD, 2);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "createAsyncHandler", "()Ljava/nio/channels/CompletionHandler;", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL,
+                                respInternalName,
+                                "createAsyncHandler",
+                                "()Ljava/nio/channels/CompletionHandler;",
+                                false);
                         mv.visitVarInsn(ASTORE, maxLocals);
-                        varInsns.add(new int[]{ALOAD, maxLocals});
+                        varInsns.add(new int[] {ALOAD, maxLocals});
                     } else {
                         mv.visitVarInsn(ALOAD, 3);
                         mv.visitVarInsn(ALOAD, 2);
                         mv.visitLdcInsn(Type.getType(Type.getDescriptor(ptype)));
-                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "createAsyncHandler", "(Ljava/lang/Class;)Ljava/nio/channels/CompletionHandler;", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL,
+                                respInternalName,
+                                "createAsyncHandler",
+                                "(Ljava/lang/Class;)Ljava/nio/channels/CompletionHandler;",
+                                false);
                         mv.visitTypeInsn(CHECKCAST, ptype.getName().replace('.', '/'));
                         mv.visitVarInsn(ASTORE, maxLocals);
-                        varInsns.add(new int[]{ALOAD, maxLocals});
+                        varInsns.add(new int[] {ALOAD, maxLocals});
                     }
                     hasAsyncHandler = true;
-                } else if (annsid != null) { //HttpRequest.getSessionid(true|false)
+                } else if (annsid != null) { // HttpRequest.getSessionid(true|false)
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitInsn(annsid.create() ? ICONST_1 : ICONST_0);
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getSessionid", "(Z)Ljava/lang/String;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
-                    varInsns.add(new int[]{ALOAD, maxLocals});
-                } else if (annaddr != null) { //HttpRequest.getRemoteAddr
+                    varInsns.add(new int[] {ALOAD, maxLocals});
+                } else if (annaddr != null) { // HttpRequest.getRemoteAddr
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRemoteAddr", "()Ljava/lang/String;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
-                    varInsns.add(new int[]{ALOAD, maxLocals});
-                } else if (annlocale != null) { //HttpRequest.getLocale
+                    varInsns.add(new int[] {ALOAD, maxLocals});
+                } else if (annlocale != null) { // HttpRequest.getLocale
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getLocale", "()Ljava/lang/String;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
-                    varInsns.add(new int[]{ALOAD, maxLocals});
-                } else if (annheaders) { //HttpRequest.getHeaders
+                    varInsns.add(new int[] {ALOAD, maxLocals});
+                } else if (annheaders) { // HttpRequest.getHeaders
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getHeaders", "()" + httpHeadersDesc, false);
                     mv.visitVarInsn(ASTORE, maxLocals);
-                    varInsns.add(new int[]{ALOAD, maxLocals});
-                } else if (annparams) { //HttpRequest.getParameters
+                    varInsns.add(new int[] {ALOAD, maxLocals});
+                } else if (annparams) { // HttpRequest.getParameters
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getParameters", "()" + httpParametersDesc, false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL, reqInternalName, "getParameters", "()" + httpParametersDesc, false);
                     mv.visitVarInsn(ASTORE, maxLocals);
-                    varInsns.add(new int[]{ALOAD, maxLocals});
-                } else if (annbody != null) { //HttpRequest.getBodyUTF8 / HttpRequest.getBody
+                    varInsns.add(new int[] {ALOAD, maxLocals});
+                } else if (annbody != null) { // HttpRequest.getBodyUTF8 / HttpRequest.getBody
                     if (ptype == String.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getBodyUTF8", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL, reqInternalName, "getBodyUTF8", "()Ljava/lang/String;", false);
                         mv.visitVarInsn(ASTORE, maxLocals);
-                        varInsns.add(new int[]{ALOAD, maxLocals});
+                        varInsns.add(new int[] {ALOAD, maxLocals});
                     } else if (ptype == byte[].class) {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getBody", "()[B", false);
                         mv.visitVarInsn(ASTORE, maxLocals);
-                        varInsns.add(new int[]{ALOAD, maxLocals});
-                    } else { //JavaBean 转 Json
+                        varInsns.add(new int[] {ALOAD, maxLocals});
+                    } else { // JavaBean 转 Json
                         String typefieldname = "_redkale_body_jsontype_" + bodyTypes.size();
                         bodyTypes.put(typefieldname, pgentype);
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(GETFIELD, newDynName, typefieldname, "Ljava/lang/reflect/Type;");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getBodyJson", "(Ljava/lang/reflect/Type;)Ljava/lang/Object;", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL,
+                                reqInternalName,
+                                "getBodyJson",
+                                "(Ljava/lang/reflect/Type;)Ljava/lang/Object;",
+                                false);
                         mv.visitTypeInsn(CHECKCAST, Type.getInternalName(ptype));
                         mv.visitVarInsn(ASTORE, maxLocals);
-                        varInsns.add(new int[]{ALOAD, maxLocals});
+                        varInsns.add(new int[] {ALOAD, maxLocals});
                     }
-                } else if (annfile != null) { //MultiContext.partsFirstBytes / HttpRequest.partsFirstFile / HttpRequest.partsFiles
+                } else if (annfile
+                        != null) { // MultiContext.partsFirstBytes / HttpRequest.partsFirstFile / HttpRequest.partsFiles
                     mv.visitVarInsn(ALOAD, 4);
                     mv.visitVarInsn(ASTORE, maxLocals);
-                    varInsns.add(new int[]{ALOAD, maxLocals});
-                } else if (annpath != null) { //HttpRequest.getRequestPath
+                    varInsns.add(new int[] {ALOAD, maxLocals});
+                } else if (annpath != null) { // HttpRequest.getRequestPath
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRequestPath", "()Ljava/lang/String;", false);
                     mv.visitVarInsn(ASTORE, maxLocals);
-                    varInsns.add(new int[]{ALOAD, maxLocals});
-                } else if (userid != null) { //HttpRequest.currentUserid
+                    varInsns.add(new int[] {ALOAD, maxLocals});
+                } else if (userid != null) { // HttpRequest.currentUserid
                     mv.visitVarInsn(ALOAD, 1);
                     if (ptype == int.class) {
                         mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "currentIntUserid", "()I", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
-                        varInsns.add(new int[]{ILOAD, maxLocals});
+                        varInsns.add(new int[] {ILOAD, maxLocals});
                     } else if (ptype == long.class) {
                         mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "currentLongUserid", "()J", false);
                         mv.visitVarInsn(LSTORE, maxLocals);
-                        varInsns.add(new int[]{LLOAD, maxLocals});
+                        varInsns.add(new int[] {LLOAD, maxLocals});
                         maxLocals++;
                     } else if (ptype == String.class) {
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "currentStringUserid", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL, reqInternalName, "currentStringUserid", "()Ljava/lang/String;", false);
                         mv.visitVarInsn(ASTORE, maxLocals);
-                        varInsns.add(new int[]{ALOAD, maxLocals});
+                        varInsns.add(new int[] {ALOAD, maxLocals});
                     } else {
                         mv.visitLdcInsn(Type.getType(Type.getDescriptor(ptype)));
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "currentUserid", "(Ljava/lang/Class;)Ljava/io/Serializable;", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL,
+                                reqInternalName,
+                                "currentUserid",
+                                "(Ljava/lang/Class;)Ljava/io/Serializable;",
+                                false);
                         mv.visitTypeInsn(CHECKCAST, Type.getInternalName(ptype));
                         mv.visitVarInsn(ASTORE, maxLocals);
-                        varInsns.add(new int[]{ALOAD, maxLocals});
+                        varInsns.add(new int[] {ALOAD, maxLocals});
                     }
-                } else if ("#".equals(pname)) { //从request.getRequstURI 中取参数
+                } else if ("#".equals(pname)) { // 从request.getRequstURI 中取参数
                     if (ptype == boolean.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "parseBoolean", "(Ljava/lang/String;)Z", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(
+                                INVOKESTATIC, "java/lang/Boolean", "parseBoolean", "(Ljava/lang/String;)Z", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
-                        varInsns.add(new int[]{ILOAD, maxLocals});
+                        varInsns.add(new int[] {ILOAD, maxLocals});
                     } else if (ptype == byte.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
                         mv.visitIntInsn(BIPUSH, radix);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "parseByte", "(Ljava/lang/String;I)B", false);
+                        mv.visitMethodInsn(
+                                INVOKESTATIC, "java/lang/Byte", "parseByte", "(Ljava/lang/String;I)B", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
-                        varInsns.add(new int[]{ILOAD, maxLocals});
+                        varInsns.add(new int[] {ILOAD, maxLocals});
                     } else if (ptype == short.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
                         mv.visitIntInsn(BIPUSH, radix);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "parseShort", "(Ljava/lang/String;I)S", false);
+                        mv.visitMethodInsn(
+                                INVOKESTATIC, "java/lang/Short", "parseShort", "(Ljava/lang/String;I)S", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
-                        varInsns.add(new int[]{ILOAD, maxLocals});
+                        varInsns.add(new int[] {ILOAD, maxLocals});
                     } else if (ptype == char.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
                         mv.visitInsn(ICONST_0);
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "charAt", "(I)C", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
-                        varInsns.add(new int[]{ILOAD, maxLocals});
+                        varInsns.add(new int[] {ILOAD, maxLocals});
                     } else if (ptype == int.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
                         mv.visitIntInsn(BIPUSH, radix);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "parseInt", "(Ljava/lang/String;I)I", false);
+                        mv.visitMethodInsn(
+                                INVOKESTATIC, "java/lang/Integer", "parseInt", "(Ljava/lang/String;I)I", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
-                        varInsns.add(new int[]{ILOAD, maxLocals});
+                        varInsns.add(new int[] {ILOAD, maxLocals});
                     } else if (ptype == float.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "parseFloat", "(Ljava/lang/String;)F", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(
+                                INVOKESTATIC, "java/lang/Float", "parseFloat", "(Ljava/lang/String;)F", false);
                         mv.visitVarInsn(FSTORE, maxLocals);
-                        varInsns.add(new int[]{FLOAD, maxLocals});
+                        varInsns.add(new int[] {FLOAD, maxLocals});
                     } else if (ptype == long.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
                         mv.visitIntInsn(BIPUSH, radix);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "parseLong", "(Ljava/lang/String;I)J", false);
+                        mv.visitMethodInsn(
+                                INVOKESTATIC, "java/lang/Long", "parseLong", "(Ljava/lang/String;I)J", false);
                         mv.visitVarInsn(LSTORE, maxLocals);
-                        varInsns.add(new int[]{LLOAD, maxLocals});
+                        varInsns.add(new int[] {LLOAD, maxLocals});
                         maxLocals++;
                     } else if (ptype == double.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "parseDouble", "(Ljava/lang/String;)D", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(
+                                INVOKESTATIC, "java/lang/Double", "parseDouble", "(Ljava/lang/String;)D", false);
                         mv.visitVarInsn(DSTORE, maxLocals);
-                        varInsns.add(new int[]{DLOAD, maxLocals});
+                        varInsns.add(new int[] {DLOAD, maxLocals});
                         maxLocals++;
                     } else if (ptype == String.class) {
                         mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL, reqInternalName, "getPathLastParam", "()Ljava/lang/String;", false);
                         mv.visitVarInsn(ASTORE, maxLocals);
-                        varInsns.add(new int[]{ALOAD, maxLocals});
+                        varInsns.add(new int[] {ALOAD, maxLocals});
                     } else {
-                        throw new RestException(method + " only " + RestParam.class.getSimpleName() + "(#) to Type(primitive class or String)");
+                        throw new RestException(method + " only " + RestParam.class.getSimpleName()
+                                + "(#) to Type(primitive class or String)");
                     }
-                } else if (pname.charAt(0) == '#') { //从request.getPathParam 中去参数
+                } else if (pname.charAt(0) == '#') { // 从request.getPathParam 中去参数
                     if (ptype == boolean.class) {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("false");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathParam", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "parseBoolean", "(Ljava/lang/String;)Z", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL,
+                                reqInternalName,
+                                "getPathParam",
+                                "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
+                                false);
+                        mv.visitMethodInsn(
+                                INVOKESTATIC, "java/lang/Boolean", "parseBoolean", "(Ljava/lang/String;)Z", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
-                        varInsns.add(new int[]{ILOAD, maxLocals});
+                        varInsns.add(new int[] {ILOAD, maxLocals});
                     } else if (ptype == byte.class) {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("0");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathParam", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL,
+                                reqInternalName,
+                                "getPathParam",
+                                "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
+                                false);
                         mv.visitIntInsn(BIPUSH, radix);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "parseByte", "(Ljava/lang/String;I)B", false);
+                        mv.visitMethodInsn(
+                                INVOKESTATIC, "java/lang/Byte", "parseByte", "(Ljava/lang/String;I)B", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
-                        varInsns.add(new int[]{ILOAD, maxLocals});
+                        varInsns.add(new int[] {ILOAD, maxLocals});
                     } else if (ptype == short.class) {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("0");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathParam", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL,
+                                reqInternalName,
+                                "getPathParam",
+                                "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
+                                false);
                         mv.visitIntInsn(BIPUSH, radix);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "parseShort", "(Ljava/lang/String;I)S", false);
+                        mv.visitMethodInsn(
+                                INVOKESTATIC, "java/lang/Short", "parseShort", "(Ljava/lang/String;I)S", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
-                        varInsns.add(new int[]{ILOAD, maxLocals});
+                        varInsns.add(new int[] {ILOAD, maxLocals});
                     } else if (ptype == char.class) {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("0");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathParam", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL,
+                                reqInternalName,
+                                "getPathParam",
+                                "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
+                                false);
                         mv.visitInsn(ICONST_0);
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "charAt", "(I)C", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
-                        varInsns.add(new int[]{ILOAD, maxLocals});
+                        varInsns.add(new int[] {ILOAD, maxLocals});
                     } else if (ptype == int.class) {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("0");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathParam", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL,
+                                reqInternalName,
+                                "getPathParam",
+                                "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
+                                false);
                         mv.visitIntInsn(BIPUSH, radix);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "parseInt", "(Ljava/lang/String;I)I", false);
+                        mv.visitMethodInsn(
+                                INVOKESTATIC, "java/lang/Integer", "parseInt", "(Ljava/lang/String;I)I", false);
                         mv.visitVarInsn(ISTORE, maxLocals);
-                        varInsns.add(new int[]{ILOAD, maxLocals});
+                        varInsns.add(new int[] {ILOAD, maxLocals});
                     } else if (ptype == float.class) {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("0");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathParam", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "parseFloat", "(Ljava/lang/String;)F", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL,
+                                reqInternalName,
+                                "getPathParam",
+                                "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
+                                false);
+                        mv.visitMethodInsn(
+                                INVOKESTATIC, "java/lang/Float", "parseFloat", "(Ljava/lang/String;)F", false);
                         mv.visitVarInsn(FSTORE, maxLocals);
-                        varInsns.add(new int[]{FLOAD, maxLocals});
+                        varInsns.add(new int[] {FLOAD, maxLocals});
                     } else if (ptype == long.class) {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("0");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathParam", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL,
+                                reqInternalName,
+                                "getPathParam",
+                                "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
+                                false);
                         mv.visitIntInsn(BIPUSH, radix);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "parseLong", "(Ljava/lang/String;I)J", false);
+                        mv.visitMethodInsn(
+                                INVOKESTATIC, "java/lang/Long", "parseLong", "(Ljava/lang/String;I)J", false);
                         mv.visitVarInsn(LSTORE, maxLocals);
-                        varInsns.add(new int[]{LLOAD, maxLocals});
+                        varInsns.add(new int[] {LLOAD, maxLocals});
                         maxLocals++;
                     } else if (ptype == double.class) {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("0");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathParam", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "parseDouble", "(Ljava/lang/String;)D", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL,
+                                reqInternalName,
+                                "getPathParam",
+                                "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
+                                false);
+                        mv.visitMethodInsn(
+                                INVOKESTATIC, "java/lang/Double", "parseDouble", "(Ljava/lang/String;)D", false);
                         mv.visitVarInsn(DSTORE, maxLocals);
-                        varInsns.add(new int[]{DLOAD, maxLocals});
+                        varInsns.add(new int[] {DLOAD, maxLocals});
                         maxLocals++;
                     } else if (ptype == String.class) {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitLdcInsn(pname.substring(1));
                         mv.visitLdcInsn("");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPathParam", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL,
+                                reqInternalName,
+                                "getPathParam",
+                                "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
+                                false);
                         mv.visitVarInsn(ASTORE, maxLocals);
-                        varInsns.add(new int[]{ALOAD, maxLocals});
+                        varInsns.add(new int[] {ALOAD, maxLocals});
                     } else {
-                        throw new RestException(method + " only " + RestParam.class.getSimpleName() + "(#) to Type(primitive class or String)");
+                        throw new RestException(method + " only " + RestParam.class.getSimpleName()
+                                + "(#) to Type(primitive class or String)");
                     }
-                } else if ("&".equals(pname) && ptype == userType) { //当前用户对象的类名
+                } else if ("&".equals(pname) && ptype == userType) { // 当前用户对象的类名
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "currentUser", "()Ljava/lang/Object;", false);
                     mv.visitTypeInsn(CHECKCAST, Type.getInternalName(ptype));
                     mv.visitVarInsn(ASTORE, maxLocals);
-                    varInsns.add(new int[]{ALOAD, maxLocals});
+                    varInsns.add(new int[] {ALOAD, maxLocals});
                 } else if (ptype == boolean.class) {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
                     mv.visitInsn(ICONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, ishead ? "getBooleanHeader" : "getBooleanParameter", "(Ljava/lang/String;Z)Z", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL,
+                            reqInternalName,
+                            ishead ? "getBooleanHeader" : "getBooleanParameter",
+                            "(Ljava/lang/String;Z)Z",
+                            false);
                     mv.visitVarInsn(ISTORE, maxLocals);
-                    varInsns.add(new int[]{ILOAD, maxLocals});
+                    varInsns.add(new int[] {ILOAD, maxLocals});
                 } else if (ptype == byte.class) {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
                     mv.visitLdcInsn("0");
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, ishead ? "getHeader" : "getParameter", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL,
+                            reqInternalName,
+                            ishead ? "getHeader" : "getParameter",
+                            "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
+                            false);
                     mv.visitIntInsn(BIPUSH, radix);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "parseByte", "(Ljava/lang/String;I)B", false);
                     mv.visitVarInsn(ISTORE, maxLocals);
-                    varInsns.add(new int[]{ILOAD, maxLocals});
+                    varInsns.add(new int[] {ILOAD, maxLocals});
                 } else if (ptype == short.class) {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitIntInsn(BIPUSH, radix);
                     mv.visitLdcInsn(pname);
                     mv.visitInsn(ICONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, ishead ? "getShortHeader" : "getShortParameter", "(ILjava/lang/String;S)S", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL,
+                            reqInternalName,
+                            ishead ? "getShortHeader" : "getShortParameter",
+                            "(ILjava/lang/String;S)S",
+                            false);
                     mv.visitVarInsn(ISTORE, maxLocals);
-                    varInsns.add(new int[]{ILOAD, maxLocals});
+                    varInsns.add(new int[] {ILOAD, maxLocals});
                 } else if (ptype == char.class) {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
                     mv.visitLdcInsn("0");
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, ishead ? "getHeader" : "getParameter", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL,
+                            reqInternalName,
+                            ishead ? "getHeader" : "getParameter",
+                            "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
+                            false);
                     mv.visitInsn(ICONST_0);
                     mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "charAt", "(I)C", false);
                     mv.visitVarInsn(ISTORE, maxLocals);
-                    varInsns.add(new int[]{ILOAD, maxLocals});
+                    varInsns.add(new int[] {ILOAD, maxLocals});
                 } else if (ptype == int.class) {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitIntInsn(BIPUSH, radix);
                     mv.visitLdcInsn(pname);
                     mv.visitInsn(ICONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, ishead ? "getIntHeader" : "getIntParameter", "(ILjava/lang/String;I)I", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL,
+                            reqInternalName,
+                            ishead ? "getIntHeader" : "getIntParameter",
+                            "(ILjava/lang/String;I)I",
+                            false);
                     mv.visitVarInsn(ISTORE, maxLocals);
-                    varInsns.add(new int[]{ILOAD, maxLocals});
+                    varInsns.add(new int[] {ILOAD, maxLocals});
                 } else if (ptype == float.class) {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
                     mv.visitInsn(FCONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, ishead ? "getFloatHeader" : "getFloatParameter", "(Ljava/lang/String;F)F", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL,
+                            reqInternalName,
+                            ishead ? "getFloatHeader" : "getFloatParameter",
+                            "(Ljava/lang/String;F)F",
+                            false);
                     mv.visitVarInsn(FSTORE, maxLocals);
-                    varInsns.add(new int[]{FLOAD, maxLocals});
+                    varInsns.add(new int[] {FLOAD, maxLocals});
                 } else if (ptype == long.class) {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitIntInsn(BIPUSH, radix);
                     mv.visitLdcInsn(pname);
                     mv.visitInsn(LCONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, ishead ? "getLongHeader" : "getLongParameter", "(ILjava/lang/String;J)J", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL,
+                            reqInternalName,
+                            ishead ? "getLongHeader" : "getLongParameter",
+                            "(ILjava/lang/String;J)J",
+                            false);
                     mv.visitVarInsn(LSTORE, maxLocals);
-                    varInsns.add(new int[]{LLOAD, maxLocals});
+                    varInsns.add(new int[] {LLOAD, maxLocals});
                     maxLocals++;
                 } else if (ptype == double.class) {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
                     mv.visitInsn(DCONST_0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, ishead ? "getDoubleHeader" : "getDoubleParameter", "(Ljava/lang/String;D)D", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL,
+                            reqInternalName,
+                            ishead ? "getDoubleHeader" : "getDoubleParameter",
+                            "(Ljava/lang/String;D)D",
+                            false);
                     mv.visitVarInsn(DSTORE, maxLocals);
-                    varInsns.add(new int[]{DLOAD, maxLocals});
+                    varInsns.add(new int[] {DLOAD, maxLocals});
                     maxLocals++;
                 } else if (ptype == String.class) {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitLdcInsn(pname);
                     mv.visitLdcInsn("");
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, iscookie ? "getCookie" : (ishead ? "getHeader" : "getParameter"), "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL,
+                            reqInternalName,
+                            iscookie ? "getCookie" : (ishead ? "getHeader" : "getParameter"),
+                            "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
+                            false);
                     mv.visitVarInsn(ASTORE, maxLocals);
-                    varInsns.add(new int[]{ALOAD, maxLocals});
+                    varInsns.add(new int[] {ALOAD, maxLocals});
                 } else if (ptype == Flipper.class) {
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getFlipper", "()" + flipperDesc, false);
                     mv.visitVarInsn(ASTORE, maxLocals);
-                    varInsns.add(new int[]{ALOAD, maxLocals});
-                } else { //其他Json对象
+                    varInsns.add(new int[] {ALOAD, maxLocals});
+                } else { // 其他Json对象
                     mv.visitVarInsn(ALOAD, 1);
                     if (param.getType() == param.getParameterizedType()) {
                         mv.visitLdcInsn(Type.getType(Type.getDescriptor(ptype)));
                     } else {
                         mv.visitVarInsn(ALOAD, 0);
-                        mv.visitFieldInsn(GETFIELD, newDynName, REST_PARAMTYPES_FIELD_NAME, "[[Ljava/lang/reflect/Type;");
-                        Asms.visitInsn(mv, entry.methodIdx);//方法下标
+                        mv.visitFieldInsn(
+                                GETFIELD, newDynName, REST_PARAMTYPES_FIELD_NAME, "[[Ljava/lang/reflect/Type;");
+                        Asms.visitInsn(mv, entry.methodIdx); // 方法下标
                         mv.visitInsn(AALOAD);
                         int paramidx = -1;
                         for (int i = 0; i < params.length; i++) {
@@ -2810,23 +3346,28 @@ public final class Rest {
                                 break;
                             }
                         }
-                        Asms.visitInsn(mv, paramidx); //参数下标
+                        Asms.visitInsn(mv, paramidx); // 参数下标
                         mv.visitInsn(AALOAD);
                     }
                     mv.visitLdcInsn(pname);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, ishead ? "getJsonHeader" : "getJsonParameter", "(Ljava/lang/reflect/Type;Ljava/lang/String;)Ljava/lang/Object;", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL,
+                            reqInternalName,
+                            ishead ? "getJsonHeader" : "getJsonParameter",
+                            "(Ljava/lang/reflect/Type;Ljava/lang/String;)Ljava/lang/Object;",
+                            false);
                     mv.visitTypeInsn(CHECKCAST, ptype.getName().replace('.', '/'));
                     mv.visitVarInsn(ASTORE, maxLocals);
-                    varInsns.add(new int[]{ALOAD, maxLocals});
+                    varInsns.add(new int[] {ALOAD, maxLocals});
                     JsonFactory.root().loadDecoder(pgentype);
 
-                    //构建 RestHeader、RestCookie、RestAddress 等赋值操作
+                    // 构建 RestHeader、RestCookie、RestAddress 等赋值操作
                     Class loop = ptype;
                     Set<String> fields = new HashSet<>();
                     Map<String, Object[]> attrParaNames = new LinkedHashMap<>();
                     do {
                         if (loop == null || loop.isInterface()) {
-                            break; //接口时getSuperclass可能会得到null
+                            break; // 接口时getSuperclass可能会得到null
                         }
                         for (Field field : loop.getDeclaredFields()) {
                             if (Modifier.isStatic(field.getModifiers())) {
@@ -2846,10 +3387,19 @@ public final class Rest {
                             RestBody rb = field.getAnnotation(RestBody.class);
                             RestUploadFile ru = field.getAnnotation(RestUploadFile.class);
                             RestPath ri = field.getAnnotation(RestPath.class);
-                            if (rh == null && rc == null && ra == null && rl == null && rb == null && rs == null && ru == null && ri == null) {
+                            if (rh == null
+                                    && rc == null
+                                    && ra == null
+                                    && rl == null
+                                    && rb == null
+                                    && rs == null
+                                    && ru == null
+                                    && ri == null) {
                                 continue;
                             }
-                            if (rh != null && field.getType() != String.class && field.getType() != InetSocketAddress.class) {
+                            if (rh != null
+                                    && field.getType() != String.class
+                                    && field.getType() != InetSocketAddress.class) {
                                 throw new RestException("@RestHeader must on String Field in " + field);
                             }
                             if (rc != null && field.getType() != String.class) {
@@ -2867,8 +3417,12 @@ public final class Rest {
                             if (rb != null && field.getType().isPrimitive()) {
                                 throw new RestException("@RestBody must on cannot on primitive type Field in " + field);
                             }
-                            if (ru != null && field.getType() != byte[].class && field.getType() != File.class && field.getType() != File[].class) {
-                                throw new RestException("@RestUploadFile must on byte[] or File or File[] Field in " + field);
+                            if (ru != null
+                                    && field.getType() != byte[].class
+                                    && field.getType() != File.class
+                                    && field.getType() != File[].class) {
+                                throw new RestException(
+                                        "@RestUploadFile must on byte[] or File or File[] Field in " + field);
                             }
 
                             if (ri != null && field.getType() != String.class) {
@@ -2878,54 +3432,60 @@ public final class Rest {
                             String attrFieldName;
                             String restname = "";
                             if (rh != null) {
-                                attrFieldName = "_redkale_attr_header_" + (field.getType() != String.class ? "json_" : "") + restAttributes.size();
+                                attrFieldName = "_redkale_attr_header_"
+                                        + (field.getType() != String.class ? "json_" : "") + restAttributes.size();
                                 restname = rh.name();
                             } else if (rc != null) {
                                 attrFieldName = "_redkale_attr_cookie_" + restAttributes.size();
                                 restname = rc.name();
                             } else if (rs != null) {
                                 attrFieldName = "_redkale_attr_sessionid_" + restAttributes.size();
-                                restname = rs.create() ? "1" : ""; //用于下面区分create值
+                                restname = rs.create() ? "1" : ""; // 用于下面区分create值
                             } else if (ra != null) {
                                 attrFieldName = "_redkale_attr_address_" + restAttributes.size();
-                                //restname = "";
+                                // restname = "";
                             } else if (rl != null) {
                                 attrFieldName = "_redkale_attr_locale_" + restAttributes.size();
-                                //restname = "";
+                                // restname = "";
                             } else if (rb != null && field.getType() == String.class) {
                                 attrFieldName = "_redkale_attr_bodystring_" + restAttributes.size();
-                                //restname = "";
+                                // restname = "";
                             } else if (rb != null && field.getType() == byte[].class) {
                                 attrFieldName = "_redkale_attr_bodybytes_" + restAttributes.size();
-                                //restname = "";
-                            } else if (rb != null && field.getType() != String.class && field.getType() != byte[].class) {
+                                // restname = "";
+                            } else if (rb != null
+                                    && field.getType() != String.class
+                                    && field.getType() != byte[].class) {
                                 attrFieldName = "_redkale_attr_bodyjson_" + restAttributes.size();
-                                //restname = "";
+                                // restname = "";
                             } else if (ru != null && field.getType() == byte[].class) {
                                 attrFieldName = "_redkale_attr_uploadbytes_" + restAttributes.size();
-                                //restname = "";
+                                // restname = "";
                             } else if (ru != null && field.getType() == File.class) {
                                 attrFieldName = "_redkale_attr_uploadfile_" + restAttributes.size();
-                                //restname = "";
+                                // restname = "";
                             } else if (ru != null && field.getType() == File[].class) {
                                 attrFieldName = "_redkale_attr_uploadfiles_" + restAttributes.size();
-                                //restname = "";
+                                // restname = "";
                             } else if (ri != null && field.getType() == String.class) {
                                 attrFieldName = "_redkale_attr_uri_" + restAttributes.size();
-                                //restname = "";
+                                // restname = "";
                             } else {
                                 continue;
                             }
                             restAttributes.put(attrFieldName, attr);
-                            attrParaNames.put(attrFieldName, new Object[]{restname, field.getType(), field.getGenericType(), ru});
+                            attrParaNames.put(
+                                    attrFieldName,
+                                    new Object[] {restname, field.getType(), field.getGenericType(), ru});
                             fields.add(field.getName());
                         }
                     } while ((loop = loop.getSuperclass()) != Object.class);
 
-                    if (!attrParaNames.isEmpty()) { //参数存在 RestHeader、RestCookie、RestSessionid、RestAddress、RestLocale、RestBody字段
-                        mv.visitVarInsn(ALOAD, maxLocals); //加载JsonBean
+                    if (!attrParaNames
+                            .isEmpty()) { // 参数存在 RestHeader、RestCookie、RestSessionid、RestAddress、RestLocale、RestBody字段
+                        mv.visitVarInsn(ALOAD, maxLocals); // 加载JsonBean
                         Label lif = new Label();
-                        mv.visitJumpInsn(IFNULL, lif);  //if(bean != null) {
+                        mv.visitJumpInsn(IFNULL, lif); // if(bean != null) {
                         for (Map.Entry<String, Object[]> en : attrParaNames.entrySet()) {
                             RestUploadFile ru = (RestUploadFile) en.getValue()[3];
                             mv.visitVarInsn(ALOAD, 0);
@@ -2935,71 +3495,118 @@ public final class Rest {
                             if (en.getKey().contains("_header_")) {
                                 String headerkey = en.getValue()[0].toString();
                                 if ("Host".equalsIgnoreCase(headerkey)) {
-                                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getHost", "()Ljava/lang/String;", false);
+                                    mv.visitMethodInsn(
+                                            INVOKEVIRTUAL, reqInternalName, "getHost", "()Ljava/lang/String;", false);
                                 } else if ("Content-Type".equalsIgnoreCase(headerkey)) {
-                                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getContentType", "()Ljava/lang/String;", false);
+                                    mv.visitMethodInsn(
+                                            INVOKEVIRTUAL,
+                                            reqInternalName,
+                                            "getContentType",
+                                            "()Ljava/lang/String;",
+                                            false);
                                 } else if ("Connection".equalsIgnoreCase(headerkey)) {
-                                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getConnection", "()Ljava/lang/String;", false);
+                                    mv.visitMethodInsn(
+                                            INVOKEVIRTUAL,
+                                            reqInternalName,
+                                            "getConnection",
+                                            "()Ljava/lang/String;",
+                                            false);
                                 } else if ("Method".equalsIgnoreCase(headerkey)) {
-                                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getMethod", "()Ljava/lang/String;", false);
+                                    mv.visitMethodInsn(
+                                            INVOKEVIRTUAL, reqInternalName, "getMethod", "()Ljava/lang/String;", false);
                                 } else if (en.getKey().contains("_header_json_")) {
                                     String typefieldname = "_redkale_body_jsontype_" + bodyTypes.size();
                                     bodyTypes.put(typefieldname, (java.lang.reflect.Type) en.getValue()[2]);
                                     mv.visitVarInsn(ALOAD, 0);
                                     mv.visitFieldInsn(GETFIELD, newDynName, typefieldname, "Ljava/lang/reflect/Type;");
                                     mv.visitLdcInsn(headerkey);
-                                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getJsonHeader", "(Ljava/lang/reflect/Type;Ljava/lang/String;)Ljava/lang/Object;", false);
+                                    mv.visitMethodInsn(
+                                            INVOKEVIRTUAL,
+                                            reqInternalName,
+                                            "getJsonHeader",
+                                            "(Ljava/lang/reflect/Type;Ljava/lang/String;)Ljava/lang/Object;",
+                                            false);
                                     mv.visitTypeInsn(CHECKCAST, Type.getInternalName((Class) en.getValue()[1]));
                                     JsonFactory.root().loadDecoder((java.lang.reflect.Type) en.getValue()[2]);
                                 } else {
                                     mv.visitLdcInsn(headerkey);
                                     mv.visitLdcInsn("");
-                                    mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getHeader", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                                    mv.visitMethodInsn(
+                                            INVOKEVIRTUAL,
+                                            reqInternalName,
+                                            "getHeader",
+                                            "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
+                                            false);
                                 }
                             } else if (en.getKey().contains("_cookie_")) {
                                 mv.visitLdcInsn(en.getValue()[0].toString());
                                 mv.visitLdcInsn("");
-                                mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getCookie", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false);
+                                mv.visitMethodInsn(
+                                        INVOKEVIRTUAL,
+                                        reqInternalName,
+                                        "getCookie",
+                                        "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
+                                        false);
                             } else if (en.getKey().contains("_sessionid_")) {
                                 mv.visitInsn(en.getValue()[0].toString().isEmpty() ? ICONST_0 : ICONST_1);
-                                mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getSessionid", "(Z)Ljava/lang/String;", false);
+                                mv.visitMethodInsn(
+                                        INVOKEVIRTUAL, reqInternalName, "getSessionid", "(Z)Ljava/lang/String;", false);
                             } else if (en.getKey().contains("_address_")) {
-                                mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getRemoteAddr", "()Ljava/lang/String;", false);
+                                mv.visitMethodInsn(
+                                        INVOKEVIRTUAL, reqInternalName, "getRemoteAddr", "()Ljava/lang/String;", false);
                             } else if (en.getKey().contains("_locale_")) {
-                                mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getLocale", "()Ljava/lang/String;", false);
+                                mv.visitMethodInsn(
+                                        INVOKEVIRTUAL, reqInternalName, "getLocale", "()Ljava/lang/String;", false);
                             } else if (en.getKey().contains("_uri_")) {
-                                mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getPath", "()Ljava/lang/String;", false);
+                                mv.visitMethodInsn(
+                                        INVOKEVIRTUAL, reqInternalName, "getPath", "()Ljava/lang/String;", false);
                             } else if (en.getKey().contains("_bodystring_")) {
-                                mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getBodyUTF8", "()Ljava/lang/String;", false);
+                                mv.visitMethodInsn(
+                                        INVOKEVIRTUAL, reqInternalName, "getBodyUTF8", "()Ljava/lang/String;", false);
                             } else if (en.getKey().contains("_bodybytes_")) {
                                 mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getBody", "()[B", false);
-                            } else if (en.getKey().contains("_bodyjson_")) {//JavaBean 转 Json
+                            } else if (en.getKey().contains("_bodyjson_")) { // JavaBean 转 Json
                                 String typefieldname = "_redkale_body_jsontype_" + bodyTypes.size();
                                 bodyTypes.put(typefieldname, (java.lang.reflect.Type) en.getValue()[2]);
                                 mv.visitVarInsn(ALOAD, 0);
                                 mv.visitFieldInsn(GETFIELD, newDynName, typefieldname, "Ljava/lang/reflect/Type;");
-                                mv.visitMethodInsn(INVOKEVIRTUAL, reqInternalName, "getBodyJson", "(Ljava/lang/reflect/Type;)Ljava/lang/Object;", false);
+                                mv.visitMethodInsn(
+                                        INVOKEVIRTUAL,
+                                        reqInternalName,
+                                        "getBodyJson",
+                                        "(Ljava/lang/reflect/Type;)Ljava/lang/Object;",
+                                        false);
                                 mv.visitTypeInsn(CHECKCAST, Type.getInternalName((Class) en.getValue()[1]));
                                 JsonFactory.root().loadDecoder((java.lang.reflect.Type) en.getValue()[2]);
                             } else if (en.getKey().contains("_uploadbytes_")) {
-                                //只需mv.visitVarInsn(ALOAD, 4), 无需处理
+                                // 只需mv.visitVarInsn(ALOAD, 4), 无需处理
                             } else if (en.getKey().contains("_uploadfile_")) {
-                                //只需mv.visitVarInsn(ALOAD, 4), 无需处理
+                                // 只需mv.visitVarInsn(ALOAD, 4), 无需处理
                             } else if (en.getKey().contains("_uploadfiles_")) {
-                                //只需mv.visitVarInsn(ALOAD, 4), 无需处理
+                                // 只需mv.visitVarInsn(ALOAD, 4), 无需处理
                             }
-                            mv.visitMethodInsn(INVOKEINTERFACE, attrInternalName, "set", "(Ljava/lang/Object;Ljava/lang/Object;)V", true);
+                            mv.visitMethodInsn(
+                                    INVOKEINTERFACE,
+                                    attrInternalName,
+                                    "set",
+                                    "(Ljava/lang/Object;Ljava/lang/Object;)V",
+                                    true);
                         }
                         mv.visitLabel(lif); // end if }
-                        mv.visitFrame(Opcodes.F_APPEND, 1, new Object[]{ptype.getName().replace('.', '/')}, 0, null);
+                        mv.visitFrame(
+                                Opcodes.F_APPEND,
+                                1,
+                                new Object[] {ptype.getName().replace('.', '/')},
+                                0,
+                                null);
                     }
                 }
                 maxLocals++;
                 paramMaps.add(paramMap);
             } // end params for each
 
-            //mv.visitVarInsn(ALOAD, 0); //调用this
-            //mv.visitFieldInsn(GETFIELD, newDynName, REST_SERVICE_FIELD_NAME, serviceDesc);
+            // mv.visitVarInsn(ALOAD, 0); //调用this
+            // mv.visitFieldInsn(GETFIELD, newDynName, REST_SERVICE_FIELD_NAME, serviceDesc);
             mv.visitVarInsn(ALOAD, 3);
             for (int[] ins : varInsns) {
                 mv.visitVarInsn(ins[0], ins[1]);
@@ -3011,14 +3618,15 @@ public final class Rest {
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                Asms.visitInsn(mv, entry.methodIdx);//方法下标
+                Asms.visitInsn(mv, entry.methodIdx); // 方法下标
                 mv.visitInsn(AALOAD);
                 mv.visitMethodInsn(INVOKESTATIC, retInternalName, "success", "()" + retDesc, false);
-                mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + typeDesc + "Ljava/lang/Object;)V", false);
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL, respInternalName, "finishJson", "(" + typeDesc + "Ljava/lang/Object;)V", false);
                 mv.visitInsn(RETURN);
             } else if (returnType == boolean.class) {
                 mv.visitVarInsn(ISTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, 2); // response
                 mv.visitVarInsn(ILOAD, maxLocals);
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(Z)Ljava/lang/String;", false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
@@ -3026,7 +3634,7 @@ public final class Rest {
                 maxLocals++;
             } else if (returnType == byte.class) {
                 mv.visitVarInsn(ISTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, 2); // response
                 mv.visitVarInsn(ILOAD, maxLocals);
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(I)Ljava/lang/String;", false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
@@ -3034,7 +3642,7 @@ public final class Rest {
                 maxLocals++;
             } else if (returnType == short.class) {
                 mv.visitVarInsn(ISTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, 2); // response
                 mv.visitVarInsn(ILOAD, maxLocals);
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(I)Ljava/lang/String;", false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
@@ -3042,7 +3650,7 @@ public final class Rest {
                 maxLocals++;
             } else if (returnType == char.class) {
                 mv.visitVarInsn(ISTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, 2); // response
                 mv.visitVarInsn(ILOAD, maxLocals);
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(C)Ljava/lang/String;", false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
@@ -3050,7 +3658,7 @@ public final class Rest {
                 maxLocals++;
             } else if (returnType == int.class) {
                 mv.visitVarInsn(ISTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, 2); // response
                 mv.visitVarInsn(ILOAD, maxLocals);
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(I)Ljava/lang/String;", false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
@@ -3058,7 +3666,7 @@ public final class Rest {
                 maxLocals++;
             } else if (returnType == float.class) {
                 mv.visitVarInsn(FSTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, 2); // response
                 mv.visitVarInsn(FLOAD, maxLocals);
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(F)Ljava/lang/String;", false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
@@ -3066,7 +3674,7 @@ public final class Rest {
                 maxLocals++;
             } else if (returnType == long.class) {
                 mv.visitVarInsn(LSTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, 2); // response
                 mv.visitVarInsn(LLOAD, maxLocals);
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(J)Ljava/lang/String;", false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
@@ -3074,7 +3682,7 @@ public final class Rest {
                 maxLocals += 2;
             } else if (returnType == double.class) {
                 mv.visitVarInsn(DSTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, 2); // response
                 mv.visitVarInsn(DLOAD, maxLocals);
                 mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(D)Ljava/lang/String;", false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
@@ -3082,85 +3690,103 @@ public final class Rest {
                 maxLocals += 2;
             } else if (returnType == byte[].class) {
                 mv.visitVarInsn(ASTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, 2); // response
                 mv.visitVarInsn(ALOAD, maxLocals);
                 mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "([B)V", false);
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else if (returnType == String.class) {
                 mv.visitVarInsn(ASTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, 2); // response
                 mv.visitVarInsn(ALOAD, maxLocals);
                 mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else if (returnType == File.class) {
                 mv.visitVarInsn(ASTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, 2); // response
                 mv.visitVarInsn(ALOAD, maxLocals);
                 mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/io/File;)V", false);
                 mv.visitInsn(RETURN);
                 maxLocals++;
-            } else if (Number.class.isAssignableFrom(returnType) || CharSequence.class.isAssignableFrom(returnType)) {   //returnType == String.class 必须放在前面
+            } else if (Number.class.isAssignableFrom(returnType)
+                    || CharSequence.class.isAssignableFrom(returnType)) { // returnType == String.class 必须放在前面
                 mv.visitVarInsn(ASTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, 2); // response
                 mv.visitVarInsn(ALOAD, maxLocals);
-                mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;", false);
+                mv.visitMethodInsn(
+                        INVOKESTATIC, "java/lang/String", "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;", false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(Ljava/lang/String;)V", false);
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else if (RetResult.class.isAssignableFrom(returnType)) {
                 mv.visitVarInsn(ASTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, 2); // response
                 if (rcs != null && rcs.length > 0) {
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
+                    mv.visitFieldInsn(
+                            GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    Asms.visitInsn(mv, entry.methodIdx);//方法下标
+                    Asms.visitInsn(mv, entry.methodIdx); // 方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + convertDesc + typeDesc + retDesc + ")V", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL,
+                            respInternalName,
+                            "finish",
+                            "(" + convertDesc + typeDesc + retDesc + ")V",
+                            false);
                 } else {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    Asms.visitInsn(mv, entry.methodIdx);//方法下标
+                    Asms.visitInsn(mv, entry.methodIdx); // 方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + typeDesc + retDesc + ")V", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL, respInternalName, "finish", "(" + typeDesc + retDesc + ")V", false);
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else if (HttpResult.class.isAssignableFrom(returnType)) {
                 mv.visitVarInsn(ASTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, 2); // response
                 if (rcs != null && rcs.length > 0) {
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
+                    mv.visitFieldInsn(
+                            GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    Asms.visitInsn(mv, entry.methodIdx);//方法下标
+                    Asms.visitInsn(mv, entry.methodIdx); // 方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + convertDesc + typeDesc + httpResultDesc + ")V", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL,
+                            respInternalName,
+                            "finish",
+                            "(" + convertDesc + typeDesc + httpResultDesc + ")V",
+                            false);
                 } else {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    Asms.visitInsn(mv, entry.methodIdx);//方法下标
+                    Asms.visitInsn(mv, entry.methodIdx); // 方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + typeDesc + httpResultDesc + ")V", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL, respInternalName, "finish", "(" + typeDesc + httpResultDesc + ")V", false);
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else if (HttpScope.class.isAssignableFrom(returnType)) {
                 mv.visitVarInsn(ASTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, 2); // response
                 if (rcs != null && rcs.length > 0) {
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
+                    mv.visitFieldInsn(
+                            GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + convertDesc + httpScopeDesc + ")V", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL, respInternalName, "finish", "(" + convertDesc + httpScopeDesc + ")V", false);
                 } else {
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + httpScopeDesc + ")V", false);
@@ -3169,124 +3795,188 @@ public final class Rest {
                 maxLocals++;
             } else if (CompletionStage.class.isAssignableFrom(returnType)) {
                 mv.visitVarInsn(ASTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, 2); // response
                 Class returnNoFutureType = TypeToken.typeToClassOrElse(returnGenericNoFutureType, Object.class);
                 if (returnNoFutureType == HttpScope.class) {
                     if (rcs != null && rcs.length > 0) {
                         mv.visitVarInsn(ALOAD, 0);
-                        mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
+                        mv.visitFieldInsn(
+                                GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                         mv.visitVarInsn(ALOAD, maxLocals);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishScopeFuture", "(" + convertDesc + stageDesc + ")V", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL,
+                                respInternalName,
+                                "finishScopeFuture",
+                                "(" + convertDesc + stageDesc + ")V",
+                                false);
                     } else {
                         mv.visitVarInsn(ALOAD, maxLocals);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishScopeFuture", "(" + stageDesc + ")V", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL, respInternalName, "finishScopeFuture", "(" + stageDesc + ")V", false);
                     }
                 } else if (returnNoFutureType != byte[].class
-                    && returnNoFutureType != RetResult.class
-                    && returnNoFutureType != HttpResult.class
-                    && returnNoFutureType != File.class
-                    && !((returnGenericNoFutureType instanceof Class) && (((Class) returnGenericNoFutureType).isPrimitive() || CharSequence.class.isAssignableFrom((Class) returnGenericNoFutureType)))) {
+                        && returnNoFutureType != RetResult.class
+                        && returnNoFutureType != HttpResult.class
+                        && returnNoFutureType != File.class
+                        && !((returnGenericNoFutureType instanceof Class)
+                                && (((Class) returnGenericNoFutureType).isPrimitive()
+                                        || CharSequence.class.isAssignableFrom((Class) returnGenericNoFutureType)))) {
                     if (rcs != null && rcs.length > 0) {
                         mv.visitVarInsn(ALOAD, 0);
-                        mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
+                        mv.visitFieldInsn(
+                                GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                         mv.visitVarInsn(ALOAD, 0);
-                        mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                        Asms.visitInsn(mv, entry.methodIdx);//方法下标
+                        mv.visitFieldInsn(
+                                GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
+                        Asms.visitInsn(mv, entry.methodIdx); // 方法下标
                         mv.visitInsn(AALOAD);
                         mv.visitVarInsn(ALOAD, maxLocals);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsonFuture", "(" + convertDesc + typeDesc + stageDesc + ")V", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL,
+                                respInternalName,
+                                "finishJsonFuture",
+                                "(" + convertDesc + typeDesc + stageDesc + ")V",
+                                false);
                     } else {
                         mv.visitVarInsn(ALOAD, 0);
-                        mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                        Asms.visitInsn(mv, entry.methodIdx);//方法下标
+                        mv.visitFieldInsn(
+                                GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
+                        Asms.visitInsn(mv, entry.methodIdx); // 方法下标
                         mv.visitInsn(AALOAD);
                         mv.visitVarInsn(ALOAD, maxLocals);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJsonFuture", "(" + typeDesc + stageDesc + ")V", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL,
+                                respInternalName,
+                                "finishJsonFuture",
+                                "(" + typeDesc + stageDesc + ")V",
+                                false);
                     }
                 } else {
                     if (rcs != null && rcs.length > 0) {
                         mv.visitVarInsn(ALOAD, 0);
-                        mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
+                        mv.visitFieldInsn(
+                                GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                         mv.visitVarInsn(ALOAD, 0);
-                        mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                        Asms.visitInsn(mv, entry.methodIdx);//方法下标
+                        mv.visitFieldInsn(
+                                GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
+                        Asms.visitInsn(mv, entry.methodIdx); // 方法下标
                         mv.visitInsn(AALOAD);
                         mv.visitVarInsn(ALOAD, maxLocals);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishFuture", "(" + convertDesc + typeDesc + stageDesc + ")V", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL,
+                                respInternalName,
+                                "finishFuture",
+                                "(" + convertDesc + typeDesc + stageDesc + ")V",
+                                false);
                     } else {
                         mv.visitVarInsn(ALOAD, 0);
-                        mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                        Asms.visitInsn(mv, entry.methodIdx);//方法下标
+                        mv.visitFieldInsn(
+                                GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
+                        Asms.visitInsn(mv, entry.methodIdx); // 方法下标
                         mv.visitInsn(AALOAD);
                         mv.visitVarInsn(ALOAD, maxLocals);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishFuture", "(" + typeDesc + stageDesc + ")V", false);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL,
+                                respInternalName,
+                                "finishFuture",
+                                "(" + typeDesc + stageDesc + ")V",
+                                false);
                     }
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
-            } else if (Flows.maybePublisherClass(returnType)) { //Flow.Publisher
+            } else if (Flows.maybePublisherClass(returnType)) { // Flow.Publisher
                 mv.visitVarInsn(ASTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, 2); // response
                 if (rcs != null && rcs.length > 0) {
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
+                    mv.visitFieldInsn(
+                            GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    Asms.visitInsn(mv, entry.methodIdx);//方法下标
+                    Asms.visitInsn(mv, entry.methodIdx); // 方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishPublisher", "(" + convertDesc + typeDesc + "Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL,
+                            respInternalName,
+                            "finishPublisher",
+                            "(" + convertDesc + typeDesc + "Ljava/lang/Object;)V",
+                            false);
                 } else {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    Asms.visitInsn(mv, entry.methodIdx);//方法下标
+                    Asms.visitInsn(mv, entry.methodIdx); // 方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishPublisher", "(" + typeDesc + "Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL,
+                            respInternalName,
+                            "finishPublisher",
+                            "(" + typeDesc + "Ljava/lang/Object;)V",
+                            false);
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
-            } else if (returnType == retvalType) { //普通JavaBean或JavaBean[]
+            } else if (returnType == retvalType) { // 普通JavaBean或JavaBean[]
                 mv.visitVarInsn(ASTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, 2); // response
                 if (rcs != null && rcs.length > 0) {
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
+                    mv.visitFieldInsn(
+                            GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    Asms.visitInsn(mv, entry.methodIdx);//方法下标
+                    Asms.visitInsn(mv, entry.methodIdx); // 方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + convertDesc + typeDesc + "Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL,
+                            respInternalName,
+                            "finishJson",
+                            "(" + convertDesc + typeDesc + "Ljava/lang/Object;)V",
+                            false);
                 } else {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    Asms.visitInsn(mv, entry.methodIdx);//方法下标
+                    Asms.visitInsn(mv, entry.methodIdx); // 方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finishJson", "(" + typeDesc + "Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL,
+                            respInternalName,
+                            "finishJson",
+                            "(" + typeDesc + "Ljava/lang/Object;)V",
+                            false);
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
             } else {
                 mv.visitVarInsn(ASTORE, maxLocals);
-                mv.visitVarInsn(ALOAD, 2); //response
+                mv.visitVarInsn(ALOAD, 2); // response
                 if (rcs != null && rcs.length > 0) {
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
+                    mv.visitFieldInsn(
+                            GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    Asms.visitInsn(mv, entry.methodIdx);//方法下标
+                    Asms.visitInsn(mv, entry.methodIdx); // 方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + convertDesc + typeDesc + "Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL,
+                            respInternalName,
+                            "finish",
+                            "(" + convertDesc + typeDesc + "Ljava/lang/Object;)V",
+                            false);
                 } else {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    Asms.visitInsn(mv, entry.methodIdx);//方法下标
+                    Asms.visitInsn(mv, entry.methodIdx); // 方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, respInternalName, "finish", "(" + typeDesc + "Ljava/lang/Object;)V", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL, respInternalName, "finish", "(" + typeDesc + "Ljava/lang/Object;)V", false);
                 }
                 mv.visitInsn(RETURN);
                 maxLocals++;
@@ -3294,12 +3984,16 @@ public final class Rest {
             mv.visitMaxs(maxStack, maxLocals);
             mappingMap.put("params", paramMaps);
 
-            { //_Dync_XXX__HttpServlet.class
+            { // _Dync_XXX__HttpServlet.class
                 ClassWriter cw2 = new ClassWriter(COMPUTE_FRAMES);
                 cw2.visit(V11, ACC_SUPER, newDynName + "$" + entry.newActionClassName, null, httpServletName, null);
 
-                cw2.visitInnerClass(newDynName + "$" + entry.newActionClassName, newDynName, entry.newActionClassName, ACC_PRIVATE + ACC_STATIC);
-                {  //设置 Annotation NonBlocking   
+                cw2.visitInnerClass(
+                        newDynName + "$" + entry.newActionClassName,
+                        newDynName,
+                        entry.newActionClassName,
+                        ACC_PRIVATE + ACC_STATIC);
+                { // 设置 Annotation NonBlocking
                     av0 = cw2.visitAnnotation(nonblockDesc, true);
                     av0.visit("value", entry.nonBlocking);
                     av0.visitEnd();
@@ -3314,7 +4008,11 @@ public final class Rest {
                     mv.visitMethodInsn(INVOKESPECIAL, httpServletName, "<init>", "()V", false);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitFieldInsn(PUTFIELD, newDynName + "$" + entry.newActionClassName, "_parentServlet", "L" + newDynName + ";");
+                    mv.visitFieldInsn(
+                            PUTFIELD,
+                            newDynName + "$" + entry.newActionClassName,
+                            "_parentServlet",
+                            "L" + newDynName + ";");
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitInsn(entry.nonBlocking ? ICONST_1 : ICONST_0);
                     mv.visitFieldInsn(PUTFIELD, newDynName + "$" + entry.newActionClassName, "_nonBlocking", "Z");
@@ -3322,22 +4020,32 @@ public final class Rest {
                     mv.visitMaxs(2, 2);
                     mv.visitEnd();
                 }
-//                if (false) {
-//                    mv = new MethodDebugVisitor(cw2.visitMethod(ACC_SYNTHETIC, "<init>", "(L" + newDynName + ";L" + newDynName + "$" + entry.newActionClassName + ";)V", null, null));
-//                    mv.visitVarInsn(ALOAD, 0);
-//                    mv.visitVarInsn(ALOAD, 1);
-//                    mv.visitCheckCast(INVOKESPECIAL, newDynName + "$" + entry.newActionClassName, "<init>", "L" + newDynName + ";", false);
-//                    mv.visitInsn(RETURN);
-//                    mv.visitMaxs(2, 3);
-//                    mv.visitEnd();
-//                }
+                //                if (false) {
+                //                    mv = new MethodDebugVisitor(cw2.visitMethod(ACC_SYNTHETIC, "<init>", "(L" +
+                // newDynName + ";L" + newDynName + "$" + entry.newActionClassName + ";)V", null, null));
+                //                    mv.visitVarInsn(ALOAD, 0);
+                //                    mv.visitVarInsn(ALOAD, 1);
+                //                    mv.visitCheckCast(INVOKESPECIAL, newDynName + "$" + entry.newActionClassName,
+                // "<init>", "L" + newDynName + ";", false);
+                //                    mv.visitInsn(RETURN);
+                //                    mv.visitMaxs(2, 3);
+                //                    mv.visitEnd();
+                //                }
                 {
-                    mv = new MethodDebugVisitor(cw2.visitMethod(ACC_PUBLIC, "execute", "(" + reqDesc + respDesc + ")V", null, new String[]{"java/io/IOException"}));
+                    mv = new MethodDebugVisitor(
+                            cw2.visitMethod(ACC_PUBLIC, "execute", "(" + reqDesc + respDesc + ")V", null, new String[] {
+                                "java/io/IOException"
+                            }));
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynName + "$" + entry.newActionClassName, "_parentServlet", "L" + newDynName + ";");
+                    mv.visitFieldInsn(
+                            GETFIELD,
+                            newDynName + "$" + entry.newActionClassName,
+                            "_parentServlet",
+                            "L" + newDynName + ";");
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitVarInsn(ALOAD, 2);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, entry.newMethodName, "(" + reqDesc + respDesc + ")V", false);
+                    mv.visitMethodInsn(
+                            INVOKEVIRTUAL, newDynName, entry.newMethodName, "(" + reqDesc + respDesc + ")V", false);
                     mv.visitInsn(RETURN);
                     mv.visitMaxs(3, 3);
                     mv.visitEnd();
@@ -3349,7 +4057,7 @@ public final class Rest {
             }
         } // end  for each
 
-        if (containsMupload) {  //注入 @Resource(name = "APP_HOME")  private File _redkale_home;
+        if (containsMupload) { // 注入 @Resource(name = "APP_HOME")  private File _redkale_home;
             fv = cw.visitField(ACC_PRIVATE, "_redkale_home", Type.getDescriptor(File.class), null, null);
             av0 = fv.visitAnnotation(resDesc, true);
             av0.visit("name", "APP_HOME");
@@ -3357,15 +4065,22 @@ public final class Rest {
             fv.visitEnd();
         }
 
-//        HashMap<String, ActionEntry> _createRestActionEntry() {
-//              HashMap<String, ActionEntry> map = new HashMap<>();
-//              map.put("asyncfind3", new ActionEntry(100000,200000,"asyncfind3", new String[]{},null,false,false,0, new _Dync_asyncfind3_HttpServlet()));
-//              map.put("asyncfind2", new ActionEntry(1,2,"asyncfind2", new String[]{"GET", "POST"},null,false,true,0, new _Dync_asyncfind2_HttpServlet()));
-//              return map;
-//          }
-        { //_createRestActionEntry 方法
-            mv = new MethodDebugVisitor(cw.visitMethod(0, "_createRestActionEntry", "()Ljava/util/HashMap;", "()Ljava/util/HashMap<Ljava/lang/String;L" + actionEntryName + ";>;", null));
-            //mv.setDebug(true);
+        //        HashMap<String, ActionEntry> _createRestActionEntry() {
+        //              HashMap<String, ActionEntry> map = new HashMap<>();
+        //              map.put("asyncfind3", new ActionEntry(100000,200000,"asyncfind3", new
+        // String[]{},null,false,false,0, new _Dync_asyncfind3_HttpServlet()));
+        //              map.put("asyncfind2", new ActionEntry(1,2,"asyncfind2", new String[]{"GET",
+        // "POST"},null,false,true,0, new _Dync_asyncfind2_HttpServlet()));
+        //              return map;
+        //          }
+        { // _createRestActionEntry 方法
+            mv = new MethodDebugVisitor(cw.visitMethod(
+                    0,
+                    "_createRestActionEntry",
+                    "()Ljava/util/HashMap;",
+                    "()Ljava/util/HashMap<Ljava/lang/String;L" + actionEntryName + ";>;",
+                    null));
+            // mv.setDebug(true);
             mv.visitTypeInsn(NEW, "java/util/HashMap");
             mv.visitInsn(DUP);
             mv.visitMethodInsn(INVOKESPECIAL, "java/util/HashMap", "<init>", "()V", false);
@@ -3374,13 +4089,13 @@ public final class Rest {
             for (final MappingEntry entry : entrys) {
                 mappingurlToMethod.put(entry.mappingurl, entry.mappingMethod);
                 mv.visitVarInsn(ALOAD, 1);
-                mv.visitLdcInsn(entry.mappingurl);  //name
-                mv.visitTypeInsn(NEW, actionEntryName); //new ActionEntry
+                mv.visitLdcInsn(entry.mappingurl); // name
+                mv.visitTypeInsn(NEW, actionEntryName); // new ActionEntry
                 mv.visitInsn(DUP);
-                Asms.visitInsn(mv, moduleid); //moduleid
-                Asms.visitInsn(mv, entry.actionid); //actionid
-                mv.visitLdcInsn(entry.mappingurl); //name
-                Asms.visitInsn(mv, entry.methods.length);  //methods
+                Asms.visitInsn(mv, moduleid); // moduleid
+                Asms.visitInsn(mv, entry.actionid); // actionid
+                mv.visitLdcInsn(entry.mappingurl); // name
+                Asms.visitInsn(mv, entry.methods.length); // methods
                 mv.visitTypeInsn(ANEWARRAY, "java/lang/String");
                 for (int i = 0; i < entry.methods.length; i++) {
                     mv.visitInsn(DUP);
@@ -3388,16 +4103,31 @@ public final class Rest {
                     mv.visitLdcInsn(entry.methods[i]);
                     mv.visitInsn(AASTORE);
                 }
-                mv.visitInsn(ACONST_NULL); //method
-                mv.visitInsn(entry.rpcOnly ? ICONST_1 : ICONST_0); //rpcOnly
-                mv.visitInsn(entry.auth ? ICONST_1 : ICONST_0); //auth
-                Asms.visitInsn(mv, entry.cacheSeconds); //cacheSeconds
+                mv.visitInsn(ACONST_NULL); // method
+                mv.visitInsn(entry.rpcOnly ? ICONST_1 : ICONST_0); // rpcOnly
+                mv.visitInsn(entry.auth ? ICONST_1 : ICONST_0); // auth
+                Asms.visitInsn(mv, entry.cacheSeconds); // cacheSeconds
                 mv.visitTypeInsn(NEW, newDynName + "$" + entry.newActionClassName);
                 mv.visitInsn(DUP);
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitMethodInsn(INVOKESPECIAL, newDynName + "$" + entry.newActionClassName, "<init>", "(L" + newDynName + ";)V", false);
-                mv.visitMethodInsn(INVOKESPECIAL, actionEntryName, "<init>", "(IILjava/lang/String;[Ljava/lang/String;Ljava/lang/reflect/Method;ZZI" + httpDesc + ")V", false);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/HashMap", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", false);
+                mv.visitMethodInsn(
+                        INVOKESPECIAL,
+                        newDynName + "$" + entry.newActionClassName,
+                        "<init>",
+                        "(L" + newDynName + ";)V",
+                        false);
+                mv.visitMethodInsn(
+                        INVOKESPECIAL,
+                        actionEntryName,
+                        "<init>",
+                        "(IILjava/lang/String;[Ljava/lang/String;Ljava/lang/reflect/Method;ZZI" + httpDesc + ")V",
+                        false);
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL,
+                        "java/util/HashMap",
+                        "put",
+                        "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+                        false);
                 mv.visitInsn(POP);
             }
             mv.visitVarInsn(ALOAD, 1);
@@ -3435,7 +4165,7 @@ public final class Rest {
             fv.visitEnd();
         }
 
-        { //_paramtypes字段 java.lang.reflect.Type[][]
+        { // _paramtypes字段 java.lang.reflect.Type[][]
             fv = cw.visitField(ACC_PRIVATE, REST_PARAMTYPES_FIELD_NAME, "[[Ljava/lang/reflect/Type;", null, null);
             av0 = fv.visitAnnotation(Type.getDescriptor(Comment.class), true);
             StringBuilder sb = new StringBuilder().append('[');
@@ -3446,7 +4176,7 @@ public final class Rest {
             av0.visitEnd();
             fv.visitEnd();
         }
-        { //_returntypes字段 java.lang.reflect.Type[]
+        { // _returntypes字段 java.lang.reflect.Type[]
             fv = cw.visitField(ACC_PRIVATE, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;", null, null);
             av0 = fv.visitAnnotation(Type.getDescriptor(Comment.class), true);
             av0.visit("value", retvalTypes.toString());
@@ -3454,10 +4184,10 @@ public final class Rest {
             fv.visitEnd();
         }
 
-        //classMap.put("mappings", mappingMaps); //不显示太多信息
-        { //toString函数
+        // classMap.put("mappings", mappingMaps); //不显示太多信息
+        { // toString函数
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null));
-            //mv.setDebug(true);
+            // mv.setDebug(true);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitFieldInsn(GETFIELD, newDynName, REST_TOSTRINGOBJ_FIELD_NAME, "Ljava/util/function/Supplier;");
             mv.visitMethodInsn(INVOKEINTERFACE, "java/util/function/Supplier", "get", "()Ljava/lang/Object;", true);
@@ -3467,7 +4197,7 @@ public final class Rest {
             mv.visitEnd();
         }
 
-        { //RestDyn
+        { // RestDyn
             av0 = cw.visitAnnotation(Type.getDescriptor(RestDyn.class), true);
             av0.visit("simple", (Boolean) dynsimple);
             av0.visitEnd();
@@ -3521,7 +4251,10 @@ public final class Rest {
                 Field genField = newClazz.getDeclaredField(REST_CONVERT_FIELD_PREFIX + (i + 1));
                 genField.setAccessible(true);
                 Object[] rc = restConverts.get(i);
-                genField.set(obj, createJsonFactory((RestConvert[]) rc[0], (RestConvertCoder[]) rc[1]).getConvert());
+                genField.set(
+                        obj,
+                        createJsonFactory((RestConvert[]) rc[0], (RestConvertCoder[]) rc[1])
+                                .getConvert());
                 RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), genField);
             }
             Field typesfield = newClazz.getDeclaredField(REST_PARAMTYPES_FIELD_NAME);
@@ -3540,7 +4273,8 @@ public final class Rest {
 
             Field tostringfield = newClazz.getDeclaredField(REST_TOSTRINGOBJ_FIELD_NAME);
             tostringfield.setAccessible(true);
-            java.util.function.Supplier<String> sSupplier = () -> JsonConvert.root().convertTo(classMap);
+            java.util.function.Supplier<String> sSupplier =
+                    () -> JsonConvert.root().convertTo(classMap);
             tostringfield.set(obj, sSupplier);
             RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), tostringfield);
 
@@ -3601,7 +4335,7 @@ public final class Rest {
         return t;
     }
 
-    private static boolean checkName(String name) {  //只能是字母、数字和下划线，且不能以数字开头
+    private static boolean checkName(String name) { // 只能是字母、数字和下划线，且不能以数字开头
         if (name.isEmpty()) {
             return true;
         }
@@ -3609,14 +4343,17 @@ public final class Rest {
             return false;
         }
         for (char ch : name.toCharArray()) {
-            if (!((ch >= '0' && ch <= '9') || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
+            if (!((ch >= '0' && ch <= '9')
+                    || ch == '_'
+                    || (ch >= 'a' && ch <= 'z')
+                    || (ch >= 'A' && ch <= 'Z'))) { // 不能含特殊字符
                 return false;
             }
         }
         return true;
     }
 
-    private static boolean checkName2(String name) {  //只能是字母、数字、短横、点和下划线，且不能以数字开头
+    private static boolean checkName2(String name) { // 只能是字母、数字、短横、点和下划线，且不能以数字开头
         if (name.isEmpty()) {
             return true;
         }
@@ -3624,7 +4361,12 @@ public final class Rest {
             return false;
         }
         for (char ch : name.toCharArray()) {
-            if (!((ch >= '0' && ch <= '9') || ch == '_' || ch == '-' || ch == '.' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
+            if (!((ch >= '0' && ch <= '9')
+                    || ch == '_'
+                    || ch == '-'
+                    || ch == '.'
+                    || (ch >= 'a' && ch <= 'z')
+                    || (ch >= 'A' && ch <= 'Z'))) { // 不能含特殊字符
                 return false;
             }
         }
@@ -3637,7 +4379,8 @@ public final class Rest {
 
         static {
             try {
-                DEFAULT__MAPPING = MappingEntry.class.getDeclaredMethod("mapping").getAnnotation(RestMapping.class);
+                DEFAULT__MAPPING =
+                        MappingEntry.class.getDeclaredMethod("mapping").getAnnotation(RestMapping.class);
             } catch (Exception e) {
                 throw new Error(e);
             }
@@ -3647,7 +4390,7 @@ public final class Rest {
             if (name.isEmpty()) {
                 return name;
             }
-            boolean normal = true; //是否包含特殊字符
+            boolean normal = true; // 是否包含特殊字符
             for (char ch : name.toCharArray()) {
                 if (ch >= '0' && ch <= '9') {
                     continue;
@@ -3667,7 +4410,13 @@ public final class Rest {
             return normal ? name : Utility.md5Hex(name);
         }
 
-        public MappingEntry(final boolean serRpcOnly, int methodIndex, Boolean typeNonBlocking, RestMapping mapping, final String defModuleName, Method method) {
+        public MappingEntry(
+                final boolean serRpcOnly,
+                int methodIndex,
+                Boolean typeNonBlocking,
+                RestMapping mapping,
+                final String defModuleName,
+                Method method) {
             if (mapping == null) {
                 mapping = DEFAULT__MAPPING;
             }
@@ -3705,11 +4454,12 @@ public final class Rest {
                 }
             }
             this.existsPound = pound;
-            this.newMethodName = formatMappingName(this.name.replace('/', '$').replace('.', '_').replace('-', '_'));
+            this.newMethodName = formatMappingName(
+                    this.name.replace('/', '$').replace('.', '_').replace('-', '_'));
             this.newActionClassName = "_Dyn_" + this.newMethodName + "_ActionHttpServlet";
 
             NonBlocking non = method.getAnnotation(NonBlocking.class);
-            Boolean nonFlag = non == null ? typeNonBlocking : (Boolean) non.value(); //显注在方法优先级大于类
+            Boolean nonFlag = non == null ? typeNonBlocking : (Boolean) non.value(); // 显注在方法优先级大于类
             if (nonFlag == null) {
                 if (CompletionStage.class.isAssignableFrom(method.getReturnType())) {
                     nonFlag = true;
@@ -3753,12 +4503,12 @@ public final class Rest {
 
         public final int cacheSeconds;
 
-        public final boolean existsPound;  //是否包含#的参数
+        public final boolean existsPound; // 是否包含#的参数
 
-        String mappingurl; //在生成方法时赋值， 供 _createRestActionEntry 使用
+        String mappingurl; // 在生成方法时赋值， 供 _createRestActionEntry 使用
 
         @RestMapping()
-        void mapping() { //用于获取Mapping 默认值
+        void mapping() { // 用于获取Mapping 默认值
         }
 
         @Override
@@ -3781,6 +4531,5 @@ public final class Rest {
         public int compareTo(MappingEntry o) {
             return this.name.compareTo(o.name);
         }
-
     }
 }

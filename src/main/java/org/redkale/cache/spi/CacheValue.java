@@ -7,15 +7,12 @@ import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.JsonConvert;
 
 /**
- *
  * 内部缓存对象
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> 泛型
- *
  * @since 2.8.0
  */
 public class CacheValue<T> {
@@ -23,8 +20,7 @@ public class CacheValue<T> {
     @ConvertColumn(index = 1)
     private T val;
 
-    public CacheValue() {
-    }
+    public CacheValue() {}
 
     protected CacheValue(T value) {
         this.val = value;

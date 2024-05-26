@@ -13,8 +13,7 @@ import org.redkale.util.StringWrapper;
 /**
  * InetAddress 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -54,7 +53,8 @@ public final class InetAddressSimpledCoder<R extends Reader, W extends Writer> e
      * @param <W> Writer输出的子类型
      */
     @SuppressWarnings("unchecked")
-    public final static class InetSocketAddressSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, InetSocketAddress> {
+    public static final class InetSocketAddressSimpledCoder<R extends Reader, W extends Writer>
+            extends SimpledCoder<R, W, InetSocketAddress> {
 
         public static final InetSocketAddressSimpledCoder instance = new InetSocketAddressSimpledCoder();
 
@@ -81,7 +81,6 @@ public final class InetAddressSimpledCoder<R extends Reader, W extends Writer> e
                 return null;
             }
         }
-
     }
 
     /**
@@ -90,7 +89,8 @@ public final class InetAddressSimpledCoder<R extends Reader, W extends Writer> e
      * @param <R> Reader输入的子类型
      * @param <W> Writer输出的子类型
      */
-    public final static class InetAddressJsonSimpledCoder<R extends JsonReader, W extends JsonWriter> extends SimpledCoder<R, W, InetAddress> {
+    public static final class InetAddressJsonSimpledCoder<R extends JsonReader, W extends JsonWriter>
+            extends SimpledCoder<R, W, InetAddress> {
 
         public static final InetAddressJsonSimpledCoder instance = new InetAddressJsonSimpledCoder();
 
@@ -115,7 +115,6 @@ public final class InetAddressSimpledCoder<R extends Reader, W extends Writer> e
                 return null;
             }
         }
-
     }
 
     /**
@@ -124,7 +123,8 @@ public final class InetAddressSimpledCoder<R extends Reader, W extends Writer> e
      * @param <R> Reader输入的子类型
      * @param <W> Writer输出的子类型
      */
-    public final static class InetSocketAddressJsonSimpledCoder<R extends JsonReader, W extends JsonWriter> extends SimpledCoder<R, W, InetSocketAddress> {
+    public static final class InetSocketAddressJsonSimpledCoder<R extends JsonReader, W extends JsonWriter>
+            extends SimpledCoder<R, W, InetSocketAddress> {
 
         public static final InetSocketAddressJsonSimpledCoder instance = new InetSocketAddressJsonSimpledCoder();
 
@@ -146,6 +146,5 @@ public final class InetAddressSimpledCoder<R extends Reader, W extends Writer> e
             int pos = str.indexOf(':');
             return new InetSocketAddress(str.substring(0, pos), Integer.parseInt(str.substring(pos + 1)));
         }
-
     }
 }

@@ -16,12 +16,9 @@ import org.redkale.boot.Application;
 import org.redkale.util.AnyValue;
 
 /**
- * 根Servlet， 一个Server只能存在一个根Servlet
- * 由之前PrepareServlet更名而来，since 2.7.0
- * 用于分发Request请求
+ * 根Servlet， 一个Server只能存在一个根Servlet 由之前PrepareServlet更名而来，since 2.7.0 用于分发Request请求
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <K> SessionID的类型
@@ -30,11 +27,17 @@ import org.redkale.util.AnyValue;
  * @param <P> Response的子类型
  * @param <S> Servlet的子类型
  */
-public abstract class DispatcherServlet<K extends Serializable, C extends Context, R extends Request<C>, P extends Response<C, R>, S extends Servlet<C, R, P>> extends Servlet<C, R, P> {
+public abstract class DispatcherServlet<
+                K extends Serializable,
+                C extends Context,
+                R extends Request<C>,
+                P extends Response<C, R>,
+                S extends Servlet<C, R, P>>
+        extends Servlet<C, R, P> {
 
-    private final LongAdder executeCounter = new LongAdder(); //执行请求次数
+    private final LongAdder executeCounter = new LongAdder(); // 执行请求次数
 
-    private final LongAdder illegalRequestCounter = new LongAdder(); //错误请求次数
+    private final LongAdder illegalRequestCounter = new LongAdder(); // 错误请求次数
 
     private final ReentrantLock servletLock = new ReentrantLock();
 
@@ -158,8 +161,7 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
         }
     }
 
-    protected void doAfterRemove(S servlet) {
-    }
+    protected void doAfterRemove(S servlet) {}
 
     protected S mappingServlet(K key) {
         return mappings.get(key);
@@ -195,7 +197,7 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     }
 
     @Override
-    @SuppressWarnings("unchecked")  //Servlet由子类来销毁
+    @SuppressWarnings("unchecked") // Servlet由子类来销毁
     public void destroy(C context, AnyValue config) {
         filtersLock.lock();
         try {
@@ -333,5 +335,4 @@ public abstract class DispatcherServlet<K extends Serializable, C extends Contex
     public Long getIllRequestCounter() {
         return illegalRequestCounter.longValue();
     }
-
 }

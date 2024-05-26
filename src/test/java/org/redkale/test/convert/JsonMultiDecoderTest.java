@@ -6,10 +6,7 @@ import java.lang.reflect.Type;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.json.JsonConvert;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class JsonMultiDecoderTest {
 
     private boolean main;
@@ -24,7 +21,7 @@ public class JsonMultiDecoderTest {
     public void run() throws Exception {
         JsonConvert convert = JsonConvert.root();
         String json = "[\"aaaa\",{\"name\":\"haha\"}]";
-        Type[] types = new Type[]{String.class, JsonConvert.TYPE_MAP_STRING_STRING};
+        Type[] types = new Type[] {String.class, JsonConvert.TYPE_MAP_STRING_STRING};
         Object[] objs = convert.convertFrom(types, json);
         System.out.println(convert.convertTo(objs));
         if (!main) Assertions.assertEquals(convert.convertTo(objs), json);

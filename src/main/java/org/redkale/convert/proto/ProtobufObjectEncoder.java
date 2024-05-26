@@ -10,10 +10,7 @@ import org.redkale.convert.*;
 import org.redkale.util.Attribute;
 import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T> {
 
     protected ProtobufObjectEncoder(Type type) {
@@ -23,10 +20,17 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T> {
     @Override
     protected void initForEachEnMember(ConvertFactory factory, EnMember member) {
         if (member.getIndex() < 1) {
-            throw new ConvertException(Utility.orElse(member.getField(), member.getMethod()) + " not found @" + ConvertColumn.class.getSimpleName() + ".index");
+            throw new ConvertException(Utility.orElse(member.getField(), member.getMethod()) + " not found @"
+                    + ConvertColumn.class.getSimpleName() + ".index");
         }
         Attribute attr = member.getAttribute();
-        setTag(member, ProtobufFactory.getTag(attr.field(), attr.genericType(), member.getPosition(), ((ProtobufFactory) factory).enumtostring));
+        setTag(
+                member,
+                ProtobufFactory.getTag(
+                        attr.field(),
+                        attr.genericType(),
+                        member.getPosition(),
+                        ((ProtobufFactory) factory).enumtostring));
     }
 
     @Override

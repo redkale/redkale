@@ -11,7 +11,6 @@ import org.redkale.util.TypeToken;
  *
  * @see org.redkale.asm.AsmMethodBean
  * @see org.redkale.asm.AsmMethodBoost
- *
  * @since 2.8.0
  */
 public class AsmMethodParam {
@@ -22,8 +21,7 @@ public class AsmMethodParam {
 
     private String signature;
 
-    public AsmMethodParam() {
-    }
+    public AsmMethodParam() {}
 
     public AsmMethodParam(String name) {
         this.name = name;

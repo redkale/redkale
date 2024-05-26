@@ -6,10 +6,7 @@ import org.junit.jupiter.api.*;
 import org.redkale.convert.Convert;
 import org.redkale.convert.json.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class TinyTest {
 
     private boolean main;

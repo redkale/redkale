@@ -2,6 +2,9 @@
  */
 package org.redkale.boot;
 
+import static org.redkale.boot.Application.RESNAME_APP_NAME;
+import static org.redkale.boot.Application.SYSNAME_APP_NAME;
+
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -9,8 +12,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.*;
 import java.util.logging.Formatter;
 import java.util.regex.Pattern;
-import static org.redkale.boot.Application.RESNAME_APP_NAME;
-import static org.redkale.boot.Application.SYSNAME_APP_NAME;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.persistence.*;
@@ -20,8 +21,8 @@ import org.redkale.util.*;
 
 /**
  * 基于SearchSource的日志输出类
- * <p>
- * 详情见: https://redkale.org
+ *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.7.0
@@ -34,9 +35,9 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
 
     protected final AtomicInteger retryCount = new AtomicInteger(3);
 
-    protected String tag = DEFAULT_TABLE_NAME;  //用于表前缀， 默认是 
+    protected String tag = DEFAULT_TABLE_NAME; // 用于表前缀， 默认是
 
-    protected String tagDateFormat; //需要时间格式化
+    protected String tagDateFormat; // 需要时间格式化
 
     protected String pattern;
 
@@ -46,7 +47,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
 
     protected SearchSource source;
 
-    //在LogManager.getLogManager().readConfiguration执行完后，通过反射注入Application
+    // 在LogManager.getLogManager().readConfiguration执行完后，通过反射注入Application
     protected Application application;
 
     public LoggingSearchHandler() {
@@ -56,7 +57,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
 
     private void open() {
         final String name = "Redkale-Logging-" + getClass().getSimpleName().replace("Logging", "") + "-Thread";
-        final int batchSize = 100; //批量最多100条
+        final int batchSize = 100; // 批量最多100条
         final List<SearchLogRecord> logList = new ArrayList<>();
         final Formatter formatter = new LoggingBaseHandler.LoggingFormater();
         final PrintStream outStream = System.out;
@@ -72,8 +73,8 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
                     try {
                         SearchLogRecord log = logqueue.take();
                         while (source == null && retryCount.get() > 0) initSource();
-                        //----------------------写日志-------------------------
-                        if (source == null) { //source加载失败
+                        // ----------------------写日志-------------------------
+                        if (source == null) { // source加载失败
                             outStream.print(formatter.format(log.rawLog));
                         } else {
                             logList.add(log);
@@ -96,7 +97,6 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
                         logList.clear();
                     }
                 }
-
             }
         }.start();
     }
@@ -106,7 +106,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
             return;
         }
         try {
-            Utility.sleep(3000); //如果SearchSource自身在打印日志，需要停顿一点时间让SearchSource初始化完成
+            Utility.sleep(3000); // 如果SearchSource自身在打印日志，需要停顿一点时间让SearchSource初始化完成
             if (application == null) {
                 Utility.sleep(3000);
             }
@@ -127,7 +127,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
         }
     }
 
-    private static boolean checkTagName(String name) {  //只能是字母、数字、短横、点、%、$和下划线
+    private static boolean checkTagName(String name) { // 只能是字母、数字、短横、点、%、$和下划线
         if (name.isEmpty()) {
             return false;
         }
@@ -164,7 +164,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
             this.tag = tagStr.replace("${" + RESNAME_APP_NAME + "}", System.getProperty(SYSNAME_APP_NAME, ""));
             if (this.tag.contains("%")) {
                 this.tagDateFormat = this.tag;
-                Times.formatTime(this.tagDateFormat, -1, System.currentTimeMillis()); //测试时间格式是否正确
+                Times.formatTime(this.tagDateFormat, -1, System.currentTimeMillis()); // 测试时间格式是否正确
             }
         }
 
@@ -175,7 +175,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
                 setLevel(l != null ? l : Level.ALL);
             }
         } catch (Exception e) {
-            //do nothing
+            // do nothing
         }
         String filterStr = manager.getProperty(cname + ".filter");
         try {
@@ -185,7 +185,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
                 setFilter((Filter) clz.getDeclaredConstructor().newInstance());
             }
         } catch (Exception e) {
-            //do nothing
+            // do nothing
         }
         String formatterStr = manager.getProperty(cname + ".formatter");
         try {
@@ -195,7 +195,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
                 setFormatter((Formatter) clz.getDeclaredConstructor().newInstance());
             }
         } catch (Exception e) {
-            //do nothing
+            // do nothing
         }
         if (getFormatter() == null) {
             setFormatter(new SimpleFormatter());
@@ -207,7 +207,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
                 setEncoding(encodingStr);
             }
         } catch (Exception e) {
-            //do nothing
+            // do nothing
         }
 
         String denyRegxStr = manager.getProperty(cname + ".denyregx");
@@ -216,7 +216,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
                 denyRegx = Pattern.compile(denyRegxStr);
             }
         } catch (Exception e) {
-            //do nothing
+            // do nothing
         }
     }
 
@@ -239,19 +239,21 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
                 break;
             }
         }
-        String rawTag = tagDateFormat == null ? tag : Times.formatTime(tagDateFormat, -1, log.getInstant().toEpochMilli());
+        String rawTag = tagDateFormat == null
+                ? tag
+                : Times.formatTime(tagDateFormat, -1, log.getInstant().toEpochMilli());
         fillLogRecord(log);
         logqueue.offer(new SearchLogRecord(rawTag, log));
     }
 
     @Override
     public void flush() {
-        //do nothing
+        // do nothing
     }
 
     @Override
     public void close() throws SecurityException {
-        //do nothing
+        // do nothing
     }
 
     @Entity
@@ -288,8 +290,8 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
         public String methodName;
 
         @ConvertColumn(index = 8)
-        @SearchColumn(text = true, options = "offsets") //, analyzer = "ik_max_word"
-        public String message;  //log.message +"\r\n"+ log.thrown
+        @SearchColumn(text = true, options = "offsets") // , analyzer = "ik_max_word"
+        public String message; // log.message +"\r\n"+ log.thrown
 
         @Transient
         @ConvertDisabled
@@ -299,8 +301,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
         @ConvertDisabled
         String rawTag;
 
-        public SearchLogRecord() {
-        }
+        public SearchLogRecord() {}
 
         protected SearchLogRecord(String tag, LogRecord log) {
             this.rawLog = log;
@@ -347,7 +348,6 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
             public String[] getTables(String table, FilterNode node) {
                 throw new UnsupportedOperationException("Not supported yet.");
             }
-
         }
     }
 }

@@ -9,10 +9,7 @@ import java.nio.channels.CompletionHandler;
 import org.junit.jupiter.api.*;
 import org.redkale.util.TypeToken;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class TypeTokenTest {
 
     private boolean main;
@@ -33,7 +30,8 @@ public class TypeTokenTest {
         if (handlerType instanceof Class) {
             resultType = Object.class;
         } else if (handlerType instanceof ParameterizedType) {
-            resultType = TypeToken.getGenericType(((ParameterizedType) handlerType).getActualTypeArguments()[0], handlerType);
+            resultType = TypeToken.getGenericType(
+                    ((ParameterizedType) handlerType).getActualTypeArguments()[0], handlerType);
         }
         if (!main) {
             Assertions.assertEquals(resultType, String.class);
@@ -50,7 +48,8 @@ public class TypeTokenTest {
         if (handlerType instanceof Class) {
             resultType = Object.class;
         } else if (handlerType instanceof ParameterizedType) {
-            resultType = TypeToken.getGenericType(((ParameterizedType) handlerType).getActualTypeArguments()[0], handlerType);
+            resultType = TypeToken.getGenericType(
+                    ((ParameterizedType) handlerType).getActualTypeArguments()[0], handlerType);
         }
         if (!main) {
             Assertions.assertEquals(resultType, File.class);
@@ -58,17 +57,15 @@ public class TypeTokenTest {
         System.out.println("resultType = " + resultType);
     }
 
-    public static abstract class Service1 {
+    public abstract static class Service1 {
 
         public abstract void test(String name, CompletionHandler<String, Integer> handler);
     }
 
-    public static abstract class IService2<T> {
+    public abstract static class IService2<T> {
 
         public abstract void test(String name, CompletionHandler<T, Integer> handler);
     }
 
-    public static abstract class Service2 extends IService2<File> {
-
-    }
+    public abstract static class Service2 extends IService2<File> {}
 }

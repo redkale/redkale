@@ -13,7 +13,6 @@ import org.redkale.convert.json.JsonConvert;
 /**
  * userid 与 sncpaddress组合对象
  *
- *
  * @author zhangjx
  */
 public interface WebSocketUserAddress extends Serializable {
@@ -48,8 +47,7 @@ public interface WebSocketUserAddress extends Serializable {
 
         private Collection<WebSocketAddress> addresses;
 
-        public SimpleWebSocketUserAddress() {
-        }
+        public SimpleWebSocketUserAddress() {}
 
         public SimpleWebSocketUserAddress(Serializable userid, String mqtopic, InetSocketAddress sncpAddress) {
             this.userid = userid;

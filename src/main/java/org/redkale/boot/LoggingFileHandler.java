@@ -5,9 +5,10 @@
  */
 package org.redkale.boot;
 
+import static java.nio.file.StandardCopyOption.*;
+
 import java.io.*;
 import java.nio.file.Files;
-import static java.nio.file.StandardCopyOption.*;
 import java.util.Calendar;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.*;
@@ -17,17 +18,15 @@ import org.redkale.util.*;
 
 /**
  * 自定义的日志输出类
- * <p>
- * 详情见: https://redkale.org
+ *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
 public class LoggingFileHandler extends LoggingBaseHandler {
 
-    /**
-     * SNCP的日志输出Handler
-     */
+    /** SNCP的日志输出Handler */
     public static class LoggingSncpFileHandler extends LoggingFileHandler {
 
         @Override
@@ -57,7 +56,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                     this.denyRegx = Pattern.compile(denyregxstr);
                 }
             } catch (Exception e) {
-                //do nothing
+                // do nothing
             }
         }
 
@@ -75,19 +74,19 @@ public class LoggingFileHandler extends LoggingBaseHandler {
 
     protected String pattern;
 
-    protected String patternDateFormat; //需要时间格式化
+    protected String patternDateFormat; // 需要时间格式化
 
-    protected String unusual; //不为null表示将 WARNING、SEVERE 级别的日志写入单独的文件中
+    protected String unusual; // 不为null表示将 WARNING、SEVERE 级别的日志写入单独的文件中
 
-    protected String unusualDateFormat; //需要时间格式化
+    protected String unusualDateFormat; // 需要时间格式化
 
-    private int limit;   //文件大小限制
+    private int limit; // 文件大小限制
 
     private final AtomicInteger logIndex = new AtomicInteger();
 
     private final AtomicInteger logUnusualIndex = new AtomicInteger();
 
-    private int count = 1;  //文件限制
+    private int count = 1; // 文件限制
 
     private long tomorrow;
 
@@ -150,10 +149,18 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                                     for (int i = Math.min(count - 2, logIndex.get() - 1); i > 0; i--) {
                                         File greater = new File(logFile.getPath() + "." + i);
                                         if (greater.exists()) {
-                                            Files.move(greater.toPath(), new File(logFile.getPath() + "." + (i + 1)).toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
+                                            Files.move(
+                                                    greater.toPath(),
+                                                    new File(logFile.getPath() + "." + (i + 1)).toPath(),
+                                                    REPLACE_EXISTING,
+                                                    ATOMIC_MOVE);
                                         }
                                     }
-                                    Files.move(logFile.toPath(), new File(logFile.getPath() + ".1").toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
+                                    Files.move(
+                                            logFile.toPath(),
+                                            new File(logFile.getPath() + ".1").toPath(),
+                                            REPLACE_EXISTING,
+                                            ATOMIC_MOVE);
                                 } else {
                                     if (logFile.exists() && logFile.length() < 1) {
                                         Files.delete(logFile.toPath());
@@ -168,10 +175,18 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                                 for (int i = Math.min(count - 2, logUnusualIndex.get() - 1); i > 0; i--) {
                                     File greater = new File(logUnusualFile.getPath() + "." + i);
                                     if (greater.exists()) {
-                                        Files.move(greater.toPath(), new File(logUnusualFile.getPath() + "." + (i + 1)).toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
+                                        Files.move(
+                                                greater.toPath(),
+                                                new File(logUnusualFile.getPath() + "." + (i + 1)).toPath(),
+                                                REPLACE_EXISTING,
+                                                ATOMIC_MOVE);
                                     }
                                 }
-                                Files.move(logUnusualFile.toPath(), new File(logUnusualFile.getPath() + ".1").toPath(), REPLACE_EXISTING, ATOMIC_MOVE);
+                                Files.move(
+                                        logUnusualFile.toPath(),
+                                        new File(logUnusualFile.getPath() + ".1").toPath(),
+                                        REPLACE_EXISTING,
+                                        ATOMIC_MOVE);
                             } else {
                                 if (logUnusualFile.exists() && logUnusualFile.length() < 1) {
                                     Files.delete(logUnusualFile.toPath());
@@ -181,19 +196,25 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                         }
                         if (logStream == null) {
                             logIndex.incrementAndGet();
-                            logFile = new File(patternDateFormat == null ? pattern : Times.formatTime(patternDateFormat, -1, System.currentTimeMillis()));
+                            logFile = new File(
+                                    patternDateFormat == null
+                                            ? pattern
+                                            : Times.formatTime(patternDateFormat, -1, System.currentTimeMillis()));
                             logFile.getParentFile().mkdirs();
                             logLength.set(logFile.length());
                             logStream = new FileOutputStream(logFile, append);
                         }
                         if (unusual != null && logUnusualStream == null) {
                             logUnusualIndex.incrementAndGet();
-                            logUnusualFile = new File(unusualDateFormat == null ? unusual : Times.formatTime(unusualDateFormat, -1, System.currentTimeMillis()));
+                            logUnusualFile = new File(
+                                    unusualDateFormat == null
+                                            ? unusual
+                                            : Times.formatTime(unusualDateFormat, -1, System.currentTimeMillis()));
                             logUnusualFile.getParentFile().mkdirs();
                             logUnusualLength.set(logUnusualFile.length());
                             logUnusualStream = new FileOutputStream(logUnusualFile, append);
                         }
-                        //----------------------写日志-------------------------
+                        // ----------------------写日志-------------------------
                         String message = getFormatter().format(log);
                         String encoding = getEncoding();
                         byte[] bytes = encoding == null ? message.getBytes() : message.getBytes(encoding);
@@ -210,7 +231,6 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                         }
                     }
                 }
-
             }
         }.start();
     }
@@ -233,9 +253,9 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                 this.pattern = getPrefix() + this.pattern;
             }
         }
-        if (this.pattern != null && this.pattern.contains("%")) { //需要时间格式化
+        if (this.pattern != null && this.pattern.contains("%")) { // 需要时间格式化
             this.patternDateFormat = this.pattern;
-            Times.formatTime(this.patternDateFormat, -1, System.currentTimeMillis()); //测试时间格式是否正确
+            Times.formatTime(this.patternDateFormat, -1, System.currentTimeMillis()); // 测试时间格式是否正确
         }
         String unusualstr = manager.getProperty(cname + ".unusual");
         if (unusualstr != null) {
@@ -246,9 +266,9 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                 this.unusual = getPrefix() + unusualstr;
             }
         }
-        if (this.unusual != null && this.unusual.contains("%")) { //需要时间格式化
+        if (this.unusual != null && this.unusual.contains("%")) { // 需要时间格式化
             this.unusualDateFormat = this.unusual;
-            Times.formatTime(this.unusualDateFormat, -1, System.currentTimeMillis()); //测试时间格式是否正确
+            Times.formatTime(this.unusualDateFormat, -1, System.currentTimeMillis()); // 测试时间格式是否正确
         }
         String limitstr = manager.getProperty(cname + ".limit");
         try {
@@ -257,7 +277,10 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                 boolean g = limitstr.indexOf('G') > 0;
                 boolean m = limitstr.indexOf('M') > 0;
                 boolean k = limitstr.indexOf('K') > 0;
-                int ls = Math.abs(Integer.decode(limitstr.replace("G", "").replace("M", "").replace("K", "").replace("B", "")));
+                int ls = Math.abs(Integer.decode(limitstr.replace("G", "")
+                        .replace("M", "")
+                        .replace("K", "")
+                        .replace("B", "")));
                 if (g) {
                     ls *= 1024 * 1024 * 1024;
                 } else if (m) {
@@ -268,7 +291,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                 this.limit = ls;
             }
         } catch (Exception e) {
-            //do nothing
+            // do nothing
         }
         String countstr = manager.getProperty(cname + ".count");
         try {
@@ -276,7 +299,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                 this.count = Math.max(1, Math.abs(Integer.decode(countstr)));
             }
         } catch (Exception e) {
-            //do nothing
+            // do nothing
         }
         String appendstr = manager.getProperty(cname + ".append");
         try {
@@ -284,7 +307,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                 this.append = "true".equalsIgnoreCase(appendstr) || "1".equals(appendstr);
             }
         } catch (Exception e) {
-            //do nothing
+            // do nothing
         }
         String levelstr = manager.getProperty(cname + ".level");
         try {
@@ -293,7 +316,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                 setLevel(l != null ? l : Level.ALL);
             }
         } catch (Exception e) {
-            //do nothing
+            // do nothing
         }
         String filterstr = manager.getProperty(cname + ".filter");
         try {
@@ -303,7 +326,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                 setFilter((Filter) clz.getDeclaredConstructor().newInstance());
             }
         } catch (Exception e) {
-            //do nothing
+            // do nothing
         }
         String formatterstr = manager.getProperty(cname + ".formatter");
         try {
@@ -313,7 +336,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                 setFormatter((Formatter) clz.getDeclaredConstructor().newInstance());
             }
         } catch (Exception e) {
-            //do nothing
+            // do nothing
         }
         if (getFormatter() == null) {
             setFormatter(new SimpleFormatter());
@@ -325,7 +348,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                 setEncoding(encodingstr);
             }
         } catch (Exception e) {
-            //do nothing
+            // do nothing
         }
 
         String denyregxstr = manager.getProperty(cname + ".denyregx");
@@ -334,7 +357,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
                 denyRegx = Pattern.compile(denyregxstr);
             }
         } catch (Exception e) {
-            //do nothing
+            // do nothing
         }
     }
 
@@ -377,5 +400,4 @@ public class LoggingFileHandler extends LoggingBaseHandler {
             }
         }
     }
-
 }

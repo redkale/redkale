@@ -12,19 +12,16 @@ import org.redkale.util.*;
 /**
  * 常规json
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.8.0
  */
 class JsonElementDecoder extends AnyDecoder<JsonElement> {
 
-    private static final Type arrayType = new TypeToken<Collection<JsonElement>>() {
-    }.getType();
+    private static final Type arrayType = new TypeToken<Collection<JsonElement>>() {}.getType();
 
-    private static final Type objectType = new TypeToken<Map<String, JsonElement>>() {
-    }.getType();
+    private static final Type objectType = new TypeToken<Map<String, JsonElement>>() {}.getType();
 
     private static final Creator<JsonArray> arrayCreator = t -> new JsonArray();
 

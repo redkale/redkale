@@ -13,13 +13,12 @@ import org.redkale.service.Service;
 import org.redkale.util.*;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
  */
-public class SncpDispatcherServlet extends DispatcherServlet<Uint128, SncpContext, SncpRequest, SncpResponse, SncpServlet> {
+public class SncpDispatcherServlet
+        extends DispatcherServlet<Uint128, SncpContext, SncpRequest, SncpResponse, SncpServlet> {
 
     private final ReentrantLock updateLock = new ReentrantLock();
 
@@ -71,13 +70,13 @@ public class SncpDispatcherServlet extends DispatcherServlet<Uint128, SncpContex
         if (application != null && application.isCompileMode()) {
             return;
         }
-        super.init(context, config); //必须要执行
+        super.init(context, config); // 必须要执行
         getServlets().forEach(s -> s.init(context, getServletConf(s)));
     }
 
     @Override
     public void destroy(SncpContext context, AnyValue config) {
-        super.destroy(context, config); //必须要执行
+        super.destroy(context, config); // 必须要执行
         getServlets().forEach(s -> s.destroy(context, getServletConf(s)));
     }
 
@@ -94,14 +93,15 @@ public class SncpDispatcherServlet extends DispatcherServlet<Uint128, SncpContex
             }
             SncpServlet servlet = mappingServlet(request.getHeader().getServiceid());
             if (servlet == null) {
-                response.finish(SncpResponse.RETCODE_ILLSERVICEID, null);  //无效serviceid
+                response.finish(SncpResponse.RETCODE_ILLSERVICEID, null); // 无效serviceid
             } else {
                 servlet.execute(request, response);
             }
         } catch (Throwable e) {
-            request.getContext().getLogger().log(Level.WARNING, "Dispatch servlet occur exception. request = " + request, e);
+            request.getContext()
+                    .getLogger()
+                    .log(Level.WARNING, "Dispatch servlet occur exception. request = " + request, e);
             response.finishError(e);
         }
     }
-
 }

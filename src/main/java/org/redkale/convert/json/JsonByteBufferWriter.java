@@ -15,8 +15,7 @@ import org.redkale.util.*;
 /**
  * 以ByteBuffer为数据载体的JsonWriter
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -80,7 +79,7 @@ public class JsonByteBufferWriter extends JsonWriter {
     private int expand(final int byteLength) {
         if (this.buffers == null) {
             this.index = 0;
-            this.buffers = new ByteBuffer[]{supplier.get()};
+            this.buffers = new ByteBuffer[] {supplier.get()};
         }
         ByteBuffer buffer = this.buffers[index];
         if (!buffer.hasRemaining()) {
@@ -115,15 +114,15 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override
-    public void writeTo(final byte ch) { //只能是 0 - 127 的字符
+    public void writeTo(final byte ch) { // 只能是 0 - 127 的字符
         expand(1);
         this.buffers[index].put(ch);
     }
 
     @Override
-    public void writeTo(final byte[] chs, final int start, final int len) { //只能是 0 - 127 的字符
+    public void writeTo(final byte[] chs, final int start, final int len) { // 只能是 0 - 127 的字符
         int expandsize = expand(len);
-        if (expandsize == 0) { // 只需要一个buffer 
+        if (expandsize == 0) { // 只需要一个buffer
             this.buffers[index].put(chs, start, len);
         } else {
             ByteBuffer buffer = this.buffers[index];
@@ -154,13 +153,13 @@ public class JsonByteBufferWriter extends JsonWriter {
         if (expandsize < 0) {
             expandsize = expand(byteLength);
         }
-        if (expandsize == 0) { // 只需要一个buffer 
+        if (expandsize == 0) { // 只需要一个buffer
             final ByteBuffer buffer = this.buffers[index];
             if (quote) {
                 buffer.put((byte) '"');
             }
 
-            if (charset == null) { //UTF-8
+            if (charset == null) { // UTF-8
                 final int limit = start + len;
                 for (int i = start; i < limit; i++) {
                     char c = chs[i];
@@ -169,7 +168,7 @@ public class JsonByteBufferWriter extends JsonWriter {
                     } else if (c < 0x800) {
                         buffer.put((byte) (0xc0 | (c >> 6)));
                         buffer.put((byte) (0x80 | (c & 0x3f)));
-                    } else if (Character.isSurrogate(c)) { //连取两个
+                    } else if (Character.isSurrogate(c)) { // 连取两个
                         int uc = Character.toCodePoint(c, chs[i + 1]);
                         buffer.put((byte) (0xf0 | ((uc >> 18))));
                         buffer.put((byte) (0x80 | ((uc >> 12) & 0x3f)));
@@ -198,7 +197,7 @@ public class JsonByteBufferWriter extends JsonWriter {
             }
             buffer.put((byte) '"');
         }
-        if (charset == null) { //UTF-8
+        if (charset == null) { // UTF-8
             final int limit = start + len;
             for (int i = start; i < limit; i++) {
                 char c = chs[i];
@@ -216,7 +215,7 @@ public class JsonByteBufferWriter extends JsonWriter {
                         buffer = nextByteBuffer();
                     }
                     buffer.put((byte) (0x80 | (c & 0x3f)));
-                } else if (Character.isSurrogate(c)) { //连取两个
+                } else if (Character.isSurrogate(c)) { // 连取两个
                     int uc = Character.toCodePoint(c, chs[i + 1]);
                     if (!buffer.hasRemaining()) {
                         buffer = nextByteBuffer();
@@ -279,15 +278,20 @@ public class JsonByteBufferWriter extends JsonWriter {
         for (int i = start; i < limit; i++) {
             c = chs[i];
             switch (c) {
-                case '\n': size += 2;
+                case '\n':
+                    size += 2;
                     break;
-                case '\r': size += 2;
+                case '\r':
+                    size += 2;
                     break;
-                case '\t': size += 2;
+                case '\t':
+                    size += 2;
                     break;
-                case '\\': size += 2;
+                case '\\':
+                    size += 2;
                     break;
-                case '"': size += 2;
+                case '"':
+                    size += 2;
                     break;
                 default:
                     size += (c < 0x80 ? 1 : (c < 0x800 || Character.isSurrogate(c) ? 2 : 3));
@@ -311,7 +315,7 @@ public class JsonByteBufferWriter extends JsonWriter {
         }
         byte[] bs = Utility.latin1ByteArray(value);
         int expandsize = expand(bs.length + (quote ? 2 : 0));
-        if (expandsize == 0) {// 只需要一个buffer 
+        if (expandsize == 0) { // 只需要一个buffer
             final ByteBuffer buffer = this.buffers[index];
             if (quote) {
                 buffer.put((byte) '"');
@@ -348,7 +352,7 @@ public class JsonByteBufferWriter extends JsonWriter {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = Utility.latin1ByteArray(String.valueOf(value));
         int expandsize = expand(bs1.length + bs2.length);
-        if (expandsize == 0) {// 只需要一个buffer 
+        if (expandsize == 0) { // 只需要一个buffer
             final ByteBuffer buffer = this.buffers[index];
             buffer.put(bs1);
             buffer.put(bs2);
@@ -374,7 +378,7 @@ public class JsonByteBufferWriter extends JsonWriter {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = Utility.latin1ByteArray(String.valueOf(value));
         int expandsize = expand(bs1.length + bs2.length);
-        if (expandsize == 0) {// 只需要一个buffer 
+        if (expandsize == 0) { // 只需要一个buffer
             final ByteBuffer buffer = this.buffers[index];
             buffer.put(bs1);
             buffer.put(bs2);
@@ -400,7 +404,7 @@ public class JsonByteBufferWriter extends JsonWriter {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = Utility.latin1ByteArray(String.valueOf(value));
         int expandsize = expand(bs1.length + bs2.length);
-        if (expandsize == 0) {// 只需要一个buffer 
+        if (expandsize == 0) { // 只需要一个buffer
             final ByteBuffer buffer = this.buffers[index];
             buffer.put(bs1);
             buffer.put(bs2);
@@ -426,7 +430,7 @@ public class JsonByteBufferWriter extends JsonWriter {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = Utility.latin1ByteArray(value);
         int expandsize = expand(bs1.length + bs2.length + 2);
-        if (expandsize == 0) {// 只需要一个buffer 
+        if (expandsize == 0) { // 只需要一个buffer
             final ByteBuffer buffer = this.buffers[index];
             buffer.put(bs1);
             buffer.put((byte) '"');
@@ -466,7 +470,7 @@ public class JsonByteBufferWriter extends JsonWriter {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = Utility.latin1ByteArray(String.valueOf(value));
         int expandsize = expand(bs1.length + bs2.length + 1);
-        if (expandsize == 0) {// 只需要一个buffer 
+        if (expandsize == 0) { // 只需要一个buffer
             final ByteBuffer buffer = this.buffers[index];
             buffer.put(bs1);
             buffer.put(bs2);
@@ -499,7 +503,7 @@ public class JsonByteBufferWriter extends JsonWriter {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = Utility.latin1ByteArray(String.valueOf(value));
         int expandsize = expand(bs1.length + bs2.length + 1);
-        if (expandsize == 0) {// 只需要一个buffer 
+        if (expandsize == 0) { // 只需要一个buffer
             final ByteBuffer buffer = this.buffers[index];
             buffer.put(bs1);
             buffer.put(bs2);
@@ -532,7 +536,7 @@ public class JsonByteBufferWriter extends JsonWriter {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = Utility.latin1ByteArray(String.valueOf(value));
         int expandsize = expand(bs1.length + bs2.length + 1);
-        if (expandsize == 0) {// 只需要一个buffer 
+        if (expandsize == 0) { // 只需要一个buffer
             final ByteBuffer buffer = this.buffers[index];
             buffer.put(bs1);
             buffer.put(bs2);
@@ -575,7 +579,7 @@ public class JsonByteBufferWriter extends JsonWriter {
             byte[] bs1 = fieldBytes;
             byte[] bs2 = Utility.latin1ByteArray(value);
             int expandsize = expand(bs1.length + bs2.length + 3);
-            if (expandsize == 0) {// 只需要一个buffer 
+            if (expandsize == 0) { // 只需要一个buffer
                 final ByteBuffer buffer = this.buffers[index];
                 buffer.put(bs1);
                 buffer.put((byte) '"');
@@ -618,7 +622,7 @@ public class JsonByteBufferWriter extends JsonWriter {
         }
     }
 
-    @Override //firstFieldBytes 必须带{开头
+    @Override // firstFieldBytes 必须带{开头
     public void writeObjectByOnlyOneLatin1FieldValue(final byte[] firstFieldBytes, final String value) {
         if (value == null && nullable()) {
             writeTo('{');
@@ -629,7 +633,7 @@ public class JsonByteBufferWriter extends JsonWriter {
         }
         if (value == null || (tiny() && value.isEmpty())) {
             int expandsize = expand(2);
-            if (expandsize == 0) { // 只需要一个buffer 
+            if (expandsize == 0) { // 只需要一个buffer
                 ByteBuffer bb = this.buffers[index];
                 bb.put((byte) '{');
                 bb.put((byte) '}');
@@ -643,7 +647,7 @@ public class JsonByteBufferWriter extends JsonWriter {
             byte[] bs1 = firstFieldBytes;
             byte[] bs2 = Utility.latin1ByteArray(value);
             int expandsize = expand(bs1.length + bs2.length + 3);
-            if (expandsize == 0) {// 只需要一个buffer 
+            if (expandsize == 0) { // 只需要一个buffer
                 final ByteBuffer buffer = this.buffers[index];
                 buffer.put(bs1);
                 buffer.put((byte) '"');
@@ -686,14 +690,15 @@ public class JsonByteBufferWriter extends JsonWriter {
         }
     }
 
-    @Override //firstFieldBytes 必须带{开头, lastFieldBytes必须,开头
-    public void writeObjectByOnlyTwoIntFieldValue(final byte[] firstFieldBytes, final int value1, final byte[] lastFieldBytes, final int value2) {
+    @Override // firstFieldBytes 必须带{开头, lastFieldBytes必须,开头
+    public void writeObjectByOnlyTwoIntFieldValue(
+            final byte[] firstFieldBytes, final int value1, final byte[] lastFieldBytes, final int value2) {
         byte[] bs1 = firstFieldBytes;
         byte[] bs2 = Utility.latin1ByteArray(String.valueOf(value1));
         byte[] bs3 = lastFieldBytes;
         byte[] bs4 = Utility.latin1ByteArray(String.valueOf(value2));
         int expandsize = expand(bs1.length + bs2.length + bs3.length + bs4.length + 1);
-        if (expandsize == 0) {// 只需要一个buffer 
+        if (expandsize == 0) { // 只需要一个buffer
             final ByteBuffer buffer = this.buffers[index];
             buffer.put(bs1);
             buffer.put(bs2);
@@ -765,17 +770,23 @@ public class JsonByteBufferWriter extends JsonWriter {
         int len = 0;
         for (char ch : chs) {
             switch (ch) {
-                case '\n': len += 2;
+                case '\n':
+                    len += 2;
                     break;
-                case '\r': len += 2;
+                case '\r':
+                    len += 2;
                     break;
-                case '\t': len += 2;
+                case '\t':
+                    len += 2;
                     break;
-                case '\\': len += 2;
+                case '\\':
+                    len += 2;
                     break;
-                case '"': len += 2;
+                case '"':
+                    len += 2;
                     break;
-                default: len++;
+                default:
+                    len++;
                     break;
             }
         }
@@ -784,10 +795,10 @@ public class JsonByteBufferWriter extends JsonWriter {
             return;
         }
         int expandsize = -1;
-        if (this.charset == null) { //UTF-8
+        if (this.charset == null) { // UTF-8
             final int byteLength = 2 + encodeEscapeUTF8Length(chs, 0, chs.length);
             expandsize = expand(byteLength);
-            if (expandsize == 0) { // 只需要一个buffer 
+            if (expandsize == 0) { // 只需要一个buffer
                 final ByteBuffer buffer = this.buffers[index];
                 if (quote) {
                     buffer.put((byte) '"');
@@ -795,15 +806,20 @@ public class JsonByteBufferWriter extends JsonWriter {
                 for (int i = 0; i < chs.length; i++) {
                     char c = chs[i];
                     switch (c) {
-                        case '\n': buffer.put((byte) '\\').put((byte) 'n');
+                        case '\n':
+                            buffer.put((byte) '\\').put((byte) 'n');
                             break;
-                        case '\r': buffer.put((byte) '\\').put((byte) 'r');
+                        case '\r':
+                            buffer.put((byte) '\\').put((byte) 'r');
                             break;
-                        case '\t': buffer.put((byte) '\\').put((byte) 't');
+                        case '\t':
+                            buffer.put((byte) '\\').put((byte) 't');
                             break;
-                        case '\\': buffer.put((byte) '\\').put((byte) '\\');
+                        case '\\':
+                            buffer.put((byte) '\\').put((byte) '\\');
                             break;
-                        case '"': buffer.put((byte) '\\').put((byte) '"');
+                        case '"':
+                            buffer.put((byte) '\\').put((byte) '"');
                             break;
                         default:
                             if (c < 0x80) {
@@ -811,7 +827,7 @@ public class JsonByteBufferWriter extends JsonWriter {
                             } else if (c < 0x800) {
                                 buffer.put((byte) (0xc0 | (c >> 6)));
                                 buffer.put((byte) (0x80 | (c & 0x3f)));
-                            } else if (Character.isSurrogate(c)) { //连取两个
+                            } else if (Character.isSurrogate(c)) { // 连取两个
                                 int uc = Character.toCodePoint(c, chs[i + 1]);
                                 buffer.put((byte) (0xf0 | ((uc >> 18))));
                                 buffer.put((byte) (0x80 | ((uc >> 12) & 0x3f)));
@@ -835,17 +851,23 @@ public class JsonByteBufferWriter extends JsonWriter {
         StringBuilder sb = new StringBuilder(len);
         for (char ch : chs) {
             switch (ch) {
-                case '\n': sb.append("\\n");
+                case '\n':
+                    sb.append("\\n");
                     break;
-                case '\r': sb.append("\\r");
+                case '\r':
+                    sb.append("\\r");
                     break;
-                case '\t': sb.append("\\t");
+                case '\t':
+                    sb.append("\\t");
                     break;
-                case '\\': sb.append("\\\\");
+                case '\\':
+                    sb.append("\\\\");
                     break;
-                case '"': sb.append("\\\"");
+                case '"':
+                    sb.append("\\\"");
                     break;
-                default: sb.append(ch);
+                default:
+                    sb.append(ch);
                     break;
             }
         }

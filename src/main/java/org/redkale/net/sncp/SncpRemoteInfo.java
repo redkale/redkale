@@ -3,6 +3,9 @@
  */
 package org.redkale.net.sncp;
 
+import static org.redkale.net.sncp.Sncp.loadRemoteMethodActions;
+import static org.redkale.net.sncp.SncpHeader.HEADER_SUBSIZE;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.*;
@@ -16,20 +19,16 @@ import org.redkale.convert.json.JsonConvert;
 import org.redkale.mq.spi.MessageAgent;
 import org.redkale.mq.spi.MessageClient;
 import org.redkale.mq.spi.MessageRecord;
-import static org.redkale.net.sncp.Sncp.loadRemoteMethodActions;
-import static org.redkale.net.sncp.SncpHeader.HEADER_SUBSIZE;
 import org.redkale.service.*;
 import org.redkale.util.*;
 
 /**
  * 每个Service的client相关信息对象
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <S> Service泛型
- *
  * @since 2.8.0
  */
 public class SncpRemoteInfo<S extends Service> {
@@ -46,35 +45,42 @@ public class SncpRemoteInfo<S extends Service> {
 
     protected final int serviceVersion;
 
-    //key: actionid.Uint128.toString()
+    // key: actionid.Uint128.toString()
     protected final Map<String, SncpRemoteAction> actions = new HashMap<>();
 
-    //非MQ模式下此字段才有值
+    // 非MQ模式下此字段才有值
     protected final SncpRpcGroups sncpRpcGroups;
 
-    //非MQ模式下此字段才有值
+    // 非MQ模式下此字段才有值
     protected final SncpClient sncpClient;
 
-    //非MQ模式下此字段才有值, 可能为null
+    // 非MQ模式下此字段才有值, 可能为null
     protected String remoteGroup;
 
-    //非MQ模式下此字段才有值, 可能为null
+    // 非MQ模式下此字段才有值, 可能为null
     protected Set<InetSocketAddress> remoteAddresses;
 
-    //默认值: BsonConvert.root()
+    // 默认值: BsonConvert.root()
     protected final Convert convert;
 
-    //MQ模式下此字段才有值
+    // MQ模式下此字段才有值
     protected final String topic;
 
-    //MQ模式下此字段才有值
+    // MQ模式下此字段才有值
     protected final MessageAgent messageAgent;
 
-    //MQ模式下此字段才有值
+    // MQ模式下此字段才有值
     protected final MessageClient messageClient;
 
-    SncpRemoteInfo(String resourceName, Class<S> resourceType, Class<S> serviceImplClass, Convert convert,
-        SncpRpcGroups sncpRpcGroups, SncpClient sncpClient, MessageAgent messageAgent, String remoteGroup) {
+    SncpRemoteInfo(
+            String resourceName,
+            Class<S> resourceType,
+            Class<S> serviceImplClass,
+            Convert convert,
+            SncpRpcGroups sncpRpcGroups,
+            SncpClient sncpClient,
+            MessageAgent messageAgent,
+            String remoteGroup) {
         Objects.requireNonNull(sncpRpcGroups);
         this.name = resourceName;
         this.serviceType = resourceType;
@@ -87,15 +93,20 @@ public class SncpRemoteInfo<S extends Service> {
         this.messageAgent = messageAgent;
         this.remoteGroup = remoteGroup;
         this.messageClient = messageAgent == null ? null : messageAgent.getSncpMessageClient();
-        this.topic = messageAgent == null ? null : Sncp.generateSncpReqTopic(resourceName, resourceType, messageAgent.getNodeid());
+        this.topic = messageAgent == null
+                ? null
+                : Sncp.generateSncpReqTopic(resourceName, resourceType, messageAgent.getNodeid());
 
-        for (Map.Entry<Uint128, Method> en : loadRemoteMethodActions(Sncp.getServiceType(serviceImplClass)).entrySet()) {
-            this.actions.put(en.getKey().toString(), 
-                new SncpRemoteAction(serviceImplClass, resourceType, en.getValue(), serviceid, en.getKey(), sncpClient));
+        for (Map.Entry<Uint128, Method> en :
+                loadRemoteMethodActions(Sncp.getServiceType(serviceImplClass)).entrySet()) {
+            this.actions.put(
+                    en.getKey().toString(),
+                    new SncpRemoteAction(
+                            serviceImplClass, resourceType, en.getValue(), serviceid, en.getKey(), sncpClient));
         }
     }
 
-    //由远程模式的DyncRemoveService调用
+    // 由远程模式的DyncRemoveService调用
     public <T> T remote(final String actionid, final Object... params) {
         final SncpRemoteAction action = this.actions.get(actionid);
         CompletionHandler callbackHandler = null;
@@ -109,47 +120,58 @@ public class SncpRemoteInfo<S extends Service> {
             }
         }
         final CompletableFuture<byte[]> future = remote(action, Traces.currentTraceid(), params);
-        if (action.paramHandlerIndex >= 0) { //参数中存在CompletionHandler
+        if (action.paramHandlerIndex >= 0) { // 参数中存在CompletionHandler
             final CompletionHandler handler = callbackHandler;
             final Object attach = callbackHandlerAttach;
-            if (handler == null) { //传入的CompletionHandler参数为null
+            if (handler == null) { // 传入的CompletionHandler参数为null
                 future.join();
             } else {
                 future.whenComplete((v, t) -> {
                     if (t == null) {
-                        //v,length-1为了读掉(byte)0
-                        handler.completed(v == null ? null : convert.convertFrom(action.paramHandlerResultType, v, 1, v.length - 1), attach);
+                        // v,length-1为了读掉(byte)0
+                        handler.completed(
+                                v == null
+                                        ? null
+                                        : convert.convertFrom(action.paramHandlerResultType, v, 1, v.length - 1),
+                                attach);
                     } else {
                         handler.failed(t, attach);
                     }
                 });
             }
-        } else if (action.returnFutureClass != null) { //返回类型为CompletableFuture
+        } else if (action.returnFutureClass != null) { // 返回类型为CompletableFuture
             if (action.returnFutureClass == CompletableFuture.class) {
-                //v,length-1为了读掉(byte)0
-                return (T) future.thenApply(v -> v == null ? null : convert.convertFrom(action.returnFutureResultType, v, 1, v.length - 1));
+                // v,length-1为了读掉(byte)0
+                return (T) future.thenApply(
+                        v -> v == null ? null : convert.convertFrom(action.returnFutureResultType, v, 1, v.length - 1));
             } else {
                 final CompletableFuture returnFuture = action.returnFutureCreator.create();
                 future.whenComplete((v, t) -> {
                     if (t == null) {
-                        //v,length-1为了读掉(byte)0
-                        returnFuture.complete(v == null ? null : convert.convertFrom(action.returnFutureResultType, v, 1, v.length - 1));
+                        // v,length-1为了读掉(byte)0
+                        returnFuture.complete(
+                                v == null
+                                        ? null
+                                        : convert.convertFrom(action.returnFutureResultType, v, 1, v.length - 1));
                     } else {
                         returnFuture.completeExceptionally(t);
                     }
                 });
                 return (T) returnFuture;
             }
-        } else if (action.returnObjectType != null) { //返回类型为JavaBean
-            //v,length-1为了读掉(byte)0
-            return (T) future.thenApply(v -> v == null ? null : convert.convertFrom(action.returnObjectType, v, 1, v.length - 1)).join();
-        } else { //返回类型为void
+        } else if (action.returnObjectType != null) { // 返回类型为JavaBean
+            // v,length-1为了读掉(byte)0
+            return (T) future.thenApply(
+                            v -> v == null ? null : convert.convertFrom(action.returnObjectType, v, 1, v.length - 1))
+                    .join();
+        } else { // 返回类型为void
             future.join();
         }
         return null;
     }
 
-    private CompletableFuture<byte[]> remote(final SncpRemoteAction action, final String traceid, final Object[] params) {
+    private CompletableFuture<byte[]> remote(
+            final SncpRemoteAction action, final String traceid, final Object[] params) {
         if (messageAgent != null) {
             return remoteMessage(action, traceid, params);
         } else {
@@ -157,23 +179,31 @@ public class SncpRemoteInfo<S extends Service> {
         }
     }
 
-    //MQ模式RPC
-    private CompletableFuture<byte[]> remoteMessage(final SncpRemoteAction action, final String traceid, final Object[] params) {
-        final SncpClientRequest request = createSncpClientRequest(action, this.sncpClient.clientSncpAddress, traceid, params);
-        String targetTopic = action.paramTopicTargetIndex >= 0 ? (String) params[action.paramTopicTargetIndex] : this.topic;
+    // MQ模式RPC
+    private CompletableFuture<byte[]> remoteMessage(
+            final SncpRemoteAction action, final String traceid, final Object[] params) {
+        final SncpClientRequest request =
+                createSncpClientRequest(action, this.sncpClient.clientSncpAddress, traceid, params);
+        String targetTopic =
+                action.paramTopicTargetIndex >= 0 ? (String) params[action.paramTopicTargetIndex] : this.topic;
         if (targetTopic == null) {
             targetTopic = this.topic;
         }
         ByteArray array = new ByteArray();
         request.writeTo(null, array);
-        MessageRecord message = messageAgent.getSncpMessageClient().createMessageRecord(MessageRecord.CTYPE_BSON, targetTopic, null, array.getBytes());
+        MessageRecord message = messageAgent
+                .getSncpMessageClient()
+                .createMessageRecord(MessageRecord.CTYPE_BSON, targetTopic, null, array.getBytes());
         final String tt = targetTopic;
         message.localActionName(action.actionName());
         message.localParams(params);
         return messageClient.sendMessage(message).thenApply(msg -> {
             if (msg == null || msg.getContent() == null) {
-                logger.log(Level.SEVERE, action.method + " sncp mq(params: " + JsonConvert.root().convertTo(params)
-                    + ", message: " + message + ") deal error, this.topic = " + this.topic + ", targetTopic = " + tt + ", result = " + msg);
+                logger.log(
+                        Level.SEVERE,
+                        action.method + " sncp mq(params: " + JsonConvert.root().convertTo(params) + ", message: "
+                                + message + ") deal error, this.topic = " + this.topic + ", targetTopic = " + tt
+                                + ", result = " + msg);
                 return null;
             }
             ByteBuffer buffer = ByteBuffer.wrap(msg.getContent());
@@ -183,15 +213,19 @@ public class SncpRemoteInfo<S extends Service> {
             }
             SncpHeader header = SncpHeader.read(buffer, headerSize);
             if (!header.checkValid(action.header)) {
-                throw new SncpException("sncp header error, response-header:" + action.header + "+, response-header:" + header);
+                throw new SncpException(
+                        "sncp header error, response-header:" + action.header + "+, response-header:" + header);
             }
             final int retcode = header.getRetcode();
             if (retcode != 0) {
-                logger.log(Level.SEVERE, action.method + " sncp (params: " + JsonConvert.root().convertTo(params)
-                    + ") deal error (retcode=" + retcode + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) 
-                    + "), params=" + JsonConvert.root().convertTo(params));
-                throw new SncpException("remote service(" + action.method + ") deal error (retcode=" + retcode 
-                    + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
+                logger.log(
+                        Level.SEVERE,
+                        action.method + " sncp (params: " + JsonConvert.root().convertTo(params)
+                                + ") deal error (retcode=" + retcode + ", retinfo="
+                                + SncpResponse.getRetCodeInfo(retcode)
+                                + "), params=" + JsonConvert.root().convertTo(params));
+                throw new SncpException("remote service(" + action.method + ") deal error (retcode=" + retcode
+                        + ", retinfo=" + SncpResponse.getRetCodeInfo(retcode) + ")");
             }
             final int respBodyLength = header.getBodyLength();
             byte[] body = new byte[respBodyLength];
@@ -200,15 +234,20 @@ public class SncpRemoteInfo<S extends Service> {
         });
     }
 
-    //Client模式RPC
-    protected CompletableFuture<byte[]> remoteClient(final SncpRemoteAction action, final String traceid, final Object[] params) {
+    // Client模式RPC
+    protected CompletableFuture<byte[]> remoteClient(
+            final SncpRemoteAction action, final String traceid, final Object[] params) {
         final SncpClient client = this.sncpClient;
         final SncpClientRequest request = createSncpClientRequest(action, client.clientSncpAddress, traceid, params);
-        final SocketAddress addr = action.paramAddressTargetIndex >= 0 ? (SocketAddress) params[action.paramAddressTargetIndex] : nextRemoteAddress();
-        return client.connect(addr).thenCompose(conn -> client.writeChannel(conn, request).thenApply(rs -> rs.getBodyContent()));
+        final SocketAddress addr = action.paramAddressTargetIndex >= 0
+                ? (SocketAddress) params[action.paramAddressTargetIndex]
+                : nextRemoteAddress();
+        return client.connect(addr)
+                .thenCompose(conn -> client.writeChannel(conn, request).thenApply(rs -> rs.getBodyContent()));
     }
 
-    protected SncpClientRequest createSncpClientRequest(SncpRemoteAction action, InetSocketAddress clientSncpAddress, String traceid, Object[] params) {
+    protected SncpClientRequest createSncpClientRequest(
+            SncpRemoteAction action, InetSocketAddress clientSncpAddress, String traceid, Object[] params) {
         final Type[] myParamTypes = action.paramTypes;
         final Class[] myParamClass = action.paramClasses;
         if (action.paramAddressSourceIndex >= 0) {
@@ -217,8 +256,13 @@ public class SncpRemoteInfo<S extends Service> {
         byte[] body = null;
         if (myParamTypes.length > 0) {
             Writer writer = convert.pollWriter();
-            for (int i = 0; i < params.length; i++) { //service方法的参数
-                convert.convertTo(writer, CompletionHandler.class.isAssignableFrom(myParamClass[i]) ? CompletionHandler.class : myParamTypes[i], params[i]);
+            for (int i = 0; i < params.length; i++) { // service方法的参数
+                convert.convertTo(
+                        writer,
+                        CompletionHandler.class.isAssignableFrom(myParamClass[i])
+                                ? CompletionHandler.class
+                                : myParamTypes[i],
+                        params[i]);
             }
             body = ((ByteTuple) writer).toArray();
             convert.offerWriter(writer);
@@ -243,24 +287,33 @@ public class SncpRemoteInfo<S extends Service> {
                 }
             }
         }
-        throw new SncpException("Not found SocketAddress by remoteGroup = " + remoteGroup + ", resourceid = " + resourceid);
+        throw new SncpException(
+                "Not found SocketAddress by remoteGroup = " + remoteGroup + ", resourceid = " + resourceid);
     }
 
     @Override
     public String toString() {
         InetSocketAddress clientSncpAddress = sncpClient == null ? null : sncpClient.getClientSncpAddress();
-        return this.getClass().getSimpleName() + "(service = " + serviceType.getSimpleName() + ", serviceid = " + serviceid
-            + ", serviceVersion = " + serviceVersion + ", name = '" + name
-            + "', address = " + (clientSncpAddress == null ? "" : (clientSncpAddress.getHostString() + ":" + clientSncpAddress.getPort()))
-            + ", actions.size = " + actions.size() + ")";
+        return this.getClass().getSimpleName() + "(service = " + serviceType.getSimpleName() + ", serviceid = "
+                + serviceid
+                + ", serviceVersion = " + serviceVersion + ", name = '" + name
+                + "', address = "
+                + (clientSncpAddress == null
+                        ? ""
+                        : (clientSncpAddress.getHostString() + ":" + clientSncpAddress.getPort()))
+                + ", actions.size = " + actions.size() + ")";
     }
 
-    public String toSimpleString() { //给Sncp产生的Service用
+    public String toSimpleString() { // 给Sncp产生的Service用
         InetSocketAddress clientSncpAddress = sncpClient == null ? null : sncpClient.getClientSncpAddress();
-        return serviceType.getSimpleName() + "(name = '" + name + "', serviceid = " + serviceid + ", serviceVersion = " + serviceVersion
-            + ", clientaddr = " + (clientSncpAddress == null ? "" : (clientSncpAddress.getHostString() + ":" + clientSncpAddress.getPort()))
-            + ((remoteGroup == null || remoteGroup.isEmpty()) ? "" : ", remoteGroup = " + remoteGroup)
-            + ", actions.size = " + actions.size() + ")";
+        return serviceType.getSimpleName() + "(name = '" + name + "', serviceid = " + serviceid + ", serviceVersion = "
+                + serviceVersion
+                + ", clientaddr = "
+                + (clientSncpAddress == null
+                        ? ""
+                        : (clientSncpAddress.getHostString() + ":" + clientSncpAddress.getPort()))
+                + ((remoteGroup == null || remoteGroup.isEmpty()) ? "" : ", remoteGroup = " + remoteGroup)
+                + ", actions.size = " + actions.size() + ")";
     }
 
     public void updateRemoteAddress(String remoteGroup, Set<InetSocketAddress> remoteAddresses) {
@@ -306,7 +359,7 @@ public class SncpRemoteInfo<S extends Service> {
 
         protected final Method method;
 
-        protected final Type returnObjectType;  //void必须设为null
+        protected final Type returnObjectType; // void必须设为null
 
         protected final Type[] paramTypes;
 
@@ -322,21 +375,26 @@ public class SncpRemoteInfo<S extends Service> {
 
         protected final int paramTopicTargetIndex;
 
-        protected final Class<? extends CompletionHandler> paramHandlerClass; //CompletionHandler参数的类型
+        protected final Class<? extends CompletionHandler> paramHandlerClass; // CompletionHandler参数的类型
 
-        protected final java.lang.reflect.Type paramHandlerResultType; //CompletionHandler.completed第一个参数的类型
+        protected final java.lang.reflect.Type paramHandlerResultType; // CompletionHandler.completed第一个参数的类型
 
-        protected final java.lang.reflect.Type returnFutureResultType; //返回结果的CompletableFuture的结果泛型类型
+        protected final java.lang.reflect.Type returnFutureResultType; // 返回结果的CompletableFuture的结果泛型类型
 
-        protected final Class<? extends Future> returnFutureClass; //返回结果的CompletableFuture类型
+        protected final Class<? extends Future> returnFutureClass; // 返回结果的CompletableFuture类型
 
-        protected final Creator<? extends CompletableFuture> returnFutureCreator; //返回CompletableFuture类型的构建器
+        protected final Creator<? extends CompletableFuture> returnFutureCreator; // 返回CompletableFuture类型的构建器
 
         protected final SncpHeader header;
 
         @SuppressWarnings("unchecked")
-        SncpRemoteAction(final Class serviceImplClass, Class resourceType, Method method, 
-            Uint128 serviceid, Uint128 actionid, final SncpClient sncpClient) {
+        SncpRemoteAction(
+                final Class serviceImplClass,
+                Class resourceType,
+                Method method,
+                Uint128 serviceid,
+                Uint128 actionid,
+                final SncpClient sncpClient) {
             this.actionid = actionid == null ? Sncp.actionid(method) : actionid;
             Type rt = TypeToken.getGenericType(method.getGenericReturnType(), serviceImplClass);
             this.returnObjectType = rt == void.class || rt == Void.class ? null : rt;
@@ -368,12 +426,14 @@ public class SncpRemoteInfo<S extends Service> {
                     if (handlerType instanceof Class) {
                         handlerResultType = Object.class;
                     } else if (handlerType instanceof ParameterizedType) {
-                        handlerResultType = TypeToken.getGenericType(((ParameterizedType) handlerType).getActualTypeArguments()[0], handlerType);
+                        handlerResultType = TypeToken.getGenericType(
+                                ((ParameterizedType) handlerType).getActualTypeArguments()[0], handlerType);
                     } else {
                         throw new SncpException(serviceImplClass + " had unknown genericType in " + method);
                     }
                     if (method.getReturnType() != void.class) {
-                        throw new SncpException(method + " have CompletionHandler type parameter but return type is not void");
+                        throw new SncpException(
+                                method + " have CompletionHandler type parameter but return type is not void");
                     }
                     break;
                 }
@@ -390,32 +450,38 @@ public class SncpRemoteInfo<S extends Service> {
                             } else if (ann.annotationType() == RpcTargetAddress.class) {
                                 if (SocketAddress.class.isAssignableFrom(params[i])) {
                                     if (sourceAddrIndex >= 0) {
-                                        throw new SncpException(method + " have more than one @RpcTargetAddress parameter");
+                                        throw new SncpException(
+                                                method + " have more than one @RpcTargetAddress parameter");
                                     } else {
                                         targetAddrIndex = i;
                                     }
                                 } else {
-                                    throw new SncpException(method + " must be SocketAddress Type on @RpcTargetAddress parameter");
+                                    throw new SncpException(
+                                            method + " must be SocketAddress Type on @RpcTargetAddress parameter");
                                 }
                             } else if (ann.annotationType() == RpcSourceAddress.class) {
                                 if (SocketAddress.class.isAssignableFrom(params[i])) {
                                     if (sourceAddrIndex >= 0) {
-                                        throw new SncpException(method + " have more than one @RpcSourceAddress parameter");
+                                        throw new SncpException(
+                                                method + " have more than one @RpcSourceAddress parameter");
                                     } else {
                                         sourceAddrIndex = i;
                                     }
                                 } else {
-                                    throw new SncpException(method + " must be SocketAddress Type on @RpcSourceAddress parameter");
+                                    throw new SncpException(
+                                            method + " must be SocketAddress Type on @RpcSourceAddress parameter");
                                 }
                             } else if (ann.annotationType() == RpcTargetTopic.class) {
                                 if (String.class.isAssignableFrom(params[i])) {
                                     if (sourceAddrIndex >= 0) {
-                                        throw new SncpException(method + " have more than one @RpcTargetTopic parameter");
+                                        throw new SncpException(
+                                                method + " have more than one @RpcTargetTopic parameter");
                                     } else {
                                         tpoicAddrIndex = i;
                                     }
                                 } else {
-                                    throw new SncpException(method + " must be String Type on @RpcTargetTopic parameter");
+                                    throw new SncpException(
+                                            method + " must be String Type on @RpcTargetTopic parameter");
                                 }
                             }
                         }
@@ -429,24 +495,33 @@ public class SncpRemoteInfo<S extends Service> {
             this.paramHandlerClass = handlerFuncClass;
             this.paramHandlerResultType = handlerResultType;
             this.paramHandlerAttachIndex = handlerAttachIndex;
-            this.header = SncpHeader.create(sncpClient == null ? null : sncpClient.getClientSncpAddress(), 
-                serviceid, resourceType.getName(), actionid, method.getName());
+            this.header = SncpHeader.create(
+                    sncpClient == null ? null : sncpClient.getClientSncpAddress(),
+                    serviceid,
+                    resourceType.getName(),
+                    actionid,
+                    method.getName());
             if (this.paramHandlerIndex >= 0 && method.getReturnType() != void.class) {
                 throw new SncpException(method + " have CompletionHandler type parameter but return type is not void");
             }
             if (Future.class.isAssignableFrom(method.getReturnType())) {
-                java.lang.reflect.Type futureType = TypeToken.getGenericType(method.getGenericReturnType(), serviceImplClass);
+                java.lang.reflect.Type futureType =
+                        TypeToken.getGenericType(method.getGenericReturnType(), serviceImplClass);
                 java.lang.reflect.Type returnType = null;
                 if (futureType instanceof Class) {
                     returnType = Object.class;
                 } else if (futureType instanceof ParameterizedType) {
-                    returnType = TypeToken.getGenericType(((ParameterizedType) futureType).getActualTypeArguments()[0], futureType);
+                    returnType = TypeToken.getGenericType(
+                            ((ParameterizedType) futureType).getActualTypeArguments()[0], futureType);
                 } else {
                     throw new SncpException(serviceImplClass + " had unknown return genericType in " + method);
                 }
                 this.returnFutureResultType = returnType;
-                this.returnFutureClass = method.getReturnType().isAssignableFrom(CompletableFuture.class) ? CompletableFuture.class : (Class) method.getReturnType();
-                if (method.getReturnType().isAssignableFrom(CompletableFuture.class) || CompletableFuture.class.isAssignableFrom(method.getReturnType())) {
+                this.returnFutureClass = method.getReturnType().isAssignableFrom(CompletableFuture.class)
+                        ? CompletableFuture.class
+                        : (Class) method.getReturnType();
+                if (method.getReturnType().isAssignableFrom(CompletableFuture.class)
+                        || CompletableFuture.class.isAssignableFrom(method.getReturnType())) {
                     this.returnFutureCreator = (Creator) Creator.create(this.returnFutureClass);
                 } else {
                     throw new SncpException(serviceImplClass + " return must be CompletableFuture or subclass");

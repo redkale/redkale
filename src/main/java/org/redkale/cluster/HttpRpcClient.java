@@ -15,11 +15,9 @@ import org.redkale.util.RedkaleException;
 /**
  * 不依赖MessageRecord则可兼容RPC方式
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.1.0
  */
 public abstract class HttpRpcClient implements ClusterRpcClient<WebRequest, HttpResult<byte[]>> {
@@ -50,7 +48,8 @@ public abstract class HttpRpcClient implements ClusterRpcClient<WebRequest, Http
         return sendMessage(generateHttpReqTopic(request, null), userid, null, request);
     }
 
-    public final CompletableFuture<HttpResult<byte[]>> sendMessage(Serializable userid, String groupid, WebRequest request) {
+    public final CompletableFuture<HttpResult<byte[]>> sendMessage(
+            Serializable userid, String groupid, WebRequest request) {
         return sendMessage(generateHttpReqTopic(request, null), userid, groupid, request);
     }
 
@@ -59,47 +58,50 @@ public abstract class HttpRpcClient implements ClusterRpcClient<WebRequest, Http
     }
 
     public <T> CompletableFuture<T> sendMessage(WebRequest request, Type type) {
-        return sendMessage(generateHttpReqTopic(request, null), 0, null, request).thenApply((HttpResult<byte[]> httbs) -> {
-            if (!httbs.isSuccess()) {
-                throw new RedkaleException(httbs.getHeader("retinfo", "Internal Server Error"));
-            }
-            if (httbs.getResult() == null) {
-                return null;
-            }
-            return JsonConvert.root().convertFrom(type, httbs.getResult());
-        });
+        return sendMessage(generateHttpReqTopic(request, null), 0, null, request)
+                .thenApply((HttpResult<byte[]> httbs) -> {
+                    if (!httbs.isSuccess()) {
+                        throw new RedkaleException(httbs.getHeader("retinfo", "Internal Server Error"));
+                    }
+                    if (httbs.getResult() == null) {
+                        return null;
+                    }
+                    return JsonConvert.root().convertFrom(type, httbs.getResult());
+                });
     }
 
     public <T> CompletableFuture<T> sendMessage(Serializable userid, WebRequest request, Type type) {
-        return sendMessage(generateHttpReqTopic(request, null), userid, null, request).thenApply((HttpResult<byte[]> httbs) -> {
-            if (!httbs.isSuccess()) {
-                throw new RedkaleException(httbs.getHeader("retinfo", "Internal Server Error"));
-            }
-            if (httbs.getResult() == null) {
-                return null;
-            }
-            return JsonConvert.root().convertFrom(type, httbs.getResult());
-        });
+        return sendMessage(generateHttpReqTopic(request, null), userid, null, request)
+                .thenApply((HttpResult<byte[]> httbs) -> {
+                    if (!httbs.isSuccess()) {
+                        throw new RedkaleException(httbs.getHeader("retinfo", "Internal Server Error"));
+                    }
+                    if (httbs.getResult() == null) {
+                        return null;
+                    }
+                    return JsonConvert.root().convertFrom(type, httbs.getResult());
+                });
     }
 
     public <T> CompletableFuture<T> sendMessage(Serializable userid, String groupid, WebRequest request, Type type) {
-        return sendMessage(generateHttpReqTopic(request, null), userid, groupid, request).thenApply((HttpResult<byte[]> httbs) -> {
-            if (!httbs.isSuccess()) {
-                throw new RedkaleException(httbs.getHeader("retinfo", "Internal Server Error"));
-            }
-            if (httbs.getResult() == null) {
-                return null;
-            }
-            return JsonConvert.root().convertFrom(type, httbs.getResult());
-        });
+        return sendMessage(generateHttpReqTopic(request, null), userid, groupid, request)
+                .thenApply((HttpResult<byte[]> httbs) -> {
+                    if (!httbs.isSuccess()) {
+                        throw new RedkaleException(httbs.getHeader("retinfo", "Internal Server Error"));
+                    }
+                    if (httbs.getResult() == null) {
+                        return null;
+                    }
+                    return JsonConvert.root().convertFrom(type, httbs.getResult());
+                });
     }
 
-    //格式: http.req.user
+    // 格式: http.req.user
     public String generateHttpReqTopic(String module) {
         return Rest.generateHttpReqTopic(module, getNodeid());
     }
 
-    //格式: http.req.user-n10
+    // 格式: http.req.user-n10
     public String generateHttpReqTopic(String module, String resname) {
         return Rest.generateHttpReqTopic(module, resname, getNodeid());
     }
@@ -109,16 +111,17 @@ public abstract class HttpRpcClient implements ClusterRpcClient<WebRequest, Http
         if (path != null && !path.isEmpty() && module.startsWith(path)) {
             module = module.substring(path.length());
         }
-        module = module.substring(1); //去掉/
+        module = module.substring(1); // 去掉/
         module = module.substring(0, module.indexOf('/'));
         String resname = request.getHeader(Rest.REST_HEADER_RESNAME, "");
         return Rest.generateHttpReqTopic(module, resname, getNodeid());
     }
 
-    public abstract CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, WebRequest request);
+    public abstract CompletableFuture<HttpResult<byte[]>> sendMessage(
+            String topic, Serializable userid, String groupid, WebRequest request);
 
-    public abstract CompletableFuture<Void> produceMessage(String topic, Serializable userid, String groupid, WebRequest request);
+    public abstract CompletableFuture<Void> produceMessage(
+            String topic, Serializable userid, String groupid, WebRequest request);
 
     protected abstract String getNodeid();
-
 }

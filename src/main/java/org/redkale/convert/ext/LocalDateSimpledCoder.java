@@ -12,8 +12,7 @@ import org.redkale.convert.json.*;
 /**
  * java.time.LocalDate 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -25,7 +24,8 @@ public final class LocalDateSimpledCoder<R extends Reader, W extends Writer> ext
 
     @Override
     public void convertTo(W out, LocalDate value) {
-        out.writeInt(value == null ? -1 : value.getYear() * 100_00 + value.getMonthValue() * 100 + value.getDayOfMonth());
+        out.writeInt(
+                value == null ? -1 : value.getYear() * 100_00 + value.getMonthValue() * 100 + value.getDayOfMonth());
     }
 
     @Override
@@ -34,22 +34,23 @@ public final class LocalDateSimpledCoder<R extends Reader, W extends Writer> ext
         return t == -1 ? null : LocalDate.of(t / 100_00, t % 100_00 / 100, t % 100);
     }
 
-//    public static void main(String[] args) throws Throwable {
-//        LocalDate now = LocalDate.now();
-//        System.out.println(now);
-//        BsonWriter writer = new BsonWriter();
-//        LocalDateSimpledCoder.instance.convertTo(writer, now);
-//        System.out.println(new ByteArray(writer).getInt(0));
-//        BsonReader reader = new BsonReader(writer.toArray());
-//        System.out.println(LocalDateSimpledCoder.instance.convertFrom(reader));
-//    }
+    //    public static void main(String[] args) throws Throwable {
+    //        LocalDate now = LocalDate.now();
+    //        System.out.println(now);
+    //        BsonWriter writer = new BsonWriter();
+    //        LocalDateSimpledCoder.instance.convertTo(writer, now);
+    //        System.out.println(new ByteArray(writer).getInt(0));
+    //        BsonReader reader = new BsonReader(writer.toArray());
+    //        System.out.println(LocalDateSimpledCoder.instance.convertFrom(reader));
+    //    }
     /**
      * java.time.LocalDate 的JsonSimpledCoder实现
      *
      * @param <R> Reader输入的子类型
      * @param <W> Writer输出的子类型
      */
-    public final static class LocalDateJsonSimpledCoder<R extends JsonReader, W extends JsonWriter> extends SimpledCoder<R, W, LocalDate> {
+    public static final class LocalDateJsonSimpledCoder<R extends JsonReader, W extends JsonWriter>
+            extends SimpledCoder<R, W, LocalDate> {
 
         public static final LocalDateJsonSimpledCoder instance = new LocalDateJsonSimpledCoder();
 

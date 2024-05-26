@@ -14,16 +14,12 @@ import org.redkale.convert.TextConvert;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.RedkaleException;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class HttpParameters implements RestParams, Serializable {
 
     protected HashMap<String, String> map;
 
-    protected HttpParameters() {
-    }
+    protected HttpParameters() {}
 
     public static HttpParameters create() {
         return new HttpParameters();
@@ -42,7 +38,6 @@ public class HttpParameters implements RestParams, Serializable {
      * 无需校验参数合法性
      *
      * @param map 参数
-     *
      * @return HttpParameters
      */
     public static HttpParameters ofValid(Map<String, String> map) {
@@ -104,7 +99,7 @@ public class HttpParameters implements RestParams, Serializable {
         return this;
     }
 
-    //服务端接收，无需校验参数合法性
+    // 服务端接收，无需校验参数合法性
     void setValid(String name, String value) {
         if (this.map == null) {
             this.map = new LinkedHashMap<>();

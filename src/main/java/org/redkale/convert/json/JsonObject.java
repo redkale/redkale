@@ -13,16 +13,14 @@ import org.redkale.util.*;
 /**
  * 常规json对象
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.8.0
  */
 public class JsonObject extends LinkedHashMap<String, Object> implements JsonElement {
 
-    public JsonObject() {
-    }
+    public JsonObject() {}
 
     public JsonObject(Map map) {
         super(map);
@@ -470,5 +468,4 @@ public class JsonObject extends LinkedHashMap<String, Object> implements JsonEle
     public String toString() {
         return JsonConvert.root().convertTo(this);
     }
-
 }

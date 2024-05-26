@@ -18,11 +18,9 @@ import org.redkale.util.*;
 /**
  * 协议处理的IO线程类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.1.0
  */
 public class AsyncIOThread extends WorkThread {
@@ -41,7 +39,14 @@ public class AsyncIOThread extends WorkThread {
 
     private final AtomicBoolean closed = new AtomicBoolean();
 
-    public AsyncIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ByteBufferPool safeBufferPool) throws IOException {
+    public AsyncIOThread(
+            ThreadGroup g,
+            String name,
+            int index,
+            int threads,
+            ExecutorService workExecutor,
+            ByteBufferPool safeBufferPool)
+            throws IOException {
         super(g, name, index, threads, workExecutor, null);
         this.selector = Selector.open();
         this.setDaemon(true);
@@ -73,7 +78,7 @@ public class AsyncIOThread extends WorkThread {
             return;
         }
         key.interestOps(key.interestOps() | opt);
-        //非IO线程中
+        // 非IO线程中
         if (!inCurrThread()) {
             key.selector().wakeup();
         }
@@ -141,9 +146,7 @@ public class AsyncIOThread extends WorkThread {
         return bufferConsumer;
     }
 
-    /**
-     * 运行线程
-     */
+    /** 运行线程 */
     @Override
     public void run() {
         final Queue<Runnable> commands = this.commandQueue;
@@ -197,7 +200,8 @@ public class AsyncIOThread extends WorkThread {
                         }
                     } else {
                         if (conn.readCompletionHandler != null && key.isReadable()) {
-                            key.interestOps(key.interestOps() & ~SelectionKey.OP_READ); //不放开这行，在CompletableFuture时容易ReadPending
+                            key.interestOps(key.interestOps()
+                                    & ~SelectionKey.OP_READ); // 不放开这行，在CompletableFuture时容易ReadPending
                             conn.doRead(true);
                         } else if (conn.writeCompletionHandler != null && key.isWritable()) {
                             key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
@@ -216,9 +220,7 @@ public class AsyncIOThread extends WorkThread {
         }
     }
 
-    /**
-     * 关闭线程
-     */
+    /** 关闭线程 */
     public void close() {
         if (this.closed.compareAndSet(false, true)) {
             try {

@@ -4,6 +4,8 @@
  */
 package org.redkale.util;
 
+import static org.redkale.asm.Opcodes.*;
+
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
@@ -13,15 +15,14 @@ import java.util.concurrent.*;
 import java.util.function.*;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.asm.*;
-import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 
 /**
- * <p>
- * 实现一个类的构造方法。 代替低效的反射实现方式。 不支持数组类。
- * 常见的无参数的构造函数类都可以自动生成Creator， 对应自定义的类可以提供一个静态构建Creator方法。
- * 例如:
- * <blockquote><pre>
+ * 实现一个类的构造方法。 代替低效的反射实现方式。 不支持数组类。 常见的无参数的构造函数类都可以自动生成Creator， 对应自定义的类可以提供一个静态构建Creator方法。 例如:
+ *
+ * <blockquote>
+ *
+ * <pre>
  * public class Record {
  *
  *    private final int id;
@@ -44,10 +45,15 @@ import org.redkale.asm.Type;
  *         };
  *    }
  * }
- * </pre></blockquote>
+ * </pre>
+ *
+ * </blockquote>
  *
  * 或者:
- * <blockquote><pre>
+ *
+ * <blockquote>
+ *
+ * <pre>
  * public class Record {
  *
  *    private final int id;
@@ -60,10 +66,11 @@ import org.redkale.asm.Type;
  *        this.name = name;
  *    }
  * }
- * </pre></blockquote>
+ * </pre>
  *
- * <p>
- * 详情见: https://redkale.org
+ * </blockquote>
+ *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> 构建对象的数据类型
@@ -74,7 +81,6 @@ public interface Creator<T> {
      * 创建对象
      *
      * @param params 构造函数的参数
-     *
      * @return 构建的对象
      */
     public T create(Object... params);
@@ -92,9 +98,8 @@ public interface Creator<T> {
     /**
      * 创建指定类型对象数组的IntFunction
      *
-     * @param <T>  泛型
+     * @param <T> 泛型
      * @param type 类型
-     *
      * @return IntFunction
      */
     public static <T> IntFunction<T[]> funcArray(final Class<T> type) {
@@ -124,10 +129,9 @@ public interface Creator<T> {
     /**
      * 创建指定大小的对象数组
      *
-     * @param <T>  泛型
+     * @param <T> 泛型
      * @param type 类型
      * @param size 数组大小
-     *
      * @return 数组
      */
     public static <T> T[] newArray(final Class<T> type, final int size) {
@@ -167,9 +171,8 @@ public interface Creator<T> {
     /**
      * 根据Supplier生产Creator
      *
-     * @param <T>      构建类的数据类型
+     * @param <T> 构建类的数据类型
      * @param supplier Supplier
-     *
      * @return Creator对象
      */
     public static <T> Creator<T> create(final Supplier<T> supplier) {
@@ -180,9 +183,8 @@ public interface Creator<T> {
     /**
      * 根据Function生产Creator
      *
-     * @param <T>  构建类的数据类型
+     * @param <T> 构建类的数据类型
      * @param func Function
-     *
      * @return Creator对象
      */
     public static <T> Creator create(final Function<Object[], T> func) {
@@ -193,36 +195,41 @@ public interface Creator<T> {
     /**
      * 根据指定的class采用ASM技术生产Creator。
      *
-     * @param <T>   构建类的数据类型
+     * @param <T> 构建类的数据类型
      * @param clazz 构建类
-     *
      * @return Creator对象
      */
     @SuppressWarnings("unchecked")
     public static <T> Creator<T> create(Class<T> clazz) {
-        if (List.class.isAssignableFrom(clazz) && (clazz.isAssignableFrom(ArrayList.class)
-            || clazz.getName().startsWith("java.util.Collections")
-            || clazz.getName().startsWith("java.util.ImmutableCollections")
-            || clazz.getName().startsWith("java.util.Arrays"))) {
+        if (List.class.isAssignableFrom(clazz)
+                && (clazz.isAssignableFrom(ArrayList.class)
+                        || clazz.getName().startsWith("java.util.Collections")
+                        || clazz.getName().startsWith("java.util.ImmutableCollections")
+                        || clazz.getName().startsWith("java.util.Arrays"))) {
             clazz = (Class<T>) ArrayList.class;
-        } else if (Map.class.isAssignableFrom(clazz) && (clazz.isAssignableFrom(HashMap.class)
-            || clazz.getName().startsWith("java.util.Collections")
-            || clazz.getName().startsWith("java.util.ImmutableCollections"))) {
+        } else if (Map.class.isAssignableFrom(clazz)
+                && (clazz.isAssignableFrom(HashMap.class)
+                        || clazz.getName().startsWith("java.util.Collections")
+                        || clazz.getName().startsWith("java.util.ImmutableCollections"))) {
             clazz = (Class<T>) HashMap.class;
-        } else if (Set.class.isAssignableFrom(clazz) && (clazz.isAssignableFrom(HashSet.class)
-            || clazz.getName().startsWith("java.util.Collections")
-            || clazz.getName().startsWith("java.util.ImmutableCollections"))) {
+        } else if (Set.class.isAssignableFrom(clazz)
+                && (clazz.isAssignableFrom(HashSet.class)
+                        || clazz.getName().startsWith("java.util.Collections")
+                        || clazz.getName().startsWith("java.util.ImmutableCollections"))) {
             clazz = (Class<T>) HashSet.class;
         } else if (Map.class.isAssignableFrom(clazz) && clazz.isAssignableFrom(ConcurrentHashMap.class)) {
             clazz = (Class<T>) ConcurrentHashMap.class;
-        } else if (Deque.class.isAssignableFrom(clazz) && (clazz.isAssignableFrom(ArrayDeque.class)
-            || clazz.getName().startsWith("java.util.Collections")
-            || clazz.getName().startsWith("java.util.ImmutableCollections"))) {
+        } else if (Deque.class.isAssignableFrom(clazz)
+                && (clazz.isAssignableFrom(ArrayDeque.class)
+                        || clazz.getName().startsWith("java.util.Collections")
+                        || clazz.getName().startsWith("java.util.ImmutableCollections"))) {
             clazz = (Class<T>) ArrayDeque.class;
         } else if (Collection.class.isAssignableFrom(clazz) && clazz.isAssignableFrom(ArrayList.class)) {
             clazz = (Class<T>) ArrayList.class;
         } else if (Map.Entry.class.isAssignableFrom(clazz)
-            && (Modifier.isInterface(clazz.getModifiers()) || Modifier.isAbstract(clazz.getModifiers()) || !Modifier.isPublic(clazz.getModifiers()))) {
+                && (Modifier.isInterface(clazz.getModifiers())
+                        || Modifier.isAbstract(clazz.getModifiers())
+                        || !Modifier.isPublic(clazz.getModifiers()))) {
             clazz = (Class<T>) AbstractMap.SimpleEntry.class;
         } else if (Iterable.class == clazz) {
             clazz = (Class<T>) ArrayList.class;
@@ -238,7 +245,7 @@ public interface Creator<T> {
         if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) {
             throw new RedkaleException("[" + clazz + "] is a interface or abstract class, cannot create it's Creator.");
         }
-        for (final Method method : clazz.getDeclaredMethods()) { //查找类中是否存在提供创建Creator实例的静态方法
+        for (final Method method : clazz.getDeclaredMethods()) { // 查找类中是否存在提供创建Creator实例的静态方法
             if (!Modifier.isStatic(method.getModifiers())) {
                 continue;
             }
@@ -267,18 +274,21 @@ public interface Creator<T> {
         if (String.class.getClassLoader() != clazz.getClassLoader()) {
             loader = clazz.getClassLoader();
         }
-        final String newDynName = "org/redkaledyn/creator/_Dyn" + Creator.class.getSimpleName() + "__" + clazz.getName().replace('.', '_').replace('$', '_');
+        final String newDynName = "org/redkaledyn/creator/_Dyn" + Creator.class.getSimpleName() + "__"
+                + clazz.getName().replace('.', '_').replace('$', '_');
         try {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-            return (Creator) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz).getDeclaredConstructor().newInstance();
+            return (Creator) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz)
+                    .getDeclaredConstructor()
+                    .newInstance();
         } catch (Throwable ex) {
-            //do nothing
+            // do nothing
         }
 
         Constructor<T> constructor0 = null;
-        SimpleEntry<String, Class>[] constructorParameters0 = null; //构造函数的参数
+        SimpleEntry<String, Class>[] constructorParameters0 = null; // 构造函数的参数
 
-        if (constructor0 == null) {  // 1、查找public的空参数构造函数
+        if (constructor0 == null) { // 1、查找public的空参数构造函数
             for (Constructor c : clazz.getConstructors()) {
                 if (c.getParameterCount() == 0) {
                     constructor0 = c;
@@ -287,13 +297,14 @@ public interface Creator<T> {
                 }
             }
         }
-        if (constructor0 == null) {  // 2、查找public带ConstructorParameters注解的构造函数
+        if (constructor0 == null) { // 2、查找public带ConstructorParameters注解的构造函数
             for (Constructor c : clazz.getConstructors()) {
                 ConstructorParameters cp = (ConstructorParameters) c.getAnnotation(ConstructorParameters.class);
                 if (cp == null) {
                     continue;
                 }
-                SimpleEntry<String, Class>[] fields = Inners.CreatorInner.getConstructorField(clazz, c.getParameterCount(), cp.value());
+                SimpleEntry<String, Class>[] fields =
+                        Inners.CreatorInner.getConstructorField(clazz, c.getParameterCount(), cp.value());
                 if (fields != null) {
                     constructor0 = c;
                     constructorParameters0 = fields;
@@ -301,7 +312,7 @@ public interface Creator<T> {
                 }
             }
         }
-        if (constructor0 == null) {  // 3、查找public且不带ConstructorParameters注解的构造函数
+        if (constructor0 == null) { // 3、查找public且不带ConstructorParameters注解的构造函数
             List<Constructor> cs = new ArrayList<>();
             for (Constructor c : clazz.getConstructors()) {
                 if (c.getAnnotation(ConstructorParameters.class) != null) {
@@ -312,10 +323,11 @@ public interface Creator<T> {
                 }
                 cs.add(c);
             }
-            //优先参数最多的构造函数
+            // 优先参数最多的构造函数
             cs.sort((o1, o2) -> o2.getParameterCount() - o1.getParameterCount());
             for (Constructor c : cs) {
-                SimpleEntry<String, Class>[] fields = Inners.CreatorInner.getConstructorField(clazz, c.getParameterCount(), Type.getConstructorDescriptor(c));
+                SimpleEntry<String, Class>[] fields = Inners.CreatorInner.getConstructorField(
+                        clazz, c.getParameterCount(), Type.getConstructorDescriptor(c));
                 if (fields != null) {
                     constructor0 = c;
                     constructorParameters0 = fields;
@@ -323,7 +335,7 @@ public interface Creator<T> {
                 }
             }
         }
-        if (constructor0 == null) {  // 4、查找非private带ConstructorParameters的构造函数
+        if (constructor0 == null) { // 4、查找非private带ConstructorParameters的构造函数
             for (Constructor c : clazz.getDeclaredConstructors()) {
                 if (Modifier.isPublic(c.getModifiers()) || Modifier.isPrivate(c.getModifiers())) {
                     continue;
@@ -332,7 +344,8 @@ public interface Creator<T> {
                 if (cp == null) {
                     continue;
                 }
-                SimpleEntry<String, Class>[] fields = Inners.CreatorInner.getConstructorField(clazz, c.getParameterCount(), cp.value());
+                SimpleEntry<String, Class>[] fields =
+                        Inners.CreatorInner.getConstructorField(clazz, c.getParameterCount(), cp.value());
                 if (fields != null) {
                     constructor0 = c;
                     constructorParameters0 = fields;
@@ -340,7 +353,7 @@ public interface Creator<T> {
                 }
             }
         }
-        if (constructor0 == null) {  // 5、查找非private且不带ConstructorParameters的构造函数
+        if (constructor0 == null) { // 5、查找非private且不带ConstructorParameters的构造函数
             List<Constructor> cs = new ArrayList<>();
             for (Constructor c : clazz.getDeclaredConstructors()) {
                 if (Modifier.isPublic(c.getModifiers()) || Modifier.isPrivate(c.getModifiers())) {
@@ -354,10 +367,11 @@ public interface Creator<T> {
                 }
                 cs.add(c);
             }
-            //优先参数最多的构造函数
+            // 优先参数最多的构造函数
             cs.sort((o1, o2) -> o2.getParameterCount() - o1.getParameterCount());
             for (Constructor c : cs) {
-                SimpleEntry<String, Class>[] fields = Inners.CreatorInner.getConstructorField(clazz, c.getParameterCount(), Type.getConstructorDescriptor(c));
+                SimpleEntry<String, Class>[] fields = Inners.CreatorInner.getConstructorField(
+                        clazz, c.getParameterCount(), Type.getConstructorDescriptor(c));
                 if (fields != null) {
                     constructor0 = c;
                     constructorParameters0 = fields;
@@ -368,17 +382,24 @@ public interface Creator<T> {
         final Constructor<T> constructor = constructor0;
         final SimpleEntry<String, Class>[] constructorParameters = constructorParameters0;
         if (constructor == null || constructorParameters == null) {
-            throw new RedkaleException("[" + clazz + "] have no public or ConstructorParameters-Annotation constructor.");
+            throw new RedkaleException(
+                    "[" + clazz + "] have no public or ConstructorParameters-Annotation constructor.");
         }
         final int[] iconsts = {ICONST_0, ICONST_1, ICONST_2, ICONST_3, ICONST_4, ICONST_5};
-        //-------------------------------------------------------------
+        // -------------------------------------------------------------
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
         FieldVisitor fv;
         MethodVisitor mv;
         AnnotationVisitor av0;
-        cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, "Ljava/lang/Object;L" + supDynName + "<" + interDesc + ">;", "java/lang/Object", new String[]{supDynName});
+        cw.visit(
+                V11,
+                ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
+                newDynName,
+                "Ljava/lang/Object;L" + supDynName + "<" + interDesc + ">;",
+                "java/lang/Object",
+                new String[] {supDynName});
 
-        {//Creator自身的构造方法
+        { // Creator自身的构造方法
             mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
@@ -386,7 +407,7 @@ public interface Creator<T> {
             mv.visitMaxs(1, 1);
             mv.visitEnd();
         }
-        {//paramTypes 方法
+        { // paramTypes 方法
             mv = cw.visitMethod(ACC_PUBLIC, "paramTypes", "()[Ljava/lang/Class;", null, null);
             int paramLen = constructorParameters.length;
             if (paramLen < 6) {
@@ -419,8 +440,9 @@ public interface Creator<T> {
             mv.visitMaxs(4, 1);
             mv.visitEnd();
         }
-        {//create 方法
-            mv = cw.visitMethod(ACC_PUBLIC + ACC_VARARGS, "create", "([Ljava/lang/Object;)L" + interName + ";", null, null);
+        { // create 方法
+            mv = cw.visitMethod(
+                    ACC_PUBLIC + ACC_VARARGS, "create", "([Ljava/lang/Object;)L" + interName + ";", null, null);
             if (constructorParameters.length > 0) {
                 av0 = mv.visitAnnotation(Type.getDescriptor(ConstructorParameters.class), true);
                 AnnotationVisitor av1 = av0.visitArray("value");
@@ -430,7 +452,7 @@ public interface Creator<T> {
                 av1.visitEnd();
                 av0.visitEnd();
             }
-            {  //有Primitive数据类型且值为null的参数需要赋默认值
+            { // 有Primitive数据类型且值为null的参数需要赋默认值
                 for (int i = 0; i < constructorParameters.length; i++) {
                     final Class pt = constructorParameters[i].getValue();
                     if (!pt.isPrimitive()) {
@@ -461,7 +483,8 @@ public interface Creator<T> {
                     }
                     if (pt == int.class) {
                         mv.visitInsn(ICONST_0);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+                        mv.visitMethodInsn(
+                                INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
                     } else if (pt == long.class) {
                         mv.visitInsn(LCONST_0);
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", false);
@@ -481,7 +504,8 @@ public interface Creator<T> {
                         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;", false);
                     } else if (pt == char.class) {
                         mv.visitInsn(ICONST_0);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Character", "valueOf", "(C)Ljava/lang/Character;", false);
+                        mv.visitMethodInsn(
+                                INVOKESTATIC, "java/lang/Character", "valueOf", "(C)Ljava/lang/Character;", false);
                     }
                     mv.visitInsn(AASTORE);
                     mv.visitLabel(lab);
@@ -489,7 +513,7 @@ public interface Creator<T> {
             }
             mv.visitTypeInsn(NEW, interName);
             mv.visitInsn(DUP);
-            //---------------------------------------
+            // ---------------------------------------
             {
                 for (int i = 0; i < constructorParameters.length; i++) {
                     mv.visitVarInsn(ALOAD, 1);
@@ -509,23 +533,33 @@ public interface Creator<T> {
                         mv.visitTypeInsn(CHECKCAST, bigct.getName().replace('.', '/'));
                         try {
                             Method pm = bigct.getMethod(ct.getSimpleName() + "Value");
-                            mv.visitMethodInsn(INVOKEVIRTUAL, bigct.getName().replace('.', '/'), pm.getName(), Type.getMethodDescriptor(pm), false);
+                            mv.visitMethodInsn(
+                                    INVOKEVIRTUAL,
+                                    bigct.getName().replace('.', '/'),
+                                    pm.getName(),
+                                    Type.getMethodDescriptor(pm),
+                                    false);
                         } catch (Exception ex) {
-                            throw new RedkaleException(ex); //不可能会发生
+                            throw new RedkaleException(ex); // 不可能会发生
                         }
                     } else {
                         mv.visitTypeInsn(CHECKCAST, ct.getName().replace('.', '/'));
                     }
                 }
             }
-            //---------------------------------------
+            // ---------------------------------------
             mv.visitMethodInsn(INVOKESPECIAL, interName, "<init>", Type.getConstructorDescriptor(constructor), false);
             mv.visitInsn(ARETURN);
             mv.visitMaxs((constructorParameters.length > 0 ? (constructorParameters.length + 3) : 2), 2);
             mv.visitEnd();
         }
-        { //虚拟 create 方法
-            mv = cw.visitMethod(ACC_PUBLIC + ACC_BRIDGE + ACC_VARARGS + ACC_SYNTHETIC, "create", "([Ljava/lang/Object;)Ljava/lang/Object;", null, null);
+        { // 虚拟 create 方法
+            mv = cw.visitMethod(
+                    ACC_PUBLIC + ACC_BRIDGE + ACC_VARARGS + ACC_SYNTHETIC,
+                    "create",
+                    "([Ljava/lang/Object;)Ljava/lang/Object;",
+                    null,
+                    null);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitVarInsn(ALOAD, 1);
             mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "create", "([Ljava/lang/Object;)" + interDesc, false);
@@ -540,32 +574,34 @@ public interface Creator<T> {
         if (loader instanceof URLClassLoader && !ispub) {
             try {
                 final URLClassLoader urlLoader = (URLClassLoader) loader;
-                final URL url = new URL("memclass", "localhost", -1, "/" + newDynName.replace('/', '.') + "/", new URLStreamHandler() {
-                    @Override
-                    protected URLConnection openConnection(URL u) throws IOException {
-                        return new URLConnection(u) {
+                final URL url = new URL(
+                        "memclass", "localhost", -1, "/" + newDynName.replace('/', '.') + "/", new URLStreamHandler() {
                             @Override
-                            public void connect() throws IOException {
-                                //do nothing
-                            }
+                            protected URLConnection openConnection(URL u) throws IOException {
+                                return new URLConnection(u) {
+                                    @Override
+                                    public void connect() throws IOException {
+                                        // do nothing
+                                    }
 
-                            @Override
-                            public InputStream getInputStream() throws IOException {
-                                return new ByteArrayInputStream(bytes);
+                                    @Override
+                                    public InputStream getInputStream() throws IOException {
+                                        return new ByteArrayInputStream(bytes);
+                                    }
+                                };
                             }
-                        };
-                    }
-                });
+                        });
                 Method addURLMethod = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
                 addURLMethod.setAccessible(true);
                 addURLMethod.invoke(urlLoader, url);
                 resultClazz = urlLoader.loadClass(newDynName.replace('/', '.'));
-            } catch (Throwable t) { //异常无需理会， 使用下一种loader方式
+            } catch (Throwable t) { // 异常无需理会， 使用下一种loader方式
                 t.printStackTrace();
             }
         }
         if (!ispub && resultClazz == null) {
-            throw new RedkaleException("[" + clazz + "] have no public or ConstructorParameters-Annotation constructor.");
+            throw new RedkaleException(
+                    "[" + clazz + "] have no public or ConstructorParameters-Annotation constructor.");
         }
         try {
             if (resultClazz == null) {
@@ -582,5 +618,4 @@ public interface Creator<T> {
             throw new RedkaleException(ex);
         }
     }
-
 }

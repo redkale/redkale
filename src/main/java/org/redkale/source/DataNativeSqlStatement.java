@@ -11,11 +11,9 @@ import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
 
 /**
- *
  * 原生的sql解析对象 <br>
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.8.0
@@ -29,29 +27,32 @@ public class DataNativeSqlStatement {
         }
 
         @Override
-        public DataNativeSqlStatement parse(IntFunction<String> signFunc, String dbType,
-            String rawSql, boolean countable, Map<String, Object> params) {
+        public DataNativeSqlStatement parse(
+                IntFunction<String> signFunc,
+                String dbType,
+                String rawSql,
+                boolean countable,
+                Map<String, Object> params) {
             throw new UnsupportedOperationException("No available instances found");
         }
-
     };
 
     static DataNativeSqlParser _first_parser = PARSER_NIL;
 
-    //根据参数值集合重新生成的带?参数可执行的sql
+    // 根据参数值集合重新生成的带?参数可执行的sql
     protected String nativeSql;
 
-    //根据参数值集合重新生成的带?参数可执行的计算总数sql,用于返回Sheet对象
+    // 根据参数值集合重新生成的带?参数可执行的计算总数sql,用于返回Sheet对象
     @Nullable
     protected String nativeCountSql;
 
-    //需要预编译的##{xxx}、#{xxx}参数名, 数量与sql中的?数量一致
+    // 需要预编译的##{xxx}、#{xxx}参数名, 数量与sql中的?数量一致
     protected List<String> paramNames;
 
-    //需要预编译的jdbc参数名, 数量与sql中的?数量一致
+    // 需要预编译的jdbc参数名, 数量与sql中的?数量一致
     protected List<String> jdbcNames;
 
-    //jdbc参数值集合, paramNames中的key必然会存在
+    // jdbc参数值集合, paramNames中的key必然会存在
     protected Map<String, Object> paramValues;
 
     /**

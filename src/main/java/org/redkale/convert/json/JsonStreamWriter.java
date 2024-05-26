@@ -12,7 +12,6 @@ import org.redkale.convert.ConvertException;
 import org.redkale.util.Utility;
 
 /**
- *
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -59,7 +58,7 @@ class JsonStreamWriter extends JsonByteBufferWriter {
             if (quote) {
                 out.write('"');
             }
-            if (charset == null) { //UTF-8
+            if (charset == null) { // UTF-8
                 final int limit = start + len;
                 for (int i = start; i < limit; i++) {
                     char c = chs[i];
@@ -68,7 +67,7 @@ class JsonStreamWriter extends JsonByteBufferWriter {
                     } else if (c < 0x800) {
                         out.write((byte) (0xc0 | (c >> 6)));
                         out.write((byte) (0x80 | (c & 0x3f)));
-                    } else if (Character.isSurrogate(c)) { //连取两个
+                    } else if (Character.isSurrogate(c)) { // 连取两个
                         int uc = Character.toCodePoint(c, chs[i + 1]);
                         out.write((byte) (0xf0 | ((uc >> 18))));
                         out.write((byte) (0x80 | ((uc >> 12) & 0x3f)));
@@ -129,17 +128,23 @@ class JsonStreamWriter extends JsonByteBufferWriter {
         int len = 0;
         for (char ch : chs) {
             switch (ch) {
-                case '\n': len += 2;
+                case '\n':
+                    len += 2;
                     break;
-                case '\r': len += 2;
+                case '\r':
+                    len += 2;
                     break;
-                case '\t': len += 2;
+                case '\t':
+                    len += 2;
                     break;
-                case '\\': len += 2;
+                case '\\':
+                    len += 2;
                     break;
-                case '"': len += 2;
+                case '"':
+                    len += 2;
                     break;
-                default: len++;
+                default:
+                    len++;
                     break;
             }
         }
@@ -150,17 +155,23 @@ class JsonStreamWriter extends JsonByteBufferWriter {
         StringBuilder sb = new StringBuilder(len);
         for (char ch : chs) {
             switch (ch) {
-                case '\n': sb.append("\\n");
+                case '\n':
+                    sb.append("\\n");
                     break;
-                case '\r': sb.append("\\r");
+                case '\r':
+                    sb.append("\\r");
                     break;
-                case '\t': sb.append("\\t");
+                case '\t':
+                    sb.append("\\t");
                     break;
-                case '\\': sb.append("\\\\");
+                case '\\':
+                    sb.append("\\\\");
                     break;
-                case '"': sb.append("\\\"");
+                case '"':
+                    sb.append("\\\"");
                     break;
-                default: sb.append(ch);
+                default:
+                    sb.append(ch);
                     break;
             }
         }

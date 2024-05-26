@@ -18,15 +18,13 @@ import org.redkale.util.RedkaleException;
 import org.redkale.util.StringWrapper;
 
 /**
- * 存在MQ里面的数据结构<p>
- * groupid + userid 来确定partition， 优先使用 groupid
+ * 存在MQ里面的数据结构
  *
+ * <p>groupid + userid 来确定partition， 优先使用 groupid
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.1.0
  */
 public class MessageRecord implements Serializable {
@@ -35,13 +33,13 @@ public class MessageRecord implements Serializable {
 
     public static final byte CTYPE_STRING = 1;
 
-    //Bson bytes
+    // Bson bytes
     public static final byte CTYPE_BSON = 2;
 
-    //WebRequest
+    // WebRequest
     public static final byte CTYPE_HTTP_REQUEST = 3;
 
-    //HttpResult<byte[]>
+    // HttpResult<byte[]>
     public static final byte CTYPE_HTTP_RESULT = 4;
 
     @ConvertColumn(index = 1)
@@ -60,7 +58,7 @@ public class MessageRecord implements Serializable {
     @Comment("创建时间")
     protected long createTime;
 
-    //@since 2.5.0 由int改成Serializable
+    // @since 2.5.0 由int改成Serializable
     @ConvertColumn(index = 5)
     @Comment("用户ID，无用户信息视为null或0, 具体数据类型只能是int、long、String")
     protected Serializable userid;
@@ -95,20 +93,37 @@ public class MessageRecord implements Serializable {
     @Comment("本地附加对象，不会被序列化")
     protected Object[] localParams;
 
-    public MessageRecord() {
-    }
+    public MessageRecord() {}
 
     protected MessageRecord(long seqid, byte ctype, String topic, String respTopic, String traceid, byte[] content) {
         this(seqid, ctype, 1, 0, System.currentTimeMillis(), 0, null, topic, respTopic, traceid, content);
     }
 
-    protected MessageRecord(long seqid, byte ctype, int flag, Serializable userid, 
-        String groupid, String topic, String respTopic, String traceid, byte[] content) {
+    protected MessageRecord(
+            long seqid,
+            byte ctype,
+            int flag,
+            Serializable userid,
+            String groupid,
+            String topic,
+            String respTopic,
+            String traceid,
+            byte[] content) {
         this(seqid, ctype, 1, flag, System.currentTimeMillis(), userid, groupid, topic, respTopic, traceid, content);
     }
 
-    protected MessageRecord(long seqid, byte ctype, int version, int flag, long createTime, Serializable userid, 
-        String groupid, String topic, String respTopic, String traceid, byte[] content) {
+    protected MessageRecord(
+            long seqid,
+            byte ctype,
+            int version,
+            int flag,
+            long createTime,
+            Serializable userid,
+            String groupid,
+            String topic,
+            String respTopic,
+            String traceid,
+            byte[] content) {
         this.seqid = seqid;
         this.ctype = ctype;
         this.version = version;
@@ -305,7 +320,7 @@ public class MessageRecord implements Serializable {
 
     @Override
     public String toString() {
-        //return JsonConvert.root().convertTo(this);
+        // return JsonConvert.root().convertTo(this);
         StringBuilder sb = new StringBuilder(128);
         sb.append("{\"seqid\":").append(this.seqid);
         sb.append(",\"version\":").append(this.version);
@@ -330,10 +345,11 @@ public class MessageRecord implements Serializable {
         }
         if (this.content != null) {
             if (this.ctype == CTYPE_BSON && this.content.length > SncpHeader.HEADER_SUBSIZE) {
-                //int offset = new ByteArray(this.content).getChar(0) + 1; //循环占位符
-                //Object rs = BsonConvert.root().convertFrom(Object.class, this.content, offset, this.content.length - offset);
-                //sb.append(",\"content\":").append(rs);
-                //SncpHeader包含不确定长度的信息，故不能再直接偏移读取
+                // int offset = new ByteArray(this.content).getChar(0) + 1; //循环占位符
+                // Object rs = BsonConvert.root().convertFrom(Object.class, this.content, offset, this.content.length -
+                // offset);
+                // sb.append(",\"content\":").append(rs);
+                // SncpHeader包含不确定长度的信息，故不能再直接偏移读取
                 sb.append(",\"content\":").append("bytes[" + this.content.length + "]");
             } else if (this.ctype == CTYPE_HTTP_REQUEST) {
                 WebRequest req = WebRequestCoder.getInstance().decode(this.content);
@@ -359,11 +375,12 @@ public class MessageRecord implements Serializable {
                     sb.append(",\"params\":").append(JsonConvert.root().convertTo(ps));
                 }
             } else {
-                sb.append(",\"content\":\"").append(new String(this.content, StandardCharsets.UTF_8)).append("\"");
+                sb.append(",\"content\":\"")
+                        .append(new String(this.content, StandardCharsets.UTF_8))
+                        .append("\"");
             }
         }
         sb.append("}");
         return sb.toString();
     }
-
 }

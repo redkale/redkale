@@ -18,11 +18,9 @@ import org.redkale.util.*;
 /**
  * 协议处理的IO线程组
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.1.0
  */
 @ResourceType(AsyncGroup.class)
@@ -48,29 +46,33 @@ public class AsyncIOGroup extends AsyncGroup {
 
     private final AtomicInteger writeIndex = new AtomicInteger();
 
-    //创建数
+    // 创建数
     protected final LongAdder connCreateCounter = new LongAdder();
 
-    //在线数
+    // 在线数
     protected final LongAdder connLivingCounter = new LongAdder();
 
-    //关闭数
+    // 关闭数
     protected final LongAdder connClosedCounter = new LongAdder();
 
-    //超时器
+    // 超时器
     protected final ScheduledExecutorService timeoutExecutor;
 
     public AsyncIOGroup(final int bufferCapacity, final int bufferPoolSize) {
         this("Redkale-AnonymousClient-IOThread-%s", null, bufferCapacity, bufferPoolSize);
     }
 
-    public AsyncIOGroup(String threadNameFormat, final ExecutorService workExecutor, final int bufferCapacity, final int bufferPoolSize) {
+    public AsyncIOGroup(
+            String threadNameFormat,
+            final ExecutorService workExecutor,
+            final int bufferCapacity,
+            final int bufferPoolSize) {
         this(threadNameFormat, workExecutor, ByteBufferPool.createSafePool(bufferPoolSize, bufferCapacity));
     }
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
     public AsyncIOGroup(String threadNameFormat, ExecutorService workExecutor, final ByteBufferPool safeBufferPool) {
-        final int threads = Utility.cpus(); //固定值,不可改
+        final int threads = Utility.cpus(); // 固定值,不可改
         this.bufferCapacity = safeBufferPool.getBufferCapacity();
         this.ioReadThreads = new AsyncIOThread[threads];
         this.ioWriteThreads = new AsyncIOThread[threads];
@@ -83,20 +85,36 @@ public class AsyncIOGroup extends AsyncGroup {
         try {
             for (int i = 0; i < threads; i++) {
                 String indexFix = WorkThread.formatIndex(threads, i + 1);
-                this.ioReadThreads[i] = createAsyncIOThread(g, String.format(threadNameFormat, indexFix), i, threads, workExecutor, safeBufferPool);
+                this.ioReadThreads[i] = createAsyncIOThread(
+                        g, String.format(threadNameFormat, indexFix), i, threads, workExecutor, safeBufferPool);
                 this.ioWriteThreads[i] = this.ioReadThreads[i];
             }
-            this.connectThread = createConnectIOThread(g, String.format(threadNameFormat, "Connect"), 0, 0, workExecutor, safeBufferPool);
+            this.connectThread = createConnectIOThread(
+                    g, String.format(threadNameFormat, "Connect"), 0, 0, workExecutor, safeBufferPool);
         } catch (IOException e) {
             throw new RedkaleException(e);
         }
     }
 
-    protected AsyncIOThread createConnectIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ByteBufferPool safeBufferPool) throws IOException {
+    protected AsyncIOThread createConnectIOThread(
+            ThreadGroup g,
+            String name,
+            int index,
+            int threads,
+            ExecutorService workExecutor,
+            ByteBufferPool safeBufferPool)
+            throws IOException {
         return new AsyncIOThread(g, name, index, threads, workExecutor, safeBufferPool);
     }
 
-    protected AsyncIOThread createAsyncIOThread(ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, ByteBufferPool safeBufferPool) throws IOException {
+    protected AsyncIOThread createAsyncIOThread(
+            ThreadGroup g,
+            String name,
+            int index,
+            int threads,
+            ExecutorService workExecutor,
+            ByteBufferPool safeBufferPool)
+            throws IOException {
         return new AsyncIOThread(g, name, index, threads, workExecutor, safeBufferPool);
     }
 
@@ -119,7 +137,7 @@ public class AsyncIOGroup extends AsyncGroup {
                     this.ioWriteThreads[i].start();
                 }
             }
-            //connectThread用时才初始化
+            // connectThread用时才初始化
         }
         return this;
     }
@@ -181,7 +199,7 @@ public class AsyncIOGroup extends AsyncGroup {
         return timeoutExecutor.schedule(callable, delay, unit);
     }
 
-    //创建一个AsyncConnection对象，只给测试代码使用
+    // 创建一个AsyncConnection对象，只给测试代码使用
     public AsyncConnection newTCPClientConnection() {
         try {
             return newTCPClientConnection(null);
@@ -228,8 +246,11 @@ public class AsyncIOGroup extends AsyncGroup {
     }
 
     @Override
-    public CompletableFuture<AsyncConnection> createTCPClient(final SocketAddress address,
-        final int connectTimeoutSeconds, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
+    public CompletableFuture<AsyncConnection> createTCPClient(
+            final SocketAddress address,
+            final int connectTimeoutSeconds,
+            final int readTimeoutSeconds,
+            final int writeTimeoutSeconds) {
         Objects.requireNonNull(address);
         AsyncNioTcpConnection conn;
         try {
@@ -268,7 +289,7 @@ public class AsyncIOGroup extends AsyncGroup {
         return Utility.orTimeout(future, timeoutMsg, seconds, TimeUnit.SECONDS);
     }
 
-    //创建一个AsyncConnection对象，只给测试代码使用
+    // 创建一个AsyncConnection对象，只给测试代码使用
     public AsyncConnection newUDPClientConnection() {
         try {
             return newUDPClientConnection(null);
@@ -307,8 +328,11 @@ public class AsyncIOGroup extends AsyncGroup {
     }
 
     @Override
-    public CompletableFuture<AsyncConnection> createUDPClient(final SocketAddress address,
-        final int connectTimeoutSeconds, final int readTimeoutSeconds, final int writeTimeoutSeconds) {
+    public CompletableFuture<AsyncConnection> createUDPClient(
+            final SocketAddress address,
+            final int connectTimeoutSeconds,
+            final int readTimeoutSeconds,
+            final int writeTimeoutSeconds) {
         AsyncNioUdpConnection conn;
         try {
             conn = newUDPClientConnection(address);
@@ -341,5 +365,4 @@ public class AsyncIOGroup extends AsyncGroup {
         final Supplier<String> timeoutMsg = () -> address + " udp-connect timeout";
         return Utility.orTimeout(future, timeoutMsg, seconds, TimeUnit.SECONDS);
     }
-
 }

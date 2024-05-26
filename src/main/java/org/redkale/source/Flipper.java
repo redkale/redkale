@@ -13,8 +13,7 @@ import org.redkale.convert.ConvertColumn;
 /**
  * 翻页对象, offset从0开始, limit必须大于0
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -34,8 +33,7 @@ public final class Flipper implements Serializable, Cloneable {
     @Comment("排序字段, 可多字段排序")
     private String sort = "";
 
-    public Flipper() {
-    }
+    public Flipper() {}
 
     public Flipper(int limit) {
         this.limit = limit > 0 ? limit : 0;
@@ -95,7 +93,6 @@ public final class Flipper implements Serializable, Cloneable {
      * 设置当前页号，页号从1开始
      *
      * @param current 页号， 从1开始
-     *
      * @return Flipper
      */
     public Flipper current(int current) {
@@ -112,7 +109,7 @@ public final class Flipper implements Serializable, Cloneable {
     @Override
     public String toString() {
         return "{offset:" + this.offset + ",limit:" + this.limit
-            + ((sort == null || sort.isEmpty()) ? "" : (",sort:\"" + this.sort.replace('"', '\'') + "\"")) + "}";
+                + ((sort == null || sort.isEmpty()) ? "" : (",sort:\"" + this.sort.replace('"', '\'') + "\"")) + "}";
     }
 
     @Override
@@ -207,5 +204,4 @@ public final class Flipper implements Serializable, Cloneable {
         }
         return this;
     }
-
 }

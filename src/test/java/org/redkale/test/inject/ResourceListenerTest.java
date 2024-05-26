@@ -11,10 +11,7 @@ import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.util.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class ResourceListenerTest {
 
     private boolean main;
@@ -84,14 +81,14 @@ public class ResourceListenerTest {
         private void changeResource(ResourceEvent[] events) {
             for (ResourceEvent event : events) {
                 counter.incrementAndGet();
-                System.out.println(getClass().getSimpleName() + " @Resource = " + event.name() + " 资源变更:  newVal = " + event.newValue() + ", oldVal = " + event.oldValue());
+                System.out.println(getClass().getSimpleName() + " @Resource = " + event.name() + " 资源变更:  newVal = "
+                        + event.newValue() + ", oldVal = " + event.oldValue());
             }
         }
 
         public String test() {
             return "";
         }
-
     }
 
     class BService {
@@ -105,7 +102,8 @@ public class ResourceListenerTest {
         private void changeResource(ResourceEvent[] events) {
             for (ResourceEvent event : events) {
                 counter.incrementAndGet();
-                System.out.println(getClass().getSimpleName() + " @Resource = " + event.name() + " 资源变更:  newVal = " + event.newValue() + ", oldVal = " + event.oldValue());
+                System.out.println(getClass().getSimpleName() + " @Resource = " + event.name() + " 资源变更:  newVal = "
+                        + event.newValue() + ", oldVal = " + event.oldValue());
             }
             System.out.println(getClass().getSimpleName() + " env = " + env);
         }
@@ -129,7 +127,8 @@ public class ResourceListenerTest {
         private void changeResource(ResourceEvent[] events) {
             for (ResourceEvent event : events) {
                 counter.incrementAndGet();
-                System.out.println(getClass().getSimpleName() + " @Resource = " + event.name() + " 资源变更:  newVal = " + event.newValue() + ", oldVal = " + event.oldValue());
+                System.out.println(getClass().getSimpleName() + " @Resource = " + event.name() + " 资源变更:  newVal = "
+                        + event.newValue() + ", oldVal = " + event.oldValue());
             }
             System.out.println(getClass().getSimpleName() + " env = " + env);
         }

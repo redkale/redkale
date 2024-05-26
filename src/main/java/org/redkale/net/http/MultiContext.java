@@ -17,8 +17,7 @@ import org.redkale.util.ByteArray;
 /**
  * HTTP的文件上传请求的上下文对象
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -55,7 +54,12 @@ public final class MultiContext {
         }
     };
 
-    public MultiContext(final Charset charsetName, final String contentType, final Map<String, String> params, final InputStream in, String fileNameRegex) {
+    public MultiContext(
+            final Charset charsetName,
+            final String contentType,
+            final Map<String, String> params,
+            final InputStream in,
+            String fileNameRegex) {
         this.charset = charsetName == null ? StandardCharsets.UTF_8 : charsetName;
         this.contentType = contentType == null ? "" : contentType.trim();
         this.parameters = params;
@@ -87,18 +91,18 @@ public final class MultiContext {
         return this.boundary != null;
     }
 
-    //或被 REST 用到 
+    // 或被 REST 用到
     /**
      * 获取第一个文件的二进制
      *
-     * @param max             可接收的文件大小最大值
-     * @param fileNameRegx    可接收的文件名正则表达式
+     * @param max 可接收的文件大小最大值
+     * @param fileNameRegx 可接收的文件名正则表达式
      * @param contentTypeRegx 可接收的ContentType正则表达式
-     *
      * @return 二进制文件
      * @throws IOException IOException
      */
-    public byte[] partsFirstBytes(final long max, final String fileNameRegx, final String contentTypeRegx) throws IOException {
+    public byte[] partsFirstBytes(final long max, final String fileNameRegx, final String contentTypeRegx)
+            throws IOException {
         if (!isMultipart()) {
             return null;
         }
@@ -106,13 +110,17 @@ public final class MultiContext {
         boolean has = false;
         for (MultiPart part : parts()) {
             if (has) {
-                continue;//不遍历完后面getParameter可能获取不到值
+                continue; // 不遍历完后面getParameter可能获取不到值
             }
             has = true;
-            if (fileNameRegx != null && !fileNameRegx.isEmpty() && !part.getFileName().matches(fileNameRegx)) {
+            if (fileNameRegx != null
+                    && !fileNameRegx.isEmpty()
+                    && !part.getFileName().matches(fileNameRegx)) {
                 continue;
             }
-            if (contentTypeRegx != null && !contentTypeRegx.isEmpty() && !part.getContentType().matches(contentTypeRegx)) {
+            if (contentTypeRegx != null
+                    && !contentTypeRegx.isEmpty()
+                    && !part.getContentType().matches(contentTypeRegx)) {
                 continue;
             }
             tmpfile = part.getContentBytes(max < 1 ? Long.MAX_VALUE : max);
@@ -124,7 +132,6 @@ public final class MultiContext {
      * 根据临时文件获取上传时的文件名
      *
      * @param file 临时文件
-     *
      * @return 上传的文件名
      */
     public static String getFileName(File file) {
@@ -135,19 +142,19 @@ public final class MultiContext {
         return name.startsWith("redkale-") ? name.substring(name.indexOf('_') + 1) : name;
     }
 
-    //或被 REST 用到 
+    // 或被 REST 用到
     /**
      * 获取第一个文件
      *
-     * @param home            进程目录
-     * @param max             可接收的文件大小最大值
-     * @param fileNameRegx    可接收的文件名正则表达式
+     * @param home 进程目录
+     * @param max 可接收的文件大小最大值
+     * @param fileNameRegx 可接收的文件名正则表达式
      * @param contentTypeRegx 可接收的ContentType正则表达式
-     *
      * @return 文件
      * @throws IOException IOException
      */
-    public File partsFirstFile(final File home, final long max, final String fileNameRegx, final String contentTypeRegx) throws IOException {
+    public File partsFirstFile(final File home, final long max, final String fileNameRegx, final String contentTypeRegx)
+            throws IOException {
         if (!isMultipart()) {
             return null;
         }
@@ -155,13 +162,17 @@ public final class MultiContext {
         boolean has = false;
         for (MultiPart part : parts()) {
             if (has) {
-                continue; //不遍历完后面getParameter可能获取不到值
+                continue; // 不遍历完后面getParameter可能获取不到值
             }
             has = true;
-            if (fileNameRegx != null && !fileNameRegx.isEmpty() && !part.getFileName().matches(fileNameRegx)) {
+            if (fileNameRegx != null
+                    && !fileNameRegx.isEmpty()
+                    && !part.getFileName().matches(fileNameRegx)) {
                 continue;
             }
-            if (contentTypeRegx != null && !contentTypeRegx.isEmpty() && !part.getContentType().matches(contentTypeRegx)) {
+            if (contentTypeRegx != null
+                    && !contentTypeRegx.isEmpty()
+                    && !part.getContentType().matches(contentTypeRegx)) {
                 continue;
             }
             File file = new File(home, "tmp/redkale-" + System.nanoTime() + "_" + part.getFileName());
@@ -180,28 +191,32 @@ public final class MultiContext {
         return tmpfile;
     }
 
-    //或被 REST 用到 
+    // 或被 REST 用到
     /**
      * 获取所有文件
      *
-     * @param home            进程目录
-     * @param max             可接收的文件大小最大值
-     * @param fileNameRegx    可接收的文件名正则表达式
+     * @param home 进程目录
+     * @param max 可接收的文件大小最大值
+     * @param fileNameRegx 可接收的文件名正则表达式
      * @param contentTypeRegx 可接收的ContentType正则表达式
-     *
      * @return 文件列表
      * @throws IOException IOException
      */
-    public File[] partsFiles(final File home, final long max, final String fileNameRegx, final String contentTypeRegx) throws IOException {
+    public File[] partsFiles(final File home, final long max, final String fileNameRegx, final String contentTypeRegx)
+            throws IOException {
         if (!isMultipart()) {
             return null;
         }
         List<File> files = null;
         for (MultiPart part : parts()) {
-            if (fileNameRegx != null && !fileNameRegx.isEmpty() && !part.getFileName().matches(fileNameRegx)) {
+            if (fileNameRegx != null
+                    && !fileNameRegx.isEmpty()
+                    && !part.getFileName().matches(fileNameRegx)) {
                 continue;
             }
-            if (contentTypeRegx != null && !contentTypeRegx.isEmpty() && !part.getContentType().matches(contentTypeRegx)) {
+            if (contentTypeRegx != null
+                    && !contentTypeRegx.isEmpty()
+                    && !part.getContentType().matches(contentTypeRegx)) {
                 continue;
             }
             File file = new File(home, "tmp/redkale-" + System.nanoTime() + "_" + part.getFileName());
@@ -259,28 +274,29 @@ public final class MultiContext {
                     if (boundaryline == null) {
                         boundaryline = readBoundary();
                     }
-                    //if (debug) System.out.print("boundaryline=" + boundaryline + "  ");
-                    if (endboundary.equals(boundaryline) || !boundarystr.equals(boundaryline)) { //结尾或异常
+                    // if (debug) System.out.print("boundaryline=" + boundaryline + "  ");
+                    if (endboundary.equals(boundaryline) || !boundarystr.equals(boundaryline)) { // 结尾或异常
                         lastentry = null;
                         return false;
                     }
                     final String disposition = readLine();
-                    //if (debug) System.out.println("disposition=" + disposition);
-                    if (disposition.contains("; filename=\"")) { //是上传文件
+                    // if (debug) System.out.println("disposition=" + disposition);
+                    if (disposition.contains("; filename=\"")) { // 是上传文件
                         String contentType = "";
-                        //读掉HTTP Header和空白行 通常情况下Content-Type后面就是内容，但是有些特殊情况下后面会跟其他如Content-Length: xxx等HTTP header，所以需要循环读取
+                        // 读掉HTTP Header和空白行 通常情况下Content-Type后面就是内容，但是有些特殊情况下后面会跟其他如Content-Length: xxx等HTTP
+                        // header，所以需要循环读取
                         String rl;
                         while (!(rl = readLine()).isEmpty()) {
                             if (rl.startsWith("Content-Type:") || rl.startsWith("content-type:")) {
                                 contentType = rl.substring(rl.indexOf(':') + 1).trim();
                             }
                         }
-                        //if (debug) System.out.println("file.contentType=" + contentType);
+                        // if (debug) System.out.println("file.contentType=" + contentType);
 
                         String name = parseValue(disposition, "name");
                         String filename = parseValue(disposition, "filename");
-                        if (filename == null || filename.isEmpty()) { //没有上传
-                            readLine(); //读掉空白行
+                        if (filename == null || filename.isEmpty()) { // 没有上传
+                            readLine(); // 读掉空白行
                             this.boundaryline = null;
                             this.lastentry = null;
                             return this.hasNext();
@@ -306,7 +322,9 @@ public final class MultiContext {
                                     return -1;
                                 }
                                 final byte[] buf = buffer;
-                                int ch = (this.bufposition < buf.length) ? (buf[this.bufposition++] & 0xff) : input.read();
+                                int ch = (this.bufposition < buf.length)
+                                        ? (buf[this.bufposition++] & 0xff)
+                                        : input.read();
                                 if ((ch == '\r' && readBuffer())) {
                                     return -1;
                                 }
@@ -359,12 +377,13 @@ public final class MultiContext {
                             }
                         };
                         this.lastentry = new MultiPart(filename, name, contentType, counter, source);
-                        if (fileNameRegx != null && !fileNameRegx.matcher(filename).matches()) {
+                        if (fileNameRegx != null
+                                && !fileNameRegx.matcher(filename).matches()) {
                             return this.hasNext();
                         }
                         return true;
-                    } else { //不是文件
-                        readLine(); //读掉空白
+                    } else { // 不是文件
+                        readLine(); // 读掉空白
                         params.put(parseValue(disposition, "name"), readLine());
                         this.boundaryline = null;
                         this.lastentry = null;
@@ -380,7 +399,6 @@ public final class MultiContext {
             public MultiPart next() {
                 return lastentry;
             }
-
         };
     }
 
@@ -397,7 +415,7 @@ public final class MultiContext {
         buf.clear();
         final int bc = this.endBoundarray.length;
         int c = 0;
-        for (;;) {
+        for (; ; ) {
             int b = in.read();
             c++;
             if (b == -1 || (lasted == '\r' && b == '\n')) {
@@ -433,5 +451,4 @@ public final class MultiContext {
         String sub = str.substring(pos + key.length());
         return sub.substring(0, sub.indexOf('"'));
     }
-
 }

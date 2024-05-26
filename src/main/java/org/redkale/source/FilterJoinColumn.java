@@ -5,20 +5,19 @@
  */
 package org.redkale.source;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 
 /**
  * 关联表过滤条件 <br>
  * 关联关系表必须含主表， 不能是主表A关联表B，表B再关联表C，只能是主表A关联表B，主表A关联表C <br>
  *
- * <p>
- * 详情见: https://redkale.org
- * 
- * @see org.redkale.source.FilterBean 
- * @see org.redkale.source.FilterNode
+ * <p>详情见: https://redkale.org
  *
+ * @see org.redkale.source.FilterBean
+ * @see org.redkale.source.FilterNode
  * @author zhangjx
  */
 @Documented
@@ -34,14 +33,13 @@ public @interface FilterJoinColumn {
     Class table();
 
     /**
+     * 多个关联字段, 默认使用join表(b)的主键, join表与被join表(a)的字段必须一样 <br>
+     * 例如: SELECT a.* FROM user a INNER JOIN orderinfo b ON a.userid = b.userid AND a.usertype = b.usertype <br>
+     * 那么注解为: &#64;FilterJoinColumn(table = OrderInfo.class, columns = {"userid", "usertype"}) <br>
      *
-     * 多个关联字段, 默认使用join表(b)的主键, join表与被join表(a)的字段必须一样   <br>
-     * 例如: SELECT a.* FROM user a INNER JOIN orderinfo b ON a.userid = b.userid AND a.usertype = b.usertype   <br>
-     * 那么注解为: &#64;FilterJoinColumn(table = OrderInfo.class, columns = {"userid", "usertype"})   <br>
-     * <p>
-     * columns中的字段名如果不一致，可以将两个字段名用=连接成一个字段名   <br>
-     * 例如: SELECT a.* FROM user a INNER JOIN orderinfo b ON a.userid = b.buyerid AND a.usertype = b.usertype   <br>
-     * 那么注解为: &#64;FilterJoinColumn(table = OrderInfo.class, columns = {"userid=buyerid", "usertype"})   <br>
+     * <p>columns中的字段名如果不一致，可以将两个字段名用=连接成一个字段名 <br>
+     * 例如: SELECT a.* FROM user a INNER JOIN orderinfo b ON a.userid = b.buyerid AND a.usertype = b.usertype <br>
+     * 那么注解为: &#64;FilterJoinColumn(table = OrderInfo.class, columns = {"userid=buyerid", "usertype"}) <br>
      *
      * @return 关联字段
      */

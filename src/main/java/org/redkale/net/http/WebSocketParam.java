@@ -10,10 +10,9 @@ import java.util.Arrays;
 import org.redkale.util.Creator;
 
 /**
+ * 供WebSocket.preOnMessage 方法获取RestWebSocket里OnMessage方法的参数 <br>
  *
- * 供WebSocket.preOnMessage 方法获取RestWebSocket里OnMessage方法的参数  <br>
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */

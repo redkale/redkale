@@ -20,25 +20,25 @@ import org.redkale.service.Service;
 import org.redkale.util.*;
 
 /**
- * HTTP Servlet的总入口，请求在HttpDispatcherServlet中进行分流。  <br>
- * 一个HttpServer只有一个HttpDispatcherServlet， 用于管理所有HttpServlet。  <br>
+ * HTTP Servlet的总入口，请求在HttpDispatcherServlet中进行分流。 <br>
+ * 一个HttpServer只有一个HttpDispatcherServlet， 用于管理所有HttpServlet。 <br>
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
-public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext, HttpRequest, HttpResponse, HttpServlet> {
+public class HttpDispatcherServlet
+        extends DispatcherServlet<String, HttpContext, HttpRequest, HttpResponse, HttpServlet> {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
     protected HttpServlet resourceHttpServlet = new HttpResourceServlet();
 
-    protected MappingEntry[] regxArray = null; //regxArray 包含 regxWsArray
+    protected MappingEntry[] regxArray = null; // regxArray 包含 regxWsArray
 
     protected MappingEntry[] regxWsArray = null;
 
-    protected Map<String, WebSocketServlet> wsMappings = new HashMap<>(); //super.mappings 包含 wsMappings
+    protected Map<String, WebSocketServlet> wsMappings = new HashMap<>(); // super.mappings 包含 wsMappings
 
     protected final Map<String, Class> allMapStrings = new HashMap<>();
 
@@ -48,12 +48,12 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
 
     protected HttpContext context;
 
-    //所有Servlet方法都不需要读取http-header且不存在HttpFilter的情况下，lazyHeaders=true
+    // 所有Servlet方法都不需要读取http-header且不存在HttpFilter的情况下，lazyHeaders=true
     protected boolean lazyHeaders = true;
 
-    private Map<String, BiPredicate<String, String>> forbidURIMaps; //禁用的URL的正则表达式, 必须与 forbidURIPredicates 保持一致
+    private Map<String, BiPredicate<String, String>> forbidURIMaps; // 禁用的URL的正则表达式, 必须与 forbidURIPredicates 保持一致
 
-    private BiPredicate<String, String>[] forbidURIPredicates; //禁用的URL的Predicate, 必须与 forbidURIMaps 保持一致
+    private BiPredicate<String, String>[] forbidURIPredicates; // 禁用的URL的Predicate, 必须与 forbidURIMaps 保持一致
 
     private HttpServlet lastRunServlet;
 
@@ -61,7 +61,9 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
         super();
     }
 
-    private List<HttpServlet> removeHttpServlet(final Predicate<MappingEntry> predicateEntry, final Predicate<Map.Entry<String, WebSocketServlet>> predicateFilter) {
+    private List<HttpServlet> removeHttpServlet(
+            final Predicate<MappingEntry> predicateEntry,
+            final Predicate<Map.Entry<String, WebSocketServlet>> predicateFilter) {
         List<HttpServlet> servlets = new ArrayList<>();
         allMapLock.lock();
         try {
@@ -150,7 +152,7 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                 if (key != null) {
                     map.remove(key);
                 }
-                return false; //还有其他Resouce.name 的Service
+                return false; // 还有其他Resouce.name 的Service
             }
             return rs;
         };
@@ -195,7 +197,7 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                 forbidURIMaps = new HashMap<>();
             }
             String mapping = urlRegx;
-            if (Utility.contains(mapping, '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
+            if (Utility.contains(mapping, '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { // 是否是正则表达式))
                 if (mapping.endsWith("/*")) {
                     mapping = mapping.substring(0, mapping.length() - 1) + ".*";
                 } else {
@@ -255,7 +257,7 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
     @Override
     @SuppressWarnings("unchecked")
     public void init(HttpContext context, AnyValue config) {
-        super.init(context, config); //必须要执行
+        super.init(context, config); // 必须要执行
         this.context = context;
         context.lazyHeaders = lazyHeaders;
         Collection<HttpServlet> servlets = getServlets();
@@ -265,12 +267,13 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                 s.init(context, getServletConf(s));
             }
         });
-        { //设置ResourceServlet
+        { // 设置ResourceServlet
             AnyValue resConfig = config.getAnyValue("resource-servlet");
-            if ((resConfig instanceof AnyValueWriter) && resConfig.getValue("webroot", "").isEmpty()) {
+            if ((resConfig instanceof AnyValueWriter)
+                    && resConfig.getValue("webroot", "").isEmpty()) {
                 ((AnyValueWriter) resConfig).addValue("webroot", config.getValue("root"));
             }
-            if (resConfig == null) { //主要用于嵌入式的HttpServer初始化
+            if (resConfig == null) { // 主要用于嵌入式的HttpServer初始化
                 AnyValueWriter dresConfig = new AnyValueWriter();
                 dresConfig.addValue("webroot", config.getValue("root"));
                 dresConfig.addValue("ranges", config.getValue("ranges"));
@@ -287,15 +290,19 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
             try {
                 Class resClazz = Thread.currentThread().getContextClassLoader().loadClass(resServlet);
                 RedkaleClassLoader.putReflectionDeclaredConstructors(resClazz, resClazz.getName());
-                this.resourceHttpServlet = (HttpServlet) resClazz.getDeclaredConstructor().newInstance();
+                this.resourceHttpServlet =
+                        (HttpServlet) resClazz.getDeclaredConstructor().newInstance();
             } catch (Throwable e) {
                 this.resourceHttpServlet = new HttpResourceServlet();
                 logger.log(Level.WARNING, "init HttpResourceSerlvet(" + resServlet + ") error", e);
             }
-            { //获取render的suffixs         
+            { // 获取render的suffixs
                 AnyValue renderConfig = config.getAnyValue("render");
                 if (renderConfig != null) {
-                    String[] suffixs = renderConfig.getValue("suffixs", ".htel").toLowerCase().split(";");
+                    String[] suffixs = renderConfig
+                            .getValue("suffixs", ".htel")
+                            .toLowerCase()
+                            .split(";");
                     ((HttpResourceServlet) this.resourceHttpServlet).renderSuffixs = suffixs;
                 }
             }
@@ -343,7 +350,7 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                         }
                     }
                 }
-                //找不到匹配的HttpServlet则使用静态资源HttpResourceServlet
+                // 找不到匹配的HttpServlet则使用静态资源HttpResourceServlet
                 if (servlet == null) {
                     servlet = this.resourceHttpServlet;
                 }
@@ -364,7 +371,9 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
             }
             servlet.execute(request, response);
         } catch (Throwable e) {
-            request.getContext().getLogger().log(Level.WARNING, "Dispatch servlet occur exception. request = " + request, e);
+            request.getContext()
+                    .getLogger()
+                    .log(Level.WARNING, "Dispatch servlet occur exception. request = " + request, e);
             response.finishError(e);
         }
     }
@@ -374,16 +383,16 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
         super.addFilter(filter, conf);
         this.lazyHeaders = false;
         if (context != null) {
-            context.lazyHeaders = this.lazyHeaders; //启动后运行过程中执行addFilter
+            context.lazyHeaders = this.lazyHeaders; // 启动后运行过程中执行addFilter
         }
     }
 
     /**
      * 添加HttpServlet
      *
-     * @param servlet      HttpServlet
-     * @param prefix       url前缀
-     * @param conf         配置信息
+     * @param servlet HttpServlet
+     * @param prefix url前缀
+     * @param conf 配置信息
      * @param mappingPaths 匹配规则
      */
     @Override
@@ -396,18 +405,18 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
             if (ws != null) {
                 mappingPaths = ws.value();
                 if (!ws.repair()) {
-                    prefix = "";//被设置为不自动追加前缀则清空prefix
+                    prefix = ""; // 被设置为不自动追加前缀则清空prefix
                 }
             }
         }
         if (this.lazyHeaders && !Rest.isSimpleRestDyn(servlet)) {
             this.lazyHeaders = false;
             if (context != null) {
-                context.lazyHeaders = this.lazyHeaders; //启动后运行过程中执行addServlet
+                context.lazyHeaders = this.lazyHeaders; // 启动后运行过程中执行addServlet
             }
         }
         allMapLock.lock();
-        try {  //需要整段锁住
+        try { // 需要整段锁住
             for (String mappingPath : mappingPaths) {
                 if (mappingPath == null) {
                     continue;
@@ -416,7 +425,7 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                     mappingPath = prefix + mappingPath;
                 }
 
-                if (Utility.contains(mappingPath, '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { //是否是正则表达式))
+                if (Utility.contains(mappingPath, '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { // 是否是正则表达式))
                     if (mappingPath.charAt(0) != '^') {
                         mappingPath = '^' + mappingPath;
                     }
@@ -427,25 +436,34 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                     }
                     if (regxArray == null) {
                         regxArray = new MappingEntry[1];
-                        regxArray[0] = new MappingEntry(mappingPath, Pattern.compile(mappingPath).asPredicate(), servlet);
+                        regxArray[0] = new MappingEntry(
+                                mappingPath, Pattern.compile(mappingPath).asPredicate(), servlet);
                     } else {
                         regxArray = Arrays.copyOf(regxArray, regxArray.length + 1);
-                        regxArray[regxArray.length - 1] = new MappingEntry(mappingPath, Pattern.compile(mappingPath).asPredicate(), servlet);
+                        regxArray[regxArray.length - 1] = new MappingEntry(
+                                mappingPath, Pattern.compile(mappingPath).asPredicate(), servlet);
                         Arrays.sort(regxArray);
                     }
                     if (servlet instanceof WebSocketServlet) {
                         if (regxWsArray == null) {
                             regxWsArray = new MappingEntry[1];
-                            regxWsArray[0] = new MappingEntry(mappingPath, Pattern.compile(mappingPath).asPredicate(), (WebSocketServlet) servlet);
+                            regxWsArray[0] = new MappingEntry(
+                                    mappingPath, Pattern.compile(mappingPath).asPredicate(), (WebSocketServlet)
+                                            servlet);
                         } else {
                             regxWsArray = Arrays.copyOf(regxWsArray, regxWsArray.length + 1);
-                            regxWsArray[regxWsArray.length - 1] = new MappingEntry(mappingPath, Pattern.compile(mappingPath).asPredicate(), (WebSocketServlet) servlet);
+                            regxWsArray[regxWsArray.length - 1] = new MappingEntry(
+                                    mappingPath, Pattern.compile(mappingPath).asPredicate(), (WebSocketServlet)
+                                            servlet);
                             Arrays.sort(regxWsArray);
                         }
                     }
                 } else if (mappingPath != null && !mappingPath.isEmpty()) {
                     if (servlet._actionmap != null && servlet._actionmap.containsKey(mappingPath)) {
-                        putMapping(mappingPath, new HttpServlet.HttpActionServlet(servlet._actionmap.get(mappingPath), servlet, mappingPath));
+                        putMapping(
+                                mappingPath,
+                                new HttpServlet.HttpActionServlet(
+                                        servlet._actionmap.get(mappingPath), servlet, mappingPath));
                     } else {
                         putMapping(mappingPath, servlet);
                     }
@@ -457,7 +475,8 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
                 }
                 if (this.allMapStrings.containsKey(mappingPath)) {
                     Class old = this.allMapStrings.get(mappingPath);
-                    throw new HttpException("mapping [" + mappingPath + "] repeat on " + old.getName() + " and " + servlet.getClass().getName());
+                    throw new HttpException("mapping [" + mappingPath + "] repeat on " + old.getName() + " and "
+                            + servlet.getClass().getName());
                 }
                 this.allMapStrings.put(mappingPath, servlet.getClass());
             }
@@ -518,7 +537,9 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
     }
 
     public HttpServlet findServletByTopic(String topic) {
-        return filterServlets(x -> x._reqtopic != null && x._reqtopic.equals(topic)).findFirst().orElse(null);
+        return filterServlets(x -> x._reqtopic != null && x._reqtopic.equals(topic))
+                .findFirst()
+                .orElse(null);
     }
 
     public Stream<HttpServlet> filterServlets(Predicate<HttpServlet> predicate) {
@@ -528,7 +549,9 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
     @Override
     protected HttpServlet mappingServlet(String key) {
         HttpServlet last = this.lastRunServlet;
-        if (last != null && last._actionSimpleMappingUrl != null && last._actionSimpleMappingUrl.equalsIgnoreCase(key)) {
+        if (last != null
+                && last._actionSimpleMappingUrl != null
+                && last._actionSimpleMappingUrl.equalsIgnoreCase(key)) {
             return last;
         }
         HttpServlet s = super.mappingServlet(key);
@@ -543,7 +566,7 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
 
     @Override
     public void destroy(HttpContext context, AnyValue config) {
-        super.destroy(context, config); //必须要执行
+        super.destroy(context, config); // 必须要执行
         this.resourceHttpServlet.destroy(context, config);
         getServlets().forEach(s -> {
             s.destroy(context, getServletConf(s));
@@ -573,6 +596,5 @@ public class HttpDispatcherServlet extends DispatcherServlet<String, HttpContext
         public int compareTo(MappingEntry o) {
             return o.mapping.compareTo(this.mapping);
         }
-
     }
 }

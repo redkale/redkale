@@ -59,13 +59,10 @@
 package org.redkale.asm;
 
 /**
- * Defines the JVM opcodes, access flags and array type codes. This interface
- * does not define all the JVM opcodes because some opcodes are automatically
- * handled. For example, the xLOAD and xSTORE opcodes are automatically replaced
- * by xLOAD_n and xSTORE_n opcodes when possible. The xLOAD_n and xSTORE_n
- * opcodes are therefore not defined in this interface. Likewise for LDC,
- * automatically replaced by LDC_W or LDC2_W when necessary, WIDE, GOTO_W and
- * JSR_W.
+ * Defines the JVM opcodes, access flags and array type codes. This interface does not define all the JVM opcodes
+ * because some opcodes are automatically handled. For example, the xLOAD and xSTORE opcodes are automatically replaced
+ * by xLOAD_n and xSTORE_n opcodes when possible. The xLOAD_n and xSTORE_n opcodes are therefore not defined in this
+ * interface. Likewise for LDC, automatically replaced by LDC_W or LDC2_W when necessary, WIDE, GOTO_W and JSR_W.
  *
  * @author Eric Bruneton
  * @author Eugene Kuleshov
@@ -117,7 +114,6 @@ public interface Opcodes {
     int ACC_MANDATED = 0x8000; // parameter, module, module *
     int ACC_MODULE = 0x8000; // class
 
-
     // ASM specific pseudo access flags
 
     int ACC_DEPRECATED = 0x20000; // class, field, method
@@ -147,39 +143,30 @@ public interface Opcodes {
 
     // stack map frame types
 
-    /**
-     * Represents an expanded frame. See {@link ClassReader#EXPAND_FRAMES}.
-     */
+    /** Represents an expanded frame. See {@link ClassReader#EXPAND_FRAMES}. */
     int F_NEW = -1;
 
-    /**
-     * Represents a compressed frame with complete frame data.
-     */
+    /** Represents a compressed frame with complete frame data. */
     int F_FULL = 0;
 
     /**
-     * Represents a compressed frame where locals are the same as the locals in
-     * the previous frame, except that additional 1-3 locals are defined, and
-     * with an empty stack.
+     * Represents a compressed frame where locals are the same as the locals in the previous frame, except that
+     * additional 1-3 locals are defined, and with an empty stack.
      */
     int F_APPEND = 1;
 
     /**
-     * Represents a compressed frame where locals are the same as the locals in
-     * the previous frame, except that the last 1-3 locals are absent and with
-     * an empty stack.
+     * Represents a compressed frame where locals are the same as the locals in the previous frame, except that the last
+     * 1-3 locals are absent and with an empty stack.
      */
     int F_CHOP = 2;
 
-    /**
-     * Represents a compressed frame with exactly the same locals as the
-     * previous frame and with an empty stack.
-     */
+    /** Represents a compressed frame with exactly the same locals as the previous frame and with an empty stack. */
     int F_SAME = 3;
 
     /**
-     * Represents a compressed frame with exactly the same locals as the
-     * previous frame and with a single value on the stack.
+     * Represents a compressed frame with exactly the same locals as the previous frame and with a single value on the
+     * stack.
      */
     int F_SAME1 = 4;
 
@@ -187,13 +174,26 @@ public interface Opcodes {
     // these values are compared by reference and not by value
     // The constructor of Integer was deprecated in 9
     // but we are stuck with it by backward compatibility
-    @SuppressWarnings("deprecation") Integer TOP = new Integer(0);
-    @SuppressWarnings("deprecation") Integer INTEGER = new Integer(1);
-    @SuppressWarnings("deprecation") Integer FLOAT = new Integer(2);
-    @SuppressWarnings("deprecation") Integer DOUBLE = new Integer(3);
-    @SuppressWarnings("deprecation") Integer LONG = new Integer(4);
-    @SuppressWarnings("deprecation") Integer NULL = new Integer(5);
-    @SuppressWarnings("deprecation") Integer UNINITIALIZED_THIS = new Integer(6);
+    @SuppressWarnings("deprecation")
+    Integer TOP = new Integer(0);
+
+    @SuppressWarnings("deprecation")
+    Integer INTEGER = new Integer(1);
+
+    @SuppressWarnings("deprecation")
+    Integer FLOAT = new Integer(2);
+
+    @SuppressWarnings("deprecation")
+    Integer DOUBLE = new Integer(3);
+
+    @SuppressWarnings("deprecation")
+    Integer LONG = new Integer(4);
+
+    @SuppressWarnings("deprecation")
+    Integer NULL = new Integer(5);
+
+    @SuppressWarnings("deprecation")
+    Integer UNINITIALIZED_THIS = new Integer(6);
 
     // opcodes // visit method (- = idem)
 

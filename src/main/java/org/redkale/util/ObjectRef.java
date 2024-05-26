@@ -6,13 +6,10 @@ package org.redkale.util;
 /**
  * 简单的对象引用
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @param <V> 泛型
- *
  * @author zhangjx
- *
  * @since 2.8.0
  */
 public final class ObjectRef<V> {
@@ -23,8 +20,7 @@ public final class ObjectRef<V> {
         this.value = initialValue;
     }
 
-    public ObjectRef() {
-    }
+    public ObjectRef() {}
 
     public final V get() {
         return this.value;

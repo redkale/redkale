@@ -16,8 +16,6 @@ import org.redkale.service.RetResult;
 import org.redkale.util.*;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -25,21 +23,17 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
-    public static final Type TYPE_MAP_STRING_STRING = new TypeToken<java.util.Map<String, String>>() {
-    }.getType();
+    public static final Type TYPE_MAP_STRING_STRING = new TypeToken<java.util.Map<String, String>>() {}.getType();
 
-    public static final Type TYPE_LIST_STRING = new TypeToken<java.util.List<String>>() {
-    }.getType();
+    public static final Type TYPE_LIST_STRING = new TypeToken<java.util.List<String>>() {}.getType();
 
-    public static final Type TYPE_RETRESULT_STRING = new TypeToken<RetResult<String>>() {
-    }.getType();
+    public static final Type TYPE_RETRESULT_STRING = new TypeToken<RetResult<String>>() {}.getType();
 
     private final ThreadLocal<JsonBytesWriter> bytesWriterPool = Utility.withInitialThreadLocal(JsonBytesWriter::new);
 
     private final Consumer<JsonBytesWriter> offerBytesConsumer = w -> offerJsonBytesWriter(w);
 
     private final ThreadLocal<JsonReader> readerPool = Utility.withInitialThreadLocal(JsonReader::new);
-
 
     private Encodeable lastConvertEncodeable;
 
@@ -64,7 +58,8 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     }
 
     @Override
-    public JsonConvert newConvert(final BiFunction<Attribute, Object, Object> objFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
+    public JsonConvert newConvert(
+            final BiFunction<Attribute, Object, Object> objFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
         return newConvert(objFieldFunc, null, objExtFunc);
     }
 
@@ -74,7 +69,10 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
     }
 
     @Override
-    public JsonConvert newConvert(final BiFunction<Attribute, Object, Object> objFieldFunc, BiFunction mapFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
+    public JsonConvert newConvert(
+            final BiFunction<Attribute, Object, Object> objFieldFunc,
+            BiFunction mapFieldFunc,
+            Function<Object, ConvertField[]> objExtFunc) {
         return new JsonConvert(getFactory(), features) {
             @Override
             protected <S extends JsonWriter> S configWrite(S writer) {
@@ -122,7 +120,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         }
     }
 
-    //------------------------------ writer -----------------------------------------------------------
+    // ------------------------------ writer -----------------------------------------------------------
     private JsonBytesWriter pollJsonBytesWriter() {
         JsonBytesWriter writer = bytesWriterPool.get();
         if (writer == null) {
@@ -140,7 +138,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         }
     }
 
-    //------------------------------ convertFrom -----------------------------------------------------------
+    // ------------------------------ convertFrom -----------------------------------------------------------
     @Override
     public <T> T convertFrom(final Type type, final byte[] bytes) {
         if (bytes == null) {
@@ -225,7 +223,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         return rs;
     }
 
-    //返回非null的值是由String、ArrayList、HashMap任意组合的对象
+    // 返回非null的值是由String、ArrayList、HashMap任意组合的对象
     public <V> V convertFrom(final String text) {
         if (text == null) {
             return null;
@@ -233,7 +231,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         return (V) convertFrom(Utility.charArray(text));
     }
 
-    //返回非null的值是由String、ArrayList、HashMap任意组合的对象
+    // 返回非null的值是由String、ArrayList、HashMap任意组合的对象
     public <V> V convertFrom(final char[] text) {
         if (text == null) {
             return null;
@@ -241,19 +239,19 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         return (V) convertFrom(text, 0, text.length);
     }
 
-    //返回非null的值是由String、ArrayList、HashMap任意组合的对象
+    // 返回非null的值是由String、ArrayList、HashMap任意组合的对象
     public <V> V convertFrom(final char[] text, final int offset, final int length) {
         if (text == null) {
             return null;
         }
-        //final JsonReader in = readerPool.get();
-        //in.setText(text, offset, length);
+        // final JsonReader in = readerPool.get();
+        // in.setText(text, offset, length);
         Object rs = new AnyDecoder(factory).convertFrom(new JsonReader(text, offset, length));
-        //readerPool.accept(in);
+        // readerPool.accept(in);
         return (V) rs;
     }
 
-    //返回非null的值是由String、ArrayList、HashMap任意组合的对象
+    // 返回非null的值是由String、ArrayList、HashMap任意组合的对象
     public <V> V convertFrom(final InputStream in) {
         if (in == null) {
             return null;
@@ -261,7 +259,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         return (V) new AnyDecoder(factory).convertFrom(new JsonStreamReader(in));
     }
 
-    //返回非null的值是由String、ArrayList、HashMap任意组合的对象
+    // 返回非null的值是由String、ArrayList、HashMap任意组合的对象
     public <V> V convertFrom(final ByteBuffer... buffers) {
         if (buffers == null || buffers.length == 0) {
             return null;
@@ -269,7 +267,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         return (V) new AnyDecoder(factory).convertFrom(new JsonByteBufferReader(buffers));
     }
 
-    //返回非null的值是由String、ArrayList、HashMap任意组合的对象
+    // 返回非null的值是由String、ArrayList、HashMap任意组合的对象
     public <V> V convertFrom(final JsonReader reader) {
         if (reader == null) {
             return null;
@@ -277,7 +275,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         return (V) new AnyDecoder(factory).convertFrom(reader);
     }
 
-    //json数据的数组长度必须和types个数相同
+    // json数据的数组长度必须和types个数相同
     public Object[] convertFrom(final Type[] types, final String text) {
         if (text == null) {
             return null;
@@ -285,7 +283,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         return new JsonMultiArrayDecoder(getFactory(), types).convertFrom(new JsonReader(text));
     }
 
-    //json数据的数组长度必须和types个数相同
+    // json数据的数组长度必须和types个数相同
     public Object[] convertFrom(final Type[] types, final byte[] bytes) {
         if (bytes == null) {
             return null;
@@ -293,7 +291,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         return convertFrom(types, new String(bytes, StandardCharsets.UTF_8));
     }
 
-    //json数据的数组长度必须和types个数相同
+    // json数据的数组长度必须和types个数相同
     public Object[] convertFrom(final Type[] types, final byte[] bytes, final int offset, final int length) {
         if (bytes == null) {
             return null;
@@ -301,7 +299,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         return convertFrom(types, new String(bytes, offset, length, StandardCharsets.UTF_8));
     }
 
-    //------------------------------ convertTo -----------------------------------------------------------
+    // ------------------------------ convertTo -----------------------------------------------------------
     @Override
     public String convertTo(final Type type, final Object value) {
         if (value == null) {
@@ -436,5 +434,4 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
             encoder.convertTo(writer, value);
         }
     }
-
 }

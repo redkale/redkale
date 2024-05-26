@@ -11,10 +11,7 @@ import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.util.ByteArray;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public final class Message {
 
     protected boolean flag;
@@ -26,8 +23,7 @@ public final class Message {
     @ConvertSmallString
     private String message;
 
-    public Message() {
-    }
+    public Message() {}
 
     public List<Long> getLongs() {
         return longs;
@@ -77,7 +73,7 @@ public final class Message {
         longs.add(2222L);
         longs.add(3333L);
         msg.longs = longs;
-        msg.ints = new int[]{2, 3, 4};
+        msg.ints = new int[] {2, 3, 4};
         JsonConvert convert = JsonFactory.root().getConvert();
         Encodeable encoder = JsonFactory.root().loadEncoder(Message.class);
         System.out.println(encoder);
@@ -85,7 +81,7 @@ public final class Message {
         array.put("数据: ".getBytes(StandardCharsets.UTF_8));
         JsonConvert.root().convertToBytes(array, msg);
         System.out.println(array);
-        Message[] mss = new Message[]{msg};
+        Message[] mss = new Message[] {msg};
         System.out.println(JsonConvert.root().convertTo(mss));
     }
 }

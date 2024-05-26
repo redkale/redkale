@@ -14,8 +14,7 @@ import org.redkale.util.Utility;
 /**
  * 被net.client模块代替
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -24,14 +23,13 @@ public class TransportGroupInfo {
 
     protected final ReentrantLock lock = new ReentrantLock();
 
-    protected String name;  //地址
+    protected String name; // 地址
 
-    protected String protocol; //协议 取值范围:  TCP、UDP
+    protected String protocol; // 协议 取值范围:  TCP、UDP
 
-    protected Set<InetSocketAddress> addresses; //地址列表， 对应 resources-&#62;group-&#62;node节点信息
+    protected Set<InetSocketAddress> addresses; // 地址列表， 对应 resources-&#62;group-&#62;node节点信息
 
-    public TransportGroupInfo() {
-    }
+    public TransportGroupInfo() {}
 
     public TransportGroupInfo(String name, InetSocketAddress... addrs) {
         this(name, "TCP", Utility.ofSet(addrs));

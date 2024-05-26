@@ -9,18 +9,18 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
- * 简易类的序列化和反序列化操作类   <br>
- * 能序列化为Boolean、Number或者字符串的类视为简易类  <br>
+ * 简易类的序列化和反序列化操作类 <br>
+ * 能序列化为Boolean、Number或者字符串的类视为简易类 <br>
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类
  * @param <W> Writer输出的子类
  * @param <T> 序列化/反解析的数据类型
  */
-public abstract class SimpledCoder<R extends Reader, W extends Writer, T> implements Decodeable<R, T>, Encodeable<W, T> {
+public abstract class SimpledCoder<R extends Reader, W extends Writer, T>
+        implements Decodeable<R, T>, Encodeable<W, T> {
 
     protected Type type;
 

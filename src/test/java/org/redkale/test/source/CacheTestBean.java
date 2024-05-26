@@ -14,10 +14,7 @@ import org.redkale.persistence.*;
 import org.redkale.persistence.VirtualEntity;
 import org.redkale.source.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @VirtualEntity(loader = CacheTestBean.DefaultBeanLoader.class)
 public class CacheTestBean {
 
@@ -29,9 +26,11 @@ public class CacheTestBean {
     private long price;
 
     public static void main(String[] args) throws Exception {
-        Method method = EntityInfo.class.getDeclaredMethod("load", Class.class, boolean.class, Properties.class, DataSource.class, BiFunction.class);
+        Method method = EntityInfo.class.getDeclaredMethod(
+                "load", Class.class, boolean.class, Properties.class, DataSource.class, BiFunction.class);
         method.setAccessible(true);
-        final EntityInfo<CacheTestBean> info = (EntityInfo<CacheTestBean>) method.invoke(null, CacheTestBean.class, true, new Properties(), null, new CacheTestBean.DefaultBeanLoader());
+        final EntityInfo<CacheTestBean> info = (EntityInfo<CacheTestBean>) method.invoke(
+                null, CacheTestBean.class, true, new Properties(), null, new CacheTestBean.DefaultBeanLoader());
         EntityCache<CacheTestBean> cache = new EntityCache(info, null);
         cache.fullLoadAsync();
 
@@ -50,8 +49,7 @@ public class CacheTestBean {
         System.out.println(cache.querySheet(null, null, FilterNodes.igNotLike(CacheTestBean::getName, "B")));
     }
 
-    public CacheTestBean() {
-    }
+    public CacheTestBean() {}
 
     public CacheTestBean(long pkgid, String name, long price) {
         this.pkgid = pkgid;
@@ -99,6 +97,5 @@ public class CacheTestBean {
             list.add(new CacheTestBean(2, "bb", 60));
             return CompletableFuture.completedFuture(list);
         }
-
     }
 }

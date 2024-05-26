@@ -10,10 +10,7 @@ import org.redkale.mq.spi.WebRequestCoder;
 import org.redkale.net.client.ClientRequest;
 import org.redkale.net.http.WebRequest;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class RequestCoderTest {
 
     private boolean main;

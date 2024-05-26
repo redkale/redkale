@@ -5,16 +5,17 @@
  */
 package org.redkale.convert.bson;
 
+import static org.redkale.convert.Reader.SIGN_NULL;
+
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import org.redkale.convert.*;
-import static org.redkale.convert.Reader.SIGN_NULL;
 import org.redkale.convert.ext.ByteSimpledCoder;
 
 /**
  * 以ByteBuffer为数据载体的BsonReader
  *
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -35,7 +36,7 @@ public class BsonByteBufferReader extends BsonReader {
 
     @Override
     protected boolean recycle() {
-        super.recycle();   // this.position 初始化值为-1
+        super.recycle(); // this.position 初始化值为-1
         this.currentIndex = 0;
         this.currentBuffer = null;
         this.buffers = null;
@@ -66,10 +67,9 @@ public class BsonByteBufferReader extends BsonReader {
     /**
      * 判断下一个非空白字节是否为[
      *
-     * @param member           DeMember
-     * @param typevals         byte[]
+     * @param member DeMember
+     * @param typevals byte[]
      * @param componentDecoder Decodeable
-     *
      * @return 数组长度或 SIGN_NULL
      */
     @Override
@@ -87,7 +87,7 @@ public class BsonByteBufferReader extends BsonReader {
         }
         return (bt & 0xffff) << 16 | (lt & 0xffff);
     }
-//------------------------------------------------------------
+    // ------------------------------------------------------------
 
     @Override
     public final boolean readBoolean() {
@@ -100,7 +100,7 @@ public class BsonByteBufferReader extends BsonReader {
             this.position++;
             return this.currentBuffer.get();
         }
-        for (;;) {
+        for (; ; ) {
             this.currentBuffer = this.buffers[++this.currentIndex];
             if (this.currentBuffer.hasRemaining()) {
                 this.position++;
@@ -142,7 +142,10 @@ public class BsonByteBufferReader extends BsonReader {
                 return this.currentBuffer.getInt();
             }
         }
-        return ((readByte() & 0xff) << 24) | ((readByte() & 0xff) << 16) | ((readByte() & 0xff) << 8) | (readByte() & 0xff);
+        return ((readByte() & 0xff) << 24)
+                | ((readByte() & 0xff) << 16)
+                | ((readByte() & 0xff) << 8)
+                | (readByte() & 0xff);
     }
 
     @Override
@@ -155,13 +158,13 @@ public class BsonByteBufferReader extends BsonReader {
             }
         }
         return ((((long) readByte() & 0xff) << 56)
-            | (((long) readByte() & 0xff) << 48)
-            | (((long) readByte() & 0xff) << 40)
-            | (((long) readByte() & 0xff) << 32)
-            | (((long) readByte() & 0xff) << 24)
-            | (((long) readByte() & 0xff) << 16)
-            | (((long) readByte() & 0xff) << 8)
-            | (((long) readByte() & 0xff)));
+                | (((long) readByte() & 0xff) << 48)
+                | (((long) readByte() & 0xff) << 40)
+                | (((long) readByte() & 0xff) << 32)
+                | (((long) readByte() & 0xff) << 24)
+                | (((long) readByte() & 0xff) << 16)
+                | (((long) readByte() & 0xff) << 8)
+                | (((long) readByte() & 0xff)));
     }
 
     protected byte[] read(final int len) {

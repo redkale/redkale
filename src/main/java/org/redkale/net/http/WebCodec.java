@@ -3,18 +3,16 @@
  */
 package org.redkale.net.http;
 
+import static org.redkale.net.http.HttpRequest.*;
+
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 import org.redkale.net.client.ClientCodec;
-import static org.redkale.net.http.HttpRequest.*;
 import org.redkale.util.ByteArray;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 class WebCodec extends ClientCodec<WebRequest, WebResult> {
 
     protected static final Logger logger = Logger.getLogger(WebCodec.class.getSimpleName());
@@ -58,10 +56,10 @@ class WebCodec extends ClientCodec<WebRequest, WebResult> {
             }
             if (result.readState == READ_STATE_ROUTE) {
                 rs = readStatusLine(result, buffer, array);
-                if (rs > 0) { //数据不全
+                if (rs > 0) { // 数据不全
                     this.halfBytes = pollArray(array);
                     return;
-                } else if (rs < 0) { //数据异常
+                } else if (rs < 0) { // 数据异常
                     occurError(null, new HttpException("http status not valid"));
                     return;
                 }
@@ -69,10 +67,10 @@ class WebCodec extends ClientCodec<WebRequest, WebResult> {
             }
             if (result.readState == READ_STATE_HEADER) {
                 rs = readHeaderBytes(result, buffer, array);
-                if (rs > 0) { //数据不全
+                if (rs > 0) { // 数据不全
                     this.halfBytes = pollArray(array);
                     return;
-                } else if (rs < 0) { //数据异常
+                } else if (rs < 0) { // 数据异常
                     occurError(null, new HttpException("http header not valid"));
                     return;
                 }
@@ -80,10 +78,10 @@ class WebCodec extends ClientCodec<WebRequest, WebResult> {
             }
             if (result.readState == READ_STATE_BODY) {
                 rs = readBody(result, buffer, array);
-                if (rs > 0) { //数据不全
+                if (rs > 0) { // 数据不全
                     this.halfBytes = pollArray(array);
                     return;
-                } else if (rs < 0) { //数据异常
+                } else if (rs < 0) { // 数据异常
                     occurError(null, new HttpException("http data not valid"));
                     return;
                 }
@@ -94,15 +92,15 @@ class WebCodec extends ClientCodec<WebRequest, WebResult> {
         }
     }
 
-    //解析 HTTP/1.1 200 OK  
+    // 解析 HTTP/1.1 200 OK
     private int readStatusLine(final WebResult result, final ByteBuffer buffer, final ByteArray array) {
         int remain = buffer.remaining();
-        if (array.length() > 0 && array.getLastByte() == '\r') { //array存在半截数据
+        if (array.length() > 0 && array.getLastByte() == '\r') { // array存在半截数据
             if (buffer.get() != '\n') {
                 return -1;
             }
         } else {
-            for (;;) {
+            for (; ; ) {
                 if (remain-- < 1) {
                     return 1;
                 }
@@ -127,17 +125,20 @@ class WebCodec extends ClientCodec<WebRequest, WebResult> {
         return 0;
     }
 
-    //解析Header Connection: keep-alive
-    //返回0表示解析完整，非0表示还需继续读数据
+    // 解析Header Connection: keep-alive
+    // 返回0表示解析完整，非0表示还需继续读数据
     private int readHeaderBytes(final WebResult result, final ByteBuffer buffer, final ByteArray array) {
         byte b;
         while (buffer.hasRemaining()) {
             b = buffer.get();
             if (b == '\n') {
                 int len = array.length();
-                if (len >= 3 && array.get(len - 1) == '\r' && array.get(len - 2) == '\n' && array.get(len - 3) == '\r') {
-                    //最后一个\r\n不写入
-                    readHeaderLines(result, array.removeLastByte()); //移除最后一个\r
+                if (len >= 3
+                        && array.get(len - 1) == '\r'
+                        && array.get(len - 2) == '\n'
+                        && array.get(len - 3) == '\r') {
+                    // 最后一个\r\n不写入
+                    readHeaderLines(result, array.removeLastByte()); // 移除最后一个\r
                     array.clear();
                     return 0;
                 }
@@ -172,8 +173,7 @@ class WebCodec extends ClientCodec<WebRequest, WebResult> {
             if ("Content-Length".equalsIgnoreCase(name)) {
                 result.contentLength = Integer.parseInt(value);
             }
-            start = posR + 2; //跳过\r\n
+            start = posR + 2; // 跳过\r\n
         }
     }
-
 }

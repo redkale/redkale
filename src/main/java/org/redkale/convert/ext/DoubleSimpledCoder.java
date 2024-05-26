@@ -10,8 +10,7 @@ import org.redkale.convert.*;
 /**
  * double 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -30,5 +29,4 @@ public final class DoubleSimpledCoder<R extends Reader, W extends Writer> extend
     public Double convertFrom(R in) {
         return in.readDouble();
     }
-
 }

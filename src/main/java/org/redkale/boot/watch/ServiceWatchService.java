@@ -15,7 +15,6 @@ import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
 
 /**
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -31,10 +30,11 @@ public class ServiceWatchService extends AbstractWatchService {
 
     @RestConvert(type = void.class)
     @RestMapping(name = "setField", auth = false, comment = "设置Service中指定字段的内容")
-    public RetResult setField(@RestParam(name = "name", comment = "Service的资源名") String name,
-        @RestParam(name = "type", comment = "Service的类名") String type,
-        @RestParam(name = "field", comment = "字段名") String field,
-        @RestParam(name = "value", comment = "字段值") String value) {
+    public RetResult setField(
+            @RestParam(name = "name", comment = "Service的资源名") String name,
+            @RestParam(name = "type", comment = "Service的类名") String type,
+            @RestParam(name = "field", comment = "字段名") String field,
+            @RestParam(name = "value", comment = "字段值") String value) {
         if (name == null) {
             name = "";
         }
@@ -80,9 +80,10 @@ public class ServiceWatchService extends AbstractWatchService {
 
     @RestConvert(type = void.class)
     @RestMapping(name = "getField", auth = false, comment = "查询Service中指定字段的内容")
-    public RetResult getField(@RestParam(name = "name", comment = "Service的资源名") String name,
-        @RestParam(name = "type", comment = "Service的类名") String type,
-        @RestParam(name = "field", comment = "字段名") String field) {
+    public RetResult getField(
+            @RestParam(name = "name", comment = "Service的资源名") String name,
+            @RestParam(name = "type", comment = "Service的类名") String type,
+            @RestParam(name = "field", comment = "字段名") String field) {
         if (name == null) {
             name = "";
         }
@@ -127,11 +128,12 @@ public class ServiceWatchService extends AbstractWatchService {
 
     @RestConvert(type = void.class)
     @RestMapping(name = "runMethod", auth = false, comment = "调用Service中指定方法")
-    public RetResult runMethod(@RestParam(name = "name", comment = "Service的资源名") String name,
-        @RestParam(name = "type", comment = "Service的类名") String type,
-        @RestParam(name = "method", comment = "Service的方法名") String method,
-        @RestParam(name = "params", comment = "方法的参数值") List<String> params,
-        @RestParam(name = "paramtypes", comment = "方法的参数数据类型") List<String> paramtypes) {
+    public RetResult runMethod(
+            @RestParam(name = "name", comment = "Service的资源名") String name,
+            @RestParam(name = "type", comment = "Service的类名") String type,
+            @RestParam(name = "method", comment = "Service的方法名") String method,
+            @RestParam(name = "params", comment = "方法的参数值") List<String> params,
+            @RestParam(name = "paramtypes", comment = "方法的参数数据类型") List<String> paramtypes) {
         if (name == null) {
             name = "";
         }
@@ -188,7 +190,10 @@ public class ServiceWatchService extends AbstractWatchService {
                 }
             } while ((clazz = clazz.getSuperclass()) != Object.class);
             if (methodObj == null) {
-                return new RetResult(RET_WATCH_RUN_EXCEPTION, "run exception (" + (t == null ? ("not found method(" + method + ")") : String.valueOf(t)) + ")");
+                return new RetResult(
+                        RET_WATCH_RUN_EXCEPTION,
+                        "run exception (" + (t == null ? ("not found method(" + method + ")") : String.valueOf(t))
+                                + ")");
             }
             methodObj.setAccessible(true);
             if (paramcount < 1) {
@@ -209,43 +214,49 @@ public class ServiceWatchService extends AbstractWatchService {
         Object dest = null;
         for (NodeServer ns : application.getNodeServers()) {
             ResourceFactory resFactory = ns.getResourceFactory();
-            List list = resFactory.query((n, s) -> name.equals(n) && s != null && s.getClass().getName().endsWith(type));
+            List list = resFactory.query((n, s) ->
+                    name.equals(n) && s != null && s.getClass().getName().endsWith(type));
             if (list == null || list.isEmpty()) {
                 continue;
             }
             dest = list.get(0);
         }
         if (dest == null) {
-            return new RetResult(RET_SERVICE_DEST_NOT_EXISTS, "not found servie (name=" + name + ", type=" + type + ")");
+            return new RetResult(
+                    RET_SERVICE_DEST_NOT_EXISTS, "not found servie (name=" + name + ", type=" + type + ")");
         }
         return dest;
     }
 
     @RestMapping(name = "loadService", auth = false, comment = "动态增加Service")
-    public RetResult loadService(@RestParam(name = "type", comment = "Service的类名") String type,
-        @RestUploadFile(maxLength = 10 * 1024 * 1024, fileNameRegx = "\\.jar$") byte[] jar) {
-        //待开发
+    public RetResult loadService(
+            @RestParam(name = "type", comment = "Service的类名") String type,
+            @RestUploadFile(maxLength = 10 * 1024 * 1024, fileNameRegx = "\\.jar$") byte[] jar) {
+        // 待开发
         return RetResult.success();
     }
 
     @RestMapping(name = "reloadService", auth = false, comment = "重新加载Service")
-    public RetResult reloadService(@RestParam(name = "name", comment = "Service的资源名") String name,
-        @RestParam(name = "type", comment = "Service的类名") String type) {
-        //待开发
+    public RetResult reloadService(
+            @RestParam(name = "name", comment = "Service的资源名") String name,
+            @RestParam(name = "type", comment = "Service的类名") String type) {
+        // 待开发
         return RetResult.success();
     }
 
     @RestMapping(name = "stopService", auth = false, comment = "动态停止Service")
-    public RetResult stopService(@RestParam(name = "name", comment = "Service的资源名") String name,
-        @RestParam(name = "type", comment = "Service的类名") String type) {
-        //待开发
+    public RetResult stopService(
+            @RestParam(name = "name", comment = "Service的资源名") String name,
+            @RestParam(name = "type", comment = "Service的类名") String type) {
+        // 待开发
         return RetResult.success();
     }
 
     @RestMapping(name = "findService", auth = false, comment = "查找Service")
-    public RetResult find(@RestParam(name = "name", comment = "Service的资源名") String name,
-        @RestParam(name = "type", comment = "Service的类名") String type) {
-        //待开发
+    public RetResult find(
+            @RestParam(name = "name", comment = "Service的资源名") String name,
+            @RestParam(name = "type", comment = "Service的类名") String type) {
+        // 待开发
         return RetResult.success();
     }
 }

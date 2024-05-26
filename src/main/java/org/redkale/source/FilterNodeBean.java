@@ -5,18 +5,17 @@
  */
 package org.redkale.source;
 
+import static org.redkale.source.FilterExpress.*;
+
 import java.io.Serializable;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import org.redkale.persistence.Transient;
-import static org.redkale.source.FilterExpress.*;
 import org.redkale.util.*;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -38,12 +37,12 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
 
     private FilterNodeBean[] nodeBeans;
 
-    //-----------------join table--------------------------
+    // -----------------join table--------------------------
     private Class joinClass;
 
     private String[] joinColumns;
 
-    //----------------------------------------------------
+    // ----------------------------------------------------
     private long least;
 
     private boolean string;
@@ -63,7 +62,11 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
         this.nodeBeans = bean == null ? null : bean.nodeBeans;
     }
 
-    private FilterNodeBean(final FilterJoinColumn joinCol, final FilterColumn filterCol, final Attribute<T, Serializable> attr, final Type genericType) {
+    private FilterNodeBean(
+            final FilterJoinColumn joinCol,
+            final FilterColumn filterCol,
+            final Attribute<T, Serializable> attr,
+            final Type genericType) {
         this.beanAttr = attr;
         this.joinClass = joinCol == null ? null : joinCol.table();
         this.joinColumns = joinCol == null ? null : joinCol.columns();
@@ -124,7 +127,7 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
             return this;
         }
         if (this.nodeBeans == null) {
-            this.nodeBeans = new FilterNodeBean[]{node};
+            this.nodeBeans = new FilterNodeBean[] {node};
             this.or = signor;
             return this;
         }
@@ -132,7 +135,7 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
             this.nodeBeans = Utility.append(this.nodeBeans, node);
             return this;
         }
-        this.nodeBeans = new FilterNodeBean[]{new FilterNodeBean(this), node};
+        this.nodeBeans = new FilterNodeBean[] {new FilterNodeBean(this), node};
         this.column = null;
         this.or = signor;
         return this;
@@ -171,9 +174,9 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
         final Serializable val = beanAttr.get(bean);
         if (column != null && val != null) {
             boolean skip = false;
-            if (string && (least > 0 && ((CharSequence) val).length() == 0)) { //空字符串不需要进行过滤
+            if (string && (least > 0 && ((CharSequence) val).length() == 0)) { // 空字符串不需要进行过滤
                 skip = true;
-            } else if (number && ((Number) val).longValue() < least) { //数值小于过滤下值限则不需要过滤
+            } else if (number && ((Number) val).longValue() < least) { // 数值小于过滤下值限则不需要过滤
                 skip = true;
             }
             if (!skip) {
@@ -215,7 +218,8 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
                 if (field.getAnnotation(javax.persistence.Transient.class) != null) {
                     continue;
                 }
-                if (field.getAnnotation(FilterColumn.class) != null && field.getAnnotation(FilterColumn.class).ignore()) {
+                if (field.getAnnotation(FilterColumn.class) != null
+                        && field.getAnnotation(FilterColumn.class).ignore()) {
                     continue;
                 }
 
@@ -226,7 +230,8 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
                 final Class t = field.getType();
                 Method getter = null;
                 try {
-                    getter = cltmp.getMethod(((t == boolean.class || t == Boolean.class) ? "is" : "get") + new String(chars));
+                    getter = cltmp.getMethod(
+                            ((t == boolean.class || t == Boolean.class) ? "is" : "get") + new String(chars));
                 } catch (NoSuchMethodException ex) {
                     try {
                         getter = cltmp.getMethod(field.getName());
@@ -246,11 +251,15 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
                 }
                 fields.add(field.getName());
 
-                final Attribute<T, Serializable> beanAttr = pubmod ? Attribute.create(field) : Attribute.create(getter, null);
-                FilterNodeBean<T> nodeBean = new FilterNodeBean(field.getAnnotation(FilterJoinColumn.class),
-                    field.getAnnotation(FilterColumn.class), beanAttr, field.getGenericType());
+                final Attribute<T, Serializable> beanAttr =
+                        pubmod ? Attribute.create(field) : Attribute.create(getter, null);
+                FilterNodeBean<T> nodeBean = new FilterNodeBean(
+                        field.getAnnotation(FilterJoinColumn.class),
+                        field.getAnnotation(FilterColumn.class),
+                        beanAttr,
+                        field.getGenericType());
 
-                //------------------------------------
+                // ------------------------------------
                 {
                     FilterGroup[] refs = field.getAnnotationsByType(FilterGroup.class);
                     String[] groups = new String[refs.length];
@@ -258,19 +267,27 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
                         groups[i] = refs[i].value();
                     }
                     if (groups.length == 0) {
-                        groups = new String[]{"[AND]"};
+                        groups = new String[] {"[AND]"};
                     }
                     for (String key : groups) {
                         if (!key.startsWith("[AND]") && !key.startsWith("[OR]")) {
-                            throw new SourceException(field + "'s FilterGroup.value(" + key + ") illegal, must be [AND] or [OR] startsWith");
+                            throw new SourceException(field + "'s FilterGroup.value(" + key
+                                    + ") illegal, must be [AND] or [OR] startsWith");
                         }
                         FilterNodeBean node = nodemap.get(key);
                         if (node == null) {
                             nodemap.put(key, nodeBean);
-                        } else if (nodeBean.joinClass == null && node.joinClass != null) { //非joinNode 关联 joinNode
-                            nodemap.put(key, nodeBean.any(node, key.substring(key.lastIndexOf('.') + 1).contains("[OR]")));
+                        } else if (nodeBean.joinClass == null && node.joinClass != null) { // 非joinNode 关联 joinNode
+                            nodemap.put(
+                                    key,
+                                    nodeBean.any(
+                                            node,
+                                            key.substring(key.lastIndexOf('.') + 1)
+                                                    .contains("[OR]")));
                         } else {
-                            node.any(nodeBean, key.substring(key.lastIndexOf('.') + 1).contains("[OR]"));
+                            node.any(
+                                    nodeBean,
+                                    key.substring(key.lastIndexOf('.') + 1).contains("[OR]"));
                         }
                     }
                 }
@@ -424,13 +441,27 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
                 sb.append(col).append(' ').append(express.value());
             } else if (express == IS_EMPTY || express == NOT_EMPTY) {
                 sb.append(col).append(' ').append(express.value()).append(" ''");
-            } else if (express == LEN_EQ || express == LEN_LT || express == LEN_LE
-                || express == LEN_GT || express == LEN_GE) {
-                sb.append("LENGTH(").append(col).append(") ").append(express.value()).append(" ?");
+            } else if (express == LEN_EQ
+                    || express == LEN_LT
+                    || express == LEN_LE
+                    || express == LEN_GT
+                    || express == LEN_GE) {
+                sb.append("LENGTH(")
+                        .append(col)
+                        .append(") ")
+                        .append(express.value())
+                        .append(" ?");
             } else {
-                boolean lower = (express == IG_EQ || express == IG_NE || express == IG_LIKE
-                    || express == IG_NOT_LIKE || express == IG_CONTAIN || express == IG_NOT_CONTAIN);
-                sb.append(lower ? ("LOWER(" + col + ')') : col).append(' ').append(express.value()).append(" ?");
+                boolean lower = (express == IG_EQ
+                        || express == IG_NE
+                        || express == IG_LIKE
+                        || express == IG_NOT_LIKE
+                        || express == IG_CONTAIN
+                        || express == IG_NOT_CONTAIN);
+                sb.append(lower ? ("LOWER(" + col + ')') : col)
+                        .append(' ')
+                        .append(express.value())
+                        .append(" ?");
             }
         }
         return sb;

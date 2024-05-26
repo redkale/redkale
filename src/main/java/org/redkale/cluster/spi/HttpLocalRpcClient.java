@@ -5,6 +5,8 @@
  */
 package org.redkale.cluster.spi;
 
+import static org.redkale.util.Utility.isEmpty;
+
 import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
@@ -19,16 +21,13 @@ import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Traces;
-import static org.redkale.util.Utility.isEmpty;
 
 /**
  * 没有配置MQ且也没有ClusterAgent的情况下实现的默认HttpMessageClient实例
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.4.0
  */
 public class HttpLocalRpcClient extends HttpRpcClient {
@@ -51,7 +50,10 @@ public class HttpLocalRpcClient extends HttpRpcClient {
             NodeHttpServer nodeHttpServer = null;
             List<NodeServer> nodeServers = application.getNodeServers();
             for (NodeServer n : nodeServers) {
-                if (n.getClass() == NodeHttpServer.class && Objects.equals(resourceName, ((NodeHttpServer) n).getHttpServer().getName())) {
+                if (n.getClass() == NodeHttpServer.class
+                        && Objects.equals(
+                                resourceName,
+                                ((NodeHttpServer) n).getHttpServer().getName())) {
                     nodeHttpServer = (NodeHttpServer) n;
                     break;
                 }
@@ -129,7 +131,8 @@ public class HttpLocalRpcClient extends HttpRpcClient {
     }
 
     @Override
-    public CompletableFuture<HttpResult<byte[]>> sendMessage(String topic, Serializable userid, String groupid, WebRequest request) {
+    public CompletableFuture<HttpResult<byte[]>> sendMessage(
+            String topic, Serializable userid, String groupid, WebRequest request) {
         if (isEmpty(request.getTraceid())) {
             request.setTraceid(Traces.currentTraceid());
         }
@@ -166,7 +169,8 @@ public class HttpLocalRpcClient extends HttpRpcClient {
     }
 
     @Override
-    public CompletableFuture<Void> produceMessage(String topic, Serializable userid, String groupid, WebRequest request) {
+    public CompletableFuture<Void> produceMessage(
+            String topic, Serializable userid, String groupid, WebRequest request) {
         CompletableFuture future = new CompletableFuture();
         HttpDispatcherServlet ps = dispatcherServlet();
         HttpServlet servlet = ps.findServletByTopic(topic);

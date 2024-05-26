@@ -3,8 +3,6 @@
  */
 package org.redkale.asm;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import static org.redkale.asm.Opcodes.BIPUSH;
 import static org.redkale.asm.Opcodes.CHECKCAST;
 import static org.redkale.asm.Opcodes.GETSTATIC;
@@ -12,32 +10,40 @@ import static org.redkale.asm.Opcodes.ICONST_0;
 import static org.redkale.asm.Opcodes.INVOKESTATIC;
 import static org.redkale.asm.Opcodes.INVOKEVIRTUAL;
 import static org.redkale.asm.Opcodes.SIPUSH;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import org.redkale.util.RedkaleException;
 
 /**
  * ASM简单的工具方法 <br>
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.8.0
  */
 public final class Asms {
 
-    private Asms() {
-    }
+    private Asms() {}
 
     public static Handle createLambdaMetaHandle() {
-        return new Handle(Opcodes.H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false);
+        return new Handle(
+                Opcodes.H_INVOKESTATIC,
+                "java/lang/invoke/LambdaMetafactory",
+                "metafactory",
+                "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
+                false);
     }
 
     public static void visitAnnotation(final AnnotationVisitor av, final Annotation ann) {
         try {
             for (Method anm : ann.annotationType().getMethods()) {
                 final String mname = anm.getName();
-                if ("equals".equals(mname) || "hashCode".equals(mname) || "toString".equals(mname) || "annotationType".equals(mname)) {
+                if ("equals".equals(mname)
+                        || "hashCode".equals(mname)
+                        || "toString".equals(mname)
+                        || "annotationType".equals(mname)) {
                     continue;
                 }
                 final Object r = anm.invoke(ann);
@@ -62,7 +68,9 @@ public final class Asms {
                 } else if (r instanceof Annotation[]) {
                     AnnotationVisitor av1 = av.visitArray(mname);
                     for (Annotation item : (Annotation[]) r) {
-                        visitAnnotation(av1.visitAnnotation(null, Type.getDescriptor(((Annotation) item).annotationType())), item);
+                        visitAnnotation(
+                                av1.visitAnnotation(null, Type.getDescriptor(((Annotation) item).annotationType())),
+                                item);
                     }
                     av1.visitEnd();
                 } else if (r instanceof Class) {
@@ -70,7 +78,9 @@ public final class Asms {
                 } else if (r instanceof Enum) {
                     av.visitEnum(mname, Type.getDescriptor(r.getClass()), ((Enum) r).name());
                 } else if (r instanceof Annotation) {
-                    visitAnnotation(av.visitAnnotation(null, Type.getDescriptor(((Annotation) r).annotationType())), (Annotation) r);
+                    visitAnnotation(
+                            av.visitAnnotation(null, Type.getDescriptor(((Annotation) r).annotationType())),
+                            (Annotation) r);
                 } else {
                     av.visit(mname, r);
                 }

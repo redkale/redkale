@@ -1,39 +1,32 @@
-/*******************************************************************************
- * Copyright (c) 2008 - 2013 Oracle Corporation. All rights reserved.
+/**
+ * ***************************************************************************** Copyright (c) 2008 - 2013 Oracle
+ * Corporation. All rights reserved.
  *
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License v1.0 and Eclipse Distribution License v. 1.0
- * which accompanies this distribution.
- * The Eclipse Public License is available at http://www.eclipse.org/legal/epl-v10.html
- * and the Eclipse Distribution License is available at
+ * <p>This program and the accompanying materials are made available under the terms of the Eclipse Public License v1.0
+ * and Eclipse Distribution License v. 1.0 which accompanies this distribution. The Eclipse Public License is available
+ * at http://www.eclipse.org/legal/epl-v10.html and the Eclipse Distribution License is available at
  * http://www.eclipse.org/org/documents/edl-v10.php.
  *
- * Contributors:
- *     Linda DeMichiel - Java Persistence 2.1
- *     Linda DeMichiel - Java Persistence 2.0
+ * <p>Contributors: Linda DeMichiel - Java Persistence 2.1 Linda DeMichiel - Java Persistence 2.0
  *
- ******************************************************************************/
+ * <p>****************************************************************************
+ */
 package javax.persistence;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import java.lang.annotation.*;
+
 /**
- * Specifies the primary key of an entity.
- * The field or property to which the <code>Id</code> annotation is applied 
- * should be one of the following types: any Java primitive type; 
- * any primitive wrapper type; 
- * <code>String</code>; 
- * <code>java.util.Date</code>; 
- * <code>java.sql.Date</code>; 
- * <code>java.math.BigDecimal</code>;
- * <code>java.math.BigInteger</code>.
+ * Specifies the primary key of an entity. The field or property to which the <code>Id</code> annotation is applied
+ * should be one of the following types: any Java primitive type; any primitive wrapper type; <code>String</code>;
+ * <code>java.util.Date</code>; <code>java.sql.Date</code>; <code>java.math.BigDecimal</code>; <code>
+ * java.math.BigInteger</code>.
  *
- * <p>The mapped column for the primary key of the entity is assumed 
- * to be the primary key of the primary table. If no <code>Column</code> annotation 
- * is specified, the primary key column name is assumed to be the name 
- * of the primary key property or field.
+ * <p>The mapped column for the primary key of the entity is assumed to be the primary key of the primary table. If no
+ * <code>Column</code> annotation is specified, the primary key column name is assumed to be the name of the primary key
+ * property or field.
  *
  * <pre>
  *   Example:
@@ -42,17 +35,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *   public Long getId() { return id; }
  * </pre>
  *
- * @see Column
- * see GeneratedValue
- *
+ * @see Column see GeneratedValue
  * @since Java Persistence 1.0
- * 
  * @deprecated replace by {@link org.redkale.persistence.Id}
- * 
  * @see org.redkale.persistence.Id
  */
 @Deprecated(since = "2.8.0")
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
-
 public @interface Id {}

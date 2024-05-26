@@ -12,8 +12,7 @@ import java.util.concurrent.locks.*;
 /**
  * Optional 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -85,7 +84,7 @@ public class OptionalCoder<R extends Reader, W extends Writer, T> extends Simple
                 try {
                     condition.await();
                 } catch (Exception e) {
-                    //do nothing
+                    // do nothing
                 } finally {
                     lock.unlock();
                 }
@@ -102,7 +101,7 @@ public class OptionalCoder<R extends Reader, W extends Writer, T> extends Simple
                 try {
                     condition.await();
                 } catch (Exception e) {
-                    //do nothing
+                    // do nothing
                 } finally {
                     lock.unlock();
                 }
@@ -110,5 +109,4 @@ public class OptionalCoder<R extends Reader, W extends Writer, T> extends Simple
         }
         return Optional.ofNullable(this.decoder.convertFrom(in));
     }
-
 }

@@ -5,33 +5,32 @@
  */
 package org.redkale.net.sncp;
 
+import static org.redkale.net.sncp.SncpHeader.KEEPALIVE_OFF;
+import static org.redkale.net.sncp.SncpHeader.KEEPALIVE_ON;
+
 import java.lang.reflect.Type;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.*;
+import org.redkale.annotation.ClassDepends;
 import org.redkale.convert.bson.BsonWriter;
 import org.redkale.net.Response;
-import static org.redkale.net.sncp.SncpHeader.KEEPALIVE_OFF;
-import static org.redkale.net.sncp.SncpHeader.KEEPALIVE_ON;
 import org.redkale.util.ByteArray;
 import org.redkale.util.Traces;
-import org.redkale.annotation.ClassDepends;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
  */
 public class SncpResponse extends Response<SncpContext, SncpRequest> {
 
-    public static final int RETCODE_ILLSERVICEID = (1 << 1); //无效serviceid
+    public static final int RETCODE_ILLSERVICEID = (1 << 1); // 无效serviceid
 
-    public static final int RETCODE_ILLSERVICEVER = (1 << 2); //无效serviceVersion
+    public static final int RETCODE_ILLSERVICEVER = (1 << 2); // 无效serviceVersion
 
-    public static final int RETCODE_ILLACTIONID = (1 << 3); //无效actionid
+    public static final int RETCODE_ILLACTIONID = (1 << 3); // 无效actionid
 
-    public static final int RETCODE_THROWEXCEPTION = (1 << 4); //内部异常
+    public static final int RETCODE_THROWEXCEPTION = (1 << 4); // 内部异常
 
     final byte[] addrBytes;
 
@@ -80,9 +79,12 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         }
     }
 
-    public SncpResponse paramAsyncHandler(Class<? extends CompletionHandler> paramHandlerType, Type paramHandlerResultType) {
+    public SncpResponse paramAsyncHandler(
+            Class<? extends CompletionHandler> paramHandlerType, Type paramHandlerResultType) {
         this.paramHandlerResultType = paramHandlerResultType;
-        this.paramAsyncHandler = paramHandlerType == CompletionHandler.class ? realHandler : SncpAsyncHandler.createHandler(paramHandlerType, realHandler);
+        this.paramAsyncHandler = paramHandlerType == CompletionHandler.class
+                ? realHandler
+                : SncpAsyncHandler.createHandler(paramHandlerType, realHandler);
         return this;
     }
 
@@ -113,7 +115,8 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
     }
 
     protected void writeHeader(ByteArray array, int bodyLength, int retcode) {
-        request.getHeader().writeTo(array, this, request.isKeepAlive() ? KEEPALIVE_ON : KEEPALIVE_OFF, bodyLength, retcode);
+        request.getHeader()
+                .writeTo(array, this, request.isKeepAlive() ? KEEPALIVE_ON : KEEPALIVE_OFF, bodyLength, retcode);
     }
 
     @Override
@@ -170,13 +173,13 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         BsonWriter out = getBsonWriter();
         out.writePlaceholderTo(headerSize);
         if (result != null || type != Void.class) {
-            out.writeByte((byte) 0);  //body的第一个字节为0，表示返回结果对象，而不是参数回调对象
+            out.writeByte((byte) 0); // body的第一个字节为0，表示返回结果对象，而不是参数回调对象
             context.getBsonConvert().convertTo(out, type, result);
         }
         finish(0, out);
     }
 
-    //调用此方法时out已写入SncpHeader的占位空间
+    // 调用此方法时out已写入SncpHeader的占位空间
     public void finish(final int retcode, final BsonWriter out) {
         int headerSize = SncpHeader.calcHeaderSize(request);
         if (out == null) {
@@ -190,5 +193,4 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         writeHeader(array, bodyLength, retcode);
         finish(array);
     }
-
 }

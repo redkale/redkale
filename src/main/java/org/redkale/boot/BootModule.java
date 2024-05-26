@@ -10,10 +10,7 @@ import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.util.Environment;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public abstract class BootModule {
 
     protected final Application application;
@@ -46,7 +43,7 @@ public abstract class BootModule {
 
     protected void onEnvironmentChanged(String namespace, List<ResourceEvent> events) {
         if (namespace != null && namespace.contains("logging")) {
-            //日志配置单独处理
+            // 日志配置单独处理
             application.loggingModule.onEnvironmentUpdated(events);
         } else {
             application.onEnvironmentChanged(namespace, events);

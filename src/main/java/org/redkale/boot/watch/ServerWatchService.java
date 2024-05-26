@@ -15,10 +15,7 @@ import org.redkale.net.Server;
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @RestService(name = "server", catalog = "watch", repair = false)
 public class ServerWatchService extends AbstractWatchService {
 
@@ -34,7 +31,9 @@ public class ServerWatchService extends AbstractWatchService {
     @RestMapping(name = "info", comment = "单个Server信息查询")
     public RetResult info(@RestParam(name = "#port:") final int port) {
         Stream<NodeServer> stream = application.getNodeServers().stream();
-        NodeServer node = stream.filter(ns -> ns.getServer().getSocketAddress().getPort() == port).findFirst().orElse(null);
+        NodeServer node = stream.filter(ns -> ns.getServer().getSocketAddress().getPort() == port)
+                .findFirst()
+                .orElse(null);
         if (node == null) {
             return new RetResult(RET_SERVER_NOT_EXISTS, "Server(port=" + port + ") not found");
         }
@@ -52,8 +51,10 @@ public class ServerWatchService extends AbstractWatchService {
     }
 
     @RestMapping(name = "changeAddress", comment = "更改Server的监听地址和端口")
-    public RetResult changeAddress(@RestParam(name = "#port:") final int oldport,
-        @RestParam(name = "#newhost:") final String newhost, @RestParam(name = "#newport:") final int newport) {
+    public RetResult changeAddress(
+            @RestParam(name = "#port:") final int oldport,
+            @RestParam(name = "#newhost:") final String newhost,
+            @RestParam(name = "#newport:") final int newport) {
         if (oldport < 1) {
             return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `oldport`");
         }
@@ -61,12 +62,15 @@ public class ServerWatchService extends AbstractWatchService {
             return new RetResult(RET_WATCH_PARAMS_ILLEGAL, "not found param `newport`");
         }
         Stream<NodeServer> stream = application.getNodeServers().stream();
-        NodeServer node = stream.filter(ns -> ns.getServer().getSocketAddress().getPort() == oldport).findFirst().orElse(null);
+        NodeServer node = stream.filter(ns -> ns.getServer().getSocketAddress().getPort() == oldport)
+                .findFirst()
+                .orElse(null);
         if (node == null) {
             return new RetResult(RET_SERVER_NOT_EXISTS, "Server(port=" + oldport + ") not found");
         }
         final Server server = node.getServer();
-        InetSocketAddress newAddr = new InetSocketAddress(newhost == null || newhost.isEmpty() ? server.getSocketAddress().getHostString() : newhost, newport);
+        InetSocketAddress newAddr = new InetSocketAddress(
+                newhost == null || newhost.isEmpty() ? server.getSocketAddress().getHostString() : newhost, newport);
         try {
             server.changeAddress(application, newAddr);
         } catch (IOException e) {
@@ -96,7 +100,9 @@ public class ServerWatchService extends AbstractWatchService {
         rs.put("backlog", server.getBacklog());
         rs.put("bufferCapacity", server.getBufferCapacity());
         rs.put("bufferPoolSize", server.getBufferPoolSize());
-        rs.put("charset", server.getCharset() == null ? "UTF-8" : server.getCharset().name());
+        rs.put(
+                "charset",
+                server.getCharset() == null ? "UTF-8" : server.getCharset().name());
         rs.put("maxbody", server.getMaxBody());
         rs.put("maxconns", server.getMaxConns());
         rs.put("serverStartTime", server.getServerStartTime());

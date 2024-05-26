@@ -21,8 +21,7 @@ import org.redkale.util.*;
 /**
  * 被net.client模块代替
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -43,53 +42,59 @@ public class TransportFactory {
 
     protected static final Logger logger = Logger.getLogger(TransportFactory.class.getSimpleName());
 
-    //传输端的AsyncGroup
+    // 传输端的AsyncGroup
     protected final AsyncGroup asyncGroup;
 
-    //每个地址对应的Group名
+    // 每个地址对应的Group名
     protected final Map<InetSocketAddress, String> groupAddrs = new HashMap<>();
 
-    //协议地址的Group集合
+    // 协议地址的Group集合
     protected final Map<String, TransportGroupInfo> groupInfos = new HashMap<>();
 
     protected final List<WeakReference<Service>> services = new CopyOnWriteArrayList<>();
 
     protected final List<WeakReference<Transport>> transportReferences = new CopyOnWriteArrayList<>();
 
-    //连接池大小
-    protected int poolMaxConns = Integer.getInteger("redkale.net.transport.pool.maxconns", Math.max(100, Utility.cpus() * 16)); //最少是wsthreads的两倍
+    // 连接池大小
+    protected int poolMaxConns = Integer.getInteger(
+            "redkale.net.transport.pool.maxconns", Math.max(100, Utility.cpus() * 16)); // 最少是wsthreads的两倍
 
-    //检查不可用地址周期， 单位：秒
+    // 检查不可用地址周期， 单位：秒
     protected int checkInterval = Integer.getInteger("redkale.net.transport.check.interval", 30);
 
-    //心跳周期， 单位：秒
+    // 心跳周期， 单位：秒
     protected int pinginterval;
 
-    //TCP读取超时秒数
+    // TCP读取超时秒数
     protected int readTimeoutSeconds;
 
-    //TCP写入超时秒数
+    // TCP写入超时秒数
     protected int writeTimeoutSeconds;
 
-    //ping和检查的定时器
+    // ping和检查的定时器
     private ScheduledThreadPoolExecutor scheduler;
 
     protected SSLContext sslContext;
 
-    //ping的内容
+    // ping的内容
     private ByteBuffer pingBuffer;
 
-    //pong的数据长度, 小于0表示不进行判断
+    // pong的数据长度, 小于0表示不进行判断
     protected int pongLength;
 
-    //是否TCP
+    // 是否TCP
     protected String netprotocol = "TCP";
 
-    //负载均衡策略
+    // 负载均衡策略
     protected final TransportStrategy strategy;
 
-    protected TransportFactory(AsyncGroup asyncGroup, SSLContext sslContext, String netprotocol,
-        int readTimeoutSeconds, int writeTimeoutSeconds, final TransportStrategy strategy) {
+    protected TransportFactory(
+            AsyncGroup asyncGroup,
+            SSLContext sslContext,
+            String netprotocol,
+            int readTimeoutSeconds,
+            int writeTimeoutSeconds,
+            final TransportStrategy strategy) {
         this.asyncGroup = asyncGroup;
         this.sslContext = sslContext;
         this.netprotocol = netprotocol;
@@ -98,8 +103,12 @@ public class TransportFactory {
         this.strategy = strategy;
     }
 
-    protected TransportFactory(AsyncGroup asyncGroup, SSLContext sslContext, String netprotocol,
-        int readTimeoutSeconds, int writeTimeoutSeconds) {
+    protected TransportFactory(
+            AsyncGroup asyncGroup,
+            SSLContext sslContext,
+            String netprotocol,
+            int readTimeoutSeconds,
+            int writeTimeoutSeconds) {
         this(asyncGroup, sslContext, netprotocol, readTimeoutSeconds, writeTimeoutSeconds, null);
     }
 
@@ -123,22 +132,33 @@ public class TransportFactory {
             t.setDaemon(true);
             return t;
         });
-        this.scheduler.scheduleAtFixedRate(() -> {
-            try {
-                checks();
-            } catch (Throwable t) {
-                logger.log(Level.SEVERE, "TransportFactory schedule(interval=" + checkInterval + "s) check error", t);
-            }
-        }, checkInterval, checkInterval, TimeUnit.SECONDS);
+        this.scheduler.scheduleAtFixedRate(
+                () -> {
+                    try {
+                        checks();
+                    } catch (Throwable t) {
+                        logger.log(
+                                Level.SEVERE,
+                                "TransportFactory schedule(interval=" + checkInterval + "s) check error",
+                                t);
+                    }
+                },
+                checkInterval,
+                checkInterval,
+                TimeUnit.SECONDS);
 
         if (this.pinginterval > 0) {
             if (pingBuffer != null) {
                 this.pingBuffer = pingBuffer.asReadOnlyBuffer();
                 this.pongLength = pongLength;
 
-                scheduler.scheduleAtFixedRate(() -> {
-                    pings();
-                }, pinginterval, pinginterval, TimeUnit.SECONDS);
+                scheduler.scheduleAtFixedRate(
+                        () -> {
+                            pings();
+                        },
+                        pinginterval,
+                        pinginterval,
+                        TimeUnit.SECONDS);
             }
         }
     }
@@ -147,24 +167,43 @@ public class TransportFactory {
         return new TransportFactory(asyncGroup, null, "TCP", readTimeoutSeconds, writeTimeoutSeconds, null);
     }
 
-    public static TransportFactory create(AsyncGroup asyncGroup, SSLContext sslContext, int readTimeoutSeconds, int writeTimeoutSeconds, final TransportStrategy strategy) {
+    public static TransportFactory create(
+            AsyncGroup asyncGroup,
+            SSLContext sslContext,
+            int readTimeoutSeconds,
+            int writeTimeoutSeconds,
+            final TransportStrategy strategy) {
         return new TransportFactory(asyncGroup, sslContext, "TCP", readTimeoutSeconds, writeTimeoutSeconds, strategy);
     }
 
-    public static TransportFactory create(AsyncGroup asyncGroup, String netprotocol, int readTimeoutSeconds, int writeTimeoutSeconds) {
+    public static TransportFactory create(
+            AsyncGroup asyncGroup, String netprotocol, int readTimeoutSeconds, int writeTimeoutSeconds) {
         return new TransportFactory(asyncGroup, null, netprotocol, readTimeoutSeconds, writeTimeoutSeconds, null);
     }
 
-    public static TransportFactory create(AsyncGroup asyncGroup, SSLContext sslContext, String netprotocol, int readTimeoutSeconds, int writeTimeoutSeconds, final TransportStrategy strategy) {
-        return new TransportFactory(asyncGroup, sslContext, netprotocol, readTimeoutSeconds, writeTimeoutSeconds, strategy);
+    public static TransportFactory create(
+            AsyncGroup asyncGroup,
+            SSLContext sslContext,
+            String netprotocol,
+            int readTimeoutSeconds,
+            int writeTimeoutSeconds,
+            final TransportStrategy strategy) {
+        return new TransportFactory(
+                asyncGroup, sslContext, netprotocol, readTimeoutSeconds, writeTimeoutSeconds, strategy);
     }
 
-    public Transport createTransportTCP(String name, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
+    public Transport createTransportTCP(
+            String name, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
         return new Transport(name, "TCP", this, this.asyncGroup, this.sslContext, clientAddress, addresses, strategy);
     }
 
-    public Transport createTransport(String name, String netprotocol, final InetSocketAddress clientAddress, final Collection<InetSocketAddress> addresses) {
-        return new Transport(name, netprotocol, this, this.asyncGroup, this.sslContext, clientAddress, addresses, strategy);
+    public Transport createTransport(
+            String name,
+            String netprotocol,
+            final InetSocketAddress clientAddress,
+            final Collection<InetSocketAddress> addresses) {
+        return new Transport(
+                name, netprotocol, this, this.asyncGroup, this.sslContext, clientAddress, addresses, strategy);
     }
 
     public String findGroupName(InetSocketAddress addr) {
@@ -258,7 +297,15 @@ public class TransportFactory {
         if (sncpAddress != null) {
             addresses.remove(sncpAddress);
         }
-        return new Transport(groups.stream().sorted().collect(Collectors.joining(";")), info.protocol, this, this.asyncGroup, this.sslContext, sncpAddress, addresses, this.strategy);
+        return new Transport(
+                groups.stream().sorted().collect(Collectors.joining(";")),
+                info.protocol,
+                this,
+                this.asyncGroup,
+                this.sslContext,
+                sncpAddress,
+                addresses,
+                this.strategy);
     }
 
     public List<TransportGroupInfo> getGroupInfos() {
@@ -304,9 +351,10 @@ public class TransportFactory {
             Transport.TransportNode[] nodes = transport.getTransportNodes();
             for (final Transport.TransportNode node : nodes) {
                 if (node.disabletime < 1) {
-                    continue; //可用
+                    continue; // 可用
                 }
-                CompletableFuture<AsyncConnection> future = Utility.orTimeout(asyncGroup.createTCPClient(node.address), null, 2, TimeUnit.SECONDS);
+                CompletableFuture<AsyncConnection> future =
+                        Utility.orTimeout(asyncGroup.createTCPClient(node.address), null, 2, TimeUnit.SECONDS);
                 future.whenComplete((r, t) -> {
                     node.disabletime = t == null ? 0 : System.currentTimeMillis();
                     if (r != null) {
@@ -321,7 +369,8 @@ public class TransportFactory {
     }
 
     private void pings() {
-        long timex = System.currentTimeMillis() - (this.pinginterval < 15 ? this.pinginterval : (this.pinginterval - 3)) * 1000;
+        long timex = System.currentTimeMillis()
+                - (this.pinginterval < 15 ? this.pinginterval : (this.pinginterval - 3)) * 1000;
         for (WeakReference<Transport> ref : transportReferences) {
             Transport transport = ref.get();
             if (transport == null) {
@@ -332,9 +381,9 @@ public class TransportFactory {
                 final BlockingQueue<AsyncConnection> queue = node.connQueue;
                 AsyncConnection conn;
                 while ((conn = queue.poll()) != null) {
-                    if (conn.getLastWriteTime() > timex && false) { //最近几秒内已经进行过IO操作
+                    if (conn.getLastWriteTime() > timex && false) { // 最近几秒内已经进行过IO操作
                         queue.offer(conn);
-                    } else { //超过一定时间的连接需要进行ping处理
+                    } else { // 超过一定时间的连接需要进行ping处理
                         ByteBuffer sendBuffer = pingBuffer.duplicate();
                         final AsyncConnection localconn = conn;
                         final BlockingQueue<AsyncConnection> localqueue = queue;
@@ -380,7 +429,7 @@ public class TransportFactory {
         }
     }
 
-    private static boolean checkName(String name) {  //不能含特殊字符
+    private static boolean checkName(String name) { // 不能含特殊字符
         if (name.isEmpty()) {
             return false;
         }
@@ -388,7 +437,10 @@ public class TransportFactory {
             return false;
         }
         for (char ch : name.toCharArray()) {
-            if (!((ch >= '0' && ch <= '9') || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) { //不能含特殊字符
+            if (!((ch >= '0' && ch <= '9')
+                    || ch == '_'
+                    || (ch >= 'a' && ch <= 'z')
+                    || (ch >= 'A' && ch <= 'Z'))) { // 不能含特殊字符
                 return false;
             }
         }

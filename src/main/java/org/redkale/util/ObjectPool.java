@@ -13,8 +13,7 @@ import java.util.logging.*;
 /**
  * 对象池
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <T> 对象池元素的数据类型
@@ -45,11 +44,19 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
 
     protected Thread unsafeThread;
 
-    //true表示unsafeThread不为空且当前为非线程安全版且parent为线程安全版
+    // true表示unsafeThread不为空且当前为非线程安全版且parent为线程安全版
     protected final boolean safeCombine;
 
-    protected ObjectPool(ObjectPool<T> parent, LongAdder creatCounter, LongAdder cycleCounter,
-        Thread unsafeThread, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler, Queue<T> queue) {
+    protected ObjectPool(
+            ObjectPool<T> parent,
+            LongAdder creatCounter,
+            LongAdder cycleCounter,
+            Thread unsafeThread,
+            int max,
+            Creator<T> creator,
+            Consumer<T> prepare,
+            Predicate<T> recycler,
+            Queue<T> queue) {
         this.parent = parent;
         this.creatCounter = creatCounter;
         this.cycleCounter = cycleCounter;
@@ -64,130 +71,211 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
         this.safeCombine = unsafeThread != null && unsafeDequeable && parent != null && !parent.unsafeDequeable;
     }
 
-    //非线程安全版
+    // 非线程安全版
     public static <T> ObjectPool<T> createUnsafePool(Class<T> clazz, Consumer<T> prepare, Predicate<T> recycler) {
         return createUnsafePool(2, clazz, prepare, recycler);
     }
 
-    //非线程安全版
-    public static <T> ObjectPool<T> createUnsafePool(int max, Class<T> clazz, Consumer<T> prepare, Predicate<T> recycler) {
+    // 非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(
+            int max, Class<T> clazz, Consumer<T> prepare, Predicate<T> recycler) {
         return createUnsafePool(max, Creator.create(clazz), prepare, recycler);
     }
 
-    //非线程安全版
+    // 非线程安全版
     public static <T> ObjectPool<T> createUnsafePool(Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
         return createUnsafePool(2, creator, prepare, recycler);
     }
 
-    //非线程安全版
-    public static <T> ObjectPool<T> createUnsafePool(int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+    // 非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(
+            int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
         return createUnsafePool(null, null, max, creator, prepare, recycler);
     }
 
-    //非线程安全版
-    public static <T> ObjectPool<T> createUnsafePool(int max, Supplier<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+    // 非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(
+            int max, Supplier<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
         return createUnsafePool(null, null, max, creator, prepare, recycler);
     }
 
-    //非线程安全版
-    public static <T> ObjectPool<T> createUnsafePool(LongAdder creatCounter, LongAdder cycleCounter, 
-        int max, Supplier<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+    // 非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(
+            LongAdder creatCounter,
+            LongAdder cycleCounter,
+            int max,
+            Supplier<T> creator,
+            Consumer<T> prepare,
+            Predicate<T> recycler) {
         return createUnsafePool(creatCounter, cycleCounter, max, c -> creator.get(), prepare, recycler);
     }
 
-    //非线程安全版
-    public static <T> ObjectPool<T> createUnsafePool(LongAdder creatCounter, LongAdder cycleCounter, 
-        int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+    // 非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(
+            LongAdder creatCounter,
+            LongAdder cycleCounter,
+            int max,
+            Creator<T> creator,
+            Consumer<T> prepare,
+            Predicate<T> recycler) {
         return createUnsafePool(null, creatCounter, cycleCounter, max, creator, prepare, recycler);
     }
 
-    //非线程安全版
-    public static <T> ObjectPool<T> createUnsafePool(ObjectPool<T> parent, Class<T> clazz, Consumer<T> prepare, Predicate<T> recycler) {
+    // 非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(
+            ObjectPool<T> parent, Class<T> clazz, Consumer<T> prepare, Predicate<T> recycler) {
         return createUnsafePool(parent, 2, clazz, prepare, recycler);
     }
 
-    //非线程安全版
-    public static <T> ObjectPool<T> createUnsafePool(ObjectPool<T> parent, int max, Class<T> clazz, Consumer<T> prepare, Predicate<T> recycler) {
+    // 非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(
+            ObjectPool<T> parent, int max, Class<T> clazz, Consumer<T> prepare, Predicate<T> recycler) {
         return createUnsafePool(parent, max, Creator.create(clazz), prepare, recycler);
     }
 
-    //非线程安全版
-    public static <T> ObjectPool<T> createUnsafePool(ObjectPool<T> parent, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+    // 非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(
+            ObjectPool<T> parent, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
         return createUnsafePool(parent, 2, creator, prepare, recycler);
     }
 
-    //非线程安全版
-    public static <T> ObjectPool<T> createUnsafePool(ObjectPool<T> parent, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+    // 非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(
+            ObjectPool<T> parent, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
         return createUnsafePool(parent, null, null, max, creator, prepare, recycler);
     }
 
-    //非线程安全版
-    public static <T> ObjectPool<T> createUnsafePool(ObjectPool<T> parent, int max, Supplier<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+    // 非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(
+            ObjectPool<T> parent, int max, Supplier<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
         return createUnsafePool(parent, null, null, max, creator, prepare, recycler);
     }
 
-    //非线程安全版
-    public static <T> ObjectPool<T> createUnsafePool(ObjectPool<T> parent, LongAdder creatCounter, LongAdder cycleCounter, 
-        int max, Supplier<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+    // 非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(
+            ObjectPool<T> parent,
+            LongAdder creatCounter,
+            LongAdder cycleCounter,
+            int max,
+            Supplier<T> creator,
+            Consumer<T> prepare,
+            Predicate<T> recycler) {
         return createUnsafePool(parent, creatCounter, cycleCounter, max, c -> creator.get(), prepare, recycler);
     }
 
-    //非线程安全版
-    public static <T> ObjectPool<T> createUnsafePool(ObjectPool<T> parent, LongAdder creatCounter, LongAdder cycleCounter, 
-        int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
-        return new ObjectPool(parent, creatCounter, cycleCounter, null, Math.max(Utility.cpus(), max),
-            creator, prepare, recycler, new ArrayDeque<>(Math.max(Utility.cpus(), max)));
+    // 非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(
+            ObjectPool<T> parent,
+            LongAdder creatCounter,
+            LongAdder cycleCounter,
+            int max,
+            Creator<T> creator,
+            Consumer<T> prepare,
+            Predicate<T> recycler) {
+        return new ObjectPool(
+                parent,
+                creatCounter,
+                cycleCounter,
+                null,
+                Math.max(Utility.cpus(), max),
+                creator,
+                prepare,
+                recycler,
+                new ArrayDeque<>(Math.max(Utility.cpus(), max)));
     }
 
-    //非线程安全版
-    public static <T> ObjectPool<T> createUnsafePool(ObjectPool<T> parent, LongAdder creatCounter, LongAdder cycleCounter, 
-        Thread unsafeThread, int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
-        return new ObjectPool(parent, creatCounter, cycleCounter, unsafeThread, Math.max(Utility.cpus(), max),
-            creator, prepare, recycler, new ArrayDeque<>(Math.max(Utility.cpus(), max)));
+    // 非线程安全版
+    public static <T> ObjectPool<T> createUnsafePool(
+            ObjectPool<T> parent,
+            LongAdder creatCounter,
+            LongAdder cycleCounter,
+            Thread unsafeThread,
+            int max,
+            Creator<T> creator,
+            Consumer<T> prepare,
+            Predicate<T> recycler) {
+        return new ObjectPool(
+                parent,
+                creatCounter,
+                cycleCounter,
+                unsafeThread,
+                Math.max(Utility.cpus(), max),
+                creator,
+                prepare,
+                recycler,
+                new ArrayDeque<>(Math.max(Utility.cpus(), max)));
     }
 
-    //非线程安全版
+    // 非线程安全版
     public static <T> ObjectPool<T> createUnsafePool(Thread unsafeThread, int max, ObjectPool<T> safePool) {
-        return createUnsafePool(safePool, safePool.getCreatCounter(), safePool.getCycleCounter(), 
-            unsafeThread, max, safePool.getCreator(), safePool.getPrepare(), safePool.getRecycler());
+        return createUnsafePool(
+                safePool,
+                safePool.getCreatCounter(),
+                safePool.getCycleCounter(),
+                unsafeThread,
+                max,
+                safePool.getCreator(),
+                safePool.getPrepare(),
+                safePool.getRecycler());
     }
 
-    //线程安全版
+    // 线程安全版
     public static <T> ObjectPool<T> createSafePool(Class<T> clazz, Consumer<T> prepare, Predicate<T> recycler) {
         return createSafePool(2, clazz, prepare, recycler);
     }
 
-    //线程安全版
-    public static <T> ObjectPool<T> createSafePool(int max, Class<T> clazz, Consumer<T> prepare, Predicate<T> recycler) {
+    // 线程安全版
+    public static <T> ObjectPool<T> createSafePool(
+            int max, Class<T> clazz, Consumer<T> prepare, Predicate<T> recycler) {
         return createSafePool(max, Creator.create(clazz), prepare, recycler);
     }
 
-    //线程安全版
+    // 线程安全版
     public static <T> ObjectPool<T> createSafePool(Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
         return createSafePool(2, creator, prepare, recycler);
     }
 
-    //线程安全版
-    public static <T> ObjectPool<T> createSafePool(int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+    // 线程安全版
+    public static <T> ObjectPool<T> createSafePool(
+            int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
         return createSafePool(null, null, max, creator, prepare, recycler);
     }
 
-    //线程安全版
-    public static <T> ObjectPool<T> createSafePool(int max, Supplier<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+    // 线程安全版
+    public static <T> ObjectPool<T> createSafePool(
+            int max, Supplier<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
         return createSafePool(null, null, max, creator, prepare, recycler);
     }
 
-    //线程安全版
-    public static <T> ObjectPool<T> createSafePool(LongAdder creatCounter, LongAdder cycleCounter, 
-        int max, Supplier<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
+    // 线程安全版
+    public static <T> ObjectPool<T> createSafePool(
+            LongAdder creatCounter,
+            LongAdder cycleCounter,
+            int max,
+            Supplier<T> creator,
+            Consumer<T> prepare,
+            Predicate<T> recycler) {
         return createSafePool(creatCounter, cycleCounter, max, c -> creator.get(), prepare, recycler);
     }
 
-    //线程安全版
-    public static <T> ObjectPool<T> createSafePool(LongAdder creatCounter, LongAdder cycleCounter, 
-        int max, Creator<T> creator, Consumer<T> prepare, Predicate<T> recycler) {
-        return new ObjectPool(null, creatCounter, cycleCounter, null, Math.max(Utility.cpus(), max),
-            creator, prepare, recycler, new LinkedBlockingQueue<>(Math.max(Utility.cpus(), max)));
+    // 线程安全版
+    public static <T> ObjectPool<T> createSafePool(
+            LongAdder creatCounter,
+            LongAdder cycleCounter,
+            int max,
+            Creator<T> creator,
+            Consumer<T> prepare,
+            Predicate<T> recycler) {
+        return new ObjectPool(
+                null,
+                creatCounter,
+                cycleCounter,
+                null,
+                Math.max(Utility.cpus(), max),
+                creator,
+                prepare,
+                recycler,
+                new LinkedBlockingQueue<>(Math.max(Utility.cpus(), max)));
     }
 
     public void setCreator(Creator<T> creator) {
@@ -228,7 +316,8 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
             if (unsafeThread == null) {
                 unsafeThread = Thread.currentThread();
             } else if (unsafeThread != Thread.currentThread()) {
-                throw new RedkaleException("unsafeThread is " + unsafeThread + ", but currentThread is " + Thread.currentThread());
+                throw new RedkaleException(
+                        "unsafeThread is " + unsafeThread + ", but currentThread is " + Thread.currentThread());
             }
         }
         T result = queue.poll();
@@ -263,21 +352,23 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
             if (unsafeThread == null) {
                 unsafeThread = Thread.currentThread();
             } else if (unsafeThread != Thread.currentThread()) {
-                throw new RedkaleException("unsafeThread is " + unsafeThread + ", but currentThread is " + Thread.currentThread());
+                throw new RedkaleException(
+                        "unsafeThread is " + unsafeThread + ", but currentThread is " + Thread.currentThread());
             }
         }
         if (recycler.test(e)) {
             if (cycleCounter != null) {
                 cycleCounter.increment();
             }
-//            if (debug) {
-//                for (T t : queue) {
-//                    if (t == e) {
-//                        logger.log(Level.WARNING, "repeat offer the same object(" + e + ")", new Exception());
-//                        return;
-//                    }
-//                }
-//            }
+            //            if (debug) {
+            //                for (T t : queue) {
+            //                    if (t == e) {
+            //                        logger.log(Level.WARNING, "repeat offer the same object(" + e + ")", new
+            // Exception());
+            //                        return;
+            //                    }
+            //                }
+            //            }
             boolean rs = unsafeDequeable ? queue.size() < max && queue.offer(e) : queue.offer(e);
             if (!rs && parent != null) {
                 parent.accept(e);
@@ -292,5 +383,4 @@ public class ObjectPool<T> implements Supplier<T>, Consumer<T> {
     public long getCycleCount() {
         return cycleCounter == null ? -1 : cycleCounter.longValue();
     }
-
 }

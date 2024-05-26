@@ -14,7 +14,7 @@ import org.redkale.service.*;
  */
 public class UserService implements Service {
 
-    //根据登录态获取当前用户信息
+    // 根据登录态获取当前用户信息
     public UserInfo current(String sessionid) {
         return new UserInfo();
     }

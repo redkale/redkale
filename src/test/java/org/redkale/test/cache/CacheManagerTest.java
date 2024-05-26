@@ -12,10 +12,7 @@ import org.redkale.convert.json.JsonConvert;
 import org.redkale.source.CacheMemorySource;
 import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class CacheManagerTest {
 
     private static CacheManagerService manager;
@@ -49,9 +46,11 @@ public class CacheManagerTest {
 
         String json = bean.toString();
         manager.localSet("user", bean.getName(), CachingBean.class, bean, expire);
-        Assertions.assertEquals(manager.localGet("user", bean.getName(), CachingBean.class).toString(), json);
+        Assertions.assertEquals(
+                manager.localGet("user", bean.getName(), CachingBean.class).toString(), json);
         bean.setRemark(bean.getRemark() + "-新备注");
-        Assertions.assertEquals(manager.localGet("user", bean.getName(), CachingBean.class).toString(), json);
+        Assertions.assertEquals(
+                manager.localGet("user", bean.getName(), CachingBean.class).toString(), json);
     }
 
     @Test
@@ -64,29 +63,45 @@ public class CacheManagerTest {
             CountDownLatch cdl = new CountDownLatch(count);
             for (int i = 0; i < count; i++) {
                 new Thread(() -> {
-                    manager.bothGetSet("ParallelBean", "name", String.class, false, localExpire, remoteExpire, () -> bean.getName());
-                    cdl.countDown();
-                }).start();
+                            manager.bothGetSet(
+                                    "ParallelBean",
+                                    "name",
+                                    String.class,
+                                    false,
+                                    localExpire,
+                                    remoteExpire,
+                                    () -> bean.getName());
+                            cdl.countDown();
+                        })
+                        .start();
             }
             cdl.await();
         }
         Assertions.assertEquals(1, ParallelBean.c1.get());
         Utility.sleep(200);
-        manager.bothGetSet("ParallelBean", "name", String.class, false, localExpire, remoteExpire, () -> bean.getName());
+        manager.bothGetSet(
+                "ParallelBean", "name", String.class, false, localExpire, remoteExpire, () -> bean.getName());
         Assertions.assertEquals(1, ParallelBean.c1.get());
         Utility.sleep(200);
         {
             CountDownLatch cdl = new CountDownLatch(count);
             for (int i = 0; i < count; i++) {
                 new Thread(() -> {
-                    manager.bothGetSet("ParallelBean", "name", String.class, false, localExpire, remoteExpire, () -> bean.getName());
-                    cdl.countDown();
-                }).start();
+                            manager.bothGetSet(
+                                    "ParallelBean",
+                                    "name",
+                                    String.class,
+                                    false,
+                                    localExpire,
+                                    remoteExpire,
+                                    () -> bean.getName());
+                            cdl.countDown();
+                        })
+                        .start();
             }
             cdl.await();
         }
         Assertions.assertEquals(2, ParallelBean.c1.get());
-
     }
 
     public static class ParallelBean {

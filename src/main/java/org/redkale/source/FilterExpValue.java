@@ -11,8 +11,7 @@ import org.redkale.convert.ConvertColumn;
  * FilterValue主要用于复杂的表达式。<br>
  * 例如: col / 10 = 3 、MOD(col, 8) &gt; 0 这些都不是单独一个数值能表达的，因此需要FilterValue 才构建 8 、 &gt; 、0 组合值。
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -27,8 +26,7 @@ public class FilterExpValue implements java.io.Serializable {
     @ConvertColumn(index = 3)
     private Number right;
 
-    public FilterExpValue() {
-    }
+    public FilterExpValue() {}
 
     public FilterExpValue(Number left, Number right) {
         this(left, FilterExpress.EQ, right);
@@ -70,6 +68,7 @@ public class FilterExpValue implements java.io.Serializable {
 
     @Override
     public String toString() {
-        return FilterExpValue.class.getSimpleName() + "[left=" + getLeft() + ", express=" + getExpress() + ", right=" + getRight() + "]";
+        return FilterExpValue.class.getSimpleName() + "[left=" + getLeft() + ", express=" + getExpress() + ", right="
+                + getRight() + "]";
     }
 }

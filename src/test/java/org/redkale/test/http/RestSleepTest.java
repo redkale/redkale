@@ -15,10 +15,7 @@ import org.redkale.net.http.*;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.util.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class RestSleepTest {
 
     private boolean main;
@@ -39,7 +36,7 @@ public class RestSleepTest {
         resFactory.register(JsonConvert.root());
         resFactory.register(BsonConvert.root());
 
-        //------------------------ 初始化 CService ------------------------------------
+        // ------------------------ 初始化 CService ------------------------------------
         RestSleepService service = Sncp.createSimpleLocalService(RestSleepService.class, resFactory);
         HttpServer server = new HttpServer(application, System.currentTimeMillis(), resFactory);
         server.getResourceFactory().register(application);
@@ -53,14 +50,15 @@ public class RestSleepTest {
         Socket socket = new Socket(httpAddress.getAddress(), port);
         OutputStream out = socket.getOutputStream();
         out.write(("GET /test/sleep200  HTTP/1.1\r\n"
-            + "Connection: Keep-Alive\r\n"
-            + "\r\n"
-            + "GET /test/sleep300  HTTP/1.1\r\n"
-            + "Connection: Keep-Alive\r\n"
-            + "\r\n"
-            + "GET /test/sleep500  HTTP/1.1\r\n"
-            + "Connection: Keep-Alive\r\n"
-            + "\r\n").getBytes());
+                        + "Connection: Keep-Alive\r\n"
+                        + "\r\n"
+                        + "GET /test/sleep300  HTTP/1.1\r\n"
+                        + "Connection: Keep-Alive\r\n"
+                        + "\r\n"
+                        + "GET /test/sleep500  HTTP/1.1\r\n"
+                        + "Connection: Keep-Alive\r\n"
+                        + "\r\n")
+                .getBytes());
         InputStream in = socket.getInputStream();
         byte[] bytes = new byte[8192];
         long s = System.currentTimeMillis();

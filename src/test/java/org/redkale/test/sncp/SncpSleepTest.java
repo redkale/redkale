@@ -14,10 +14,7 @@ import org.redkale.net.client.ClientAddress;
 import org.redkale.net.sncp.*;
 import org.redkale.util.*;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class SncpSleepTest {
 
     private boolean main;
@@ -40,7 +37,7 @@ public class SncpSleepTest {
         resFactory.register(JsonConvert.root());
         resFactory.register(BsonConvert.root());
 
-        //------------------------ 初始化 CService ------------------------------------
+        // ------------------------ 初始化 CService ------------------------------------
         SncpSleepService service = Sncp.createSimpleLocalService(SncpSleepService.class, resFactory);
         resFactory.inject(service);
         SncpServer server = new SncpServer(application, System.currentTimeMillis(), null, resFactory);
@@ -52,16 +49,16 @@ public class SncpSleepTest {
         int port = server.getSocketAddress().getPort();
         System.out.println("SNCP服务器启动端口: " + port);
         InetSocketAddress sncpAddress = new InetSocketAddress("127.0.0.1", port);
-        final SncpClient client = new SncpClient("", asyncGroup, "0", sncpAddress, new ClientAddress(sncpAddress), "TCP", 16, 100);
+        final SncpClient client =
+                new SncpClient("", asyncGroup, "0", sncpAddress, new ClientAddress(sncpAddress), "TCP", 16, 100);
         final SncpRpcGroups rpcGroups = application.getSncpRpcGroups();
         rpcGroups.computeIfAbsent("cs", "TCP").putAddress(sncpAddress);
-        SncpSleepService remoteCService = Sncp.createSimpleRemoteService(SncpSleepService.class, resFactory, rpcGroups, client, "cs");
+        SncpSleepService remoteCService =
+                Sncp.createSimpleRemoteService(SncpSleepService.class, resFactory, rpcGroups, client, "cs");
         long s = System.currentTimeMillis();
-        CompletableFuture[] futures = new CompletableFuture[]{
-            remoteCService.sleep200(),
-            remoteCService.sleep300(),
-            remoteCService.sleep500()
-        };
+        CompletableFuture[] futures =
+                new CompletableFuture[] {remoteCService.sleep200(), remoteCService.sleep300(), remoteCService.sleep500()
+                };
         CompletableFuture.allOf(futures).join();
         long e = System.currentTimeMillis() - s;
         System.out.println("耗时: " + e + " ms");

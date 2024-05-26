@@ -9,7 +9,6 @@ import java.io.*;
 import org.redkale.convert.*;
 
 /**
- *
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -27,7 +26,7 @@ class BsonStreamReader extends BsonByteBufferReader {
 
     @Override
     protected boolean recycle() {
-        super.recycle();   // this.position 初始化值为-1
+        super.recycle(); // this.position 初始化值为-1
         this.in = null;
         this.currByte = 0;
         return false;

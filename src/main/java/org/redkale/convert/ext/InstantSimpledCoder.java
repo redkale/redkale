@@ -12,8 +12,7 @@ import org.redkale.convert.json.*;
 /**
  * java.time.Instant 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -34,7 +33,8 @@ public class InstantSimpledCoder<R extends Reader, W extends Writer> extends Sim
         return t == -1 ? null : Instant.ofEpochMilli(t);
     }
 
-    public final static class InstantJsonSimpledCoder<R extends JsonReader, W extends JsonWriter> extends SimpledCoder<R, W, Instant> {
+    public static final class InstantJsonSimpledCoder<R extends JsonReader, W extends JsonWriter>
+            extends SimpledCoder<R, W, Instant> {
 
         public static final InstantJsonSimpledCoder instance = new InstantJsonSimpledCoder();
 

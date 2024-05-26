@@ -5,15 +5,15 @@
  */
 package org.redkale.convert;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.*;
+
+import java.lang.annotation.*;
 
 /**
  * 依附在setter、getter方法、字段进行简单的配置
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -54,8 +54,7 @@ public @interface ConvertColumn {
     /**
      * ConvertColumn 的多用类
      *
-     * <p>
-     * 详情见: https://redkale.org
+     * <p>详情见: https://redkale.org
      *
      * @author zhangjx
      */

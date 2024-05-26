@@ -7,10 +7,7 @@ import org.junit.jupiter.api.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.StringWrapper;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class StringWrapperTest {
 
     private boolean main;
@@ -36,7 +33,8 @@ public class StringWrapperTest {
             String val = "{id:'带中文'}";
             StringWrapper wrapper = new StringWrapper(val);
             if (!main) Assertions.assertEquals(val, convert.convertTo(wrapper));
-            if (!main) Assertions.assertEquals(val, new String(convert.convertToBytes(wrapper), StandardCharsets.UTF_8));
+            if (!main)
+                Assertions.assertEquals(val, new String(convert.convertToBytes(wrapper), StandardCharsets.UTF_8));
             System.out.println(convert.convertTo(wrapper));
             System.out.println(new String(convert.convertToBytes(wrapper), StandardCharsets.UTF_8));
         }

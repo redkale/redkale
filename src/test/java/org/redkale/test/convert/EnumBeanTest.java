@@ -4,14 +4,11 @@
  */
 package org.redkale.test.convert;
 
-import org.redkale.convert.ConvertEnumValue;
 import org.junit.jupiter.api.*;
+import org.redkale.convert.ConvertEnumValue;
 import org.redkale.convert.json.JsonConvert;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class EnumBeanTest {
 
     private boolean main;
@@ -46,7 +43,8 @@ public class EnumBeanTest {
 
     @ConvertEnumValue("code")
     public static enum EnumKey {
-        ONE(1), TWO(2);
+        ONE(1),
+        TWO(2);
 
         private final int code;
 

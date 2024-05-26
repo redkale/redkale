@@ -33,8 +33,7 @@ public class GenericEntity<T, K, V> {
         list.add(1234567890L);
         bean.setList(list);
         bean.setEntry(new Entry<>("aaaa", SimpleEntity.create()));
-        final Type type = new TypeToken<GenericEntity<Long, String, SimpleEntity>>() {
-        }.getType();
+        final Type type = new TypeToken<GenericEntity<Long, String, SimpleEntity>>() {}.getType();
         JsonFactory.root().withTinyFeature(true);
         String json = JsonConvert.root().convertTo(bean);
         System.out.println(json);
@@ -76,8 +75,7 @@ public class GenericEntity<T, K, V> {
 
         private V value;
 
-        public Entry() {
-        }
+        public Entry() {}
 
         public Entry(K key, V value) {
             this.key = key;
@@ -104,6 +102,5 @@ public class GenericEntity<T, K, V> {
         public void setValue(V value) {
             this.value = value;
         }
-
     }
 }

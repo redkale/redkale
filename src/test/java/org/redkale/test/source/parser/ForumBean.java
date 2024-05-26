@@ -5,10 +5,7 @@ package org.redkale.test.source.parser;
 
 import java.io.Serializable;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class ForumBean implements Serializable {
 
     private String forumSectionid;
@@ -40,5 +37,4 @@ public class ForumBean implements Serializable {
     public void setForumid(String forumid) {
         this.forumid = forumid;
     }
-
 }

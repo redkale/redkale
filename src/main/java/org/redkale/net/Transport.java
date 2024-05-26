@@ -25,8 +25,7 @@ import org.redkale.util.*;
 /**
  * 被net.client模块代替
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -41,35 +40,48 @@ public final class Transport {
 
     protected final TransportFactory factory;
 
-    protected final String name; //即<group>的name属性
+    protected final String name; // 即<group>的name属性
 
     protected final boolean tcp;
 
     protected final String netprotocol;
 
-    //传输端的AsyncGroup
+    // 传输端的AsyncGroup
     protected final AsyncGroup asyncGroup;
 
     protected final InetSocketAddress clientAddress;
 
-    //不可能为null
+    // 不可能为null
     protected TransportNode[] transportNodes = new TransportNode[0];
 
     protected final SSLContext sslContext;
 
-    //负载均衡策略
+    // 负载均衡策略
     protected final TransportStrategy strategy;
 
-    //连接上限， 为null表示无限制
+    // 连接上限， 为null表示无限制
     protected Semaphore semaphore;
 
-    protected Transport(String name, TransportFactory factory, final AsyncGroup asyncGroup, final SSLContext sslContext, final InetSocketAddress clientAddress,
-        final Collection<InetSocketAddress> addresses, final TransportStrategy strategy) {
+    protected Transport(
+            String name,
+            TransportFactory factory,
+            final AsyncGroup asyncGroup,
+            final SSLContext sslContext,
+            final InetSocketAddress clientAddress,
+            final Collection<InetSocketAddress> addresses,
+            final TransportStrategy strategy) {
         this(name, DEFAULT_NETPROTOCOL, factory, asyncGroup, sslContext, clientAddress, addresses, strategy);
     }
 
-    protected Transport(String name, String netprotocol, final TransportFactory factory, final AsyncGroup asyncGroup, final SSLContext sslContext, final InetSocketAddress clientAddress,
-        final Collection<InetSocketAddress> addresses, final TransportStrategy strategy) {
+    protected Transport(
+            String name,
+            String netprotocol,
+            final TransportFactory factory,
+            final AsyncGroup asyncGroup,
+            final SSLContext sslContext,
+            final InetSocketAddress clientAddress,
+            final Collection<InetSocketAddress> addresses,
+            final TransportStrategy strategy) {
         this.name = name;
         this.netprotocol = netprotocol;
         this.factory = factory;
@@ -147,7 +159,7 @@ public final class Transport {
         lock.lock();
         try {
             if (this.transportNodes.length == 0) {
-                this.transportNodes = new TransportNode[]{new TransportNode(factory.poolMaxConns, addr)};
+                this.transportNodes = new TransportNode[] {new TransportNode(factory.poolMaxConns, addr)};
             } else {
                 for (TransportNode i : this.transportNodes) {
                     if (addr.equals(i.address)) {
@@ -218,7 +230,8 @@ public final class Transport {
 
     @Override
     public String toString() {
-        return Transport.class.getSimpleName() + "{name = " + name + ", protocol = " + netprotocol + ", clientAddress = " + clientAddress + ", remoteNodes = " + Arrays.toString(transportNodes) + "}";
+        return Transport.class.getSimpleName() + "{name = " + name + ", protocol = " + netprotocol
+                + ", clientAddress = " + clientAddress + ", remoteNodes = " + Arrays.toString(transportNodes) + "}";
     }
 
     public String getNetprotocol() {
@@ -229,7 +242,8 @@ public final class Transport {
         return tcp;
     }
 
-    protected CompletableFuture<AsyncConnection> pollAsync(TransportNode node, SocketAddress addr, Supplier<CompletableFuture<AsyncConnection>> func) {
+    protected CompletableFuture<AsyncConnection> pollAsync(
+            TransportNode node, SocketAddress addr, Supplier<CompletableFuture<AsyncConnection>> func) {
         final BlockingQueue<AsyncConnection> queue = node.connQueue;
         if (!queue.isEmpty()) {
             AsyncConnection conn;
@@ -242,7 +256,8 @@ public final class Transport {
             }
         }
         if (semaphore != null && !semaphore.tryAcquire()) {
-            final CompletableFuture<AsyncConnection> future = Utility.orTimeout(new CompletableFuture<>(), null, 10, TimeUnit.SECONDS);
+            final CompletableFuture<AsyncConnection> future =
+                    Utility.orTimeout(new CompletableFuture<>(), null, 10, TimeUnit.SECONDS);
             future.whenComplete((r, t) -> node.pollQueue.remove(future));
             if (node.pollQueue.offer(future)) {
                 return future;
@@ -267,7 +282,7 @@ public final class Transport {
             addr0 = nodes[0].address;
         }
         final SocketAddress addr = addr0;
-        final boolean rand = addr == null; //是否随机取地址
+        final boolean rand = addr == null; // 是否随机取地址
         if (rand && nodes.length < 1) {
             throw new RedkaleException("Transport (" + this.name + ") have no remoteAddress list");
         }
@@ -276,15 +291,19 @@ public final class Transport {
                 SocketAddress udpaddr = rand ? nodes[0].address : addr;
                 return asyncGroup.createUDPClient(udpaddr, 6, factory.readTimeoutSeconds, factory.writeTimeoutSeconds);
             }
-            if (!rand) { //指定地址
+            if (!rand) { // 指定地址
                 TransportNode node = findTransportNode(addr);
                 if (node == null) {
                     return asyncGroup.createTCPClient(addr, 6, factory.readTimeoutSeconds, factory.writeTimeoutSeconds);
                 }
-                return pollAsync(node, addr, () -> asyncGroup.createTCPClient(addr, 6, factory.readTimeoutSeconds, factory.writeTimeoutSeconds));
+                return pollAsync(
+                        node,
+                        addr,
+                        () -> asyncGroup.createTCPClient(
+                                addr, 6, factory.readTimeoutSeconds, factory.writeTimeoutSeconds));
             }
 
-            //---------------------随机取地址------------------------
+            // ---------------------随机取地址------------------------
             int enablecount = 0;
             final TransportNode[] newnodes = new TransportNode[nodes.length];
             for (final TransportNode node : nodes) {
@@ -294,7 +313,7 @@ public final class Transport {
                 newnodes[enablecount++] = node;
             }
             final long now = System.currentTimeMillis();
-            if (enablecount > 0) { //存在可用的地址
+            if (enablecount > 0) { // 存在可用的地址
                 final TransportNode one = newnodes[Math.abs(seq.incrementAndGet()) % enablecount];
                 final BlockingQueue<AsyncConnection> queue = one.connQueue;
                 if (!queue.isEmpty()) {
@@ -308,10 +327,11 @@ public final class Transport {
                     }
                 }
                 return pollAsync(one, one.getAddress(), () -> {
-                    return asyncGroup.createTCPClient(one.address, 6, factory.readTimeoutSeconds, factory.writeTimeoutSeconds)
-                        .whenComplete((c, t) -> {
-                            one.disabletime = t == null ? 0 : System.currentTimeMillis();
-                        });
+                    return asyncGroup
+                            .createTCPClient(one.address, 6, factory.readTimeoutSeconds, factory.writeTimeoutSeconds)
+                            .whenComplete((c, t) -> {
+                                one.disabletime = t == null ? 0 : System.currentTimeMillis();
+                            });
                 });
             }
             return pollConnection0(nodes, null, now);
@@ -320,8 +340,9 @@ public final class Transport {
         }
     }
 
-    private CompletableFuture<AsyncConnection> pollConnection0(TransportNode[] nodes, TransportNode exclude, long now) throws IOException {
-        //从可用/不可用的地址列表中创建连接
+    private CompletableFuture<AsyncConnection> pollConnection0(TransportNode[] nodes, TransportNode exclude, long now)
+            throws IOException {
+        // 从可用/不可用的地址列表中创建连接
         CompletableFuture future = new CompletableFuture();
         for (final TransportNode node : nodes) {
             if (node == exclude) {
@@ -330,13 +351,14 @@ public final class Transport {
             if (future.isDone()) {
                 return future;
             }
-            asyncGroup.createTCPClient(node.address, 6, factory.readTimeoutSeconds, factory.writeTimeoutSeconds)
-                .whenComplete((c, t) -> {
-                    if (c != null && !future.complete(c)) {
-                        node.connQueue.offer(c);
-                    }
-                    node.disabletime = t == null ? 0 : System.currentTimeMillis();
-                });
+            asyncGroup
+                    .createTCPClient(node.address, 6, factory.readTimeoutSeconds, factory.writeTimeoutSeconds)
+                    .whenComplete((c, t) -> {
+                        if (c != null && !future.complete(c)) {
+                            node.connQueue.offer(c);
+                        }
+                        node.disabletime = t == null ? 0 : System.currentTimeMillis();
+                    });
         }
         return future;
     }
@@ -359,7 +381,8 @@ public final class Transport {
         }
     }
 
-    public <A> void async(SocketAddress addr, final ByteBuffer buffer, A att, final CompletionHandler<Integer, A> handler) {
+    public <A> void async(
+            SocketAddress addr, final ByteBuffer buffer, A att, final CompletionHandler<Integer, A> handler) {
         pollConnection(addr).whenComplete((conn, ex) -> {
             if (ex != null) {
                 factory.getLogger().log(Level.WARNING, Transport.class.getSimpleName() + " async error", ex);
@@ -388,7 +411,6 @@ public final class Transport {
                             offerConnection(true, conn);
                         }
                     });
-
                 }
 
                 @Override
@@ -404,7 +426,7 @@ public final class Transport {
 
         protected InetSocketAddress address;
 
-        protected volatile long disabletime; //不可用时的时间, 为0表示可用
+        protected volatile long disabletime; // 不可用时的时间, 为0表示可用
 
         protected final BlockingQueue<AsyncConnection> connQueue;
 

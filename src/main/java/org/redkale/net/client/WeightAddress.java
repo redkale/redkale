@@ -13,11 +13,9 @@ import org.redkale.convert.json.JsonConvert;
 /**
  * 带权重的地址
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.8.0
  */
 public class WeightAddress implements Comparable<WeightAddress>, java.io.Serializable {
@@ -25,7 +23,7 @@ public class WeightAddress implements Comparable<WeightAddress>, java.io.Seriali
     @ConvertColumn(index = 1)
     private final SocketAddress address;
 
-    //权重值，取值范围[0-100]
+    // 权重值，取值范围[0-100]
     @ConvertColumn(index = 2)
     private final int weight;
 
@@ -41,14 +39,14 @@ public class WeightAddress implements Comparable<WeightAddress>, java.io.Seriali
 
     public static SocketAddress[] createAddressArray(List<WeightAddress> ws) {
         int min = 0;
-        int size = 0; //20,35,45去掉最大公约数，数组长度为:4+7+9=20
+        int size = 0; // 20,35,45去掉最大公约数，数组长度为:4+7+9=20
         for (WeightAddress w : ws) {
             size += w.getWeight();
             if (min == 0 || w.getWeight() < min) {
                 min = w.getWeight();
             }
         }
-        int divisor = 1; //最大公约数
+        int divisor = 1; // 最大公约数
         for (int i = 2; i <= min; i++) {
             boolean all = true;
             for (WeightAddress w : ws) {
@@ -91,5 +89,4 @@ public class WeightAddress implements Comparable<WeightAddress>, java.io.Seriali
     public String toString() {
         return JsonConvert.root().convertTo(this);
     }
-
 }

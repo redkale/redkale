@@ -17,8 +17,7 @@ import org.redkale.util.*;
 /**
  * Service Node Communicate Protocol
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -33,7 +32,8 @@ public class SncpServer extends Server<Uint128, SncpContext, SncpRequest, SncpRe
         this(null, System.currentTimeMillis(), null, resourceFactory);
     }
 
-    public SncpServer(Application application, long serverStartTime, AnyValue serconf, ResourceFactory resourceFactory) {
+    public SncpServer(
+            Application application, long serverStartTime, AnyValue serconf, ResourceFactory resourceFactory) {
         super(application, serverStartTime, netprotocol(serconf), resourceFactory, new SncpDispatcherServlet());
     }
 
@@ -64,9 +64,8 @@ public class SncpServer extends Server<Uint128, SncpContext, SncpRequest, SncpRe
     /**
      * 删除SncpFilter
      *
-     * @param <T>         泛型
+     * @param <T> 泛型
      * @param filterClass SncpFilter类
-     *
      * @return SncpFilter
      */
     public <T extends SncpFilter> T removeSncpFilter(Class<T> filterClass) {
@@ -77,8 +76,7 @@ public class SncpServer extends Server<Uint128, SncpContext, SncpRequest, SncpRe
      * 添加SncpFilter
      *
      * @param filter SncpFilter
-     * @param conf   AnyValue
-     *
+     * @param conf AnyValue
      * @return SncpServer
      */
     public SncpServer addSncpFilter(SncpFilter filter, AnyValue conf) {
@@ -90,7 +88,6 @@ public class SncpServer extends Server<Uint128, SncpContext, SncpRequest, SncpRe
      * 删除SncpServlet
      *
      * @param sncpService Service
-     *
      * @return SncpServlet
      */
     public SncpServlet removeSncpServlet(Service sncpService) {
@@ -104,7 +101,8 @@ public class SncpServer extends Server<Uint128, SncpContext, SncpRequest, SncpRe
         if (!Sncp.isSncpDyn(sncpService)) {
             throw new SncpException(sncpService + " is not sncp dynamic-gen service");
         }
-        SncpServlet sds = new SncpServlet(Sncp.getResourceName(sncpService), Sncp.getResourceType(sncpService), sncpService);
+        SncpServlet sds =
+                new SncpServlet(Sncp.getResourceName(sncpService), Sncp.getResourceType(sncpService), sncpService);
         this.dispatcher.addServlet(sds, null, Sncp.getResourceConf(sncpService));
         return sds;
     }
@@ -127,9 +125,11 @@ public class SncpServer extends Server<Uint128, SncpContext, SncpRequest, SncpRe
     }
 
     @Override
-    protected ObjectPool<SncpResponse> createSafeResponsePool(LongAdder createCounter, LongAdder cycleCounter, int responsePoolSize) {
-        Creator<SncpResponse> creator = (Object... params) -> new SncpResponse(this.context, new SncpRequest(this.context));
-        return ObjectPool.createSafePool(createCounter, cycleCounter, responsePoolSize, creator, SncpResponse::prepare, SncpResponse::recycle);
+    protected ObjectPool<SncpResponse> createSafeResponsePool(
+            LongAdder createCounter, LongAdder cycleCounter, int responsePoolSize) {
+        Creator<SncpResponse> creator =
+                (Object... params) -> new SncpResponse(this.context, new SncpRequest(this.context));
+        return ObjectPool.createSafePool(
+                createCounter, cycleCounter, responsePoolSize, creator, SncpResponse::prepare, SncpResponse::recycle);
     }
-
 }

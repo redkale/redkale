@@ -9,10 +9,7 @@ import java.nio.ByteBuffer;
 import java.util.function.Supplier;
 import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class ProtobufByteBufferWriter extends ProtobufWriter {
 
     private final Supplier<ByteBuffer> supplier;
@@ -75,7 +72,7 @@ public class ProtobufByteBufferWriter extends ProtobufWriter {
     protected int expand(final int byteLength) {
         if (this.buffers == null) {
             this.index = 0;
-            this.buffers = new ByteBuffer[]{supplier.get()};
+            this.buffers = new ByteBuffer[] {supplier.get()};
         }
         ByteBuffer buffer = this.buffers[index];
         if (!buffer.hasRemaining()) {
@@ -102,10 +99,10 @@ public class ProtobufByteBufferWriter extends ProtobufWriter {
         } else {
             ByteBuffer buffer = this.buffers[index];
             final int end = start + len;
-            int remain = len;  //还剩多少没有写
+            int remain = len; // 还剩多少没有写
             while (remain > 0) {
                 final int br = buffer.remaining();
-                if (remain > br) { //一个buffer写不完
+                if (remain > br) { // 一个buffer写不完
                     buffer.put(chs, end - remain, br);
                     buffer = nextByteBuffer();
                     remain -= br;
@@ -132,16 +129,16 @@ public class ProtobufByteBufferWriter extends ProtobufWriter {
 
     @Override
     public byte[] content() {
-        throw new UnsupportedOperationException("Not supported yet."); //无需实现
+        throw new UnsupportedOperationException("Not supported yet."); // 无需实现
     }
 
     @Override
     public int offset() {
-        throw new UnsupportedOperationException("Not supported yet.");//无需实现
+        throw new UnsupportedOperationException("Not supported yet."); // 无需实现
     }
 
     @Override
     public int length() {
-        throw new UnsupportedOperationException("Not supported yet."); //无需实现
+        throw new UnsupportedOperationException("Not supported yet."); // 无需实现
     }
 }

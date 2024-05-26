@@ -5,6 +5,9 @@
  */
 package org.redkale.net.http;
 
+import static org.redkale.util.Utility.isEmpty;
+import static org.redkale.util.Utility.isNotEmpty;
+
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.net.*;
@@ -19,28 +22,26 @@ import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.Request;
 import org.redkale.util.*;
-import static org.redkale.util.Utility.isEmpty;
-import static org.redkale.util.Utility.isNotEmpty;
 
 /**
- * Http请求包 与javax.servlet.http.HttpServletRequest 基本类似。  <br>
- * 同时提供json的解析接口: public Object getJsonParameter(Type type, String name)  <br>
- * Redkale提倡带简单的参数的GET请求采用类似REST风格, 因此提供了 getPathParam 系列接口。  <br>
- * 例如简单的翻页查询   <br>
- *      /pipes/user/query/offset:0/limit:20 <br>
- * 获取页号: int offset = request.getPathParam("offset:", 0);   <br>
- * 获取行数: int limit = request.getPathParam("limit:", 10);  <br>
- * <p>
- * 详情见: https://redkale.org
+ * Http请求包 与javax.servlet.http.HttpServletRequest 基本类似。 <br>
+ * 同时提供json的解析接口: public Object getJsonParameter(Type type, String name) <br>
+ * Redkale提倡带简单的参数的GET请求采用类似REST风格, 因此提供了 getPathParam 系列接口。 <br>
+ * 例如简单的翻页查询 <br>
+ * /pipes/user/query/offset:0/limit:20 <br>
+ * 获取页号: int offset = request.getPathParam("offset:", 0); <br>
+ * 获取行数: int limit = request.getPathParam("limit:", 10); <br>
+ *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
 public class HttpRequest extends Request<HttpContext> {
 
-    private static final boolean PIPELINE_SAME_HEADERS = Boolean.getBoolean("redkale.http.request.pipeline.sameheaders");
+    private static final boolean PIPELINE_SAME_HEADERS =
+            Boolean.getBoolean("redkale.http.request.pipeline.sameheaders");
 
-    protected static final Serializable CURRUSERID_NIL = new Serializable() {
-    };
+    protected static final Serializable CURRUSERID_NIL = new Serializable() {};
 
     protected static final int READ_STATE_ROUTE = 1;
 
@@ -86,7 +87,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     public static final String SESSIONID_NAME = "JSESSIONID";
 
-    //---------- header 相关参数 开始 ----------
+    // ---------- header 相关参数 开始 ----------
     protected int headerLength;
 
     protected int headerHalfLen;
@@ -102,9 +103,9 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected HttpCookie[] cookies;
 
-    private boolean maybews = false; //是否可能是WebSocket
+    private boolean maybews = false; // 是否可能是WebSocket
 
-    private boolean expect = false; //是否Expect:100-continue
+    private boolean expect = false; // 是否Expect:100-continue
 
     protected boolean rpc;
 
@@ -125,7 +126,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected final HttpHeaders headers = HttpHeaders.create();
 
-    //---------- header 相关参数 结束 ----------
+    // ---------- header 相关参数 结束 ----------
     @Comment("Method GET/POST/...")
     protected String method;
 
@@ -173,7 +174,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     final HttpRpcAuthenticator rpcAuthenticator;
 
-    HttpServlet.ActionEntry actionEntry;  //仅供HttpServlet传递Entry使用
+    HttpServlet.ActionEntry actionEntry; // 仅供HttpServlet传递Entry使用
 
     public HttpRequest(HttpContext context) {
         this(context, new ByteArray());
@@ -212,9 +213,11 @@ public class HttpRequest extends Request<HttpContext> {
                 this.headers.setAll(req.getHeaders());
             }
             this.reqConvertType = req.getReqConvertType();
-            this.reqConvert = req.getReqConvertType() == null ? null : ConvertFactory.findConvert(req.getReqConvertType());
+            this.reqConvert =
+                    req.getReqConvertType() == null ? null : ConvertFactory.findConvert(req.getReqConvertType());
             this.respConvertType = req.getRespConvertType();
-            this.respConvert = req.getRespConvertType() == null ? null : ConvertFactory.findConvert(req.getRespConvertType());
+            this.respConvert =
+                    req.getRespConvertType() == null ? null : ConvertFactory.findConvert(req.getRespConvertType());
             if (req.getParams() != null) {
                 this.params.putAll(req.getParams());
             }
@@ -227,7 +230,7 @@ public class HttpRequest extends Request<HttpContext> {
             this.requestPath = needPath ? req.requestPath() : req.getPath();
             this.method = req.getMethod();
             if (isNotEmpty(req.getSessionid())) {
-                this.cookies = new HttpCookie[]{new HttpCookie(SESSIONID_NAME, req.getSessionid())};
+                this.cookies = new HttpCookie[] {new HttpCookie(SESSIONID_NAME, req.getSessionid())};
             }
         }
         return this;
@@ -238,13 +241,13 @@ public class HttpRequest extends Request<HttpContext> {
         req.setBody(array.length() == 0 ? null : array.getBytes());
         if (!getHeaders().isEmpty()) {
             req.setHeaders(headers);
-            if (headers.contains(Rest.REST_HEADER_RPC)) { //外部request不能包含RPC的header信息
+            if (headers.contains(Rest.REST_HEADER_RPC)) { // 外部request不能包含RPC的header信息
                 req.removeHeader(Rest.REST_HEADER_RPC);
             }
-            if (headers.contains(Rest.REST_HEADER_RESNAME)) { //外部request不能包含RPC的header信息
+            if (headers.contains(Rest.REST_HEADER_RESNAME)) { // 外部request不能包含RPC的header信息
                 req.removeHeader(Rest.REST_HEADER_RESNAME);
             }
-            if (headers.contains(Rest.REST_HEADER_CURRUSERID)) { //外部request不能包含RPC的header信息
+            if (headers.contains(Rest.REST_HEADER_CURRUSERID)) { // 外部request不能包含RPC的header信息
                 req.removeHeader(Rest.REST_HEADER_CURRUSERID);
             }
         }
@@ -329,7 +332,7 @@ public class HttpRequest extends Request<HttpContext> {
                 this.headerBytes = httplast.headerBytes;
                 this.headerParsed = httplast.headerParsed;
                 this.headers.setAll(httplast.headers);
-            } else if (context.lazyHeaders && getmethod) { //非GET必须要读header，会有Content-Length
+            } else if (context.lazyHeaders && getmethod) { // 非GET必须要读header，会有Content-Length
                 int rs = loadHeaderBytes(buffer);
                 if (rs != 0) {
                     buffer.clear();
@@ -353,9 +356,9 @@ public class HttpRequest extends Request<HttpContext> {
                 this.boundary = true;
             }
             if (this.boundary) {
-                this.keepAlive = false; //文件上传必须设置keepAlive为false，因为文件过大时用户不一定会skip掉多余的数据
+                this.keepAlive = false; // 文件上传必须设置keepAlive为false，因为文件过大时用户不一定会skip掉多余的数据
             }
-            //completed=true时ProtocolCodec会继续读下一个request
+            // completed=true时ProtocolCodec会继续读下一个request
             this.completed = !this.boundary && !maybews && this.headerParsed;
             this.readState = READ_STATE_BODY;
         }
@@ -369,7 +372,7 @@ public class HttpRequest extends Request<HttpContext> {
                 if (lr == 0) {
                     this.readState = READ_STATE_END;
                     if (bytes.isEmpty()) {
-                        this.bodyParsed = true; //no body data
+                        this.bodyParsed = true; // no body data
                     }
                 } else {
                     buffer.clear();
@@ -377,14 +380,14 @@ public class HttpRequest extends Request<HttpContext> {
                 return lr > 0 ? lr : 0;
             }
             if (buffer.hasRemaining() && (this.boundary || !this.keepAlive)) {
-                bytes.put(buffer, buffer.remaining()); //文件上传、HTTP1.0或Connection:close
+                bytes.put(buffer, buffer.remaining()); // 文件上传、HTTP1.0或Connection:close
             }
             this.readState = READ_STATE_END;
             if (bytes.isEmpty()) {
-                this.bodyParsed = true;  //no body data
+                this.bodyParsed = true; // no body data
             }
         }
-        //暂不考虑是keep-alive且存在body却没有指定Content-Length的情况
+        // 暂不考虑是keep-alive且存在body却没有指定Content-Length的情况
         return 0;
     }
 
@@ -393,8 +396,8 @@ public class HttpRequest extends Request<HttpContext> {
         ByteArray bytes = array;
         int remain = buffer.remaining();
         byte b1, b2, b3, b4;
-        for (;;) {
-            if (remain-- < 4) { //bytes不存放\r\n\r\n这4个字节
+        for (; ; ) {
+            if (remain-- < 4) { // bytes不存放\r\n\r\n这4个字节
                 bytes.put(buffer);
                 buffer.clear();
                 if (bytes.length() > 0) {
@@ -457,14 +460,14 @@ public class HttpRequest extends Request<HttpContext> {
         }
     }
 
-    //解析 GET /xxx HTTP/1.1
+    // 解析 GET /xxx HTTP/1.1
     private int readMethodUriLine(final ByteBuffer buf) {
         final ByteBuffer buffer = buf;
         Charset charset = this.context.getCharset();
         int remain = buffer.remaining();
         int size;
         ByteArray bytes = array;
-        //读method
+        // 读method
         if (this.method == null) {
             boolean flag = false;
             if (remain >= 5) {
@@ -478,7 +481,7 @@ public class HttpRequest extends Request<HttpContext> {
                     byte b3 = buffer.get();
                     if (b3 == ' ') {
                         remain -= 3;
-                        this.method = new String(new byte[]{b1, b2});
+                        this.method = new String(new byte[] {b1, b2});
                         this.getmethod = false;
                     } else {
                         byte b4 = buffer.get();
@@ -491,7 +494,7 @@ public class HttpRequest extends Request<HttpContext> {
                                 this.method = METHOD_PUT;
                                 this.getmethod = false;
                             } else {
-                                this.method = new String(new byte[]{b1, b2, b3});
+                                this.method = new String(new byte[] {b1, b2, b3});
                                 this.getmethod = false;
                             }
                         } else {
@@ -505,7 +508,7 @@ public class HttpRequest extends Request<HttpContext> {
                                     this.method = METHOD_HEAD;
                                     this.getmethod = false;
                                 } else {
-                                    this.method = new String(new byte[]{b1, b2, b3, b4});
+                                    this.method = new String(new byte[] {b1, b2, b3, b4});
                                     this.getmethod = false;
                                 }
                             } else {
@@ -517,7 +520,7 @@ public class HttpRequest extends Request<HttpContext> {
                 }
             }
             if (flag) {
-                for (;;) {
+                for (; ; ) {
                     if (remain-- < 1) {
                         buffer.clear();
                         return 1;
@@ -552,8 +555,13 @@ public class HttpRequest extends Request<HttpContext> {
                     }
                 } else if (size == 7) {
                     this.getmethod = false;
-                    if (content[0] == 'O' && content[1] == 'P' && content[2] == 'T'
-                        && content[3] == 'I' && content[4] == 'O' && content[5] == 'N' && content[6] == 'S') {
+                    if (content[0] == 'O'
+                            && content[1] == 'P'
+                            && content[2] == 'T'
+                            && content[3] == 'I'
+                            && content[4] == 'O'
+                            && content[5] == 'N'
+                            && content[6] == 'S') {
                         this.method = METHOD_OPTIONS;
                     } else {
                         this.method = bytes.toString(true, charset);
@@ -566,12 +574,12 @@ public class HttpRequest extends Request<HttpContext> {
             }
         }
 
-        //读uri
+        // 读uri
         if (this.requestPath == null) {
-            int qst = -1;//?的位置
+            int qst = -1; // ?的位置
             boolean decodeable = false;
             boolean latin1 = true;
-            for (;;) {
+            for (; ; ) {
                 if (remain-- < 1) {
                     buffer.clear();
                     return 1;
@@ -590,8 +598,10 @@ public class HttpRequest extends Request<HttpContext> {
                 bytes.put(b);
             }
             size = bytes.length();
-            if (qst > 0) { //带?参数
-                this.requestPath = decodeable ? toDecodeString(bytes, 0, qst, charset) : context.loadUriPath(bytes, qst, latin1, charset);// bytes.toString(latin1, 0, qst, charset);
+            if (qst > 0) { // 带?参数
+                this.requestPath = decodeable
+                        ? toDecodeString(bytes, 0, qst, charset)
+                        : context.loadUriPath(bytes, qst, latin1, charset); // bytes.toString(latin1, 0, qst, charset);
                 int qlen = size - qst - 1;
                 this.queryBytes = bytes.getBytes(qst + 1, qlen);
                 this.lastPathString = null;
@@ -599,10 +609,12 @@ public class HttpRequest extends Request<HttpContext> {
                 try {
                     addParameter(bytes, false, qst + 1, qlen);
                 } catch (Exception e) {
-                    this.context.getLogger().log(Level.WARNING, "HttpRequest.addParameter error: " + bytes.toString(), e);
+                    this.context
+                            .getLogger()
+                            .log(Level.WARNING, "HttpRequest.addParameter error: " + bytes.toString(), e);
                 }
             } else {
-                if (decodeable) { //需要转义
+                if (decodeable) { // 需要转义
                     this.requestPath = toDecodeString(bytes, 0, bytes.length(), charset);
                     this.lastPathString = null;
                     this.lastPathBytes = null;
@@ -611,12 +623,13 @@ public class HttpRequest extends Request<HttpContext> {
                     if (lastURIBytes != null && lastURIBytes.length == size && bytes.deepEquals(lastURIBytes)) {
                         this.requestPath = this.lastPathString;
                     } else {
-                        this.requestPath = context.loadUriPath(bytes, latin1, charset);// bytes.toString(latin1, charset);
+                        this.requestPath =
+                                context.loadUriPath(bytes, latin1, charset); // bytes.toString(latin1, charset);
                         this.lastPathString = this.requestPath;
                         this.lastPathBytes = bytes.getBytes();
                     }
                 } else {
-                    this.requestPath = context.loadUriPath(bytes, latin1, charset); //bytes.toString(latin1, charset);
+                    this.requestPath = context.loadUriPath(bytes, latin1, charset); // bytes.toString(latin1, charset);
                     this.lastPathString = null;
                     this.lastPathBytes = null;
                 }
@@ -624,8 +637,8 @@ public class HttpRequest extends Request<HttpContext> {
             }
             bytes.clear();
         }
-        //读protocol
-        for (;;) {
+        // 读protocol
+        for (; ; ) {
             if (remain-- < 1) {
                 this.params.clear();
                 buffer.clear();
@@ -659,12 +672,12 @@ public class HttpRequest extends Request<HttpContext> {
         return 0;
     }
 
-    //解析Header Connection: keep-alive
+    // 解析Header Connection: keep-alive
     private int readHeaderLines(final ByteBuffer buf, ByteArray bytes) {
         final ByteBuffer buffer = buf;
         Charset charset = this.context.getCharset();
         int remain = buffer.remaining();
-        for (;;) {
+        for (; ; ) {
             bytes.clear();
             if (remain-- < 2) {
                 if (remain == 1) {
@@ -690,7 +703,7 @@ public class HttpRequest extends Request<HttpContext> {
                 latin1 = false;
             }
             bytes.put(b1, b2);
-            for (;;) {  // name
+            for (; ; ) { // name
                 if (remain-- < 1) {
                     buffer.clear();
                     buffer.put(bytes.content(), 0, bytes.length());
@@ -708,7 +721,7 @@ public class HttpRequest extends Request<HttpContext> {
             bytes.clear();
             boolean first = true;
             int space = 0;
-            for (;;) {  // value
+            for (; ; ) { // value
                 if (remain-- < 1) {
                     buffer.clear();
                     buffer.put(name.getBytes());
@@ -754,35 +767,43 @@ public class HttpRequest extends Request<HttpContext> {
             int vlen = bytes.length();
             byte[] content = bytes.content();
             switch (name) {
-                case HEAD_CONTENT_TYPE: //Content-Type
+                case HEAD_CONTENT_TYPE: // Content-Type
                     this.contentType = bytes.toString(true, charset);
                     break;
-                case HEAD_CONTENT_LENGTH: //Content-Length
+                case HEAD_CONTENT_LENGTH: // Content-Length
                     this.contentLength = Long.decode(bytes.toString(true, charset));
                     break;
-                case HEAD_HOST: //Host
+                case HEAD_HOST: // Host
                     this.host = bytes.toString(charset);
                     break;
-                case HEAD_COOKIE: //Cookie
+                case HEAD_COOKIE: // Cookie
                     if (this.cookie == null || this.cookie.isEmpty()) {
                         this.cookie = bytes.toString(charset);
                     } else {
                         this.cookie += ";" + bytes.toString(charset);
                     }
                     break;
-                case HEAD_CONNECTION: //Connection
+                case HEAD_CONNECTION: // Connection
                     if (vlen > 0) {
-                        if (vlen == 5 && content[0] == 'c'
-                            && content[1] == 'l' && content[2] == 'o'
-                            && content[3] == 's' && content[4] == 'e') {
+                        if (vlen == 5
+                                && content[0] == 'c'
+                                && content[1] == 'l'
+                                && content[2] == 'o'
+                                && content[3] == 's'
+                                && content[4] == 'e') {
                             value = "close";
                             this.setKeepAlive(false);
-                        } else if (vlen == 10 && content[0] == 'k'
-                            && content[1] == 'e' && content[2] == 'e'
-                            && content[3] == 'p' && content[4] == '-'
-                            && content[5] == 'a' && content[6] == 'l'
-                            && content[7] == 'i' && content[8] == 'v'
-                            && content[9] == 'e') {
+                        } else if (vlen == 10
+                                && content[0] == 'k'
+                                && content[1] == 'e'
+                                && content[2] == 'e'
+                                && content[3] == 'p'
+                                && content[4] == '-'
+                                && content[5] == 'a'
+                                && content[6] == 'l'
+                                && content[7] == 'i'
+                                && content[8] == 'v'
+                                && content[9] == 'e') {
                             value = "keep-alive";
                             this.setKeepAlive(true);
                         } else {
@@ -794,40 +815,71 @@ public class HttpRequest extends Request<HttpContext> {
                     }
                     headers.setValid(HEAD_CONNECTION, value);
                     break;
-                case HEAD_UPGRADE: //Upgrade          
-                    this.maybews = vlen == 9 && content[0] == 'w' && content[1] == 'e' && content[2] == 'b' && content[3] == 's'
-                        && content[4] == 'o' && content[5] == 'c' && content[6] == 'k' && content[7] == 'e' && content[8] == 't';
+                case HEAD_UPGRADE: // Upgrade
+                    this.maybews = vlen == 9
+                            && content[0] == 'w'
+                            && content[1] == 'e'
+                            && content[2] == 'b'
+                            && content[3] == 's'
+                            && content[4] == 'o'
+                            && content[5] == 'c'
+                            && content[6] == 'k'
+                            && content[7] == 'e'
+                            && content[8] == 't';
                     headers.setValid(HEAD_UPGRADE, this.maybews ? "websocket" : bytes.toString(true, charset));
                     break;
-                case HEAD_EXPECT: //Expect                
-                    this.expect = vlen == 12 && content[0] == '1' && content[1] == '0' && content[2] == '0' && content[3] == '-'
-                        && content[4] == 'c' && content[5] == 'o' && content[6] == 'n' && content[7] == 't' && content[8] == 'i'
-                        && content[9] == 'n' && content[10] == 'u' && content[11] == 'e';
+                case HEAD_EXPECT: // Expect
+                    this.expect = vlen == 12
+                            && content[0] == '1'
+                            && content[1] == '0'
+                            && content[2] == '0'
+                            && content[3] == '-'
+                            && content[4] == 'c'
+                            && content[5] == 'o'
+                            && content[6] == 'n'
+                            && content[7] == 't'
+                            && content[8] == 'i'
+                            && content[9] == 'n'
+                            && content[10] == 'u'
+                            && content[11] == 'e';
                     headers.setValid(HEAD_EXPECT, this.expect ? "100-continue" : bytes.toString(true, charset));
                     break;
-                case Rest.REST_HEADER_RPC: //rest-rpc     
-                    this.rpc = vlen == 4 && content[0] == 't' && content[1] == 'r' && content[2] == 'u' && content[3] == 'e';
-                    headers.setValid(name, this.rpc ? "true"
-                        : (vlen == 5 && content[0] == 'f' && content[1] == 'a' && content[2] == 'l' && content[3] == 's' && content[4] == 'e'
-                            ? "false" : bytes.toString(true, charset)));
+                case Rest.REST_HEADER_RPC: // rest-rpc
+                    this.rpc = vlen == 4
+                            && content[0] == 't'
+                            && content[1] == 'r'
+                            && content[2] == 'u'
+                            && content[3] == 'e';
+                    headers.setValid(
+                            name,
+                            this.rpc
+                                    ? "true"
+                                    : (vlen == 5
+                                                    && content[0] == 'f'
+                                                    && content[1] == 'a'
+                                                    && content[2] == 'l'
+                                                    && content[3] == 's'
+                                                    && content[4] == 'e'
+                                            ? "false"
+                                            : bytes.toString(true, charset)));
                     break;
-                case Rest.REST_HEADER_TRACEID: //rest-traceid
+                case Rest.REST_HEADER_TRACEID: // rest-traceid
                     value = bytes.toString(true, charset);
                     this.traceid = value;
                     headers.setValid(name, value);
                     break;
-                case Rest.REST_HEADER_CURRUSERID: //rest-curruserid
+                case Rest.REST_HEADER_CURRUSERID: // rest-curruserid
                     value = bytes.toString(true, charset);
                     this.currentUserid = value;
                     headers.setValid(name, value);
                     break;
-                case Rest.REST_HEADER_REQ_CONVERT: //rest-req-convert-type
+                case Rest.REST_HEADER_REQ_CONVERT: // rest-req-convert-type
                     value = bytes.toString(true, charset);
                     reqConvertType = ConvertType.valueOf(value);
                     reqConvert = ConvertFactory.findConvert(reqConvertType);
                     headers.setValid(name, value);
                     break;
-                case Rest.REST_HEADER_RESP_CONVERT: //rest-resp-convert-type
+                case Rest.REST_HEADER_RESP_CONVERT: // rest-resp-convert-type
                     value = bytes.toString(true, charset);
                     respConvertType = ConvertType.valueOf(value);
                     respConvert = ConvertFactory.findConvert(respConvertType);
@@ -850,7 +902,7 @@ public class HttpRequest extends Request<HttpContext> {
         if (array.isEmpty()) {
             readHeaderLines(ByteBuffer.wrap(headerBytes), array);
             array.clear();
-        } else { //array存有body数据
+        } else { // array存有body数据
             readHeaderLines(ByteBuffer.wrap(headerBytes), new ByteArray());
         }
     }
@@ -859,60 +911,82 @@ public class HttpRequest extends Request<HttpContext> {
         final int size = bytes.length();
         final byte[] bs = bytes.content();
         final byte first = bs[0];
-        if ((first == 'H' || first == 'h') && size == 4) {  //Host
+        if ((first == 'H' || first == 'h') && size == 4) { // Host
             if (bs[1] == 'o' && bs[2] == 's' && bs[3] == 't') {
                 return HEAD_HOST;
             }
-        } else if ((first == 'A' || first == 'a') && size == 6) {  //Accept
-            if (bs[1] == 'c' && bs[2] == 'c' && bs[3] == 'e'
-                && bs[4] == 'p' && bs[5] == 't') {
+        } else if ((first == 'A' || first == 'a') && size == 6) { // Accept
+            if (bs[1] == 'c' && bs[2] == 'c' && bs[3] == 'e' && bs[4] == 'p' && bs[5] == 't') {
                 return HEAD_ACCEPT;
             }
         } else if (first == 'C' || first == 'c') {
-            if (size == 10) { //Connection
-                if (bs[1] == 'o' && bs[2] == 'n' && bs[3] == 'n'
-                    && bs[4] == 'e' && bs[5] == 'c' && bs[6] == 't'
-                    && bs[7] == 'i' && bs[8] == 'o' && bs[9] == 'n') {
+            if (size == 10) { // Connection
+                if (bs[1] == 'o'
+                        && bs[2] == 'n'
+                        && bs[3] == 'n'
+                        && bs[4] == 'e'
+                        && bs[5] == 'c'
+                        && bs[6] == 't'
+                        && bs[7] == 'i'
+                        && bs[8] == 'o'
+                        && bs[9] == 'n') {
                     return HEAD_CONNECTION;
                 }
-            } else if (size == 12) { //Content-Type
-                if (bs[1] == 'o' && bs[2] == 'n' && bs[3] == 't'
-                    && bs[4] == 'e' && bs[5] == 'n' && bs[6] == 't'
-                    && bs[7] == '-' && (bs[8] == 'T' || bs[8] == 't')
-                    && bs[9] == 'y' && bs[10] == 'p' && bs[11] == 'e') {
+            } else if (size == 12) { // Content-Type
+                if (bs[1] == 'o'
+                        && bs[2] == 'n'
+                        && bs[3] == 't'
+                        && bs[4] == 'e'
+                        && bs[5] == 'n'
+                        && bs[6] == 't'
+                        && bs[7] == '-'
+                        && (bs[8] == 'T' || bs[8] == 't')
+                        && bs[9] == 'y'
+                        && bs[10] == 'p'
+                        && bs[11] == 'e') {
                     return HEAD_CONTENT_TYPE;
                 }
-            } else if (size == 14) { //Content-Length
-                if (bs[1] == 'o' && bs[2] == 'n' && bs[3] == 't'
-                    && bs[4] == 'e' && bs[5] == 'n' && bs[6] == 't'
-                    && bs[7] == '-' && (bs[8] == 'L' || bs[8] == 'l')
-                    && bs[9] == 'e' && bs[10] == 'n' && bs[11] == 'g'
-                    && bs[12] == 't'
-                    && bs[13] == 'h') {
+            } else if (size == 14) { // Content-Length
+                if (bs[1] == 'o'
+                        && bs[2] == 'n'
+                        && bs[3] == 't'
+                        && bs[4] == 'e'
+                        && bs[5] == 'n'
+                        && bs[6] == 't'
+                        && bs[7] == '-'
+                        && (bs[8] == 'L' || bs[8] == 'l')
+                        && bs[9] == 'e'
+                        && bs[10] == 'n'
+                        && bs[11] == 'g'
+                        && bs[12] == 't'
+                        && bs[13] == 'h') {
                     return HEAD_CONTENT_LENGTH;
                 }
-            } else if (size == 6) { //Cookie
-                if (bs[1] == 'o' && bs[2] == 'o' && bs[3] == 'k'
-                    && bs[4] == 'i' && bs[5] == 'e') {
+            } else if (size == 6) { // Cookie
+                if (bs[1] == 'o' && bs[2] == 'o' && bs[3] == 'k' && bs[4] == 'i' && bs[5] == 'e') {
                     return HEAD_COOKIE;
                 }
             }
         } else if (first == 'U' || first == 'u') {
-            if (size == 7) { //Upgrade
-                if (bs[1] == 'p' && bs[2] == 'g' && bs[3] == 'r'
-                    && bs[4] == 'a' && bs[5] == 'd' && bs[6] == 'e') {
+            if (size == 7) { // Upgrade
+                if (bs[1] == 'p' && bs[2] == 'g' && bs[3] == 'r' && bs[4] == 'a' && bs[5] == 'd' && bs[6] == 'e') {
                     return HEAD_UPGRADE;
                 }
-            } else if (size == 10) { //User-Agent
-                if (bs[1] == 's' && bs[2] == 'e' && bs[3] == 'r'
-                    && bs[4] == '-' && (bs[5] == 'A' || bs[5] == 'a') && bs[6] == 'g'
-                    && bs[7] == 'e' && bs[8] == 'n' && bs[9] == 't') {
+            } else if (size == 10) { // User-Agent
+                if (bs[1] == 's'
+                        && bs[2] == 'e'
+                        && bs[3] == 'r'
+                        && bs[4] == '-'
+                        && (bs[5] == 'A' || bs[5] == 'a')
+                        && bs[6] == 'g'
+                        && bs[7] == 'e'
+                        && bs[8] == 'n'
+                        && bs[9] == 't') {
                     return HEAD_USER_AGENT;
                 }
             }
-        } else if ((first == 'E' || first == 'e') && size == 6) {  //Expect
-            if (bs[1] == 'x' && bs[2] == 'p' && bs[3] == 'e'
-                && bs[4] == 'c' && bs[5] == 't') {
+        } else if ((first == 'E' || first == 'e') && size == 6) { // Expect
+            if (bs[1] == 'x' && bs[2] == 'p' && bs[3] == 'e' && bs[4] == 'c' && bs[5] == 't') {
                 return HEAD_EXPECT;
             }
         }
@@ -955,12 +1029,12 @@ public class HttpRequest extends Request<HttpContext> {
 
     @Override
     protected void prepare() {
-        this.keepAlive = true; //默认HTTP/1.1
+        this.keepAlive = true; // 默认HTTP/1.1
     }
 
     @Override
     protected void recycle() {
-        //header    
+        // header
         this.headerLength = 0;
         this.headerHalfLen = 0;
         this.headerBytes = null;
@@ -981,7 +1055,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.respConvert = jsonConvert;
         this.respConvertType = null;
         this.headers.clear();
-        //其他
+        // 其他
         this.newSessionid = null;
         this.method = null;
         this.getmethod = false;
@@ -996,7 +1070,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.remoteAddr = null;
         this.params.clear();
         this.array.clear();
-        //内部
+        // 内部
         this.actionEntry = null;
         super.recycle();
     }
@@ -1031,7 +1105,7 @@ public class HttpRequest extends Request<HttpContext> {
         }
         String name = toDecodeString(array, offset, keypos - offset, charset);
         if (body && !name.isEmpty() && name.charAt(0) == '<') {
-            return; //内容可能是xml格式; 如: <?xml version="1.0"
+            return; // 内容可能是xml格式; 如: <?xml version="1.0"
         }
         ++keypos;
         String value = toDecodeString(array, keypos, (valpos < 0) ? (limit - keypos) : (valpos - keypos), charset);
@@ -1098,7 +1172,7 @@ public class HttpRequest extends Request<HttpContext> {
         }
         int start = offset;
         final int end = offset + len;
-        boolean flag = false; //是否需要转义
+        boolean flag = false; // 是否需要转义
         byte[] bs = content;
         for (int i = offset; i < end; i++) {
             if (content[i] == '+' || content[i] == '%') {
@@ -1162,11 +1236,9 @@ public class HttpRequest extends Request<HttpContext> {
      * 设置当前用户ID, 通常在HttpServlet.preExecute方法里设置currentUserid <br>
      * 数据类型只能是int、long、String、JavaBean
      *
-     * @param <T>    泛型
+     * @param <T> 泛型
      * @param userid 用户ID
-     *
      * @return HttpRequest
-     *
      * @since 2.1.0
      */
     public <T extends Serializable> HttpRequest setCurrentUserid(T userid) {
@@ -1178,7 +1250,6 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取当前用户ID的int值<br>
      *
      * @return 用户ID
-     *
      * @since 2.4.0
      */
     @ClassDepends
@@ -1198,7 +1269,6 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取当前用户ID的long值<br>
      *
      * @return 用户ID
-     *
      * @since 2.7.0
      */
     @ClassDepends
@@ -1218,7 +1288,6 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取当前用户ID的String值<br>
      *
      * @return 用户ID
-     *
      * @since 2.8.0
      */
     @ClassDepends
@@ -1233,11 +1302,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取当前用户ID<br>
      *
-     * @param <T>  数据类型只能是int、long、String、JavaBean
+     * @param <T> 数据类型只能是int、long、String、JavaBean
      * @param type 类型
-     *
      * @return 用户ID
-     *
      * @since 2.1.0
      */
     @ClassDepends
@@ -1281,9 +1348,7 @@ public class HttpRequest extends Request<HttpContext> {
      * 数据类型由&#64;HttpUserType指定
      *
      * @param supplier currentUser对象方法
-     *
      * @since 2.4.0
-     *
      * @return HttpRequest
      */
     public HttpRequest setCurrentUserSupplier(Supplier supplier) {
@@ -1297,7 +1362,6 @@ public class HttpRequest extends Request<HttpContext> {
      * 数据类型由&#64;HttpUserType指定
      *
      * @param <T> &#64;HttpUserType指定的用户信息类型
-     *
      * @return 用户信息
      */
     @SuppressWarnings("unchecked")
@@ -1344,9 +1408,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取当前操作Method上的注解
      *
-     * @param <T>             注解泛型
+     * @param <T> 注解泛型
      * @param annotationClass 注解类型
-     *
      * @return Annotation
      */
     public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
@@ -1364,9 +1427,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取当前操作Method上的注解集合
      *
-     * @param <T>             注解泛型
+     * @param <T> 注解泛型
      * @param annotationClass 注解类型
-     *
      * @return Annotation[]
      */
     public <T extends Annotation> T[] getAnnotationsByType(Class<T> annotationClass) {
@@ -1397,7 +1459,8 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取客户端地址IP, 与getRemoteAddress() 的区别在于：本方法优先取header中指定为RemoteAddress名的值，没有则返回getRemoteAddress()的getHostAddress()。<br>
+     * 获取客户端地址IP, 与getRemoteAddress() 的区别在于：本方法优先取header中指定为RemoteAddress名的值，没有则返回getRemoteAddress()的getHostAddress()。
+     * <br>
      * 本方法适用于服务前端有如nginx的代理服务器进行中转，通过 getRemoteAddress()是获取不到客户端的真实IP。
      *
      * @return 地址
@@ -1456,7 +1519,6 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取请求内容指定的编码字符串
      *
      * @param charset 编码
-     *
      * @return 内容
      */
     public String getBody(final Charset charset) {
@@ -1476,9 +1538,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求内容的JavaBean对象
      *
-     * @param <T>  泛型
+     * @param <T> 泛型
      * @param type 类型
-     *
      * @return 内容
      */
     public <T> T getBodyJson(java.lang.reflect.Type type) {
@@ -1498,10 +1559,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取请求内容的JavaBean对象
      *
-     * @param <T>     泛型
+     * @param <T> 泛型
      * @param convert Convert
-     * @param type    类型
-     *
+     * @param type 类型
      * @return 内容
      */
     public <T> T getBodyJson(Convert convert, java.lang.reflect.Type type) {
@@ -1536,22 +1596,30 @@ public class HttpRequest extends Request<HttpContext> {
     @Override
     public String toString() {
         parseBody();
-        return this.getClass().getSimpleName() + "{\r\n    method: " + this.method + ", \r\n    path: " + this.requestPath
-            + (this.reqConvertType != null ? (", \r\n    reqConvertType: " + this.reqConvertType) : "")
-            + (this.respConvertType != null ? (", \r\n    respConvertType: " + this.respConvertType) : "")
-            + (this.currentUserid != CURRUSERID_NIL ? (", \r\n    currentUserid: " + (this.currentUserid == CURRUSERID_NIL ? null : this.currentUserid)) : "")
-            + (this.getRemoteAddr() != null ? (", \r\n    remoteAddr: " + this.getRemoteAddr()) : "")
-            + (this.cookie != null ? (", \r\n    cookies: " + this.cookie) : "")
-            + (this.getContentType() != null ? (", \r\n    contentType: " + this.contentType) : "")
-            + (this.protocol != null ? (", \r\n    protocol: " + this.protocol) : "")
-            + (this.getHost() != null ? (", \r\n    host: " + this.host) : "")
-            + (this.getContentLength() >= 0 ? (", \r\n    contentLength: " + this.contentLength) : "")
-            + (this.array.length() > 0 ? (", \r\n    bodyLength: " + this.array.length()) : "")
-            + (this.boundary || this.array.isEmpty() ? "" : (", \r\n    bodyContent: " 
-            + (this.respConvertType == null || this.respConvertType == ConvertType.JSON ? this.getBodyUTF8() : Arrays.toString(getBody()))))
-            + ", \r\n    params: " + toMapString(this.params.map, 4)
-            + ", \r\n    header: " + toMapString(this.headers.map, 4)
-            + "\r\n}"; //this.headers.toString(4)
+        return this.getClass().getSimpleName() + "{\r\n    method: " + this.method + ", \r\n    path: "
+                + this.requestPath
+                + (this.reqConvertType != null ? (", \r\n    reqConvertType: " + this.reqConvertType) : "")
+                + (this.respConvertType != null ? (", \r\n    respConvertType: " + this.respConvertType) : "")
+                + (this.currentUserid != CURRUSERID_NIL
+                        ? (", \r\n    currentUserid: "
+                                + (this.currentUserid == CURRUSERID_NIL ? null : this.currentUserid))
+                        : "")
+                + (this.getRemoteAddr() != null ? (", \r\n    remoteAddr: " + this.getRemoteAddr()) : "")
+                + (this.cookie != null ? (", \r\n    cookies: " + this.cookie) : "")
+                + (this.getContentType() != null ? (", \r\n    contentType: " + this.contentType) : "")
+                + (this.protocol != null ? (", \r\n    protocol: " + this.protocol) : "")
+                + (this.getHost() != null ? (", \r\n    host: " + this.host) : "")
+                + (this.getContentLength() >= 0 ? (", \r\n    contentLength: " + this.contentLength) : "")
+                + (this.array.length() > 0 ? (", \r\n    bodyLength: " + this.array.length()) : "")
+                + (this.boundary || this.array.isEmpty()
+                        ? ""
+                        : (", \r\n    bodyContent: "
+                                + (this.respConvertType == null || this.respConvertType == ConvertType.JSON
+                                        ? this.getBodyUTF8()
+                                        : Arrays.toString(getBody()))))
+                + ", \r\n    params: " + toMapString(this.params.map, 4)
+                + ", \r\n    header: " + toMapString(this.headers.map, 4)
+                + "\r\n}"; // this.headers.toString(4)
     }
 
     private static CharSequence toMapString(Map<String, ?> map, int indent) {
@@ -1563,10 +1631,20 @@ public class HttpRequest extends Request<HttpContext> {
                 Object val = en.getValue();
                 if (val instanceof Collection) {
                     for (Object item : (Collection) val) {
-                        sb.append(space).append("    '").append(en.getKey()).append("': '").append(item).append("',\r\n");
+                        sb.append(space)
+                                .append("    '")
+                                .append(en.getKey())
+                                .append("': '")
+                                .append(item)
+                                .append("',\r\n");
                     }
                 } else {
-                    sb.append(space).append("    '").append(en.getKey()).append("': '").append(val).append("',\r\n");
+                    sb.append(space)
+                            .append("    '")
+                            .append(en.getKey())
+                            .append("': '")
+                            .append(val)
+                            .append("',\r\n");
                 }
             }
         }
@@ -1582,13 +1660,17 @@ public class HttpRequest extends Request<HttpContext> {
     @ConvertDisabled
     public final MultiContext getMultiContext() {
         final InputStream in = newInputStream();
-        return new MultiContext(context.getCharset(), this.getContentType(), this.params.map(),
-            new BufferedInputStream(in, Math.max(array.length(), 8192)) {
-            { 
-                array.copyTo(this.buf);
-                this.count = array.length();
-            }
-        }, null);
+        return new MultiContext(
+                context.getCharset(),
+                this.getContentType(),
+                this.params.map(),
+                new BufferedInputStream(in, Math.max(array.length(), 8192)) {
+                    {
+                        array.copyTo(this.buf);
+                        this.count = array.length();
+                    }
+                },
+                null);
     }
 
     /**
@@ -1604,7 +1686,6 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取文件上传信息列表
      *
      * @return 文件上传对象集合
-     *
      * @throws IOException IO异常
      */
     @ConvertDisabled
@@ -1616,7 +1697,6 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取sessionid
      *
      * @param autoCreate 无sessionid是否自动创建
-     *
      * @return sessionid
      */
     @ConvertDisabled
@@ -1643,7 +1723,6 @@ public class HttpRequest extends Request<HttpContext> {
      * 指定值更新sessionid
      *
      * @param newSessionid 新sessionid值
-     *
      * @return 新的sessionid值
      */
     public String changeSessionid(String newSessionid) {
@@ -1651,11 +1730,9 @@ public class HttpRequest extends Request<HttpContext> {
         return newSessionid;
     }
 
-    /**
-     * 使sessionid失效
-     */
+    /** 使sessionid失效 */
     public void invalidateSession() {
-        this.newSessionid = ""; //为空表示删除sessionid
+        this.newSessionid = ""; // 为空表示删除sessionid
     }
 
     /**
@@ -1675,7 +1752,6 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取Cookie值
      *
      * @param name cookie名
-     *
      * @return cookie值
      */
     public String getCookie(String name) {
@@ -1685,9 +1761,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取Cookie值， 没有返回默认值
      *
-     * @param name    cookie名
+     * @param name cookie名
      * @param dfvalue 默认cookie值
-     *
      * @return cookie值
      */
     public String getCookie(String name, String dfvalue) {
@@ -1811,12 +1886,11 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL最后的一个/后面的部分的short值   <br>
-     * 例如请求URL /pipes/user/query/2   <br>
+     * 获取请求URL最后的一个/后面的部分的short值 <br>
+     * 例如请求URL /pipes/user/query/2 <br>
      * 获取type参数: short type = request.getPathLastParam((short)0); //type = 2
      *
      * @param defvalue 默认short值
-     *
      * @return short值
      */
     public short getPathLastParam(short defvalue) {
@@ -1832,13 +1906,12 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL最后的一个/后面的部分的short值   <br>
-     * 例如请求URL /pipes/user/query/2   <br>
+     * 获取请求URL最后的一个/后面的部分的short值 <br>
+     * 例如请求URL /pipes/user/query/2 <br>
      * 获取type参数: short type = request.getPathLastParam(16, (short)0); //type = 2
      *
-     * @param radix    进制数
+     * @param radix 进制数
      * @param defvalue 默认short值
-     *
      * @return short值
      */
     public short getPathLastParam(int radix, short defvalue) {
@@ -1854,12 +1927,11 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL最后的一个/后面的部分的int值   <br>
-     * 例如请求URL /pipes/user/query/2   <br>
+     * 获取请求URL最后的一个/后面的部分的int值 <br>
+     * 例如请求URL /pipes/user/query/2 <br>
      * 获取type参数: int type = request.getPathLastParam(0); //type = 2
      *
      * @param defvalue 默认int值
-     *
      * @return int值
      */
     public int getPathLastParam(int defvalue) {
@@ -1872,13 +1944,12 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL最后的一个/后面的部分的int值   <br>
-     * 例如请求URL /pipes/user/query/2   <br>
+     * 获取请求URL最后的一个/后面的部分的int值 <br>
+     * 例如请求URL /pipes/user/query/2 <br>
      * 获取type参数: int type = request.getPathLastParam(16, 0); //type = 2
      *
-     * @param radix    进制数
+     * @param radix 进制数
      * @param defvalue 默认int值
-     *
      * @return int值
      */
     public int getPathLastParam(int radix, int defvalue) {
@@ -1891,12 +1962,11 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL最后的一个/后面的部分的float值   <br>
-     * 例如请求URL /pipes/user/query/2   <br>
+     * 获取请求URL最后的一个/后面的部分的float值 <br>
+     * 例如请求URL /pipes/user/query/2 <br>
      * 获取type参数: float type = request.getPathLastParam(0.0f); //type = 2.0f
      *
      * @param defvalue 默认float值
-     *
      * @return float值
      */
     public float getPathLastParam(float defvalue) {
@@ -1909,12 +1979,11 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL最后的一个/后面的部分的int值   <br>
-     * 例如请求URL /pipes/user/query/2   <br>
+     * 获取请求URL最后的一个/后面的部分的int值 <br>
+     * 例如请求URL /pipes/user/query/2 <br>
      * 获取type参数: long type = request.getPathLastParam(0L); //type = 2
      *
      * @param defvalue 默认long值
-     *
      * @return long值
      */
     public long getPathLastParam(long defvalue) {
@@ -1927,13 +1996,12 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL最后的一个/后面的部分的int值   <br>
-     * 例如请求URL /pipes/user/query/2   <br>
+     * 获取请求URL最后的一个/后面的部分的int值 <br>
+     * 例如请求URL /pipes/user/query/2 <br>
      * 获取type参数: long type = request.getPathLastParam(16, 0L); //type = 2
      *
-     * @param radix    进制数
+     * @param radix 进制数
      * @param defvalue 默认long值
-     *
      * @return long值
      */
     public long getPathLastParam(int radix, long defvalue) {
@@ -1946,12 +2014,11 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL最后的一个/后面的部分的double值   <br>
-     * 例如请求URL /pipes/user/query/2   <br>
+     * 获取请求URL最后的一个/后面的部分的double值 <br>
+     * 例如请求URL /pipes/user/query/2 <br>
      * 获取type参数: double type = request.getPathLastParam(0.0); //type = 2.0
      *
      * @param defvalue 默认double值
-     *
      * @return double值
      */
     public double getPathLastParam(double defvalue) {
@@ -1964,28 +2031,29 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     *
      * 从prefix之后截取getPath再对"/"进行分隔
-     * <p>
-     * @param prefix 前缀
      *
+     * <p>
+     *
+     * @param prefix 前缀
      * @return String[]
      */
     public String[] getPathParams(String prefix) {
         if (requestPath == null || prefix == null) {
             return new String[0];
         }
-        return requestPath.substring(requestPath.indexOf(prefix) + prefix.length() + (prefix.endsWith("/") ? 0 : 1)).split("/");
+        return requestPath
+                .substring(requestPath.indexOf(prefix) + prefix.length() + (prefix.endsWith("/") ? 0 : 1))
+                .split("/");
     }
 
     /**
-     * 获取请求URL分段中含prefix段的值   <br>
-     * 例如请求URL /pipes/user/query/name:hello   <br>
+     * 获取请求URL分段中含prefix段的值 <br>
+     * 例如请求URL /pipes/user/query/name:hello <br>
      * 获取name参数: String name = request.getPathParam("name:", "none");
      *
-     * @param prefix   prefix段前缀
+     * @param prefix prefix段前缀
      * @param defvalue 默认值
-     *
      * @return prefix截断后的值
      */
     public String getPathParam(String prefix, String defvalue) {
@@ -2002,13 +2070,12 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL分段中含prefix段的short值   <br>
-     * 例如请求URL /pipes/user/query/type:10   <br>
+     * 获取请求URL分段中含prefix段的short值 <br>
+     * 例如请求URL /pipes/user/query/type:10 <br>
      * 获取type参数: short type = request.getPathParam("type:", (short)0);
      *
-     * @param prefix   prefix段前缀
+     * @param prefix prefix段前缀
      * @param defvalue 默认short值
-     *
      * @return short值
      */
     public short getPathParam(String prefix, short defvalue) {
@@ -2021,14 +2088,13 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL分段中含prefix段的short值   <br>
-     * 例如请求URL /pipes/user/query/type:a   <br>
+     * 获取请求URL分段中含prefix段的short值 <br>
+     * 例如请求URL /pipes/user/query/type:a <br>
      * 获取type参数: short type = request.getPathParam(16, "type:", (short)0); //type = 10
      *
-     * @param radix    进制数
-     * @param prefix   prefix段前缀
+     * @param radix 进制数
+     * @param prefix prefix段前缀
      * @param defvalue 默认short值
-     *
      * @return short值
      */
     public short getPathParam(int radix, String prefix, short defvalue) {
@@ -2041,14 +2107,13 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL分段中含prefix段的int值  <br>
-     * 例如请求URL /pipes/user/query/offset:0/limit:50   <br>
-     * 获取offset参数: int offset = request.getPathParam("offset:", 0);   <br>
-     * 获取limit参数: int limit = request.getPathParam("limit:", 20);  <br>
+     * 获取请求URL分段中含prefix段的int值 <br>
+     * 例如请求URL /pipes/user/query/offset:0/limit:50 <br>
+     * 获取offset参数: int offset = request.getPathParam("offset:", 0); <br>
+     * 获取limit参数: int limit = request.getPathParam("limit:", 20); <br>
      *
-     * @param prefix   prefix段前缀
+     * @param prefix prefix段前缀
      * @param defvalue 默认int值
-     *
      * @return int值
      */
     public int getPathParam(String prefix, int defvalue) {
@@ -2061,15 +2126,14 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL分段中含prefix段的int值  <br>
-     * 例如请求URL /pipes/user/query/offset:0/limit:50   <br>
-     * 获取offset参数: int offset = request.getPathParam("offset:", 0);   <br>
-     * 获取limit参数: int limit = request.getPathParam(16, "limit:", 20); // limit = 16  <br>
+     * 获取请求URL分段中含prefix段的int值 <br>
+     * 例如请求URL /pipes/user/query/offset:0/limit:50 <br>
+     * 获取offset参数: int offset = request.getPathParam("offset:", 0); <br>
+     * 获取limit参数: int limit = request.getPathParam(16, "limit:", 20); // limit = 16 <br>
      *
-     * @param radix    进制数
-     * @param prefix   prefix段前缀
+     * @param radix 进制数
+     * @param prefix prefix段前缀
      * @param defvalue 默认int值
-     *
      * @return int值
      */
     public int getPathParam(int radix, String prefix, int defvalue) {
@@ -2082,13 +2146,12 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL分段中含prefix段的float值   <br>
-     * 例如请求URL /pipes/user/query/point:40.0   <br>
+     * 获取请求URL分段中含prefix段的float值 <br>
+     * 例如请求URL /pipes/user/query/point:40.0 <br>
      * 获取time参数: float point = request.getPathParam("point:", 0.0f);
      *
-     * @param prefix   prefix段前缀
+     * @param prefix prefix段前缀
      * @param defvalue 默认float值
-     *
      * @return float值
      */
     public float getPathParam(String prefix, float defvalue) {
@@ -2101,13 +2164,12 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL分段中含prefix段的long值   <br>
-     * 例如请求URL /pipes/user/query/time:1453104341363/id:40   <br>
+     * 获取请求URL分段中含prefix段的long值 <br>
+     * 例如请求URL /pipes/user/query/time:1453104341363/id:40 <br>
      * 获取time参数: long time = request.getPathParam("time:", 0L);
      *
-     * @param prefix   prefix段前缀
+     * @param prefix prefix段前缀
      * @param defvalue 默认long值
-     *
      * @return long值
      */
     public long getPathParam(String prefix, long defvalue) {
@@ -2120,14 +2182,13 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL分段中含prefix段的long值   <br>
-     * 例如请求URL /pipes/user/query/time:1453104341363/id:40   <br>
+     * 获取请求URL分段中含prefix段的long值 <br>
+     * 例如请求URL /pipes/user/query/time:1453104341363/id:40 <br>
      * 获取time参数: long time = request.getPathParam(16, "time:", 0L);
      *
-     * @param radix    进制数
-     * @param prefix   prefix段前缀
+     * @param radix 进制数
+     * @param prefix prefix段前缀
      * @param defvalue 默认long值
-     *
      * @return long值
      */
     public long getPathParam(int radix, String prefix, long defvalue) {
@@ -2140,13 +2201,12 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取请求URL分段中含prefix段的double值   <br>
-     * 例如请求URL /pipes/user/query/point:40.0   <br>
+     * 获取请求URL分段中含prefix段的double值 <br>
+     * 例如请求URL /pipes/user/query/point:40.0 <br>
      * 获取time参数: double point = request.getPathParam("point:", 0.0);
      *
-     * @param prefix   prefix段前缀
+     * @param prefix prefix段前缀
      * @param defvalue 默认double值
-     *
      * @return double值
      */
     public double getPathParam(String prefix, double defvalue) {
@@ -2158,7 +2218,7 @@ public class HttpRequest extends Request<HttpContext> {
         }
     }
 
-    //------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------
     /**
      * 获取请求Header总对象
      *
@@ -2185,7 +2245,6 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取指定的header值
      *
      * @param name header名
-     *
      * @return header值
      */
     public String getHeader(String name) {
@@ -2195,9 +2254,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header值, 没有返回默认值
      *
-     * @param name         header名
+     * @param name header名
      * @param defaultValue 默认值
-     *
      * @return header值
      */
     @ClassDepends
@@ -2209,10 +2267,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的json值
      *
-     * @param <T>  泛型
+     * @param <T> 泛型
      * @param type 反序列化的类名
      * @param name header名
-     *
      * @return header值
      */
     @ClassDepends
@@ -2224,11 +2281,10 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的json值
      *
-     * @param <T>     泛型
+     * @param <T> 泛型
      * @param convert JsonConvert对象
-     * @param type    反序列化的类名
-     * @param name    header名
-     *
+     * @param type 反序列化的类名
+     * @param name header名
      * @return header值
      */
     @ClassDepends
@@ -2240,9 +2296,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的boolean值, 没有返回默认boolean值
      *
-     * @param name         header名
+     * @param name header名
      * @param defaultValue 默认boolean值
-     *
      * @return header值
      */
     @ClassDepends
@@ -2254,9 +2309,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的short值, 没有返回默认short值
      *
-     * @param name         header名
+     * @param name header名
      * @param defaultValue 默认short值
-     *
      * @return header值
      */
     @ClassDepends
@@ -2275,10 +2329,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的short值, 没有返回默认short值
      *
-     * @param radix        进制数
-     * @param name         header名
+     * @param radix 进制数
+     * @param name header名
      * @param defaultValue 默认short值
-     *
      * @return header值
      */
     @ClassDepends
@@ -2297,9 +2350,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的short值, 没有返回默认short值
      *
-     * @param name         header名
+     * @param name header名
      * @param defaultValue 默认short值
-     *
      * @return header值
      */
     @ClassDepends
@@ -2318,10 +2370,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的short值, 没有返回默认short值
      *
-     * @param radix        进制数
-     * @param name         header名
+     * @param radix 进制数
+     * @param name header名
      * @param defaultValue 默认short值
-     *
      * @return header值
      */
     @ClassDepends
@@ -2340,9 +2391,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的int值, 没有返回默认int值
      *
-     * @param name         header名
+     * @param name header名
      * @param defaultValue 默认int值
-     *
      * @return header值
      */
     @ClassDepends
@@ -2361,10 +2411,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的int值, 没有返回默认int值
      *
-     * @param radix        进制数
-     * @param name         header名
+     * @param radix 进制数
+     * @param name header名
      * @param defaultValue 默认int值
-     *
      * @return header值
      */
     @ClassDepends
@@ -2383,9 +2432,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的long值, 没有返回默认long值
      *
-     * @param name         header名
+     * @param name header名
      * @param defaultValue 默认long值
-     *
      * @return header值
      */
     @ClassDepends
@@ -2404,10 +2452,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的long值, 没有返回默认long值
      *
-     * @param radix        进制数
-     * @param name         header名
+     * @param radix 进制数
+     * @param name header名
      * @param defaultValue 默认long值
-     *
      * @return header值
      */
     @ClassDepends
@@ -2426,9 +2473,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的float值, 没有返回默认float值
      *
-     * @param name         header名
+     * @param name header名
      * @param defaultValue 默认float值
-     *
      * @return header值
      */
     @ClassDepends
@@ -2447,9 +2493,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的header的double值, 没有返回默认double值
      *
-     * @param name         header名
+     * @param name header名
      * @param defaultValue 默认double值
-     *
      * @return header值
      */
     @ClassDepends
@@ -2465,7 +2510,7 @@ public class HttpRequest extends Request<HttpContext> {
         }
     }
 
-    //------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------
     /**
      * 获取请求参数总对象
      *
@@ -2481,7 +2526,6 @@ public class HttpRequest extends Request<HttpContext> {
      * 将请求参数转换成String, 字符串格式为: bean1={}&amp;id=13&amp;name=xxx <br>
      * 不会返回null，没有参数返回空字符串
      *
-     *
      * @return String
      */
     @ConvertDisabled
@@ -2494,7 +2538,6 @@ public class HttpRequest extends Request<HttpContext> {
      * 不会返回null，没有参数返回空字符串
      *
      * @param prefix 拼接前缀， 如果无参数，返回的字符串不会含有拼接前缀
-     *
      * @return String
      */
     public String getParametersToString(String prefix) {
@@ -2522,7 +2565,6 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取指定的参数值
      *
      * @param name 参数名
-     *
      * @return 参数值
      */
     public String getParameter(String name) {
@@ -2533,9 +2575,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数值, 没有返回默认值
      *
-     * @param name         参数名
+     * @param name 参数名
      * @param defaultValue 默认值
-     *
      * @return 参数值
      */
     public String getParameter(String name, String defaultValue) {
@@ -2546,10 +2587,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数json值
      *
-     * @param <T>  泛型
+     * @param <T> 泛型
      * @param type 反序列化的类名
      * @param name 参数名
-     *
      * @return 参数值
      */
     public <T> T getJsonParameter(java.lang.reflect.Type type, String name) {
@@ -2560,11 +2600,10 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数json值
      *
-     * @param <T>     泛型
+     * @param <T> 泛型
      * @param convert JsonConvert对象
-     * @param type    反序列化的类名
-     * @param name    参数名
-     *
+     * @param type 反序列化的类名
+     * @param name 参数名
      * @return 参数值
      */
     public <T> T getJsonParameter(JsonConvert convert, java.lang.reflect.Type type, String name) {
@@ -2575,9 +2614,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数boolean值, 没有返回默认boolean值
      *
-     * @param name         参数名
+     * @param name 参数名
      * @param defaultValue 默认boolean值
-     *
      * @return 参数值
      */
     public boolean getBooleanParameter(String name, boolean defaultValue) {
@@ -2589,9 +2627,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数short值, 没有返回默认short值
      *
-     * @param name         参数名
+     * @param name 参数名
      * @param defaultValue 默认short值
-     *
      * @return 参数值
      */
     public short getShortParameter(String name, short defaultValue) {
@@ -2610,10 +2647,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数short值, 没有返回默认short值
      *
-     * @param radix        进制数
-     * @param name         参数名
+     * @param radix 进制数
+     * @param name 参数名
      * @param defaultValue 默认short值
-     *
      * @return 参数值
      */
     public short getShortParameter(int radix, String name, short defaultValue) {
@@ -2632,9 +2668,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数short值, 没有返回默认short值
      *
-     * @param name         参数名
+     * @param name 参数名
      * @param defaultValue 默认short值
-     *
      * @return 参数值
      */
     public short getShortParameter(String name, int defaultValue) {
@@ -2653,9 +2688,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数int值, 没有返回默认int值
      *
-     * @param name         参数名
+     * @param name 参数名
      * @param defaultValue 默认int值
-     *
      * @return 参数值
      */
     public int getIntParameter(String name, int defaultValue) {
@@ -2674,10 +2708,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数int值, 没有返回默认int值
      *
-     * @param radix        进制数
-     * @param name         参数名
+     * @param radix 进制数
+     * @param name 参数名
      * @param defaultValue 默认int值
-     *
      * @return 参数值
      */
     public int getIntParameter(int radix, String name, int defaultValue) {
@@ -2696,9 +2729,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数long值, 没有返回默认long值
      *
-     * @param name         参数名
+     * @param name 参数名
      * @param defaultValue 默认long值
-     *
      * @return 参数值
      */
     public long getLongParameter(String name, long defaultValue) {
@@ -2717,10 +2749,9 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数long值, 没有返回默认long值
      *
-     * @param radix        进制数
-     * @param name         参数名
+     * @param radix 进制数
+     * @param name 参数名
      * @param defaultValue 默认long值
-     *
      * @return 参数值
      */
     public long getLongParameter(int radix, String name, long defaultValue) {
@@ -2739,9 +2770,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数float值, 没有返回默认float值
      *
-     * @param name         参数名
+     * @param name 参数名
      * @param defaultValue 默认float值
-     *
      * @return 参数值
      */
     public float getFloatParameter(String name, float defaultValue) {
@@ -2760,9 +2790,8 @@ public class HttpRequest extends Request<HttpContext> {
     /**
      * 获取指定的参数double值, 没有返回默认double值
      *
-     * @param name         参数名
+     * @param name 参数名
      * @param defaultValue 默认double值
-     *
      * @return 参数值
      */
     public double getDoubleParameter(String name, double defaultValue) {
@@ -2791,7 +2820,6 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取翻页对象 同 getFlipper("flipper", autoCreate, 0);
      *
      * @param autoCreate 无参数时是否创建新Flipper对象
-     *
      * @return Flipper翻页对象
      */
     public org.redkale.source.Flipper getFlipper(boolean autoCreate) {
@@ -2802,7 +2830,6 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取翻页对象 同 getFlipper("flipper", false, maxLimit);
      *
      * @param maxLimit 最大行数， 小于1则值为Flipper.DEFAULT_LIMIT
-     *
      * @return Flipper翻页对象
      */
     public org.redkale.source.Flipper getFlipper(int maxLimit) {
@@ -2813,8 +2840,7 @@ public class HttpRequest extends Request<HttpContext> {
      * 获取翻页对象 同 getFlipper("flipper", autoCreate, maxLimit)
      *
      * @param autoCreate 无参数时是否创建新Flipper对象
-     * @param maxLimit   最大行数， 小于1则值为Flipper.DEFAULT_LIMIT
-     *
+     * @param maxLimit 最大行数， 小于1则值为Flipper.DEFAULT_LIMIT
      * @return Flipper翻页对象
      */
     public org.redkale.source.Flipper getFlipper(boolean autoCreate, int maxLimit) {
@@ -2822,30 +2848,28 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取翻页对象 https://redkale.org/pipes/users/list?flipper={'offset':0,'limit':20, 'sort':'createtime ASC'}  <br>
+     * 获取翻页对象 https://redkale.org/pipes/users/list?flipper={'offset':0,'limit':20, 'sort':'createtime ASC'} <br>
      *
-     *
-     * @param name       Flipper对象的参数名，默认为 "flipper"
+     * @param name Flipper对象的参数名，默认为 "flipper"
      * @param autoCreate 无参数时是否创建新Flipper对象
-     * @param maxLimit   最大行数， 小于1则值为Flipper.DEFAULT_LIMIT
-     *
+     * @param maxLimit 最大行数， 小于1则值为Flipper.DEFAULT_LIMIT
      * @return Flipper翻页对象
      */
     public org.redkale.source.Flipper getFlipper(String name, boolean autoCreate, int maxLimit) {
         org.redkale.source.Flipper flipper = getJsonParameter(org.redkale.source.Flipper.class, name);
         if (flipper == null) {
-//            if (maxLimit < 1) maxLimit = org.redkale.source.Flipper.DEFAULT_LIMIT;
-//            String limitstr = getParameter("limit");
-//            if (limitstr != null && !limitstr.isEmpty()) {
-//                String offsetstr = getParameter("offset");
-//                if (offsetstr != null && !offsetstr.isEmpty()) {
-//                    int limit = Integer.parseInt(limitstr);
-//                    int offset = Integer.parseInt(offsetstr);
-//                    String sort = getParameter("sort");
-//                    if (limit > maxLimit) limit = maxLimit;
-//                    flipper = new org.redkale.source.Flipper(limit, offset, sort);
-//                }
-//            }
+            //            if (maxLimit < 1) maxLimit = org.redkale.source.Flipper.DEFAULT_LIMIT;
+            //            String limitstr = getParameter("limit");
+            //            if (limitstr != null && !limitstr.isEmpty()) {
+            //                String offsetstr = getParameter("offset");
+            //                if (offsetstr != null && !offsetstr.isEmpty()) {
+            //                    int limit = Integer.parseInt(limitstr);
+            //                    int offset = Integer.parseInt(offsetstr);
+            //                    String sort = getParameter("sort");
+            //                    if (limit > maxLimit) limit = maxLimit;
+            //                    flipper = new org.redkale.source.Flipper(limit, offset, sort);
+            //                }
+            //            }
         } else if (flipper.getLimit() < 1 || (maxLimit > 0 && flipper.getLimit() > maxLimit)) {
             flipper.setLimit(maxLimit);
         }

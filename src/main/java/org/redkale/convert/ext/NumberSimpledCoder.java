@@ -12,8 +12,7 @@ import org.redkale.convert.Writer;
 /**
  * Number 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -32,5 +31,4 @@ public final class NumberSimpledCoder<R extends Reader, W extends Writer> extend
     public Number convertFrom(R in) {
         return in.readLong();
     }
-
 }

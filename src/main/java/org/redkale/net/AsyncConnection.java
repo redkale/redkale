@@ -5,6 +5,9 @@
  */
 package org.redkale.net;
 
+import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
+import static javax.net.ssl.SSLEngineResult.Status.*;
+
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
@@ -15,13 +18,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import javax.net.ssl.*;
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;
-import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
-import static javax.net.ssl.SSLEngineResult.Status.*;
 import org.redkale.util.*;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -30,7 +29,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
 
     private static final ByteBuffer EMPTY_BUFFER = ByteBuffer.allocate(0);
 
-    //SSL
+    // SSL
     protected SSLEngine sslEngine;
 
     protected volatile long readTime;
@@ -43,9 +42,9 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
 
     protected volatile boolean writePending;
 
-    private Map<String, Object> attributes; //用于存储绑定在Connection上的对象集合
+    private Map<String, Object> attributes; // 用于存储绑定在Connection上的对象集合
 
-    private Object subobject; //用于存储绑定在Connection上的对象， 同attributes， 只绑定单个对象时尽量使用subobject而非attributes
+    private Object subobject; // 用于存储绑定在Connection上的对象， 同attributes， 只绑定单个对象时尽量使用subobject而非attributes
 
     protected final AsyncIOGroup ioGroup;
 
@@ -75,19 +74,25 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
 
     private ByteBuffer readSSLHalfBuffer;
 
-    //在线数
+    // 在线数
     private LongAdder livingCounter;
 
-    //关闭数
+    // 关闭数
     private LongAdder closedCounter;
 
     private Consumer<AsyncConnection> beforeCloseListener;
 
-    //用于服务端的Socket, 等同于一直存在的readCompletionHandler
+    // 用于服务端的Socket, 等同于一直存在的readCompletionHandler
     ProtocolCodec protocolCodec;
 
-    protected AsyncConnection(boolean clientMode, AsyncIOGroup ioGroup, AsyncIOThread ioReadThread,
-        AsyncIOThread ioWriteThread, int bufferCapacity, SSLBuilder sslBuilder, SSLContext sslContext) {
+    protected AsyncConnection(
+            boolean clientMode,
+            AsyncIOGroup ioGroup,
+            AsyncIOThread ioReadThread,
+            AsyncIOThread ioWriteThread,
+            int bufferCapacity,
+            SSLBuilder sslBuilder,
+            SSLContext sslContext) {
         Objects.requireNonNull(ioGroup);
         Objects.requireNonNull(ioReadThread);
         Objects.requireNonNull(ioWriteThread);
@@ -102,7 +107,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         this.writeBufferConsumer = ioWriteThread.getBufferConsumer();
         this.livingCounter = ioGroup.connLivingCounter;
         this.closedCounter = ioGroup.connClosedCounter;
-        if (clientMode) { //client模式下无SSLBuilder
+        if (clientMode) { // client模式下无SSLBuilder
             if (sslContext != null) {
                 if (sslBuilder != null) {
                     this.sslEngine = sslBuilder.createSSLEngine(sslContext, clientMode);
@@ -224,18 +229,19 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
 
     public abstract void setWriteTimeoutSeconds(int writeTimeoutSeconds);
 
-//    public abstract <A> AsyncConnection fastHandler(CompletionHandler<Integer, ? super A> handler);
-//
-//    public abstract <A> void fastWrite(byte[] data);
+    //    public abstract <A> AsyncConnection fastHandler(CompletionHandler<Integer, ? super A> handler);
+    //
+    //    public abstract <A> void fastWrite(byte[] data);
     protected abstract void readRegisterImpl(CompletionHandler<Integer, ByteBuffer> handler);
 
     protected abstract void readImpl(CompletionHandler<Integer, ByteBuffer> handler);
 
-    //src写完才会回调
+    // src写完才会回调
     protected abstract <A> void writeImpl(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler);
 
-    //srcs写完才会回调
-    protected abstract <A> void writeImpl(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler);
+    // srcs写完才会回调
+    protected abstract <A> void writeImpl(
+            ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler);
 
     protected void startRead(CompletionHandler<Integer, ByteBuffer> handler) {
         read(handler);
@@ -309,7 +315,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    //src写完才会回调
+    // src写完才会回调
     public final <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {
         if (sslEngine == null) {
             writeImpl(src, attachment, handler);
@@ -329,8 +335,9 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    //srcs写完才会回调
-    public final <A> void write(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
+    // srcs写完才会回调
+    public final <A> void write(
+            ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
         if (sslEngine == null) {
             writeImpl(srcs, offset, length, attachment, handler);
         } else {
@@ -349,7 +356,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    //srcs写完才会回调
+    // srcs写完才会回调
     public final <A> void write(ByteBuffer[] srcs, A attachment, CompletionHandler<Integer, ? super A> handler) {
         write(srcs, 0, srcs.length, attachment, handler);
     }
@@ -375,14 +382,36 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
     }
 
     public final void write(ByteTuple header, ByteTuple body, CompletionHandler<Integer, Void> handler) {
-        write(header.content(), header.offset(), header.length(), body == null ? null : body.content(), body == null ? 0 : body.offset(), body == null ? 0 : body.length(), handler);
+        write(
+                header.content(),
+                header.offset(),
+                header.length(),
+                body == null ? null : body.content(),
+                body == null ? 0 : body.offset(),
+                body == null ? 0 : body.length(),
+                handler);
     }
 
-    public void write(byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength, CompletionHandler<Integer, Void> handler) {
+    public void write(
+            byte[] headerContent,
+            int headerOffset,
+            int headerLength,
+            byte[] bodyContent,
+            int bodyOffset,
+            int bodyLength,
+            CompletionHandler<Integer, Void> handler) {
         write(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength, null, handler);
     }
 
-    public void write(byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength, Object handlerAttachment, CompletionHandler handler) {
+    public void write(
+            byte[] headerContent,
+            int headerOffset,
+            int headerLength,
+            byte[] bodyContent,
+            int bodyOffset,
+            int bodyLength,
+            Object handlerAttachment,
+            CompletionHandler handler) {
         final ByteBuffer buffer = sslEngine == null ? pollWriteBuffer() : pollWriteSSLBuffer();
         if (buffer.remaining() >= headerLength + bodyLength) {
             buffer.put(headerContent, headerOffset, headerLength);
@@ -405,7 +434,8 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
             };
             write(buffer, handlerAttachment, newHandler);
         } else {
-            ByteBufferWriter writer = ByteBufferWriter.create(sslEngine == null ? writeBufferSupplier : () -> pollWriteSSLBuffer(), buffer);
+            ByteBufferWriter writer = ByteBufferWriter.create(
+                    sslEngine == null ? writeBufferSupplier : () -> pollWriteSSLBuffer(), buffer);
             writer.put(headerContent, headerOffset, headerLength);
             if (bodyLength > 0) {
                 writer.put(bodyContent, bodyOffset, bodyLength);
@@ -428,7 +458,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    //src写完才会回调
+    // src写完才会回调
     public final <A> void writeInIOThread(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {
         if (inCurrWriteThread()) {
             write(src, attachment, handler);
@@ -437,8 +467,9 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    //srcs写完才会回调
-    public final <A> void writeInIOThread(ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
+    // srcs写完才会回调
+    public final <A> void writeInIOThread(
+            ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
         if (inCurrWriteThread()) {
             write(srcs, offset, length, attachment, handler);
         } else {
@@ -446,8 +477,9 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    //srcs写完才会回调
-    public final <A> void writeInIOThread(ByteBuffer[] srcs, A attachment, CompletionHandler<Integer, ? super A> handler) {
+    // srcs写完才会回调
+    public final <A> void writeInIOThread(
+            ByteBuffer[] srcs, A attachment, CompletionHandler<Integer, ? super A> handler) {
         if (inCurrWriteThread()) {
             write(srcs, attachment, handler);
         } else {
@@ -487,11 +519,19 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    public final void writeInIOThread(byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength, CompletionHandler<Integer, Void> handler) {
+    public final void writeInIOThread(
+            byte[] headerContent,
+            int headerOffset,
+            int headerLength,
+            byte[] bodyContent,
+            int bodyOffset,
+            int bodyLength,
+            CompletionHandler<Integer, Void> handler) {
         if (inCurrWriteThread()) {
             write(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength, handler);
         } else {
-            executeWrite(() -> write(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength, handler));
+            executeWrite(() ->
+                    write(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength, handler));
         }
     }
 
@@ -555,12 +595,12 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    //返回pipelineCount个数数据是否全部写入完毕
+    // 返回pipelineCount个数数据是否全部写入完毕
     public final boolean appendPipeline(int pipelineIndex, int pipelineCount, ByteTuple array) {
         return appendPipeline(pipelineIndex, pipelineCount, array.content(), array.offset(), array.length());
     }
 
-    //返回pipelineCount个数数据是否全部写入完毕
+    // 返回pipelineCount个数数据是否全部写入完毕
     public boolean appendPipeline(int pipelineIndex, int pipelineCount, byte[] bs, int offset, int length) {
         pipelineLock.lock();
         try {
@@ -578,7 +618,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
                     dataNode = new PipelineDataNode();
                     this.pipelineDataNode = dataNode;
                 }
-                if (pipelineIndex == pipelineCount) { //此时pipelineCount为最大值
+                if (pipelineIndex == pipelineCount) { // 此时pipelineCount为最大值
                     dataNode.pipelineCount = pipelineCount;
                 }
                 dataNode.put(pipelineIndex, bs, offset, length);
@@ -596,13 +636,29 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    //返回pipelineCount个数数据是否全部写入完毕
+    // 返回pipelineCount个数数据是否全部写入完毕
     public final boolean appendPipeline(int pipelineIndex, int pipelineCount, ByteTuple header, ByteTuple body) {
-        return appendPipeline(pipelineIndex, pipelineCount, header.content(), header.offset(), header.length(), body == null ? null : body.content(), body == null ? 0 : body.offset(), body == null ? 0 : body.length());
+        return appendPipeline(
+                pipelineIndex,
+                pipelineCount,
+                header.content(),
+                header.offset(),
+                header.length(),
+                body == null ? null : body.content(),
+                body == null ? 0 : body.offset(),
+                body == null ? 0 : body.length());
     }
 
-    //返回pipelineCount个数数据是否全部写入完毕
-    public boolean appendPipeline(int pipelineIndex, int pipelineCount, byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength) {
+    // 返回pipelineCount个数数据是否全部写入完毕
+    public boolean appendPipeline(
+            int pipelineIndex,
+            int pipelineCount,
+            byte[] headerContent,
+            int headerOffset,
+            int headerLength,
+            byte[] bodyContent,
+            int bodyOffset,
+            int bodyLength) {
         pipelineLock.lock();
         try {
             ByteBufferWriter writer = this.pipelineWriter;
@@ -619,10 +675,11 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
                     dataNode = new PipelineDataNode();
                     this.pipelineDataNode = dataNode;
                 }
-                if (pipelineIndex == pipelineCount) { //此时pipelineCount为最大值
+                if (pipelineIndex == pipelineCount) { // 此时pipelineCount为最大值
                     dataNode.pipelineCount = pipelineCount;
                 }
-                dataNode.put(pipelineIndex, headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength);
+                dataNode.put(
+                        pipelineIndex, headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength);
                 if (writer.getWriteBytesCounter() + dataNode.itemsize == dataNode.pipelineCount) {
                     for (PipelineDataItem item : dataNode.arrayItems()) {
                         writer.put(item.data);
@@ -673,18 +730,26 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
             itemsize++;
         }
 
-        public void put(int pipelineIndex, byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength) {
+        public void put(
+                int pipelineIndex,
+                byte[] headerContent,
+                int headerOffset,
+                int headerLength,
+                byte[] bodyContent,
+                int bodyOffset,
+                int bodyLength) {
             if (tail == null) {
-                head = new PipelineDataItem(pipelineIndex, headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength);
+                head = new PipelineDataItem(
+                        pipelineIndex, headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength);
                 tail = head;
             } else {
-                PipelineDataItem item = new PipelineDataItem(pipelineIndex, headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength);
+                PipelineDataItem item = new PipelineDataItem(
+                        pipelineIndex, headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength);
                 tail.next = item;
                 tail = item;
             }
             itemsize++;
         }
-
     }
 
     private static class PipelineDataItem implements Comparable<PipelineDataItem> {
@@ -700,13 +765,27 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
             this.data = Arrays.copyOfRange(bs, offset, offset + length);
         }
 
-        public PipelineDataItem(int index, byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength) {
+        public PipelineDataItem(
+                int index,
+                byte[] headerContent,
+                int headerOffset,
+                int headerLength,
+                byte[] bodyContent,
+                int bodyOffset,
+                int bodyLength) {
             this.index = index;
-            this.data = bodyLength > 0 ? copyOfRange(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength)
-                : Arrays.copyOfRange(headerContent, headerOffset, headerOffset + headerLength);
+            this.data = bodyLength > 0
+                    ? copyOfRange(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength)
+                    : Arrays.copyOfRange(headerContent, headerOffset, headerOffset + headerLength);
         }
 
-        private static byte[] copyOfRange(byte[] headerContent, int headerOffset, int headerLength, byte[] bodyContent, int bodyOffset, int bodyLength) {
+        private static byte[] copyOfRange(
+                byte[] headerContent,
+                int headerOffset,
+                int headerLength,
+                byte[] bodyContent,
+                int bodyOffset,
+                int bodyLength) {
             byte[] result = new byte[headerLength + bodyLength];
             System.arraycopy(headerContent, headerOffset, result, 0, headerLength);
             System.arraycopy(bodyContent, bodyOffset, result, headerLength, bodyLength);
@@ -799,11 +878,11 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         return this.writePending;
     }
 
-    public void dispose() {//同close， 只是去掉throws IOException
+    public void dispose() { // 同close， 只是去掉throws IOException
         try {
             this.close();
         } catch (IOException io) {
-            //do nothing
+            // do nothing
         }
     }
 
@@ -827,7 +906,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
                 sslEngine.closeInbound();
                 sslEngine.closeOutbound();
             } catch (SSLException e) {
-                //do nothing
+                // do nothing
             }
             sslEngine = null;
         }
@@ -835,7 +914,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
             try {
                 beforeCloseListener.accept(this);
             } catch (Exception io) {
-                //do nothing
+                // do nothing
             }
         }
         if (this.readBuffer != null && Thread.currentThread() == this.ioReadThread) {
@@ -855,7 +934,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
             }
             attributes.clear();
         } catch (Exception io) {
-            //do nothing
+            // do nothing
         }
     }
 
@@ -910,17 +989,18 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    //解密ssl网络数据， 返回null表示CLOSED
+    // 解密ssl网络数据， 返回null表示CLOSED
     protected ByteBuffer sslUnwrap(final boolean handshake, ByteBuffer netBuffer) throws SSLException {
         ByteBuffer appBuffer = pollReadBuffer();
         SSLEngine engine = this.sslEngine;
         HandshakeStatus hss;
-        do { //status只有 CLOSED、OK、BUFFER_UNDERFLOW、BUFFER_OVERFLOW
-            //BUFFER_OVERFLOW:  appBuffer可用空间不足, redkale确保appBuffer不会出现空间不足的情况
-            //BUFFER_UNDERFLOW: netBuffer可用内容不足
+        do { // status只有 CLOSED、OK、BUFFER_UNDERFLOW、BUFFER_OVERFLOW
+            // BUFFER_OVERFLOW:  appBuffer可用空间不足, redkale确保appBuffer不会出现空间不足的情况
+            // BUFFER_UNDERFLOW: netBuffer可用内容不足
             SSLEngineResult engineResult = engine.unwrap(netBuffer, appBuffer);
             if (engineResult.getStatus() == SSLEngineResult.Status.CLOSED
-                && (engineResult.getHandshakeStatus() == NOT_HANDSHAKING || engineResult.getHandshakeStatus() == FINISHED)) {
+                    && (engineResult.getHandshakeStatus() == NOT_HANDSHAKING
+                            || engineResult.getHandshakeStatus() == FINISHED)) {
                 offerReadBuffer(netBuffer);
                 offerReadBuffer(appBuffer);
                 return null;
@@ -949,7 +1029,8 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         readRegisterImpl(createSslCompletionHandler(handshake, handler));
     }
 
-    private CompletionHandler<Integer, ByteBuffer> createSslCompletionHandler(final boolean handshake, final CompletionHandler<Integer, ByteBuffer> handler) {
+    private CompletionHandler<Integer, ByteBuffer> createSslCompletionHandler(
+            final boolean handshake, final CompletionHandler<Integer, ByteBuffer> handler) {
         return new CompletionHandler<Integer, ByteBuffer>() {
 
             @Override
@@ -964,7 +1045,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
                 try {
                     ByteBuffer appBuffer = sslUnwrap(handshake, netBuffer);
                     if (appBuffer == null) {
-                        return; //CLOSED，netBuffer已被回收
+                        return; // CLOSED，netBuffer已被回收
                     }
                     if (AsyncConnection.this.readSSLHalfBuffer != netBuffer) {
                         offerReadBuffer(netBuffer);
@@ -996,15 +1077,15 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         };
     }
 
-    //加密ssl内容数据 
+    // 加密ssl内容数据
     protected ByteBuffer[] sslWrap(final boolean handshake, ByteBuffer appBuffer) throws SSLException {
         final SSLEngine engine = this.sslEngine;
         final int netSize = engine.getSession().getPacketBufferSize();
         ByteBuffer netBuffer = pollWriteBuffer();
-        ByteBuffer[] netBuffers = new ByteBuffer[]{netBuffer};
+        ByteBuffer[] netBuffers = new ByteBuffer[] {netBuffer};
         SSLEngineResult engineResult = engine.wrap(appBuffer, netBuffer);
-        //status只有 CLOSED、OK、BUFFER_OVERFLOW
-        //BUFFER_OVERFLOW:  netBuffer可用空间不足, redkale确保netBuffer不会出现空间不足的情况
+        // status只有 CLOSED、OK、BUFFER_OVERFLOW
+        // BUFFER_OVERFLOW:  netBuffer可用空间不足, redkale确保netBuffer不会出现空间不足的情况
         while (appBuffer.hasRemaining() || (handshake && engine.getHandshakeStatus() == NEED_WRAP)) {
             boolean enough = true;
             if (engineResult.getHandshakeStatus() == NEED_TASK) {
@@ -1012,7 +1093,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
                 while ((task = engine.getDelegatedTask()) != null) {
                     task.run();
                 }
-            } else if (engineResult.getStatus() == BUFFER_OVERFLOW) { //需要重新wrap
+            } else if (engineResult.getStatus() == BUFFER_OVERFLOW) { // 需要重新wrap
                 enough = false;
             }
             if (enough && netBuffer.remaining() >= netSize) {
@@ -1034,12 +1115,13 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         return netBuffers;
     }
 
-    //加密ssl内容数据
-    protected ByteBuffer[] sslWrap(final boolean handshake, ByteBuffer[] appBuffers, int offset, int length) throws SSLException {
+    // 加密ssl内容数据
+    protected ByteBuffer[] sslWrap(final boolean handshake, ByteBuffer[] appBuffers, int offset, int length)
+            throws SSLException {
         final SSLEngine engine = this.sslEngine;
         final int netSize = engine.getSession().getPacketBufferSize();
         ByteBuffer netBuffer = pollWriteSSLBuffer();
-        ByteBuffer[] netBuffers = new ByteBuffer[]{netBuffer};
+        ByteBuffer[] netBuffers = new ByteBuffer[] {netBuffer};
         SSLEngineResult engineResult = engine.wrap(appBuffers, offset, length, netBuffer);
         while (ByteBufferReader.remaining(appBuffers, offset, length) > 0) {
             boolean enough = true;
@@ -1048,7 +1130,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
                 while ((task = engine.getDelegatedTask()) != null) {
                     task.run();
                 }
-            } else if (engineResult.getStatus() == BUFFER_OVERFLOW) { //需要重新wrap
+            } else if (engineResult.getStatus() == BUFFER_OVERFLOW) { // 需要重新wrap
                 enough = false;
             }
             if (enough && netBuffer.remaining() >= netSize) {
@@ -1070,7 +1152,8 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         return netBuffers;
     }
 
-    protected boolean sslWriteImpl(final boolean handshake, ByteBuffer appBuffer, final Consumer<Throwable> callback) throws SSLException {
+    protected boolean sslWriteImpl(final boolean handshake, ByteBuffer appBuffer, final Consumer<Throwable> callback)
+            throws SSLException {
         ByteBuffer[] netBuffers = sslWrap(handshake, appBuffer);
         if (netBuffers.length > 0) {
             if (netBuffers.length == 1) {
@@ -1109,7 +1192,13 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    protected boolean sslWriteImpl(final boolean handshake, ByteBuffer[] appBuffers, int offset, int length, final Consumer<Throwable> callback) throws SSLException {
+    protected boolean sslWriteImpl(
+            final boolean handshake,
+            ByteBuffer[] appBuffers,
+            int offset,
+            int length,
+            final Consumer<Throwable> callback)
+            throws SSLException {
         ByteBuffer[] netBuffers = sslWrap(handshake, appBuffers, offset, length);
         if (netBuffers.length > 0) {
             if (netBuffers.length == 1) {

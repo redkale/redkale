@@ -5,19 +5,19 @@
  */
 package org.redkale.source;
 
+import static org.redkale.source.ColumnExpress.*;
+
 import java.io.Serializable;
 import java.util.Objects;
 import org.redkale.convert.ConvertColumn;
-import static org.redkale.source.ColumnExpress.*;
 import org.redkale.util.*;
 
 /**
  * ColumnValue主要用于多个字段更新的表达式。
  * value值为:ColumnExpNode、ColumnFuncNode、ColumnNameNode、ColumnNumberNode、ColumnStringNode、ColumnBytesNode <br>
- * 用于 DataSource.updateColumn 方法  <br>
+ * 用于 DataSource.updateColumn 方法 <br>
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -32,8 +32,7 @@ public class ColumnValue implements Comparable<ColumnValue> {
     @ConvertColumn(index = 3)
     private ColumnNode value;
 
-    public ColumnValue() {
-    }
+    public ColumnValue() {}
 
     protected <T extends Serializable> ColumnValue(LambdaSupplier<T> func, ColumnExpress express) {
         this(LambdaSupplier.readColumn(func), express, func.get());
@@ -53,11 +52,11 @@ public class ColumnValue implements Comparable<ColumnValue> {
         } else if (value instanceof Number) {
             this.value = new ColumnNumberNode((Number) value);
         } else if (value instanceof ColumnExpNode
-            || value instanceof ColumnFuncNode
-            || value instanceof ColumnNameNode
-            || value instanceof ColumnNumberNode
-            || value instanceof ColumnStringNode
-            || value instanceof ColumnBytesNode) {
+                || value instanceof ColumnFuncNode
+                || value instanceof ColumnNameNode
+                || value instanceof ColumnNumberNode
+                || value instanceof ColumnStringNode
+                || value instanceof ColumnBytesNode) {
             this.value = (ColumnNode) value;
         } else if (value == null) {
             this.value = null;
@@ -70,8 +69,7 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 同 set 操作
      *
      * @param column 字段名
-     * @param value  字段值
-     *
+     * @param value 字段值
      * @return ColumnValue
      */
     public static ColumnValue create(String column, Serializable value) {
@@ -80,10 +78,8 @@ public class ColumnValue implements Comparable<ColumnValue> {
 
     /**
      * @see #set(java.lang.String, java.io.Serializable)
-     *
      * @param column 字段名
-     * @param value  字段值
-     *
+     * @param value 字段值
      * @return ColumnValue
      * @deprecated
      */
@@ -96,8 +92,7 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 返回 {column} = {value} 操作
      *
      * @param column 字段名
-     * @param value  字段值
-     *
+     * @param value 字段值
      * @return ColumnValue
      */
     public static ColumnValue set(String column, Serializable value) {
@@ -108,8 +103,7 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 返回 {column} = {column} + {value} 操作
      *
      * @param column 字段名
-     * @param value  字段值
-     *
+     * @param value 字段值
      * @return ColumnValue
      */
     public static ColumnValue inc(String column, Number value) {
@@ -120,9 +114,7 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 返回 {column} = {column} + 1 操作
      *
      * @param column 字段名
-     *
      * @return ColumnValue
-     *
      * @since 2.4.0
      */
     public static ColumnValue inc(String column) {
@@ -133,8 +125,7 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 返回 {column} = {column} - {value} 操作
      *
      * @param column 字段名
-     * @param value  字段值
-     *
+     * @param value 字段值
      * @return ColumnValue
      */
     public static ColumnValue dec(String column, Number value) {
@@ -145,9 +136,7 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 返回 {column} = {column} - 1 操作
      *
      * @param column 字段名
-     *
      * @return ColumnValue
-     *
      * @since 2.4.0
      */
     public static ColumnValue dec(String column) {
@@ -158,8 +147,7 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 返回 {column} = {column} * {value} 操作
      *
      * @param column 字段名
-     * @param value  字段值
-     *
+     * @param value 字段值
      * @return ColumnValue
      */
     public static ColumnValue mul(String column, Number value) {
@@ -170,8 +158,7 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 返回 {column} = {column} / {value} 操作
      *
      * @param column 字段名
-     * @param value  字段值
-     *
+     * @param value 字段值
      * @return ColumnValue
      */
     public static ColumnValue div(String column, Number value) {
@@ -182,8 +169,7 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 返回 {column} = {column} % {value} 操作
      *
      * @param column 字段名
-     * @param value  字段值
-     *
+     * @param value 字段值
      * @return ColumnValue
      */
     public static ColumnValue mod(String column, Serializable value) {
@@ -194,8 +180,7 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 返回 {column} = {column} &#38; {value} 操作
      *
      * @param column 字段名
-     * @param value  字段值
-     *
+     * @param value 字段值
      * @return ColumnValue
      */
     public static ColumnValue and(String column, Serializable value) {
@@ -206,8 +191,7 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 返回 {column} = {column} | {value} 操作
      *
      * @param column 字段名
-     * @param value  字段值
-     *
+     * @param value 字段值
      * @return ColumnValue
      */
     public static ColumnValue orr(String column, Serializable value) {
@@ -218,11 +202,8 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 同 set 操作
      *
      * @param func 字段名Lambda
-     * @param <T>  值的泛型
-     *
-     *
+     * @param <T> 值的泛型
      * @return ColumnValue
-     *
      * @since 2.8.0
      */
     public static <T extends Serializable> ColumnValue create(LambdaSupplier<T> func) {
@@ -233,10 +214,8 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 返回 {column} = {value} 操作
      *
      * @param func 字段名Lambda
-     * @param <T>  值的泛型
-     *
+     * @param <T> 值的泛型
      * @return ColumnValue
-     *
      * @since 2.8.0
      */
     public static <T extends Serializable> ColumnValue set(LambdaSupplier<T> func) {
@@ -247,10 +226,8 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 返回 {column} = {column} + {value} 操作
      *
      * @param func 字段名Lambda
-     * @param <T>  值的泛型
-     *
+     * @param <T> 值的泛型
      * @return ColumnValue
-     *
      * @since 2.8.0
      */
     public static <T extends Serializable> ColumnValue inc(LambdaSupplier<T> func) {
@@ -261,10 +238,8 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 返回 {column} = {column} - {value} 操作
      *
      * @param func 字段名Lambda
-     * @param <T>  值的泛型
-     *
+     * @param <T> 值的泛型
      * @return ColumnValue
-     *
      * @since 2.8.0
      */
     public static <T extends Serializable> ColumnValue dec(LambdaSupplier<T> func) {
@@ -275,10 +250,8 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 返回 {column} = {column} * {value} 操作
      *
      * @param func 字段名Lambda
-     * @param <T>  值的泛型
-     *
+     * @param <T> 值的泛型
      * @return ColumnValue
-     *
      * @since 2.8.0
      */
     public static <T extends Serializable> ColumnValue mul(LambdaSupplier<T> func) {
@@ -289,10 +262,8 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 返回 {column} = {column} / {value} 操作
      *
      * @param func 字段名Lambda
-     * @param <T>  值的泛型
-     *
+     * @param <T> 值的泛型
      * @return ColumnValue
-     *
      * @since 2.8.0
      */
     public static <T extends Serializable> ColumnValue div(LambdaSupplier<T> func) {
@@ -303,10 +274,8 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 返回 {column} = {column} % {value} 操作
      *
      * @param func 字段名Lambda
-     * @param <T>  值的泛型
-     *
+     * @param <T> 值的泛型
      * @return ColumnValue
-     *
      * @since 2.8.0
      */
     public static <T extends Serializable> ColumnValue mod(LambdaSupplier<T> func) {
@@ -317,10 +286,8 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 返回 {column} = {column} &#38; {value} 操作
      *
      * @param func 字段名Lambda
-     * @param <T>  值的泛型
-     *
+     * @param <T> 值的泛型
      * @return ColumnValue
-     *
      * @since 2.8.0
      */
     public static <T extends Serializable> ColumnValue and(LambdaSupplier<T> func) {
@@ -331,10 +298,8 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 返回 {column} = {column} | {value} 操作
      *
      * @param func 字段名Lambda
-     * @param <T>  值的泛型
-     *
+     * @param <T> 值的泛型
      * @return ColumnValue
-     *
      * @since 2.8.0
      */
     public static <T extends Serializable> ColumnValue orr(LambdaSupplier<T> func) {
@@ -344,12 +309,10 @@ public class ColumnValue implements Comparable<ColumnValue> {
     /**
      * 同 set 操作
      *
-     * @param func  字段名Lambda
+     * @param func 字段名Lambda
      * @param value 字段值
-     * @param <T>   值的泛型
-     *
+     * @param <T> 值的泛型
      * @return ColumnValue
-     *
      * @since 2.8.0
      */
     public static <T> ColumnValue create(LambdaFunction<T, ?> func, Serializable value) {
@@ -359,12 +322,10 @@ public class ColumnValue implements Comparable<ColumnValue> {
     /**
      * 返回 {column} = {value} 操作
      *
-     * @param func  字段名Lambda
+     * @param func 字段名Lambda
      * @param value 字段值
-     * @param <T>   值的泛型
-     *
+     * @param <T> 值的泛型
      * @return ColumnValue
-     *
      * @since 2.8.0
      */
     public static <T> ColumnValue set(LambdaFunction<T, ?> func, Serializable value) {
@@ -374,12 +335,10 @@ public class ColumnValue implements Comparable<ColumnValue> {
     /**
      * 返回 {column} = {column} + {value} 操作
      *
-     * @param func  字段名Lambda
+     * @param func 字段名Lambda
      * @param value 字段值
-     * @param <T>   值的泛型
-     *
+     * @param <T> 值的泛型
      * @return ColumnValue
-     *
      * @since 2.8.0
      */
     public static <T> ColumnValue inc(LambdaFunction<T, ?> func, Serializable value) {
@@ -390,10 +349,8 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 返回 {column} = {column} + 1 操作
      *
      * @param func 字段名Lambda
-     * @param <T>  值的泛型
-     *
+     * @param <T> 值的泛型
      * @return ColumnValue
-     *
      * @since 2.8.0
      */
     public static <T> ColumnValue inc(LambdaFunction<T, ?> func) {
@@ -403,12 +360,10 @@ public class ColumnValue implements Comparable<ColumnValue> {
     /**
      * 返回 {column} = {column} - {value} 操作
      *
-     * @param func  字段名Lambda
+     * @param func 字段名Lambda
      * @param value 字段值
-     * @param <T>   值的泛型
-     *
+     * @param <T> 值的泛型
      * @return ColumnValue
-     *
      * @since 2.8.0
      */
     public static <T> ColumnValue dec(LambdaFunction<T, ?> func, Serializable value) {
@@ -419,10 +374,8 @@ public class ColumnValue implements Comparable<ColumnValue> {
      * 返回 {column} = {column} - 1 操作
      *
      * @param func 字段名Lambda
-     * @param <T>  值的泛型
-     *
+     * @param <T> 值的泛型
      * @return ColumnValue
-     *
      * @since 2.8.0
      */
     public static <T> ColumnValue dec(LambdaFunction<T, ?> func) {
@@ -432,12 +385,10 @@ public class ColumnValue implements Comparable<ColumnValue> {
     /**
      * 返回 {column} = {column} * {value} 操作
      *
-     * @param func  字段名Lambda
+     * @param func 字段名Lambda
      * @param value 字段值
-     * @param <T>   值的泛型
-     *
+     * @param <T> 值的泛型
      * @return ColumnValue
-     *
      * @since 2.8.0
      */
     public static <T> ColumnValue mul(LambdaFunction<T, ?> func, Serializable value) {
@@ -447,12 +398,10 @@ public class ColumnValue implements Comparable<ColumnValue> {
     /**
      * 返回 {column} = {column} / {value} 操作
      *
-     * @param func  字段名Lambda
+     * @param func 字段名Lambda
      * @param value 字段值
-     * @param <T>   值的泛型
-     *
+     * @param <T> 值的泛型
      * @return ColumnValue
-     *
      * @since 2.8.0
      */
     public static <T> ColumnValue div(LambdaFunction<T, ?> func, Serializable value) {
@@ -462,12 +411,10 @@ public class ColumnValue implements Comparable<ColumnValue> {
     /**
      * 返回 {column} = {column} % {value} 操作
      *
-     * @param func  字段名Lambda
+     * @param func 字段名Lambda
      * @param value 字段值
-     * @param <T>   值的泛型
-     *
+     * @param <T> 值的泛型
      * @return ColumnValue
-     *
      * @since 2.8.0
      */
     public static <T> ColumnValue mod(LambdaFunction<T, ?> func, Serializable value) {
@@ -477,12 +424,10 @@ public class ColumnValue implements Comparable<ColumnValue> {
     /**
      * 返回 {column} = {column} &#38; {value} 操作
      *
-     * @param func  字段名Lambda
+     * @param func 字段名Lambda
      * @param value 字段值
-     * @param <T>   值的泛型
-     *
+     * @param <T> 值的泛型
      * @return ColumnValue
-     *
      * @since 2.8.0
      */
     public static <T> ColumnValue and(LambdaFunction<T, ?> func, Serializable value) {
@@ -492,12 +437,10 @@ public class ColumnValue implements Comparable<ColumnValue> {
     /**
      * 返回 {column} = {column} | {value} 操作
      *
-     * @param func  字段名Lambda
+     * @param func 字段名Lambda
      * @param value 字段值
-     * @param <T>   值的泛型
-     *
+     * @param <T> 值的泛型
      * @return ColumnValue
-     *
      * @since 2.8.0
      */
     public static <T> ColumnValue orr(LambdaFunction<T, ?> func, Serializable value) {
@@ -537,5 +480,4 @@ public class ColumnValue implements Comparable<ColumnValue> {
     public String toString() {
         return "{\"column\":\"" + column + "\", \"express\":" + express + ", \"value\":" + value + "}";
     }
-
 }

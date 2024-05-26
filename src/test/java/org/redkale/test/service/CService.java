@@ -10,10 +10,7 @@ import org.redkale.annotation.Resource;
 import org.redkale.service.*;
 import org.redkale.util.Times;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class CService implements Service {
 
     @Resource(name = "@name")
@@ -41,7 +38,7 @@ public class CService implements Service {
         System.out.println("执行了 CService.ccCurrentTime2----异步方法2");
         if (handler != null) handler.completed(new RetResult(rs), null);
     }
-    
+
     public void mcCurrentTime3(final MyAsyncHandler<RetResult<String>, Void> handler, final String name) {
         String rs = "异步mcCurrentTime3: " + name + ": " + Times.formatTime(System.currentTimeMillis());
         System.out.println("执行了 CService.mcCurrentTime3----异步方法3");

@@ -1,23 +1,23 @@
 package org.redkale.test.convert.proto;
 
-///*
+/// *
 // * To change this license header, choose License Headers in Project Properties.
 // * To change this template file, choose Tools | Templates
 // * and open the template in the editor.
 // */
-//package org.redkalex.test.protobuf;
+// package org.redkalex.test.protobuf;
 //
-//import java.util.Arrays;
-//import org.redkale.convert.ConvertColumn;
-//import org.redkale.convert.json.JsonConvert;
-//import org.redkale.util.Utility;
-//import org.redkalex.convert.protobuf.ProtobufConvert;
+// import java.util.Arrays;
+// import org.redkale.convert.ConvertColumn;
+// import org.redkale.convert.json.JsonConvert;
+// import org.redkale.util.Utility;
+// import org.redkalex.convert.protobuf.ProtobufConvert;
 //
-///**
+/// **
 // *
 // * @author zhangjx
 // */
-//public class SimpleBean {
+// public class SimpleBean {
 //
 //    public static class PSimpleEntry {
 //
@@ -80,19 +80,22 @@ package org.redkale.test.convert.proto;
 //
 //    }
 //
-//    private static PSimpleBeanOuterClass.PSimpleBean createPSimpleBean(SimpleBean bean, PSimpleBeanOuterClass.PSimpleBean.Builder builder) {
+//    private static PSimpleBeanOuterClass.PSimpleBean createPSimpleBean(SimpleBean bean,
+// PSimpleBeanOuterClass.PSimpleBean.Builder builder) {
 //        if (builder == null) {
 //            builder = PSimpleBeanOuterClass.PSimpleBean.newBuilder();
 //        } else {
 //            builder.clear();
 //        }
-//        PSimpleBeanOuterClass.PSimpleBean.PSimpleEntry.Builder sentry = PSimpleBeanOuterClass.PSimpleBean.PSimpleEntry.newBuilder();
+//        PSimpleBeanOuterClass.PSimpleBean.PSimpleEntry.Builder sentry =
+// PSimpleBeanOuterClass.PSimpleBean.PSimpleEntry.newBuilder();
 //        sentry.setId(bean.simple.id);
 //        sentry.setName(bean.simple.name);
 //        sentry.setEmail(bean.simple.email);
 //        builder.setSimple(sentry.build());
 //
-//        PSimpleBeanOuterClass.PSimpleBean.PTwoEntry.Builder tentry = PSimpleBeanOuterClass.PSimpleBean.PTwoEntry.newBuilder();
+//        PSimpleBeanOuterClass.PSimpleBean.PTwoEntry.Builder tentry =
+// PSimpleBeanOuterClass.PSimpleBean.PTwoEntry.newBuilder();
 //        tentry.setStatus(bean.two.status);
 //        tentry.setCreatetime(bean.two.createtime);
 //        builder.setTwo(tentry.build());
@@ -102,4 +105,4 @@ package org.redkale.test.convert.proto;
 //        PSimpleBeanOuterClass.PSimpleBean bean2 = builder.build();
 //        return bean2;
 //    }
-//}
+// }

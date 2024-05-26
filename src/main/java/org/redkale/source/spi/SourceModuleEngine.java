@@ -49,26 +49,23 @@ import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class SourceModuleEngine extends ModuleEngine implements SourceManager {
 
-    //Source 原始的配置资源, 只会存在redkale.datasource(.|[) redkale.cachesource(.|[)开头的配置项
+    // Source 原始的配置资源, 只会存在redkale.datasource(.|[) redkale.cachesource(.|[)开头的配置项
     private final Properties sourceProperties = new Properties();
 
-    //CacheSource 资源
+    // CacheSource 资源
     private final List<CacheSource> cacheSources = new CopyOnWriteArrayList<>();
 
     private final ReentrantLock cacheSourceLock = new ReentrantLock();
 
-    //DataSource 资源
+    // DataSource 资源
     private final List<DataSource> dataSources = new CopyOnWriteArrayList<>();
 
     private final ReentrantLock dataSourceLock = new ReentrantLock();
 
-    //原生sql解析器
+    // 原生sql解析器
     DataNativeSqlParser nativeSqlParser;
 
     public SourceModuleEngine(Application application) {
@@ -79,10 +76,9 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
      * 判断模块的配置项合并策略， 返回null表示模块不识别此配置项
      *
      * @param path 配置项路径
-     * @param key  配置项名称
+     * @param key 配置项名称
      * @param val1 配置项原值
      * @param val2 配置项新值
-     *
      * @return MergeEnum
      */
     @Override
@@ -96,16 +92,18 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
         return null;
     }
 
-    /**
-     * 配置项加载后被调用
-     */
+    /** 配置项加载后被调用 */
     @Override
     public void onEnvironmentLoaded(Properties allProps) {
         allProps.forEach((key, val) -> {
-            if (key.toString().startsWith("redkale.datasource.") || key.toString().startsWith("redkale.datasource[")
-                || key.toString().startsWith("redkale.cachesource.") || key.toString().startsWith("redkale.cachesource[")) {
+            if (key.toString().startsWith("redkale.datasource.")
+                    || key.toString().startsWith("redkale.datasource[")
+                    || key.toString().startsWith("redkale.cachesource.")
+                    || key.toString().startsWith("redkale.cachesource[")) {
                 if (key.toString().endsWith(".name")) {
-                    logger.log(Level.WARNING, "skip illegal key " + key + " in source config, key cannot endsWith '.name'");
+                    logger.log(
+                            Level.WARNING,
+                            "skip illegal key " + key + " in source config, key cannot endsWith '.name'");
                 } else {
                     this.sourceProperties.put(key, val);
                 }
@@ -113,29 +111,30 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
         });
     }
 
-    /**
-     * 结束Application.init方法前被调用
-     */
+    /** 结束Application.init方法前被调用 */
     @Override
     public void onAppPostInit() {
-        //加载原生sql解析器
-        Iterator<DataNativeSqlParserProvider> it = ServiceLoader.load(DataNativeSqlParserProvider.class, application.getClassLoader()).iterator();
+        // 加载原生sql解析器
+        Iterator<DataNativeSqlParserProvider> it = ServiceLoader.load(
+                        DataNativeSqlParserProvider.class, application.getClassLoader())
+                .iterator();
         RedkaleClassLoader.putServiceLoader(DataNativeSqlParserProvider.class);
         List<DataNativeSqlParserProvider> providers = new ArrayList<>();
         while (it.hasNext()) {
             DataNativeSqlParserProvider provider = it.next();
             if (provider != null && provider.acceptsConf(null)) {
-                RedkaleClassLoader.putReflectionPublicConstructors(provider.getClass(), provider.getClass().getName());
+                RedkaleClassLoader.putReflectionPublicConstructors(
+                        provider.getClass(), provider.getClass().getName());
                 providers.add(provider);
             }
         }
         for (DataNativeSqlParserProvider provider : InstanceProvider.sort(providers)) {
             this.nativeSqlParser = provider.createInstance();
             this.resourceFactory.register(DataNativeSqlParser.class, this.nativeSqlParser);
-            break;  //only first provider
+            break; // only first provider
         }
         resourceFactory.register(SourceManager.class, this);
-        //--------------------------------- 注册 DataSource、CacheSource ---------------------------------        
+        // --------------------------------- 注册 DataSource、CacheSource ---------------------------------
         resourceFactory.register(new DataSourceLoader());
         resourceFactory.register(new CacheSourceLoader());
         resourceFactory.register(new DataSqlMapperLoader());
@@ -145,7 +144,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
      * 配置项变更时被调用
      *
      * @param namespace 命名空间
-     * @param events    变更项
+     * @param events 变更项
      */
     @Override
     public void onEnvironmentChanged(String namespace, List<ResourceEvent> events) {
@@ -153,11 +152,15 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
         Properties sourceChangedProps = new Properties();
 
         for (ResourceEvent<String> event : events) {
-            if (event.name().startsWith("redkale.datasource.") || event.name().startsWith("redkale.datasource[")
-                || event.name().startsWith("redkale.cachesource.") || event.name().startsWith("redkale.cachesource[")) {
+            if (event.name().startsWith("redkale.datasource.")
+                    || event.name().startsWith("redkale.datasource[")
+                    || event.name().startsWith("redkale.cachesource.")
+                    || event.name().startsWith("redkale.cachesource[")) {
                 if (event.name().endsWith(".name")) {
-                    logger.log(Level.WARNING, "skip illegal key " + event.name()
-                        + " in source config " + (namespace == null ? "" : namespace) + ", key cannot endsWith '.name'");
+                    logger.log(
+                            Level.WARNING,
+                            "skip illegal key " + event.name() + " in source config "
+                                    + (namespace == null ? "" : namespace) + ", key cannot endsWith '.name'");
                 } else {
                     if (!Objects.equals(event.newValue(), this.sourceProperties.getProperty(event.name()))) {
                         if (event.newValue() == null) {
@@ -171,7 +174,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                 }
             }
         }
-        //数据源配置项的变更
+        // 数据源配置项的变更
         if (!sourceChangedProps.isEmpty() || !sourceRemovedKeys.isEmpty()) {
             Set<String> cacheSourceNames = new LinkedHashSet<>();
             Set<String> dataSourceNames = new LinkedHashSet<>();
@@ -201,22 +204,26 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                     }
                 }
             }
-            //更新缓存
+            // 更新缓存
             onSourceChanged("cachesource", cacheSourceNames, cacheSources, sourceRemovedKeys, sourceChangedProps);
-            //更新数据库 
+            // 更新数据库
             onSourceChanged("datasource", dataSourceNames, dataSources, sourceRemovedKeys, sourceChangedProps);
-            //更新到内存配置
+            // 更新到内存配置
             sourceRemovedKeys.forEach(this.sourceProperties::remove);
             this.sourceProperties.putAll(sourceChangedProps);
         }
     }
 
-    private void onSourceChanged(String sourceType, Set<String> sourceNames, List<? extends Resourcable> sources,
-        Set<String> sourceRemovedKeys, Properties sourceChangedProps) {
+    private void onSourceChanged(
+            String sourceType,
+            Set<String> sourceNames,
+            List<? extends Resourcable> sources,
+            Set<String> sourceRemovedKeys,
+            Properties sourceChangedProps) {
         for (String sourceName : sourceNames) {
             Object source = Utility.find(sources, s -> Objects.equals(s.resourceName(), sourceName));
             if (source == null) {
-                continue;  //多余的数据源
+                continue; // 多余的数据源
             }
             AnyValueWriter old = (AnyValueWriter) findSourceConfig(sourceName, sourceType);
             Properties newProps = new Properties();
@@ -235,7 +242,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                     }
                 }
                 if (pos < 0) {
-                    return; //不是同一name数据源配置项
+                    return; // 不是同一name数据源配置项
                 }
                 newProps.put(k, v);
             });
@@ -255,10 +262,11 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                     }
                 }
                 if (pos < 0) {
-                    return; //不是同一name数据源配置项
+                    return; // 不是同一name数据源配置项
                 }
                 newProps.put(k, v);
-                changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), v, this.sourceProperties.getProperty(key)));
+                changeEvents.add(ResourceEvent.create(
+                        key.substring(prefix.length()), v, this.sourceProperties.getProperty(key)));
             });
             sourceRemovedKeys.forEach(k -> {
                 final String key = k;
@@ -277,14 +285,17 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                 if (pos < 0) {
                     return;
                 }
-                newProps.remove(k); //不是同一name数据源配置项
-                changeEvents.add(ResourceEvent.create(key.substring(prefix.length()), null, this.sourceProperties.getProperty(key)));
+                newProps.remove(k); // 不是同一name数据源配置项
+                changeEvents.add(ResourceEvent.create(
+                        key.substring(prefix.length()), null, this.sourceProperties.getProperty(key)));
             });
             if (!changeEvents.isEmpty()) {
                 AnyValueWriter back = old == null ? null : old.copy();
                 try {
                     if (old != null) {
-                        AnyValue parent = AnyValue.loadFromProperties(newProps).getAnyValue("redkale").getAnyValue(sourceType);
+                        AnyValue parent = AnyValue.loadFromProperties(newProps)
+                                .getAnyValue("redkale")
+                                .getAnyValue(sourceType);
                         AnyValue sub = parent.getAnyValue(sourceName);
                         if (sub == null && sourceName.isEmpty()) {
                             ((AnyValueWriter) parent).clearAnyEntrys();
@@ -293,13 +304,15 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                         old.replace(sub);
                     }
                     if (source instanceof AbstractDataSource) {
-                        ((AbstractDataSource) source).onResourceChange(changeEvents.toArray(new ResourceEvent[changeEvents.size()]));
+                        ((AbstractDataSource) source)
+                                .onResourceChange(changeEvents.toArray(new ResourceEvent[changeEvents.size()]));
                     } else if (source instanceof AbstractCacheSource) {
-                        ((AbstractCacheSource) source).onResourceChange(changeEvents.toArray(new ResourceEvent[changeEvents.size()]));
+                        ((AbstractCacheSource) source)
+                                .onResourceChange(changeEvents.toArray(new ResourceEvent[changeEvents.size()]));
                     }
                 } catch (RuntimeException e) {
                     if (old != null) {
-                        old.replace(back);  //还原配置
+                        old.replace(back); // 还原配置
                     }
                     throw e;
                 }
@@ -307,9 +320,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
         }
     }
 
-    /**
-     * 服务全部停掉后被调用
-     */
+    /** 服务全部停掉后被调用 */
     @Override
     public void onServersPostStop() {
         for (DataSource source : dataSources) {
@@ -319,7 +330,8 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
             try {
                 if (source instanceof Service) {
                     long s = System.currentTimeMillis();
-                    ((Service) source).destroy(Sncp.isSncpDyn((Service) source) ? Sncp.getResourceConf((Service) source) : null);
+                    ((Service) source)
+                            .destroy(Sncp.isSncpDyn((Service) source) ? Sncp.getResourceConf((Service) source) : null);
                     logger.info(source + " destroy in " + (System.currentTimeMillis() - s) + " ms");
                 }
             } catch (Exception e) {
@@ -333,7 +345,8 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
             try {
                 if (source instanceof Service) {
                     long s = System.currentTimeMillis();
-                    ((Service) source).destroy(Sncp.isSncpDyn((Service) source) ? Sncp.getResourceConf((Service) source) : null);
+                    ((Service) source)
+                            .destroy(Sncp.isSncpDyn((Service) source) ? Sncp.getResourceConf((Service) source) : null);
                     logger.info(source + " destroy in " + (System.currentTimeMillis() - s) + " ms");
                 }
             } catch (Exception e) {
@@ -374,25 +387,32 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                 if (!application.isCompileMode() && source instanceof Service) {
                     ((Service) source).init(sourceConf);
                 }
-                logger.info("Load CacheSource resourceName = '" + sourceName
-                    + "', source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
+                logger.info("Load CacheSource resourceName = '" + sourceName + "', source = " + source + " in "
+                        + (System.currentTimeMillis() - st) + " ms");
                 return source;
             }
-            if (!sourceConf.getValue(AbstractCacheSource.CACHE_SOURCE_RESOURCE, "").isEmpty()) {
-                CacheSource source = loadCacheSource(sourceConf.getValue(AbstractCacheSource.CACHE_SOURCE_RESOURCE), autoMemory);
+            if (!sourceConf
+                    .getValue(AbstractCacheSource.CACHE_SOURCE_RESOURCE, "")
+                    .isEmpty()) {
+                CacheSource source =
+                        loadCacheSource(sourceConf.getValue(AbstractCacheSource.CACHE_SOURCE_RESOURCE), autoMemory);
                 if (source != null) {
                     resourceFactory.register(sourceName, CacheSource.class, source);
                 }
                 return source;
             }
             try {
-                CacheSource source = AbstractCacheSource.createCacheSource(application.getServerClassLoader(),
-                    resourceFactory, sourceConf, sourceName, application.isCompileMode());
+                CacheSource source = AbstractCacheSource.createCacheSource(
+                        application.getServerClassLoader(),
+                        resourceFactory,
+                        sourceConf,
+                        sourceName,
+                        application.isCompileMode());
 
                 cacheSources.add(source);
                 resourceFactory.register(sourceName, CacheSource.class, source);
-                logger.info("Load CacheSource resourceName = '" + sourceName
-                    + "', source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
+                logger.info("Load CacheSource resourceName = '" + sourceName + "', source = " + source + " in "
+                        + (System.currentTimeMillis() - st) + " ms");
                 return source;
             } catch (RuntimeException ex) {
                 throw ex;
@@ -438,8 +458,8 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                 }
                 dataSources.add(source);
                 resourceFactory.register(sourceName, DataSource.class, source);
-                logger.info("Load DataSource resourceName = '" + sourceName
-                    + "', source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
+                logger.info("Load DataSource resourceName = '" + sourceName + "', source = " + source + " in "
+                        + (System.currentTimeMillis() - st) + " ms");
                 return source;
             }
             if (!sourceConf.getValue(DataSources.DATA_SOURCE_RESOURCE, "").isEmpty()) {
@@ -460,8 +480,12 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                 return source;
             }
             try {
-                DataSource source = DataSources.createDataSource(application.getServerClassLoader(),
-                    resourceFactory, sourceConf, sourceName, application.isCompileMode());
+                DataSource source = DataSources.createDataSource(
+                        application.getServerClassLoader(),
+                        resourceFactory,
+                        sourceConf,
+                        sourceName,
+                        application.isCompileMode());
 
                 if (!application.isCompileMode() && source instanceof Service) {
                     resourceFactory.inject(sourceName, source);
@@ -479,8 +503,8 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                         resourceFactory.register(sourceName, DataJdbcSource.class, source);
                     }
                 }
-                logger.info("Load DataSource resourceName = '" + sourceName
-                    + "', source = " + source + " in " + (System.currentTimeMillis() - st) + " ms");
+                logger.info("Load DataSource resourceName = '" + sourceName + "', source = " + source + " in "
+                        + (System.currentTimeMillis() - st) + " ms");
                 return source;
             } catch (RuntimeException ex) {
                 throw ex;
@@ -524,10 +548,16 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
     private class DataSqlMapperLoader implements ResourceTypeLoader {
 
         @Override
-        public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+        public Object load(
+                ResourceFactory rf,
+                String srcResourceName,
+                Object srcObj,
+                String resourceName,
+                Field field,
+                Object attachment) {
             try {
                 if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
-                    return null; //远程模式不得注入
+                    return null; // 远程模式不得注入
                 }
                 Class<? extends DataSqlMapper> mapperType = (Class) field.getType();
                 DataSqlMapper old = resourceFactory.find(resourceName, mapperType);
@@ -535,7 +565,8 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                     return old;
                 }
                 DataSource source = loadDataSource(resourceName, false);
-                DataSqlMapper mapper = DataSqlMapperBuilder.createMapper(nativeSqlParser, (DataSqlSource) source, mapperType);
+                DataSqlMapper mapper =
+                        DataSqlMapperBuilder.createMapper(nativeSqlParser, (DataSqlSource) source, mapperType);
                 resourceFactory.register(resourceName, mapperType, mapper);
                 field.set(srcObj, mapper);
                 return mapper;
@@ -554,10 +585,16 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
     private class DataSourceLoader implements ResourceTypeLoader {
 
         @Override
-        public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+        public Object load(
+                ResourceFactory rf,
+                String srcResourceName,
+                Object srcObj,
+                String resourceName,
+                Field field,
+                Object attachment) {
             try {
                 if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
-                    return null; //远程模式不得注入
+                    return null; // 远程模式不得注入
                 }
                 DataSource source = loadDataSource(resourceName, false);
                 field.set(srcObj, source);
@@ -577,10 +614,16 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
     private class CacheSourceLoader implements ResourceTypeLoader {
 
         @Override
-        public Object load(ResourceFactory rf, String srcResourceName, Object srcObj, String resourceName, Field field, Object attachment) {
+        public Object load(
+                ResourceFactory rf,
+                String srcResourceName,
+                Object srcObj,
+                String resourceName,
+                Field field,
+                Object attachment) {
             try {
                 if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
-                    return null; //远程模式不得注入
+                    return null; // 远程模式不得注入
                 }
                 if (srcObj instanceof Servlet) {
                     throw new RedkaleException("CacheSource cannot inject in Servlet " + srcObj);
@@ -592,8 +635,9 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                 if (res != null && res.required() && source == null) {
                     throw new RedkaleException("CacheSource (resourceName = '" + resourceName + "') not found");
                 } else {
-                    logger.info("Load CacheSource (type = " + (source == null ? null : source.getClass().getSimpleName())
-                        + ", resourceName = '" + resourceName + "')");
+                    logger.info("Load CacheSource (type = "
+                            + (source == null ? null : source.getClass().getSimpleName()) + ", resourceName = '"
+                            + resourceName + "')");
                 }
                 return source;
             } catch (Exception e) {
@@ -612,5 +656,4 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
             return false;
         }
     }
-
 }

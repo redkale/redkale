@@ -5,16 +5,19 @@
  */
 package org.redkale.annotation;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 
 /**
  * &#64;Resource资源被更新时的监听事件, 本注解只能标记在方法参数为ResourceEvent[]上 <br>
  * 注意: 一个类只能存在一个&#64;ResourceChanged的方法， 多余的会被忽略 <br>
  * 方法在资源被更新以后调用。
  *
- * <blockquote><pre>
+ * <blockquote>
+ *
+ * <pre>
  * public class RecordService implements Service {
  *
  *    &#64;Resource(name = "record.id")
@@ -39,10 +42,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *      factory.register("record.name", "my new name");
  *  }
  * }
- * </pre></blockquote>
+ * </pre>
  *
- * <p>
- * 详情见: https://redkale.org
+ * </blockquote>
+ *
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -53,8 +57,7 @@ public @interface ResourceChanged {
 
     /**
      * 新旧值是否不同时才回调方法 <br>
-     * true: 新值与旧值不同时才回调ResourceChanged方法
-     * false: 只要执行了ResourceFactory.register 就回调ResourceChanged方法
+     * true: 新值与旧值不同时才回调ResourceChanged方法 false: 只要执行了ResourceFactory.register 就回调ResourceChanged方法
      *
      * @since 2.7.0
      * @return boolean

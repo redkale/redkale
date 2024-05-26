@@ -5,6 +5,8 @@
  */
 package org.redkale.net;
 
+import static org.redkale.net.AsyncGroup.UDP_BUFFER_CAPACITY;
+
 import java.io.*;
 import java.net.*;
 import java.nio.charset.Charset;
@@ -15,13 +17,9 @@ import java.util.logging.*;
 import javax.net.ssl.SSLContext;
 import org.redkale.boot.Application;
 import org.redkale.inject.ResourceFactory;
-import static org.redkale.net.AsyncGroup.UDP_BUFFER_CAPACITY;
-import org.redkale.net.Filter;
 import org.redkale.util.*;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -31,86 +29,96 @@ import org.redkale.util.*;
  * @param <P> Response
  * @param <S> Servlet
  */
-public abstract class Server<K extends Serializable, C extends Context, R extends Request<C>, P extends Response<C, R>, S extends Servlet<C, R, P>> {
+public abstract class Server<
+        K extends Serializable,
+        C extends Context,
+        R extends Request<C>,
+        P extends Response<C, R>,
+        S extends Servlet<C, R, P>> {
 
     public static final String RESNAME_SERVER_ROOT = "SERVER_ROOT";
 
-    //@Deprecated  //@deprecated 2.3.0 使用RESNAME_APP_EXECUTOR
-    //public static final String RESNAME_SERVER_EXECUTOR2 = "SERVER_EXECUTOR";
-    //public static final String RESNAME_SERVER_RESFACTORY = "SERVER_RESFACTORY";
+    // @Deprecated  //@deprecated 2.3.0 使用RESNAME_APP_EXECUTOR
+    // public static final String RESNAME_SERVER_EXECUTOR2 = "SERVER_EXECUTOR";
+    // public static final String RESNAME_SERVER_RESFACTORY = "SERVER_RESFACTORY";
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
-    //-------------------------------------------------------------
-    //Application
+    // -------------------------------------------------------------
+    // Application
     protected Application application;
 
-    //服务的启动时间
+    // 服务的启动时间
     protected final long serverStartTime;
 
-    //服务的名称
+    // 服务的名称
     protected String name;
 
-    //应用层协议名
+    // 应用层协议名
     protected final String netprotocol;
 
-    //依赖注入工厂类
+    // 依赖注入工厂类
     protected final ResourceFactory resourceFactory;
 
-    //服务的根Servlet
+    // 服务的根Servlet
     protected final DispatcherServlet<K, C, R, P, S> dispatcher;
 
-    //ClassLoader
+    // ClassLoader
     protected RedkaleClassLoader serverClassLoader;
 
-    //SSL
+    // SSL
     protected SSLBuilder sslBuilder;
 
-    //SSL
+    // SSL
     protected SSLContext sslContext;
 
-    //服务的上下文对象
+    // 服务的上下文对象
     protected C context;
 
-    //服务的配置信息
+    // 服务的配置信息
     protected AnyValue config;
 
-    //服务数据的编解码，null视为UTF-8
+    // 服务数据的编解码，null视为UTF-8
     protected Charset charset;
 
-    //服务的监听端口
+    // 服务的监听端口
     protected InetSocketAddress address;
 
-    //连接队列大小
+    // 连接队列大小
     protected int backlog;
 
-    //传输层协议的服务
+    // 传输层协议的服务
     protected ProtocolServer serverChannel;
 
-    //ByteBuffer的容量大小
+    // ByteBuffer的容量大小
     protected int bufferCapacity;
 
-    //ByteBuffer池大小
+    // ByteBuffer池大小
     protected int bufferPoolSize;
 
-    //Response池大小
+    // Response池大小
     protected int responsePoolSize;
 
-    //最大连接数, 为0表示没限制
+    // 最大连接数, 为0表示没限制
     protected int maxConns;
 
-    //请求包大小的上限，单位:字节
+    // 请求包大小的上限，单位:字节
     protected int maxBody;
 
-    //Keep-Alive IO读取的超时秒数，小于1视为不设置
+    // Keep-Alive IO读取的超时秒数，小于1视为不设置
     protected int aliveTimeoutSeconds;
 
-    //IO读取的超时秒数，小于1视为不设置
+    // IO读取的超时秒数，小于1视为不设置
     protected int readTimeoutSeconds;
 
-    //IO写入 的超时秒数，小于1视为不设置
+    // IO写入 的超时秒数，小于1视为不设置
     protected int writeTimeoutSeconds;
 
-    protected Server(Application application, long serverStartTime, String netprotocol, ResourceFactory resourceFactory, DispatcherServlet<K, C, R, P, S> servlet) {
+    protected Server(
+            Application application,
+            long serverStartTime,
+            String netprotocol,
+            ResourceFactory resourceFactory,
+            DispatcherServlet<K, C, R, P, S> servlet) {
         this.application = application;
         this.serverStartTime = serverStartTime;
         this.netprotocol = netprotocol;
@@ -129,12 +137,21 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.readTimeoutSeconds = config.getIntValue("readTimeoutSeconds", 0);
         this.writeTimeoutSeconds = config.getIntValue("writeTimeoutSeconds", 0);
         this.backlog = parseLenth(config.getValue("backlog"), 1024);
-        this.maxBody = parseLenth(config.getValue("maxbody"), "UDP".equalsIgnoreCase(netprotocol) ? 16 * 1024 : 256 * 1024);
-        int bufCapacity = parseLenth(config.getValue("bufferCapacity"), "UDP".equalsIgnoreCase(netprotocol) ? UDP_BUFFER_CAPACITY : 32 * 1024);
-        this.bufferCapacity = "UDP".equalsIgnoreCase(netprotocol) ? bufCapacity : (bufCapacity < 1024 ? 1024 : bufCapacity);
+        this.maxBody =
+                parseLenth(config.getValue("maxbody"), "UDP".equalsIgnoreCase(netprotocol) ? 16 * 1024 : 256 * 1024);
+        int bufCapacity = parseLenth(
+                config.getValue("bufferCapacity"),
+                "UDP".equalsIgnoreCase(netprotocol) ? UDP_BUFFER_CAPACITY : 32 * 1024);
+        this.bufferCapacity =
+                "UDP".equalsIgnoreCase(netprotocol) ? bufCapacity : (bufCapacity < 1024 ? 1024 : bufCapacity);
         this.bufferPoolSize = config.getIntValue("bufferPoolSize", Utility.cpus() * 8);
         this.responsePoolSize = config.getIntValue("responsePoolSize", 1024);
-        this.name = config.getValue("name", "Server-" + config.getValue("protocol", netprotocol).replaceFirst("\\..+", "").toUpperCase() + "-" + this.address.getPort());
+        this.name = config.getValue(
+                "name",
+                "Server-"
+                        + config.getValue("protocol", netprotocol)
+                                .replaceFirst("\\..+", "")
+                                .toUpperCase() + "-" + this.address.getPort());
         if (!this.name.matches("^[a-zA-Z][\\w_-]{1,64}$")) {
             throw new RedkaleException("server.name (" + this.name + ") is illegal");
         }
@@ -148,7 +165,10 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
                 ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
                 Class clazz = classLoader.loadClass(builderClass);
                 RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());
-                builder = ((SSLBuilder) classLoader.loadClass(builderClass).getDeclaredConstructor().newInstance());
+                builder = ((SSLBuilder) classLoader
+                        .loadClass(builderClass)
+                        .getDeclaredConstructor()
+                        .newInstance());
             }
             this.resourceFactory.inject(builder);
             SSLContext sslc = builder.createSSLContext(this, sslConf);
@@ -156,11 +176,13 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
                 this.sslBuilder = builder;
                 this.sslContext = sslc;
                 final boolean dtls = sslc.getProtocol().toUpperCase().startsWith("DTLS");
-                //SSL模式下， size必须大于 5+16+16384+256+48+(isDTLS?0:16384) = 16k*1/2+325 = 16709/33093  见: sun.security.ssl.SSLRecord.maxLargeRecordSize
+                // SSL模式下， size必须大于 5+16+16384+256+48+(isDTLS?0:16384) = 16k*1/2+325 = 16709/33093  见:
+                // sun.security.ssl.SSLRecord.maxLargeRecordSize
                 int maxLen = dtls ? 16709 : 33093;
                 if (maxLen > this.bufferCapacity) {
-                    int newLen = dtls ? (17 * 1024) : (33 * 1024); //取个1024的整倍数
-                    logger.info(this.getClass().getSimpleName() + " change bufferCapacity " + this.bufferCapacity + " to " + newLen + " for SSL size " + maxLen);
+                    int newLen = dtls ? (17 * 1024) : (33 * 1024); // 取个1024的整倍数
+                    logger.info(this.getClass().getSimpleName() + " change bufferCapacity " + this.bufferCapacity
+                            + " to " + newLen + " for SSL size " + maxLen);
                     this.bufferCapacity = newLen;
                 }
             }
@@ -302,7 +324,8 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     }
 
     public void start() throws IOException {
-        this.dispatcher.init(this.context, config); //不能在init方法内执行，因Server.init执行后会调用loadService,loadServlet, 再执行Server.start
+        this.dispatcher.init(
+                this.context, config); // 不能在init方法内执行，因Server.init执行后会调用loadService,loadServlet, 再执行Server.start
         this.postPrepareInit();
         this.serverChannel = ProtocolServer.create(this.netprotocol, context, this.serverClassLoader);
         this.resourceFactory.inject(this.serverChannel);
@@ -311,7 +334,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         SocketAddress localAddress = serverChannel.getLocalAddress();
         if (localAddress instanceof InetSocketAddress && !Objects.equals(localAddress, this.address)) {
             this.address = (InetSocketAddress) localAddress;
-            //this.context.updateServerAddress(this.address);
+            // this.context.updateServerAddress(this.address);
         }
         serverChannel.accept(application, this);
         postStart();
@@ -319,25 +342,25 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         int workThreads = 0;
         if (workExecutor instanceof ThreadPoolExecutor) {
             workThreads = ((ThreadPoolExecutor) workExecutor).getCorePoolSize();
-        } else if (workExecutor != null) { //virtual thread pool
+        } else if (workExecutor != null) { // virtual thread pool
             workThreads = -1;
         }
-        logger.info(this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(netprotocol) ? "" : ("." + netprotocol)) + " listen: " + (address.getHostString() + ":" + address.getPort())
-            + ", cpu: " + Utility.cpus() + ", workThreads: " + (workThreads >= 0 ? workThreads : "[virtual]")
-            + ", responsePoolSize: " + responsePoolSize + ", bufferPoolSize: " + bufferPoolSize
-            + ", bufferCapacity: " + formatLenth(bufferCapacity) + ", maxbody: " + formatLenth(context.maxBody) + startExtLog()
-            + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms\r\n");
+        logger.info(this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(netprotocol) ? "" : ("." + netprotocol))
+                + " listen: " + (address.getHostString() + ":" + address.getPort())
+                + ", cpu: " + Utility.cpus() + ", workThreads: " + (workThreads >= 0 ? workThreads : "[virtual]")
+                + ", responsePoolSize: " + responsePoolSize + ", bufferPoolSize: " + bufferPoolSize
+                + ", bufferCapacity: " + formatLenth(bufferCapacity) + ", maxbody: " + formatLenth(context.maxBody)
+                + startExtLog()
+                + ", started in " + (System.currentTimeMillis() - context.getServerStartTime()) + " ms\r\n");
     }
 
     protected String startExtLog() {
         return "";
     }
 
-    protected void postPrepareInit() {
-    }
+    protected void postPrepareInit() {}
 
-    protected void postStart() {
-    }
+    protected void postStart() {}
 
     public void changeAddress(Application application, final InetSocketAddress addr) throws IOException {
         long s = System.currentTimeMillis();
@@ -362,7 +385,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.address = context.serverAddress;
         this.serverChannel = newServerChannel;
         logger.info(this.getClass().getSimpleName() + ("TCP".equalsIgnoreCase(netprotocol) ? "" : ("." + netprotocol))
-            + " change address listen: " + address + ", started in " + (System.currentTimeMillis() - s) + " ms");
+                + " change address listen: " + address + ", started in " + (System.currentTimeMillis() - s) + " ms");
         if (oldServerChannel != null) {
             new Thread() {
 
@@ -447,11 +470,13 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         contextConfig.writeTimeoutSeconds = this.writeTimeoutSeconds;
     }
 
-    //必须在 createContext()之后调用
-    protected abstract ByteBufferPool createSafeBufferPool(LongAdder createCounter, LongAdder cycleCounter, int bufferPoolSize);
+    // 必须在 createContext()之后调用
+    protected abstract ByteBufferPool createSafeBufferPool(
+            LongAdder createCounter, LongAdder cycleCounter, int bufferPoolSize);
 
-    //必须在 createContext()之后调用
-    protected abstract ObjectPool<P> createSafeResponsePool(LongAdder createCounter, LongAdder cycleCounter, int responsePoolSize);
+    // 必须在 createContext()之后调用
+    protected abstract ObjectPool<P> createSafeResponsePool(
+            LongAdder createCounter, LongAdder cycleCounter, int responsePoolSize);
 
     public void shutdown() throws IOException {
         long s = System.currentTimeMillis();
@@ -459,7 +484,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         try {
             this.serverChannel.close();
         } catch (Exception e) {
-            //do nothing
+            // do nothing
         }
         logger.info(this.getClass().getSimpleName() + "-" + this.netprotocol + " shutdow prepare servlet");
         this.dispatcher.destroy(this.context, config);
@@ -475,7 +500,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         this.serverClassLoader = serverClassLoader;
     }
 
-    //必须在Server.start执行后才能调用此方法
+    // 必须在Server.start执行后才能调用此方法
     public AsyncGroup getAsyncGroup() {
         if (this.serverChannel == null) {
             throw new RedkaleException("Server is not running");
@@ -486,9 +511,8 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     /**
      * 判断是否存在Filter
      *
-     * @param <T>         泛型
+     * @param <T> 泛型
      * @param filterClass Filter类
-     *
      * @return boolean
      */
     public <T extends Filter> boolean containsFilter(Class<T> filterClass) {
@@ -498,9 +522,8 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     /**
      * 判断是否存在Filter
      *
-     * @param <T>             泛型
+     * @param <T> 泛型
      * @param filterClassName Filter类
-     *
      * @return boolean
      */
     public <T extends Filter> boolean containsFilter(String filterClassName) {
@@ -510,7 +533,7 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
     /**
      * 销毁Servlet
      *
-     * @param <T>    泛型
+     * @param <T> 泛型
      * @param filter Filter
      */
     public <T extends Filter> void destroyFilter(T filter) {
@@ -521,7 +544,6 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
      * 判断是否存在Servlet
      *
      * @param servletClass Servlet类
-     *
      * @return boolean
      */
     public boolean containsServlet(Class<? extends S> servletClass) {
@@ -532,7 +554,6 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
      * 判断是否存在Servlet
      *
      * @param servletClassName Servlet类
-     *
      * @return boolean
      */
     public boolean containsServlet(String servletClassName) {
@@ -548,17 +569,17 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         servlet.destroy(context, this.dispatcher.getServletConf(servlet));
     }
 
-    //创建数
+    // 创建数
     public long getCreateConnectionCount() {
         return serverChannel == null ? -1 : serverChannel.getCreateConnectionCount();
     }
 
-    //关闭数
+    // 关闭数
     public long getClosedConnectionCount() {
         return serverChannel == null ? -1 : serverChannel.getClosedConnectionCount();
     }
 
-    //在线数
+    // 在线数
     public long getLivingConnectionCount() {
         return serverChannel == null ? -1 : serverChannel.getLivingConnectionCount();
     }
@@ -604,5 +625,4 @@ public abstract class Server<K extends Serializable, C extends Context, R extend
         list.sort((URL o1, URL o2) -> o1.getFile().compareTo(o2.getFile()));
         return list.toArray(new URL[list.size()]);
     }
-
 }

@@ -8,8 +8,7 @@ import java.sql.Connection;
 /**
  * 用于获取jdbc的物理连接对象
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.8.0

@@ -8,21 +8,20 @@ package org.redkale.boot;
 /**
  * NodeServer的拦截类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
 public class NodeInterceptor {
 
-    /** *
-     * Server.start之前调用 <br>
+    /**
+     * * Server.start之前调用 <br>
      * NodeServer.start的部署是先执行NodeInterceptor.preStart，再执行 Server.start 方法
      *
      * @param server NodeServer
      */
     public void preStart(NodeServer server) {
-        //do nothing
+        // do nothing
     }
 
     /**
@@ -32,7 +31,6 @@ public class NodeInterceptor {
      * @param server NodeServer
      */
     public void preShutdown(NodeServer server) {
-        //do nothing
+        // do nothing
     }
-
 }

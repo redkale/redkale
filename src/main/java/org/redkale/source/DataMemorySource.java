@@ -10,23 +10,18 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import org.redkale.annotation.AutoLoad;
+import org.redkale.annotation.ResourceChanged;
 import org.redkale.annotation.ResourceType;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.service.Local;
 import org.redkale.util.*;
-import org.redkale.annotation.ResourceChanged;
 
-/**
- *
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 /**
  * DataSource的Memory实现类 <br>
  * 注意: url 需要指定为 memory:datasource
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
@@ -49,16 +44,16 @@ public class DataMemorySource extends AbstractDataSource {
     @Override
     @ResourceChanged
     public void onResourceChange(ResourceEvent[] events) {
-        //do nothing
+        // do nothing
     }
 
     public static boolean acceptsConf(AnyValue config) {
         return config.getValue(DataSources.DATA_SOURCE_URL).startsWith("memory:");
     }
-//
-//    public static boolean isSearchType(AnyValue config) {
-//        return config.getValue(DATA_SOURCE_URL).startsWith("memory:search");
-//    }
+    //
+    //    public static boolean isSearchType(AnyValue config) {
+    //        return config.getValue(DATA_SOURCE_URL).startsWith("memory:search");
+    //    }
 
     @Local
     @Override
@@ -165,7 +160,8 @@ public class DataMemorySource extends AbstractDataSource {
     }
 
     @Override
-    public <T> CompletableFuture<Integer> updateColumnAsync(Class<T> clazz, Serializable pk, String column, Serializable value) {
+    public <T> CompletableFuture<Integer> updateColumnAsync(
+            Class<T> clazz, Serializable pk, String column, Serializable value) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -175,7 +171,8 @@ public class DataMemorySource extends AbstractDataSource {
     }
 
     @Override
-    public <T> CompletableFuture<Integer> updateColumnAsync(Class<T> clazz, String column, Serializable value, FilterNode node) {
+    public <T> CompletableFuture<Integer> updateColumnAsync(
+            Class<T> clazz, String column, Serializable value, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -195,7 +192,8 @@ public class DataMemorySource extends AbstractDataSource {
     }
 
     @Override
-    public <T> CompletableFuture<Integer> updateColumnAsync(Class<T> clazz, FilterNode node, Flipper flipper, ColumnValue... values) {
+    public <T> CompletableFuture<Integer> updateColumnAsync(
+            Class<T> clazz, FilterNode node, Flipper flipper, ColumnValue... values) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -215,47 +213,56 @@ public class DataMemorySource extends AbstractDataSource {
     }
 
     @Override
-    public CompletableFuture<Number> getNumberResultAsync(Class entityClass, FilterFunc func, Number defVal, String column, FilterNode node) {
+    public CompletableFuture<Number> getNumberResultAsync(
+            Class entityClass, FilterFunc func, Number defVal, String column, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public <N extends Number> Map<String, N> getNumberMap(Class entityClass, FilterNode node, FilterFuncColumn... columns) {
+    public <N extends Number> Map<String, N> getNumberMap(
+            Class entityClass, FilterNode node, FilterFuncColumn... columns) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(Class entityClass, FilterNode node, FilterFuncColumn... columns) {
+    public <N extends Number> CompletableFuture<Map<String, N>> getNumberMapAsync(
+            Class entityClass, FilterNode node, FilterFuncColumn... columns) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(Class<T> entityClass, String keyColumn, FilterFunc func, String funcColumn, FilterNode node) {
+    public <T, K extends Serializable, N extends Number> Map<K, N> queryColumnMap(
+            Class<T> entityClass, String keyColumn, FilterFunc func, String funcColumn, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(Class<T> entityClass, String keyColumn, FilterFunc func, String funcColumn, FilterNode node) {
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N>> queryColumnMapAsync(
+            Class<T> entityClass, String keyColumn, FilterFunc func, String funcColumn, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(Class<T> entityClass, ColumnNode[] funcNodes, String groupByColumn, FilterNode node) {
+    public <T, K extends Serializable, N extends Number> Map<K, N[]> queryColumnMap(
+            Class<T> entityClass, ColumnNode[] funcNodes, String groupByColumn, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(Class<T> entityClass, ColumnNode[] funcNodes, String groupByColumn, FilterNode node) {
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K, N[]>> queryColumnMapAsync(
+            Class<T> entityClass, ColumnNode[] funcNodes, String groupByColumn, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(Class<T> entityClass, ColumnNode[] funcNodes, String[] groupByColumns, FilterNode node) {
+    public <T, K extends Serializable, N extends Number> Map<K[], N[]> queryColumnMap(
+            Class<T> entityClass, ColumnNode[] funcNodes, String[] groupByColumns, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(Class<T> entityClass, ColumnNode[] funcNodes, String[] groupByColumns, FilterNode node) {
+    public <T, K extends Serializable, N extends Number> CompletableFuture<Map<K[], N[]>> queryColumnMapAsync(
+            Class<T> entityClass, ColumnNode[] funcNodes, String[] groupByColumns, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -305,7 +312,8 @@ public class DataMemorySource extends AbstractDataSource {
     }
 
     @Override
-    public <T> CompletableFuture<Serializable> findColumnAsync(Class<T> clazz, String column, Serializable defValue, Serializable pk) {
+    public <T> CompletableFuture<Serializable> findColumnAsync(
+            Class<T> clazz, String column, Serializable defValue, Serializable pk) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -315,7 +323,8 @@ public class DataMemorySource extends AbstractDataSource {
     }
 
     @Override
-    public <T> CompletableFuture<Serializable> findColumnAsync(Class<T> clazz, String column, Serializable defValue, FilterNode node) {
+    public <T> CompletableFuture<Serializable> findColumnAsync(
+            Class<T> clazz, String column, Serializable defValue, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -340,32 +349,38 @@ public class DataMemorySource extends AbstractDataSource {
     }
 
     @Override
-    public <T, V extends Serializable> Set<V> queryColumnSet(String selectedColumn, Class<T> clazz, Flipper flipper, FilterNode node) {
+    public <T, V extends Serializable> Set<V> queryColumnSet(
+            String selectedColumn, Class<T> clazz, Flipper flipper, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(String selectedColumn, Class<T> clazz, Flipper flipper, FilterNode node) {
+    public <T, V extends Serializable> CompletableFuture<Set<V>> queryColumnSetAsync(
+            String selectedColumn, Class<T> clazz, Flipper flipper, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public <T, V extends Serializable> List<V> queryColumnList(String selectedColumn, Class<T> clazz, Flipper flipper, FilterNode node) {
+    public <T, V extends Serializable> List<V> queryColumnList(
+            String selectedColumn, Class<T> clazz, Flipper flipper, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(String selectedColumn, Class<T> clazz, Flipper flipper, FilterNode node) {
+    public <T, V extends Serializable> CompletableFuture<List<V>> queryColumnListAsync(
+            String selectedColumn, Class<T> clazz, Flipper flipper, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public <T, V extends Serializable> Sheet<V> queryColumnSheet(String selectedColumn, Class<T> clazz, Flipper flipper, FilterNode node) {
+    public <T, V extends Serializable> Sheet<V> queryColumnSheet(
+            String selectedColumn, Class<T> clazz, Flipper flipper, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public <T, V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(String selectedColumn, Class<T> clazz, Flipper flipper, FilterNode node) {
+    public <T, V extends Serializable> CompletableFuture<Sheet<V>> queryColumnSheetAsync(
+            String selectedColumn, Class<T> clazz, Flipper flipper, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -375,7 +390,8 @@ public class DataMemorySource extends AbstractDataSource {
     }
 
     @Override
-    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(Class<T> clazz, SelectColumn selects, Stream<K> keyStream) {
+    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(
+            Class<T> clazz, SelectColumn selects, Stream<K> keyStream) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -385,7 +401,8 @@ public class DataMemorySource extends AbstractDataSource {
     }
 
     @Override
-    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(Class<T> clazz, SelectColumn selects, FilterNode node) {
+    public <K extends Serializable, T> CompletableFuture<Map<K, T>> queryMapAsync(
+            Class<T> clazz, SelectColumn selects, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -395,7 +412,8 @@ public class DataMemorySource extends AbstractDataSource {
     }
 
     @Override
-    public <T> CompletableFuture<Set<T>> querySetAsync(Class<T> clazz, SelectColumn selects, Flipper flipper, FilterNode node) {
+    public <T> CompletableFuture<Set<T>> querySetAsync(
+            Class<T> clazz, SelectColumn selects, Flipper flipper, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -405,7 +423,8 @@ public class DataMemorySource extends AbstractDataSource {
     }
 
     @Override
-    public <T> CompletableFuture<List<T>> queryListAsync(Class<T> clazz, SelectColumn selects, Flipper flipper, FilterNode node) {
+    public <T> CompletableFuture<List<T>> queryListAsync(
+            Class<T> clazz, SelectColumn selects, Flipper flipper, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -415,7 +434,8 @@ public class DataMemorySource extends AbstractDataSource {
     }
 
     @Override
-    public <T> CompletableFuture<Sheet<T>> querySheetAsync(Class<T> clazz, SelectColumn selects, Flipper flipper, FilterNode node) {
+    public <T> CompletableFuture<Sheet<T>> querySheetAsync(
+            Class<T> clazz, SelectColumn selects, Flipper flipper, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -423,5 +443,4 @@ public class DataMemorySource extends AbstractDataSource {
     public void close() throws Exception {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
 }

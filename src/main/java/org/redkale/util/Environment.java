@@ -8,9 +8,10 @@ import java.util.function.*;
 /**
  * 环境变量, 只读版Properties
  * 只存放system.property.、mimetype.property.、redkale.cachesource(.|[)、redkale.datasource(.|[)和其他非redkale.开头的配置项
- * 只有ResourceFactory.register(Properties properties, String environmentName, Class environmentType) 方法才能是Environment的ResourceChanged起作用
+ * 只有ResourceFactory.register(Properties properties, String environmentName, Class environmentType)
+ * 方法才能是Environment的ResourceChanged起作用
  *
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.7.0
@@ -44,8 +45,9 @@ public class Environment implements java.io.Serializable {
     }
 
     public void forEach(Predicate<String> predicate, BiConsumer<String, String> action) {
-        properties.entrySet().stream().filter(en -> predicate.test(en.getKey().toString()))
-            .forEach(en -> action.accept(en.getKey().toString(), String.valueOf(en.getValue())));
+        properties.entrySet().stream()
+                .filter(en -> predicate.test(en.getKey().toString()))
+                .forEach(en -> action.accept(en.getKey().toString(), String.valueOf(en.getValue())));
     }
 
     public String getProperty(String name) {
@@ -75,8 +77,8 @@ public class Environment implements java.io.Serializable {
             last = ch;
         }
 
-        //${domain}/${path}/xxx    ${aa${bbb}}
-        //school_#{name}_${haha_${age}}_${bb}_#{dd}  -> school_#{name}_xxx_xxx_#{dd}
+        // ${domain}/${path}/xxx    ${aa${bbb}}
+        // school_#{name}_${haha_${age}}_${bb}_#{dd}  -> school_#{name}_xxx_xxx_#{dd}
         if (startIndex >= 0 && endIndex > 0) {
             String key = val.substring(startIndex + 2, endIndex);
             int pos3 = key.lastIndexOf(':');

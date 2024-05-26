@@ -5,18 +5,17 @@
  */
 package org.redkale.source;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 
 /**
  * 过滤字段标记
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @see org.redkale.source.FilterBean
- *
  * @author zhangjx
  */
 @Documented
@@ -48,10 +47,10 @@ public @interface FilterColumn {
     boolean ignore() default false;
 
     /**
-     * express的默认值根据字段类型的不同而不同:  <br>
-     * 数组 --&gt; IN  <br>
-     * Range --&gt; Between  <br>
-     * 其他 --&gt; =  <br>
+     * express的默认值根据字段类型的不同而不同: <br>
+     * 数组 --&gt; IN <br>
+     * Range --&gt; Between <br>
+     * 其他 --&gt; = <br>
      *
      * @return 字段表达式
      */
@@ -80,5 +79,4 @@ public @interface FilterColumn {
      */
     @Deprecated(since = "2.8.0")
     String comment() default "";
-
 }

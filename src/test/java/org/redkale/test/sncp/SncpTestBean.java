@@ -11,10 +11,7 @@ import org.redkale.persistence.Id;
 import org.redkale.source.FilterBean;
 import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class SncpTestBean implements FilterBean {
 
     @Id
@@ -28,7 +25,10 @@ public class SncpTestBean implements FilterBean {
         System.out.println(bean);
         byte[] bs = BsonFactory.root().getConvert().convertTo(bean);
         Utility.println("---------", bs);
-        System.out.println(BsonFactory.root().getConvert().convertFrom(SncpTestBean.class, bs).toString());
+        System.out.println(BsonFactory.root()
+                .getConvert()
+                .convertFrom(SncpTestBean.class, bs)
+                .toString());
     }
 
     @Override
@@ -51,5 +51,4 @@ public class SncpTestBean implements FilterBean {
     public void setContent(String content) {
         this.content = content;
     }
-
 }

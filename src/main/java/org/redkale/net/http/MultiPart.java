@@ -9,8 +9,6 @@ import java.io.*;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
- *
- * <p>
  * 详情见: https://redkale.org
  *
  * @author zhangjx
@@ -37,7 +35,8 @@ public final class MultiPart {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "{" + "name=" + name + ", fileName=" + fileName + ", contentType=" + contentType + ", received=" + received + '}';
+        return this.getClass().getSimpleName() + "{" + "name=" + name + ", fileName=" + fileName + ", contentType="
+                + contentType + ", received=" + received + '}';
     }
 
     public boolean save(File file) throws IOException {
@@ -59,7 +58,6 @@ public final class MultiPart {
      * 将文件流读进bytes， 如果超出max指定的值则返回null
      *
      * @param max 最大长度限制
-     *
      * @return 内容
      * @throws IOException 异常
      */
@@ -77,7 +75,6 @@ public final class MultiPart {
      *
      * @param max 最大长度限制
      * @param out 输出流
-     *
      * @return 是否成功
      * @throws IOException 异常
      */
@@ -105,7 +102,6 @@ public final class MultiPart {
 
     /**
      * @see #getFileName()
-     *
      * @return String
      * @deprecated replace by {@link #getFileName() }
      */
@@ -129,5 +125,4 @@ public final class MultiPart {
     public void skip() throws IOException {
         in.skip(Long.MAX_VALUE);
     }
-
 }

@@ -11,11 +11,9 @@ import org.redkale.util.*;
 /**
  * SncpClient编解码器
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.8.0
  */
 public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientResult> {
@@ -43,7 +41,7 @@ public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientRe
     }
 
     protected void offerResult(SncpClientResult rs) {
-        //do nothing
+        // do nothing
     }
 
     protected ByteArray pollArray() {
@@ -60,12 +58,12 @@ public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientRe
         ByteBuffer buffer = realBuf;
         while (buffer.hasRemaining()) {
             if (this.halfHeaderBytes != null) {
-                if (buffer.remaining() + halfHeaderBytes.length() < halfHeaderSize - 2) { //buffer不足以读取完整header
+                if (buffer.remaining() + halfHeaderBytes.length() < halfHeaderSize - 2) { // buffer不足以读取完整header
                     halfHeaderBytes.put(buffer);
                     return;
                 }
                 halfHeaderBytes.put(buffer, halfHeaderSize - 2 - halfHeaderBytes.length());
-                //读取完整header
+                // 读取完整header
                 SncpClientResult result = new SncpClientResult();
                 result.readHeader(halfHeaderBytes, halfHeaderSize);
                 halfHeaderSize = 0;
@@ -79,43 +77,45 @@ public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientRe
                     lastResult = null;
                     continue;
                 }
-                //还需要读body
+                // 还需要读body
                 lastResult = result;
             }
-            if (lastResult != null) { //lastResult的body没有读完
+            if (lastResult != null) { // lastResult的body没有读完
                 if (halfBodyBytes != null) {
-                    if (buffer.remaining() + halfBodyBytes.length() < lastResult.getBodyLength()) { //buffer不足以读取完整body
+                    if (buffer.remaining() + halfBodyBytes.length() < lastResult.getBodyLength()) { // buffer不足以读取完整body
                         halfBodyBytes.put(buffer);
                         return;
                     }
                     halfBodyBytes.put(buffer, lastResult.getBodyLength() - halfBodyBytes.length());
-                    //读取完整body
+                    // 读取完整body
                     lastResult.setBodyContent(halfBodyBytes.getBytes());
-                    //if (halfBodyBytes.length() != lastResult.getBodyLength()) {
-                    //    logger.log(Level.SEVERE, "halfBodyBytes.length must be " + lastResult.getBodyLength() + ", but " + halfBodyBytes.length());
-                    //}
+                    // if (halfBodyBytes.length() != lastResult.getBodyLength()) {
+                    //    logger.log(Level.SEVERE, "halfBodyBytes.length must be " + lastResult.getBodyLength() + ", but
+                    // " + halfBodyBytes.length());
+                    // }
                     halfBodyBytes = null;
                     addMessage(findRequest(lastResult.getRequestid()), lastResult);
                     lastResult = null;
                     continue;
                 }
-                if (buffer.remaining() < lastResult.getBodyLength()) {  //buffer不足以读取完整body
+                if (buffer.remaining() < lastResult.getBodyLength()) { // buffer不足以读取完整body
                     halfBodyBytes = pollArray();
                     halfBodyBytes.put(buffer);
                     return;
                 }
-                //有足够的数据读取完整body
+                // 有足够的数据读取完整body
                 lastResult.readBody(buffer);
                 halfBodyBytes = null;
-                //if (lastResult.getBodyContent().length != lastResult.getBodyLength()) {
-                //    logger.log(Level.SEVERE, "lastResult.length must be " + lastResult.getBodyLength() + ", but " + lastResult.getBodyContent().length);
-                //}
+                // if (lastResult.getBodyContent().length != lastResult.getBodyLength()) {
+                //    logger.log(Level.SEVERE, "lastResult.length must be " + lastResult.getBodyLength() + ", but " +
+                // lastResult.getBodyContent().length);
+                // }
                 addMessage(findRequest(lastResult.getRequestid()), lastResult);
                 lastResult = null;
                 continue;
             }
             if (this.halfHeaderSize < 1) {
-                if (buffer.remaining() < 2) { //只有一个字节
+                if (buffer.remaining() < 2) { // 只有一个字节
                     this.halfHeaderSizeFirstByte = buffer.get();
                     return;
                 } else {
@@ -126,7 +126,7 @@ public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientRe
                         this.halfHeaderSize = buffer.getChar();
                     }
                     this.halfHeaderSizeFirstByte = null;
-                    if (buffer.remaining() < this.halfHeaderSize - 2) { //buffer不足以读取完整header
+                    if (buffer.remaining() < this.halfHeaderSize - 2) { // buffer不足以读取完整header
                         this.halfHeaderBytes = pollArray();
                         this.halfHeaderBytes.put(buffer);
                         return;
@@ -145,7 +145,7 @@ public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientRe
                 lastResult = null;
                 continue;
             }
-            if (buffer.remaining() < result.getBodyLength()) {  //buffer不足以读取完整body
+            if (buffer.remaining() < result.getBodyLength()) { // buffer不足以读取完整body
                 lastResult = result;
                 halfBodyBytes = pollArray();
                 halfBodyBytes.put(buffer);
@@ -156,5 +156,4 @@ public class SncpClientCodec extends ClientCodec<SncpClientRequest, SncpClientRe
             lastResult = null;
         }
     }
-
 }

@@ -15,8 +15,7 @@ import org.redkale.util.*;
 /**
  * 自定义对象的序列化操作类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <W> Writer输出的子类
@@ -64,7 +63,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
             if (type == Object.class) {
                 return;
             }
-            //if (!(type instanceof Class)) throw new ConvertException("[" + type + "] is no a class");
+            // if (!(type instanceof Class)) throw new ConvertException("[" + type + "] is no a class");
             final Class clazz = this.typeClass;
             final Set<EnMember> list = new LinkedHashSet();
             final boolean reversible = factory.isReversible();
@@ -93,7 +92,8 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                         continue;
                     }
                     ConvertSmallString small = field.getAnnotation(ConvertSmallString.class);
-                    colFactory = factory.columnFactory(field.getGenericType(), field.getAnnotationsByType(ConvertCoder.class), true);
+                    colFactory = factory.columnFactory(
+                            field.getGenericType(), field.getAnnotationsByType(ConvertCoder.class), true);
                     Encodeable<W, ?> fieldCoder;
                     if (small != null && field.getType() == String.class) {
                         fieldCoder = StringSimpledCoder.SmallStringSimpledCoder.instance;
@@ -101,10 +101,12 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                         fieldCoder = colFactory.findFieldCoder(clazz, field.getName());
                     }
                     if (fieldCoder == null) {
-                        Type t = TypeToken.createClassType(TypeToken.getGenericType(field.getGenericType(), this.type), this.type);
+                        Type t = TypeToken.createClassType(
+                                TypeToken.getGenericType(field.getGenericType(), this.type), this.type);
                         fieldCoder = colFactory.loadEncoder(t);
                     }
-                    EnMember member = new EnMember(createAttribute(colFactory, type, clazz, field, null, null), fieldCoder, field, null);
+                    EnMember member = new EnMember(
+                            createAttribute(colFactory, type, clazz, field, null, null), fieldCoder, field, null);
                     if (ref != null) {
                         member.index = ref.getIndex();
                     }
@@ -132,8 +134,9 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                         continue;
                     }
                     if (!(method.getName().startsWith("is") && method.getName().length() > 2)
-                        && !(method.getName().startsWith("get") && method.getName().length() > 3)
-                        && !Utility.isRecordGetter(clazz, method)) {
+                            && !(method.getName().startsWith("get")
+                                    && method.getName().length() > 3)
+                            && !Utility.isRecordGetter(clazz, method)) {
                         continue;
                     }
                     if (factory.isConvertDisabled(method)) {
@@ -143,7 +146,8 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                     if (reversible && (cps == null || !contains(cps, convertName))) {
                         boolean is = method.getName().startsWith("is");
                         try {
-                            clazz.getMethod(method.getName().replaceFirst(is ? "is" : "get", "set"), method.getReturnType());
+                            clazz.getMethod(
+                                    method.getName().replaceFirst(is ? "is" : "get", "set"), method.getReturnType());
                         } catch (Exception e) {
                             continue;
                         }
@@ -160,13 +164,15 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                                 small = f.getAnnotation(ConvertSmallString.class);
                             }
                         } catch (Exception e) {
-                            //do nothing
+                            // do nothing
                         }
                     }
                     Field maybeField = ConvertFactory.readGetSetField(method);
-                    colFactory = factory.columnFactory(method.getGenericReturnType(), method.getAnnotationsByType(ConvertCoder.class), true);
+                    colFactory = factory.columnFactory(
+                            method.getGenericReturnType(), method.getAnnotationsByType(ConvertCoder.class), true);
                     if (maybeField != null && colFactory == factory) {
-                        colFactory = factory.columnFactory(maybeField.getGenericType(), maybeField.getAnnotationsByType(ConvertCoder.class), true);
+                        colFactory = factory.columnFactory(
+                                maybeField.getGenericType(), maybeField.getAnnotationsByType(ConvertCoder.class), true);
                     }
                     Encodeable<W, ?> fieldCoder;
                     if (small != null && method.getReturnType() == String.class) {
@@ -175,10 +181,15 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                         fieldCoder = colFactory.findFieldCoder(clazz, ConvertFactory.readGetSetFieldName(method));
                     }
                     if (fieldCoder == null) {
-                        Type t = TypeToken.createClassType(TypeToken.getGenericType(method.getGenericReturnType(), this.type), this.type);
+                        Type t = TypeToken.createClassType(
+                                TypeToken.getGenericType(method.getGenericReturnType(), this.type), this.type);
                         fieldCoder = colFactory.loadEncoder(t);
                     }
-                    EnMember member = new EnMember(createAttribute(colFactory, type, clazz, null, method, null), fieldCoder, maybeField, method);
+                    EnMember member = new EnMember(
+                            createAttribute(colFactory, type, clazz, null, method, null),
+                            fieldCoder,
+                            maybeField,
+                            method);
                     if (Utility.contains(list, m -> m.attribute.field().equals(member.attribute.field()))) {
                         continue;
                     }
@@ -191,25 +202,27 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                 List<EnMember> sorts = new ArrayList<>(list);
                 if (cps != null) {
                     Set<EnMember> dissorts = new LinkedHashSet<>(list);
-                    for (final String constructorField : cps) {  //reversible模式下需要确保DeMember与EnMember的个数和顺序保持一致，不然postition会不一致导致反序列化对应的字段顺序不同
+                    for (final String constructorField :
+                            cps) { // reversible模式下需要确保DeMember与EnMember的个数和顺序保持一致，不然postition会不一致导致反序列化对应的字段顺序不同
                         if (Utility.contains(dissorts, m -> m.attribute.field().equals(constructorField))) {
                             continue;
                         }
-                        //不存在setter方法
+                        // 不存在setter方法
                         try {
                             Field f = clazz.getDeclaredField(constructorField);
                             ConvertColumnEntry ref2 = factory.findRef(clazz, f);
-                            //Type t = TypeToken.createClassType(f.getGenericType(), this.type);
+                            // Type t = TypeToken.createClassType(f.getGenericType(), this.type);
                             try {
-                                EnMember member = new EnMember(createAttribute(factory, type, clazz, f, null, null), null, f, null);
+                                EnMember member = new EnMember(
+                                        createAttribute(factory, type, clazz, f, null, null), null, f, null);
                                 if (ref2 != null) {
                                     member.index = ref2.getIndex();
                                 }
-                                dissorts.add(member); //虚构
+                                dissorts.add(member); // 虚构
                             } catch (RuntimeException e) {
-                                //do nothing
+                                // do nothing
                             }
-                        } catch (NoSuchFieldException nsfe) { //不存在field， 可能存在getter方法
+                        } catch (NoSuchFieldException nsfe) { // 不存在field， 可能存在getter方法
                             char[] fs = constructorField.toCharArray();
                             fs[0] = Character.toUpperCase(fs[0]);
                             String mn = new String(fs);
@@ -220,15 +233,18 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                                 getter = clazz.getMethod("is" + mn);
                             }
                             ConvertColumnEntry ref2 = factory.findRef(clazz, getter);
-                            //Type t = TypeToken.createClassType(TypeToken.getGenericType(getter.getGenericParameterTypes()[0], this.type), this.type);
+                            // Type t =
+                            // TypeToken.createClassType(TypeToken.getGenericType(getter.getGenericParameterTypes()[0],
+                            // this.type), this.type);
                             try {
-                                EnMember member = new EnMember(createAttribute(factory, type, clazz, null, getter, null), null, null, null);
+                                EnMember member = new EnMember(
+                                        createAttribute(factory, type, clazz, null, getter, null), null, null, null);
                                 if (ref2 != null) {
                                     member.index = ref2.getIndex();
                                 }
-                                dissorts.add(member); //虚构
+                                dissorts.add(member); // 虚构
                             } catch (RuntimeException e) {
-                                //do nothing
+                                // do nothing
                             }
                         }
                     }
@@ -248,7 +264,8 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                     if (member.index > 0) {
                         member.position = member.index;
                     } else {
-                        while (pos.contains(++pidx));
+                        while (pos.contains(++pidx))
+                            ;
                         member.position = pidx;
                     }
                     initForEachEnMember(factory, member);
@@ -283,7 +300,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
             try {
                 condition.await();
             } catch (Exception e) {
-                //do nothing
+                // do nothing
             } finally {
                 lock.unlock();
             }
@@ -312,7 +329,12 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                             continue;
                         }
                         maxPosition++;
-                        objout.writeObjectField(en.getName(), en.getType(), Math.max(en.getPosition(), maxPosition), anyEncoder, en.getValue());
+                        objout.writeObjectField(
+                                en.getName(),
+                                en.getType(),
+                                Math.max(en.getPosition(), maxPosition),
+                                anyEncoder,
+                                en.getValue());
                     }
                 }
             }
@@ -320,20 +342,20 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
         objout.writeObjectE(value);
     }
 
-    //---------------------------------- 可定制方法 ----------------------------------
+    // ---------------------------------- 可定制方法 ----------------------------------
     protected void initForEachEnMember(ConvertFactory factory, EnMember member) {
-        //do nothing
+        // do nothing
     }
 
     protected void afterInitEnMember(ConvertFactory factory) {
-        //do nothing
+        // do nothing
     }
 
     protected W objectWriter(W out, T value) {
         return out;
     }
 
-    //---------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------
     protected void setTag(EnMember member, int tag) {
         member.tag = tag;
     }
@@ -384,7 +406,8 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
             if (cps != null) {
                 vals = cps.value();
             } else {
-                org.redkale.util.ConstructorParameters cps2 = method.getAnnotation(org.redkale.util.ConstructorParameters.class);
+                org.redkale.util.ConstructorParameters cps2 =
+                        method.getAnnotation(org.redkale.util.ConstructorParameters.class);
                 if (cps2 != null) {
                     vals = cps2.value();
                 }
@@ -395,7 +418,13 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
         }
     }
 
-    static Attribute createAttribute(final ConvertFactory factory, final Type realType, Class clazz, final Field field, final Method getter, final Method setter) {
+    static Attribute createAttribute(
+            final ConvertFactory factory,
+            final Type realType,
+            Class clazz,
+            final Field field,
+            final Method getter,
+            final Method setter) {
         String fieldalias;
         if (field != null) { // public field
             ConvertColumnEntry ref = factory.findRef(clazz, field);
@@ -407,7 +436,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                 try {
                     ref = factory.findRef(clazz, clazz.getDeclaredField(mfieldname));
                 } catch (Exception e) {
-                    //do nothing
+                    // do nothing
                 }
             }
             fieldalias = ref == null || ref.name().isEmpty() ? mfieldname : ref.name();
@@ -418,17 +447,16 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                 try {
                     ref = factory.findRef(clazz, clazz.getDeclaredField(mfieldname));
                 } catch (Exception e) {
-                    //do nothing
+                    // do nothing
                 }
             }
             fieldalias = ref == null || ref.name().isEmpty() ? mfieldname : ref.name();
         }
         Type subclass = realType;
         if ((realType instanceof Class) && field != null && getter == null && setter == null) {
-            //修复父类含public field，subclass不传父类会导致java.lang.NoSuchFieldError的bug
+            // 修复父类含public field，subclass不传父类会导致java.lang.NoSuchFieldError的bug
             subclass = field.getDeclaringClass();
         }
         return Attribute.create(subclass, clazz, fieldalias, null, field, getter, setter, null);
     }
-
 }

@@ -10,8 +10,7 @@ import org.redkale.convert.*;
 /**
  * char 的SimpledCoder实现
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @param <R> Reader输入的子类型
@@ -30,5 +29,4 @@ public final class CharSimpledCoder<R extends Reader, W extends Writer> extends 
     public Character convertFrom(R in) {
         return in.readChar();
     }
-
 }

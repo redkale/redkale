@@ -6,11 +6,9 @@ package org.redkale.util;
 /**
  * 缺失参数异常类
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- *
  * @since 2.8.0
  */
 public class MissingParamException extends RedkaleException {
@@ -42,5 +40,4 @@ public class MissingParamException extends RedkaleException {
     public static MissingParamException of(String parameter) {
         return new MissingParamException(parameter);
     }
-
 }
