@@ -150,9 +150,9 @@
                     <formats>
                         <format>
                             <includes>
-                                <include>src/**/*.</include>
+                                <include>src/**</include>
                             </includes>
-                            <trimTrailingWhitespace />
+                            <trimTrailingWhitespace/>
                             <endWithNewline/>
                             <indent>
                                 <tabs>true</tabs>
