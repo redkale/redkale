@@ -21,7 +21,7 @@ public class UserService implements Service {
      * @return
      */
     public UserInfo current(String sessionid) {
-        return new UserInfo();
+        return new UserInfo(); 
     }
 
     public RetResult<UserInfo> login(LoginBean bean) {
