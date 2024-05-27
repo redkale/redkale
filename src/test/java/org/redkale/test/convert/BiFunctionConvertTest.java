@@ -11,24 +11,12 @@ import org.redkale.convert.ConvertField;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.Attribute;
 
-/** @author zhangjx */
+/*
+ * test
+ *
+ * @author zhangjx
+ */
 public class BiFunctionConvertTest {
-
-    public static class GamePlayer {
-
-        public int userid;
-
-        public String username;
-
-        public int[] cards;
-    }
-
-    public static class GameTable { 
-
-        public int tableid;
-
-        public GamePlayer[] players;
-    }
 
     @Test
     public void run() throws Throwable {
@@ -70,4 +58,21 @@ public class BiFunctionConvertTest {
         // {"players":[{"cards":[11,12,13,14,15],"userid":1,"username":"玩家1"},{"cards":[21,22,23,24,25],"userid":2,"username":"玩家2"},{"cards":[31,32,33,34,35],"userid":3,"username":"玩家3"}],"tableid":100}
         // {"players":[{"cards":[11,12,13,14,15],"userid":1,"username":"玩家1"},{"cards":[21,22,23,24,25],"userid":2,"username":"玩家2"},{"userid":3,"username":"玩家3"}],"tableid":100,"extcol1":30,"extcol2":"扩展字段值"}
     }
+
+    public static class GamePlayer {
+
+        public int userid;
+
+        public String username;
+
+        public int[] cards;
+    }
+
+    public static class GameTable { 
+
+        public int tableid;
+
+        public GamePlayer[] players;
+    }
+
 }
