@@ -14,8 +14,10 @@ import org.redkale.convert.json.JsonFactory;
  */
 public class LoginBean {
     
+    //账号
     private String account = "";
     
+    //密码
     private String password = "";
     
     public String getAccount() {

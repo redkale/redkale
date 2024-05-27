@@ -15,7 +15,7 @@ import org.redkale.service.*;
 public class UserService implements Service {
 
     /**
-     * 根据登录态获取当前用户信息
+     * 根据登录态获取当前用户信息 
      *
      * @param sessionid
      * @return
