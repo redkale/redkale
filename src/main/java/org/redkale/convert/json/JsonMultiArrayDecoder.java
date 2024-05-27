@@ -18,45 +18,45 @@ import org.redkale.convert.*;
  */
 public class JsonMultiArrayDecoder implements Decodeable<JsonReader, Object[]> {
 
-    protected final JsonFactory factory;
+	protected final JsonFactory factory;
 
-    protected final Type[] types;
+	protected final Type[] types;
 
-    protected final Decodeable[] decoders;
+	protected final Decodeable[] decoders;
 
-    public JsonMultiArrayDecoder(final JsonFactory factory, final Type[] types) {
-        this.factory = factory;
-        this.types = types;
-        this.decoders = new Decodeable[types.length];
-        for (int i = 0; i < types.length; i++) {
-            this.decoders[i] = factory.loadDecoder(types[i]);
-        }
-    }
+	public JsonMultiArrayDecoder(final JsonFactory factory, final Type[] types) {
+		this.factory = factory;
+		this.types = types;
+		this.decoders = new Decodeable[types.length];
+		for (int i = 0; i < types.length; i++) {
+			this.decoders[i] = factory.loadDecoder(types[i]);
+		}
+	}
 
-    @Override
-    public Object[] convertFrom(JsonReader in) {
-        return convertFrom(in, null);
-    }
+	@Override
+	public Object[] convertFrom(JsonReader in) {
+		return convertFrom(in, null);
+	}
 
-    public Object[] convertFrom(JsonReader in, DeMember member) {
-        int len = in.readArrayB(member, null, null);
-        if (len == Reader.SIGN_NULL) {
-            return null;
-        }
-        // len must be Reader.SIGN_NOLENGTH
-        final List<Object> result = new ArrayList();
-        int startPosition = in.position();
-        int index = -1;
-        final Decodeable[] coders = this.decoders;
-        while (in.hasNext(startPosition, -1)) {
-            result.add(coders[++index % coders.length].convertFrom(in));
-        }
-        in.readArrayE();
-        return result.toArray(new Object[result.size()]);
-    }
+	public Object[] convertFrom(JsonReader in, DeMember member) {
+		int len = in.readArrayB(member, null, null);
+		if (len == Reader.SIGN_NULL) {
+			return null;
+		}
+		// len must be Reader.SIGN_NOLENGTH
+		final List<Object> result = new ArrayList();
+		int startPosition = in.position();
+		int index = -1;
+		final Decodeable[] coders = this.decoders;
+		while (in.hasNext(startPosition, -1)) {
+			result.add(coders[++index % coders.length].convertFrom(in));
+		}
+		in.readArrayE();
+		return result.toArray(new Object[result.size()]);
+	}
 
-    @Override
-    public Type getType() {
-        return Object[].class;
-    }
+	@Override
+	public Type getType() {
+		return Object[].class;
+	}
 }

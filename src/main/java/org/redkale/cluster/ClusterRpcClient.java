@@ -17,19 +17,19 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface ClusterRpcClient<R, P> {
 
-    /**
-     * 发送消息，需要响应
-     *
-     * @param message 消息体
-     * @return 应答消息
-     */
-    public CompletableFuture<P> sendMessage(final R message);
+	/**
+	 * 发送消息，需要响应
+	 *
+	 * @param message 消息体
+	 * @return 应答消息
+	 */
+	public CompletableFuture<P> sendMessage(final R message);
 
-    /**
-     * 发送消息，无需响应
-     *
-     * @param message 消息体
-     * @return 应答
-     */
-    public CompletableFuture<Void> produceMessage(R message);
+	/**
+	 * 发送消息，无需响应
+	 *
+	 * @param message 消息体
+	 * @return 应答
+	 */
+	public CompletableFuture<Void> produceMessage(R message);
 }

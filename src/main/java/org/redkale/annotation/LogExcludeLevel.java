@@ -37,15 +37,15 @@ import java.lang.annotation.*;
 @Repeatable(LogExcludeLevel.LogExcludeLevels.class)
 public @interface LogExcludeLevel {
 
-    String[] levels();
+	String[] levels();
 
-    String[] keys();
+	String[] keys();
 
-    @Documented
-    @Target({TYPE})
-    @Retention(RUNTIME)
-    @interface LogExcludeLevels {
+	@Documented
+	@Target({TYPE})
+	@Retention(RUNTIME)
+	@interface LogExcludeLevels {
 
-        LogExcludeLevel[] value();
-    }
+		LogExcludeLevel[] value();
+	}
 }

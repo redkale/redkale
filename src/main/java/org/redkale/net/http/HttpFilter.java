@@ -17,62 +17,62 @@ import org.redkale.util.AnyValue;
  */
 public abstract class HttpFilter extends Filter<HttpContext, HttpRequest, HttpResponse> {
 
-    // Server执行start后运行此方法
-    protected void postStart(HttpContext context, AnyValue config) {}
+	// Server执行start后运行此方法
+	protected void postStart(HttpContext context, AnyValue config) {}
 
-    protected void setMethod(HttpRequest request, String method) {
-        request.setMethod(method);
-    }
+	protected void setMethod(HttpRequest request, String method) {
+		request.setMethod(method);
+	}
 
-    protected void setPath(HttpRequest request, String path) {
-        request.setRequestPath(path);
-    }
+	protected void setPath(HttpRequest request, String path) {
+		request.setRequestPath(path);
+	}
 
-    protected void setRemoteAddr(HttpRequest request, String remoteAddr) {
-        request.setRemoteAddr(remoteAddr);
-    }
+	protected void setRemoteAddr(HttpRequest request, String remoteAddr) {
+		request.setRemoteAddr(remoteAddr);
+	}
 
-    protected void setLocale(HttpRequest request, String locale) {
-        request.setLocale(locale);
-    }
+	protected void setLocale(HttpRequest request, String locale) {
+		request.setLocale(locale);
+	}
 
-    protected <T> T setProperty(HttpRequest request, String name, T value) {
-        return request.setProperty(name, value);
-    }
+	protected <T> T setProperty(HttpRequest request, String name, T value) {
+		return request.setProperty(name, value);
+	}
 
-    protected <T> T getProperty(HttpRequest request, String name) {
-        return request.getProperty(name);
-    }
+	protected <T> T getProperty(HttpRequest request, String name) {
+		return request.getProperty(name);
+	}
 
-    protected void removeProperty(HttpRequest request, String name) {
-        request.removeProperty(name);
-    }
+	protected void removeProperty(HttpRequest request, String name) {
+		request.removeProperty(name);
+	}
 
-    protected void addHeader(HttpRequest request, String name, String value) {
-        request.addHeader(name, value);
-    }
+	protected void addHeader(HttpRequest request, String name, String value) {
+		request.addHeader(name, value);
+	}
 
-    protected void setHeader(HttpRequest request, String name, String value) {
-        request.setHeader(name, value);
-    }
+	protected void setHeader(HttpRequest request, String name, String value) {
+		request.setHeader(name, value);
+	}
 
-    protected void removeHeader(HttpRequest request, String name) {
-        request.removeHeader(name);
-    }
+	protected void removeHeader(HttpRequest request, String name) {
+		request.removeHeader(name);
+	}
 
-    protected void setParameter(HttpRequest request, String name, String value) {
-        request.setParameter(name, value);
-    }
+	protected void setParameter(HttpRequest request, String name, String value) {
+		request.setParameter(name, value);
+	}
 
-    protected void removeParameter(HttpRequest request, String name) {
-        request.removeParameter(name);
-    }
+	protected void removeParameter(HttpRequest request, String name) {
+		request.removeParameter(name);
+	}
 
-    protected void setFilter(HttpResponse response, HttpFilter filter) {
-        response.setFilter(filter);
-    }
+	protected void setFilter(HttpResponse response, HttpFilter filter) {
+		response.setFilter(filter);
+	}
 
-    protected void thenEvent(HttpResponse response, HttpFilter filter) {
-        response.thenEvent(filter);
-    }
+	protected void thenEvent(HttpResponse response, HttpFilter filter) {
+		response.thenEvent(filter);
+	}
 }

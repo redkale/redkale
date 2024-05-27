@@ -18,51 +18,51 @@ import java.util.logging.*;
  */
 public class MessageRespFuture implements Runnable {
 
-    protected final long seqid;
+	protected final long seqid;
 
-    protected final long createTime;
+	protected final long createTime;
 
-    protected final CompletableFuture<MessageRecord> future;
+	protected final CompletableFuture<MessageRecord> future;
 
-    protected final MessageRecord message;
+	protected final MessageRecord message;
 
-    protected final MessageClient messageClient;
+	protected final MessageClient messageClient;
 
-    protected ScheduledFuture<?> scheduledFuture;
+	protected ScheduledFuture<?> scheduledFuture;
 
-    public MessageRespFuture(
-            MessageClient messageClient, CompletableFuture<MessageRecord> future, MessageRecord message) {
-        this.messageClient = messageClient;
-        this.message = message;
-        this.seqid = message.getSeqid();
-        this.future = future;
-        this.createTime = System.currentTimeMillis();
-    }
+	public MessageRespFuture(
+			MessageClient messageClient, CompletableFuture<MessageRecord> future, MessageRecord message) {
+		this.messageClient = messageClient;
+		this.message = message;
+		this.seqid = message.getSeqid();
+		this.future = future;
+		this.createTime = System.currentTimeMillis();
+	}
 
-    @Override // 超时后被timeoutExecutor调用
-    public void run() { // timeout
-        messageClient.respQueue.remove(this.seqid);
-        future.completeExceptionally(new TimeoutException("message-record: " + message));
-        messageClient.logger.log(
-                Level.WARNING,
-                getClass().getSimpleName() + " wait msg: " + message
-                        + " timeout " + (System.currentTimeMillis() - createTime) + "ms"
-                        + (message.userid != null || (message.groupid != null && !message.groupid.isEmpty())
-                                ? (message.userid != null
-                                        ? (", userid:" + message.userid)
-                                        : (", groupid:" + message.groupid))
-                                : ""));
-    }
+	@Override // 超时后被timeoutExecutor调用
+	public void run() { // timeout
+		messageClient.respQueue.remove(this.seqid);
+		future.completeExceptionally(new TimeoutException("message-record: " + message));
+		messageClient.logger.log(
+				Level.WARNING,
+				getClass().getSimpleName() + " wait msg: " + message
+						+ " timeout " + (System.currentTimeMillis() - createTime) + "ms"
+						+ (message.userid != null || (message.groupid != null && !message.groupid.isEmpty())
+								? (message.userid != null
+										? (", userid:" + message.userid)
+										: (", groupid:" + message.groupid))
+								: ""));
+	}
 
-    public long getSeqid() {
-        return seqid;
-    }
+	public long getSeqid() {
+		return seqid;
+	}
 
-    public long getCreateTime() {
-        return createTime;
-    }
+	public long getCreateTime() {
+		return createTime;
+	}
 
-    public CompletableFuture<MessageRecord> getFuture() {
-        return future;
-    }
+	public CompletableFuture<MessageRecord> getFuture() {
+		return future;
+	}
 }

@@ -11,15 +11,15 @@ import org.redkale.service.Service;
 /** @author zhangjx */
 public interface SncpTestIService extends Service {
 
-    public String queryResult(SncpTestBean bean);
+	public String queryResult(SncpTestBean bean);
 
-    public double queryDoubleResult(String a, int b, double value);
+	public double queryDoubleResult(String a, int b, double value);
 
-    public long queryLongResult(String a, int b, long value);
+	public long queryLongResult(String a, int b, long value);
 
-    public CompletableFuture<String> queryResultAsync(SncpTestBean bean);
+	public CompletableFuture<String> queryResultAsync(SncpTestBean bean);
 
-    public SncpTestBean insert(SncpTestBean bean);
+	public SncpTestBean insert(SncpTestBean bean);
 
-    public String updateBean(SncpTestBean bean);
+	public String updateBean(SncpTestBean bean);
 }

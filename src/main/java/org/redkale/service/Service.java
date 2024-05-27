@@ -43,18 +43,18 @@ import org.redkale.util.AnyValue;
  */
 public interface Service {
 
-    /**
-     * 该方法必须是可以重复调用， 当reload时需要重复调用init方法 远程模式下该方法会重载成空方法
-     *
-     * @param config 配置参数
-     */
-    default void init(AnyValue config) {}
+	/**
+	 * 该方法必须是可以重复调用， 当reload时需要重复调用init方法 远程模式下该方法会重载成空方法
+	 *
+	 * @param config 配置参数
+	 */
+	default void init(AnyValue config) {}
 
-    /**
-     * 进程退出时，调用Service销毁 远程模式下该方法会重载成空方法 注意： 在此方法内不能调用MessageClient.sendMessage
-     * 方法，因为Application关闭时会先destroy掉MessageClient
-     *
-     * @param config 配置参数
-     */
-    default void destroy(AnyValue config) {}
+	/**
+	 * 进程退出时，调用Service销毁 远程模式下该方法会重载成空方法 注意： 在此方法内不能调用MessageClient.sendMessage
+	 * 方法，因为Application关闭时会先destroy掉MessageClient
+	 *
+	 * @param config 配置参数
+	 */
+	default void destroy(AnyValue config) {}
 }

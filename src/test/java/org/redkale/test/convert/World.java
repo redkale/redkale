@@ -11,45 +11,45 @@ import org.redkale.persistence.Id;
 /** @author zhangjx */
 public class World implements Comparable<World> {
 
-    @Id
-    private int id;
+	@Id
+	private int id;
 
-    private int randomNumber;
+	private int randomNumber;
 
-    public int getId() {
-        return id;
-    }
+	public int getId() {
+		return id;
+	}
 
-    public void setId(int id) {
-        this.id = id;
-    }
+	public void setId(int id) {
+		this.id = id;
+	}
 
-    public int getRandomNumber() {
-        return randomNumber;
-    }
+	public int getRandomNumber() {
+		return randomNumber;
+	}
 
-    public void setRandomNumber(int randomNumber) {
-        this.randomNumber = randomNumber;
-    }
+	public void setRandomNumber(int randomNumber) {
+		this.randomNumber = randomNumber;
+	}
 
-    @Override
-    public int compareTo(World o) {
-        return Integer.compare(id, o.id);
-    }
+	@Override
+	public int compareTo(World o) {
+		return Integer.compare(id, o.id);
+	}
 
-    @Override
-    public String toString() {
-        return JsonConvert.root().convertTo(this);
-    }
+	@Override
+	public String toString() {
+		return JsonConvert.root().convertTo(this);
+	}
 
-    public static void main(String[] args) throws Throwable {
-        World[] worlds = new World[20];
-        int index = 8866;
-        for (int i = 0; i < worlds.length; i++) {
-            worlds[i] = new World();
-            worlds[i].setId(8866 + i);
-            worlds[i].setRandomNumber(9966 + i);
-        }
-        System.out.println(JsonConvert.root().convertTo(worlds));
-    }
+	public static void main(String[] args) throws Throwable {
+		World[] worlds = new World[20];
+		int index = 8866;
+		for (int i = 0; i < worlds.length; i++) {
+			worlds[i] = new World();
+			worlds[i].setId(8866 + i);
+			worlds[i].setRandomNumber(9966 + i);
+		}
+		System.out.println(JsonConvert.root().convertTo(worlds));
+	}
 }

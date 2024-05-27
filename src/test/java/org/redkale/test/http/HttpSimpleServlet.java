@@ -12,9 +12,9 @@ import org.redkale.net.http.HttpServlet;
 /** @author zhangjx */
 public class HttpSimpleServlet extends HttpServlet {
 
-    @HttpMapping(url = "/test")
-    public void test(HttpRequest req, HttpResponse resp) throws IOException {
-        System.out.println("运行到test方法了， id=" + req.getParameter("id"));
-        resp.finish("ok-" + req.getParameter("id", "0"));
-    }
+	@HttpMapping(url = "/test")
+	public void test(HttpRequest req, HttpResponse resp) throws IOException {
+		System.out.println("运行到test方法了， id=" + req.getParameter("id"));
+		resp.finish("ok-" + req.getParameter("id", "0"));
+	}
 }

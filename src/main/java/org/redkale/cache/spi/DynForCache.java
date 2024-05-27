@@ -23,19 +23,19 @@ import org.redkale.service.LoadMode;
 @Retention(RUNTIME)
 public @interface DynForCache {
 
-    String dynField();
+	String dynField();
 
-    String key();
+	String key();
 
-    String hash();
+	String hash();
 
-    String localExpire();
+	String localExpire();
 
-    String remoteExpire();
+	String remoteExpire();
 
-    TimeUnit timeUnit();
+	TimeUnit timeUnit();
 
-    boolean nullable();
+	boolean nullable();
 
-    LoadMode mode() default LoadMode.ANY;
+	LoadMode mode() default LoadMode.ANY;
 }

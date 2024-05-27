@@ -21,16 +21,16 @@ import org.redkale.convert.Writer;
  */
 public final class DateSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, Date> {
 
-    public static final DateSimpledCoder instance = new DateSimpledCoder();
+	public static final DateSimpledCoder instance = new DateSimpledCoder();
 
-    @Override
-    public void convertTo(W out, Date value) {
-        out.writeLong(value == null ? 0L : value.getTime());
-    }
+	@Override
+	public void convertTo(W out, Date value) {
+		out.writeLong(value == null ? 0L : value.getTime());
+	}
 
-    @Override
-    public Date convertFrom(R in) {
-        long t = in.readLong();
-        return t == 0 ? null : new Date(t);
-    }
+	@Override
+	public Date convertFrom(R in) {
+		long t = in.readLong();
+		return t == 0 ? null : new Date(t);
+	}
 }

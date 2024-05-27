@@ -20,49 +20,49 @@ import org.redkale.util.*;
  */
 public abstract class PropertiesAgent {
 
-    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
+	protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
-    PropertiesModule bootModule;
+	PropertiesModule bootModule;
 
-    /**
-     * 编译时进行的操作
-     *
-     * @param conf 节点配置
-     */
-    public void compile(AnyValue conf) {}
+	/**
+	 * 编译时进行的操作
+	 *
+	 * @param conf 节点配置
+	 */
+	public void compile(AnyValue conf) {}
 
-    /**
-     * ServiceLoader时判断配置是否符合当前实现类
-     *
-     * @param config 节点配置
-     * @return boolean
-     */
-    public abstract boolean acceptsConf(AnyValue config);
+	/**
+	 * ServiceLoader时判断配置是否符合当前实现类
+	 *
+	 * @param config 节点配置
+	 * @return boolean
+	 */
+	public abstract boolean acceptsConf(AnyValue config);
 
-    /**
-     * 初始化配置源，配置项需要写入envProperties，并监听配置项的变化
-     *
-     * @param application Application
-     * @param conf 节点配置
-     * @return 加载的配置项, key:namespace
-     */
-    public abstract Map<String, Properties> init(Application application, AnyValue conf);
+	/**
+	 * 初始化配置源，配置项需要写入envProperties，并监听配置项的变化
+	 *
+	 * @param application Application
+	 * @param conf 节点配置
+	 * @return 加载的配置项, key:namespace
+	 */
+	public abstract Map<String, Properties> init(Application application, AnyValue conf);
 
-    /**
-     * 销毁动作
-     *
-     * @param conf 节点配置
-     */
-    public abstract void destroy(AnyValue conf);
+	/**
+	 * 销毁动作
+	 *
+	 * @param conf 节点配置
+	 */
+	public abstract void destroy(AnyValue conf);
 
-    /**
-     * 响应配置项的变更
-     *
-     * @param application Application
-     * @param namespace 命名空间
-     * @param events 变更项集合
-     */
-    protected final void onEnvironmentUpdated(Application application, String namespace, List<ResourceEvent> events) {
-        bootModule.onEnvironmentUpdated(namespace, events);
-    }
+	/**
+	 * 响应配置项的变更
+	 *
+	 * @param application Application
+	 * @param namespace 命名空间
+	 * @param events 变更项集合
+	 */
+	protected final void onEnvironmentUpdated(Application application, String namespace, List<ResourceEvent> events) {
+		bootModule.onEnvironmentUpdated(namespace, events);
+	}
 }

@@ -72,131 +72,131 @@ package org.redkale.asm;
  * @author Remi Forax
  */
 public abstract class ModuleVisitor {
-    /** The ASM API version implemented by this visitor. The value of this field must be {@link Opcodes#ASM6}. */
-    protected final int api;
+	/** The ASM API version implemented by this visitor. The value of this field must be {@link Opcodes#ASM6}. */
+	protected final int api;
 
-    /** The module visitor to which this visitor must delegate method calls. May be null. */
-    protected ModuleVisitor mv;
+	/** The module visitor to which this visitor must delegate method calls. May be null. */
+	protected ModuleVisitor mv;
 
-    /**
-     * Constructs a new {@link ModuleVisitor}.
-     *
-     * @param api the ASM API version implemented by this visitor. Must be {@link Opcodes#ASM6}.
-     */
-    public ModuleVisitor(final int api) {
-        this(api, null);
-    }
+	/**
+	 * Constructs a new {@link ModuleVisitor}.
+	 *
+	 * @param api the ASM API version implemented by this visitor. Must be {@link Opcodes#ASM6}.
+	 */
+	public ModuleVisitor(final int api) {
+		this(api, null);
+	}
 
-    /**
-     * Constructs a new {@link ModuleVisitor}.
-     *
-     * @param api the ASM API version implemented by this visitor. Must be {@link Opcodes#ASM6}.
-     * @param mv the module visitor to which this visitor must delegate method calls. May be null.
-     */
-    public ModuleVisitor(final int api, final ModuleVisitor mv) {
-        if (api != Opcodes.ASM6) {
-            throw new IllegalArgumentException();
-        }
-        this.api = api;
-        this.mv = mv;
-    }
+	/**
+	 * Constructs a new {@link ModuleVisitor}.
+	 *
+	 * @param api the ASM API version implemented by this visitor. Must be {@link Opcodes#ASM6}.
+	 * @param mv the module visitor to which this visitor must delegate method calls. May be null.
+	 */
+	public ModuleVisitor(final int api, final ModuleVisitor mv) {
+		if (api != Opcodes.ASM6) {
+			throw new IllegalArgumentException();
+		}
+		this.api = api;
+		this.mv = mv;
+	}
 
-    /**
-     * Visit the main class of the current module.
-     *
-     * @param mainClass the internal name of the main class of the current module.
-     */
-    public void visitMainClass(String mainClass) {
-        if (mv != null) {
-            mv.visitMainClass(mainClass);
-        }
-    }
+	/**
+	 * Visit the main class of the current module.
+	 *
+	 * @param mainClass the internal name of the main class of the current module.
+	 */
+	public void visitMainClass(String mainClass) {
+		if (mv != null) {
+			mv.visitMainClass(mainClass);
+		}
+	}
 
-    /**
-     * Visit a package of the current module.
-     *
-     * @param packaze the qualified name of a package.
-     */
-    public void visitPackage(String packaze) {
-        if (mv != null) {
-            mv.visitPackage(packaze);
-        }
-    }
+	/**
+	 * Visit a package of the current module.
+	 *
+	 * @param packaze the qualified name of a package.
+	 */
+	public void visitPackage(String packaze) {
+		if (mv != null) {
+			mv.visitPackage(packaze);
+		}
+	}
 
-    /**
-     * Visits a dependence of the current module.
-     *
-     * @param module the qualified name of the dependence.
-     * @param access the access flag of the dependence among ACC_TRANSITIVE, ACC_STATIC_PHASE, ACC_SYNTHETIC and
-     *     ACC_MANDATED.
-     * @param version the module version at compile time or null.
-     */
-    public void visitRequire(String module, int access, String version) {
-        if (mv != null) {
-            mv.visitRequire(module, access, version);
-        }
-    }
+	/**
+	 * Visits a dependence of the current module.
+	 *
+	 * @param module the qualified name of the dependence.
+	 * @param access the access flag of the dependence among ACC_TRANSITIVE, ACC_STATIC_PHASE, ACC_SYNTHETIC and
+	 *     ACC_MANDATED.
+	 * @param version the module version at compile time or null.
+	 */
+	public void visitRequire(String module, int access, String version) {
+		if (mv != null) {
+			mv.visitRequire(module, access, version);
+		}
+	}
 
-    /**
-     * Visit an exported package of the current module.
-     *
-     * @param packaze the qualified name of the exported package.
-     * @param access the access flag of the exported package, valid values are among {@code ACC_SYNTHETIC} and
-     *     {@code ACC_MANDATED}.
-     * @param modules the qualified names of the modules that can access to the public classes of the exported package
-     *     or &#60;tt&#62;null&#60;/tt&#62;.
-     */
-    public void visitExport(String packaze, int access, String... modules) {
-        if (mv != null) {
-            mv.visitExport(packaze, access, modules);
-        }
-    }
+	/**
+	 * Visit an exported package of the current module.
+	 *
+	 * @param packaze the qualified name of the exported package.
+	 * @param access the access flag of the exported package, valid values are among {@code ACC_SYNTHETIC} and
+	 *     {@code ACC_MANDATED}.
+	 * @param modules the qualified names of the modules that can access to the public classes of the exported package
+	 *     or &#60;tt&#62;null&#60;/tt&#62;.
+	 */
+	public void visitExport(String packaze, int access, String... modules) {
+		if (mv != null) {
+			mv.visitExport(packaze, access, modules);
+		}
+	}
 
-    /**
-     * Visit an open package of the current module.
-     *
-     * @param packaze the qualified name of the opened package.
-     * @param access the access flag of the opened package, valid values are among {@code ACC_SYNTHETIC} and
-     *     {@code ACC_MANDATED}.
-     * @param modules the qualified names of the modules that can use deep reflection to the classes of the open package
-     *     or &#60;tt&#62;null&#60;/tt&#62;.
-     */
-    public void visitOpen(String packaze, int access, String... modules) {
-        if (mv != null) {
-            mv.visitOpen(packaze, access, modules);
-        }
-    }
+	/**
+	 * Visit an open package of the current module.
+	 *
+	 * @param packaze the qualified name of the opened package.
+	 * @param access the access flag of the opened package, valid values are among {@code ACC_SYNTHETIC} and
+	 *     {@code ACC_MANDATED}.
+	 * @param modules the qualified names of the modules that can use deep reflection to the classes of the open package
+	 *     or &#60;tt&#62;null&#60;/tt&#62;.
+	 */
+	public void visitOpen(String packaze, int access, String... modules) {
+		if (mv != null) {
+			mv.visitOpen(packaze, access, modules);
+		}
+	}
 
-    /**
-     * Visit a service used by the current module. The name must be the internal name of an interface or a class.
-     *
-     * @param service the internal name of the service.
-     */
-    public void visitUse(String service) {
-        if (mv != null) {
-            mv.visitUse(service);
-        }
-    }
+	/**
+	 * Visit a service used by the current module. The name must be the internal name of an interface or a class.
+	 *
+	 * @param service the internal name of the service.
+	 */
+	public void visitUse(String service) {
+		if (mv != null) {
+			mv.visitUse(service);
+		}
+	}
 
-    /**
-     * Visit an implementation of a service.
-     *
-     * @param service the internal name of the service
-     * @param providers the internal names of the implementations of the service (there is at least one provider).
-     */
-    public void visitProvide(String service, String... providers) {
-        if (mv != null) {
-            mv.visitProvide(service, providers);
-        }
-    }
+	/**
+	 * Visit an implementation of a service.
+	 *
+	 * @param service the internal name of the service
+	 * @param providers the internal names of the implementations of the service (there is at least one provider).
+	 */
+	public void visitProvide(String service, String... providers) {
+		if (mv != null) {
+			mv.visitProvide(service, providers);
+		}
+	}
 
-    /**
-     * Visits the end of the module. This method, which is the last one to be called, is used to inform the visitor that
-     * everything have been visited.
-     */
-    public void visitEnd() {
-        if (mv != null) {
-            mv.visitEnd();
-        }
-    }
+	/**
+	 * Visits the end of the module. This method, which is the last one to be called, is used to inform the visitor that
+	 * everything have been visited.
+	 */
+	public void visitEnd() {
+		if (mv != null) {
+			mv.visitEnd();
+		}
+	}
 }

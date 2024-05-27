@@ -9,21 +9,21 @@ import org.redkale.convert.json.JsonConvert;
 /** @author zhangjx */
 public class JsonMultiDecoderTest {
 
-    private boolean main;
+	private boolean main;
 
-    public static void main(String[] args) throws Throwable {
-        JsonMultiDecoderTest test = new JsonMultiDecoderTest();
-        test.main = true;
-        test.run();
-    }
+	public static void main(String[] args) throws Throwable {
+		JsonMultiDecoderTest test = new JsonMultiDecoderTest();
+		test.main = true;
+		test.run();
+	}
 
-    @Test
-    public void run() throws Exception {
-        JsonConvert convert = JsonConvert.root();
-        String json = "[\"aaaa\",{\"name\":\"haha\"}]";
-        Type[] types = new Type[] {String.class, JsonConvert.TYPE_MAP_STRING_STRING};
-        Object[] objs = convert.convertFrom(types, json);
-        System.out.println(convert.convertTo(objs));
-        if (!main) Assertions.assertEquals(convert.convertTo(objs), json);
-    }
+	@Test
+	public void run() throws Exception {
+		JsonConvert convert = JsonConvert.root();
+		String json = "[\"aaaa\",{\"name\":\"haha\"}]";
+		Type[] types = new Type[] {String.class, JsonConvert.TYPE_MAP_STRING_STRING};
+		Object[] objs = convert.convertFrom(types, json);
+		System.out.println(convert.convertTo(objs));
+		if (!main) Assertions.assertEquals(convert.convertTo(objs), json);
+	}
 }

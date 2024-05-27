@@ -24,54 +24,54 @@ import java.lang.annotation.*;
 @Repeatable(RestConvert.RestConverts.class)
 public @interface RestConvert {
 
-    /**
-     * 配置项
-     *
-     * @return int
-     */
-    int features() default -1;
+	/**
+	 * 配置项
+	 *
+	 * @return int
+	 */
+	int features() default -1;
 
-    /**
-     * 是否忽略ConvertColumn.ignore=true的设置， 优先级最高
-     *
-     * @return boolean
-     */
-    boolean skipIgnore() default false;
+	/**
+	 * 是否忽略ConvertColumn.ignore=true的设置， 优先级最高
+	 *
+	 * @return boolean
+	 */
+	boolean skipIgnore() default false;
 
-    /**
-     * 类型
-     *
-     * @return Class
-     */
-    Class type();
+	/**
+	 * 类型
+	 *
+	 * @return Class
+	 */
+	Class type();
 
-    /**
-     * 仅显示的字段， 优先级其次,有值就会忽略ignoreColumns、convertColumns值
-     *
-     * @since 2.7.0
-     * @return String[]
-     */
-    String[] onlyColumns() default {};
+	/**
+	 * 仅显示的字段， 优先级其次,有值就会忽略ignoreColumns、convertColumns值
+	 *
+	 * @since 2.7.0
+	 * @return String[]
+	 */
+	String[] onlyColumns() default {};
 
-    /**
-     * 屏蔽的字段
-     *
-     * @return String[]
-     */
-    String[] ignoreColumns() default {};
+	/**
+	 * 屏蔽的字段
+	 *
+	 * @return String[]
+	 */
+	String[] ignoreColumns() default {};
 
-    /**
-     * 允许输出的字段
-     *
-     * @return String[]
-     */
-    String[] convertColumns() default {};
+	/**
+	 * 允许输出的字段
+	 *
+	 * @return String[]
+	 */
+	String[] convertColumns() default {};
 
-    @Documented
-    @Target({METHOD})
-    @Retention(RUNTIME)
-    @interface RestConverts {
+	@Documented
+	@Target({METHOD})
+	@Retention(RUNTIME)
+	@interface RestConverts {
 
-        RestConvert[] value();
-    }
+		RestConvert[] value();
+	}
 }

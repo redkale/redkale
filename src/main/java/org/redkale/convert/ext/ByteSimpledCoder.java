@@ -18,15 +18,15 @@ import org.redkale.convert.*;
  */
 public final class ByteSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, Byte> {
 
-    public static final ByteSimpledCoder instance = new ByteSimpledCoder();
+	public static final ByteSimpledCoder instance = new ByteSimpledCoder();
 
-    @Override
-    public void convertTo(W out, Byte value) {
-        out.writeByte(value);
-    }
+	@Override
+	public void convertTo(W out, Byte value) {
+		out.writeByte(value);
+	}
 
-    @Override
-    public Byte convertFrom(R in) {
-        return in.readByte();
-    }
+	@Override
+	public Byte convertFrom(R in) {
+		return in.readByte();
+	}
 }

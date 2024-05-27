@@ -20,54 +20,54 @@ import org.redkale.convert.json.*;
  */
 public final class LocalTimeSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, LocalTime> {
 
-    public static final LocalTimeSimpledCoder instance = new LocalTimeSimpledCoder();
+	public static final LocalTimeSimpledCoder instance = new LocalTimeSimpledCoder();
 
-    @Override
-    public void convertTo(W out, LocalTime value) {
-        out.writeLong(value == null ? -1L : value.toNanoOfDay());
-    }
+	@Override
+	public void convertTo(W out, LocalTime value) {
+		out.writeLong(value == null ? -1L : value.toNanoOfDay());
+	}
 
-    @Override
-    public LocalTime convertFrom(R in) {
-        long t = in.readLong();
-        return t == -1 ? null : LocalTime.ofNanoOfDay(t);
-    }
+	@Override
+	public LocalTime convertFrom(R in) {
+		long t = in.readLong();
+		return t == -1 ? null : LocalTime.ofNanoOfDay(t);
+	}
 
-    //    public static void main(String[] args) throws Throwable {
-    //        LocalTime now = LocalTime.now();
-    //        System.out.println(now);
-    //        BsonWriter writer = new BsonWriter();
-    //        LocalTimeSimpledCoder.instance.convertTo(writer, now);
-    //        BsonReader reader = new BsonReader(writer.toArray());
-    //        System.out.println(LocalTimeSimpledCoder.instance.convertFrom(reader));
-    //    }
-    /**
-     * java.time.LocalTime 的JsonSimpledCoder实现
-     *
-     * @param <R> Reader输入的子类型
-     * @param <W> Writer输出的子类型
-     */
-    public static final class LocalTimeJsonSimpledCoder<R extends JsonReader, W extends JsonWriter>
-            extends SimpledCoder<R, W, LocalTime> {
+	//    public static void main(String[] args) throws Throwable {
+	//        LocalTime now = LocalTime.now();
+	//        System.out.println(now);
+	//        BsonWriter writer = new BsonWriter();
+	//        LocalTimeSimpledCoder.instance.convertTo(writer, now);
+	//        BsonReader reader = new BsonReader(writer.toArray());
+	//        System.out.println(LocalTimeSimpledCoder.instance.convertFrom(reader));
+	//    }
+	/**
+	 * java.time.LocalTime 的JsonSimpledCoder实现
+	 *
+	 * @param <R> Reader输入的子类型
+	 * @param <W> Writer输出的子类型
+	 */
+	public static final class LocalTimeJsonSimpledCoder<R extends JsonReader, W extends JsonWriter>
+			extends SimpledCoder<R, W, LocalTime> {
 
-        public static final LocalTimeJsonSimpledCoder instance = new LocalTimeJsonSimpledCoder();
+		public static final LocalTimeJsonSimpledCoder instance = new LocalTimeJsonSimpledCoder();
 
-        @Override
-        public void convertTo(final W out, final LocalTime value) {
-            if (value == null) {
-                out.writeNull();
-            } else {
-                out.writeSmallString(value.toString());
-            }
-        }
+		@Override
+		public void convertTo(final W out, final LocalTime value) {
+			if (value == null) {
+				out.writeNull();
+			} else {
+				out.writeSmallString(value.toString());
+			}
+		}
 
-        @Override
-        public LocalTime convertFrom(R in) {
-            final String str = in.readSmallString();
-            if (str == null) {
-                return null;
-            }
-            return LocalTime.parse(str);
-        }
-    }
+		@Override
+		public LocalTime convertFrom(R in) {
+			final String str = in.readSmallString();
+			if (str == null) {
+				return null;
+			}
+			return LocalTime.parse(str);
+		}
+	}
 }

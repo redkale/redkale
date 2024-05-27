@@ -18,232 +18,232 @@ import java.util.regex.Pattern;
  */
 public class SelectColumn implements Predicate<String> {
 
-    private Pattern[] patterns;
+	private Pattern[] patterns;
 
-    private String[] columns;
+	private String[] columns;
 
-    private boolean excludable; // 是否排除
+	private boolean excludable; // 是否排除
 
-    public SelectColumn() {}
+	public SelectColumn() {}
 
-    protected SelectColumn(final String[] columns0, final boolean excludable) {
-        this.excludable = excludable;
-        final int len = columns0.length;
-        if (len < 1) {
-            return;
-        }
-        Pattern[] regxs = null;
-        String[] cols = null;
-        int regcount = 0;
-        int colcount = 0;
-        for (String col : columns0) {
-            boolean regx = false;
-            for (int i = 0; i < col.length(); i++) {
-                char ch = col.charAt(i);
-                if (ch == '^' || ch == '$' || ch == '*' || ch == '?' || ch == '+' || ch == '[' || ch == '(') {
-                    regx = true;
-                    break;
-                }
-            }
-            if (regx) {
-                if (regxs == null) {
-                    regxs = new Pattern[len];
-                }
-                regxs[regcount++] = Pattern.compile(col);
-            } else {
-                if (cols == null) {
-                    cols = new String[len];
-                }
-                cols[colcount++] = col;
-            }
-        }
-        if (regxs != null) {
-            if (regcount == len) {
-                this.patterns = regxs;
-            } else {
-                this.patterns = Arrays.copyOf(regxs, regcount);
-            }
-        }
-        if (cols != null) {
-            if (colcount == len) {
-                this.columns = cols;
-            } else {
-                this.columns = Arrays.copyOf(cols, colcount);
-            }
-        }
-    }
+	protected SelectColumn(final String[] columns0, final boolean excludable) {
+		this.excludable = excludable;
+		final int len = columns0.length;
+		if (len < 1) {
+			return;
+		}
+		Pattern[] regxs = null;
+		String[] cols = null;
+		int regcount = 0;
+		int colcount = 0;
+		for (String col : columns0) {
+			boolean regx = false;
+			for (int i = 0; i < col.length(); i++) {
+				char ch = col.charAt(i);
+				if (ch == '^' || ch == '$' || ch == '*' || ch == '?' || ch == '+' || ch == '[' || ch == '(') {
+					regx = true;
+					break;
+				}
+			}
+			if (regx) {
+				if (regxs == null) {
+					regxs = new Pattern[len];
+				}
+				regxs[regcount++] = Pattern.compile(col);
+			} else {
+				if (cols == null) {
+					cols = new String[len];
+				}
+				cols[colcount++] = col;
+			}
+		}
+		if (regxs != null) {
+			if (regcount == len) {
+				this.patterns = regxs;
+			} else {
+				this.patterns = Arrays.copyOf(regxs, regcount);
+			}
+		}
+		if (cols != null) {
+			if (colcount == len) {
+				this.columns = cols;
+			} else {
+				this.columns = Arrays.copyOf(cols, colcount);
+			}
+		}
+	}
 
-    /**
-     * class中的字段名
-     *
-     * @param columns 包含的字段名集合
-     * @return SelectColumn
-     */
-    //    @Deprecated
-    //    public static SelectColumn createIncludes(String... columns) {
-    //        return new SelectColumn(columns, false);
-    //    }
-    //
-    //
-    /**
-     * class中的字段名
-     *
-     * @param funcs 包含的字段名Lambda集合
-     * @param <T> 泛型
-     * @return SelectColumn
-     */
-    public static <T> SelectColumn includes(LambdaFunction<T, ?>... funcs) {
-        return includes(LambdaFunction.readColumns(funcs));
-    }
+	/**
+	 * class中的字段名
+	 *
+	 * @param columns 包含的字段名集合
+	 * @return SelectColumn
+	 */
+	//    @Deprecated
+	//    public static SelectColumn createIncludes(String... columns) {
+	//        return new SelectColumn(columns, false);
+	//    }
+	//
+	//
+	/**
+	 * class中的字段名
+	 *
+	 * @param funcs 包含的字段名Lambda集合
+	 * @param <T> 泛型
+	 * @return SelectColumn
+	 */
+	public static <T> SelectColumn includes(LambdaFunction<T, ?>... funcs) {
+		return includes(LambdaFunction.readColumns(funcs));
+	}
 
-    /**
-     * class中的字段名
-     *
-     * @param columns 包含的字段名集合
-     * @return SelectColumn
-     */
-    public static SelectColumn includes(String... columns) {
-        return new SelectColumn(columns, false);
-    }
+	/**
+	 * class中的字段名
+	 *
+	 * @param columns 包含的字段名集合
+	 * @return SelectColumn
+	 */
+	public static SelectColumn includes(String... columns) {
+		return new SelectColumn(columns, false);
+	}
 
-    /**
-     * class中的字段名
-     *
-     * @param cols 包含的字段名集合
-     * @param columns 包含的字段名集合
-     * @return SelectColumn
-     */
-    //    @Deprecated
-    //    public static SelectColumn createIncludes(String[] cols, String... columns) {
-    //        return new SelectColumn(Utility.append(cols, columns), false);
-    //    }
-    //
-    //
-    /**
-     * class中的字段名
-     *
-     * @param cols 包含的字段名集合
-     * @param columns 包含的字段名集合
-     * @return SelectColumn
-     */
-    public static SelectColumn includes(String[] cols, String... columns) {
-        return new SelectColumn(Utility.append(cols, columns), false);
-    }
+	/**
+	 * class中的字段名
+	 *
+	 * @param cols 包含的字段名集合
+	 * @param columns 包含的字段名集合
+	 * @return SelectColumn
+	 */
+	//    @Deprecated
+	//    public static SelectColumn createIncludes(String[] cols, String... columns) {
+	//        return new SelectColumn(Utility.append(cols, columns), false);
+	//    }
+	//
+	//
+	/**
+	 * class中的字段名
+	 *
+	 * @param cols 包含的字段名集合
+	 * @param columns 包含的字段名集合
+	 * @return SelectColumn
+	 */
+	public static SelectColumn includes(String[] cols, String... columns) {
+		return new SelectColumn(Utility.append(cols, columns), false);
+	}
 
-    /**
-     * class中的字段名
-     *
-     * @param columns 排除的字段名集合
-     * @return SelectColumn
-     */
-    //    @Deprecated
-    //    public static SelectColumn createExcludes(String... columns) {
-    //        return new SelectColumn(columns, true);
-    //    }
-    //
-    //
-    /**
-     * class中的字段名
-     *
-     * @param funcs 包含的字段名Lambda集合
-     * @param <T> 泛型
-     * @return SelectColumn
-     */
-    public static <T> SelectColumn excludes(LambdaFunction<T, ?>... funcs) {
-        return excludes(LambdaFunction.readColumns(funcs));
-    }
+	/**
+	 * class中的字段名
+	 *
+	 * @param columns 排除的字段名集合
+	 * @return SelectColumn
+	 */
+	//    @Deprecated
+	//    public static SelectColumn createExcludes(String... columns) {
+	//        return new SelectColumn(columns, true);
+	//    }
+	//
+	//
+	/**
+	 * class中的字段名
+	 *
+	 * @param funcs 包含的字段名Lambda集合
+	 * @param <T> 泛型
+	 * @return SelectColumn
+	 */
+	public static <T> SelectColumn excludes(LambdaFunction<T, ?>... funcs) {
+		return excludes(LambdaFunction.readColumns(funcs));
+	}
 
-    /**
-     * class中的字段名
-     *
-     * @param columns 排除的字段名集合
-     * @return SelectColumn
-     */
-    public static SelectColumn excludes(String... columns) {
-        return new SelectColumn(columns, true);
-    }
+	/**
+	 * class中的字段名
+	 *
+	 * @param columns 排除的字段名集合
+	 * @return SelectColumn
+	 */
+	public static SelectColumn excludes(String... columns) {
+		return new SelectColumn(columns, true);
+	}
 
-    /**
-     * class中的字段名
-     *
-     * @param cols 排除的字段名集合
-     * @param columns 排除的字段名集合
-     * @return SelectColumn
-     */
-    //    @Deprecated
-    //    public static SelectColumn createExcludes(String[] cols, String... columns) {
-    //        return new SelectColumn(Utility.append(cols, columns), true);
-    //    }
-    //
-    //
-    /**
-     * class中的字段名
-     *
-     * @param cols 排除的字段名集合
-     * @param columns 排除的字段名集合
-     * @return SelectColumn
-     */
-    public static SelectColumn excludes(String[] cols, String... columns) {
-        return new SelectColumn(Utility.append(cols, columns), true);
-    }
+	/**
+	 * class中的字段名
+	 *
+	 * @param cols 排除的字段名集合
+	 * @param columns 排除的字段名集合
+	 * @return SelectColumn
+	 */
+	//    @Deprecated
+	//    public static SelectColumn createExcludes(String[] cols, String... columns) {
+	//        return new SelectColumn(Utility.append(cols, columns), true);
+	//    }
+	//
+	//
+	/**
+	 * class中的字段名
+	 *
+	 * @param cols 排除的字段名集合
+	 * @param columns 排除的字段名集合
+	 * @return SelectColumn
+	 */
+	public static SelectColumn excludes(String[] cols, String... columns) {
+		return new SelectColumn(Utility.append(cols, columns), true);
+	}
 
-    public boolean isOnlyOneColumn() {
-        return !excludable && columns != null && columns.length == 1;
-    }
+	public boolean isOnlyOneColumn() {
+		return !excludable && columns != null && columns.length == 1;
+	}
 
-    @Override
-    public boolean test(final String column) {
-        if (this.columns != null) {
-            for (String col : this.columns) {
-                if (col.equalsIgnoreCase(column)) {
-                    return !excludable;
-                }
-            }
-        }
-        if (this.patterns != null) {
-            for (Pattern reg : this.patterns) {
-                if (reg.matcher(column).find()) {
-                    return !excludable;
-                }
-            }
-        }
-        return excludable;
-    }
+	@Override
+	public boolean test(final String column) {
+		if (this.columns != null) {
+			for (String col : this.columns) {
+				if (col.equalsIgnoreCase(column)) {
+					return !excludable;
+				}
+			}
+		}
+		if (this.patterns != null) {
+			for (Pattern reg : this.patterns) {
+				if (reg.matcher(column).find()) {
+					return !excludable;
+				}
+			}
+		}
+		return excludable;
+	}
 
-    public String[] getColumns() {
-        return columns;
-    }
+	public String[] getColumns() {
+		return columns;
+	}
 
-    public void setColumns(String[] columns) {
-        this.columns = columns;
-    }
+	public void setColumns(String[] columns) {
+		this.columns = columns;
+	}
 
-    public boolean isExcludable() {
-        return excludable;
-    }
+	public boolean isExcludable() {
+		return excludable;
+	}
 
-    public void setExcludable(boolean excludable) {
-        this.excludable = excludable;
-    }
+	public void setExcludable(boolean excludable) {
+		this.excludable = excludable;
+	}
 
-    public Pattern[] getPatterns() {
-        return patterns;
-    }
+	public Pattern[] getPatterns() {
+		return patterns;
+	}
 
-    public void setPatterns(Pattern[] patterns) {
-        this.patterns = patterns;
-    }
+	public void setPatterns(Pattern[] patterns) {
+		this.patterns = patterns;
+	}
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(getClass().getSimpleName()).append("{excludable=").append(excludable);
-        if (columns != null) {
-            sb.append(", columns=").append(Arrays.toString(columns));
-        }
-        if (patterns != null) {
-            sb.append(", patterns=").append(Arrays.toString(patterns));
-        }
-        return sb.append('}').toString();
-    }
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(getClass().getSimpleName()).append("{excludable=").append(excludable);
+		if (columns != null) {
+			sb.append(", columns=").append(Arrays.toString(columns));
+		}
+		if (patterns != null) {
+			sb.append(", patterns=").append(Arrays.toString(patterns));
+		}
+		return sb.append('}').toString();
+	}
 }

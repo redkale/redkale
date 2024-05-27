@@ -11,21 +11,21 @@ import org.redkale.source.DataSqlSource;
 /** @author zhangjx */
 public class DataSqlMapperTest {
 
-    private static DataSqlSource source = new DataJdbcSource();
+	private static DataSqlSource source = new DataJdbcSource();
 
-    public static void main(String[] args) throws Throwable {
-        DataSqlMapperTest test = new DataSqlMapperTest();
-        test.init();
-        test.run();
-    }
+	public static void main(String[] args) throws Throwable {
+		DataSqlMapperTest test = new DataSqlMapperTest();
+		test.init();
+		test.run();
+	}
 
-    @BeforeAll
-    public static void init() throws Exception {
-        // do
-    }
+	@BeforeAll
+	public static void init() throws Exception {
+		// do
+	}
 
-    @Test
-    public void run() throws Exception {
-        // do
-    }
+	@Test
+	public void run() throws Exception {
+		// do
+	}
 }

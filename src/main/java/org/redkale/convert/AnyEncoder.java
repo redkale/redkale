@@ -17,39 +17,39 @@ import java.lang.reflect.Type;
  */
 public final class AnyEncoder<T> implements Encodeable<Writer, T> {
 
-    final ConvertFactory factory;
+	final ConvertFactory factory;
 
-    AnyEncoder(ConvertFactory factory) {
-        this.factory = factory;
-    }
+	AnyEncoder(ConvertFactory factory) {
+		this.factory = factory;
+	}
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public void convertTo(final Writer out, final T value) {
-        if (value == null) {
-            out.writeClassName(null);
-            out.writeNull();
-        } else {
-            Class clazz = value.getClass();
-            if (clazz == Object.class) {
-                out.writeObjectB(value);
-                out.writeObjectE(value);
-                return;
-            }
-            if (out.needWriteClassName()) {
-                out.writeClassName(factory.getEntityAlias(clazz));
-            }
-            factory.loadEncoder(clazz).convertTo(out, value);
-        }
-    }
+	@Override
+	@SuppressWarnings("unchecked")
+	public void convertTo(final Writer out, final T value) {
+		if (value == null) {
+			out.writeClassName(null);
+			out.writeNull();
+		} else {
+			Class clazz = value.getClass();
+			if (clazz == Object.class) {
+				out.writeObjectB(value);
+				out.writeObjectE(value);
+				return;
+			}
+			if (out.needWriteClassName()) {
+				out.writeClassName(factory.getEntityAlias(clazz));
+			}
+			factory.loadEncoder(clazz).convertTo(out, value);
+		}
+	}
 
-    @Override
-    public Type getType() {
-        return Object.class;
-    }
+	@Override
+	public Type getType() {
+		return Object.class;
+	}
 
-    @Override
-    public boolean specifyable() {
-        return false;
-    }
+	@Override
+	public boolean specifyable() {
+		return false;
+	}
 }

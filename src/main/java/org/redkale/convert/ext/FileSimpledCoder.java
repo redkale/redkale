@@ -19,23 +19,23 @@ import org.redkale.convert.*;
  */
 public class FileSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, File> {
 
-    public static final FileSimpledCoder instance = new FileSimpledCoder();
+	public static final FileSimpledCoder instance = new FileSimpledCoder();
 
-    @Override
-    public void convertTo(W out, File value) {
-        if (value == null) {
-            out.writeNull();
-        } else {
-            out.writeString(value.getPath());
-        }
-    }
+	@Override
+	public void convertTo(W out, File value) {
+		if (value == null) {
+			out.writeNull();
+		} else {
+			out.writeString(value.getPath());
+		}
+	}
 
-    @Override
-    public File convertFrom(R in) {
-        String value = in.readString();
-        if (value == null) {
-            return null;
-        }
-        return new File(value);
-    }
+	@Override
+	public File convertFrom(R in) {
+		String value = in.readString();
+		if (value == null) {
+			return null;
+		}
+		return new File(value);
+	}
 }

@@ -27,10 +27,10 @@ import org.redkale.service.LoadMode;
 @Retention(RUNTIME)
 public @interface Locked {
 
-    /**
-     * Service加载模式
-     *
-     * @return 模式
-     */
-    LoadMode mode() default LoadMode.ANY;
+	/**
+	 * Service加载模式
+	 *
+	 * @return 模式
+	 */
+	LoadMode mode() default LoadMode.ANY;
 }

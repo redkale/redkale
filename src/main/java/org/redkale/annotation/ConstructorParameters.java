@@ -23,5 +23,5 @@ import java.lang.annotation.*;
 @ClassDepends
 public @interface ConstructorParameters {
 
-    String[] value();
+	String[] value();
 }

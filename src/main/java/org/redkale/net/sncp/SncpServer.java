@@ -24,112 +24,112 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public class SncpServer extends Server<Uint128, SncpContext, SncpRequest, SncpResponse, SncpServlet> {
 
-    public SncpServer() {
-        this(null, System.currentTimeMillis(), null, ResourceFactory.create());
-    }
+	public SncpServer() {
+		this(null, System.currentTimeMillis(), null, ResourceFactory.create());
+	}
 
-    public SncpServer(ResourceFactory resourceFactory) {
-        this(null, System.currentTimeMillis(), null, resourceFactory);
-    }
+	public SncpServer(ResourceFactory resourceFactory) {
+		this(null, System.currentTimeMillis(), null, resourceFactory);
+	}
 
-    public SncpServer(
-            Application application, long serverStartTime, AnyValue serconf, ResourceFactory resourceFactory) {
-        super(application, serverStartTime, netprotocol(serconf), resourceFactory, new SncpDispatcherServlet());
-    }
+	public SncpServer(
+			Application application, long serverStartTime, AnyValue serconf, ResourceFactory resourceFactory) {
+		super(application, serverStartTime, netprotocol(serconf), resourceFactory, new SncpDispatcherServlet());
+	}
 
-    private static String netprotocol(AnyValue serconf) {
-        if (serconf == null) {
-            return "TCP";
-        }
-        String protocol = serconf.getValue("protocol", "").toUpperCase();
-        if (protocol.endsWith(".UDP")) {
-            return "UDP";
-        }
-        return "TCP";
-    }
+	private static String netprotocol(AnyValue serconf) {
+		if (serconf == null) {
+			return "TCP";
+		}
+		String protocol = serconf.getValue("protocol", "").toUpperCase();
+		if (protocol.endsWith(".UDP")) {
+			return "UDP";
+		}
+		return "TCP";
+	}
 
-    @Override
-    public void init(AnyValue config) throws Exception {
-        super.init(config);
-    }
+	@Override
+	public void init(AnyValue config) throws Exception {
+		super.init(config);
+	}
 
-    public List<SncpServlet> getSncpServlets() {
-        return this.dispatcher.getServlets();
-    }
+	public List<SncpServlet> getSncpServlets() {
+		return this.dispatcher.getServlets();
+	}
 
-    public List<SncpFilter> getSncpFilters() {
-        return this.dispatcher.getFilters();
-    }
+	public List<SncpFilter> getSncpFilters() {
+		return this.dispatcher.getFilters();
+	}
 
-    /**
-     * 删除SncpFilter
-     *
-     * @param <T> 泛型
-     * @param filterClass SncpFilter类
-     * @return SncpFilter
-     */
-    public <T extends SncpFilter> T removeSncpFilter(Class<T> filterClass) {
-        return (T) this.dispatcher.removeFilter(filterClass);
-    }
+	/**
+	 * 删除SncpFilter
+	 *
+	 * @param <T> 泛型
+	 * @param filterClass SncpFilter类
+	 * @return SncpFilter
+	 */
+	public <T extends SncpFilter> T removeSncpFilter(Class<T> filterClass) {
+		return (T) this.dispatcher.removeFilter(filterClass);
+	}
 
-    /**
-     * 添加SncpFilter
-     *
-     * @param filter SncpFilter
-     * @param conf AnyValue
-     * @return SncpServer
-     */
-    public SncpServer addSncpFilter(SncpFilter filter, AnyValue conf) {
-        this.dispatcher.addFilter(filter, conf);
-        return this;
-    }
+	/**
+	 * 添加SncpFilter
+	 *
+	 * @param filter SncpFilter
+	 * @param conf AnyValue
+	 * @return SncpServer
+	 */
+	public SncpServer addSncpFilter(SncpFilter filter, AnyValue conf) {
+		this.dispatcher.addFilter(filter, conf);
+		return this;
+	}
 
-    /**
-     * 删除SncpServlet
-     *
-     * @param sncpService Service
-     * @return SncpServlet
-     */
-    public SncpServlet removeSncpServlet(Service sncpService) {
-        if (!Sncp.isSncpDyn(sncpService)) {
-            throw new SncpException(sncpService + " is not sncp dynamic-gen service");
-        }
-        return ((SncpDispatcherServlet) this.dispatcher).removeSncpServlet(sncpService);
-    }
+	/**
+	 * 删除SncpServlet
+	 *
+	 * @param sncpService Service
+	 * @return SncpServlet
+	 */
+	public SncpServlet removeSncpServlet(Service sncpService) {
+		if (!Sncp.isSncpDyn(sncpService)) {
+			throw new SncpException(sncpService + " is not sncp dynamic-gen service");
+		}
+		return ((SncpDispatcherServlet) this.dispatcher).removeSncpServlet(sncpService);
+	}
 
-    public SncpServlet addSncpServlet(Service sncpService) {
-        if (!Sncp.isSncpDyn(sncpService)) {
-            throw new SncpException(sncpService + " is not sncp dynamic-gen service");
-        }
-        SncpServlet sds =
-                new SncpServlet(Sncp.getResourceName(sncpService), Sncp.getResourceType(sncpService), sncpService);
-        this.dispatcher.addServlet(sds, null, Sncp.getResourceConf(sncpService));
-        return sds;
-    }
+	public SncpServlet addSncpServlet(Service sncpService) {
+		if (!Sncp.isSncpDyn(sncpService)) {
+			throw new SncpException(sncpService + " is not sncp dynamic-gen service");
+		}
+		SncpServlet sds =
+				new SncpServlet(Sncp.getResourceName(sncpService), Sncp.getResourceType(sncpService), sncpService);
+		this.dispatcher.addServlet(sds, null, Sncp.getResourceConf(sncpService));
+		return sds;
+	}
 
-    @Override
-    @SuppressWarnings("unchecked")
-    protected SncpContext createContext() {
-        if (!"UDP".equalsIgnoreCase(netprotocol)) {
-            this.bufferCapacity = Math.max(this.bufferCapacity, 8 * 1024);
-        }
-        final SncpContextConfig contextConfig = new SncpContextConfig();
-        initContextConfig(contextConfig);
+	@Override
+	@SuppressWarnings("unchecked")
+	protected SncpContext createContext() {
+		if (!"UDP".equalsIgnoreCase(netprotocol)) {
+			this.bufferCapacity = Math.max(this.bufferCapacity, 8 * 1024);
+		}
+		final SncpContextConfig contextConfig = new SncpContextConfig();
+		initContextConfig(contextConfig);
 
-        return new SncpContext(contextConfig);
-    }
+		return new SncpContext(contextConfig);
+	}
 
-    @Override
-    protected ByteBufferPool createSafeBufferPool(LongAdder createCounter, LongAdder cycleCounter, int bufferPoolSize) {
-        return ByteBufferPool.createSafePool(createCounter, cycleCounter, bufferPoolSize, this.bufferCapacity);
-    }
+	@Override
+	protected ByteBufferPool createSafeBufferPool(LongAdder createCounter, LongAdder cycleCounter, int bufferPoolSize) {
+		return ByteBufferPool.createSafePool(createCounter, cycleCounter, bufferPoolSize, this.bufferCapacity);
+	}
 
-    @Override
-    protected ObjectPool<SncpResponse> createSafeResponsePool(
-            LongAdder createCounter, LongAdder cycleCounter, int responsePoolSize) {
-        Creator<SncpResponse> creator =
-                (Object... params) -> new SncpResponse(this.context, new SncpRequest(this.context));
-        return ObjectPool.createSafePool(
-                createCounter, cycleCounter, responsePoolSize, creator, SncpResponse::prepare, SncpResponse::recycle);
-    }
+	@Override
+	protected ObjectPool<SncpResponse> createSafeResponsePool(
+			LongAdder createCounter, LongAdder cycleCounter, int responsePoolSize) {
+		Creator<SncpResponse> creator =
+				(Object... params) -> new SncpResponse(this.context, new SncpRequest(this.context));
+		return ObjectPool.createSafePool(
+				createCounter, cycleCounter, responsePoolSize, creator, SncpResponse::prepare, SncpResponse::recycle);
+	}
 }

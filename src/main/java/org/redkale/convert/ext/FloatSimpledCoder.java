@@ -18,15 +18,15 @@ import org.redkale.convert.*;
  */
 public final class FloatSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, Float> {
 
-    public static final FloatSimpledCoder instance = new FloatSimpledCoder();
+	public static final FloatSimpledCoder instance = new FloatSimpledCoder();
 
-    @Override
-    public void convertTo(W out, Float value) {
-        out.writeFloat(value);
-    }
+	@Override
+	public void convertTo(W out, Float value) {
+		out.writeFloat(value);
+	}
 
-    @Override
-    public Float convertFrom(R in) {
-        return in.readFloat();
-    }
+	@Override
+	public Float convertFrom(R in) {
+		return in.readFloat();
+	}
 }

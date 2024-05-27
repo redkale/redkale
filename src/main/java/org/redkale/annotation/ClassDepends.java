@@ -21,5 +21,5 @@ import java.lang.annotation.*;
 @Retention(SOURCE)
 public @interface ClassDepends {
 
-    Class[] value() default {};
+	Class[] value() default {};
 }

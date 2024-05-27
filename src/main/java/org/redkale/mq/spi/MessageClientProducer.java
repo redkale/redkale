@@ -17,21 +17,21 @@ import java.util.logging.Logger;
  */
 public abstract class MessageClientProducer {
 
-    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
+	protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
-    protected final String name;
+	protected final String name;
 
-    protected final AtomicBoolean closed = new AtomicBoolean();
+	protected final AtomicBoolean closed = new AtomicBoolean();
 
-    protected MessageClientProducer(String name) {
-        this.name = name;
-    }
+	protected MessageClientProducer(String name) {
+		this.name = name;
+	}
 
-    public abstract CompletableFuture<Void> apply(MessageRecord message);
+	public abstract CompletableFuture<Void> apply(MessageRecord message);
 
-    public abstract void stop();
+	public abstract void stop();
 
-    public boolean isClosed() {
-        return closed.get();
-    }
+	public boolean isClosed() {
+		return closed.get();
+	}
 }

@@ -7,5 +7,5 @@ package org.redkale.test.util;
 
 /** @author zhangjx */
 public class TestABean {
-    public long time;
+	public long time;
 }

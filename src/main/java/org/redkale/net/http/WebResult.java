@@ -16,18 +16,18 @@ import org.redkale.net.client.ClientResult;
  */
 public class WebResult<T> extends HttpResult<T> implements ClientResult {
 
-    int readState;
+	int readState;
 
-    int contentLength = -1;
+	int contentLength = -1;
 
-    @Override
-    @ConvertDisabled
-    public boolean isKeepAlive() {
-        return true;
-    }
+	@Override
+	@ConvertDisabled
+	public boolean isKeepAlive() {
+		return true;
+	}
 
-    @Override
-    public String toString() {
-        return JsonConvert.root().convertTo(HttpResult.class, this);
-    }
+	@Override
+	public String toString() {
+		return JsonConvert.root().convertTo(HttpResult.class, this);
+	}
 }

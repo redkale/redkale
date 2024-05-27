@@ -20,40 +20,40 @@ import org.redkale.convert.json.*;
  */
 public class InstantSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, Instant> {
 
-    public static final InstantSimpledCoder instance = new InstantSimpledCoder();
+	public static final InstantSimpledCoder instance = new InstantSimpledCoder();
 
-    @Override
-    public void convertTo(W out, Instant value) {
-        out.writeLong(value == null ? -1L : value.toEpochMilli());
-    }
+	@Override
+	public void convertTo(W out, Instant value) {
+		out.writeLong(value == null ? -1L : value.toEpochMilli());
+	}
 
-    @Override
-    public Instant convertFrom(R in) {
-        long t = in.readLong();
-        return t == -1 ? null : Instant.ofEpochMilli(t);
-    }
+	@Override
+	public Instant convertFrom(R in) {
+		long t = in.readLong();
+		return t == -1 ? null : Instant.ofEpochMilli(t);
+	}
 
-    public static final class InstantJsonSimpledCoder<R extends JsonReader, W extends JsonWriter>
-            extends SimpledCoder<R, W, Instant> {
+	public static final class InstantJsonSimpledCoder<R extends JsonReader, W extends JsonWriter>
+			extends SimpledCoder<R, W, Instant> {
 
-        public static final InstantJsonSimpledCoder instance = new InstantJsonSimpledCoder();
+		public static final InstantJsonSimpledCoder instance = new InstantJsonSimpledCoder();
 
-        @Override
-        public void convertTo(final W out, final Instant value) {
-            if (value == null) {
-                out.writeNull();
-            } else {
-                out.writeSmallString(value.toString());
-            }
-        }
+		@Override
+		public void convertTo(final W out, final Instant value) {
+			if (value == null) {
+				out.writeNull();
+			} else {
+				out.writeSmallString(value.toString());
+			}
+		}
 
-        @Override
-        public Instant convertFrom(R in) {
-            final String str = in.readSmallString();
-            if (str == null) {
-                return null;
-            }
-            return Instant.parse(str);
-        }
-    }
+		@Override
+		public Instant convertFrom(R in) {
+			final String str = in.readSmallString();
+			if (str == null) {
+				return null;
+			}
+			return Instant.parse(str);
+		}
+	}
 }

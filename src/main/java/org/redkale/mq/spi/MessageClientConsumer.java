@@ -17,25 +17,25 @@ import java.util.logging.Logger;
  */
 public abstract class MessageClientConsumer implements MessageProcessor {
 
-    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
+	protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
-    protected MessageClient messageClient;
+	protected MessageClient messageClient;
 
-    protected MessageClientConsumer(MessageClient messageClient) {
-        Objects.requireNonNull(messageClient);
-        this.messageClient = messageClient;
-    }
+	protected MessageClientConsumer(MessageClient messageClient) {
+		Objects.requireNonNull(messageClient);
+		this.messageClient = messageClient;
+	}
 
-    public Collection<String> getTopics() {
-        return messageClient.getTopics();
-    }
+	public Collection<String> getTopics() {
+		return messageClient.getTopics();
+	}
 
-    @Override
-    public void process(MessageRecord message, long time) {
-        messageClient.process(message, time);
-    }
+	@Override
+	public void process(MessageRecord message, long time) {
+		messageClient.process(message, time);
+	}
 
-    public abstract void start();
+	public abstract void start();
 
-    public abstract void stop();
+	public abstract void stop();
 }

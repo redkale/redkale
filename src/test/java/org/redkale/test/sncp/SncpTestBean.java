@@ -14,41 +14,41 @@ import org.redkale.util.Utility;
 /** @author zhangjx */
 public class SncpTestBean implements FilterBean {
 
-    @Id
-    private long id;
+	@Id
+	private long id;
 
-    private String content;
+	private String content;
 
-    public static void main(String[] args) throws Exception {
-        String json = "{\"content\":\"数据: 01\",\"id\":1}";
-        SncpTestBean bean = JsonConvert.root().convertFrom(SncpTestBean.class, json);
-        System.out.println(bean);
-        byte[] bs = BsonFactory.root().getConvert().convertTo(bean);
-        Utility.println("---------", bs);
-        System.out.println(BsonFactory.root()
-                .getConvert()
-                .convertFrom(SncpTestBean.class, bs)
-                .toString());
-    }
+	public static void main(String[] args) throws Exception {
+		String json = "{\"content\":\"数据: 01\",\"id\":1}";
+		SncpTestBean bean = JsonConvert.root().convertFrom(SncpTestBean.class, json);
+		System.out.println(bean);
+		byte[] bs = BsonFactory.root().getConvert().convertTo(bean);
+		Utility.println("---------", bs);
+		System.out.println(BsonFactory.root()
+				.getConvert()
+				.convertFrom(SncpTestBean.class, bs)
+				.toString());
+	}
 
-    @Override
-    public String toString() {
-        return JsonConvert.root().convertTo(this);
-    }
+	@Override
+	public String toString() {
+		return JsonConvert.root().convertTo(this);
+	}
 
-    public long getId() {
-        return id;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public void setId(long id) {
-        this.id = id;
-    }
+	public void setId(long id) {
+		this.id = id;
+	}
 
-    public String getContent() {
-        return content;
-    }
+	public String getContent() {
+		return content;
+	}
 
-    public void setContent(String content) {
-        this.content = content;
-    }
+	public void setContent(String content) {
+		this.content = content;
+	}
 }

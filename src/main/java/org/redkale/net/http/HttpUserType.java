@@ -24,5 +24,5 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface HttpUserType {
 
-    Class value();
+	Class value();
 }

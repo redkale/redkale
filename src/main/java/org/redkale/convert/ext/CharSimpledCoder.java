@@ -18,15 +18,15 @@ import org.redkale.convert.*;
  */
 public final class CharSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, Character> {
 
-    public static final CharSimpledCoder instance = new CharSimpledCoder();
+	public static final CharSimpledCoder instance = new CharSimpledCoder();
 
-    @Override
-    public void convertTo(W out, Character value) {
-        out.writeChar(value);
-    }
+	@Override
+	public void convertTo(W out, Character value) {
+		out.writeChar(value);
+	}
 
-    @Override
-    public Character convertFrom(R in) {
-        return in.readChar();
-    }
+	@Override
+	public Character convertFrom(R in) {
+		return in.readChar();
+	}
 }

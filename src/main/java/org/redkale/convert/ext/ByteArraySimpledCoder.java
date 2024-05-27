@@ -20,15 +20,15 @@ import org.redkale.convert.Writer;
  */
 public final class ByteArraySimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, byte[]> {
 
-    public static final ByteArraySimpledCoder instance = new ByteArraySimpledCoder();
+	public static final ByteArraySimpledCoder instance = new ByteArraySimpledCoder();
 
-    @Override
-    public void convertTo(W out, byte[] values) {
-        out.writeByteArray(values);
-    }
+	@Override
+	public void convertTo(W out, byte[] values) {
+		out.writeByteArray(values);
+	}
 
-    @Override
-    public byte[] convertFrom(R in) {
-        return in.readByteArray();
-    }
+	@Override
+	public byte[] convertFrom(R in) {
+		return in.readByteArray();
+	}
 }

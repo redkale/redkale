@@ -22,38 +22,38 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface RestHeader {
 
-    /**
-     * Header参数名
-     *
-     * @return String
-     */
-    String name();
+	/**
+	 * Header参数名
+	 *
+	 * @return String
+	 */
+	String name();
 
-    /**
-     * 转换数字byte/short/int/long时所用的进制数， 默认10进制
-     *
-     * @return int
-     */
-    int radix() default 10;
+	/**
+	 * 转换数字byte/short/int/long时所用的进制数， 默认10进制
+	 *
+	 * @return int
+	 */
+	int radix() default 10;
 
-    /**
-     * 参数是否必传, 框架运行中不作验证, only for OpenAPI Specification 3
-     *
-     * @return boolean
-     */
-    boolean required() default true;
+	/**
+	 * 参数是否必传, 框架运行中不作验证, only for OpenAPI Specification 3
+	 *
+	 * @return boolean
+	 */
+	boolean required() default true;
 
-    /**
-     * for OpenAPI Specification 3.1.0
-     *
-     * @return String
-     */
-    String example() default "";
+	/**
+	 * for OpenAPI Specification 3.1.0
+	 *
+	 * @return String
+	 */
+	String example() default "";
 
-    /**
-     * 备注描述
-     *
-     * @return String
-     */
-    String comment() default "";
+	/**
+	 * 备注描述
+	 *
+	 * @return String
+	 */
+	String comment() default "";
 }

@@ -8,5 +8,5 @@ package org.redkale.test.type;
 /** @author zhangjx */
 public class TwoBean extends OneBean {
 
-    public String name;
+	public String name;
 }

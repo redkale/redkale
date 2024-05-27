@@ -18,7 +18,7 @@ import org.redkale.convert.ConvertType;
  */
 public interface ConvertProvider {
 
-    public ConvertType type();
+	public ConvertType type();
 
-    public Convert convert();
+	public Convert convert();
 }

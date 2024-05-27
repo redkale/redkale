@@ -18,11 +18,11 @@ import org.redkale.annotation.ClassDepends;
 @FunctionalInterface
 public interface ThrowSupplier<T> {
 
-    /**
-     * Gets a result.
-     *
-     * @return a result
-     * @throws java.lang.Throwable Throwable
-     */
-    T get() throws Throwable;
+	/**
+	 * Gets a result.
+	 *
+	 * @return a result
+	 * @throws java.lang.Throwable Throwable
+	 */
+	T get() throws Throwable;
 }

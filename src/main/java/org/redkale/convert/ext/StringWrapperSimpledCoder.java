@@ -18,17 +18,17 @@ import org.redkale.util.StringWrapper;
  * @param <W> Writer输出的子类型
  */
 public final class StringWrapperSimpledCoder<R extends Reader, W extends Writer>
-        extends SimpledCoder<R, W, StringWrapper> {
+		extends SimpledCoder<R, W, StringWrapper> {
 
-    public static final StringWrapperSimpledCoder instance = new StringWrapperSimpledCoder();
+	public static final StringWrapperSimpledCoder instance = new StringWrapperSimpledCoder();
 
-    @Override
-    public void convertTo(W out, StringWrapper value) {
-        out.writeWrapper(value);
-    }
+	@Override
+	public void convertTo(W out, StringWrapper value) {
+		out.writeWrapper(value);
+	}
 
-    @Override
-    public StringWrapper convertFrom(R in) {
-        return new StringWrapper(in.readString());
-    }
+	@Override
+	public StringWrapper convertFrom(R in) {
+		return new StringWrapper(in.readString());
+	}
 }

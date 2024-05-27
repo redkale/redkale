@@ -21,19 +21,19 @@ import java.util.function.Predicate;
  */
 public interface RestHeaders {
 
-    public String firstValue(String name);
+	public String firstValue(String name);
 
-    public String firstValue(String name, String defaultValue);
+	public String firstValue(String name, String defaultValue);
 
-    public List<String> listValue(String name);
+	public List<String> listValue(String name);
 
-    public void forEach(BiConsumer<String, String> consumer);
+	public void forEach(BiConsumer<String, String> consumer);
 
-    public void forEach(Predicate<String> filter, BiConsumer<String, String> consumer);
+	public void forEach(Predicate<String> filter, BiConsumer<String, String> consumer);
 
-    public String[] names();
+	public String[] names();
 
-    public boolean contains(String name);
+	public boolean contains(String name);
 
-    public Map<String, Serializable> map();
+	public Map<String, Serializable> map();
 }

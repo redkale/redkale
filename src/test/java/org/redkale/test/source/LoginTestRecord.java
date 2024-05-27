@@ -18,69 +18,69 @@ import org.redkale.persistence.Id;
  */
 public class LoginTestRecord {
 
-    @Id
-    private String sessionid;
+	@Id
+	private String sessionid;
 
-    private int userid;
+	private int userid;
 
-    private String loginagent;
+	private String loginagent;
 
-    private String loginip;
+	private String loginip;
 
-    private long logintime;
+	private long logintime;
 
-    private long logouttime;
+	private long logouttime;
 
-    @Override
-    public String toString() {
-        return JsonConvert.root().convertTo(this);
-    }
+	@Override
+	public String toString() {
+		return JsonConvert.root().convertTo(this);
+	}
 
-    public String getSessionid() {
-        return sessionid;
-    }
+	public String getSessionid() {
+		return sessionid;
+	}
 
-    public void setSessionid(String sessionid) {
-        this.sessionid = sessionid;
-    }
+	public void setSessionid(String sessionid) {
+		this.sessionid = sessionid;
+	}
 
-    public int getUserid() {
-        return userid;
-    }
+	public int getUserid() {
+		return userid;
+	}
 
-    public void setUserid(int userid) {
-        this.userid = userid;
-    }
+	public void setUserid(int userid) {
+		this.userid = userid;
+	}
 
-    public String getLoginagent() {
-        return loginagent;
-    }
+	public String getLoginagent() {
+		return loginagent;
+	}
 
-    public void setLoginagent(String loginagent) {
-        this.loginagent = loginagent;
-    }
+	public void setLoginagent(String loginagent) {
+		this.loginagent = loginagent;
+	}
 
-    public String getLoginip() {
-        return loginip;
-    }
+	public String getLoginip() {
+		return loginip;
+	}
 
-    public void setLoginip(String loginip) {
-        this.loginip = loginip;
-    }
+	public void setLoginip(String loginip) {
+		this.loginip = loginip;
+	}
 
-    public long getLogintime() {
-        return logintime;
-    }
+	public long getLogintime() {
+		return logintime;
+	}
 
-    public void setLogintime(long logintime) {
-        this.logintime = logintime;
-    }
+	public void setLogintime(long logintime) {
+		this.logintime = logintime;
+	}
 
-    public long getLogouttime() {
-        return logouttime;
-    }
+	public long getLogouttime() {
+		return logouttime;
+	}
 
-    public void setLogouttime(long logouttime) {
-        this.logouttime = logouttime;
-    }
+	public void setLogouttime(long logouttime) {
+		this.logouttime = logouttime;
+	}
 }

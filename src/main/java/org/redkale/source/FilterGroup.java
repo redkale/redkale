@@ -78,5 +78,5 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface FilterGroup {
 
-    String value() default "[AND]";
+	String value() default "[AND]";
 }

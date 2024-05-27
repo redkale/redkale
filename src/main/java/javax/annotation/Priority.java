@@ -30,10 +30,10 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Priority {
 
-    /**
-     * 优先级值
-     *
-     * @return int
-     */
-    int value();
+	/**
+	 * 优先级值
+	 *
+	 * @return int
+	 */
+	int value();
 }

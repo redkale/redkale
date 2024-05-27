@@ -17,51 +17,51 @@ import org.redkale.convert.json.JsonConvert;
  */
 public class ClientAddress implements java.io.Serializable {
 
-    private SocketAddress[] addresses;
+	private SocketAddress[] addresses;
 
-    public ClientAddress() {}
+	public ClientAddress() {}
 
-    public ClientAddress(SocketAddress... addresses) {
-        if (addresses == null || addresses.length == 0) {
-            throw new NullPointerException("addresses is empty");
-        }
-        for (SocketAddress addr : addresses) {
-            Objects.requireNonNull(addr);
-        }
-        this.addresses = addresses;
-    }
+	public ClientAddress(SocketAddress... addresses) {
+		if (addresses == null || addresses.length == 0) {
+			throw new NullPointerException("addresses is empty");
+		}
+		for (SocketAddress addr : addresses) {
+			Objects.requireNonNull(addr);
+		}
+		this.addresses = addresses;
+	}
 
-    public ClientAddress(List<WeightAddress> addrs) {
-        if (addrs == null || addrs.isEmpty()) {
-            throw new NullPointerException("addresses is empty");
-        }
-        this.addresses = WeightAddress.createAddressArray(addrs);
-    }
+	public ClientAddress(List<WeightAddress> addrs) {
+		if (addrs == null || addrs.isEmpty()) {
+			throw new NullPointerException("addresses is empty");
+		}
+		this.addresses = WeightAddress.createAddressArray(addrs);
+	}
 
-    void updateAddress(List<SocketAddress> addrs) {
-        if (addrs == null || addrs.isEmpty()) {
-            throw new NullPointerException("addresses is empty");
-        }
-        for (SocketAddress addr : addrs) {
-            Objects.requireNonNull(addr);
-        }
-        this.addresses = addrs.toArray(new SocketAddress[addrs.size()]);
-    }
+	void updateAddress(List<SocketAddress> addrs) {
+		if (addrs == null || addrs.isEmpty()) {
+			throw new NullPointerException("addresses is empty");
+		}
+		for (SocketAddress addr : addrs) {
+			Objects.requireNonNull(addr);
+		}
+		this.addresses = addrs.toArray(new SocketAddress[addrs.size()]);
+	}
 
-    public SocketAddress randomAddress() {
-        SocketAddress[] addrs = this.addresses;
-        if (addrs.length == 1) {
-            return addrs[0];
-        }
-        return addrs[ThreadLocalRandom.current().nextInt(addrs.length)];
-    }
+	public SocketAddress randomAddress() {
+		SocketAddress[] addrs = this.addresses;
+		if (addrs.length == 1) {
+			return addrs[0];
+		}
+		return addrs[ThreadLocalRandom.current().nextInt(addrs.length)];
+	}
 
-    public Set<SocketAddress> getAddresses() {
-        return Set.of(addresses);
-    }
+	public Set<SocketAddress> getAddresses() {
+		return Set.of(addresses);
+	}
 
-    @Override
-    public String toString() {
-        return JsonConvert.root().convertTo(this);
-    }
+	@Override
+	public String toString() {
+		return JsonConvert.root().convertTo(this);
+	}
 }

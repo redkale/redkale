@@ -26,18 +26,18 @@ import org.redkale.service.LoadMode;
 @Retention(RUNTIME)
 public @interface Messaged {
 
-    String mq() default "";
+	String mq() default "";
 
-    String group() default "";
+	String group() default "";
 
-    String[] topics();
+	String[] topics();
 
-    ConvertType convertType() default ConvertType.JSON;
+	ConvertType convertType() default ConvertType.JSON;
 
-    /**
-     * Service加载模式
-     *
-     * @return 模式
-     */
-    LoadMode mode() default LoadMode.LOCAL;
+	/**
+	 * Service加载模式
+	 *
+	 * @return 模式
+	 */
+	LoadMode mode() default LoadMode.LOCAL;
 }

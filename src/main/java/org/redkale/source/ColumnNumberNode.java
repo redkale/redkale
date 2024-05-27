@@ -16,26 +16,26 @@ import org.redkale.convert.ConvertColumn;
  */
 public class ColumnNumberNode implements ColumnNode {
 
-    @ConvertColumn(index = 1)
-    private Number value;
+	@ConvertColumn(index = 1)
+	private Number value;
 
-    public ColumnNumberNode() {}
+	public ColumnNumberNode() {}
 
-    public ColumnNumberNode(Number value) {
-        Objects.requireNonNull(value, "number is null");
-        this.value = value;
-    }
+	public ColumnNumberNode(Number value) {
+		Objects.requireNonNull(value, "number is null");
+		this.value = value;
+	}
 
-    public Number getValue() {
-        return value;
-    }
+	public Number getValue() {
+		return value;
+	}
 
-    public void setValue(Number value) {
-        this.value = value;
-    }
+	public void setValue(Number value) {
+		this.value = value;
+	}
 
-    @Override
-    public String toString() {
-        return "{\"value\":" + value + "}";
-    }
+	@Override
+	public String toString() {
+		return "{\"value\":" + value + "}";
+	}
 }

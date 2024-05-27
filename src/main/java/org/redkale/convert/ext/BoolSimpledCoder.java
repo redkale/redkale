@@ -18,15 +18,15 @@ import org.redkale.convert.*;
  */
 public final class BoolSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, Boolean> {
 
-    public static final BoolSimpledCoder instance = new BoolSimpledCoder();
+	public static final BoolSimpledCoder instance = new BoolSimpledCoder();
 
-    @Override
-    public void convertTo(W out, Boolean value) {
-        out.writeBoolean(value);
-    }
+	@Override
+	public void convertTo(W out, Boolean value) {
+		out.writeBoolean(value);
+	}
 
-    @Override
-    public Boolean convertFrom(R in) {
-        return in.readBoolean();
-    }
+	@Override
+	public Boolean convertFrom(R in) {
+		return in.readBoolean();
+	}
 }

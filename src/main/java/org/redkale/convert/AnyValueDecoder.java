@@ -19,19 +19,19 @@ import org.redkale.util.AnyValue;
  */
 public class AnyValueDecoder<R extends Reader> implements Decodeable<R, AnyValue> {
 
-    protected final ConvertFactory factory;
+	protected final ConvertFactory factory;
 
-    public AnyValueDecoder(final ConvertFactory factory) {
-        this.factory = factory;
-    }
+	public AnyValueDecoder(final ConvertFactory factory) {
+		this.factory = factory;
+	}
 
-    @Override
-    public AnyValue convertFrom(R in) {
-        return null;
-    }
+	@Override
+	public AnyValue convertFrom(R in) {
+		return null;
+	}
 
-    @Override
-    public Type getType() {
-        return AnyValue.class;
-    }
+	@Override
+	public Type getType() {
+		return AnyValue.class;
+	}
 }

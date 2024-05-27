@@ -15,29 +15,29 @@ import org.redkale.convert.ConvertColumn;
  */
 public class ColumnBytesNode implements ColumnNode {
 
-    @ConvertColumn(index = 1)
-    private byte[] value;
+	@ConvertColumn(index = 1)
+	private byte[] value;
 
-    public ColumnBytesNode() {}
+	public ColumnBytesNode() {}
 
-    public ColumnBytesNode(byte[] value) {
-        this.value = value;
-    }
+	public ColumnBytesNode(byte[] value) {
+		this.value = value;
+	}
 
-    public static ColumnBytesNode create(byte[] value) {
-        return new ColumnBytesNode(value);
-    }
+	public static ColumnBytesNode create(byte[] value) {
+		return new ColumnBytesNode(value);
+	}
 
-    public byte[] getValue() {
-        return value;
-    }
+	public byte[] getValue() {
+		return value;
+	}
 
-    public void setValue(byte[] value) {
-        this.value = value;
-    }
+	public void setValue(byte[] value) {
+		this.value = value;
+	}
 
-    @Override
-    public String toString() {
-        return "{\"value\":" + value + "}";
-    }
+	@Override
+	public String toString() {
+		return "{\"value\":" + value + "}";
+	}
 }

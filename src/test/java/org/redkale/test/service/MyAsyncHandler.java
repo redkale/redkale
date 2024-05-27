@@ -12,5 +12,5 @@ package org.redkale.test.service;
  */
 public abstract class MyAsyncHandler<V, A> extends MyAsyncInnerHandler<V, A> {
 
-    public abstract int id();
+	public abstract int id();
 }

@@ -17,109 +17,109 @@ import org.redkale.util.AnyValueWriter;
 // @Cacheable
 public class JsonRecord {
 
-    @SourceConvert
-    private static JsonConvert createConvert() {
-        return JsonConvert.root();
-    }
+	@SourceConvert
+	private static JsonConvert createConvert() {
+		return JsonConvert.root();
+	}
 
-    @Id
-    @Column(comment = "主键ID;")
-    private long recordid;
+	@Id
+	@Column(comment = "主键ID;")
+	private long recordid;
 
-    @Column(comment = ";")
-    private String recordname = "";
+	@Column(comment = ";")
+	private String recordname = "";
 
-    @Column(comment = ";")
-    private Map<String, Integer> rmap;
+	@Column(comment = ";")
+	private Map<String, Integer> rmap;
 
-    @Column(comment = ";")
-    private List<String> rlist;
+	@Column(comment = ";")
+	private List<String> rlist;
 
-    @Column(comment = ";")
-    private Set<String> rset;
+	@Column(comment = ";")
+	private Set<String> rset;
 
-    public static JsonRecord create() {
-        JsonRecord record = new JsonRecord();
-        record.setRecordid(System.currentTimeMillis());
-        record.setRecordname("my name");
-        Map<String, Integer> map = new HashMap<>();
-        map.put("str111", 10000);
-        map.put("str222", 20000);
-        record.setRmap(map);
-        List<String> list = new ArrayList<>();
-        list.add("item11");
-        list.add("item22");
-        list.add("item11");
-        record.setRlist(list);
-        Set<String> set = new HashSet<>();
-        set.add("r1");
-        set.add("r2");
-        record.setRset(set);
-        return record;
-    }
+	public static JsonRecord create() {
+		JsonRecord record = new JsonRecord();
+		record.setRecordid(System.currentTimeMillis());
+		record.setRecordname("my name");
+		Map<String, Integer> map = new HashMap<>();
+		map.put("str111", 10000);
+		map.put("str222", 20000);
+		record.setRmap(map);
+		List<String> list = new ArrayList<>();
+		list.add("item11");
+		list.add("item22");
+		list.add("item11");
+		record.setRlist(list);
+		Set<String> set = new HashSet<>();
+		set.add("r1");
+		set.add("r2");
+		record.setRset(set);
+		return record;
+	}
 
-    public static void main(String[] args) throws Throwable {
-        AnyValueWriter conf = AnyValueWriter.create();
-        conf.addValue("name", "");
-        conf.addValue(
-                "url",
-                "jdbc:mysql://localhost:3306/center?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&rewriteBatchedStatements=true");
-        conf.addValue("user", "root");
-        conf.addValue("password", "");
-        DataJdbcSource source = new DataJdbcSource();
-        source.init(conf);
-        JsonRecord record = JsonRecord.create();
-        source.insert(record);
-        source.updateColumn(JsonRecord.class, record.getRecordid(), ColumnValue.set("recordname", "my name 2"));
-        record.getRmap().put("haha", 2222);
-        source.updateColumn(JsonRecord.class, record.getRecordid(), ColumnValue.set("rmap", (Serializable)
-                (Object) record.getRmap()));
-        System.out.println(source.find(JsonRecord.class, record.getRecordid()));
-        System.out.println(source.findColumn(JsonRecord.class, "rmap", record.getRecordid()));
-    }
+	public static void main(String[] args) throws Throwable {
+		AnyValueWriter conf = AnyValueWriter.create();
+		conf.addValue("name", "");
+		conf.addValue(
+				"url",
+				"jdbc:mysql://localhost:3306/center?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&rewriteBatchedStatements=true");
+		conf.addValue("user", "root");
+		conf.addValue("password", "");
+		DataJdbcSource source = new DataJdbcSource();
+		source.init(conf);
+		JsonRecord record = JsonRecord.create();
+		source.insert(record);
+		source.updateColumn(JsonRecord.class, record.getRecordid(), ColumnValue.set("recordname", "my name 2"));
+		record.getRmap().put("haha", 2222);
+		source.updateColumn(JsonRecord.class, record.getRecordid(), ColumnValue.set("rmap", (Serializable)
+				(Object) record.getRmap()));
+		System.out.println(source.find(JsonRecord.class, record.getRecordid()));
+		System.out.println(source.findColumn(JsonRecord.class, "rmap", record.getRecordid()));
+	}
 
-    @Override
-    public String toString() {
-        return JsonConvert.root().convertTo(this);
-    }
+	@Override
+	public String toString() {
+		return JsonConvert.root().convertTo(this);
+	}
 
-    public long getRecordid() {
-        return recordid;
-    }
+	public long getRecordid() {
+		return recordid;
+	}
 
-    public void setRecordid(long recordid) {
-        this.recordid = recordid;
-    }
+	public void setRecordid(long recordid) {
+		this.recordid = recordid;
+	}
 
-    public String getRecordname() {
-        return recordname;
-    }
+	public String getRecordname() {
+		return recordname;
+	}
 
-    public void setRecordname(String recordname) {
-        this.recordname = recordname;
-    }
+	public void setRecordname(String recordname) {
+		this.recordname = recordname;
+	}
 
-    public Map<String, Integer> getRmap() {
-        return rmap;
-    }
+	public Map<String, Integer> getRmap() {
+		return rmap;
+	}
 
-    public void setRmap(Map<String, Integer> rmap) {
-        this.rmap = rmap;
-    }
+	public void setRmap(Map<String, Integer> rmap) {
+		this.rmap = rmap;
+	}
 
-    public List<String> getRlist() {
-        return rlist;
-    }
+	public List<String> getRlist() {
+		return rlist;
+	}
 
-    public void setRlist(List<String> rlist) {
-        this.rlist = rlist;
-    }
+	public void setRlist(List<String> rlist) {
+		this.rlist = rlist;
+	}
 
-    public Set<String> getRset() {
-        return rset;
-    }
+	public Set<String> getRset() {
+		return rset;
+	}
 
-    public void setRset(Set<String> rset) {
-        this.rset = rset;
-    }
+	public void setRset(Set<String> rset) {
+		this.rset = rset;
+	}
 }

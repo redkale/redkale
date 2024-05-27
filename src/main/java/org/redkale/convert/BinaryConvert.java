@@ -18,18 +18,18 @@ import java.lang.reflect.Type;
  */
 public abstract class BinaryConvert<R extends Reader, W extends Writer> extends Convert<R, W> {
 
-    protected BinaryConvert(ConvertFactory<R, W> factory, int features) {
-        super(factory, features);
-    }
+	protected BinaryConvert(ConvertFactory<R, W> factory, int features) {
+		super(factory, features);
+	}
 
-    @Override
-    public final boolean isBinary() {
-        return true;
-    }
+	@Override
+	public final boolean isBinary() {
+		return true;
+	}
 
-    public final byte[] convertTo(final Object value) {
-        return convertTo((Type) null, value);
-    }
+	public final byte[] convertTo(final Object value) {
+		return convertTo((Type) null, value);
+	}
 
-    public abstract byte[] convertTo(final Type type, final Object value);
+	public abstract byte[] convertTo(final Type type, final Object value);
 }

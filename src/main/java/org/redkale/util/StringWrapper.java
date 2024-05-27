@@ -17,25 +17,25 @@ import org.redkale.convert.ConvertColumn;
  */
 public class StringWrapper implements Serializable {
 
-    @ConvertColumn(index = 1)
-    protected String value;
+	@ConvertColumn(index = 1)
+	protected String value;
 
-    public StringWrapper() {}
+	public StringWrapper() {}
 
-    public StringWrapper(String value) {
-        this.value = value;
-    }
+	public StringWrapper(String value) {
+		this.value = value;
+	}
 
-    public String getValue() {
-        return value;
-    }
+	public String getValue() {
+		return value;
+	}
 
-    public void setValue(String value) {
-        this.value = value;
-    }
+	public void setValue(String value) {
+		this.value = value;
+	}
 
-    @Override
-    public String toString() {
-        return value;
-    }
+	@Override
+	public String toString() {
+		return value;
+	}
 }

@@ -35,24 +35,24 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface Cacheable {
 
-    /**
-     * (Optional) Whether or not the entity should be cached.
-     *
-     * @return boolean
-     */
-    boolean value() default true;
+	/**
+	 * (Optional) Whether or not the entity should be cached.
+	 *
+	 * @return boolean
+	 */
+	boolean value() default true;
 
-    /**
-     * (Optional) 定时自动更新缓存的周期秒数，为0表示不做定时更新， 大于0表示每经过interval秒后会自动从数据库中拉取数据更新Cache
-     *
-     * @return int
-     */
-    int interval() default 0;
+	/**
+	 * (Optional) 定时自动更新缓存的周期秒数，为0表示不做定时更新， 大于0表示每经过interval秒后会自动从数据库中拉取数据更新Cache
+	 *
+	 * @return int
+	 */
+	int interval() default 0;
 
-    /**
-     * DataSource是否直接返回对象的真实引用， 而不是copy一份
-     *
-     * @return boolean
-     */
-    boolean direct() default false;
+	/**
+	 * DataSource是否直接返回对象的真实引用， 而不是copy一份
+	 *
+	 * @return boolean
+	 */
+	boolean direct() default false;
 }

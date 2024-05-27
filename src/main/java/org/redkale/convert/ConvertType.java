@@ -13,33 +13,33 @@ package org.redkale.convert;
  * @author zhangjx
  */
 public enum ConvertType {
-    JSON(1),
-    BSON(2),
-    PROTOBUF(64),
-    PROTOBUF_JSON(64 + 1),
-    PROTOBUF_BSON(64 + 2),
-    DIY(256),
-    ALL(1023);
+	JSON(1),
+	BSON(2),
+	PROTOBUF(64),
+	PROTOBUF_JSON(64 + 1),
+	PROTOBUF_BSON(64 + 2),
+	DIY(256),
+	ALL(1023);
 
-    private final int value;
+	private final int value;
 
-    private ConvertType(int v) {
-        this.value = v;
-    }
+	private ConvertType(int v) {
+		this.value = v;
+	}
 
-    public int getValue() {
-        return value;
-    }
+	public int getValue() {
+		return value;
+	}
 
-    public boolean contains(ConvertType type) {
-        if (type == null) return false;
-        return this.value >= type.value && (this.value & type.value) > 0;
-    }
+	public boolean contains(ConvertType type) {
+		if (type == null) return false;
+		return this.value >= type.value && (this.value & type.value) > 0;
+	}
 
-    public static ConvertType find(int value) {
-        for (ConvertType t : ConvertType.values()) {
-            if (value == t.value) return t;
-        }
-        return null;
-    }
+	public static ConvertType find(int value) {
+		for (ConvertType t : ConvertType.values()) {
+			if (value == t.value) return t;
+		}
+		return null;
+	}
 }

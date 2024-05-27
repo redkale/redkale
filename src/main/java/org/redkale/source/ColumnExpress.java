@@ -13,20 +13,20 @@ package org.redkale.source;
  * @author zhangjx
  */
 public enum ColumnExpress {
-    /** 赋值 col = val */
-    SET,
-    /** 加值 col = col + val */
-    INC,
-    /** 加值 col = col - val */
-    DEC,
-    /** 乘值 col = col * val */
-    MUL,
-    /** 除值 col = col / val */
-    DIV,
-    /** 取模 col = col % val */
-    MOD,
-    /** 与值 col = col &#38; val */
-    AND, // 与值 col = col & val
-    /** 或值 col = col | val */
-    ORR;
+	/** 赋值 col = val */
+	SET,
+	/** 加值 col = col + val */
+	INC,
+	/** 加值 col = col - val */
+	DEC,
+	/** 乘值 col = col * val */
+	MUL,
+	/** 除值 col = col / val */
+	DIV,
+	/** 取模 col = col % val */
+	MOD,
+	/** 与值 col = col &#38; val */
+	AND, // 与值 col = col & val
+	/** 或值 col = col | val */
+	ORR;
 }

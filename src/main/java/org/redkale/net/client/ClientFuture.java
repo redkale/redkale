@@ -19,82 +19,82 @@ import org.redkale.util.Traces;
  */
 public class ClientFuture<R extends ClientRequest, T> extends CompletableFuture<T> implements Runnable {
 
-    @Nonnull
-    protected final R request;
+	@Nonnull
+	protected final R request;
 
-    @Nonnull
-    protected final ClientConnection conn;
+	@Nonnull
+	protected final ClientConnection conn;
 
-    private ScheduledFuture timeout;
+	private ScheduledFuture timeout;
 
-    ClientFuture(ClientConnection conn, R request) {
-        super();
-        Objects.requireNonNull(conn);
-        Objects.requireNonNull(request);
-        this.conn = conn;
-        this.request = request;
-    }
+	ClientFuture(ClientConnection conn, R request) {
+		super();
+		Objects.requireNonNull(conn);
+		Objects.requireNonNull(request);
+		this.conn = conn;
+		this.request = request;
+	}
 
-    void setTimeout(ScheduledFuture timeout) {
-        this.timeout = timeout;
-    }
+	void setTimeout(ScheduledFuture timeout) {
+		this.timeout = timeout;
+	}
 
-    void cancelTimeout() {
-        if (timeout != null && !timeout.isDone()) {
-            timeout.cancel(true);
-        }
-    }
+	void cancelTimeout() {
+		if (timeout != null && !timeout.isDone()) {
+			timeout.cancel(true);
+		}
+	}
 
-    @Override // JDK9+
-    public <U> ClientFuture<R, U> newIncompleteFuture() {
-        ClientFuture future = new ClientFuture<>(conn, request);
-        future.timeout = timeout;
-        return future;
-    }
+	@Override // JDK9+
+	public <U> ClientFuture<R, U> newIncompleteFuture() {
+		ClientFuture future = new ClientFuture<>(conn, request);
+		future.timeout = timeout;
+		return future;
+	}
 
-    public R getRequest() {
-        return request;
-    }
+	public R getRequest() {
+		return request;
+	}
 
-    @Override
-    public void run() {
-        if (conn == null) {
-            return;
-        }
-        AsyncConnection channel = conn.getChannel();
-        if (channel.inCurrReadThread()) {
-            this.runTimeout();
-        } else {
-            channel.executeRead(this::runTimeout);
-        }
-    }
+	@Override
+	public void run() {
+		if (conn == null) {
+			return;
+		}
+		AsyncConnection channel = conn.getChannel();
+		if (channel.inCurrReadThread()) {
+			this.runTimeout();
+		} else {
+			channel.executeRead(this::runTimeout);
+		}
+	}
 
-    private void runTimeout() {
-        String traceid = request != null ? request.getTraceid() : null;
-        if (request != null) {
-            conn.removeRespFuture(request.getRequestid(), this);
-        }
-        TimeoutException ex = new TimeoutException("client-request: " + request);
-        WorkThread workThread = null;
-        if (request != null) {
-            workThread = request.workThread;
-            request.workThread = null;
-        }
-        if (workThread == null || workThread.getWorkExecutor() == null) {
-            workThread = conn.getChannel().getReadIOThread();
-        }
-        workThread.runWork(() -> {
-            Traces.currentTraceid(traceid);
-            if (!isDone()) {
-                completeExceptionally(ex);
-            }
-            Traces.removeTraceid();
-        });
-    }
+	private void runTimeout() {
+		String traceid = request != null ? request.getTraceid() : null;
+		if (request != null) {
+			conn.removeRespFuture(request.getRequestid(), this);
+		}
+		TimeoutException ex = new TimeoutException("client-request: " + request);
+		WorkThread workThread = null;
+		if (request != null) {
+			workThread = request.workThread;
+			request.workThread = null;
+		}
+		if (workThread == null || workThread.getWorkExecutor() == null) {
+			workThread = conn.getChannel().getReadIOThread();
+		}
+		workThread.runWork(() -> {
+			Traces.currentTraceid(traceid);
+			if (!isDone()) {
+				completeExceptionally(ex);
+			}
+			Traces.removeTraceid();
+		});
+	}
 
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + "_" + Objects.hash(this) + "{conn = " + conn + ", request = " + request
-                + "}";
-    }
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "_" + Objects.hash(this) + "{conn = " + conn + ", request = " + request
+				+ "}";
+	}
 }

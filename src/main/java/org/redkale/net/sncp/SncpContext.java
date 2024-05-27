@@ -15,22 +15,22 @@ import org.redkale.net.Context;
  */
 public class SncpContext extends Context {
 
-    protected byte[] serverAddressBytes;
+	protected byte[] serverAddressBytes;
 
-    protected int serverAddressPort;
+	protected int serverAddressPort;
 
-    public SncpContext(SncpContextConfig config) {
-        super(config);
-        this.serverAddressBytes = serverAddress.getAddress().getAddress();
-        this.serverAddressPort = serverAddress.getPort();
-    }
+	public SncpContext(SncpContextConfig config) {
+		super(config);
+		this.serverAddressBytes = serverAddress.getAddress().getAddress();
+		this.serverAddressPort = serverAddress.getPort();
+	}
 
-    @Override
-    protected void updateServerAddress(InetSocketAddress addr) {
-        super.updateServerAddress(addr);
-        this.serverAddressBytes = addr.getAddress().getAddress();
-        this.serverAddressPort = addr.getPort();
-    }
+	@Override
+	protected void updateServerAddress(InetSocketAddress addr) {
+		super.updateServerAddress(addr);
+		this.serverAddressBytes = addr.getAddress().getAddress();
+		this.serverAddressPort = addr.getPort();
+	}
 
-    public static class SncpContextConfig extends ContextConfig {}
+	public static class SncpContextConfig extends ContextConfig {}
 }

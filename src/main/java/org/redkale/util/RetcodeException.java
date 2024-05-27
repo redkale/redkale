@@ -11,28 +11,28 @@ package org.redkale.util;
  */
 public class RetcodeException extends RedkaleException {
 
-    protected int retcode;
+	protected int retcode;
 
-    public RetcodeException(int retcode) {
-        this.retcode = retcode;
-    }
+	public RetcodeException(int retcode) {
+		this.retcode = retcode;
+	}
 
-    public RetcodeException(int retcode, Throwable cause) {
-        super(cause);
-        this.retcode = retcode;
-    }
+	public RetcodeException(int retcode, Throwable cause) {
+		super(cause);
+		this.retcode = retcode;
+	}
 
-    public RetcodeException(int retcode, String message) {
-        super(message);
-        this.retcode = retcode;
-    }
+	public RetcodeException(int retcode, String message) {
+		super(message);
+		this.retcode = retcode;
+	}
 
-    public RetcodeException(int retcode, String message, Throwable cause) {
-        super(message, cause);
-        this.retcode = retcode;
-    }
+	public RetcodeException(int retcode, String message, Throwable cause) {
+		super(message, cause);
+		this.retcode = retcode;
+	}
 
-    public int getRetcode() {
-        return retcode;
-    }
+	public int getRetcode() {
+		return retcode;
+	}
 }

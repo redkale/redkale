@@ -35,89 +35,89 @@ import org.redkale.util.RedkaleClassLoader;
 @Repeatable(RetLabel.RetLabels.class)
 public @interface RetLabel {
 
-    String value();
+	String value();
 
-    String locale() default "";
+	String locale() default "";
 
-    @Documented
-    @Target({FIELD})
-    @Retention(RUNTIME)
-    @interface RetLabels {
+	@Documented
+	@Target({FIELD})
+	@Retention(RUNTIME)
+	@interface RetLabels {
 
-        RetLabel[] value();
-    }
+		RetLabel[] value();
+	}
 
-    public static interface RetInfoTransfer extends BiFunction<Integer, String, String> {}
+	public static interface RetInfoTransfer extends BiFunction<Integer, String, String> {}
 
-    public abstract static class RetLoader {
+	public abstract static class RetLoader {
 
-        public static Map<String, Map<Integer, String>> loadMap(Class clazz) {
-            final Map<String, Map<Integer, String>> rets = new LinkedHashMap<>();
-            ServiceLoader<RetInfoTransfer> loader = ServiceLoader.load(RetInfoTransfer.class);
-            RedkaleClassLoader.putServiceLoader(RetInfoTransfer.class);
-            Iterator<RetInfoTransfer> it = loader.iterator();
-            RetInfoTransfer func = it.hasNext() ? it.next() : null;
-            if (func != null) {
-                RedkaleClassLoader.putReflectionPublicConstructors(
-                        func.getClass(), func.getClass().getName());
-            }
-            RedkaleClassLoader.putReflectionPublicFields(clazz.getName());
-            for (Field field : clazz.getFields()) {
-                if (!Modifier.isStatic(field.getModifiers())) {
-                    continue;
-                }
-                if (field.getType() != int.class) {
-                    continue;
-                }
-                RetLabel[] infos = field.getAnnotationsByType(RetLabel.class);
-                if (infos == null || infos.length == 0) {
-                    continue;
-                }
-                int value;
-                try {
-                    value = field.getInt(null);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    continue;
-                }
-                for (RetLabel info : infos) {
-                    rets.computeIfAbsent(info.locale(), k -> new LinkedHashMap<>())
-                            .put(value, func == null ? info.value() : func.apply(value, info.value()));
-                }
-            }
-            try {
-                File homePath = new File(System.getProperty(SYSNAME_APP_HOME, ""), "conf");
-                File propPath = new File(System.getProperty(SYSNAME_APP_CONF_DIR, homePath.getPath()));
-                if (propPath.isDirectory() && propPath.canRead()) {
-                    final String prefix = clazz.getSimpleName().toLowerCase();
-                    for (File propFile : propPath.listFiles(
-                            f -> f.getName().startsWith(prefix) && f.getName().endsWith(".properties"))) {
-                        if (propFile.isFile() && propFile.canRead()) {
-                            String locale = propFile.getName()
-                                    .substring(prefix.length())
-                                    .replaceAll("\\.\\d+", "");
-                            locale = locale.substring(0, locale.indexOf(".properties"));
-                            Map<Integer, String> defrets = rets.get(locale);
-                            if (defrets != null) {
-                                InputStreamReader in =
-                                        new InputStreamReader(new FileInputStream(propFile), StandardCharsets.UTF_8);
-                                Properties prop = new Properties();
-                                prop.load(in);
-                                in.close();
-                                prop.forEach((k, v) -> {
-                                    int retcode = Integer.parseInt(k.toString());
-                                    if (defrets.containsKey(retcode)) {
-                                        defrets.put(retcode, v.toString());
-                                    }
-                                });
-                            }
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return rets;
-        }
-    }
+		public static Map<String, Map<Integer, String>> loadMap(Class clazz) {
+			final Map<String, Map<Integer, String>> rets = new LinkedHashMap<>();
+			ServiceLoader<RetInfoTransfer> loader = ServiceLoader.load(RetInfoTransfer.class);
+			RedkaleClassLoader.putServiceLoader(RetInfoTransfer.class);
+			Iterator<RetInfoTransfer> it = loader.iterator();
+			RetInfoTransfer func = it.hasNext() ? it.next() : null;
+			if (func != null) {
+				RedkaleClassLoader.putReflectionPublicConstructors(
+						func.getClass(), func.getClass().getName());
+			}
+			RedkaleClassLoader.putReflectionPublicFields(clazz.getName());
+			for (Field field : clazz.getFields()) {
+				if (!Modifier.isStatic(field.getModifiers())) {
+					continue;
+				}
+				if (field.getType() != int.class) {
+					continue;
+				}
+				RetLabel[] infos = field.getAnnotationsByType(RetLabel.class);
+				if (infos == null || infos.length == 0) {
+					continue;
+				}
+				int value;
+				try {
+					value = field.getInt(null);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+					continue;
+				}
+				for (RetLabel info : infos) {
+					rets.computeIfAbsent(info.locale(), k -> new LinkedHashMap<>())
+							.put(value, func == null ? info.value() : func.apply(value, info.value()));
+				}
+			}
+			try {
+				File homePath = new File(System.getProperty(SYSNAME_APP_HOME, ""), "conf");
+				File propPath = new File(System.getProperty(SYSNAME_APP_CONF_DIR, homePath.getPath()));
+				if (propPath.isDirectory() && propPath.canRead()) {
+					final String prefix = clazz.getSimpleName().toLowerCase();
+					for (File propFile : propPath.listFiles(
+							f -> f.getName().startsWith(prefix) && f.getName().endsWith(".properties"))) {
+						if (propFile.isFile() && propFile.canRead()) {
+							String locale = propFile.getName()
+									.substring(prefix.length())
+									.replaceAll("\\.\\d+", "");
+							locale = locale.substring(0, locale.indexOf(".properties"));
+							Map<Integer, String> defrets = rets.get(locale);
+							if (defrets != null) {
+								InputStreamReader in =
+										new InputStreamReader(new FileInputStream(propFile), StandardCharsets.UTF_8);
+								Properties prop = new Properties();
+								prop.load(in);
+								in.close();
+								prop.forEach((k, v) -> {
+									int retcode = Integer.parseInt(k.toString());
+									if (defrets.containsKey(retcode)) {
+										defrets.put(retcode, v.toString());
+									}
+								});
+							}
+						}
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return rets;
+		}
+	}
 }

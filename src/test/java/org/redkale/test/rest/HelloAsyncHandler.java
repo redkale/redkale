@@ -10,14 +10,14 @@ import java.nio.channels.CompletionHandler;
 /** @author zhangjx */
 public class HelloAsyncHandler implements CompletionHandler {
 
-    @Override
-    public void completed(Object result, Object attachment) {
-        System.out.println("-----HelloAsyncHandler--------result : " + result + ", attachment: " + attachment);
-    }
+	@Override
+	public void completed(Object result, Object attachment) {
+		System.out.println("-----HelloAsyncHandler--------result : " + result + ", attachment: " + attachment);
+	}
 
-    @Override
-    public void failed(Throwable exc, Object attachment) {
-        throw new UnsupportedOperationException(
-                "Not supported yet."); // To change body of generated methods, choose Tools | Templates.
-    }
+	@Override
+	public void failed(Throwable exc, Object attachment) {
+		throw new UnsupportedOperationException(
+				"Not supported yet."); // To change body of generated methods, choose Tools | Templates.
+	}
 }

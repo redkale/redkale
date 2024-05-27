@@ -26,5 +26,5 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface ConstructorParameters {
 
-    String[] value();
+	String[] value();
 }

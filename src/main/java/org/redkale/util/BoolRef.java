@@ -13,34 +13,34 @@ package org.redkale.util;
  */
 public final class BoolRef {
 
-    private boolean value;
+	private boolean value;
 
-    public BoolRef(boolean initialValue) {
-        this.value = initialValue;
-    }
+	public BoolRef(boolean initialValue) {
+		this.value = initialValue;
+	}
 
-    public BoolRef() {}
+	public BoolRef() {}
 
-    public boolean get() {
-        return this.value;
-    }
+	public boolean get() {
+		return this.value;
+	}
 
-    public void set(boolean newValue) {
-        this.value = newValue;
-    }
+	public void set(boolean newValue) {
+		this.value = newValue;
+	}
 
-    public BoolRef asFalse() {
-        this.value = false;
-        return this;
-    }
+	public BoolRef asFalse() {
+		this.value = false;
+		return this;
+	}
 
-    public BoolRef asTrue() {
-        this.value = true;
-        return this;
-    }
+	public BoolRef asTrue() {
+		this.value = true;
+		return this;
+	}
 
-    @Override
-    public String toString() {
-        return String.valueOf(this.value);
-    }
+	@Override
+	public String toString() {
+		return String.valueOf(this.value);
+	}
 }

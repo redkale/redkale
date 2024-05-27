@@ -31,9 +31,9 @@ import org.redkale.util.*;
  */
 public interface HttpRender {
 
-    default void init(HttpContext context, AnyValue config) {}
+	default void init(HttpContext context, AnyValue config) {}
 
-    public void renderTo(HttpRequest request, HttpResponse response, Convert convert, HttpScope scope);
+	public void renderTo(HttpRequest request, HttpResponse response, Convert convert, HttpScope scope);
 
-    default void destroy(HttpContext context, AnyValue config) {}
+	default void destroy(HttpContext context, AnyValue config) {}
 }

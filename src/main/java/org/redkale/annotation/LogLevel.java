@@ -22,5 +22,5 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface LogLevel {
 
-    String value();
+	String value();
 }

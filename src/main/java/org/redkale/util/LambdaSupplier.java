@@ -18,11 +18,11 @@ import java.util.function.Supplier;
 @FunctionalInterface
 public interface LambdaSupplier<T> extends Supplier<T>, Serializable {
 
-    public static <V> String readColumn(LambdaSupplier<V> func) {
-        return Utility.readFieldName(func);
-    }
+	public static <V> String readColumn(LambdaSupplier<V> func) {
+		return Utility.readFieldName(func);
+	}
 
-    public static <V> Class<V> readClass(LambdaSupplier<V> func) {
-        return Utility.readClassName(func);
-    }
+	public static <V> Class<V> readClass(LambdaSupplier<V> func) {
+		return Utility.readClassName(func);
+	}
 }

@@ -16,47 +16,47 @@ import org.redkale.net.http.*;
  */
 public class HttpMessageRequest extends HttpRequest {
 
-    protected MessageRecord message;
+	protected MessageRecord message;
 
-    public HttpMessageRequest(HttpContext context) {
-        this(context, (MessageRecord) null);
-    }
+	public HttpMessageRequest(HttpContext context) {
+		this(context, (MessageRecord) null);
+	}
 
-    public HttpMessageRequest(HttpContext context, MessageRecord message) {
-        super(context, (WebRequest) null);
-        if (message != null) {
-            prepare(message);
-        }
-    }
+	public HttpMessageRequest(HttpContext context, MessageRecord message) {
+		super(context, (WebRequest) null);
+		if (message != null) {
+			prepare(message);
+		}
+	}
 
-    protected HttpMessageRequest prepare(MessageRecord message) {
-        super.initWebRequest(message.decodeContent(WebRequestCoder.getInstance()), false);
-        this.message = message;
-        this.currentUserid = message.getUserid();
-        this.createTime = System.currentTimeMillis();
-        return this;
-    }
+	protected HttpMessageRequest prepare(MessageRecord message) {
+		super.initWebRequest(message.decodeContent(WebRequestCoder.getInstance()), false);
+		this.message = message;
+		this.currentUserid = message.getUserid();
+		this.createTime = System.currentTimeMillis();
+		return this;
+	}
 
-    @Override
-    public HttpMessageRequest setRequestPath(String path) {
-        this.requestPath = path;
-        return this;
-    }
+	@Override
+	public HttpMessageRequest setRequestPath(String path) {
+		this.requestPath = path;
+		return this;
+	}
 
-    @Override
-    public Convert getRespConvert() {
-        return this.respConvert;
-    }
+	@Override
+	public Convert getRespConvert() {
+		return this.respConvert;
+	}
 
-    @Override
-    protected void prepare() {
-        super.prepare();
-        this.keepAlive = false;
-    }
+	@Override
+	protected void prepare() {
+		super.prepare();
+		this.keepAlive = false;
+	}
 
-    @Override
-    protected void recycle() {
-        super.recycle();
-        this.message = null;
-    }
+	@Override
+	protected void recycle() {
+		super.recycle();
+		this.message = null;
+	}
 }

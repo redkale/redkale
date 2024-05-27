@@ -27,5 +27,5 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface ResourceType {
 
-    Class value();
+	Class value();
 }

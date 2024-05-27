@@ -23,17 +23,17 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Sql {
 
-    /**
-     * 原生sql语句
-     *
-     * @return sql
-     */
-    String value();
+	/**
+	 * 原生sql语句
+	 *
+	 * @return sql
+	 */
+	String value();
 
-    /**
-     * 备注说明
-     *
-     * @return 备注说明
-     */
-    String comment() default "";
+	/**
+	 * 备注说明
+	 *
+	 * @return 备注说明
+	 */
+	String comment() default "";
 }

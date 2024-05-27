@@ -17,14 +17,14 @@ import java.util.Arrays;
  */
 public interface ByteTuple {
 
-    public byte[] content();
+	public byte[] content();
 
-    public int offset();
+	public int offset();
 
-    public int length();
+	public int length();
 
-    default byte[] toArray() {
-        int o = offset();
-        return Arrays.copyOfRange(content(), o, o + length());
-    }
+	default byte[] toArray() {
+		int o = offset();
+		return Arrays.copyOfRange(content(), o, o + length());
+	}
 }

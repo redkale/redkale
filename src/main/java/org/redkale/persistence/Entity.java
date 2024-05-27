@@ -29,39 +29,39 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface Entity {
 
-    /**
-     * (Optional) The entity name. Defaults to the unqualified name of the entity class. This name is used to refer to
-     * the entity in queries. The name must not be a reserved literal in the Java Persistence query language.
-     *
-     * @return String
-     */
-    String name() default "";
+	/**
+	 * (Optional) The entity name. Defaults to the unqualified name of the entity class. This name is used to refer to
+	 * the entity in queries. The name must not be a reserved literal in the Java Persistence query language.
+	 *
+	 * @return String
+	 */
+	String name() default "";
 
-    /**
-     * (Optional) The comment of the entity.
-     *
-     * @return String
-     */
-    String comment() default "";
+	/**
+	 * (Optional) The comment of the entity.
+	 *
+	 * @return String
+	 */
+	String comment() default "";
 
-    /**
-     * (Optional) 是否缓存实体对象
-     *
-     * @return boolean
-     */
-    boolean cacheable() default false;
+	/**
+	 * (Optional) 是否缓存实体对象
+	 *
+	 * @return boolean
+	 */
+	boolean cacheable() default false;
 
-    /**
-     * (Optional) 定时自动更新缓存的周期秒数，为0表示不做定时更新， 大于0表示每经过interval秒后会自动从数据库中拉取数据更新Cache
-     *
-     * @return int
-     */
-    int cacheInterval() default 0;
+	/**
+	 * (Optional) 定时自动更新缓存的周期秒数，为0表示不做定时更新， 大于0表示每经过interval秒后会自动从数据库中拉取数据更新Cache
+	 *
+	 * @return int
+	 */
+	int cacheInterval() default 0;
 
-    /**
-     * (Optional) DataSource是否直接返回对象的真实引用， 而不是copy一份
-     *
-     * @return boolean
-     */
-    boolean cacheDirect() default false;
+	/**
+	 * (Optional) DataSource是否直接返回对象的真实引用， 而不是copy一份
+	 *
+	 * @return boolean
+	 */
+	boolean cacheDirect() default false;
 }

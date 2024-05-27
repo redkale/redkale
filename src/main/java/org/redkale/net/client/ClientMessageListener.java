@@ -13,7 +13,7 @@ package org.redkale.net.client;
  */
 public abstract class ClientMessageListener {
 
-    public abstract void onMessage(ClientConnection conn, ClientResponse resp);
+	public abstract void onMessage(ClientConnection conn, ClientResponse resp);
 
-    public void onClose(ClientConnection conn) {}
+	public void onClose(ClientConnection conn) {}
 }

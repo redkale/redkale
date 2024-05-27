@@ -14,23 +14,23 @@ package org.redkale.util;
  */
 public final class Redkale {
 
-    private static final String ROOT_PACKAGE = "org.redkale";
+	private static final String ROOT_PACKAGE = "org.redkale";
 
-    private Redkale() {}
+	private Redkale() {}
 
-    public static String getRootPackage() {
-        return ROOT_PACKAGE;
-    }
+	public static String getRootPackage() {
+		return ROOT_PACKAGE;
+	}
 
-    public static String getDotedVersion() {
-        return "2.8.0";
-    }
+	public static String getDotedVersion() {
+		return "2.8.0";
+	}
 
-    public static int getMajorVersion() {
-        return 2;
-    }
+	public static int getMajorVersion() {
+		return 2;
+	}
 
-    public static int getMinorVersion() {
-        return 8;
-    }
+	public static int getMinorVersion() {
+		return 8;
+	}
 }

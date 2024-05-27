@@ -20,15 +20,15 @@ import org.redkale.convert.Writer;
  */
 public final class NumberSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, Number> {
 
-    public static final NumberSimpledCoder instance = new NumberSimpledCoder();
+	public static final NumberSimpledCoder instance = new NumberSimpledCoder();
 
-    @Override
-    public void convertTo(W out, Number value) {
-        out.writeLong(value == null ? 0L : value.longValue());
-    }
+	@Override
+	public void convertTo(W out, Number value) {
+		out.writeLong(value == null ? 0L : value.longValue());
+	}
 
-    @Override
-    public Number convertFrom(R in) {
-        return in.readLong();
-    }
+	@Override
+	public Number convertFrom(R in) {
+		return in.readLong();
+	}
 }

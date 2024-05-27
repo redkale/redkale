@@ -24,11 +24,11 @@ import org.redkale.convert.ConvertType;
 @Retention(RUNTIME)
 public @interface ResourceConsumer {
 
-    String mq() default "";
+	String mq() default "";
 
-    String group() default "";
+	String group() default "";
 
-    String[] topics();
+	String[] topics();
 
-    ConvertType convertType() default ConvertType.JSON;
+	ConvertType convertType() default ConvertType.JSON;
 }

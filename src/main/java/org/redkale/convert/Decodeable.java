@@ -20,18 +20,18 @@ import org.redkale.annotation.ClassDepends;
 @ClassDepends
 public interface Decodeable<R extends Reader, T> {
 
-    /**
-     * 反序列化操作
-     *
-     * @param in R
-     * @return T
-     */
-    public T convertFrom(final R in);
+	/**
+	 * 反序列化操作
+	 *
+	 * @param in R
+	 * @return T
+	 */
+	public T convertFrom(final R in);
 
-    /**
-     * 泛型映射接口
-     *
-     * @return 反解析的数据类型
-     */
-    public Type getType();
+	/**
+	 * 泛型映射接口
+	 *
+	 * @return 反解析的数据类型
+	 */
+	public Type getType();
 }

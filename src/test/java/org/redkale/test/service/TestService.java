@@ -14,16 +14,16 @@ import org.redkale.util.*;
 /** @author zhangjx */
 public class TestService implements Service {
 
-    //    public boolean change(TestBean bean, String name, int id) {
-    //        return false;
-    //    }
-    public void change(CompletionHandler<Boolean, TestBean> handler, TestBean bean, String name, int id) {}
+	//    public boolean change(TestBean bean, String name, int id) {
+	//        return false;
+	//    }
+	public void change(CompletionHandler<Boolean, TestBean> handler, TestBean bean, String name, int id) {}
 
-    public static void main(String[] args) throws Throwable {
-        final Application application = Application.create(true);
-        SncpServer cserver = new SncpServer();
-        cserver.getResourceFactory().register(application);
-        cserver.addSncpServlet(new TestService());
-        cserver.init(AnyValueWriter.create("port", 5577));
-    }
+	public static void main(String[] args) throws Throwable {
+		final Application application = Application.create(true);
+		SncpServer cserver = new SncpServer();
+		cserver.getResourceFactory().register(application);
+		cserver.addSncpServlet(new TestService());
+		cserver.init(AnyValueWriter.create("port", 5577));
+	}
 }

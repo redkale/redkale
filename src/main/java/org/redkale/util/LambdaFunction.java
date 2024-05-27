@@ -19,15 +19,15 @@ import java.util.function.Function;
 @FunctionalInterface
 public interface LambdaFunction<T, R> extends Function<T, R>, Serializable {
 
-    public static <T> String[] readColumns(LambdaFunction<T, ?>... funcs) {
-        String[] columns = new String[funcs.length];
-        for (int i = 0; i < columns.length; i++) {
-            columns[i] = readColumn(funcs[i]);
-        }
-        return columns;
-    }
+	public static <T> String[] readColumns(LambdaFunction<T, ?>... funcs) {
+		String[] columns = new String[funcs.length];
+		for (int i = 0; i < columns.length; i++) {
+			columns[i] = readColumn(funcs[i]);
+		}
+		return columns;
+	}
 
-    public static <T> String readColumn(LambdaFunction<T, ?> func) {
-        return Utility.readFieldName(func);
-    }
+	public static <T> String readColumn(LambdaFunction<T, ?> func) {
+		return Utility.readFieldName(func);
+	}
 }

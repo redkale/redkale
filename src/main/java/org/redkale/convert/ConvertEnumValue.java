@@ -19,5 +19,5 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface ConvertEnumValue {
 
-    String value();
+	String value();
 }

@@ -17,53 +17,53 @@ import org.redkale.util.*;
 /** @author zhangjx */
 public class SncpSleepTest {
 
-    private boolean main;
+	private boolean main;
 
-    public static void main(String[] args) throws Throwable {
-        SncpSleepTest test = new SncpSleepTest();
-        test.main = true;
-        test.run();
-    }
+	public static void main(String[] args) throws Throwable {
+		SncpSleepTest test = new SncpSleepTest();
+		test.main = true;
+		test.run();
+	}
 
-    @Test
-    public void run() throws Exception {
-        System.out.println("------------------- 并发调用 -----------------------------------");
-        final Application application = Application.create(true);
-        final ExecutorService workExecutor = WorkThread.createWorkExecutor(10, "Thread-Work-%s");
-        final AsyncIOGroup asyncGroup = new AsyncIOGroup("Redkale-TestClient-IOThread-%s", workExecutor, 8192, 16);
-        asyncGroup.start();
-        final ResourceFactory resFactory = ResourceFactory.create();
-        resFactory.register(Application.RESNAME_APP_EXECUTOR, ExecutorService.class, workExecutor);
-        resFactory.register(JsonConvert.root());
-        resFactory.register(BsonConvert.root());
+	@Test
+	public void run() throws Exception {
+		System.out.println("------------------- 并发调用 -----------------------------------");
+		final Application application = Application.create(true);
+		final ExecutorService workExecutor = WorkThread.createWorkExecutor(10, "Thread-Work-%s");
+		final AsyncIOGroup asyncGroup = new AsyncIOGroup("Redkale-TestClient-IOThread-%s", workExecutor, 8192, 16);
+		asyncGroup.start();
+		final ResourceFactory resFactory = ResourceFactory.create();
+		resFactory.register(Application.RESNAME_APP_EXECUTOR, ExecutorService.class, workExecutor);
+		resFactory.register(JsonConvert.root());
+		resFactory.register(BsonConvert.root());
 
-        // ------------------------ 初始化 CService ------------------------------------
-        SncpSleepService service = Sncp.createSimpleLocalService(SncpSleepService.class, resFactory);
-        resFactory.inject(service);
-        SncpServer server = new SncpServer(application, System.currentTimeMillis(), null, resFactory);
-        server.getResourceFactory().register(application);
-        server.addSncpServlet(service);
-        server.init(AnyValueWriter.create("port", 0));
-        server.start();
+		// ------------------------ 初始化 CService ------------------------------------
+		SncpSleepService service = Sncp.createSimpleLocalService(SncpSleepService.class, resFactory);
+		resFactory.inject(service);
+		SncpServer server = new SncpServer(application, System.currentTimeMillis(), null, resFactory);
+		server.getResourceFactory().register(application);
+		server.addSncpServlet(service);
+		server.init(AnyValueWriter.create("port", 0));
+		server.start();
 
-        int port = server.getSocketAddress().getPort();
-        System.out.println("SNCP服务器启动端口: " + port);
-        InetSocketAddress sncpAddress = new InetSocketAddress("127.0.0.1", port);
-        final SncpClient client =
-                new SncpClient("", asyncGroup, "0", sncpAddress, new ClientAddress(sncpAddress), "TCP", 16, 100);
-        final SncpRpcGroups rpcGroups = application.getSncpRpcGroups();
-        rpcGroups.computeIfAbsent("cs", "TCP").putAddress(sncpAddress);
-        SncpSleepService remoteCService =
-                Sncp.createSimpleRemoteService(SncpSleepService.class, resFactory, rpcGroups, client, "cs");
-        long s = System.currentTimeMillis();
-        CompletableFuture[] futures =
-                new CompletableFuture[] {remoteCService.sleep200(), remoteCService.sleep300(), remoteCService.sleep500()
-                };
-        CompletableFuture.allOf(futures).join();
-        long e = System.currentTimeMillis() - s;
-        System.out.println("耗时: " + e + " ms");
-        server.shutdown();
-        workExecutor.shutdown();
-        Assertions.assertTrue(e < 600);
-    }
+		int port = server.getSocketAddress().getPort();
+		System.out.println("SNCP服务器启动端口: " + port);
+		InetSocketAddress sncpAddress = new InetSocketAddress("127.0.0.1", port);
+		final SncpClient client =
+				new SncpClient("", asyncGroup, "0", sncpAddress, new ClientAddress(sncpAddress), "TCP", 16, 100);
+		final SncpRpcGroups rpcGroups = application.getSncpRpcGroups();
+		rpcGroups.computeIfAbsent("cs", "TCP").putAddress(sncpAddress);
+		SncpSleepService remoteCService =
+				Sncp.createSimpleRemoteService(SncpSleepService.class, resFactory, rpcGroups, client, "cs");
+		long s = System.currentTimeMillis();
+		CompletableFuture[] futures =
+				new CompletableFuture[] {remoteCService.sleep200(), remoteCService.sleep300(), remoteCService.sleep500()
+				};
+		CompletableFuture.allOf(futures).join();
+		long e = System.currentTimeMillis() - s;
+		System.out.println("耗时: " + e + " ms");
+		server.shutdown();
+		workExecutor.shutdown();
+		Assertions.assertTrue(e < 600);
+	}
 }

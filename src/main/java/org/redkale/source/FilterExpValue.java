@@ -17,58 +17,58 @@ import org.redkale.convert.ConvertColumn;
  */
 public class FilterExpValue implements java.io.Serializable {
 
-    @ConvertColumn(index = 1)
-    private Number left;
+	@ConvertColumn(index = 1)
+	private Number left;
 
-    @ConvertColumn(index = 2)
-    private FilterExpress express;
+	@ConvertColumn(index = 2)
+	private FilterExpress express;
 
-    @ConvertColumn(index = 3)
-    private Number right;
+	@ConvertColumn(index = 3)
+	private Number right;
 
-    public FilterExpValue() {}
+	public FilterExpValue() {}
 
-    public FilterExpValue(Number left, Number right) {
-        this(left, FilterExpress.EQ, right);
-    }
+	public FilterExpValue(Number left, Number right) {
+		this(left, FilterExpress.EQ, right);
+	}
 
-    public FilterExpValue(Number left, FilterExpress express) {
-        this(left, express, 0);
-    }
+	public FilterExpValue(Number left, FilterExpress express) {
+		this(left, express, 0);
+	}
 
-    public FilterExpValue(Number left, FilterExpress express, Number right) {
-        this.left = left;
-        this.express = FilterNodes.oldExpress(express);
-        this.right = right;
-    }
+	public FilterExpValue(Number left, FilterExpress express, Number right) {
+		this.left = left;
+		this.express = FilterNodes.oldExpress(express);
+		this.right = right;
+	}
 
-    public Number getLeft() {
-        return left == null ? 0 : left;
-    }
+	public Number getLeft() {
+		return left == null ? 0 : left;
+	}
 
-    public void setLeft(Number left) {
-        this.left = left;
-    }
+	public void setLeft(Number left) {
+		this.left = left;
+	}
 
-    public FilterExpress getExpress() {
-        return express == null ? FilterExpress.EQ : express;
-    }
+	public FilterExpress getExpress() {
+		return express == null ? FilterExpress.EQ : express;
+	}
 
-    public void setExpress(FilterExpress express) {
-        this.express = express;
-    }
+	public void setExpress(FilterExpress express) {
+		this.express = express;
+	}
 
-    public Number getRight() {
-        return right == null ? 0 : right;
-    }
+	public Number getRight() {
+		return right == null ? 0 : right;
+	}
 
-    public void setRight(Number right) {
-        this.right = right;
-    }
+	public void setRight(Number right) {
+		this.right = right;
+	}
 
-    @Override
-    public String toString() {
-        return FilterExpValue.class.getSimpleName() + "[left=" + getLeft() + ", express=" + getExpress() + ", right="
-                + getRight() + "]";
-    }
+	@Override
+	public String toString() {
+		return FilterExpValue.class.getSimpleName() + "[left=" + getLeft() + ", express=" + getExpress() + ", right="
+				+ getRight() + "]";
+	}
 }

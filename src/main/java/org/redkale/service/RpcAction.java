@@ -21,5 +21,5 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface RpcAction {
 
-    String name();
+	String name();
 }

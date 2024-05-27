@@ -17,33 +17,33 @@ import org.redkale.util.ByteArray;
  */
 public class SncpMessageResponse extends SncpResponse {
 
-    protected MessageClient messageClient;
+	protected MessageClient messageClient;
 
-    protected MessageRecord message;
+	protected MessageRecord message;
 
-    public SncpMessageResponse(MessageClient messageClient, SncpContext context, SncpMessageRequest request) {
-        super(context, request);
-        this.messageClient = messageClient;
-        this.message = request.message;
-    }
+	public SncpMessageResponse(MessageClient messageClient, SncpContext context, SncpMessageRequest request) {
+		super(context, request);
+		this.messageClient = messageClient;
+		this.message = request.message;
+	}
 
-    @Override
-    public void finish(final int retcode, final BsonWriter out) {
-        int headerSize = SncpHeader.calcHeaderSize(request);
-        if (out == null) {
-            final ByteArray result = new ByteArray(headerSize).putPlaceholder(headerSize);
-            writeHeader(result, 0, retcode);
-            messageClient
-                    .getProducer()
-                    .apply(messageClient.createMessageRecord(
-                            message.getSeqid(), MessageRecord.CTYPE_BSON, message.getRespTopic(), null, (byte[]) null));
-            return;
-        }
-        final ByteArray result = out.toByteArray();
-        writeHeader(result, result.length() - headerSize, retcode);
-        messageClient
-                .getProducer()
-                .apply(messageClient.createMessageRecord(
-                        message.getSeqid(), MessageRecord.CTYPE_BSON, message.getRespTopic(), null, result.getBytes()));
-    }
+	@Override
+	public void finish(final int retcode, final BsonWriter out) {
+		int headerSize = SncpHeader.calcHeaderSize(request);
+		if (out == null) {
+			final ByteArray result = new ByteArray(headerSize).putPlaceholder(headerSize);
+			writeHeader(result, 0, retcode);
+			messageClient
+					.getProducer()
+					.apply(messageClient.createMessageRecord(
+							message.getSeqid(), MessageRecord.CTYPE_BSON, message.getRespTopic(), null, (byte[]) null));
+			return;
+		}
+		final ByteArray result = out.toByteArray();
+		writeHeader(result, result.length() - headerSize, retcode);
+		messageClient
+				.getProducer()
+				.apply(messageClient.createMessageRecord(
+						message.getSeqid(), MessageRecord.CTYPE_BSON, message.getRespTopic(), null, result.getBytes()));
+	}
 }

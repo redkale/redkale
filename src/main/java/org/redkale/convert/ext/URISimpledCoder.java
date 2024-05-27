@@ -17,28 +17,28 @@ import org.redkale.convert.*;
  */
 public class URISimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, URI> {
 
-    public static final URISimpledCoder instance = new URISimpledCoder();
+	public static final URISimpledCoder instance = new URISimpledCoder();
 
-    @Override
-    public void convertTo(final Writer out, final URI value) {
-        if (value == null) {
-            out.writeNull();
-        } else {
-            out.writeString(value.toString());
-        }
-    }
+	@Override
+	public void convertTo(final Writer out, final URI value) {
+		if (value == null) {
+			out.writeNull();
+		} else {
+			out.writeString(value.toString());
+		}
+	}
 
-    @Override
-    public URI convertFrom(Reader in) {
-        final String str = in.readString();
-        if (str == null) {
-            return null;
-        }
-        try {
-            return new URI(str);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
+	@Override
+	public URI convertFrom(Reader in) {
+		final String str = in.readString();
+		if (str == null) {
+			return null;
+		}
+		try {
+			return new URI(str);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 }

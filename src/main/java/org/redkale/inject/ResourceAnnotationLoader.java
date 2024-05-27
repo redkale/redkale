@@ -17,13 +17,13 @@ import java.lang.reflect.Field;
  */
 public interface ResourceAnnotationLoader<T extends Annotation> {
 
-    public void load(
-            ResourceFactory factory,
-            String srcResourceName,
-            Object srcObj,
-            T annotation,
-            Field field,
-            Object attachment);
+	public void load(
+			ResourceFactory factory,
+			String srcResourceName,
+			Object srcObj,
+			T annotation,
+			Field field,
+			Object attachment);
 
-    public Class<T> annotationType();
+	public Class<T> annotationType();
 }

@@ -19,11 +19,11 @@ import java.util.function.BiConsumer;
 @FunctionalInterface
 public interface LambdaBiConsumer<T, R> extends BiConsumer<T, R>, Serializable {
 
-    public static <T> String readColumn(LambdaBiConsumer<T, ?> consumer) {
-        return Utility.readFieldName(consumer);
-    }
+	public static <T> String readColumn(LambdaBiConsumer<T, ?> consumer) {
+		return Utility.readFieldName(consumer);
+	}
 
-    public static <T> Class<T> readClass(LambdaBiConsumer<T, ?> consumer) {
-        return Utility.readClassName(consumer);
-    }
+	public static <T> Class<T> readClass(LambdaBiConsumer<T, ?> consumer) {
+		return Utility.readClassName(consumer);
+	}
 }

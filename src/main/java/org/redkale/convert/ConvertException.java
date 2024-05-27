@@ -15,19 +15,19 @@ import org.redkale.util.RedkaleException;
  */
 public class ConvertException extends RedkaleException {
 
-    public ConvertException() {
-        super();
-    }
+	public ConvertException() {
+		super();
+	}
 
-    public ConvertException(String s) {
-        super(s);
-    }
+	public ConvertException(String s) {
+		super(s);
+	}
 
-    public ConvertException(String message, Throwable cause) {
-        super(message, cause);
-    }
+	public ConvertException(String message, Throwable cause) {
+		super(message, cause);
+	}
 
-    public ConvertException(Throwable cause) {
-        super(cause);
-    }
+	public ConvertException(Throwable cause) {
+		super(cause);
+	}
 }

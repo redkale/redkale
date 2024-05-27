@@ -49,17 +49,17 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface ConvertImpl {
 
-    /**
-     * 默认的实现类
-     *
-     * @return String
-     */
-    Class value() default Object.class;
+	/**
+	 * 默认的实现类
+	 *
+	 * @return String
+	 */
+	Class value() default Object.class;
 
-    /**
-     * 实现类的集合
-     *
-     * @return Class[]
-     */
-    Class[] types() default {};
+	/**
+	 * 实现类的集合
+	 *
+	 * @return Class[]
+	 */
+	Class[] types() default {};
 }

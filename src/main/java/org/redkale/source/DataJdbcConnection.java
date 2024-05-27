@@ -15,11 +15,11 @@ import java.sql.Connection;
  */
 public abstract class DataJdbcConnection {
 
-    final boolean readFlag;
+	final boolean readFlag;
 
-    public abstract Connection getConnection();
+	public abstract Connection getConnection();
 
-    DataJdbcConnection(boolean readFlag) {
-        this.readFlag = readFlag;
-    }
+	DataJdbcConnection(boolean readFlag) {
+		this.readFlag = readFlag;
+	}
 }

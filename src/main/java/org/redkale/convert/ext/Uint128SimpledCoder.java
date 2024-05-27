@@ -20,57 +20,57 @@ import org.redkale.util.*;
  */
 public final class Uint128SimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, Uint128> {
 
-    private static final ByteArraySimpledCoder bsSimpledCoder = ByteArraySimpledCoder.instance;
+	private static final ByteArraySimpledCoder bsSimpledCoder = ByteArraySimpledCoder.instance;
 
-    public static final Uint128SimpledCoder instance = new Uint128SimpledCoder();
+	public static final Uint128SimpledCoder instance = new Uint128SimpledCoder();
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public void convertTo(final W out, final Uint128 value) {
-        if (value == null) {
-            out.writeNull();
-        } else {
-            bsSimpledCoder.convertTo(out, value.getBytes());
-        }
-    }
+	@Override
+	@SuppressWarnings("unchecked")
+	public void convertTo(final W out, final Uint128 value) {
+		if (value == null) {
+			out.writeNull();
+		} else {
+			bsSimpledCoder.convertTo(out, value.getBytes());
+		}
+	}
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public Uint128 convertFrom(R in) {
-        byte[] bs = bsSimpledCoder.convertFrom(in);
-        if (bs == null) {
-            return null;
-        }
-        return Uint128.create(bs);
-    }
+	@Override
+	@SuppressWarnings("unchecked")
+	public Uint128 convertFrom(R in) {
+		byte[] bs = bsSimpledCoder.convertFrom(in);
+		if (bs == null) {
+			return null;
+		}
+		return Uint128.create(bs);
+	}
 
-    /**
-     * Uint128 的JsonSimpledCoder实现
-     *
-     * @param <R> Reader输入的子类型
-     * @param <W> Writer输出的子类型
-     */
-    public static class Uint128JsonSimpledCoder<R extends JsonReader, W extends JsonWriter>
-            extends SimpledCoder<R, W, Uint128> {
+	/**
+	 * Uint128 的JsonSimpledCoder实现
+	 *
+	 * @param <R> Reader输入的子类型
+	 * @param <W> Writer输出的子类型
+	 */
+	public static class Uint128JsonSimpledCoder<R extends JsonReader, W extends JsonWriter>
+			extends SimpledCoder<R, W, Uint128> {
 
-        public static final Uint128JsonSimpledCoder instance = new Uint128JsonSimpledCoder();
+		public static final Uint128JsonSimpledCoder instance = new Uint128JsonSimpledCoder();
 
-        @Override
-        public void convertTo(final W out, final Uint128 value) {
-            if (value == null) {
-                out.writeNull();
-            } else {
-                out.writeSmallString(value.toString());
-            }
-        }
+		@Override
+		public void convertTo(final W out, final Uint128 value) {
+			if (value == null) {
+				out.writeNull();
+			} else {
+				out.writeSmallString(value.toString());
+			}
+		}
 
-        @Override
-        public Uint128 convertFrom(R in) {
-            final String str = in.readSmallString();
-            if (str == null) {
-                return null;
-            }
-            return Uint128.create(Utility.hexToBin(str));
-        }
-    }
+		@Override
+		public Uint128 convertFrom(R in) {
+			final String str = in.readSmallString();
+			if (str == null) {
+				return null;
+			}
+			return Uint128.create(Utility.hexToBin(str));
+		}
+	}
 }

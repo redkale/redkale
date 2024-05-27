@@ -14,17 +14,17 @@ import org.redkale.service.*;
  */
 public class UserService implements Service {
 
-    /**
-     * 根据登录态获取当前用户信息
-     *
-     * @param sessionid
-     * @return
-     */
-    public UserInfo current(String sessionid) {
-        return new UserInfo();
-    }
+	/**
+	 * 根据登录态获取当前用户信息
+	 *
+	 * @param sessionid
+	 * @return
+	 */
+	public UserInfo current(String sessionid) {
+		return new UserInfo();
+	}
 
-    public RetResult<UserInfo> login(LoginBean bean) {
-        return new RetResult<>(new UserInfo());
-    }
+	public RetResult<UserInfo> login(LoginBean bean) {
+		return new RetResult<>(new UserInfo());
+	}
 }

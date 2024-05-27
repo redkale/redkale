@@ -15,19 +15,19 @@ import org.redkale.util.RedkaleException;
  */
 public class HttpException extends RedkaleException {
 
-    public HttpException() {
-        super();
-    }
+	public HttpException() {
+		super();
+	}
 
-    public HttpException(String s) {
-        super(s);
-    }
+	public HttpException(String s) {
+		super(s);
+	}
 
-    public HttpException(String message, Throwable cause) {
-        super(message, cause);
-    }
+	public HttpException(String message, Throwable cause) {
+		super(message, cause);
+	}
 
-    public HttpException(Throwable cause) {
-        super(cause);
-    }
+	public HttpException(Throwable cause) {
+		super(cause);
+	}
 }

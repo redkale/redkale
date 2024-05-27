@@ -22,33 +22,33 @@ import org.redkale.util.AnyValue;
 @ResourceType(LockManager.class)
 public class LockManagerService implements LockManager, Service {
 
-    // 是否开启锁
-    protected boolean enabled = true;
+	// 是否开启锁
+	protected boolean enabled = true;
 
-    // 配置
-    protected AnyValue config;
+	// 配置
+	protected AnyValue config;
 
-    @Resource(required = false)
-    protected Application application;
+	@Resource(required = false)
+	protected Application application;
 
-    // 远程缓存Source
-    protected CacheSource remoteSource;
+	// 远程缓存Source
+	protected CacheSource remoteSource;
 
-    protected LockManagerService(@Nullable CacheSource remoteSource) {
-        this.remoteSource = remoteSource;
-    }
+	protected LockManagerService(@Nullable CacheSource remoteSource) {
+		this.remoteSource = remoteSource;
+	}
 
-    // 一般用于独立组件
-    public static LockManagerService create(@Nullable CacheSource remoteSource) {
-        return new LockManagerService(remoteSource);
-    }
+	// 一般用于独立组件
+	public static LockManagerService create(@Nullable CacheSource remoteSource) {
+		return new LockManagerService(remoteSource);
+	}
 
-    public boolean enabled() {
-        return this.enabled;
-    }
+	public boolean enabled() {
+		return this.enabled;
+	}
 
-    public LockManagerService enabled(boolean val) {
-        this.enabled = val;
-        return this;
-    }
+	public LockManagerService enabled(boolean val) {
+		this.enabled = val;
+		return this;
+	}
 }

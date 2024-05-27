@@ -25,42 +25,42 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface RestParam {
 
-    // name='&'表示当前用户;
-    /**
-     * 参数名 <br>
-     * name='&#38;'表示当前用户; <br>
-     * name='#'表示截取uri最后一段; <br>
-     * name='#xxx:'表示从uri中/pipes/xxx:v/截取xxx:的值 <br>
-     *
-     * @return String
-     */
-    String name() default "";
+	// name='&'表示当前用户;
+	/**
+	 * 参数名 <br>
+	 * name='&#38;'表示当前用户; <br>
+	 * name='#'表示截取uri最后一段; <br>
+	 * name='#xxx:'表示从uri中/pipes/xxx:v/截取xxx:的值 <br>
+	 *
+	 * @return String
+	 */
+	String name() default "";
 
-    /**
-     * 转换数字byte/short/int/long时所用的进制数， 默认10进制
-     *
-     * @return int
-     */
-    int radix() default 10;
+	/**
+	 * 转换数字byte/short/int/long时所用的进制数， 默认10进制
+	 *
+	 * @return int
+	 */
+	int radix() default 10;
 
-    /**
-     * 参数是否必传, 框架运行中不作验证, only for OpenAPI Specification 3
-     *
-     * @return boolean
-     */
-    boolean required() default true;
+	/**
+	 * 参数是否必传, 框架运行中不作验证, only for OpenAPI Specification 3
+	 *
+	 * @return boolean
+	 */
+	boolean required() default true;
 
-    /**
-     * for OpenAPI Specification 3.1.0
-     *
-     * @return String
-     */
-    String example() default "";
+	/**
+	 * for OpenAPI Specification 3.1.0
+	 *
+	 * @return String
+	 */
+	String example() default "";
 
-    /**
-     * 备注描述
-     *
-     * @return String
-     */
-    String comment() default "";
+	/**
+	 * 备注描述
+	 *
+	 * @return String
+	 */
+	String comment() default "";
 }
