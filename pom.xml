@@ -150,7 +150,7 @@
                     <formats>
                         <format>
                             <includes>
-                                <include>src/**</include>
+                                <include>src/**/java/**/*.java</include>
                             </includes>
                             <trimTrailingWhitespace/>
                             <endWithNewline/>
