@@ -8,13 +8,18 @@ package org.redkale.test.rest;
 import org.redkale.service.*;
 
 /**
- * 简单的定义UserService接口 
+ * 简单的定义UserService接口
  *
  * @author zhangjx
  */
 public class UserService implements Service {
 
-    // 根据登录态获取当前用户信息
+    /**
+     * 根据登录态获取当前用户信息
+     *
+     * @param sessionid
+     * @return
+     */
     public UserInfo current(String sessionid) {
         return new UserInfo();
     }
