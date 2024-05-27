@@ -11,41 +11,41 @@ import org.redkale.persistence.Id;
 /** @author zhangjx */
 public class Fortune implements Comparable<Fortune> {
 
-	@Id
-	private int id;
+    @Id
+    private int id;
 
-	private String message = "";
+    private String message = "";
 
-	public Fortune() {}
+    public Fortune() {}
 
-	public Fortune(int id, String message) {
-		this.id = id;
-		this.message = message;
-	}
+    public Fortune(int id, String message) {
+        this.id = id;
+        this.message = message;
+    }
 
-	public int getId() {
-		return id;
-	}
+    public int getId() {
+        return id;
+    }
 
-	public void setId(int id) {
-		this.id = id;
-	}
+    public void setId(int id) {
+        this.id = id;
+    }
 
-	public String getMessage() {
-		return message;
-	}
+    public String getMessage() {
+        return message;
+    }
 
-	public void setMessage(String message) {
-		this.message = message;
-	}
+    public void setMessage(String message) {
+        this.message = message;
+    }
 
-	@Override
-	public int compareTo(Fortune o) {
-		return message.compareTo(o.message);
-	}
+    @Override
+    public int compareTo(Fortune o) {
+        return message.compareTo(o.message);
+    }
 
-	@Override
-	public String toString() {
-		return JsonConvert.root().convertTo(this);
-	}
+    @Override
+    public String toString() {
+        return JsonConvert.root().convertTo(this);
+    }
 }

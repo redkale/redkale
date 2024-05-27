@@ -22,77 +22,77 @@ import org.redkale.util.RedkaleClassLoader;
  */
 public final class EnumSimpledCoder<R extends Reader, W extends Writer, E extends Enum> extends SimpledCoder<R, W, E> {
 
-	private final Encodeable valueEncoder;
+    private final Encodeable valueEncoder;
 
-	private final Map<E, Object> enumToValues;
+    private final Map<E, Object> enumToValues;
 
-	private final Map<String, E> valueToEnums;
+    private final Map<String, E> valueToEnums;
 
-	public EnumSimpledCoder(final ConvertFactory factory, Class<E> type) {
-		this.type = type;
-		ConvertEnumValue cev = type.getAnnotation(ConvertEnumValue.class);
-		if (cev == null) {
-			this.valueEncoder = null;
-			this.enumToValues = null;
-			this.valueToEnums = null;
-		} else {
-			try {
-				String fieldName = cev.value();
-				Field field = type.getDeclaredField(fieldName);
-				RedkaleClassLoader.putReflectionField(fieldName, field);
-				char[] chs = fieldName.toCharArray();
-				chs[0] = Character.toUpperCase(chs[0]);
-				String methodName = "get" + new String(chs);
-				Method method = null;
-				try {
-					method = type.getMethod(methodName);
-				} catch (NoSuchMethodException | SecurityException me) {
-					method = type.getMethod(fieldName);
-					methodName = fieldName;
-				}
-				RedkaleClassLoader.putReflectionMethod(methodName, method);
-				Map<E, Object> map1 = new HashMap<>();
-				Map<String, E> map2 = new HashMap<>();
-				for (E e : type.getEnumConstants()) {
-					map1.put(e, method.invoke(e));
-					map2.put(method.invoke(e).toString(), e);
-				}
-				this.valueEncoder = factory.loadEncoder(field.getType());
-				this.enumToValues = map1;
-				this.valueToEnums = map2;
-			} catch (Exception e) {
-				throw new ConvertException(e);
-			}
-		}
-	}
+    public EnumSimpledCoder(final ConvertFactory factory, Class<E> type) {
+        this.type = type;
+        ConvertEnumValue cev = type.getAnnotation(ConvertEnumValue.class);
+        if (cev == null) {
+            this.valueEncoder = null;
+            this.enumToValues = null;
+            this.valueToEnums = null;
+        } else {
+            try {
+                String fieldName = cev.value();
+                Field field = type.getDeclaredField(fieldName);
+                RedkaleClassLoader.putReflectionField(fieldName, field);
+                char[] chs = fieldName.toCharArray();
+                chs[0] = Character.toUpperCase(chs[0]);
+                String methodName = "get" + new String(chs);
+                Method method = null;
+                try {
+                    method = type.getMethod(methodName);
+                } catch (NoSuchMethodException | SecurityException me) {
+                    method = type.getMethod(fieldName);
+                    methodName = fieldName;
+                }
+                RedkaleClassLoader.putReflectionMethod(methodName, method);
+                Map<E, Object> map1 = new HashMap<>();
+                Map<String, E> map2 = new HashMap<>();
+                for (E e : type.getEnumConstants()) {
+                    map1.put(e, method.invoke(e));
+                    map2.put(method.invoke(e).toString(), e);
+                }
+                this.valueEncoder = factory.loadEncoder(field.getType());
+                this.enumToValues = map1;
+                this.valueToEnums = map2;
+            } catch (Exception e) {
+                throw new ConvertException(e);
+            }
+        }
+    }
 
-	@Override
-	public void convertTo(final W out, final E value) {
-		if (value == null) {
-			out.writeNull();
-		} else if (valueEncoder != null) {
-			valueEncoder.convertTo(out, enumToValues.get(value));
-		} else {
-			out.writeSmallString(value.toString());
-		}
-	}
+    @Override
+    public void convertTo(final W out, final E value) {
+        if (value == null) {
+            out.writeNull();
+        } else if (valueEncoder != null) {
+            valueEncoder.convertTo(out, enumToValues.get(value));
+        } else {
+            out.writeSmallString(value.toString());
+        }
+    }
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public E convertFrom(final R in) {
-		String value = in.readSmallString();
-		if (value == null) {
-			return null;
-		}
-		if (valueToEnums != null) {
-			return valueToEnums.get(value);
-		} else {
-			return (E) Enum.valueOf((Class<E>) type, value);
-		}
-	}
+    @Override
+    @SuppressWarnings("unchecked")
+    public E convertFrom(final R in) {
+        String value = in.readSmallString();
+        if (value == null) {
+            return null;
+        }
+        if (valueToEnums != null) {
+            return valueToEnums.get(value);
+        } else {
+            return (E) Enum.valueOf((Class<E>) type, value);
+        }
+    }
 
-	@Override
-	public Class<E> getType() {
-		return (Class<E>) type;
-	}
+    @Override
+    public Class<E> getType() {
+        return (Class<E>) type;
+    }
 }

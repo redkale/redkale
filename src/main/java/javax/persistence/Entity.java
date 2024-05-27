@@ -32,18 +32,18 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface Entity {
 
-	/**
-	 * (Optional) The entity name. Defaults to the unqualified name of the entity class. This name is used to refer to
-	 * the entity in queries. The name must not be a reserved literal in the Java Persistence query language.
-	 *
-	 * @return String
-	 */
-	String name() default "";
+    /**
+     * (Optional) The entity name. Defaults to the unqualified name of the entity class. This name is used to refer to
+     * the entity in queries. The name must not be a reserved literal in the Java Persistence query language.
+     *
+     * @return String
+     */
+    String name() default "";
 
-	/**
-	 * (Optional) The comment of the entity.
-	 *
-	 * @return String
-	 */
-	String comment() default "";
+    /**
+     * (Optional) The comment of the entity.
+     *
+     * @return String
+     */
+    String comment() default "";
 }

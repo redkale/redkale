@@ -21,53 +21,53 @@ import org.redkale.util.Utility;
  */
 public final class BigDecimalSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, BigDecimal> {
 
-	public static final BigDecimalSimpledCoder instance = new BigDecimalSimpledCoder();
+    public static final BigDecimalSimpledCoder instance = new BigDecimalSimpledCoder();
 
-	@Override
-	public void convertTo(W out, BigDecimal value) {
-		if (value == null) {
-			out.writeNull();
-			return;
-		}
-		out.writeSmallString(value.toString());
-	}
+    @Override
+    public void convertTo(W out, BigDecimal value) {
+        if (value == null) {
+            out.writeNull();
+            return;
+        }
+        out.writeSmallString(value.toString());
+    }
 
-	@Override
-	public BigDecimal convertFrom(R in) {
-		String value = in.readSmallString();
-		if (value == null) {
-			return null;
-		}
-		return new BigDecimal(Utility.charArray(value));
-	}
+    @Override
+    public BigDecimal convertFrom(R in) {
+        String value = in.readSmallString();
+        if (value == null) {
+            return null;
+        }
+        return new BigDecimal(Utility.charArray(value));
+    }
 
-	/**
-	 * BigDecimal 的JsonSimpledCoder实现
-	 *
-	 * @param <R> Reader输入的子类型
-	 * @param <W> Writer输出的子类型
-	 */
-	public static class BigDecimalJsonSimpledCoder<R extends JsonReader, W extends JsonWriter>
-			extends SimpledCoder<R, W, BigDecimal> {
+    /**
+     * BigDecimal 的JsonSimpledCoder实现
+     *
+     * @param <R> Reader输入的子类型
+     * @param <W> Writer输出的子类型
+     */
+    public static class BigDecimalJsonSimpledCoder<R extends JsonReader, W extends JsonWriter>
+            extends SimpledCoder<R, W, BigDecimal> {
 
-		public static final BigDecimalJsonSimpledCoder instance = new BigDecimalJsonSimpledCoder();
+        public static final BigDecimalJsonSimpledCoder instance = new BigDecimalJsonSimpledCoder();
 
-		@Override
-		public void convertTo(final W out, final BigDecimal value) {
-			if (value == null) {
-				out.writeNull();
-			} else {
-				out.writeSmallString(value.toString());
-			}
-		}
+        @Override
+        public void convertTo(final W out, final BigDecimal value) {
+            if (value == null) {
+                out.writeNull();
+            } else {
+                out.writeSmallString(value.toString());
+            }
+        }
 
-		@Override
-		public BigDecimal convertFrom(R in) {
-			final String str = in.readString();
-			if (str == null) {
-				return null;
-			}
-			return new BigDecimal(str);
-		}
-	}
+        @Override
+        public BigDecimal convertFrom(R in) {
+            final String str = in.readString();
+            if (str == null) {
+                return null;
+            }
+            return new BigDecimal(str);
+        }
+    }
 }

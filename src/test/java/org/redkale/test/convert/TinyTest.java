@@ -9,42 +9,42 @@ import org.redkale.convert.json.*;
 /** @author zhangjx */
 public class TinyTest {
 
-	private boolean main;
+    private boolean main;
 
-	public static void main(String[] args) throws Throwable {
-		TinyTest test = new TinyTest();
-		test.main = true;
-		test.run();
-	}
+    public static void main(String[] args) throws Throwable {
+        TinyTest test = new TinyTest();
+        test.main = true;
+        test.run();
+    }
 
-	@Test
-	public void run() throws Exception {
-		TinyRecord record = new TinyRecord();
-		record.id = 5;
-		{
-			JsonFactory factory = JsonFactory.create().withFeatures(Convert.FEATURE_TINY);
-			JsonConvert convert = factory.getConvert();
-			String json = "{\"id\":5}";
-			if (!main) {
-				Assertions.assertEquals(json, convert.convertTo(record));
-			}
-			System.out.println(convert.convertTo(record));
-		}
-		{
-			JsonFactory factory = JsonFactory.create().withFeatures(0);
-			JsonConvert convert = factory.getConvert();
-			String json = "{\"id\":5,\"name\":\"\"}";
-			if (!main) {
-				Assertions.assertEquals(json, convert.convertTo(record));
-			}
-			System.out.println(convert.convertTo(record));
-		}
-	}
+    @Test
+    public void run() throws Exception {
+        TinyRecord record = new TinyRecord();
+        record.id = 5;
+        {
+            JsonFactory factory = JsonFactory.create().withFeatures(Convert.FEATURE_TINY);
+            JsonConvert convert = factory.getConvert();
+            String json = "{\"id\":5}";
+            if (!main) {
+                Assertions.assertEquals(json, convert.convertTo(record));
+            }
+            System.out.println(convert.convertTo(record));
+        }
+        {
+            JsonFactory factory = JsonFactory.create().withFeatures(0);
+            JsonConvert convert = factory.getConvert();
+            String json = "{\"id\":5,\"name\":\"\"}";
+            if (!main) {
+                Assertions.assertEquals(json, convert.convertTo(record));
+            }
+            System.out.println(convert.convertTo(record));
+        }
+    }
 
-	public static class TinyRecord {
+    public static class TinyRecord {
 
-		public String name = "";
+        public String name = "";
 
-		public int id;
-	}
+        public int id;
+    }
 }

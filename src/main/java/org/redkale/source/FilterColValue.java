@@ -19,20 +19,20 @@ import org.redkale.convert.ConvertColumn;
  */
 public class FilterColValue implements java.io.Serializable {
 
-	@ConvertColumn(index = 1)
-	private final String column;
+    @ConvertColumn(index = 1)
+    private final String column;
 
-	@ConstructorParameters({"column"})
-	public FilterColValue(String column) {
-		this.column = Objects.requireNonNull(column);
-	}
+    @ConstructorParameters({"column"})
+    public FilterColValue(String column) {
+        this.column = Objects.requireNonNull(column);
+    }
 
-	public String getColumn() {
-		return column;
-	}
+    public String getColumn() {
+        return column;
+    }
 
-	@Override
-	public String toString() {
-		return "a." + getColumn();
-	}
+    @Override
+    public String toString() {
+        return "a." + getColumn();
+    }
 }

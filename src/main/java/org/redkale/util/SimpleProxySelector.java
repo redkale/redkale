@@ -16,30 +16,30 @@ import java.util.List;
  */
 public class SimpleProxySelector extends ProxySelector {
 
-	private static final List<Proxy> NO_PROXY_LIST = List.of(Proxy.NO_PROXY);
+    private static final List<Proxy> NO_PROXY_LIST = List.of(Proxy.NO_PROXY);
 
-	final List<Proxy> list;
+    final List<Proxy> list;
 
-	SimpleProxySelector(Proxy... proxys) {
-		list = proxys.length == 0 ? NO_PROXY_LIST : List.of(proxys);
-	}
+    SimpleProxySelector(Proxy... proxys) {
+        list = proxys.length == 0 ? NO_PROXY_LIST : List.of(proxys);
+    }
 
-	public static SimpleProxySelector create(Proxy... proxys) {
-		return new SimpleProxySelector(proxys);
-	}
+    public static SimpleProxySelector create(Proxy... proxys) {
+        return new SimpleProxySelector(proxys);
+    }
 
-	@Override
-	public void connectFailed(URI uri, SocketAddress sa, IOException e) {
-		/* ignore */
-	}
+    @Override
+    public void connectFailed(URI uri, SocketAddress sa, IOException e) {
+        /* ignore */
+    }
 
-	@Override
-	public List<Proxy> select(URI uri) {
-		String scheme = uri.getScheme().toLowerCase();
-		if (scheme.equals("http") || scheme.equals("https")) {
-			return list;
-		} else {
-			return NO_PROXY_LIST;
-		}
-	}
+    @Override
+    public List<Proxy> select(URI uri) {
+        String scheme = uri.getScheme().toLowerCase();
+        if (scheme.equals("http") || scheme.equals("https")) {
+            return list;
+        } else {
+            return NO_PROXY_LIST;
+        }
+    }
 }

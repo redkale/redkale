@@ -18,18 +18,18 @@ import org.redkale.convert.*;
  * @param <W> Writer输出的子类型
  */
 public final class CompletionHandlerSimpledCoder<R extends Reader, W extends Writer>
-		extends SimpledCoder<R, W, CompletionHandler> {
+        extends SimpledCoder<R, W, CompletionHandler> {
 
-	public static final CompletionHandlerSimpledCoder instance = new CompletionHandlerSimpledCoder();
+    public static final CompletionHandlerSimpledCoder instance = new CompletionHandlerSimpledCoder();
 
-	@Override
-	public void convertTo(W out, CompletionHandler value) {
-		out.writeObjectNull(CompletionHandler.class);
-	}
+    @Override
+    public void convertTo(W out, CompletionHandler value) {
+        out.writeObjectNull(CompletionHandler.class);
+    }
 
-	@Override
-	public CompletionHandler convertFrom(R in) {
-		in.readObjectB(CompletionHandler.class);
-		return null;
-	}
+    @Override
+    public CompletionHandler convertFrom(R in) {
+        in.readObjectB(CompletionHandler.class);
+        return null;
+    }
 }

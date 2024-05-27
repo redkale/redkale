@@ -23,9 +23,9 @@ import org.redkale.convert.ConvertType;
 @Retention(RUNTIME)
 public @interface ResourceProducer {
 
-	String mq() default "";
+    String mq() default "";
 
-	boolean required() default true;
+    boolean required() default true;
 
-	ConvertType convertType() default ConvertType.JSON;
+    ConvertType convertType() default ConvertType.JSON;
 }

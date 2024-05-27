@@ -32,18 +32,18 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface DataTransaction {
 
-	// 事务版的DataSource
-	DataSource source();
+    // 事务版的DataSource
+    DataSource source();
 
-	// 同步模式提交
-	public void commit();
+    // 同步模式提交
+    public void commit();
 
-	// 同步模式回滚
-	public void rollback();
+    // 同步模式回滚
+    public void rollback();
 
-	// 异步模式提交
-	public CompletableFuture<Void> commitAsync();
+    // 异步模式提交
+    public CompletableFuture<Void> commitAsync();
 
-	// 异步模式回滚
-	public CompletableFuture<Void> rollbackAsync();
+    // 异步模式回滚
+    public CompletableFuture<Void> rollbackAsync();
 }

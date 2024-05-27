@@ -39,28 +39,28 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 public @interface Table {
 
-	/**
-	 * (Optional) The name of the table.
-	 *
-	 * <p>Defaults to the entity name.
-	 *
-	 * @return String
-	 */
-	String name() default "";
+    /**
+     * (Optional) The name of the table.
+     *
+     * <p>Defaults to the entity name.
+     *
+     * @return String
+     */
+    String name() default "";
 
-	/**
-	 * (Optional) The catalog of the table.
-	 *
-	 * <p>Defaults to the default catalog.
-	 *
-	 * @return String
-	 */
-	String catalog() default "";
+    /**
+     * (Optional) The catalog of the table.
+     *
+     * <p>Defaults to the default catalog.
+     *
+     * @return String
+     */
+    String catalog() default "";
 
-	/**
-	 * comment
-	 *
-	 * @return String
-	 */
-	String comment() default "";
+    /**
+     * comment
+     *
+     * @return String
+     */
+    String comment() default "";
 }

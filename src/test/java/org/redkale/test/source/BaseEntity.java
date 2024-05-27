@@ -11,8 +11,8 @@ import org.redkale.convert.json.*;
 /** @author zhangjx */
 public abstract class BaseEntity implements Serializable {
 
-	@Override
-	public String toString() {
-		return JsonConvert.root().convertTo(this);
-	}
+    @Override
+    public String toString() {
+        return JsonConvert.root().convertTo(this);
+    }
 }

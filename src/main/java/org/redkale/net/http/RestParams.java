@@ -18,15 +18,15 @@ import java.util.function.BiConsumer;
  */
 public interface RestParams {
 
-	public String get(String name);
+    public String get(String name);
 
-	public String get(String name, String defaultValue);
+    public String get(String name, String defaultValue);
 
-	public void forEach(BiConsumer<String, String> consumer);
+    public void forEach(BiConsumer<String, String> consumer);
 
-	public String[] names();
+    public String[] names();
 
-	public boolean contains(String name);
+    public boolean contains(String name);
 
-	public Map<String, String> map();
+    public Map<String, String> map();
 }

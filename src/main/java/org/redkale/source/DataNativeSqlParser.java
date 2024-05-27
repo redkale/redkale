@@ -21,25 +21,25 @@ import org.redkale.util.RedkaleClassLoader;
  */
 public interface DataNativeSqlParser {
 
-	public DataNativeSqlInfo parse(IntFunction<String> signFunc, String dbType, String rawSql);
+    public DataNativeSqlInfo parse(IntFunction<String> signFunc, String dbType, String rawSql);
 
-	public DataNativeSqlStatement parse(
-			IntFunction<String> signFunc, String dbType, String rawSql, boolean countable, Map<String, Object> params);
+    public DataNativeSqlStatement parse(
+            IntFunction<String> signFunc, String dbType, String rawSql, boolean countable, Map<String, Object> params);
 
-	public static DataNativeSqlParser loadFirst() {
-		if (DataNativeSqlStatement._first_parser != DataNativeSqlStatement.PARSER_NIL) {
-			return DataNativeSqlStatement._first_parser;
-		}
-		Iterator<DataNativeSqlParserProvider> it =
-				ServiceLoader.load(DataNativeSqlParserProvider.class).iterator();
-		RedkaleClassLoader.putServiceLoader(DataNativeSqlParserProvider.class);
-		while (it.hasNext()) {
-			DataNativeSqlParserProvider provider = it.next();
-			if (provider != null && provider.acceptsConf(null)) {
-				return provider.createInstance();
-			}
-		}
-		DataNativeSqlStatement._first_parser = null;
-		return null;
-	}
+    public static DataNativeSqlParser loadFirst() {
+        if (DataNativeSqlStatement._first_parser != DataNativeSqlStatement.PARSER_NIL) {
+            return DataNativeSqlStatement._first_parser;
+        }
+        Iterator<DataNativeSqlParserProvider> it =
+                ServiceLoader.load(DataNativeSqlParserProvider.class).iterator();
+        RedkaleClassLoader.putServiceLoader(DataNativeSqlParserProvider.class);
+        while (it.hasNext()) {
+            DataNativeSqlParserProvider provider = it.next();
+            if (provider != null && provider.acceptsConf(null)) {
+                return provider.createInstance();
+            }
+        }
+        DataNativeSqlStatement._first_parser = null;
+        return null;
+    }
 }

@@ -10,52 +10,52 @@ import org.redkale.inject.ResourceFactory;
 /** @author zhangjx */
 public class ResourceLoaderTest {
 
-	public static void main(String[] args) throws Throwable {
-		ResourceLoaderTest test = new ResourceLoaderTest();
-		test.run();
-	}
+    public static void main(String[] args) throws Throwable {
+        ResourceLoaderTest test = new ResourceLoaderTest();
+        test.run();
+    }
 
-	@Test
-	public void run() throws Exception {
-		ResourceFactory factory = ResourceFactory.create();
-		factory.register("a.id", 1234);
-		factory.register("a.name", "my a name");
-		factory.register("b.id", 4321);
-		factory.register("b.name", "my b name");
-		Bean bean = new Bean();
-		factory.register("a", bean);
-		factory.inject("a", bean);
+    @Test
+    public void run() throws Exception {
+        ResourceFactory factory = ResourceFactory.create();
+        factory.register("a.id", 1234);
+        factory.register("a.name", "my a name");
+        factory.register("b.id", 4321);
+        factory.register("b.name", "my b name");
+        Bean bean = new Bean();
+        factory.register("a", bean);
+        factory.inject("a", bean);
 
-		ParentBean pb = new ParentBean();
-		factory.inject(pb);
-		Assertions.assertEquals(new Bean(1234, "my a name").toString(), pb.bean.toString());
-		System.out.println(pb.bean);
-	}
+        ParentBean pb = new ParentBean();
+        factory.inject(pb);
+        Assertions.assertEquals(new Bean(1234, "my a name").toString(), pb.bean.toString());
+        System.out.println(pb.bean);
+    }
 
-	public static class ParentBean {
+    public static class ParentBean {
 
-		@Resource(name = "a")
-		public Bean bean;
-	}
+        @Resource(name = "a")
+        public Bean bean;
+    }
 
-	public static class Bean {
+    public static class Bean {
 
-		@Resource(name = "@.id")
-		public int id;
+        @Resource(name = "@.id")
+        public int id;
 
-		@Resource(name = "@.name")
-		public String name;
+        @Resource(name = "@.name")
+        public String name;
 
-		public Bean() {}
+        public Bean() {}
 
-		public Bean(int id, String name) {
-			this.id = id;
-			this.name = name;
-		}
+        public Bean(int id, String name) {
+            this.id = id;
+            this.name = name;
+        }
 
-		@Override
-		public String toString() {
-			return JsonFactory.root().getConvert().convertTo(this);
-		}
-	}
+        @Override
+        public String toString() {
+            return JsonFactory.root().getConvert().convertTo(this);
+        }
+    }
 }

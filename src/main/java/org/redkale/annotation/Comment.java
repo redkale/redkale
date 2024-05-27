@@ -23,7 +23,7 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface Comment {
 
-	String name() default "";
+    String name() default "";
 
-	String value();
+    String value();
 }

@@ -19,22 +19,22 @@ import org.redkale.util.*;
  */
 class JsonElementDecoder extends AnyDecoder<JsonElement> {
 
-	private static final Type arrayType = new TypeToken<Collection<JsonElement>>() {}.getType();
+    private static final Type arrayType = new TypeToken<Collection<JsonElement>>() {}.getType();
 
-	private static final Type objectType = new TypeToken<Map<String, JsonElement>>() {}.getType();
+    private static final Type objectType = new TypeToken<Map<String, JsonElement>>() {}.getType();
 
-	private static final Creator<JsonArray> arrayCreator = t -> new JsonArray();
+    private static final Creator<JsonArray> arrayCreator = t -> new JsonArray();
 
-	private static final Creator<JsonObject> objectCreator = t -> new JsonObject();
+    private static final Creator<JsonObject> objectCreator = t -> new JsonObject();
 
-	public static final JsonElementDecoder instance = new JsonElementDecoder();
+    public static final JsonElementDecoder instance = new JsonElementDecoder();
 
-	public JsonElementDecoder() {
-		super(objectCreator, objectType, arrayCreator, arrayType, StringSimpledCoder.instance);
-	}
+    public JsonElementDecoder() {
+        super(objectCreator, objectType, arrayCreator, arrayType, StringSimpledCoder.instance);
+    }
 
-	@Override
-	public Type getType() {
-		return JsonElement.class;
-	}
+    @Override
+    public Type getType() {
+        return JsonElement.class;
+    }
 }

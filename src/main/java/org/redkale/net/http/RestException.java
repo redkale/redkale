@@ -13,19 +13,19 @@ package org.redkale.net.http;
  */
 public class RestException extends HttpException {
 
-	public RestException() {
-		super();
-	}
+    public RestException() {
+        super();
+    }
 
-	public RestException(String s) {
-		super(s);
-	}
+    public RestException(String s) {
+        super(s);
+    }
 
-	public RestException(String message, Throwable cause) {
-		super(message, cause);
-	}
+    public RestException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-	public RestException(Throwable cause) {
-		super(cause);
-	}
+    public RestException(Throwable cause) {
+        super(cause);
+    }
 }

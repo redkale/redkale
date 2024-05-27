@@ -10,5 +10,5 @@ import java.nio.channels.CompletionHandler;
 /** @author zhangjx */
 public abstract class MyAsyncInnerHandler<V, A> implements CompletionHandler<V, A> {
 
-	protected abstract int id2();
+    protected abstract int id2();
 }

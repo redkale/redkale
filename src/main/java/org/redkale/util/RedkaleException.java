@@ -13,19 +13,19 @@ package org.redkale.util;
  */
 public class RedkaleException extends RuntimeException {
 
-	public RedkaleException() {
-		super();
-	}
+    public RedkaleException() {
+        super();
+    }
 
-	public RedkaleException(String s) {
-		super(s);
-	}
+    public RedkaleException(String s) {
+        super(s);
+    }
 
-	public RedkaleException(String message, Throwable cause) {
-		super(message, cause);
-	}
+    public RedkaleException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-	public RedkaleException(Throwable cause) {
-		super(cause);
-	}
+    public RedkaleException(Throwable cause) {
+        super(cause);
+    }
 }

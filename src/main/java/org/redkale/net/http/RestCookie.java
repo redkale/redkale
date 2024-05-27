@@ -22,31 +22,31 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface RestCookie {
 
-	/**
-	 * cookie名
-	 *
-	 * @return String
-	 */
-	String name();
+    /**
+     * cookie名
+     *
+     * @return String
+     */
+    String name();
 
-	/**
-	 * 转换数字byte/short/int/long时所用的进制数， 默认10进制
-	 *
-	 * @return int
-	 */
-	int radix() default 10;
+    /**
+     * 转换数字byte/short/int/long时所用的进制数， 默认10进制
+     *
+     * @return int
+     */
+    int radix() default 10;
 
-	/**
-	 * for OpenAPI Specification 3.1.0
-	 *
-	 * @return String
-	 */
-	String example() default "";
+    /**
+     * for OpenAPI Specification 3.1.0
+     *
+     * @return String
+     */
+    String example() default "";
 
-	/**
-	 * 备注描述
-	 *
-	 * @return String
-	 */
-	String comment() default "";
+    /**
+     * 备注描述
+     *
+     * @return String
+     */
+    String comment() default "";
 }

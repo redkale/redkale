@@ -18,27 +18,27 @@ import org.redkale.convert.*;
  */
 public class TypeSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, Class> {
 
-	public static final TypeSimpledCoder instance = new TypeSimpledCoder();
+    public static final TypeSimpledCoder instance = new TypeSimpledCoder();
 
-	@Override
-	public void convertTo(final W out, final Class value) {
-		if (value == null) {
-			out.writeNull();
-		} else {
-			out.writeSmallString(value.getName());
-		}
-	}
+    @Override
+    public void convertTo(final W out, final Class value) {
+        if (value == null) {
+            out.writeNull();
+        } else {
+            out.writeSmallString(value.getName());
+        }
+    }
 
-	@Override
-	public Class convertFrom(R in) {
-		String str = in.readSmallString();
-		if (str == null) {
-			return null;
-		}
-		try {
-			return Thread.currentThread().getContextClassLoader().loadClass(str);
-		} catch (Throwable e) {
-			return null;
-		}
-	}
+    @Override
+    public Class convertFrom(R in) {
+        String str = in.readSmallString();
+        if (str == null) {
+            return null;
+        }
+        try {
+            return Thread.currentThread().getContextClassLoader().loadClass(str);
+        } catch (Throwable e) {
+            return null;
+        }
+    }
 }

@@ -10,35 +10,35 @@ import org.redkale.persistence.Id;
  */
 public class UserInfo {
 
-	@Id
-	private int userid;
+    @Id
+    private int userid;
 
-	private String username = "";
+    private String username = "";
 
-	public int getUserid() {
-		return userid;
-	}
+    public int getUserid() {
+        return userid;
+    }
 
-	public boolean checkAuth(int moduleid, int actionid) {
-		if (moduleid == 0 || actionid == 0) return true;
-		// 权限判断
-		return true;
-	}
+    public boolean checkAuth(int moduleid, int actionid) {
+        if (moduleid == 0 || actionid == 0) return true;
+        // 权限判断
+        return true;
+    }
 
-	public void setUserid(int userid) {
-		this.userid = userid;
-	}
+    public void setUserid(int userid) {
+        this.userid = userid;
+    }
 
-	public String getUsername() {
-		return username;
-	}
+    public String getUsername() {
+        return username;
+    }
 
-	public void setUsername(String username) {
-		this.username = username;
-	}
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-	@Override
-	public String toString() {
-		return JsonFactory.root().getConvert().convertTo(this);
-	}
+    @Override
+    public String toString() {
+        return JsonFactory.root().getConvert().convertTo(this);
+    }
 }

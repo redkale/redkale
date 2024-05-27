@@ -13,35 +13,35 @@ import org.redkale.util.Times;
 /** @author zhangjx */
 public class CService implements Service {
 
-	@Resource(name = "@name")
-	private String serviceName;
+    @Resource(name = "@name")
+    private String serviceName;
 
-	@Resource(name = "@type")
-	private Class serviceType;
+    @Resource(name = "@type")
+    private Class serviceType;
 
-	public String serviceName() {
-		return serviceName;
-	}
+    public String serviceName() {
+        return serviceName;
+    }
 
-	public Class serviceType() {
-		return serviceType;
-	}
+    public Class serviceType() {
+        return serviceType;
+    }
 
-	public RetResult<String> ccCurrentTime1(final String name) {
-		String rs = "同步ccCurrentTime1: " + name + ": " + Times.formatTime(System.currentTimeMillis());
-		System.out.println("执行了 CService.ccCurrentTime1++++同步方法1");
-		return new RetResult(rs);
-	}
+    public RetResult<String> ccCurrentTime1(final String name) {
+        String rs = "同步ccCurrentTime1: " + name + ": " + Times.formatTime(System.currentTimeMillis());
+        System.out.println("执行了 CService.ccCurrentTime1++++同步方法1");
+        return new RetResult(rs);
+    }
 
-	public void ccCurrentTime2(final CompletionHandler<RetResult<String>, Void> handler, final String name) {
-		String rs = "异步ccCurrentTime2: " + name + ": " + Times.formatTime(System.currentTimeMillis());
-		System.out.println("执行了 CService.ccCurrentTime2----异步方法2");
-		if (handler != null) handler.completed(new RetResult(rs), null);
-	}
+    public void ccCurrentTime2(final CompletionHandler<RetResult<String>, Void> handler, final String name) {
+        String rs = "异步ccCurrentTime2: " + name + ": " + Times.formatTime(System.currentTimeMillis());
+        System.out.println("执行了 CService.ccCurrentTime2----异步方法2");
+        if (handler != null) handler.completed(new RetResult(rs), null);
+    }
 
-	public void mcCurrentTime3(final MyAsyncHandler<RetResult<String>, Void> handler, final String name) {
-		String rs = "异步mcCurrentTime3: " + name + ": " + Times.formatTime(System.currentTimeMillis());
-		System.out.println("执行了 CService.mcCurrentTime3----异步方法3");
-		if (handler != null) handler.completed(new RetResult(rs), null);
-	}
+    public void mcCurrentTime3(final MyAsyncHandler<RetResult<String>, Void> handler, final String name) {
+        String rs = "异步mcCurrentTime3: " + name + ": " + Times.formatTime(System.currentTimeMillis());
+        System.out.println("执行了 CService.mcCurrentTime3----异步方法3");
+        if (handler != null) handler.completed(new RetResult(rs), null);
+    }
 }

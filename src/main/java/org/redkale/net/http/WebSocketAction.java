@@ -18,47 +18,47 @@ import org.redkale.convert.json.JsonConvert;
  */
 public class WebSocketAction implements Serializable {
 
-	protected String action;
+    protected String action;
 
-	protected Map<String, String> attach;
+    protected Map<String, String> attach;
 
-	public WebSocketAction() {}
+    public WebSocketAction() {}
 
-	public WebSocketAction(String action) {
-		this.action = action;
-	}
+    public WebSocketAction(String action) {
+        this.action = action;
+    }
 
-	public WebSocketAction(String action, Map<String, String> attach) {
-		this.action = action;
-		this.attach = attach;
-	}
+    public WebSocketAction(String action, Map<String, String> attach) {
+        this.action = action;
+        this.attach = attach;
+    }
 
-	public String findAttach(String name) {
-		return attach == null ? null : attach.get(name);
-	}
+    public String findAttach(String name) {
+        return attach == null ? null : attach.get(name);
+    }
 
-	public String findAttach(String name, String defvalue) {
-		return attach == null ? defvalue : attach.getOrDefault(name, defvalue);
-	}
+    public String findAttach(String name, String defvalue) {
+        return attach == null ? defvalue : attach.getOrDefault(name, defvalue);
+    }
 
-	public String getAction() {
-		return action;
-	}
+    public String getAction() {
+        return action;
+    }
 
-	public void setAction(String action) {
-		this.action = action;
-	}
+    public void setAction(String action) {
+        this.action = action;
+    }
 
-	public Map<String, String> getAttach() {
-		return attach;
-	}
+    public Map<String, String> getAttach() {
+        return attach;
+    }
 
-	public void setAttach(Map<String, String> attach) {
-		this.attach = attach;
-	}
+    public void setAttach(Map<String, String> attach) {
+        this.attach = attach;
+    }
 
-	@Override
-	public String toString() {
-		return JsonConvert.root().convertTo(this);
-	}
+    @Override
+    public String toString() {
+        return JsonConvert.root().convertTo(this);
+    }
 }

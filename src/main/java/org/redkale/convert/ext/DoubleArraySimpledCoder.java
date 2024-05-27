@@ -19,84 +19,84 @@ import org.redkale.convert.*;
  */
 public final class DoubleArraySimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, double[]> {
 
-	public static final DoubleArraySimpledCoder instance = new DoubleArraySimpledCoder();
+    public static final DoubleArraySimpledCoder instance = new DoubleArraySimpledCoder();
 
-	@Override
-	public void convertTo(W out, double[] values) {
-		if (values == null) {
-			out.writeNull();
-			return;
-		}
-		if (out.writeArrayB(values.length, this, DoubleSimpledCoder.instance, values) < 0) {
-			boolean flag = false;
-			for (double v : values) {
-				if (flag) {
-					out.writeArrayMark();
-				}
-				out.writeDouble(v);
-				flag = true;
-			}
-		}
-		out.writeArrayE();
-	}
+    @Override
+    public void convertTo(W out, double[] values) {
+        if (values == null) {
+            out.writeNull();
+            return;
+        }
+        if (out.writeArrayB(values.length, this, DoubleSimpledCoder.instance, values) < 0) {
+            boolean flag = false;
+            for (double v : values) {
+                if (flag) {
+                    out.writeArrayMark();
+                }
+                out.writeDouble(v);
+                flag = true;
+            }
+        }
+        out.writeArrayE();
+    }
 
-	@Override
-	public double[] convertFrom(R in) {
-		int len = in.readArrayB(null, null, DoubleSimpledCoder.instance);
-		int contentLength = -1;
-		if (len == Reader.SIGN_NULL) {
-			return null;
-		}
-		if (len == Reader.SIGN_NOLENBUTBYTES) {
-			contentLength = in.readMemberContentLength(null, DoubleSimpledCoder.instance);
-			len = Reader.SIGN_NOLENGTH;
-		}
-		if (len == Reader.SIGN_NOLENGTH) {
-			int size = 0;
-			double[] data = new double[8];
-			int startPosition = in.position();
-			while (in.hasNext(startPosition, contentLength)) {
-				if (size >= data.length) {
-					double[] newdata = new double[data.length + 4];
-					System.arraycopy(data, 0, newdata, 0, size);
-					data = newdata;
-				}
-				data[size++] = in.readDouble();
-			}
-			in.readArrayE();
-			double[] newdata = new double[size];
-			System.arraycopy(data, 0, newdata, 0, size);
-			return newdata;
-		} else {
-			double[] values = new double[len];
-			for (int i = 0; i < values.length; i++) {
-				values[i] = in.readDouble();
-			}
-			in.readArrayE();
-			return values;
-		}
-	}
+    @Override
+    public double[] convertFrom(R in) {
+        int len = in.readArrayB(null, null, DoubleSimpledCoder.instance);
+        int contentLength = -1;
+        if (len == Reader.SIGN_NULL) {
+            return null;
+        }
+        if (len == Reader.SIGN_NOLENBUTBYTES) {
+            contentLength = in.readMemberContentLength(null, DoubleSimpledCoder.instance);
+            len = Reader.SIGN_NOLENGTH;
+        }
+        if (len == Reader.SIGN_NOLENGTH) {
+            int size = 0;
+            double[] data = new double[8];
+            int startPosition = in.position();
+            while (in.hasNext(startPosition, contentLength)) {
+                if (size >= data.length) {
+                    double[] newdata = new double[data.length + 4];
+                    System.arraycopy(data, 0, newdata, 0, size);
+                    data = newdata;
+                }
+                data[size++] = in.readDouble();
+            }
+            in.readArrayE();
+            double[] newdata = new double[size];
+            System.arraycopy(data, 0, newdata, 0, size);
+            return newdata;
+        } else {
+            double[] values = new double[len];
+            for (int i = 0; i < values.length; i++) {
+                values[i] = in.readDouble();
+            }
+            in.readArrayE();
+            return values;
+        }
+    }
 
-	public static final class DoubleStreamSimpledCoder<R extends Reader, W extends Writer>
-			extends SimpledCoder<R, W, DoubleStream> {
+    public static final class DoubleStreamSimpledCoder<R extends Reader, W extends Writer>
+            extends SimpledCoder<R, W, DoubleStream> {
 
-		public static final DoubleStreamSimpledCoder instance = new DoubleStreamSimpledCoder();
+        public static final DoubleStreamSimpledCoder instance = new DoubleStreamSimpledCoder();
 
-		@Override
-		@SuppressWarnings("unchecked")
-		public void convertTo(W out, DoubleStream values) {
-			if (values == null) {
-				out.writeNull();
-				return;
-			}
-			DoubleArraySimpledCoder.instance.convertTo(out, values.toArray());
-		}
+        @Override
+        @SuppressWarnings("unchecked")
+        public void convertTo(W out, DoubleStream values) {
+            if (values == null) {
+                out.writeNull();
+                return;
+            }
+            DoubleArraySimpledCoder.instance.convertTo(out, values.toArray());
+        }
 
-		@Override
-		@SuppressWarnings("unchecked")
-		public DoubleStream convertFrom(R in) {
-			double[] value = DoubleArraySimpledCoder.instance.convertFrom(in);
-			return value == null ? null : DoubleStream.of(value);
-		}
-	}
+        @Override
+        @SuppressWarnings("unchecked")
+        public DoubleStream convertFrom(R in) {
+            double[] value = DoubleArraySimpledCoder.instance.convertFrom(in);
+            return value == null ? null : DoubleStream.of(value);
+        }
+    }
 }

@@ -23,31 +23,31 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface RestUploadFile {
 
-	/**
-	 * 可接收的文件大小最大值， 小于1表示无大小限制
-	 *
-	 * @return int
-	 */
-	long maxLength() default 0;
+    /**
+     * 可接收的文件大小最大值， 小于1表示无大小限制
+     *
+     * @return int
+     */
+    long maxLength() default 0;
 
-	/**
-	 * 可接收的文件名正则表达式, 为空表示接收任何文件 <br>
-	 *
-	 * @return String
-	 */
-	String fileNameRegx() default "";
+    /**
+     * 可接收的文件名正则表达式, 为空表示接收任何文件 <br>
+     *
+     * @return String
+     */
+    String fileNameRegx() default "";
 
-	/**
-	 * 可接收的ContentType正则表达式, 为空表示接收任何文件类型 <br>
-	 *
-	 * @return String
-	 */
-	String contentTypeRegx() default "";
+    /**
+     * 可接收的ContentType正则表达式, 为空表示接收任何文件类型 <br>
+     *
+     * @return String
+     */
+    String contentTypeRegx() default "";
 
-	/**
-	 * 备注描述, 对应&#64;HttpParam.comment
-	 *
-	 * @return String
-	 */
-	String comment() default "";
+    /**
+     * 备注描述, 对应&#64;HttpParam.comment
+     *
+     * @return String
+     */
+    String comment() default "";
 }

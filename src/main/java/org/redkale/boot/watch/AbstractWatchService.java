@@ -12,11 +12,11 @@ import org.redkale.watch.WatchService;
 /** @author zhangjx */
 public abstract class AbstractWatchService extends AbstractService implements WatchService {
 
-	/** 缺少参数 */
-	@Comment("缺少参数")
-	public static final int RET_WATCH_PARAMS_ILLEGAL = 1600_0001;
+    /** 缺少参数 */
+    @Comment("缺少参数")
+    public static final int RET_WATCH_PARAMS_ILLEGAL = 1600_0001;
 
-	/** 执行异常 */
-	@Comment("执行异常")
-	public static final int RET_WATCH_RUN_EXCEPTION = 1600_0002;
+    /** 执行异常 */
+    @Comment("执行异常")
+    public static final int RET_WATCH_RUN_EXCEPTION = 1600_0002;
 }

@@ -10,15 +10,15 @@ import org.redkale.convert.json.JsonConvert;
 /** @author zhangjx */
 public class ChatMessage {
 
-	public int fromuserid;
+    public int fromuserid;
 
-	public int touserid;
+    public int touserid;
 
-	public String fromusername;
+    public String fromusername;
 
-	public String content;
+    public String content;
 
-	public String toString() {
-		return JsonConvert.root().convertTo(this);
-	}
+    public String toString() {
+        return JsonConvert.root().convertTo(this);
+    }
 }

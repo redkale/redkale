@@ -41,24 +41,24 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface Index {
 
-	/**
-	 * (Optional) The name of the index; defaults to a provider-generated name.
-	 *
-	 * @return String
-	 */
-	String name() default "";
+    /**
+     * (Optional) The name of the index; defaults to a provider-generated name.
+     *
+     * @return String
+     */
+    String name() default "";
 
-	/**
-	 * (Required) The names of the columns to be included in the index, in order.
-	 *
-	 * @return String
-	 */
-	String columnList();
+    /**
+     * (Required) The names of the columns to be included in the index, in order.
+     *
+     * @return String
+     */
+    String columnList();
 
-	/**
-	 * (Optional) Whether the index is unique.
-	 *
-	 * @return boolean
-	 */
-	boolean unique() default false;
+    /**
+     * (Optional) Whether the index is unique.
+     *
+     * @return boolean
+     */
+    boolean unique() default false;
 }

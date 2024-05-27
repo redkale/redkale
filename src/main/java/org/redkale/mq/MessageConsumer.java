@@ -24,9 +24,9 @@ import org.redkale.util.AnyValue;
 @ClassDepends
 public interface MessageConsumer<T> {
 
-	default void init(AnyValue config) {}
+    default void init(AnyValue config) {}
 
-	public void onMessage(MessageConext context, T message);
+    public void onMessage(MessageConext context, T message);
 
-	default void destroy(AnyValue config) {}
+    default void destroy(AnyValue config) {}
 }

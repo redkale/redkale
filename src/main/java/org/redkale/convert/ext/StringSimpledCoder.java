@@ -20,31 +20,31 @@ import org.redkale.convert.Writer;
  */
 public final class StringSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, String> {
 
-	public static final StringSimpledCoder instance = new StringSimpledCoder();
+    public static final StringSimpledCoder instance = new StringSimpledCoder();
 
-	@Override
-	public void convertTo(W out, String value) {
-		out.writeString(value);
-	}
+    @Override
+    public void convertTo(W out, String value) {
+        out.writeString(value);
+    }
 
-	@Override
-	public String convertFrom(R in) {
-		return in.readString();
-	}
+    @Override
+    public String convertFrom(R in) {
+        return in.readString();
+    }
 
-	public static final class SmallStringSimpledCoder<R extends Reader, W extends Writer>
-			extends SimpledCoder<R, W, String> {
+    public static final class SmallStringSimpledCoder<R extends Reader, W extends Writer>
+            extends SimpledCoder<R, W, String> {
 
-		public static final SmallStringSimpledCoder instance = new SmallStringSimpledCoder();
+        public static final SmallStringSimpledCoder instance = new SmallStringSimpledCoder();
 
-		@Override
-		public void convertTo(W out, String value) {
-			out.writeSmallString(value);
-		}
+        @Override
+        public void convertTo(W out, String value) {
+            out.writeSmallString(value);
+        }
 
-		@Override
-		public String convertFrom(R in) {
-			return in.readSmallString();
-		}
-	}
+        @Override
+        public String convertFrom(R in) {
+            return in.readSmallString();
+        }
+    }
 }

@@ -42,39 +42,39 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 public @interface Index {
 
-	/**
-	 * (Optional) The name of the index; defaults to a provider-generated name.
-	 *
-	 * @return String
-	 */
-	String name() default "";
+    /**
+     * (Optional) The name of the index; defaults to a provider-generated name.
+     *
+     * @return String
+     */
+    String name() default "";
 
-	/**
-	 * (Required) The names of the columns to be included in the index, in order.
-	 *
-	 * @return String[]
-	 */
-	String[] columns();
+    /**
+     * (Required) The names of the columns to be included in the index, in order.
+     *
+     * @return String[]
+     */
+    String[] columns();
 
-	/**
-	 * (Optional) Whether the index is unique.
-	 *
-	 * @return boolean
-	 */
-	boolean unique() default false;
+    /**
+     * (Optional) Whether the index is unique.
+     *
+     * @return boolean
+     */
+    boolean unique() default false;
 
-	/**
-	 * Index的多用类
-	 *
-	 * <p>详情见: https://redkale.org
-	 *
-	 * @author zhangjx
-	 */
-	@Documented
-	@Target(TYPE)
-	@Retention(RUNTIME)
-	public static @interface Indexs {
+    /**
+     * Index的多用类
+     *
+     * <p>详情见: https://redkale.org
+     *
+     * @author zhangjx
+     */
+    @Documented
+    @Target(TYPE)
+    @Retention(RUNTIME)
+    public static @interface Indexs {
 
-		Index[] value();
-	}
+        Index[] value();
+    }
 }

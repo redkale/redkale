@@ -20,58 +20,58 @@ import org.redkale.convert.json.JsonConvert;
  */
 public class WebSocketAddress implements Serializable {
 
-	protected InetSocketAddress addr;
+    protected InetSocketAddress addr;
 
-	protected String topic;
+    protected String topic;
 
-	public WebSocketAddress() {}
+    public WebSocketAddress() {}
 
-	public WebSocketAddress(String topic, InetSocketAddress addr) {
-		this.topic = topic;
-		this.addr = addr;
-	}
+    public WebSocketAddress(String topic, InetSocketAddress addr) {
+        this.topic = topic;
+        this.addr = addr;
+    }
 
-	@Override
-	public int hashCode() {
-		int hash = 7;
-		hash = 37 * hash + Objects.hashCode(this.addr);
-		hash = 37 * hash + Objects.hashCode(this.topic);
-		return hash;
-	}
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 37 * hash + Objects.hashCode(this.addr);
+        hash = 37 * hash + Objects.hashCode(this.topic);
+        return hash;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		final WebSocketAddress other = (WebSocketAddress) obj;
-		return Objects.equals(this.topic, other.topic) && Objects.equals(this.addr, other.addr);
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final WebSocketAddress other = (WebSocketAddress) obj;
+        return Objects.equals(this.topic, other.topic) && Objects.equals(this.addr, other.addr);
+    }
 
-	public String getTopic() {
-		return topic;
-	}
+    public String getTopic() {
+        return topic;
+    }
 
-	public void setTopic(String topic) {
-		this.topic = topic;
-	}
+    public void setTopic(String topic) {
+        this.topic = topic;
+    }
 
-	public InetSocketAddress getAddr() {
-		return addr;
-	}
+    public InetSocketAddress getAddr() {
+        return addr;
+    }
 
-	public void setAddr(InetSocketAddress addr) {
-		this.addr = addr;
-	}
+    public void setAddr(InetSocketAddress addr) {
+        this.addr = addr;
+    }
 
-	@Override
-	public String toString() {
-		return JsonConvert.root().convertTo(this);
-	}
+    @Override
+    public String toString() {
+        return JsonConvert.root().convertTo(this);
+    }
 }

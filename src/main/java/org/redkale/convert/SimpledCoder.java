@@ -20,28 +20,28 @@ import java.lang.reflect.Type;
  * @param <T> 序列化/反解析的数据类型
  */
 public abstract class SimpledCoder<R extends Reader, W extends Writer, T>
-		implements Decodeable<R, T>, Encodeable<W, T> {
+        implements Decodeable<R, T>, Encodeable<W, T> {
 
-	protected Type type;
+    protected Type type;
 
-	@Override
-	public abstract void convertTo(final W out, final T value);
+    @Override
+    public abstract void convertTo(final W out, final T value);
 
-	@Override
-	public abstract T convertFrom(final R in);
+    @Override
+    public abstract T convertFrom(final R in);
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public Class<T> getType() {
-		if (type == null) {
-			Type[] ts = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments();
-			type = ts[ts.length - 1];
-		}
-		return (Class<T>) type;
-	}
+    @Override
+    @SuppressWarnings("unchecked")
+    public Class<T> getType() {
+        if (type == null) {
+            Type[] ts = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments();
+            type = ts[ts.length - 1];
+        }
+        return (Class<T>) type;
+    }
 
-	@Override
-	public String toString() {
-		return this.getClass().getSimpleName();
-	}
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName();
+    }
 }

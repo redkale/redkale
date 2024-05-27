@@ -16,77 +16,77 @@ import java.util.Arrays;
  */
 public class FilterFuncColumn implements java.io.Serializable {
 
-	public static final String COLUMN_NULL = "*";
+    public static final String COLUMN_NULL = "*";
 
-	FilterFunc func;
+    FilterFunc func;
 
-	String[] columns; // 为null，将使用*代替
+    String[] columns; // 为null，将使用*代替
 
-	Number defvalue;
+    Number defvalue;
 
-	public FilterFuncColumn() {}
+    public FilterFuncColumn() {}
 
-	public static FilterFuncColumn create(final FilterFunc func) {
-		return new FilterFuncColumn(func);
-	}
+    public static FilterFuncColumn create(final FilterFunc func) {
+        return new FilterFuncColumn(func);
+    }
 
-	public static FilterFuncColumn create(final FilterFunc func, final String... columns) {
-		return new FilterFuncColumn(func, columns);
-	}
+    public static FilterFuncColumn create(final FilterFunc func, final String... columns) {
+        return new FilterFuncColumn(func, columns);
+    }
 
-	public static FilterFuncColumn create(final FilterFunc func, final Number defvalue, final String... columns) {
-		return new FilterFuncColumn(func, defvalue, columns);
-	}
+    public static FilterFuncColumn create(final FilterFunc func, final Number defvalue, final String... columns) {
+        return new FilterFuncColumn(func, defvalue, columns);
+    }
 
-	public String[] cols() {
-		return columns == null || columns.length == 0 ? new String[] {COLUMN_NULL} : columns;
-	}
+    public String[] cols() {
+        return columns == null || columns.length == 0 ? new String[] {COLUMN_NULL} : columns;
+    }
 
-	public String col(String column) {
-		return column == null || column.isEmpty() ? COLUMN_NULL : column;
-	}
+    public String col(String column) {
+        return column == null || column.isEmpty() ? COLUMN_NULL : column;
+    }
 
-	public FilterFuncColumn(final FilterFunc func) {
-		this(func, (Number) null);
-	}
+    public FilterFuncColumn(final FilterFunc func) {
+        this(func, (Number) null);
+    }
 
-	public FilterFuncColumn(final FilterFunc func, final String... columns) {
-		this(func, null, columns);
-	}
+    public FilterFuncColumn(final FilterFunc func, final String... columns) {
+        this(func, null, columns);
+    }
 
-	public FilterFuncColumn(final FilterFunc func, final Number defvalue, final String... columns) {
-		this.func = func;
-		this.defvalue = defvalue;
-		this.columns = columns;
-	}
+    public FilterFuncColumn(final FilterFunc func, final Number defvalue, final String... columns) {
+        this.func = func;
+        this.defvalue = defvalue;
+        this.columns = columns;
+    }
 
-	public FilterFunc getFunc() {
-		return func;
-	}
+    public FilterFunc getFunc() {
+        return func;
+    }
 
-	public void setFunc(FilterFunc func) {
-		this.func = func;
-	}
+    public void setFunc(FilterFunc func) {
+        this.func = func;
+    }
 
-	public String[] getColumns() {
-		return columns;
-	}
+    public String[] getColumns() {
+        return columns;
+    }
 
-	public void setColumns(String[] columns) {
-		this.columns = columns;
-	}
+    public void setColumns(String[] columns) {
+        this.columns = columns;
+    }
 
-	public Number getDefvalue() {
-		return defvalue;
-	}
+    public Number getDefvalue() {
+        return defvalue;
+    }
 
-	public void setDefvalue(Number defvalue) {
-		this.defvalue = defvalue;
-	}
+    public void setDefvalue(Number defvalue) {
+        this.defvalue = defvalue;
+    }
 
-	@Override
-	public String toString() {
-		return this.getClass().getSimpleName() + "{func:" + this.func + ", columns:" + Arrays.toString(this.columns)
-				+ ", defvalue:" + this.defvalue + "}";
-	}
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + "{func:" + this.func + ", columns:" + Arrays.toString(this.columns)
+                + ", defvalue:" + this.defvalue + "}";
+    }
 }

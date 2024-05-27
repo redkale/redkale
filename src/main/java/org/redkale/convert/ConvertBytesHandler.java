@@ -17,5 +17,5 @@ import java.util.function.Consumer;
  */
 public interface ConvertBytesHandler {
 
-	<A> void completed(byte[] bs, int offset, int length, Consumer<A> callback, A attachment);
+    <A> void completed(byte[] bs, int offset, int length, Consumer<A> callback, A attachment);
 }

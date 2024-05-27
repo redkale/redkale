@@ -30,16 +30,16 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Priority {
 
-	/** 最高优先级, 其他值必须比此值小 */
-	public static final int HIGHTEST = Integer.MAX_VALUE;
+    /** 最高优先级, 其他值必须比此值小 */
+    public static final int HIGHTEST = Integer.MAX_VALUE;
 
-	/** 最低优先级, 其他值必须比此值大 */
-	public static final int LOWEST = Integer.MIN_VALUE;
+    /** 最低优先级, 其他值必须比此值大 */
+    public static final int LOWEST = Integer.MIN_VALUE;
 
-	/**
-	 * 优先级值
-	 *
-	 * @return int
-	 */
-	int value();
+    /**
+     * 优先级值
+     *
+     * @return int
+     */
+    int value();
 }

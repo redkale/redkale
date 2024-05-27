@@ -26,343 +26,343 @@ import org.redkale.util.*;
 @ResourceType(AsyncGroup.class)
 public class AsyncIOGroup extends AsyncGroup {
 
-	private final AtomicBoolean started = new AtomicBoolean();
+    private final AtomicBoolean started = new AtomicBoolean();
 
-	private boolean skipClose;
+    private boolean skipClose;
 
-	private final AtomicBoolean closed = new AtomicBoolean();
+    private final AtomicBoolean closed = new AtomicBoolean();
 
-	final AsyncIOThread[] ioReadThreads;
+    final AsyncIOThread[] ioReadThreads;
 
-	final AsyncIOThread[] ioWriteThreads;
+    final AsyncIOThread[] ioWriteThreads;
 
-	private final AtomicBoolean connectThreadInited = new AtomicBoolean();
+    private final AtomicBoolean connectThreadInited = new AtomicBoolean();
 
-	private final AsyncIOThread connectThread;
+    private final AsyncIOThread connectThread;
 
-	final int bufferCapacity;
+    final int bufferCapacity;
 
-	private final AtomicInteger readIndex = new AtomicInteger();
+    private final AtomicInteger readIndex = new AtomicInteger();
 
-	private final AtomicInteger writeIndex = new AtomicInteger();
+    private final AtomicInteger writeIndex = new AtomicInteger();
 
-	// 创建数
-	protected final LongAdder connCreateCounter = new LongAdder();
+    // 创建数
+    protected final LongAdder connCreateCounter = new LongAdder();
 
-	// 在线数
-	protected final LongAdder connLivingCounter = new LongAdder();
+    // 在线数
+    protected final LongAdder connLivingCounter = new LongAdder();
 
-	// 关闭数
-	protected final LongAdder connClosedCounter = new LongAdder();
+    // 关闭数
+    protected final LongAdder connClosedCounter = new LongAdder();
 
-	// 超时器
-	protected final ScheduledExecutorService timeoutExecutor;
+    // 超时器
+    protected final ScheduledExecutorService timeoutExecutor;
 
-	public AsyncIOGroup(final int bufferCapacity, final int bufferPoolSize) {
-		this("Redkale-AnonymousClient-IOThread-%s", null, bufferCapacity, bufferPoolSize);
-	}
+    public AsyncIOGroup(final int bufferCapacity, final int bufferPoolSize) {
+        this("Redkale-AnonymousClient-IOThread-%s", null, bufferCapacity, bufferPoolSize);
+    }
 
-	public AsyncIOGroup(
-			String threadNameFormat,
-			final ExecutorService workExecutor,
-			final int bufferCapacity,
-			final int bufferPoolSize) {
-		this(threadNameFormat, workExecutor, ByteBufferPool.createSafePool(bufferPoolSize, bufferCapacity));
-	}
+    public AsyncIOGroup(
+            String threadNameFormat,
+            final ExecutorService workExecutor,
+            final int bufferCapacity,
+            final int bufferPoolSize) {
+        this(threadNameFormat, workExecutor, ByteBufferPool.createSafePool(bufferPoolSize, bufferCapacity));
+    }
 
-	@SuppressWarnings("OverridableMethodCallInConstructor")
-	public AsyncIOGroup(String threadNameFormat, ExecutorService workExecutor, final ByteBufferPool safeBufferPool) {
-		final int threads = Utility.cpus(); // 固定值,不可改
-		this.bufferCapacity = safeBufferPool.getBufferCapacity();
-		this.ioReadThreads = new AsyncIOThread[threads];
-		this.ioWriteThreads = new AsyncIOThread[threads];
-		final ThreadGroup g = new ThreadGroup(String.format(threadNameFormat, "Group"));
-		this.timeoutExecutor = Executors.newScheduledThreadPool(1, (Runnable r) -> {
-			Thread t = new Thread(r, String.format(threadNameFormat, "Timeout"));
-			t.setDaemon(true);
-			return t;
-		});
-		try {
-			for (int i = 0; i < threads; i++) {
-				String indexFix = WorkThread.formatIndex(threads, i + 1);
-				this.ioReadThreads[i] = createAsyncIOThread(
-						g, String.format(threadNameFormat, indexFix), i, threads, workExecutor, safeBufferPool);
-				this.ioWriteThreads[i] = this.ioReadThreads[i];
-			}
-			this.connectThread = createConnectIOThread(
-					g, String.format(threadNameFormat, "Connect"), 0, 0, workExecutor, safeBufferPool);
-		} catch (IOException e) {
-			throw new RedkaleException(e);
-		}
-	}
+    @SuppressWarnings("OverridableMethodCallInConstructor")
+    public AsyncIOGroup(String threadNameFormat, ExecutorService workExecutor, final ByteBufferPool safeBufferPool) {
+        final int threads = Utility.cpus(); // 固定值,不可改
+        this.bufferCapacity = safeBufferPool.getBufferCapacity();
+        this.ioReadThreads = new AsyncIOThread[threads];
+        this.ioWriteThreads = new AsyncIOThread[threads];
+        final ThreadGroup g = new ThreadGroup(String.format(threadNameFormat, "Group"));
+        this.timeoutExecutor = Executors.newScheduledThreadPool(1, (Runnable r) -> {
+            Thread t = new Thread(r, String.format(threadNameFormat, "Timeout"));
+            t.setDaemon(true);
+            return t;
+        });
+        try {
+            for (int i = 0; i < threads; i++) {
+                String indexFix = WorkThread.formatIndex(threads, i + 1);
+                this.ioReadThreads[i] = createAsyncIOThread(
+                        g, String.format(threadNameFormat, indexFix), i, threads, workExecutor, safeBufferPool);
+                this.ioWriteThreads[i] = this.ioReadThreads[i];
+            }
+            this.connectThread = createConnectIOThread(
+                    g, String.format(threadNameFormat, "Connect"), 0, 0, workExecutor, safeBufferPool);
+        } catch (IOException e) {
+            throw new RedkaleException(e);
+        }
+    }
 
-	protected AsyncIOThread createConnectIOThread(
-			ThreadGroup g,
-			String name,
-			int index,
-			int threads,
-			ExecutorService workExecutor,
-			ByteBufferPool safeBufferPool)
-			throws IOException {
-		return new AsyncIOThread(g, name, index, threads, workExecutor, safeBufferPool);
-	}
+    protected AsyncIOThread createConnectIOThread(
+            ThreadGroup g,
+            String name,
+            int index,
+            int threads,
+            ExecutorService workExecutor,
+            ByteBufferPool safeBufferPool)
+            throws IOException {
+        return new AsyncIOThread(g, name, index, threads, workExecutor, safeBufferPool);
+    }
 
-	protected AsyncIOThread createAsyncIOThread(
-			ThreadGroup g,
-			String name,
-			int index,
-			int threads,
-			ExecutorService workExecutor,
-			ByteBufferPool safeBufferPool)
-			throws IOException {
-		return new AsyncIOThread(g, name, index, threads, workExecutor, safeBufferPool);
-	}
+    protected AsyncIOThread createAsyncIOThread(
+            ThreadGroup g,
+            String name,
+            int index,
+            int threads,
+            ExecutorService workExecutor,
+            ByteBufferPool safeBufferPool)
+            throws IOException {
+        return new AsyncIOThread(g, name, index, threads, workExecutor, safeBufferPool);
+    }
 
-	AsyncIOThread connectThread() {
-		if (connectThreadInited.compareAndSet(false, true)) {
-			this.connectThread.start();
-		}
-		return this.connectThread;
-	}
+    AsyncIOThread connectThread() {
+        if (connectThreadInited.compareAndSet(false, true)) {
+            this.connectThread.start();
+        }
+        return this.connectThread;
+    }
 
-	@Override
-	public AsyncIOGroup start() {
-		if (closed.get()) {
-			throw new RedkaleException("group is closed");
-		}
-		if (started.compareAndSet(false, true)) {
-			for (int i = 0; i < this.ioReadThreads.length; i++) {
-				this.ioReadThreads[i].start();
-				if (this.ioWriteThreads[i] != this.ioReadThreads[i]) {
-					this.ioWriteThreads[i].start();
-				}
-			}
-			// connectThread用时才初始化
-		}
-		return this;
-	}
+    @Override
+    public AsyncIOGroup start() {
+        if (closed.get()) {
+            throw new RedkaleException("group is closed");
+        }
+        if (started.compareAndSet(false, true)) {
+            for (int i = 0; i < this.ioReadThreads.length; i++) {
+                this.ioReadThreads[i].start();
+                if (this.ioWriteThreads[i] != this.ioReadThreads[i]) {
+                    this.ioWriteThreads[i].start();
+                }
+            }
+            // connectThread用时才初始化
+        }
+        return this;
+    }
 
-	@Override
-	public AsyncGroup close() {
-		if (skipClose) {
-			return this;
-		} else {
-			return dispose();
-		}
-	}
+    @Override
+    public AsyncGroup close() {
+        if (skipClose) {
+            return this;
+        } else {
+            return dispose();
+        }
+    }
 
-	public AsyncIOGroup skipClose(boolean skip) {
-		this.skipClose = skip;
-		return this;
-	}
+    public AsyncIOGroup skipClose(boolean skip) {
+        this.skipClose = skip;
+        return this;
+    }
 
-	public AsyncIOGroup dispose() {
-		if (closed.compareAndSet(false, true)) {
-			for (AsyncIOThread t : this.ioReadThreads) {
-				t.close();
-			}
-			for (AsyncIOThread t : this.ioWriteThreads) {
-				t.close();
-			}
-			if (connectThread != null) {
-				connectThread.close();
-			}
-			this.timeoutExecutor.shutdownNow();
-		}
-		return this;
-	}
+    public AsyncIOGroup dispose() {
+        if (closed.compareAndSet(false, true)) {
+            for (AsyncIOThread t : this.ioReadThreads) {
+                t.close();
+            }
+            for (AsyncIOThread t : this.ioWriteThreads) {
+                t.close();
+            }
+            if (connectThread != null) {
+                connectThread.close();
+            }
+            this.timeoutExecutor.shutdownNow();
+        }
+        return this;
+    }
 
-	public LongAdder getCreateConnectionCount() {
-		return connCreateCounter;
-	}
+    public LongAdder getCreateConnectionCount() {
+        return connCreateCounter;
+    }
 
-	public LongAdder getClosedConnectionCount() {
-		return connLivingCounter;
-	}
+    public LongAdder getClosedConnectionCount() {
+        return connLivingCounter;
+    }
 
-	public LongAdder getLivingConnectionCount() {
-		return connClosedCounter;
-	}
+    public LongAdder getLivingConnectionCount() {
+        return connClosedCounter;
+    }
 
-	public AsyncIOThread nextReadIOThread() {
-		int i = Math.abs(readIndex.getAndIncrement()) % ioReadThreads.length;
-		return ioReadThreads[i];
-	}
+    public AsyncIOThread nextReadIOThread() {
+        int i = Math.abs(readIndex.getAndIncrement()) % ioReadThreads.length;
+        return ioReadThreads[i];
+    }
 
-	public AsyncIOThread nextWriteIOThread() {
-		int i = Math.abs(writeIndex.getAndIncrement()) % ioWriteThreads.length;
-		return ioWriteThreads[i];
-	}
+    public AsyncIOThread nextWriteIOThread() {
+        int i = Math.abs(writeIndex.getAndIncrement()) % ioWriteThreads.length;
+        return ioWriteThreads[i];
+    }
 
-	@Override
-	public ScheduledFuture scheduleTimeout(Runnable callable, long delay, TimeUnit unit) {
-		return timeoutExecutor.schedule(callable, delay, unit);
-	}
+    @Override
+    public ScheduledFuture scheduleTimeout(Runnable callable, long delay, TimeUnit unit) {
+        return timeoutExecutor.schedule(callable, delay, unit);
+    }
 
-	// 创建一个AsyncConnection对象，只给测试代码使用
-	public AsyncConnection newTCPClientConnection() {
-		try {
-			return newTCPClientConnection(null);
-		} catch (IOException e) {
-			throw new RedkaleException(e);
-		}
-	}
+    // 创建一个AsyncConnection对象，只给测试代码使用
+    public AsyncConnection newTCPClientConnection() {
+        try {
+            return newTCPClientConnection(null);
+        } catch (IOException e) {
+            throw new RedkaleException(e);
+        }
+    }
 
-	private AsyncNioTcpConnection newTCPClientConnection(final SocketAddress address) throws IOException {
-		SocketChannel channel = SocketChannel.open();
-		channel.configureBlocking(false);
-		channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-		channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-		channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+    private AsyncNioTcpConnection newTCPClientConnection(final SocketAddress address) throws IOException {
+        SocketChannel channel = SocketChannel.open();
+        channel.configureBlocking(false);
+        channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+        channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+        channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
 
-		AsyncIOThread readThread = null;
-		AsyncIOThread writeThread = null;
-		AsyncIOThread currThread = AsyncIOThread.currentAsyncIOThread();
-		if (currThread != null) {
-			if (this.ioReadThreads[0].getThreadGroup() == currThread.getThreadGroup()) {
-				for (int i = 0; i < this.ioReadThreads.length; i++) {
-					if (this.ioReadThreads[i].index() == currThread.index()) {
-						readThread = this.ioReadThreads[i];
-						break;
-					}
-				}
-			}
-			if (this.ioWriteThreads[0].getThreadGroup() == currThread.getThreadGroup()) {
-				for (int i = 0; i < this.ioWriteThreads.length; i++) {
-					if (this.ioWriteThreads[i].index() == currThread.index()) {
-						writeThread = this.ioWriteThreads[i];
-						break;
-					}
-				}
-			}
-		}
-		if (readThread == null) {
-			readThread = nextReadIOThread();
-		}
-		if (writeThread == null) {
-			writeThread = nextWriteIOThread();
-		}
-		return new AsyncNioTcpConnection(true, this, readThread, writeThread, channel, null, null, address);
-	}
+        AsyncIOThread readThread = null;
+        AsyncIOThread writeThread = null;
+        AsyncIOThread currThread = AsyncIOThread.currentAsyncIOThread();
+        if (currThread != null) {
+            if (this.ioReadThreads[0].getThreadGroup() == currThread.getThreadGroup()) {
+                for (int i = 0; i < this.ioReadThreads.length; i++) {
+                    if (this.ioReadThreads[i].index() == currThread.index()) {
+                        readThread = this.ioReadThreads[i];
+                        break;
+                    }
+                }
+            }
+            if (this.ioWriteThreads[0].getThreadGroup() == currThread.getThreadGroup()) {
+                for (int i = 0; i < this.ioWriteThreads.length; i++) {
+                    if (this.ioWriteThreads[i].index() == currThread.index()) {
+                        writeThread = this.ioWriteThreads[i];
+                        break;
+                    }
+                }
+            }
+        }
+        if (readThread == null) {
+            readThread = nextReadIOThread();
+        }
+        if (writeThread == null) {
+            writeThread = nextWriteIOThread();
+        }
+        return new AsyncNioTcpConnection(true, this, readThread, writeThread, channel, null, null, address);
+    }
 
-	@Override
-	public CompletableFuture<AsyncConnection> createTCPClient(
-			final SocketAddress address,
-			final int connectTimeoutSeconds,
-			final int readTimeoutSeconds,
-			final int writeTimeoutSeconds) {
-		Objects.requireNonNull(address);
-		AsyncNioTcpConnection conn;
-		try {
-			conn = newTCPClientConnection(address);
-		} catch (IOException e) {
-			return CompletableFuture.failedFuture(e);
-		}
-		final CompletableFuture future = new CompletableFuture();
-		conn.connect(address, null, new CompletionHandler<Void, Void>() {
-			@Override
-			public void completed(Void result, Void attachment) {
-				conn.setReadTimeoutSeconds(readTimeoutSeconds);
-				conn.setWriteTimeoutSeconds(writeTimeoutSeconds);
-				connCreateCounter.increment();
-				connLivingCounter.increment();
-				if (conn.sslEngine == null) {
-					future.complete(conn);
-				} else {
-					conn.startHandshake(t -> {
-						if (t == null) {
-							future.complete(conn);
-						} else {
-							future.completeExceptionally(t);
-						}
-					});
-				}
-			}
+    @Override
+    public CompletableFuture<AsyncConnection> createTCPClient(
+            final SocketAddress address,
+            final int connectTimeoutSeconds,
+            final int readTimeoutSeconds,
+            final int writeTimeoutSeconds) {
+        Objects.requireNonNull(address);
+        AsyncNioTcpConnection conn;
+        try {
+            conn = newTCPClientConnection(address);
+        } catch (IOException e) {
+            return CompletableFuture.failedFuture(e);
+        }
+        final CompletableFuture future = new CompletableFuture();
+        conn.connect(address, null, new CompletionHandler<Void, Void>() {
+            @Override
+            public void completed(Void result, Void attachment) {
+                conn.setReadTimeoutSeconds(readTimeoutSeconds);
+                conn.setWriteTimeoutSeconds(writeTimeoutSeconds);
+                connCreateCounter.increment();
+                connLivingCounter.increment();
+                if (conn.sslEngine == null) {
+                    future.complete(conn);
+                } else {
+                    conn.startHandshake(t -> {
+                        if (t == null) {
+                            future.complete(conn);
+                        } else {
+                            future.completeExceptionally(t);
+                        }
+                    });
+                }
+            }
 
-			@Override
-			public void failed(Throwable exc, Void attachment) {
-				future.completeExceptionally(exc);
-			}
-		});
-		int seconds = connectTimeoutSeconds > 0 ? connectTimeoutSeconds : 6;
-		final Supplier<String> timeoutMsg = () -> address + " tcp-connect timeout";
-		return Utility.orTimeout(future, timeoutMsg, seconds, TimeUnit.SECONDS);
-	}
+            @Override
+            public void failed(Throwable exc, Void attachment) {
+                future.completeExceptionally(exc);
+            }
+        });
+        int seconds = connectTimeoutSeconds > 0 ? connectTimeoutSeconds : 6;
+        final Supplier<String> timeoutMsg = () -> address + " tcp-connect timeout";
+        return Utility.orTimeout(future, timeoutMsg, seconds, TimeUnit.SECONDS);
+    }
 
-	// 创建一个AsyncConnection对象，只给测试代码使用
-	public AsyncConnection newUDPClientConnection() {
-		try {
-			return newUDPClientConnection(null);
-		} catch (IOException e) {
-			throw new RedkaleException(e);
-		}
-	}
+    // 创建一个AsyncConnection对象，只给测试代码使用
+    public AsyncConnection newUDPClientConnection() {
+        try {
+            return newUDPClientConnection(null);
+        } catch (IOException e) {
+            throw new RedkaleException(e);
+        }
+    }
 
-	private AsyncNioUdpConnection newUDPClientConnection(final SocketAddress address) throws IOException {
-		DatagramChannel channel = DatagramChannel.open();
-		channel.configureBlocking(false);
-		AsyncIOThread readThread = null;
-		AsyncIOThread writeThread = null;
-		AsyncIOThread currThread = AsyncIOThread.currentAsyncIOThread();
-		if (currThread != null) {
-			for (int i = 0; i < this.ioReadThreads.length; i++) {
-				if (this.ioReadThreads[i].index() == currThread.index()) {
-					readThread = this.ioReadThreads[i];
-					break;
-				}
-			}
-			for (int i = 0; i < this.ioWriteThreads.length; i++) {
-				if (this.ioWriteThreads[i].index() == currThread.index()) {
-					writeThread = this.ioWriteThreads[i];
-					break;
-				}
-			}
-		}
-		if (readThread == null) {
-			readThread = nextReadIOThread();
-		}
-		if (writeThread == null) {
-			writeThread = nextWriteIOThread();
-		}
-		return new AsyncNioUdpConnection(true, this, readThread, writeThread, channel, null, null, address);
-	}
+    private AsyncNioUdpConnection newUDPClientConnection(final SocketAddress address) throws IOException {
+        DatagramChannel channel = DatagramChannel.open();
+        channel.configureBlocking(false);
+        AsyncIOThread readThread = null;
+        AsyncIOThread writeThread = null;
+        AsyncIOThread currThread = AsyncIOThread.currentAsyncIOThread();
+        if (currThread != null) {
+            for (int i = 0; i < this.ioReadThreads.length; i++) {
+                if (this.ioReadThreads[i].index() == currThread.index()) {
+                    readThread = this.ioReadThreads[i];
+                    break;
+                }
+            }
+            for (int i = 0; i < this.ioWriteThreads.length; i++) {
+                if (this.ioWriteThreads[i].index() == currThread.index()) {
+                    writeThread = this.ioWriteThreads[i];
+                    break;
+                }
+            }
+        }
+        if (readThread == null) {
+            readThread = nextReadIOThread();
+        }
+        if (writeThread == null) {
+            writeThread = nextWriteIOThread();
+        }
+        return new AsyncNioUdpConnection(true, this, readThread, writeThread, channel, null, null, address);
+    }
 
-	@Override
-	public CompletableFuture<AsyncConnection> createUDPClient(
-			final SocketAddress address,
-			final int connectTimeoutSeconds,
-			final int readTimeoutSeconds,
-			final int writeTimeoutSeconds) {
-		AsyncNioUdpConnection conn;
-		try {
-			conn = newUDPClientConnection(address);
-		} catch (IOException e) {
-			return CompletableFuture.failedFuture(e);
-		}
-		final CompletableFuture future = new CompletableFuture();
-		conn.connect(address, null, new CompletionHandler<Void, Void>() {
-			@Override
-			public void completed(Void result, Void attachment) {
-				if (conn.sslEngine == null) {
-					future.complete(conn);
-				} else {
-					conn.startHandshake(t -> {
-						if (t == null) {
-							future.complete(conn);
-						} else {
-							future.completeExceptionally(t);
-						}
-					});
-				}
-			}
+    @Override
+    public CompletableFuture<AsyncConnection> createUDPClient(
+            final SocketAddress address,
+            final int connectTimeoutSeconds,
+            final int readTimeoutSeconds,
+            final int writeTimeoutSeconds) {
+        AsyncNioUdpConnection conn;
+        try {
+            conn = newUDPClientConnection(address);
+        } catch (IOException e) {
+            return CompletableFuture.failedFuture(e);
+        }
+        final CompletableFuture future = new CompletableFuture();
+        conn.connect(address, null, new CompletionHandler<Void, Void>() {
+            @Override
+            public void completed(Void result, Void attachment) {
+                if (conn.sslEngine == null) {
+                    future.complete(conn);
+                } else {
+                    conn.startHandshake(t -> {
+                        if (t == null) {
+                            future.complete(conn);
+                        } else {
+                            future.completeExceptionally(t);
+                        }
+                    });
+                }
+            }
 
-			@Override
-			public void failed(Throwable exc, Void attachment) {
-				future.completeExceptionally(exc);
-			}
-		});
-		int seconds = connectTimeoutSeconds > 0 ? connectTimeoutSeconds : 6;
-		final Supplier<String> timeoutMsg = () -> address + " udp-connect timeout";
-		return Utility.orTimeout(future, timeoutMsg, seconds, TimeUnit.SECONDS);
-	}
+            @Override
+            public void failed(Throwable exc, Void attachment) {
+                future.completeExceptionally(exc);
+            }
+        });
+        int seconds = connectTimeoutSeconds > 0 ? connectTimeoutSeconds : 6;
+        final Supplier<String> timeoutMsg = () -> address + " udp-connect timeout";
+        return Utility.orTimeout(future, timeoutMsg, seconds, TimeUnit.SECONDS);
+    }
 }

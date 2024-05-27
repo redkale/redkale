@@ -21,47 +21,47 @@ import org.redkale.convert.json.JsonConvert;
 @Bean
 public class PageBean<T> {
 
-	@ConvertColumn(index = 1)
-	protected T bean;
+    @ConvertColumn(index = 1)
+    protected T bean;
 
-	@ConvertColumn(index = 2)
-	protected Flipper flipper;
+    @ConvertColumn(index = 2)
+    protected Flipper flipper;
 
-	public PageBean() {}
+    public PageBean() {}
 
-	public PageBean(T bean, Flipper flipper) {
-		this.bean = bean;
-		this.flipper = flipper;
-	}
+    public PageBean(T bean, Flipper flipper) {
+        this.bean = bean;
+        this.flipper = flipper;
+    }
 
-	public PageBean<T> bean(T bean) {
-		this.bean = bean;
-		return this;
-	}
+    public PageBean<T> bean(T bean) {
+        this.bean = bean;
+        return this;
+    }
 
-	public PageBean<T> flipper(Flipper flipper) {
-		this.flipper = flipper;
-		return this;
-	}
+    public PageBean<T> flipper(Flipper flipper) {
+        this.flipper = flipper;
+        return this;
+    }
 
-	public T getBean() {
-		return bean;
-	}
+    public T getBean() {
+        return bean;
+    }
 
-	public void setBean(T bean) {
-		this.bean = bean;
-	}
+    public void setBean(T bean) {
+        this.bean = bean;
+    }
 
-	public Flipper getFlipper() {
-		return flipper;
-	}
+    public Flipper getFlipper() {
+        return flipper;
+    }
 
-	public void setFlipper(Flipper flipper) {
-		this.flipper = flipper;
-	}
+    public void setFlipper(Flipper flipper) {
+        this.flipper = flipper;
+    }
 
-	@Override
-	public String toString() {
-		return JsonConvert.root().convertTo(this);
-	}
+    @Override
+    public String toString() {
+        return JsonConvert.root().convertTo(this);
+    }
 }

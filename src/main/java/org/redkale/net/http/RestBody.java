@@ -24,24 +24,24 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface RestBody {
 
-	/**
-	 * 参数是否必传, 框架运行中不作验证, only for OpenAPI Specification 3
-	 *
-	 * @return boolean
-	 */
-	boolean required() default true;
+    /**
+     * 参数是否必传, 框架运行中不作验证, only for OpenAPI Specification 3
+     *
+     * @return boolean
+     */
+    boolean required() default true;
 
-	/**
-	 * for OpenAPI Specification 3.1.0
-	 *
-	 * @return String
-	 */
-	String example() default "";
+    /**
+     * for OpenAPI Specification 3.1.0
+     *
+     * @return String
+     */
+    String example() default "";
 
-	/**
-	 * 备注描述, 对应&#64;HttpParam.comment
-	 *
-	 * @return String
-	 */
-	String comment() default "";
+    /**
+     * 备注描述, 对应&#64;HttpParam.comment
+     *
+     * @return String
+     */
+    String comment() default "";
 }

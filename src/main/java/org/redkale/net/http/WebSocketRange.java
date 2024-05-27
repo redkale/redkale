@@ -18,51 +18,51 @@ import org.redkale.convert.json.JsonConvert;
  */
 public class WebSocketRange implements Serializable {
 
-	protected String wskey;
+    protected String wskey;
 
-	protected Map<String, String> attach;
+    protected Map<String, String> attach;
 
-	public WebSocketRange() {}
+    public WebSocketRange() {}
 
-	public WebSocketRange(String wskey) {
-		this.wskey = wskey;
-	}
+    public WebSocketRange(String wskey) {
+        this.wskey = wskey;
+    }
 
-	public WebSocketRange(String wskey, Map<String, String> attach) {
-		this.wskey = wskey;
-		this.attach = attach;
-	}
+    public WebSocketRange(String wskey, Map<String, String> attach) {
+        this.wskey = wskey;
+        this.attach = attach;
+    }
 
-	public boolean containsAttach(String key) {
-		return this.attach != null && this.attach.containsKey(key);
-	}
+    public boolean containsAttach(String key) {
+        return this.attach != null && this.attach.containsKey(key);
+    }
 
-	public String getAttach(String key) {
-		return this.attach == null ? null : this.attach.get(key);
-	}
+    public String getAttach(String key) {
+        return this.attach == null ? null : this.attach.get(key);
+    }
 
-	public String getAttach(String key, String defval) {
-		return this.attach == null ? defval : this.attach.getOrDefault(key, defval);
-	}
+    public String getAttach(String key, String defval) {
+        return this.attach == null ? defval : this.attach.getOrDefault(key, defval);
+    }
 
-	public String getWskey() {
-		return wskey;
-	}
+    public String getWskey() {
+        return wskey;
+    }
 
-	public void setWskey(String wskey) {
-		this.wskey = wskey;
-	}
+    public void setWskey(String wskey) {
+        this.wskey = wskey;
+    }
 
-	public Map<String, String> getAttach() {
-		return attach;
-	}
+    public Map<String, String> getAttach() {
+        return attach;
+    }
 
-	public void setAttach(Map<String, String> attach) {
-		this.attach = attach;
-	}
+    public void setAttach(Map<String, String> attach) {
+        this.attach = attach;
+    }
 
-	@Override
-	public String toString() {
-		return JsonConvert.root().convertTo(this);
-	}
+    @Override
+    public String toString() {
+        return JsonConvert.root().convertTo(this);
+    }
 }

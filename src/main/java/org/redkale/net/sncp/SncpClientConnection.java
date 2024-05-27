@@ -17,25 +17,25 @@ import org.redkale.util.ObjectPool;
  */
 public class SncpClientConnection extends ClientConnection<SncpClientRequest, SncpClientResult> {
 
-	private final ObjectPool<SncpClientRequest> requestPool;
+    private final ObjectPool<SncpClientRequest> requestPool;
 
-	public SncpClientConnection(SncpClient client, AsyncConnection channel) {
-		super(client, channel);
-		requestPool = ObjectPool.createUnsafePool(
-				Thread.currentThread(),
-				256,
-				ObjectPool.createSafePool(
-						256, t -> new SncpClientRequest(), SncpClientRequest::prepare, SncpClientRequest::recycle));
-	}
+    public SncpClientConnection(SncpClient client, AsyncConnection channel) {
+        super(client, channel);
+        requestPool = ObjectPool.createUnsafePool(
+                Thread.currentThread(),
+                256,
+                ObjectPool.createSafePool(
+                        256, t -> new SncpClientRequest(), SncpClientRequest::prepare, SncpClientRequest::recycle));
+    }
 
-	@Override
-	protected ClientCodec createCodec() {
-		return new SncpClientCodec(this);
-	}
+    @Override
+    protected ClientCodec createCodec() {
+        return new SncpClientCodec(this);
+    }
 
-	protected void offerResult(SncpClientRequest req, SncpClientResult rs) {
-		SncpClientCodec c = getCodec();
-		c.offerResult(rs);
-		requestPool.accept(req);
-	}
+    protected void offerResult(SncpClientRequest req, SncpClientResult rs) {
+        SncpClientCodec c = getCodec();
+        c.offerResult(rs);
+        requestPool.accept(req);
+    }
 }

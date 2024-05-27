@@ -14,5 +14,5 @@ package org.redkale.inject;
  */
 public interface Resourcable {
 
-	public String resourceName();
+    public String resourceName();
 }

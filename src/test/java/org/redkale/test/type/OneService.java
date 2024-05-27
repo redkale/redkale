@@ -14,7 +14,7 @@ import org.redkale.service.RetResult;
  */
 public class OneService<OR extends OneRound, OB extends OneBean> {
 
-	public RetResult run(OR round, OB bean) {
-		return RetResult.success();
-	}
+    public RetResult run(OR round, OB bean) {
+        return RetResult.success();
+    }
 }

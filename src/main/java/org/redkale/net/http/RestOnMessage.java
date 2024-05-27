@@ -25,18 +25,18 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface RestOnMessage {
 
-	/**
-	 * 请求的方法名, 不能含特殊字符,不能以数字开头(能作为变量名) <br>
-	 * 值"*" 表示参数中不包含方法名
-	 *
-	 * @return String
-	 */
-	String name();
+    /**
+     * 请求的方法名, 不能含特殊字符,不能以数字开头(能作为变量名) <br>
+     * 值"*" 表示参数中不包含方法名
+     *
+     * @return String
+     */
+    String name();
 
-	/**
-	 * 备注描述
-	 *
-	 * @return String
-	 */
-	String comment() default "";
+    /**
+     * 备注描述
+     *
+     * @return String
+     */
+    String comment() default "";
 }

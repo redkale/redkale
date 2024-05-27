@@ -12,5 +12,5 @@ package org.redkale.source;
  * @since 2.8.0
  */
 public enum FilterJoinType {
-	INNER;
+    INNER;
 }

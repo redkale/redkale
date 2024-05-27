@@ -22,63 +22,63 @@ import java.lang.annotation.*;
 @Repeatable(ConvertCoder.ConvertCoders.class)
 public @interface ConvertCoder {
 
-	/**
-	 * 需要指定的字段类型，类型必须是原字段类型的子类。 例如: <br>
-	 *
-	 * <blockquote>
-	 *
-	 * <pre>
-	 * &#64;ConvertCoder(column = String.class)
-	 * private CharSequence name;
-	 * </pre>
-	 *
-	 * </blockquote>
-	 *
-	 * 通常此字段值与encoder/decoder是二选一，指定了coder字段值则可以不设置此字段。
-	 *
-	 * @return 字段类名
-	 */
-	Class column() default Object.class;
+    /**
+     * 需要指定的字段类型，类型必须是原字段类型的子类。 例如: <br>
+     *
+     * <blockquote>
+     *
+     * <pre>
+     * &#64;ConvertCoder(column = String.class)
+     * private CharSequence name;
+     * </pre>
+     *
+     * </blockquote>
+     *
+     * 通常此字段值与encoder/decoder是二选一，指定了coder字段值则可以不设置此字段。
+     *
+     * @return 字段类名
+     */
+    Class column() default Object.class;
 
-	/**
-	 * 序列化定制化的 Encodeable, 构造函数的参数可以是：<br>
-	 * 1、ConvertFactory 2、Type 3、Class 4、ConvertFactory和Type 5、ConvertFactory和Class
-	 *
-	 * <p>类如果存在instance单实例对象字段值，则优先使用instance对象
-	 *
-	 * @return Encodeable 类
-	 */
-	Class<? extends Encodeable> encoder() default Encodeable.class;
+    /**
+     * 序列化定制化的 Encodeable, 构造函数的参数可以是：<br>
+     * 1、ConvertFactory 2、Type 3、Class 4、ConvertFactory和Type 5、ConvertFactory和Class
+     *
+     * <p>类如果存在instance单实例对象字段值，则优先使用instance对象
+     *
+     * @return Encodeable 类
+     */
+    Class<? extends Encodeable> encoder() default Encodeable.class;
 
-	/**
-	 * 反序列化定制化的 Decodeable, 构造函数的参数可以是：<br>
-	 * 1、ConvertFactory 2、Type 3、Class 4、ConvertFactory和Type 5、ConvertFactory和Class
-	 *
-	 * <p>类如果存在instance单实例对象字段值，则优先使用instance对象
-	 *
-	 * @return Decodeable 类
-	 */
-	Class<? extends Decodeable> decoder() default Decodeable.class;
+    /**
+     * 反序列化定制化的 Decodeable, 构造函数的参数可以是：<br>
+     * 1、ConvertFactory 2、Type 3、Class 4、ConvertFactory和Type 5、ConvertFactory和Class
+     *
+     * <p>类如果存在instance单实例对象字段值，则优先使用instance对象
+     *
+     * @return Decodeable 类
+     */
+    Class<? extends Decodeable> decoder() default Decodeable.class;
 
-	/**
-	 * 解析/序列化定制化的TYPE
-	 *
-	 * @return JSON or BSON or ALL
-	 */
-	ConvertType type() default ConvertType.ALL;
+    /**
+     * 解析/序列化定制化的TYPE
+     *
+     * @return JSON or BSON or ALL
+     */
+    ConvertType type() default ConvertType.ALL;
 
-	/**
-	 * ConvertCoder 的多用类
-	 *
-	 * <p>详情见: https://redkale.org
-	 *
-	 * @author zhangjx
-	 */
-	@Documented
-	@Target({METHOD, FIELD})
-	@Retention(RUNTIME)
-	public static @interface ConvertCoders {
+    /**
+     * ConvertCoder 的多用类
+     *
+     * <p>详情见: https://redkale.org
+     *
+     * @author zhangjx
+     */
+    @Documented
+    @Target({METHOD, FIELD})
+    @Retention(RUNTIME)
+    public static @interface ConvertCoders {
 
-		ConvertCoder[] value();
-	}
+        ConvertCoder[] value();
+    }
 }

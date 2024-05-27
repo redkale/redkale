@@ -8,5 +8,5 @@ package org.redkale.test.type;
 /** @author zhangjx */
 public class OneBean {
 
-	public int id;
+    public int id;
 }

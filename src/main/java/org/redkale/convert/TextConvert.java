@@ -18,20 +18,20 @@ import java.lang.reflect.Type;
  */
 public abstract class TextConvert<R extends Reader, W extends Writer> extends Convert<R, W> {
 
-	protected TextConvert(ConvertFactory<R, W> factory, int features) {
-		super(factory, features);
-	}
+    protected TextConvert(ConvertFactory<R, W> factory, int features) {
+        super(factory, features);
+    }
 
-	@Override
-	public final boolean isBinary() {
-		return false;
-	}
+    @Override
+    public final boolean isBinary() {
+        return false;
+    }
 
-	public abstract <T> T convertFrom(final Type type, final String text);
+    public abstract <T> T convertFrom(final Type type, final String text);
 
-	public final String convertTo(final Object value) {
-		return convertTo((Type) null, value);
-	}
+    public final String convertTo(final Object value) {
+        return convertTo((Type) null, value);
+    }
 
-	public abstract String convertTo(final Type type, final Object value);
+    public abstract String convertTo(final Type type, final Object value);
 }

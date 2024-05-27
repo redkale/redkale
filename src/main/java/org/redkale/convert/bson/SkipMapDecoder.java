@@ -19,23 +19,23 @@ import org.redkale.convert.*;
  */
 public class SkipMapDecoder<K, V> extends MapDecoder<K, V> {
 
-	public SkipMapDecoder(final ConvertFactory factory, final Type type) {
-		super(factory, type);
-	}
+    public SkipMapDecoder(final ConvertFactory factory, final Type type) {
+        super(factory, type);
+    }
 
-	@Override
-	protected Decodeable<Reader, K> getKeyDecoder(Decodeable<Reader, K> decoder, byte[] typevals) {
-		if (typevals != null) {
-			return BsonFactory.typeEnum(typevals[0]);
-		}
-		return decoder;
-	}
+    @Override
+    protected Decodeable<Reader, K> getKeyDecoder(Decodeable<Reader, K> decoder, byte[] typevals) {
+        if (typevals != null) {
+            return BsonFactory.typeEnum(typevals[0]);
+        }
+        return decoder;
+    }
 
-	@Override
-	protected Decodeable<Reader, V> getValueDecoder(Decodeable<Reader, V> decoder, byte[] typevals) {
-		if (typevals != null) {
-			return BsonFactory.typeEnum(typevals[1]);
-		}
-		return decoder;
-	}
+    @Override
+    protected Decodeable<Reader, V> getValueDecoder(Decodeable<Reader, V> decoder, byte[] typevals) {
+        if (typevals != null) {
+            return BsonFactory.typeEnum(typevals[1]);
+        }
+        return decoder;
+    }
 }

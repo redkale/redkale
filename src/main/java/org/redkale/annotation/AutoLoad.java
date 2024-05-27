@@ -22,5 +22,5 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface AutoLoad {
 
-	boolean value() default true;
+    boolean value() default true;
 }

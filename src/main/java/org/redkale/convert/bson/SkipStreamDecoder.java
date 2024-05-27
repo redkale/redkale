@@ -19,15 +19,15 @@ import org.redkale.convert.*;
  */
 public class SkipStreamDecoder<T> extends StreamDecoder<T> {
 
-	public SkipStreamDecoder(final ConvertFactory factory, final Type type) {
-		super(factory, type);
-	}
+    public SkipStreamDecoder(final ConvertFactory factory, final Type type) {
+        super(factory, type);
+    }
 
-	@Override
-	protected Decodeable<Reader, T> getComponentDecoder(Decodeable<Reader, T> decoder, byte[] typevals) {
-		if (typevals != null) {
-			return BsonFactory.typeEnum(typevals[0]);
-		}
-		return decoder;
-	}
+    @Override
+    protected Decodeable<Reader, T> getComponentDecoder(Decodeable<Reader, T> decoder, byte[] typevals) {
+        if (typevals != null) {
+            return BsonFactory.typeEnum(typevals[0]);
+        }
+        return decoder;
+    }
 }

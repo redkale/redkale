@@ -19,15 +19,15 @@ import org.redkale.convert.*;
  */
 public final class AtomicLongSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, AtomicLong> {
 
-	public static final AtomicLongSimpledCoder instance = new AtomicLongSimpledCoder();
+    public static final AtomicLongSimpledCoder instance = new AtomicLongSimpledCoder();
 
-	@Override
-	public void convertTo(W out, AtomicLong value) {
-		out.writeLong(value == null ? 0 : value.get());
-	}
+    @Override
+    public void convertTo(W out, AtomicLong value) {
+        out.writeLong(value == null ? 0 : value.get());
+    }
 
-	@Override
-	public AtomicLong convertFrom(R in) {
-		return new AtomicLong(in.readLong());
-	}
+    @Override
+    public AtomicLong convertFrom(R in) {
+        return new AtomicLong(in.readLong());
+    }
 }

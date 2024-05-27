@@ -21,25 +21,25 @@ import org.redkale.service.Service;
  */
 public class SncpMessageServlet extends MessageServlet {
 
-	public SncpMessageServlet(
-			MessageClient messageClient, Context context, Service service, SncpServlet servlet, String topic) {
-		super(messageClient, context, service, servlet, topic);
-	}
+    public SncpMessageServlet(
+            MessageClient messageClient, Context context, Service service, SncpServlet servlet, String topic) {
+        super(messageClient, context, service, servlet, topic);
+    }
 
-	@Override
-	protected Request createRequest(Context context, MessageRecord message) {
-		return new SncpMessageRequest((SncpContext) context, message);
-	}
+    @Override
+    protected Request createRequest(Context context, MessageRecord message) {
+        return new SncpMessageRequest((SncpContext) context, message);
+    }
 
-	@Override
-	protected Response createResponse(Context context, Request request) {
-		return new SncpMessageResponse(messageClient, (SncpContext) context, (SncpMessageRequest) request);
-	}
+    @Override
+    protected Response createResponse(Context context, Request request) {
+        return new SncpMessageResponse(messageClient, (SncpContext) context, (SncpMessageRequest) request);
+    }
 
-	@Override
-	protected void onError(Response response, MessageRecord message, Throwable t) {
-		if (response != null) {
-			((SncpMessageResponse) response).finish(SncpResponse.RETCODE_ILLSERVICEID, null);
-		}
-	}
+    @Override
+    protected void onError(Response response, MessageRecord message, Throwable t) {
+        if (response != null) {
+            ((SncpMessageResponse) response).finish(SncpResponse.RETCODE_ILLSERVICEID, null);
+        }
+    }
 }

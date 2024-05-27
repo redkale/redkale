@@ -22,116 +22,116 @@ import java.util.stream.Stream;
 @SuppressWarnings("unchecked")
 public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
 
-	protected final Type type;
+    protected final Type type;
 
-	protected final Type componentType;
+    protected final Type componentType;
 
-	protected final Decodeable<Reader, T> componentDecoder;
+    protected final Decodeable<Reader, T> componentDecoder;
 
-	protected volatile boolean inited = false;
+    protected volatile boolean inited = false;
 
-	private final ReentrantLock lock = new ReentrantLock();
+    private final ReentrantLock lock = new ReentrantLock();
 
-	private final Condition condition = lock.newCondition();
+    private final Condition condition = lock.newCondition();
 
-	public StreamDecoder(final ConvertFactory factory, final Type type) {
-		this.type = type;
-		try {
-			if (type instanceof ParameterizedType) {
-				final ParameterizedType pt = (ParameterizedType) type;
-				this.componentType = pt.getActualTypeArguments()[0];
-				factory.register(type, this);
-				this.componentDecoder = factory.loadDecoder(this.componentType);
-			} else {
-				throw new ConvertException("StreamDecoder not support the type (" + type + ")");
-			}
-		} finally {
-			inited = true;
-			lock.lock();
-			try {
-				condition.signalAll();
-			} finally {
-				lock.unlock();
-			}
-		}
-	}
+    public StreamDecoder(final ConvertFactory factory, final Type type) {
+        this.type = type;
+        try {
+            if (type instanceof ParameterizedType) {
+                final ParameterizedType pt = (ParameterizedType) type;
+                this.componentType = pt.getActualTypeArguments()[0];
+                factory.register(type, this);
+                this.componentDecoder = factory.loadDecoder(this.componentType);
+            } else {
+                throw new ConvertException("StreamDecoder not support the type (" + type + ")");
+            }
+        } finally {
+            inited = true;
+            lock.lock();
+            try {
+                condition.signalAll();
+            } finally {
+                lock.unlock();
+            }
+        }
+    }
 
-	@Override
-	public Stream<T> convertFrom(Reader in) {
-		return convertFrom(in, null);
-	}
+    @Override
+    public Stream<T> convertFrom(Reader in) {
+        return convertFrom(in, null);
+    }
 
-	public Stream<T> convertFrom(Reader in, DeMember member) {
-		byte[] typevals = new byte[1];
-		int len = in.readArrayB(member, typevals, this.componentDecoder);
-		int contentLength = -1;
-		if (len == Reader.SIGN_NULL) {
-			return null;
-		}
-		if (len == Reader.SIGN_NOLENBUTBYTES) {
-			contentLength = in.readMemberContentLength(member, this.componentDecoder);
-			len = Reader.SIGN_NOLENGTH;
-		}
-		if (this.componentDecoder == null) {
-			if (!this.inited) {
-				lock.lock();
-				try {
-					condition.await();
-				} catch (Exception e) {
-					// do nothing
-				} finally {
-					lock.unlock();
-				}
-			}
-		}
-		final Decodeable<Reader, T> localdecoder = getComponentDecoder(this.componentDecoder, typevals);
-		final List<T> result = new ArrayList();
-		boolean first = true;
-		if (len == Reader.SIGN_NOLENGTH) {
-			int startPosition = in.position();
-			while (hasNext(in, member, startPosition, contentLength, first)) {
-				Reader itemReader = getItemReader(in, member, first);
-				if (itemReader == null) {
-					break;
-				}
-				result.add(readMemberValue(itemReader, member, localdecoder, first));
-				first = false;
-			}
-		} else {
-			for (int i = 0; i < len; i++) {
-				result.add(localdecoder.convertFrom(in));
-			}
-		}
-		in.readArrayE();
-		return result.stream();
-	}
+    public Stream<T> convertFrom(Reader in, DeMember member) {
+        byte[] typevals = new byte[1];
+        int len = in.readArrayB(member, typevals, this.componentDecoder);
+        int contentLength = -1;
+        if (len == Reader.SIGN_NULL) {
+            return null;
+        }
+        if (len == Reader.SIGN_NOLENBUTBYTES) {
+            contentLength = in.readMemberContentLength(member, this.componentDecoder);
+            len = Reader.SIGN_NOLENGTH;
+        }
+        if (this.componentDecoder == null) {
+            if (!this.inited) {
+                lock.lock();
+                try {
+                    condition.await();
+                } catch (Exception e) {
+                    // do nothing
+                } finally {
+                    lock.unlock();
+                }
+            }
+        }
+        final Decodeable<Reader, T> localdecoder = getComponentDecoder(this.componentDecoder, typevals);
+        final List<T> result = new ArrayList();
+        boolean first = true;
+        if (len == Reader.SIGN_NOLENGTH) {
+            int startPosition = in.position();
+            while (hasNext(in, member, startPosition, contentLength, first)) {
+                Reader itemReader = getItemReader(in, member, first);
+                if (itemReader == null) {
+                    break;
+                }
+                result.add(readMemberValue(itemReader, member, localdecoder, first));
+                first = false;
+            }
+        } else {
+            for (int i = 0; i < len; i++) {
+                result.add(localdecoder.convertFrom(in));
+            }
+        }
+        in.readArrayE();
+        return result.stream();
+    }
 
-	protected boolean hasNext(Reader in, DeMember member, int startPosition, int contentLength, boolean first) {
-		return in.hasNext(startPosition, contentLength);
-	}
+    protected boolean hasNext(Reader in, DeMember member, int startPosition, int contentLength, boolean first) {
+        return in.hasNext(startPosition, contentLength);
+    }
 
-	protected Decodeable<Reader, T> getComponentDecoder(Decodeable<Reader, T> decoder, byte[] typevals) {
-		return decoder;
-	}
+    protected Decodeable<Reader, T> getComponentDecoder(Decodeable<Reader, T> decoder, byte[] typevals) {
+        return decoder;
+    }
 
-	protected Reader getItemReader(Reader in, DeMember member, boolean first) {
-		return in;
-	}
+    protected Reader getItemReader(Reader in, DeMember member, boolean first) {
+        return in;
+    }
 
-	protected T readMemberValue(Reader in, DeMember member, Decodeable<Reader, T> decoder, boolean first) {
-		return decoder.convertFrom(in);
-	}
+    protected T readMemberValue(Reader in, DeMember member, Decodeable<Reader, T> decoder, boolean first) {
+        return decoder.convertFrom(in);
+    }
 
-	@Override
-	public Type getType() {
-		return type;
-	}
+    @Override
+    public Type getType() {
+        return type;
+    }
 
-	public Type getComponentType() {
-		return componentType;
-	}
+    public Type getComponentType() {
+        return componentType;
+    }
 
-	public Decodeable<Reader, T> getComponentDecoder() {
-		return componentDecoder;
-	}
+    public Decodeable<Reader, T> getComponentDecoder() {
+        return componentDecoder;
+    }
 }

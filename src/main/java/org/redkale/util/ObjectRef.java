@@ -14,30 +14,30 @@ package org.redkale.util;
  */
 public final class ObjectRef<V> {
 
-	private V value;
+    private V value;
 
-	public ObjectRef(V initialValue) {
-		this.value = initialValue;
-	}
+    public ObjectRef(V initialValue) {
+        this.value = initialValue;
+    }
 
-	public ObjectRef() {}
+    public ObjectRef() {}
 
-	public final V get() {
-		return this.value;
-	}
+    public final V get() {
+        return this.value;
+    }
 
-	public final void set(V newValue) {
-		this.value = newValue;
-	}
+    public final void set(V newValue) {
+        this.value = newValue;
+    }
 
-	public final void setIfNull(V newValue) {
-		if (this.value == null) {
-			this.value = newValue;
-		}
-	}
+    public final void setIfNull(V newValue) {
+        if (this.value == null) {
+            this.value = newValue;
+        }
+    }
 
-	@Override
-	public String toString() {
-		return String.valueOf(this.value);
-	}
+    @Override
+    public String toString() {
+        return String.valueOf(this.value);
+    }
 }

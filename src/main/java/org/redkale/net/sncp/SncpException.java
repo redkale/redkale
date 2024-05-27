@@ -15,19 +15,19 @@ import org.redkale.util.RedkaleException;
  */
 public class SncpException extends RedkaleException {
 
-	public SncpException() {
-		super();
-	}
+    public SncpException() {
+        super();
+    }
 
-	public SncpException(String s) {
-		super(s);
-	}
+    public SncpException(String s) {
+        super(s);
+    }
 
-	public SncpException(String message, Throwable cause) {
-		super(message, cause);
-	}
+    public SncpException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-	public SncpException(Throwable cause) {
-		super(cause);
-	}
+    public SncpException(Throwable cause) {
+        super(cause);
+    }
 }

@@ -23,5 +23,5 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface DistributeTable {
 
-	Class<? extends DistributeTableStrategy> strategy();
+    Class<? extends DistributeTableStrategy> strategy();
 }

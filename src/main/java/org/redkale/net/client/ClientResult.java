@@ -11,5 +11,5 @@ package org.redkale.net.client;
  */
 public interface ClientResult {
 
-	public boolean isKeepAlive();
+    public boolean isKeepAlive();
 }

@@ -61,430 +61,430 @@ import org.redkale.util.Utility;
 @ResourceType(ScheduleManager.class)
 public class ScheduleManagerService implements ScheduleManager, Service {
 
-	protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
+    protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
-	protected final ConcurrentHashMap<WeakReference, List<ScheduledTask>> refTaskMap = new ConcurrentHashMap<>();
+    protected final ConcurrentHashMap<WeakReference, List<ScheduledTask>> refTaskMap = new ConcurrentHashMap<>();
 
-	protected final ReentrantLock lock = new ReentrantLock();
+    protected final ReentrantLock lock = new ReentrantLock();
 
-	@Resource(required = false)
-	protected Application application;
+    @Resource(required = false)
+    protected Application application;
 
-	@Nullable
-	private UnaryOperator<String> propertyFunc;
+    @Nullable
+    private UnaryOperator<String> propertyFunc;
 
-	private ScheduledThreadPoolExecutor scheduler;
+    private ScheduledThreadPoolExecutor scheduler;
 
-	protected boolean enabled = true;
+    protected boolean enabled = true;
 
-	protected AnyValue config;
+    protected AnyValue config;
 
-	protected ScheduleManagerService(UnaryOperator<String> propertyFunc) {
-		this.propertyFunc = propertyFunc;
-	}
+    protected ScheduleManagerService(UnaryOperator<String> propertyFunc) {
+        this.propertyFunc = propertyFunc;
+    }
 
-	// 一般用于独立组件
-	public static ScheduleManagerService create(UnaryOperator<String> propertyFunc) {
-		return new ScheduleManagerService(propertyFunc);
-	}
+    // 一般用于独立组件
+    public static ScheduleManagerService create(UnaryOperator<String> propertyFunc) {
+        return new ScheduleManagerService(propertyFunc);
+    }
 
-	public boolean enabled() {
-		return this.enabled;
-	}
+    public boolean enabled() {
+        return this.enabled;
+    }
 
-	public ScheduleManagerService enabled(boolean val) {
-		this.enabled = val;
-		return this;
-	}
+    public ScheduleManagerService enabled(boolean val) {
+        this.enabled = val;
+        return this;
+    }
 
-	@Override
-	public void init(AnyValue conf) {
-		if (conf == null) {
-			conf = AnyValue.create();
-		}
-		this.config = conf;
-		this.enabled = config.getBoolValue("enabled", true);
-		if (this.enabled) {
-			if (this.propertyFunc == null && application != null) {
-				UnaryOperator<String> func = application.getEnvironment()::getPropertyValue;
-				this.propertyFunc = func;
-			}
-			this.scheduler = new ScheduledThreadPoolExecutor(
-					Utility.cpus(), Utility.newThreadFactory("Redkale-Scheduled-Task-Thread-%s"));
-			this.scheduler.setRemoveOnCancelPolicy(true);
-		}
-	}
+    @Override
+    public void init(AnyValue conf) {
+        if (conf == null) {
+            conf = AnyValue.create();
+        }
+        this.config = conf;
+        this.enabled = config.getBoolValue("enabled", true);
+        if (this.enabled) {
+            if (this.propertyFunc == null && application != null) {
+                UnaryOperator<String> func = application.getEnvironment()::getPropertyValue;
+                this.propertyFunc = func;
+            }
+            this.scheduler = new ScheduledThreadPoolExecutor(
+                    Utility.cpus(), Utility.newThreadFactory("Redkale-Scheduled-Task-Thread-%s"));
+            this.scheduler.setRemoveOnCancelPolicy(true);
+        }
+    }
 
-	@Override
-	public void destroy(AnyValue conf) {
-		if (scheduler != null) {
-			scheduler.shutdown();
-		}
-	}
+    @Override
+    public void destroy(AnyValue conf) {
+        if (scheduler != null) {
+            scheduler.shutdown();
+        }
+    }
 
-	public void onServersPreStart() {
-		// do nothing
-	}
+    public void onServersPreStart() {
+        // do nothing
+    }
 
-	public void onServersPostStart() {
-		// do nothing
-	}
+    public void onServersPostStart() {
+        // do nothing
+    }
 
-	@Override
-	public void schedule(Object service) {
-		lock.lock();
-		try {
-			boolean remoteMode = service instanceof Service && Sncp.isRemote((Service) service);
-			for (WeakReference item : refTaskMap.keySet()) {
-				if (item.get() == service) {
-					logger.log(Level.WARNING, service + " repeat schedule");
-				}
-			}
-			Map<String, ScheduledTask> tasks = new LinkedHashMap<>();
-			Class clazz = service.getClass();
-			WeakReference ref = new WeakReference(service);
-			Set<String> methodKeys = new HashSet<>();
-			do {
-				for (final Method method : clazz.getDeclaredMethods()) {
-					if (method.getAnnotation(Scheduled.class) == null) {
-						continue;
-					}
-					String mk = Utility.methodKey(method);
-					if (methodKeys.contains(mk)) {
-						// 跳过已处理的继承方法
-						continue;
-					}
-					methodKeys.add(mk);
-					if (method.getParameterCount() != 0
-							&& !(method.getParameterCount() == 1
-									&& method.getParameterTypes()[0] == ScheduleEvent.class)) {
-						throw new RedkaleException(
-								"@" + Scheduled.class.getSimpleName() + " must be on non-parameter or "
-										+ ScheduleEvent.class.getSimpleName() + "-parameter method, but on " + method);
-					}
-					ScheduledTask task = schedule(ref, method, remoteMode);
-					// 时间没配置: task=null
-					if (task != null) {
-						tasks.put(method.getName(), task);
-						RedkaleClassLoader.putReflectionMethod(clazz.getName(), method);
-					}
-				}
-			} while ((clazz = clazz.getSuperclass()) != Object.class);
-			// 开始执行定时任务
-			if (enabled && !tasks.isEmpty()) {
-				tasks.forEach((name, task) -> task.init());
-				refTaskMap.put(ref, new ArrayList<>(tasks.values()));
-			}
-		} finally {
-			lock.unlock();
-		}
-	}
+    @Override
+    public void schedule(Object service) {
+        lock.lock();
+        try {
+            boolean remoteMode = service instanceof Service && Sncp.isRemote((Service) service);
+            for (WeakReference item : refTaskMap.keySet()) {
+                if (item.get() == service) {
+                    logger.log(Level.WARNING, service + " repeat schedule");
+                }
+            }
+            Map<String, ScheduledTask> tasks = new LinkedHashMap<>();
+            Class clazz = service.getClass();
+            WeakReference ref = new WeakReference(service);
+            Set<String> methodKeys = new HashSet<>();
+            do {
+                for (final Method method : clazz.getDeclaredMethods()) {
+                    if (method.getAnnotation(Scheduled.class) == null) {
+                        continue;
+                    }
+                    String mk = Utility.methodKey(method);
+                    if (methodKeys.contains(mk)) {
+                        // 跳过已处理的继承方法
+                        continue;
+                    }
+                    methodKeys.add(mk);
+                    if (method.getParameterCount() != 0
+                            && !(method.getParameterCount() == 1
+                                    && method.getParameterTypes()[0] == ScheduleEvent.class)) {
+                        throw new RedkaleException(
+                                "@" + Scheduled.class.getSimpleName() + " must be on non-parameter or "
+                                        + ScheduleEvent.class.getSimpleName() + "-parameter method, but on " + method);
+                    }
+                    ScheduledTask task = schedule(ref, method, remoteMode);
+                    // 时间没配置: task=null
+                    if (task != null) {
+                        tasks.put(method.getName(), task);
+                        RedkaleClassLoader.putReflectionMethod(clazz.getName(), method);
+                    }
+                }
+            } while ((clazz = clazz.getSuperclass()) != Object.class);
+            // 开始执行定时任务
+            if (enabled && !tasks.isEmpty()) {
+                tasks.forEach((name, task) -> task.init());
+                refTaskMap.put(ref, new ArrayList<>(tasks.values()));
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
 
-	@Override
-	public void unschedule(Object service) {
-		lock.lock();
-		try {
-			for (Map.Entry<WeakReference, List<ScheduledTask>> item : refTaskMap.entrySet()) {
-				if (item.getKey().get() == service) {
-					refTaskMap.remove(item.getKey());
-					for (ScheduledTask task : item.getValue()) {
-						task.stop();
-					}
-				}
-			}
-		} finally {
-			lock.unlock();
-		}
-	}
+    @Override
+    public void unschedule(Object service) {
+        lock.lock();
+        try {
+            for (Map.Entry<WeakReference, List<ScheduledTask>> item : refTaskMap.entrySet()) {
+                if (item.getKey().get() == service) {
+                    refTaskMap.remove(item.getKey());
+                    for (ScheduledTask task : item.getValue()) {
+                        task.stop();
+                    }
+                }
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
 
-	protected ScheduledTask schedule(WeakReference ref, Method method, boolean remoteMode) {
-		Scheduled ann = method.getAnnotation(Scheduled.class);
-		if (!LoadMode.matches(remoteMode, ann.mode())) {
-			return null;
-		}
-		String name = getProperty(ann.name());
-		String cron = getProperty(ann.cron());
-		String fixedDelay = getProperty(ann.fixedDelay());
-		String fixedRate = getProperty(ann.fixedRate());
-		String initialDelay = getProperty(ann.initialDelay());
-		String zone = getProperty(ann.zone());
-		TimeUnit timeUnit = ann.timeUnit();
-		return scheduleTask(ref, method, name, cron, fixedDelay, fixedRate, initialDelay, zone, timeUnit);
-	}
+    protected ScheduledTask schedule(WeakReference ref, Method method, boolean remoteMode) {
+        Scheduled ann = method.getAnnotation(Scheduled.class);
+        if (!LoadMode.matches(remoteMode, ann.mode())) {
+            return null;
+        }
+        String name = getProperty(ann.name());
+        String cron = getProperty(ann.cron());
+        String fixedDelay = getProperty(ann.fixedDelay());
+        String fixedRate = getProperty(ann.fixedRate());
+        String initialDelay = getProperty(ann.initialDelay());
+        String zone = getProperty(ann.zone());
+        TimeUnit timeUnit = ann.timeUnit();
+        return scheduleTask(ref, method, name, cron, fixedDelay, fixedRate, initialDelay, zone, timeUnit);
+    }
 
-	protected ScheduledTask scheduleTask(
-			WeakReference ref,
-			Method method,
-			String name,
-			String cron,
-			String fixedDelay,
-			String fixedRate,
-			String initialDelay,
-			String zone,
-			TimeUnit timeUnit) {
-		if ((cron.isEmpty() || "-".equals(cron)) && "-1".equals(fixedRate) && "-1".endsWith(fixedDelay)) {
-			return createdOnlyNameTask(
-					ref, method, name, cron, fixedDelay, fixedRate, initialDelay, zone, timeUnit); // 时间都没配置
-		}
-		ZoneId zoneId = Utility.isEmpty(zone) ? null : ZoneId.of(zone);
-		if (!cron.isEmpty() && !"-".equals(cron)) {
-			CronExpression cronExpr = CronExpression.parse(cron);
-			return new CronTask(ref, name, method, cronExpr, zoneId);
-		} else {
-			long fixedDelayLong = Long.parseLong(fixedDelay);
-			long fixedRateLong = Long.parseLong(fixedRate);
-			long initialDelayLong = Long.parseLong(initialDelay);
-			return new FixedTask(ref, name, method, fixedDelayLong, fixedRateLong, initialDelayLong, timeUnit);
-		}
-	}
+    protected ScheduledTask scheduleTask(
+            WeakReference ref,
+            Method method,
+            String name,
+            String cron,
+            String fixedDelay,
+            String fixedRate,
+            String initialDelay,
+            String zone,
+            TimeUnit timeUnit) {
+        if ((cron.isEmpty() || "-".equals(cron)) && "-1".equals(fixedRate) && "-1".endsWith(fixedDelay)) {
+            return createdOnlyNameTask(
+                    ref, method, name, cron, fixedDelay, fixedRate, initialDelay, zone, timeUnit); // 时间都没配置
+        }
+        ZoneId zoneId = Utility.isEmpty(zone) ? null : ZoneId.of(zone);
+        if (!cron.isEmpty() && !"-".equals(cron)) {
+            CronExpression cronExpr = CronExpression.parse(cron);
+            return new CronTask(ref, name, method, cronExpr, zoneId);
+        } else {
+            long fixedDelayLong = Long.parseLong(fixedDelay);
+            long fixedRateLong = Long.parseLong(fixedRate);
+            long initialDelayLong = Long.parseLong(initialDelay);
+            return new FixedTask(ref, name, method, fixedDelayLong, fixedRateLong, initialDelayLong, timeUnit);
+        }
+    }
 
-	protected ScheduledTask createdOnlyNameTask(
-			WeakReference ref,
-			Method method,
-			String name,
-			String cron,
-			String fixedDelay,
-			String fixedRate,
-			String initialDelay,
-			String zone,
-			TimeUnit timeUnit) {
-		return null;
-	}
+    protected ScheduledTask createdOnlyNameTask(
+            WeakReference ref,
+            Method method,
+            String name,
+            String cron,
+            String fixedDelay,
+            String fixedRate,
+            String initialDelay,
+            String zone,
+            TimeUnit timeUnit) {
+        return null;
+    }
 
-	protected Function<ScheduleEvent, Object> createFuncJob(final WeakReference ref, Method method) {
-		try {
-			if (!Modifier.isPublic(method.getModifiers())) {
-				method.setAccessible(true);
-			}
-			MethodHandle mh = MethodHandles.lookup().unreflect(method);
-			return event -> {
-				Object rs = null;
-				try {
-					Object obj = ref.get();
-					if (obj != null) {
-						if (event == null) {
-							rs = mh.invoke(obj);
-						} else {
-							rs = mh.invoke(obj, event);
-						}
-					}
-				} catch (Throwable t) {
-					logger.log(Level.SEVERE, "schedule task error", t);
-				}
-				if (event != null) {
-					event.clear();
-				}
-				return rs;
-			};
-		} catch (IllegalAccessException e) {
-			throw new RedkaleException(e);
-		}
-	}
+    protected Function<ScheduleEvent, Object> createFuncJob(final WeakReference ref, Method method) {
+        try {
+            if (!Modifier.isPublic(method.getModifiers())) {
+                method.setAccessible(true);
+            }
+            MethodHandle mh = MethodHandles.lookup().unreflect(method);
+            return event -> {
+                Object rs = null;
+                try {
+                    Object obj = ref.get();
+                    if (obj != null) {
+                        if (event == null) {
+                            rs = mh.invoke(obj);
+                        } else {
+                            rs = mh.invoke(obj, event);
+                        }
+                    }
+                } catch (Throwable t) {
+                    logger.log(Level.SEVERE, "schedule task error", t);
+                }
+                if (event != null) {
+                    event.clear();
+                }
+                return rs;
+            };
+        } catch (IllegalAccessException e) {
+            throw new RedkaleException(e);
+        }
+    }
 
-	protected String getProperty(String value) {
-		if (propertyFunc == null || value == null || value.indexOf('}') < 0) {
-			return value;
-		}
-		return propertyFunc.apply(value);
-	}
+    protected String getProperty(String value) {
+        if (propertyFunc == null || value == null || value.indexOf('}') < 0) {
+            return value;
+        }
+        return propertyFunc.apply(value);
+    }
 
-	@Override
-	public int start(String scheduleName) {
-		int c = 0;
-		lock.lock();
-		try {
-			for (Map.Entry<WeakReference, List<ScheduledTask>> item : refTaskMap.entrySet()) {
-				for (ScheduledTask task : item.getValue()) {
-					if (Objects.equals(task.name(), scheduleName)) {
-						c++;
-						task.start();
-					}
-				}
-			}
-		} finally {
-			lock.unlock();
-		}
-		return c;
-	}
+    @Override
+    public int start(String scheduleName) {
+        int c = 0;
+        lock.lock();
+        try {
+            for (Map.Entry<WeakReference, List<ScheduledTask>> item : refTaskMap.entrySet()) {
+                for (ScheduledTask task : item.getValue()) {
+                    if (Objects.equals(task.name(), scheduleName)) {
+                        c++;
+                        task.start();
+                    }
+                }
+            }
+        } finally {
+            lock.unlock();
+        }
+        return c;
+    }
 
-	@Override
-	public int stop(String scheduleName) {
-		int c = 0;
-		lock.lock();
-		try {
-			for (Map.Entry<WeakReference, List<ScheduledTask>> item : refTaskMap.entrySet()) {
-				for (ScheduledTask task : item.getValue()) {
-					if (Objects.equals(task.name(), scheduleName)) {
-						c++;
-						task.stop();
-					}
-				}
-			}
-		} finally {
-			lock.unlock();
-		}
-		return c;
-	}
+    @Override
+    public int stop(String scheduleName) {
+        int c = 0;
+        lock.lock();
+        try {
+            for (Map.Entry<WeakReference, List<ScheduledTask>> item : refTaskMap.entrySet()) {
+                for (ScheduledTask task : item.getValue()) {
+                    if (Objects.equals(task.name(), scheduleName)) {
+                        c++;
+                        task.stop();
+                    }
+                }
+            }
+        } finally {
+            lock.unlock();
+        }
+        return c;
+    }
 
-	protected abstract class ScheduledTask {
+    protected abstract class ScheduledTask {
 
-		protected final WeakReference ref;
+        protected final WeakReference ref;
 
-		protected final String name;
+        protected final String name;
 
-		protected final Method method;
+        protected final Method method;
 
-		protected final AtomicBoolean started = new AtomicBoolean();
+        protected final AtomicBoolean started = new AtomicBoolean();
 
-		protected ScheduledFuture future;
+        protected ScheduledFuture future;
 
-		protected final ScheduleEvent event;
+        protected final ScheduleEvent event;
 
-		protected final Map<String, Object> eventMap;
+        protected final Map<String, Object> eventMap;
 
-		// 任务是否正运行中
-		protected final AtomicBoolean doing = new AtomicBoolean();
+        // 任务是否正运行中
+        protected final AtomicBoolean doing = new AtomicBoolean();
 
-		protected ScheduledTask(WeakReference ref, String name, Method method) {
-			Objects.requireNonNull(ref);
-			Objects.requireNonNull(name);
-			Objects.requireNonNull(method);
-			this.ref = ref;
-			this.name = name;
-			this.method = method;
-			this.eventMap = method.getParameterCount() == 0 ? null : new HashMap<>();
-			this.event = eventMap == null ? null : new ScheduleEvent(eventMap);
-		}
+        protected ScheduledTask(WeakReference ref, String name, Method method) {
+            Objects.requireNonNull(ref);
+            Objects.requireNonNull(name);
+            Objects.requireNonNull(method);
+            this.ref = ref;
+            this.name = name;
+            this.method = method;
+            this.eventMap = method.getParameterCount() == 0 ? null : new HashMap<>();
+            this.event = eventMap == null ? null : new ScheduleEvent(eventMap);
+        }
 
-		public void init() {
-			start();
-		}
+        public void init() {
+            start();
+        }
 
-		public abstract void start();
+        public abstract void start();
 
-		public void stop() {
-			if (future != null) {
-				future.cancel(true);
-				future = null;
-			}
-			this.started.set(false);
-		}
+        public void stop() {
+            if (future != null) {
+                future.cancel(true);
+                future = null;
+            }
+            this.started.set(false);
+        }
 
-		public boolean doing() {
-			return doing.get();
-		}
+        public boolean doing() {
+            return doing.get();
+        }
 
-		public Map<String, Object> eventMap() {
-			return eventMap;
-		}
+        public Map<String, Object> eventMap() {
+            return eventMap;
+        }
 
-		public Method method() {
-			return method;
-		}
+        public Method method() {
+            return method;
+        }
 
-		public String name() {
-			return name;
-		}
-	}
+        public String name() {
+            return name;
+        }
+    }
 
-	protected class FixedTask extends ScheduledTask implements Runnable {
+    protected class FixedTask extends ScheduledTask implements Runnable {
 
-		private final Function<ScheduleEvent, Object> delegate;
+        private final Function<ScheduleEvent, Object> delegate;
 
-		private final long fixedDelay;
+        private final long fixedDelay;
 
-		private final long fixedRate;
+        private final long fixedRate;
 
-		private final long initialDelay;
+        private final long initialDelay;
 
-		private final TimeUnit timeUnit;
+        private final TimeUnit timeUnit;
 
-		public FixedTask(
-				final WeakReference ref,
-				String name,
-				Method method,
-				long fixedDelay,
-				long fixedRate,
-				long initialDelay,
-				TimeUnit timeUnit) {
-			super(ref, name, method);
-			this.delegate = createFuncJob(ref, method);
-			this.fixedDelay = fixedDelay;
-			this.fixedRate = fixedRate;
-			this.initialDelay = initialDelay;
-			this.timeUnit = timeUnit;
-		}
+        public FixedTask(
+                final WeakReference ref,
+                String name,
+                Method method,
+                long fixedDelay,
+                long fixedRate,
+                long initialDelay,
+                TimeUnit timeUnit) {
+            super(ref, name, method);
+            this.delegate = createFuncJob(ref, method);
+            this.fixedDelay = fixedDelay;
+            this.fixedRate = fixedRate;
+            this.initialDelay = initialDelay;
+            this.timeUnit = timeUnit;
+        }
 
-		@Override
-		public void run() {
-			doing.set(true);
-			try {
-				delegate.apply(event);
-			} catch (Throwable t) {
-				logger.log(Level.SEVERE, "schedule task error", t);
-			} finally {
-				doing.set(false);
-			}
-			if (ref.get() == null) {
-				stop();
-			}
-		}
+        @Override
+        public void run() {
+            doing.set(true);
+            try {
+                delegate.apply(event);
+            } catch (Throwable t) {
+                logger.log(Level.SEVERE, "schedule task error", t);
+            } finally {
+                doing.set(false);
+            }
+            if (ref.get() == null) {
+                stop();
+            }
+        }
 
-		@Override
-		public void start() {
-			if (started.compareAndSet(false, true)) {
-				if (fixedRate > 0) {
-					this.future = scheduler.scheduleAtFixedRate(
-							this, initialDelay > 0 ? initialDelay : 0, fixedRate, timeUnit);
-				} else if (fixedDelay > 0) {
-					this.future = scheduler.scheduleWithFixedDelay(this, initialDelay, fixedDelay, timeUnit);
-				} else if (initialDelay > 0) {
-					this.future = scheduler.schedule(this, initialDelay, timeUnit);
-				}
-			}
-		}
-	}
+        @Override
+        public void start() {
+            if (started.compareAndSet(false, true)) {
+                if (fixedRate > 0) {
+                    this.future = scheduler.scheduleAtFixedRate(
+                            this, initialDelay > 0 ? initialDelay : 0, fixedRate, timeUnit);
+                } else if (fixedDelay > 0) {
+                    this.future = scheduler.scheduleWithFixedDelay(this, initialDelay, fixedDelay, timeUnit);
+                } else if (initialDelay > 0) {
+                    this.future = scheduler.schedule(this, initialDelay, timeUnit);
+                }
+            }
+        }
+    }
 
-	protected class CronTask extends ScheduledTask implements Runnable {
+    protected class CronTask extends ScheduledTask implements Runnable {
 
-		private final Function<ScheduleEvent, Object> delegate;
+        private final Function<ScheduleEvent, Object> delegate;
 
-		private final CronExpression cron;
+        private final CronExpression cron;
 
-		@Nullable
-		private final ZoneId zoneId;
+        @Nullable
+        private final ZoneId zoneId;
 
-		public CronTask(WeakReference ref, String name, Method method, CronExpression cron, ZoneId zoneId) {
-			super(ref, name, method);
-			this.delegate = createFuncJob(ref, method);
-			this.cron = cron;
-			this.zoneId = zoneId;
-		}
+        public CronTask(WeakReference ref, String name, Method method, CronExpression cron, ZoneId zoneId) {
+            super(ref, name, method);
+            this.delegate = createFuncJob(ref, method);
+            this.cron = cron;
+            this.zoneId = zoneId;
+        }
 
-		@Override
-		public void run() {
-			doing.set(true);
-			try {
-				delegate.apply(event);
-			} catch (Throwable t) {
-				logger.log(Level.SEVERE, "schedule task error", t);
-			} finally {
-				doing.set(false);
-			}
-			start();
-		}
+        @Override
+        public void run() {
+            doing.set(true);
+            try {
+                delegate.apply(event);
+            } catch (Throwable t) {
+                logger.log(Level.SEVERE, "schedule task error", t);
+            } finally {
+                doing.set(false);
+            }
+            start();
+        }
 
-		@Override
-		public void start() {
-			if (ref.get() == null) {
-				return;
-			}
-			if (started.compareAndSet(false, true)) {
-				LocalDateTime now = zoneId == null ? LocalDateTime.now() : LocalDateTime.now(zoneId);
-				LocalDateTime next = cron.next(now);
-				Duration delay = Duration.between(now, next);
-				this.future = scheduler.schedule(this, delay.toNanos(), TimeUnit.NANOSECONDS);
-			}
-		}
-	}
+        @Override
+        public void start() {
+            if (ref.get() == null) {
+                return;
+            }
+            if (started.compareAndSet(false, true)) {
+                LocalDateTime now = zoneId == null ? LocalDateTime.now() : LocalDateTime.now(zoneId);
+                LocalDateTime next = cron.next(now);
+                Duration delay = Duration.between(now, next);
+                this.future = scheduler.schedule(this, delay.toNanos(), TimeUnit.NANOSECONDS);
+            }
+        }
+    }
 }

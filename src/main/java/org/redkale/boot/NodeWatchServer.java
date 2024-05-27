@@ -17,36 +17,36 @@ import org.redkale.watch.*;
 @NodeProtocol("WATCH")
 public class NodeWatchServer extends NodeHttpServer {
 
-	public NodeWatchServer(Application application, AnyValue serconf) {
-		super(application, serconf);
-	}
+    public NodeWatchServer(Application application, AnyValue serconf) {
+        super(application, serconf);
+    }
 
-	@Override
-	@SuppressWarnings("unchecked")
-	protected ClassFilter<Service> createServiceClassFilter() {
-		return createClassFilter(
-				this.sncpGroup, null, WatchService.class, null, Annotation.class, "services", "service");
-	}
+    @Override
+    @SuppressWarnings("unchecked")
+    protected ClassFilter<Service> createServiceClassFilter() {
+        return createClassFilter(
+                this.sncpGroup, null, WatchService.class, null, Annotation.class, "services", "service");
+    }
 
-	@Override
-	@SuppressWarnings("unchecked")
-	protected ClassFilter<Filter> createFilterClassFilter() {
-		return createClassFilter(null, null, WatchFilter.class, null, null, "filters", "filter");
-	}
+    @Override
+    @SuppressWarnings("unchecked")
+    protected ClassFilter<Filter> createFilterClassFilter() {
+        return createClassFilter(null, null, WatchFilter.class, null, null, "filters", "filter");
+    }
 
-	@Override
-	@SuppressWarnings("unchecked")
-	protected ClassFilter<Servlet> createServletClassFilter() {
-		return createClassFilter(null, WebServlet.class, WatchServlet.class, null, null, "servlets", "servlet");
-	}
+    @Override
+    @SuppressWarnings("unchecked")
+    protected ClassFilter<Servlet> createServletClassFilter() {
+        return createClassFilter(null, WebServlet.class, WatchServlet.class, null, null, "servlets", "servlet");
+    }
 
-	@Override
-	protected List<ClassFilter> createOtherClassFilters() {
-		return null; // 不调用 super.createOtherClassFilters()
-	}
+    @Override
+    protected List<ClassFilter> createOtherClassFilters() {
+        return null; // 不调用 super.createOtherClassFilters()
+    }
 
-	@Override
-	public boolean isWATCH() {
-		return true;
-	}
+    @Override
+    public boolean isWATCH() {
+        return true;
+    }
 }

@@ -15,69 +15,69 @@ import org.redkale.convert.ConvertDisabled;
  */
 public class JsonString implements CharSequence, JsonElement, Comparable<JsonString> {
 
-	private String value;
+    private String value;
 
-	public JsonString() {}
+    public JsonString() {}
 
-	public JsonString(String value) {
-		this.value = value;
-	}
+    public JsonString(String value) {
+        this.value = value;
+    }
 
-	public String getValue() {
-		return value;
-	}
+    public String getValue() {
+        return value;
+    }
 
-	public void setValue(String value) {
-		this.value = value;
-	}
+    public void setValue(String value) {
+        this.value = value;
+    }
 
-	@ConvertDisabled
-	public boolean isNull() {
-		return value == null;
-	}
+    @ConvertDisabled
+    public boolean isNull() {
+        return value == null;
+    }
 
-	@Override
-	public int length() {
-		return value.length();
-	}
+    @Override
+    public int length() {
+        return value.length();
+    }
 
-	@Override
-	public char charAt(int index) {
-		return value.charAt(index);
-	}
+    @Override
+    public char charAt(int index) {
+        return value.charAt(index);
+    }
 
-	@Override
-	public CharSequence subSequence(int start, int end) {
-		return value.substring(end, end);
-	}
+    @Override
+    public CharSequence subSequence(int start, int end) {
+        return value.substring(end, end);
+    }
 
-	@Override
-	public int compareTo(JsonString o) {
-		return o == null || o.value == null
-				? (value == null ? 0 : 1)
-				: (this.value == null ? -1 : this.value.compareTo(o.value));
-	}
+    @Override
+    public int compareTo(JsonString o) {
+        return o == null || o.value == null
+                ? (value == null ? 0 : 1)
+                : (this.value == null ? -1 : this.value.compareTo(o.value));
+    }
 
-	@Override
-	@ConvertDisabled
-	public final boolean isObject() {
-		return false;
-	}
+    @Override
+    @ConvertDisabled
+    public final boolean isObject() {
+        return false;
+    }
 
-	@Override
-	@ConvertDisabled
-	public final boolean isArray() {
-		return false;
-	}
+    @Override
+    @ConvertDisabled
+    public final boolean isArray() {
+        return false;
+    }
 
-	@Override
-	@ConvertDisabled
-	public final boolean isString() {
-		return true;
-	}
+    @Override
+    @ConvertDisabled
+    public final boolean isString() {
+        return true;
+    }
 
-	@Override
-	public String toString() {
-		return value;
-	}
+    @Override
+    public String toString() {
+        return value;
+    }
 }

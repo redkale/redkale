@@ -18,32 +18,32 @@ import org.redkale.convert.*;
  */
 public class CharSequenceSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, CharSequence> {
 
-	public static final CharSequenceSimpledCoder instance = new CharSequenceSimpledCoder();
+    public static final CharSequenceSimpledCoder instance = new CharSequenceSimpledCoder();
 
-	@Override
-	public void convertTo(W out, CharSequence value) {
-		out.writeString(value == null ? null : value.toString());
-	}
+    @Override
+    public void convertTo(W out, CharSequence value) {
+        out.writeString(value == null ? null : value.toString());
+    }
 
-	@Override
-	public CharSequence convertFrom(R in) {
-		return in.readString();
-	}
+    @Override
+    public CharSequence convertFrom(R in) {
+        return in.readString();
+    }
 
-	public static class StringBuilderSimpledCoder<R extends Reader, W extends Writer>
-			extends SimpledCoder<R, W, StringBuilder> {
+    public static class StringBuilderSimpledCoder<R extends Reader, W extends Writer>
+            extends SimpledCoder<R, W, StringBuilder> {
 
-		public static final StringBuilderSimpledCoder instance = new StringBuilderSimpledCoder();
+        public static final StringBuilderSimpledCoder instance = new StringBuilderSimpledCoder();
 
-		@Override
-		public void convertTo(W out, StringBuilder value) {
-			out.writeString(value == null ? null : value.toString());
-		}
+        @Override
+        public void convertTo(W out, StringBuilder value) {
+            out.writeString(value == null ? null : value.toString());
+        }
 
-		@Override
-		public StringBuilder convertFrom(R in) {
-			String rs = in.readString();
-			return rs == null ? null : new StringBuilder(rs);
-		}
-	}
+        @Override
+        public StringBuilder convertFrom(R in) {
+            String rs = in.readString();
+            return rs == null ? null : new StringBuilder(rs);
+        }
+    }
 }

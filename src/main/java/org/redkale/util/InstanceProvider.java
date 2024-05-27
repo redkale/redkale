@@ -16,17 +16,17 @@ import org.redkale.annotation.Priority;
  */
 public interface InstanceProvider<V> {
 
-	public boolean acceptsConf(AnyValue config);
+    public boolean acceptsConf(AnyValue config);
 
-	public V createInstance();
+    public V createInstance();
 
-	// 值大排前面
-	public static <P extends InstanceProvider> List<P> sort(List<P> providers) {
-		Collections.sort(providers, (a, b) -> {
-			Priority p1 = a == null ? null : a.getClass().getAnnotation(Priority.class);
-			Priority p2 = b == null ? null : b.getClass().getAnnotation(Priority.class);
-			return (p2 == null ? 0 : p2.value()) - (p1 == null ? 0 : p1.value());
-		});
-		return providers;
-	}
+    // 值大排前面
+    public static <P extends InstanceProvider> List<P> sort(List<P> providers) {
+        Collections.sort(providers, (a, b) -> {
+            Priority p1 = a == null ? null : a.getClass().getAnnotation(Priority.class);
+            Priority p2 = b == null ? null : b.getClass().getAnnotation(Priority.class);
+            return (p2 == null ? 0 : p2.value()) - (p1 == null ? 0 : p1.value());
+        });
+        return providers;
+    }
 }

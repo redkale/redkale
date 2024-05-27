@@ -40,18 +40,18 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface UniqueConstraint {
 
-	/**
-	 * (Optional) Constraint name. A provider-chosen name will be chosen if a name is not specified.
-	 *
-	 * @return String
-	 * @since Java Persistence 2.0
-	 */
-	String name() default "";
+    /**
+     * (Optional) Constraint name. A provider-chosen name will be chosen if a name is not specified.
+     *
+     * @return String
+     * @since Java Persistence 2.0
+     */
+    String name() default "";
 
-	/**
-	 * (Required) An array of the column names that make up the constraint.
-	 *
-	 * @return String[]
-	 */
-	String[] columnNames();
+    /**
+     * (Required) An array of the column names that make up the constraint.
+     *
+     * @return String[]
+     */
+    String[] columnNames();
 }

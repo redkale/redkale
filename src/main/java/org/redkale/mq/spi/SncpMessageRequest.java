@@ -16,13 +16,13 @@ import org.redkale.net.sncp.*;
  */
 public class SncpMessageRequest extends SncpRequest {
 
-	protected MessageRecord message;
+    protected MessageRecord message;
 
-	@SuppressWarnings("OverridableMethodCallInConstructor")
-	public SncpMessageRequest(SncpContext context, MessageRecord message) {
-		super(context);
-		this.message = message;
-		this.createTime = System.currentTimeMillis();
-		readHeader(ByteBuffer.wrap(message.getContent()), null);
-	}
+    @SuppressWarnings("OverridableMethodCallInConstructor")
+    public SncpMessageRequest(SncpContext context, MessageRecord message) {
+        super(context);
+        this.message = message;
+        this.createTime = System.currentTimeMillis();
+        readHeader(ByteBuffer.wrap(message.getContent()), null);
+    }
 }

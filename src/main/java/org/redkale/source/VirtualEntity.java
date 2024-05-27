@@ -28,27 +28,27 @@ import java.util.function.BiFunction;
 @Retention(RUNTIME)
 public @interface VirtualEntity {
 
-	/**
-	 * DataSource是否直接返回对象的真实引用， 而不是copy一份
-	 *
-	 * @return boolean
-	 */
-	boolean direct() default false;
+    /**
+     * DataSource是否直接返回对象的真实引用， 而不是copy一份
+     *
+     * @return boolean
+     */
+    boolean direct() default false;
 
-	/**
-	 * 初始化时数据的加载器
-	 *
-	 * @return Class
-	 */
-	Class<? extends BiFunction<DataSource, EntityInfo, CompletableFuture<List>>> loader() default
-			DefaultFunctionLoader.class;
+    /**
+     * 初始化时数据的加载器
+     *
+     * @return Class
+     */
+    Class<? extends BiFunction<DataSource, EntityInfo, CompletableFuture<List>>> loader() default
+            DefaultFunctionLoader.class;
 
-	/** 默认全量加载器 */
-	public static class DefaultFunctionLoader implements BiFunction<DataSource, EntityInfo, CompletableFuture<List>> {
+    /** 默认全量加载器 */
+    public static class DefaultFunctionLoader implements BiFunction<DataSource, EntityInfo, CompletableFuture<List>> {
 
-		@Override
-		public CompletableFuture<List> apply(DataSource source, EntityInfo info) {
-			return null;
-		}
-	}
+        @Override
+        public CompletableFuture<List> apply(DataSource source, EntityInfo info) {
+            return null;
+        }
+    }
 }

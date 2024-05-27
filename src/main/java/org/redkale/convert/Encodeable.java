@@ -20,23 +20,23 @@ import org.redkale.annotation.ClassDepends;
 @ClassDepends
 public interface Encodeable<W extends Writer, T> {
 
-	/**
-	 * 序列化操作
-	 *
-	 * @param out Writer
-	 * @param value 对象
-	 */
-	public void convertTo(final W out, T value);
+    /**
+     * 序列化操作
+     *
+     * @param out Writer
+     * @param value 对象
+     */
+    public void convertTo(final W out, T value);
 
-	/**
-	 * 泛型映射接口
-	 *
-	 * @return 返回序列化对象类的数据类型
-	 */
-	public Type getType();
+    /**
+     * 泛型映射接口
+     *
+     * @return 返回序列化对象类的数据类型
+     */
+    public Type getType();
 
-	// 是否需要检查Writer.specify
-	default boolean specifyable() {
-		return true;
-	}
+    // 是否需要检查Writer.specify
+    default boolean specifyable() {
+        return true;
+    }
 }

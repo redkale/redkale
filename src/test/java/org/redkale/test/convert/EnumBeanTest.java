@@ -11,49 +11,49 @@ import org.redkale.convert.json.JsonConvert;
 /** @author zhangjx */
 public class EnumBeanTest {
 
-	private boolean main;
+    private boolean main;
 
-	public static void main(String[] args) throws Throwable {
-		EnumBeanTest test = new EnumBeanTest();
-		test.main = true;
-		test.run();
-	}
+    public static void main(String[] args) throws Throwable {
+        EnumBeanTest test = new EnumBeanTest();
+        test.main = true;
+        test.run();
+    }
 
-	@Test
-	public void run() throws Exception {
-		EnumBean bean = new EnumBean();
-		bean.v1 = EnumKey.TWO;
-		bean.v2 = 5;
-		String expect = "{\"v1\":2,\"v2\":5}";
-		String json = JsonConvert.root().convertTo(bean);
-		if (!main) Assertions.assertEquals(expect, json);
-		System.out.println(json);
-		EnumBean b = JsonConvert.root().convertFrom(EnumBean.class, json);
-		String js = JsonConvert.root().convertTo(b);
-		System.out.println(js);
-		if (!main) Assertions.assertEquals(expect, js);
-	}
+    @Test
+    public void run() throws Exception {
+        EnumBean bean = new EnumBean();
+        bean.v1 = EnumKey.TWO;
+        bean.v2 = 5;
+        String expect = "{\"v1\":2,\"v2\":5}";
+        String json = JsonConvert.root().convertTo(bean);
+        if (!main) Assertions.assertEquals(expect, json);
+        System.out.println(json);
+        EnumBean b = JsonConvert.root().convertFrom(EnumBean.class, json);
+        String js = JsonConvert.root().convertTo(b);
+        System.out.println(js);
+        if (!main) Assertions.assertEquals(expect, js);
+    }
 
-	public static class EnumBean {
+    public static class EnumBean {
 
-		public EnumKey v1;
+        public EnumKey v1;
 
-		public int v2;
-	}
+        public int v2;
+    }
 
-	@ConvertEnumValue("code")
-	public static enum EnumKey {
-		ONE(1),
-		TWO(2);
+    @ConvertEnumValue("code")
+    public static enum EnumKey {
+        ONE(1),
+        TWO(2);
 
-		private final int code;
+        private final int code;
 
-		private EnumKey(int v) {
-			this.code = v;
-		}
+        private EnumKey(int v) {
+            this.code = v;
+        }
 
-		public int getCode() {
-			return code;
-		}
-	}
+        public int getCode() {
+            return code;
+        }
+    }
 }

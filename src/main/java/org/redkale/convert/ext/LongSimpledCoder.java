@@ -19,55 +19,55 @@ import org.redkale.convert.json.*;
  */
 public final class LongSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, Long> {
 
-	public static final LongSimpledCoder instance = new LongSimpledCoder();
+    public static final LongSimpledCoder instance = new LongSimpledCoder();
 
-	@Override
-	public void convertTo(W out, Long value) {
-		out.writeLong(value);
-	}
+    @Override
+    public void convertTo(W out, Long value) {
+        out.writeLong(value);
+    }
 
-	@Override
-	public Long convertFrom(R in) {
-		return in.readLong();
-	}
+    @Override
+    public Long convertFrom(R in) {
+        return in.readLong();
+    }
 
-	/**
-	 * long 的十六进制JsonSimpledCoder实现
-	 *
-	 * @param <R> Reader输入的子类型
-	 * @param <W> Writer输出的子类型
-	 */
-	public static class LongHexJsonSimpledCoder<R extends JsonReader, W extends JsonWriter>
-			extends SimpledCoder<R, W, Long> {
+    /**
+     * long 的十六进制JsonSimpledCoder实现
+     *
+     * @param <R> Reader输入的子类型
+     * @param <W> Writer输出的子类型
+     */
+    public static class LongHexJsonSimpledCoder<R extends JsonReader, W extends JsonWriter>
+            extends SimpledCoder<R, W, Long> {
 
-		public static final LongHexJsonSimpledCoder instance = new LongHexJsonSimpledCoder();
+        public static final LongHexJsonSimpledCoder instance = new LongHexJsonSimpledCoder();
 
-		@Override
-		public void convertTo(final W out, final Long value) {
-			if (value == null) {
-				out.writeSmallString("0x0");
-			} else {
-				if (value < 0) {
-					throw new ConvertException("Negative values (" + value + ") are not supported");
-				}
-				out.writeSmallString("0x" + Long.toHexString(value));
-			}
-		}
+        @Override
+        public void convertTo(final W out, final Long value) {
+            if (value == null) {
+                out.writeSmallString("0x0");
+            } else {
+                if (value < 0) {
+                    throw new ConvertException("Negative values (" + value + ") are not supported");
+                }
+                out.writeSmallString("0x" + Long.toHexString(value));
+            }
+        }
 
-		@Override
-		public Long convertFrom(R in) {
-			final String str = in.readString();
-			if (str == null) {
-				return 0L;
-			}
-			try {
-				if (str.length() > 2 && str.charAt(0) == '0' && (str.charAt(1) == 'x' || str.charAt(1) == 'X')) {
-					return Long.parseLong(str.substring(2), 16);
-				}
-				return Long.parseLong(str);
-			} catch (NumberFormatException e) {
-				return 0L;
-			}
-		}
-	}
+        @Override
+        public Long convertFrom(R in) {
+            final String str = in.readString();
+            if (str == null) {
+                return 0L;
+            }
+            try {
+                if (str.length() > 2 && str.charAt(0) == '0' && (str.charAt(1) == 'x' || str.charAt(1) == 'X')) {
+                    return Long.parseLong(str.substring(2), 16);
+                }
+                return Long.parseLong(str);
+            } catch (NumberFormatException e) {
+                return 0L;
+            }
+        }
+    }
 }

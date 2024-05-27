@@ -17,37 +17,37 @@ import org.redkale.convert.json.JsonConvert;
  */
 public class CacheValue<T> {
 
-	@ConvertColumn(index = 1)
-	private T val;
+    @ConvertColumn(index = 1)
+    private T val;
 
-	public CacheValue() {}
+    public CacheValue() {}
 
-	protected CacheValue(T value) {
-		this.val = value;
-	}
+    protected CacheValue(T value) {
+        this.val = value;
+    }
 
-	public static <T> CacheValue<T> create(T value) {
-		return new CacheValue(value);
-	}
+    public static <T> CacheValue<T> create(T value) {
+        return new CacheValue(value);
+    }
 
-	public static boolean isValid(CacheValue val) {
-		return val != null;
-	}
+    public static boolean isValid(CacheValue val) {
+        return val != null;
+    }
 
-	public static <T> T get(CacheValue val) {
-		return isValid(val) ? (T) val.getVal() : null;
-	}
+    public static <T> T get(CacheValue val) {
+        return isValid(val) ? (T) val.getVal() : null;
+    }
 
-	public T getVal() {
-		return val;
-	}
+    public T getVal() {
+        return val;
+    }
 
-	public void setVal(T val) {
-		this.val = val;
-	}
+    public void setVal(T val) {
+        this.val = val;
+    }
 
-	@Override
-	public String toString() {
-		return JsonConvert.root().convertTo(this);
-	}
+    @Override
+    public String toString() {
+        return JsonConvert.root().convertTo(this);
+    }
 }

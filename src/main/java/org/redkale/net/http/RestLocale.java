@@ -22,10 +22,10 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface RestLocale {
 
-	/**
-	 * 备注描述
-	 *
-	 * @return String
-	 */
-	String comment() default "";
+    /**
+     * 备注描述
+     *
+     * @return String
+     */
+    String comment() default "";
 }

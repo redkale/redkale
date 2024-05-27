@@ -17,26 +17,26 @@ import org.redkale.convert.Convert;
  */
 public interface MessageProducer {
 
-	public CompletableFuture<Void> sendMessage(
-			String topic, Integer partition, Convert convert, Type type, Object value);
+    public CompletableFuture<Void> sendMessage(
+            String topic, Integer partition, Convert convert, Type type, Object value);
 
-	default CompletableFuture<Void> sendMessage(String topic, Integer partition, Convert convert, Object value) {
-		return sendMessage(topic, partition, convert, (Type) null, value);
-	}
+    default CompletableFuture<Void> sendMessage(String topic, Integer partition, Convert convert, Object value) {
+        return sendMessage(topic, partition, convert, (Type) null, value);
+    }
 
-	default CompletableFuture<Void> sendMessage(String topic, Integer partition, Object value) {
-		return sendMessage(topic, partition, (Convert) null, (Type) null, value);
-	}
+    default CompletableFuture<Void> sendMessage(String topic, Integer partition, Object value) {
+        return sendMessage(topic, partition, (Convert) null, (Type) null, value);
+    }
 
-	default CompletableFuture<Void> sendMessage(String topic, Convert convert, Type type, Object value) {
-		return sendMessage(topic, (Integer) null, convert, type, value);
-	}
+    default CompletableFuture<Void> sendMessage(String topic, Convert convert, Type type, Object value) {
+        return sendMessage(topic, (Integer) null, convert, type, value);
+    }
 
-	default CompletableFuture<Void> sendMessage(String topic, Convert convert, Object value) {
-		return sendMessage(topic, (Integer) null, convert, value);
-	}
+    default CompletableFuture<Void> sendMessage(String topic, Convert convert, Object value) {
+        return sendMessage(topic, (Integer) null, convert, value);
+    }
 
-	default CompletableFuture<Void> sendMessage(String topic, Object value) {
-		return sendMessage(topic, (Integer) null, value);
-	}
+    default CompletableFuture<Void> sendMessage(String topic, Object value) {
+        return sendMessage(topic, (Integer) null, value);
+    }
 }

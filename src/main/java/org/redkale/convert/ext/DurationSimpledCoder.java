@@ -19,23 +19,23 @@ import org.redkale.convert.*;
  */
 public class DurationSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, Duration> {
 
-	public static final DurationSimpledCoder instance = new DurationSimpledCoder();
+    public static final DurationSimpledCoder instance = new DurationSimpledCoder();
 
-	@Override
-	public void convertTo(W out, Duration value) {
-		if (value == null) {
-			out.writeNull();
-		} else {
-			out.writeLong(value.toNanos());
-		}
-	}
+    @Override
+    public void convertTo(W out, Duration value) {
+        if (value == null) {
+            out.writeNull();
+        } else {
+            out.writeLong(value.toNanos());
+        }
+    }
 
-	@Override
-	public Duration convertFrom(R in) {
-		String value = in.readSmallString();
-		if (value == null) {
-			return null;
-		}
-		return Duration.ofNanos(Long.parseLong(value));
-	}
+    @Override
+    public Duration convertFrom(R in) {
+        String value = in.readSmallString();
+        if (value == null) {
+            return null;
+        }
+        return Duration.ofNanos(Long.parseLong(value));
+    }
 }

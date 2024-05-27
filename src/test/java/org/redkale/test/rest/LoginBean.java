@@ -14,30 +14,30 @@ import org.redkale.convert.json.JsonFactory;
  */
 public class LoginBean {
 
-	// 账号
-	private String account = "";
+    // 账号
+    private String account = "";
 
-	// 密码
-	private String password = "";
+    // 密码
+    private String password = "";
 
-	public String getAccount() {
-		return account;
-	}
+    public String getAccount() {
+        return account;
+    }
 
-	public void setAccount(String account) {
-		this.account = account;
-	}
+    public void setAccount(String account) {
+        this.account = account;
+    }
 
-	public String getPassword() {
-		return password;
-	}
+    public String getPassword() {
+        return password;
+    }
 
-	public void setPassword(String password) {
-		this.password = password;
-	}
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
-	@Override
-	public String toString() {
-		return JsonFactory.root().getConvert().convertTo(this);
-	}
+    @Override
+    public String toString() {
+        return JsonFactory.root().getConvert().convertTo(this);
+    }
 }

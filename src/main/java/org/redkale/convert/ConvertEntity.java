@@ -24,10 +24,10 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface ConvertEntity {
 
-	/**
-	 * 别名值
-	 *
-	 * @return String
-	 */
-	String value();
+    /**
+     * 别名值
+     *
+     * @return String
+     */
+    String value();
 }

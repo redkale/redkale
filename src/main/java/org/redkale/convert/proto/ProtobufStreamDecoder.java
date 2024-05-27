@@ -15,31 +15,31 @@ import org.redkale.convert.*;
  */
 public class ProtobufStreamDecoder<T> extends StreamDecoder<T> {
 
-	protected final boolean simple;
+    protected final boolean simple;
 
-	private final boolean string;
+    private final boolean string;
 
-	private final boolean enumtostring;
+    private final boolean enumtostring;
 
-	public ProtobufStreamDecoder(ConvertFactory factory, Type type) {
-		super(factory, type);
-		this.enumtostring = ((ProtobufFactory) factory).enumtostring;
-		Type comtype = this.getComponentType();
-		this.string = String.class == comtype;
-		this.simple = Boolean.class == comtype
-				|| Short.class == comtype
-				|| Character.class == comtype
-				|| Integer.class == comtype
-				|| Float.class == comtype
-				|| Long.class == comtype
-				|| Double.class == comtype
-				|| AtomicInteger.class == comtype
-				|| AtomicLong.class == comtype;
-	}
+    public ProtobufStreamDecoder(ConvertFactory factory, Type type) {
+        super(factory, type);
+        this.enumtostring = ((ProtobufFactory) factory).enumtostring;
+        Type comtype = this.getComponentType();
+        this.string = String.class == comtype;
+        this.simple = Boolean.class == comtype
+                || Short.class == comtype
+                || Character.class == comtype
+                || Integer.class == comtype
+                || Float.class == comtype
+                || Long.class == comtype
+                || Double.class == comtype
+                || AtomicInteger.class == comtype
+                || AtomicLong.class == comtype;
+    }
 
-	@Override
-	protected Reader getItemReader(Reader in, DeMember member, boolean first) {
-		if (simple) return in;
-		return ProtobufFactory.getItemReader(string, simple, in, member, enumtostring, first);
-	}
+    @Override
+    protected Reader getItemReader(Reader in, DeMember member, boolean first) {
+        if (simple) return in;
+        return ProtobufFactory.getItemReader(string, simple, in, member, enumtostring, first);
+    }
 }

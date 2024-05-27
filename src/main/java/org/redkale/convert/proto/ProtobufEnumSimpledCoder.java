@@ -21,51 +21,51 @@ import org.redkale.util.RedkaleClassLoader;
  * @param <E> Enum的子类
  */
 public class ProtobufEnumSimpledCoder<R extends Reader, W extends Writer, E extends Enum>
-		extends SimpledCoder<R, W, E> {
+        extends SimpledCoder<R, W, E> {
 
-	private final Map<Integer, E> values = new HashMap<>();
+    private final Map<Integer, E> values = new HashMap<>();
 
-	private final boolean enumtostring;
+    private final boolean enumtostring;
 
-	public ProtobufEnumSimpledCoder(Class<E> type, boolean enumtostring) {
-		this.type = type;
-		this.enumtostring = enumtostring;
-		try {
-			final Method method = type.getMethod("values");
-			RedkaleClassLoader.putReflectionMethod(type.getName(), method);
-			for (E item : (E[]) method.invoke(null)) {
-				values.put(item.ordinal(), item);
-			}
-		} catch (Exception e) {
-			throw new ConvertException(e);
-		}
-	}
+    public ProtobufEnumSimpledCoder(Class<E> type, boolean enumtostring) {
+        this.type = type;
+        this.enumtostring = enumtostring;
+        try {
+            final Method method = type.getMethod("values");
+            RedkaleClassLoader.putReflectionMethod(type.getName(), method);
+            for (E item : (E[]) method.invoke(null)) {
+                values.put(item.ordinal(), item);
+            }
+        } catch (Exception e) {
+            throw new ConvertException(e);
+        }
+    }
 
-	@Override
-	public void convertTo(final W out, final E value) {
-		if (value == null) {
-			out.writeNull();
-		} else if (enumtostring) {
-			out.writeSmallString(value.toString());
-		} else {
-			((ProtobufWriter) out).writeUInt32(value.ordinal());
-		}
-	}
+    @Override
+    public void convertTo(final W out, final E value) {
+        if (value == null) {
+            out.writeNull();
+        } else if (enumtostring) {
+            out.writeSmallString(value.toString());
+        } else {
+            ((ProtobufWriter) out).writeUInt32(value.ordinal());
+        }
+    }
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public E convertFrom(final R in) {
-		if (enumtostring) {
-			String value = in.readSmallString();
-			if (value == null) return null;
-			return (E) Enum.valueOf((Class<E>) type, value);
-		}
-		int value = ((ProtobufReader) in).readRawVarint32();
-		return values.get(value);
-	}
+    @Override
+    @SuppressWarnings("unchecked")
+    public E convertFrom(final R in) {
+        if (enumtostring) {
+            String value = in.readSmallString();
+            if (value == null) return null;
+            return (E) Enum.valueOf((Class<E>) type, value);
+        }
+        int value = ((ProtobufReader) in).readRawVarint32();
+        return values.get(value);
+    }
 
-	@Override
-	public Class<E> getType() {
-		return (Class) type;
-	}
+    @Override
+    public Class<E> getType() {
+        return (Class) type;
+    }
 }

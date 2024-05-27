@@ -19,17 +19,17 @@ import org.redkale.convert.*;
  */
 public final class LongAdderSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, LongAdder> {
 
-	public static final LongAdderSimpledCoder instance = new LongAdderSimpledCoder();
+    public static final LongAdderSimpledCoder instance = new LongAdderSimpledCoder();
 
-	@Override
-	public void convertTo(W out, LongAdder value) {
-		out.writeLong(value == null ? 0L : value.longValue());
-	}
+    @Override
+    public void convertTo(W out, LongAdder value) {
+        out.writeLong(value == null ? 0L : value.longValue());
+    }
 
-	@Override
-	public LongAdder convertFrom(R in) {
-		LongAdder la = new LongAdder();
-		la.add(in.readLong());
-		return la;
-	}
+    @Override
+    public LongAdder convertFrom(R in) {
+        LongAdder la = new LongAdder();
+        la.add(in.readLong());
+        return la;
+    }
 }

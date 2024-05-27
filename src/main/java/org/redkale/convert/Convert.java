@@ -21,106 +21,106 @@ import org.redkale.util.*;
  */
 public abstract class Convert<R extends Reader, W extends Writer> {
 
-	// 值为true时 String类型值为""，Boolean类型值为false时不会输出，默认为false
-	public static final int FEATURE_TINY = 1 << 1;
+    // 值为true时 String类型值为""，Boolean类型值为false时不会输出，默认为false
+    public static final int FEATURE_TINY = 1 << 1;
 
-	// 值为true时 字段值为null时会输出，默认为false
-	public static final int FEATURE_NULLABLE = 1 << 2;
+    // 值为true时 字段值为null时会输出，默认为false
+    public static final int FEATURE_NULLABLE = 1 << 2;
 
-	// 配置属性集合， 1<<1至1<<10为系统内置
-	protected final int features;
+    // 配置属性集合， 1<<1至1<<10为系统内置
+    protected final int features;
 
-	protected final ConvertFactory<R, W> factory;
+    protected final ConvertFactory<R, W> factory;
 
-	protected Convert(ConvertFactory<R, W> factory, int features) {
-		this.factory = factory;
-		this.features = features;
-	}
+    protected Convert(ConvertFactory<R, W> factory, int features) {
+        this.factory = factory;
+        this.features = features;
+    }
 
-	public ConvertFactory<R, W> getFactory() {
-		return this.factory;
-	}
+    public ConvertFactory<R, W> getFactory() {
+        return this.factory;
+    }
 
-	protected <S extends W> S configWrite(S writer) {
-		return writer;
-	}
+    protected <S extends W> S configWrite(S writer) {
+        return writer;
+    }
 
-	protected <S extends W> S fieldFunc(
-			S writer,
-			BiFunction<Attribute, Object, Object> objFieldFunc,
-			BiFunction mapFieldFunc,
-			Function<Object, ConvertField[]> objExtFunc) {
-		writer.mapFieldFunc = mapFieldFunc;
-		writer.objFieldFunc = objFieldFunc;
-		writer.objExtFunc = objExtFunc;
-		return writer;
-	}
+    protected <S extends W> S fieldFunc(
+            S writer,
+            BiFunction<Attribute, Object, Object> objFieldFunc,
+            BiFunction mapFieldFunc,
+            Function<Object, ConvertField[]> objExtFunc) {
+        writer.mapFieldFunc = mapFieldFunc;
+        writer.objFieldFunc = objFieldFunc;
+        writer.objExtFunc = objExtFunc;
+        return writer;
+    }
 
-	public Convert<R, W> newConvert(BiFunction<Attribute, Object, Object> objFieldFunc) {
-		return newConvert(objFieldFunc, null, null);
-	}
+    public Convert<R, W> newConvert(BiFunction<Attribute, Object, Object> objFieldFunc) {
+        return newConvert(objFieldFunc, null, null);
+    }
 
-	public Convert<R, W> newConvert(BiFunction<Attribute, Object, Object> objFieldFunc, BiFunction mapFieldFunc) {
-		return newConvert(objFieldFunc, mapFieldFunc, null);
-	}
+    public Convert<R, W> newConvert(BiFunction<Attribute, Object, Object> objFieldFunc, BiFunction mapFieldFunc) {
+        return newConvert(objFieldFunc, mapFieldFunc, null);
+    }
 
-	public Convert<R, W> newConvert(
-			BiFunction<Attribute, Object, Object> objFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
-		return newConvert(objFieldFunc, null, objExtFunc);
-	}
+    public Convert<R, W> newConvert(
+            BiFunction<Attribute, Object, Object> objFieldFunc, Function<Object, ConvertField[]> objExtFunc) {
+        return newConvert(objFieldFunc, null, objExtFunc);
+    }
 
-	public abstract Convert<R, W> newConvert(
-			BiFunction<Attribute, Object, Object> objFieldFunc,
-			BiFunction mapFieldFunc,
-			Function<Object, ConvertField[]> objExtFunc);
+    public abstract Convert<R, W> newConvert(
+            BiFunction<Attribute, Object, Object> objFieldFunc,
+            BiFunction mapFieldFunc,
+            Function<Object, ConvertField[]> objExtFunc);
 
-	public abstract boolean isBinary();
+    public abstract boolean isBinary();
 
-	public abstract R pollReader();
+    public abstract R pollReader();
 
-	public abstract void offerReader(final R reader);
+    public abstract void offerReader(final R reader);
 
-	// 返回的Writer子类必须实现ByteTuple接口
-	public abstract W pollWriter();
+    // 返回的Writer子类必须实现ByteTuple接口
+    public abstract W pollWriter();
 
-	public abstract void offerWriter(final W write);
+    public abstract void offerWriter(final W write);
 
-	public abstract <T> T convertFrom(final Type type, final byte[] bytes);
+    public abstract <T> T convertFrom(final Type type, final byte[] bytes);
 
-	public abstract <T> T convertFrom(final Type type, final R reader);
+    public abstract <T> T convertFrom(final Type type, final R reader);
 
-	// @since 2.2.0
-	public abstract <T> T convertFrom(final Type type, final byte[] bytes, final int offset, final int length);
+    // @since 2.2.0
+    public abstract <T> T convertFrom(final Type type, final byte[] bytes, final int offset, final int length);
 
-	public abstract <T> T convertFrom(final Type type, final ByteBuffer... buffers);
+    public abstract <T> T convertFrom(final Type type, final ByteBuffer... buffers);
 
-	public final void convertTo(final W writer, final Object value) {
-		convertTo(writer, (Type) null, value);
-	}
+    public final void convertTo(final W writer, final Object value) {
+        convertTo(writer, (Type) null, value);
+    }
 
-	public abstract void convertTo(final W writer, final Type type, final Object value);
+    public abstract void convertTo(final W writer, final Type type, final Object value);
 
-	public final byte[] convertToBytes(final Object value) {
-		return convertToBytes((Type) null, value);
-	}
+    public final byte[] convertToBytes(final Object value) {
+        return convertToBytes((Type) null, value);
+    }
 
-	public abstract byte[] convertToBytes(final Type type, final Object value);
+    public abstract byte[] convertToBytes(final Type type, final Object value);
 
-	public final void convertToBytes(final Object value, final ConvertBytesHandler handler) {
-		convertToBytes((Type) null, value, handler);
-	}
+    public final void convertToBytes(final Object value, final ConvertBytesHandler handler) {
+        convertToBytes((Type) null, value, handler);
+    }
 
-	public abstract void convertToBytes(final Type type, final Object value, final ConvertBytesHandler handler);
+    public abstract void convertToBytes(final Type type, final Object value, final ConvertBytesHandler handler);
 
-	public final void convertToBytes(final ByteArray array, final Object value) {
-		convertToBytes(array, (Type) null, value);
-	}
+    public final void convertToBytes(final ByteArray array, final Object value) {
+        convertToBytes(array, (Type) null, value);
+    }
 
-	public abstract void convertToBytes(final ByteArray array, final Type type, final Object value);
+    public abstract void convertToBytes(final ByteArray array, final Type type, final Object value);
 
-	public final ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Object value) {
-		return convertTo(supplier, (Type) null, value);
-	}
+    public final ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Object value) {
+        return convertTo(supplier, (Type) null, value);
+    }
 
-	public abstract ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value);
+    public abstract ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value);
 }

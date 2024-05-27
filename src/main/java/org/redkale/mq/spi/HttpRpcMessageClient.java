@@ -14,37 +14,37 @@ import org.redkale.net.http.WebRequest;
 /** @author zhangjx */
 final class HttpRpcMessageClient extends HttpRpcClient {
 
-	private final MessageCoder<WebRequest> requestCoder = WebRequestCoder.getInstance();
+    private final MessageCoder<WebRequest> requestCoder = WebRequestCoder.getInstance();
 
-	private final String nodeid;
+    private final String nodeid;
 
-	private final MessageClient messageClient;
+    private final MessageClient messageClient;
 
-	public HttpRpcMessageClient(MessageClient messageClient, final String nodeid) {
-		this.messageClient = messageClient;
-		this.nodeid = nodeid;
-	}
+    public HttpRpcMessageClient(MessageClient messageClient, final String nodeid) {
+        this.messageClient = messageClient;
+        this.nodeid = nodeid;
+    }
 
-	@Override
-	public CompletableFuture<HttpResult<byte[]>> sendMessage(
-			String topic, Serializable userid, String groupid, WebRequest request) {
-		MessageRecord message = messageClient.createMessageRecord(
-				CTYPE_HTTP_REQUEST, topic, null, request.getTraceid(), requestCoder.encode(request));
-		message.userid(userid).groupid(groupid);
-		return messageClient.sendMessage(message).thenApply(r -> r.decodeContent(HttpResultCoder.getInstance()));
-	}
+    @Override
+    public CompletableFuture<HttpResult<byte[]>> sendMessage(
+            String topic, Serializable userid, String groupid, WebRequest request) {
+        MessageRecord message = messageClient.createMessageRecord(
+                CTYPE_HTTP_REQUEST, topic, null, request.getTraceid(), requestCoder.encode(request));
+        message.userid(userid).groupid(groupid);
+        return messageClient.sendMessage(message).thenApply(r -> r.decodeContent(HttpResultCoder.getInstance()));
+    }
 
-	@Override
-	public CompletableFuture<Void> produceMessage(
-			String topic, Serializable userid, String groupid, WebRequest request) {
-		MessageRecord message = messageClient.createMessageRecord(
-				CTYPE_HTTP_REQUEST, topic, null, request.getTraceid(), requestCoder.encode(request));
-		message.userid(userid).groupid(groupid);
-		return messageClient.produceMessage(message);
-	}
+    @Override
+    public CompletableFuture<Void> produceMessage(
+            String topic, Serializable userid, String groupid, WebRequest request) {
+        MessageRecord message = messageClient.createMessageRecord(
+                CTYPE_HTTP_REQUEST, topic, null, request.getTraceid(), requestCoder.encode(request));
+        message.userid(userid).groupid(groupid);
+        return messageClient.produceMessage(message);
+    }
 
-	@Override
-	protected String getNodeid() {
-		return nodeid;
-	}
+    @Override
+    protected String getNodeid() {
+        return nodeid;
+    }
 }

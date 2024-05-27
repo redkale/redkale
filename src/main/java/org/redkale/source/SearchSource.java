@@ -18,19 +18,19 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface SearchSource extends DataSource {
 
-	// 不存在分表时用此方法
-	default <T> int updateMapping(final Class<T> clazz) {
-		return updateMapping(clazz, null);
-	}
+    // 不存在分表时用此方法
+    default <T> int updateMapping(final Class<T> clazz) {
+        return updateMapping(clazz, null);
+    }
 
-	// 不存在分表时用此方法
-	default <T> CompletableFuture<Integer> updateMappingAsync(final Class<T> clazz) {
-		return updateMappingAsync(clazz, null);
-	}
+    // 不存在分表时用此方法
+    default <T> CompletableFuture<Integer> updateMappingAsync(final Class<T> clazz) {
+        return updateMappingAsync(clazz, null);
+    }
 
-	// 存在分表时用此方法
-	public <T> int updateMapping(final Class<T> clazz, String table);
+    // 存在分表时用此方法
+    public <T> int updateMapping(final Class<T> clazz, String table);
 
-	// 存在分表时用此方法
-	public <T> CompletableFuture<Integer> updateMappingAsync(final Class<T> clazz, String table);
+    // 存在分表时用此方法
+    public <T> CompletableFuture<Integer> updateMappingAsync(final Class<T> clazz, String table);
 }

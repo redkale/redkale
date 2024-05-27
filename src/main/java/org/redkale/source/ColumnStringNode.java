@@ -16,26 +16,26 @@ import org.redkale.convert.ConvertColumn;
  */
 public class ColumnStringNode implements ColumnNode {
 
-	@ConvertColumn(index = 1)
-	private String value;
+    @ConvertColumn(index = 1)
+    private String value;
 
-	public ColumnStringNode() {}
+    public ColumnStringNode() {}
 
-	public ColumnStringNode(String value) {
-		Objects.requireNonNull(value, "string value is null");
-		this.value = value;
-	}
+    public ColumnStringNode(String value) {
+        Objects.requireNonNull(value, "string value is null");
+        this.value = value;
+    }
 
-	public String getValue() {
-		return value;
-	}
+    public String getValue() {
+        return value;
+    }
 
-	public void setValue(String value) {
-		this.value = value;
-	}
+    public void setValue(String value) {
+        this.value = value;
+    }
 
-	@Override
-	public String toString() {
-		return "{\"value\":\"" + value + "\"}";
-	}
+    @Override
+    public String toString() {
+        return "{\"value\":\"" + value + "\"}";
+    }
 }

@@ -16,19 +16,19 @@ import org.redkale.util.RedkaleException;
  */
 public class RpcRemoteException extends RedkaleException {
 
-	public RpcRemoteException() {
-		super();
-	}
+    public RpcRemoteException() {
+        super();
+    }
 
-	public RpcRemoteException(String s) {
-		super(s);
-	}
+    public RpcRemoteException(String s) {
+        super(s);
+    }
 
-	public RpcRemoteException(String message, Throwable cause) {
-		super(message, cause);
-	}
+    public RpcRemoteException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-	public RpcRemoteException(Throwable cause) {
-		super(cause);
-	}
+    public RpcRemoteException(Throwable cause) {
+        super(cause);
+    }
 }

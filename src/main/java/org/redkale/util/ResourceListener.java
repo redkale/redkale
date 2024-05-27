@@ -59,12 +59,12 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface ResourceListener {
 
-	/**
-	 * 新旧值是否不同时才回调方法 <br>
-	 * true: 新值与旧值不同时才回调ResourceListener方法 false: 只要执行了ResourceFactory.register 就回调ResourceListener方法
-	 *
-	 * @since 2.7.0
-	 * @return boolean
-	 */
-	boolean different() default true;
+    /**
+     * 新旧值是否不同时才回调方法 <br>
+     * true: 新值与旧值不同时才回调ResourceListener方法 false: 只要执行了ResourceFactory.register 就回调ResourceListener方法
+     *
+     * @since 2.7.0
+     * @return boolean
+     */
+    boolean different() default true;
 }

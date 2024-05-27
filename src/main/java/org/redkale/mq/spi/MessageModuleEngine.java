@@ -43,471 +43,471 @@ import org.redkale.util.Utility;
 /** @author zhangjx */
 public class MessageModuleEngine extends ModuleEngine {
 
-	// MQ管理配置资源
-	// @since 2.8.0
-	private final Properties messageProperties = new Properties();
+    // MQ管理配置资源
+    // @since 2.8.0
+    private final Properties messageProperties = new Properties();
 
-	//
-	private final Map<String, List<MessageConsumer>> agentConsumers = new ConcurrentHashMap<>();
+    //
+    private final Map<String, List<MessageConsumer>> agentConsumers = new ConcurrentHashMap<>();
 
-	// MQ管理接口
-	// @since 2.1.0
-	private MessageAgent[] messageAgents;
+    // MQ管理接口
+    // @since 2.1.0
+    private MessageAgent[] messageAgents;
 
-	public MessageModuleEngine(Application application) {
-		super(application);
-	}
+    public MessageModuleEngine(Application application) {
+        super(application);
+    }
 
-	/**
-	 * 动态扩展类的方法
-	 *
-	 * @param remote 是否远程模式
-	 * @param serviceClass 类
-	 * @return 方法动态扩展器
-	 */
-	@Override
-	public AsmMethodBoost createAsmMethodBoost(boolean remote, Class serviceClass) {
-		return new MessageAsmMethodBoost(remote, serviceClass, this);
-	}
+    /**
+     * 动态扩展类的方法
+     *
+     * @param remote 是否远程模式
+     * @param serviceClass 类
+     * @return 方法动态扩展器
+     */
+    @Override
+    public AsmMethodBoost createAsmMethodBoost(boolean remote, Class serviceClass) {
+        return new MessageAsmMethodBoost(remote, serviceClass, this);
+    }
 
-	void addMessageConsumer(MessageConsumer consumer) {
-		String agentName = environment.getPropertyValue(
-				consumer.getClass().getAnnotation(ResourceConsumer.class).mq());
-		agentConsumers
-				.computeIfAbsent(agentName, v -> new CopyOnWriteArrayList<>())
-				.add(consumer);
-	}
+    void addMessageConsumer(MessageConsumer consumer) {
+        String agentName = environment.getPropertyValue(
+                consumer.getClass().getAnnotation(ResourceConsumer.class).mq());
+        agentConsumers
+                .computeIfAbsent(agentName, v -> new CopyOnWriteArrayList<>())
+                .add(consumer);
+    }
 
-	/**
-	 * 判断模块的配置项合并策略， 返回null表示模块不识别此配置项
-	 *
-	 * @param path 配置项路径
-	 * @param key 配置项名称
-	 * @param val1 配置项原值
-	 * @param val2 配置项新值
-	 * @return MergeEnum
-	 */
-	@Override
-	public AnyValue.MergeEnum mergeAppConfigStrategy(String path, String key, AnyValue val1, AnyValue val2) {
-		if ("".equals(path) && "mq".equals(key)) {
-			if (Objects.equals(val1.getValue("name"), val2.getValue("name"))) {
-				return AnyValue.MergeEnum.REPLACE;
-			} else {
-				return AnyValue.MergeEnum.DEFAULT;
-			}
-		}
-		return null;
-	}
+    /**
+     * 判断模块的配置项合并策略， 返回null表示模块不识别此配置项
+     *
+     * @param path 配置项路径
+     * @param key 配置项名称
+     * @param val1 配置项原值
+     * @param val2 配置项新值
+     * @return MergeEnum
+     */
+    @Override
+    public AnyValue.MergeEnum mergeAppConfigStrategy(String path, String key, AnyValue val1, AnyValue val2) {
+        if ("".equals(path) && "mq".equals(key)) {
+            if (Objects.equals(val1.getValue("name"), val2.getValue("name"))) {
+                return AnyValue.MergeEnum.REPLACE;
+            } else {
+                return AnyValue.MergeEnum.DEFAULT;
+            }
+        }
+        return null;
+    }
 
-	/** 配置项加载后被调用 */
-	@Override
-	public void onEnvironmentLoaded(Properties allProps) {
-		if (this.messageAgents == null) {
-			return;
-		}
-		allProps.forEach((key, val) -> {
-			if (key.toString().startsWith("redkale.mq.") || key.toString().startsWith("redkale.mq[")) {
-				if (key.toString().endsWith(".name")) {
-					logger.log(Level.WARNING, "skip illegal key " + key + " in mq config, key cannot endsWith '.name'");
-				} else {
-					this.messageProperties.put(key, val);
-				}
-			}
-		});
-	}
+    /** 配置项加载后被调用 */
+    @Override
+    public void onEnvironmentLoaded(Properties allProps) {
+        if (this.messageAgents == null) {
+            return;
+        }
+        allProps.forEach((key, val) -> {
+            if (key.toString().startsWith("redkale.mq.") || key.toString().startsWith("redkale.mq[")) {
+                if (key.toString().endsWith(".name")) {
+                    logger.log(Level.WARNING, "skip illegal key " + key + " in mq config, key cannot endsWith '.name'");
+                } else {
+                    this.messageProperties.put(key, val);
+                }
+            }
+        });
+    }
 
-	/** 结束Application.init方法前被调用 */
-	@Override
-	public void onAppPostInit() {
-		MessageAgent[] mqs = null;
-		AnyValue[] mqConfs = application.getAppConfig().getAnyValues("mq");
-		if (mqConfs != null && mqConfs.length > 0) {
-			mqs = new MessageAgent[mqConfs.length];
-			Set<String> mqnames = new HashSet<>();
-			for (int i = 0; i < mqConfs.length; i++) {
-				AnyValue mqConf = mqConfs[i];
-				String names = environment.getPropertyValue(mqConf.getValue("name")); // 含,或者;表示多个别名使用同一mq对象
-				if (names != null && !names.isEmpty()) {
-					for (String n : names.replace(',', ';').split(";")) {
-						if (n.trim().isEmpty()) {
-							continue;
-						}
-						if (mqnames.contains(n.trim())) {
-							throw new RedkaleException("mq.name(" + n.trim() + ") is repeat");
-						}
-						mqnames.add(n.trim());
-					}
-				} else if (names != null && names.isEmpty()) {
-					String n = "";
-					if (mqnames.contains(n.trim())) {
-						throw new RedkaleException("mq.name(" + n.trim() + ") is repeat");
-					}
-					mqnames.add(n);
-				}
-				try {
-					String classVal = environment.getPropertyValue(
-							mqConf.getValue("type", mqConf.getValue("value"))); // 兼容value字段
-					if (classVal == null
-							|| classVal.isEmpty()
-							|| classVal.indexOf('.') < 0) { // 不包含.表示非类名，比如值: kafka, pulsar
-						Iterator<MessageAgentProvider> it = ServiceLoader.load(
-										MessageAgentProvider.class, application.getClassLoader())
-								.iterator();
-						RedkaleClassLoader.putServiceLoader(MessageAgentProvider.class);
-						while (it.hasNext()) {
-							MessageAgentProvider provider = it.next();
-							if (provider != null) {
-								RedkaleClassLoader.putReflectionPublicConstructors(
-										provider.getClass(), provider.getClass().getName()); // loader class
-							}
-							if (provider != null && provider.acceptsConf(mqConf)) {
-								mqs[i] = provider.createInstance();
-								mqs[i].setConfig(mqConf);
-								break;
-							}
-						}
-						if (mqs[i] == null) {
-							logger.log(
-									Level.SEVERE,
-									"load application mq resource, but not found name='value' value error: " + mqConf);
-						}
-					} else {
-						Class type = application.getClassLoader().loadClass(classVal);
-						if (!MessageAgent.class.isAssignableFrom(type)) {
-							logger.log(
-									Level.SEVERE,
-									"load application mq resource, but not found " + MessageAgent.class.getSimpleName()
-											+ " implements class error: " + mqConf);
-						} else {
-							RedkaleClassLoader.putReflectionDeclaredConstructors(type, type.getName());
-							mqs[i] =
-									(MessageAgent) type.getDeclaredConstructor().newInstance();
-							mqs[i].setConfig(mqConf);
-						}
-					}
-					// 此时不能执行mq.init，因内置的对象可能依赖config.properties配置项
-				} catch (Exception e) {
-					logger.log(Level.SEVERE, "load application mq resource error: " + mqs[i], e);
-				}
-			}
-		}
-		this.messageAgents = mqs;
-		// ------------------------------------ 注册 ResourceProducer MessageProducer ------------------------------------
-		resourceFactory.register(new ResourceAnnotationLoader<ResourceProducer>() {
-			@Override
-			public void load(
-					ResourceFactory rf,
-					String srcResourceName,
-					Object srcObj,
-					ResourceProducer annotation,
-					Field field,
-					Object attachment) {
-				if (field.getType() != MessageProducer.class) {
-					throw new RestException("@" + ResourceProducer.class.getSimpleName() + " must on "
-							+ MessageProducer.class.getName() + " type field, but on " + field);
-				}
-				MessageAgent agent = resourceFactory.find(annotation.mq(), MessageAgent.class);
-				if (!annotation.required() && agent == null) {
-					return;
-				}
-				if (agent == null) {
-					throw new RedkaleException("Not found " + MessageAgent.class.getSimpleName() + "(name = "
-							+ annotation.mq() + ") on " + field);
-				}
-				try {
-					MessageProducer producer = agent.loadMessageProducer(annotation);
-					field.set(srcObj, producer);
-				} catch (RuntimeException ex) {
-					throw ex;
-				} catch (Exception e) {
-					throw new RedkaleException(field + "inject error", e);
-				}
-			}
+    /** 结束Application.init方法前被调用 */
+    @Override
+    public void onAppPostInit() {
+        MessageAgent[] mqs = null;
+        AnyValue[] mqConfs = application.getAppConfig().getAnyValues("mq");
+        if (mqConfs != null && mqConfs.length > 0) {
+            mqs = new MessageAgent[mqConfs.length];
+            Set<String> mqnames = new HashSet<>();
+            for (int i = 0; i < mqConfs.length; i++) {
+                AnyValue mqConf = mqConfs[i];
+                String names = environment.getPropertyValue(mqConf.getValue("name")); // 含,或者;表示多个别名使用同一mq对象
+                if (names != null && !names.isEmpty()) {
+                    for (String n : names.replace(',', ';').split(";")) {
+                        if (n.trim().isEmpty()) {
+                            continue;
+                        }
+                        if (mqnames.contains(n.trim())) {
+                            throw new RedkaleException("mq.name(" + n.trim() + ") is repeat");
+                        }
+                        mqnames.add(n.trim());
+                    }
+                } else if (names != null && names.isEmpty()) {
+                    String n = "";
+                    if (mqnames.contains(n.trim())) {
+                        throw new RedkaleException("mq.name(" + n.trim() + ") is repeat");
+                    }
+                    mqnames.add(n);
+                }
+                try {
+                    String classVal = environment.getPropertyValue(
+                            mqConf.getValue("type", mqConf.getValue("value"))); // 兼容value字段
+                    if (classVal == null
+                            || classVal.isEmpty()
+                            || classVal.indexOf('.') < 0) { // 不包含.表示非类名，比如值: kafka, pulsar
+                        Iterator<MessageAgentProvider> it = ServiceLoader.load(
+                                        MessageAgentProvider.class, application.getClassLoader())
+                                .iterator();
+                        RedkaleClassLoader.putServiceLoader(MessageAgentProvider.class);
+                        while (it.hasNext()) {
+                            MessageAgentProvider provider = it.next();
+                            if (provider != null) {
+                                RedkaleClassLoader.putReflectionPublicConstructors(
+                                        provider.getClass(), provider.getClass().getName()); // loader class
+                            }
+                            if (provider != null && provider.acceptsConf(mqConf)) {
+                                mqs[i] = provider.createInstance();
+                                mqs[i].setConfig(mqConf);
+                                break;
+                            }
+                        }
+                        if (mqs[i] == null) {
+                            logger.log(
+                                    Level.SEVERE,
+                                    "load application mq resource, but not found name='value' value error: " + mqConf);
+                        }
+                    } else {
+                        Class type = application.getClassLoader().loadClass(classVal);
+                        if (!MessageAgent.class.isAssignableFrom(type)) {
+                            logger.log(
+                                    Level.SEVERE,
+                                    "load application mq resource, but not found " + MessageAgent.class.getSimpleName()
+                                            + " implements class error: " + mqConf);
+                        } else {
+                            RedkaleClassLoader.putReflectionDeclaredConstructors(type, type.getName());
+                            mqs[i] =
+                                    (MessageAgent) type.getDeclaredConstructor().newInstance();
+                            mqs[i].setConfig(mqConf);
+                        }
+                    }
+                    // 此时不能执行mq.init，因内置的对象可能依赖config.properties配置项
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, "load application mq resource error: " + mqs[i], e);
+                }
+            }
+        }
+        this.messageAgents = mqs;
+        // ------------------------------------ 注册 ResourceProducer MessageProducer ------------------------------------
+        resourceFactory.register(new ResourceAnnotationLoader<ResourceProducer>() {
+            @Override
+            public void load(
+                    ResourceFactory rf,
+                    String srcResourceName,
+                    Object srcObj,
+                    ResourceProducer annotation,
+                    Field field,
+                    Object attachment) {
+                if (field.getType() != MessageProducer.class) {
+                    throw new RestException("@" + ResourceProducer.class.getSimpleName() + " must on "
+                            + MessageProducer.class.getName() + " type field, but on " + field);
+                }
+                MessageAgent agent = resourceFactory.find(annotation.mq(), MessageAgent.class);
+                if (!annotation.required() && agent == null) {
+                    return;
+                }
+                if (agent == null) {
+                    throw new RedkaleException("Not found " + MessageAgent.class.getSimpleName() + "(name = "
+                            + annotation.mq() + ") on " + field);
+                }
+                try {
+                    MessageProducer producer = agent.loadMessageProducer(annotation);
+                    field.set(srcObj, producer);
+                } catch (RuntimeException ex) {
+                    throw ex;
+                } catch (Exception e) {
+                    throw new RedkaleException(field + "inject error", e);
+                }
+            }
 
-			@Override
-			public Class<ResourceProducer> annotationType() {
-				return ResourceProducer.class;
-			}
-		});
+            @Override
+            public Class<ResourceProducer> annotationType() {
+                return ResourceProducer.class;
+            }
+        });
 
-		if (this.messageAgents == null) {
-			return;
-		}
-		if (logger.isLoggable(Level.FINER)) {
-			logger.log(Level.FINER, "MessageAgent initing");
-		}
-		long s = System.currentTimeMillis();
-		for (MessageAgent agent : this.messageAgents) {
-			String agentName = agent.getConfig().getValue("name", "");
-			if (!application.isCompileMode()) {
-				this.resourceFactory.inject(agent);
-				agent.init(agent.getConfig());
-				agentName = agent.getName();
-			} else {
-				agent.name = agentName;
-				agent.application = application;
-			}
-			this.resourceFactory.register(agentName, MessageManager.class, agent);
-			this.resourceFactory.register(agentName, MessageAgent.class, agent);
-		}
-		logger.info("MessageAgent init in " + (System.currentTimeMillis() - s) + " ms");
-	}
+        if (this.messageAgents == null) {
+            return;
+        }
+        if (logger.isLoggable(Level.FINER)) {
+            logger.log(Level.FINER, "MessageAgent initing");
+        }
+        long s = System.currentTimeMillis();
+        for (MessageAgent agent : this.messageAgents) {
+            String agentName = agent.getConfig().getValue("name", "");
+            if (!application.isCompileMode()) {
+                this.resourceFactory.inject(agent);
+                agent.init(agent.getConfig());
+                agentName = agent.getName();
+            } else {
+                agent.name = agentName;
+                agent.application = application;
+            }
+            this.resourceFactory.register(agentName, MessageManager.class, agent);
+            this.resourceFactory.register(agentName, MessageAgent.class, agent);
+        }
+        logger.info("MessageAgent init in " + (System.currentTimeMillis() - s) + " ms");
+    }
 
-	/**
-	 * 配置项变更时被调用
-	 *
-	 * @param namespace 命名空间
-	 * @param events 变更项
-	 */
-	@Override
-	public void onEnvironmentChanged(String namespace, List<ResourceEvent> events) {
-		Set<String> messageRemovedKeys = new HashSet<>();
-		Properties messageChangedProps = new Properties();
+    /**
+     * 配置项变更时被调用
+     *
+     * @param namespace 命名空间
+     * @param events 变更项
+     */
+    @Override
+    public void onEnvironmentChanged(String namespace, List<ResourceEvent> events) {
+        Set<String> messageRemovedKeys = new HashSet<>();
+        Properties messageChangedProps = new Properties();
 
-		for (ResourceEvent<String> event : events) {
-			if (event.name().startsWith("redkale.mq.") || event.name().startsWith("redkale.mq[")) {
-				if (event.name().endsWith(".name")) {
-					logger.log(
-							Level.WARNING,
-							"skip illegal key " + event.name() + " in mq config " + (namespace == null ? "" : namespace)
-									+ ", key cannot endsWith '.name'");
-				} else {
-					if (!Objects.equals(event.newValue(), this.messageProperties.getProperty(event.name()))) {
-						if (event.newValue() == null) {
-							if (this.messageProperties.containsKey(event.name())) {
-								messageRemovedKeys.add(event.name());
-							}
-						} else {
-							messageChangedProps.put(event.name(), event.newValue());
-						}
-					}
-				}
-			}
-		}
-		// MQ配置项的变更
-		if (!messageChangedProps.isEmpty() || !messageRemovedKeys.isEmpty()) {
-			Set<String> messageNames = new LinkedHashSet<>();
-			List<String> keys = new ArrayList<>();
-			keys.addAll(messageRemovedKeys);
-			keys.addAll((Set) messageChangedProps.keySet());
-			for (final String key : keys) {
-				if (key.startsWith("redkale.mq[")) {
-					messageNames.add(key.substring("redkale.mq[".length(), key.indexOf(']')));
-				} else if (key.startsWith("redkale.mq.")) {
-					messageNames.add(key.substring("redkale.mq.".length(), key.indexOf('.', "redkale.mq.".length())));
-				}
-			}
-			// 更新MQ
-			for (String mqName : messageNames) {
-				MessageAgent agent = Utility.find(messageAgents, s -> Objects.equals(s.resourceName(), mqName));
-				if (agent == null) {
-					continue; // 多余的数据源
-				}
-				final AnyValueWriter old = (AnyValueWriter) findMQConfig(mqName);
-				Properties newProps = new Properties();
-				this.messageProperties.forEach((k, v) -> {
-					final String key = k.toString();
-					String prefix = "redkale.mq[" + mqName + "].";
-					int pos = key.indexOf(prefix);
-					if (pos < 0) {
-						prefix = "redkale.mq." + mqName + ".";
-						pos = key.indexOf(prefix);
-					}
-					if (pos < 0) {
-						return; // 不是同一name数据源配置项
-					}
-					newProps.put(k, v);
-				});
-				List<ResourceEvent> changeEvents = new ArrayList<>();
-				messageChangedProps.forEach((k, v) -> {
-					final String key = k.toString();
-					String prefix = "redkale.mq[" + mqName + "].";
-					int pos = key.indexOf(prefix);
-					if (pos < 0) {
-						prefix = "redkale.mq." + mqName + ".";
-						pos = key.indexOf(prefix);
-					}
-					if (pos < 0) {
-						return; // 不是同一name数据源配置项
-					}
-					newProps.put(k, v);
-					changeEvents.add(ResourceEvent.create(
-							key.substring(prefix.length()), v, this.messageProperties.getProperty(key)));
-				});
-				messageRemovedKeys.forEach(k -> {
-					final String key = k;
-					String prefix = "redkale.mq[" + mqName + "].";
-					int pos = key.indexOf(prefix);
-					if (pos < 0) {
-						prefix = "redkale.mq." + mqName + ".";
-						pos = key.indexOf(prefix);
-					}
-					if (pos < 0) {
-						return;
-					}
-					newProps.remove(k); // 不是同一name数据源配置项
-					changeEvents.add(ResourceEvent.create(
-							key.substring(prefix.length()), null, this.messageProperties.getProperty(key)));
-				});
-				if (!changeEvents.isEmpty()) {
-					AnyValueWriter back = old.copy();
-					try {
-						old.replace(AnyValue.loadFromProperties(newProps)
-								.getAnyValue("redkale")
-								.getAnyValue("mq")
-								.getAnyValue(mqName));
-						agent.onResourceChange(changeEvents.toArray(new ResourceEvent[changeEvents.size()]));
-					} catch (RuntimeException e) {
-						old.replace(back); // 还原配置
-						throw e;
-					}
-				}
-			}
-			messageRemovedKeys.forEach(this.messageProperties::remove);
-			this.messageProperties.putAll(messageChangedProps);
-		}
-	}
+        for (ResourceEvent<String> event : events) {
+            if (event.name().startsWith("redkale.mq.") || event.name().startsWith("redkale.mq[")) {
+                if (event.name().endsWith(".name")) {
+                    logger.log(
+                            Level.WARNING,
+                            "skip illegal key " + event.name() + " in mq config " + (namespace == null ? "" : namespace)
+                                    + ", key cannot endsWith '.name'");
+                } else {
+                    if (!Objects.equals(event.newValue(), this.messageProperties.getProperty(event.name()))) {
+                        if (event.newValue() == null) {
+                            if (this.messageProperties.containsKey(event.name())) {
+                                messageRemovedKeys.add(event.name());
+                            }
+                        } else {
+                            messageChangedProps.put(event.name(), event.newValue());
+                        }
+                    }
+                }
+            }
+        }
+        // MQ配置项的变更
+        if (!messageChangedProps.isEmpty() || !messageRemovedKeys.isEmpty()) {
+            Set<String> messageNames = new LinkedHashSet<>();
+            List<String> keys = new ArrayList<>();
+            keys.addAll(messageRemovedKeys);
+            keys.addAll((Set) messageChangedProps.keySet());
+            for (final String key : keys) {
+                if (key.startsWith("redkale.mq[")) {
+                    messageNames.add(key.substring("redkale.mq[".length(), key.indexOf(']')));
+                } else if (key.startsWith("redkale.mq.")) {
+                    messageNames.add(key.substring("redkale.mq.".length(), key.indexOf('.', "redkale.mq.".length())));
+                }
+            }
+            // 更新MQ
+            for (String mqName : messageNames) {
+                MessageAgent agent = Utility.find(messageAgents, s -> Objects.equals(s.resourceName(), mqName));
+                if (agent == null) {
+                    continue; // 多余的数据源
+                }
+                final AnyValueWriter old = (AnyValueWriter) findMQConfig(mqName);
+                Properties newProps = new Properties();
+                this.messageProperties.forEach((k, v) -> {
+                    final String key = k.toString();
+                    String prefix = "redkale.mq[" + mqName + "].";
+                    int pos = key.indexOf(prefix);
+                    if (pos < 0) {
+                        prefix = "redkale.mq." + mqName + ".";
+                        pos = key.indexOf(prefix);
+                    }
+                    if (pos < 0) {
+                        return; // 不是同一name数据源配置项
+                    }
+                    newProps.put(k, v);
+                });
+                List<ResourceEvent> changeEvents = new ArrayList<>();
+                messageChangedProps.forEach((k, v) -> {
+                    final String key = k.toString();
+                    String prefix = "redkale.mq[" + mqName + "].";
+                    int pos = key.indexOf(prefix);
+                    if (pos < 0) {
+                        prefix = "redkale.mq." + mqName + ".";
+                        pos = key.indexOf(prefix);
+                    }
+                    if (pos < 0) {
+                        return; // 不是同一name数据源配置项
+                    }
+                    newProps.put(k, v);
+                    changeEvents.add(ResourceEvent.create(
+                            key.substring(prefix.length()), v, this.messageProperties.getProperty(key)));
+                });
+                messageRemovedKeys.forEach(k -> {
+                    final String key = k;
+                    String prefix = "redkale.mq[" + mqName + "].";
+                    int pos = key.indexOf(prefix);
+                    if (pos < 0) {
+                        prefix = "redkale.mq." + mqName + ".";
+                        pos = key.indexOf(prefix);
+                    }
+                    if (pos < 0) {
+                        return;
+                    }
+                    newProps.remove(k); // 不是同一name数据源配置项
+                    changeEvents.add(ResourceEvent.create(
+                            key.substring(prefix.length()), null, this.messageProperties.getProperty(key)));
+                });
+                if (!changeEvents.isEmpty()) {
+                    AnyValueWriter back = old.copy();
+                    try {
+                        old.replace(AnyValue.loadFromProperties(newProps)
+                                .getAnyValue("redkale")
+                                .getAnyValue("mq")
+                                .getAnyValue(mqName));
+                        agent.onResourceChange(changeEvents.toArray(new ResourceEvent[changeEvents.size()]));
+                    } catch (RuntimeException e) {
+                        old.replace(back); // 还原配置
+                        throw e;
+                    }
+                }
+            }
+            messageRemovedKeys.forEach(this.messageProperties::remove);
+            this.messageProperties.putAll(messageChangedProps);
+        }
+    }
 
-	/** 服务全部启动后被调用 */
-	@Override
-	public void onServersPostStart() {
-		if (this.messageAgents == null) {
-			return;
-		}
-		// startMessageAgent
-		if (logger.isLoggable(Level.FINE)) {
-			logger.log(Level.FINE, MessageAgent.class.getSimpleName() + " starting");
-		}
-		long s = System.currentTimeMillis();
-		Set<String> names = new HashSet<>();
-		ResourceFactory serResourceFactory = this.resourceFactory.createChild();
-		List<ResourceFactory> factorys = new ArrayList<>();
-		for (NodeServer ns : application.getNodeServers()) {
-			factorys.add(ns.getResourceFactory());
-		}
-		serResourceFactory.register(new ResourceTypeLoader() {
-			@Override
-			public Object load(
-					ResourceFactory rf,
-					String srcResourceName,
-					Object srcObj,
-					String resourceName,
-					Field field,
-					Object attachment) {
-				for (ResourceFactory f : factorys) {
-					Object val = f.find(resourceName, field.getGenericType());
-					if (val != null) {
-						return val;
-					}
-				}
-				return null;
-			}
+    /** 服务全部启动后被调用 */
+    @Override
+    public void onServersPostStart() {
+        if (this.messageAgents == null) {
+            return;
+        }
+        // startMessageAgent
+        if (logger.isLoggable(Level.FINE)) {
+            logger.log(Level.FINE, MessageAgent.class.getSimpleName() + " starting");
+        }
+        long s = System.currentTimeMillis();
+        Set<String> names = new HashSet<>();
+        ResourceFactory serResourceFactory = this.resourceFactory.createChild();
+        List<ResourceFactory> factorys = new ArrayList<>();
+        for (NodeServer ns : application.getNodeServers()) {
+            factorys.add(ns.getResourceFactory());
+        }
+        serResourceFactory.register(new ResourceTypeLoader() {
+            @Override
+            public Object load(
+                    ResourceFactory rf,
+                    String srcResourceName,
+                    Object srcObj,
+                    String resourceName,
+                    Field field,
+                    Object attachment) {
+                for (ResourceFactory f : factorys) {
+                    Object val = f.find(resourceName, field.getGenericType());
+                    if (val != null) {
+                        return val;
+                    }
+                }
+                return null;
+            }
 
-			@Override
-			public Type resourceType() {
-				return Object.class;
-			}
+            @Override
+            public Type resourceType() {
+                return Object.class;
+            }
 
-			@Override
-			public boolean autoNone() {
-				return false;
-			}
-		});
-		for (MessageAgent agent : this.messageAgents) {
-			names.add(agent.getName());
-			List<MessageConsumer> consumers =
-					agentConsumers.getOrDefault(agent.getName(), new CopyOnWriteArrayList<>());
-			AnyValue consumerConf = agent.getConfig().getAnyValue("consumer");
-			if (consumerConf != null) { // 加载 MessageConsumer
-				ClassFilter filter = new ClassFilter(
-						application.getServerClassLoader(), ResourceConsumer.class, MessageConsumer.class, null, null);
-				if (consumerConf.getBoolValue("autoload", true)) {
-					String includes = consumerConf.getValue("includes", "");
-					String excludes = consumerConf.getValue("excludes", "");
-					filter.setIncludePatterns(includes.split(";"));
-					filter.setExcludePatterns(excludes.split(";"));
-				} else {
-					filter.setRefused(true);
-				}
+            @Override
+            public boolean autoNone() {
+                return false;
+            }
+        });
+        for (MessageAgent agent : this.messageAgents) {
+            names.add(agent.getName());
+            List<MessageConsumer> consumers =
+                    agentConsumers.getOrDefault(agent.getName(), new CopyOnWriteArrayList<>());
+            AnyValue consumerConf = agent.getConfig().getAnyValue("consumer");
+            if (consumerConf != null) { // 加载 MessageConsumer
+                ClassFilter filter = new ClassFilter(
+                        application.getServerClassLoader(), ResourceConsumer.class, MessageConsumer.class, null, null);
+                if (consumerConf.getBoolValue("autoload", true)) {
+                    String includes = consumerConf.getValue("includes", "");
+                    String excludes = consumerConf.getValue("excludes", "");
+                    filter.setIncludePatterns(includes.split(";"));
+                    filter.setExcludePatterns(excludes.split(";"));
+                } else {
+                    filter.setRefused(true);
+                }
 
-				try {
-					application.loadServerClassFilters(filter);
-					List<ClassFilter.FilterEntry<? extends MessageConsumer>> entrys =
-							new ArrayList(filter.getFilterEntrys());
-					for (ClassFilter.FilterEntry<? extends MessageConsumer> en : entrys) {
-						Class<? extends MessageConsumer> clazz = en.getType();
-						ResourceConsumer res = clazz.getAnnotation(ResourceConsumer.class);
-						if (!Objects.equals(agent.getName(), environment.getPropertyValue(res.mq()))) {
-							continue;
-						}
-						RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());
-						final MessageConsumer consumer =
-								clazz.getDeclaredConstructor().newInstance();
-						serResourceFactory.inject(consumer);
-						consumers.add(consumer);
-					}
-				} catch (Exception e) {
-					throw new RedkaleException(e);
-				}
-				for (MessageConsumer consumer : consumers) {
-					consumer.init(consumerConf);
-				}
-			}
-			agent.start(consumers);
-		}
-		logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") started in "
-				+ (System.currentTimeMillis() - s) + " ms");
-	}
+                try {
+                    application.loadServerClassFilters(filter);
+                    List<ClassFilter.FilterEntry<? extends MessageConsumer>> entrys =
+                            new ArrayList(filter.getFilterEntrys());
+                    for (ClassFilter.FilterEntry<? extends MessageConsumer> en : entrys) {
+                        Class<? extends MessageConsumer> clazz = en.getType();
+                        ResourceConsumer res = clazz.getAnnotation(ResourceConsumer.class);
+                        if (!Objects.equals(agent.getName(), environment.getPropertyValue(res.mq()))) {
+                            continue;
+                        }
+                        RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());
+                        final MessageConsumer consumer =
+                                clazz.getDeclaredConstructor().newInstance();
+                        serResourceFactory.inject(consumer);
+                        consumers.add(consumer);
+                    }
+                } catch (Exception e) {
+                    throw new RedkaleException(e);
+                }
+                for (MessageConsumer consumer : consumers) {
+                    consumer.init(consumerConf);
+                }
+            }
+            agent.start(consumers);
+        }
+        logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") started in "
+                + (System.currentTimeMillis() - s) + " ms");
+    }
 
-	/** 服务全部停掉前被调用 */
-	@Override
-	public void onServersPreStop() {
-		if (application.isCompileMode() && this.messageAgents != null) {
-			Set<String> names = new HashSet<>();
-			if (logger.isLoggable(Level.FINER)) {
-				logger.log(Level.FINER, "MessageAgent stopping");
-			}
-			long s = System.currentTimeMillis();
-			for (MessageAgent agent : this.messageAgents) {
-				names.add(agent.getName());
-				if (!application.isCompileMode()) {
-					agent.stop();
-				}
-			}
-			logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") stop in "
-					+ (System.currentTimeMillis() - s) + " ms");
-		}
-	}
+    /** 服务全部停掉前被调用 */
+    @Override
+    public void onServersPreStop() {
+        if (application.isCompileMode() && this.messageAgents != null) {
+            Set<String> names = new HashSet<>();
+            if (logger.isLoggable(Level.FINER)) {
+                logger.log(Level.FINER, "MessageAgent stopping");
+            }
+            long s = System.currentTimeMillis();
+            for (MessageAgent agent : this.messageAgents) {
+                names.add(agent.getName());
+                if (!application.isCompileMode()) {
+                    agent.stop();
+                }
+            }
+            logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") stop in "
+                    + (System.currentTimeMillis() - s) + " ms");
+        }
+    }
 
-	/** 服务全部停掉后被调用 */
-	@Override
-	public void onServersPostStop() {
-		if (this.messageAgents != null) {
-			Set<String> names = new HashSet<>();
-			if (logger.isLoggable(Level.FINER)) {
-				logger.log(Level.FINER, "MessageAgent destroying");
-			}
-			long s = System.currentTimeMillis();
-			for (MessageAgent agent : this.messageAgents) {
-				names.add(agent.getName());
-				if (!application.isCompileMode()) {
-					agent.destroy(agent.getConfig());
-				}
-			}
-			logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") destroy in "
-					+ (System.currentTimeMillis() - s) + " ms");
-		}
-	}
+    /** 服务全部停掉后被调用 */
+    @Override
+    public void onServersPostStop() {
+        if (this.messageAgents != null) {
+            Set<String> names = new HashSet<>();
+            if (logger.isLoggable(Level.FINER)) {
+                logger.log(Level.FINER, "MessageAgent destroying");
+            }
+            long s = System.currentTimeMillis();
+            for (MessageAgent agent : this.messageAgents) {
+                names.add(agent.getName());
+                if (!application.isCompileMode()) {
+                    agent.destroy(agent.getConfig());
+                }
+            }
+            logger.info("MessageAgent(names=" + JsonConvert.root().convertTo(names) + ") destroy in "
+                    + (System.currentTimeMillis() - s) + " ms");
+        }
+    }
 
-	private AnyValue findMQConfig(String mqName) {
-		AnyValue mqsNode = application.getAppConfig().getAnyValue("mq");
-		if (mqsNode != null) {
-			AnyValue confNode = mqsNode.getAnyValue(mqName);
-			if (confNode != null) { // 必须要设置name属性
-				((AnyValueWriter) confNode).setValue("name", mqName);
-			}
-			return confNode;
-		}
-		return null;
-	}
+    private AnyValue findMQConfig(String mqName) {
+        AnyValue mqsNode = application.getAppConfig().getAnyValue("mq");
+        if (mqsNode != null) {
+            AnyValue confNode = mqsNode.getAnyValue(mqName);
+            if (confNode != null) { // 必须要设置name属性
+                ((AnyValueWriter) confNode).setValue("name", mqName);
+            }
+            return confNode;
+        }
+        return null;
+    }
 }

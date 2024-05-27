@@ -19,42 +19,42 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Resource {
 
-	public static final String PARENT_NAME = "@";
+    public static final String PARENT_NAME = "@";
 
-	public static final String SELF_NAME = "#name";
+    public static final String SELF_NAME = "#name";
 
-	public static final String SELF_TYPE = "#type";
+    public static final String SELF_TYPE = "#type";
 
-	/**
-	 * 是否必须存在
-	 *
-	 * @return boolean
-	 * @since 2.8.0
-	 */
-	public boolean required() default true;
+    /**
+     * 是否必须存在
+     *
+     * @return boolean
+     * @since 2.8.0
+     */
+    public boolean required() default true;
 
-	/**
-	 * 资源名称 <br>
-	 *
-	 * <blockquote>
-	 *
-	 * <pre>
-	 * name规则:
-	 * 1: "@"有特殊含义, 表示资源本身，"@"不能单独使用
-	 * 2: "#name"、"#type"有特殊含义
-	 * 3: 只能是字母、数字、(短横)-、(下划线)_、点(.)的组合
-	 * </pre>
-	 *
-	 * </blockquote>
-	 *
-	 * @return String
-	 */
-	public String name() default "";
+    /**
+     * 资源名称 <br>
+     *
+     * <blockquote>
+     *
+     * <pre>
+     * name规则:
+     * 1: "@"有特殊含义, 表示资源本身，"@"不能单独使用
+     * 2: "#name"、"#type"有特殊含义
+     * 3: 只能是字母、数字、(短横)-、(下划线)_、点(.)的组合
+     * </pre>
+     *
+     * </blockquote>
+     *
+     * @return String
+     */
+    public String name() default "";
 
-	/**
-	 * 依赖注入的类型
-	 *
-	 * @return Class
-	 */
-	public Class<?> type() default Object.class;
+    /**
+     * 依赖注入的类型
+     *
+     * @return Class
+     */
+    public Class<?> type() default Object.class;
 }

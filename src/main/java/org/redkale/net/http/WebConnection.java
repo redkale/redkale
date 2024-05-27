@@ -15,12 +15,12 @@ import org.redkale.net.client.ClientConnection;
  */
 class WebConnection extends ClientConnection<WebRequest, WebResult> {
 
-	public WebConnection(WebClient client, AsyncConnection channel) {
-		super(client, channel);
-	}
+    public WebConnection(WebClient client, AsyncConnection channel) {
+        super(client, channel);
+    }
 
-	@Override
-	protected ClientCodec createCodec() {
-		return new WebCodec(this);
-	}
+    @Override
+    protected ClientCodec createCodec() {
+        return new WebCodec(this);
+    }
 }

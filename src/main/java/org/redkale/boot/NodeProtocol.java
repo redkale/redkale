@@ -19,5 +19,5 @@ import java.lang.annotation.*;
 @Documented
 public @interface NodeProtocol {
 
-	String value();
+    String value();
 }

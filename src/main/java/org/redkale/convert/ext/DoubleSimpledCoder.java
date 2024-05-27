@@ -18,15 +18,15 @@ import org.redkale.convert.*;
  */
 public final class DoubleSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, Double> {
 
-	public static final DoubleSimpledCoder instance = new DoubleSimpledCoder();
+    public static final DoubleSimpledCoder instance = new DoubleSimpledCoder();
 
-	@Override
-	public void convertTo(W out, Double value) {
-		out.writeDouble(value);
-	}
+    @Override
+    public void convertTo(W out, Double value) {
+        out.writeDouble(value);
+    }
 
-	@Override
-	public Double convertFrom(R in) {
-		return in.readDouble();
-	}
+    @Override
+    public Double convertFrom(R in) {
+        return in.readDouble();
+    }
 }

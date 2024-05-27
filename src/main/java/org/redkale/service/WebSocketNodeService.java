@@ -24,12 +24,12 @@ import org.redkale.util.AnyValue;
 @ResourceType(WebSocketNode.class)
 public class WebSocketNodeService extends org.redkale.net.http.WebSocketNodeService {
 
-	@Override
-	public void init(AnyValue conf) {
-		super.init(conf);
-		logger.log(
-				Level.WARNING,
-				WebSocketNodeService.class.getName() + "is replaced by "
-						+ org.redkale.net.http.WebSocketNodeService.class.getName());
-	}
+    @Override
+    public void init(AnyValue conf) {
+        super.init(conf);
+        logger.log(
+                Level.WARNING,
+                WebSocketNodeService.class.getName() + "is replaced by "
+                        + org.redkale.net.http.WebSocketNodeService.class.getName());
+    }
 }

@@ -24,59 +24,59 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface RestService {
 
-	/**
-	 * 模块名, 只能是模块名,不能含特殊字符， 只能小写字母+数字，且不能以数字开头， 单独一个空格值为特殊值
-	 *
-	 * @return 模块名
-	 */
-	String name() default "";
+    /**
+     * 模块名, 只能是模块名,不能含特殊字符， 只能小写字母+数字，且不能以数字开头， 单独一个空格值为特殊值
+     *
+     * @return 模块名
+     */
+    String name() default "";
 
-	/**
-	 * 目录名, 不能含特殊字符， 只能小写字母+数字，且不能以数字开头
-	 *
-	 * @return 目录名
-	 */
-	String catalog() default "";
+    /**
+     * 目录名, 不能含特殊字符， 只能小写字母+数字，且不能以数字开头
+     *
+     * @return 目录名
+     */
+    String catalog() default "";
 
-	/**
-	 * 模块ID值，鉴权时用到, 对应&#64;WebServlet.moduleid
-	 *
-	 * @return 模块ID值
-	 */
-	int moduleid() default 0;
+    /**
+     * 模块ID值，鉴权时用到, 对应&#64;WebServlet.moduleid
+     *
+     * @return 模块ID值
+     */
+    int moduleid() default 0;
 
-	/**
-	 * 是否只接受RPC请求， 默认为false, 为true则覆盖所有&#64;RestMapping的方法的rpcOnly值，都转为true
-	 *
-	 * @return 默认false
-	 */
-	boolean rpcOnly() default false;
+    /**
+     * 是否只接受RPC请求， 默认为false, 为true则覆盖所有&#64;RestMapping的方法的rpcOnly值，都转为true
+     *
+     * @return 默认false
+     */
+    boolean rpcOnly() default false;
 
-	/**
-	 * 没有标记&#64;RestMapping的方法是否转换， 默认为false
-	 *
-	 * @return 默认false
-	 */
-	boolean autoMapping() default false;
+    /**
+     * 没有标记&#64;RestMapping的方法是否转换， 默认为false
+     *
+     * @return 默认false
+     */
+    boolean autoMapping() default false;
 
-	/**
-	 * 是否屏蔽该类的转换
-	 *
-	 * @return 默认false
-	 */
-	boolean ignore() default false;
+    /**
+     * 是否屏蔽该类的转换
+     *
+     * @return 默认false
+     */
+    boolean ignore() default false;
 
-	/**
-	 * 同&#64;WebServlet的repair属性
-	 *
-	 * @return 默认true
-	 */
-	boolean repair() default true;
+    /**
+     * 同&#64;WebServlet的repair属性
+     *
+     * @return 默认true
+     */
+    boolean repair() default true;
 
-	/**
-	 * 备注描述
-	 *
-	 * @return 备注描述
-	 */
-	String comment() default "";
+    /**
+     * 备注描述
+     *
+     * @return 备注描述
+     */
+    String comment() default "";
 }

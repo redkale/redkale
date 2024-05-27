@@ -20,15 +20,15 @@ import org.redkale.convert.*;
  */
 public class SkipArrayDecoder<T> extends ArrayDecoder<T> {
 
-	public SkipArrayDecoder(final ConvertFactory factory, final Type type) {
-		super(factory, type);
-	}
+    public SkipArrayDecoder(final ConvertFactory factory, final Type type) {
+        super(factory, type);
+    }
 
-	@Override
-	protected Decodeable<Reader, T> getComponentDecoder(Decodeable<Reader, T> decoder, byte[] typevals) {
-		if (typevals != null) {
-			return BsonFactory.typeEnum(typevals[0]);
-		}
-		return decoder;
-	}
+    @Override
+    protected Decodeable<Reader, T> getComponentDecoder(Decodeable<Reader, T> decoder, byte[] typevals) {
+        if (typevals != null) {
+            return BsonFactory.typeEnum(typevals[0]);
+        }
+        return decoder;
+    }
 }

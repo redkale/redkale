@@ -10,57 +10,57 @@ import java.util.*;
 /** @author zhangjx */
 public class Two extends One {
 
-	public Two() {
-		super(90100119);
-	}
+    public Two() {
+        super(90100119);
+    }
 
-	protected List<String> list;
+    protected List<String> list;
 
-	protected Map<String, String> stringMap;
+    protected Map<String, String> stringMap;
 
-	protected List<ConvertRecord> records;
+    protected List<ConvertRecord> records;
 
-	protected Map<String, ConvertRecord> recordMap;
+    protected Map<String, ConvertRecord> recordMap;
 
-	public Map<String, String> getStringMap() {
-		return stringMap;
-	}
+    public Map<String, String> getStringMap() {
+        return stringMap;
+    }
 
-	public void setStringMap(Map<String, String> stringMap) {
-		this.stringMap = stringMap;
-	}
+    public void setStringMap(Map<String, String> stringMap) {
+        this.stringMap = stringMap;
+    }
 
-	String ip;
+    String ip;
 
-	public String getIp() {
-		return ip;
-	}
+    public String getIp() {
+        return ip;
+    }
 
-	public void setIp(String ip) {
-		this.ip = ip;
-	}
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
 
-	public List<String> getList() {
-		return list;
-	}
+    public List<String> getList() {
+        return list;
+    }
 
-	public void setList(List<String> list) {
-		this.list = list;
-	}
+    public void setList(List<String> list) {
+        this.list = list;
+    }
 
-	public List<ConvertRecord> getRecords() {
-		return records;
-	}
+    public List<ConvertRecord> getRecords() {
+        return records;
+    }
 
-	public void setRecords(List<ConvertRecord> records) {
-		this.records = records;
-	}
+    public void setRecords(List<ConvertRecord> records) {
+        this.records = records;
+    }
 
-	public Map<String, ConvertRecord> getRecordMap() {
-		return recordMap;
-	}
+    public Map<String, ConvertRecord> getRecordMap() {
+        return recordMap;
+    }
 
-	public void setRecordMap(Map<String, ConvertRecord> recordMap) {
-		this.recordMap = recordMap;
-	}
+    public void setRecordMap(Map<String, ConvertRecord> recordMap) {
+        this.recordMap = recordMap;
+    }
 }
