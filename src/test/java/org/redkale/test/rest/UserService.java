@@ -8,7 +8,7 @@ package org.redkale.test.rest;
 import org.redkale.service.*;
 
 /**
- * 简单的定义UserService接口
+ * 简单的定义UserService接口 
  *
  * @author zhangjx
  */
