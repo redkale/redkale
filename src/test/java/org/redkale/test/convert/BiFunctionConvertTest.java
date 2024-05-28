@@ -64,12 +64,7 @@ public class BiFunctionConvertTest {
                     }
                     return t.get(u);
                 },
-                (Object u) -> {
-                    if (table != u) {
-                        return null;
-                    }
-                    return ConvertField.ofArray("extcol1", 30, "extcol2", "扩展字段值");
-                });
+                (Object u) -> table != u ? null : ConvertField.ofArray("extcol1", 30, "extcol2", "扩展字段值"));
         System.out.println(convert2.convertTo(table));
         Assertions.assertEquals(
                 "{\"players\":[{\"cards\":[11,12,13,14,15],\"userid\":1,\"username\":\"玩家1\"},"
