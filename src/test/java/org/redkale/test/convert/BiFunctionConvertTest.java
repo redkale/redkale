@@ -14,7 +14,7 @@ import org.redkale.util.Attribute;
  *
  * @author zhangjx
  */
-public class FunctionConvertTest {
+public class BiFunctionConvertTest {
 
     public static class GamePlayer {
 
