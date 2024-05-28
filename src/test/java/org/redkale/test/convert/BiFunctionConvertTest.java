@@ -52,7 +52,7 @@ public class BiFunctionConvertTest {
         JsonConvert convert1 = JsonConvert.root();
         System.out.println(convert1.convertTo(table));
         JsonConvert convert2 = convert1.newConvert(
-                (Attribute t, Object u) -> { // 玩家3不输出cards字段
+                (Attribute t, Object u) -> { // 玩家3不输出cards字段 
                     if (t.field().equals("cards") && u instanceof GamePlayer) {
                         int userid = ((GamePlayer) u).userid;
                         if (userid == 3) { // 玩家3的cards不输出
