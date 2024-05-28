@@ -64,7 +64,7 @@ public class BiFunctionConvertTest {
                     }
                     return t.get(u);
                 },
-                (Object u) -> {
+                (Object u) -> { 
                     if (table != u) {
                         return null;
                     }
@@ -78,4 +78,5 @@ public class BiFunctionConvertTest {
                         + "\"tableid\":100,\"extcol1\":30,\"extcol2\":\"扩展字段值\"}",
                 convert2.convertTo(table));
     }
+    
 }
