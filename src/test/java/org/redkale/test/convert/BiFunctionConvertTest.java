@@ -60,7 +60,7 @@ public class BiFunctionConvertTest {
                         if (userid == 3) { // 玩家3的cards不输出
                             return null;
                         }
-                        return t.get(u);
+                        return t.get(u); 
                     }
                     return t.get(u);
                 },
