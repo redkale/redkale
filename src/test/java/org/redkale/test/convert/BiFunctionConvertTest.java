@@ -65,9 +65,9 @@ public class BiFunctionConvertTest {
                     return t.get(u);
                 },
                 (Object u) -> {
-                    if (table != u) return null;
-                    // return new ConvertField[]{new ConvertField("extcol1", 30),
-                    // new ConvertField("extcol2", "扩展字段值")};
+                    if (table != u) {
+                        return null;
+                    }
                     return ConvertField.ofArray("extcol1", 30, "extcol2", "扩展字段值");
                 });
         System.out.println(convert2.convertTo(table));
