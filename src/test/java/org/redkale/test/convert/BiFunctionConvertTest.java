@@ -57,7 +57,9 @@ public class BiFunctionConvertTest {
                 (Attribute t, Object u) -> {
                     if (t.field().equals("cards") && u instanceof GamePlayer) {
                         int userid = ((GamePlayer) u).userid;
-                        if (userid == 3) return null; // 玩家3的cards不输出
+                        if (userid == 3) { // 玩家3的cards不输出
+                            return null;
+                        }
                         return t.get(u);
                     }
                     return t.get(u);
