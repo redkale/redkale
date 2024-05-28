@@ -1,8 +1,7 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
+*/
+
 package org.redkale.test.convert;
 
 import org.junit.jupiter.api.Assertions;
@@ -11,12 +10,11 @@ import org.redkale.convert.ConvertField;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.Attribute;
 
-/*
- * test
+/**
  *
  * @author zhangjx
  */
-public class BiFuncConvertTest {
+public class FunctionConvertTest {
 
     public static class GamePlayer {
 
