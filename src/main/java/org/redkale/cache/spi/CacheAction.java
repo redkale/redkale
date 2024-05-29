@@ -66,6 +66,9 @@ public class CacheAction {
     // 缓存的hash
     private String hash;
 
+    // 模板key
+    String templetKey;
+
     // 缓存的key
     private MultiHashKey dynKey;
 
@@ -90,6 +93,7 @@ public class CacheAction {
         this.paramNames = paramNames;
         this.methodName = Objects.requireNonNull(methodName);
         this.fieldName = Objects.requireNonNull(fieldName);
+        this.templetKey = cached.getKey();
         this.async = CompletableFuture.class.isAssignableFrom(TypeToken.typeToClass(returnType));
         this.resultType = this.async ? ((ParameterizedType) returnType).getActualTypeArguments()[0] : returnType;
     }
@@ -99,6 +103,7 @@ public class CacheAction {
                 ? CacheManager.DEFAULT_HASH
                 : environment.getPropertyValue(cached.getHash());
         String key = environment.getPropertyValue(cached.getKey());
+        this.templetKey = key;
         this.dynKey = MultiHashKey.create(paramNames, key);
         this.localExpire = createDuration(cached.getLocalExpire());
         this.remoteExpire = createDuration(cached.getRemoteExpire());

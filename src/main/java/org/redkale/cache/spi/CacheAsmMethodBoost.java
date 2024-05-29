@@ -3,8 +3,6 @@
  */
 package org.redkale.cache.spi;
 
-import static org.redkale.asm.Opcodes.*;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -13,6 +11,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.redkale.asm.AnnotationVisitor;
 import org.redkale.asm.AsmMethodBean;
 import org.redkale.asm.AsmMethodBoost;
@@ -23,6 +23,7 @@ import org.redkale.asm.Handle;
 import org.redkale.asm.Label;
 import org.redkale.asm.MethodVisitor;
 import org.redkale.asm.Opcodes;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.cache.Cached;
 import org.redkale.inject.ResourceFactory;
@@ -38,6 +39,8 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
     private static final java.lang.reflect.Type FUTURE_VOID = new TypeToken<CompletableFuture<Void>>() {}.getType();
 
     private static final List<Class<? extends Annotation>> FILTER_ANN = List.of(Cached.class, DynForCache.class);
+
+    private final Logger logger = Logger.getLogger(getClass().getSimpleName());
 
     private Map<String, CacheAction> actionMap;
 
@@ -227,6 +230,14 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
                             methodBean.fieldNameArray(),
                             method.getName(),
                             dynFieldName);
+                    action.init();
+                    if (action.templetKey.indexOf('{') < 0 && method.getParameterCount() > 0) {
+                        // 一般有参数的方法，Cached.key应该是动态的
+                        logger.log(
+                                Level.WARNING,
+                                method + " has parameters but @" + Cached.class.getSimpleName()
+                                        + ".key not contains parameter");
+                    }
                     actionMap.put(dynFieldName, action);
                 }
             }
@@ -236,7 +247,6 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
                 Field c = clazz.getDeclaredField(field);
                 c.setAccessible(true);
                 resourceFactory.inject(action);
-                action.init();
                 c.set(service, action);
                 RedkaleClassLoader.putReflectionField(clazz.getName(), c);
             } catch (Exception e) {
