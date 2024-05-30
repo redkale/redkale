@@ -174,7 +174,6 @@
                 <artifactId>spotless-maven-plugin</artifactId>
                 <version>${spotless-maven-plugin.version}</version>
                 <configuration>
-                    <lineEndings>WINDOWS</lineEndings>
                     <formats>
                         <format>
                             <includes>
