@@ -19,7 +19,7 @@ public interface CacheKeyGenerator {
     /**
      * 根据service和方法名生成key
      *
-     * @param target service对象
+     * @param target Service对象
      * @param action CacheAction对象
      * @param params 参数值
      * @return key值
