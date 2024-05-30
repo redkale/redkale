@@ -41,7 +41,7 @@ public interface CacheKeyGenerator {
     /**
      * 根据MultiHashKey生成一个CacheKeyGenerator
      * @param key MultiHashKey 不能为空
-     * @return
+     * @return CacheKeyGenerator
      */
     public static CacheKeyGenerator create(MultiHashKey key) {
         Objects.requireNonNull(key);
