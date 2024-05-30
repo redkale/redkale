@@ -46,48 +46,24 @@ public class CacheEntry {
         return key;
     }
 
-    public void setKey(String key) {
-        this.key = key;
-    }
-
     public String getHash() {
         return hash;
-    }
-
-    public void setHash(String hash) {
-        this.hash = hash;
     }
 
     public String getLocalExpire() {
         return localExpire;
     }
 
-    public void setLocalExpire(String localExpire) {
-        this.localExpire = localExpire;
-    }
-
     public String getRemoteExpire() {
         return remoteExpire;
-    }
-
-    public void setRemoteExpire(String remoteExpire) {
-        this.remoteExpire = remoteExpire;
     }
 
     public TimeUnit getTimeUnit() {
         return timeUnit;
     }
 
-    public void setTimeUnit(TimeUnit timeUnit) {
-        this.timeUnit = timeUnit;
-    }
-
     public boolean isNullable() {
         return nullable;
-    }
-
-    public void setNullable(boolean nullable) {
-        this.nullable = nullable;
     }
 
     @Override

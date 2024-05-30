@@ -3,18 +3,26 @@
  */
 package org.redkale.cache.spi;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.ServiceLoader;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 import org.redkale.asm.AsmMethodBoost;
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
 import org.redkale.cache.CacheManager;
+import org.redkale.inject.ResourceFactory;
+import org.redkale.inject.ResourceTypeLoader;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
 import org.redkale.util.InstanceProvider;
 import org.redkale.util.RedkaleClassLoader;
+import org.redkale.util.RedkaleException;
 
 /** @author zhangjx */
 public class CacheModuleEngine extends ModuleEngine {
@@ -70,6 +78,50 @@ public class CacheModuleEngine extends ModuleEngine {
             }
         }
         this.resourceFactory.register("", CacheManager.class, this.cacheManager);
+        ConcurrentHashMap<String, CacheKeyGenerator> generatorMap = new ConcurrentHashMap<>();
+        this.resourceFactory.register(new ResourceTypeLoader() {
+
+            @Override
+            public Object load(
+                    ResourceFactory rf,
+                    String srcResourceName,
+                    Object srcObj,
+                    String resourceName,
+                    Field field,
+                    Object attachment) {
+                try {
+                    CacheKeyGenerator generator = rf.find(resourceName, CacheKeyGenerator.class);
+                    if (generator == null) {
+                        return generator;
+                    }
+                    generator = generatorMap.computeIfAbsent(resourceName, n -> {
+                        for (CacheKeyGenerator instance :
+                                ServiceLoader.load(CacheKeyGenerator.class, application.getClassLoader())) {
+                            if (Objects.equals(n, instance.name())) {
+                                rf.inject(instance);
+                                if (instance instanceof Service) {
+                                    ((Service) instance).init(null);
+                                }
+                                return instance;
+                            }
+                        }
+                        return null;
+                    });
+                    if (generator != null) {
+                        rf.register(resourceName, CacheKeyGenerator.class, generator);
+                    }
+                    return generator;
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, CacheKeyGenerator.class.getSimpleName() + " inject error", e);
+                    throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
+                }
+            }
+
+            @Override
+            public Type resourceType() {
+                return CacheKeyGenerator.class;
+            }
+        });
     }
 
     /** 进入Application.shutdown方法被调用 */

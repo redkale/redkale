@@ -169,13 +169,7 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
             mv.visitMaxs(20, 20);
             mv.visitEnd();
             CacheAction action = new CacheAction(
-                    new CacheEntry(cached),
-                    method.getGenericReturnType(),
-                    serviceType,
-                    method.getParameterTypes(),
-                    methodBean.fieldNameArray(),
-                    method.getName(),
-                    dynFieldName);
+                    new CacheEntry(cached), method, serviceType, methodBean.fieldNameArray(), dynFieldName);
             actions.put(dynFieldName, action);
         }
         { // ThrowSupplier
@@ -223,27 +217,24 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
                     String dynFieldName = cached.dynField();
                     AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
                     CacheAction action = new CacheAction(
-                            new CacheEntry(cached),
-                            method.getGenericReturnType(),
-                            serviceType,
-                            method.getParameterTypes(),
-                            methodBean.fieldNameArray(),
-                            method.getName(),
-                            dynFieldName);
-                    action.init();
-                    if (action.templetKey.indexOf('{') < 0 && method.getParameterCount() > 0) {
-                        // 一般有参数的方法，Cached.key应该是动态的
-                        logger.log(
-                                Level.WARNING,
-                                method + " has parameters but @" + Cached.class.getSimpleName()
-                                        + ".key not contains parameter");
-                    }
+                            new CacheEntry(cached), method, serviceType, methodBean.fieldNameArray(), dynFieldName);
                     actionMap.put(dynFieldName, action);
                 }
             }
         }
         actionMap.forEach((field, action) -> {
             try {
+                resourceFactory.inject(action);
+                action.init(resourceFactory, service);
+                if (action.templetKey.indexOf('@') < 0
+                        && action.templetKey.indexOf('{') < 0
+                        && action.getMethod().getParameterCount() > 0) {
+                    // 一般有参数的方法，Cached.key应该是动态的
+                    logger.log(
+                            Level.WARNING,
+                            action.getMethod() + " has parameters but @" + Cached.class.getSimpleName()
+                                    + ".key not contains parameter");
+                }
                 Field c = clazz.getDeclaredField(field);
                 c.setAccessible(true);
                 resourceFactory.inject(action);

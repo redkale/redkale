@@ -3,18 +3,20 @@
  */
 package org.redkale.cache;
 
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import java.lang.annotation.Documented;
+import static java.lang.annotation.ElementType.METHOD;
 import java.lang.annotation.Retention;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Target;
 import java.util.concurrent.TimeUnit;
 import org.redkale.service.LoadMode;
 
 /**
  * 标记在Service的缓存接口, 方法有以下限制: <br>
- * 1、方法返回类型不能是void/CompletableFuture&#60;Void&#62; 2、方法返回类型必须可json序列化 3、方法必须是protected/public 4、方法不能是final/static
+ * 1、方法返回类型不能是void/CompletableFuture&#60;Void&#62;  <br>
+ * 2、方法返回类型必须可json序列化  <br>
+ * 3、方法必须是protected/public  <br>
+ * 4、方法不能是final/static <br>
  *
  * @since 2.8.0
  */
@@ -24,7 +26,10 @@ import org.redkale.service.LoadMode;
 public @interface Cached {
 
     /**
-     * 缓存的key，支持参数动态组合，比如"key_#{id}"
+     * 缓存的key，支持参数动态组合，比如"key_#{id}" <br>
+     * '@'开头的key值视为CacheKeyGenerator对象名称 <br>
+     *
+     * @see org.redkale.cache.spi.CacheKeyGenerator#name()
      *
      * @return 键
      */

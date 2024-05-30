@@ -3,6 +3,7 @@
  */
 package org.redkale.cache.spi;
 
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.time.Duration;
@@ -13,6 +14,7 @@ import org.redkale.annotation.Nullable;
 import org.redkale.annotation.Resource;
 import org.redkale.cache.CacheManager;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.inject.ResourceFactory;
 import org.redkale.util.Environment;
 import org.redkale.util.MultiHashKey;
 import org.redkale.util.ThrowSupplier;
@@ -37,6 +39,8 @@ public class CacheAction {
 
     private final CacheEntry cached;
 
+    private final Method method;
+
     // Supplier对象的类型
     private final Type resultType;
 
@@ -55,10 +59,6 @@ public class CacheAction {
     // 获取动态的字段名
     private final String fieldName;
 
-    // 方法参数类型
-    @Nullable
-    private final Class[] paramTypes;
-
     // 方法参数名
     @Nullable
     private final String[] paramNames;
@@ -69,8 +69,11 @@ public class CacheAction {
     // 模板key
     String templetKey;
 
-    // 缓存的key
-    private MultiHashKey dynKey;
+    // 缓存key生成器
+    private CacheKeyGenerator keyGenerator;
+
+    // 父对象
+    private Object service;
 
     // 本地缓存过期时长，Duration.ZERO为永不过期，为null表示不本地缓存
     private Duration localExpire;
@@ -78,34 +81,33 @@ public class CacheAction {
     // 远程缓存过期时长，Duration.ZERO为永不过期，为null表示不远程缓存
     private Duration remoteExpire;
 
-    CacheAction(
-            CacheEntry cached,
-            Type returnType,
-            Class serviceClass,
-            Class[] paramTypes,
-            String[] paramNames,
-            String methodName,
-            String fieldName) {
+    CacheAction(CacheEntry cached, Method method, Class serviceClass, String[] paramNames, String fieldName) {
         this.cached = cached;
+        this.method = method;
         this.nullable = cached.isNullable();
         this.serviceClass = Objects.requireNonNull(serviceClass);
-        this.paramTypes = paramTypes;
         this.paramNames = paramNames;
-        this.methodName = Objects.requireNonNull(methodName);
+        this.methodName = method.getName();
         this.fieldName = Objects.requireNonNull(fieldName);
         this.templetKey = cached.getKey();
+        Type returnType = method.getGenericReturnType();
         this.async = CompletableFuture.class.isAssignableFrom(TypeToken.typeToClass(returnType));
         this.resultType = this.async ? ((ParameterizedType) returnType).getActualTypeArguments()[0] : returnType;
     }
 
-    void init() {
+    void init(ResourceFactory resourceFactory, Object service) {
         this.hash = cached.getHash().trim().isEmpty() || CacheManager.DEFAULT_HASH.equals(cached.getHash())
                 ? CacheManager.DEFAULT_HASH
                 : environment.getPropertyValue(cached.getHash());
         String key = environment.getPropertyValue(cached.getKey());
         this.templetKey = key;
-        this.dynKey = MultiHashKey.create(paramNames, key);
-        this.localExpire = createDuration(cached.getLocalExpire());
+        if (key.startsWith("@")) { // 动态加载缓存key生成器
+            String generatorName = key.substring(1);
+            this.keyGenerator = resourceFactory.findChild(generatorName, CacheKeyGenerator.class);
+        } else {
+            MultiHashKey dynKey = MultiHashKey.create(paramNames, key);
+            this.keyGenerator = (t, a, args) -> dynKey.keyFor(args);
+        }
         this.remoteExpire = createDuration(cached.getRemoteExpire());
     }
 
@@ -114,10 +116,22 @@ public class CacheAction {
         if (async) {
             ThrowSupplier supplier0 = supplier;
             return (T) manager.bothGetSetAsync(
-                    hash, dynKey.keyFor(args), resultType, nullable, localExpire, remoteExpire, supplier0);
+                    hash,
+                    keyGenerator.generate(service, this, args),
+                    resultType,
+                    nullable,
+                    localExpire,
+                    remoteExpire,
+                    supplier0);
         } else {
             return manager.bothGetSet(
-                    hash, dynKey.keyFor(args), resultType, nullable, localExpire, remoteExpire, supplier);
+                    hash,
+                    keyGenerator.generate(service, this, args),
+                    resultType,
+                    nullable,
+                    localExpire,
+                    remoteExpire,
+                    supplier);
         }
     }
 
@@ -146,14 +160,23 @@ public class CacheAction {
         }
     }
 
+    public CacheEntry getCached() {
+        return cached;
+    }
+
+    public Method getMethod() {
+        return method;
+    }
+
     @Override
     public String toString() {
         return "{"
                 + "\"serviceClass\":" + serviceClass.getName()
                 + ",\"methodName\":\"" + methodName + "\""
                 + ",\"fieldName\":\"" + fieldName + "\""
-                + ",\"paramTypes\":" + JsonConvert.root().convertTo(paramTypes)
+                + ",\"paramTypes\":" + JsonConvert.root().convertTo(method.getParameterTypes())
                 + ",\"paramNames\":" + JsonConvert.root().convertTo(paramNames)
+                + ",\"templetKey\":\"" + templetKey + "\""
                 + ",\"resultType\":\"" + resultType + "\""
                 + ",\"cache\":" + cached
                 + "}";
