@@ -106,7 +106,7 @@ public class CacheAction {
             this.keyGenerator = resourceFactory.findChild(generatorName, CacheKeyGenerator.class);
         } else {
             MultiHashKey dynKey = MultiHashKey.create(paramNames, key);
-            this.keyGenerator = (t, a, args) -> dynKey.keyFor(args);
+            this.keyGenerator = CacheKeyGenerator.create(dynKey);
         }
         this.remoteExpire = createDuration(cached.getRemoteExpire());
     }

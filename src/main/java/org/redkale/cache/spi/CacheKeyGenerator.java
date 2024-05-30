@@ -4,6 +4,9 @@
 
 package org.redkale.cache.spi;
 
+import java.util.Objects;
+import org.redkale.util.MultiHashKey;
+
 /**
  * 缓存key生成器
  *
@@ -33,7 +36,25 @@ public interface CacheKeyGenerator {
      *
      * @return  name
      */
-    default String name() {
-        return "";
+    public String name();
+
+    /**
+     * 根据MultiHashKey生成一个CacheKeyGenerator
+     * @param key MultiHashKey
+     * @return
+     */
+    public static CacheKeyGenerator create(MultiHashKey key) {
+        Objects.requireNonNull(key);
+        return new CacheKeyGenerator() {
+            @Override
+            public String generate(Object target, CacheAction action, Object... params) {
+                return key.keyFor(params);
+            }
+
+            @Override
+            public String name() {
+                return "";
+            }
+        };
     }
 }
