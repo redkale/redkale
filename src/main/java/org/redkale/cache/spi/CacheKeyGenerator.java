@@ -40,7 +40,7 @@ public interface CacheKeyGenerator {
 
     /**
      * 根据MultiHashKey生成一个CacheKeyGenerator
-     * @param key MultiHashKey
+     * @param key MultiHashKey 不能为空
      * @return
      */
     public static CacheKeyGenerator create(MultiHashKey key) {
