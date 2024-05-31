@@ -172,7 +172,7 @@
                             <goal>sign</goal>
                         </goals>
                         <configuration>
-                            <bestPractices>true</bestPractices>
+                            <!--<bestPractices>true</bestPractices>-->
                         </configuration>
                     </execution>
                 </executions>
