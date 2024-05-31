@@ -23,12 +23,11 @@ jobs:
         server-id: ossrh 
         server-username: MAVEN_USERNAME
         server-password: MAVEN_PASSWORD
-        gpg-passphrase2: MAVEN_GPG_PASSPHRASE
-        gpg-private-key2: ${{ secrets.OSSRH_GPG_SECRET_KEY }}
+        gpg-passphrase: MAVEN_GPG_PASSPHRASE
+        gpg-private-key: ${{ secrets.OSSRH_GPG_SECRET_KEY }}
       env:
         MAVEN_USERNAME: ${{ secrets.OSSRHUSERNAME }}
         MAVEN_PASSWORD: ${{ secrets.OSSRHPASSWORD }}
-        MAVEN_GPG_KEY: ${{ secrets.OSSRH_GPG_KEY }}
         MAVEN_GPG_PASSPHRASE: ${{ secrets.OSSRH_GPG_SECRET_PASSWORD }}
     - name: debug env
       run: env
