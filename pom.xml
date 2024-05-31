@@ -17,7 +17,7 @@
         
         <junit.version>5.9.0</junit.version>
         <maven-jar-plugin.version>3.4.0</maven-jar-plugin.version>
-        <maven-gpg-plugin.version>3.2.4</maven-gpg-plugin.version>
+        <maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
         <maven-source-plugin.version>3.2.0</maven-source-plugin.version>
         <maven-assembly-plugin.version>3.7.0</maven-assembly-plugin.version>
         <nexus-staging-plugin.version>1.7.0</nexus-staging-plugin.version>
