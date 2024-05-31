@@ -21,10 +21,13 @@ jobs:
         distribution: 'temurin'
         cache: maven
         server-id: ossrh 
-        server-username: ${{ secrets.OSSRHUSERNAME }}
-        server-password: ${{ secrets.OSSRHPASSWORD }}
+        server-username: MAVEN_USERNAME
+        server-password: MAVEN_PASSWORD
         gpg-private-key: ${{ secrets.OSSRH_GPG_SECRET_KEY }}
         gpg-passphrase: ${{ secrets.OSSRH_GPG_SECRET_PASSWORD }}
+      env:
+        MAVEN_USERNAME: ${{ secrets.OSSRHUSERNAME }}
+        MAVEN_PASSWORD: ${{ secrets.OSSRHPASSWORD }}
     - name: debug settings.xml
       run: cat /home/runner/.m2/settings.xml
     - name: Check if secret exists
