@@ -25,5 +25,9 @@ jobs:
         server-password: ${{ secrets.OSSRHPASSWORD }}
         gpg-private-key: ${{ secrets.OSSRH_GPG_SECRET_KEY }}
         gpg-passphrase: ${{ secrets.OSSRH_GPG_SECRET_PASSWORD }}
+    - name: Show the Gpg
+      run: gpg --list-secret-keys
+    - name: Detail the Gpg
+      run: tail -n100 /tmp/private-key.asc
     - name: Build with Maven
       run: mvn --batch-mode clean deploy -DskipTests=true
