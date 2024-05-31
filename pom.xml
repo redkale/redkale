@@ -172,7 +172,7 @@
                             <goal>sign</goal>
                         </goals>
                         <configuration>
-                            <!--<bestPractices>true</bestPractices>-->
+                            <keyname>CD4C40E804D972E2569BF61A4E3BD7A9E43CC39E</keyname>
                         </configuration>
                     </execution>
                 </executions>
