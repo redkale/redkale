@@ -33,7 +33,5 @@ jobs:
       run: cat /home/runner/.m2/settings.xml
     - name: Show the Gpg
       run: gpg --list-secret-keys
-    - name: Detail the Gpg
-      run: tail -n100 /home/runner/tmp/private-key.asc
     - name: Build with Maven
       run: mvn --batch-mode clean deploy -DskipTests=true
