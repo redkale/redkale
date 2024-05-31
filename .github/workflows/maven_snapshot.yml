@@ -23,19 +23,14 @@ jobs:
         server-id: ossrh 
         server-username: MAVEN_USERNAME
         server-password: MAVEN_PASSWORD
+        gpg-passphrase: GPG_PASSPHRASE
         gpg-private-key: ${{ secrets.OSSRH_GPG_SECRET_KEY }}
-        gpg-passphrase: ${{ secrets.OSSRH_GPG_SECRET_PASSWORD }}
       env:
         MAVEN_USERNAME: ${{ secrets.OSSRHUSERNAME }}
         MAVEN_PASSWORD: ${{ secrets.OSSRHPASSWORD }}
+        GPG_PASSPHRASE: ${{ secrets.OSSRH_GPG_SECRET_PASSWORD }}
     - name: debug settings.xml
       run: cat /home/runner/.m2/settings.xml
-    - name: Check if secret exists
-      run: |
-        if [[ -z "${{ secrets.OSSRH_GPG_SECRET_KEY }}" ]]; then
-          echo "Secret does not exist"
-        else
-          echo "Secret exists"
     - name: Show the Gpg
       run: gpg --list-secret-keys
     - name: Detail the Gpg
