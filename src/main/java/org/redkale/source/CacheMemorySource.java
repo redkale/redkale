@@ -475,7 +475,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         if (keyVals.length % 2 != 0) {
             throw new SourceException("key value must be paired");
         }
-        return msetnx(Utility.ofMap(keyVals));
+        return msetnx(Utility.ofMap((Object[]) keyVals));
     }
 
     @Override

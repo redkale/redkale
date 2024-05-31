@@ -4,8 +4,6 @@
  */
 package org.redkale.util;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import java.io.*;
 import java.lang.invoke.*;
 import java.lang.reflect.*;
@@ -15,6 +13,7 @@ import java.net.http.HttpClient;
 import java.nio.*;
 import java.nio.channels.CompletionHandler;
 import java.nio.charset.*;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import java.security.*;
 import java.time.*;
 import java.util.*;
@@ -1532,21 +1531,6 @@ public final class Utility {
             Collections.reverse(list);
         }
         return list;
-    }
-
-    /**
-     * 将多个key:value的字符串键值对组合成一个Map，items长度必须是偶数, 参数个数若是奇数的话，最后一个会被忽略 类似 JDK9中的 Map.of 方法
-     *
-     * @param items 键值对
-     * @return Map
-     */
-    public static HashMap<String, String> ofMap(String... items) {
-        HashMap<String, String> map = new LinkedHashMap<>(Math.max(1, items.length / 2));
-        int len = items.length / 2;
-        for (int i = 0; i < len; i++) {
-            map.put(items[i * 2], items[i * 2 + 1]);
-        }
-        return map;
     }
 
     /**

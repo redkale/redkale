@@ -149,10 +149,6 @@ public class RetResult<T> implements Serializable {
         }
     }
 
-    public static RetResult<Map<String, String>> map(String... items) {
-        return new RetResult(Utility.ofMap(items));
-    }
-
     public static <K, V> RetResult<Map<K, V>> map(Object... items) {
         return new RetResult(Utility.ofMap(items));
     }
