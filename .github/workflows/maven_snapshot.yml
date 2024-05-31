@@ -26,4 +26,4 @@ jobs:
         gpg-private-key: ${{ secrets.OSSRH_GPG_SECRET_KEY }}
         gpg-passphrase: ${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}
     - name: Build with Maven
-      run: mvn --batch-mode clean deploy -P central-deploy -DskipTests=true
+      run: mvn --batch-mode clean deploy
