@@ -171,6 +171,9 @@
                         <goals>
                             <goal>sign</goal>
                         </goals>
+                        <configuration>
+                            <bestPractices>true</bestPractices>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
