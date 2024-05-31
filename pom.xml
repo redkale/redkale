@@ -79,11 +79,11 @@
 
     <distributionManagement>
         <repository>
-            <id>sonatype-nexus-staging</id>
+            <id>ossrh</id>
             <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
         <snapshotRepository>
-            <id>sonatype-nexus-snapshots</id>
+            <id>ossrh</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
@@ -93,7 +93,12 @@
         <connection>scm:git:git@github.com/redkale/redkale.git</connection>
         <developerConnection>scm:git:git@github.com:redkale/redkale.git</developerConnection>
     </scm>
-
+    
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/redkale/redkale/issues</url>
+    </issueManagement>
+    
     <build>
         <plugins>
 
@@ -200,6 +205,18 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.13</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
             </plugin>
             
             <plugin>

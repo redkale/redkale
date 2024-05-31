@@ -20,11 +20,13 @@ jobs:
         java-version: ${{ matrix.java }}
         distribution: 'temurin'
         cache: maven
-        server-id: sonatype-nexus-snapshots 
-        server-username: MAVEN_USERNAME
-        server-password: MAVEN_PASSWORD
+        server-id: ossrh 
+        server-username: ${{ secrets.OSSRHUSERNAME }}
+        server-password: ${{ secrets.OSSRHPASSWORD }}
+    - id: install-secret-key
+      name: Install gpg secret key
+      run: |
+        cat <(echo -e "${{ secrets.OSSRH_GPG_SECRET_KEY }}") | gpg --batch --import
+        gpg --list-secret-keys --keyid-format LONG
     - name: Build with Maven
-      run: mvn -B deploy --file pom.xml -DdisableXmlReport=true -Djacoco.skip=true -Dpmd.skip=true
-      env:
-        MAVEN_USERNAME: ${{ secrets.OSSRHUSERNAME }}
-        MAVEN_PASSWORD: ${{ secrets.OSSRHPASSWORD }}
+      run: mvn --batch-mode -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }} clean deploy
