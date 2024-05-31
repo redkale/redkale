@@ -24,7 +24,7 @@ jobs:
         server-username: MAVEN_USERNAME
         server-password: MAVEN_PASSWORD
         gpg-passphrase: MAVEN_GPG_PASSPHRASE
-        gpg-private-key: ${{ secrets.OSSRH_GPG_KEY }}
+        gpg-private-ke: ${{ secrets.OSSRH_GPG_KEY }}
       env:
         MAVEN_USERNAME: ${{ secrets.OSSRHUSERNAME }}
         MAVEN_PASSWORD: ${{ secrets.OSSRHPASSWORD }}
