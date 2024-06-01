@@ -141,7 +141,7 @@ public abstract class Writer {
     public void writeObjectField(final EnMember member, Object obj) {
         Object value;
         if (objFieldFunc == null) {
-            value = member.attribute.get(obj);
+            value = member.getFieldValue(obj);
         } else {
             value = objFieldFunc.apply(member.attribute, obj);
         }

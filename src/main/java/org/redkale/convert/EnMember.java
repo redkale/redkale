@@ -106,6 +106,10 @@ public final class EnMember<W extends Writer, T, F> {
         return new EnMember<>(attribute, factory.loadEncoder(fieldtype), null, null);
     }
 
+    public F getFieldValue(T obj) {
+        return attribute.get(obj);
+    }
+
     public final boolean accepts(String name) {
         return attribute.field().equals(name);
     }

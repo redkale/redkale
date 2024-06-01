@@ -29,5 +29,6 @@ jobs:
     - name: Build with Maven
       run: mvn --batch-mode -e -X clean deploy -DskipTests=true
       env:
-        MAVEN_GPG_KEY: aaaaaa
+        MAVEN_GPG_KEY: ${{ secrets.OSSRHGPGKEY }}
         MAVEN_GPG_PASSPHRASE: ${{ secrets.OSSRHGPGPASSWORD }}
+        MAVEN_GPG_KEY_FINGERPRINT: CD4C40E804D972E2569BF61A4E3BD7A9E43CC39E

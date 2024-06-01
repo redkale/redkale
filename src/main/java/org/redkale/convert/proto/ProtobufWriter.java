@@ -414,7 +414,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     public void writeObjectField(final EnMember member, Object obj) {
         Object value;
         if (objFieldFunc == null) {
-            value = member.getAttribute().get(obj);
+            value = member.getFieldValue(obj);
         } else {
             value = objFieldFunc.apply(member.getAttribute(), obj);
         }
