@@ -26,8 +26,8 @@ jobs:
       env:
         MAVEN_USERNAME: ${{ secrets.OSSRHUSERNAME }}
         MAVEN_PASSWORD: ${{ secrets.OSSRHPASSWORD }}
-        MAVEN_GPG_KEY: ${{ secrets.OSSRH_GPG_SECRET_KEY }}
-        MAVEN_GPG_PASSPHRASE: ${{ secrets.OSSRH_GPG_SECRET_PASSWORD }}
+        MAVEN_GPG_KEY: ${{ secrets.OSSRHGPGKEY }}
+        MAVEN_GPG_PASSPHRASE: ${{ secrets.OSSRHGPGPASSWORD }}
     - name: debug env
       run: env
     - name: Build with Maven
@@ -35,5 +35,5 @@ jobs:
         env
         mvn --batch-mode -e -X clean deploy -DskipTests=true
       env:
-        MAVEN_GPG_KEY: ${{ secrets.OSSRH_GPG_SECRET_KEY }}
-        MAVEN_GPG_PASSPHRASE: ${{ secrets.OSSRH_GPG_SECRET_PASSWORD }}
+        MAVEN_GPG_KEY: ${{ secrets.OSSRHGPGKEY }}
+        MAVEN_GPG_PASSPHRASE: ${{ secrets.OSSRHGPGPASSWORD }}
