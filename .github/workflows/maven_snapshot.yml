@@ -25,6 +25,8 @@ jobs:
       env:
         MAVEN_USERNAME: ${{ secrets.OSSRHUSERNAME }}
         MAVEN_PASSWORD: ${{ secrets.OSSRHPASSWORD }}
+        MAVEN_GPG_KEY: ${{ secrets.OSSRH_GPG_SECRET_KEY }}
+        MAVEN_GPG_PASSPHRASE: ${{ secrets.OSSRH_GPG_SECRET_PASSWORD }}
     - name: debug env
       run: env
     - name: Build with Maven
