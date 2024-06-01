@@ -35,5 +35,6 @@ jobs:
         env
         mvn --batch-mode -e -X clean deploy -DskipTests=true
       env:
+        MAVEN_USERNAME: ${{ secrets.OSSRHUSERNAME }}
         MAVEN_GPG_KEY: ${{ secrets.OSSRHGPGKEY }}
         MAVEN_GPG_PASSPHRASE: ${{ secrets.OSSRHGPGPASSWORD }}
