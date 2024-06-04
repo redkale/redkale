@@ -8,7 +8,6 @@ import org.junit.jupiter.api.*;
 import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.ConvertColumnTransfer;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.util.Attribute;
 
 /**
  *
@@ -61,7 +60,7 @@ public class ConvertTransferTest {
     public static class ParamTransfer implements ConvertColumnTransfer<String> {
 
         @Override
-        public Object transfer(Object obj, Attribute attribute, String value) {
+        public Object transfer(Object obj, String field, String value) {
             if (value == null || value.length() < 5) {
                 return value;
             } else {

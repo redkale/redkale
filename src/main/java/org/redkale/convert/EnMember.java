@@ -107,7 +107,7 @@ public final class EnMember<W extends Writer, T, F> {
     public Object getFieldValue(T obj) {
         F val = attribute.get(obj);
         if (transfer != null) {
-            return transfer.transfer(obj, attribute, val);
+            return transfer.transfer(obj, attribute.field(), val);
         } else {
             return val;
         }
