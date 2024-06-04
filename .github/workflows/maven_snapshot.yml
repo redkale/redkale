@@ -27,7 +27,9 @@ jobs:
         MAVEN_USERNAME: ${{ secrets.OSSRHUSERNAME }}
         MAVEN_PASSWORD: ${{ secrets.OSSRHPASSWORD }}
     - name: Build with Maven
-      run: mvn --batch-mode -e -X clean deploy -DskipTests=true
+      run: |
+        copy my/pom.xml pom.xml
+        mvn --batch-mode -e -X clean deploy -DskipTests=true
       env:
         MAVEN_GPG_KEY: ${{ secrets.OSSRHGPGKEY }}
         MAVEN_GPG_PASSPHRASE: ${{ secrets.OSSRHGPGPASSWORD }}
