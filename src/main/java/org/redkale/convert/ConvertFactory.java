@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.*;
 import org.redkale.annotation.ConstructorParameters;
@@ -59,6 +60,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     private final ConcurrentHashMap<AccessibleObject, ConvertColumnEntry> columnEntrys = new ConcurrentHashMap();
 
+    private final ConcurrentHashMap<Class, ConvertColumnTransfer> transfers = new ConcurrentHashMap();
+
     private final Set<Class> skipIgnores = new HashSet();
 
     final Set<String> ignoreMapColumns = new HashSet();
@@ -69,6 +72,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
     private final ConcurrentHashMap<Class, Set<String>> ignoreAlls = new ConcurrentHashMap();
 
     private boolean skipAllIgnore = false;
+
+    private Consumer<ConvertColumnTransfer> transferConsumer;
 
     protected ConvertFactory(ConvertFactory<R, W> parent, int features) {
         this.features = features;
@@ -445,7 +450,24 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                         return new ConvertColumnEntry(realName, true);
                     }
                 }
-                ConvertColumnEntry entry = new ConvertColumnEntry(ref);
+                ConvertColumnTransfer transfer = null;
+                Class<? extends ConvertColumnTransfer> transferClass = ref.tranfer();
+                if (transferClass != ConvertColumnTransfer.class) {
+                    transfer = findTransfer(transferClass);
+                    if (transfer == null) {
+                        try {
+                            transfer = transferClass.getConstructor().newInstance();
+                        } catch (Exception e) {
+                            throw new ConvertException(e);
+                        }
+                        Consumer<ConvertColumnTransfer> consumer = findTransferConsumer();
+                        if (consumer != null) {
+                            consumer.accept(transfer);
+                        }
+                        register((Class) transferClass, transfer);
+                    }
+                }
+                ConvertColumnEntry entry = new ConvertColumnEntry(ref, transfer);
                 if (skipAllIgnore) {
                     entry.setIgnore(false);
                     return entry;
@@ -868,9 +890,25 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return child;
     }
 
+    private Consumer<ConvertColumnTransfer> findTransferConsumer() {
+        if (transferConsumer != null) {
+            return transferConsumer;
+        }
+        return parent == null ? null : parent.findTransferConsumer();
+    }
+
     private Class findEntityAlias(String name) {
         Class clazz = entitys.get(name);
         return parent == null ? clazz : parent.findEntityAlias(name);
+    }
+
+    /**
+     * 设置ConvertColumnTransfer初始化的处理函数
+     *
+     * @param consumer ConvertColumnTransfer处理函数
+     */
+    public final void registerTransferConsumer(Consumer<ConvertColumnTransfer> consumer) {
+        this.transferConsumer = consumer;
     }
 
     /**
@@ -922,9 +960,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             ignoreMapColumnLock.lock();
             try {
                 if (ignore) {
-                    for (String column : columns) {
-                        ignoreMapColumns.add(column);
-                    }
+                    ignoreMapColumns.addAll(List.of(columns));
                 } else {
                     for (String column : columns) {
                         ignoreMapColumns.remove(column);
@@ -945,9 +981,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             ignoreMapColumnLock.lock();
             try {
                 if (ignore) {
-                    for (String column : columns) {
-                        ignoreMapColumns.add(column);
-                    }
+                    ignoreMapColumns.addAll(columns);
                 } else {
                     for (String column : columns) {
                         ignoreMapColumns.remove(column);
@@ -1007,7 +1041,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return field == null || register(field, entry);
     }
 
-    public final <E> boolean register(final AccessibleObject field, final ConvertColumnEntry entry) {
+    public final boolean register(final AccessibleObject field, final ConvertColumnEntry entry) {
         if (field == null || entry == null) {
             return false;
         }
@@ -1048,9 +1082,21 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return result;
     }
 
+    public final <C extends ConvertColumnTransfer> ConvertColumnTransfer findTransfer(Class<C> type) {
+        ConvertColumnTransfer transfer = transfers.get(type);
+        if (transfer != null) {
+            return transfer;
+        }
+        return this.parent == null ? null : this.parent.findTransfer(type);
+    }
+
     // ----------------------------------------------------------------------
     public final <E> Encodeable<W, E> getAnyEncoder() {
         return (Encodeable<W, E>) anyEncoder;
+    }
+
+    public final <C extends ConvertColumnTransfer> void register(final Class<C> clazz, final C transfer) {
+        transfers.put(Objects.requireNonNull(clazz), Objects.requireNonNull(transfer));
     }
 
     public final <E> void register(final Type clazz, final SimpledCoder<R, W, E> coder) {

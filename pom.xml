@@ -173,9 +173,6 @@
                         </goals>
                         <configuration>
                             <signer>bc</signer>
-                            <useAgent>false</useAgent>
-                            <defaultKeyring>false</defaultKeyring>
-                            <bestPractices>true</bestPractices>
                         </configuration>
                     </execution>
                 </executions>

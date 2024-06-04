@@ -22,14 +22,17 @@ public final class ConvertColumnEntry {
 
     private ConvertType convertType;
 
+    private ConvertColumnTransfer transfer;
+
     public ConvertColumnEntry() {}
 
-    public ConvertColumnEntry(ConvertColumn column) {
+    public ConvertColumnEntry(ConvertColumn column, ConvertColumnTransfer transfer) {
         if (column == null) return;
         this.name = column.name();
         this.index = column.index();
         this.ignore = column.ignore();
         this.convertType = column.type();
+        this.transfer = transfer;
     }
 
     public ConvertColumnEntry(String name) {
@@ -53,6 +56,19 @@ public final class ConvertColumnEntry {
         this.index = index;
         this.ignore = ignore;
         this.convertType = convertType;
+    }
+
+    public ConvertColumnEntry(
+            String name, int index, boolean ignore, ConvertType convertType, ConvertColumnTransfer transfer) {
+        this.name = name;
+        this.index = index;
+        this.ignore = ignore;
+        this.convertType = convertType;
+        this.transfer = transfer;
+    }
+
+    public ConvertColumnTransfer transfer() {
+        return transfer;
     }
 
     public String name() {
@@ -89,7 +105,11 @@ public final class ConvertColumnEntry {
 
     @Override
     public String toString() {
-        return "ConvertColumnEntry{" + "index=" + index + ", name=" + name + ", ignore=" + ignore + ", convertType="
-                + convertType + '}';
+        return "ConvertColumnEntry{"
+                + "index=" + index
+                + ", name=" + name
+                + ", ignore=" + ignore
+                + ", convertType=" + convertType
+                + '}';
     }
 }

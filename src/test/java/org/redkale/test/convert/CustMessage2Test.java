@@ -77,14 +77,14 @@ public class CustMessage2Test {
                 protected void afterInitEnMember(ConvertFactory factory) {
                     Function func1 = t -> eventName;
                     Attribute attribute1 = Attribute.create(clazz, "event", String.class, func1, null);
-                    EnMember member1 = new EnMember(attribute1, factory.loadEncoder(String.class), null, null);
+                    EnMember member1 = new EnMember(attribute1, factory.loadEncoder(String.class), null, null, null);
                     setIndex(member1, 1);
                     setPosition(member1, 1);
                     initForEachEnMember(factory, member1);
 
                     Function func2 = t -> t;
                     Attribute attribute2 = Attribute.create(clazz, "result", clazz, func2, null);
-                    EnMember member2 = new EnMember(attribute2, valEncoder, null, null);
+                    EnMember member2 = new EnMember(attribute2, valEncoder, null, null, null);
                     setIndex(member2, 2);
                     setPosition(member2, 2);
                     initForEachEnMember(factory, member2);

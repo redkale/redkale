@@ -5,13 +5,12 @@
  */
 package org.redkale.convert.json;
 
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
-
 import java.lang.reflect.*;
 import java.lang.reflect.Type;
 import java.util.*;
 import org.redkale.asm.*;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.convert.*;
 import org.redkale.convert.ext.*;
 import org.redkale.util.*;
@@ -257,6 +256,9 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 ref = factory.findRef(clazz, method);
                 if (ref != null && ref.ignore()) {
                     continue;
+                }
+                if (ref != null && ref.transfer() != null) {
+                    return null;
                 }
                 if (!(checkMemberType(factory, clazz, method.getGenericReturnType(), method.getReturnType()))) {
                     return null;

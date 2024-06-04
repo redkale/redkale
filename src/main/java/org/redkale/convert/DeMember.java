@@ -7,7 +7,6 @@ package org.redkale.convert;
 
 import java.lang.reflect.*;
 import org.redkale.annotation.Comment;
-import org.redkale.persistence.Column;
 import org.redkale.util.Attribute;
 
 /**
@@ -45,20 +44,10 @@ public final class DeMember<R extends Reader, T, F> {
         this.method = method;
         if (field != null) {
             Comment ct = field.getAnnotation(Comment.class);
-            if (ct == null) {
-                Column col = field.getAnnotation(Column.class);
-                this.comment = col == null ? "" : col.comment();
-            } else {
-                this.comment = ct.value();
-            }
+            this.comment = ct == null ? "" : ct.value();
         } else if (method != null) {
             Comment ct = method.getAnnotation(Comment.class);
-            if (ct == null) {
-                Column col = method.getAnnotation(Column.class);
-                this.comment = col == null ? "" : col.comment();
-            } else {
-                this.comment = ct.value();
-            }
+            this.comment = ct == null ? "" : ct.value();
         } else {
             this.comment = "";
         }

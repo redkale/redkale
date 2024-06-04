@@ -106,7 +106,11 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                         fieldCoder = colFactory.loadEncoder(t);
                     }
                     EnMember member = new EnMember(
-                            createAttribute(colFactory, type, clazz, field, null, null), fieldCoder, field, null);
+                            createAttribute(colFactory, type, clazz, field, null, null),
+                            fieldCoder,
+                            field,
+                            null,
+                            ref == null ? null : ref.transfer());
                     if (ref != null) {
                         member.index = ref.getIndex();
                     }
@@ -189,7 +193,8 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                             createAttribute(colFactory, type, clazz, null, method, null),
                             fieldCoder,
                             maybeField,
-                            method);
+                            method,
+                            ref == null ? null : ref.transfer());
                     if (Utility.contains(list, m -> m.attribute.field().equals(member.attribute.field()))) {
                         continue;
                     }
@@ -214,7 +219,11 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                             // Type t = TypeToken.createClassType(f.getGenericType(), this.type);
                             try {
                                 EnMember member = new EnMember(
-                                        createAttribute(factory, type, clazz, f, null, null), null, f, null);
+                                        createAttribute(factory, type, clazz, f, null, null),
+                                        null,
+                                        f,
+                                        null,
+                                        ref2 == null ? null : ref2.transfer());
                                 if (ref2 != null) {
                                     member.index = ref2.getIndex();
                                 }
@@ -238,7 +247,11 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                             // this.type), this.type);
                             try {
                                 EnMember member = new EnMember(
-                                        createAttribute(factory, type, clazz, null, getter, null), null, null, null);
+                                        createAttribute(factory, type, clazz, null, getter, null),
+                                        null,
+                                        null,
+                                        null,
+                                        ref2 == null ? null : ref2.transfer());
                                 if (ref2 != null) {
                                     member.index = ref2.getIndex();
                                 }

@@ -29,6 +29,7 @@ import org.redkale.cluster.spi.ClusterModuleEngine;
 import org.redkale.cluster.spi.HttpClusterRpcClient;
 import org.redkale.cluster.spi.HttpLocalRpcClient;
 import org.redkale.convert.Convert;
+import org.redkale.convert.ConvertColumnTransfer;
 import org.redkale.convert.bson.BsonFactory;
 import org.redkale.convert.json.*;
 import org.redkale.convert.proto.ProtobufFactory;
@@ -303,6 +304,10 @@ public final class Application {
                 "jsonconvert", Convert.class, JsonFactory.root().getConvert());
         this.resourceFactory.register(
                 "protobufconvert", Convert.class, ProtobufFactory.root().getConvert());
+        Consumer<ConvertColumnTransfer> transferConsumer = resourceFactory::inject;
+        BsonFactory.root().registerTransferConsumer(transferConsumer);
+        JsonFactory.root().registerTransferConsumer(transferConsumer);
+        ProtobufFactory.root().registerTransferConsumer(transferConsumer);
 
         // 系统内部模块组件
         moduleEngines.add(this.sourceModule); // 放第一，很多module依赖于source

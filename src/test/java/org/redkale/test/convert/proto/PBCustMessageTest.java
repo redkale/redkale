@@ -2,10 +2,9 @@
  */
 package org.redkale.test.convert.proto;
 
+import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-import java.lang.annotation.*;
 import java.util.*;
 import java.util.function.*;
 import org.junit.jupiter.api.*;
@@ -84,7 +83,7 @@ public class PBCustMessageTest {
                 protected void afterInitEnMember(ConvertFactory factory) {
                     Function func = t -> t;
                     Attribute attribute = Attribute.create(clazz, getMessageName(clazz), clazz, func, null);
-                    EnMember member = new EnMember(attribute, valEncoder, null, null);
+                    EnMember member = new EnMember(attribute, valEncoder, null, null, null);
                     setIndex(member, 1);
                     setPosition(member, 1);
                     initForEachEnMember(factory, member);

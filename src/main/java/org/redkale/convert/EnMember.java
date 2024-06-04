@@ -7,7 +7,6 @@ package org.redkale.convert;
 
 import java.lang.reflect.*;
 import org.redkale.annotation.Comment;
-import org.redkale.persistence.Column;
 import org.redkale.util.Attribute;
 
 /**
@@ -42,17 +41,25 @@ public final class EnMember<W extends Writer, T, F> {
 
     final Method method; // 对应类成员的Method也可能为null
 
+    final ConvertColumnTransfer transfer; // 一般为null
+
     int index;
 
     int position; // 从1开始
 
     int tag; // 主要给protobuf使用
 
-    public EnMember(Attribute<T, F> attribute, Encodeable<W, F> encoder, Field field, Method method) {
+    public EnMember(
+            Attribute<T, F> attribute,
+            Encodeable<W, F> encoder,
+            Field field,
+            Method method,
+            ConvertColumnTransfer transfer) {
         this.attribute = attribute;
         this.encoder = encoder;
         this.field = field;
         this.method = method;
+        this.transfer = transfer;
         Class t = attribute.type();
         this.string = CharSequence.class.isAssignableFrom(t);
         this.bool = t == Boolean.class || t == boolean.class;
@@ -60,20 +67,10 @@ public final class EnMember<W extends Writer, T, F> {
         this.jsonFieldNameBytes = ('"' + attribute.field() + "\":").getBytes();
         if (field != null) {
             Comment ct = field.getAnnotation(Comment.class);
-            if (ct == null) {
-                Column col = field.getAnnotation(Column.class);
-                this.comment = col == null ? "" : col.comment();
-            } else {
-                this.comment = ct.value();
-            }
+            this.comment = ct == null ? "" : ct.value();
         } else if (method != null) {
             Comment ct = method.getAnnotation(Comment.class);
-            if (ct == null) {
-                Column col = method.getAnnotation(Column.class);
-                this.comment = col == null ? "" : col.comment();
-            } else {
-                this.comment = ct.value();
-            }
+            this.comment = ct == null ? "" : ct.value();
         } else {
             this.comment = "";
         }
@@ -84,7 +81,8 @@ public final class EnMember<W extends Writer, T, F> {
             final ConvertFactory factory, final Class<T> clazz, final String fieldname) {
         try {
             Field field = clazz.getDeclaredField(fieldname);
-            return new EnMember<>(Attribute.create(field), factory.loadEncoder(field.getGenericType()), field, null);
+            return new EnMember<>(
+                    Attribute.create(field), factory.loadEncoder(field.getGenericType()), field, null, null);
         } catch (Exception e) {
             throw new ConvertException(e);
         }
@@ -95,7 +93,7 @@ public final class EnMember<W extends Writer, T, F> {
         try {
             Field field = clazz.getDeclaredField(fieldname);
             return new EnMember<>(
-                    Attribute.create(clazz, fieldname, fieldtype), factory.loadEncoder(fieldtype), field, null);
+                    Attribute.create(clazz, fieldname, fieldtype), factory.loadEncoder(fieldtype), field, null, null);
         } catch (Exception e) {
             throw new ConvertException(e);
         }
@@ -103,11 +101,16 @@ public final class EnMember<W extends Writer, T, F> {
 
     public static <W extends Writer, T, F> EnMember<W, T, F> create(
             final Attribute<T, F> attribute, final ConvertFactory factory, final Class<F> fieldtype) {
-        return new EnMember<>(attribute, factory.loadEncoder(fieldtype), null, null);
+        return new EnMember<>(attribute, factory.loadEncoder(fieldtype), null, null, null);
     }
 
-    public F getFieldValue(T obj) {
-        return attribute.get(obj);
+    public Object getFieldValue(T obj) {
+        F val = attribute.get(obj);
+        if (transfer != null) {
+            return transfer.transfer(obj, attribute, val);
+        } else {
+            return val;
+        }
     }
 
     public final boolean accepts(String name) {
