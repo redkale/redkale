@@ -107,16 +107,17 @@
  <span class="k">new</span> <span class="nf">UserBean</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="s">&quot;redkale&quot;</span><span class="o">,</span> <span class="kc">null</span><span class="o">)</span> <span class="o">等价于</span> <span class="s">&quot;WHERE userName LIKE &#39;%redkale%&#39;&quot;</span>
 
                 </pre></div>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上定义UserBean过滤条件，当非数值类字段值为null、字符串值为空、数值类字段值小于@FilterColumn.least()值(least的默认值为1)都不会构建成过滤条件。@FilterColumn.express根据字段的类型有不同的默认值，若字段类型为Collection子类或数组则express默认为FilterExpress.IN；若字段类型为Range的子类则express默认为FilterExpress.BETWEEN；其他类型则express默认为FilterExpress.EQUAL。默认字段之间是AND关系，若想使用OR关系则需要使用@FilterGroup进行标记：</p>
-            <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserBean</span> <span class="kd">implements</span> <span class="n">FilterBean</span> <span class="o">{</span>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上定义UserBean过滤条件，当非数值类字段值为null、字符串值为空、数值类字段值小于@FilterColumn.least()值(least的默认值为1)都不会构建成过滤条件。@FilterColumn.express根据字段的类型有不同的默认值，若字段类型为Collection子类或数组则express默认为FilterExpress.IN；若字段类型为Range的子类则express默认为FilterExpress.BETWEEN；其他类型则express默认为FilterExpress.EQUAL。默认字段之间是AND关系，若想使用OR关系则需要使用@FilterOrs进行标记：</p>
+            <div class="highlight"><pre><span class="nd">@FilterOrs</span><span class="o">{</span><span class="s">&quot;a&quot;</span><span class="o">}</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserBean</span> <span class="kd">implements</span> <span class="n">FilterBean</span> <span class="o">{</span>
 
     <span class="kd">private</span> <span class="kt">int</span> <span class="n">userid</span><span class="o">;</span>
 
-    <span class="nd">@FilterGroup</span><span class="o">(</span><span class="s">&quot;[OR]a&quot;</span><span class="o">)</span>
+    <span class="nd">@FilterGroup</span><span class="o">(</span><span class="s">&quot;a&quot;</span><span class="o">)</span>
     <span class="nd">@FilterColumn</span><span class="o">(</span><span class="n">express</span> <span class="o">=</span> <span class="n">FilterExpress</span><span class="o">.</span><span class="na">LIKE</span><span class="o">)</span>
     <span class="kd">private</span> <span class="n">String</span> <span class="n">userName</span><span class="o">;</span>
 
-    <span class="nd">@FilterGroup</span><span class="o">(</span><span class="s">&quot;[OR]a&quot;</span><span class="o">)</span>
+    <span class="nd">@FilterGroup</span><span class="o">(</span><span class="s">&quot;a&quot;</span><span class="o">)</span>
     <span class="kd">private</span> <span class="n">Range</span> <span class="n">age</span><span class="o">;</span>
 
     <span class="kd">public</span> <span class="nf">UserBean</span><span class="o">(</span><span class="kt">int</span> <span class="n">userid</span><span class="o">,</span> <span class="n">String</span> <span class="n">userName</span><span class="o">,</span> <span class="n">Range</span> <span class="n">age</span><span class="o">)</span> <span class="o">{</span>
@@ -143,7 +144,7 @@
  <span class="n">source</span><span class="o">.</span><span class="na">getNumberResult</span><span class="o">(</span><span class="n">User</span><span class="o">.</span><span class="k">class</span><span class="o">,</span> <span class="n">FilterFunc</span><span class="o">.</span><span class="na">COUNT</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="k">new</span> <span class="nf">UserBean</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="s">&quot;redkale&quot;</span><span class="o">,</span> <span class="k">new</span> <span class="nf">IntRange</span><span class="o">(</span><span class="mi">14</span><span class="o">,</span> <span class="mi">36</span><span class="o">))).</span><span class="na">intValue</span><span class="o">()</span> <span class="o">等价于</span>
  <span class="s">&quot;SELECT COUNT(*) FROM user WHERE userName LIKE &#39;%redkale%&#39; AND  age BETWEEN 14 AND 36&quot;</span>
                 </pre></div>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上@FilterGroup 的value 必须是[OR]或者[AND]开头，没有标记@FilterGroup的字段等价于标记了@FilterGroup(value = "[AND]")。[AND]、[OR]后面的字符串为GROUP_NAME，默认的GROUP_NAME为空字符串。如上"[OR]a"可以直接使用"[OR]"，有多个[OR]或者[AND]则需要加上不同的NAME。</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如上@FilterGroup 的value 用.来构建树结构，没有标记@FilterGroup的字段等价于标记了@FilterGroup(value = "")。</p>
 
 
             <p id="source_distribute">&nbsp;&nbsp;&nbsp;&nbsp;<b>分表分库</b></p>
