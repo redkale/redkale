@@ -5,14 +5,13 @@
  */
 package org.redkale.source;
 
-import static org.redkale.source.FilterExpress.*;
-
 import java.io.Serializable;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import org.redkale.persistence.Transient;
+import static org.redkale.source.FilterExpress.*;
 import org.redkale.util.*;
 
 /**
@@ -103,10 +102,6 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
         this.least = filterCol == null ? 1 : filterCol.least();
         this.number = (type.isPrimitive() && type != boolean.class) || Number.class.isAssignableFrom(type);
         this.string = CharSequence.class.isAssignableFrom(type);
-    }
-
-    private FilterNodeBean or(FilterNodeBean node) {
-        return any(node, true);
     }
 
     private FilterNodeBean and(FilterNodeBean node) {
@@ -203,7 +198,17 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
     private static <T extends FilterBean> FilterNodeBean createFilterNodeBean(final Class<T> clazz) {
         final Set<String> fields = new HashSet<>();
         final Map<String, FilterNodeBean> nodemap = new LinkedHashMap();
-        Class cltmp = clazz;
+        Set<String> orItems = new HashSet<>();
+        // 读取FilterOrs
+        Class<?> cltmp = clazz;
+        do {
+            FilterOrs ors = cltmp.getAnnotation(FilterOrs.class);
+            if (ors != null) {
+                orItems.addAll(List.of(ors.value()));
+            }
+        } while ((cltmp = cltmp.getSuperclass()) != Object.class);
+        // 读取FilterGroup
+        cltmp = clazz;
         do {
             for (final Field field : cltmp.getDeclaredFields()) {
                 if (Modifier.isStatic(field.getModifiers())) {
@@ -267,27 +272,20 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
                         groups[i] = refs[i].value();
                     }
                     if (groups.length == 0) {
-                        groups = new String[] {"[AND]"};
+                        groups = new String[] {""};
                     }
                     for (String key : groups) {
-                        if (!key.startsWith("[AND]") && !key.startsWith("[OR]")) {
-                            throw new SourceException(field + "'s FilterGroup.value(" + key
-                                    + ") illegal, must be [AND] or [OR] startsWith");
-                        }
                         FilterNodeBean node = nodemap.get(key);
                         if (node == null) {
                             nodemap.put(key, nodeBean);
                         } else if (nodeBean.joinClass == null && node.joinClass != null) { // 非joinNode 关联 joinNode
-                            nodemap.put(
-                                    key,
-                                    nodeBean.any(
-                                            node,
-                                            key.substring(key.lastIndexOf('.') + 1)
-                                                    .contains("[OR]")));
+                            String subKey = key.substring(key.lastIndexOf('.') + 1);
+                            boolean or = orItems.contains(subKey) || subKey.contains("[OR]");
+                            nodemap.put(key, nodeBean.any(node, or));
                         } else {
-                            node.any(
-                                    nodeBean,
-                                    key.substring(key.lastIndexOf('.') + 1).contains("[OR]"));
+                            String subKey = key.substring(key.lastIndexOf('.') + 1);
+                            boolean or = orItems.contains(subKey) || subKey.contains("[OR]");
+                            node.any(nodeBean, or);
                         }
                     }
                 }
@@ -297,10 +295,11 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
         nodemap.forEach((k, v) -> {
             String[] keys = k.split("\\.");
             LinkNode link = linkes.get(keys[0]);
+            boolean or = orItems.contains(keys[0]) || keys[0].contains("[OR]");
             if (link == null) {
-                linkes.put(keys[0], new LinkNode(k, v));
+                linkes.put(keys[0], new LinkNode(keys, or, 0, v));
             } else {
-                link.put(keys, 0, v);
+                link.put(keys, or, 0, v);
             }
         });
         FilterNodeBean rs = null;
@@ -338,17 +337,10 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
 
         public final Map<String, LinkNode> nexts = new LinkedHashMap<>();
 
-        public LinkNode(String keyString, FilterNodeBean node) {
-            String[] keys = keyString.split("\\.");
-            this.key = keys[0];
-            this.or = this.key.contains("[OR]");
-            put(keys, 0, node);
-        }
-
-        public LinkNode(String[] keyStrings, int pos, FilterNodeBean node) {
+        public LinkNode(String[] keyStrings, boolean or, int pos, FilterNodeBean node) {
             this.key = keyStrings[pos];
-            this.or = this.key.contains("[OR]");
-            put(keyStrings, pos, node);
+            this.or = or;
+            put(keyStrings, or, pos, node);
         }
 
         public FilterNodeBean createFilterNodeBean() {
@@ -366,16 +358,16 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
             return node;
         }
 
-        public final void put(final String[] keys, int pos, final FilterNodeBean node) {
+        public final void put(final String[] keys, boolean or, int pos, final FilterNodeBean node) {
             if (keys.length == pos + 1 && this.key.equals(keys[pos])) {
                 this.beans.add(node);
                 return;
             }
             LinkNode link = nexts.get(keys[pos + 1]);
             if (link == null) {
-                nexts.put(keys[pos + 1], new LinkNode(keys, pos + 1, node));
+                nexts.put(keys[pos + 1], new LinkNode(keys, or, pos + 1, node));
             } else {
-                link.put(keys, pos + 1, node);
+                link.put(keys, or, pos + 1, node);
             }
         }
 

@@ -5,28 +5,27 @@
  */
 package org.redkale.source;
 
+import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import java.lang.annotation.*;
-
 /**
  * 默认情况下FilterBean下的过滤字段之间是AND关系。 <br>
- * 当需要使用OR或AND OR组合过滤查询时需要使用 FilterGroup。 <br>
- * FilterGroup 的value 必须是[OR]或者[AND]开头， 多级需要用点.分隔。 (注: 暂时不支持多级) <br>
+ * 当需要使用OR或AND OR组合过滤查询时需要使用 FilterOrs、FilterGroup。 <br>
  * 示例一:
  *
  * <blockquote>
  *
  * <pre>
+ * &#64;FilterOrs({"g1"})
  * public class TestFilterBean implements FilterBean {
  *
  *      private int id;
  *
- *      &#64;FilterGroup("[OR]g1")
+ *      &#64;FilterGroup("g1")
  *      private String desc;
  *
- *      &#64;FilterGroup("[OR]g1")
+ *      &#64;FilterGroup("g1")
  *      private String name;
  * }
  * </pre>
@@ -40,22 +39,23 @@ import java.lang.annotation.*;
  * <blockquote>
  *
  * <pre>
+ * &#64;FilterOrs({"g1","subg2"})
  * public class TestFilterBean implements FilterBean {
  *
  *      private int id;
  *
- *      &#64;FilterGroup("[OR]g1.[AND]subg1")
+ *      &#64;FilterGroup("g1.subg1")
  *      &#64;FilterColumn(express = LIKE)
  *      private String desc;
  *
- *      &#64;FilterGroup("[OR]g1.[AND]subg1")
+ *      &#64;FilterGroup("g1.subg1")
  *      &#64;FilterColumn(express = LIKE)
  *      private String name;
  *
- *      &#64;FilterGroup("[OR]g1.[OR]subg2")
+ *      &#64;FilterGroup("g1.subg2")
  *      private int age;
  *
- *      &#64;FilterGroup("[OR]g1.[OR]subg2")
+ *      &#64;FilterGroup("g1.subg2")
  *      private int birthday;
  * }
  * </pre>
@@ -63,14 +63,13 @@ import java.lang.annotation.*;
  * </blockquote>
  *
  * 转换的SQL语句为: WHERE id = ? AND ((desc LIKE ? AND name LIKE ?) OR (age = ? OR birthday = ?)) <br>
- * 因为默认是AND关系， &#64;FilterGroup("") 等价于 &#64;FilterGroup("[AND]") <br>
- * 所以示例二的&#64;FilterGroup("[OR]g1.[AND]subg1") 可以简化为 &#64;FilterGroup("[OR]g1.subg1") <br>
  */
 /**
  * 详情见: https://redkale.org
  *
  * @see org.redkale.source.FilterBean
  * @see org.redkale.source.FilterNode
+ * @see org.redkale.source.FilterOrs
  * @author zhangjx
  */
 @Documented
@@ -78,5 +77,5 @@ import java.lang.annotation.*;
 @Retention(RUNTIME)
 public @interface FilterGroup {
 
-    String value() default "[AND]";
+    String value() default "";
 }

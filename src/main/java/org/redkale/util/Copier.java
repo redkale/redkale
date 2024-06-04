@@ -3,15 +3,14 @@
  */
 package org.redkale.util;
 
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
-
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.*;
 import java.util.stream.Collectors;
 import org.redkale.asm.*;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 
 /**
@@ -26,13 +25,19 @@ import org.redkale.asm.Type;
  */
 public interface Copier<S, D> extends BiFunction<S, D, D> {
 
-    /** 是否跳过值为null的字段 */
+    /**
+     * 是否跳过值为null的字段
+     */
     public static final int OPTION_SKIP_NULL_VALUE = 1 << 1; // 2
 
-    /** 是否跳过值为空字符串的字段 */
+    /**
+     * 是否跳过值为空字符串的字段
+     */
     public static final int OPTION_SKIP_EMPTY_STRING = 1 << 2; // 4
 
-    /** 同名字段类型强制转换 */
+    /**
+     * 同名字段类型强制转换
+     */
     public static final int OPTION_ALLOW_TYPE_CAST = 1 << 3; // 8
 
     /**

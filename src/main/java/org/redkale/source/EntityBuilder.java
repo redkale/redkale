@@ -46,7 +46,7 @@ public class EntityBuilder<T> {
     // key：类字段名， value：数据库字段名
     // 只有field.name 与 Column.name不同才存放在aliasmap里.
     @Nullable
-    private final Map<String, String> aliasmap;
+    private final Map<String, String> aliasMap;
 
     // Entity构建器参数Attribute， 数组个数与constructorParameters相同
     @Nullable
@@ -71,7 +71,7 @@ public class EntityBuilder<T> {
     EntityBuilder(
             Class<T> type,
             Creator<T> creator,
-            Map<String, String> aliasmap,
+            Map<String, String> aliasMap,
             String[] constructorParameters,
             Attribute<T, Serializable>[] constructorAttributes,
             Attribute<T, Serializable>[] unconstructorAttributes,
@@ -79,7 +79,7 @@ public class EntityBuilder<T> {
             Attribute<T, Serializable>[] queryAttributes) {
         this.type = type;
         this.creator = creator;
-        this.aliasmap = aliasmap;
+        this.aliasMap = aliasMap;
         this.constructorParameters = constructorParameters;
         this.constructorAttributes = constructorAttributes;
         this.unconstructorAttributes = unconstructorAttributes;
@@ -127,7 +127,8 @@ public class EntityBuilder<T> {
                     }
                 }
             } catch (Exception e) {
-                throw new SourceException(type + " cannot find ConstructorParameters Creator");
+                throw new SourceException(type + " cannot find "
+                        + org.redkale.annotation.ConstructorParameters.class.getSimpleName() + " Creator");
             }
         }
         Class cltmp = type;
@@ -569,11 +570,11 @@ public class EntityBuilder<T> {
      * @return String
      */
     public String getSQLColumn(String tabalis, String fieldname) {
-        return this.aliasmap == null
+        return this.aliasMap == null
                 ? (tabalis == null ? fieldname : (tabalis + '.' + fieldname))
                 : (tabalis == null
-                        ? aliasmap.getOrDefault(fieldname, fieldname)
-                        : (tabalis + '.' + aliasmap.getOrDefault(fieldname, fieldname)));
+                        ? aliasMap.getOrDefault(fieldname, fieldname)
+                        : (tabalis + '.' + aliasMap.getOrDefault(fieldname, fieldname)));
     }
 
     public boolean hasConstructorAttribute() {
@@ -587,7 +588,7 @@ public class EntityBuilder<T> {
      */
     @ConvertDisabled
     public boolean isNoAlias() {
-        return this.aliasmap == null;
+        return this.aliasMap == null;
     }
 
     @ConvertDisabled

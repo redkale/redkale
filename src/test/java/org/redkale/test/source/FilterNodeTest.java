@@ -5,8 +5,6 @@
  */
 package org.redkale.test.source;
 
-import static org.redkale.source.FilterExpress.*;
-
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -18,6 +16,7 @@ import org.redkale.persistence.Entity;
 import org.redkale.persistence.Id;
 import org.redkale.persistence.Transient;
 import org.redkale.source.*;
+import static org.redkale.source.FilterExpress.*;
 
 /** @author zhangjx */
 public class FilterNodeTest {
@@ -184,28 +183,29 @@ public class FilterNodeTest {
         System.out.println("bean.sheet = " + carEntity.getCache().querySheet(null, new Flipper(), beanNode));
     }
 
+    @FilterOrs({"r", "c"})
     public static class CarTestBean implements FilterBean {
 
-        @FilterGroup("[OR].[AND]a")
+        @FilterGroup("r.a")
         @FilterColumn(express = GT)
         @Transient
         public long carid;
 
-        @FilterGroup("[OR].[AND]a.[OR]c")
+        @FilterGroup("r.a.c")
         @FilterColumn(express = LIKE)
         @FilterJoinColumn(
                 table = UserTestTable.class,
                 columns = {"userid", "username"})
         public String username;
 
-        @FilterGroup("[OR].[AND]a.[OR]c")
+        @FilterGroup("r.a.c")
         @FilterColumn(express = GT)
         @FilterJoinColumn(
                 table = UserTestTable.class,
                 columns = {"userid", "username"})
         public long createtime;
 
-        @FilterGroup("[OR]")
+        @FilterGroup("r")
         @FilterColumn(express = LIKE)
         @FilterJoinColumn(
                 table = CarTypeTable.class,
