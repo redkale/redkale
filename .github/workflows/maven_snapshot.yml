@@ -28,7 +28,7 @@ jobs:
         MAVEN_PASSWORD: ${{ secrets.OSSRHPASSWORD }}
     - name: Build with Maven
       run: |
-        copy my/pom.xml pom.xml
+        cp -fr my/pom.xml pom.xml
         mvn --batch-mode -e -X clean deploy -DskipTests=true
       env:
         MAVEN_GPG_KEY: ${{ secrets.OSSRHGPGKEY }}
