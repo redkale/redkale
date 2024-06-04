@@ -8,7 +8,7 @@ package org.redkale.convert;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.*;
-import java.util.function.BiFunction;
+import org.redkale.util.ColumnHandler;
 
 /**
  * 字段值转换器，常见于脱敏操作
@@ -28,11 +28,11 @@ public @interface ConvertColumnHandler {
     /**
      * 字段值转换器
      *
-     * @return BiFunction&lt;String, Object, Object&gt;实现类
+     * @return ColumnHandler实现类
      *
      * @since 2.8.0
      */
-    Class<? extends BiFunction> value() default BiFunction.class;
+    Class<? extends ColumnHandler> value() default ColumnHandler.class;
 
     /**
      * 解析/序列化定制化的TYPE

@@ -61,7 +61,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     private final ConcurrentHashMap<AccessibleObject, ConvertColumnEntry> columnEntrys = new ConcurrentHashMap();
 
-    private final ConcurrentHashMap<Class, BiFunction> columnHandlers = new ConcurrentHashMap();
+    private final ConcurrentHashMap<Class, BiFunction> fieldFuncs = new ConcurrentHashMap();
 
     private final Set<Class> skipIgnores = new HashSet();
 
@@ -74,7 +74,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     private boolean skipAllIgnore = false;
 
-    private Consumer<BiFunction> columnHandlerConsumer;
+    private Consumer<BiFunction> fieldFuncConsumer;
 
     protected ConvertFactory(ConvertFactory<R, W> parent, int features) {
         this.features = features;
@@ -436,17 +436,17 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         }
         for (ConvertColumnHandler h : chs) {
             if (h.type().contains(ct)) {
-                Class<? extends BiFunction> handlerClass = h.value();
-                if (handlerClass != BiFunction.class) {
+                Class<? extends ColumnHandler> handlerClass = h.value();
+                if (handlerClass != ColumnHandler.class) {
                     colConvertType = h.type();
-                    colHandler = findColumnHandler(handlerClass);
+                    colHandler = findFieldFunc(handlerClass);
                     if (colHandler == null) {
                         try {
                             colHandler = handlerClass.getConstructor().newInstance();
                         } catch (Exception e) {
                             throw new ConvertException(e);
                         }
-                        Consumer<BiFunction> consumer = findColumnHandlerConsumer();
+                        Consumer<BiFunction> consumer = findFieldFuncConsumer();
                         if (consumer != null) {
                             consumer.accept(colHandler);
                         }
@@ -918,11 +918,11 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return child;
     }
 
-    private Consumer<BiFunction> findColumnHandlerConsumer() {
-        if (columnHandlerConsumer != null) {
-            return columnHandlerConsumer;
+    private Consumer<BiFunction> findFieldFuncConsumer() {
+        if (fieldFuncConsumer != null) {
+            return fieldFuncConsumer;
         }
-        return parent == null ? null : parent.findColumnHandlerConsumer();
+        return parent == null ? null : parent.findFieldFuncConsumer();
     }
 
     private Class findEntityAlias(String name) {
@@ -935,8 +935,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
      *
      * @param consumer ColumnHandler处理函数
      */
-    public final void registerColumnHandlerConsumer(Consumer<BiFunction> consumer) {
-        this.columnHandlerConsumer = consumer;
+    public final void registerFieldFuncConsumer(Consumer<BiFunction> consumer) {
+        this.fieldFuncConsumer = consumer;
     }
 
     /**
@@ -1110,12 +1110,12 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return result;
     }
 
-    public final <C extends BiFunction> BiFunction findColumnHandler(Class<C> type) {
-        BiFunction handler = columnHandlers.get(type);
+    public final <C extends BiFunction> BiFunction findFieldFunc(Class<C> type) {
+        BiFunction handler = fieldFuncs.get(type);
         if (handler != null) {
             return handler;
         }
-        return this.parent == null ? null : this.parent.findColumnHandler(type);
+        return this.parent == null ? null : this.parent.findFieldFunc(type);
     }
 
     // ----------------------------------------------------------------------
@@ -1124,7 +1124,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
     }
 
     public final <C extends BiFunction> void register(Class<C> clazz, C columnHandler) {
-        columnHandlers.put(Objects.requireNonNull(clazz), Objects.requireNonNull(columnHandler));
+        fieldFuncs.put(Objects.requireNonNull(clazz), Objects.requireNonNull(columnHandler));
     }
 
     public final <E> void register(final Type clazz, final SimpledCoder<R, W, E> coder) {

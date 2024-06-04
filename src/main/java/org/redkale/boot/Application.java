@@ -303,9 +303,9 @@ public final class Application {
                 "jsonconvert", Convert.class, JsonFactory.root().getConvert());
         this.resourceFactory.register(
                 "protobufconvert", Convert.class, ProtobufFactory.root().getConvert());
-        BsonFactory.root().registerColumnHandlerConsumer(resourceFactory::inject);
-        JsonFactory.root().registerColumnHandlerConsumer(resourceFactory::inject);
-        ProtobufFactory.root().registerColumnHandlerConsumer(resourceFactory::inject);
+        BsonFactory.root().registerFieldFuncConsumer(resourceFactory::inject);
+        JsonFactory.root().registerFieldFuncConsumer(resourceFactory::inject);
+        ProtobufFactory.root().registerFieldFuncConsumer(resourceFactory::inject);
 
         // 系统内部模块组件
         moduleEngines.add(this.sourceModule); // 放第一，很多module依赖于source

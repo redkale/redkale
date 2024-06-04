@@ -4,10 +4,10 @@
 
 package org.redkale.test.convert;
 
-import java.util.function.BiFunction;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.ConvertColumnHandler;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.util.ColumnHandler;
 
 /**
  *
@@ -57,7 +57,7 @@ public class ConvertColumnHandlerTest {
         }
     }
 
-    public static class ParamColumnHandler implements BiFunction<String, String, String> {
+    public static class ParamColumnHandler implements ColumnHandler<String, String> {
 
         @Override
         public String apply(String field, String value) {
