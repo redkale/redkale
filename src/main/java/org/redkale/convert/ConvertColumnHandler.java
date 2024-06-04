@@ -8,40 +8,31 @@ package org.redkale.convert;
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.*;
+import java.util.function.BiFunction;
 
 /**
- * 依附在setter、getter方法、字段进行简单的配置
+ * 字段值转换器，常见于脱敏操作
  *
  * <p>详情见: https://redkale.org
  *
  * @author zhangjx
+ * @since 2.8.0
+ *
  */
 @Documented
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
-@Repeatable(ConvertColumn.ConvertColumns.class)
-public @interface ConvertColumn {
+@Repeatable(ConvertColumnHandler.ConvertColumnHandlers.class)
+public @interface ConvertColumnHandler {
 
     /**
-     * 给字段取个别名
+     * 字段值转换器
      *
-     * @return 字段别名
-     */
-    String name() default "";
-
-    /**
-     * 给字段取个序号ID，值小靠前
+     * @return BiFunction&lt;String, Object, Object&gt;实现类
      *
-     * @return 字段排序ID
+     * @since 2.8.0
      */
-    int index() default 0;
-
-    /**
-     * 解析/序列化时是否屏蔽该字段
-     *
-     * @return 是否屏蔽该字段
-     */
-    boolean ignore() default false;
+    Class<? extends BiFunction> value() default BiFunction.class;
 
     /**
      * 解析/序列化定制化的TYPE
@@ -51,17 +42,18 @@ public @interface ConvertColumn {
     ConvertType type() default ConvertType.ALL;
 
     /**
-     * ConvertColumn 的多用类
+     * ConvertColumnHandler 的多用类
      *
      * <p>详情见: https://redkale.org
      *
      * @author zhangjx
+     * @since 2.8.0
      */
     @Documented
     @Target({METHOD, FIELD})
     @Retention(RUNTIME)
-    public static @interface ConvertColumns {
+    public static @interface ConvertColumnHandlers {
 
-        ConvertColumn[] value();
+        ConvertColumnHandler[] value();
     }
 }

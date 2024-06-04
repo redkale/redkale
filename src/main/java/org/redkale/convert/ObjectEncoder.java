@@ -110,7 +110,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                             fieldCoder,
                             field,
                             null,
-                            ref == null ? null : ref.transfer());
+                            ref == null ? null : ref.fieldFunc());
                     if (ref != null) {
                         member.index = ref.getIndex();
                     }
@@ -194,7 +194,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                             fieldCoder,
                             maybeField,
                             method,
-                            ref == null ? null : ref.transfer());
+                            ref == null ? null : ref.fieldFunc());
                     if (Utility.contains(list, m -> m.attribute.field().equals(member.attribute.field()))) {
                         continue;
                     }
@@ -223,7 +223,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                                         null,
                                         f,
                                         null,
-                                        ref2 == null ? null : ref2.transfer());
+                                        ref2 == null ? null : ref2.fieldFunc());
                                 if (ref2 != null) {
                                     member.index = ref2.getIndex();
                                 }
@@ -251,7 +251,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                                         null,
                                         null,
                                         null,
-                                        ref2 == null ? null : ref2.transfer());
+                                        ref2 == null ? null : ref2.fieldFunc());
                                 if (ref2 != null) {
                                     member.index = ref2.getIndex();
                                 }

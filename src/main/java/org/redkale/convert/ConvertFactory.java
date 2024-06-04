@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.*;
@@ -60,7 +61,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     private final ConcurrentHashMap<AccessibleObject, ConvertColumnEntry> columnEntrys = new ConcurrentHashMap();
 
-    private final ConcurrentHashMap<Class, ConvertColumnTransfer> transfers = new ConcurrentHashMap();
+    private final ConcurrentHashMap<Class, BiFunction> columnHandlers = new ConcurrentHashMap();
 
     private final Set<Class> skipIgnores = new HashSet();
 
@@ -73,7 +74,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     private boolean skipAllIgnore = false;
 
-    private Consumer<ConvertColumnTransfer> transferConsumer;
+    private Consumer<BiFunction> columnHandlerConsumer;
 
     protected ConvertFactory(ConvertFactory<R, W> parent, int features) {
         this.features = features;
@@ -414,8 +415,49 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             return en;
         }
         final ConvertType ct = this.getConvertType();
-        ConvertColumn[] ccs = element.getAnnotationsByType(ConvertColumn.class);
         String fieldName = null;
+        // 解析 ColumnHandler
+        BiFunction colHandler = null;
+        ConvertType colConvertType = ConvertType.ALL;
+        ConvertColumnHandler[] chs = element.getAnnotationsByType(ConvertColumnHandler.class);
+        if (chs.length == 0 && element instanceof Method) {
+            final Method method = (Method) element;
+            fieldName = readGetSetFieldName(method);
+            if (fieldName != null) {
+                Class mclz = method.getDeclaringClass();
+                do {
+                    try {
+                        chs = mclz.getDeclaredField(fieldName).getAnnotationsByType(ConvertColumnHandler.class);
+                        break;
+                    } catch (Exception e) { // 说明没有该字段，忽略异常
+                    }
+                } while (mclz != Object.class && (mclz = mclz.getSuperclass()) != Object.class);
+            }
+        }
+        for (ConvertColumnHandler h : chs) {
+            if (h.type().contains(ct)) {
+                Class<? extends BiFunction> handlerClass = h.value();
+                if (handlerClass != BiFunction.class) {
+                    colConvertType = h.type();
+                    colHandler = findColumnHandler(handlerClass);
+                    if (colHandler == null) {
+                        try {
+                            colHandler = handlerClass.getConstructor().newInstance();
+                        } catch (Exception e) {
+                            throw new ConvertException(e);
+                        }
+                        Consumer<BiFunction> consumer = findColumnHandlerConsumer();
+                        if (consumer != null) {
+                            consumer.accept(colHandler);
+                        }
+                        register((Class) handlerClass, colHandler);
+                    }
+                    break;
+                }
+            }
+        }
+        // 解析ConvertColumn
+        ConvertColumn[] ccs = element.getAnnotationsByType(ConvertColumn.class);
         if (ccs.length == 0 && element instanceof Method) {
             final Method method = (Method) element;
             fieldName = readGetSetFieldName(method);
@@ -439,7 +481,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         }
         if (ccs.length == 0 && onlyColumns != null && fieldName != null) {
             if (!onlyColumns.contains(fieldName)) {
-                return new ConvertColumnEntry(fieldName, true);
+                return new ConvertColumnEntry(fieldName, true, colConvertType, colHandler);
             }
         }
         for (ConvertColumn ref : ccs) {
@@ -447,27 +489,10 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                 String realName = ref.name().isEmpty() ? fieldName : ref.name();
                 if (onlyColumns != null && fieldName != null) {
                     if (!onlyColumns.contains(realName)) {
-                        return new ConvertColumnEntry(realName, true);
+                        return new ConvertColumnEntry(realName, true, colConvertType, colHandler);
                     }
                 }
-                ConvertColumnTransfer transfer = null;
-                Class<? extends ConvertColumnTransfer> transferClass = ref.tranfer();
-                if (transferClass != ConvertColumnTransfer.class) {
-                    transfer = findTransfer(transferClass);
-                    if (transfer == null) {
-                        try {
-                            transfer = transferClass.getConstructor().newInstance();
-                        } catch (Exception e) {
-                            throw new ConvertException(e);
-                        }
-                        Consumer<ConvertColumnTransfer> consumer = findTransferConsumer();
-                        if (consumer != null) {
-                            consumer.accept(transfer);
-                        }
-                        register((Class) transferClass, transfer);
-                    }
-                }
-                ConvertColumnEntry entry = new ConvertColumnEntry(ref, transfer);
+                ConvertColumnEntry entry = new ConvertColumnEntry(ref, colHandler);
                 if (skipAllIgnore) {
                     entry.setIgnore(false);
                     return entry;
@@ -483,6 +508,9 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                 }
                 return entry;
             }
+        }
+        if (colHandler != null) {
+            return new ConvertColumnEntry(fieldName, false, colConvertType, colHandler);
         }
         return null;
     }
@@ -890,11 +918,11 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return child;
     }
 
-    private Consumer<ConvertColumnTransfer> findTransferConsumer() {
-        if (transferConsumer != null) {
-            return transferConsumer;
+    private Consumer<BiFunction> findColumnHandlerConsumer() {
+        if (columnHandlerConsumer != null) {
+            return columnHandlerConsumer;
         }
-        return parent == null ? null : parent.findTransferConsumer();
+        return parent == null ? null : parent.findColumnHandlerConsumer();
     }
 
     private Class findEntityAlias(String name) {
@@ -903,12 +931,12 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
     }
 
     /**
-     * 设置ConvertColumnTransfer初始化的处理函数
+     * 设置ColumnHandler初始化的处理函数
      *
-     * @param consumer ConvertColumnTransfer处理函数
+     * @param consumer ColumnHandler处理函数
      */
-    public final void registerTransferConsumer(Consumer<ConvertColumnTransfer> consumer) {
-        this.transferConsumer = consumer;
+    public final void registerColumnHandlerConsumer(Consumer<BiFunction> consumer) {
+        this.columnHandlerConsumer = consumer;
     }
 
     /**
@@ -1082,12 +1110,12 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return result;
     }
 
-    public final <C extends ConvertColumnTransfer> ConvertColumnTransfer findTransfer(Class<C> type) {
-        ConvertColumnTransfer transfer = transfers.get(type);
-        if (transfer != null) {
-            return transfer;
+    public final <C extends BiFunction> BiFunction findColumnHandler(Class<C> type) {
+        BiFunction handler = columnHandlers.get(type);
+        if (handler != null) {
+            return handler;
         }
-        return this.parent == null ? null : this.parent.findTransfer(type);
+        return this.parent == null ? null : this.parent.findColumnHandler(type);
     }
 
     // ----------------------------------------------------------------------
@@ -1095,8 +1123,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return (Encodeable<W, E>) anyEncoder;
     }
 
-    public final <C extends ConvertColumnTransfer> void register(final Class<C> clazz, final C transfer) {
-        transfers.put(Objects.requireNonNull(clazz), Objects.requireNonNull(transfer));
+    public final <C extends BiFunction> void register(Class<C> clazz, C columnHandler) {
+        columnHandlers.put(Objects.requireNonNull(clazz), Objects.requireNonNull(columnHandler));
     }
 
     public final <E> void register(final Type clazz, final SimpledCoder<R, W, E> coder) {

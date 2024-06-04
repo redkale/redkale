@@ -6,6 +6,7 @@
 package org.redkale.convert;
 
 import java.lang.reflect.*;
+import java.util.function.BiFunction;
 import org.redkale.annotation.Comment;
 import org.redkale.util.Attribute;
 
@@ -41,7 +42,7 @@ public final class EnMember<W extends Writer, T, F> {
 
     final Method method; // 对应类成员的Method也可能为null
 
-    final ConvertColumnTransfer transfer; // 一般为null
+    final BiFunction<String, Object, Object> fieldFunc; // 一般为null
 
     int index;
 
@@ -50,16 +51,12 @@ public final class EnMember<W extends Writer, T, F> {
     int tag; // 主要给protobuf使用
 
     public EnMember(
-            Attribute<T, F> attribute,
-            Encodeable<W, F> encoder,
-            Field field,
-            Method method,
-            ConvertColumnTransfer transfer) {
+            Attribute<T, F> attribute, Encodeable<W, F> encoder, Field field, Method method, BiFunction fieldFunc) {
         this.attribute = attribute;
         this.encoder = encoder;
         this.field = field;
         this.method = method;
-        this.transfer = transfer;
+        this.fieldFunc = fieldFunc;
         Class t = attribute.type();
         this.string = CharSequence.class.isAssignableFrom(t);
         this.bool = t == Boolean.class || t == boolean.class;
@@ -106,8 +103,8 @@ public final class EnMember<W extends Writer, T, F> {
 
     public Object getFieldValue(T obj) {
         F val = attribute.get(obj);
-        if (transfer != null) {
-            return transfer.transfer(obj, attribute.field(), val);
+        if (fieldFunc != null) {
+            return fieldFunc.apply(attribute.field(), val);
         } else {
             return val;
         }

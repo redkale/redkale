@@ -257,7 +257,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 if (ref != null && ref.ignore()) {
                     continue;
                 }
-                if (ref != null && ref.transfer() != null) {
+                if (ref != null && ref.fieldFunc() != null) {
                     return null;
                 }
                 if (!(checkMemberType(factory, clazz, method.getGenericReturnType(), method.getReturnType()))) {

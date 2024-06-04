@@ -4,19 +4,19 @@
 
 package org.redkale.test.convert;
 
+import java.util.function.BiFunction;
 import org.junit.jupiter.api.*;
-import org.redkale.convert.ConvertColumn;
-import org.redkale.convert.ConvertColumnTransfer;
+import org.redkale.convert.ConvertColumnHandler;
 import org.redkale.convert.json.JsonConvert;
 
 /**
  *
  * @author zhangjx
  */
-public class ConvertTransferTest {
+public class ConvertColumnHandlerTest {
 
     public static void main(String[] args) throws Throwable {
-        ConvertTransferTest test = new ConvertTransferTest();
+        ConvertColumnHandlerTest test = new ConvertColumnHandlerTest();
         test.run1();
     }
 
@@ -32,7 +32,7 @@ public class ConvertTransferTest {
 
         private String name;
 
-        @ConvertColumn(tranfer = ParamTransfer.class)
+        @ConvertColumnHandler(ParamColumnHandler.class)
         private String phone;
 
         public String getName() {
@@ -57,10 +57,10 @@ public class ConvertTransferTest {
         }
     }
 
-    public static class ParamTransfer implements ConvertColumnTransfer<String> {
+    public static class ParamColumnHandler implements BiFunction<String, String, String> {
 
         @Override
-        public Object transfer(Object obj, String field, String value) {
+        public String apply(String field, String value) {
             if (value == null || value.length() < 5) {
                 return value;
             } else {

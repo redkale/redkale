@@ -5,6 +5,8 @@
  */
 package org.redkale.convert;
 
+import java.util.function.BiFunction;
+
 /**
  * ConvertColumn 对应的实体类
  *
@@ -22,17 +24,17 @@ public final class ConvertColumnEntry {
 
     private ConvertType convertType;
 
-    private ConvertColumnTransfer transfer;
+    private BiFunction<?, String, ?> fieldFunc;
 
     public ConvertColumnEntry() {}
 
-    public ConvertColumnEntry(ConvertColumn column, ConvertColumnTransfer transfer) {
+    public ConvertColumnEntry(ConvertColumn column, BiFunction<?, String, ?> fieldFunc) {
         if (column == null) return;
         this.name = column.name();
         this.index = column.index();
         this.ignore = column.ignore();
         this.convertType = column.type();
-        this.transfer = transfer;
+        this.fieldFunc = fieldFunc;
     }
 
     public ConvertColumnEntry(String name) {
@@ -51,6 +53,14 @@ public final class ConvertColumnEntry {
         this.convertType = convertType;
     }
 
+    public ConvertColumnEntry(
+            String name, boolean ignore, ConvertType convertType, BiFunction<?, String, ?> fieldFunc) {
+        this.name = name;
+        this.ignore = ignore;
+        this.convertType = convertType;
+        this.fieldFunc = fieldFunc;
+    }
+
     public ConvertColumnEntry(String name, int index, boolean ignore, ConvertType convertType) {
         this.name = name;
         this.index = index;
@@ -59,16 +69,16 @@ public final class ConvertColumnEntry {
     }
 
     public ConvertColumnEntry(
-            String name, int index, boolean ignore, ConvertType convertType, ConvertColumnTransfer transfer) {
+            String name, int index, boolean ignore, ConvertType convertType, BiFunction<?, String, ?> fieldFunc) {
         this.name = name;
         this.index = index;
         this.ignore = ignore;
         this.convertType = convertType;
-        this.transfer = transfer;
+        this.fieldFunc = fieldFunc;
     }
 
-    public ConvertColumnTransfer transfer() {
-        return transfer;
+    public BiFunction<?, String, ?> fieldFunc() {
+        return fieldFunc;
     }
 
     public String name() {
