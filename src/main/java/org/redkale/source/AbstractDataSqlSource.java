@@ -5,10 +5,6 @@
  */
 package org.redkale.source;
 
-import static org.redkale.boot.Application.*;
-import static org.redkale.source.DataSources.*;
-import static org.redkale.util.Utility.isEmpty;
-
 import java.io.Serializable;
 import java.math.*;
 import java.sql.SQLException;
@@ -21,13 +17,16 @@ import java.util.stream.Stream;
 import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ResourceType;
+import static org.redkale.boot.Application.*;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.net.AsyncGroup;
 import org.redkale.persistence.Table;
 import org.redkale.service.Local;
+import static org.redkale.source.DataSources.*;
 import org.redkale.source.EntityInfo.EntityColumn;
 import org.redkale.util.*;
+import static org.redkale.util.Utility.isEmpty;
 
 /**
  * DataSource的SQL抽象实现类 <br>
@@ -155,6 +154,17 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
                 readConfProps.getProperty(DATA_SOURCE_SLOWMS_WARN, "2000").trim());
         this.slowmsError = Integer.parseInt(
                 readConfProps.getProperty(DATA_SOURCE_SLOWMS_ERROR, "3000").trim());
+    }
+
+    protected String createLimitSQL(String listSql, Flipper flipper) {
+        if (flipper == null || flipper.getLimit() < 1) {
+            return listSql;
+        }
+        final boolean mysqlOrPgsql = "mysql".equals(dbtype()) || "postgresql".equals(dbtype());
+        if (mysqlOrPgsql) {
+            return listSql + " LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset();
+        }
+        throw new SourceException("Not support page sql: " + listSql);
     }
 
     @Override
@@ -1458,7 +1468,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
                 String sql = "DELETE FROM " + table + " a" + (join1 == null ? "" : (", " + join1))
                         + " WHERE " + info.getPrimarySQLColumn() + " IN (SELECT " + info.getPrimaryField() + " FROM "
                         + table
-                        + join2AndWhere + info.createSQLOrderby(flipper) + " OFFSET 0 LIMIT " + flipper.getLimit()
+                        + join2AndWhere + info.createOrderbySql(flipper) + " OFFSET 0 LIMIT " + flipper.getLimit()
                         + ")";
                 sqls.add(sql);
             }
@@ -1468,7 +1478,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             List<String> sqls = new ArrayList<>();
             for (String table : tables) {
                 String sql = "DELETE " + (mysql ? "a" : "") + " FROM " + table + " a"
-                        + (join1 == null ? "" : (", " + join1)) + join2AndWhere + info.createSQLOrderby(flipper)
+                        + (join1 == null ? "" : (", " + join1)) + join2AndWhere + info.createOrderbySql(flipper)
                         + ((mysql && flipper != null && flipper.getLimit() > 0)
                                 ? (" LIMIT " + flipper.getLimit())
                                 : "");
@@ -2144,14 +2154,14 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             sql = "UPDATE " + tables[0] + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
                     + " WHERE " + info.getPrimarySQLColumn() + " IN (SELECT " + info.getPrimaryField() + " FROM "
                     + tables[0]
-                    + wherestr + info.createSQLOrderby(flipper) + " OFFSET 0 LIMIT " + flipper.getLimit() + ")";
+                    + wherestr + info.createOrderbySql(flipper) + " OFFSET 0 LIMIT " + flipper.getLimit() + ")";
 
         } else {
             sql = "UPDATE " + tables[0] + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
                     + ((where == null || where.length() == 0)
                             ? (join2 == null ? "" : (" WHERE " + join2))
                             : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))))
-                    + info.createSQLOrderby(flipper)
+                    + info.createOrderbySql(flipper)
                     + (("mysql".equals(dbtype()) && flipper != null && flipper.getLimit() > 0)
                             ? (" LIMIT " + flipper.getLimit())
                             : "");

@@ -5,8 +5,6 @@
  */
 package org.redkale.source;
 
-import static org.redkale.source.DataSources.*;
-
 import java.io.Serializable;
 import java.sql.*;
 import java.util.*;
@@ -20,6 +18,7 @@ import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ResourceType;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.service.Local;
+import static org.redkale.source.DataSources.*;
 import org.redkale.util.*;
 
 /**
@@ -2570,7 +2569,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 listSubSql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getQueryColumns("a", selects) + " FROM "
                         + tables[0] + " a" + joinAndWhere;
             } else {
-                int b = 0;
                 for (String table : tables) {
                     if (union.length() > 0) {
                         union.append(" UNION ALL ");
@@ -2585,21 +2583,10 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 listSubSql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getQueryColumns("a", selects) + " FROM ("
                         + (union) + ") a";
             }
-            listSql = listSubSql + createSQLOrderby(info, flipper);
-            if (mysqlOrPgsql) {
-                listSql += (flipper == null || flipper.getLimit() < 1
-                        ? ""
-                        : (" LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset()));
-                if (readCache && info.isLoggable(logger, Level.FINEST, listSql)) {
-                    logger.finest(info.getType().getSimpleName() + " query sql=" + listSql);
-                }
-            } else {
-                if (readCache && info.isLoggable(logger, Level.FINEST, listSql)) {
-                    logger.finest(info.getType().getSimpleName() + " query sql=" + listSql
-                            + (flipper == null || flipper.getLimit() < 1
-                                    ? ""
-                                    : (" LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset())));
-                }
+            listSql = listSubSql + createOrderbySql(info, flipper);
+            listSql = createLimitSQL(listSql, flipper);
+            if (readCache && info.isLoggable(logger, Level.FINEST, listSql)) {
+                logger.finest(info.getType().getSimpleName() + " query sql=" + listSql);
             }
             if (mysqlOrPgsql && needTotal) {
                 String countSubSql;
@@ -2840,7 +2827,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     }
 
     public <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, Flipper flipper, Map<String, Object> params) {
-        final boolean mysqlOrPgsql = "mysql".equals(dbtype()) || "postgresql".equals(dbtype());
         DataNativeSqlStatement sinfo = super.nativeParse(sql, true, params);
         final long s = System.currentTimeMillis();
         final JdbcConnection conn = readPool.pollConnection();
@@ -2876,12 +2862,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             }
             slowLog(s, countSql);
             if (total > 0) {
-                String listSql = sinfo.getNativeSql();
-                if (mysqlOrPgsql) {
-                    listSql += (flipper == null || flipper.getLimit() < 1
-                            ? ""
-                            : (" LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset()));
-                }
+                String listSql = createLimitSQL(sinfo.getNativeSql(), flipper);
                 if (sinfo.isEmptyNamed()) {
                     Statement stmt = conn.createQueryStatement();
                     ResultSet set = stmt.executeQuery(listSql);

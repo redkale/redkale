@@ -231,8 +231,8 @@ public abstract class AbstractDataSource extends AbstractService implements Data
      * @param flipper 翻页参数
      * @return SQL
      */
-    protected <T> String createSQLOrderby(EntityInfo<T> info, Flipper flipper) {
-        return info.createSQLOrderby(flipper);
+    protected <T> String createOrderbySql(EntityInfo<T> info, Flipper flipper) {
+        return info.createOrderbySql(flipper);
     }
 
     /**

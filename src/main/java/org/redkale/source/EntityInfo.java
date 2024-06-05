@@ -1415,7 +1415,7 @@ public final class EntityInfo<T> {
      * @param flipper 翻页对象
      * @return String
      */
-    protected String createSQLOrderby(Flipper flipper) {
+    protected String createOrderbySql(Flipper flipper) {
         if (flipper == null || flipper.getSort() == null) {
             return "";
         }
