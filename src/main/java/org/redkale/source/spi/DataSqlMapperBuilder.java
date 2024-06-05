@@ -3,10 +3,6 @@
  */
 package org.redkale.source.spi;
 
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
-import static org.redkale.source.DataNativeSqlInfo.SqlMode.SELECT;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -23,15 +19,19 @@ import org.redkale.asm.AsmMethodBoost;
 import org.redkale.asm.AsmMethodParam;
 import org.redkale.asm.Asms;
 import org.redkale.asm.ClassWriter;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.FieldVisitor;
 import org.redkale.asm.Label;
 import org.redkale.asm.MethodDebugVisitor;
 import org.redkale.asm.MethodVisitor;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.convert.json.JsonObject;
+import org.redkale.persistence.Entity;
 import org.redkale.persistence.Sql;
 import org.redkale.source.AbstractDataSqlSource;
 import org.redkale.source.DataNativeSqlInfo;
+import static org.redkale.source.DataNativeSqlInfo.SqlMode.SELECT;
 import org.redkale.source.DataNativeSqlParser;
 import org.redkale.source.DataSqlMapper;
 import org.redkale.source.DataSqlSource;
@@ -392,7 +392,11 @@ public final class DataSqlMapperBuilder {
     private static Class entityType(Class mapperType) {
         for (java.lang.reflect.Type t : mapperType.getGenericInterfaces()) {
             if (DataSqlMapper.class.isAssignableFrom(TypeToken.typeToClass(t))) {
-                return TypeToken.typeToClass(((ParameterizedType) t).getActualTypeArguments()[0]);
+                Class<?> entityClass = TypeToken.typeToClass(((ParameterizedType) t).getActualTypeArguments()[0]);
+                if (entityClass.getAnnotation(Entity.class) == null) {
+                    throw new SourceException(
+                            "Entity Class " + entityClass.getName() + " must be on Annotation @Entity");
+                }
             }
         }
         throw new SourceException("Not found entity class from " + mapperType.getName());
