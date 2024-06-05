@@ -69,6 +69,7 @@ public class RestSleepTest {
         System.out.println("返回结果: " + new String(bytes, 0, pos));
         System.out.println("耗时: " + e + " ms");
         server.shutdown();
-        Assertions.assertTrue(e < 600);
+        int exptime = Runtime.getRuntime().availableProcessors() > 1 ? 600 : 1100;
+        Assertions.assertTrue(e < exptime);
     }
 }
