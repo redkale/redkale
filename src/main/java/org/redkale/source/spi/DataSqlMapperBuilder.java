@@ -69,12 +69,12 @@ public final class DataSqlMapperBuilder {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
             Class newClazz = clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz;
             M mapper = (M) newClazz.getDeclaredConstructor().newInstance();
-            {
+            { // DataSqlSource
                 Field c = newClazz.getDeclaredField("_source");
                 c.setAccessible(true);
                 c.set(mapper, source);
             }
-            {
+            { // Entity Class
                 Field c = newClazz.getDeclaredField("_type");
                 c.setAccessible(true);
                 c.set(mapper, entityType);
@@ -120,7 +120,7 @@ public final class DataSqlMapperBuilder {
             }
             DataNativeSqlInfo sqlInfo = nativeSqlParser.parse(signFunc, source.getType(), sql.value());
             AsmMethodBean methodBean = selfMethodBeans.get(AsmMethodBoost.getMethodBeanKey(method));
-            List<String> fieldNames = methodBean.fieldNameList();
+            List<String> fieldNames = methodBean.paramNameList(method);
             Class resultClass = resultClass(method);
             int flipperIndex = -1;
             if (resultClass.isAssignableFrom(Sheet.class)) {
@@ -397,6 +397,7 @@ public final class DataSqlMapperBuilder {
                     throw new SourceException(
                             "Entity Class " + entityClass.getName() + " must be on Annotation @Entity");
                 }
+                return entityClass;
             }
         }
         throw new SourceException("Not found entity class from " + mapperType.getName());

@@ -4,9 +4,11 @@
 package org.redkale.asm;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.redkale.annotation.Param;
 import org.redkale.convert.json.JsonConvert;
 
 /**
@@ -64,23 +66,37 @@ public class AsmMethodBean {
     }
 
     public List<String> fieldNameList() {
+        return paramNameList(null);
+    }
+
+    public List<String> paramNameList(Method method) {
         if (params == null) {
             return new ArrayList<>();
         }
+        int index = 0;
+        Parameter[] ps = method == null ? null : method.getParameters();
         List<String> rs = new ArrayList<>(params.size());
         for (AsmMethodParam p : params) {
-            rs.add(p.getName());
+            Param pann = ps == null ? null : ps[index].getAnnotation(Param.class);
+            rs.add(pann == null ? p.getName() : pann.value());
+            index++;
         }
         return rs;
     }
 
     public String[] fieldNameArray() {
+        return paramNameArray(null);
+    }
+
+    public String[] paramNameArray(Method method) {
         if (params == null) {
             return null;
         }
+        Parameter[] ps = method == null ? null : method.getParameters();
         String[] rs = new String[params.size()];
         for (int i = 0; i < rs.length; i++) {
-            rs[i] = params.get(i).getName();
+            Param pann = ps == null ? null : ps[i].getAnnotation(Param.class);
+            rs[i] = pann == null ? params.get(i).getName() : pann.value();
         }
         return rs;
     }
