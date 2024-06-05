@@ -28,7 +28,7 @@ public @interface FilterOrs {
     /**
      * OR 关系的组名
      *
-     * @return
+     * @return 组名集合
      */
     String[] value();
 }
