@@ -6,6 +6,7 @@
 package org.redkale.test.http;
 
 import java.io.*;
+import java.lang.reflect.Method;
 import java.net.*;
 import org.junit.jupiter.api.*;
 import org.redkale.boot.Application;
@@ -20,11 +21,8 @@ import org.redkale.util.*;
 /** @author zhangjx */
 public class RestSleepTest {
 
-    private boolean main;
-
     public static void main(String[] args) throws Throwable {
         RestSleepTest test = new RestSleepTest();
-        test.main = true;
         test.run();
     }
 
@@ -37,6 +35,9 @@ public class RestSleepTest {
         final ResourceFactory resFactory = ResourceFactory.create();
         resFactory.register(JsonConvert.root());
         resFactory.register(BsonConvert.root());
+        Method method = Application.class.getDeclaredMethod("initWorkExecutor");
+        method.setAccessible(true);
+        method.invoke(application);
 
         // ------------------------ 初始化 CService ------------------------------------
         RestSleepService service = Sncp.createSimpleLocalService(RestSleepService.class, resFactory);
@@ -69,7 +70,6 @@ public class RestSleepTest {
         System.out.println("返回结果: " + new String(bytes, 0, pos));
         System.out.println("耗时: " + e + " ms");
         server.shutdown();
-        int exptime = Runtime.getRuntime().availableProcessors() > 2 ? 600 : 1100;
-        Assertions.assertTrue(e < exptime);
+        Assertions.assertTrue(e < 600);
     }
 }
