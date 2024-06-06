@@ -40,6 +40,10 @@ public class CacheInstance implements Service {
         return "haha";
     }
 
+    public void updateName() {
+        cacheManager.bothSet("name", String.class, "gege", Duration.ofMillis(600), Duration.ofMillis(600));
+    }
+
     @Cached(key = "name", localExpire = "30", remoteExpire = "60")
     public String getName2() throws RedkaleException {
         return "haha";
