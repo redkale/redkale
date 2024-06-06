@@ -7,7 +7,15 @@ import java.util.concurrent.TimeUnit;
 import org.redkale.cache.Cached;
 import org.redkale.convert.json.JsonConvert;
 
-/** @author zhangjx */
+/**
+ * 缓存信息的基本对象
+ *
+ * <p>详情见: https://redkale.org
+ *
+ * @author zhangjx
+ * @since 2.8.0
+ *
+ */
 public class CacheEntry {
 
     private String key;

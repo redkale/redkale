@@ -114,7 +114,6 @@ public class CacheAction {
     @ClassDepends
     public <T> T get(ThrowSupplier<T> supplier, Object... args) {
         if (async) {
-            ThrowSupplier supplier0 = supplier;
             return (T) manager.bothGetSetAsync(
                     hash,
                     keyGenerator.generate(service, this, args),
@@ -122,7 +121,7 @@ public class CacheAction {
                     nullable,
                     localExpire,
                     remoteExpire,
-                    supplier0);
+                    (ThrowSupplier) supplier);
         } else {
             return manager.bothGetSet(
                     hash,

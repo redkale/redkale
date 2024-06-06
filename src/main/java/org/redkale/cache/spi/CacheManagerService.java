@@ -3,6 +3,7 @@
  */
 package org.redkale.cache.spi;
 
+import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -21,8 +22,10 @@ import org.redkale.annotation.Resource;
 import org.redkale.annotation.ResourceType;
 import org.redkale.boot.Application;
 import org.redkale.cache.CacheManager;
+import org.redkale.convert.json.JsonConvert;
 import org.redkale.service.Local;
 import org.redkale.service.Service;
+import org.redkale.source.CacheEventListener;
 import org.redkale.source.CacheMemorySource;
 import org.redkale.source.CacheSource;
 import org.redkale.util.AnyValue;
@@ -34,7 +37,10 @@ import org.redkale.util.Utility;
 /**
  * 缓存管理器
  *
+ * <p>详情见: https://redkale.org
+ *
  * @author zhangjx
+ * @since 2.8.0
  */
 @Local
 @Component
@@ -42,8 +48,13 @@ import org.redkale.util.Utility;
 @ResourceType(CacheManager.class)
 public class CacheManagerService implements CacheManager, Service {
 
+    public static final String CACHE_CHANNEL_TOPIC = "cache-update-channel";
+
     // 是否开启缓存
     protected boolean enabled = true;
+
+    // 是否开启本地缓存变更通知
+    protected boolean channelable = true;
 
     // 配置
     protected AnyValue config;
@@ -68,6 +79,8 @@ public class CacheManagerService implements CacheManager, Service {
 
     // 远程缓存Source
     protected CacheSource remoteSource;
+
+    protected CacheEventListener remoteListener;
 
     protected CacheManagerService(@Nullable CacheSource remoteSource) {
         this.remoteSource = remoteSource;
@@ -98,11 +111,14 @@ public class CacheManagerService implements CacheManager, Service {
             this.localSource.init(conf);
             String remoteSourceName = conf.getValue("remote");
             if (Utility.isNotBlank(remoteSourceName)) {
+                this.channelable = conf.getBoolValue("channelable", true);
                 CacheSource source = application.loadCacheSource(remoteSourceName, false);
                 if (source == null) {
                     throw new RedkaleException("Not found CacheSource '" + remoteSourceName + "'");
                 }
                 this.remoteSource = source;
+                this.remoteListener = new CacheRemoteListener();
+                this.remoteSource.subscribe(CacheEventMessage.class, remoteListener, CACHE_CHANNEL_TOPIC);
             }
         }
     }
@@ -111,6 +127,9 @@ public class CacheManagerService implements CacheManager, Service {
     public void destroy(AnyValue conf) {
         if (this.enabled) {
             this.localSource.destroy(conf);
+        }
+        if (this.remoteSource != null && this.remoteListener != null) {
+            this.remoteSource.unsubscribe(remoteListener, CACHE_CHANNEL_TOPIC);
         }
     }
 
@@ -513,6 +532,9 @@ public class CacheManagerService implements CacheManager, Service {
         }
         if (remoteSource != null && remoteExpire != null) {
             setCache(remoteSource, hash, key, type, value, remoteExpire);
+            if (channelable) {
+                remoteSource.publish(CACHE_CHANNEL_TOPIC, new CacheEventMessage(idFor(hash, key)));
+            }
         }
     }
 
@@ -536,7 +558,14 @@ public class CacheManagerService implements CacheManager, Service {
             setCache(localSource, hash, key, type, value, localExpire);
         }
         if (remoteSource != null && remoteExpire != null) {
-            return setCacheAsync(remoteSource, hash, key, type, value, remoteExpire);
+            return setCacheAsync(remoteSource, hash, key, type, value, remoteExpire)
+                    .thenCompose(r -> {
+                        return channelable
+                                ? remoteSource
+                                        .publishAsync(CACHE_CHANNEL_TOPIC, new CacheEventMessage(idFor(hash, key)))
+                                        .thenApply(n -> r)
+                                : CompletableFuture.completedFuture(null);
+                    });
         } else {
             return CompletableFuture.completedFuture(null);
         }
@@ -555,10 +584,12 @@ public class CacheManagerService implements CacheManager, Service {
         String id = idFor(hash, key);
         long v = localSource.del(id);
         if (remoteSource != null) {
-            return remoteSource.del(id);
-        } else {
-            return v;
+            v = remoteSource.del(id);
+            if (channelable) {
+                remoteSource.publish(CACHE_CHANNEL_TOPIC, new CacheEventMessage(id));
+            }
         }
+        return v;
     }
 
     /**
@@ -574,7 +605,13 @@ public class CacheManagerService implements CacheManager, Service {
         String id = idFor(hash, key);
         long v = localSource.del(id); // 内存操作，无需异步
         if (remoteSource != null) {
-            return remoteSource.delAsync(id);
+            return remoteSource.delAsync(id).thenCompose(r -> {
+                return channelable
+                        ? remoteSource
+                                .publishAsync(CACHE_CHANNEL_TOPIC, new CacheEventMessage(id))
+                                .thenApply(n -> r)
+                        : CompletableFuture.completedFuture(v);
+            });
         } else {
             return CompletableFuture.completedFuture(v);
         }
@@ -943,6 +980,50 @@ public class CacheManagerService implements CacheManager, Service {
                 asyncLock.remove(lockId);
                 lock.unlock();
             }
+        }
+    }
+
+    public class CacheRemoteListener implements CacheEventListener<CacheEventMessage> {
+
+        @Override
+        public void onMessage(String topic, CacheEventMessage message) {
+            localSource.del(message.getKey());
+        }
+    }
+
+    public static class CacheEventMessage implements Serializable {
+        // key
+        protected String key;
+
+        // 时间
+        protected long time;
+
+        public CacheEventMessage() {}
+
+        public CacheEventMessage(String key) {
+            this.key = key;
+            this.time = System.currentTimeMillis();
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public void setKey(String key) {
+            this.key = key;
+        }
+
+        public long getTime() {
+            return time;
+        }
+
+        public void setTime(long time) {
+            this.time = time;
+        }
+
+        @Override
+        public String toString() {
+            return JsonConvert.root().convertTo(this);
         }
     }
 }

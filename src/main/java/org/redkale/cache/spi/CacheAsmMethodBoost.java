@@ -33,7 +33,13 @@ import org.redkale.util.RedkaleException;
 import org.redkale.util.ThrowSupplier;
 import org.redkale.util.TypeToken;
 
-/** @author zhangjx */
+/**
+ * 动态字节码的方法扩展器
+ *
+ * @author zhangjx
+ *
+ * @since 2.8.0
+ */
 public class CacheAsmMethodBoost extends AsmMethodBoost {
 
     private static final java.lang.reflect.Type FUTURE_VOID = new TypeToken<CompletableFuture<Void>>() {}.getType();
@@ -55,12 +61,12 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
 
     @Override
     public String doMethod(
-            ClassLoader classLoader,
-            ClassWriter cw,
-            String newDynName,
-            String fieldPrefix,
-            List filterAnns,
-            Method method,
+            final ClassLoader classLoader,
+            final ClassWriter cw,
+            final String newDynName,
+            final String fieldPrefix,
+            final List filterAnns,
+            final Method method,
             final String newMethodName) {
         Map<String, CacheAction> actions = this.actionMap;
         if (actions == null) {

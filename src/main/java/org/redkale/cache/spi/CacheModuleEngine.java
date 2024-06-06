@@ -24,7 +24,14 @@ import org.redkale.util.InstanceProvider;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 
-/** @author zhangjx */
+/**
+ * 缓存管理器
+ *
+ * <p>详情见: https://redkale.org
+ *
+ * @author zhangjx
+ * @since 2.8.0
+ */
 public class CacheModuleEngine extends ModuleEngine {
 
     // 全局缓存管理器
@@ -124,7 +131,9 @@ public class CacheModuleEngine extends ModuleEngine {
         });
     }
 
-    /** 进入Application.shutdown方法被调用 */
+    /**
+     * 进入Application.shutdown方法被调用
+     */
     @Override
     public void onAppPreShutdown() {
         if (!application.isCompileMode() && this.cacheManager instanceof Service) {
