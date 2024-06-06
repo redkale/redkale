@@ -207,13 +207,13 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
                     pageSql = "SELECT * FROM (SELECT T_.*, ROWNUM RN_ FROM (" + pageSql + ") T_) WHERE RN_ BETWEEN "
                             + start + " AND " + end;
                     containsLimit = true;
-                } else if ("mysql".equals(dbtype) || "postgresql".equals(dbtype)) {
-                    pageSql += " LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset();
-                    containsLimit = true;
                 } else if ("sqlserver".equals(dbtype)) {
                     int offset = flipper.getOffset();
                     int limit = flipper.getLimit();
                     pageSql += " OFFSET " + offset + " ROWS FETCH NEXT " + limit + " ROWS ONLY";
+                    containsLimit = true;
+                } else { // 按mysql、postgresql、mariadb、h2处理
+                    pageSql += " LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset();
                     containsLimit = true;
                 }
             }
