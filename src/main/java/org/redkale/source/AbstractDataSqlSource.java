@@ -82,6 +82,9 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
 
     protected final IntFunction<String> signFunc = index -> prepareParamSign(index);
 
+    // Flipper.sort转换成以ORDER BY开头SQL的缓存
+    protected final Map<String, String> sortOrderbySqls = new ConcurrentHashMap<>();
+
     // 超过多少毫秒视为较慢, 会打印警告级别的日志, 默认值: 2000
     protected long slowmsWarn;
 
@@ -156,7 +159,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
                 readConfProps.getProperty(DATA_SOURCE_SLOWMS_ERROR, "3000").trim());
     }
 
-    protected String createLimitSQL(String listSql, Flipper flipper) {
+    protected String createLimitSql(String listSql, Flipper flipper) {
         if (flipper == null || flipper.getLimit() < 1) {
             return listSql;
         }
@@ -165,6 +168,47 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             return listSql + " LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset();
         }
         throw new SourceException("Not support page sql: " + listSql);
+    }
+
+    /**
+     * 根据Flipper获取ORDER BY的SQL语句，不存在Flipper或sort字段返回空字符串
+     *
+     * @param flipper 翻页对象
+     * @return String
+     */
+    protected String createOrderbySql(EntityInfo info, Flipper flipper) {
+        if (flipper == null || Utility.isEmpty(flipper.getSort())) {
+            return "";
+        }
+        final String sort = flipper.getSort();
+        if (sort.indexOf(';') >= 0 || sort.indexOf('\n') >= 0) {
+            return "";
+        }
+        return sortOrderbySqls.computeIfAbsent(sort, s -> {
+            final StringBuilder sb = new StringBuilder();
+            sb.append(" ORDER BY ");
+            if (info.getBuilder().isNoAlias()) {
+                sb.append(s);
+            } else {
+                boolean flag = false;
+                for (String item : s.split(",")) {
+                    if (item.isEmpty()) {
+                        continue;
+                    }
+                    String[] sub = item.split("\\s+");
+                    if (flag) {
+                        sb.append(',');
+                    }
+                    if (sub.length < 2 || sub[1].equalsIgnoreCase("ASC")) {
+                        sb.append(info.getSQLColumn("a", sub[0])).append(" ASC");
+                    } else {
+                        sb.append(info.getSQLColumn("a", sub[0])).append(" DESC");
+                    }
+                    flag = true;
+                }
+            }
+            return sb.toString();
+        });
     }
 
     @Override
@@ -336,7 +380,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
                 // #{oldtable} LIMIT 0)");
                 props.setProperty(
                         DATA_SOURCE_TABLECOPY_SQLTEMPLATE,
-                        "CREATE TABLE IF NOT EXISTS #{newtable} (LIKE #{oldtable} INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING COMMENTS INCLUDING INDEXES)");
+                        "CREATE TABLE IF NOT EXISTS #{newtable} (LIKE #{oldtable} "
+                                + "INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING COMMENTS INCLUDING INDEXES)");
             }
             if (!props.containsKey(DATA_SOURCE_TABLENOTEXIST_SQLSTATES)) {
                 props.setProperty(DATA_SOURCE_TABLENOTEXIST_SQLSTATES, "42P01;3F000");
@@ -719,11 +764,11 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
         return sqlCode != null && !sqlCode.isEmpty() && tableNotExistSqlstates.contains(';' + sqlCode + ';');
     }
 
-    protected String getTableCopySQL(EntityInfo info, String newTable) {
+    protected String getTableCopySql(EntityInfo info, String newTable) {
         return tablecopySQL.replace("#{newtable}", newTable).replace("#{oldtable}", info.table);
     }
 
-    protected <T> Serializable getSQLAttrValue(EntityInfo info, Attribute attr, Serializable val) {
+    protected Serializable getSQLAttrValue(EntityInfo info, Attribute attr, Serializable val) {
         if (val != null
                 && !(val instanceof Number)
                 && !(val instanceof CharSequence)
@@ -1468,7 +1513,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
                 String sql = "DELETE FROM " + table + " a" + (join1 == null ? "" : (", " + join1))
                         + " WHERE " + info.getPrimarySQLColumn() + " IN (SELECT " + info.getPrimaryField() + " FROM "
                         + table
-                        + join2AndWhere + info.createOrderbySql(flipper) + " OFFSET 0 LIMIT " + flipper.getLimit()
+                        + join2AndWhere + createOrderbySql(info, flipper) + " OFFSET 0 LIMIT " + flipper.getLimit()
                         + ")";
                 sqls.add(sql);
             }
@@ -1478,7 +1523,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             List<String> sqls = new ArrayList<>();
             for (String table : tables) {
                 String sql = "DELETE " + (mysql ? "a" : "") + " FROM " + table + " a"
-                        + (join1 == null ? "" : (", " + join1)) + join2AndWhere + info.createOrderbySql(flipper)
+                        + (join1 == null ? "" : (", " + join1)) + join2AndWhere + createOrderbySql(info, flipper)
                         + ((mysql && flipper != null && flipper.getLimit() > 0)
                                 ? (" LIMIT " + flipper.getLimit())
                                 : "");
@@ -1562,7 +1607,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
         if (sqls == null) {
             return -1;
         }
-        String copyTableSql = info.getTableStrategy() == null ? null : getTableCopySQL(info, info.getTable(pk));
+        String copyTableSql = info.getTableStrategy() == null ? null : getTableCopySql(info, info.getTable(pk));
         if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
             logger.finest(info.getType().getSimpleName() + " createTable sql=" + Arrays.toString(sqls));
         }
@@ -1582,7 +1627,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
         if (sqls == null) {
             return CompletableFuture.completedFuture(-1);
         }
-        String copyTableSql = info.getTableStrategy() == null ? null : getTableCopySQL(info, info.getTable(pk));
+        String copyTableSql = info.getTableStrategy() == null ? null : getTableCopySql(info, info.getTable(pk));
         if (copyTableSql == null) {
             if (info.isLoggable(logger, Level.FINEST, sqls[0])) {
                 logger.finest(info.getType().getSimpleName() + " createTable sql=" + Arrays.toString(sqls));
@@ -2154,14 +2199,14 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             sql = "UPDATE " + tables[0] + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
                     + " WHERE " + info.getPrimarySQLColumn() + " IN (SELECT " + info.getPrimaryField() + " FROM "
                     + tables[0]
-                    + wherestr + info.createOrderbySql(flipper) + " OFFSET 0 LIMIT " + flipper.getLimit() + ")";
+                    + wherestr + createOrderbySql(info, flipper) + " OFFSET 0 LIMIT " + flipper.getLimit() + ")";
 
         } else {
             sql = "UPDATE " + tables[0] + " a " + (join1 == null ? "" : (", " + join1)) + " SET " + setsql
                     + ((where == null || where.length() == 0)
                             ? (join2 == null ? "" : (" WHERE " + join2))
                             : (" WHERE " + where + (join2 == null ? "" : (" AND " + join2))))
-                    + info.createOrderbySql(flipper)
+                    + createOrderbySql(info, flipper)
                     + (("mysql".equals(dbtype()) && flipper != null && flipper.getLimit() > 0)
                             ? (" LIMIT " + flipper.getLimit())
                             : "");
@@ -2703,7 +2748,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
         }
 
         final String[] tables = info.getTables(node);
-        String sql = queryColumnMapSql(info, tables, keyColumn, func, funcColumn, node);
+        String sql = AbstractDataSqlSource.this.queryColumnMapSql(info, tables, keyColumn, func, funcColumn, node);
         if (info.isLoggable(logger, Level.FINEST, sql)) {
             logger.finest(info.getType().getSimpleName() + " queryColumnMap sql=" + sql);
         }
@@ -2730,7 +2775,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             }
         }
         final String[] tables = info.getTables(node);
-        String sql = queryColumnMapSql(info, tables, keyColumn, func, funcColumn, node);
+        String sql = AbstractDataSqlSource.this.queryColumnMapSql(info, tables, keyColumn, func, funcColumn, node);
         if (info.isLoggable(logger, Level.FINEST, sql)) {
             logger.finest(info.getType().getSimpleName() + " queryColumnMap sql=" + sql);
         }
@@ -3060,7 +3105,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
 
     protected <T> T findUnCache(final EntityInfo<T> info, final SelectColumn selects, final Serializable pk) {
         String[] tables = info.getTableOneArray(pk);
-        String sql = findSql(info, selects, pk);
+        String sql = AbstractDataSqlSource.this.findSql(info, selects, pk);
         if (info.isLoggable(logger, Level.FINEST, sql)) {
             logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
         }
@@ -3074,7 +3119,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
     protected <T> CompletableFuture<T> findUnCacheAsync(
             final EntityInfo<T> info, final SelectColumn selects, final Serializable pk) {
         String[] tables = info.getTableOneArray(pk);
-        String sql = findSql(info, selects, pk);
+        String sql = AbstractDataSqlSource.this.findSql(info, selects, pk);
         if (info.isLoggable(logger, Level.FINEST, sql)) {
             logger.finest(info.getType().getSimpleName() + " find sql=" + sql);
         }

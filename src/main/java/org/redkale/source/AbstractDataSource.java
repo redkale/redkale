@@ -5,9 +5,6 @@
  */
 package org.redkale.source;
 
-import static org.redkale.boot.Application.RESNAME_APP_EXECUTOR;
-import static org.redkale.source.DataSources.*;
-
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -19,12 +16,14 @@ import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Comment;
 import org.redkale.annotation.ResourceType;
+import static org.redkale.boot.Application.RESNAME_APP_EXECUTOR;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.inject.Resourcable;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.net.WorkThread;
 import org.redkale.persistence.Entity;
 import org.redkale.service.*;
+import static org.redkale.source.DataSources.*;
 import org.redkale.util.*;
 
 /**
@@ -221,18 +220,6 @@ public abstract class AbstractDataSource extends AbstractService implements Data
      */
     protected <T> T getEntityValue(EntityInfo<T> info, final SelectColumn sels, final EntityInfo.DataResultSetRow row) {
         return info.getBuilder().getEntityValue(sels, row);
-    }
-
-    /**
-     * 根据翻页参数构建排序SQL
-     *
-     * @param <T> 泛型
-     * @param info EntityInfo
-     * @param flipper 翻页参数
-     * @return SQL
-     */
-    protected <T> String createOrderbySql(EntityInfo<T> info, Flipper flipper) {
-        return info.createOrderbySql(flipper);
     }
 
     /**

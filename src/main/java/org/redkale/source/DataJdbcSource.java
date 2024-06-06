@@ -453,7 +453,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         if (pos > 0) {
                             newCatalogs.add(t.substring(0, pos));
                         }
-                        tableCopys.add(getTableCopySQL(info, t));
+                        tableCopys.add(getTableCopySql(info, t));
                     });
                     try {
                         // 执行一遍创建分表操作
@@ -2584,7 +2584,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         + (union) + ") a";
             }
             listSql = listSubSql + createOrderbySql(info, flipper);
-            listSql = createLimitSQL(listSql, flipper);
+            listSql = createLimitSql(listSql, flipper);
             if (readCache && info.isLoggable(logger, Level.FINEST, listSql)) {
                 logger.finest(info.getType().getSimpleName() + " query sql=" + listSql);
             }
@@ -2862,7 +2862,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             }
             slowLog(s, countSql);
             if (total > 0) {
-                String listSql = createLimitSQL(sinfo.getNativeSql(), flipper);
+                String listSql = createLimitSql(sinfo.getNativePageSql(), flipper);
                 if (sinfo.isEmptyNamed()) {
                     Statement stmt = conn.createQueryStatement();
                     ResultSet set = stmt.executeQuery(listSql);

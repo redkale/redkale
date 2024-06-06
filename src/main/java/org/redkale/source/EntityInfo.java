@@ -196,9 +196,6 @@ public final class EntityInfo<T> {
     // 日志控制
     private final Map<Integer, String[]> excludeLogLevels;
 
-    // Flipper.sort转换成以ORDER BY开头SQL的缓存
-    private final Map<String, String> sortOrderbySqls = new ConcurrentHashMap<>();
-
     // 所属的DataSource
     final DataSource source;
 
@@ -1407,51 +1404,6 @@ public final class EntityInfo<T> {
      */
     public Attribute<T, Serializable> getUpdateAttribute(String fieldname) {
         return this.updateAttributeMap.get(fieldname);
-    }
-
-    /**
-     * 根据Flipper获取ORDER BY的SQL语句，不存在Flipper或sort字段返回空字符串
-     *
-     * @param flipper 翻页对象
-     * @return String
-     */
-    protected String createOrderbySql(Flipper flipper) {
-        if (flipper == null || flipper.getSort() == null) {
-            return "";
-        }
-        final String sort = flipper.getSort();
-        if (sort.isEmpty() || sort.indexOf(';') >= 0 || sort.indexOf('\n') >= 0) {
-            return "";
-        }
-        String sql = this.sortOrderbySqls.get(sort);
-        if (sql != null) {
-            return sql;
-        }
-        final StringBuilder sb = new StringBuilder();
-        sb.append(" ORDER BY ");
-        if (builder.isNoAlias()) {
-            sb.append(sort);
-        } else {
-            boolean flag = false;
-            for (String item : sort.split(",")) {
-                if (item.isEmpty()) {
-                    continue;
-                }
-                String[] sub = item.split("\\s+");
-                if (flag) {
-                    sb.append(',');
-                }
-                if (sub.length < 2 || sub[1].equalsIgnoreCase("ASC")) {
-                    sb.append(getSQLColumn("a", sub[0])).append(" ASC");
-                } else {
-                    sb.append(getSQLColumn("a", sub[0])).append(" DESC");
-                }
-                flag = true;
-            }
-        }
-        sql = sb.toString();
-        this.sortOrderbySqls.put(sort, sql);
-        return sql;
     }
 
     /**

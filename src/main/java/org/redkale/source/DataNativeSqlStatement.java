@@ -42,6 +42,9 @@ public class DataNativeSqlStatement {
     // 根据参数值集合重新生成的带?参数可执行的sql
     protected String nativeSql;
 
+    // 根据参数值集合重新生成的带?参数可执行的sql
+    protected String nativePageSql;
+
     // 根据参数值集合重新生成的带?参数可执行的计算总数sql,用于返回Sheet对象
     @Nullable
     protected String nativeCountSql;
@@ -71,6 +74,14 @@ public class DataNativeSqlStatement {
 
     public void setNativeSql(String nativeSql) {
         this.nativeSql = nativeSql;
+    }
+
+    public String getNativePageSql() {
+        return nativePageSql == null ? nativeSql : nativePageSql;
+    }
+
+    public void setNativePageSql(String nativePageSql) {
+        this.nativePageSql = nativePageSql;
     }
 
     public String getNativeCountSql() {
