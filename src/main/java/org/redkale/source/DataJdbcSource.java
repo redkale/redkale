@@ -2386,23 +2386,13 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         JdbcConnection conn = null;
         final long s = System.currentTimeMillis();
         final SelectColumn sels = selects;
-        final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
-        final CharSequence join =
-                node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
-        final CharSequence where = node == null ? null : node.createSQLExpress(this, info, joinTabalis);
         String[] tables = info.getTables(node);
-        final String joinAndWhere =
-                (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
-        final boolean mysqlOrPgsql = "mysql".equals(dbtype()) || "postgresql".equals(dbtype());
         try {
             conn = readPool.pollConnection();
             conn.setAutoCommit(true);
-            String[] sqls = createSheetListAndCountSql(
-                    info, readCache, needTotal, distinct, selects, flipper, mysqlOrPgsql, tables, joinAndWhere);
-            String listSql = sqls[0];
-            String countSql = sqls[1];
+            PageCountSql sqls = createPageCountSql(info, readCache, needTotal, distinct, sels, tables, flipper, node);
             try {
-                return executeQuerySheet(info, needTotal, flipper, sels, s, conn, mysqlOrPgsql, listSql, countSql);
+                return executeQuerySheet(info, needTotal, flipper, sels, s, conn, sqls);
             } catch (SQLException se) {
                 if (isTableNotExist(info, se, se.getSQLState())) {
                     if (info.getTableStrategy() == null) {
@@ -2439,20 +2429,8 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         }
 
                         // 重新查询一次
-                        sqls = createSheetListAndCountSql(
-                                info,
-                                readCache,
-                                needTotal,
-                                distinct,
-                                selects,
-                                flipper,
-                                mysqlOrPgsql,
-                                tables,
-                                joinAndWhere);
-                        listSql = sqls[0];
-                        countSql = sqls[1];
-                        return executeQuerySheet(
-                                info, needTotal, flipper, sels, s, conn, mysqlOrPgsql, listSql, countSql);
+                        sqls = createPageCountSql(info, readCache, needTotal, distinct, sels, tables, flipper, node);
+                        return executeQuerySheet(info, needTotal, flipper, sels, s, conn, sqls);
                     } else {
                         throw new SourceException(se);
                     }
@@ -2475,26 +2453,25 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             SelectColumn sels,
             long s,
             JdbcConnection conn,
-            boolean mysqlOrPgsql,
-            String listSql,
-            String countSql)
+            PageCountSql sqls)
             throws SQLException {
         final List<T> list = new ArrayList();
-        if (mysqlOrPgsql) { // sql可以带limit、offset
+        if (sqls.pageContainsLimit) { // sql可以带limit、offset
             ResultSet set;
             PreparedStatement prestmt;
             long total = -1;
             if (needTotal) {
-                prestmt = conn.prepareQueryStatement(countSql);
+                prestmt = conn.prepareQueryStatement(sqls.countSql);
                 set = prestmt.executeQuery();
                 if (set.next()) {
                     total = set.getLong(1);
                 }
                 set.close();
                 conn.offerQueryStatement(prestmt);
+                slowLog(s, sqls.countSql);
             }
             if (total != 0) {
-                prestmt = conn.prepareQueryStatement(listSql);
+                prestmt = conn.prepareQueryStatement(sqls.pageSql);
                 set = prestmt.executeQuery();
                 final DataResultSet rr = createDataResultSet(info, set);
                 while (set.next()) {
@@ -2505,11 +2482,11 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                 if (!needTotal) {
                     total = list.size();
                 }
+                slowLog(s, sqls.pageSql);
             }
-            slowLog(s, listSql);
             return new Sheet<>(total, list);
         } else {
-            PreparedStatement prestmt = conn.prepareQueryStatement(listSql);
+            PreparedStatement prestmt = conn.prepareQueryStatement(sqls.pageSql);
             if (flipper != null && flipper.getLimit() > 0) {
                 prestmt.setFetchSize(flipper.getLimit());
             }
@@ -2545,67 +2522,9 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             }
             set.close();
             conn.offerQueryStatement(prestmt);
-            slowLog(s, listSql);
+            slowLog(s, sqls.pageSql);
             return new Sheet<>(total, list);
         }
-    }
-
-    private <T> String[] createSheetListAndCountSql(
-            EntityInfo<T> info,
-            final boolean readCache,
-            boolean needTotal,
-            final boolean distinct,
-            SelectColumn selects,
-            Flipper flipper,
-            boolean mysqlOrPgsql,
-            String[] tables,
-            String joinAndWhere) {
-        String listSql = null;
-        String countSql = null;
-        { // 组装listSql、countSql
-            String listSubSql;
-            StringBuilder union = new StringBuilder();
-            if (tables.length == 1) {
-                listSubSql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getQueryColumns("a", selects) + " FROM "
-                        + tables[0] + " a" + joinAndWhere;
-            } else {
-                for (String table : tables) {
-                    if (union.length() > 0) {
-                        union.append(" UNION ALL ");
-                    }
-                    union.append("SELECT ")
-                            .append(info.getQueryColumns("a", selects))
-                            .append(" FROM ")
-                            .append(table)
-                            .append(" a")
-                            .append(joinAndWhere);
-                }
-                listSubSql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getQueryColumns("a", selects) + " FROM ("
-                        + (union) + ") a";
-            }
-            listSql = listSubSql + createOrderbySql(info, flipper);
-            listSql = createLimitSql(listSql, flipper);
-            if (readCache && info.isLoggable(logger, Level.FINEST, listSql)) {
-                logger.finest(info.getType().getSimpleName() + " query sql=" + listSql);
-            }
-            if (mysqlOrPgsql && needTotal) {
-                String countSubSql;
-                if (tables.length == 1) {
-                    countSubSql = "SELECT "
-                            + (distinct ? "DISTINCT COUNT(" + info.getQueryColumns("a", selects) + ")" : "COUNT(*)")
-                            + " FROM " + tables[0] + " a" + joinAndWhere;
-                } else {
-                    countSubSql = "SELECT "
-                            + (distinct ? "DISTINCT COUNT(" + info.getQueryColumns("a", selects) + ")" : "COUNT(*)")
-                            + " FROM (" + (union) + ") a";
-                }
-                countSql = countSubSql;
-                if (readCache && info.isLoggable(logger, Level.FINEST, countSql)) {
-                    logger.finest(info.getType().getSimpleName() + " querySheet countsql=" + countSql);
-                }
-            }
-        }
-        return new String[] {listSql, countSql};
     }
 
     protected List<String> checkNotExistTablesNoThrows(JdbcConnection conn, String[] tables) {
@@ -2862,15 +2781,15 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             }
             slowLog(s, countSql);
             if (total > 0) {
-                String listSql = createLimitSql(sinfo.getNativePageSql(), flipper);
+                String pageSql = createLimitSql(sinfo.getNativePageSql(), flipper);
                 if (sinfo.isEmptyNamed()) {
                     Statement stmt = conn.createQueryStatement();
-                    ResultSet set = stmt.executeQuery(listSql);
+                    ResultSet set = stmt.executeQuery(pageSql);
                     list = EntityBuilder.getListValue(type, createDataResultSet(null, set));
                     set.close();
                     conn.offerQueryStatement(stmt);
                 } else {
-                    final PreparedStatement prestmt = conn.prepareQueryStatement(listSql);
+                    final PreparedStatement prestmt = conn.prepareQueryStatement(pageSql);
                     Map<String, Object> paramValues = sinfo.getParamValues();
                     int index = 0;
                     for (String n : sinfo.getParamNames()) {
@@ -2881,7 +2800,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                     set.close();
                     conn.offerQueryStatement(prestmt);
                 }
-                slowLog(s, listSql);
+                slowLog(s, pageSql);
             } else {
                 list = new ArrayList();
             }

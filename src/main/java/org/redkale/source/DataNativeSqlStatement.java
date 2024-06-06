@@ -42,7 +42,7 @@ public class DataNativeSqlStatement {
     // 根据参数值集合重新生成的带?参数可执行的sql
     protected String nativeSql;
 
-    // 根据参数值集合重新生成的带?参数可执行的sql
+    // 根据参数值集合重新生成的带?参数可执行的sql, 用于翻页查询
     protected String nativePageSql;
 
     // 根据参数值集合重新生成的带?参数可执行的计算总数sql,用于返回Sheet对象

@@ -159,6 +159,87 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
                 readConfProps.getProperty(DATA_SOURCE_SLOWMS_ERROR, "3000").trim());
     }
 
+    protected <T> PageCountSql createPageCountSql(
+            EntityInfo<T> info,
+            final boolean readCache,
+            boolean needTotal,
+            final boolean distinct,
+            SelectColumn selects,
+            String[] tables,
+            Flipper flipper,
+            FilterNode node) {
+        final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
+        final CharSequence join =
+                node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
+        final CharSequence where = node == null ? null : node.createSQLExpress(this, info, joinTabalis);
+        final String joinAndWhere =
+                (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+        final boolean mysqlOrPgsql = "mysql".equals(dbtype()) || "postgresql".equals(dbtype());
+        String pageSql = null;
+        String countSql = null;
+        boolean containsLimit = false;
+        { // 组装pageSql、countSql
+            String listSubSql;
+            StringBuilder union = new StringBuilder();
+            if (tables.length == 1) {
+                listSubSql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getQueryColumns("a", selects) + " FROM "
+                        + tables[0] + " a" + joinAndWhere;
+            } else {
+                for (String table : tables) {
+                    if (union.length() > 0) {
+                        union.append(" UNION ALL ");
+                    }
+                    union.append("SELECT ")
+                            .append(info.getQueryColumns("a", selects))
+                            .append(" FROM ")
+                            .append(table)
+                            .append(" a")
+                            .append(joinAndWhere);
+                }
+                listSubSql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getQueryColumns("a", selects) + " FROM ("
+                        + (union) + ") a";
+            }
+            pageSql = listSubSql + createOrderbySql(info, flipper);
+            if (mysqlOrPgsql) {
+                pageSql = createLimitSql(pageSql, flipper);
+                containsLimit = true;
+            }
+            if (mysqlOrPgsql && needTotal) {
+                String countSubSql;
+                if (tables.length == 1) {
+                    countSubSql = "SELECT "
+                            + (distinct ? "DISTINCT COUNT(" + info.getQueryColumns("a", selects) + ")" : "COUNT(*)")
+                            + " FROM " + tables[0] + " a" + joinAndWhere;
+                } else {
+                    countSubSql = "SELECT "
+                            + (distinct ? "DISTINCT COUNT(" + info.getQueryColumns("a", selects) + ")" : "COUNT(*)")
+                            + " FROM (" + (union) + ") a";
+                }
+                countSql = countSubSql;
+            }
+        }
+        if (readCache && info.isLoggable(logger, Level.FINEST, pageSql)) {
+            String prefix = needTotal ? " querySheet" : " queryList";
+            if (countSql != null) {
+                logger.finest(info.getType().getSimpleName() + prefix + " count-sql=" + countSql);
+            }
+            logger.finest(
+                    info.getType().getSimpleName() + prefix + (needTotal ? " page-sql=" : " list-sql=") + pageSql);
+        }
+        PageCountSql rs = new PageCountSql();
+        rs.pageSql = pageSql;
+        rs.countSql = countSql;
+        rs.pageContainsLimit = containsLimit;
+        return rs;
+    }
+
+    /**
+     * 生成page sql
+     *
+     * @param listSql listSql
+     * @param flipper 翻页对象
+     * @return String
+     */
     protected String createLimitSql(String listSql, Flipper flipper) {
         if (flipper == null || flipper.getLimit() < 1) {
             return listSql;
@@ -3907,6 +3988,21 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
                 entitys = new ArrayList<>();
             }
             entitys.add(entity);
+        }
+    }
+
+    protected static class PageCountSql {
+
+        public String pageSql;
+
+        @Nullable
+        public String countSql;
+
+        public boolean pageContainsLimit;
+
+        @Override
+        public String toString() {
+            return "PageCountSql{" + "pageSql=" + pageSql + ", countSql=" + countSql + '}';
         }
     }
 }
