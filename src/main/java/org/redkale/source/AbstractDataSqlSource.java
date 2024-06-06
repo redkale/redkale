@@ -80,7 +80,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             ((CompletableFuture<Sheet>) querySheetDBAsync(i, false, false, false, null, null, (FilterNode) null))
                     .thenApply(e -> e == null ? new ArrayList() : e.list(true));
 
-    protected final IntFunction<String> signFunc = index -> prepareParamSign(index);
+    protected final IntFunction<String> signFunc = this::prepareParamSign;
 
     // Flipper.sort转换成以ORDER BY开头SQL的缓存
     protected final Map<String, String> sortOrderbySqls = new ConcurrentHashMap<>();
@@ -161,76 +161,73 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
 
     protected <T> PageCountSql createPageCountSql(
             EntityInfo<T> info,
-            final boolean readCache,
+            boolean readCache,
             boolean needTotal,
-            final boolean distinct,
+            boolean distinct,
             SelectColumn selects,
             String[] tables,
             Flipper flipper,
             FilterNode node) {
         final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
-        final CharSequence join =
-                node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
         final CharSequence where = node == null ? null : node.createSQLExpress(this, info, joinTabalis);
-        final String joinAndWhere =
-                (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
+        CharSequence join = node == null ? null : node.createSQLJoin(this, false, joinTabalis, new HashSet<>(), info);
+        final String joinAndWhere = (join == null ? "" : join) + (Utility.isEmpty(where) ? "" : (" WHERE " + where));
         String pageSql = null;
         String countSql = null;
         boolean containsLimit = false;
-        { // 组装pageSql、countSql
-            String listSubSql;
-            StringBuilder union = new StringBuilder();
+        // 组装pageSql、countSql
+        String listSubSql;
+        StringBuilder union = new StringBuilder();
+        if (tables.length == 1) {
+            listSubSql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getQueryColumns("a", selects) + " FROM "
+                    + tables[0] + " a" + joinAndWhere;
+        } else {
+            for (String table : tables) {
+                if (union.length() > 0) {
+                    union.append(" UNION ALL ");
+                }
+                union.append("SELECT ")
+                        .append(info.getQueryColumns("a", selects))
+                        .append(" FROM ")
+                        .append(table)
+                        .append(" a")
+                        .append(joinAndWhere);
+            }
+            listSubSql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getQueryColumns("a", selects) + " FROM ("
+                    + (union) + ") a";
+        }
+        // pageSql
+        pageSql = listSubSql + createOrderbySql(info, flipper);
+        if (Flipper.validLimit(flipper)) {
+            if ("oracle".equals(dbtype)) {
+                int start = flipper.getOffset();
+                int end = flipper.getOffset() + flipper.getLimit();
+                pageSql = "SELECT * FROM (SELECT T_.*, ROWNUM RN_ FROM (" + pageSql + ") T_) WHERE RN_ BETWEEN " + start
+                        + " AND " + end;
+                containsLimit = true;
+            } else if ("sqlserver".equals(dbtype)) {
+                int offset = flipper.getOffset();
+                int limit = flipper.getLimit();
+                pageSql += " OFFSET " + offset + " ROWS FETCH NEXT " + limit + " ROWS ONLY";
+                containsLimit = true;
+            } else { // 按mysql、postgresql、mariadb、h2处理
+                pageSql += " LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset();
+                containsLimit = true;
+            }
+        }
+        // countSql
+        if (needTotal) {
+            String countSubSql;
             if (tables.length == 1) {
-                listSubSql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getQueryColumns("a", selects) + " FROM "
-                        + tables[0] + " a" + joinAndWhere;
+                countSubSql = "SELECT "
+                        + (distinct ? "DISTINCT COUNT(" + info.getQueryColumns("a", selects) + ")" : "COUNT(*)")
+                        + " FROM " + tables[0] + " a" + joinAndWhere;
             } else {
-                for (String table : tables) {
-                    if (union.length() > 0) {
-                        union.append(" UNION ALL ");
-                    }
-                    union.append("SELECT ")
-                            .append(info.getQueryColumns("a", selects))
-                            .append(" FROM ")
-                            .append(table)
-                            .append(" a")
-                            .append(joinAndWhere);
-                }
-                listSubSql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getQueryColumns("a", selects) + " FROM ("
-                        + (union) + ") a";
+                countSubSql = "SELECT "
+                        + (distinct ? "DISTINCT COUNT(" + info.getQueryColumns("a", selects) + ")" : "COUNT(*)")
+                        + " FROM (" + (union) + ") a";
             }
-            // pageSql
-            pageSql = listSubSql + createOrderbySql(info, flipper);
-            if (Flipper.validLimit(flipper)) {
-                if ("oracle".equals(dbtype)) {
-                    int start = flipper.getOffset();
-                    int end = flipper.getOffset() + flipper.getLimit();
-                    pageSql = "SELECT * FROM (SELECT T_.*, ROWNUM RN_ FROM (" + pageSql + ") T_) WHERE RN_ BETWEEN "
-                            + start + " AND " + end;
-                    containsLimit = true;
-                } else if ("sqlserver".equals(dbtype)) {
-                    int offset = flipper.getOffset();
-                    int limit = flipper.getLimit();
-                    pageSql += " OFFSET " + offset + " ROWS FETCH NEXT " + limit + " ROWS ONLY";
-                    containsLimit = true;
-                } else { // 按mysql、postgresql、mariadb、h2处理
-                    pageSql += " LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset();
-                    containsLimit = true;
-                }
-            }
-            // countSql
-            if (needTotal) {
-                String countSubSql;
-                if (tables.length == 1) {
-                    countSubSql = "SELECT "
-                            + (distinct ? "DISTINCT COUNT(" + info.getQueryColumns("a", selects) + ")" : "COUNT(*)")
-                            + " FROM " + tables[0] + " a" + joinAndWhere;
-                } else {
-                    countSubSql = "SELECT "
-                            + (distinct ? "DISTINCT COUNT(" + info.getQueryColumns("a", selects) + ")" : "COUNT(*)")
-                            + " FROM (" + (union) + ") a";
-                }
-                countSql = countSubSql;
-            }
+            countSql = countSubSql;
         }
         if (readCache && info.isLoggable(logger, Level.FINEST, pageSql)) {
             String prefix = needTotal ? " querySheet" : " queryList";
@@ -240,16 +237,13 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             logger.finest(
                     info.getType().getSimpleName() + prefix + (needTotal ? " page-sql=" : " list-sql=") + pageSql);
         }
-        PageCountSql rs = new PageCountSql();
-        rs.pageSql = pageSql;
-        rs.countSql = countSql;
-        rs.pageContainsLimit = containsLimit;
-        return rs;
+        return new PageCountSql(pageSql, countSql, containsLimit);
     }
 
     /**
      * 根据Flipper获取ORDER BY的SQL语句，不存在Flipper或sort字段返回空字符串
      *
+     * @param info EntityInfo
      * @param flipper 翻页对象
      * @return String
      */
@@ -3990,12 +3984,18 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
 
     protected static class PageCountSql {
 
-        public String pageSql;
+        public final String pageSql;
 
         @Nullable
-        public String countSql;
+        public final String countSql;
 
-        public boolean pageContainsLimit;
+        public final boolean pageContainsLimit;
+
+        public PageCountSql(String pageSql, String countSql, boolean pageContainsLimit) {
+            this.pageSql = pageSql;
+            this.countSql = countSql;
+            this.pageContainsLimit = pageContainsLimit;
+        }
 
         @Override
         public String toString() {
