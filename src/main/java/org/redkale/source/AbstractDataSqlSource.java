@@ -174,7 +174,6 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
         final CharSequence where = node == null ? null : node.createSQLExpress(this, info, joinTabalis);
         final String joinAndWhere =
                 (join == null ? "" : join) + ((where == null || where.length() == 0) ? "" : (" WHERE " + where));
-        final boolean mysqlOrPgsql = "mysql".equals(dbtype()) || "postgresql".equals(dbtype());
         String pageSql = null;
         String countSql = null;
         boolean containsLimit = false;
@@ -202,11 +201,20 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             // pageSql
             pageSql = listSubSql + createOrderbySql(info, flipper);
             if (Flipper.validLimit(flipper)) {
-                if (mysqlOrPgsql) {
+                if ("oracle".equals(dbtype)) {
+                    int start = flipper.getOffset();
+                    int end = flipper.getOffset() + flipper.getLimit();
+                    pageSql = "SELECT * FROM (SELECT T_.*, ROWNUM RN_ FROM (" + pageSql + ") T_) WHERE RN_ BETWEEN "
+                            + start + " AND " + end;
+                    containsLimit = true;
+                } else if ("mysql".equals(dbtype) || "postgresql".equals(dbtype)) {
                     pageSql += " LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset();
                     containsLimit = true;
-                } else if ("oracle".equals(dbtype())) {
-                    // to do
+                } else if ("sqlserver".equals(dbtype)) {
+                    int offset = flipper.getOffset();
+                    int limit = flipper.getLimit();
+                    pageSql += " OFFSET " + offset + " ROWS FETCH NEXT " + limit + " ROWS ONLY";
+                    containsLimit = true;
                 }
             }
             // countSql
