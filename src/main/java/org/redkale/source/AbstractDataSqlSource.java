@@ -70,6 +70,9 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
     @Resource(required = false)
     protected DataNativeSqlParser nativeSqlParser;
 
+    @Resource(required = false)
+    protected DataSqlMonitor sqlMonitor;
+
     protected BiFunction<EntityInfo, Object, CharSequence> sqlFormatter;
 
     protected BiConsumer errorCompleteConsumer = (r, t) -> {
@@ -385,8 +388,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
     }
 
     protected void slowLog(long startTime, String... sqls) {
+        long cost = System.currentTimeMillis() - startTime;
         if (slowmsError > 0 || slowmsWarn > 0) {
-            long cost = System.currentTimeMillis() - startTime;
             if (slowmsError > 0 && cost > slowmsError) {
                 logger.log(
                         Level.SEVERE,
@@ -398,6 +401,9 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
                         DataSource.class.getSimpleName() + "(name='" + resourceName() + "') slow sql cost " + cost
                                 + " ms, content: " + Arrays.toString(sqls));
             }
+        }
+        if (sqlMonitor != null) {
+            sqlMonitor.visitCostTime(this, cost, sqls);
         }
     }
 
