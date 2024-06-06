@@ -174,7 +174,6 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
         final String joinAndWhere = (join == null ? "" : join) + (Utility.isEmpty(where) ? "" : (" WHERE " + where));
         String pageSql = null;
         String countSql = null;
-        boolean containsLimit = false;
         // 组装pageSql、countSql
         String listSubSql;
         StringBuilder union = new StringBuilder();
@@ -204,15 +203,12 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
                 int end = flipper.getOffset() + flipper.getLimit();
                 pageSql = "SELECT * FROM (SELECT T_.*, ROWNUM RN_ FROM (" + pageSql + ") T_) WHERE RN_ BETWEEN " + start
                         + " AND " + end;
-                containsLimit = true;
             } else if ("sqlserver".equals(dbtype)) {
                 int offset = flipper.getOffset();
                 int limit = flipper.getLimit();
                 pageSql += " OFFSET " + offset + " ROWS FETCH NEXT " + limit + " ROWS ONLY";
-                containsLimit = true;
             } else { // 按mysql、postgresql、mariadb、h2处理
                 pageSql += " LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset();
-                containsLimit = true;
             }
         }
         // countSql
@@ -237,7 +233,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             logger.finest(
                     info.getType().getSimpleName() + prefix + (needTotal ? " page-sql=" : " list-sql=") + pageSql);
         }
-        return new PageCountSql(pageSql, countSql, containsLimit);
+        return new PageCountSql(pageSql, countSql);
     }
 
     /**
@@ -3989,12 +3985,9 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
         @Nullable
         public final String countSql;
 
-        public final boolean pageContainsLimit;
-
-        public PageCountSql(String pageSql, String countSql, boolean pageContainsLimit) {
+        public PageCountSql(String pageSql, String countSql) {
             this.pageSql = pageSql;
             this.countSql = countSql;
-            this.pageContainsLimit = pageContainsLimit;
         }
 
         @Override

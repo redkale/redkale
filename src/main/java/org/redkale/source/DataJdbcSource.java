@@ -2392,7 +2392,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             conn.setAutoCommit(true);
             PageCountSql sqls = createPageCountSql(info, readCache, needTotal, distinct, sels, tables, flipper, node);
             try {
-                return executeQuerySheet(info, needTotal, flipper, sels, s, conn, sqls);
+                return executeQuerySheet(info, needTotal, sels, s, conn, sqls);
             } catch (SQLException se) {
                 if (isTableNotExist(info, se, se.getSQLState())) {
                     if (info.getTableStrategy() == null) {
@@ -2430,7 +2430,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
                         // 重新查询一次
                         sqls = createPageCountSql(info, readCache, needTotal, distinct, sels, tables, flipper, node);
-                        return executeQuerySheet(info, needTotal, flipper, sels, s, conn, sqls);
+                        return executeQuerySheet(info, needTotal, sels, s, conn, sqls);
                     } else {
                         throw new SourceException(se);
                     }
@@ -2447,84 +2447,78 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     }
 
     private <T> Sheet<T> executeQuerySheet(
-            EntityInfo<T> info,
-            boolean needTotal,
-            Flipper flipper,
-            SelectColumn sels,
-            long s,
-            JdbcConnection conn,
-            PageCountSql sqls)
+            EntityInfo<T> info, boolean needTotal, SelectColumn sels, long s, JdbcConnection conn, PageCountSql sqls)
             throws SQLException {
         final List<T> list = new ArrayList();
-        if (sqls.pageContainsLimit) { // sql可以带limit、offset
-            ResultSet set;
-            PreparedStatement prestmt;
-            long total = -1;
-            if (needTotal) {
-                prestmt = conn.prepareQueryStatement(sqls.countSql);
-                set = prestmt.executeQuery();
-                if (set.next()) {
-                    total = set.getLong(1);
-                }
-                set.close();
-                conn.offerQueryStatement(prestmt);
-                slowLog(s, sqls.countSql);
-            }
-            if (total != 0) {
-                prestmt = conn.prepareQueryStatement(sqls.pageSql);
-                set = prestmt.executeQuery();
-                final DataResultSet rr = createDataResultSet(info, set);
-                while (set.next()) {
-                    list.add(getEntityValue(info, sels, rr));
-                }
-                set.close();
-                conn.offerQueryStatement(prestmt);
-                if (!needTotal) {
-                    total = list.size();
-                }
-                slowLog(s, sqls.pageSql);
-            }
-            return new Sheet<>(total, list);
-        } else {
-            PreparedStatement prestmt = conn.prepareQueryStatement(sqls.pageSql);
-            if (flipper != null && flipper.getLimit() > 0) {
-                prestmt.setFetchSize(flipper.getLimit());
-            }
-            ResultSet set = prestmt.executeQuery();
-            if (flipper != null && flipper.getOffset() > 0) {
-                set.absolute(flipper.getOffset());
-            }
-            final int limit = Flipper.validLimit(flipper) ? flipper.getLimit() : Integer.MAX_VALUE;
-            int i = 0;
-            final DataResultSet rr = createDataResultSet(info, set);
-            EntityBuilder<T> builder = info.getBuilder();
-            if (sels == null) {
-                while (set.next()) {
-                    i++;
-                    list.add(builder.getFullEntityValue(rr));
-                    if (limit <= i) {
-                        break;
-                    }
-                }
-            } else {
-                while (set.next()) {
-                    i++;
-                    list.add(builder.getEntityValue(sels, rr));
-                    if (limit <= i) {
-                        break;
-                    }
-                }
-            }
-            long total = list.size();
-            if (needTotal && flipper != null) {
-                set.last();
-                total = set.getRow();
+        // if (sqls.pageContainsLimit) { sql可以带limit、offset
+        ResultSet set;
+        PreparedStatement preStmt;
+        long total = -1;
+        if (needTotal) {
+            preStmt = conn.prepareQueryStatement(sqls.countSql);
+            set = preStmt.executeQuery();
+            if (set.next()) {
+                total = set.getLong(1);
             }
             set.close();
-            conn.offerQueryStatement(prestmt);
-            slowLog(s, sqls.pageSql);
-            return new Sheet<>(total, list);
+            conn.offerQueryStatement(preStmt);
+            slowLog(s, sqls.countSql);
         }
+        if (total != 0) {
+            preStmt = conn.prepareQueryStatement(sqls.pageSql);
+            set = preStmt.executeQuery();
+            final DataResultSet rr = createDataResultSet(info, set);
+            while (set.next()) {
+                list.add(getEntityValue(info, sels, rr));
+            }
+            set.close();
+            conn.offerQueryStatement(preStmt);
+            if (!needTotal) {
+                total = list.size();
+            }
+            slowLog(s, sqls.pageSql);
+        }
+        return new Sheet<>(total, list);
+        //        } else {
+        //            PreparedStatement prestmt = conn.prepareQueryStatement(sqls.pageSql);
+        //            if (flipper != null && flipper.getLimit() > 0) {
+        //                prestmt.setFetchSize(flipper.getLimit());
+        //            }
+        //            ResultSet set = prestmt.executeQuery();
+        //            if (flipper != null && flipper.getOffset() > 0) {
+        //                set.absolute(flipper.getOffset());
+        //            }
+        //            final int limit = Flipper.validLimit(flipper) ? flipper.getLimit() : Integer.MAX_VALUE;
+        //            int i = 0;
+        //            final DataResultSet rr = createDataResultSet(info, set);
+        //            EntityBuilder<T> builder = info.getBuilder();
+        //            if (sels == null) {
+        //                while (set.next()) {
+        //                    i++;
+        //                    list.add(builder.getFullEntityValue(rr));
+        //                    if (limit <= i) {
+        //                        break;
+        //                    }
+        //                }
+        //            } else {
+        //                while (set.next()) {
+        //                    i++;
+        //                    list.add(builder.getEntityValue(sels, rr));
+        //                    if (limit <= i) {
+        //                        break;
+        //                    }
+        //                }
+        //            }
+        //            long total = list.size();
+        //            if (needTotal && flipper != null) {
+        //                set.last();
+        //                total = set.getRow();
+        //            }
+        //            set.close();
+        //            conn.offerQueryStatement(prestmt);
+        //            slowLog(s, sqls.pageSql);
+        //            return new Sheet<>(total, list);
+        //        }
     }
 
     protected List<String> checkNotExistTablesNoThrows(JdbcConnection conn, String[] tables) {
