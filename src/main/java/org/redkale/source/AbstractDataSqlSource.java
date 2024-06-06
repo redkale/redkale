@@ -159,7 +159,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
                 readConfProps.getProperty(DATA_SOURCE_SLOWMS_ERROR, "3000").trim());
     }
 
-    protected <T> PageCountSql filterPageCountSql(
+    protected <T> PageCountSql createPageCountSql(
             EntityInfo<T> info,
             final boolean readCache,
             boolean needTotal,

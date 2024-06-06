@@ -2390,7 +2390,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         try {
             conn = readPool.pollConnection();
             conn.setAutoCommit(true);
-            PageCountSql sqls = filterPageCountSql(info, readCache, needTotal, distinct, sels, tables, flipper, node);
+            PageCountSql sqls = createPageCountSql(info, readCache, needTotal, distinct, sels, tables, flipper, node);
             try {
                 return executeQuerySheet(info, needTotal, flipper, sels, s, conn, sqls);
             } catch (SQLException se) {
@@ -2429,7 +2429,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         }
 
                         // 重新查询一次
-                        sqls = filterPageCountSql(info, readCache, needTotal, distinct, sels, tables, flipper, node);
+                        sqls = createPageCountSql(info, readCache, needTotal, distinct, sels, tables, flipper, node);
                         return executeQuerySheet(info, needTotal, flipper, sels, s, conn, sqls);
                     } else {
                         throw new SourceException(se);
