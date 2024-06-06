@@ -159,7 +159,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
                 readConfProps.getProperty(DATA_SOURCE_SLOWMS_ERROR, "3000").trim());
     }
 
-    protected <T> PageCountSql createPageCountSql(
+    protected <T> PageCountSql filterPageCountSql(
             EntityInfo<T> info,
             final boolean readCache,
             boolean needTotal,
@@ -199,12 +199,18 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
                 listSubSql = "SELECT " + (distinct ? "DISTINCT " : "") + info.getQueryColumns("a", selects) + " FROM ("
                         + (union) + ") a";
             }
+            // pageSql
             pageSql = listSubSql + createOrderbySql(info, flipper);
-            if (mysqlOrPgsql) {
-                pageSql = createLimitSql(pageSql, flipper);
-                containsLimit = true;
+            if (Flipper.validLimit(flipper)) {
+                if (mysqlOrPgsql) {
+                    pageSql += " LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset();
+                    containsLimit = true;
+                } else if ("oracle".equals(dbtype())) {
+                    // to do
+                }
             }
-            if (mysqlOrPgsql && needTotal) {
+            // countSql
+            if (needTotal) {
                 String countSubSql;
                 if (tables.length == 1) {
                     countSubSql = "SELECT "
@@ -231,24 +237,6 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
         rs.countSql = countSql;
         rs.pageContainsLimit = containsLimit;
         return rs;
-    }
-
-    /**
-     * 生成page sql
-     *
-     * @param listSql listSql
-     * @param flipper 翻页对象
-     * @return String
-     */
-    protected String createLimitSql(String listSql, Flipper flipper) {
-        if (flipper == null || flipper.getLimit() < 1) {
-            return listSql;
-        }
-        final boolean mysqlOrPgsql = "mysql".equals(dbtype()) || "postgresql".equals(dbtype());
-        if (mysqlOrPgsql) {
-            return listSql + " LIMIT " + flipper.getLimit() + " OFFSET " + flipper.getOffset();
-        }
-        throw new SourceException("Not support page sql: " + listSql);
     }
 
     /**
@@ -922,12 +910,13 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
         return getSQLAttrValue(info, attr, val);
     }
 
-    protected DataNativeSqlStatement nativeParse(String nativeSql, boolean countable, Map<String, Object> params) {
+    protected DataNativeSqlStatement nativeParse(
+            String nativeSql, boolean countable, Flipper flipper, Map<String, Object> params) {
         if (nativeSqlParser == null) {
             throw new SourceException("not found " + DataNativeSqlParser.class.getSimpleName() + " instance");
         }
         return nativeSqlParser.parse(
-                signFunc, dbtype(), nativeSql, countable, params == null ? Collections.emptyMap() : params);
+                signFunc, dbtype(), nativeSql, countable, flipper, params == null ? Collections.emptyMap() : params);
     }
 
     @ConvertDisabled

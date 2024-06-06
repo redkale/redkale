@@ -24,7 +24,12 @@ public interface DataNativeSqlParser {
     public DataNativeSqlInfo parse(IntFunction<String> signFunc, String dbType, String rawSql);
 
     public DataNativeSqlStatement parse(
-            IntFunction<String> signFunc, String dbType, String rawSql, boolean countable, Map<String, Object> params);
+            IntFunction<String> signFunc,
+            String dbType,
+            String rawSql,
+            boolean countable,
+            Flipper flipper,
+            Map<String, Object> params);
 
     public static DataNativeSqlParser loadFirst() {
         if (DataNativeSqlStatement._first_parser != DataNativeSqlStatement.PARSER_NIL) {

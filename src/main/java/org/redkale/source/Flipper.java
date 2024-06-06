@@ -191,6 +191,13 @@ public final class Flipper implements Serializable, Cloneable {
         return this;
     }
 
+    public Flipper sortIfAbsent(String sort) {
+        if (this.sort == null || this.sort.isEmpty()) {
+            this.sort = sort;
+        }
+        return this;
+    }
+
     public static Flipper sortIfAbsent(Flipper flipper, String sort) {
         if (flipper != null) {
             return flipper.sortIfAbsent(sort);
@@ -198,10 +205,7 @@ public final class Flipper implements Serializable, Cloneable {
         return flipper;
     }
 
-    public Flipper sortIfAbsent(String sort) {
-        if (this.sort == null || this.sort.isEmpty()) {
-            this.sort = sort;
-        }
-        return this;
+    public static boolean validLimit(Flipper flipper) {
+        return flipper != null && flipper.getLimit() > 0;
     }
 }

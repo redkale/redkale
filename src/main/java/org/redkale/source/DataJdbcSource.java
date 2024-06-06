@@ -2390,7 +2390,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         try {
             conn = readPool.pollConnection();
             conn.setAutoCommit(true);
-            PageCountSql sqls = createPageCountSql(info, readCache, needTotal, distinct, sels, tables, flipper, node);
+            PageCountSql sqls = filterPageCountSql(info, readCache, needTotal, distinct, sels, tables, flipper, node);
             try {
                 return executeQuerySheet(info, needTotal, flipper, sels, s, conn, sqls);
             } catch (SQLException se) {
@@ -2429,7 +2429,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         }
 
                         // 重新查询一次
-                        sqls = createPageCountSql(info, readCache, needTotal, distinct, sels, tables, flipper, node);
+                        sqls = filterPageCountSql(info, readCache, needTotal, distinct, sels, tables, flipper, node);
                         return executeQuerySheet(info, needTotal, flipper, sels, s, conn, sqls);
                     } else {
                         throw new SourceException(se);
@@ -2494,7 +2494,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             if (flipper != null && flipper.getOffset() > 0) {
                 set.absolute(flipper.getOffset());
             }
-            final int limit = flipper == null || flipper.getLimit() < 1 ? Integer.MAX_VALUE : flipper.getLimit();
+            final int limit = Flipper.validLimit(flipper) ? flipper.getLimit() : Integer.MAX_VALUE;
             int i = 0;
             final DataResultSet rr = createDataResultSet(info, set);
             EntityBuilder<T> builder = info.getBuilder();
@@ -2626,7 +2626,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     @Local
     @Override
     public int nativeUpdate(String sql, Map<String, Object> params) {
-        DataNativeSqlStatement sinfo = super.nativeParse(sql, false, params);
+        DataNativeSqlStatement sinfo = super.nativeParse(sql, false, null, params);
         final long s = System.currentTimeMillis();
         JdbcConnection conn = writePool.pollConnection();
         Statement stmt = null;
@@ -2703,7 +2703,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             BiConsumer<Object, Object> consumer,
             Function<DataResultSet, V> handler,
             Map<String, Object> params) {
-        DataNativeSqlStatement sinfo = super.nativeParse(sql, false, params);
+        DataNativeSqlStatement sinfo = super.nativeParse(sql, false, null, params);
         final long s = System.currentTimeMillis();
         final JdbcConnection conn = readPool.pollConnection();
         try {
@@ -2746,7 +2746,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     }
 
     public <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, Flipper flipper, Map<String, Object> params) {
-        DataNativeSqlStatement sinfo = super.nativeParse(sql, true, params);
+        DataNativeSqlStatement sinfo = super.nativeParse(sql, true, flipper, params);
         final long s = System.currentTimeMillis();
         final JdbcConnection conn = readPool.pollConnection();
         try {
@@ -2781,7 +2781,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             }
             slowLog(s, countSql);
             if (total > 0) {
-                String pageSql = createLimitSql(sinfo.getNativePageSql(), flipper);
+                String pageSql = sinfo.getNativePageSql();
                 if (sinfo.isEmptyNamed()) {
                     Statement stmt = conn.createQueryStatement();
                     ResultSet set = stmt.executeQuery(pageSql);
