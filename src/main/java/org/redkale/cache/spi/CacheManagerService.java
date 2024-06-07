@@ -32,7 +32,6 @@ import org.redkale.util.AnyValue;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.ThrowSupplier;
 import org.redkale.util.TypeToken;
-import org.redkale.util.Utility;
 
 /**
  * 缓存管理器
@@ -110,7 +109,7 @@ public class CacheManagerService implements CacheManager, Service {
         if (this.enabled) {
             this.localSource.init(conf);
             String remoteSourceName = conf.getValue("remote");
-            if (remoteSource == null && Utility.isNotBlank(remoteSourceName)) {
+            if (remoteSource == null && remoteSourceName != null) {
                 this.broadcastable = conf.getBoolValue("broadcastable", true);
                 CacheSource source = application.loadCacheSource(remoteSourceName, false);
                 if (source == null) {
