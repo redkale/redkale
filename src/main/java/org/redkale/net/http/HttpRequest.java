@@ -5,9 +5,6 @@
  */
 package org.redkale.net.http;
 
-import static org.redkale.util.Utility.isEmpty;
-import static org.redkale.util.Utility.isNotEmpty;
-
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.net.*;
@@ -22,6 +19,8 @@ import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.Request;
 import org.redkale.util.*;
+import static org.redkale.util.Utility.isEmpty;
+import static org.redkale.util.Utility.isNotEmpty;
 
 /**
  * Http请求包 与javax.servlet.http.HttpServletRequest 基本类似。 <br>
@@ -2812,6 +2811,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return Flipper翻页对象
      */
+    @ClassDepends
     public org.redkale.source.Flipper getFlipper() {
         return getFlipper(false, 0);
     }

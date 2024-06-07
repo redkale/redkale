@@ -32,7 +32,7 @@ public class DataNativeSqlStatement {
                 String dbType,
                 String rawSql,
                 boolean countable,
-                Flipper flipper,
+                RowBound round,
                 Map<String, Object> params) {
             throw new UnsupportedOperationException("No available instances found");
         }

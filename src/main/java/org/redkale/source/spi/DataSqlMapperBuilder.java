@@ -36,7 +36,7 @@ import org.redkale.source.DataNativeSqlParser;
 import org.redkale.source.DataSqlMapper;
 import org.redkale.source.DataSqlSource;
 import org.redkale.source.EntityBuilder;
-import org.redkale.source.Flipper;
+import org.redkale.source.RowBound;
 import org.redkale.source.SourceException;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.Sheet;
@@ -122,21 +122,21 @@ public final class DataSqlMapperBuilder {
             AsmMethodBean methodBean = selfMethodBeans.get(AsmMethodBoost.getMethodBeanKey(method));
             List<String> fieldNames = methodBean.paramNameList(method);
             Class resultClass = resultClass(method);
-            int flipperIndex = -1;
+            int roundIndex = -1;
             if (resultClass.isAssignableFrom(Sheet.class)) {
                 Class[] pts = method.getParameterTypes();
                 for (int i = 0; i < pts.length; i++) {
-                    if (pts[i] == Flipper.class) {
-                        flipperIndex = i;
+                    if (RowBound.class.isAssignableFrom(pts[i])) {
+                        roundIndex = i;
                         break;
                     }
                 }
-                if (flipperIndex < 0) {
+                if (roundIndex < 0) {
                     throw new SourceException(
-                            mapperType.getSimpleName() + "." + method.getName() + " need Flipper type parameter on @"
+                            mapperType.getSimpleName() + "." + method.getName() + " need RowBound type parameter on @"
                                     + Sql.class.getSimpleName() + "(" + sql.value() + ")");
                 }
-                fieldNames.remove(flipperIndex);
+                fieldNames.remove(roundIndex);
             }
             if (!Utility.equalsElement(sqlInfo.getRootParamNames(), fieldNames)) {
                 throw new SourceException(mapperType.getSimpleName() + "." + method.getName()
@@ -148,13 +148,13 @@ public final class DataSqlMapperBuilder {
                     throw new SourceException("Update SQL must on return int method, but " + method);
                 }
             }
-            items.add(new Item(method, sqlInfo, methodBean, flipperIndex));
+            items.add(new Item(method, sqlInfo, methodBean, roundIndex));
         }
         // ------------------------------------------------------------------------------
 
         final String utilClassName = Utility.class.getName().replace('.', '/');
         final String sheetDesc = Type.getDescriptor(Sheet.class);
-        final String flipperDesc = Type.getDescriptor(Flipper.class);
+        final String roundDesc = Type.getDescriptor(RowBound.class);
         final String entityDesc = Type.getDescriptor(entityType);
         final String sqlSourceName = DataSqlSource.class.getName().replace('.', '/');
         final String sqlSourceDesc = Type.getDescriptor(DataSqlSource.class);
@@ -218,7 +218,7 @@ public final class DataSqlMapperBuilder {
             Method method = item.method;
             DataNativeSqlInfo sqlInfo = item.sqlInfo;
             AsmMethodBean methodBean = item.methodBean;
-            int flipperIndex = item.flipperIndex;
+            int roundIndex = item.roundIndex;
             Sql sql = method.getAnnotation(Sql.class);
             Class resultClass = resultClass(method);
             Class[] componentTypes = resultComponentType(method);
@@ -247,16 +247,16 @@ public final class DataSqlMapperBuilder {
             }
             // 参数：sql
             mv.visitLdcInsn(sql.value());
-            if (flipperIndex >= 0) {
-                mv.visitVarInsn(ALOAD, flipperIndex + 1);
+            if (roundIndex >= 0) {
+                mv.visitVarInsn(ALOAD, roundIndex + 1);
             }
             // 参数: params
-            Asms.visitInsn(mv, paramTypes.length * 2 - (flipperIndex >= 0 ? 2 : 0));
+            Asms.visitInsn(mv, paramTypes.length * 2 - (roundIndex >= 0 ? 2 : 0));
             mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
             int insn = 0;
             for (int i = 0; i < paramTypes.length; i++) {
                 insn++;
-                if (i != flipperIndex) {
+                if (i != roundIndex) {
                     Class pt = paramTypes[i];
                     // 参数名
                     mv.visitInsn(DUP);
@@ -293,7 +293,7 @@ public final class DataSqlMapperBuilder {
             // Map:   "(Ljava/lang/Class;Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/util/Map;"
             // List:  "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/util/List;"
             // Sheet:
-            // "(Ljava/lang/Class;Ljava/lang/String;Lorg/redkale/source/Flipper;Ljava/util/Map;)Lorg/redkale/util/Sheet;"
+            // "(Ljava/lang/Class;Ljava/lang/String;Lorg/redkale/source/RowRound;Ljava/util/Map;)Lorg/redkale/util/Sheet;"
             // Async: "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/util/concurrent/CompletableFuture;"
             if (sqlInfo.getSqlMode() == SELECT) {
                 String queryMethodName = "nativeQueryOne";
@@ -313,7 +313,7 @@ public final class DataSqlMapperBuilder {
                 } else if (resultClass.isAssignableFrom(Sheet.class)) {
                     oneMode = false;
                     queryMethodName = "nativeQuerySheet";
-                    queryMethodDesc = "(Ljava/lang/Class;Ljava/lang/String;" + flipperDesc + "Ljava/util/Map;)"
+                    queryMethodDesc = "(Ljava/lang/Class;Ljava/lang/String;" + roundDesc + "Ljava/util/Map;)"
                             + (async ? "Ljava/util/concurrent/CompletableFuture;" : sheetDesc);
                 }
                 mv.visitMethodInsn(
@@ -453,13 +453,13 @@ public final class DataSqlMapperBuilder {
 
         public AsmMethodBean methodBean;
 
-        public int flipperIndex = -1;
+        public int roundIndex = -1;
 
-        public Item(Method method, DataNativeSqlInfo sqlInfo, AsmMethodBean methodBean, int flipperIndex) {
+        public Item(Method method, DataNativeSqlInfo sqlInfo, AsmMethodBean methodBean, int roundIndex) {
             this.method = method;
             this.sqlInfo = sqlInfo;
             this.methodBean = methodBean;
-            this.flipperIndex = flipperIndex;
+            this.roundIndex = roundIndex;
         }
     }
 }

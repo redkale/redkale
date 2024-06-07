@@ -3,13 +3,12 @@
  */
 package org.redkale.source;
 
-import static org.redkale.source.DataResultSet.formatColumnValue;
-
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
 import org.redkale.annotation.ClassDepends;
+import static org.redkale.source.DataResultSet.formatColumnValue;
 import org.redkale.util.*;
 
 /**
@@ -131,11 +130,11 @@ public interface DataSqlSource extends DataSource {
             Map<String, Object> params);
 
     @ClassDepends
-    public <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, Flipper flipper, Map<String, Object> params);
+    public <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, RowBound round, Map<String, Object> params);
 
     @ClassDepends
     public <V> CompletableFuture<Sheet<V>> nativeQuerySheetAsync(
-            Class<V> type, String sql, Flipper flipper, Map<String, Object> params);
+            Class<V> type, String sql, RowBound round, Map<String, Object> params);
 
     // ----------------------------- 无参数 -----------------------------
     default <V> V nativeQuery(String sql, Function<DataResultSet, V> handler) {

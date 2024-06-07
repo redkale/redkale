@@ -915,12 +915,12 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
     }
 
     protected DataNativeSqlStatement nativeParse(
-            String nativeSql, boolean countable, Flipper flipper, Map<String, Object> params) {
+            String nativeSql, boolean countable, RowBound round, Map<String, Object> params) {
         if (nativeSqlParser == null) {
             throw new SourceException("not found " + DataNativeSqlParser.class.getSimpleName() + " instance");
         }
         return nativeSqlParser.parse(
-                signFunc, dbtype(), nativeSql, countable, flipper, params == null ? Collections.emptyMap() : params);
+                signFunc, dbtype(), nativeSql, countable, round, params == null ? Collections.emptyMap() : params);
     }
 
     @ConvertDisabled
@@ -3909,8 +3909,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
     }
 
     @Override
-    public <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, Flipper flipper, Map<String, Object> params) {
-        return nativeQuerySheetAsync(type, sql, flipper, params).join();
+    public <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, RowBound round, Map<String, Object> params) {
+        return nativeQuerySheetAsync(type, sql, round, params).join();
     }
 
     @Override

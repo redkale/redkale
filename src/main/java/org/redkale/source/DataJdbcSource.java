@@ -2838,8 +2838,8 @@ public class DataJdbcSource extends AbstractDataSqlSource {
 
     @Override
     public <V> CompletableFuture<Sheet<V>> nativeQuerySheetAsync(
-            Class<V> type, String sql, Flipper flipper, Map<String, Object> params) {
-        return supplyAsync(() -> nativeQuerySheet(type, sql, flipper, params));
+            Class<V> type, String sql, RowBound round, Map<String, Object> params) {
+        return supplyAsync(() -> nativeQuerySheet(type, sql, round, params));
     }
 
     @Deprecated

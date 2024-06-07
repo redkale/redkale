@@ -5,29 +5,20 @@
  */
 package org.redkale.source;
 
-import java.io.Serializable;
 import java.util.Objects;
 import org.redkale.annotation.Comment;
 import org.redkale.convert.ConvertColumn;
 
 /**
- * 翻页对象, offset从0开始, limit必须大于0
+ * 翻页+排序对象, offset从0开始, limit必须大于0
  *
  * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  */
-public final class Flipper implements Serializable, Cloneable {
+public final class Flipper extends RowBound {
 
     public static int DEFAULT_LIMIT = 20;
-
-    @ConvertColumn(index = 1)
-    @Comment("记录行的偏移量，从0开始")
-    private int offset = 0;
-
-    @ConvertColumn(index = 2)
-    @Comment("每页多少行")
-    private int limit = DEFAULT_LIMIT;
 
     @ConvertColumn(index = 3)
     @Comment("排序字段, 可多字段排序")
@@ -36,7 +27,7 @@ public final class Flipper implements Serializable, Cloneable {
     public Flipper() {}
 
     public Flipper(int limit) {
-        this.limit = limit > 0 ? limit : 0;
+        super(limit);
     }
 
     public Flipper(String sortColumn) {
@@ -44,27 +35,42 @@ public final class Flipper implements Serializable, Cloneable {
     }
 
     public Flipper(int limit, int offset) {
-        this.limit = limit > 0 ? limit : 0;
-        this.offset = offset < 0 ? 0 : offset;
+        super(limit, offset);
     }
 
     public Flipper(int limit, String sortColumn) {
-        this.limit = limit > 0 ? limit : 0;
+        super(limit);
         this.sort = sortColumn;
     }
 
     public Flipper(int limit, int offset, String sortColumn) {
-        this.limit = limit > 0 ? limit : 0;
-        this.offset = offset < 0 ? 0 : offset;
+        super(limit, offset);
         this.sort = sortColumn;
+    }
+
+    @Override
+    public Flipper limit(int limit) {
+        super.limit(limit);
+        return this;
+    }
+
+    @Override
+    public Flipper maxLimit(int maxlimit) {
+        super.maxLimit(maxlimit);
+        return this;
+    }
+
+    @Override
+    public Flipper unlimit() {
+        super.unlimit();
+        return this;
     }
 
     public Flipper copyTo(Flipper copy) {
         if (copy == null) {
             return copy;
         }
-        copy.offset = this.offset;
-        copy.limit = this.limit;
+        super.copyTo(copy);
         copy.sort = this.sort;
         return copy;
     }
@@ -73,8 +79,7 @@ public final class Flipper implements Serializable, Cloneable {
         if (copy == null) {
             return this;
         }
-        this.offset = copy.offset;
-        this.limit = copy.limit;
+        super.copyFrom(copy);
         this.sort = copy.sort;
         return this;
     }
@@ -82,10 +87,11 @@ public final class Flipper implements Serializable, Cloneable {
     /**
      * 翻下一页
      *
-     * @return Flipper
+     * @return RowBound
      */
+    @Override
     public Flipper next() {
-        this.offset = getOffset() + this.limit;
+        super.next();
         return this;
     }
 
@@ -95,8 +101,9 @@ public final class Flipper implements Serializable, Cloneable {
      * @param current 页号， 从1开始
      * @return Flipper
      */
+    @Override
     public Flipper current(int current) {
-        this.offset = (current - 1) * this.limit;
+        super.current(current);
         return this;
     }
 
@@ -108,8 +115,9 @@ public final class Flipper implements Serializable, Cloneable {
 
     @Override
     public String toString() {
-        return "{offset:" + this.offset + ",limit:" + this.limit
-                + ((sort == null || sort.isEmpty()) ? "" : (",sort:\"" + this.sort.replace('"', '\'') + "\"")) + "}";
+        return "{\"limit\":" + this.limit + ",\"offset\":" + this.offset
+                + ((sort == null || sort.isEmpty()) ? "" : (",\"sort\":\"" + this.sort.replace('"', '\'') + "\""))
+                + "}";
     }
 
     @Override
@@ -140,42 +148,6 @@ public final class Flipper implements Serializable, Cloneable {
             return false;
         }
         return Objects.equals(this.sort, other.sort);
-    }
-
-    public int getLimit() {
-        return limit;
-    }
-
-    public void setLimit(int limit) {
-        this.limit = limit;
-    }
-
-    public Flipper limit(int limit) {
-        setLimit(limit);
-        return this;
-    }
-
-    public Flipper maxLimit(int maxlimit) {
-        setLimit(Math.max(1, Math.min(maxlimit, limit)));
-        return this;
-    }
-
-    public Flipper unlimit() {
-        this.limit = 0;
-        return this;
-    }
-
-    public int getOffset() {
-        return offset;
-    }
-
-    public void setOffset(int offset) {
-        this.offset = offset < 0 ? 0 : offset;
-    }
-
-    public Flipper offset(int offset) {
-        setOffset(offset);
-        return this;
     }
 
     public String getSort() {
