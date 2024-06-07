@@ -78,7 +78,7 @@ public class DataNativeSqlStatement {
     }
 
     public String getNativePageSql() {
-        return nativePageSql == null ? nativeSql : nativePageSql;
+        return nativePageSql;
     }
 
     public void setNativePageSql(String nativePageSql) {
