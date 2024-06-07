@@ -119,7 +119,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "{type=memory, name='" + resourceName() + "'}";
+        return getClass().getSimpleName() + "{type=memory, name='" + resourceName() + "', hash="
+                + Objects.hashCode(this) + "}";
     }
 
     @Override

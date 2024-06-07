@@ -5,19 +5,17 @@
  */
 package org.redkale.net.sncp;
 
+import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
-import static org.redkale.util.Utility.isEmpty;
-
-import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import org.redkale.annotation.*;
 import org.redkale.asm.*;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.convert.Convert;
 import org.redkale.convert.bson.BsonConvert;
@@ -33,6 +31,7 @@ import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.TypeToken;
 import org.redkale.util.Uint128;
 import org.redkale.util.Utility;
+import static org.redkale.util.Utility.isEmpty;
 
 /**
  * Service Node Communicate Protocol 生成Service的本地模式或远程模式Service-Class的工具类
@@ -531,13 +530,15 @@ public abstract class Sncp {
             }
             newDynName += "_" + (normal ? name : hash(name));
         }
-        try {
-            Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-            return (Class<T>) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz);
-        } catch (ClassNotFoundException e) {
-            // do nothing
-        } catch (Throwable t) {
-            t.printStackTrace();
+        if (methodBoost == null) { // 加强动态时不能重复加载
+            try {
+                Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
+                return (Class<T>) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz);
+            } catch (ClassNotFoundException e) {
+                // do nothing
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
         }
         // ------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
@@ -598,11 +599,22 @@ public abstract class Sncp {
         }
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();
-        Class<?> newClazz = new ClassLoader(loader) {
-            public final Class<?> loadClass(String name, byte[] b) {
-                return defineClass(name, b, 0, b.length);
+        Class<?> newClazz = null;
+        if (methodBoost != null) {
+            try {
+                Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
+                newClazz = (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz);
+            } catch (Throwable t) {
+                // do nothing
             }
-        }.loadClass(newDynName.replace('/', '.'), bytes);
+        }
+        if (newClazz == null) {
+            newClazz = new ClassLoader(loader) {
+                public final Class<?> loadClass(String name, byte[] b) {
+                    return defineClass(name, b, 0, b.length);
+                }
+            }.loadClass(newDynName.replace('/', '.'), bytes);
+        }
         RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionPublicClasses(newDynName.replace('/', '.'));
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));

@@ -40,11 +40,11 @@ public class CacheInstance implements Service {
         return "haha";
     }
 
-    public void updateName() {
-        cacheManager.bothSet("name", String.class, "gege", Duration.ofMillis(600), Duration.ofMillis(600));
+    public void updateName(String val) {
+        cacheManager.bothSet("name_2", String.class, val, Duration.ofSeconds(31), Duration.ofSeconds(60));
     }
 
-    @Cached(key = "name", localExpire = "30", remoteExpire = "60")
+    @Cached(key = "name_2", localExpire = "31", remoteExpire = "60")
     public String getName2() throws RedkaleException {
         return "haha";
     }
@@ -78,6 +78,10 @@ public class CacheInstance implements Service {
             ParamBean bean, int id, List<String> idList, Map<String, File> files)
             throws IOException, InstantiationException {
         return CompletableFuture.completedFuture(null);
+    }
+
+    public CacheManager getCacheManager() {
+        return cacheManager;
     }
 
     public static class ParamBean {

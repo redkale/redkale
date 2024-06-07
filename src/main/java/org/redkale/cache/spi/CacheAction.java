@@ -108,6 +108,7 @@ public class CacheAction {
             MultiHashKey dynKey = MultiHashKey.create(paramNames, key);
             this.keyGenerator = CacheKeyGenerator.create(dynKey);
         }
+        this.localExpire = createDuration(cached.getLocalExpire());
         this.remoteExpire = createDuration(cached.getRemoteExpire());
     }
 

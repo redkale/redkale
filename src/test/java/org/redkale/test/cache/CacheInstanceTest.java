@@ -60,6 +60,7 @@ public class CacheInstanceTest {
     public void run1() throws Exception {
         Class<CacheInstance> serviceClass = CacheInstance.class;
         CacheAsmMethodBoost boost = new CacheAsmMethodBoost(false, serviceClass);
+        CacheAsmMethodBoost boost2 = new CacheAsmMethodBoost(false, serviceClass);
         SncpRpcGroups grous = new SncpRpcGroups();
         AsyncGroup iGroup = AsyncGroup.create("", Utility.newScheduledExecutor(1), 0, 0);
         SncpClient client = new SncpClient(
@@ -68,12 +69,24 @@ public class CacheInstanceTest {
                 null, "", serviceClass, boost, resourceFactory, grous, client, null, null, null);
         resourceFactory.inject(instance);
         CacheInstance instance2 = Sncp.createLocalService(
-                null, "", serviceClass, boost, resourceFactory2, grous, client, null, null, null);
+                null, "", serviceClass, boost2, resourceFactory2, grous, client, null, null, null);
         resourceFactory2.inject(instance2);
         System.out.println(instance.getName2());
+        System.out.println(instance.getClass());
         Assertions.assertEquals("haha", instance.getName2());
         Assertions.assertEquals("haha", instance2.getName2());
-        instance.updateName();
+        System.out.println("准备设置 updateName");
+        System.out.println("instance1.manager = " + instance.getCacheManager());
+        System.out.println("instance2.manager = " + instance2.getCacheManager());
+        manager.updateBroadcastable(false);
+        instance.updateName("gege");
+        Assertions.assertEquals("gege", instance.getName2());
+        Assertions.assertEquals("haha", instance2.getName2());
+        manager.updateBroadcastable(true);
+        System.out.println("准备设置 updateName");
+        instance.updateName("gege");
+        System.out.println("设置结束 updateName");
+        Utility.sleep(10);
         Assertions.assertEquals("gege", instance.getName2());
         Assertions.assertEquals("gege", instance2.getName2());
     }
