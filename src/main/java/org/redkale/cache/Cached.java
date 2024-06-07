@@ -27,7 +27,7 @@ public @interface Cached {
 
     /**
      * 缓存的key，支持参数动态组合，比如"key_#{id}" <br>
-     * '@'开头的key值视为CacheKeyGenerator对象名称 <br>
+     * <b>'@'开头的key值视为CacheKeyGenerator对象名称</b> <br>
      *
      * @see org.redkale.cache.spi.CacheKeyGenerator#name()
      *

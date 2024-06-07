@@ -195,7 +195,15 @@ public class CacheManagerService implements CacheManager, Service {
             boolean nullable,
             Duration expire,
             ThrowSupplier<T> supplier) {
-        return getSet(this::localGetCache, this::localSetCache, hash, key, type, nullable, expire, supplier);
+        return getSet(
+                (id, ex, ct) -> localSource.get(id, ct),
+                this::localSetCache,
+                hash,
+                key,
+                type,
+                nullable,
+                expire,
+                supplier);
     }
 
     /**
@@ -219,7 +227,14 @@ public class CacheManagerService implements CacheManager, Service {
             Duration expire,
             ThrowSupplier<CompletableFuture<T>> supplier) {
         return getSetAsync(
-                this::localGetCacheAsync, this::localSetCacheAsync, hash, key, type, nullable, expire, supplier);
+                (id, ex, ct) -> localSource.getAsync(id, ct),
+                this::localSetCacheAsync,
+                hash,
+                key,
+                type,
+                nullable,
+                expire,
+                supplier);
     }
 
     /**
@@ -302,7 +317,15 @@ public class CacheManagerService implements CacheManager, Service {
             boolean nullable,
             Duration expire,
             ThrowSupplier<T> supplier) {
-        return getSet(this::remoteGetCache, this::remoteSetCache, hash, key, type, nullable, expire, supplier);
+        return getSet(
+                (id, ex, ct) -> remoteSource.get(id, ct),
+                this::remoteSetCache,
+                hash,
+                key,
+                type,
+                nullable,
+                expire,
+                supplier);
     }
 
     /**
@@ -326,7 +349,14 @@ public class CacheManagerService implements CacheManager, Service {
             Duration expire,
             ThrowSupplier<CompletableFuture<T>> supplier) {
         return getSetAsync(
-                this::remoteGetCacheAsync, this::remoteSetCacheAsync, hash, key, type, nullable, expire, supplier);
+                (id, ex, ct) -> remoteSource.getAsync(id, ct),
+                this::remoteSetCacheAsync,
+                hash,
+                key,
+                type,
+                nullable,
+                expire,
+                supplier);
     }
 
     /**
@@ -808,6 +838,7 @@ public class CacheManagerService implements CacheManager, Service {
      * @param <T> 泛型
      * @param hash 缓存hash
      * @param key 缓存键
+     * @param expire 过期时长，Duration.ZERO为永不过期
      * @param type 数据类型
      * @return 数据值
      */
@@ -833,27 +864,12 @@ public class CacheManagerService implements CacheManager, Service {
         }
     }
 
-    protected <T> CacheValue<T> localGetCache(String id, Duration expire, Type cacheType) {
-        return localSource.get(id, cacheType);
-    }
-
-    protected <T> CompletableFuture<CacheValue<T>> localGetCacheAsync(String id, Duration expire, Type cacheType) {
-        return localSource.getAsync(id, cacheType);
-    }
-
-    protected <T> CacheValue<T> remoteGetCache(String id, Duration expire, Type cacheType) {
-        return remoteSource.get(id, cacheType);
-    }
-
-    protected <T> CompletableFuture<CacheValue<T>> remoteGetCacheAsync(String id, Duration expire, Type cacheType) {
-        return remoteSource.getAsync(id, cacheType);
-    }
-
     /**
      * 远程异步获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
      * @param id 缓存键
+     * @param expire 过期时长，Duration.ZERO为永不过期
      * @param cacheType 数据类型
      * @return 数据值
      */

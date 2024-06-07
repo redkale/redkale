@@ -56,7 +56,8 @@
     <!--
         全局Serivce的缓存设置，没配置该节点将自动创建一个。
         enabled： 是否开启缓存功能。默认: true
-        source: 远程CacheSource的资源名
+        remote: 远程CacheSource的资源名
+        broadcastable: 存在远程CacheSource时修改数据是否进行广播到其他集群服务中。默认: true
     -->
-    <cache enabled="true" source="xxx"/>
+    <cache enabled="true" remote="xxx" broadcastable="true"/>
 ```
