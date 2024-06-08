@@ -1,5 +1,5 @@
 # 定时任务
-&emsp;&emsp;@Scheduled注解在Service的方法上，实现对方法结果进行定时运行。方法必须是无参数或者```ScheduleEvent```参数。
+&emsp;&emsp;@Scheduled注解在Service的方法上，实现对方法结果进行定时运行。方法必须是无参数或者```ScheduledEvent```参数。
 
 ## 属性说明
 |属性|默认值|说明|
@@ -52,7 +52,7 @@
 
 
 ## 使用Xxl-Job
-&emsp;&emsp;Schedule可以采用第三方实现, 官方扩展包```redkale-plugins```提供了xxl-job实现，且不依赖xxl-job包。
+&emsp;&emsp;Scheduled可以采用第三方实现, 官方扩展包```redkale-plugins```提供了xxl-job实现，且不依赖xxl-job包。
 
 ### pom依赖
 ```xml
@@ -65,13 +65,13 @@
 
 ### 配置文件
 ```xml
-    <schedule enabled="true">    
+    <scheduled enabled="true">    
         <xxljob addresses="http://localhost:8080/xxl-job-admin" 
                 executorName="redkale-examples" 
                 ip="127.0.0.1" <!-- 可选 -->
                 port="5678"    <!-- 可选 -->
                 accessToken="default_token" />
-    </schedule>
+    </scheduled>
 ```
 
 ### 使用方法
