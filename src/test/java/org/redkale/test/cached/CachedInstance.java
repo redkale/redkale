@@ -49,6 +49,12 @@ public class CachedInstance implements Service {
         return "haha";
     }
 
+    @Cached(key = "dictcode", localExpire = "30", remoteExpire = "60")
+    public CompletableFuture<String> getDictcodeAsync() {
+        System.out.println("执行了 getDictcodeAsync");
+        return CompletableFuture.completedFuture("code001");
+    }
+
     @Cached(key = "name", localExpire = "30")
     public CompletableFuture<String> getNameAsync() {
         return CompletableFuture.completedFuture("nameAsync");

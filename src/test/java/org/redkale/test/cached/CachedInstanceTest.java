@@ -4,6 +4,7 @@
 package org.redkale.test.cached;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.CountDownLatch;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -71,6 +72,7 @@ public class CachedInstanceTest {
         CachedInstance instance2 = Sncp.createLocalService(
                 null, "", serviceClass, boost2, resourceFactory2, grous, client, null, null, null);
         resourceFactory2.inject(instance2);
+
         System.out.println(instance.getName2());
         System.out.println(instance.getClass());
         Assertions.assertEquals("haha", instance.getName2());
@@ -89,8 +91,47 @@ public class CachedInstanceTest {
         Utility.sleep(10);
         Assertions.assertEquals("gege", instance.getName2());
         Assertions.assertEquals("gege", instance2.getName2());
+        System.out.println("=====================================01============================================");
     }
 
     @Test
-    public void run2() throws Exception {}
+    public void run2() throws Exception {
+        Class<CachedInstance> serviceClass = CachedInstance.class;
+        CachedAsmMethodBoost boost = new CachedAsmMethodBoost(false, serviceClass);
+        CachedAsmMethodBoost boost2 = new CachedAsmMethodBoost(false, serviceClass);
+        SncpRpcGroups grous = new SncpRpcGroups();
+        AsyncGroup iGroup = AsyncGroup.create("", Utility.newScheduledExecutor(1), 0, 0);
+        SncpClient client = new SncpClient(
+                "", iGroup, "0", new InetSocketAddress("127.0.0.1", 8080), new ClientAddress(), "TCP", 1, 16);
+        CachedInstance instance = Sncp.createLocalService(
+                null, "", serviceClass, boost, resourceFactory, grous, client, null, null, null);
+        resourceFactory.inject(instance);
+        CachedInstance instance2 = Sncp.createLocalService(
+                null, "", serviceClass, boost2, resourceFactory2, grous, client, null, null, null);
+        resourceFactory2.inject(instance2);
+
+        int threads = Runtime.getRuntime().availableProcessors() * 10;
+        CountDownLatch cdl = new CountDownLatch(threads);
+        CountDownLatch cd2 = new CountDownLatch(threads);
+        System.out.println("开启并发数: " + threads);
+        for (int i = 0; i < threads; i++) {
+            new Thread(() -> {
+                        cdl.countDown();
+                        try {
+                            cdl.await();
+                        } catch (Exception e) {
+                        }
+                        instance.getDictcodeAsync().thenApply(v -> {
+                            if (!"code001".equals(v)) {
+                                System.out.println("值不对: " + v);
+                            }
+                            return v;
+                        });
+                        cd2.countDown();
+                    })
+                    .start();
+        }
+        cd2.await();
+        System.out.println("=====================================02============================================");
+    }
 }

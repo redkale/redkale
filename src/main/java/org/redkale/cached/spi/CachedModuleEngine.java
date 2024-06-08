@@ -33,7 +33,9 @@ import org.redkale.util.RedkaleException;
  * @since 2.8.0
  */
 public class CachedModuleEngine extends ModuleEngine {
+
     protected static final String CONFIG_NAME = "cached";
+
     // 全局缓存管理器
     private CachedManager cacheManager;
 
