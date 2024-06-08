@@ -96,9 +96,9 @@ public class CachedAction {
     }
 
     void init(ResourceFactory resourceFactory, Object service) {
-        this.hash = cached.getHash().trim().isEmpty() || CachedManager.DEFAULT_HASH.equals(cached.getHash())
-                ? CachedManager.DEFAULT_HASH
-                : environment.getPropertyValue(cached.getHash());
+        this.hash = cached.getSchema().trim().isEmpty() || CachedManager.DEFAULT_SCHEMA.equals(cached.getSchema())
+                ? CachedManager.DEFAULT_SCHEMA
+                : environment.getPropertyValue(cached.getSchema());
         String key = environment.getPropertyValue(cached.getKey());
         this.templetKey = key;
         if (key.startsWith("@")) { // 动态加载缓存key生成器

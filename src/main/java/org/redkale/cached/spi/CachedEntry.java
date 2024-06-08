@@ -20,7 +20,7 @@ public class CachedEntry {
 
     private String key;
 
-    private String hash;
+    private String schema;
 
     private String localExpire;
 
@@ -34,7 +34,7 @@ public class CachedEntry {
 
     public CachedEntry(DynForCached cached) {
         this.key = cached.key();
-        this.hash = cached.hash();
+        this.schema = cached.schema();
         this.localExpire = cached.localExpire();
         this.remoteExpire = cached.remoteExpire();
         this.timeUnit = cached.timeUnit();
@@ -43,7 +43,7 @@ public class CachedEntry {
 
     public CachedEntry(Cached cached) {
         this.key = cached.key();
-        this.hash = cached.hash();
+        this.schema = cached.schema();
         this.localExpire = cached.localExpire();
         this.remoteExpire = cached.remoteExpire();
         this.timeUnit = cached.timeUnit();
@@ -54,8 +54,8 @@ public class CachedEntry {
         return key;
     }
 
-    public String getHash() {
-        return hash;
+    public String getSchema() {
+        return schema;
     }
 
     public String getLocalExpire() {

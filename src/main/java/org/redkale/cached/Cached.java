@@ -29,7 +29,7 @@ public @interface Cached {
      * 缓存的key，支持参数动态组合，比如"key_#{id}" <br>
      * <b>'@'开头的key值视为CacheKeyGenerator对象名称</b> <br>
      *
-     * @see org.redkale.cache.spi.CacheKeyGenerator#name()
+     * @see org.redkale.cached.spi.CachedKeyGenerator#name()
      *
      * @return 键
      */
@@ -38,9 +38,9 @@ public @interface Cached {
     /**
      * 缓存的hash, 不能含有':'、'#'、'@'字符
      *
-     * @return hash
+     * @return schema
      */
-    String hash() default CachedManager.DEFAULT_HASH;
+    String schema() default CachedManager.DEFAULT_SCHEMA;
 
     /**
      * 本地缓存过期时长， 0表示永不过期， -1表示不作本地缓存。<br>

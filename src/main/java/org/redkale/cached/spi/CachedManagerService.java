@@ -58,11 +58,11 @@ public class CachedManagerService implements CachedManager, Service {
     // 本地缓存Source
     protected final CacheMemorySource localSource = new CacheMemorySource("cache-local");
 
-    // 缓存hash集合, 用于定时遍历删除过期数据
+    // 缓存schema集合, 用于定时遍历删除过期数据
     protected final ConcurrentSkipListSet<String> hashNames = new ConcurrentSkipListSet<>();
 
     // 缓存无效时使用的同步锁
-    private final ConcurrentHashMap<String, CachedValue> syncLock = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, CachedValue> syncLockMap = new ConcurrentHashMap<>();
 
     // 缓存无效时使用的异步锁
     private final ConcurrentHashMap<String, CachedAsyncLock> asyncLockMap = new ConcurrentHashMap<>();
@@ -132,8 +132,8 @@ public class CachedManagerService implements CachedManager, Service {
         return enabled;
     }
 
-    public CachedManagerService addHash(String hash) {
-        this.hashNames.add(hash);
+    public CachedManagerService addSchema(String schema) {
+        this.hashNames.add(schema);
         return this;
     }
 
@@ -158,22 +158,22 @@ public class CachedManagerService implements CachedManager, Service {
      * 本地获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @param type 数据类型
      * @return 数据值
      */
     @Override
-    public <T> T localGet(final String hash, final String key, final Type type) {
+    public <T> T localGet(final String schema, final String key, final Type type) {
         checkEnable();
-        return CachedValue.get(localSource.get(idFor(hash, key), loadCacheType(type)));
+        return CachedValue.get(localSource.get(idFor(schema, key), loadCacheType(type)));
     }
 
     /**
      * 本地获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -183,7 +183,7 @@ public class CachedManagerService implements CachedManager, Service {
      */
     @Override
     public <T> T localGetSet(
-            final String hash,
+            final String schema,
             final String key,
             final Type type,
             boolean nullable,
@@ -192,7 +192,7 @@ public class CachedManagerService implements CachedManager, Service {
         return getSet(
                 (id, ex, ct) -> localSource.get(id, ct),
                 this::localSetCache,
-                hash,
+                schema,
                 key,
                 type,
                 nullable,
@@ -204,7 +204,7 @@ public class CachedManagerService implements CachedManager, Service {
      * 本地异步获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -214,7 +214,7 @@ public class CachedManagerService implements CachedManager, Service {
      */
     @Override
     public <T> CompletableFuture<T> localGetSetAsync(
-            String hash,
+            String schema,
             String key,
             Type type,
             boolean nullable,
@@ -223,7 +223,7 @@ public class CachedManagerService implements CachedManager, Service {
         return getSetAsync(
                 (id, ex, ct) -> localSource.getAsync(id, ct),
                 this::localSetCacheAsync,
-                hash,
+                schema,
                 key,
                 type,
                 nullable,
@@ -235,28 +235,28 @@ public class CachedManagerService implements CachedManager, Service {
      * 本地缓存数据
      *
      * @param <T> 泛型
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @param type 数据类型
      * @param value 数据值
      * @param expire 过期时长，Duration.ZERO为永不过期
      */
     @Override
-    public <T> void localSet(String hash, String key, Type type, T value, Duration expire) {
-        setCache(localSource, hash, key, type, value, expire);
+    public <T> void localSet(String schema, String key, Type type, T value, Duration expire) {
+        setCache(localSource, schema, key, type, value, expire);
     }
 
     /**
      * 本地删除缓存数据
      *
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @return 删除数量
      */
     @Override
-    public long localDel(String hash, String key) {
+    public long localDel(String schema, String key) {
         checkEnable();
-        return localSource.del(idFor(hash, key));
+        return localSource.del(idFor(schema, key));
     }
 
     // -------------------------------------- 远程缓存 --------------------------------------
@@ -264,30 +264,30 @@ public class CachedManagerService implements CachedManager, Service {
      * 远程获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @param type 数据类型
      * @return 数据值
      */
     @Override
-    public <T> T remoteGet(final String hash, final String key, final Type type) {
+    public <T> T remoteGet(final String schema, final String key, final Type type) {
         checkEnable();
-        return CachedValue.get(remoteSource.get(idFor(hash, key), loadCacheType(type)));
+        return CachedValue.get(remoteSource.get(idFor(schema, key), loadCacheType(type)));
     }
 
     /**
      * 远程异步获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @param type 数据类型
      * @return 数据值
      */
     @Override
-    public <T> CompletableFuture<T> remoteGetAsync(final String hash, final String key, final Type type) {
+    public <T> CompletableFuture<T> remoteGetAsync(final String schema, final String key, final Type type) {
         checkEnable();
-        CompletableFuture<CachedValue<T>> future = remoteSource.getAsync(idFor(hash, key), loadCacheType(type));
+        CompletableFuture<CachedValue<T>> future = remoteSource.getAsync(idFor(schema, key), loadCacheType(type));
         return future.thenApply(CachedValue::get);
     }
 
@@ -295,7 +295,7 @@ public class CachedManagerService implements CachedManager, Service {
      * 远程获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -305,7 +305,7 @@ public class CachedManagerService implements CachedManager, Service {
      */
     @Override
     public <T> T remoteGetSet(
-            final String hash,
+            final String schema,
             final String key,
             final Type type,
             boolean nullable,
@@ -314,7 +314,7 @@ public class CachedManagerService implements CachedManager, Service {
         return getSet(
                 (id, ex, ct) -> remoteSource.get(id, ct),
                 this::remoteSetCache,
-                hash,
+                schema,
                 key,
                 type,
                 nullable,
@@ -326,7 +326,7 @@ public class CachedManagerService implements CachedManager, Service {
      * 远程异步获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -336,7 +336,7 @@ public class CachedManagerService implements CachedManager, Service {
      */
     @Override
     public <T> CompletableFuture<T> remoteGetSetAsync(
-            String hash,
+            String schema,
             String key,
             Type type,
             boolean nullable,
@@ -345,7 +345,7 @@ public class CachedManagerService implements CachedManager, Service {
         return getSetAsync(
                 (id, ex, ct) -> remoteSource.getAsync(id, ct),
                 this::remoteSetCacheAsync,
-                hash,
+                schema,
                 key,
                 type,
                 nullable,
@@ -357,56 +357,56 @@ public class CachedManagerService implements CachedManager, Service {
      * 远程缓存数据
      *
      * @param <T> 泛型
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @param type 数据类型
      * @param value 数据值
      * @param expire 过期时长，Duration.ZERO为永不过期
      */
     @Override
-    public <T> void remoteSet(final String hash, final String key, final Type type, final T value, Duration expire) {
-        setCache(remoteSource, hash, key, type, value, expire);
+    public <T> void remoteSet(final String schema, final String key, final Type type, final T value, Duration expire) {
+        setCache(remoteSource, schema, key, type, value, expire);
     }
 
     /**
      * 远程异步缓存数据
      *
      * @param <T> 泛型
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @param type 数据类型
      * @param value 数据值
      * @param expire 过期时长，Duration.ZERO为永不过期
      */
     @Override
-    public <T> CompletableFuture<Void> remoteSetAsync(String hash, String key, Type type, T value, Duration expire) {
-        return setCacheAsync(remoteSource, hash, key, type, value, expire);
+    public <T> CompletableFuture<Void> remoteSetAsync(String schema, String key, Type type, T value, Duration expire) {
+        return setCacheAsync(remoteSource, schema, key, type, value, expire);
     }
 
     /**
      * 远程删除缓存数据
      *
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @return 删除数量
      */
     @Override
-    public long remoteDel(String hash, String key) {
+    public long remoteDel(String schema, String key) {
         checkEnable();
-        return remoteSource.del(idFor(hash, key));
+        return remoteSource.del(idFor(schema, key));
     }
 
     /**
      * 远程异步删除缓存数据
      *
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @return 删除数量
      */
     @Override
-    public CompletableFuture<Long> remoteDelAsync(String hash, String key) {
+    public CompletableFuture<Long> remoteDelAsync(String schema, String key) {
         checkEnable();
-        return remoteSource.delAsync(idFor(hash, key));
+        return remoteSource.delAsync(idFor(schema, key));
     }
 
     // -------------------------------------- both缓存 --------------------------------------
@@ -414,35 +414,35 @@ public class CachedManagerService implements CachedManager, Service {
      * 远程获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @param type 数据类型
      * @return 数据值
      */
     @Override
-    public <T> T bothGet(final String hash, final String key, final Type type) {
-        return CachedValue.get(bothGetCache(hash, key, (Duration) null, type));
+    public <T> T bothGet(final String schema, final String key, final Type type) {
+        return CachedValue.get(bothGetCache(schema, key, (Duration) null, type));
     }
 
     /**
      * 远程异步获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @param type 数据类型
      * @return 数据值
      */
     @Override
-    public <T> CompletableFuture<T> bothGetAsync(final String hash, final String key, final Type type) {
-        return bothGetCacheAsync(hash, key, (Duration) null, type).thenApply(CachedValue::get);
+    public <T> CompletableFuture<T> bothGetAsync(final String schema, final String key, final Type type) {
+        return bothGetCacheAsync(schema, key, (Duration) null, type).thenApply(CachedValue::get);
     }
 
     /**
      * 远程获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -453,7 +453,7 @@ public class CachedManagerService implements CachedManager, Service {
      */
     @Override
     public <T> T bothGetSet(
-            final String hash,
+            final String schema,
             final String key,
             final Type type,
             boolean nullable,
@@ -471,11 +471,11 @@ public class CachedManagerService implements CachedManager, Service {
         }
         if (remoteExpire == null) { // 只有本地缓存
             Objects.requireNonNull(localExpire);
-            return localGetSet(hash, key, type, nullable, localExpire, supplier);
+            return localGetSet(schema, key, type, nullable, localExpire, supplier);
         }
         if (localExpire == null) { // 只有远程缓存
             Objects.requireNonNull(remoteExpire);
-            return remoteGetSet(hash, key, type, nullable, remoteExpire, supplier);
+            return remoteGetSet(schema, key, type, nullable, remoteExpire, supplier);
         }
         return getSet(
                 this::bothGetCache,
@@ -485,7 +485,7 @@ public class CachedManagerService implements CachedManager, Service {
                         remoteSetCache(i, remoteExpire, t, v);
                     }
                 },
-                hash,
+                schema,
                 key,
                 type,
                 nullable,
@@ -497,7 +497,7 @@ public class CachedManagerService implements CachedManager, Service {
      * 远程异步获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -508,7 +508,7 @@ public class CachedManagerService implements CachedManager, Service {
      */
     @Override
     public <T> CompletableFuture<T> bothGetSetAsync(
-            String hash,
+            String schema,
             String key,
             Type type,
             boolean nullable,
@@ -524,11 +524,11 @@ public class CachedManagerService implements CachedManager, Service {
         }
         if (remoteExpire == null) { // 只有本地缓存
             Objects.requireNonNull(localExpire);
-            return localGetSetAsync(hash, key, type, nullable, localExpire, supplier);
+            return localGetSetAsync(schema, key, type, nullable, localExpire, supplier);
         }
         if (localExpire == null) { // 只有远程缓存
             Objects.requireNonNull(remoteExpire);
-            return remoteGetSetAsync(hash, key, type, nullable, remoteExpire, supplier);
+            return remoteGetSetAsync(schema, key, type, nullable, remoteExpire, supplier);
         }
         return getSetAsync(
                 this::bothGetCacheAsync,
@@ -540,7 +540,7 @@ public class CachedManagerService implements CachedManager, Service {
                         return CompletableFuture.completedFuture(null);
                     }
                 },
-                hash,
+                schema,
                 key,
                 type,
                 nullable,
@@ -552,7 +552,7 @@ public class CachedManagerService implements CachedManager, Service {
      * 远程缓存数据
      *
      * @param <T> 泛型
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @param type 数据类型
      * @param value 数据值
@@ -561,7 +561,7 @@ public class CachedManagerService implements CachedManager, Service {
      */
     @Override
     public <T> void bothSet(
-            final String hash,
+            final String schema,
             final String key,
             final Type type,
             final T value,
@@ -569,13 +569,13 @@ public class CachedManagerService implements CachedManager, Service {
             Duration remoteExpire) {
         checkEnable();
         if (localExpire != null) {
-            setCache(localSource, hash, key, type, value, localExpire);
+            setCache(localSource, schema, key, type, value, localExpire);
         }
         if (remoteExpire != null && remoteSource != null) {
-            setCache(remoteSource, hash, key, type, value, remoteExpire);
+            setCache(remoteSource, schema, key, type, value, remoteExpire);
         }
         if (remoteSource != null && broadcastable) {
-            remoteSource.publish(CACHE_CHANNEL_TOPIC, new CachedEventMessage(idFor(hash, key)));
+            remoteSource.publish(CACHE_CHANNEL_TOPIC, new CachedEventMessage(idFor(schema, key)));
         }
     }
 
@@ -583,7 +583,7 @@ public class CachedManagerService implements CachedManager, Service {
      * 远程异步缓存数据
      *
      * @param <T> 泛型
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @param type 数据类型
      * @param value 数据值
@@ -593,18 +593,18 @@ public class CachedManagerService implements CachedManager, Service {
      */
     @Override
     public <T> CompletableFuture<Void> bothSetAsync(
-            String hash, String key, Type type, T value, Duration localExpire, Duration remoteExpire) {
+            String schema, String key, Type type, T value, Duration localExpire, Duration remoteExpire) {
         checkEnable();
         if (localExpire != null) {
-            setCache(localSource, hash, key, type, value, localExpire);
+            setCache(localSource, schema, key, type, value, localExpire);
         }
         CompletableFuture<Void> future = CompletableFuture.completedFuture(null);
         if (remoteSource != null && remoteExpire != null) {
-            future = setCacheAsync(remoteSource, hash, key, type, value, remoteExpire);
+            future = setCacheAsync(remoteSource, schema, key, type, value, remoteExpire);
         }
         if (remoteSource != null && broadcastable) {
             future = future.thenCompose(r -> remoteSource
-                    .publishAsync(CACHE_CHANNEL_TOPIC, new CachedEventMessage(idFor(hash, key)))
+                    .publishAsync(CACHE_CHANNEL_TOPIC, new CachedEventMessage(idFor(schema, key)))
                     .thenApply(n -> r));
         }
         return future;
@@ -613,14 +613,14 @@ public class CachedManagerService implements CachedManager, Service {
     /**
      * 远程删除缓存数据
      *
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @return 删除数量
      */
     @Override
-    public long bothDel(String hash, String key) {
+    public long bothDel(String schema, String key) {
         checkEnable();
-        String id = idFor(hash, key);
+        String id = idFor(schema, key);
         long v = localSource.del(id);
         if (remoteSource != null) {
             v = remoteSource.del(id);
@@ -634,14 +634,14 @@ public class CachedManagerService implements CachedManager, Service {
     /**
      * 远程异步删除缓存数据
      *
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @return 删除数量
      */
     @Override
-    public CompletableFuture<Long> bothDelAsync(String hash, String key) {
+    public CompletableFuture<Long> bothDelAsync(String schema, String key) {
         checkEnable();
-        String id = idFor(hash, key);
+        String id = idFor(schema, key);
         long v = localSource.del(id); // 内存操作，无需异步
         if (remoteSource != null) {
             return remoteSource.delAsync(id).thenCompose(r -> {
@@ -663,7 +663,7 @@ public class CachedManagerService implements CachedManager, Service {
      * @param <T> 泛型
      * @param getter 获取数据函数
      * @param setter 设置数据函数
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -674,7 +674,7 @@ public class CachedManagerService implements CachedManager, Service {
     protected <T> T getSet(
             GetterFunc<CachedValue<T>> getter,
             SetterSyncFunc setter,
-            String hash,
+            String schema,
             String key,
             Type type,
             boolean nullable,
@@ -684,7 +684,7 @@ public class CachedManagerService implements CachedManager, Service {
         Objects.requireNonNull(expire);
         Objects.requireNonNull(supplier);
         final Type cacheType = loadCacheType(type);
-        final String id = idFor(hash, key);
+        final String id = idFor(schema, key);
         CachedValue<T> cacheVal = getter.get(id, expire, cacheType);
         if (CachedValue.isValid(cacheVal)) {
             return cacheVal.getVal();
@@ -707,11 +707,11 @@ public class CachedManagerService implements CachedManager, Service {
             }
             return newCacheVal;
         };
-        cacheVal = syncLock.computeIfAbsent(id, func);
+        cacheVal = syncLockMap.computeIfAbsent(id, func);
         try {
             return CachedValue.get(cacheVal);
         } finally {
-            syncLock.remove(id);
+            syncLockMap.remove(id);
         }
     }
 
@@ -721,7 +721,7 @@ public class CachedManagerService implements CachedManager, Service {
      * @param <T> 泛型
      * @param getter 获取数据函数
      * @param setter 设置数据函数
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -732,7 +732,7 @@ public class CachedManagerService implements CachedManager, Service {
     protected <T> CompletableFuture<T> getSetAsync(
             GetterFunc<CompletableFuture<CachedValue<T>>> getter,
             SetterAsyncFunc setter,
-            String hash,
+            String schema,
             String key,
             Type type,
             boolean nullable,
@@ -741,7 +741,7 @@ public class CachedManagerService implements CachedManager, Service {
         checkEnable();
         Objects.requireNonNull(supplier);
         final Type cacheType = loadCacheType(type);
-        final String id = idFor(hash, key);
+        final String id = idFor(schema, key);
         CompletableFuture<CachedValue<T>> sourceFuture = getter.get(id, expire, cacheType);
         return sourceFuture.thenCompose(val -> {
             if (CachedValue.isValid(val)) {
@@ -813,32 +813,32 @@ public class CachedManagerService implements CachedManager, Service {
         }
     }
 
-    protected <T> void setCache(CacheSource source, String hash, String key, Type type, T value, Duration expire) {
-        setCache(source, idFor(hash, key), expire, loadCacheType(type, value), CachedValue.create(value));
+    protected <T> void setCache(CacheSource source, String schema, String key, Type type, T value, Duration expire) {
+        setCache(source, idFor(schema, key), expire, loadCacheType(type, value), CachedValue.create(value));
     }
 
     protected <T> CompletableFuture<Void> setCacheAsync(
-            CacheSource source, String hash, String key, Type type, T value, Duration expire) {
-        return setCacheAsync(source, idFor(hash, key), expire, loadCacheType(type, value), CachedValue.create(value));
+            CacheSource source, String schema, String key, Type type, T value, Duration expire) {
+        return setCacheAsync(source, idFor(schema, key), expire, loadCacheType(type, value), CachedValue.create(value));
     }
 
-    protected <T> CachedValue<T> bothGetCache(String hash, String key, Duration expire, Type type) {
-        return bothGetCache(idFor(hash, key), expire, loadCacheType(type));
+    protected <T> CachedValue<T> bothGetCache(String schema, String key, Duration expire, Type type) {
+        return bothGetCache(idFor(schema, key), expire, loadCacheType(type));
     }
 
     /**
      * 远程异步获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @param expire 过期时长，Duration.ZERO为永不过期
      * @param type 数据类型
      * @return 数据值
      */
     protected <T> CompletableFuture<CachedValue<T>> bothGetCacheAsync(
-            final String hash, final String key, Duration expire, final Type type) {
-        return bothGetCacheAsync(idFor(hash, key), expire, loadCacheType(type));
+            final String schema, final String key, Duration expire, final Type type) {
+        return bothGetCacheAsync(idFor(schema, key), expire, loadCacheType(type));
     }
 
     protected <T> CachedValue<T> bothGetCache(final String id, final Duration expire, final Type cacheType) {
@@ -895,12 +895,12 @@ public class CachedManagerService implements CachedManager, Service {
     /**
      * 创建一个锁key
      *
-     * @param hash 缓存hash
+     * @param schema 缓存schema
      * @param key 缓存键
      * @return key
      */
-    protected String idFor(String hash, String key) {
-        return hash + ':' + key;
+    protected String idFor(String schema, String key) {
+        return schema + ':' + key;
     }
 
     /**

@@ -10,7 +10,7 @@ import org.redkale.util.MultiHashKey;
 /**
  * 缓存key生成器
  *
- * @see org.redkale.cache.Cached#key()
+ * @see org.redkale.cached.Cached#key()
  *
  * <p>详情见: https://redkale.org
  *
@@ -22,8 +22,8 @@ public interface CachedKeyGenerator {
     /**
      * 根据service和方法名生成key
      *
-     * @param target Service对象
-     * @param action CacheAction对象
+     * @param target 依附对象
+     * @param action {@link org.redkale.cached.spi.CachedAction}对象
      * @param params 参数值
      * @return key值
      */
@@ -32,15 +32,15 @@ public interface CachedKeyGenerator {
     /**
      * 生成器的名字
      *
-     * @see org.redkale.cache.Cached#key()
+     * @see org.redkale.cached.Cached#key()
      *
      * @return  name
      */
     public String name();
 
     /**
-     * 根据MultiHashKey生成一个CacheKeyGenerator
-     * @param key MultiHashKey 不能为空
+     * 根据MultiHashKey生成一个CachedKeyGenerator
+     * @param key {@link org.redkale.util.MultiHashKey} 不能为空
      * @return CachedKeyGenerator
      */
     public static CachedKeyGenerator create(MultiHashKey key) {
