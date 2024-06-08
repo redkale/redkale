@@ -33,7 +33,7 @@ import org.redkale.util.RedkaleException;
  * @since 2.8.0
  */
 public class CachedModuleEngine extends ModuleEngine {
-
+    protected static final String CONFIG_NAME = "cached";
     // 全局缓存管理器
     private CachedManager cacheManager;
 
@@ -54,7 +54,7 @@ public class CachedModuleEngine extends ModuleEngine {
      */
     @Override
     public AnyValue.MergeEnum mergeAppConfigStrategy(String path, String key, AnyValue val1, AnyValue val2) {
-        if ("".equals(path) && "cache".equals(key)) {
+        if ("".equals(path) && CONFIG_NAME.equals(key)) {
             return AnyValue.MergeEnum.REPLACE;
         }
         return null;
@@ -76,7 +76,7 @@ public class CachedModuleEngine extends ModuleEngine {
     @Override
     public void onAppPostInit() {
         // 设置缓存管理器
-        this.config = application.getAppConfig().getAnyValue("cache");
+        this.config = application.getAppConfig().getAnyValue(CONFIG_NAME);
         this.cacheManager = createManager(this.config);
         if (!application.isCompileMode()) {
             this.resourceFactory.inject(this.cacheManager);
