@@ -2,7 +2,7 @@
 
 */
 
-package org.redkale.cache.spi;
+package org.redkale.cached.spi;
 
 import java.util.Objects;
 import org.redkale.util.MultiHashKey;
@@ -17,7 +17,7 @@ import org.redkale.util.MultiHashKey;
  * @author zhangjx
  * @since 2.8.0
  */
-public interface CacheKeyGenerator {
+public interface CachedKeyGenerator {
 
     /**
      * 根据service和方法名生成key
@@ -27,7 +27,7 @@ public interface CacheKeyGenerator {
      * @param params 参数值
      * @return key值
      */
-    public String generate(Object target, CacheAction action, Object... params);
+    public String generate(Object target, CachedAction action, Object... params);
 
     /**
      * 生成器的名字
@@ -41,13 +41,13 @@ public interface CacheKeyGenerator {
     /**
      * 根据MultiHashKey生成一个CacheKeyGenerator
      * @param key MultiHashKey 不能为空
-     * @return CacheKeyGenerator
+     * @return CachedKeyGenerator
      */
-    public static CacheKeyGenerator create(MultiHashKey key) {
+    public static CachedKeyGenerator create(MultiHashKey key) {
         Objects.requireNonNull(key);
-        return new CacheKeyGenerator() {
+        return new CachedKeyGenerator() {
             @Override
-            public String generate(Object target, CacheAction action, Object... params) {
+            public String generate(Object target, CachedAction action, Object... params) {
                 return key.keyFor(params);
             }
 

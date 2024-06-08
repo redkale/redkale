@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.test.cache;
+package org.redkale.test.cached;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,17 +13,17 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.redkale.annotation.Resource;
-import org.redkale.cache.CacheManager;
-import org.redkale.cache.Cached;
+import org.redkale.cached.Cached;
+import org.redkale.cached.CachedManager;
 import org.redkale.service.Service;
 import org.redkale.source.Range;
 import org.redkale.util.RedkaleException;
 
 /** @author zhangjx */
-public class CacheInstance implements Service {
+public class CachedInstance implements Service {
 
     @Resource
-    private CacheManager cacheManager;
+    private CachedManager cacheManager;
 
     // 修改远程缓存的key值
     public void updateName(String code, Map<String, Long> map) {
@@ -80,7 +80,7 @@ public class CacheInstance implements Service {
         return CompletableFuture.completedFuture(null);
     }
 
-    public CacheManager getCacheManager() {
+    public CachedManager getCacheManager() {
         return cacheManager;
     }
 

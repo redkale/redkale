@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.cache.spi;
+package org.redkale.cached.spi;
 
 import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.JsonConvert;
@@ -15,26 +15,26 @@ import org.redkale.convert.json.JsonConvert;
  * @param <T> 泛型
  * @since 2.8.0
  */
-public class CacheValue<T> {
+public class CachedValue<T> {
 
     @ConvertColumn(index = 1)
     private T val;
 
-    public CacheValue() {}
+    public CachedValue() {}
 
-    protected CacheValue(T value) {
+    protected CachedValue(T value) {
         this.val = value;
     }
 
-    public static <T> CacheValue<T> create(T value) {
-        return new CacheValue(value);
+    public static <T> CachedValue<T> create(T value) {
+        return new CachedValue(value);
     }
 
-    public static boolean isValid(CacheValue val) {
+    public static boolean isValid(CachedValue val) {
         return val != null;
     }
 
-    public static <T> T get(CacheValue val) {
+    public static <T> T get(CachedValue val) {
         return isValid(val) ? (T) val.getVal() : null;
     }
 

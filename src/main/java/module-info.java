@@ -13,8 +13,8 @@ module org.redkale {
     exports org.redkale.annotation;
     exports org.redkale.boot;
     exports org.redkale.boot.watch;
-    exports org.redkale.cache;
-    exports org.redkale.cache.spi;
+    exports org.redkale.cached;
+    exports org.redkale.cached.spi;
     exports org.redkale.cluster;
     exports org.redkale.cluster.spi;
     exports org.redkale.convert;
@@ -24,8 +24,8 @@ module org.redkale {
     exports org.redkale.convert.proto;
     exports org.redkale.convert.spi;
     exports org.redkale.inject;
-    exports org.redkale.lock;
-    exports org.redkale.lock.spi;
+    exports org.redkale.locked;
+    exports org.redkale.locked.spi;
     exports org.redkale.mq;
     exports org.redkale.mq.spi;
     exports org.redkale.net;
@@ -43,7 +43,7 @@ module org.redkale {
     exports org.redkale.watch;
 
     uses org.redkale.props.spi.PropertiesAgentProvider;
-    uses org.redkale.cache.spi.CacheManagerProvider;
+    uses org.redkale.cached.spi.CachedManagerProvider;
     uses org.redkale.cluster.spi.ClusterAgentProvider;
     uses org.redkale.convert.spi.ConvertProvider;
     uses org.redkale.mq.spi.MessageAgentProvider;

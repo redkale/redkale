@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.cache.spi;
+package org.redkale.cached.spi;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
@@ -21,7 +21,7 @@ import org.redkale.annotation.Nullable;
 import org.redkale.annotation.Resource;
 import org.redkale.annotation.ResourceType;
 import org.redkale.boot.Application;
-import org.redkale.cache.CacheManager;
+import org.redkale.cached.CachedManager;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.service.Local;
 import org.redkale.service.Service;
@@ -44,8 +44,8 @@ import org.redkale.util.TypeToken;
 @Local
 @Component
 @AutoLoad(false)
-@ResourceType(CacheManager.class)
-public class CacheManagerService implements CacheManager, Service {
+@ResourceType(CachedManager.class)
+public class CachedManagerService implements CachedManager, Service {
 
     public static final String CACHE_CHANNEL_TOPIC = "cache-update-channel";
 
@@ -68,7 +68,7 @@ public class CacheManagerService implements CacheManager, Service {
     protected final ConcurrentSkipListSet<String> hashNames = new ConcurrentSkipListSet<>();
 
     // 缓存无效时使用的同步锁
-    private final ConcurrentHashMap<String, CacheValue> syncLock = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, CachedValue> syncLock = new ConcurrentHashMap<>();
 
     // 缓存无效时使用的异步锁
     private final ConcurrentHashMap<String, CacheAsyncEntry> asyncLock = new ConcurrentHashMap<>();
@@ -81,20 +81,20 @@ public class CacheManagerService implements CacheManager, Service {
 
     protected CacheEventListener remoteListener;
 
-    protected CacheManagerService(@Nullable CacheSource remoteSource) {
+    protected CachedManagerService(@Nullable CacheSource remoteSource) {
         this.remoteSource = remoteSource;
     }
 
     // 一般用于独立组件
-    public static CacheManagerService create(@Nullable CacheSource remoteSource) {
-        return new CacheManagerService(remoteSource);
+    public static CachedManagerService create(@Nullable CacheSource remoteSource) {
+        return new CachedManagerService(remoteSource);
     }
 
     public boolean enabled() {
         return this.enabled;
     }
 
-    public CacheManagerService enabled(boolean val) {
+    public CachedManagerService enabled(boolean val) {
         this.enabled = val;
         return this;
     }
@@ -138,7 +138,7 @@ public class CacheManagerService implements CacheManager, Service {
         return enabled;
     }
 
-    public CacheManagerService addHash(String hash) {
+    public CachedManagerService addHash(String hash) {
         this.hashNames.add(hash);
         return this;
     }
@@ -172,7 +172,7 @@ public class CacheManagerService implements CacheManager, Service {
     @Override
     public <T> T localGet(final String hash, final String key, final Type type) {
         checkEnable();
-        return CacheValue.get(localSource.get(idFor(hash, key), loadCacheType(type)));
+        return CachedValue.get(localSource.get(idFor(hash, key), loadCacheType(type)));
     }
 
     /**
@@ -278,7 +278,7 @@ public class CacheManagerService implements CacheManager, Service {
     @Override
     public <T> T remoteGet(final String hash, final String key, final Type type) {
         checkEnable();
-        return CacheValue.get(remoteSource.get(idFor(hash, key), loadCacheType(type)));
+        return CachedValue.get(remoteSource.get(idFor(hash, key), loadCacheType(type)));
     }
 
     /**
@@ -293,8 +293,8 @@ public class CacheManagerService implements CacheManager, Service {
     @Override
     public <T> CompletableFuture<T> remoteGetAsync(final String hash, final String key, final Type type) {
         checkEnable();
-        CompletableFuture<CacheValue<T>> future = remoteSource.getAsync(idFor(hash, key), loadCacheType(type));
-        return future.thenApply(CacheValue::get);
+        CompletableFuture<CachedValue<T>> future = remoteSource.getAsync(idFor(hash, key), loadCacheType(type));
+        return future.thenApply(CachedValue::get);
     }
 
     /**
@@ -427,7 +427,7 @@ public class CacheManagerService implements CacheManager, Service {
      */
     @Override
     public <T> T bothGet(final String hash, final String key, final Type type) {
-        return CacheValue.get(bothGetCache(hash, key, (Duration) null, type));
+        return CachedValue.get(bothGetCache(hash, key, (Duration) null, type));
     }
 
     /**
@@ -441,7 +441,7 @@ public class CacheManagerService implements CacheManager, Service {
      */
     @Override
     public <T> CompletableFuture<T> bothGetAsync(final String hash, final String key, final Type type) {
-        return bothGetCacheAsync(hash, key, (Duration) null, type).thenApply(CacheValue::get);
+        return bothGetCacheAsync(hash, key, (Duration) null, type).thenApply(CachedValue::get);
     }
 
     /**
@@ -678,7 +678,7 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 数据值
      */
     protected <T> T getSet(
-            GetterFunc<CacheValue<T>> getter,
+            GetterFunc<CachedValue<T>> getter,
             SetterSyncFunc setter,
             String hash,
             String key,
@@ -691,16 +691,16 @@ public class CacheManagerService implements CacheManager, Service {
         Objects.requireNonNull(supplier);
         final Type cacheType = loadCacheType(type);
         final String id = idFor(hash, key);
-        CacheValue<T> cacheVal = getter.get(id, expire, cacheType);
-        if (CacheValue.isValid(cacheVal)) {
+        CachedValue<T> cacheVal = getter.get(id, expire, cacheType);
+        if (CachedValue.isValid(cacheVal)) {
             return cacheVal.getVal();
         }
-        Function<String, CacheValue> func = k -> {
-            CacheValue<T> oldCacheVal = getter.get(id, expire, cacheType);
-            if (CacheValue.isValid(oldCacheVal)) {
+        Function<String, CachedValue> func = k -> {
+            CachedValue<T> oldCacheVal = getter.get(id, expire, cacheType);
+            if (CachedValue.isValid(oldCacheVal)) {
                 return oldCacheVal;
             }
-            CacheValue<T> newCacheVal;
+            CachedValue<T> newCacheVal;
             try {
                 newCacheVal = toCacheSupplier(nullable, supplier).get();
             } catch (RuntimeException e) {
@@ -708,14 +708,14 @@ public class CacheManagerService implements CacheManager, Service {
             } catch (Throwable t) {
                 throw new RedkaleException(t);
             }
-            if (CacheValue.isValid(newCacheVal)) {
+            if (CachedValue.isValid(newCacheVal)) {
                 setter.set(id, expire, cacheType, newCacheVal);
             }
             return newCacheVal;
         };
         cacheVal = syncLock.computeIfAbsent(id, func);
         try {
-            return CacheValue.get(cacheVal);
+            return CachedValue.get(cacheVal);
         } finally {
             syncLock.remove(id);
         }
@@ -736,7 +736,7 @@ public class CacheManagerService implements CacheManager, Service {
      * @return 数据值
      */
     protected <T> CompletableFuture<T> getSetAsync(
-            GetterFunc<CompletableFuture<CacheValue<T>>> getter,
+            GetterFunc<CompletableFuture<CachedValue<T>>> getter,
             SetterAsyncFunc setter,
             String hash,
             String key,
@@ -748,9 +748,9 @@ public class CacheManagerService implements CacheManager, Service {
         Objects.requireNonNull(supplier);
         final Type cacheType = loadCacheType(type);
         final String id = idFor(hash, key);
-        CompletableFuture<CacheValue<T>> sourceFuture = getter.get(id, expire, cacheType);
+        CompletableFuture<CachedValue<T>> sourceFuture = getter.get(id, expire, cacheType);
         return sourceFuture.thenCompose(val -> {
-            if (CacheValue.isValid(val)) {
+            if (CachedValue.isValid(val)) {
                 return CompletableFuture.completedFuture(val.getVal());
             }
             final CacheAsyncEntry entry = asyncLock.computeIfAbsent(id, CacheAsyncEntry::new);
@@ -761,12 +761,12 @@ public class CacheManagerService implements CacheManager, Service {
                         if (e != null) {
                             entry.fail(e);
                         }
-                        CacheValue<T> cacheVal = toCacheValue(nullable, v);
-                        if (CacheValue.isValid(cacheVal)) {
+                        CachedValue<T> cacheVal = toCacheValue(nullable, v);
+                        if (CachedValue.isValid(cacheVal)) {
                             setter.set(id, expire, cacheType, cacheVal)
-                                    .whenComplete((v2, e2) -> entry.success(CacheValue.get(cacheVal)));
+                                    .whenComplete((v2, e2) -> entry.success(CachedValue.get(cacheVal)));
                         } else {
-                            entry.success(CacheValue.get(cacheVal));
+                            entry.success(CachedValue.get(cacheVal));
                         }
                     });
                 } catch (Throwable e) {
@@ -778,25 +778,25 @@ public class CacheManagerService implements CacheManager, Service {
     }
 
     protected <T> CompletableFuture<Void> localSetCacheAsync(
-            String id, Duration expire, Type cacheType, CacheValue<T> cacheVal) {
+            String id, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
         return setCacheAsync(localSource, id, expire, cacheType, cacheVal);
     }
 
     protected <T> CompletableFuture<Void> remoteSetCacheAsync(
-            String id, Duration expire, Type cacheType, CacheValue<T> cacheVal) {
+            String id, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
         return setCacheAsync(remoteSource, id, expire, cacheType, cacheVal);
     }
 
-    protected <T> void localSetCache(String id, Duration expire, Type cacheType, CacheValue<T> cacheVal) {
+    protected <T> void localSetCache(String id, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
         setCache(localSource, id, expire, cacheType, cacheVal);
     }
 
-    protected <T> void remoteSetCache(String id, Duration expire, Type cacheType, CacheValue<T> cacheVal) {
+    protected <T> void remoteSetCache(String id, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
         setCache(remoteSource, id, expire, cacheType, cacheVal);
     }
 
     protected <T> void setCache(
-            CacheSource source, String id, Duration expire, Type cacheType, CacheValue<T> cacheVal) {
+            CacheSource source, String id, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
         checkEnable();
         Objects.requireNonNull(expire);
         long millis = expire.toMillis();
@@ -808,7 +808,7 @@ public class CacheManagerService implements CacheManager, Service {
     }
 
     protected <T> CompletableFuture<Void> setCacheAsync(
-            CacheSource source, String id, Duration expire, Type cacheType, CacheValue<T> cacheVal) {
+            CacheSource source, String id, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
         checkEnable();
         Objects.requireNonNull(expire);
         long millis = expire.toMillis();
@@ -820,15 +820,15 @@ public class CacheManagerService implements CacheManager, Service {
     }
 
     protected <T> void setCache(CacheSource source, String hash, String key, Type type, T value, Duration expire) {
-        setCache(source, idFor(hash, key), expire, loadCacheType(type, value), CacheValue.create(value));
+        setCache(source, idFor(hash, key), expire, loadCacheType(type, value), CachedValue.create(value));
     }
 
     protected <T> CompletableFuture<Void> setCacheAsync(
             CacheSource source, String hash, String key, Type type, T value, Duration expire) {
-        return setCacheAsync(source, idFor(hash, key), expire, loadCacheType(type, value), CacheValue.create(value));
+        return setCacheAsync(source, idFor(hash, key), expire, loadCacheType(type, value), CachedValue.create(value));
     }
 
-    protected <T> CacheValue<T> bothGetCache(String hash, String key, Duration expire, Type type) {
+    protected <T> CachedValue<T> bothGetCache(String hash, String key, Duration expire, Type type) {
         return bothGetCache(idFor(hash, key), expire, loadCacheType(type));
     }
 
@@ -842,20 +842,20 @@ public class CacheManagerService implements CacheManager, Service {
      * @param type 数据类型
      * @return 数据值
      */
-    protected <T> CompletableFuture<CacheValue<T>> bothGetCacheAsync(
+    protected <T> CompletableFuture<CachedValue<T>> bothGetCacheAsync(
             final String hash, final String key, Duration expire, final Type type) {
         return bothGetCacheAsync(idFor(hash, key), expire, loadCacheType(type));
     }
 
-    protected <T> CacheValue<T> bothGetCache(final String id, final Duration expire, final Type cacheType) {
+    protected <T> CachedValue<T> bothGetCache(final String id, final Duration expire, final Type cacheType) {
         checkEnable();
-        CacheValue<T> cacheVal = localSource.get(id, cacheType);
-        if (CacheValue.isValid(cacheVal)) {
+        CachedValue<T> cacheVal = localSource.get(id, cacheType);
+        if (CachedValue.isValid(cacheVal)) {
             return cacheVal;
         }
         if (remoteSource != null) {
             cacheVal = remoteSource.get(id, cacheType);
-            if (CacheValue.isValid(cacheVal) && expire != null) {
+            if (CachedValue.isValid(cacheVal) && expire != null) {
                 setCache(localSource, id, expire, cacheType, cacheVal);
             }
             return cacheVal;
@@ -873,16 +873,16 @@ public class CacheManagerService implements CacheManager, Service {
      * @param cacheType 数据类型
      * @return 数据值
      */
-    protected <T> CompletableFuture<CacheValue<T>> bothGetCacheAsync(String id, Duration expire, Type cacheType) {
+    protected <T> CompletableFuture<CachedValue<T>> bothGetCacheAsync(String id, Duration expire, Type cacheType) {
         checkEnable();
-        CacheValue<T> val = localSource.get(id, cacheType); // 内存操作，无需异步
-        if (CacheValue.isValid(val)) {
+        CachedValue<T> val = localSource.get(id, cacheType); // 内存操作，无需异步
+        if (CachedValue.isValid(val)) {
             return CompletableFuture.completedFuture(val);
         }
         if (remoteSource != null) {
-            CompletableFuture<CacheValue<T>> future = remoteSource.getAsync(id, cacheType);
+            CompletableFuture<CachedValue<T>> future = remoteSource.getAsync(id, cacheType);
             return future.thenApply(v -> {
-                if (CacheValue.isValid(v) && expire != null) {
+                if (CachedValue.isValid(v) && expire != null) {
                     setCache(localSource, id, expire, cacheType, v);
                 }
                 return v;
@@ -894,7 +894,7 @@ public class CacheManagerService implements CacheManager, Service {
 
     protected void checkEnable() {
         if (!enabled) {
-            throw new RedkaleException(CacheManager.class.getSimpleName() + " is disabled");
+            throw new RedkaleException(CachedManager.class.getSimpleName() + " is disabled");
         }
     }
 
@@ -917,11 +917,11 @@ public class CacheManagerService implements CacheManager, Service {
      * @param value 缓存值
      * @return CacheValue函数
      */
-    protected <T> CacheValue<T> toCacheValue(boolean nullable, T value) {
+    protected <T> CachedValue<T> toCacheValue(boolean nullable, T value) {
         if (value == null) {
-            return nullable ? CacheValue.create(value) : null;
+            return nullable ? CachedValue.create(value) : null;
         }
-        return CacheValue.create(value);
+        return CachedValue.create(value);
     }
 
     /**
@@ -932,7 +932,7 @@ public class CacheManagerService implements CacheManager, Service {
      * @param supplier 数据函数
      * @return CacheValue函数
      */
-    protected <T> ThrowSupplier<CacheValue<T>> toCacheSupplier(boolean nullable, ThrowSupplier<T> supplier) {
+    protected <T> ThrowSupplier<CachedValue<T>> toCacheSupplier(boolean nullable, ThrowSupplier<T> supplier) {
         return () -> toCacheValue(nullable, supplier.get());
     }
 
@@ -955,7 +955,7 @@ public class CacheManagerService implements CacheManager, Service {
      */
     protected Type loadCacheType(Type type) {
         return cacheValueTypes.computeIfAbsent(
-                type, t -> TypeToken.createParameterizedType(null, CacheValue.class, type));
+                type, t -> TypeToken.createParameterizedType(null, CachedValue.class, type));
     }
 
     private static final Object NIL = new Object();
@@ -967,12 +967,12 @@ public class CacheManagerService implements CacheManager, Service {
 
     protected static interface SetterSyncFunc {
 
-        public void set(String id, Duration expire, Type cacheType, CacheValue cacheVal);
+        public void set(String id, Duration expire, Type cacheType, CachedValue cacheVal);
     }
 
     protected static interface SetterAsyncFunc {
 
-        public CompletableFuture<Void> set(String id, Duration expire, Type cacheType, CacheValue cacheVal);
+        public CompletableFuture<Void> set(String id, Duration expire, Type cacheType, CachedValue cacheVal);
     }
 
     protected class CacheAsyncEntry {

@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.cache;
+package org.redkale.cached;
 
 import java.lang.reflect.Type;
 import java.time.Duration;
@@ -16,10 +16,10 @@ import org.redkale.util.ThrowSupplier;
  * @author zhangjx
  * @since 2.8.0
  */
-public interface CacheManager {
+public interface CachedManager {
 
     /** 默认的hash */
-    public static final String DEFAULT_HASH = "cache-hash";
+    public static final String DEFAULT_HASH = "cached-hash";
 
     // -------------------------------------- 本地缓存 --------------------------------------
     /**

@@ -38,11 +38,11 @@
 &emsp;&emsp;以参数code+map.id为key将结果进行远程缓存60毫秒
 ```java
     @Resource
-    private CacheManager cacheManager;
+    private CachedManager cachedManager;
 
     //实时修改远程缓存的key值
     public void updateName(String code, Map<String, Long> map) {
-        cacheManager.remoteSetString(code, code + "_" + map.get("id"), Duration.ofMillis(60));
+        cachedManager.remoteSetString(code, code + "_" + map.get("id"), Duration.ofMillis(60));
     }
 
     @Cached(key = "#{code}_#{map.id}", remoteExpire = "60", timeUnit = TimeUnit.MILLISECONDS)
@@ -59,5 +59,5 @@
         remote: 远程CacheSource的资源名
         broadcastable: 存在远程CacheSource时修改数据是否进行广播到其他集群服务中。默认: true
     -->
-    <cache enabled="true" remote="xxx" broadcastable="true"/>
+    <cached enabled="true" remote="xxx" broadcastable="true"/>
 ```

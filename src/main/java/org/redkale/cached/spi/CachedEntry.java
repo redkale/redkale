@@ -1,10 +1,10 @@
 /*
  *
  */
-package org.redkale.cache.spi;
+package org.redkale.cached.spi;
 
 import java.util.concurrent.TimeUnit;
-import org.redkale.cache.Cached;
+import org.redkale.cached.Cached;
 import org.redkale.convert.json.JsonConvert;
 
 /**
@@ -16,7 +16,7 @@ import org.redkale.convert.json.JsonConvert;
  * @since 2.8.0
  *
  */
-public class CacheEntry {
+public class CachedEntry {
 
     private String key;
 
@@ -30,9 +30,9 @@ public class CacheEntry {
 
     private boolean nullable;
 
-    public CacheEntry() {}
+    public CachedEntry() {}
 
-    public CacheEntry(DynForCache cached) {
+    public CachedEntry(DynForCached cached) {
         this.key = cached.key();
         this.hash = cached.hash();
         this.localExpire = cached.localExpire();
@@ -41,7 +41,7 @@ public class CacheEntry {
         this.nullable = cached.nullable();
     }
 
-    public CacheEntry(Cached cached) {
+    public CachedEntry(Cached cached) {
         this.key = cached.key();
         this.hash = cached.hash();
         this.localExpire = cached.localExpire();

@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.cache.spi;
+package org.redkale.cached.spi;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
@@ -15,7 +15,7 @@ import java.util.logging.Level;
 import org.redkale.asm.AsmMethodBoost;
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
-import org.redkale.cache.CacheManager;
+import org.redkale.cached.CachedManager;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
 import org.redkale.service.Service;
@@ -32,14 +32,14 @@ import org.redkale.util.RedkaleException;
  * @author zhangjx
  * @since 2.8.0
  */
-public class CacheModuleEngine extends ModuleEngine {
+public class CachedModuleEngine extends ModuleEngine {
 
     // 全局缓存管理器
-    private CacheManager cacheManager;
+    private CachedManager cacheManager;
 
     private AnyValue config;
 
-    public CacheModuleEngine(Application application) {
+    public CachedModuleEngine(Application application) {
         super(application);
     }
 
@@ -69,7 +69,7 @@ public class CacheModuleEngine extends ModuleEngine {
      */
     @Override
     public AsmMethodBoost createAsmMethodBoost(boolean remote, Class serviceClass) {
-        return new CacheAsmMethodBoost(remote, serviceClass);
+        return new CachedAsmMethodBoost(remote, serviceClass);
     }
 
     /** 结束Application.init方法前被调用 */
@@ -84,8 +84,8 @@ public class CacheModuleEngine extends ModuleEngine {
                 ((Service) this.cacheManager).init(this.config);
             }
         }
-        this.resourceFactory.register("", CacheManager.class, this.cacheManager);
-        ConcurrentHashMap<String, CacheKeyGenerator> generatorMap = new ConcurrentHashMap<>();
+        this.resourceFactory.register("", CachedManager.class, this.cacheManager);
+        ConcurrentHashMap<String, CachedKeyGenerator> generatorMap = new ConcurrentHashMap<>();
         this.resourceFactory.register(new ResourceTypeLoader() {
 
             @Override
@@ -97,13 +97,13 @@ public class CacheModuleEngine extends ModuleEngine {
                     Field field,
                     Object attachment) {
                 try {
-                    CacheKeyGenerator generator = rf.find(resourceName, CacheKeyGenerator.class);
+                    CachedKeyGenerator generator = rf.find(resourceName, CachedKeyGenerator.class);
                     if (generator == null) {
                         return generator;
                     }
                     generator = generatorMap.computeIfAbsent(resourceName, n -> {
-                        for (CacheKeyGenerator instance :
-                                ServiceLoader.load(CacheKeyGenerator.class, application.getClassLoader())) {
+                        for (CachedKeyGenerator instance :
+                                ServiceLoader.load(CachedKeyGenerator.class, application.getClassLoader())) {
                             if (Objects.equals(n, instance.name())) {
                                 rf.inject(instance);
                                 if (instance instanceof Service) {
@@ -115,18 +115,18 @@ public class CacheModuleEngine extends ModuleEngine {
                         return null;
                     });
                     if (generator != null) {
-                        rf.register(resourceName, CacheKeyGenerator.class, generator);
+                        rf.register(resourceName, CachedKeyGenerator.class, generator);
                     }
                     return generator;
                 } catch (Exception e) {
-                    logger.log(Level.SEVERE, CacheKeyGenerator.class.getSimpleName() + " inject error", e);
+                    logger.log(Level.SEVERE, CachedKeyGenerator.class.getSimpleName() + " inject error", e);
                     throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
                 }
             }
 
             @Override
             public Type resourceType() {
-                return CacheKeyGenerator.class;
+                return CachedKeyGenerator.class;
             }
         });
     }
@@ -141,22 +141,23 @@ public class CacheModuleEngine extends ModuleEngine {
         }
     }
 
-    private CacheManager createManager(AnyValue conf) {
-        Iterator<CacheManagerProvider> it = ServiceLoader.load(CacheManagerProvider.class, application.getClassLoader())
+    private CachedManager createManager(AnyValue conf) {
+        Iterator<CachedManagerProvider> it = ServiceLoader.load(
+                        CachedManagerProvider.class, application.getClassLoader())
                 .iterator();
-        RedkaleClassLoader.putServiceLoader(CacheManagerProvider.class);
-        List<CacheManagerProvider> providers = new ArrayList<>();
+        RedkaleClassLoader.putServiceLoader(CachedManagerProvider.class);
+        List<CachedManagerProvider> providers = new ArrayList<>();
         while (it.hasNext()) {
-            CacheManagerProvider provider = it.next();
+            CachedManagerProvider provider = it.next();
             if (provider != null && provider.acceptsConf(conf)) {
                 RedkaleClassLoader.putReflectionPublicConstructors(
                         provider.getClass(), provider.getClass().getName());
                 providers.add(provider);
             }
         }
-        for (CacheManagerProvider provider : InstanceProvider.sort(providers)) {
+        for (CachedManagerProvider provider : InstanceProvider.sort(providers)) {
             return provider.createInstance();
         }
-        return CacheManagerService.create(null).enabled(false);
+        return CachedManagerService.create(null).enabled(false);
     }
 }

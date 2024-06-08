@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.cache.spi;
+package org.redkale.cached.spi;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -25,7 +25,7 @@ import org.redkale.asm.MethodVisitor;
 import org.redkale.asm.Opcodes;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
-import org.redkale.cache.Cached;
+import org.redkale.cached.Cached;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.service.LoadMode;
 import org.redkale.util.RedkaleClassLoader;
@@ -40,17 +40,17 @@ import org.redkale.util.TypeToken;
  *
  * @since 2.8.0
  */
-public class CacheAsmMethodBoost extends AsmMethodBoost {
+public class CachedAsmMethodBoost extends AsmMethodBoost {
 
     private static final java.lang.reflect.Type FUTURE_VOID = new TypeToken<CompletableFuture<Void>>() {}.getType();
 
-    private static final List<Class<? extends Annotation>> FILTER_ANN = List.of(Cached.class, DynForCache.class);
+    private static final List<Class<? extends Annotation>> FILTER_ANN = List.of(Cached.class, DynForCached.class);
 
     private final Logger logger = Logger.getLogger(getClass().getSimpleName());
 
-    private Map<String, CacheAction> actionMap;
+    private Map<String, CachedAction> actionMap;
 
-    public CacheAsmMethodBoost(boolean remote, Class serviceType) {
+    public CachedAsmMethodBoost(boolean remote, Class serviceType) {
         super(remote, serviceType);
     }
 
@@ -68,7 +68,7 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
             final List filterAnns,
             final Method method,
             final String newMethodName) {
-        Map<String, CacheAction> actions = this.actionMap;
+        Map<String, CachedAction> actions = this.actionMap;
         if (actions == null) {
             actions = new LinkedHashMap<>();
             this.actionMap = actions;
@@ -80,7 +80,7 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
         if (!LoadMode.matches(remote, cached.mode())) {
             return newMethodName;
         }
-        if (method.getAnnotation(DynForCache.class) != null) {
+        if (method.getAnnotation(DynForCached.class) != null) {
             return newMethodName;
         }
         if (Modifier.isFinal(method.getModifiers()) || Modifier.isStatic(method.getModifiers())) {
@@ -95,11 +95,12 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
             throw new RedkaleException("@" + Cached.class.getSimpleName() + " cannot on void method, but on " + method);
         }
         final int actionIndex = fieldIndex.incrementAndGet();
-        final String rsMethodName = method.getName() + "_afterCache";
-        final String dynFieldName = fieldPrefix + "_" + method.getName() + "CacheAction" + actionIndex;
+        final String rsMethodName = method.getName() + "_afterCached";
+        final String dynFieldName =
+                fieldPrefix + "_" + method.getName() + CachedAction.class.getSimpleName() + actionIndex;
         final AsmMethodBean methodBean = getMethodBean(method);
         { // 定义一个新方法调用 this.rsMethodName
-            final String cacheDynDesc = Type.getDescriptor(DynForCache.class);
+            final String cacheDynDesc = Type.getDescriptor(DynForCached.class);
             final MethodVisitor mv = createMethodVisitor(cw, method, newMethodName, methodBean);
             // mv.setDebug(true);
             AnnotationVisitor av = mv.visitAnnotation(cacheDynDesc, true);
@@ -123,7 +124,7 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
             Label l1 = new Label();
             mv.visitLabel(l1);
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, newDynName, dynFieldName, Type.getDescriptor(CacheAction.class));
+            mv.visitFieldInsn(GETFIELD, newDynName, dynFieldName, Type.getDescriptor(CachedAction.class));
 
             mv.visitVarInsn(ALOAD, 1 + method.getParameterCount());
             Asms.visitInsn(mv, method.getParameterCount());
@@ -160,7 +161,7 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
             String throwFuncDesc = Type.getDescriptor(ThrowSupplier.class);
             mv.visitMethodInsn(
                     INVOKEVIRTUAL,
-                    CacheAction.class.getName().replace('.', '/'),
+                    CachedAction.class.getName().replace('.', '/'),
                     "get",
                     "(" + throwFuncDesc + "[Ljava/lang/Object;)Ljava/lang/Object;",
                     false);
@@ -174,8 +175,8 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
 
             mv.visitMaxs(20, 20);
             mv.visitEnd();
-            CacheAction action = new CacheAction(
-                    new CacheEntry(cached), method, serviceType, methodBean.paramNameArray(method), dynFieldName);
+            CachedAction action = new CachedAction(
+                    new CachedEntry(cached), method, serviceType, methodBean.paramNameArray(method), dynFieldName);
             actions.put(dynFieldName, action);
         }
         { // ThrowSupplier
@@ -198,7 +199,7 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
         }
         { // 定义字段
             FieldVisitor fv =
-                    cw.visitField(ACC_PRIVATE, dynFieldName, Type.getDescriptor(CacheAction.class), null, null);
+                    cw.visitField(ACC_PRIVATE, dynFieldName, Type.getDescriptor(CachedAction.class), null, null);
             fv.visitEnd();
         }
         if (actions.size() == 1) {
@@ -218,12 +219,12 @@ public class CacheAsmMethodBoost extends AsmMethodBoost {
             actionMap = new LinkedHashMap<>();
             Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBeans(clazz);
             for (final Method method : clazz.getDeclaredMethods()) {
-                DynForCache cached = method.getAnnotation(DynForCache.class);
+                DynForCached cached = method.getAnnotation(DynForCached.class);
                 if (cached != null) {
                     String dynFieldName = cached.dynField();
                     AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
-                    CacheAction action = new CacheAction(
-                            new CacheEntry(cached),
+                    CachedAction action = new CachedAction(
+                            new CachedEntry(cached),
                             method,
                             serviceType,
                             methodBean.paramNameArray(method),

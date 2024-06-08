@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.lock.spi;
+package org.redkale.locked.spi;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -10,21 +10,21 @@ import java.util.ServiceLoader;
 import org.redkale.asm.AsmMethodBoost;
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
-import org.redkale.lock.LockManager;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
 import org.redkale.util.InstanceProvider;
 import org.redkale.util.RedkaleClassLoader;
+import org.redkale.locked.LockedManager;
 
 /** @author zhangjx */
-public class LockModuleEngine extends ModuleEngine {
+public class LockedModuleEngine extends ModuleEngine {
 
     // 全局锁管理器
-    private LockManager lockManager;
+    private LockedManager lockManager;
 
     private AnyValue config;
 
-    public LockModuleEngine(Application application) {
+    public LockedModuleEngine(Application application) {
         super(application);
     }
 
@@ -53,7 +53,7 @@ public class LockModuleEngine extends ModuleEngine {
      * @return 方法动态扩展器
      */
     public AsmMethodBoost createAsmMethodBoost(boolean remote, Class serviceClass) {
-        return new LockAsmMethodBoost(remote, serviceClass);
+        return new LockedAsmMethodBoost(remote, serviceClass);
     }
 
     /** 结束Application.init方法前被调用 */
@@ -68,7 +68,7 @@ public class LockModuleEngine extends ModuleEngine {
                 ((Service) this.lockManager).init(this.config);
             }
         }
-        this.resourceFactory.register("", LockManager.class, this.lockManager);
+        this.resourceFactory.register("", LockedManager.class, this.lockManager);
     }
 
     /** 进入Application.shutdown方法被调用 */
@@ -79,22 +79,22 @@ public class LockModuleEngine extends ModuleEngine {
         }
     }
 
-    private LockManager createManager(AnyValue conf) {
-        Iterator<LockManagerProvider> it = ServiceLoader.load(LockManagerProvider.class, application.getClassLoader())
+    private LockedManager createManager(AnyValue conf) {
+        Iterator<LockedManagerProvider> it = ServiceLoader.load(LockedManagerProvider.class, application.getClassLoader())
                 .iterator();
-        RedkaleClassLoader.putServiceLoader(LockManagerProvider.class);
-        List<LockManagerProvider> providers = new ArrayList<>();
+        RedkaleClassLoader.putServiceLoader(LockedManagerProvider.class);
+        List<LockedManagerProvider> providers = new ArrayList<>();
         while (it.hasNext()) {
-            LockManagerProvider provider = it.next();
+            LockedManagerProvider provider = it.next();
             if (provider != null && provider.acceptsConf(conf)) {
                 RedkaleClassLoader.putReflectionPublicConstructors(
                         provider.getClass(), provider.getClass().getName());
                 providers.add(provider);
             }
         }
-        for (LockManagerProvider provider : InstanceProvider.sort(providers)) {
+        for (LockedManagerProvider provider : InstanceProvider.sort(providers)) {
             return provider.createInstance();
         }
-        return LockManagerService.create(null).enabled(false);
+        return LockedManagerService.create(null).enabled(false);
     }
 }

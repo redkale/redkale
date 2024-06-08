@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.lock;
+package org.redkale.locked;
 
 /**
  * //TODO 待实现
@@ -13,4 +13,4 @@ package org.redkale.lock;
  * @author zhangjx
  * @since 2.8.0
  */
-public interface LockManager {}
+public interface LockedManager {}

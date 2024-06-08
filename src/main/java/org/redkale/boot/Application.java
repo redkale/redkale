@@ -22,7 +22,7 @@ import java.util.logging.*;
 import org.redkale.annotation.Nonnull;
 import org.redkale.asm.AsmMethodBoost;
 import org.redkale.boot.ClassFilter.FilterEntry;
-import org.redkale.cache.spi.CacheModuleEngine;
+import org.redkale.cached.spi.CachedModuleEngine;
 import org.redkale.cluster.*;
 import org.redkale.cluster.spi.ClusterAgent;
 import org.redkale.cluster.spi.ClusterModuleEngine;
@@ -35,7 +35,7 @@ import org.redkale.convert.proto.ProtobufFactory;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
-import org.redkale.lock.spi.LockModuleEngine;
+import org.redkale.locked.spi.LockedModuleEngine;
 import org.redkale.mq.spi.MessageAgent;
 import org.redkale.mq.spi.MessageModuleEngine;
 import org.redkale.net.*;
@@ -312,8 +312,8 @@ public final class Application {
         moduleEngines.add(new MessageModuleEngine(this));
         moduleEngines.add(new ClusterModuleEngine(this));
         moduleEngines.add(new ScheduleModuleEngine(this));
-        moduleEngines.add(new CacheModuleEngine(this));
-        moduleEngines.add(new LockModuleEngine(this));
+        moduleEngines.add(new CachedModuleEngine(this));
+        moduleEngines.add(new LockedModuleEngine(this));
 
         // 根据本地日志配置文件初始化日志
         loggingModule.reconfigLogging(true, appConfig.locaLogProperties);

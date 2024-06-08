@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.cache;
+package org.redkale.cached;
 
 import java.lang.annotation.Documented;
 import static java.lang.annotation.ElementType.METHOD;
@@ -40,7 +40,7 @@ public @interface Cached {
      *
      * @return hash
      */
-    String hash() default CacheManager.DEFAULT_HASH;
+    String hash() default CachedManager.DEFAULT_HASH;
 
     /**
      * 本地缓存过期时长， 0表示永不过期， -1表示不作本地缓存。<br>

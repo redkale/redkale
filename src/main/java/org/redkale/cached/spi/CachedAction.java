@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.cache.spi;
+package org.redkale.cached.spi;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
 import org.redkale.annotation.ClassDepends;
 import org.redkale.annotation.Nullable;
 import org.redkale.annotation.Resource;
-import org.redkale.cache.CacheManager;
+import org.redkale.cached.CachedManager;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.util.Environment;
@@ -29,15 +29,15 @@ import org.redkale.util.TypeToken;
  * @since 2.8.0
  */
 @ClassDepends
-public class CacheAction {
+public class CachedAction {
 
     @Resource
     private Environment environment;
 
     @Resource
-    private CacheManager manager;
+    private CachedManager manager;
 
-    private final CacheEntry cached;
+    private final CachedEntry cached;
 
     private final Method method;
 
@@ -70,7 +70,7 @@ public class CacheAction {
     String templetKey;
 
     // 缓存key生成器
-    private CacheKeyGenerator keyGenerator;
+    private CachedKeyGenerator keyGenerator;
 
     // 父对象
     private Object service;
@@ -81,7 +81,7 @@ public class CacheAction {
     // 远程缓存过期时长，Duration.ZERO为永不过期，为null表示不远程缓存
     private Duration remoteExpire;
 
-    CacheAction(CacheEntry cached, Method method, Class serviceClass, String[] paramNames, String fieldName) {
+    CachedAction(CachedEntry cached, Method method, Class serviceClass, String[] paramNames, String fieldName) {
         this.cached = cached;
         this.method = method;
         this.nullable = cached.isNullable();
@@ -96,17 +96,17 @@ public class CacheAction {
     }
 
     void init(ResourceFactory resourceFactory, Object service) {
-        this.hash = cached.getHash().trim().isEmpty() || CacheManager.DEFAULT_HASH.equals(cached.getHash())
-                ? CacheManager.DEFAULT_HASH
+        this.hash = cached.getHash().trim().isEmpty() || CachedManager.DEFAULT_HASH.equals(cached.getHash())
+                ? CachedManager.DEFAULT_HASH
                 : environment.getPropertyValue(cached.getHash());
         String key = environment.getPropertyValue(cached.getKey());
         this.templetKey = key;
         if (key.startsWith("@")) { // 动态加载缓存key生成器
             String generatorName = key.substring(1);
-            this.keyGenerator = resourceFactory.findChild(generatorName, CacheKeyGenerator.class);
+            this.keyGenerator = resourceFactory.findChild(generatorName, CachedKeyGenerator.class);
         } else {
             MultiHashKey dynKey = MultiHashKey.create(paramNames, key);
-            this.keyGenerator = CacheKeyGenerator.create(dynKey);
+            this.keyGenerator = CachedKeyGenerator.create(dynKey);
         }
         this.localExpire = createDuration(cached.getLocalExpire());
         this.remoteExpire = createDuration(cached.getRemoteExpire());
@@ -160,7 +160,7 @@ public class CacheAction {
         }
     }
 
-    public CacheEntry getCached() {
+    public CachedEntry getCached() {
         return cached;
     }
 

@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.test.cache;
+package org.redkale.test.cached;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,39 +11,39 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.redkale.annotation.Resource;
 import org.redkale.annotation.ResourceType;
-import org.redkale.cache.spi.CacheAction;
-import org.redkale.cache.spi.DynForCache;
+import org.redkale.cached.spi.CachedAction;
 import org.redkale.net.sncp.Sncp.SncpDyn;
 import org.redkale.util.AnyValue;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.ThrowSupplier;
+import org.redkale.cached.spi.DynForCached;
 
 @Resource(name = "")
-@SncpDyn(remote = false, type = CacheInstance.class)
-@ResourceType(CacheInstance.class)
-public class _DynLocalCacheInstance extends CacheInstance {
+@SncpDyn(remote = false, type = CachedInstance.class)
+@ResourceType(CachedInstance.class)
+public class _DynLocalCacheInstance extends CachedInstance {
 
     private AnyValue _redkale_conf;
 
     private String _redkale_mq;
 
-    private CacheAction _redkale_getNameCacheAction1;
+    private CachedAction _redkale_getNameCacheAction1;
 
-    private CacheAction _redkale_getInfoCacheAction2;
+    private CachedAction _redkale_getInfoCacheAction2;
 
-    private CacheAction _redkale_getNameAsyncCacheAction3;
+    private CachedAction _redkale_getNameAsyncCacheAction3;
 
-    private CacheAction _redkale_getInfo2AsyncCacheAction4;
+    private CachedAction _redkale_getInfo2AsyncCacheAction4;
 
-    private CacheAction _redkale_getName2AsyncCacheAction5;
+    private CachedAction _redkale_getName2AsyncCacheAction5;
 
-    private CacheAction _redkale_getInfoAsyncCacheAction6;
+    private CachedAction _redkale_getInfoAsyncCacheAction6;
 
-    private CacheAction _redkale_getName2CacheAction7;
+    private CachedAction _redkale_getName2CacheAction7;
 
     public _DynLocalCacheInstance() {}
 
-    @DynForCache(
+    @DynForCached(
             dynField = "_redkale_getNameCacheAction1",
             hash = "",
             key = "name",
@@ -60,7 +60,7 @@ public class _DynLocalCacheInstance extends CacheInstance {
         return super.getName();
     }
 
-    @DynForCache(
+    @DynForCached(
             dynField = "_redkale_getInfoCacheAction2",
             hash = "",
             key = "info_#{id}_file#{files.one}",
@@ -68,17 +68,17 @@ public class _DynLocalCacheInstance extends CacheInstance {
             timeUnit = TimeUnit.SECONDS,
             remoteExpire = "60",
             localExpire = "30")
-    public File getInfo(CacheInstance.ParamBean bean, int id, List<String> idList, Map<String, File> files) {
+    public File getInfo(CachedInstance.ParamBean bean, int id, List<String> idList, Map<String, File> files) {
         ThrowSupplier<File> supplier = () -> this.getInfo_afterCache(bean, id, idList, files);
         return _redkale_getInfoCacheAction2.get(supplier);
     }
 
     private File getInfo_afterCache(
-            CacheInstance.ParamBean bean, int id, List<String> idList, Map<String, File> files) {
+            CachedInstance.ParamBean bean, int id, List<String> idList, Map<String, File> files) {
         return super.getInfo(bean, id, idList, files);
     }
 
-    @DynForCache(
+    @DynForCached(
             dynField = "_redkale_getNameAsyncCacheAction3",
             hash = "",
             key = "name",
@@ -95,7 +95,7 @@ public class _DynLocalCacheInstance extends CacheInstance {
         return super.getNameAsync();
     }
 
-    @DynForCache(
+    @DynForCached(
             dynField = "_redkale_getInfo2AsyncCacheAction4",
             hash = "",
             key = "info_#{id}_file#{files.one}",
@@ -104,7 +104,7 @@ public class _DynLocalCacheInstance extends CacheInstance {
             remoteExpire = "60",
             localExpire = "30")
     public CompletableFuture<Map<String, Integer>> getInfo2Async(
-            CacheInstance.ParamBean bean, int id, List<String> idList, Map<String, File> files)
+            CachedInstance.ParamBean bean, int id, List<String> idList, Map<String, File> files)
             throws IOException, InstantiationException {
         ThrowSupplier<CompletableFuture<Map<String, Integer>>> supplier =
                 () -> this.getInfo2Async_afterCache(bean, id, idList, files);
@@ -112,12 +112,12 @@ public class _DynLocalCacheInstance extends CacheInstance {
     }
 
     private CompletableFuture<Map<String, Integer>> getInfo2Async_afterCache(
-            CacheInstance.ParamBean bean, int id, List<String> idList, Map<String, File> files)
+            CachedInstance.ParamBean bean, int id, List<String> idList, Map<String, File> files)
             throws IOException, InstantiationException {
         return super.getInfo2Async(bean, id, idList, files);
     }
 
-    @DynForCache(
+    @DynForCached(
             dynField = "_redkale_getName2AsyncCacheAction5",
             hash = "",
             key = "name",
@@ -134,7 +134,7 @@ public class _DynLocalCacheInstance extends CacheInstance {
         return super.getName2Async();
     }
 
-    @DynForCache(
+    @DynForCached(
             dynField = "_redkale_getInfoAsyncCacheAction6",
             hash = "",
             key = "info_#{id}_file#{files.one}",
@@ -143,17 +143,17 @@ public class _DynLocalCacheInstance extends CacheInstance {
             remoteExpire = "60",
             localExpire = "30")
     public CompletableFuture<File> getInfoAsync(
-            CacheInstance.ParamBean bean, int id, List<String> idList, Map<String, File> files) {
+            CachedInstance.ParamBean bean, int id, List<String> idList, Map<String, File> files) {
         ThrowSupplier<CompletableFuture<File>> supplier = () -> this.getInfoAsync_afterCache(bean, id, idList, files);
         return _redkale_getInfoAsyncCacheAction6.get(supplier, bean, id, idList, files);
     }
 
     private CompletableFuture<File> getInfoAsync_afterCache(
-            CacheInstance.ParamBean bean, int id, List<String> idList, Map<String, File> files) {
+            CachedInstance.ParamBean bean, int id, List<String> idList, Map<String, File> files) {
         return super.getInfoAsync(bean, id, idList, files);
     }
 
-    @DynForCache(
+    @DynForCached(
             dynField = "_redkale_getName2CacheAction7",
             hash = "",
             key = "name",

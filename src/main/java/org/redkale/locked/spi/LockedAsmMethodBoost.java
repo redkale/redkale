@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.lock.spi;
+package org.redkale.locked.spi;
 
 import static org.redkale.asm.Opcodes.*;
 
@@ -18,16 +18,16 @@ import org.redkale.asm.Label;
 import org.redkale.asm.MethodVisitor;
 import org.redkale.asm.Type;
 import org.redkale.inject.ResourceFactory;
-import org.redkale.lock.Locked;
+import org.redkale.locked.Locked;
 import org.redkale.service.LoadMode;
 import org.redkale.util.RedkaleException;
 
 /** @author zhangjx */
-public class LockAsmMethodBoost extends AsmMethodBoost {
+public class LockedAsmMethodBoost extends AsmMethodBoost {
 
-    private static final List<Class<? extends Annotation>> FILTER_ANN = List.of(Locked.class, DynForLock.class);
+    private static final List<Class<? extends Annotation>> FILTER_ANN = List.of(Locked.class, DynForLocked.class);
 
-    public LockAsmMethodBoost(boolean remote, Class serviceType) {
+    public LockedAsmMethodBoost(boolean remote, Class serviceType) {
         super(remote, serviceType);
     }
 
@@ -52,7 +52,7 @@ public class LockAsmMethodBoost extends AsmMethodBoost {
         if (!LoadMode.matches(remote, locked.mode())) {
             return newMethodName;
         }
-        if (method.getAnnotation(DynForLock.class) != null) {
+        if (method.getAnnotation(DynForLocked.class) != null) {
             return newMethodName;
         }
         if (Modifier.isFinal(method.getModifiers()) || Modifier.isStatic(method.getModifiers())) {
@@ -68,7 +68,7 @@ public class LockAsmMethodBoost extends AsmMethodBoost {
         final String dynFieldName = fieldPrefix + "_" + method.getName() + "LockAction" + fieldIndex.incrementAndGet();
         { // 定义一个新方法调用 this.rsMethodName
             final AsmMethodBean methodBean = getMethodBean(method);
-            final String lockDynDesc = Type.getDescriptor(DynForLock.class);
+            final String lockDynDesc = Type.getDescriptor(DynForLocked.class);
             final MethodVisitor mv = createMethodVisitor(cw, method, newMethodName, methodBean);
             // mv.setDebug(true);
             Label l0 = new Label();
