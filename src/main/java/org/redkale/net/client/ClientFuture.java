@@ -90,6 +90,7 @@ public class ClientFuture<R extends ClientRequest, T> extends CompletableFuture<
             }
             Traces.removeTraceid();
         });
+        conn.dispose(ex);
     }
 
     @Override

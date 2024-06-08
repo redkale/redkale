@@ -38,6 +38,17 @@ public abstract class AsyncGroup {
         return createTCPClient(address, 0, 0, 0);
     }
 
+    /**
+     * 创建TCP连接
+     *
+     * @see org.redkale.net.AsyncIOGroup#createTCPClient(java.net.SocketAddress, int, int, int)
+     *
+     * @param address 地址
+     * @param connectTimeoutSeconds 连接超时
+     * @param readTimeoutSeconds 读超时
+     * @param writeTimeoutSeconds 写超时
+     * @return AsyncConnection
+     */
     public abstract CompletableFuture<AsyncConnection> createTCPClient(
             final SocketAddress address,
             final int connectTimeoutSeconds,
@@ -48,6 +59,17 @@ public abstract class AsyncGroup {
         return createUDPClient(address, 0, 0, 0);
     }
 
+    /**
+     * 创建UDP连接
+     *
+     * @see org.redkale.net.AsyncIOGroup#createUDPClient(java.net.SocketAddress, int, int, int)
+     *
+     * @param address 地址
+     * @param connectTimeoutSeconds 连接超时
+     * @param readTimeoutSeconds 读超时
+     * @param writeTimeoutSeconds 写超时
+     * @return AsyncConnection
+     */
     public abstract CompletableFuture<AsyncConnection> createUDPClient(
             final SocketAddress address,
             final int connectTimeoutSeconds,
@@ -69,9 +91,31 @@ public abstract class AsyncGroup {
                 : createUDPClient(address, connectTimeoutSeconds, readTimeoutSeconds, writeTimeoutSeconds);
     }
 
+    /**
+     * 设置超时回调
+     *
+     * @see org.redkale.net.AsyncIOGroup#scheduleTimeout(java.lang.Runnable, long, java.util.concurrent.TimeUnit)
+     *
+     * @param callable 回调函数
+     * @param delay 延迟时长
+     * @param unit 时长单位
+     * @return ScheduledFuture
+     */
     public abstract ScheduledFuture scheduleTimeout(Runnable callable, long delay, TimeUnit unit);
 
+    /**
+     * 启动
+     * @see org.redkale.net.AsyncIOGroup#start()
+     *
+     * @return  AsyncGroup
+     */
     public abstract AsyncGroup start();
 
+    /**
+     * 关闭
+     * @see org.redkale.net.AsyncIOGroup#close()
+     *
+     * @return  AsyncGroup
+     */
     public abstract AsyncGroup close();
 }

@@ -39,7 +39,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
     protected final AsyncNioCompletionHandler<ByteBuffer> readTimeoutCompletionHandler =
             new AsyncNioCompletionHandler<>(true, this);
 
-    //值大于0才有效
+    // 值大于0才有效
     protected int readTimeoutSeconds;
 
     protected ByteBuffer readByteBuffer;
@@ -52,7 +52,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
     protected final AsyncNioCompletionHandler<Object> writeTimeoutCompletionHandler =
             new AsyncNioCompletionHandler<>(false, this);
 
-    //值大于0才有效
+    // 值大于0才有效
     protected int writeTimeoutSeconds;
 
     protected byte[] writeByteTuple1Array;

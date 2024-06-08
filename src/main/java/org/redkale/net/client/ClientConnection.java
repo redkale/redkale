@@ -85,6 +85,8 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
     // respFutureQueue、respFutureMap二选一, key: requestid， SPSC模式
     private final ConcurrentHashMap<Serializable, ClientFuture<R, P>> respFutureMap = new ConcurrentHashMap<>();
 
+    private final AtomicBoolean closed = new AtomicBoolean();
+
     Iterator<ClientFuture<R, P>> currRespIterator; // 必须在调用decodeMessages之前重置为null
 
     private int maxPipelines; // 最大并行处理数
@@ -325,23 +327,25 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
     }
 
     public void dispose(Throwable exc) {
-        channel.offerWriteBuffer(writeBuffer);
-        channel.dispose();
-        Throwable e = exc == null ? new ClosedChannelException() : exc;
-        CompletableFuture f;
-        respWaitingCounter.reset();
-        WorkThread thread = channel.getReadIOThread();
-        if (!respFutureQueue.isEmpty()) {
-            while ((f = respFutureQueue.poll()) != null) {
-                CompletableFuture future = f;
-                thread.runWork(() -> future.completeExceptionally(e));
+        if (closed.compareAndSet(false, true)) {
+            channel.offerWriteBuffer(writeBuffer);
+            channel.dispose();
+            Throwable e = exc == null ? new ClosedChannelException() : exc;
+            CompletableFuture f;
+            respWaitingCounter.reset();
+            WorkThread thread = channel.getReadIOThread();
+            if (!respFutureQueue.isEmpty()) {
+                while ((f = respFutureQueue.poll()) != null) {
+                    CompletableFuture future = f;
+                    thread.runWork(() -> future.completeExceptionally(e));
+                }
             }
-        }
-        if (!respFutureMap.isEmpty()) {
-            respFutureMap.forEach((key, future) -> {
-                respFutureMap.remove(key);
-                thread.runWork(() -> future.completeExceptionally(e));
-            });
+            if (!respFutureMap.isEmpty()) {
+                respFutureMap.forEach((key, future) -> {
+                    respFutureMap.remove(key);
+                    thread.runWork(() -> future.completeExceptionally(e));
+                });
+            }
         }
     }
 

@@ -5,9 +5,6 @@
  */
 package org.redkale.net;
 
-import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
-import static javax.net.ssl.SSLEngineResult.Status.*;
-
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
@@ -18,6 +15,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import javax.net.ssl.*;
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;
+import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
+import static javax.net.ssl.SSLEngineResult.Status.*;
 import org.redkale.util.*;
 
 /**
@@ -203,9 +202,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
     public final AsyncIOThread getWriteIOThread() {
         return ioWriteThread;
     }
-
-    @Override
-    public abstract boolean isOpen();
 
     public abstract boolean isTCP();
 
