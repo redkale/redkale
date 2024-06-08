@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.*;
+import org.redkale.boot.LoggingBaseHandler;
 import org.redkale.cached.spi.CachedManagerService;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.source.CacheMemorySource;
@@ -18,6 +19,7 @@ public class CachedManagerTest {
     private static CachedManagerService manager;
 
     public static void main(String[] args) throws Throwable {
+        LoggingBaseHandler.initDebugLogConfig();
         CachedManagerTest test = new CachedManagerTest();
         init();
         test.run1();

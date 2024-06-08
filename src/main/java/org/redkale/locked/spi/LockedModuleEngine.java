@@ -10,14 +10,16 @@ import java.util.ServiceLoader;
 import org.redkale.asm.AsmMethodBoost;
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
+import org.redkale.locked.LockedManager;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
 import org.redkale.util.InstanceProvider;
 import org.redkale.util.RedkaleClassLoader;
-import org.redkale.locked.LockedManager;
 
 /** @author zhangjx */
 public class LockedModuleEngine extends ModuleEngine {
+
+    protected static final String CONFIG_NAME = "locked";
 
     // 全局锁管理器
     private LockedManager lockManager;
@@ -39,7 +41,7 @@ public class LockedModuleEngine extends ModuleEngine {
      */
     @Override
     public AnyValue.MergeEnum mergeAppConfigStrategy(String path, String key, AnyValue val1, AnyValue val2) {
-        if ("".equals(path) && "lock".equals(key)) {
+        if ("".equals(path) && CONFIG_NAME.equals(key)) {
             return AnyValue.MergeEnum.REPLACE;
         }
         return null;
@@ -60,7 +62,7 @@ public class LockedModuleEngine extends ModuleEngine {
     @Override
     public void onAppPostInit() {
         // 设置锁管理器
-        this.config = application.getAppConfig().getAnyValue("lock");
+        this.config = application.getAppConfig().getAnyValue(CONFIG_NAME);
         this.lockManager = createManager(this.config);
         if (!application.isCompileMode()) {
             this.resourceFactory.inject(this.lockManager);
@@ -80,7 +82,8 @@ public class LockedModuleEngine extends ModuleEngine {
     }
 
     private LockedManager createManager(AnyValue conf) {
-        Iterator<LockedManagerProvider> it = ServiceLoader.load(LockedManagerProvider.class, application.getClassLoader())
+        Iterator<LockedManagerProvider> it = ServiceLoader.load(
+                        LockedManagerProvider.class, application.getClassLoader())
                 .iterator();
         RedkaleClassLoader.putServiceLoader(LockedManagerProvider.class);
         List<LockedManagerProvider> providers = new ArrayList<>();

@@ -3,8 +3,6 @@
  */
 package org.redkale.locked.spi;
 
-import static org.redkale.asm.Opcodes.*;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -16,6 +14,7 @@ import org.redkale.asm.Asms;
 import org.redkale.asm.ClassWriter;
 import org.redkale.asm.Label;
 import org.redkale.asm.MethodVisitor;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.locked.Locked;
@@ -64,8 +63,9 @@ public class LockedAsmMethodBoost extends AsmMethodBoost {
                     "@" + Locked.class.getSimpleName() + " must on protected or public method, but on " + method);
         }
 
-        final String rsMethodName = method.getName() + "_afterLock";
-        final String dynFieldName = fieldPrefix + "_" + method.getName() + "LockAction" + fieldIndex.incrementAndGet();
+        final String rsMethodName = method.getName() + "_afterLocked";
+        final String dynFieldName = fieldPrefix + "_" + method.getName() + LockedAction.class.getSimpleName()
+                + fieldIndex.incrementAndGet();
         { // 定义一个新方法调用 this.rsMethodName
             final AsmMethodBean methodBean = getMethodBean(method);
             final String lockDynDesc = Type.getDescriptor(DynForLocked.class);

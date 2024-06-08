@@ -8,6 +8,7 @@ import java.util.concurrent.CountDownLatch;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.redkale.boot.LoggingBaseHandler;
 import org.redkale.cached.CachedManager;
 import org.redkale.cached.spi.CachedAsmMethodBoost;
 import org.redkale.cached.spi.CachedManagerService;
@@ -33,6 +34,7 @@ public class CachedInstanceTest {
     private static CachedManagerService manager2;
 
     public static void main(String[] args) throws Throwable {
+        LoggingBaseHandler.initDebugLogConfig();
         CachedInstanceTest test = new CachedInstanceTest();
         init();
         test.run1();

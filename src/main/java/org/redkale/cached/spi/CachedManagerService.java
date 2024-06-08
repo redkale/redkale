@@ -10,6 +10,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Component;
 import org.redkale.annotation.Nullable;
@@ -42,6 +44,10 @@ import org.redkale.util.TypeToken;
 public class CachedManagerService implements CachedManager, Service {
 
     public static final String CACHE_CHANNEL_TOPIC = "cache-update-channel";
+
+    protected final Logger logger = Logger.getLogger(getClass().getSimpleName());
+
+    protected Level logLevel = Level.FINER;
 
     // 是否开启缓存
     protected boolean enabled = true;
@@ -681,12 +687,16 @@ public class CachedManagerService implements CachedManager, Service {
             Duration expire,
             ThrowSupplier<T> supplier) {
         checkEnable();
+        boolean logable = logger.isLoggable(logLevel);
         Objects.requireNonNull(expire);
         Objects.requireNonNull(supplier);
         final Type cacheType = loadCacheType(type);
         final String id = idFor(schema, key);
         CachedValue<T> cacheVal = getter.get(id, expire, cacheType);
         if (CachedValue.isValid(cacheVal)) {
+            if (logable) {
+                logger.log(logLevel, "Cached got id(" + id + ") value from eitherSource");
+            }
             return cacheVal.getVal();
         }
         Function<String, CachedValue> func = k -> {
@@ -739,12 +749,16 @@ public class CachedManagerService implements CachedManager, Service {
             Duration expire,
             ThrowSupplier<CompletableFuture<T>> supplier) {
         checkEnable();
+        boolean logable = logger.isLoggable(logLevel);
         Objects.requireNonNull(supplier);
         final Type cacheType = loadCacheType(type);
         final String id = idFor(schema, key);
         CompletableFuture<CachedValue<T>> sourceFuture = getter.get(id, expire, cacheType);
         return sourceFuture.thenCompose(val -> {
             if (CachedValue.isValid(val)) {
+                if (logable) {
+                    logger.log(logLevel, "Cached got id(" + id + ") value from eitherSource");
+                }
                 return CompletableFuture.completedFuture(val.getVal());
             }
             final CachedAsyncLock lock = asyncLockMap.computeIfAbsent(id, k -> new CachedAsyncLock(asyncLockMap, k));
@@ -792,8 +806,13 @@ public class CachedManagerService implements CachedManager, Service {
     protected <T> void setCache(
             CacheSource source, String id, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
         checkEnable();
+        boolean logable = logger.isLoggable(logLevel);
         Objects.requireNonNull(expire);
         long millis = expire.toMillis();
+        if (logable) {
+            String s = source == localSource ? "localSource" : "remoteSource";
+            logger.log(logLevel, "Cached set id(" + id + ") value to " + s + " expire " + millis + " ms");
+        }
         if (millis > 0) {
             source.psetex(id, millis, cacheType, cacheVal);
         } else {
@@ -804,8 +823,13 @@ public class CachedManagerService implements CachedManager, Service {
     protected <T> CompletableFuture<Void> setCacheAsync(
             CacheSource source, String id, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
         checkEnable();
+        boolean logable = logger.isLoggable(logLevel);
         Objects.requireNonNull(expire);
         long millis = expire.toMillis();
+        if (logable) {
+            String s = source == localSource ? "localSource" : "remoteSource";
+            logger.log(logLevel, "Cached set id(" + id + ") value to " + s + " expire " + millis + " ms");
+        }
         if (millis > 0) {
             return source.psetexAsync(id, millis, cacheType, cacheVal);
         } else {
@@ -843,14 +867,26 @@ public class CachedManagerService implements CachedManager, Service {
 
     protected <T> CachedValue<T> bothGetCache(final String id, final Duration expire, final Type cacheType) {
         checkEnable();
+        boolean logable = logger.isLoggable(logLevel);
         CachedValue<T> cacheVal = localSource.get(id, cacheType);
         if (CachedValue.isValid(cacheVal)) {
+            if (logable) {
+                logger.log(logLevel, "Cached got id(" + id + ") value from localSource");
+            }
             return cacheVal;
         }
         if (remoteSource != null) {
             cacheVal = remoteSource.get(id, cacheType);
-            if (CachedValue.isValid(cacheVal) && expire != null) {
-                setCache(localSource, id, expire, cacheType, cacheVal);
+            if (CachedValue.isValid(cacheVal)) {
+                if (expire != null) {
+                    if (logable) {
+                        logger.log(logLevel, "Cached set id(" + id + ") value to localSource from remoteSource");
+                    }
+                    setCache(localSource, id, expire, cacheType, cacheVal);
+                }
+                if (logable) {
+                    logger.log(logLevel, "Cached got id(" + id + ") value from remoteSource");
+                }
             }
             return cacheVal;
         } else {
@@ -869,15 +905,27 @@ public class CachedManagerService implements CachedManager, Service {
      */
     protected <T> CompletableFuture<CachedValue<T>> bothGetCacheAsync(String id, Duration expire, Type cacheType) {
         checkEnable();
+        boolean logable = logger.isLoggable(logLevel);
         CachedValue<T> val = localSource.get(id, cacheType); // 内存操作，无需异步
         if (CachedValue.isValid(val)) {
+            if (logable) {
+                logger.log(logLevel, "Cached got id(" + id + ") value from localSource");
+            }
             return CompletableFuture.completedFuture(val);
         }
         if (remoteSource != null) {
             CompletableFuture<CachedValue<T>> future = remoteSource.getAsync(id, cacheType);
             return future.thenApply(v -> {
-                if (CachedValue.isValid(v) && expire != null) {
-                    setCache(localSource, id, expire, cacheType, v);
+                if (CachedValue.isValid(v)) {
+                    if (expire != null) {
+                        if (logable) {
+                            logger.log(logLevel, "Cached set id(" + id + ") value to localSource from remoteSource");
+                        }
+                        setCache(localSource, id, expire, cacheType, v);
+                    }
+                    if (logable) {
+                        logger.log(logLevel, "Cached got id(" + id + ") value from remoteSource");
+                    }
                 }
                 return v;
             });
