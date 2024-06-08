@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.schedule.spi;
+package org.redkale.scheduled.spi;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -36,9 +36,8 @@ import org.redkale.annotation.Resource;
 import org.redkale.annotation.ResourceType;
 import org.redkale.boot.Application;
 import org.redkale.net.sncp.Sncp;
-import org.redkale.schedule.ScheduleEvent;
-import org.redkale.schedule.ScheduleManager;
-import org.redkale.schedule.Scheduled;
+import org.redkale.scheduled.ScheduledEvent;
+import org.redkale.scheduled.Scheduled;
 import org.redkale.service.LoadMode;
 import org.redkale.service.Local;
 import org.redkale.service.Service;
@@ -46,6 +45,7 @@ import org.redkale.util.AnyValue;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Utility;
+import org.redkale.scheduled.ScheduledManager;
 
 /**
  * 定时任务管理器
@@ -58,8 +58,8 @@ import org.redkale.util.Utility;
 @Local
 @Component
 @AutoLoad(false)
-@ResourceType(ScheduleManager.class)
-public class ScheduleManagerService implements ScheduleManager, Service {
+@ResourceType(ScheduledManager.class)
+public class ScheduleManagerService implements ScheduledManager, Service {
 
     protected final Logger logger = Logger.getLogger(this.getClass().getSimpleName());
 
@@ -157,10 +157,10 @@ public class ScheduleManagerService implements ScheduleManager, Service {
                     methodKeys.add(mk);
                     if (method.getParameterCount() != 0
                             && !(method.getParameterCount() == 1
-                                    && method.getParameterTypes()[0] == ScheduleEvent.class)) {
+                                    && method.getParameterTypes()[0] == ScheduledEvent.class)) {
                         throw new RedkaleException(
                                 "@" + Scheduled.class.getSimpleName() + " must be on non-parameter or "
-                                        + ScheduleEvent.class.getSimpleName() + "-parameter method, but on " + method);
+                                        + ScheduledEvent.class.getSimpleName() + "-parameter method, but on " + method);
                     }
                     ScheduledTask task = schedule(ref, method, remoteMode);
                     // 时间没配置: task=null
@@ -251,7 +251,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
         return null;
     }
 
-    protected Function<ScheduleEvent, Object> createFuncJob(final WeakReference ref, Method method) {
+    protected Function<ScheduledEvent, Object> createFuncJob(final WeakReference ref, Method method) {
         try {
             if (!Modifier.isPublic(method.getModifiers())) {
                 method.setAccessible(true);
@@ -338,7 +338,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
 
         protected ScheduledFuture future;
 
-        protected final ScheduleEvent event;
+        protected final ScheduledEvent event;
 
         protected final Map<String, Object> eventMap;
 
@@ -353,7 +353,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
             this.name = name;
             this.method = method;
             this.eventMap = method.getParameterCount() == 0 ? null : new HashMap<>();
-            this.event = eventMap == null ? null : new ScheduleEvent(eventMap);
+            this.event = eventMap == null ? null : new ScheduledEvent(eventMap);
         }
 
         public void init() {
@@ -389,7 +389,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
 
     protected class FixedTask extends ScheduledTask implements Runnable {
 
-        private final Function<ScheduleEvent, Object> delegate;
+        private final Function<ScheduledEvent, Object> delegate;
 
         private final long fixedDelay;
 
@@ -447,7 +447,7 @@ public class ScheduleManagerService implements ScheduleManager, Service {
 
     protected class CronTask extends ScheduledTask implements Runnable {
 
-        private final Function<ScheduleEvent, Object> delegate;
+        private final Function<ScheduledEvent, Object> delegate;
 
         private final CronExpression cron;
 

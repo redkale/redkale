@@ -42,7 +42,7 @@ import org.redkale.net.*;
 import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
 import org.redkale.props.spi.PropertiesModule;
-import org.redkale.schedule.spi.ScheduleModuleEngine;
+import org.redkale.scheduled.spi.ScheduledModuleEngine;
 import org.redkale.service.Service;
 import org.redkale.source.*;
 import org.redkale.source.spi.SourceModuleEngine;
@@ -311,7 +311,7 @@ public final class Application {
         moduleEngines.add(this.sourceModule); // 放第一，很多module依赖于source
         moduleEngines.add(new MessageModuleEngine(this));
         moduleEngines.add(new ClusterModuleEngine(this));
-        moduleEngines.add(new ScheduleModuleEngine(this));
+        moduleEngines.add(new ScheduledModuleEngine(this));
         moduleEngines.add(new CachedModuleEngine(this));
         moduleEngines.add(new LockedModuleEngine(this));
 

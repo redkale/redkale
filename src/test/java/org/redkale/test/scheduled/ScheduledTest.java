@@ -1,17 +1,17 @@
 /*
  *
  */
-package org.redkale.test.schedule;
+package org.redkale.test.scheduled;
 
 import org.junit.jupiter.api.Test;
-import org.redkale.schedule.spi.ScheduleManagerService;
+import org.redkale.scheduled.spi.ScheduleManagerService;
 import org.redkale.util.Utility;
 
 /** @author zhangjx */
-public class SchedulingTest {
+public class ScheduledTest {
 
     public static void main(String[] args) throws Throwable {
-        SchedulingTest test = new SchedulingTest();
+        ScheduledTest test = new ScheduledTest();
         test.run();
     }
 
@@ -19,7 +19,7 @@ public class SchedulingTest {
     public void run() throws Exception {
         ScheduleManagerService manager = ScheduleManagerService.create(null);
         manager.init(null);
-        ScheduleService service = new ScheduleService();
+        ScheduledService service = new ScheduledService();
         manager.schedule(service);
         Utility.sleep(3000);
         manager.unschedule(service);

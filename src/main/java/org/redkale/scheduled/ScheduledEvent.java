@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.schedule;
+package org.redkale.scheduled;
 
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -17,15 +17,15 @@ import org.redkale.util.Utility;
  * @author zhangjx
  * @since 2.8.0
  */
-public final class ScheduleEvent {
+public final class ScheduledEvent {
 
     private final Map<String, Object> map;
 
-    public ScheduleEvent() {
+    public ScheduledEvent() {
         this.map = new HashMap<>();
     }
 
-    public ScheduleEvent(Map<String, Object> map) {
+    public ScheduledEvent(Map<String, Object> map) {
         this.map = map;
     }
 
@@ -67,7 +67,7 @@ public final class ScheduleEvent {
         return Utility.convertValue(long.class, val);
     }
 
-    public ScheduleEvent clear() {
+    public ScheduledEvent clear() {
         map.clear();
         return this;
     }

@@ -34,8 +34,8 @@ module org.redkale {
     exports org.redkale.net.sncp;
     exports org.redkale.persistence;
     exports org.redkale.props.spi;
-    exports org.redkale.schedule;
-    exports org.redkale.schedule.spi;
+    exports org.redkale.scheduled;
+    exports org.redkale.scheduled.spi;
     exports org.redkale.service;
     exports org.redkale.source;
     exports org.redkale.source.spi;
@@ -47,7 +47,7 @@ module org.redkale {
     uses org.redkale.cluster.spi.ClusterAgentProvider;
     uses org.redkale.convert.spi.ConvertProvider;
     uses org.redkale.mq.spi.MessageAgentProvider;
-    uses org.redkale.schedule.spi.ScheduleManagerProvider;
+    uses org.redkale.scheduled.spi.ScheduledManagerProvider;
     uses org.redkale.source.spi.CacheSourceProvider;
     uses org.redkale.source.spi.DataSourceProvider;
     uses org.redkale.source.spi.DataNativeSqlParserProvider;

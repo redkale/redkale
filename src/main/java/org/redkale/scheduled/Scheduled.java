@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.schedule;
+package org.redkale.scheduled;
 
 import java.lang.annotation.*;
 import java.util.concurrent.TimeUnit;

@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.schedule;
+package org.redkale.scheduled;
 
 /**
  * 定时管理器
@@ -11,7 +11,7 @@ package org.redkale.schedule;
  * @author zhangjx
  * @since 2.8.0
  */
-public interface ScheduleManager {
+public interface ScheduledManager {
 
     /**
      * 开启宿主对象中所有的定时任务方法. 存在定时任务方法返回true，否则返回false
@@ -23,7 +23,7 @@ public interface ScheduleManager {
     /**
      * 开启所有宿主对象中指定的任务名
      *
-     * @see org.redkale.schedule.Scheduled#name()
+     * @see org.redkale.scheduled.Scheduled#name()
      * @param scheduleName 定时任务名称
      * @return 返回任务数量
      */
@@ -39,7 +39,7 @@ public interface ScheduleManager {
     /**
      * 关闭所有宿主对象中指定的任务名
      *
-     * @see org.redkale.schedule.Scheduled#name()
+     * @see org.redkale.scheduled.Scheduled#name()
      * @param scheduleName 定时任务名称
      * @return 返回任务数量
      */

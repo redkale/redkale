@@ -40,7 +40,7 @@ serviceid1_name1  serviceid1_name2   serviceid2_name1  serviceid2_name2
         全局Serivce的定时任务设置，没配置该节点将自动创建一个。
         enabled： 是否开启缓存功能。默认: true
     -->
-    <schedule enabled="true"/>
+    <scheduled enabled="true"/>
 
     <!--
     【节点全局唯一】 @since 2.8.0

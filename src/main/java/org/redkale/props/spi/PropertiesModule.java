@@ -175,9 +175,9 @@ public class PropertiesModule extends BootModule {
             if (key.startsWith("redkale.executor.") // 节点全局唯一
                     || key.startsWith("redkale.transport.") // 节点全局唯一
                     || key.startsWith("redkale.cluster.") // 节点全局唯一
-                    || key.startsWith("redkale.cache.") // 节点全局唯一
-                    || key.startsWith("redkale.schedule.") // 节点全局唯一
-                    || key.startsWith("redkale.lock.") // 节点全局唯一
+                    || key.startsWith("redkale.cached.") // 节点全局唯一
+                    || key.startsWith("redkale.scheduled.") // 节点全局唯一
+                    || key.startsWith("redkale.locked.") // 节点全局唯一
                     || key.startsWith("redkale.mq.")
                     || key.startsWith("redkale.mq[")
                     || key.startsWith("redkale.group.")

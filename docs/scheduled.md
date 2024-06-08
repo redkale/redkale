@@ -5,11 +5,11 @@
 |属性|默认值|说明|
 | --- | --- | --- |
 |name|未定义|名称, 可用于第三方实现的定时任务组件的key, 比如xxl-job的任务标识|
-|cron|未定义|cron表达式，也可以使用常量值: <br> &emsp;@yearly、@annually、@monthly、@weekly、<br> &emsp;@daily、@midnight、@hourly、@minutely <br> &emsp;@1m、@2m、@3m、@5m、@10m、@15m、@30m <br> &emsp;@1h、@2h、@3h、@6h <br> &emsp;${env.scheduling.cron}: 读取系统配置项|
+|cron|未定义|cron表达式，也可以使用常量值: <br> &emsp;@yearly、@annually、@monthly、@weekly、<br> &emsp;@daily、@midnight、@hourly、@minutely <br> &emsp;@1m、@2m、@3m、@5m、@10m、@15m、@30m <br> &emsp;@1h、@2h、@3h、@6h <br> &emsp;${env.scheduled.cron}: 读取系统配置项|
 |zone|未定义|时区，```cron```有值才有效, 例如: "Asia/Shanghai"|
-|fixedDelay|-1|延迟时间，负数为无效值，支持参数配置、乘法表达式和对象字段值 <br> 参数值支持方式:<br> &emsp;100: 设置数值 <br> &emsp;${env.scheduling.fixedDelay}: 读取系统配置项 <br> 值大于0且fixedRate小于0则使用 ScheduledThreadPoolExecutor.scheduleWithFixedDelay |
-|fixedRate|-1|周期时间，负数为无效值，支持参数配置、乘法表达式和对象字段值 <br> 参数值支持方式:<br> &emsp;100: 设置数值 <br> &emsp;${env.scheduling.fixedRate}: 读取系统配置项 <br> 值大于0且fixedRate小于0则使用 ScheduledThreadPoolExecutor.scheduleAtFixedRate |
-|initialDelay|-1|起始延迟时间，负数为无效值，支持参数配置、乘法表达式和对象字段值 <br> 参数值支持方式:<br> &emsp;100: 设置数值 <br> &emsp;${env.scheduling.initialDelay}: 读取系统配置项 <br> 值大于0且fixedRate和fixedDelay小于0则使用 ScheduledThreadPoolExecutor.schedule |
+|fixedDelay|-1|延迟时间，负数为无效值，支持参数配置、乘法表达式和对象字段值 <br> 参数值支持方式:<br> &emsp;100: 设置数值 <br> &emsp;${env.scheduled.fixedDelay}: 读取系统配置项 <br> 值大于0且fixedRate小于0则使用 ScheduledThreadPoolExecutor.scheduleWithFixedDelay |
+|fixedRate|-1|周期时间，负数为无效值，支持参数配置、乘法表达式和对象字段值 <br> 参数值支持方式:<br> &emsp;100: 设置数值 <br> &emsp;${env.scheduled.fixedRate}: 读取系统配置项 <br> 值大于0且fixedRate小于0则使用 ScheduledThreadPoolExecutor.scheduleAtFixedRate |
+|initialDelay|-1|起始延迟时间，负数为无效值，支持参数配置、乘法表达式和对象字段值 <br> 参数值支持方式:<br> &emsp;100: 设置数值 <br> &emsp;${env.scheduled.initialDelay}: 读取系统配置项 <br> 值大于0且fixedRate和fixedDelay小于0则使用 ScheduledThreadPoolExecutor.schedule |
 |timeUnit|```TimeUnit.SECONDS```|时间单位TimeUnit|
 |comment|未定义|备注描述|
 |mode|```LoadMode.LOCAL```|作用于Service模式，默认值为：LOCAL，<br> LOCAL: 表示远程模式的Service对象中的定时任务不起作用|
@@ -31,9 +31,9 @@
     }
 ```
 
-&emsp;&emsp;<b>环境配置</b>, 定时间隔时间由环境变量```env.schedule.fixedRate```配置，没配置采用默认值60秒)
+&emsp;&emsp;<b>环境配置</b>, 定时间隔时间由环境变量```env.scheduled.fixedRate```配置，没配置采用默认值60秒)
 ```java
-    @Scheduled(fixedRate = "${env.schedule.fixedRate:60}")
+    @Scheduled(fixedRate = "${env.scheduled.fixedRate:60}")
     public String task2() {
         System.out.println(Times.nowMillis() + "执行一次");
         return "";
@@ -47,7 +47,7 @@
         全局Serivce的定时任务设置，没配置该节点将自动创建一个。
         enabled： 是否开启缓存功能。默认: true
     -->
-    <schedule enabled="true"/>
+    <scheduled enabled="true"/>
 ```
 
 
