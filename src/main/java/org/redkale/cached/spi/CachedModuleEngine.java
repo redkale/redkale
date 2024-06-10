@@ -87,7 +87,8 @@ public class CachedModuleEngine extends ModuleEngine {
         for (AnyValue config : configs) {
             String name = config.getOrDefault("name", "");
             if (configMap.containsKey(name)) {
-                throw new RedkaleException(CachedManager.class.getSimpleName() + ". name repeat '" + name + "'");
+                throw new RedkaleException(
+                        CachedManager.class.getSimpleName() + " config(name='" + name + "') is repeat");
             }
             configMap.put(name, config);
         }
