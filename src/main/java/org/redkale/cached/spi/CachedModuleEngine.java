@@ -194,6 +194,7 @@ public class CachedModuleEngine extends ModuleEngine {
                     ((Service) manager).destroy(v.config);
                 }
             });
+            cacheManagerMap.clear();
         }
     }
 

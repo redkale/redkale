@@ -17,6 +17,7 @@ import org.redkale.convert.json.JsonConvert;
  *
  */
 public class CachedEventMessage implements Serializable {
+
     // key
     protected String key;
 
