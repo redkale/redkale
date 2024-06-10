@@ -43,7 +43,7 @@ import org.redkale.util.TypeToken;
 @ResourceType(CachedManager.class)
 public class CachedManagerService implements CachedManager, Service {
 
-    public static final String CACHED_CHANNEL_TOPIC_PREFIX = "cached-update-channel:";
+    public static final String CACHED_CHANNEL_TOPIC_PREFIX = "cached-update-channel";
 
     protected final Logger logger = Logger.getLogger(getClass().getSimpleName());
 
@@ -175,10 +175,6 @@ public class CachedManagerService implements CachedManager, Service {
             }
             this.broadcastable = broadcastable;
         }
-    }
-
-    public String getChannelTopic() {
-        return CACHED_CHANNEL_TOPIC_PREFIX + resourceName();
     }
 
     @Override

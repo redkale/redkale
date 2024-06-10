@@ -25,6 +25,11 @@ public interface CachedManager extends Resourcable {
     public static final String DEFAULT_SCHEMA = "cached-schema";
 
     /**
+     * 默认的远程缓存订阅消息的管道名称
+     */
+    public static final String CACHED_CHANNEL_TOPIC_PREFIX = "cached-update-channel";
+
+    /**
      * 资源名称
      *
      * @return 名称
@@ -38,6 +43,20 @@ public interface CachedManager extends Resourcable {
      * @return  schema
      */
     public String getSchema();
+
+    /**
+     * 远程缓存订阅消息的管道名称
+     *
+     * @return 管道名称
+     */
+    default String getChannelTopic() {
+        String n = resourceName();
+        if (n.isEmpty()) {
+            return CACHED_CHANNEL_TOPIC_PREFIX;
+        } else {
+            return CACHED_CHANNEL_TOPIC_PREFIX + ':' + n;
+        }
+    }
 
     // -------------------------------------- 本地缓存 --------------------------------------
     /**
