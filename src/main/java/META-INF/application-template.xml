@@ -43,13 +43,14 @@ serviceid1_name1  serviceid1_name2   serviceid2_name1  serviceid2_name2
     <scheduled enabled="true"/>
 
     <!--
-    【节点全局唯一】 @since 2.8.0
+        @since 2.8.0
         全局Serivce的缓存设置，没配置该节点将自动创建一个。
+        name:  缓存管理器的名称， 默认: ""
         enabled： 是否开启缓存功能。默认: true
         remote: 远程CacheSource的资源名
         broadcastable: 存在远程CacheSource时修改数据是否进行广播到其他集群服务中。默认: true
     -->
-    <cached enabled="true" remote="xxx" broadcastable="true"/>
+    <cached name="" enabled="true" remote="xxx" broadcastable="true"/>
 
     <!--
     【节点全局唯一】

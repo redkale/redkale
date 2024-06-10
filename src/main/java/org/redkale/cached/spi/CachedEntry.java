@@ -18,9 +18,9 @@ import org.redkale.convert.json.JsonConvert;
  */
 public class CachedEntry {
 
-    private String key;
+    private String manager;
 
-    private String schema;
+    private String key;
 
     private String localExpire;
 
@@ -33,8 +33,8 @@ public class CachedEntry {
     public CachedEntry() {}
 
     public CachedEntry(DynForCached cached) {
+        this.manager = cached.manager();
         this.key = cached.key();
-        this.schema = cached.schema();
         this.localExpire = cached.localExpire();
         this.remoteExpire = cached.remoteExpire();
         this.timeUnit = cached.timeUnit();
@@ -42,20 +42,20 @@ public class CachedEntry {
     }
 
     public CachedEntry(Cached cached) {
+        this.manager = cached.manager();
         this.key = cached.key();
-        this.schema = cached.schema();
         this.localExpire = cached.localExpire();
         this.remoteExpire = cached.remoteExpire();
         this.timeUnit = cached.timeUnit();
         this.nullable = cached.nullable();
     }
 
-    public String getKey() {
-        return key;
+    public String getManager() {
+        return manager;
     }
 
-    public String getSchema() {
-        return schema;
+    public String getKey() {
+        return key;
     }
 
     public String getLocalExpire() {

@@ -34,7 +34,6 @@ public class CachedAction {
     @Resource
     private Environment environment;
 
-    @Resource
     private CachedManager manager;
 
     private final CachedEntry cached;
@@ -62,9 +61,6 @@ public class CachedAction {
     // 方法参数名
     @Nullable
     private final String[] paramNames;
-
-    // 缓存的hash
-    private String hash;
 
     // 模板key
     String templetKey;
@@ -96,9 +92,7 @@ public class CachedAction {
     }
 
     void init(ResourceFactory resourceFactory, Object service) {
-        this.hash = cached.getSchema().trim().isEmpty() || CachedManager.DEFAULT_SCHEMA.equals(cached.getSchema())
-                ? CachedManager.DEFAULT_SCHEMA
-                : environment.getPropertyValue(cached.getSchema());
+        this.manager = resourceFactory.find(cached.getManager(), CachedManager.class);
         String key = environment.getPropertyValue(cached.getKey());
         this.templetKey = key;
         if (key.startsWith("@")) { // 动态加载缓存key生成器
@@ -116,7 +110,6 @@ public class CachedAction {
     public <T> T get(ThrowSupplier<T> supplier, Object... args) {
         if (async) {
             return (T) manager.bothGetSetAsync(
-                    hash,
                     keyGenerator.generate(service, this, args),
                     resultType,
                     nullable,
@@ -125,7 +118,6 @@ public class CachedAction {
                     (ThrowSupplier) supplier);
         } else {
             return manager.bothGetSet(
-                    hash,
                     keyGenerator.generate(service, this, args),
                     resultType,
                     nullable,

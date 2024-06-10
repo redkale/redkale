@@ -24,9 +24,9 @@ public @interface DynForCached {
 
     String dynField();
 
-    String key();
+    String manager();
 
-    String schema();
+    String key();
 
     String localExpire();
 

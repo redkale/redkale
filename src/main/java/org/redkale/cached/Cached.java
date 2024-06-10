@@ -36,11 +36,11 @@ public @interface Cached {
     String key();
 
     /**
-     * 缓存的hash, 不能含有':'、'#'、'@'字符
+     * 缓存管理器名称
      *
-     * @return schema
+     * @return 名称
      */
-    String schema() default CachedManager.DEFAULT_SCHEMA;
+    String manager() default "";
 
     /**
      * 本地缓存过期时长， 0表示永不过期， -1表示不作本地缓存。<br>

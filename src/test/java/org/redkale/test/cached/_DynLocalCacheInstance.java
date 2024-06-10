@@ -45,7 +45,7 @@ public class _DynLocalCacheInstance extends CachedInstance {
 
     @DynForCached(
             dynField = "_redkale_getNameCachedAction1",
-            schema = "",
+            manager = "",
             key = "name",
             nullable = false,
             timeUnit = TimeUnit.SECONDS,
@@ -62,7 +62,7 @@ public class _DynLocalCacheInstance extends CachedInstance {
 
     @DynForCached(
             dynField = "_redkale_getInfoCachedAction2",
-            schema = "",
+            manager = "",
             key = "info_#{id}_file#{files.one}",
             nullable = false,
             timeUnit = TimeUnit.SECONDS,
@@ -80,7 +80,7 @@ public class _DynLocalCacheInstance extends CachedInstance {
 
     @DynForCached(
             dynField = "_redkale_getNameAsyncCachedAction3",
-            schema = "",
+            manager = "",
             key = "name",
             nullable = false,
             timeUnit = TimeUnit.SECONDS,
@@ -97,7 +97,7 @@ public class _DynLocalCacheInstance extends CachedInstance {
 
     @DynForCached(
             dynField = "_redkale_getInfo2AsyncCachedAction4",
-            schema = "",
+            manager = "",
             key = "info_#{id}_file#{files.one}",
             nullable = false,
             timeUnit = TimeUnit.SECONDS,
@@ -119,7 +119,7 @@ public class _DynLocalCacheInstance extends CachedInstance {
 
     @DynForCached(
             dynField = "_redkale_getName2AsyncCachedAction5",
-            schema = "",
+            manager = "",
             key = "name",
             nullable = false,
             timeUnit = TimeUnit.SECONDS,
@@ -136,7 +136,7 @@ public class _DynLocalCacheInstance extends CachedInstance {
 
     @DynForCached(
             dynField = "_redkale_getInfoAsyncCachedAction6",
-            schema = "",
+            manager = "",
             key = "info_#{id}_file#{files.one}",
             nullable = false,
             timeUnit = TimeUnit.SECONDS,
@@ -155,7 +155,7 @@ public class _DynLocalCacheInstance extends CachedInstance {
 
     @DynForCached(
             dynField = "_redkale_getName2CachedAction7",
-            schema = "",
+            manager = "",
             key = "name",
             nullable = false,
             timeUnit = TimeUnit.SECONDS,

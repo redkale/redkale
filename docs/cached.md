@@ -10,7 +10,7 @@
 |属性|默认值|说明|
 | --- | --- | --- |
 |key|未定义|缓存的key，支持参数动态组合，比如"key_#{id}"|
-|hash|```DEFAULT_HASH```|缓存的hash, 不能含有':'、'#'、'@'字符|
+|manager|空|缓存管理器名称, 不能含有':'、'#'、'@'字符|
 |localExpire|-1|本地缓存过期时长， 0表示永不过期， -1表示不作本地缓存。 <br> 参数值支持方式:<br> &emsp;100: 设置数值 <br> &emsp;${env.cache.expires}: 读取系统配置项  |
 |remoteExpire|-1|远程缓存过期时长， 0表示永不过期， -1表示不作远程缓存。 <br> 参数值支持方式:<br> &emsp;100: 设置数值 <br> &emsp;${env.cache.expires}: 读取系统配置项  |
 |nullable|false|是否可以缓存null值|
@@ -42,7 +42,7 @@
 
     //实时修改远程缓存的key值
     public void updateName(String code, Map<String, Long> map) {
-        cachedManager.remoteSetString(code, code + "_" + map.get("id"), Duration.ofMillis(60));
+        cachedManager.remoteSetString(code + "_" + map.get("id"), Duration.ofMillis(60));
     }
 
     @Cached(key = "#{code}_#{map.id}", remoteExpire = "60", timeUnit = TimeUnit.MILLISECONDS)
@@ -55,9 +55,10 @@
 ```xml
     <!--
         全局Serivce的缓存设置，没配置该节点将自动创建一个。
+        name:  缓存管理器的名称， 默认: ""
         enabled： 是否开启缓存功能。默认: true
         remote: 远程CacheSource的资源名
         broadcastable: 存在远程CacheSource时修改数据是否进行广播到其他集群服务中。默认: true
     -->
-    <cached enabled="true" remote="xxx" broadcastable="true"/>
+    <cached name="" enabled="true" remote="xxx" broadcastable="true"/>
 ```

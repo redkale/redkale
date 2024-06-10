@@ -248,7 +248,6 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
                 }
                 Field c = clazz.getDeclaredField(field);
                 c.setAccessible(true);
-                resourceFactory.inject(action);
                 c.set(service, action);
                 RedkaleClassLoader.putReflectionField(clazz.getName(), c);
             } catch (Exception e) {
