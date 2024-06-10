@@ -246,11 +246,7 @@ public class AsyncIOGroup extends AsyncGroup {
     }
 
     @Override
-    public CompletableFuture<AsyncConnection> createTCPClient(
-            final SocketAddress address,
-            final int connectTimeoutSeconds,
-            final int readTimeoutSeconds,
-            final int writeTimeoutSeconds) {
+    public CompletableFuture<AsyncConnection> createTCPClient(SocketAddress address, int connectTimeoutSeconds) {
         Objects.requireNonNull(address);
         AsyncNioTcpConnection conn;
         try {
@@ -262,8 +258,6 @@ public class AsyncIOGroup extends AsyncGroup {
         conn.connect(address, null, new CompletionHandler<Void, Void>() {
             @Override
             public void completed(Void result, Void attachment) {
-                conn.setReadTimeoutSeconds(readTimeoutSeconds);
-                conn.setWriteTimeoutSeconds(writeTimeoutSeconds);
                 connCreateCounter.increment();
                 connLivingCounter.increment();
                 if (conn.sslEngine == null) {
@@ -328,11 +322,7 @@ public class AsyncIOGroup extends AsyncGroup {
     }
 
     @Override
-    public CompletableFuture<AsyncConnection> createUDPClient(
-            final SocketAddress address,
-            final int connectTimeoutSeconds,
-            final int readTimeoutSeconds,
-            final int writeTimeoutSeconds) {
+    public CompletableFuture<AsyncConnection> createUDPClient(SocketAddress address, int connectTimeoutSeconds) {
         AsyncNioUdpConnection conn;
         try {
             conn = newUDPClientConnection(address);

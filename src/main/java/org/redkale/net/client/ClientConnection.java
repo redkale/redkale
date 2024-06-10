@@ -14,6 +14,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
+import java.util.logging.Level;
 import org.redkale.annotation.*;
 import org.redkale.net.*;
 import org.redkale.util.*;
@@ -119,16 +120,13 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
 
     // respTransfer只会在ClientCodec的读线程里调用
     protected final <T> CompletableFuture<T> writeChannel(R request, Function<P, T> respTransfer) {
-        //        if (client.debug) {
-        //            client.logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ":
-        // "
-        //                + this + ", 发送请求: " + request);
-        //        }
         request.respTransfer = respTransfer;
         ClientFuture respFuture = createClientFuture(request);
-        int rts = this.channel.getReadTimeoutSeconds();
-        if (rts > 0 && !request.isCloseType()) {
-            respFuture.setTimeout(client.timeoutScheduler.schedule(respFuture, rts, TimeUnit.SECONDS));
+        if (client.debug) {
+            client.logger.log(
+                    Level.FINEST,
+                    Times.nowMillis() + ": " + Thread.currentThread().getName() + ": " + this + ", sendRequest: "
+                            + request + ", respFuture: " + respFuture);
         }
         respWaitingCounter.increment(); // 放在writeChannelInWriteThread计数会延迟，导致不准确
         writeLock.lock();
@@ -141,6 +139,14 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
             }
         } finally {
             writeLock.unlock();
+        }
+        if (client.debug) {
+            return respFuture.whenComplete((v, t) -> {
+                client.logger.log(
+                        Level.FINEST,
+                        Times.nowMillis() + ": " + Thread.currentThread().getName() + ": " + this + ", respResult: "
+                                + (t != null ? t : v));
+            });
         }
         return respFuture;
     }
@@ -169,22 +175,18 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
 
     // respTransfer只会在ClientCodec的读线程里调用
     protected final <T> CompletableFuture<List<T>> writeChannel(R[] requests, Function<P, T> respTransfer) {
-        //        if (client.debug) {
-        //            client.logger.log(Level.FINEST, Utility.nowMillis() + ": " + Thread.currentThread().getName() + ":
-        // "
-        //                + this + ", 发送请求: " + Arrays.toString(requests) + ", readTimeoutSeconds: " +
-        // this.channel.getReadTimeoutSeconds());
-        //        }
+        if (client.debug) {
+            client.logger.log(
+                    Level.FINEST,
+                    Times.nowMillis() + ": " + Thread.currentThread().getName() + ": " + this + ", 发送请求: "
+                            + Arrays.toString(requests));
+        }
         ClientFuture[] respFutures = new ClientFuture[requests.length];
-        int rts = this.channel.getReadTimeoutSeconds();
+        int rts = this.client.getReadTimeoutSeconds();
         for (int i = 0; i < respFutures.length; i++) {
             R request = requests[i];
             request.respTransfer = respTransfer;
-            ClientFuture respFuture = createClientFuture(requests[i]);
-            respFutures[i] = respFuture;
-            if (rts > 0 && !request.isCloseType()) {
-                respFuture.setTimeout(client.timeoutScheduler.schedule(respFuture, rts, TimeUnit.SECONDS));
-            }
+            respFutures[i] = createClientFuture(requests[i]);
         }
         respWaitingCounter.add(respFutures.length); // 放在writeChannelInWriteThread计数会延迟，导致不准确
 
@@ -310,7 +312,12 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
     protected void preComplete(P resp, R req, Throwable exc) {}
 
     protected ClientFuture<R, P> createClientFuture(R request) {
-        return new ClientFuture(this, request);
+        ClientFuture respFuture = new ClientFuture(this, request);
+        int rts = this.client.getReadTimeoutSeconds();
+        if (rts > 0 && !request.isCloseType()) {
+            respFuture.setTimeout(client.timeoutScheduler.schedule(respFuture, rts, TimeUnit.SECONDS));
+        }
+        return respFuture;
     }
 
     @Override // AsyncConnection.beforeCloseListener

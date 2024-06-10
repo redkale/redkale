@@ -35,60 +35,44 @@ public abstract class AsyncGroup {
     }
 
     public CompletableFuture<AsyncConnection> createTCPClient(final SocketAddress address) {
-        return createTCPClient(address, 0, 0, 0);
+        return createTCPClient(address, 0);
     }
 
     /**
      * 创建TCP连接
      *
-     * @see org.redkale.net.AsyncIOGroup#createTCPClient(java.net.SocketAddress, int, int, int)
+     * @see org.redkale.net.AsyncIOGroup#createTCPClient(java.net.SocketAddress, int)
      *
      * @param address 地址
      * @param connectTimeoutSeconds 连接超时
-     * @param readTimeoutSeconds 读超时
-     * @param writeTimeoutSeconds 写超时
      * @return AsyncConnection
      */
     public abstract CompletableFuture<AsyncConnection> createTCPClient(
-            final SocketAddress address,
-            final int connectTimeoutSeconds,
-            final int readTimeoutSeconds,
-            final int writeTimeoutSeconds);
+            SocketAddress address, int connectTimeoutSeconds);
 
     public CompletableFuture<AsyncConnection> createUDPClient(final SocketAddress address) {
-        return createUDPClient(address, 0, 0, 0);
+        return createUDPClient(address, 0);
     }
 
     /**
      * 创建UDP连接
      *
-     * @see org.redkale.net.AsyncIOGroup#createUDPClient(java.net.SocketAddress, int, int, int)
+     * @see org.redkale.net.AsyncIOGroup#createUDPClient(java.net.SocketAddress, int)
      *
      * @param address 地址
      * @param connectTimeoutSeconds 连接超时
-     * @param readTimeoutSeconds 读超时
-     * @param writeTimeoutSeconds 写超时
      * @return AsyncConnection
      */
     public abstract CompletableFuture<AsyncConnection> createUDPClient(
-            final SocketAddress address,
-            final int connectTimeoutSeconds,
-            final int readTimeoutSeconds,
-            final int writeTimeoutSeconds);
+            SocketAddress address, int connectTimeoutSeconds);
 
     public CompletableFuture<AsyncConnection> createClient(final boolean tcp, final SocketAddress address) {
         return tcp ? createTCPClient(address) : createUDPClient(address);
     }
 
     public CompletableFuture<AsyncConnection> createClient(
-            final boolean tcp,
-            final SocketAddress address,
-            final int connectTimeoutSeconds,
-            final int readTimeoutSeconds,
-            final int writeTimeoutSeconds) {
-        return tcp
-                ? createTCPClient(address, connectTimeoutSeconds, readTimeoutSeconds, writeTimeoutSeconds)
-                : createUDPClient(address, connectTimeoutSeconds, readTimeoutSeconds, writeTimeoutSeconds);
+            boolean tcp, SocketAddress address, int connectTimeoutSeconds) {
+        return tcp ? createTCPClient(address, connectTimeoutSeconds) : createUDPClient(address, connectTimeoutSeconds);
     }
 
     /**

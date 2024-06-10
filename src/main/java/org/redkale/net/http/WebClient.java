@@ -5,8 +5,6 @@
  */
 package org.redkale.net.http;
 
-import static org.redkale.net.http.HttpRequest.parseHeaderName;
-
 import java.lang.reflect.Type;
 import java.net.*;
 import java.nio.*;
@@ -19,6 +17,7 @@ import org.redkale.net.*;
 import org.redkale.net.client.Client;
 import org.redkale.net.client.ClientAddress;
 import org.redkale.net.client.ClientConnection;
+import static org.redkale.net.http.HttpRequest.parseHeaderName;
 import org.redkale.util.*;
 
 /**
@@ -315,11 +314,7 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
 
     protected CompletableFuture<HttpConnection> createConnection(String host, int port) {
         return asyncGroup
-                .createTCPClient(
-                        new InetSocketAddress(host, port),
-                        connectTimeoutSeconds,
-                        readTimeoutSeconds,
-                        writeTimeoutSeconds)
+                .createTCPClient(new InetSocketAddress(host, port), connectTimeoutSeconds)
                 .thenApply(conn -> new HttpConnection(conn));
     }
 

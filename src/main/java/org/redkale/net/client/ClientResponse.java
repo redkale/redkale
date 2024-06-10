@@ -93,9 +93,9 @@ public class ClientResponse<R extends ClientRequest, P extends ClientResult> {
     @Override
     public String toString() {
         if (cause != null) {
-            return "{\"exc\":" + cause + "}";
+            return "{\"request\":" + request + ",\"exc\":" + cause + "}";
         }
-        return "{\"message\":" + message + "}";
+        return "{\"request\":" + request + ",\"message\":" + message + "}";
     }
 
     boolean isError() {

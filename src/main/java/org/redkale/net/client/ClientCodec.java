@@ -81,7 +81,7 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
                 if (cr.isError()) {
                     connection.dispose(cr.cause);
                     return;
-                } else if (messageListener != null) {
+                } else if (cr.request == null && messageListener != null) { // listener模式的第一次请求一般需要有resputure
                     messageListener.onMessage(connection, cr);
                     respPool.accept(cr);
                 } else {

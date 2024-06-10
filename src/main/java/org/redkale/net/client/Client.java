@@ -333,15 +333,6 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         return connect(addr, WorkThread.currentWorkThread(), false);
     }
 
-    public final CompletableFuture<C> newConnection(int readTimeout, int writeTimeout) {
-        return connect(getAddress(null), WorkThread.currentWorkThread(), false, readTimeout, writeTimeout);
-    }
-
-    // 指定地址获取连接
-    public final CompletableFuture<C> newConnection(SocketAddress addr, int readTimeout, int writeTimeout) {
-        return connect(addr, WorkThread.currentWorkThread(), false, readTimeout, writeTimeout);
-    }
-
     public final CompletableFuture<C> connect() {
         return connect(getAddress(null), WorkThread.currentWorkThread(), true);
     }
@@ -361,18 +352,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     }
 
     // 指定地址获取连接
-    private CompletableFuture<C> connect(
-            @Nonnull final SocketAddress addr, @Nullable final WorkThread workThread, final boolean pool) {
-        return connect(addr, workThread, pool, readTimeoutSeconds, writeTimeoutSeconds);
-    }
-
-    // 指定地址获取连接
-    private CompletableFuture<C> connect(
-            @Nonnull final SocketAddress addr,
-            @Nullable final WorkThread workThread,
-            final boolean pool,
-            final int readTimeout,
-            final int writeTimeout) {
+    private CompletableFuture<C> connect(@Nonnull SocketAddress addr, @Nullable WorkThread workThread, boolean pool) {
         if (addr == null) {
             return CompletableFuture.failedFuture(new NullPointerException("address is empty"));
         }
@@ -384,8 +364,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         }
         final Queue<CompletableFuture<C>> waitQueue = entry.connAcquireWaitings;
         if (!pool || entry.connOpenState.compareAndSet(false, true)) {
-            CompletableFuture<C> future = group.createClient(
-                            tcp, addr, connectTimeoutSeconds, readTimeout, writeTimeout)
+            CompletableFuture<C> future = group.createClient(tcp, addr, connectTimeoutSeconds)
                     .thenApply(c ->
                             (C) createClientConnection(c).setConnEntry(entry).setMaxPipelines(maxPipelines));
             R virtualReq = createVirtualRequestAfterConnect();
@@ -433,7 +412,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
                         }
                     });
         } else {
-            int seconds = connectTimeoutSeconds > 0 ? connectTimeoutSeconds : 6;
+            int seconds = connectTimeoutSeconds > 0 ? connectTimeoutSeconds : 3;
             CompletableFuture rs = new CompletableFuture();
             waitQueue.offer(rs);
             return Utility.orTimeout(rs, () -> addr + " connect timeout", seconds, TimeUnit.SECONDS);

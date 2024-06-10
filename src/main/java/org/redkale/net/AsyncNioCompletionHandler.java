@@ -12,9 +12,12 @@ import java.util.concurrent.*;
 /**
  * 详情见: https://redkale.org
  *
+ * @deprecated
+ *
  * @author zhangjx
  * @since 2.1.0
  */
+@Deprecated(since = "2.8.0")
 class AsyncNioCompletionHandler<A> implements CompletionHandler<Integer, A>, Runnable {
 
     private final AsyncNioConnection conn;

@@ -217,14 +217,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
 
     public abstract SocketAddress getLocalAddress();
 
-    public abstract int getReadTimeoutSeconds();
-
-    public abstract int getWriteTimeoutSeconds();
-
-    public abstract void setReadTimeoutSeconds(int readTimeoutSeconds);
-
-    public abstract void setWriteTimeoutSeconds(int writeTimeoutSeconds);
-
     //    public abstract <A> AsyncConnection fastHandler(CompletionHandler<Integer, ? super A> handler);
     //
     //    public abstract <A> void fastWrite(byte[] data);
@@ -430,8 +422,8 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
             };
             write(buffer, handlerAttachment, newHandler);
         } else {
-            ByteBufferWriter writer = ByteBufferWriter.create(
-                    sslEngine == null ? writeBufferSupplier : () -> pollWriteSSLBuffer(), buffer);
+            ByteBufferWriter writer =
+                    ByteBufferWriter.create(sslEngine == null ? writeBufferSupplier : this::pollWriteSSLBuffer, buffer);
             writer.put(headerContent, headerOffset, headerLength);
             if (bodyLength > 0) {
                 writer.put(bodyContent, bodyOffset, bodyLength);
