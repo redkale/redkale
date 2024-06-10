@@ -71,8 +71,7 @@ public interface CachedManager extends Resourcable {
      * @param supplier 数据函数
      * @return 数据值
      */
-    public <T> T localGetSet(
-            final String key, final Type type, boolean nullable, Duration expire, ThrowSupplier<T> supplier);
+    public <T> T localGetSet(String key, Type type, boolean nullable, Duration expire, ThrowSupplier<T> supplier);
 
     /**
      * 本地异步获取缓存数据, 过期返回null
@@ -170,8 +169,7 @@ public interface CachedManager extends Resourcable {
      * @param supplier 数据函数
      * @return 数据值
      */
-    public <T> T remoteGetSet(
-            final String key, final Type type, boolean nullable, Duration expire, ThrowSupplier<T> supplier);
+    public <T> T remoteGetSet(String key, Type type, boolean nullable, Duration expire, ThrowSupplier<T> supplier);
 
     /**
      * 远程异步获取缓存数据, 过期返回null
@@ -340,8 +338,7 @@ public interface CachedManager extends Resourcable {
      * @param localExpire 本地过期时长，Duration.ZERO为永不过期，为null表示不本地缓存
      * @param remoteExpire 远程过期时长，Duration.ZERO为永不过期，为null表示不远程缓存
      */
-    public <T> void bothSet(
-            final String key, final Type type, final T value, Duration localExpire, Duration remoteExpire);
+    public <T> void bothSet(String key, Type type, T value, Duration localExpire, Duration remoteExpire);
 
     /**
      * 本地和远程缓存字符串数据
