@@ -27,7 +27,7 @@ public interface CachedManager extends Resourcable {
     /**
      * 默认的远程缓存订阅消息的管道名称
      */
-    public static final String CACHED_CHANNEL_TOPIC_PREFIX = "cached-update-channel";
+    public static final String CACHED_CHANNEL_TOPIC = "cached-channel-topic";
 
     /**
      * 资源名称
@@ -52,9 +52,9 @@ public interface CachedManager extends Resourcable {
     default String getChannelTopic() {
         String n = resourceName();
         if (n.isEmpty()) {
-            return CACHED_CHANNEL_TOPIC_PREFIX;
+            return CACHED_CHANNEL_TOPIC;
         } else {
-            return CACHED_CHANNEL_TOPIC_PREFIX + ':' + n;
+            return CACHED_CHANNEL_TOPIC + ':' + n;
         }
     }
 
