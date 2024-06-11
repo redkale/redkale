@@ -8,7 +8,6 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -69,9 +68,6 @@ public class CachedManagerService implements CachedManager, Service {
 
     // 本地缓存Source
     protected final CacheMemorySource localSource = new CacheMemorySource("cache-local");
-
-    // 缓存schema集合, 用于定时遍历删除过期数据
-    protected final ConcurrentSkipListSet<String> hashNames = new ConcurrentSkipListSet<>();
 
     // 缓存无效时使用的同步锁
     private final ConcurrentHashMap<String, CachedValue> syncLockMap = new ConcurrentHashMap<>();
@@ -263,7 +259,6 @@ public class CachedManagerService implements CachedManager, Service {
     /**
      * 本地删除缓存数据
      *
-     * @param schema 缓存schema
      * @param key 缓存键
      * @return 删除数量
      */

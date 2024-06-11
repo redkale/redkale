@@ -23,7 +23,7 @@ public interface ResourceTypeLoader {
      * @param srcObj  依附对象
      * @param resourceName  资源名
      * @param field  字段对象
-     * @param attachment
+     * @param attachment  附加对象
      * @return Object
      */
     public Object load(
