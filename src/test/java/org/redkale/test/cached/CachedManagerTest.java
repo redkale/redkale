@@ -61,7 +61,7 @@ public class CachedManagerTest {
         int count = 50;
         ParallelBean bean = new ParallelBean();
         Duration localExpire = Duration.ofMillis(190);
-        Duration remoteExpire = Duration.ofMillis(400);
+        Duration remoteExpire = Duration.ofMillis(500);
         {
             CountDownLatch cdl = new CountDownLatch(count);
             for (int i = 0; i < count; i++) {
@@ -78,7 +78,7 @@ public class CachedManagerTest {
         Utility.sleep(200);
         manager.bothGetSet("name", String.class, false, localExpire, remoteExpire, () -> bean.getName());
         Assertions.assertEquals(1, ParallelBean.c1.get());
-        Utility.sleep(200);
+        Utility.sleep(300);
         {
             CountDownLatch cdl = new CountDownLatch(count);
             for (int i = 0; i < count; i++) {
