@@ -179,7 +179,7 @@ public class CachedManagerService implements CachedManager, Service {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "_" + Objects.hash(this) + "{name = '" + name + "', schema = '" + schema
+        return getClass().getSimpleName() + "_" + Objects.hash(this) + "{name='" + name + "', schema='" + schema
                 + "'}";
     }
 

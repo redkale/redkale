@@ -3,9 +3,6 @@
  */
 package org.redkale.net.sncp;
 
-import static org.redkale.net.sncp.Sncp.loadRemoteMethodActions;
-import static org.redkale.net.sncp.SncpHeader.HEADER_SUBSIZE;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.*;
@@ -19,6 +16,8 @@ import org.redkale.convert.json.JsonConvert;
 import org.redkale.mq.spi.MessageAgent;
 import org.redkale.mq.spi.MessageClient;
 import org.redkale.mq.spi.MessageRecord;
+import static org.redkale.net.sncp.Sncp.loadRemoteMethodActions;
+import static org.redkale.net.sncp.SncpHeader.HEADER_SUBSIZE;
 import org.redkale.service.*;
 import org.redkale.util.*;
 
@@ -294,26 +293,26 @@ public class SncpRemoteInfo<S extends Service> {
     @Override
     public String toString() {
         InetSocketAddress clientSncpAddress = sncpClient == null ? null : sncpClient.getClientSncpAddress();
-        return this.getClass().getSimpleName() + "(service = " + serviceType.getSimpleName() + ", serviceid = "
+        return this.getClass().getSimpleName() + "(service=" + serviceType.getSimpleName() + ", serviceid="
                 + serviceid
-                + ", serviceVersion = " + serviceVersion + ", name = '" + name
-                + "', address = "
+                + ", serviceVersion=" + serviceVersion + ", name='" + name
+                + "', address="
                 + (clientSncpAddress == null
                         ? ""
                         : (clientSncpAddress.getHostString() + ":" + clientSncpAddress.getPort()))
-                + ", actions.size = " + actions.size() + ")";
+                + ", actions.size=" + actions.size() + ")";
     }
 
     public String toSimpleString() { // 给Sncp产生的Service用
         InetSocketAddress clientSncpAddress = sncpClient == null ? null : sncpClient.getClientSncpAddress();
-        return serviceType.getSimpleName() + "(name = '" + name + "', serviceid = " + serviceid + ", serviceVersion = "
+        return serviceType.getSimpleName() + "(name='" + name + "', serviceid=" + serviceid + ", serviceVersion="
                 + serviceVersion
-                + ", clientaddr = "
+                + ", clientaddr="
                 + (clientSncpAddress == null
                         ? ""
                         : (clientSncpAddress.getHostString() + ":" + clientSncpAddress.getPort()))
-                + ((remoteGroup == null || remoteGroup.isEmpty()) ? "" : ", remoteGroup = " + remoteGroup)
-                + ", actions.size = " + actions.size() + ")";
+                + ((remoteGroup == null || remoteGroup.isEmpty()) ? "" : ", remoteGroup=" + remoteGroup)
+                + ", actions.size=" + actions.size() + ")";
     }
 
     public void updateRemoteAddress(String remoteGroup, Set<InetSocketAddress> remoteAddresses) {

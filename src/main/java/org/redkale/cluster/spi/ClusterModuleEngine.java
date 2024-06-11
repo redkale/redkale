@@ -100,7 +100,7 @@ public class ClusterModuleEngine extends ModuleEngine {
             if (logger.isLoggable(Level.FINER)) {
                 logger.log(
                         Level.FINER,
-                        "ClusterAgent (type = " + this.clusterAgent.getClass().getSimpleName() + ") initing");
+                        "ClusterAgent (type=" + this.clusterAgent.getClass().getSimpleName() + ") initing");
             }
             long s = System.currentTimeMillis();
             if (this.clusterAgent instanceof CacheClusterAgent) {
@@ -112,7 +112,7 @@ public class ClusterModuleEngine extends ModuleEngine {
             this.resourceFactory.inject(clusterAgent);
             clusterAgent.init(clusterAgent.getConfig());
             this.resourceFactory.register(ClusterAgent.class, clusterAgent);
-            logger.info("ClusterAgent (type = " + this.clusterAgent.getClass().getSimpleName() + ") init in "
+            logger.info("ClusterAgent (type=" + this.clusterAgent.getClass().getSimpleName() + ") init in "
                     + (System.currentTimeMillis() - s) + " ms");
         }
     }

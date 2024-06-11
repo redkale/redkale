@@ -115,7 +115,7 @@ public class PropertiesModule extends BootModule {
                             }
                         }
                     }
-                    logger.info("PropertiesAgent (type = "
+                    logger.info("PropertiesAgent (type="
                             + this.propertiesAgent.getClass().getSimpleName() + ") load " + propCount + " data in "
                             + (System.currentTimeMillis() - s) + " ms");
                 }

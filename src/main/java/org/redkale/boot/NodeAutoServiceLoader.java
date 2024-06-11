@@ -105,7 +105,7 @@ class NodeAutoServiceLoader implements ResourceTypeLoader {
                 service.init(null);
             }
             logger.info("Load Service(" + (Sncp.isRemote(service) ? "Remote" : "@Local") + " @AutoLoad service = "
-                    + serviceImplClass.getSimpleName() + ", resourceName = '" + resourceName + "')");
+                    + serviceImplClass.getSimpleName() + ", resourceName='" + resourceName + "')");
             return service;
         } catch (Exception e) {
             logger.log(

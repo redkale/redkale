@@ -52,10 +52,10 @@ class CacheSourceLoader implements ResourceTypeLoader {
                 field.set(srcObj, source);
                 Resource res = field.getAnnotation(Resource.class);
                 if (res != null && res.required() && source == null) {
-                    throw new RedkaleException("CacheSource (resourceName = '" + resourceName + "') not found");
+                    throw new RedkaleException("CacheSource (resourceName='" + resourceName + "') not found");
                 } else {
-                    logger.info("Load CacheSource (type = "
-                            + (source == null ? null : source.getClass().getSimpleName()) + ", resourceName = '"
+                    logger.info("Load CacheSource (type="
+                            + (source == null ? null : source.getClass().getSimpleName()) + ", resourceName='"
                             + resourceName + "')");
                 }
             }

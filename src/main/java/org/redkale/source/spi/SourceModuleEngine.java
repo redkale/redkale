@@ -379,7 +379,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                 if (!application.isCompileMode() && source instanceof Service) {
                     ((Service) source).init(sourceConf);
                 }
-                logger.info("Load CacheSource resourceName = '" + sourceName + "', source = " + source + " in "
+                logger.info("Load CacheSource resourceName='" + sourceName + "', source=" + source + " in "
                         + (System.currentTimeMillis() - st) + " ms");
                 return source;
             }
@@ -403,7 +403,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
 
                 cacheSources.add(source);
                 resourceFactory.register(sourceName, CacheSource.class, source);
-                logger.info("Load CacheSource resourceName = '" + sourceName + "', source = " + source + " in "
+                logger.info("Load CacheSource resourceName='" + sourceName + "', source=" + source + " in "
                         + (System.currentTimeMillis() - st) + " ms");
                 return source;
             } catch (RuntimeException ex) {
@@ -450,7 +450,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                 }
                 dataSources.add(source);
                 resourceFactory.register(sourceName, DataSource.class, source);
-                logger.info("Load DataSource resourceName = '" + sourceName + "', source = " + source + " in "
+                logger.info("Load DataSource resourceName='" + sourceName + "', source=" + source + " in "
                         + (System.currentTimeMillis() - st) + " ms");
                 return source;
             }
@@ -495,7 +495,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                         resourceFactory.register(sourceName, DataJdbcSource.class, source);
                     }
                 }
-                logger.info("Load DataSource resourceName = '" + sourceName + "', source = " + source + " in "
+                logger.info("Load DataSource resourceName='" + sourceName + "', source=" + source + " in "
                         + (System.currentTimeMillis() - st) + " ms");
                 return source;
             } catch (RuntimeException ex) {
