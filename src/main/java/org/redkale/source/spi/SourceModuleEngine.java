@@ -3,8 +3,6 @@
  */
 package org.redkale.source.spi;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,14 +17,10 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
-import org.redkale.annotation.Resource;
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
 import org.redkale.inject.Resourcable;
 import org.redkale.inject.ResourceEvent;
-import org.redkale.inject.ResourceFactory;
-import org.redkale.inject.ResourceTypeLoader;
-import org.redkale.net.Servlet;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.service.Service;
 import org.redkale.source.AbstractCacheSource;
@@ -38,7 +32,6 @@ import org.redkale.source.DataMemorySource;
 import org.redkale.source.DataNativeSqlParser;
 import org.redkale.source.DataSource;
 import org.redkale.source.DataSources;
-import org.redkale.source.DataSqlMapper;
 import org.redkale.source.DataSqlSource;
 import org.redkale.source.SearchSource;
 import org.redkale.source.SourceManager;
@@ -46,7 +39,6 @@ import org.redkale.util.AnyValue;
 import org.redkale.util.AnyValueWriter;
 import org.redkale.util.InstanceProvider;
 import org.redkale.util.RedkaleClassLoader;
-import org.redkale.util.RedkaleException;
 import org.redkale.util.Utility;
 
 /** @author zhangjx */
@@ -135,9 +127,9 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
         }
         resourceFactory.register(SourceManager.class, this);
         // --------------------------------- 注册 DataSource、CacheSource ---------------------------------
-        resourceFactory.register(new DataSourceLoader());
-        resourceFactory.register(new CacheSourceLoader());
-        resourceFactory.register(new DataSqlMapperLoader());
+        resourceFactory.register(new DataSourceLoader(this));
+        resourceFactory.register(new CacheSourceLoader(this));
+        resourceFactory.register(new DataSqlMapperLoader(this));
     }
 
     /**
@@ -545,115 +537,4 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
         return conf;
     }
 
-    private class DataSqlMapperLoader implements ResourceTypeLoader {
-
-        @Override
-        public Object load(
-                ResourceFactory rf,
-                String srcResourceName,
-                Object srcObj,
-                String resourceName,
-                Field field,
-                Object attachment) {
-            try {
-                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
-                    return null; // 远程模式不得注入
-                }
-                Class<? extends DataSqlMapper> mapperType = (Class) field.getType();
-                DataSqlMapper old = resourceFactory.find(resourceName, mapperType);
-                if (old != null) {
-                    return old;
-                }
-                DataSource source = loadDataSource(resourceName, false);
-                DataSqlMapper mapper =
-                        DataSqlMapperBuilder.createMapper(nativeSqlParser, (DataSqlSource) source, mapperType);
-                resourceFactory.register(resourceName, mapperType, mapper);
-                field.set(srcObj, mapper);
-                return mapper;
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, DataSqlMapper.class.getSimpleName() + " inject to " + srcObj + " error", e);
-                throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
-            }
-        }
-
-        @Override
-        public Type resourceType() {
-            return DataSqlMapper.class;
-        }
-    }
-
-    private class DataSourceLoader implements ResourceTypeLoader {
-
-        @Override
-        public Object load(
-                ResourceFactory rf,
-                String srcResourceName,
-                Object srcObj,
-                String resourceName,
-                Field field,
-                Object attachment) {
-            try {
-                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
-                    return null; // 远程模式不得注入
-                }
-                DataSource source = loadDataSource(resourceName, false);
-                field.set(srcObj, source);
-                return source;
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "DataSource inject to " + srcObj + " error", e);
-                throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
-            }
-        }
-
-        @Override
-        public Type resourceType() {
-            return DataSource.class;
-        }
-    }
-
-    private class CacheSourceLoader implements ResourceTypeLoader {
-
-        @Override
-        public Object load(
-                ResourceFactory rf,
-                String srcResourceName,
-                Object srcObj,
-                String resourceName,
-                Field field,
-                Object attachment) {
-            try {
-                if ((srcObj instanceof Service) && Sncp.isRemote((Service) srcObj)) {
-                    return null; // 远程模式不得注入
-                }
-                if (srcObj instanceof Servlet) {
-                    throw new RedkaleException("CacheSource cannot inject in Servlet " + srcObj);
-                }
-                final boolean ws = (srcObj instanceof org.redkale.net.http.WebSocketNodeService);
-                CacheSource source = loadCacheSource(resourceName, ws);
-                field.set(srcObj, source);
-                Resource res = field.getAnnotation(Resource.class);
-                if (res != null && res.required() && source == null) {
-                    throw new RedkaleException("CacheSource (resourceName = '" + resourceName + "') not found");
-                } else {
-                    logger.info("Load CacheSource (type = "
-                            + (source == null ? null : source.getClass().getSimpleName()) + ", resourceName = '"
-                            + resourceName + "')");
-                }
-                return source;
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "DataSource inject error", e);
-                throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
-            }
-        }
-
-        @Override
-        public Type resourceType() {
-            return CacheSource.class;
-        }
-
-        @Override
-        public boolean autoNone() {
-            return false;
-        }
-    }
 }

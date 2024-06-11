@@ -117,16 +117,16 @@ public class CachedManagerService implements CachedManager, Service {
         this.schema = conf.getValue("schema", DEFAULT_SCHEMA);
         if (this.enabled) {
             this.localSource.init(conf);
-            String remoteSourceName = conf.getValue("remote");
+            String remoteSourceName = conf.getValue("remote", "");
             if (remoteSource == null && remoteSourceName != null) {
-                this.broadcastable = conf.getBoolValue("broadcastable", true);
                 CacheSource source = application.loadCacheSource(remoteSourceName, false);
-                if (source == null) {
+                if (source == null && !remoteSourceName.isEmpty()) {
                     throw new RedkaleException("Not found CacheSource '" + remoteSourceName + "'");
                 }
                 this.remoteSource = source;
+                this.broadcastable = conf.getBoolValue("broadcastable", true);
             }
-            if (remoteSource != null) {
+            if (remoteSource != null && this.broadcastable) {
                 this.remoteListener = new CacheRemoteListener();
                 this.remoteSource.subscribe(CachedEventMessage.class, remoteListener, getChannelTopic());
             }

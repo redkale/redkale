@@ -92,7 +92,7 @@ public class CachedAction {
     }
 
     void init(ResourceFactory resourceFactory, Object service) {
-        this.manager = resourceFactory.find(cached.getManager(), CachedManager.class);
+        this.manager = resourceFactory.load(cached.getManager(), CachedManager.class);
         String key = environment.getPropertyValue(cached.getKey());
         this.templetKey = key;
         if (key.startsWith("@")) { // 动态加载缓存key生成器

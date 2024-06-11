@@ -686,6 +686,32 @@ public final class ResourceFactory {
         return null;
     }
 
+    public <A> A load(Class<? extends A> clazz) {
+        return load("", clazz);
+    }
+
+    public <A> A load(String name, Type clazz) {
+        A val = find(name, clazz);
+        if (val == null) {
+            ResourceTypeLoader loader = findResourceTypeLoader(clazz);
+            if (loader != null) {
+                val = (A) loader.load(this, null, null, name, null, null);
+            }
+        }
+        return val;
+    }
+
+    public <A> A load(String name, Class<? extends A> clazz) {
+        A val = find(name, clazz);
+        if (val == null) {
+            ResourceTypeLoader loader = findResourceTypeLoader(clazz);
+            if (loader != null) {
+                val = (A) loader.load(this, null, null, name, null, null);
+            }
+        }
+        return val;
+    }
+
     public <A> List<A> query(Class<? extends A> clazz) {
         return query(new ArrayList<>(), clazz);
     }
@@ -1097,7 +1123,7 @@ public final class ResourceFactory {
         return parent == null ? null : parent.findResourceTypeLoader(clazz);
     }
 
-    public ResourceTypeLoader findTypeLoader(Type ft, Field field) {
+    public ResourceTypeLoader findTypeLoader(Type ft, @Nullable Field field) {
         ResourceTypeLoader it = this.findMatchTypeLoader(ft, field);
         return it == null ? findRegxTypeLoader(ft, field) : it;
     }
@@ -1109,7 +1135,7 @@ public final class ResourceFactory {
         return parent.parentRoot();
     }
 
-    private ResourceTypeLoader findMatchTypeLoader(Type ft, Field field) {
+    private ResourceTypeLoader findMatchTypeLoader(Type ft, @Nullable Field field) {
         ResourceTypeLoader it = this.resTypeLoaderMap.get(ft);
         if (it == null && field != null) {
             it = this.resTypeLoaderMap.get(field.getType());
@@ -1120,7 +1146,7 @@ public final class ResourceFactory {
         return parent == null ? null : parent.findMatchTypeLoader(ft, field);
     }
 
-    private ResourceTypeLoader findRegxTypeLoader(Type ft, Field field) {
+    private ResourceTypeLoader findRegxTypeLoader(Type ft, @Nullable Field field) {
         if (field == null) {
             return null;
         }

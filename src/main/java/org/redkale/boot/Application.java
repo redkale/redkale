@@ -391,7 +391,9 @@ public final class Application {
                     Field field,
                     Object attachment) {
                 try {
-                    field.set(srcObj, application);
+                    if (field != null) {
+                        field.set(srcObj, application);
+                    }
                     return application;
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Resource inject error", e);
@@ -423,7 +425,9 @@ public final class Application {
                     boolean serv =
                             RESNAME_SERVER_RESFACTORY.equals(resourceName) || resourceName.equalsIgnoreCase("server");
                     ResourceFactory rs = serv ? rf : (resourceName.isEmpty() ? application.resourceFactory : null);
-                    field.set(srcObj, rs);
+                    if (field != null) {
+                        field.set(srcObj, rs);
+                    }
                     return rs;
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Resource inject error", e);
@@ -462,7 +466,9 @@ public final class Application {
                             break;
                         }
                     }
-                    field.set(srcObj, server);
+                    if (field != null) {
+                        field.set(srcObj, server);
+                    }
                     return server;
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Resource inject error", e);
@@ -501,7 +507,9 @@ public final class Application {
                             break;
                         }
                     }
-                    field.set(srcObj, server);
+                    if (field != null) {
+                        field.set(srcObj, server);
+                    }
                     return server;
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Resource inject error", e);
@@ -540,7 +548,9 @@ public final class Application {
                             break;
                         }
                     }
-                    field.set(srcObj, server);
+                    if (field != null) {
+                        field.set(srcObj, server);
+                    }
                     return server;
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Resource inject error", e);
@@ -578,7 +588,9 @@ public final class Application {
                         builder.version(HttpClient.Version.HTTP_2);
                     }
                     java.net.http.HttpClient httpClient = builder.build();
-                    field.set(srcObj, httpClient);
+                    if (field != null) {
+                        field.set(srcObj, httpClient);
+                    }
                     rf.inject(resourceName, httpClient, null); // 给其可能包含@Resource的字段赋值;
                     rf.register(resourceName, java.net.http.HttpClient.class, httpClient);
                     return httpClient;
@@ -606,7 +618,9 @@ public final class Application {
                     Object attachment) {
                 try {
                     WebClient httpClient = WebClient.create(workExecutor, clientAsyncGroup);
-                    field.set(srcObj, httpClient);
+                    if (field != null) {
+                        field.set(srcObj, httpClient);
+                    }
                     rf.inject(resourceName, httpClient, null); // 给其可能包含@Resource的字段赋值;
                     rf.register(resourceName, WebClient.class, httpClient);
                     return httpClient;
@@ -640,7 +654,9 @@ public final class Application {
                                 || !Objects.equals(clusterAgent.getName(), resourceName)
                                 || messageAgent.isRpcFirst()) {
                             HttpRpcClient rpcClient = messageAgent.getHttpRpcClient();
-                            field.set(srcObj, rpcClient);
+                            if (field != null) {
+                                field.set(srcObj, rpcClient);
+                            }
                             rf.inject(resourceName, rpcClient, null); // 给其可能包含@Resource的字段赋值;
                             rf.register(resourceName, HttpRpcClient.class, rpcClient);
                             return rpcClient;
@@ -648,13 +664,17 @@ public final class Application {
                     }
                     if (clusterAgent == null) {
                         HttpRpcClient rpcClient = new HttpLocalRpcClient(application, resourceName);
-                        field.set(srcObj, rpcClient);
+                        if (field != null) {
+                            field.set(srcObj, rpcClient);
+                        }
                         rf.inject(resourceName, rpcClient, null); // 给其可能包含@Resource的字段赋值;
                         rf.register(resourceName, HttpRpcClient.class, rpcClient);
                         return rpcClient;
                     }
                     HttpRpcClient rpcClient = new HttpClusterRpcClient(application, resourceName, clusterAgent);
-                    field.set(srcObj, rpcClient);
+                    if (field != null) {
+                        field.set(srcObj, rpcClient);
+                    }
                     rf.inject(resourceName, rpcClient, null); // 给其可能包含@Resource的字段赋值;
                     rf.register(resourceName, HttpRpcClient.class, rpcClient);
                     return rpcClient;

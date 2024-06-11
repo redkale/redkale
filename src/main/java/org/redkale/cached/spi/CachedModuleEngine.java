@@ -3,26 +3,19 @@
  */
 package org.redkale.cached.spi;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 import org.redkale.asm.AsmMethodBoost;
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
 import org.redkale.cached.CachedManager;
-import org.redkale.inject.ResourceFactory;
-import org.redkale.inject.ResourceTypeLoader;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
-import org.redkale.util.AnyValueWriter;
 import org.redkale.util.InstanceProvider;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
@@ -40,7 +33,7 @@ public class CachedModuleEngine extends ModuleEngine {
     protected static final String CONFIG_NAME = "cached";
 
     // 全局缓存管理器
-    private ConcurrentHashMap<String, ManagerEntity> cacheManagerMap = new ConcurrentHashMap<>();
+    protected ConcurrentHashMap<String, ManagerEntity> cacheManagerMap = new ConcurrentHashMap<>();
 
     public CachedModuleEngine(Application application) {
         super(application);
@@ -81,7 +74,7 @@ public class CachedModuleEngine extends ModuleEngine {
         // 设置缓存管理器
         AnyValue[] configs = application.getAppConfig().getAnyValues(CONFIG_NAME);
         if (configs == null || configs.length == 0) {
-            configs = new AnyValue[] {new AnyValueWriter()};
+            configs = new AnyValue[] {AnyValue.create()};
         }
         Map<String, AnyValue> configMap = new HashMap<>();
         for (AnyValue config : configs) {
@@ -92,94 +85,8 @@ public class CachedModuleEngine extends ModuleEngine {
             }
             configMap.put(name, config);
         }
-        this.resourceFactory.register(new ResourceTypeLoader() {
-
-            @Override
-            public Object load(
-                    ResourceFactory rf,
-                    String srcResourceName,
-                    Object srcObj,
-                    String resourceName,
-                    Field field,
-                    Object attachment) {
-                try {
-                    CachedManager manager = rf.find(resourceName, CachedManager.class);
-                    if (manager != null) {
-                        return manager;
-                    }
-                    AnyValue config = configMap.get(resourceName);
-                    if (config == null) {
-                        throw new RedkaleException("Not found " + CachedManager.class.getSimpleName() + "(name='"
-                                + resourceName + "') config");
-                    }
-                    manager = createManager(config);
-                    if (manager != null) {
-                        rf.register(resourceName, CachedManager.class, manager);
-                        cacheManagerMap.put(resourceName, new ManagerEntity(manager, config));
-                        if (!application.isCompileMode()) {
-                            rf.inject(manager);
-                            if (manager instanceof Service) {
-                                ((Service) manager).init(config);
-                            }
-                        }
-                    }
-                    return manager;
-                } catch (Exception e) {
-                    logger.log(Level.SEVERE, CachedManager.class.getSimpleName() + " inject error", e);
-                    throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
-                }
-            }
-
-            @Override
-            public Type resourceType() {
-                return CachedManager.class;
-            }
-        });
-
-        ConcurrentHashMap<String, CachedKeyGenerator> generatorMap = new ConcurrentHashMap<>();
-        this.resourceFactory.register(new ResourceTypeLoader() {
-
-            @Override
-            public Object load(
-                    ResourceFactory rf,
-                    String srcResourceName,
-                    Object srcObj,
-                    String resourceName,
-                    Field field,
-                    Object attachment) {
-                try {
-                    CachedKeyGenerator generator = rf.find(resourceName, CachedKeyGenerator.class);
-                    if (generator != null) {
-                        return generator;
-                    }
-                    generator = generatorMap.computeIfAbsent(resourceName, n -> {
-                        for (CachedKeyGenerator instance :
-                                ServiceLoader.load(CachedKeyGenerator.class, application.getClassLoader())) {
-                            if (Objects.equals(n, instance.name())) {
-                                rf.inject(instance);
-                                if (instance instanceof Service) {
-                                    ((Service) instance).init(null);
-                                }
-                                return instance;
-                            }
-                        }
-                        return null;
-                    });
-                    if (generator != null) {
-                        rf.register(resourceName, CachedKeyGenerator.class, generator);
-                    }
-                    return generator;
-                } catch (Exception e) {
-                    logger.log(Level.SEVERE, CachedKeyGenerator.class.getSimpleName() + " inject error", e);
-                    throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
-                }
-            }
-
-            @Override
-            public Type resourceType() {
-                return CachedKeyGenerator.class;
-            }
-        });
+        this.resourceFactory.register(new CachedManagerLoader(this, configMap));
+        this.resourceFactory.register(new CachedKeyGeneratorLoader(this));
     }
 
     /**
@@ -198,7 +105,7 @@ public class CachedModuleEngine extends ModuleEngine {
         }
     }
 
-    private CachedManager createManager(AnyValue conf) {
+    protected CachedManager createManager(AnyValue conf) {
         Iterator<CachedManagerProvider> it = ServiceLoader.load(
                         CachedManagerProvider.class, application.getClassLoader())
                 .iterator();

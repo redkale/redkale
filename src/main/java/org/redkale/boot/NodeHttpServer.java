@@ -5,8 +5,6 @@
  */
 package org.redkale.boot;
 
-import static org.redkale.boot.Application.RESNAME_SNCP_ADDRESS;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.*;
@@ -16,11 +14,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 import org.redkale.annotation.*;
-import org.redkale.asm.AsmMethodBoost;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.cluster.spi.ClusterAgent;
-import org.redkale.inject.ResourceFactory;
-import org.redkale.inject.ResourceTypeLoader;
 import org.redkale.mq.spi.MessageAgent;
 import org.redkale.net.*;
 import org.redkale.net.http.*;
@@ -124,7 +119,7 @@ public class NodeHttpServer extends NodeServer {
     @Override
     protected void loadService(ClassFilter<? extends Service> serviceFilter) throws Exception {
         super.loadService(serviceFilter);
-        initWebSocketService();
+        resourceFactory.register(new NodeWebSocketNodeLoader(this));
     }
 
     @Override
@@ -140,105 +135,6 @@ public class NodeHttpServer extends NodeServer {
         if (httpServer != null) {
             loadHttpServlet(servletFilter);
         }
-    }
-
-    private void initWebSocketService() {
-        final NodeServer self = this;
-        final ResourceFactory regFactory = application.getResourceFactory();
-        resourceFactory.register(new ResourceTypeLoader() {
-
-            @Override
-            public Object load(
-                    ResourceFactory rf,
-                    String srcResourceName,
-                    Object srcObj,
-                    String resourceName,
-                    Field field,
-                    Object attachment) { // 主要用于单点的服务
-                try {
-                    if (!(srcObj instanceof WebSocketServlet)) {
-                        return null;
-                    }
-                    ResourceTypeLoader loader = null;
-                    ResourceFactory sncpResFactory = null;
-                    for (NodeServer ns : application.servers) {
-                        if (!ns.isSNCP()) {
-                            continue;
-                        }
-                        sncpResFactory = ns.resourceFactory;
-                        loader = sncpResFactory.findTypeLoader(WebSocketNode.class, field);
-                        if (loader != null) {
-                            break;
-                        }
-                    }
-                    Service nodeService = null;
-                    if (loader != null) {
-                        nodeService = (Service)
-                                loader.load(sncpResFactory, srcResourceName, srcObj, resourceName, field, attachment);
-                    }
-                    regFactory.lock();
-                    try {
-                        if (nodeService == null) {
-                            nodeService = (Service) rf.find(resourceName, WebSocketNode.class);
-                        }
-                        if (sncpResFactory != null
-                                && resourceFactory.find(RESNAME_SNCP_ADDRESS, String.class) == null) {
-                            resourceFactory.register(
-                                    RESNAME_SNCP_ADDRESS,
-                                    InetSocketAddress.class,
-                                    sncpResFactory.find(RESNAME_SNCP_ADDRESS, InetSocketAddress.class));
-                            resourceFactory.register(
-                                    RESNAME_SNCP_ADDRESS,
-                                    SocketAddress.class,
-                                    sncpResFactory.find(RESNAME_SNCP_ADDRESS, SocketAddress.class));
-                            resourceFactory.register(
-                                    RESNAME_SNCP_ADDRESS,
-                                    String.class,
-                                    sncpResFactory.find(RESNAME_SNCP_ADDRESS, String.class));
-                        }
-                        if (nodeService == null) {
-                            MessageAgent messageAgent = null;
-                            try {
-                                Field c = WebSocketServlet.class.getDeclaredField("messageAgent");
-                                RedkaleClassLoader.putReflectionField("messageAgent", c);
-                                c.setAccessible(true);
-                                messageAgent = (MessageAgent) c.get(srcObj);
-                            } catch (Exception ex) {
-                                logger.log(Level.WARNING, "WebSocketServlet getMessageAgent error", ex);
-                            }
-                            AsmMethodBoost methodBoost =
-                                    application.createAsmMethodBoost(false, WebSocketNodeService.class);
-                            nodeService = Sncp.createLocalService(
-                                    serverClassLoader,
-                                    resourceName,
-                                    WebSocketNodeService.class,
-                                    methodBoost,
-                                    application.getResourceFactory(),
-                                    application.getSncpRpcGroups(),
-                                    sncpClient,
-                                    messageAgent,
-                                    (String) null,
-                                    (AnyValue) null);
-                            regFactory.register(resourceName, WebSocketNode.class, nodeService);
-                        }
-                        resourceFactory.inject(resourceName, nodeService, self);
-                        field.set(srcObj, nodeService);
-                        logger.fine("Load Service " + nodeService);
-                        return nodeService;
-                    } finally {
-                        regFactory.unlock();
-                    }
-                } catch (Exception e) {
-                    logger.log(Level.SEVERE, "WebSocketNode inject error", e);
-                    throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
-                }
-            }
-
-            @Override
-            public Type resourceType() {
-                return WebSocketNode.class;
-            }
-        });
     }
 
     @SuppressWarnings("unchecked")

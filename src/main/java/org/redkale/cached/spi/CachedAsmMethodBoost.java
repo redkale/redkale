@@ -233,6 +233,7 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
                 }
             }
         }
+
         actionMap.forEach((field, action) -> {
             try {
                 resourceFactory.inject(action);

@@ -38,6 +38,18 @@ public abstract class ModuleEngine {
         this.environment = Objects.requireNonNull(application.getEnvironment());
     }
 
+    public final ResourceFactory getResourceFactory() {
+        return resourceFactory;
+    }
+
+    public final Environment getEnvironment() {
+        return environment;
+    }
+
+    public final Application getApplication() {
+        return application;
+    }
+
     /**
      * 判断模块的配置项合并策略， 返回null表示模块不识别此配置项
      *
