@@ -1,28 +1,31 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
+*/
+
 package org.redkale.net.http;
 
-import java.lang.annotation.*;
-import static java.lang.annotation.ElementType.*;
-import static java.lang.annotation.RetentionPolicy.*;
+import java.lang.annotation.Documented;
+import static java.lang.annotation.ElementType.METHOD;
+import java.lang.annotation.Repeatable;
+import java.lang.annotation.Retention;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.lang.annotation.Target;
 
 /**
- * 只能依附在Service实现类的public方法上，且方法如果throws只能是IOException <br>
- * value默认为"/" + Service的类名去掉Service字样的小写字符串 (如HelloService，的默认路径为/hello)。 <br>
+ * DELETE方法版{@link org.redkale.net.http.RestMapping}
  *
  * <p>详情见: https://redkale.org
  *
+ * @since 2.8.0
+ * @org.redkale.net.http.RestMapping
  * @see org.redkale.net.http.RestService
  * @author zhangjx
  */
 @Documented
 @Target({METHOD})
 @Retention(RUNTIME)
-@Repeatable(RestMapping.RestMappings.class)
-public @interface RestMapping {
+@Repeatable(RestDeleteMapping.RestDeleteMappings.class)
+public @interface RestDeleteMapping {
 
     /**
      * 是否屏蔽该方法进行HttpMapping转换
@@ -80,18 +83,11 @@ public @interface RestMapping {
      */
     String example() default "";
 
-    /**
-     * 允许方法(不区分大小写),如:GET/POST/PUT,为空表示允许所有方法, 对应&#64;HttpMapping.methods
-     *
-     * @return String[]
-     */
-    String[] methods() default {};
-
     @Documented
     @Target({METHOD})
     @Retention(RUNTIME)
-    @interface RestMappings {
+    @interface RestDeleteMappings {
 
-        RestMapping[] value();
+        RestDeleteMapping[] value();
     }
 }

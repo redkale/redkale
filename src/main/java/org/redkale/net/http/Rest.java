@@ -5,23 +5,20 @@
  */
 package org.redkale.net.http;
 
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
-import static org.redkale.util.Utility.isEmpty;
-
 import java.io.*;
 import java.lang.annotation.*;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.reflect.*;
 import java.net.InetSocketAddress;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.CompletionStage;
 import org.redkale.annotation.*;
-import org.redkale.annotation.ClassDepends;
 import org.redkale.annotation.Comment;
 import org.redkale.asm.*;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
@@ -33,6 +30,7 @@ import org.redkale.service.*;
 import org.redkale.source.Flipper;
 import org.redkale.util.*;
 import org.redkale.util.RedkaleClassLoader.DynBytesClassLoader;
+import static org.redkale.util.Utility.isEmpty;
 
 /**
  * 详情见: https://redkale.org
@@ -1349,20 +1347,11 @@ public final class Rest {
                         continue;
                     }
 
-                    RestMapping[] mappings = method.getAnnotationsByType(RestMapping.class);
-                    if (!controller.autoMapping() && mappings.length < 1) {
+                    List<MappingAnn> mappings = MappingAnn.paraseMappingAnns(controller, method);
+                    if (mappings == null) {
                         continue;
                     }
-                    boolean ignore = false;
-                    for (RestMapping mapping : mappings) {
-                        if (mapping.ignore()) {
-                            ignore = true;
-                            break;
-                        }
-                    }
-                    if (ignore) {
-                        continue;
-                    }
+
                     java.lang.reflect.Type[] ptypes =
                             TypeToken.getGenericType(method.getGenericParameterTypes(), serviceType);
                     for (java.lang.reflect.Type t : ptypes) {
@@ -1378,14 +1367,19 @@ public final class Rest {
                                 + ", serviceType is " + serviceType.getName());
                     }
                     retvalTypes.add(rtype);
-                    if (mappings.length == 0) { // 没有Mapping，设置一个默认值
+                    if (mappings.isEmpty()) { // 没有Mapping，设置一个默认值
                         MappingEntry entry = new MappingEntry(
-                                serRpcOnly, methodIdex, parentNonBlocking, null, bigModuleName, method);
+                                serRpcOnly,
+                                methodIdex,
+                                parentNonBlocking,
+                                new MappingAnn(method, MappingEntry.DEFAULT__MAPPING),
+                                bigModuleName,
+                                method);
                         entrys.add(entry);
                     } else {
-                        for (RestMapping mapping : mappings) {
+                        for (MappingAnn ann : mappings) {
                             MappingEntry entry = new MappingEntry(
-                                    serRpcOnly, methodIdex, parentNonBlocking, mapping, defModuleName, method);
+                                    serRpcOnly, methodIdex, parentNonBlocking, ann, defModuleName, method);
                             entrys.add(entry);
                         }
                     }
@@ -1920,21 +1914,10 @@ public final class Rest {
                 continue;
             }
 
-            RestMapping[] mappings = method.getAnnotationsByType(RestMapping.class);
-            if (!controller.autoMapping() && mappings.length < 1) {
+            List<MappingAnn> mappings = MappingAnn.paraseMappingAnns(controller, method);
+            if (mappings == null) {
                 continue;
             }
-            boolean ignore = false;
-            for (RestMapping mapping : mappings) {
-                if (mapping.ignore()) {
-                    ignore = true;
-                    break;
-                }
-            }
-            if (ignore) {
-                continue;
-            }
-
             Class[] extypes = method.getExceptionTypes();
             if (extypes.length > 0) {
                 for (Class exp : extypes) {
@@ -1958,18 +1941,23 @@ public final class Rest {
                         + ", serviceType is " + serviceType.getName());
             }
             retvalTypes.add(rtype);
-            if (mappings.length == 0) { // 没有Mapping，设置一个默认值
-                MappingEntry entry =
-                        new MappingEntry(serRpcOnly, methodidex, parentNonBlocking, null, bigModuleName, method);
+            if (mappings.isEmpty()) { // 没有Mapping，设置一个默认值
+                MappingEntry entry = new MappingEntry(
+                        serRpcOnly,
+                        methodidex,
+                        parentNonBlocking,
+                        new MappingAnn(method, MappingEntry.DEFAULT__MAPPING),
+                        bigModuleName,
+                        method);
                 if (entrys.contains(entry)) {
                     throw new RestException(serviceType.getName() + " on " + method.getName() + " 's mapping("
                             + entry.name + ") is repeat");
                 }
                 entrys.add(entry);
             } else {
-                for (RestMapping mapping : mappings) {
+                for (MappingAnn ann : mappings) {
                     MappingEntry entry =
-                            new MappingEntry(serRpcOnly, methodidex, parentNonBlocking, mapping, defModuleName, method);
+                            new MappingEntry(serRpcOnly, methodidex, parentNonBlocking, ann, defModuleName, method);
                     if (entrys.contains(entry)) {
                         throw new RestException(serviceType.getName() + " on " + method.getName() + " 's mapping("
                                 + entry.name + ") is repeat");
@@ -4373,9 +4361,229 @@ public final class Rest {
         return true;
     }
 
+    private static class MappingAnn {
+
+        public final boolean ignore;
+
+        public final String name;
+
+        public final String example;
+
+        public final String comment;
+
+        public final boolean rpcOnly;
+
+        public final boolean auth;
+
+        public final int actionid;
+
+        public final int cacheSeconds;
+
+        public final String[] methods;
+
+        public MappingAnn(Method method, RestDeleteMapping mapping) {
+            this(
+                    mapping.ignore(),
+                    mapping.name().trim().isEmpty()
+                            ? method.getName()
+                            : mapping.name().trim(),
+                    mapping.example(),
+                    mapping.comment(),
+                    mapping.rpcOnly(),
+                    mapping.auth(),
+                    mapping.actionid(),
+                    mapping.cacheSeconds(),
+                    new String[] {"DELETE"});
+        }
+
+        public MappingAnn(Method method, RestPatchMapping mapping) {
+            this(
+                    mapping.ignore(),
+                    mapping.name().trim().isEmpty()
+                            ? method.getName()
+                            : mapping.name().trim(),
+                    mapping.example(),
+                    mapping.comment(),
+                    mapping.rpcOnly(),
+                    mapping.auth(),
+                    mapping.actionid(),
+                    mapping.cacheSeconds(),
+                    new String[] {"PATCH"});
+        }
+
+        public MappingAnn(Method method, RestPutMapping mapping) {
+            this(
+                    mapping.ignore(),
+                    mapping.name().trim().isEmpty()
+                            ? method.getName()
+                            : mapping.name().trim(),
+                    mapping.example(),
+                    mapping.comment(),
+                    mapping.rpcOnly(),
+                    mapping.auth(),
+                    mapping.actionid(),
+                    mapping.cacheSeconds(),
+                    new String[] {"PUT"});
+        }
+
+        public MappingAnn(Method method, RestPostMapping mapping) {
+            this(
+                    mapping.ignore(),
+                    mapping.name().trim().isEmpty()
+                            ? method.getName()
+                            : mapping.name().trim(),
+                    mapping.example(),
+                    mapping.comment(),
+                    mapping.rpcOnly(),
+                    mapping.auth(),
+                    mapping.actionid(),
+                    mapping.cacheSeconds(),
+                    new String[] {"POST"});
+        }
+
+        public MappingAnn(Method method, RestGetMapping mapping) {
+            this(
+                    mapping.ignore(),
+                    mapping.name().trim().isEmpty()
+                            ? method.getName()
+                            : mapping.name().trim(),
+                    mapping.example(),
+                    mapping.comment(),
+                    mapping.rpcOnly(),
+                    mapping.auth(),
+                    mapping.actionid(),
+                    mapping.cacheSeconds(),
+                    new String[] {"GET"});
+        }
+
+        public MappingAnn(Method method, RestMapping mapping) {
+            this(
+                    mapping.ignore(),
+                    mapping.name().trim().isEmpty()
+                            ? method.getName()
+                            : mapping.name().trim(),
+                    mapping.example(),
+                    mapping.comment(),
+                    mapping.rpcOnly(),
+                    mapping.auth(),
+                    mapping.actionid(),
+                    mapping.cacheSeconds(),
+                    mapping.methods());
+        }
+
+        public MappingAnn(
+                boolean ignore,
+                String name,
+                String example,
+                String comment,
+                boolean rpcOnly,
+                boolean auth,
+                int actionid,
+                int cacheSeconds,
+                String[] methods) {
+            this.ignore = ignore;
+            this.name = name;
+            this.example = example;
+            this.comment = comment;
+            this.rpcOnly = rpcOnly;
+            this.auth = auth;
+            this.actionid = actionid;
+            this.cacheSeconds = cacheSeconds;
+            this.methods = methods;
+        }
+
+        public static List<MappingAnn> paraseMappingAnns(RestService controller, Method method) {
+            RestMapping[] mappings = method.getAnnotationsByType(RestMapping.class);
+            RestGetMapping[] mappings2 = method.getAnnotationsByType(RestGetMapping.class);
+            RestPostMapping[] mappings3 = method.getAnnotationsByType(RestPostMapping.class);
+            RestPutMapping[] mappings4 = method.getAnnotationsByType(RestPutMapping.class);
+            RestPatchMapping[] mappings5 = method.getAnnotationsByType(RestPatchMapping.class);
+            RestDeleteMapping[] mappings6 = method.getAnnotationsByType(RestDeleteMapping.class);
+            int len = mappings.length
+                    + mappings2.length
+                    + mappings3.length
+                    + mappings4.length
+                    + mappings5.length
+                    + mappings6.length;
+            if (!controller.autoMapping() && len < 1) {
+                return null;
+            }
+            boolean ignore = false;
+            for (RestMapping mapping : mappings) {
+                if (mapping.ignore()) {
+                    ignore = true;
+                    break;
+                }
+            }
+            if (!ignore) {
+                for (RestGetMapping mapping : mappings2) {
+                    if (mapping.ignore()) {
+                        ignore = true;
+                        break;
+                    }
+                }
+            }
+            if (!ignore) {
+                for (RestPostMapping mapping : mappings3) {
+                    if (mapping.ignore()) {
+                        ignore = true;
+                        break;
+                    }
+                }
+            }
+            if (!ignore) {
+                for (RestPutMapping mapping : mappings4) {
+                    if (mapping.ignore()) {
+                        ignore = true;
+                        break;
+                    }
+                }
+            }
+            if (!ignore) {
+                for (RestPatchMapping mapping : mappings5) {
+                    if (mapping.ignore()) {
+                        ignore = true;
+                        break;
+                    }
+                }
+            }
+            if (!ignore) {
+                for (RestDeleteMapping mapping : mappings6) {
+                    if (mapping.ignore()) {
+                        ignore = true;
+                        break;
+                    }
+                }
+            }
+            if (ignore) {
+                return null;
+            }
+            List<MappingAnn> list = new ArrayList<>();
+            for (RestMapping mapping : mappings) {
+                list.add(new MappingAnn(method, mapping));
+            }
+            for (RestGetMapping mapping : mappings2) {
+                list.add(new MappingAnn(method, mapping));
+            }
+            for (RestPostMapping mapping : mappings3) {
+                list.add(new MappingAnn(method, mapping));
+            }
+            for (RestPutMapping mapping : mappings4) {
+                list.add(new MappingAnn(method, mapping));
+            }
+            for (RestPatchMapping mapping : mappings5) {
+                list.add(new MappingAnn(method, mapping));
+            }
+            for (RestDeleteMapping mapping : mappings6) {
+                list.add(new MappingAnn(method, mapping));
+            }
+            return list;
+        }
+    }
+
     private static class MappingEntry implements Comparable<MappingEntry> {
 
-        private static final RestMapping DEFAULT__MAPPING;
+        static final RestMapping DEFAULT__MAPPING;
 
         static {
             try {
@@ -4414,27 +4622,20 @@ public final class Rest {
                 final boolean serRpcOnly,
                 int methodIndex,
                 Boolean typeNonBlocking,
-                RestMapping mapping,
+                MappingAnn mapping,
                 final String defModuleName,
                 Method method) {
-            if (mapping == null) {
-                mapping = DEFAULT__MAPPING;
-            }
             this.methodIdx = methodIndex;
-            this.ignore = mapping.ignore();
-            String n = mapping.name();
-            if (n.isEmpty()) {
-                n = method.getName();
-            }
-            this.name = n.trim();
-            this.example = mapping.example();
             this.mappingMethod = method;
-            this.methods = mapping.methods();
-            this.auth = mapping.auth();
-            this.rpcOnly = serRpcOnly || mapping.rpcOnly();
-            this.actionid = mapping.actionid();
-            this.cacheSeconds = mapping.cacheSeconds();
-            this.comment = mapping.comment();
+            this.ignore = mapping.ignore;
+            this.name = mapping.name;
+            this.example = mapping.example;
+            this.methods = mapping.methods;
+            this.auth = mapping.auth;
+            this.rpcOnly = serRpcOnly || mapping.rpcOnly;
+            this.actionid = mapping.actionid;
+            this.cacheSeconds = mapping.cacheSeconds;
+            this.comment = mapping.comment;
             boolean pound = false;
             Parameter[] params = method.getParameters();
             for (Parameter param : params) {
@@ -4479,21 +4680,21 @@ public final class Rest {
 
         public final Method mappingMethod;
 
-        public final boolean ignore;
-
         public final String newMethodName;
 
         public final String newActionClassName;
+
+        public final boolean nonBlocking;
+
+        public final boolean existsPound; // 是否包含#的参数
+
+        public final boolean ignore;
 
         public final String name;
 
         public final String example;
 
         public final String comment;
-
-        public final String[] methods;
-
-        public final boolean nonBlocking;
 
         public final boolean rpcOnly;
 
@@ -4503,7 +4704,7 @@ public final class Rest {
 
         public final int cacheSeconds;
 
-        public final boolean existsPound; // 是否包含#的参数
+        public final String[] methods;
 
         String mappingurl; // 在生成方法时赋值， 供 _createRestActionEntry 使用
 
