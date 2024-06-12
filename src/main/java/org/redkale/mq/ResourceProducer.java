@@ -30,7 +30,7 @@ public @interface ResourceProducer {
     String mq() default "";
 
     /**
-     * 是否必须要加载，为ture时若mq()值对应{@link org.redkale.mq.MessageAgent}对象不存在的情况下会抛异常
+     * 是否必须要加载，为ture时若mq()值对应{@link org.redkale.mq.spi.MessageAgent}对象不存在的情况下会抛异常
      *
      * @return 是否必须要加载
      */
