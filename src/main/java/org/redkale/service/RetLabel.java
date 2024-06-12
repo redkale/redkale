@@ -49,7 +49,7 @@ public @interface RetLabel {
     public static interface RetInfoTransfer extends BiFunction<Integer, String, String> {}
 
     public abstract static class RetLoader {
-        
+
         private RetLoader() {
             throw new IllegalStateException();
         }
