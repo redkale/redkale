@@ -216,14 +216,14 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     public static Convert findConvert(ConvertType type) {
         Objects.requireNonNull(type);
-        if (type == ConvertType.JSON) {
+        if (type == ConvertType.JSON || type.contains(ConvertType.JSON)) {
             return JsonConvert.root();
         }
-        if (type == ConvertType.BSON) {
-            return BsonConvert.root();
-        }
-        if (type == ConvertType.PROTOBUF) {
+        if (type == ConvertType.PROTOBUF || type.contains(ConvertType.PROTOBUF)) {
             return ProtobufConvert.root();
+        }
+        if (type == ConvertType.BSON || type.contains(ConvertType.BSON)) {
+            return BsonConvert.root();
         }
 
         Iterator<ConvertProvider> it = ServiceLoader.load(ConvertProvider.class).iterator();
@@ -232,7 +232,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             ConvertProvider cl = it.next();
             RedkaleClassLoader.putReflectionPublicConstructors(
                     cl.getClass(), cl.getClass().getName());
-            if (cl.type() == ConvertType.PROTOBUF) {
+            if (type.contains(cl.type())) {
                 return cl.convert();
             }
         }

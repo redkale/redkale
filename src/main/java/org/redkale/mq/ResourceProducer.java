@@ -23,7 +23,7 @@ import org.redkale.convert.ConvertType;
 public @interface ResourceProducer {
 
     /**
-     * {@link org.redkale.mq.MessageAgent}对象对应名称
+     * {@link org.redkale.mq.spi.MessageAgent}对象对应名称
      *
      * @return MQ名称
      */
