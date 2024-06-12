@@ -38,7 +38,7 @@ public @interface ResourceProducer {
 
     /**
      * 消息序列化类型
-     * 
+     *
      * @return  序列化类型
      */
     ConvertType convertType() default ConvertType.JSON;

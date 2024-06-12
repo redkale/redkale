@@ -30,7 +30,7 @@ public @interface ResourceConsumer {
      * @return MQ名称
      */
     String mq() default "";
-    
+
     /**
      * MQ客户端分组名称
      *
@@ -40,14 +40,14 @@ public @interface ResourceConsumer {
 
     /**
      * 监听的topic
-     * 
+     *
      * @return  topic
      */
     String[] topics();
 
     /**
      * 消息序列化类型
-     * 
+     *
      * @return  序列化类型
      */
     ConvertType convertType() default ConvertType.JSON;
