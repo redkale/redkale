@@ -520,19 +520,19 @@ public final class EntityInfo<T> {
         }
         this.ddlColumns = ddls.toArray(new EntityColumn[ddls.size()]);
         this.attributes = attributeMap.values().toArray(new Attribute[attributeMap.size()]);
-        this.primaryColumn = Utility.find(this.ddlColumns, c -> c.field.equals(primary.field()));
+        this.primaryColumn = Utility.find(this.ddlColumns, c -> c.getField().equals(primary.field()));
         this.primaryColumnOneArray = new EntityColumn[] {this.primaryColumn};
         this.insertAttributes = insertAttrs.toArray(new Attribute[insertAttrs.size()]);
         this.insertColumns = new EntityColumn[this.insertAttributes.length];
         for (int i = 0; i < this.insertAttributes.length; i++) {
             String field = this.insertAttributes[i].field();
-            this.insertColumns[i] = Utility.find(this.ddlColumns, c -> c.field.equals(field));
+            this.insertColumns[i] = Utility.find(this.ddlColumns, c -> c.getField().equals(field));
         }
         this.updateAttributes = updateAttrs.toArray(new Attribute[updateAttrs.size()]);
         this.updateColumns = new EntityColumn[this.updateAttributes.length];
         for (int i = 0; i < this.updateAttributes.length; i++) {
             String field = this.updateAttributes[i].field();
-            this.updateColumns[i] = Utility.find(this.ddlColumns, c -> c.field.equals(field));
+            this.updateColumns[i] = Utility.find(this.ddlColumns, c -> c.getField().equals(field));
         }
         this.updateEntityAttributes = Utility.append(this.updateAttributes, this.primary);
         this.updateEntityColumns = Utility.append(this.updateColumns, this.primaryColumn);
@@ -578,7 +578,7 @@ public final class EntityInfo<T> {
         this.queryColumns = new EntityColumn[this.queryAttributes.length];
         for (int i = 0; i < this.queryAttributes.length; i++) {
             String field = this.queryAttributes[i].field();
-            this.queryColumns[i] = Utility.find(this.ddlColumns, c -> c.field.equals(field));
+            this.queryColumns[i] = Utility.find(this.ddlColumns, c -> c.getField().equals(field));
         }
         this.builder = new EntityBuilder<>(
                 type,
@@ -1775,78 +1775,4 @@ public final class EntityInfo<T> {
         return getClass().getSimpleName() + "(" + type.getName() + ")@" + Objects.hashCode(this);
     }
 
-    public static interface DataResultSetRow {
-
-        // 可以为空
-        public EntityInfo getEntityInfo();
-
-        // index从1开始
-        public Object getObject(int index);
-
-        public Object getObject(String columnLabel);
-
-        // index从1开始
-        default <T> Serializable getObject(Attribute<T, Serializable> attr, int index, String columnLabel) {
-            return DataResultSet.getRowColumnValue(this, attr, index, columnLabel);
-        }
-
-        /**
-         * 判断当前行值是否为null
-         *
-         * @return boolean
-         */
-        public boolean wasNull();
-
-        /**
-         * 获取字段名集合，尽量不要多次调用
-         *
-         * @return List
-         */
-        public List<String> getColumnLabels();
-    }
-
-    public static class EntityColumn {
-
-        public final boolean primary; // 是否主键
-
-        public final String field;
-
-        public final String column;
-
-        public final Class type;
-
-        public final String comment;
-
-        public final boolean nullable;
-
-        public final boolean unique;
-
-        public final int length;
-
-        public final int precision;
-
-        public final int scale;
-
-        protected EntityColumn(boolean primary, Column col, String name, Class type, Comment comment) {
-            this.primary = primary;
-            this.field = name;
-            this.column = col == null || col.name().isEmpty() ? name : col.name();
-            this.type = type;
-            this.comment = (col == null || col.comment().isEmpty())
-                            && comment != null
-                            && !comment.value().isEmpty()
-                    ? comment.value()
-                    : (col == null ? "" : col.comment());
-            this.nullable = col != null && col.nullable();
-            this.unique = col != null && col.unique();
-            this.length = col == null ? 255 : col.length();
-            this.precision = col == null ? 0 : col.precision();
-            this.scale = col == null ? 0 : col.scale();
-        }
-
-        @Override
-        public String toString() {
-            return JsonConvert.root().convertTo(this);
-        }
-    }
 }

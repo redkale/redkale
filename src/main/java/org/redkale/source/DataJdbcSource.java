@@ -2109,7 +2109,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             final DataResultSet set = createDataResultSet(info, prestmt.executeQuery());
             Serializable val = defValue;
             if (set.next()) {
-                val = info.getBuilder().getFieldValue(attr, set, 1);
+                val = info.getBuilder().getFieldValue(set, attr, 1);
             }
             set.close();
             conn.offerQueryStatement(prestmt);
@@ -2161,7 +2161,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         final DataResultSet set = createDataResultSet(info, prestmt.executeQuery());
                         Serializable val = defValue;
                         if (set.next()) {
-                            val = info.getBuilder().getFieldValue(attr, set, 1);
+                            val = info.getBuilder().getFieldValue(set, attr, 1);
                         }
                         set.close();
                         conn.offerQueryStatement(prestmt);

@@ -218,7 +218,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
      * @param row ResultSet
      * @return 对象
      */
-    protected <T> T getEntityValue(EntityInfo<T> info, final SelectColumn sels, final EntityInfo.DataResultSetRow row) {
+    protected <T> T getEntityValue(EntityInfo<T> info, final SelectColumn sels, final DataResultSetRow row) {
         return info.getBuilder().getEntityValue(sels, row);
     }
 

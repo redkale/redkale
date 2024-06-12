@@ -43,85 +43,102 @@ import org.redkale.util.Attribute;
  * @author zhangjx
  * @since 2.5.0
  */
-public interface DataResultSet extends EntityInfo.DataResultSetRow {
+public interface DataResultSet extends DataResultSetRow {
 
     public boolean next();
 
     public void close();
 
-    public static Serializable formatColumnValue(Class t, Object o) {
-        return formatColumnValue(t, null, o);
+    /**
+     * 将对象转化成另一个类型对象
+     * @param type 类型
+     * @param o 数据库字段值
+     * @return  转换后对象
+     */
+    public static Serializable formatColumnValue(Class type, Object o) {
+        return formatColumnValue(type, null, o);
     }
 
-    public static Serializable formatColumnValue(Class t, Type genericType, Object o) {
-        if (t == byte[].class) {
+    /**
+     * 将对象转化成另一个类型对象
+     * @param type 类型
+     * @param genericType 泛型类型
+     * @param o 数据库字段值
+     * @return  转换后对象
+     */
+    public static Serializable formatColumnValue(Class type, Type genericType, Object o) {
+        if (type == byte[].class) {
             return (byte[]) o;
         } else {
-            if (t.isPrimitive()) {
+            if (type.isPrimitive()) {
                 if (o != null) {
-                    if (t == int.class) {
+                    if (type == int.class) {
                         o = ((Number) o).intValue();
-                    } else if (t == long.class) {
+                    } else if (type == long.class) {
                         o = ((Number) o).longValue();
-                    } else if (t == short.class) {
+                    } else if (type == short.class) {
                         o = ((Number) o).shortValue();
-                    } else if (t == float.class) {
+                    } else if (type == float.class) {
                         o = ((Number) o).floatValue();
-                    } else if (t == double.class) {
+                    } else if (type == double.class) {
                         o = ((Number) o).doubleValue();
-                    } else if (t == byte.class) {
+                    } else if (type == byte.class) {
                         o = ((Number) o).byteValue();
-                    } else if (t == char.class) {
+                    } else if (type == char.class) {
                         o = (char) ((Number) o).intValue();
-                    } else if (t == boolean.class) {
-                        o = (Boolean) o;
+                    } else if (type == boolean.class) {
+                        if (o instanceof Number) {
+                            o = ((Number) o).intValue() != 0;
+                        }
                     }
-                } else if (t == int.class) {
+                } else if (type == int.class) {
                     o = 0;
-                } else if (t == long.class) {
+                } else if (type == long.class) {
                     o = 0L;
-                } else if (t == short.class) {
+                } else if (type == short.class) {
                     o = (short) 0;
-                } else if (t == float.class) {
+                } else if (type == float.class) {
                     o = 0.0f;
-                } else if (t == double.class) {
+                } else if (type == double.class) {
                     o = 0.0d;
-                } else if (t == byte.class) {
+                } else if (type == byte.class) {
                     o = (byte) 0;
-                } else if (t == boolean.class) {
+                } else if (type == boolean.class) {
                     o = false;
-                } else if (t == char.class) {
+                } else if (type == char.class) {
                     o = (char) 0;
                 }
-            } else if (t == Integer.class) {
+            } else if (type == Integer.class) {
                 o = ((Number) o).intValue();
-            } else if (t == Long.class) {
+            } else if (type == Long.class) {
                 o = ((Number) o).longValue();
-            } else if (t == Short.class) {
+            } else if (type == Short.class) {
                 o = ((Number) o).shortValue();
-            } else if (t == Float.class) {
+            } else if (type == Float.class) {
                 o = ((Number) o).floatValue();
-            } else if (t == Double.class) {
+            } else if (type == Double.class) {
                 o = ((Number) o).doubleValue();
-            } else if (t == Byte.class) {
+            } else if (type == Byte.class) {
                 o = ((Number) o).byteValue();
-            } else if (t == Character.class) {
+            } else if (type == Character.class) {
                 o = (char) ((Number) o).intValue();
-            } else if (t == Boolean.class) {
-                o = (Boolean) o;
-            } else if (t == AtomicInteger.class) {
+            } else if (type == Boolean.class) {
+                if (o instanceof Number) {
+                    o = ((Number) o).intValue() != 0;
+                }
+            } else if (type == AtomicInteger.class) {
                 if (o != null) {
                     o = new AtomicInteger(((Number) o).intValue());
                 } else {
                     o = new AtomicInteger();
                 }
-            } else if (t == AtomicLong.class) {
+            } else if (type == AtomicLong.class) {
                 if (o != null) {
                     o = new AtomicLong(((Number) o).longValue());
                 } else {
                     o = new AtomicLong();
                 }
-            } else if (t == LongAdder.class) {
+            } else if (type == LongAdder.class) {
                 if (o != null) {
                     LongAdder v = new LongAdder();
                     v.add(((Number) o).longValue());
@@ -129,7 +146,7 @@ public interface DataResultSet extends EntityInfo.DataResultSetRow {
                 } else {
                     o = new LongAdder();
                 }
-            } else if (t == BigInteger.class) {
+            } else if (type == BigInteger.class) {
                 if (o != null && !(o instanceof BigInteger)) {
                     if (o instanceof byte[]) {
                         o = new BigInteger((byte[]) o);
@@ -137,7 +154,7 @@ public interface DataResultSet extends EntityInfo.DataResultSetRow {
                         o = new BigInteger(o.toString(), 10);
                     }
                 }
-            } else if (t == BigDecimal.class) {
+            } else if (type == BigDecimal.class) {
                 if (o != null && !(o instanceof BigDecimal)) {
                     if (o instanceof byte[]) {
                         o = new BigDecimal(new String((byte[]) o));
@@ -145,7 +162,7 @@ public interface DataResultSet extends EntityInfo.DataResultSetRow {
                         o = new BigDecimal(o.toString());
                     }
                 }
-            } else if (t == LocalDate.class) {
+            } else if (type == LocalDate.class) {
                 if (o != null && !(o instanceof LocalDate)) {
                     if (o instanceof java.sql.Date) {
                         o = ((java.sql.Date) o).toLocalDate();
@@ -153,7 +170,7 @@ public interface DataResultSet extends EntityInfo.DataResultSetRow {
                         o = ((java.sql.Timestamp) o).toLocalDateTime().toLocalDate();
                     }
                 }
-            } else if (t == LocalTime.class) {
+            } else if (type == LocalTime.class) {
                 if (o != null && !(o instanceof LocalTime)) {
                     if (o instanceof java.sql.Time) {
                         o = ((java.sql.Time) o).toLocalTime();
@@ -161,7 +178,7 @@ public interface DataResultSet extends EntityInfo.DataResultSetRow {
                         o = ((java.sql.Timestamp) o).toLocalDateTime().toLocalTime();
                     }
                 }
-            } else if (t == LocalDateTime.class) {
+            } else if (type == LocalDateTime.class) {
                 if (o != null && !(o instanceof LocalDateTime)) {
                     if (o instanceof java.sql.Date) {
                         o = ((java.sql.Date) o).toLocalDate().atStartOfDay();
@@ -169,7 +186,7 @@ public interface DataResultSet extends EntityInfo.DataResultSetRow {
                         o = ((java.sql.Timestamp) o).toLocalDateTime();
                     }
                 }
-            } else if (t == Instant.class) {
+            } else if (type == Instant.class) {
                 if (o != null && !(o instanceof Instant)) {
                     if (o instanceof java.sql.Date) {
                         o = ((java.sql.Date) o).toInstant();
@@ -179,7 +196,7 @@ public interface DataResultSet extends EntityInfo.DataResultSetRow {
                         o = ((java.sql.Timestamp) o).toInstant();
                     }
                 }
-            } else if (t == String.class) {
+            } else if (type == String.class) {
                 if (o == null) {
                     o = "";
                 } else if (o instanceof byte[]) {
@@ -187,17 +204,17 @@ public interface DataResultSet extends EntityInfo.DataResultSetRow {
                 } else {
                     o = o.toString();
                 }
-            } else if (o != null && !t.isAssignableFrom(o.getClass()) && o instanceof CharSequence) {
+            } else if (o != null && !type.isAssignableFrom(o.getClass()) && o instanceof CharSequence) {
                 o = ((CharSequence) o).length() == 0
                         ? null
-                        : JsonConvert.root().convertFrom(genericType == null ? t : genericType, o.toString());
+                        : JsonConvert.root().convertFrom(genericType == null ? type : genericType, o.toString());
             }
         }
         return (Serializable) o;
     }
 
     public static <T> Serializable getRowColumnValue(
-            final EntityInfo.DataResultSetRow row, Attribute<T, Serializable> attr, int index, String column) {
+            DataResultSetRow row, Attribute<T, Serializable> attr, int index, String column) {
         final Class t = attr.type();
         Serializable o = null;
         try {

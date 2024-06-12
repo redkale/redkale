@@ -10,7 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.redkale.annotation.Nullable;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.persistence.*;
-import org.redkale.source.EntityInfo.DataResultSetRow;
 import org.redkale.util.*;
 
 /**
@@ -30,7 +29,7 @@ public class EntityBuilder<T> {
 
     private static final ConcurrentHashMap<String, String> camelMap = new ConcurrentHashMap<>();
 
-    // 实体类名
+    // 实体或者JavaBean类名
     private final Class<T> type;
 
     // 是否Map类型的虚拟实体类
@@ -363,7 +362,7 @@ public class EntityBuilder<T> {
                     if (sqlFlag) {
                         attr.set(obj, getFieldValue(row, sqlCol));
                     } else {
-                        attr.set(obj, getFieldValue(attr, row, 0));
+                        attr.set(obj, getFieldValue(row, attr, 0));
                     }
                 }
             }
@@ -373,11 +372,11 @@ public class EntityBuilder<T> {
                 Attribute<T, Serializable> attr = this.constructorAttributes[i];
                 String sqlCol = getSQLColumn(null, attr.field());
                 if (sqlColumns.contains(sqlCol)) {
-                    cps[i] = getFieldValue(attr, row, 0);
+                    cps[i] = getFieldValue(row, attr, 0);
                 } else {
                     sqlCol = camelCaseColumn(sqlCol);
                     if (sqlColumns.contains(sqlCol)) {
-                        cps[i] = getFieldValue(attr, row, 0);
+                        cps[i] = getFieldValue(row, attr, 0);
                     }
                 }
             }
@@ -385,11 +384,11 @@ public class EntityBuilder<T> {
             for (Attribute<T, Serializable> attr : this.unconstructorAttributes) {
                 String sqlCol = getSQLColumn(null, attr.field());
                 if (sqlColumns.contains(sqlCol)) {
-                    attr.set(obj, getFieldValue(attr, row, 0));
+                    attr.set(obj, getFieldValue(row, attr, 0));
                 } else {
                     sqlCol = camelCaseColumn(sqlCol);
                     if (sqlColumns.contains(sqlCol)) {
-                        attr.set(obj, getFieldValue(attr, row, 0));
+                        attr.set(obj, getFieldValue(row, attr, 0));
                     }
                 }
             }
@@ -434,16 +433,16 @@ public class EntityBuilder<T> {
             Object[] cps = new Object[this.constructorParameters.length];
             for (int i = 0; i < this.constructorAttributes.length; i++) {
                 Attribute<T, Serializable> attr = this.constructorAttributes[i];
-                if (sels == null || sels.test(attr.field())) {
-                    cps[i] = getFieldValue(attr, row, 0);
+                if (sels.test(attr.field())) {
+                    cps[i] = getFieldValue(row, attr, 0);
                 }
             }
             obj = creator.create(cps);
             attrs = this.unconstructorAttributes;
         }
         for (Attribute<T, Serializable> attr : attrs) {
-            if (sels == null || sels.test(attr.field())) {
-                attr.set(obj, getFieldValue(attr, row, 0));
+            if (sels.test(attr.field())) {
+                attr.set(obj, getFieldValue(row, attr, 0));
             }
         }
         return obj;
@@ -500,7 +499,7 @@ public class EntityBuilder<T> {
                 if (attr == null) {
                     continue;
                 }
-                cps[i] = getFieldValue(attr, row, ++index);
+                cps[i] = getFieldValue(row, attr, ++index);
             }
             obj = creator.create(cps);
         }
@@ -509,7 +508,7 @@ public class EntityBuilder<T> {
                 if (attr == null) {
                     continue;
                 }
-                attr.set(obj, getFieldValue(attr, row, ++index));
+                attr.set(obj, getFieldValue(row, attr, ++index));
             }
         }
         return obj;
@@ -558,23 +557,23 @@ public class EntityBuilder<T> {
         return (Serializable) row.getObject(sqlColumn);
     }
 
-    protected Serializable getFieldValue(Attribute<T, Serializable> attr, final DataResultSetRow row, int index) {
+    protected Serializable getFieldValue(final DataResultSetRow row, Attribute<T, Serializable> attr, int index) {
         return row.getObject(attr, index, index > 0 ? null : this.getSQLColumn(null, attr.field()));
     }
 
     /**
      * 根据field字段名获取数据库对应的字段名
      *
-     * @param tabalis 表别名
-     * @param fieldname 字段名
+     * @param tabAlis 表别名
+     * @param fieldName 字段名
      * @return String
      */
-    public String getSQLColumn(String tabalis, String fieldname) {
+    public String getSQLColumn(@Nullable String tabAlis, String fieldName) {
         return this.aliasMap == null
-                ? (tabalis == null ? fieldname : (tabalis + '.' + fieldname))
-                : (tabalis == null
-                        ? aliasMap.getOrDefault(fieldname, fieldname)
-                        : (tabalis + '.' + aliasMap.getOrDefault(fieldname, fieldname)));
+                ? (tabAlis == null ? fieldName : (tabAlis + '.' + fieldName))
+                : (tabAlis == null
+                        ? aliasMap.getOrDefault(fieldName, fieldName)
+                        : (tabAlis + '.' + aliasMap.getOrDefault(fieldName, fieldName)));
     }
 
     public boolean hasConstructorAttribute() {

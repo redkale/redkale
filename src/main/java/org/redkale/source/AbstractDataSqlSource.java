@@ -24,7 +24,6 @@ import org.redkale.net.AsyncGroup;
 import org.redkale.persistence.Table;
 import org.redkale.service.Local;
 import static org.redkale.source.DataSources.*;
-import org.redkale.source.EntityInfo.EntityColumn;
 import org.redkale.util.*;
 import static org.redkale.util.Utility.isEmpty;
 
@@ -513,160 +512,160 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
                     ? info.getCreator().create()
                     : null;
             for (EntityColumn column : info.getDDLColumns()) {
-                if (column.primary) {
+                if (column.isPrimary()) {
                     primary = column;
                 }
-                String sqltype = "VARCHAR(" + column.length + ")";
-                String sqlnull = column.primary ? "NOT NULL" : "NULL";
-                if (column.type == boolean.class || column.type == Boolean.class) {
+                String sqltype = "VARCHAR(" + column.getLength() + ")";
+                String sqlnull = column.isPrimary() ? "NOT NULL" : "NULL";
+                if (column.getType() == boolean.class || column.getType() == Boolean.class) {
                     sqltype = "TINYINT(1)";
                     Boolean val = one == null
                             ? null
-                            : (Boolean) info.getAttribute(column.field).get(one);
+                            : (Boolean) info.getAttribute(column.getField()).get(one);
                     sqlnull = "NOT NULL DEFAULT " + (val != null && val ? 1 : 0);
-                } else if (column.type == byte.class || column.type == Byte.class) {
+                } else if (column.getType() == byte.class || column.getType() == Byte.class) {
                     sqltype = "TINYINT";
                     Number val = one == null
                             ? null
-                            : (Number) info.getAttribute(column.field).get(one);
+                            : (Number) info.getAttribute(column.getField()).get(one);
                     sqlnull = "NOT NULL DEFAULT " + (val == null ? 0 : val.byteValue());
-                } else if (column.type == short.class || column.type == Short.class) {
+                } else if (column.getType() == short.class || column.getType() == Short.class) {
                     sqltype = "SMALLINT";
                     Number val = one == null
                             ? null
-                            : (Number) info.getAttribute(column.field).get(one);
+                            : (Number) info.getAttribute(column.getField()).get(one);
                     sqlnull = "NOT NULL DEFAULT " + (val == null ? 0 : val);
-                } else if (column.type == char.class || column.type == Character.class) {
+                } else if (column.getType() == char.class || column.getType() == Character.class) {
                     sqltype = "SMALLINT UNSIGNED";
                     Number val = one == null
                             ? null
-                            : (Number) info.getAttribute(column.field).get(one);
+                            : (Number) info.getAttribute(column.getField()).get(one);
                     sqlnull = "NOT NULL DEFAULT " + (val == null ? 0 : val.intValue());
-                } else if (column.type == int.class
-                        || column.type == Integer.class
-                        || column.type == AtomicInteger.class) {
+                } else if (column.getType() == int.class
+                        || column.getType() == Integer.class
+                        || column.getType() == AtomicInteger.class) {
                     sqltype = "INT";
                     Number val = one == null
                             ? null
-                            : (Number) info.getAttribute(column.field).get(one);
+                            : (Number) info.getAttribute(column.getField()).get(one);
                     sqlnull = "NOT NULL DEFAULT " + (val == null ? 0 : val);
-                } else if (column.type == long.class
-                        || column.type == Long.class
-                        || column.type == AtomicLong.class
-                        || column.type == LongAdder.class) {
+                } else if (column.getType() == long.class
+                        || column.getType() == Long.class
+                        || column.getType() == AtomicLong.class
+                        || column.getType() == LongAdder.class) {
                     sqltype = "BIGINT";
                     Number val = one == null
                             ? null
-                            : (Number) info.getAttribute(column.field).get(one);
+                            : (Number) info.getAttribute(column.getField()).get(one);
                     sqlnull = "NOT NULL DEFAULT " + (val == null ? 0 : val);
-                } else if (column.type == float.class || column.type == Float.class) {
+                } else if (column.getType() == float.class || column.getType() == Float.class) {
                     sqltype = "FLOAT";
-                    if (column.precision > 0) {
-                        sqltype += "(" + column.precision + "," + column.scale + ")";
+                    if (column.getPrecision() > 0) {
+                        sqltype += "(" + column.getPrecision() + "," + column.getScale() + ")";
                     }
                     Number val = one == null
                             ? null
-                            : (Number) info.getAttribute(column.field).get(one);
+                            : (Number) info.getAttribute(column.getField()).get(one);
                     sqlnull = "NOT NULL DEFAULT " + (val == null ? 0 : val);
-                } else if (column.type == double.class || column.type == Double.class) {
+                } else if (column.getType() == double.class || column.getType() == Double.class) {
                     sqltype = "DOUBLE";
-                    if (column.precision > 0) {
-                        sqltype += "(" + column.precision + "," + column.scale + ")";
+                    if (column.getPrecision() > 0) {
+                        sqltype += "(" + column.getPrecision() + "," + column.getScale() + ")";
                     }
                     Number val = one == null
                             ? null
-                            : (Number) info.getAttribute(column.field).get(one);
+                            : (Number) info.getAttribute(column.getField()).get(one);
                     sqlnull = "NOT NULL DEFAULT " + (val == null ? 0 : val);
-                } else if (column.type == BigInteger.class) {
+                } else if (column.getType() == BigInteger.class) {
                     sqltype = "DECIMAL";
-                    if (column.precision > 0) {
-                        sqltype += "(" + column.precision + "," + column.scale + ")";
+                    if (column.getPrecision() > 0) {
+                        sqltype += "(" + column.getPrecision() + "," + column.getScale() + ")";
                     } else {
                         sqltype += "(19,2)";
                     }
                     Number val = one == null
                             ? null
-                            : (Number) info.getAttribute(column.field).get(one);
+                            : (Number) info.getAttribute(column.getField()).get(one);
                     sqlnull = "NOT NULL DEFAULT " + (val == null ? 0 : val);
-                } else if (column.type == BigDecimal.class) {
+                } else if (column.getType() == BigDecimal.class) {
                     sqltype = "DECIMAL";
-                    if (column.precision > 0) {
-                        sqltype += "(" + column.precision + "," + column.scale + ")";
+                    if (column.getPrecision() > 0) {
+                        sqltype += "(" + column.getPrecision() + "," + column.getScale() + ")";
                     }
                     Number val = one == null
                             ? null
-                            : (Number) info.getAttribute(column.field).get(one);
+                            : (Number) info.getAttribute(column.getField()).get(one);
                     sqlnull = "NOT NULL DEFAULT " + (val == null ? 0 : val);
-                } else if (column.type == String.class) {
-                    if (column.length < 65535) {
+                } else if (column.getType() == String.class) {
+                    if (column.getLength() < 65535) {
                         String val = one == null
                                 ? null
-                                : (String) info.getAttribute(column.field).get(one);
+                                : (String) info.getAttribute(column.getField()).get(one);
                         if (val != null) {
                             sqlnull = "NOT NULL DEFAULT '" + val.replace('\'', '"') + "'";
-                        } else if (column.primary) {
+                        } else if (column.isPrimary()) {
                             sqlnull = "NOT NULL DEFAULT ''";
                         }
-                    } else if (column.length == 65535) {
+                    } else if (column.getLength() == 65535) {
                         sqltype = "TEXT";
-                        if (!column.nullable) {
+                        if (!column.isNullable()) {
                             sqlnull = "NOT NULL";
                         }
-                    } else if (column.length <= 16777215) {
+                    } else if (column.getLength() <= 16777215) {
                         sqltype = "MEDIUMTEXT";
-                        if (!column.nullable) {
+                        if (!column.isNullable()) {
                             sqlnull = "NOT NULL";
                         }
                     } else {
                         sqltype = "LONGTEXT";
-                        if (!column.nullable) {
+                        if (!column.isNullable()) {
                             sqlnull = "NOT NULL";
                         }
                     }
-                } else if (column.type == byte[].class) {
-                    if (column.length <= 65535) {
+                } else if (column.getType() == byte[].class) {
+                    if (column.getLength() <= 65535) {
                         sqltype = "BLOB";
-                        if (!column.nullable) {
+                        if (!column.isNullable()) {
                             sqlnull = "NOT NULL";
                         }
-                    } else if (column.length <= 16777215) {
+                    } else if (column.getLength() <= 16777215) {
                         sqltype = "MEDIUMBLOB";
-                        if (!column.nullable) {
+                        if (!column.isNullable()) {
                             sqlnull = "NOT NULL";
                         }
                     } else {
                         sqltype = "LONGBLOB";
-                        if (!column.nullable) {
+                        if (!column.isNullable()) {
                             sqlnull = "NOT NULL";
                         }
                     }
-                } else if (column.type == java.time.LocalDate.class
-                        || column.type == java.util.Date.class
-                        || "java.sql.Date".equals(column.type.getName())) {
+                } else if (column.getType() == java.time.LocalDate.class
+                        || column.getType() == java.util.Date.class
+                        || "java.sql.Date".equals(column.getType().getName())) {
                     sqltype = "DATE";
-                } else if (column.type == java.time.LocalTime.class || "java.sql.Time".equals(column.type.getName())) {
+                } else if (column.getType() == java.time.LocalTime.class || "java.sql.Time".equals(column.getType().getName())) {
                     sqltype = "TIME";
-                } else if (column.type == java.time.LocalDateTime.class
-                        || "java.sql.Timestamp".equals(column.type.getName())) {
+                } else if (column.getType() == java.time.LocalDateTime.class
+                        || "java.sql.Timestamp".equals(column.getType().getName())) {
                     sqltype = "DATETIME";
                 } else { // JavaBean
-                    sqltype = column.length >= 65535 ? "TEXT" : ("VARCHAR(" + column.length + ")");
-                    sqlnull = !column.nullable ? "NOT NULL DEFAULT ''" : "NULL";
+                    sqltype = column.getLength() >= 65535 ? "TEXT" : ("VARCHAR(" + column.getLength() + ")");
+                    sqlnull = !column.isNullable() ? "NOT NULL DEFAULT ''" : "NULL";
                 }
                 sb.append("   `")
-                        .append(column.column)
+                        .append(column.getColumn())
                         .append("` ")
                         .append(sqltype)
-                        .append(column.primary && info.isAutoGenerated() ? " AUTO_INCREMENT " : " ")
-                        .append(column.primary && info.isAutoGenerated() ? "" : sqlnull);
-                if (column.comment != null && !column.comment.isEmpty()) {
+                        .append(column.isPrimary() && info.isAutoGenerated() ? " AUTO_INCREMENT " : " ")
+                        .append(column.isPrimary() && info.isAutoGenerated() ? "" : sqlnull);
+                if (column.getComment() != null && !column.getComment().isEmpty()) {
                     sb.append(" COMMENT '")
-                            .append(column.comment.replace('\'', '"'))
+                            .append(column.getComment().replace('\'', '"'))
                             .append("'");
                 }
                 sb.append(",\n");
             }
-            sb.append("   PRIMARY KEY (`").append(primary.column).append("`)\n");
+            sb.append("   PRIMARY KEY (`").append(primary.getColumn()).append("`)\n");
             sb.append(")ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4");
             if (table != null && !table.comment().isEmpty()) {
                 sb.append(" COMMENT '")
@@ -689,141 +688,141 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
                         + table.comment().replace('\'', '"') + "'");
             }
             for (EntityColumn column : info.getDDLColumns()) {
-                if (column.primary) {
+                if (column.isPrimary()) {
                     primary = column;
                 }
-                String sqltype = "VARCHAR(" + column.length + ")";
-                String sqlnull = column.primary ? "NOT NULL" : "NULL";
-                if (column.type == boolean.class || column.type == Boolean.class) {
+                String sqltype = "VARCHAR(" + column.getLength() + ")";
+                String sqlnull = column.isPrimary() ? "NOT NULL" : "NULL";
+                if (column.getType() == boolean.class || column.getType() == Boolean.class) {
                     sqltype = "BOOL";
                     Boolean val = one == null
                             ? null
-                            : (Boolean) info.getAttribute(column.field).get(one);
+                            : (Boolean) info.getAttribute(column.getField()).get(one);
                     sqlnull = "NOT NULL DEFAULT " + (val != null && val ? 1 : 0);
-                } else if (column.type == byte.class || column.type == Byte.class) {
+                } else if (column.getType() == byte.class || column.getType() == Byte.class) {
                     sqltype = "INT2";
                     Number val = one == null
                             ? null
-                            : (Number) info.getAttribute(column.field).get(one);
+                            : (Number) info.getAttribute(column.getField()).get(one);
                     sqlnull = "NOT NULL DEFAULT " + (val == null ? 0 : val.byteValue());
-                } else if (column.type == short.class || column.type == Short.class) {
+                } else if (column.getType() == short.class || column.getType() == Short.class) {
                     sqltype = "INT2";
                     Number val = one == null
                             ? null
-                            : (Number) info.getAttribute(column.field).get(one);
+                            : (Number) info.getAttribute(column.getField()).get(one);
                     sqlnull = "NOT NULL DEFAULT " + (val == null ? 0 : val);
-                } else if (column.type == char.class || column.type == Character.class) {
+                } else if (column.getType() == char.class || column.getType() == Character.class) {
                     sqltype = "INT2 UNSIGNED";
                     Number val = one == null
                             ? null
-                            : (Number) info.getAttribute(column.field).get(one);
+                            : (Number) info.getAttribute(column.getField()).get(one);
                     sqlnull = "NOT NULL DEFAULT " + (val == null ? 0 : val.intValue());
-                } else if (column.type == int.class
-                        || column.type == Integer.class
-                        || column.type == AtomicInteger.class) {
+                } else if (column.getType() == int.class
+                        || column.getType() == Integer.class
+                        || column.getType() == AtomicInteger.class) {
                     sqltype = "INT4";
                     Number val = one == null
                             ? null
-                            : (Number) info.getAttribute(column.field).get(one);
+                            : (Number) info.getAttribute(column.getField()).get(one);
                     sqlnull = "NOT NULL DEFAULT " + (val == null ? 0 : val);
-                } else if (column.type == long.class
-                        || column.type == Long.class
-                        || column.type == AtomicLong.class
-                        || column.type == LongAdder.class) {
+                } else if (column.getType() == long.class
+                        || column.getType() == Long.class
+                        || column.getType() == AtomicLong.class
+                        || column.getType() == LongAdder.class) {
                     sqltype = "INT8";
                     Number val = one == null
                             ? null
-                            : (Number) info.getAttribute(column.field).get(one);
+                            : (Number) info.getAttribute(column.getField()).get(one);
                     sqlnull = "NOT NULL DEFAULT " + (val == null ? 0 : val);
-                } else if (column.type == float.class || column.type == Float.class) {
+                } else if (column.getType() == float.class || column.getType() == Float.class) {
                     sqltype = "FLOAT4";
-                    if (column.precision > 0) {
-                        sqltype += "(" + column.precision + "," + column.scale + ")";
+                    if (column.getPrecision() > 0) {
+                        sqltype += "(" + column.getPrecision() + "," + column.getScale() + ")";
                     }
                     Number val = one == null
                             ? null
-                            : (Number) info.getAttribute(column.field).get(one);
+                            : (Number) info.getAttribute(column.getField()).get(one);
                     sqlnull = "NOT NULL DEFAULT " + (val == null ? 0 : val);
-                } else if (column.type == double.class || column.type == Double.class) {
+                } else if (column.getType() == double.class || column.getType() == Double.class) {
                     sqltype = "FLOAT8";
-                    if (column.precision > 0) {
-                        sqltype += "(" + column.precision + "," + column.scale + ")";
+                    if (column.getPrecision() > 0) {
+                        sqltype += "(" + column.getPrecision() + "," + column.getScale() + ")";
                     }
                     Number val = one == null
                             ? null
-                            : (Number) info.getAttribute(column.field).get(one);
+                            : (Number) info.getAttribute(column.getField()).get(one);
                     sqlnull = "NOT NULL DEFAULT " + (val == null ? 0 : val);
-                } else if (column.type == BigInteger.class) {
+                } else if (column.getType() == BigInteger.class) {
                     sqltype = "NUMERIC";
-                    if (column.precision > 0) {
-                        sqltype += "(" + column.precision + "," + column.scale + ")";
+                    if (column.getPrecision() > 0) {
+                        sqltype += "(" + column.getPrecision() + "," + column.getScale() + ")";
                     } else {
                         sqltype += "(19,2)";
                     }
                     Number val = one == null
                             ? null
-                            : (Number) info.getAttribute(column.field).get(one);
+                            : (Number) info.getAttribute(column.getField()).get(one);
                     sqlnull = "NOT NULL DEFAULT " + (val == null ? 0 : val);
-                } else if (column.type == BigDecimal.class) {
+                } else if (column.getType() == BigDecimal.class) {
                     sqltype = "NUMERIC";
-                    if (column.precision > 0) {
-                        sqltype += "(" + column.precision + "," + column.scale + ")";
+                    if (column.getPrecision() > 0) {
+                        sqltype += "(" + column.getPrecision() + "," + column.getScale() + ")";
                     }
                     Number val = one == null
                             ? null
-                            : (Number) info.getAttribute(column.field).get(one);
+                            : (Number) info.getAttribute(column.getField()).get(one);
                     sqlnull = "NOT NULL DEFAULT " + (val == null ? 0 : val);
-                } else if (column.type == String.class) {
-                    if (column.length < 65535) {
+                } else if (column.getType() == String.class) {
+                    if (column.getLength() < 65535) {
                         String val = one == null
                                 ? null
-                                : (String) info.getAttribute(column.field).get(one);
+                                : (String) info.getAttribute(column.getField()).get(one);
                         if (val != null) {
                             sqlnull = "NOT NULL DEFAULT '" + val.replace('\'', '"') + "'";
-                        } else if (column.primary) {
+                        } else if (column.isPrimary()) {
                             sqlnull = "NOT NULL DEFAULT ''";
                         }
                     } else {
                         sqltype = "TEXT";
-                        if (!column.nullable) {
+                        if (!column.isNullable()) {
                             sqlnull = "NOT NULL";
                         }
                     }
-                } else if (column.type == byte[].class) {
+                } else if (column.getType() == byte[].class) {
                     sqltype = "BYTEA";
-                    if (!column.nullable) {
+                    if (!column.isNullable()) {
                         sqlnull = "NOT NULL";
                     }
-                } else if (column.type == java.time.LocalDate.class
-                        || column.type == java.util.Date.class
-                        || "java.sql.Date".equals(column.type.getName())) {
+                } else if (column.getType() == java.time.LocalDate.class
+                        || column.getType() == java.util.Date.class
+                        || "java.sql.Date".equals(column.getType().getName())) {
                     sqltype = "DATE";
-                } else if (column.type == java.time.LocalTime.class || "java.sql.Time".equals(column.type.getName())) {
+                } else if (column.getType() == java.time.LocalTime.class || "java.sql.Time".equals(column.getType().getName())) {
                     sqltype = "TIME";
-                } else if (column.type == java.time.LocalDateTime.class
-                        || "java.sql.Timestamp".equals(column.type.getName())) {
+                } else if (column.getType() == java.time.LocalDateTime.class
+                        || "java.sql.Timestamp".equals(column.getType().getName())) {
                     sqltype = "TIMESTAMP";
                 } else { // JavaBean
-                    sqltype = column.length >= 65535 ? "TEXT" : ("VARCHAR(" + column.length + ")");
-                    sqlnull = !column.nullable ? "NOT NULL DEFAULT ''" : "NULL";
+                    sqltype = column.getLength() >= 65535 ? "TEXT" : ("VARCHAR(" + column.getLength() + ")");
+                    sqlnull = !column.isNullable() ? "NOT NULL DEFAULT ''" : "NULL";
                 }
-                if (column.primary && info.isAutoGenerated()) {
+                if (column.isPrimary() && info.isAutoGenerated()) {
                     sqltype = "SERIAL";
                 }
                 sb.append("   ")
-                        .append(column.column)
+                        .append(column.getColumn())
                         .append(" ")
                         .append(sqltype)
                         .append(" ")
-                        .append(column.primary && info.isAutoGenerated() ? "" : sqlnull);
-                if (column.comment != null && !column.comment.isEmpty()) {
+                        .append(column.isPrimary() && info.isAutoGenerated() ? "" : sqlnull);
+                if (column.getComment() != null && !column.getComment().isEmpty()) {
                     // postgresql不支持DDL中直接带comment
-                    comments.add("COMMENT ON COLUMN " + info.getOriginTable() + "." + column.column + " IS '"
-                            + column.comment.replace('\'', '"') + "'");
+                    comments.add("COMMENT ON COLUMN " + info.getOriginTable() + "." + column.getColumn() + " IS '"
+                            + column.getComment().replace('\'', '"') + "'");
                 }
                 sb.append(",\n");
             }
-            sb.append("   PRIMARY KEY (").append(primary.column).append(")\n");
+            sb.append("   PRIMARY KEY (").append(primary.getColumn()).append(")\n");
             sb.append(")");
             return Utility.append(Utility.ofArray(sb.toString()), comments);
         }
