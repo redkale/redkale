@@ -62,3 +62,38 @@
     -->
     <cached name="" enabled="true" remote="xxx" broadcastable="true"/>
 ```
+
+## 多缓存器
+```xml
+    <cached name="" enabled="true" remote="redis_1" broadcastable="true"/>
+    <cached name="backup" enabled="true" remote="redis_2" broadcastable="true"/>
+```
+
+&emsp;&emsp;使用```@Resource```注入多个```CachedManager```
+```java
+
+    //第一个缓存器
+    @Resource
+    private CachedManager cachedManager;
+
+    //第二个缓存器
+    @Resource(name = "backup")
+    private CachedManager cachedManager2;
+
+    //第一个缓存器实时修改远程缓存的key值
+    public void updateName(String code, Map<String, Long> map) {
+        cachedManager.remoteSetString(code + "_" + map.get("id"), Duration.ofMillis(60));
+    }
+
+    //使用第一个缓存器
+    @Cached(key = "#{code}_#{map.id}", remoteExpire = "60", timeUnit = TimeUnit.MILLISECONDS)
+    public String getName(String code, Map<String, Long> map) {
+        return code + "-" + map;
+    }
+
+    //使用第二个缓存器
+    @Cached(manager = "backup", key = "#{code}_#{map.id}_2", remoteExpire = "60", timeUnit = TimeUnit.MILLISECONDS)
+    public String getName2(String code, Map<String, Long> map) {
+        return code + "-" + map;
+    }
+```
