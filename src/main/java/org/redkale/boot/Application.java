@@ -43,6 +43,7 @@ import org.redkale.net.http.*;
 import org.redkale.net.sncp.*;
 import org.redkale.props.spi.PropertiesModule;
 import org.redkale.scheduled.spi.ScheduledModuleEngine;
+import org.redkale.service.RetCodes;
 import org.redkale.service.Service;
 import org.redkale.source.*;
 import org.redkale.source.spi.SourceModuleEngine;
@@ -369,6 +370,8 @@ public final class Application {
         this.onEnvironmentLoaded();
         // init起始回调
         this.onAppPreInit();
+        // 加载错误码
+        this.initRetCodes();
         // 设置WorkExecutor
         this.initWorkExecutor();
         // 回调Listener
@@ -707,6 +710,22 @@ public final class Application {
                     resourceFactory.register(!first, k.toString(), val);
                 }
             });
+        }
+    }
+
+    /** 加载错误码 */
+    private void initRetCodes() throws IOException {
+        ClassFilter<RetCodes> filter = new ClassFilter(this.getClassLoader(), RetCodes.class);
+        loadClassByFilters(filter);
+        StringBuilder sb = new StringBuilder();
+        filter.getFilterEntrys().forEach(en -> {
+            if (en.getType() != RetCodes.class) {
+                int c = RetCodes.load(en.getType());
+                sb.append("Load RetCodes (type=").append(en.getType().getName() + ") " + c + " records\r\n");
+            }
+        });
+        if (sb.length() > 0) {
+            logger.log(Level.INFO, sb.toString().trim());
         }
     }
 

@@ -8,7 +8,7 @@ import java.text.MessageFormat;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 错误码加载器
@@ -20,41 +20,33 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public abstract class RetCodes {
 
-    private static final ReentrantLock loadLock = new ReentrantLock();
-
-    private static Map<String, Map<Integer, String>> rets = new LinkedHashMap<>();
-
-    private static Map<Integer, String> defret = new LinkedHashMap<>();
-
     protected RetCodes() {
         throw new IllegalStateException();
     }
 
-    public static void load(Class codeClass) {
-        load(RetLabel.RetLoader.loadMap(codeClass));
+    public static int load(Class codeClass) {
+        return load(RetInnerCache.loadMap(codeClass));
     }
 
-    public static void load(Map<String, Map<Integer, String>> map) {
+    public static int load(Map<String, Map<Integer, String>> map) {
         if (map.isEmpty()) {
-            return;
+            return 0;
         }
-        loadLock.lock();
+        AtomicInteger counter = new AtomicInteger();
+        RetInnerCache.loadLock.lock();
         try {
             Map<String, Map<Integer, String>> newMap = new LinkedHashMap<>();
-            rets.forEach((k, v) -> newMap.put(k, new LinkedHashMap<>(v)));
+            RetInnerCache.allRets.forEach((k, v) -> newMap.put(k, new LinkedHashMap<>(v)));
             map.forEach((k, v) -> {
-                Map<Integer, String> m = newMap.get(k);
-                if (m != null) {
-                    m.putAll(v);
-                } else {
-                    newMap.put(k, v);
-                }
+                newMap.computeIfAbsent(k, n -> new LinkedHashMap<>()).putAll(v);
+                counter.addAndGet(v.size());
             });
-            rets = newMap;
-            defret = rets.get("");
+            RetInnerCache.allRets = newMap;
+            RetInnerCache.defRets = newMap.get("");
         } finally {
-            loadLock.unlock();
+            RetInnerCache.loadLock.unlock();
         }
+        return counter.get();
     }
 
     public static RetResult retResult(int retcode) {
@@ -135,7 +127,7 @@ public abstract class RetCodes {
         if (retcode == 0) {
             return "Success";
         }
-        return defret.getOrDefault(retcode, "Error");
+        return RetInnerCache.defRets.getOrDefault(retcode, "Error");
     }
 
     public static String retInfo(String locale, int retcode) {
@@ -145,7 +137,7 @@ public abstract class RetCodes {
         if (retcode == 0) {
             return "Success";
         }
-        Map<Integer, String> map = rets.get(locale);
+        Map<Integer, String> map = RetInnerCache.allRets.get(locale);
         if (map == null) {
             return "Error";
         }

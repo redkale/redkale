@@ -63,6 +63,10 @@ public final class ClassFilter<T> {
 
     private final ClassLoader classLoader;
 
+    public ClassFilter(RedkaleClassLoader classLoader, Class superClass) {
+        this(classLoader, null, superClass, (Class[]) null, null);
+    }
+
     public ClassFilter(RedkaleClassLoader classLoader, Class<? extends Annotation> annotationClass, Class superClass) {
         this(classLoader, annotationClass, superClass, (Class[]) null, null);
     }
