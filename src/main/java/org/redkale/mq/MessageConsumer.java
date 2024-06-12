@@ -15,6 +15,7 @@ import org.redkale.util.AnyValue;
  *
  * @see org.redkale.mq.MessageConext
  * @see org.redkale.mq.ResourceConsumer
+ * @see org.redkale.mq.Messaged
  * @author zhangjx
  * @param <T> T
  * @since 2.8.0

@@ -16,12 +16,26 @@ import org.redkale.inject.Resourcable;
  */
 public interface MessageManager extends Resourcable {
 
-    //
+    /**
+     * 创建topic
+     *
+     * @param topics topic集合
+     * @return 是否成功
+     */
     public boolean createTopic(String... topics);
 
-    // 删除topic，如果不存在则跳过
+    /**
+     * 删除topic，如果不存在则跳过
+     *
+     * @param topics topic集合
+     * @return 是否成功
+     */
     public boolean deleteTopic(String... topics);
 
-    // 查询所有topic
+    /**
+     * 查询所有topic
+     *
+     * @return topic集合
+     */
     public abstract List<String> queryTopic();
 }

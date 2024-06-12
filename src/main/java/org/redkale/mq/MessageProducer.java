@@ -12,6 +12,7 @@ import org.redkale.convert.Convert;
  *
  * <p>详情见: https://redkale.org
  *
+ * @see org.redkale.mq.ResourceProducer
  * @author zhangjx
  * @since 2.8.0
  */

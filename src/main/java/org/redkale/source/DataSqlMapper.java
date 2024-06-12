@@ -24,7 +24,7 @@ import org.redkale.util.Sheet;
  * <blockquote>
  *
  * <pre>
- * public interface ForumInfoMapper extends BaseMapper&lt;ForumInfo&gt; {
+ * public interface ForumInfoMapper extends DataSqlMapper&lt;ForumInfo&gt; {
  *
  *   &#64;Sql("SELECT f.forum_groupid, s.forum_section_color "
  *      + "FROM forum_info f, forum_section s "
