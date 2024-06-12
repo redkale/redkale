@@ -729,7 +729,7 @@ public final class Application {
         filter.getFilterEntrys().forEach(en -> {
             if (en.getType() != RetCodes.class) {
                 AutoLoad auto = en.getType().getAnnotation(AutoLoad.class);
-                if (auto == null || !auto.value()) {
+                if (auto == null || auto.value()) {
                     int c = RetCodes.load(en.getType());
                     sb.append("Load RetCodes (type=").append(en.getType().getName() + ") " + c + " records\r\n");
                 }
