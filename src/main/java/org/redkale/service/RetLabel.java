@@ -5,17 +5,16 @@
  */
 package org.redkale.service;
 
-import static java.lang.annotation.ElementType.*;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.redkale.boot.Application.SYSNAME_APP_CONF_DIR;
-import static org.redkale.boot.Application.SYSNAME_APP_HOME;
-
 import java.io.*;
 import java.lang.annotation.*;
+import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.reflect.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.BiFunction;
+import static org.redkale.boot.Application.SYSNAME_APP_CONF_DIR;
+import static org.redkale.boot.Application.SYSNAME_APP_HOME;
 import org.redkale.util.RedkaleClassLoader;
 
 /**
@@ -50,6 +49,10 @@ public @interface RetLabel {
     public static interface RetInfoTransfer extends BiFunction<Integer, String, String> {}
 
     public abstract static class RetLoader {
+        
+        private RetLoader() {
+            throw new IllegalStateException();
+        }
 
         public static Map<String, Map<Integer, String>> loadMap(Class clazz) {
             final Map<String, Map<Integer, String>> rets = new LinkedHashMap<>();
