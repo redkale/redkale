@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.logging.*;
+import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Nonnull;
 import org.redkale.asm.AsmMethodBoost;
 import org.redkale.boot.ClassFilter.FilterEntry;
@@ -47,7 +48,14 @@ import org.redkale.service.RetCodes;
 import org.redkale.service.Service;
 import org.redkale.source.*;
 import org.redkale.source.spi.SourceModuleEngine;
-import org.redkale.util.*;
+import org.redkale.util.AnyValue;
+import org.redkale.util.AnyValueWriter;
+import org.redkale.util.Environment;
+import org.redkale.util.Redkale;
+import org.redkale.util.RedkaleClassLoader;
+import org.redkale.util.RedkaleException;
+import org.redkale.util.Times;
+import org.redkale.util.Utility;
 import org.redkale.watch.WatchServlet;
 
 /**
@@ -720,8 +728,11 @@ public final class Application {
         StringBuilder sb = new StringBuilder();
         filter.getFilterEntrys().forEach(en -> {
             if (en.getType() != RetCodes.class) {
-                int c = RetCodes.load(en.getType());
-                sb.append("Load RetCodes (type=").append(en.getType().getName() + ") " + c + " records\r\n");
+                AutoLoad auto = en.getType().getAnnotation(AutoLoad.class);
+                if (auto == null || !auto.value()) {
+                    int c = RetCodes.load(en.getType());
+                    sb.append("Load RetCodes (type=").append(en.getType().getName() + ") " + c + " records\r\n");
+                }
             }
         });
         if (sb.length() > 0) {
