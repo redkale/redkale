@@ -10,6 +10,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import org.redkale.cached.spi.CachedAction;
 import org.redkale.inject.Resourcable;
+import org.redkale.source.CacheSource;
 import org.redkale.util.ThrowSupplier;
 
 /**
@@ -46,6 +47,20 @@ public interface CachedManager extends Resourcable {
      * @return  schema
      */
     public String getSchema();
+
+    /**
+     * 获取本地缓存Source
+     *
+     * @return  {@link org.redkale.source.CacheSource}
+     */
+    public CacheSource getLocalSource();
+
+    /**
+     * 获取远程缓存Source, 可能为null
+     *
+     * @return  {@link org.redkale.source.CacheSource}
+     */
+    public CacheSource getRemoteSource();
 
     /**
      * 远程缓存订阅消息的管道名称

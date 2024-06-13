@@ -179,6 +179,26 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         }
     }
 
+    /**
+     * 获取本地缓存Source
+     *
+     * @return  {@link org.redkale.source.CacheSource}
+     */
+    @Override
+    public CacheSource getLocalSource() {
+        return localSource;
+    }
+
+    /**
+     * 获取远程缓存Source, 可能为null
+     *
+     * @return  {@link org.redkale.source.CacheSource}
+     */
+    @Override
+    public CacheSource getRemoteSource() {
+        return remoteSource;
+    }
+
     @Override
     public void addAction(CachedAction action) {
         actions.add(action);
