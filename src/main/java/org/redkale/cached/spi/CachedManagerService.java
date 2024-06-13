@@ -5,9 +5,13 @@ package org.redkale.cached.spi;
 
 import java.lang.reflect.Type;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,7 +44,7 @@ import org.redkale.util.TypeToken;
 @Component
 @AutoLoad(false)
 @ResourceType(CachedManager.class)
-public class CachedManagerService implements CachedManager, Service {
+public class CachedManagerService implements CachedManager, CachedActionFunc, Service {
 
     public static final String CACHED_CHANNEL_TOPIC_PREFIX = "cached-update-channel";
 
@@ -74,6 +78,8 @@ public class CachedManagerService implements CachedManager, Service {
 
     // 缓存无效时使用的异步锁
     private final ConcurrentHashMap<String, CachedAsyncLock> asyncLockMap = new ConcurrentHashMap<>();
+
+    protected final List<CachedAction> actions = new CopyOnWriteArrayList<>();
 
     @Resource(required = false)
     protected Application application;
@@ -174,9 +180,36 @@ public class CachedManagerService implements CachedManager, Service {
     }
 
     @Override
+    public void addAction(CachedAction action) {
+        actions.add(action);
+    }
+
+    /**
+     * 获取{@link org.redkale.cached.spi.CachedAction}集合
+     *
+     * @return CachedAction集合
+     */
+    @Override
+    public List<CachedAction> getCachedActions() {
+        return new ArrayList<>(actions);
+    }
+
+    /**
+     * 处理指定缓存key的{@link org.redkale.cached.spi.CachedAction}
+     *
+     * @param templetKey 缓存key
+     * @param consumer 处理函数
+     */
+    @Override
+    public void acceptCachedAction(String templetKey, Consumer<CachedAction> consumer) {
+        actions.stream()
+                .filter(v -> Objects.equals(v.getTempletKey(), templetKey))
+                .forEach(consumer);
+    }
+
+    @Override
     public String toString() {
-        return getClass().getSimpleName() + "_" + Objects.hash(this) + "{name='" + name + "', schema='" + schema
-                + "'}";
+        return getClass().getSimpleName() + "_" + Objects.hash(this) + "{name='" + name + "', schema='" + schema + "'}";
     }
 
     // -------------------------------------- 本地缓存 --------------------------------------

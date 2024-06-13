@@ -237,9 +237,9 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
         actionMap.forEach((field, action) -> {
             try {
                 resourceFactory.inject(action);
-                action.init(resourceFactory, service);
-                if (action.templetKey.indexOf('@') < 0
-                        && action.templetKey.indexOf('{') < 0
+                final String tkey = action.init(resourceFactory, service);
+                if (tkey.indexOf('@') < 0
+                        && tkey.indexOf('{') < 0
                         && action.getMethod().getParameterCount() > 0) {
                     // 一般有参数的方法，Cached.key应该是动态的
                     logger.log(

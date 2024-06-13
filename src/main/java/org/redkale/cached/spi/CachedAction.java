@@ -63,7 +63,7 @@ public class CachedAction {
     private final String[] paramNames;
 
     // 模板key
-    String templetKey;
+    final String templetKey;
 
     // 缓存key生成器
     private CachedKeyGenerator keyGenerator;
@@ -91,10 +91,9 @@ public class CachedAction {
         this.resultType = this.async ? ((ParameterizedType) returnType).getActualTypeArguments()[0] : returnType;
     }
 
-    void init(ResourceFactory resourceFactory, Object service) {
+    String init(ResourceFactory resourceFactory, Object service) {
         this.manager = resourceFactory.load(cached.getManager(), CachedManager.class);
-        String key = environment.getPropertyValue(cached.getKey());
-        this.templetKey = key;
+        final String key = environment.getPropertyValue(cached.getKey());
         if (key.startsWith("@")) { // 动态加载缓存key生成器
             String generatorName = key.substring(1);
             this.keyGenerator = resourceFactory.findChild(generatorName, CachedKeyGenerator.class);
@@ -104,6 +103,8 @@ public class CachedAction {
         }
         this.localExpire = createDuration(cached.getLocalExpire());
         this.remoteExpire = createDuration(cached.getRemoteExpire());
+        ((CachedActionFunc) this.manager).addAction(this);
+        return key;
     }
 
     @ClassDepends
@@ -158,6 +159,26 @@ public class CachedAction {
 
     public Method getMethod() {
         return method;
+    }
+
+    public String getTempletKey() {
+        return templetKey;
+    }
+
+    public Duration getLocalExpire() {
+        return localExpire;
+    }
+
+    public void setLocalExpire(Duration localExpire) {
+        this.localExpire = localExpire;
+    }
+
+    public Duration getRemoteExpire() {
+        return remoteExpire;
+    }
+
+    public void setRemoteExpire(Duration remoteExpire) {
+        this.remoteExpire = remoteExpire;
     }
 
     @Override

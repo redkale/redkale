@@ -17,7 +17,7 @@ import java.lang.annotation.Target;
  * <p>详情见: https://redkale.org
  *
  * @since 2.8.0
- * @org.redkale.net.http.RestMapping
+ * @see org.redkale.net.http.RestMapping
  * @see org.redkale.net.http.RestService
  * @author zhangjx
  */

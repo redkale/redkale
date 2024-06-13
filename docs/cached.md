@@ -51,6 +51,28 @@
     }
 ```
 
+## 动态调整缓存时长
+&emsp;&emsp;使用```@Resource```注入多个```CachedManager```
+```java
+
+    @Resource
+    private CachedManager cachedManager;
+
+    @Cached(key = "#{code}_#{map.id}", remoteExpire = "60", timeUnit = TimeUnit.MILLISECONDS)
+    public String getName(String code, Map<String, Long> map) {
+        return code + "-" + map;
+    }
+
+    public void updateExpire() {
+        Duration expire = Duration.ofMillis(600);
+        cachedManager.acceptCachedAction("#{code}_#{map.id}", action -> {
+            //将缓存时长改成600毫秒，并开启本地缓存
+            action.setLocalExpire(expire);
+            action.setRemoteExpire(expire);
+        });
+    }
+```
+
 ## 缓存配置
 ```xml
     <!--

@@ -5,7 +5,10 @@ package org.redkale.cached;
 
 import java.lang.reflect.Type;
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+import org.redkale.cached.spi.CachedAction;
 import org.redkale.inject.Resourcable;
 import org.redkale.util.ThrowSupplier;
 
@@ -57,6 +60,22 @@ public interface CachedManager extends Resourcable {
             return CACHED_CHANNEL_TOPIC + ':' + n;
         }
     }
+
+    /**
+     * 获取{@link org.redkale.cached.spi.CachedAction}集合
+     *
+     * @return CachedAction集合
+     */
+    public List<CachedAction> getCachedActions();
+
+    /**
+     * 处理指定缓存key的{@link org.redkale.cached.spi.CachedAction}<br>
+     * 可用于动态调整缓存时长
+     *
+     * @param templetKey 缓存key
+     * @param consumer 处理函数
+     */
+    public void acceptCachedAction(String templetKey, Consumer<CachedAction> consumer);
 
     // -------------------------------------- 本地缓存 --------------------------------------
     /**
