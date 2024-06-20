@@ -8,6 +8,7 @@ package org.redkale.util;
 import java.util.Arrays;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import org.redkale.convert.json.JsonConvert;
 
 /**
  * 判断字符串数组是否包含或排除指定字符串的操作类
@@ -235,15 +236,43 @@ public class SelectColumn implements Predicate<String> {
     }
 
     @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 29 * hash + Arrays.deepHashCode(this.patterns);
+        hash = 29 * hash + Arrays.deepHashCode(this.columns);
+        hash = 29 * hash + (this.excludable ? 1 : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        final SelectColumn other = (SelectColumn) obj;
+        if (this.excludable != other.excludable) {
+            return false;
+        }
+        if (!Arrays.deepEquals(this.patterns, other.patterns)) {
+            return false;
+        }
+        return Arrays.deepEquals(this.columns, other.columns);
+    }
+
+    @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(getClass().getSimpleName()).append("{excludable=").append(excludable);
-        if (columns != null) {
-            sb.append(", columns=").append(Arrays.toString(columns));
-        }
-        if (patterns != null) {
-            sb.append(", patterns=").append(Arrays.toString(patterns));
-        }
-        return sb.append('}').toString();
+        //        StringBuilder sb = new StringBuilder();
+        //        sb.append(getClass().getSimpleName()).append("{\"excludable\":").append(excludable);
+        //        if (columns != null) {
+        //            sb.append(", columns=").append(Arrays.toString(columns));
+        //        }
+        //        if (patterns != null) {
+        //            sb.append(", patterns=").append(Arrays.toString(patterns));
+        //        }
+        //        return sb.append('}').toString();
+        return JsonConvert.root().convertTo(this);
     }
 }

@@ -8,6 +8,7 @@ package org.redkale.convert;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.locks.*;
+import org.redkale.annotation.Nullable;
 import org.redkale.convert.ext.StringSimpledCoder;
 import org.redkale.util.*;
 
@@ -37,6 +38,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
 
     protected Map<Integer, DeMember> memberTagMap;
 
+    @Nullable
     protected ConvertFactory factory;
 
     protected volatile boolean inited = false;

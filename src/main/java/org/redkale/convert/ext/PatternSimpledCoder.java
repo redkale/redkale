@@ -5,8 +5,10 @@
  */
 package org.redkale.convert.ext;
 
+import java.util.HashMap;
 import java.util.regex.Pattern;
 import org.redkale.convert.*;
+import org.redkale.util.Attribute;
 
 /**
  * Pattern 的SimpledCoder实现
@@ -21,22 +23,57 @@ public class PatternSimpledCoder<R extends Reader, W extends Writer> extends Sim
 
     public static final PatternSimpledCoder instance = new PatternSimpledCoder();
 
+    protected final PatternObjectEncoder encoder = new PatternObjectEncoder();
+
+    protected final PatternObjectDecoder decoder = new PatternObjectDecoder();
+
     @Override
     public void convertTo(W out, Pattern value) {
-        if (value == null) {
-            out.writeNull();
-        } else {
-            out.writeString(value.flags() + "," + value.pattern());
-        }
+        encoder.convertTo(out, value);
     }
 
     @Override
     public Pattern convertFrom(R in) {
-        String value = in.readString();
-        if (value == null) {
-            return null;
+        return decoder.convertFrom(in);
+    }
+
+    protected static class PatternObjectEncoder extends ObjectEncoder<Writer, Pattern> {
+        protected PatternObjectEncoder() {
+            super(Pattern.class);
+            EnMember flagsMember = new EnMember(
+                    Attribute.create(Pattern.class, "flags", int.class, t -> t.flags(), null),
+                    1,
+                    IntSimpledCoder.instance);
+            EnMember patternMember = new EnMember(
+                    Attribute.create(Pattern.class, "pattern", String.class, t -> t.pattern(), null),
+                    2,
+                    StringSimpledCoder.instance);
+            this.members = new EnMember[] {flagsMember, patternMember};
+            this.inited = true;
         }
-        int pos = value.indexOf(',');
-        return Pattern.compile(value.substring(pos + 1), Integer.parseInt(value.substring(0, pos)));
+    }
+
+    protected static class PatternObjectDecoder extends ObjectDecoder<Reader, Pattern> {
+        protected PatternObjectDecoder() {
+            super(Pattern.class);
+            DeMember flagsMember = new DeMember(
+                    Attribute.create(Pattern.class, "flags", int.class, t -> t.flags(), null),
+                    1,
+                    IntSimpledCoder.instance);
+            DeMember patternMember = new DeMember(
+                    Attribute.create(Pattern.class, "pattern", String.class, t -> t.pattern(), null),
+                    2,
+                    StringSimpledCoder.instance);
+            this.creator = args -> Pattern.compile((String) args[1], (Integer) args[0]);
+            this.members = new DeMember[] {flagsMember, patternMember};
+            this.creatorConstructorMembers = this.members;
+            this.memberFieldMap = new HashMap<>(this.members.length);
+            this.memberTagMap = new HashMap<>(this.members.length);
+            for (DeMember member : this.members) {
+                this.memberFieldMap.put(member.getAttribute().field(), member);
+                this.memberTagMap.put(member.getTag(), member);
+            }
+            this.inited = true;
+        }
     }
 }

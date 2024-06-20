@@ -9,6 +9,7 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.locks.*;
 import org.redkale.annotation.ConstructorParameters;
+import org.redkale.annotation.Nullable;
 import org.redkale.convert.ext.StringSimpledCoder;
 import org.redkale.util.*;
 
@@ -30,6 +31,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
 
     protected EnMember[] members;
 
+    @Nullable
     protected ConvertFactory factory;
 
     protected volatile boolean inited = false;

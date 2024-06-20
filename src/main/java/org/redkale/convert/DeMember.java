@@ -28,15 +28,26 @@ public final class DeMember<R extends Reader, T, F> {
 
     final String comment;
 
-    protected int index;
+    protected int index; // 从1开始
 
     protected int position; // 从1开始
 
-    protected int tag; // 主要给protobuf使用
+    protected int tag; // 主要给protobuf使用  从1开始
 
     protected final Attribute<T, F> attribute;
 
     protected Decodeable<R, F> decoder;
+
+    public DeMember(final Attribute<T, F> attribute, int tag, Decodeable<R, F> decoder) {
+        this.attribute = attribute;
+        this.tag = tag;
+        this.index = tag;
+        this.position = position;
+        this.decoder = decoder;
+        this.comment = "";
+        this.field = null;
+        this.method = null;
+    }
 
     public DeMember(final Attribute<T, F> attribute, Field field, Method method) {
         this.attribute = attribute;

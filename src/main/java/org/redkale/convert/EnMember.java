@@ -44,11 +44,25 @@ public final class EnMember<W extends Writer, T, F> {
 
     final BiFunction<String, Object, Object> fieldFunc; // 一般为null
 
-    int index;
+    int index; // 从1开始
 
     int position; // 从1开始
 
-    int tag; // 主要给protobuf使用
+    int tag; // 主要给protobuf使用 从1开始
+
+    public EnMember(Attribute<T, F> attribute, int tag, Encodeable<W, F> encoder) {
+        this.attribute = attribute;
+        this.encoder = encoder;
+        Class t = attribute.type();
+        this.string = CharSequence.class.isAssignableFrom(t);
+        this.bool = t == Boolean.class || t == boolean.class;
+        this.jsonFieldNameChars = ('"' + attribute.field() + "\":").toCharArray();
+        this.jsonFieldNameBytes = ('"' + attribute.field() + "\":").getBytes();
+        this.comment = "";
+        this.field = null;
+        this.method = null;
+        this.fieldFunc = null;
+    }
 
     public EnMember(
             Attribute<T, F> attribute, Encodeable<W, F> encoder, Field field, Method method, BiFunction fieldFunc) {
