@@ -424,8 +424,8 @@ public class MessageModuleEngine extends ModuleEngine {
                 if (consumerConf.getBoolValue("autoload", true)) {
                     String includes = consumerConf.getValue("includes", "");
                     String excludes = consumerConf.getValue("excludes", "");
-                    filter.setIncludePatterns(includes.split(";"));
-                    filter.setExcludePatterns(excludes.split(";"));
+                    filter.setIncludePatterns(includes.replace(',', ';').split(";"));
+                    filter.setExcludePatterns(excludes.replace(',', ';').split(";"));
                 } else {
                     filter.setRefused(true);
                 }

@@ -342,8 +342,8 @@ serviceid1_name1  serviceid1_name2   serviceid2_name1  serviceid2_name2
         path:            servlet的ContextPath前缀 默认为空
         autoload="true"  默认值. 自动加载classpath下所有的Servlet类
         autoload="false" 需要显著的指定Service类
-        includes：       当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
-        excludes：       当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;隔开
+        includes：       当autoload="true"， 拉取类名与includes中的正则表达式匹配的类, 多个正则表达式用分号;或者逗号,隔开
+        excludes：       当autoload="true"， 排除类名与excludes中的正则表达式匹配的类, 多个正则表达式用分号;或者逗号,隔开
         -->
         <servlets path="/pipes" autoload="true" includes="" excludes="">
             <!--

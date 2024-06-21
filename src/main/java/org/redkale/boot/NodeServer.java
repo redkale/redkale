@@ -628,8 +628,8 @@ public abstract class NodeServer {
             if (list.getBoolValue("autoload", true)) {
                 String includes = list.getValue("includes", "");
                 String excludes = list.getValue("excludes", "");
-                filter.setIncludePatterns(includes.split(";"));
-                filter.setExcludePatterns(excludes.split(";"));
+                filter.setIncludePatterns(includes.replace(',', ';').split(";"));
+                filter.setExcludePatterns(excludes.replace(',', ';').split(";"));
             } else if (ref2 == null || ref2 == Annotation.class) { // service如果是autoload=false则不需要加载
                 filter.setRefused(true);
             } else if (ref2 != Annotation.class) {

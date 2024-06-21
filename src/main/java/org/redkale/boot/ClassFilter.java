@@ -108,8 +108,10 @@ public final class ClassFilter<T> {
             Set<String> includeValues,
             Set<String> excludeValues) {
         ClassFilter filter = new ClassFilter(classLoader, null, null, excludeSuperClasses);
-        filter.setIncludePatterns(includeRegxs == null ? null : includeRegxs.split(";"));
-        filter.setExcludePatterns(excludeRegxs == null ? null : excludeRegxs.split(";"));
+        filter.setIncludePatterns(
+                includeRegxs == null ? null : includeRegxs.replace(',', ';').split(";"));
+        filter.setExcludePatterns(
+                excludeRegxs == null ? null : excludeRegxs.replace(',', ';').split(";"));
         filter.setPrivilegeIncludes(includeValues);
         filter.setPrivilegeExcludes(excludeValues);
         return filter;
