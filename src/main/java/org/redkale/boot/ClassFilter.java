@@ -33,6 +33,10 @@ public final class ClassFilter<T> {
 
     private static final Logger logger = Logger.getLogger(ClassFilter.class.getName()); // 日志对象
 
+    private static final String dian = new String(new char[] {7}); // .
+    private static final String dxing = new String(new char[] {8}); // *
+    private static final String sxing = new String(new char[] {9}); // **
+
     private final Set<FilterEntry<T>> entrys = new HashSet<>(); // 符合条件的结果
 
     private final Set<FilterEntry<T>> expectEntrys = new HashSet<>(); // 准备符合条件的结果
@@ -389,7 +393,7 @@ public final class ClassFilter<T> {
             if (regx == null || regx.trim().isEmpty()) {
                 continue;
             }
-            rs[i++] = Pattern.compile(format(regx.trim()));
+            rs[i++] = Pattern.compile(formatPackageRegx(regx.trim()));
         }
         if (i == 0) {
             return null;
@@ -402,18 +406,20 @@ public final class ClassFilter<T> {
         return ps;
     }
 
-    // 将简化版正则转成标准的正则表达式
-    // *.platf.* 转成  ^.*\.platf\..*$
-    // .platf. 转成  ^.*\.platf\..*$
-    private static String format(String regx) {
-        String str = regx.replace('.', (char) 8);
-        if (regx.endsWith("*") || regx.endsWith(".")) {
-            str = str.substring(0, str.length() - 1) + ".*$";
+    /**
+     *  将简化版正则转成标准的正则表达式 <br>
+     * *.platf.** 转成  ^(\w+)\.platf\.(.*)$
+     *
+     * @param regx
+     * @return  Pattern
+     */
+    public static String formatPackageRegx(String regx) {
+        if (regx.indexOf('^') >= 0 || regx.indexOf('$') >= 0 || regx.indexOf('\\') >= 0) { // 已经是标准正则表达式
+            return regx;
         }
-        if (regx.startsWith("*") || regx.startsWith(".")) {
-            str = "^.*" + str.substring(1);
-        }
-        return str.replace(new String(new char[] {8}), "\\.");
+        String str = regx.replace("**", sxing).replace("*", dxing);
+        str = str.replace("\\.", dian).replace(".", dian);
+        return "^" + str.replace(dian, "\\.").replace(dxing, "(\\w+)").replace(sxing, "(.*)") + "$";
     }
 
     public void setSuperClass(Class superClass) {
