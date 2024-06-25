@@ -138,7 +138,7 @@ class MultiHashKeys {
                 String fieldName = subs[i];
                 Class clz = val.getClass();
                 Attribute attr = attrCache.computeIfAbsent(
-                        clz.getName() + ":" + fieldName, k -> Attribute.create(clz, fieldName));
+                        clz.getName() + ":" + fieldName, k -> Attribute.createGetter(clz, fieldName));
                 val = attr.get(val);
                 if (val == null) {
                     return val;

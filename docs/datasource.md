@@ -14,6 +14,7 @@
  |@FilterColumn |用于FilterBean过滤类的字段设置 |
  |@FilterJoinColumn |用于FilterBean过滤类的关联表字段设置 |
  |@FilterGroup  | 用于FilterBean过滤类的过滤条件分组设置 |
+ |@FilterOrs  | 用于FilterBean字段间的与或关系 |
 
 ## 操作方法
  |系列方法 | 功能描述|
@@ -130,10 +131,10 @@ public class Account {
 
 &emsp;&emsp;修改实体对象：
 ```java
-    //根据主键更新单个字段
+    //Lambda方式，根据主键更新单个字段
     source.updateColumn(Account.class, "account1", Account::getRemark, "新备注");
 
-    //根据主键更新多个字段
+    //Lambda方式，根据主键更新多个字段
     //等价sql: UPDATE t_account SET account_name='新名称', remark='新备注', age=age+2 WHERE account_id='account1';
     source.updateColumn(Account.class, "account1",
         ColumnValue.set(Account::getAccountName, "新名称"),

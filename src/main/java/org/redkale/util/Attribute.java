@@ -5,15 +5,15 @@
  */
 package org.redkale.util;
 
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
-
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.*;
 import org.redkale.annotation.*;
 import org.redkale.asm.*;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
+import org.redkale.util.Attribute;
 
 /**
  * 该类实现动态映射一个JavaBean类中成员对应的getter、setter方法； 代替低效的反射实现方式。
@@ -282,6 +282,34 @@ public interface Attribute<T, F> {
         } catch (NoSuchFieldException | SecurityException ex) {
             throw new RedkaleException(ex);
         }
+    }
+
+    /**
+     * 根据一个Class和字段名生成 Attribute 的getter对象。
+     *
+     * @param <T> 依附类的类型
+     * @param <F> 字段类型
+     * @param clazz 指定依附的类
+     * @param fieldName 字段名，如果该字段不存在则抛异常
+     * @return Attribute对象
+     */
+    public static <T, F> Attribute<T, F> createGetter(Class<T> clazz, final String fieldName) {
+        if (Map.class.isAssignableFrom(clazz)) {
+            return (Attribute) map(fieldName);
+        }
+        String fieldAlias = fieldName;
+        java.lang.reflect.Field field = null;
+        java.lang.reflect.Method getter = null;
+        try {
+            field = clazz.getDeclaredField(fieldName);
+        } catch (NoSuchFieldException | SecurityException ex) { // 不是标准的getter、setter字段
+            try {
+                getter = clazz.getMethod(fieldName);
+            } catch (NoSuchMethodException | SecurityException ex2) {
+                throw new RedkaleException(ex2);
+            }
+        }
+        return create(clazz, fieldAlias, (Class) null, field, getter, (java.lang.reflect.Method) null, null);
     }
 
     /**
@@ -791,7 +819,7 @@ public interface Attribute<T, F> {
     }
 
     /**
-     * 根据Class、字段别名、字段类型、Field、getter和setter方法生成 Attribute 对象。 fieldAlias/fieldType、Field、tgetter、setter不能同时为null.
+     * 根据Class、字段别名、字段类型、Field、getter和setter方法生成 Attribute 对象。 fieldAlias/fieldType、Field、getter、setter不能同时为null.
      *
      * @param <T> 依附类的类型
      * @param <F> 字段类型
