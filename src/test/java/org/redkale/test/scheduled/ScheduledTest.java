@@ -3,6 +3,7 @@
  */
 package org.redkale.test.scheduled;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.redkale.scheduled.spi.ScheduleManagerService;
 import org.redkale.util.Utility;
@@ -19,10 +20,16 @@ public class ScheduledTest {
     public void run() throws Exception {
         ScheduleManagerService manager = ScheduleManagerService.create(null);
         manager.init(null);
-        ScheduledService service = new ScheduledService();
+        ScheduledTestService service = new ScheduledTestService();
         manager.schedule(service);
-        Utility.sleep(3000);
+        System.out.println("开始执行");
+        Utility.sleep(2000);
+        manager.stop("task2");
+        Utility.sleep(1010);
         manager.unschedule(service);
         manager.destroy(null);
+        Assertions.assertEquals(3, service.count1.get());
+        Assertions.assertEquals(2, service.count2.get());
+        Assertions.assertEquals(3, service.count3.get());
     }
 }

@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import javax.crypto.Cipher;
 import javax.crypto.spec.*;
+import org.junit.jupiter.api.Assertions;
 import org.redkale.util.*;
 
 /** @author zhangjx */
@@ -126,5 +127,16 @@ public class UntilTestMain {
                 + Attribute.create(TestBean.class.getDeclaredField("map")).genericType());
         System.out.println();
         System.out.println();
+
+        Attribute attr = Attribute.createGetter(TestAttr.class, "bean");
+        TestAttr obj = new TestAttr();
+        Assertions.assertEquals("jaja", attr.get(obj));
+    }
+
+    public static class TestAttr {
+
+        public String bean() {
+            return "jaja";
+        }
     }
 }

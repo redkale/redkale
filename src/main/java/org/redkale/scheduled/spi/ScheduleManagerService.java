@@ -36,8 +36,9 @@ import org.redkale.annotation.Resource;
 import org.redkale.annotation.ResourceType;
 import org.redkale.boot.Application;
 import org.redkale.net.sncp.Sncp;
-import org.redkale.scheduled.ScheduledEvent;
 import org.redkale.scheduled.Scheduled;
+import org.redkale.scheduled.ScheduledEvent;
+import org.redkale.scheduled.ScheduledManager;
 import org.redkale.service.LoadMode;
 import org.redkale.service.Local;
 import org.redkale.service.Service;
@@ -45,7 +46,6 @@ import org.redkale.util.AnyValue;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Utility;
-import org.redkale.scheduled.ScheduledManager;
 
 /**
  * 定时任务管理器
@@ -426,7 +426,7 @@ public class ScheduleManagerService implements ScheduledManager, Service {
                 doing.set(false);
             }
             if (ref.get() == null) {
-                stop();
+                super.stop();
             }
         }
 
@@ -471,7 +471,7 @@ public class ScheduleManagerService implements ScheduledManager, Service {
             } finally {
                 doing.set(false);
             }
-            start();
+            schedule();
         }
 
         @Override
@@ -480,6 +480,12 @@ public class ScheduleManagerService implements ScheduledManager, Service {
                 return;
             }
             if (started.compareAndSet(false, true)) {
+                schedule();
+            }
+        }
+
+        private void schedule() {
+            if (started.get()) {
                 LocalDateTime now = zoneId == null ? LocalDateTime.now() : LocalDateTime.now(zoneId);
                 LocalDateTime next = cron.next(now);
                 Duration delay = Duration.between(now, next);
