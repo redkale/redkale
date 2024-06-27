@@ -18,7 +18,7 @@
 ```sql
     SELECT * FROM user WHERE 1=2 OR user_name = 'hello'
 ```
-&emsp;&emsp;有些场景要求参数是必需的，就需要使用$${}来保证不会进行。
+&emsp;&emsp;有些场景要求参数是必需的，就需要使用$${}来校验参数是否必需。
 ```sql
     DELETE FROM user WHERE user_name = $${bean.userName}
 ```
@@ -79,6 +79,6 @@ public interface ForumInfoMapper extends BaseMapper<ForumInfo> {
     @Sql("UPDATE forum_section s "
             + " SET s.forum_sectionid = '' "
             + " WHERE s.forum_section_color = $${bean.forumSectionColor}")
-    public int updateForumResult(ForumBean bean);
+    public int updateForumResult(@Param("bean") ForumBean bean0);
 }
 ```

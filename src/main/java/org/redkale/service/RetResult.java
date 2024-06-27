@@ -126,9 +126,19 @@ public class RetResult<T> implements Serializable {
         return new RetResult(retcode, retinfo);
     }
 
+    // @since 2.8.0
+    public static <T> RetResult<T> fail(RetException ex) {
+        return new RetResult(ex.getCode(), ex.getMessage());
+    }
+
     // @since 2.7.0
     public static <T> CompletableFuture<RetResult<T>> failFuture(int retcode, String retinfo) {
         return CompletableFuture.completedFuture(new RetResult(retcode, retinfo));
+    }
+
+    // @since 2.8.0
+    public static <T> CompletableFuture<RetResult<T>> failFuture(RetException ex) {
+        return CompletableFuture.completedFuture(new RetResult(ex.getCode(), ex.getMessage()));
     }
 
     // @since 2.7.0
