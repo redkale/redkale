@@ -34,10 +34,11 @@ public class EntityColumn {
 
     private final int scale;
 
-    public EntityColumn(boolean primary, Column col, String name, Class type, Comment comment) {
+    public EntityColumn(boolean primary, boolean camelCase, Column col, String name, Class type, Comment comment) {
         this.primary = primary;
         this.field = name;
-        this.column = col == null || col.name().isEmpty() ? name : col.name();
+        this.column =
+                col == null || col.name().isEmpty() ? (camelCase ? EntityColumn.camelCase(name) : name) : col.name();
         this.type = type;
         this.comment = (col == null || col.comment().isEmpty())
                         && comment != null
@@ -49,6 +50,26 @@ public class EntityColumn {
         this.length = col == null ? 255 : col.length();
         this.precision = col == null ? 0 : col.precision();
         this.scale = col == null ? 0 : col.scale();
+    }
+
+    /**
+     * 驼峰式字段名替换成下划线式
+     * @param col 驼峰式字段名
+     * @return  下划线式字段名
+     */
+    public static String camelCase(String col) {
+        char ch;
+        char[] chs = col.toCharArray();
+        StringBuilder sb = new StringBuilder(chs.length + 3);
+        for (int i = 0; i < chs.length; i++) {
+            ch = chs[i];
+            if (Character.isUpperCase(ch)) {
+                sb.append('_').append(Character.toLowerCase(ch));
+            } else {
+                sb.append(ch);
+            }
+        }
+        return sb.toString();
     }
 
     @Override

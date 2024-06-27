@@ -22,7 +22,7 @@
 ```sql
     DELETE FROM user WHERE user_name = $${bean.userName}
 ```
-&emsp;&emsp;当bean.userName=null时，执行sql会报错 ```Missing parameter bean.userName```
+&emsp;&emsp;当bean=null或者bean.userName=null时，执行sql会报错 ```Missing parameter bean.userName```
 
 &emsp;&emsp;Service调用原生SQL模板示例：
 ```java

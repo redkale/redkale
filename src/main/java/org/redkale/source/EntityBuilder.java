@@ -294,7 +294,7 @@ public class EntityBuilder<T> {
         });
     }
 
-    // 带下划线的字段名替换成驼峰式
+    // 下划线式字段名替换成驼峰式
     protected String snakeCaseColumn(String sqlCol) {
         return snakeMap.computeIfAbsent(sqlCol, col -> {
             char ch;
@@ -310,22 +310,9 @@ public class EntityBuilder<T> {
         });
     }
 
-    // 驼峰式字段名替换成带下划线的
+    // 驼峰式字段名替换成下划线式
     protected String camelCaseColumn(String column) {
-        return camelMap.computeIfAbsent(column, col -> {
-            char ch;
-            char[] chs = col.toCharArray();
-            StringBuilder sb = new StringBuilder(chs.length + 3);
-            for (int i = 0; i < chs.length; i++) {
-                ch = chs[i];
-                if (Character.isUpperCase(ch)) {
-                    sb.append('_').append(Character.toLowerCase(ch));
-                } else {
-                    sb.append(ch);
-                }
-            }
-            return sb.toString();
-        });
+        return camelMap.computeIfAbsent(column, EntityColumn::camelCase);
     }
 
     protected T getObjectValue(List<String> sqlColumns, final DataResultSetRow row) {

@@ -13,10 +13,9 @@
  */
 package org.redkale.persistence;
 
+import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-import java.lang.annotation.*;
 
 /**
  * Specifies that the class is an entity. This annotation is applied to the entity class.
@@ -30,12 +29,11 @@ import java.lang.annotation.*;
 public @interface Entity {
 
     /**
-     * (Optional) The entity name. Defaults to the unqualified name of the entity class. This name is used to refer to
-     * the entity in queries. The name must not be a reserved literal in the Java Persistence query language.
+     * (Optional) 表名和字段名是否将驼峰式改成下划线式
      *
-     * @return String
+     * @return boolean
      */
-    String name() default "";
+    boolean camelCase() default false;
 
     /**
      * (Optional) The comment of the entity.

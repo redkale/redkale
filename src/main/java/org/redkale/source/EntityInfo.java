@@ -323,11 +323,17 @@ public final class EntityInfo<T> {
             logmap.forEach((l, set) -> excludeLogLevels.put(l, set.toArray(new String[set.size()])));
         }
         // ---------------------------------------------
+        org.redkale.persistence.Entity en = type.getAnnotation(org.redkale.persistence.Entity.class);
+        boolean camelCase = en != null && en.camelCase();
         org.redkale.persistence.Table t1 = type.getAnnotation(org.redkale.persistence.Table.class);
         javax.persistence.Table t2 = type.getAnnotation(javax.persistence.Table.class);
         final String tableName0 = t1 != null ? t1.name() : (t2 != null ? t2.name() : null);
         final String tableCcatalog0 = t1 != null ? t1.catalog() : (t2 != null ? t2.catalog() : null);
-        String table0 = Utility.isEmpty(tableName0) ? type.getSimpleName().toLowerCase() : tableName0;
+        String table0 = Utility.isEmpty(tableName0)
+                ? (camelCase
+                        ? EntityColumn.camelCase(type.getSimpleName())
+                        : type.getSimpleName().toLowerCase())
+                : tableName0;
         if (Utility.isNotEmpty(tableCcatalog0)) {
             table0 = tableCcatalog0 + '.' + table0;
         }
@@ -471,7 +477,8 @@ public final class EntityInfo<T> {
                         notNullColumns.add(fieldName);
                     }
                 }
-                ddl.add(new EntityColumn(idFlag, col, attr.field(), attr.type(), field.getAnnotation(Comment.class)));
+                ddl.add(new EntityColumn(
+                        idFlag, camelCase, col, attr.field(), attr.type(), field.getAnnotation(Comment.class)));
                 queryCols.add(sqlField);
                 queryAttrs.add(attr);
                 fields.add(fieldName);
@@ -526,13 +533,15 @@ public final class EntityInfo<T> {
         this.insertColumns = new EntityColumn[this.insertAttributes.length];
         for (int i = 0; i < this.insertAttributes.length; i++) {
             String field = this.insertAttributes[i].field();
-            this.insertColumns[i] = Utility.find(this.ddlColumns, c -> c.getField().equals(field));
+            this.insertColumns[i] =
+                    Utility.find(this.ddlColumns, c -> c.getField().equals(field));
         }
         this.updateAttributes = updateAttrs.toArray(new Attribute[updateAttrs.size()]);
         this.updateColumns = new EntityColumn[this.updateAttributes.length];
         for (int i = 0; i < this.updateAttributes.length; i++) {
             String field = this.updateAttributes[i].field();
-            this.updateColumns[i] = Utility.find(this.ddlColumns, c -> c.getField().equals(field));
+            this.updateColumns[i] =
+                    Utility.find(this.ddlColumns, c -> c.getField().equals(field));
         }
         this.updateEntityAttributes = Utility.append(this.updateAttributes, this.primary);
         this.updateEntityColumns = Utility.append(this.updateColumns, this.primaryColumn);
@@ -545,8 +554,8 @@ public final class EntityInfo<T> {
         } else {
             constructorAttributes = new Attribute[constructorParameters.length];
             List<Attribute<T, Serializable>> unconstructorAttrs = new ArrayList<>();
-            List<String> newquerycols1 = new ArrayList<>();
-            List<String> newquerycols2 = new ArrayList<>();
+            List<String> newQueryCols1 = new ArrayList<>();
+            List<String> newQueryCols2 = new ArrayList<>();
             for (Attribute<T, Serializable> attr : new ArrayList<>(queryAttrs)) {
                 int pos = -1;
                 for (int i = 0; i < constructorParameters.length; i++) {
@@ -557,15 +566,15 @@ public final class EntityInfo<T> {
                 }
                 if (pos >= 0) {
                     constructorAttributes[pos] = attr;
-                    newquerycols1.add(queryCols.get(queryAttrs.indexOf(attr)));
+                    newQueryCols1.add(queryCols.get(queryAttrs.indexOf(attr)));
                 } else {
                     unconstructorAttrs.add(attr);
-                    newquerycols2.add(queryCols.get(queryAttrs.indexOf(attr)));
+                    newQueryCols2.add(queryCols.get(queryAttrs.indexOf(attr)));
                 }
             }
             unconstructorAttributes = unconstructorAttrs.toArray(new Attribute[unconstructorAttrs.size()]);
-            newquerycols1.addAll(newquerycols2);
-            queryCols = newquerycols1;
+            newQueryCols1.addAll(newQueryCols2);
+            queryCols = newQueryCols1;
             List<Attribute<T, Serializable>> newqueryattrs = new ArrayList<>();
             newqueryattrs.addAll(List.of(constructorAttributes));
             newqueryattrs.addAll(unconstructorAttrs);
@@ -578,7 +587,8 @@ public final class EntityInfo<T> {
         this.queryColumns = new EntityColumn[this.queryAttributes.length];
         for (int i = 0; i < this.queryAttributes.length; i++) {
             String field = this.queryAttributes[i].field();
-            this.queryColumns[i] = Utility.find(this.ddlColumns, c -> c.getField().equals(field));
+            this.queryColumns[i] =
+                    Utility.find(this.ddlColumns, c -> c.getField().equals(field));
         }
         this.builder = new EntityBuilder<>(
                 type,
@@ -735,7 +745,6 @@ public final class EntityInfo<T> {
         boolean cacheable = false;
         int interval = 0;
         boolean direct = false;
-        org.redkale.persistence.Entity en = type.getAnnotation(org.redkale.persistence.Entity.class);
         if (en != null) {
             cacheable = en.cacheable();
             interval = en.cacheInterval();
@@ -1774,5 +1783,4 @@ public final class EntityInfo<T> {
     public String toString() {
         return getClass().getSimpleName() + "(" + type.getName() + ")@" + Objects.hashCode(this);
     }
-
 }
