@@ -42,6 +42,13 @@ public interface CachedManager extends Resourcable {
     public String resourceName();
 
     /**
+     * 唯一标识
+     *
+     * @return  node
+     */
+    public String getNode();
+
+    /**
      * 缓存的schema, 不能含有':'、'#'、'@'字符
      *
      * @return  schema

@@ -18,6 +18,9 @@ import org.redkale.convert.json.JsonConvert;
  */
 public class CachedEventMessage implements Serializable {
 
+    // CachedManager唯一标识
+    protected String node;
+    
     // key
     protected String key;
 
@@ -26,9 +29,18 @@ public class CachedEventMessage implements Serializable {
 
     public CachedEventMessage() {}
 
-    public CachedEventMessage(String key) {
+    public CachedEventMessage(String node, String key) {
+        this.node = node;
         this.key = key;
         this.time = System.currentTimeMillis();
+    }
+
+    public String getNode() {
+        return node;
+    }
+
+    public void setNode(String node) {
+        this.node = node;
     }
 
     public String getKey() {

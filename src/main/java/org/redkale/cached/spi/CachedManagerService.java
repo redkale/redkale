@@ -31,6 +31,7 @@ import org.redkale.util.AnyValue;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.ThrowSupplier;
 import org.redkale.util.TypeToken;
+import org.redkale.util.Utility;
 
 /**
  * 缓存管理器
@@ -51,6 +52,9 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     protected final Logger logger = Logger.getLogger(getClass().getSimpleName());
 
     protected Level logLevel = Level.FINER;
+
+    // 唯一标识
+    protected final String node = Utility.uuid();
 
     // 名称
     protected String name;
@@ -165,6 +169,11 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     @Override
     public String resourceName() {
         return name;
+    }
+
+    @Override
+    public String getNode() {
+        return node;
     }
 
     @Override
@@ -620,7 +629,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
             setCache(remoteSource, key, type, value, remoteExpire);
         }
         if (remoteSource != null && broadcastable) {
-            remoteSource.publish(getChannelTopic(), new CachedEventMessage(key));
+            remoteSource.publish(getChannelTopic(), new CachedEventMessage(node, key));
         }
     }
 
@@ -648,7 +657,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         }
         if (remoteSource != null && broadcastable) {
             future = future.thenCompose(r -> remoteSource
-                    .publishAsync(getChannelTopic(), new CachedEventMessage(key))
+                    .publishAsync(getChannelTopic(), new CachedEventMessage(node, key))
                     .thenApply(n -> r));
         }
         return future;
@@ -668,7 +677,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         if (remoteSource != null) {
             v = remoteSource.del(id);
             if (broadcastable) {
-                remoteSource.publish(getChannelTopic(), new CachedEventMessage(key));
+                remoteSource.publish(getChannelTopic(), new CachedEventMessage(node, key));
             }
         }
         return v;
@@ -689,7 +698,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
             return remoteSource.delAsync(id).thenCompose(r -> {
                 return broadcastable
                         ? remoteSource
-                                .publishAsync(getChannelTopic(), new CachedEventMessage(key))
+                                .publishAsync(getChannelTopic(), new CachedEventMessage(node, key))
                                 .thenApply(n -> r)
                         : CompletableFuture.completedFuture(v);
             });
@@ -1035,7 +1044,9 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
 
         @Override
         public void onMessage(String topic, CachedEventMessage message) {
-            localSource.del(idFor(message.getKey()));
+            if (!Objects.equals(getNode(), message.getNode())) {
+                localSource.del(idFor(message.getKey()));
+            }
         }
     }
 }
