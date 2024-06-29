@@ -415,7 +415,7 @@ public final class ClassFilter<T> {
      * 例如：
      * *.platf.** 转成  ^(\w+)\.platf\.(.*)$
      *
-     * @param regx
+     * @param regx 正则表达式
      * @return  Pattern
      */
     public static String formatPackageRegx(String regx) {

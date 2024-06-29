@@ -18,8 +18,6 @@ import org.redkale.convert.ConvertColumn;
  */
 public final class Flipper extends RowBound {
 
-    public static int DEFAULT_LIMIT = 20;
-
     @ConvertColumn(index = 3)
     @Comment("排序字段, 可多字段排序")
     private String sort = "";

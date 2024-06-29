@@ -2877,7 +2877,7 @@ public class HttpRequest extends Request<HttpContext> {
             return flipper;
         }
         if (maxLimit < 1) {
-            maxLimit = org.redkale.source.Flipper.DEFAULT_LIMIT;
+            maxLimit = org.redkale.source.Flipper.getDefaultLimit();
         }
         return new org.redkale.source.Flipper(maxLimit);
     }

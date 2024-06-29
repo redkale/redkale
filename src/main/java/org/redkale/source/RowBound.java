@@ -13,12 +13,15 @@ import org.redkale.convert.ConvertColumn;
  *
  * <p>详情见: https://redkale.org
  *
+ * @see org.redkale.source.Flipper
+ * @see org.redkale.source.PageBean
+ *
  * @author zhangjx
  * @since 2.8.0
  */
 public class RowBound implements Serializable, Cloneable {
 
-    public static int DEFAULT_LIMIT = 20;
+    private static int DEFAULT_LIMIT = 20;
 
     @ConvertColumn(index = 1)
     @Comment("记录行的偏移量，从0开始")
@@ -148,7 +151,17 @@ public class RowBound implements Serializable, Cloneable {
         return this;
     }
 
-    public static boolean validLimit(RowBound flipper) {
-        return flipper != null && flipper.getLimit() > 0;
+    public static boolean validLimit(RowBound round) {
+        return round != null && round.getLimit() > 0;
+    }
+
+    public static int getDefaultLimit() {
+        return DEFAULT_LIMIT;
+    }
+
+    public static void setDefaultLimit(int limit) {
+        if (limit > 0) {
+            DEFAULT_LIMIT = limit;
+        }
     }
 }

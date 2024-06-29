@@ -166,13 +166,13 @@ public interface DataSqlSource extends DataSource {
     }
 
     @ClassDepends
-    default <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, Flipper flipper) {
-        return nativeQuerySheet(type, sql, flipper, Collections.emptyMap());
+    default <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, RowBound round) {
+        return nativeQuerySheet(type, sql, round, Collections.emptyMap());
     }
 
     @ClassDepends
-    default <V> CompletableFuture<Sheet<V>> nativeQuerySheetAsync(Class<V> type, String sql, Flipper flipper) {
-        return nativeQuerySheetAsync(type, sql, flipper, Collections.emptyMap());
+    default <V> CompletableFuture<Sheet<V>> nativeQuerySheetAsync(Class<V> type, String sql, RowBound round) {
+        return nativeQuerySheetAsync(type, sql, round, Collections.emptyMap());
     }
 
     @ClassDepends
@@ -417,15 +417,15 @@ public interface DataSqlSource extends DataSource {
                 Copier.copyToMap(bean, Copier.OPTION_SKIP_NULL_VALUE));
     }
 
-    default <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, Flipper flipper, Serializable bean) {
+    default <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, RowBound round, Serializable bean) {
         return nativeQuerySheet(
-                type, sql, flipper, (Map<String, Object>) Copier.copyToMap(bean, Copier.OPTION_SKIP_NULL_VALUE));
+                type, sql, round, (Map<String, Object>) Copier.copyToMap(bean, Copier.OPTION_SKIP_NULL_VALUE));
     }
 
     default <V> CompletableFuture<Sheet<V>> nativeQuerySheetAsync(
-            Class<V> type, String sql, Flipper flipper, Serializable bean) {
+            Class<V> type, String sql, RowBound round, Serializable bean) {
         return nativeQuerySheetAsync(
-                type, sql, flipper, (Map<String, Object>) Copier.copyToMap(bean, Copier.OPTION_SKIP_NULL_VALUE));
+                type, sql, round, (Map<String, Object>) Copier.copyToMap(bean, Copier.OPTION_SKIP_NULL_VALUE));
     }
 
     default <V> Sheet<V> nativeQuerySheet(Class<V> type, String sql, PageBean pageBean) {

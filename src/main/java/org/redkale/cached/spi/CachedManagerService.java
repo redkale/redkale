@@ -116,7 +116,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         }
         this.name = conf.getValue("name", "");
         this.enabled = conf.getBoolValue("enabled", true);
-        this.schema = conf.getValue("schema", DEFAULT_SCHEMA);
+        this.schema = checkSchema(conf.getValue("schema", DEFAULT_SCHEMA));
         if (this.enabled) {
             this.localSource.init(conf);
             String remoteSourceName = conf.getValue("remote", "");
@@ -133,6 +133,23 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
                 this.remoteSource.subscribe(CachedEventMessage.class, remoteListener, getChannelTopic());
             }
         }
+    }
+
+    /**
+     * 检查name是否含特殊字符
+     *
+     * @param value 参数
+     * @return
+     */
+    protected String checkSchema(String value) {
+        if (value != null && !value.isEmpty()) {
+            for (char ch : value.toCharArray()) {
+                if (ch == ':' || ch == '#' || ch == '@') { // 不能含特殊字符
+                    throw new RedkaleException("schema cannot contains : # @");
+                }
+            }
+        }
+        return value;
     }
 
     @Override

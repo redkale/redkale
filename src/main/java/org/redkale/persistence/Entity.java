@@ -31,6 +31,7 @@ public @interface Entity {
     /**
      * (Optional) 表名和字段名是否将驼峰式改成下划线式
      *
+     * @since 2.8.0
      * @return boolean
      */
     boolean camelCase() default false;
