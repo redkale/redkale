@@ -5,10 +5,9 @@
  */
 package org.redkale.net.http;
 
+import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-import java.lang.annotation.*;
 
 /**
  * 依附在RestService类的方法的参数上, 用于接收上传文件 <br>
@@ -35,14 +34,14 @@ public @interface RestUploadFile {
      *
      * @return String
      */
-    String fileNameRegx() default "";
+    String fileNameRegex() default "";
 
     /**
      * 可接收的ContentType正则表达式, 为空表示接收任何文件类型 <br>
      *
      * @return String
      */
-    String contentTypeRegx() default "";
+    String contentTypeRegex() default "";
 
     /**
      * 备注描述, 对应&#64;HttpParam.comment

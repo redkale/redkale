@@ -1291,10 +1291,10 @@ public final class CacheMemorySource extends AbstractCacheSource {
                     .collect(Collectors.toMap(
                             Map.Entry::getKey, en -> CacheEntry.serialToObj(convert, type, en.getValue())));
         } else {
-            Predicate<String> regx = Pattern.compile(pattern.replace("*", ".*")).asPredicate();
+            Predicate<String> regex = Pattern.compile(pattern.replace("*", ".*")).asPredicate();
             Set<Map.Entry<String, Serializable>> set = entry.mapValue.entrySet();
             return set.stream()
-                    .filter(en -> regx.test(en.getKey()))
+                    .filter(en -> regex.test(en.getKey()))
                     .collect(Collectors.toMap(
                             Map.Entry::getKey, en -> CacheEntry.serialToObj(convert, type, en.getValue())));
         }
@@ -2356,8 +2356,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
         if (Utility.isEmpty(pattern)) {
             return sets.stream().collect(Collectors.toList());
         } else {
-            Predicate<String> regx = Pattern.compile(pattern.replace("*", ".*")).asPredicate();
-            return sets.stream().filter(en -> regx.test(en.getValue())).collect(Collectors.toList());
+            Predicate<String> regex = Pattern.compile(pattern.replace("*", ".*")).asPredicate();
+            return sets.stream().filter(en -> regex.test(en.getValue())).collect(Collectors.toList());
         }
     }
 

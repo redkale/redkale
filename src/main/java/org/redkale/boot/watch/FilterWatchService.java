@@ -33,7 +33,7 @@ public class FilterWatchService extends AbstractWatchService {
 
     @RestMapping(name = "addFilter", auth = false, comment = "动态增加Filter")
     public RetResult addFilter(
-            @RestUploadFile(maxLength = 10 * 1024 * 1024, fileNameRegx = "\\.jar$") byte[] jar,
+            @RestUploadFile(maxLength = 10 * 1024 * 1024, fileNameRegex = "\\.jar$") byte[] jar,
             @RestParam(name = "server", comment = "Server节点名") final String serverName,
             @RestParam(name = "type", comment = "Filter类名") final String filterType)
             throws IOException {

@@ -5,13 +5,12 @@
  */
 package org.redkale.net.http;
 
-import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
-
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.HttpCookie;
 import java.text.*;
 import java.time.ZoneId;
+import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.LongAdder;
@@ -153,8 +152,8 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @param urlreg 正则表达式
      * @return 是否成功
      */
-    public boolean addForbidURIReg(final String urlreg) {
-        return ((HttpDispatcherServlet) this.dispatcher).addForbidURIRegx(urlreg);
+    public boolean addForbidURIRegex(final String urlreg) {
+        return ((HttpDispatcherServlet) this.dispatcher).addForbidURIRegex(urlreg);
     }
 
     /**
@@ -163,7 +162,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @param urlreg 正则表达式
      * @return 是否成功
      */
-    public boolean removeForbidURIReg(final String urlreg) {
+    public boolean removeForbidURIRegex(final String urlreg) {
         return ((HttpDispatcherServlet) this.dispatcher).removeForbidURIReg(urlreg);
     }
 

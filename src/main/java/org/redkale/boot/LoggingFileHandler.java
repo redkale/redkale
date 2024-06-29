@@ -5,10 +5,9 @@
  */
 package org.redkale.boot;
 
-import static java.nio.file.StandardCopyOption.*;
-
 import java.io.*;
 import java.nio.file.Files;
+import static java.nio.file.StandardCopyOption.*;
 import java.util.Calendar;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.*;
@@ -37,7 +36,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
 
     public static class LoggingConsoleHandler extends ConsoleHandler {
 
-        private Pattern denyRegx;
+        private Pattern denyRegex;
 
         public LoggingConsoleHandler() {
             super();
@@ -47,13 +46,13 @@ public class LoggingFileHandler extends LoggingBaseHandler {
 
         private void configure() {
             LogManager manager = LogManager.getLogManager();
-            String denyregxstr = manager.getProperty(LoggingConsoleHandler.class.getName() + ".denyregx");
-            if (denyregxstr == null) {
-                denyregxstr = manager.getProperty("java.util.logging.ConsoleHandler.denyregx");
+            String denyregexstr = manager.getProperty(LoggingConsoleHandler.class.getName() + ".denyregex");
+            if (denyregexstr == null) {
+                denyregexstr = manager.getProperty("java.util.logging.ConsoleHandler.denyregex");
             }
             try {
-                if (denyregxstr != null && !denyregxstr.trim().isEmpty()) {
-                    this.denyRegx = Pattern.compile(denyregxstr);
+                if (denyregexstr != null && !denyregexstr.trim().isEmpty()) {
+                    this.denyRegex = Pattern.compile(denyregexstr);
                 }
             } catch (Exception e) {
                 // do nothing
@@ -62,7 +61,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
 
         @Override
         public void publish(LogRecord log) {
-            if (denyRegx != null && denyRegx.matcher(log.getMessage()).find()) {
+            if (denyRegex != null && denyRegex.matcher(log.getMessage()).find()) {
                 return;
             }
             fillLogRecord(log);
@@ -92,7 +91,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
 
     protected boolean append;
 
-    protected Pattern denyRegx;
+    protected Pattern denyRegex;
 
     private final AtomicLong logLength = new AtomicLong();
 
@@ -351,10 +350,10 @@ public class LoggingFileHandler extends LoggingBaseHandler {
             // do nothing
         }
 
-        String denyregxstr = manager.getProperty(cname + ".denyregx");
+        String denyregexstr = manager.getProperty(cname + ".denyregex");
         try {
-            if (denyregxstr != null && !denyregxstr.trim().isEmpty()) {
-                denyRegx = Pattern.compile(denyregxstr);
+            if (denyregexstr != null && !denyregexstr.trim().isEmpty()) {
+                denyRegex = Pattern.compile(denyregexstr);
             }
         } catch (Exception e) {
             // do nothing
@@ -366,7 +365,7 @@ public class LoggingFileHandler extends LoggingBaseHandler {
         if (!isLoggable(log)) {
             return;
         }
-        if (denyRegx != null && denyRegx.matcher(log.getMessage()).find()) {
+        if (denyRegex != null && denyRegex.matcher(log.getMessage()).find()) {
             return;
         }
         fillLogRecord(log);

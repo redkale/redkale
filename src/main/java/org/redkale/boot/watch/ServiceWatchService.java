@@ -231,7 +231,7 @@ public class ServiceWatchService extends AbstractWatchService {
     @RestMapping(name = "loadService", auth = false, comment = "动态增加Service")
     public RetResult loadService(
             @RestParam(name = "type", comment = "Service的类名") String type,
-            @RestUploadFile(maxLength = 10 * 1024 * 1024, fileNameRegx = "\\.jar$") byte[] jar) {
+            @RestUploadFile(maxLength = 10 * 1024 * 1024, fileNameRegex = "\\.jar$") byte[] jar) {
         // 待开发
         return RetResult.success();
     }

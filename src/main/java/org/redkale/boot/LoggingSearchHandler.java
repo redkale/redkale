@@ -2,9 +2,6 @@
  */
 package org.redkale.boot;
 
-import static org.redkale.boot.Application.RESNAME_APP_NAME;
-import static org.redkale.boot.Application.SYSNAME_APP_NAME;
-
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -12,6 +9,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.*;
 import java.util.logging.Formatter;
 import java.util.regex.Pattern;
+import static org.redkale.boot.Application.RESNAME_APP_NAME;
+import static org.redkale.boot.Application.SYSNAME_APP_NAME;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.persistence.*;
@@ -41,7 +40,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
 
     protected String pattern;
 
-    protected Pattern denyRegx;
+    protected Pattern denyRegex;
 
     protected String sourceResourceName;
 
@@ -210,10 +209,10 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
             // do nothing
         }
 
-        String denyRegxStr = manager.getProperty(cname + ".denyregx");
+        String denyRegexStr = manager.getProperty(cname + ".denyregex");
         try {
-            if (denyRegxStr != null && !denyRegxStr.trim().isEmpty()) {
-                denyRegx = Pattern.compile(denyRegxStr);
+            if (denyRegexStr != null && !denyRegexStr.trim().isEmpty()) {
+                denyRegex = Pattern.compile(denyRegexStr);
             }
         } catch (Exception e) {
             // do nothing
@@ -225,7 +224,7 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
         if (!isLoggable(log)) {
             return;
         }
-        if (denyRegx != null && denyRegx.matcher(log.getMessage()).find()) {
+        if (denyRegex != null && denyRegex.matcher(log.getMessage()).find()) {
             return;
         }
         if (log.getSourceClassName() != null) {

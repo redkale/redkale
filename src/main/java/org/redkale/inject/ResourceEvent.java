@@ -70,7 +70,7 @@ public interface ResourceEvent<T> {
 
     public static class ResourceChangeEvent<T> implements ResourceEvent<T> {
 
-        private static final Predicate<String> numRegx =
+        private static final Predicate<String> numRegex =
                 Pattern.compile("^(\\-\\+)?\\d+(\\.\\d+)?$").asPredicate();
 
         protected String name;
@@ -84,7 +84,7 @@ public interface ResourceEvent<T> {
             String str = val.toString();
             if ("false".equalsIgnoreCase(str)) return str;
             if (str.length() <= 4) return str;
-            if (numRegx.test(str)) return str;
+            if (numRegex.test(str)) return str;
             return str.substring(0, 2) + "***" + str.substring(str.length() - 2);
         }
 

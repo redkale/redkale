@@ -22,19 +22,19 @@ public class ClassFilterTest {
 
     @Test
     public void run1() {
-        String regx = ClassFilter.formatPackageRegx("*.platf.**");
+        String regx = ClassFilter.formatPackageRegex("*.platf.**");
         Assertions.assertEquals("^(\\w+)\\.platf\\.(.*)$", regx);
     }
 
     @Test
     public void run2() {
-        String regx = ClassFilter.formatPackageRegx("com.platf.**.api");
+        String regx = ClassFilter.formatPackageRegex("com.platf.**.api");
         Assertions.assertEquals("^com\\.platf\\.(.*)\\.api$", regx);
     }
 
     @Test
     public void run3() {
-        String regx = ClassFilter.formatPackageRegx("**.platf.api");
+        String regx = ClassFilter.formatPackageRegex("**.platf.api");
         Assertions.assertEquals("^(.*)\\.platf\\.api$", regx);
     }
 }

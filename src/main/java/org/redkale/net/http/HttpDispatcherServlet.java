@@ -34,9 +34,9 @@ public class HttpDispatcherServlet
 
     protected HttpServlet resourceHttpServlet = new HttpResourceServlet();
 
-    protected MappingEntry[] regxArray = null; // regxArray 包含 regxWsArray
+    protected MappingEntry[] regexArray = null; // regexArray 包含 regexWsArray
 
-    protected MappingEntry[] regxWsArray = null;
+    protected MappingEntry[] regexWsArray = null;
 
     protected Map<String, WebSocketServlet> wsMappings = new HashMap<>(); // super.mappings 包含 wsMappings
 
@@ -68,16 +68,16 @@ public class HttpDispatcherServlet
         allMapLock.lock();
         try {
             List<String> keys = new ArrayList<>();
-            if (regxArray != null) {
-                for (MappingEntry me : regxArray) {
+            if (regexArray != null) {
+                for (MappingEntry me : regexArray) {
                     if (predicateEntry.test(me)) {
                         servlets.add(me.servlet);
                         keys.add(me.mapping);
                     }
                 }
             }
-            if (regxWsArray != null) {
-                for (MappingEntry me : regxWsArray) {
+            if (regexWsArray != null) {
+                for (MappingEntry me : regexWsArray) {
                     if (predicateEntry.test(me)) {
                         servlets.add(me.servlet);
                         keys.add(me.mapping);
@@ -97,8 +97,8 @@ public class HttpDispatcherServlet
                 this.wsMappings = newWsMappings;
             }
             if (!keys.isEmpty()) {
-                this.regxArray = Utility.remove(this.regxArray, predicateEntry);
-                this.regxWsArray = Utility.remove(this.regxWsArray, predicateEntry);
+                this.regexArray = Utility.remove(this.regexArray, predicateEntry);
+                this.regexWsArray = Utility.remove(this.regexWsArray, predicateEntry);
                 for (HttpServlet rs : servlets) {
                     super.removeServlet(rs);
                 }
@@ -184,19 +184,19 @@ public class HttpDispatcherServlet
     }
 
     @SuppressWarnings("unchecked")
-    public boolean addForbidURIRegx(final String urlRegx) {
-        if (urlRegx == null || urlRegx.isEmpty()) {
+    public boolean addForbidURIRegex(final String urlRegex) {
+        if (urlRegex == null || urlRegex.isEmpty()) {
             return false;
         }
         excludeLock.lock();
         try {
-            if (forbidURIMaps != null && forbidURIMaps.containsKey(urlRegx)) {
+            if (forbidURIMaps != null && forbidURIMaps.containsKey(urlRegex)) {
                 return false;
             }
             if (forbidURIMaps == null) {
                 forbidURIMaps = new HashMap<>();
             }
-            String mapping = urlRegx;
+            String mapping = urlRegex;
             if (Utility.contains(mapping, '*', '{', '[', '(', '|', '^', '$', '+', '?', '\\')) { // 是否是正则表达式))
                 if (mapping.endsWith("/*")) {
                     mapping = mapping.substring(0, mapping.length() - 1) + ".*";
@@ -210,7 +210,7 @@ public class HttpDispatcherServlet
             BiPredicate<String, String> predicate = (prefix, uri) -> {
                 return begin || prefix.isEmpty() ? regPredicate.test(uri) : uri.matches(prefix + reg);
             };
-            forbidURIMaps.put(urlRegx, predicate);
+            forbidURIMaps.put(urlRegex, predicate);
             forbidURIPredicates = Utility.append(forbidURIPredicates, predicate);
             return true;
         } finally {
@@ -328,8 +328,8 @@ public class HttpDispatcherServlet
             }
             if (request.isWebSocket()) {
                 servlet = wsMappings.get(uri);
-                if (servlet == null && this.regxWsArray != null) {
-                    for (MappingEntry en : regxWsArray) {
+                if (servlet == null && this.regexWsArray != null) {
+                    for (MappingEntry en : regexWsArray) {
                         if (en.predicate.test(uri)) {
                             servlet = en.servlet;
                             break;
@@ -342,8 +342,8 @@ public class HttpDispatcherServlet
                 }
             } else {
                 servlet = mappingServlet(uri);
-                if (servlet == null && this.regxArray != null) {
-                    for (MappingEntry en : regxArray) {
+                if (servlet == null && this.regexArray != null) {
+                    for (MappingEntry en : regexArray) {
                         if (en.predicate.test(uri)) {
                             servlet = en.servlet;
                             break;
@@ -434,28 +434,28 @@ public class HttpDispatcherServlet
                     } else {
                         mappingPath = mappingPath + "$";
                     }
-                    if (regxArray == null) {
-                        regxArray = new MappingEntry[1];
-                        regxArray[0] = new MappingEntry(
+                    if (regexArray == null) {
+                        regexArray = new MappingEntry[1];
+                        regexArray[0] = new MappingEntry(
                                 mappingPath, Pattern.compile(mappingPath).asPredicate(), servlet);
                     } else {
-                        regxArray = Arrays.copyOf(regxArray, regxArray.length + 1);
-                        regxArray[regxArray.length - 1] = new MappingEntry(
+                        regexArray = Arrays.copyOf(regexArray, regexArray.length + 1);
+                        regexArray[regexArray.length - 1] = new MappingEntry(
                                 mappingPath, Pattern.compile(mappingPath).asPredicate(), servlet);
-                        Arrays.sort(regxArray);
+                        Arrays.sort(regexArray);
                     }
                     if (servlet instanceof WebSocketServlet) {
-                        if (regxWsArray == null) {
-                            regxWsArray = new MappingEntry[1];
-                            regxWsArray[0] = new MappingEntry(
+                        if (regexWsArray == null) {
+                            regexWsArray = new MappingEntry[1];
+                            regexWsArray[0] = new MappingEntry(
                                     mappingPath, Pattern.compile(mappingPath).asPredicate(), (WebSocketServlet)
                                             servlet);
                         } else {
-                            regxWsArray = Arrays.copyOf(regxWsArray, regxWsArray.length + 1);
-                            regxWsArray[regxWsArray.length - 1] = new MappingEntry(
+                            regexWsArray = Arrays.copyOf(regexWsArray, regexWsArray.length + 1);
+                            regexWsArray[regexWsArray.length - 1] = new MappingEntry(
                                     mappingPath, Pattern.compile(mappingPath).asPredicate(), (WebSocketServlet)
                                             servlet);
-                            Arrays.sort(regxWsArray);
+                            Arrays.sort(regexWsArray);
                         }
                     }
                 } else if (mappingPath != null && !mappingPath.isEmpty()) {
@@ -574,8 +574,8 @@ public class HttpDispatcherServlet
         });
         this.allMapStrings.clear();
         this.wsMappings.clear();
-        this.regxArray = null;
-        this.regxWsArray = null;
+        this.regexArray = null;
+        this.regexWsArray = null;
     }
 
     protected static class MappingEntry implements Comparable<MappingEntry> {

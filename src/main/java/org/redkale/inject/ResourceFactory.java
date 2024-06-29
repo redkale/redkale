@@ -1125,7 +1125,7 @@ public final class ResourceFactory {
 
     public ResourceTypeLoader findTypeLoader(Type ft, @Nullable Field field) {
         ResourceTypeLoader it = this.findMatchTypeLoader(ft, field);
-        return it == null ? findRegxTypeLoader(ft, field) : it;
+        return it == null ? findRegexTypeLoader(ft, field) : it;
     }
 
     private ResourceFactory parentRoot() {
@@ -1146,7 +1146,7 @@ public final class ResourceFactory {
         return parent == null ? null : parent.findMatchTypeLoader(ft, field);
     }
 
-    private ResourceTypeLoader findRegxTypeLoader(Type ft, @Nullable Field field) {
+    private ResourceTypeLoader findRegexTypeLoader(Type ft, @Nullable Field field) {
         if (field == null) {
             return null;
         }
@@ -1160,7 +1160,7 @@ public final class ResourceFactory {
                 return en.getValue();
             }
         }
-        return parent == null ? null : parent.findRegxTypeLoader(ft, field);
+        return parent == null ? null : parent.findRegexTypeLoader(ft, field);
     }
 
     private void onResourceInjected(Object src, Field field, Object res) {

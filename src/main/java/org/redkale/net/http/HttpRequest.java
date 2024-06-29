@@ -1458,9 +1458,10 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     /**
-     * 获取客户端地址IP, 与getRemoteAddress() 的区别在于：本方法优先取header中指定为RemoteAddress名的值，没有则返回getRemoteAddress()的getHostAddress()。
+     * 获取客户端地址IP, 与getRemoteAddress() 的区别在于：本方法优先取header中指定为RemoteAddress名的值，
+     * 没有则返回{@link #getRemoteAddress()}的getHostAddress()。
      * <br>
-     * 本方法适用于服务前端有如nginx的代理服务器进行中转，通过 getRemoteAddress()是获取不到客户端的真实IP。
+     * 本方法适用于服务前端有如nginx的代理服务器进行中转，通过 {@link #getRemoteAddress()}是获取不到客户端的真实IP。
      *
      * @return 地址
      */
@@ -1472,6 +1473,10 @@ public class HttpRequest extends Request<HttpContext> {
         if (remoteAddrHeader != null) {
             String val = getHeader(remoteAddrHeader);
             if (val != null) {
+                int pos = val.indexOf(',');
+                if (pos > 6) {
+                    val = val.substring(0, pos);
+                }
                 this.remoteAddr = val;
                 return val;
             }
@@ -1542,7 +1547,7 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 内容
      */
     public <T> T getBodyJson(java.lang.reflect.Type type) {
-        if (array == null || array.isEmpty()) {
+        if (isEmpty(array)) {
             return null;
         }
         Convert convert = this.reqConvert;
@@ -1564,7 +1569,7 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 内容
      */
     public <T> T getBodyJson(Convert convert, java.lang.reflect.Type type) {
-        if (array.isEmpty()) {
+        if (isEmpty(array)) {
             return null;
         }
         if (type == byte[].class) {

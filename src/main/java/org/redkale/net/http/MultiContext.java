@@ -96,12 +96,12 @@ public final class MultiContext {
      * 获取第一个文件的二进制
      *
      * @param max 可接收的文件大小最大值
-     * @param fileNameRegx 可接收的文件名正则表达式
-     * @param contentTypeRegx 可接收的ContentType正则表达式
+     * @param fileNameRegex 可接收的文件名正则表达式
+     * @param contentTypeRegex 可接收的ContentType正则表达式
      * @return 二进制文件
      * @throws IOException IOException
      */
-    public byte[] partsFirstBytes(final long max, final String fileNameRegx, final String contentTypeRegx)
+    public byte[] partsFirstBytes(final long max, final String fileNameRegex, final String contentTypeRegex)
             throws IOException {
         if (!isMultipart()) {
             return null;
@@ -113,14 +113,14 @@ public final class MultiContext {
                 continue; // 不遍历完后面getParameter可能获取不到值
             }
             has = true;
-            if (fileNameRegx != null
-                    && !fileNameRegx.isEmpty()
-                    && !part.getFileName().matches(fileNameRegx)) {
+            if (fileNameRegex != null
+                    && !fileNameRegex.isEmpty()
+                    && !part.getFileName().matches(fileNameRegex)) {
                 continue;
             }
-            if (contentTypeRegx != null
-                    && !contentTypeRegx.isEmpty()
-                    && !part.getContentType().matches(contentTypeRegx)) {
+            if (contentTypeRegex != null
+                    && !contentTypeRegex.isEmpty()
+                    && !part.getContentType().matches(contentTypeRegex)) {
                 continue;
             }
             tmpfile = part.getContentBytes(max < 1 ? Long.MAX_VALUE : max);
@@ -148,12 +148,12 @@ public final class MultiContext {
      *
      * @param home 进程目录
      * @param max 可接收的文件大小最大值
-     * @param fileNameRegx 可接收的文件名正则表达式
-     * @param contentTypeRegx 可接收的ContentType正则表达式
+     * @param fileNameRegex 可接收的文件名正则表达式
+     * @param contentTypeRegex 可接收的ContentType正则表达式
      * @return 文件
      * @throws IOException IOException
      */
-    public File partsFirstFile(final File home, final long max, final String fileNameRegx, final String contentTypeRegx)
+    public File partsFirstFile(final File home, final long max, final String fileNameRegex, final String contentTypeRegex)
             throws IOException {
         if (!isMultipart()) {
             return null;
@@ -165,14 +165,14 @@ public final class MultiContext {
                 continue; // 不遍历完后面getParameter可能获取不到值
             }
             has = true;
-            if (fileNameRegx != null
-                    && !fileNameRegx.isEmpty()
-                    && !part.getFileName().matches(fileNameRegx)) {
+            if (fileNameRegex != null
+                    && !fileNameRegex.isEmpty()
+                    && !part.getFileName().matches(fileNameRegex)) {
                 continue;
             }
-            if (contentTypeRegx != null
-                    && !contentTypeRegx.isEmpty()
-                    && !part.getContentType().matches(contentTypeRegx)) {
+            if (contentTypeRegex != null
+                    && !contentTypeRegex.isEmpty()
+                    && !part.getContentType().matches(contentTypeRegex)) {
                 continue;
             }
             File file = new File(home, "tmp/redkale-" + System.nanoTime() + "_" + part.getFileName());
@@ -197,26 +197,26 @@ public final class MultiContext {
      *
      * @param home 进程目录
      * @param max 可接收的文件大小最大值
-     * @param fileNameRegx 可接收的文件名正则表达式
-     * @param contentTypeRegx 可接收的ContentType正则表达式
+     * @param fileNameRegex 可接收的文件名正则表达式
+     * @param contentTypeRegex 可接收的ContentType正则表达式
      * @return 文件列表
      * @throws IOException IOException
      */
-    public File[] partsFiles(final File home, final long max, final String fileNameRegx, final String contentTypeRegx)
+    public File[] partsFiles(final File home, final long max, final String fileNameRegex, final String contentTypeRegex)
             throws IOException {
         if (!isMultipart()) {
             return null;
         }
         List<File> files = null;
         for (MultiPart part : parts()) {
-            if (fileNameRegx != null
-                    && !fileNameRegx.isEmpty()
-                    && !part.getFileName().matches(fileNameRegx)) {
+            if (fileNameRegex != null
+                    && !fileNameRegex.isEmpty()
+                    && !part.getFileName().matches(fileNameRegex)) {
                 continue;
             }
-            if (contentTypeRegx != null
-                    && !contentTypeRegx.isEmpty()
-                    && !part.getContentType().matches(contentTypeRegx)) {
+            if (contentTypeRegex != null
+                    && !contentTypeRegex.isEmpty()
+                    && !part.getContentType().matches(contentTypeRegex)) {
                 continue;
             }
             File file = new File(home, "tmp/redkale-" + System.nanoTime() + "_" + part.getFileName());
@@ -249,7 +249,7 @@ public final class MultiContext {
             return emptyIterable;
         }
         final String boundarystr = "--" + this.boundary;
-        final Pattern fileNameRegx = this.fileNamePattern;
+        final Pattern fileNameRegex = this.fileNamePattern;
         final String endboundary = boundarystr + "--";
         final byte[] boundarray = ("\n" + boundarystr).getBytes();
         final byte[] buffer = new byte[boundarray.length];
@@ -377,8 +377,8 @@ public final class MultiContext {
                             }
                         };
                         this.lastentry = new MultiPart(filename, name, contentType, counter, source);
-                        if (fileNameRegx != null
-                                && !fileNameRegx.matcher(filename).matches()) {
+                        if (fileNameRegex != null
+                                && !fileNameRegex.matcher(filename).matches()) {
                             return this.hasNext();
                         }
                         return true;

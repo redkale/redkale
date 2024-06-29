@@ -2765,8 +2765,8 @@ public final class Rest {
                     mv.visitMethodInsn(
                             INVOKEVIRTUAL, reqInternalName, "getMultiContext", "()" + multiContextDesc, false);
                     mv.visitLdcInsn(mupload.maxLength());
-                    mv.visitLdcInsn(mupload.fileNameRegx());
-                    mv.visitLdcInsn(mupload.contentTypeRegx());
+                    mv.visitLdcInsn(mupload.fileNameRegex());
+                    mv.visitLdcInsn(mupload.contentTypeRegex());
                     mv.visitMethodInsn(
                             INVOKEVIRTUAL,
                             multiContextName,
@@ -2782,8 +2782,8 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, "_redkale_home", "Ljava/io/File;");
                     mv.visitLdcInsn(mupload.maxLength());
-                    mv.visitLdcInsn(mupload.fileNameRegx());
-                    mv.visitLdcInsn(mupload.contentTypeRegx());
+                    mv.visitLdcInsn(mupload.fileNameRegex());
+                    mv.visitLdcInsn(mupload.contentTypeRegex());
                     mv.visitMethodInsn(
                             INVOKEVIRTUAL,
                             multiContextName,
@@ -2799,8 +2799,8 @@ public final class Rest {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, "_redkale_home", "Ljava/io/File;");
                     mv.visitLdcInsn(mupload.maxLength());
-                    mv.visitLdcInsn(mupload.fileNameRegx());
-                    mv.visitLdcInsn(mupload.contentTypeRegx());
+                    mv.visitLdcInsn(mupload.fileNameRegex());
+                    mv.visitLdcInsn(mupload.contentTypeRegex());
                     mv.visitMethodInsn(
                             INVOKEVIRTUAL,
                             multiContextName,

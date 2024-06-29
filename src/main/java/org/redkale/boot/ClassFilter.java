@@ -96,22 +96,22 @@ public final class ClassFilter<T> {
         this.classLoader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
     }
 
-    public static ClassFilter create(String includeRegxs, String excludeRegxs) {
-        return create(null, null, includeRegxs, excludeRegxs, null, null);
+    public static ClassFilter create(String includeRegexs, String excludeRegexs) {
+        return create(null, null, includeRegexs, excludeRegexs, null, null);
     }
 
     public static ClassFilter create(
             RedkaleClassLoader classLoader,
             Class[] excludeSuperClasses,
-            String includeRegxs,
-            String excludeRegxs,
+            String includeRegexs,
+            String excludeRegexs,
             Set<String> includeValues,
             Set<String> excludeValues) {
         ClassFilter filter = new ClassFilter(classLoader, null, null, excludeSuperClasses);
         filter.setIncludePatterns(
-                includeRegxs == null ? null : includeRegxs.replace(',', ';').split(";"));
+                includeRegexs == null ? null : includeRegexs.replace(',', ';').split(";"));
         filter.setExcludePatterns(
-                excludeRegxs == null ? null : excludeRegxs.replace(',', ';').split(";"));
+                excludeRegexs == null ? null : excludeRegexs.replace(',', ';').split(";"));
         filter.setPrivilegeIncludes(includeValues);
         filter.setPrivilegeExcludes(excludeValues);
         return filter;
@@ -385,17 +385,17 @@ public final class ClassFilter<T> {
         return rs;
     }
 
-    public static Pattern[] toPattern(String[] regxs) {
-        if (regxs == null || regxs.length == 0) {
+    public static Pattern[] toPattern(String[] regexs) {
+        if (regexs == null || regexs.length == 0) {
             return null;
         }
         int i = 0;
-        Pattern[] rs = new Pattern[regxs.length];
-        for (String regx : regxs) {
-            if (regx == null || regx.trim().isEmpty()) {
+        Pattern[] rs = new Pattern[regexs.length];
+        for (String regex : regexs) {
+            if (regex == null || regex.trim().isEmpty()) {
                 continue;
             }
-            rs[i++] = Pattern.compile(formatPackageRegx(regx.trim()));
+            rs[i++] = Pattern.compile(formatPackageRegex(regex.trim()));
         }
         if (i == 0) {
             return null;
@@ -415,14 +415,14 @@ public final class ClassFilter<T> {
      * 例如：
      * *.platf.** 转成  ^(\w+)\.platf\.(.*)$
      *
-     * @param regx 正则表达式
+     * @param regex 正则表达式
      * @return  Pattern
      */
-    public static String formatPackageRegx(String regx) {
-        if (regx.indexOf('^') >= 0 || regx.indexOf('$') >= 0 || regx.indexOf('\\') >= 0) { // 已经是标准正则表达式
-            return regx;
+    public static String formatPackageRegex(String regex) {
+        if (regex.indexOf('^') >= 0 || regex.indexOf('$') >= 0 || regex.indexOf('\\') >= 0) { // 已经是标准正则表达式
+            return regex;
         }
-        String str = regx.replace("**", sxing).replace("*", dxing);
+        String str = regex.replace("**", sxing).replace("*", dxing);
         str = str.replace("\\.", dian).replace(".", dian);
         return "^" + str.replace(dian, "\\.").replace(dxing, "(\\w+)").replace(sxing, "(.*)") + "$";
     }

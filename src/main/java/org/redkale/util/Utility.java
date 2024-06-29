@@ -1162,6 +1162,26 @@ public final class Utility {
     }
 
     /**
+     * 是否为空
+     *
+     * @param array ByteArray
+     * @return 是否为空
+     */
+    public static boolean isEmpty(ByteArray array) {
+        return array == null || array.isEmpty();
+    }
+
+    /**
+     * 是否不为空
+     *
+     * @param array ByteArray
+     * @return 是否不为空
+     */
+    public static boolean isNotEmpty(ByteArray array) {
+        return array != null && !array.isEmpty();
+    }
+
+    /**
      * 将字符串首字母大写
      *
      * @param str 字符串
