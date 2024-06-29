@@ -36,7 +36,13 @@ public final class ScheduledEvent {
 
     public <T> T getJson(String name, Type type) {
         Object obj = get(name);
-        return obj == null ? null : JsonConvert.root().convertFrom(type, obj.toString());
+        if (obj == null) {
+            return null;
+        } else if (type instanceof Class && ((Class) type).isAssignableFrom(obj.getClass())) {
+            return (T) obj;
+        } else {
+            return JsonConvert.root().convertFrom(type, obj.toString());
+        }
     }
 
     public String getString(String name) {

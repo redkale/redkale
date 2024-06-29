@@ -139,7 +139,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      * 检查name是否含特殊字符
      *
      * @param value 参数
-     * @return
+     * @return value
      */
     protected String checkSchema(String value) {
         if (value != null && !value.isEmpty()) {

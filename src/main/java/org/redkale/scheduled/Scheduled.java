@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 import org.redkale.service.LoadMode;
 
 /**
- * 定时任务标记，只能作用于Service的无参数或者单一ScheduleEvent参数的菲static方法上, 功能类似Spring里的Scheduled注解
+ * 定时任务标记，只能作用于Service的无参数或者单一{@link org.redkale.scheduled.ScheduledEvent}参数的菲static方法上, 功能类似Spring里的Scheduled注解
  *
  * <p>详情见: https://redkale.org
  *

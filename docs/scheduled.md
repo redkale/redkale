@@ -77,7 +77,7 @@
 ### 使用方法
 ```java
     @Scheduled(name = "testTask")
-    public void runTask(ScheduleEvent event) {
+    public void runTask(ScheduledEvent event) {
         System.out.println("xxl-job参数param: " + event.getString("param"));
         System.out.println("xxl-job参数index: " + event.getInteger("index"));
         System.out.println("xxl-job参数total: " + event.getInteger("total"));
