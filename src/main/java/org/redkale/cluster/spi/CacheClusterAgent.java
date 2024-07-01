@@ -203,7 +203,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         newaddr.resname = entry.resourceName;
         newaddr.nodeid = this.nodeid;
         newaddr.time = System.currentTimeMillis();
-        source.hset(entry.checkName, entry.checkid, AddressEntry.class, newaddr);
+        source.hset(entry.checkName, entry.checkId, AddressEntry.class, newaddr);
     }
 
     @Override // 获取SNCP远程服务的可用ip列表
@@ -309,7 +309,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
         entry.resname = clusterEntry.resourceName;
         entry.nodeid = this.nodeid;
         entry.time = System.currentTimeMillis();
-        source.hset(clusterEntry.serviceName, clusterEntry.serviceid, AddressEntry.class, entry);
+        source.hset(clusterEntry.serviceName, clusterEntry.serviceId, AddressEntry.class, entry);
         return clusterEntry;
     }
 
@@ -320,14 +320,14 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
 
     protected void deregister(NodeServer ns, String protocol, Service service, boolean realCanceled) {
         String serviceName = generateServiceName(ns, protocol, service);
-        String serviceid = generateServiceId(ns, protocol, service);
+        String serviceId = generateServiceId(ns, protocol, service);
         Predicate<ClusterEntry> predicate =
-                entry -> Objects.equals(entry.serviceName, serviceName) && Objects.equals(entry.serviceid, serviceid);
+                entry -> Objects.equals(entry.serviceName, serviceName) && Objects.equals(entry.serviceId, serviceId);
         ClusterEntry currEntry = Utility.find(localEntrys.values(), predicate);
         if (currEntry == null) {
             currEntry = Utility.find(remoteEntrys.values(), predicate);
         }
-        source.hdel(serviceName, serviceid);
+        source.hdel(serviceName, serviceId);
         if (realCanceled && currEntry != null) {
             currEntry.canceled = true;
         }

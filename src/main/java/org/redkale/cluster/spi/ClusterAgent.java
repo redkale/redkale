@@ -61,10 +61,10 @@ public abstract class ClusterAgent {
 
     protected Set<String> tags;
 
-    // key: serviceid
+    // key: serviceId
     protected final ConcurrentHashMap<String, ClusterEntry> localEntrys = new ConcurrentHashMap<>();
 
-    // key: serviceid
+    // key: serviceId
     protected final ConcurrentHashMap<String, ClusterEntry> remoteEntrys = new ConcurrentHashMap<>();
 
     public void init(AnyValue config) {
@@ -75,7 +75,7 @@ public abstract class ClusterAgent {
         this.protocols = Utility.isEmpty(ps) ? null : ps.split(";");
 
         String ts = config.getValue("ports", "");
-        if (ts != null && !ts.isEmpty()) {
+        if (Utility.isNotEmpty(ts)) {
             String[] its = ts.split(";");
             List<Integer> list = new ArrayList<>();
             for (String str : its) {
@@ -152,14 +152,14 @@ public abstract class ClusterAgent {
                 continue;
             }
             ClusterEntry htentry = register(ns, protocol, service);
-            localEntrys.put(htentry.serviceid, htentry);
+            localEntrys.put(htentry.serviceId, htentry);
         }
         // 远程模式加载IP列表, 只支持SNCP协议
         if (ns.isSNCP()) {
             for (Service service : remoteServices) {
                 ClusterEntry entry = new ClusterEntry(ns, protocol, service);
                 updateSncpAddress(entry);
-                remoteEntrys.put(entry.serviceid, entry);
+                remoteEntrys.put(entry.serviceId, entry);
             }
         }
     }
@@ -248,7 +248,7 @@ public abstract class ClusterAgent {
         try {
             Set<InetSocketAddress> addrs = ClusterAgent.this.queryAddress(entry).join();
             SncpRpcGroups rpcGroups = application.getSncpRpcGroups();
-            rpcGroups.putClusterAddress(entry.resourceid, addrs);
+            rpcGroups.putClusterAddress(entry.resourceId, addrs);
         } catch (Exception e) {
             logger.log(Level.SEVERE, entry + " updateSncpAddress error", e);
         }
@@ -368,7 +368,7 @@ public abstract class ClusterAgent {
     public class ClusterEntry {
 
         // serviceName+nodeid为主  服务的单个实例
-        public String serviceid;
+        public String serviceId;
 
         // 以协议+Rest资源名为主  服务类名
         public String serviceName;
@@ -377,9 +377,9 @@ public abstract class ClusterAgent {
 
         public final String resourceName;
 
-        public final String resourceid;
+        public final String resourceId;
 
-        public String checkid;
+        public String checkId;
 
         public String checkName;
 
@@ -397,14 +397,14 @@ public abstract class ClusterAgent {
         public boolean canceled;
 
         public ClusterEntry(NodeServer ns, String protocol, Service service) {
-            this.serviceid = generateServiceId(ns, protocol, service);
+            this.serviceId = generateServiceId(ns, protocol, service);
             this.serviceName = generateServiceName(ns, protocol, service);
-            this.checkid = generateCheckId(ns, protocol, service);
+            this.checkId = generateCheckId(ns, protocol, service);
             this.checkName = generateCheckName(ns, protocol, service);
             Class restype = Sncp.getResourceType(service);
             this.resourceType = restype.getName();
             this.resourceName = Sncp.getResourceName(service);
-            this.resourceid = Sncp.resourceid(resourceName, restype);
+            this.resourceId = Sncp.resourceid(resourceName, restype);
             this.protocol = protocol;
             InetSocketAddress addr = ns.getSocketAddress();
             String host = addr.getHostString();

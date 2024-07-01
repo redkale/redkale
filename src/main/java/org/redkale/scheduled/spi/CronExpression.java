@@ -181,9 +181,9 @@ public class CronExpression {
 
         private static final String[] DAYS = new String[] {"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
 
-        private final Type type;
+        private final CronType type;
 
-        protected CronField(Type type) {
+        protected CronField(CronType type) {
             this.type = type;
         }
 
@@ -310,7 +310,7 @@ public class CronExpression {
         @Nullable
         public abstract <T extends Temporal & Comparable<? super T>> T nextOrSame(T temporal);
 
-        protected Type type() {
+        protected CronType type() {
             return this.type;
         }
 
@@ -319,7 +319,7 @@ public class CronExpression {
             return (T) temporal;
         }
 
-        protected enum Type {
+        protected enum CronType {
             NANO(ChronoField.NANO_OF_SECOND, ChronoUnit.SECONDS),
             SECOND(ChronoField.SECOND_OF_MINUTE, ChronoUnit.MINUTES, ChronoField.NANO_OF_SECOND),
             MINUTE(
@@ -362,7 +362,7 @@ public class CronExpression {
 
             private final ChronoField[] lowerOrders;
 
-            Type(ChronoField field, ChronoUnit higherOrder, ChronoField... lowerOrders) {
+            CronType(ChronoField field, ChronoUnit higherOrder, ChronoField... lowerOrders) {
                 this.field = field;
                 this.higherOrder = higherOrder;
                 this.lowerOrders = lowerOrders;
@@ -438,13 +438,13 @@ public class CronExpression {
         // we store at most 60 bits, for seconds and minutes, so a 64-bit long suffices
         private long bits;
 
-        private BitsCronField(Type type) {
+        private BitsCronField(CronType type) {
             super(type);
         }
 
         public static BitsCronField zeroNanos() {
             if (zeroNanos == null) {
-                BitsCronField field = new BitsCronField(Type.NANO);
+                BitsCronField field = new BitsCronField(CronType.NANO);
                 field.setBit(0);
                 zeroNanos = field;
             }
@@ -452,27 +452,27 @@ public class CronExpression {
         }
 
         public static BitsCronField parseSeconds(String value) {
-            return parseField(value, Type.SECOND);
+            return parseField(value, CronType.SECOND);
         }
 
         public static BitsCronField parseMinutes(String value) {
-            return BitsCronField.parseField(value, Type.MINUTE);
+            return BitsCronField.parseField(value, CronType.MINUTE);
         }
 
         public static BitsCronField parseHours(String value) {
-            return BitsCronField.parseField(value, Type.HOUR);
+            return BitsCronField.parseField(value, CronType.HOUR);
         }
 
         public static BitsCronField parseDaysOfMonth(String value) {
-            return parseDate(value, Type.DAY_OF_MONTH);
+            return parseDate(value, CronType.DAY_OF_MONTH);
         }
 
         public static BitsCronField parseMonth(String value) {
-            return BitsCronField.parseField(value, Type.MONTH);
+            return BitsCronField.parseField(value, CronType.MONTH);
         }
 
         public static BitsCronField parseDaysOfWeek(String value) {
-            BitsCronField result = parseDate(value, Type.DAY_OF_WEEK);
+            BitsCronField result = parseDate(value, CronType.DAY_OF_WEEK);
             if (result.getBit(0)) {
                 // cron supports 0 for Sunday; we use 7 like java.time
                 result.setBit(7);
@@ -481,14 +481,14 @@ public class CronExpression {
             return result;
         }
 
-        private static BitsCronField parseDate(String value, BitsCronField.Type type) {
+        private static BitsCronField parseDate(String value, CronType type) {
             if (value.equals("?")) {
                 value = "*";
             }
             return BitsCronField.parseField(value, type);
         }
 
-        private static BitsCronField parseField(String value, Type type) {
+        private static BitsCronField parseField(String value, CronType type) {
             if (Utility.isBlank(value)) {
                 throw new RedkaleException("Value must not be empty");
             }
@@ -525,7 +525,7 @@ public class CronExpression {
             }
         }
 
-        private static ValueRange parseRange(String value, Type type) {
+        private static ValueRange parseRange(String value, CronType type) {
             if (value.equals("*")) {
                 return type.range();
             } else {
@@ -538,7 +538,7 @@ public class CronExpression {
                     int max = Integer.parseInt(value, hyphenPos + 1, value.length(), 10);
                     min = type.checkValidValue(min);
                     max = type.checkValidValue(max);
-                    if (type == Type.DAY_OF_WEEK && min == 7) {
+                    if (type == CronType.DAY_OF_WEEK && min == 7) {
                         // If used as a minimum in a range, Sunday means 0 (not 7)
                         min = 0;
                     }
@@ -660,13 +660,13 @@ public class CronExpression {
 
         private final String value;
 
-        private CompositeCronField(Type type, CronField[] fields, String value) {
+        private CompositeCronField(CronType type, CronField[] fields, String value) {
             super(type);
             this.fields = fields;
             this.value = value;
         }
 
-        public static CronField compose(CronField[] fields, Type type, String value) {
+        public static CronField compose(CronField[] fields, CronType type, String value) {
             if (fields == null || fields.length < 1) {
                 throw new RedkaleException("Fields must not be empty");
             }
