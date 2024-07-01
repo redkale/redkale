@@ -9,6 +9,7 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import org.redkale.annotation.*;
 import org.redkale.boot.*;
@@ -320,20 +321,11 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
     protected void deregister(NodeServer ns, String protocol, Service service, boolean realCanceled) {
         String serviceName = generateServiceName(ns, protocol, service);
         String serviceid = generateServiceId(ns, protocol, service);
-        ClusterEntry currEntry = null;
-        for (final ClusterEntry entry : localEntrys.values()) {
-            if (Objects.equals(entry.serviceName, serviceName) && Objects.equals(entry.serviceid, serviceid)) {
-                currEntry = entry;
-                break;
-            }
-        }
+        Predicate<ClusterEntry> predicate =
+                entry -> Objects.equals(entry.serviceName, serviceName) && Objects.equals(entry.serviceid, serviceid);
+        ClusterEntry currEntry = Utility.find(localEntrys.values(), predicate);
         if (currEntry == null) {
-            for (final ClusterEntry entry : remoteEntrys.values()) {
-                if (Objects.equals(entry.serviceName, serviceName) && Objects.equals(entry.serviceid, serviceid)) {
-                    currEntry = entry;
-                    break;
-                }
-            }
+            currEntry = Utility.find(remoteEntrys.values(), predicate);
         }
         source.hdel(serviceName, serviceid);
         if (realCanceled && currEntry != null) {

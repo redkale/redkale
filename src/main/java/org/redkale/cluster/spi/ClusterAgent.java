@@ -5,8 +5,6 @@
  */
 package org.redkale.cluster.spi;
 
-import static org.redkale.boot.Application.*;
-
 import java.lang.ref.WeakReference;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
@@ -16,6 +14,7 @@ import java.util.logging.*;
 import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.boot.*;
+import static org.redkale.boot.Application.*;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.inject.ResourceEvent;
@@ -203,7 +202,7 @@ public abstract class ClusterAgent {
             }
         }
         ClusterEntry entry = new ClusterEntry(ns, protocol, service);
-        if (entry.serviceName.trim().endsWith(".")) {
+        if (entry.serviceName.endsWith(".")) {
             return false;
         }
         return true;
@@ -224,9 +223,9 @@ public abstract class ClusterAgent {
     public abstract CompletableFuture<Set<InetSocketAddress>> queryHttpAddress(
             String protocol, String module, String resname);
 
-    // 获取SNCP远程服务的可用ip列表 restype: resourceType.getName()
+    // 获取SNCP远程服务的可用ip列表 resType: resourceType.getName()
     public abstract CompletableFuture<Set<InetSocketAddress>> querySncpAddress(
-            String protocol, String restype, String resname);
+            String protocol, String resType, String resname);
 
     // 获取远程服务的可用ip列表
     protected abstract CompletableFuture<Set<InetSocketAddress>> queryAddress(ClusterEntry entry);
@@ -287,8 +286,8 @@ public abstract class ClusterAgent {
         return this.appAddress.getPort();
     }
 
-    public String generateSncpServiceName(String protocol, String restype, String resname) {
-        return protocol.toLowerCase() + ":" + restype + (Utility.isEmpty(resname) ? "" : ("-" + resname));
+    public String generateSncpServiceName(String protocol, String resType, String resname) {
+        return protocol.toLowerCase() + ":" + resType + (Utility.isEmpty(resname) ? "" : ("-" + resname));
     }
 
     // 也会提供给HttpMessageClusterAgent适用
