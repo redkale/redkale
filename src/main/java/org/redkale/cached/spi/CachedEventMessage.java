@@ -20,7 +20,7 @@ public class CachedEventMessage implements Serializable {
 
     // CachedManager唯一标识
     protected String node;
-    
+
     // key
     protected String key;
 
