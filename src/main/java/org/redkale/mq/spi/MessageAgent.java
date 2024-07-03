@@ -85,7 +85,8 @@ public abstract class MessageAgent implements MessageManager {
     protected final Map<String, Map<String, MessageConsumerWrapper>> messageConsumerMap = new HashMap<>();
 
     // -------------------------- HttpRpcClient、SncpMessageClient --------------------------
-    private boolean rpcFirst;
+    // cluster和mq同名组件时，HttpRpcClient优先使用MQ，默认不优先走MQ。
+    private boolean rpc;
 
     private HttpRpcMessageClient httpRpcClient;
 
@@ -109,7 +110,7 @@ public abstract class MessageAgent implements MessageManager {
 
     public void init(AnyValue config) {
         this.name = checkName(config.getValue("name", ""));
-        this.rpcFirst = config.getBoolValue("rpcfirst", false);
+        this.rpc = config.getBoolValue("rpc", false);
         this.httpAppRespTopic = generateHttpAppRespTopic();
         this.sncpAppRespTopic = generateSncpAppRespTopic();
         int threads = config.getIntValue("threads", application.isVirtualWorkExecutor() ? 0 : -1);
@@ -363,8 +364,8 @@ public abstract class MessageAgent implements MessageManager {
         return sncpMessageClient;
     }
 
-    public boolean isRpcFirst() {
-        return rpcFirst;
+    public boolean isRpc() {
+        return rpc;
     }
 
     protected String checkName(String name) { // 不能含特殊字符

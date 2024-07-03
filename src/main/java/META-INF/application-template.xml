@@ -74,12 +74,12 @@ serviceid1_name1  serviceid1_name2   serviceid2_name1  serviceid2_name2
         name:    服务的名称，用于监控识别，多个mq节点时只能有一个name为空的节点，mq.name不能重复,命名规则: 字母、数字、下划线
         type：   实现类名，必须是org.redkale.mq.MessageAgent的子类
         threads：线程数，为0表示使用workExecutor。默认: CPU核数, 核数=1的情况下默认值为2，JDK 21以上版本默认使用虚拟线程池
-        rpcfirst：cluster和mq同名组件时，HttpRpcClient优先使用MQ，默认不优先走MQ。
+        rpc：cluster和mq同名组件时，HttpRpcClient优先使用MQ，默认不优先走MQ。
         coder:   MessageRecord的解析器类，必须是org.redkale.mq.MessageCoder<MessageRecord>的实现类,
             可对数据包进行加密解密，默认值：org.redkale.mq.MessageRecordCoder
         MQ节点下的子节点配置没有固定格式, 根据MessageAgent实现方的定义来配置
     -->
-    <mq name="" type="org.redkalex.mq.kafka.KafkaMessageAgent" rpcfirst="false" threads="4">
+    <mq name="" type="org.redkalex.mq.kafka.KafkaMessageAgent" rpc="false" threads="4">
         <servers value="127.0.0.1:9101"/>
         <!--
         加载所有的MessageConsumer实例;

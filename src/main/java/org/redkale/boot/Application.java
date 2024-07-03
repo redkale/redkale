@@ -663,7 +663,7 @@ public final class Application {
                     if (messageAgent != null) {
                         if (clusterAgent == null
                                 || !Objects.equals(clusterAgent.getName(), resourceName)
-                                || messageAgent.isRpcFirst()) {
+                                || messageAgent.isRpc()) {
                             HttpRpcClient rpcClient = messageAgent.getHttpRpcClient();
                             if (field != null) {
                                 field.set(srcObj, rpcClient);
