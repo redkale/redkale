@@ -4,6 +4,7 @@
 package org.redkale.mq;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import org.redkale.inject.Resourcable;
 
 /**
@@ -20,22 +21,22 @@ public interface MessageManager extends Resourcable {
      * 创建topic
      *
      * @param topics topic集合
-     * @return 是否成功
+     * @return 是否完成
      */
-    public boolean createTopic(String... topics);
+    public CompletableFuture<Void> createTopic(String... topics);
 
     /**
      * 删除topic，如果不存在则跳过
      *
      * @param topics topic集合
-     * @return 是否成功
+     * @return 是否完成
      */
-    public boolean deleteTopic(String... topics);
+    public CompletableFuture<Void> deleteTopic(String... topics);
 
     /**
      * 查询所有topic
      *
      * @return topic集合
      */
-    public abstract List<String> queryTopic();
+    public abstract CompletableFuture<List<String>> queryTopic();
 }

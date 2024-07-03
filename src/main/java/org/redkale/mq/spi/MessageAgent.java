@@ -5,9 +5,6 @@
  */
 package org.redkale.mq.spi;
 
-import static org.redkale.boot.Application.RESNAME_APP_NAME;
-import static org.redkale.boot.Application.RESNAME_APP_NODEID;
-
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
@@ -20,6 +17,8 @@ import java.util.logging.*;
 import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.boot.*;
+import static org.redkale.boot.Application.RESNAME_APP_NAME;
+import static org.redkale.boot.Application.RESNAME_APP_NODEID;
 import org.redkale.cluster.HttpRpcClient;
 import org.redkale.convert.Convert;
 import org.redkale.convert.ConvertFactory;
@@ -414,17 +413,17 @@ public abstract class MessageAgent implements MessageManager {
     @ResourceChanged
     public abstract void onResourceChange(ResourceEvent[] events);
 
-    //
+    // 新增topic
     @Override
-    public abstract boolean createTopic(String... topics);
+    public abstract CompletableFuture<Void> createTopic(String... topics);
 
     // 删除topic，如果不存在则跳过
     @Override
-    public abstract boolean deleteTopic(String... topics);
+    public abstract CompletableFuture<Void> deleteTopic(String... topics);
 
     // 查询所有topic
     @Override
-    public abstract List<String> queryTopic();
+    public abstract CompletableFuture<List<String>> queryTopic();
 
     // ServiceLoader时判断配置是否符合当前实现类
     public abstract boolean acceptsConf(AnyValue config);
