@@ -516,8 +516,8 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         Supplier<byte[]> dateSupplier = null;
         if (datePeriod == 0) {
             final ZoneId gmtZone = ZoneId.of("GMT");
-            dateSupplier = () ->
-                    ("Date: " + RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(gmtZone)) + "\r\n").getBytes();
+            dateSupplier =
+                    ("Date: " + RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(gmtZone)) + "\r\n")::getBytes;
         } else if (datePeriod > 0) {
             if (this.dateScheduler == null) {
                 this.dateScheduler = new ScheduledThreadPoolExecutor(1, (Runnable r) -> {
@@ -545,7 +545,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                         1000 - System.currentTimeMillis() % 1000,
                         datePeriod,
                         TimeUnit.MILLISECONDS);
-                dateSupplier = () -> dateRef.get();
+                dateSupplier = dateRef::get;
             }
         }
         HttpRender httpRender = null;
@@ -585,7 +585,13 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
         final HttpContextConfig contextConfig = new HttpContextConfig();
         initContextConfig(contextConfig);
-        contextConfig.remoteAddrHeader = addrHeader;
+        if (addrHeader != null && addrHeader.indexOf(',') > 0) {
+            contextConfig.remoteAddrHeader = null;
+            contextConfig.remoteAddrHeaders = addrHeader.replaceAll("\\s+", "").split(",");
+        } else {
+            contextConfig.remoteAddrHeader = addrHeader;
+            contextConfig.remoteAddrHeaders = null;
+        }
         contextConfig.localHeader = localHeader;
         contextConfig.localParameter = localParameter;
         contextConfig.rpcAuthenticatorConfig = rpcAuthenticatorConfig;

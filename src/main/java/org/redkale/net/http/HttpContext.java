@@ -5,8 +5,6 @@
  */
 package org.redkale.net.http;
 
-import static org.redkale.asm.Opcodes.*;
-
 import java.nio.channels.CompletionHandler;
 import java.nio.charset.Charset;
 import java.security.SecureRandom;
@@ -14,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.asm.*;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.net.*;
 import org.redkale.net.Context.ContextConfig;
 import org.redkale.util.*;
@@ -33,6 +32,9 @@ public class HttpContext extends Context {
 
     protected final String remoteAddrHeader;
 
+    // 用逗号隔开的多个header
+    protected final String[] remoteAddrHeaders;
+
     protected final String localHeader;
 
     protected final String localParameter;
@@ -50,6 +52,7 @@ public class HttpContext extends Context {
     public HttpContext(HttpContextConfig config) {
         super(config);
         this.remoteAddrHeader = config.remoteAddrHeader;
+        this.remoteAddrHeaders = config.remoteAddrHeaders;
         this.localHeader = config.localHeader;
         this.localParameter = config.localParameter;
         this.rpcAuthenticator = config.rpcAuthenticator;
@@ -231,6 +234,9 @@ public class HttpContext extends Context {
     public static class HttpContextConfig extends ContextConfig {
 
         public String remoteAddrHeader;
+
+        // 用逗号隔开的多个header
+        public String[] remoteAddrHeaders;
 
         public String localHeader;
 

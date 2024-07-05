@@ -167,6 +167,9 @@ public class HttpRequest extends Request<HttpContext> {
 
     private final String remoteAddrHeader;
 
+    // 用逗号隔开的多个header
+    private final String[] remoteAddrHeaders;
+
     private final String localHeader;
 
     private final String localParameter;
@@ -183,6 +186,7 @@ public class HttpRequest extends Request<HttpContext> {
         super(context);
         this.array = array;
         this.remoteAddrHeader = context.remoteAddrHeader;
+        this.remoteAddrHeaders = context.remoteAddrHeaders;
         this.localHeader = context.localHeader;
         this.localParameter = context.localParameter;
         this.rpcAuthenticator = context.rpcAuthenticator;
@@ -193,6 +197,7 @@ public class HttpRequest extends Request<HttpContext> {
         super(context);
         this.array = new ByteArray();
         this.remoteAddrHeader = null;
+        this.remoteAddrHeaders = null;
         this.localHeader = null;
         this.localParameter = null;
         this.rpcAuthenticator = null;
@@ -1470,17 +1475,26 @@ public class HttpRequest extends Request<HttpContext> {
             return this.remoteAddr;
         }
         parseHeader();
+        String ipValue = null;
         if (remoteAddrHeader != null) {
-            String val = getHeader(remoteAddrHeader);
-            if (val != null) {
-                int pos = val.indexOf(',');
-                if (pos > 6) {
-                    val = val.substring(0, pos);
+            ipValue = getHeader(remoteAddrHeader);
+        } else if (remoteAddrHeaders != null) {
+            for (String h : remoteAddrHeaders) {
+                ipValue = getHeader(h);
+                if (ipValue != null && !ipValue.isBlank()) {
+                    break;
                 }
-                this.remoteAddr = val;
-                return val;
             }
         }
+        if (ipValue != null) {
+            int pos = ipValue.indexOf(',');
+            if (pos > 3) {
+                ipValue = ipValue.substring(0, pos);
+            }
+            this.remoteAddr = ipValue;
+            return ipValue;
+        }
+
         SocketAddress addr = getRemoteAddress();
         if (addr == null) {
             return "";

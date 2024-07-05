@@ -3,18 +3,17 @@
  */
 package org.redkale.mq.spi;
 
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import java.lang.annotation.Documented;
+import static java.lang.annotation.ElementType.TYPE;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Target;
 import org.redkale.mq.MessageConsumer;
 
 /**
- * 只标准在类上面，因动态方法不作变动，只增加内部类
+ * 用于识别方法是否已经动态处理过
  *
  * @author zhangjx
  */
