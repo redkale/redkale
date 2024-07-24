@@ -414,6 +414,7 @@ public final class ClassFilter<T> {
      *  一个*表示包的一个层级， 两个*表示包的多层级
      * 例如：
      * *.platf.** 转成  ^(\w+)\.platf\.(.*)$
+     * .platf.    转成  ^(.*)\.platf\.(.*)$
      *
      * @param regex 正则表达式
      * @return  Pattern
@@ -421,6 +422,9 @@ public final class ClassFilter<T> {
     public static String formatPackageRegex(String regex) {
         if (regex.indexOf('^') >= 0 || regex.indexOf('$') >= 0 || regex.indexOf('\\') >= 0) { // 已经是标准正则表达式
             return regex;
+        }
+        if (regex.startsWith(".") && regex.endsWith(".")) { // .platf.
+            regex = "**" + regex + "**";
         }
         String str = regex.replace("**", sxing).replace("*", dxing);
         str = str.replace("\\.", dian).replace(".", dian);

@@ -157,7 +157,7 @@ public class CacheClusterAgent extends ClusterAgent implements Resourcable {
                 checkApplicationHealth();
                 checkHttpAddressHealth();
                 loadSncpAddressHealth();
-                long e = System.currentTimeMillis() - s;
+                long e = (System.currentTimeMillis() - s) / 1000;
                 if (e >= ttls * 9 / 10) {
                     logger.log(Level.WARNING, getClass().getSimpleName() + ".schedule check-slower cost " + e + " ms");
                 } else if (e >= ttls / 2) {

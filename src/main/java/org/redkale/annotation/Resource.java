@@ -15,7 +15,7 @@ import java.lang.annotation.*;
  * @since Common Annotations 1.0
  * @since 2.8.0
  */
-@Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
+@Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Resource {
 
