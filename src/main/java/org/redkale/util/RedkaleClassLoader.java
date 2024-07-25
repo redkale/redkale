@@ -472,6 +472,14 @@ public class RedkaleClassLoader extends URLClassLoader {
         }
     }
 
+    public void addURI(URI uri) {
+        try {
+            super.addURL(uri.toURL());
+        } catch (Exception e) {
+            throw new RedkaleException(e);
+        }
+    }
+
     @Override
     public void addURL(URL url) {
         super.addURL(url);

@@ -5,8 +5,6 @@
  */
 package org.redkale.net;
 
-import static org.redkale.net.AsyncGroup.UDP_BUFFER_CAPACITY;
-
 import java.io.*;
 import java.net.*;
 import java.nio.charset.Charset;
@@ -17,6 +15,8 @@ import java.util.logging.*;
 import javax.net.ssl.SSLContext;
 import org.redkale.boot.Application;
 import org.redkale.inject.ResourceFactory;
+import static org.redkale.net.AsyncGroup.UDP_BUFFER_CAPACITY;
+import org.redkale.net.Filter;
 import org.redkale.util.*;
 
 /**
@@ -584,45 +584,41 @@ public abstract class Server<
         return serverChannel == null ? -1 : serverChannel.getLivingConnectionCount();
     }
 
-    public static URL[] loadLib(final RedkaleClassLoader classLoader, final Logger logger, final String lib) {
+    public static URI[] loadLib(final RedkaleClassLoader classLoader, final Logger logger, final String lib) {
         if (lib == null || lib.isEmpty()) {
-            return new URL[0];
+            return new URI[0];
         }
-        final Set<URL> set = new HashSet<>();
-        try {
-            for (String s : lib.split(";")) {
-                if (s.isEmpty()) {
-                    continue;
+        final Set<URI> set = new HashSet<>();
+        for (String s : lib.split(";")) {
+            if (s.isEmpty()) {
+                continue;
+            }
+            if (s.endsWith("*")) {
+                File root = new File(s.substring(0, s.length() - 1));
+                if (root.isDirectory()) {
+                    File[] lfs = root.listFiles();
+                    if (lfs == null) {
+                        throw new RedkaleException("File(" + root + ") cannot listFiles()");
+                    }
+                    for (File f : lfs) {
+                        set.add(f.toURI());
+                    }
                 }
-                if (s.endsWith("*")) {
-                    File root = new File(s.substring(0, s.length() - 1));
-                    if (root.isDirectory()) {
-                        File[] lfs = root.listFiles();
-                        if (lfs == null) {
-                            throw new RedkaleException("File(" + root + ") cannot listFiles()");
-                        }
-                        for (File f : lfs) {
-                            set.add(f.toURI().toURL());
-                        }
-                    }
-                } else {
-                    File f = new File(s);
-                    if (f.canRead()) {
-                        set.add(f.toURI().toURL());
-                    }
+            } else {
+                File f = new File(s);
+                if (f.canRead()) {
+                    set.add(f.toURI());
                 }
             }
-        } catch (IOException e) {
-            throw new RedkaleException(e);
         }
         if (set.isEmpty()) {
-            return new URL[0];
+            return new URI[0];
         }
-        for (URL url : set) {
-            classLoader.addURL(url);
+        for (URI uri : set) {
+            classLoader.addURI(uri);
         }
-        List<URL> list = new ArrayList<>(set);
-        list.sort((URL o1, URL o2) -> o1.getFile().compareTo(o2.getFile()));
-        return list.toArray(new URL[list.size()]);
+        List<URI> list = new ArrayList<>(set);
+        list.sort((URI o1, URI o2) -> o1.toASCIIString().compareTo(o2.toASCIIString()));
+        return list.toArray(new URI[list.size()]);
     }
 }

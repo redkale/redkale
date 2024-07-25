@@ -1417,7 +1417,7 @@ public final class Application {
     public List<Object> command(String cmd, String[] params) {
         List<NodeServer> localServers = new ArrayList<>(servers); // 顺序sncps, others, watchs
         List<Object> results = new ArrayList<>();
-        localServers.stream().forEach((server) -> {
+        localServers.stream().forEach(server -> {
             try {
                 List<Object> rs = server.command(cmd, params);
                 if (rs != null) {
