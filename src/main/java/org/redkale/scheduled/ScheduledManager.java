@@ -3,6 +3,8 @@
  */
 package org.redkale.scheduled;
 
+import java.util.List;
+
 /**
  * 定时管理器
  *
@@ -28,6 +30,16 @@ public interface ScheduledManager {
      * @return 返回任务数量
      */
     public int start(String scheduleName);
+
+    /**
+     * 执行所有宿主对象中指定的任务名
+     *
+     * @see org.redkale.scheduled.Scheduled#name()
+     * @param scheduleName 定时任务名称
+     * @param all 是执行所有同名任务还是只执行其中任意一个
+     * @return 结果集合
+     */
+    public List<Object> execute(String scheduleName, boolean all);
 
     /**
      * 关闭宿主对象中所有的定时任务方法

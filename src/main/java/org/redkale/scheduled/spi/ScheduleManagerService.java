@@ -308,6 +308,27 @@ public class ScheduleManagerService implements ScheduledManager, Service {
     }
 
     @Override
+    public List<Object> execute(String scheduleName, boolean all) {
+        List<Object> rs = new ArrayList<>();
+        lock.lock();
+        try {
+            for (Map.Entry<WeakReference, List<ScheduledTask>> item : refTaskMap.entrySet()) {
+                for (ScheduledTask task : item.getValue()) {
+                    if (Objects.equals(task.name(), scheduleName)) {
+                        rs.add(task.execute());
+                        if (!all) {
+                            return rs;
+                        }
+                    }
+                }
+            }
+        } finally {
+            lock.unlock();
+        }
+        return rs;
+    }
+
+    @Override
     public int stop(String scheduleName) {
         int c = 0;
         lock.lock();
@@ -361,6 +382,21 @@ public class ScheduleManagerService implements ScheduledManager, Service {
         }
 
         public abstract void start();
+
+        protected abstract Function<ScheduledEvent, Object> delegate();
+
+        public Object execute() {
+            Object rs = null;
+            doing.set(true);
+            try {
+                rs = delegate().apply(event);
+            } catch (Throwable t) {
+                logger.log(Level.SEVERE, "ScheduledTask[" + name() + "] schedule error", t);
+            } finally {
+                doing.set(false);
+            }
+            return rs;
+        }
 
         public void stop() {
             if (future != null) {
@@ -416,15 +452,13 @@ public class ScheduleManagerService implements ScheduledManager, Service {
         }
 
         @Override
+        protected Function<ScheduledEvent, Object> delegate() {
+            return delegate;
+        }
+
+        @Override
         public void run() {
-            doing.set(true);
-            try {
-                delegate.apply(event);
-            } catch (Throwable t) {
-                logger.log(Level.SEVERE, "schedule task error", t);
-            } finally {
-                doing.set(false);
-            }
+            super.execute();
             if (ref.get() == null) {
                 super.stop();
             }
@@ -462,15 +496,13 @@ public class ScheduleManagerService implements ScheduledManager, Service {
         }
 
         @Override
+        protected Function<ScheduledEvent, Object> delegate() {
+            return delegate;
+        }
+
+        @Override
         public void run() {
-            doing.set(true);
-            try {
-                delegate.apply(event);
-            } catch (Throwable t) {
-                logger.log(Level.SEVERE, "schedule task error", t);
-            } finally {
-                doing.set(false);
-            }
+            super.execute();
             schedule();
         }
 

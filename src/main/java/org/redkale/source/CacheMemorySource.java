@@ -325,7 +325,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         for (int i = 0; i < keyVals.length; i += 2) {
             String key = keyVals[i].toString();
             Object val = keyVals[i + 1];
-            set0(key.toString(), 0, null, null, val);
+            set0(key, 0, null, null, val);
         }
     }
 

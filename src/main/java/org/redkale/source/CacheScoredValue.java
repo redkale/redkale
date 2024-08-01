@@ -59,7 +59,7 @@ public class CacheScoredValue implements Serializable, Comparable<CacheScoredVal
 
     @Override
     public int compareTo(CacheScoredValue o) {
-        return ((Comparable) this.score).compareTo((Number) o.getScore());
+        return ((Comparable) this.score).compareTo(o.getScore());
     }
 
     @Override

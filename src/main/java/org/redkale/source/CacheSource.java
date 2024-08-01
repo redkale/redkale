@@ -113,7 +113,7 @@ public interface CacheSource extends Resourcable {
     }
 
     default <T> CompletableFuture<Integer> publishAsync(String topic, Convert convert, Type messageType, T message) {
-        if (message instanceof byte[]) {
+        if (message == null || message instanceof byte[]) {
             return publishAsync(topic, (byte[]) message);
         }
         if (messageType == String.class && (convert == null || convert instanceof TextConvert)) {
@@ -1337,7 +1337,7 @@ public interface CacheSource extends Resourcable {
     }
 
     default CompletableFuture<Long> getSetLongAsync(String key, long value, long defValue) {
-        return getSetAsync(key, Long.class, value).thenApply(v -> v == null ? defValue : (Long) v);
+        return getSetAsync(key, Long.class, value).thenApply(v -> v == null ? defValue : v);
     }
 
     default CompletableFuture<Long> getSetLongAsync(String key, long value) {
