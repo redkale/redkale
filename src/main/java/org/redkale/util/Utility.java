@@ -969,6 +969,24 @@ public final class Utility {
     }
 
     /**
+     * 字符串是否至少一个为空白
+     *
+     * @param strs 字符串集合
+     * @return 是否为空白
+     */
+    public static boolean isAnyBlank(String... strs) {
+        if (strs == null || strs.length == 0) {
+            return false;
+        }
+        for (String str : strs) {
+            if (isBlank(str)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * 是否不为空白
      *
      * @param str 字符串
@@ -1007,6 +1025,24 @@ public final class Utility {
      */
     public static boolean isEmpty(CharSequence str) {
         return str == null || str.length() == 0;
+    }
+
+    /**
+     * 字符串是否至少一个为空
+     *
+     * @param strs 字符串集合
+     * @return 是否为空
+     */
+    public static boolean isAnyEmpty(CharSequence... strs) {
+        if (strs == null || strs.length == 0) {
+            return false;
+        }
+        for (CharSequence str : strs) {
+            if (isEmpty(str)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

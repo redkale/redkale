@@ -5,13 +5,12 @@
  */
 package org.redkale.annotation;
 
+import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import java.lang.annotation.*;
-
 /**
- * 标记参数bean
+ * 用于预编译时执行Convert.convertFrom方法
  *
  * @since 2.5.0
  */
@@ -19,4 +18,4 @@ import java.lang.annotation.*;
 @Documented
 @Target(TYPE)
 @Retention(RUNTIME)
-public @interface Bean {}
+public @interface Serial {}

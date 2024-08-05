@@ -6,7 +6,6 @@
 package org.redkale.boot;
 
 import java.util.List;
-import org.redkale.annotation.Bean;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.convert.Decodeable;
 import org.redkale.convert.bson.BsonFactory;
@@ -14,6 +13,7 @@ import org.redkale.convert.json.*;
 import org.redkale.persistence.Entity;
 import org.redkale.source.*;
 import org.redkale.util.Utility;
+import org.redkale.annotation.Serial;
 
 /**
  * 执行一次Application.run提前获取所有动态类
@@ -42,12 +42,12 @@ public class PrepareCompiler {
         final ClassFilter<?> entityFilter = new ClassFilter(application.getClassLoader(), Entity.class, Object.class);
         final ClassFilter<?> entityFilter2 =
                 new ClassFilter(application.getClassLoader(), javax.persistence.Entity.class, Object.class);
-        final ClassFilter<?> beanFilter = new ClassFilter(application.getClassLoader(), Bean.class, Object.class);
-        final ClassFilter<?> beanFilter2 =
+        final ClassFilter<?> serialFilter = new ClassFilter(application.getClassLoader(), Serial.class, Object.class);
+        final ClassFilter<?> serialFilter2 =
                 new ClassFilter(application.getClassLoader(), org.redkale.util.Bean.class, Object.class);
         final ClassFilter<?> filterFilter = new ClassFilter(application.getClassLoader(), null, FilterBean.class);
 
-        application.loadClassByFilters(entityFilter, beanFilter, filterFilter);
+        application.loadClassByFilters(entityFilter, serialFilter, filterFilter);
 
         for (FilterEntry en : entityFilter.getFilterEntrys()) {
             Class clz = en.getType();
@@ -91,7 +91,7 @@ public class PrepareCompiler {
             } catch (Exception e) { // JsonFactory.loadDecoder可能会失败，因为class可能包含抽象类字段,如ColumnValue.value字段
             }
         }
-        for (FilterEntry en : beanFilter.getFilterEntrys()) {
+        for (FilterEntry en : serialFilter.getFilterEntrys()) {
             Class clz = en.getType();
             if (Utility.isAbstractOrInterface(clz)) {
                 continue;
@@ -109,7 +109,7 @@ public class PrepareCompiler {
             } catch (Exception e) { // JsonFactory.loadDecoder可能会失败，因为class可能包含抽象类字段,如ColumnValue.value字段
             }
         }
-        for (FilterEntry en : beanFilter2.getFilterEntrys()) {
+        for (FilterEntry en : serialFilter2.getFilterEntrys()) {
             Class clz = en.getType();
             if (Utility.isAbstractOrInterface(clz)) {
                 continue;

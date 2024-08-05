@@ -5,9 +5,9 @@
  */
 package org.redkale.source;
 
-import org.redkale.annotation.Bean;
 import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.annotation.Serial;
 
 /**
  * 翻页对象与过滤条件Bean的组合对象
@@ -18,7 +18,7 @@ import org.redkale.convert.json.JsonConvert;
  * @param <T> Bean类
  * @since 2.7.0
  */
-@Bean
+@Serial
 public class PageBean<T> {
 
     @ConvertColumn(index = 1)

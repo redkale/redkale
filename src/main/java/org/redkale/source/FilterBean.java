@@ -5,7 +5,7 @@
  */
 package org.redkale.source;
 
-import org.redkale.annotation.Bean;
+import org.redkale.annotation.Serial;
 
 /**
  * FilterBean用于过滤条件， 所有的FilterBean都必须可以转换成FilterNode <br>
@@ -18,5 +18,5 @@ import org.redkale.annotation.Bean;
  * @see org.redkale.source.FilterGroup
  * @author zhangjx
  */
-@Bean
+@Serial
 public interface FilterBean {}
