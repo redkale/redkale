@@ -193,7 +193,7 @@ public class AnyValueWriter extends AnyValue {
                     continue;
                 }
                 Entry<AnyValue>[] ns = getAnyValueEntrys(en.name);
-                if (ns == null || ns.length < 1) {
+                if (Utility.isEmpty(ns)) {
                     addValue(en.name, en.value);
                 } else {
                     boolean ok = false;

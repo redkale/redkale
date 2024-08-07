@@ -667,7 +667,7 @@ public class CronExpression {
         }
 
         public static CronField compose(CronField[] fields, CronType type, String value) {
-            if (fields == null || fields.length < 1) {
+            if (Utility.isEmpty(fields)) {
                 throw new RedkaleException("Fields must not be empty");
             }
             if (Utility.isBlank(value)) {

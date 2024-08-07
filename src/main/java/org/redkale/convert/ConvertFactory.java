@@ -726,7 +726,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
     }
 
     ConvertFactory columnFactory(Type type, ConvertCoder[] coders, boolean encode) {
-        if (coders == null || coders.length < 1) {
+        if (Utility.isEmpty(coders)) {
             return this;
         }
         final ConvertType ct = this.getConvertType();

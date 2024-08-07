@@ -1313,11 +1313,11 @@ public final class EntityInfo<T> {
         if (tableStrategy == null) {
             return new String[] {table};
         }
-        String[] t = tableStrategy.getTables(table, node);
-        if (t == null || t.length < 1) {
+        String[] ts = tableStrategy.getTables(table, node);
+        if (Utility.isEmpty(ts)) {
             throw new SourceException(table + " tableStrategy.getTable is empty, filter=" + node);
         }
-        return t;
+        return ts;
     }
 
     /**

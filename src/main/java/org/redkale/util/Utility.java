@@ -5093,7 +5093,7 @@ public final class Utility {
             final StringBuilder sb = new StringBuilder();
             java.lang.reflect.Type[] us = wt.getUpperBounds();
             java.lang.reflect.Type[] ls = wt.getLowerBounds();
-            if (ls.length < 1) {
+            if (isEmpty(ls)) {
                 if (us.length == 1 && us[0] == Object.class) {
                     sb.append('*');
                 } else {

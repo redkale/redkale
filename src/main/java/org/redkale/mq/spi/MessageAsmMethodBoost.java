@@ -3,7 +3,24 @@
  */
 package org.redkale.mq.spi;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.redkale.asm.AnnotationVisitor;
+import org.redkale.asm.AsmMethodBean;
+import org.redkale.asm.AsmMethodBoost;
+import org.redkale.asm.Asms;
+import org.redkale.asm.ClassWriter;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import org.redkale.asm.FieldVisitor;
+import org.redkale.asm.Label;
+import org.redkale.asm.MethodVisitor;
+import org.redkale.asm.Opcodes;
 import static org.redkale.asm.Opcodes.ACC_BRIDGE;
 import static org.redkale.asm.Opcodes.ACC_PRIVATE;
 import static org.redkale.asm.Opcodes.ACC_PUBLIC;
@@ -24,24 +41,6 @@ import static org.redkale.asm.Opcodes.POP;
 import static org.redkale.asm.Opcodes.PUTFIELD;
 import static org.redkale.asm.Opcodes.RETURN;
 import static org.redkale.asm.Opcodes.V11;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-import org.redkale.asm.AnnotationVisitor;
-import org.redkale.asm.AsmMethodBean;
-import org.redkale.asm.AsmMethodBoost;
-import org.redkale.asm.Asms;
-import org.redkale.asm.ClassWriter;
-import org.redkale.asm.FieldVisitor;
-import org.redkale.asm.Label;
-import org.redkale.asm.MethodVisitor;
-import org.redkale.asm.Opcodes;
 import org.redkale.convert.ConvertFactory;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.mq.MessageConext;
@@ -322,7 +321,7 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
     @Override
     public void doInstance(ResourceFactory resourceFactory, Object service) {
         DynForMessage[] dyns = service.getClass().getAnnotationsByType(DynForMessage.class);
-        if (dyns.length < 1) {
+        if (Utility.isEmpty(dyns)) {
             return;
         }
         try {

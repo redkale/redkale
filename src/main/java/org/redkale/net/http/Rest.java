@@ -114,7 +114,7 @@ public final class Rest {
     }
 
     public static JsonFactory createJsonFactory(int features, RestConvert[] converts, RestConvertCoder[] coders) {
-        if ((converts == null || converts.length < 1) && (coders == null || coders.length < 1)) {
+        if (Utility.isEmpty(converts) && Utility.isEmpty(coders)) {
             return JsonFactory.root();
         }
         final JsonFactory childFactory = JsonFactory.create();

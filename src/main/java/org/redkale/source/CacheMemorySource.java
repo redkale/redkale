@@ -256,7 +256,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @Override
     public CompletableFuture<Void> subscribeAsync(CacheEventListener<byte[]> listener, String... topics) {
         Objects.requireNonNull(listener);
-        if (topics == null || topics.length < 1) {
+        if (Utility.isEmpty(topics)) {
             throw new RedkaleException("topics is empty");
         }
         for (String topic : topics) {
@@ -271,7 +271,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     public CompletableFuture<Integer> unsubscribeAsync(CacheEventListener listener, String... topics) {
         int c = 0;
         if (listener == null) {
-            if (topics == null || topics.length < 1) { // 清空所有订阅者
+            if (Utility.isEmpty(topics)) { // 清空所有订阅者
                 for (Set<CacheEventListener<byte[]>> listeners : pubsubListeners.values()) {
                     c += listeners != null ? listeners.size() : 0;
                 }
@@ -283,7 +283,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
                 }
             }
         } else {
-            if (topics == null || topics.length < 1) {
+            if (Utility.isEmpty(topics)) {
                 for (Set<CacheEventListener<byte[]>> listeners : pubsubListeners.values()) {
                     c += listeners != null && listeners.remove(listener) ? 1 : 0;
                 }
@@ -1291,7 +1291,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
                     .collect(Collectors.toMap(
                             Map.Entry::getKey, en -> CacheEntry.serialToObj(convert, type, en.getValue())));
         } else {
-            Predicate<String> regex = Pattern.compile(pattern.replace("*", ".*")).asPredicate();
+            Predicate<String> regex =
+                    Pattern.compile(pattern.replace("*", ".*")).asPredicate();
             Set<Map.Entry<String, Serializable>> set = entry.mapValue.entrySet();
             return set.stream()
                     .filter(en -> regex.test(en.getKey()))
@@ -2356,7 +2357,8 @@ public final class CacheMemorySource extends AbstractCacheSource {
         if (Utility.isEmpty(pattern)) {
             return sets.stream().collect(Collectors.toList());
         } else {
-            Predicate<String> regex = Pattern.compile(pattern.replace("*", ".*")).asPredicate();
+            Predicate<String> regex =
+                    Pattern.compile(pattern.replace("*", ".*")).asPredicate();
             return sets.stream().filter(en -> regex.test(en.getValue())).collect(Collectors.toList());
         }
     }

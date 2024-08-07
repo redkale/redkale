@@ -571,7 +571,7 @@ public abstract class NodeServer {
             return cf;
         }
         AnyValue[] proplist = this.serverConf.getAnyValues(properties);
-        if (proplist == null || proplist.length < 1) {
+        if (Utility.isEmpty(proplist)) {
             cf.setRefused(true);
             return cf;
         }

@@ -2560,7 +2560,7 @@ public class HttpRequest extends Request<HttpContext> {
      */
     public String getParametersToString(String prefix) {
         byte[] rbs = queryBytes;
-        if (rbs == null || rbs.length < 1) {
+        if (Utility.isEmpty(rbs)) {
             return "";
         }
         Charset charset = this.context.getCharset();

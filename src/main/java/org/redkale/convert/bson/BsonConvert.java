@@ -182,7 +182,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T convertFrom(final Type type, final ByteBuffer... buffers) {
-        if (type == null || buffers.length < 1) {
+        if (type == null || Utility.isEmpty(buffers)) {
             return null;
         }
         return (T) factory.loadDecoder(type).convertFrom(new BsonByteBufferReader(buffers));

@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.redkale.util.Utility;
 
 /**
  * 错误码加载器
@@ -67,7 +68,7 @@ public abstract class RetCodes {
         if (retcode == 0) {
             return RetResult.success();
         }
-        if (args == null || args.length < 1) {
+        if (Utility.isEmpty(args)) {
             return new RetResult(retcode, retInfo(retcode));
         }
         String info = MessageFormat.format(retInfo(retcode), args);
@@ -78,7 +79,7 @@ public abstract class RetCodes {
         if (retcode == 0) {
             return RetResult.success();
         }
-        if (args == null || args.length < 1) {
+        if (Utility.isEmpty(args)) {
             return new RetResult(retcode, retInfo(locale, retcode));
         }
         String info = MessageFormat.format(retInfo(locale, retcode), args);
@@ -105,7 +106,7 @@ public abstract class RetCodes {
         if (retcode == 0) {
             return result.retcode(0).retinfo("");
         }
-        if (args == null || args.length < 1) {
+        if (Utility.isEmpty(args)) {
             return result.retcode(retcode).retinfo(retInfo(retcode));
         }
         String info = MessageFormat.format(retInfo(retcode), args);
@@ -116,7 +117,7 @@ public abstract class RetCodes {
         if (retcode == 0) {
             return result.retcode(0).retinfo("");
         }
-        if (args == null || args.length < 1) {
+        if (Utility.isEmpty(args)) {
             return result.retcode(retcode).retinfo(retInfo(locale, retcode));
         }
         String info = MessageFormat.format(retInfo(locale, retcode), args);

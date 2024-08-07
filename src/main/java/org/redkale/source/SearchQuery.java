@@ -8,6 +8,7 @@ package org.redkale.source;
 import java.util.*;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.util.Utility;
 
 /**
  * SearchQuery用于构建搜索过滤条件<br>
@@ -138,7 +139,7 @@ public interface SearchQuery extends java.io.Serializable {
         public SearchSimpleQuery(String keyword, String... fields) {
             this.keyword = keyword;
             this.fields = fields;
-            if (fields == null || fields.length < 1) {
+            if (Utility.isEmpty(fields)) {
                 throw new IllegalArgumentException("fields is empty");
             }
         }
@@ -154,7 +155,7 @@ public interface SearchQuery extends java.io.Serializable {
         }
 
         public SearchSimpleQuery fields(String... fields) {
-            if (fields == null || fields.length < 1) {
+            if (Utility.isEmpty(fields)) {
                 throw new IllegalArgumentException("fields is empty");
             }
             this.fields = fields;

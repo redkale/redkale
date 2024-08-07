@@ -10,6 +10,7 @@ import java.lang.reflect.*;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.function.*;
+import org.redkale.annotation.Nullable;
 import org.redkale.convert.*;
 import org.redkale.convert.ext.StringArraySimpledCoder;
 import org.redkale.util.*;
@@ -28,12 +29,14 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
 
     private final ThreadLocal<ProtobufWriter> writerPool = Utility.withInitialThreadLocal(ProtobufWriter::new);
 
-    private final Consumer<ProtobufWriter> writerConsumer = w -> offerWriter(w);
+    private final Consumer<ProtobufWriter> writerConsumer = this::offerWriter;
 
     private final ThreadLocal<ProtobufReader> readerPool = Utility.withInitialThreadLocal(ProtobufReader::new);
 
+    @Nullable
     private Encodeable lastConvertEncodeable;
 
+    @Nullable
     private Decodeable lastConvertDecodeable;
 
     protected ProtobufConvert(ConvertFactory<ProtobufReader, ProtobufWriter> factory, int features) {
@@ -634,7 +637,7 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
         if (true) {
             throw new ConvertException(this.getClass().getSimpleName() + " not supported convertFrom ByteBuffer");
         }
-        if (type == null || buffers.length < 1) {
+        if (type == null || Utility.isEmpty(buffers)) {
             return null;
         }
         Decodeable decoder = this.lastConvertDecodeable;

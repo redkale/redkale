@@ -5,9 +5,6 @@
  */
 package org.redkale.net.http;
 
-import static org.redkale.boot.Application.RESNAME_APP_NODEID;
-import static org.redkale.net.http.WebSocket.RETCODE_GROUP_EMPTY;
-
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -17,9 +14,11 @@ import java.util.stream.*;
 import org.redkale.annotation.*;
 import org.redkale.annotation.Comment;
 import org.redkale.boot.Application;
+import static org.redkale.boot.Application.RESNAME_APP_NODEID;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.mq.spi.MessageAgent;
+import static org.redkale.net.http.WebSocket.RETCODE_GROUP_EMPTY;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;
 import org.redkale.source.CacheSource;
@@ -659,7 +658,7 @@ public abstract class WebSocketNode implements Service {
     @Local
     public CompletableFuture<Integer> sendMessage(
             final Convert convert, final Object message0, final boolean last, final Serializable... userids) {
-        if (userids == null || userids.length < 1) {
+        if (Utility.isEmpty(userids)) {
             return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
         }
         if (userids[0] instanceof WebSocketUserAddress) {
@@ -748,7 +747,7 @@ public abstract class WebSocketNode implements Service {
     @Local
     public CompletableFuture<Integer> sendMessage(
             Convert convert, Object message0, boolean last, WebSocketUserAddress... useraddrs) {
-        if (useraddrs == null || useraddrs.length < 1) {
+        if (Utility.isEmpty(useraddrs)) {
             return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
         }
         if (message0 instanceof CompletableFuture) {
@@ -1102,7 +1101,7 @@ public abstract class WebSocketNode implements Service {
      */
     @Local
     public CompletableFuture<Integer> sendAction(final WebSocketAction action, final Serializable... userids) {
-        if (userids == null || userids.length < 1) {
+        if (Utility.isEmpty(userids)) {
             return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
         }
         if (userids[0] instanceof WebSocketUserAddress) {
@@ -1175,7 +1174,7 @@ public abstract class WebSocketNode implements Service {
     @Local
     public CompletableFuture<Integer> sendAction(
             final WebSocketAction action, final WebSocketUserAddress... useraddrs) {
-        if (useraddrs == null || useraddrs.length < 1) {
+        if (Utility.isEmpty(useraddrs)) {
             return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
         }
         if (this.localEngine != null && this.source == null) { // 本地模式且没有分布式

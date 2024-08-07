@@ -283,7 +283,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
     @Override
     @ResourceChanged
     public void onResourceChange(ResourceEvent[] events) {
-        if (events == null || events.length < 1) {
+        if (Utility.isEmpty(events)) {
             return;
         }
         // 不支持读写分离模式的动态切换
@@ -643,7 +643,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
                         || column.getType() == java.util.Date.class
                         || "java.sql.Date".equals(column.getType().getName())) {
                     sqltype = "DATE";
-                } else if (column.getType() == java.time.LocalTime.class || "java.sql.Time".equals(column.getType().getName())) {
+                } else if (column.getType() == java.time.LocalTime.class
+                        || "java.sql.Time".equals(column.getType().getName())) {
                     sqltype = "TIME";
                 } else if (column.getType() == java.time.LocalDateTime.class
                         || "java.sql.Timestamp".equals(column.getType().getName())) {
@@ -797,7 +798,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
                         || column.getType() == java.util.Date.class
                         || "java.sql.Date".equals(column.getType().getName())) {
                     sqltype = "DATE";
-                } else if (column.getType() == java.time.LocalTime.class || "java.sql.Time".equals(column.getType().getName())) {
+                } else if (column.getType() == java.time.LocalTime.class
+                        || "java.sql.Time".equals(column.getType().getName())) {
                     sqltype = "TIME";
                 } else if (column.getType() == java.time.LocalDateTime.class
                         || "java.sql.Timestamp".equals(column.getType().getName())) {
@@ -2084,7 +2086,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
      */
     @Override
     public <T> int updateColumn(final Class<T> clazz, final Serializable pk, final ColumnValue... values) {
-        if (values == null || values.length < 1) {
+        if (Utility.isEmpty(values)) {
             return -1;
         }
         final EntityInfo<T> info = loadEntityInfo(clazz);
@@ -2107,7 +2109,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
     @Override
     public <T> CompletableFuture<Integer> updateColumnAsync(
             final Class<T> clazz, Serializable pk, ColumnValue... values) {
-        if (values == null || values.length < 1) {
+        if (Utility.isEmpty(values)) {
             return CompletableFuture.completedFuture(-1);
         }
         final EntityInfo<T> info = loadEntityInfo(clazz);
@@ -2172,7 +2174,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
     @Override
     public <T> int updateColumn(
             final Class<T> clazz, final FilterNode node, final Flipper flipper, final ColumnValue... values) {
-        if (values == null || values.length < 1) {
+        if (Utility.isEmpty(values)) {
             return -1;
         }
         final EntityInfo<T> info = loadEntityInfo(clazz);
@@ -2194,7 +2196,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
     @Override
     public <T> CompletableFuture<Integer> updateColumnAsync(
             Class<T> clazz, FilterNode node, Flipper flipper, ColumnValue... values) {
-        if (values == null || values.length < 1) {
+        if (Utility.isEmpty(values)) {
             return CompletableFuture.completedFuture(-1);
         }
         final EntityInfo<T> info = loadEntityInfo(clazz);
