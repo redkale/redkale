@@ -131,7 +131,7 @@ class NodeWebSocketNodeLoader implements ResourceTypeLoader {
                     continue;
                 }
                 sncpResFactory = ns.resourceFactory;
-                loader = sncpResFactory.findTypeLoader(WebSocketNode.class, field);
+                loader = sncpResFactory.findResourceTypeLoader(WebSocketNode.class, field);
                 if (loader != null) {
                     break;
                 }

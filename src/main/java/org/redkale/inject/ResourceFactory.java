@@ -18,6 +18,7 @@ import java.util.logging.*;
 import org.redkale.annotation.*;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.util.Creator;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.TypeToken;
@@ -54,12 +55,16 @@ public final class ResourceFactory {
 
     private final List<WeakReference<ResourceFactory>> chidren = new CopyOnWriteArrayList<>();
 
+    private final ConcurrentHashMap<Type, ResourceTypeLoader> resTypeLoaderMap = new ConcurrentHashMap();
+
     private final ConcurrentHashMap<Class<? extends Annotation>, ResourceAnnotationLoader> resAnnotationLoaderMap =
             new ConcurrentHashMap();
 
-    private final ConcurrentHashMap<Type, ResourceTypeLoader> resTypeLoaderMap = new ConcurrentHashMap();
+    private final ConcurrentHashMap<Type, ConcurrentHashMap<String, Supplier>> resConfigureSupplierMap =
+            new ConcurrentHashMap();
 
-    private final ConcurrentHashMap<Type, ConcurrentHashMap<String, ResourceEntry>> store = new ConcurrentHashMap();
+    private final ConcurrentHashMap<Type, ConcurrentHashMap<String, ResourceEntry>> entryStore =
+            new ConcurrentHashMap();
 
     private ResourceFactory(ResourceFactory parent) {
         this.parent = parent;
@@ -101,9 +106,9 @@ public final class ResourceFactory {
         return result;
     }
 
-    /** 清空当前ResourceFactory注入资源 */
+    /** 清空当前已注入资源的缓存 */
     public void release() {
-        this.store.clear();
+        this.entryStore.clear();
     }
 
     /** inject时的锁 */
@@ -153,6 +158,80 @@ public final class ResourceFactory {
         }
         org.redkale.util.ResourceType rt2 = clazz.getAnnotation(org.redkale.util.ResourceType.class);
         return rt2 == null ? clazz : rt2.value();
+    }
+
+    /**
+     * 替换资源名中含${xxx}或{system.property.xxx}的配置项
+     *
+     * @param name 资源名
+     * @return  不包含配置项的资源名
+     */
+    public static String getResourceName(String name) {
+        return getResourceName(null, name);
+    }
+
+    /**
+     * 替换资源名中含${xxx}或{system.property.xxx}的配置项
+     *
+     * @param parent 父资源名
+     * @param name 资源名
+     * @return  不包含配置项的资源名
+     */
+    public static String getResourceName(String parent, String name) {
+        if (name == null) {
+            return null;
+        }
+        if (name.startsWith("${")) {
+            String subName = name.substring(2);
+            int pos = subName.lastIndexOf('}');
+            if (pos > 0) {
+                subName = subName.substring(0, pos);
+                pos = subName.indexOf(':');
+                if (pos > 0) {
+                    subName = subName.substring(0, pos);
+                }
+                name = subName;
+            }
+        }
+        int pos = name.indexOf("{system.property.");
+        if (pos < 0) {
+            return (name.contains(Resource.PARENT_NAME) && parent != null)
+                    ? name.replace(Resource.PARENT_NAME, parent)
+                    : name;
+        }
+        String prefix = name.substring(0, pos);
+        String subName = name.substring(pos + "{system.property.".length());
+        pos = subName.lastIndexOf('}');
+        if (pos < 0) {
+            return (name.contains(Resource.PARENT_NAME) && parent != null)
+                    ? name.replace(Resource.PARENT_NAME, parent)
+                    : name;
+        }
+        String postfix = subName.substring(pos + 1);
+        String property = subName.substring(0, pos);
+        return getResourceName(parent, prefix + System.getProperty(property, "") + postfix);
+    }
+
+    /**
+     * 替换资源名中的配置项， 没有配置项返回null
+     * @param parent 父资源名
+     * @param name 可能包含配置项的资源名
+     * @return  替换资源名中的配置项后的资源名
+     */
+    private static String getResourceDefaultValue(String parent, String name) {
+        if (name.startsWith("${")) {
+            String subName = name.substring(2);
+            int pos = subName.lastIndexOf('}');
+            if (pos > 0) {
+                subName = subName.substring(0, pos);
+                pos = subName.indexOf(':');
+                if (pos > 0) {
+                    String val = subName.substring(pos + 1);
+                    return "null".equals(val) ? null : val;
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -520,6 +599,84 @@ public final class ResourceFactory {
         }
     }
 
+    /**
+     * 注册 ResourceAnnotationLoader
+     *
+     * @param <T> 注解泛型
+     * @param loader ResourceAnnotationLoader
+     */
+    public <T extends Annotation> void register(final ResourceAnnotationLoader<T> loader) {
+        Objects.requireNonNull(loader);
+        parentRoot().resAnnotationLoaderMap.put(loader.annotationType(), loader);
+    }
+
+    /**
+     * 注册 ResourceTypeLoader
+     *
+     * @param loader ResourceTypeLoader
+     */
+    public void register(final ResourceTypeLoader loader) {
+        resTypeLoaderMap.put(loader.resourceType(), loader);
+    }
+
+    /**
+     * 注册 Configuration子类
+     *
+     * @param <T> 泛型
+     * @param configuareClass Configuration的实现类
+     *
+     */
+    public <T extends Configuration> void register(final Class<T> configuareClass) {
+        Configuration instance = Creator.create(configuareClass).create();
+        for (Method method : configuareClass.getDeclaredMethods()) {
+            Resource res = method.getAnnotation(Resource.class);
+            if (res == null) {
+                continue;
+            }
+            Parameter[] params = method.getParameters();
+            Supplier[] paramSuppliers = new Supplier[params.length];
+            for (int i = 0; i < params.length; i++) {
+                Resource pres = params[i].getAnnotation(Resource.class);
+                String presName = pres == null ? "" : getResourceName(pres.name());
+                Type presType0 = params[i].getParameterizedType();
+                if (presType0 == null) {
+                    presType0 = params[i].getType();
+                }
+                Type presType = presType0;
+                paramSuppliers[i] = () -> load(presName, presType);
+            }
+            String resName = getResourceName(res.name());
+            Type resType = method.getGenericReturnType();
+            method.setAccessible(true);
+            Supplier resSupplier = () -> {
+                Object[] args = new Object[paramSuppliers.length];
+                for (int i = 0; i < paramSuppliers.length; i++) {
+                    args[i] = paramSuppliers[i].get();
+                }
+                try {
+                    return method.invoke(instance, args);
+                } catch (Exception e) {
+                    throw new RedkaleException(method + " invoke error", e);
+                }
+            };
+            RedkaleClassLoader.putReflectionMethod(configuareClass.getName(), method);
+            resConfigureSupplierMap
+                    .computeIfAbsent(resType, k -> new ConcurrentHashMap<>())
+                    .put(resName, resSupplier);
+        }
+    }
+
+    /**
+     * 将对象以指定资源名和类型注入到资源池中
+     *
+     * @param <A> 泛型
+     * @param autoSync 是否同步已被注入的资源
+     * @param name 资源名
+     * @param clazz 资源类型
+     * @param val 资源对象
+     * @param wrappers 资源对象的缓存集合
+     * @return  旧资源对象
+     */
     private <A> A register(
             final boolean autoSync,
             final String name,
@@ -593,7 +750,8 @@ public final class ResourceFactory {
                 }
             } while ((c = c.getSuperclass()) != Object.class);
         }
-        ConcurrentHashMap<String, ResourceEntry> map = this.store.computeIfAbsent(clazz, k -> new ConcurrentHashMap());
+        ConcurrentHashMap<String, ResourceEntry> map =
+                this.entryStore.computeIfAbsent(clazz, k -> new ConcurrentHashMap());
         ResourceEntry re = map.get(name);
         if (re == null) {
             map.put(name, new ResourceEntry(name, val));
@@ -613,7 +771,7 @@ public final class ResourceFactory {
      * @return 是否存在
      */
     public <A> boolean contains(boolean recursive, String name, Class<? extends A> clazz) {
-        Map<String, ResourceEntry> map = this.store.get(clazz);
+        Map<String, ResourceEntry> map = this.entryStore.get(clazz);
         if (map != null) {
             return map.containsKey(name);
         }
@@ -628,7 +786,7 @@ public final class ResourceFactory {
      * @return ResourceFactory
      */
     public ResourceFactory findResourceFactory(String name, Type clazz) {
-        Map<String, ResourceEntry> map = this.store.get(clazz);
+        Map<String, ResourceEntry> map = this.entryStore.get(clazz);
         if (map != null && map.containsKey(name)) {
             return this;
         }
@@ -636,6 +794,78 @@ public final class ResourceFactory {
             return parent.findResourceFactory(name, clazz);
         }
         return null;
+    }
+
+    /**
+     * 获取类型对应的ResourceTypeLoader <br>
+     *
+     * @param clazz 类型
+     * @return ResourceTypeLoader
+     */
+    public ResourceTypeLoader findResourceTypeLoader(Type clazz) {
+        ResourceTypeLoader it = this.resTypeLoaderMap.get(clazz);
+        if (it != null) {
+            return it;
+        }
+        return parent == null ? null : parent.findResourceTypeLoader(clazz);
+    }
+
+    /**
+     * 获取类型对应的ResourceTypeLoader <br>
+     * 优先匹配Type， 再匹配Class，再匹配父类
+     * @param ft 类型
+     * @param field 字段
+     * @return ResourceTypeLoader
+     */
+    public ResourceTypeLoader findResourceTypeLoader(Type ft, @Nullable Field field) {
+        ResourceTypeLoader it = this.findClassTypeLoader(ft, field);
+        if (it == null && field == null && !(ft instanceof Class)) {
+            return findClassTypeLoader(TypeToken.typeToClass(ft), field);
+        }
+        return it == null ? findSuperTypeLoader(ft, field) : it;
+    }
+
+    /**
+     * 获取类型对应的ResourceTypeLoader <br>
+     * 优先匹配Type， 再匹配Class
+     * @param ft 类型
+     * @param field 字段
+     * @return ResourceTypeLoader
+     */
+    private ResourceTypeLoader findClassTypeLoader(Type ft, @Nullable Field field) {
+        ResourceTypeLoader it = this.resTypeLoaderMap.get(ft);
+        if (it == null && field != null) {
+            it = this.resTypeLoaderMap.get(field.getType());
+        }
+        if (it != null) {
+            return it;
+        }
+        return parent == null ? null : parent.findClassTypeLoader(ft, field);
+    }
+
+    /**
+     * 获取类型对应的ResourceTypeLoader <br>
+     * 优先匹配Type，再匹配父类
+     *
+     * @param ft
+     * @param field
+     * @return
+     */
+    private ResourceTypeLoader findSuperTypeLoader(Type ft, @Nullable Field field) {
+        if (field == null) {
+            return null;
+        }
+        Class c = field.getType();
+        for (Map.Entry<Type, ResourceTypeLoader> en : this.resTypeLoaderMap.entrySet()) {
+            Type t = en.getKey();
+            if (t == ft) {
+                return en.getValue();
+            }
+            if (t instanceof Class && ((Class) t).isAssignableFrom(c)) {
+                return en.getValue();
+            }
+        }
+        return parent == null ? null : parent.findSuperTypeLoader(ft, field);
     }
 
     public <A> A find(Class<? extends A> clazz) {
@@ -657,7 +887,7 @@ public final class ResourceFactory {
         if (rs != null) {
             return rs;
         }
-        for (Map.Entry<Type, ConcurrentHashMap<String, ResourceEntry>> en : this.store.entrySet()) {
+        for (Map.Entry<Type, ConcurrentHashMap<String, ResourceEntry>> en : this.entryStore.entrySet()) {
             if (!(en.getKey() instanceof Class)) {
                 continue;
             }
@@ -672,8 +902,8 @@ public final class ResourceFactory {
         return null;
     }
 
-    private ResourceEntry findEntry(String name, Type clazz) {
-        Map<String, ResourceEntry> map = this.store.get(clazz);
+    private <A> ResourceEntry<A> findEntry(String name, Type clazz) {
+        Map<String, ResourceEntry> map = this.entryStore.get(clazz);
         if (map != null) {
             ResourceEntry re = map.get(name);
             if (re != null) {
@@ -686,27 +916,44 @@ public final class ResourceFactory {
         return null;
     }
 
-    public <A> A load(Class<? extends A> clazz) {
+    /**
+     * 加载资源对象， 没有返回null
+     *
+     * @param <A> 泛型
+     * @param clazz 资源类型
+     * @return  资源对象
+     *
+     * @since 2.8.0
+     */
+    public <A> A load(Type clazz) {
         return load("", clazz);
     }
 
+    /**
+     * 加载资源对象， 没有返回null
+     *
+     * @param <A> 泛型
+     * @param name 资源名
+     * @param clazz 资源类型
+     * @return  资源对象
+     *
+     * @since 2.8.0
+     */
     public <A> A load(String name, Type clazz) {
         A val = find(name, clazz);
         if (val == null) {
-            ResourceTypeLoader loader = findResourceTypeLoader(clazz);
-            if (loader != null) {
-                val = (A) loader.load(this, null, null, name, null, null);
-            }
-        }
-        return val;
-    }
-
-    public <A> A load(String name, Class<? extends A> clazz) {
-        A val = find(name, clazz);
-        if (val == null) {
-            ResourceTypeLoader loader = findResourceTypeLoader(clazz);
-            if (loader != null) {
-                val = (A) loader.load(this, null, null, name, null, null);
+            Map<String, Supplier> supplierMap = this.resConfigureSupplierMap.get(clazz);
+            Supplier supplier = supplierMap == null ? null : supplierMap.get(name);
+            if (supplier != null) {
+                val = (A) supplier.get();
+                if (val != null) {
+                    inject(name, val);
+                }
+            } else {
+                ResourceTypeLoader loader = findResourceTypeLoader(clazz, (Field) null);
+                if (loader != null) {
+                    val = (A) loader.load(this, null, null, name, null, null);
+                }
             }
         }
         return val;
@@ -721,7 +968,7 @@ public final class ResourceFactory {
     }
 
     private <A> List<A> query(final List<A> list, Type clazz) {
-        Map<String, ResourceEntry> map = this.store.get(clazz);
+        Map<String, ResourceEntry> map = this.entryStore.get(clazz);
         if (map != null) {
             for (ResourceEntry re : map.values()) {
                 if (re.value != null) {
@@ -743,7 +990,7 @@ public final class ResourceFactory {
         if (predicate == null) {
             return list;
         }
-        for (ConcurrentHashMap<String, ResourceEntry> map : this.store.values()) {
+        for (ConcurrentHashMap<String, ResourceEntry> map : this.entryStore.values()) {
             for (Map.Entry<String, ResourceEntry> en : map.entrySet()) {
                 if (predicate.test(en.getKey(), en.getValue().value)) {
                     list.add((A) en.getValue().value);
@@ -756,48 +1003,98 @@ public final class ResourceFactory {
         return list;
     }
 
-    private <A> ResourceEntry<A> findEntry(String name, Class<? extends A> clazz) {
-        Map<String, ResourceEntry> map = this.store.get(clazz);
-        if (map != null) {
-            ResourceEntry rs = map.get(name);
-            if (rs != null) {
-                return rs;
-            }
-        }
-        if (parent != null) {
-            return parent.findEntry(name, clazz);
-        }
-        return null;
-    }
-
+    /**
+     * 注入资源对象
+     *
+     * @param srcObj 资源依附对象
+     * @return 是否成功注入
+     */
     public boolean inject(final Object srcObj) {
         return inject(srcObj, null);
     }
 
+    /**
+     * 注入资源对象
+     *
+     * @param <T> 泛型
+     * @param srcObj 资源依附对象
+     * @param attachment 附加对象
+     * @return 是否成功注入
+     */
     public <T> boolean inject(final Object srcObj, final T attachment) {
         return inject(srcObj, attachment, null);
     }
 
+    /**
+     * 注入资源对象
+     *
+     * @param srcObj 资源依附对象
+     * @param consumer 字段处理函数
+     * @return 是否成功注入
+     */
     public boolean inject(final Object srcObj, final BiConsumer<Object, Field> consumer) {
         return inject(srcObj, null, consumer);
     }
 
+    /**
+     * 注入资源对象
+     *
+     * @param <T> 泛型
+     * @param srcObj 资源依附对象
+     * @param attachment 附加对象
+     * @param consumer 字段处理函数
+     * @return 是否成功注入
+     */
     public <T> boolean inject(final Object srcObj, final T attachment, final BiConsumer<Object, Field> consumer) {
         return inject(null, srcObj, attachment, consumer, new ArrayList());
     }
 
+    /**
+     * 注入资源对象
+     *
+     * @param srcResourceName 资源名
+     * @param srcObj 资源依附对象
+     * @return 是否成功注入
+     */
     public boolean inject(final String srcResourceName, final Object srcObj) {
         return inject(srcResourceName, srcObj, null);
     }
 
+    /**
+     * 注入资源对象
+     *
+     * @param <T> 泛型
+     * @param srcResourceName 资源名
+     * @param srcObj 资源依附对象
+     * @param attachment 附加对象
+     * @return 是否成功注入
+     */
     public <T> boolean inject(final String srcResourceName, final Object srcObj, final T attachment) {
         return inject(srcResourceName, srcObj, attachment, null);
     }
 
+    /**
+     * 注入资源对象
+     *
+     * @param srcResourceName 资源名
+     * @param srcObj 资源依附对象
+     * @param consumer 字段处理函数
+     * @return 是否成功注入
+     */
     public boolean inject(final String srcResourceName, final Object srcObj, final BiConsumer<Object, Field> consumer) {
         return inject(srcResourceName, srcObj, null, consumer);
     }
 
+    /**
+     * 注入资源对象
+     *
+     * @param <T> 泛型
+     * @param srcResourceName 资源名
+     * @param srcObj 资源依附对象
+     * @param attachment 附加对象
+     * @param consumer 字段处理函数
+     * @return 是否成功注入
+     */
     public <T> boolean inject(
             final String srcResourceName,
             final Object srcObj,
@@ -806,61 +1103,17 @@ public final class ResourceFactory {
         return inject(srcResourceName, srcObj, attachment, consumer, new ArrayList());
     }
 
-    public static String getResourceName(String name) {
-        return getResourceName(null, name);
-    }
-
-    public static String getResourceName(String parent, String name) {
-        if (name == null) {
-            return null;
-        }
-        if (name.startsWith("${")) {
-            String subName = name.substring(2);
-            int pos = subName.lastIndexOf('}');
-            if (pos > 0) {
-                subName = subName.substring(0, pos);
-                pos = subName.indexOf(':');
-                if (pos > 0) {
-                    subName = subName.substring(0, pos);
-                }
-                name = subName;
-            }
-        }
-        int pos = name.indexOf("{system.property.");
-        if (pos < 0) {
-            return (name.contains(Resource.PARENT_NAME) && parent != null)
-                    ? name.replace(Resource.PARENT_NAME, parent)
-                    : name;
-        }
-        String prefix = name.substring(0, pos);
-        String subName = name.substring(pos + "{system.property.".length());
-        pos = subName.lastIndexOf('}');
-        if (pos < 0) {
-            return (name.contains(Resource.PARENT_NAME) && parent != null)
-                    ? name.replace(Resource.PARENT_NAME, parent)
-                    : name;
-        }
-        String postfix = subName.substring(pos + 1);
-        String property = subName.substring(0, pos);
-        return getResourceName(parent, prefix + System.getProperty(property, "") + postfix);
-    }
-
-    private static String getResourceDefaultValue(String parent, String name) {
-        if (name.startsWith("${")) {
-            String subName = name.substring(2);
-            int pos = subName.lastIndexOf('}');
-            if (pos > 0) {
-                subName = subName.substring(0, pos);
-                pos = subName.indexOf(':');
-                if (pos > 0) {
-                    String val = subName.substring(pos + 1);
-                    return "null".equals(val) ? null : val;
-                }
-            }
-        }
-        return null;
-    }
-
+    /**
+     * 注入资源对象
+     *
+     * @param <T> 泛型
+     * @param srcResourceName 资源名
+     * @param srcObj 资源依附对象
+     * @param attachment 附加对象
+     * @param consumer 字段处理函数
+     * @param list 层级对象集合
+     * @return 是否成功注入
+     */
     private <T> boolean inject(
             String srcResourceName,
             Object srcObj,
@@ -1017,17 +1270,19 @@ public final class ResourceFactory {
                                     && rcname.startsWith("property.")) { // 兼容2.8.0之前版本自动追加property.开头的配置项
                                 re = findEntry(rcname.substring("property.".length()), String.class);
                             } else {
-                                re = findEntry(rcname, classType);
+                                rs = findEntry(rcname, classType);
                             }
                         }
                         if (re == null) {
-                            ResourceTypeLoader it = findTypeLoader(gencType, field);
+                            ResourceTypeLoader it = findResourceTypeLoader(gencType, field);
                             if (it != null) {
                                 rs = it.load(this, srcResourceName, srcObj, rcname, field, attachment);
                                 autoRegNull = it.autoNone();
                                 if (rs == null) {
                                     re = findEntry(rcname, gencType);
                                 }
+                            } else {
+                                rs = load(rcname, gencType);
                             }
                         }
                         if (rs == null && re == null && gencType != classType) {
@@ -1049,17 +1304,19 @@ public final class ResourceFactory {
                                 }
                             }
                             if (re == null) {
-                                ResourceTypeLoader it = findTypeLoader(classType, field);
+                                ResourceTypeLoader it = findResourceTypeLoader(classType, field);
                                 if (it != null) {
                                     rs = it.load(this, srcResourceName, srcObj, rcname, field, attachment);
                                     autoRegNull = it.autoNone();
                                     if (rs == null) {
                                         re = findEntry(rcname, classType);
                                     }
+                                } else {
+                                    re = load(rcname, gencType);
                                 }
                             }
                         }
-                        if (rs == null && re == null && autoRegNull && rcname.indexOf(Resource.PARENT_NAME) < 0) {
+                        if (rs == null && re == null && autoRegNull && !rcname.contains(Resource.PARENT_NAME)) {
                             if (rcname.startsWith("${")) {
                                 String sub = rcname.substring(rcname.lastIndexOf("${") + 2, rcname.lastIndexOf('}'));
                                 register(sub, gencType, null); // 自动注入null的值
@@ -1106,28 +1363,11 @@ public final class ResourceFactory {
         }
     }
 
-    public <T extends Annotation> void register(final ResourceAnnotationLoader<T> loader) {
-        Objects.requireNonNull(loader);
-        parentRoot().resAnnotationLoaderMap.put(loader.annotationType(), loader);
-    }
-
-    public void register(final ResourceTypeLoader rs) {
-        resTypeLoaderMap.put(rs.resourceType(), rs);
-    }
-
-    public ResourceTypeLoader findResourceTypeLoader(Type clazz) {
-        ResourceTypeLoader it = this.resTypeLoaderMap.get(clazz);
-        if (it != null) {
-            return it;
-        }
-        return parent == null ? null : parent.findResourceTypeLoader(clazz);
-    }
-
-    public ResourceTypeLoader findTypeLoader(Type ft, @Nullable Field field) {
-        ResourceTypeLoader it = this.findMatchTypeLoader(ft, field);
-        return it == null ? findRegexTypeLoader(ft, field) : it;
-    }
-
+    /**
+     * 获取最底层ResourceFactory
+     *
+     * @return  ResourceFactory
+     */
     private ResourceFactory parentRoot() {
         if (parent == null) {
             return this;
@@ -1135,35 +1375,14 @@ public final class ResourceFactory {
         return parent.parentRoot();
     }
 
-    private ResourceTypeLoader findMatchTypeLoader(Type ft, @Nullable Field field) {
-        ResourceTypeLoader it = this.resTypeLoaderMap.get(ft);
-        if (it == null && field != null) {
-            it = this.resTypeLoaderMap.get(field.getType());
-        }
-        if (it != null) {
-            return it;
-        }
-        return parent == null ? null : parent.findMatchTypeLoader(ft, field);
-    }
-
-    private ResourceTypeLoader findRegexTypeLoader(Type ft, @Nullable Field field) {
-        if (field == null) {
-            return null;
-        }
-        Class c = field.getType();
-        for (Map.Entry<Type, ResourceTypeLoader> en : this.resTypeLoaderMap.entrySet()) {
-            Type t = en.getKey();
-            if (t == ft) {
-                return en.getValue();
-            }
-            if (t instanceof Class && ((Class) t).isAssignableFrom(c)) {
-                return en.getValue();
-            }
-        }
-        return parent == null ? null : parent.findRegexTypeLoader(ft, field);
-    }
-
-    private void onResourceInjected(Object src, Field field, Object res) {
+    /**
+     * 调用标记ResourceInjected的监听方法
+     *
+     * @param dest 资源的依附对象
+     * @param field  资源的依附对象的字段
+     * @param res  资源对象
+     */
+    private void onResourceInjected(Object dest, Field field, Object res) {
         if (res == null
                 || res.getClass().isPrimitive()
                 || res.getClass().getName().startsWith("java.")
@@ -1179,7 +1398,7 @@ public final class ResourceFactory {
             Object[] params = new Object[paramTypes.length];
             for (int i = 0; i < params.length; i++) {
                 if (paramTypes[i] == Object.class) {
-                    params[i] = src;
+                    params[i] = dest;
                 } else if (paramTypes[i] == String.class) {
                     params[i] = field.getName();
                 } else if (paramTypes[i] == Field.class) {
@@ -1200,6 +1419,11 @@ public final class ResourceFactory {
         }
     }
 
+    /**
+     * 资源依附信息的缓存对象
+     *
+     * @param <T>  泛型
+     */
     private static class ResourceEntry<T> {
 
         public final String name;
@@ -1267,6 +1491,11 @@ public final class ResourceFactory {
         }
     }
 
+    /**
+     * 资源字段和变更监听方法信息的缓存对象
+     *
+     * @param <T>  泛型
+     */
     private static class ResourceElement<T> {
 
         private static final ReentrantLock syncLock = new ReentrantLock();

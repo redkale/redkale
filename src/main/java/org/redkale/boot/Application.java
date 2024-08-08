@@ -33,6 +33,7 @@ import org.redkale.convert.Convert;
 import org.redkale.convert.bson.BsonFactory;
 import org.redkale.convert.json.*;
 import org.redkale.convert.proto.ProtobufFactory;
+import org.redkale.inject.Configuration;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
@@ -370,8 +371,8 @@ public final class Application {
     }
 
     public void init() throws Exception {
-        // 注册ResourceType
-        this.initResourceTypeLoader();
+        // 注册Resource加载器
+        this.initInjectResource();
         // 读取远程配置，并合并app.config
         this.propertiesModule.initRemoteProperties();
         // 解析配置
@@ -388,7 +389,7 @@ public final class Application {
         this.onAppPostInit();
     }
 
-    private void initResourceTypeLoader() {
+    private void initInjectResource() {
         final Application application = this;
         // 只有WatchService才能加载Application、WatchFactory
         this.resourceFactory.register(new ResourceTypeLoader() {
@@ -700,6 +701,13 @@ public final class Application {
                 return HttpRpcClient.class;
             }
         });
+        // 加载Configuration
+        ClassFilter<Configuration> filter = new ClassFilter(this.getClassLoader(), Configuration.class);
+        try {
+            loadClassByFilters(filter);
+        } catch (IOException e) {
+            throw new RedkaleException(e);
+        }
     }
 
     private void registerResourceEnvs(boolean first, Properties... envs) {
@@ -731,7 +739,11 @@ public final class Application {
                 AutoLoad auto = en.getType().getAnnotation(AutoLoad.class);
                 if (auto == null || auto.value()) {
                     int c = RetCodes.load(en.getType());
-                    sb.append("Load RetCodes (type=").append(en.getType().getName() + ") " + c + " records\r\n");
+                    sb.append("Load RetCodes (type=")
+                            .append(en.getType().getName())
+                            .append(") ")
+                            .append(c)
+                            .append(" records\r\n");
                 }
             }
         });
@@ -1435,9 +1447,7 @@ public final class Application {
         this.onAppPreShutdown();
         stopServers();
         this.propertiesModule.destroy();
-        if (this.workExecutor != null) {
-            this.workExecutor.shutdownNow();
-        }
+        this.workExecutor.shutdownNow();
         if (this.clientAsyncGroup != null) {
             long s = System.currentTimeMillis();
             this.clientAsyncGroup.dispose();

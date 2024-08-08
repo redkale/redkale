@@ -5,10 +5,9 @@
  */
 package org.redkale.annotation;
 
+import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-import java.lang.annotation.*;
 
 /**
  * &#64;Resource资源被依赖注入时的监听事件。<br>
@@ -27,8 +26,8 @@ import java.lang.annotation.*;
  *    private String name;
  *
  *    &#64;ResourceInjected
- *    private void onInjected(Object src, String fieldName) {
- *       System.out .println("资源被注入到对象(" + src + ")的字段(" + fieldName + ")上");
+ *    private void onInjected(Object dest, String fieldName) {
+ *       System.out .println("资源被注入到对象(" + dest + ")的字段(" + fieldName + ")上");
  *  }
  * }
  *
