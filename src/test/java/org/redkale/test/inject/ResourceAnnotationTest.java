@@ -5,11 +5,10 @@
  */
 package org.redkale.test.inject;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import java.io.File;
 import java.lang.annotation.*;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.reflect.Field;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.json.JsonConvert;
@@ -19,11 +18,8 @@ import org.redkale.inject.ResourceFactory;
 /** @author zhangjx */
 public class ResourceAnnotationTest {
 
-    private boolean main;
-
     public static void main(String[] args) throws Throwable {
         ResourceAnnotationTest test = new ResourceAnnotationTest();
-        test.main = true;
         test.run();
     }
 
@@ -33,7 +29,8 @@ public class ResourceAnnotationTest {
         factory.register(new CustomConfProvider());
         InjectBean bean = new InjectBean();
         factory.inject(bean);
-        if (!main) Assertions.assertEquals(new File("conf/test.xml").toString(), bean.conf.toString());
+        System.out.println(bean.conf);
+        Assertions.assertEquals(new File("conf/test.xml").toString(), bean.conf.toString());
     }
 
     public static class CustomConfProvider implements ResourceAnnotationLoader<CustomConf> {

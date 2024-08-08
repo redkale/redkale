@@ -9,6 +9,7 @@ import java.lang.reflect.Type;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Priority;
 import org.redkale.asm.AsmMethodBoost;
 import org.redkale.inject.ResourceFactory;
@@ -25,6 +26,7 @@ import org.redkale.util.RedkaleException;
  *
  * @author zhangjx
  */
+@AutoLoad(false)
 class NodeExpectServiceLoader implements ResourceTypeLoader {
 
     private final Logger logger = Logger.getLogger(getClass().getSimpleName());

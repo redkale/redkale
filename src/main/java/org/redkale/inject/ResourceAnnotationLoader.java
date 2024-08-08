@@ -20,7 +20,7 @@ import java.lang.reflect.Field;
  * }
  *
  *
- *  public class CustomConfProvider implements ResourceAnnotationLoader&lt;CustomConf&gt; {
+ *  public class CustomConfAnnotationLoader implements ResourceAnnotationLoader&lt;CustomConf&gt; {
  *
  *      &#064;Override
  *      public void load(
@@ -50,6 +50,12 @@ import java.lang.reflect.Field;
  *      &#064;CustomConf(path = "conf/test.xml")
  *      public File conf;
  *  }
+ *
+ *
+ *  ResourceFactory factory = ResourceFactory.create();
+ *  factory.register(new CustomConfAnnotationLoader());
+ *  InjectBean bean = new InjectBean();
+ *  factory.inject(bean);
  *
  *
  * </pre>

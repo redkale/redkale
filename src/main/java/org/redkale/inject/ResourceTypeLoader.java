@@ -12,7 +12,7 @@ import org.redkale.annotation.Nullable;
  * <blockquote>
  * <pre>
  *
- *  public class CustomConfProvider implements ResourceAnnotationLoader&lt;CustomConf&gt; {
+ *  public class CustomTypeLoader implements ResourceTypeLoader {
  *
  *      &#064;Override
  *      public Object load(
@@ -49,7 +49,7 @@ import org.redkale.annotation.Nullable;
  *
  *
  *  ResourceFactory factory = ResourceFactory.create();
- *  factory.register(new DataSourceProvider());
+ *  factory.register(new CustomTypeLoader());
  *  InjectBean bean = new InjectBean();
  *  factory.inject(bean);
  *

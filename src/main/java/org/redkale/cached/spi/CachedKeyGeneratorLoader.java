@@ -12,6 +12,7 @@ import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.redkale.annotation.AutoLoad;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
 import org.redkale.service.Service;
@@ -21,6 +22,7 @@ import org.redkale.util.RedkaleException;
  *
  * @author zhangjx
  */
+@AutoLoad(false)
 class CachedKeyGeneratorLoader implements ResourceTypeLoader {
 
     private final Logger logger = Logger.getLogger(getClass().getSimpleName());

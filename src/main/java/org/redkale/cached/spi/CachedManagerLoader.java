@@ -9,6 +9,7 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.redkale.annotation.AutoLoad;
 import org.redkale.cached.CachedManager;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
@@ -20,6 +21,7 @@ import org.redkale.util.RedkaleException;
  *
  * @author zhangjx
  */
+@AutoLoad(false)
 class CachedManagerLoader implements ResourceTypeLoader {
 
     private final Logger logger = Logger.getLogger(getClass().getSimpleName());

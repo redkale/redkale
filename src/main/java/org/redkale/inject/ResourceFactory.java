@@ -610,7 +610,8 @@ public final class ResourceFactory {
      */
     public <T extends Annotation> void register(final ResourceAnnotationLoader<T> loader) {
         Objects.requireNonNull(loader);
-        parentRoot().resAnnotationLoaderMap.put(loader.annotationType(), loader);
+        inject(loader);
+        resAnnotationLoaderMap.put(loader.annotationType(), loader);
     }
 
     /**
@@ -619,6 +620,8 @@ public final class ResourceFactory {
      * @param loader ResourceTypeLoader
      */
     public void register(final ResourceTypeLoader loader) {
+        Objects.requireNonNull(loader);
+        inject(loader);
         resTypeLoaderMap.put(loader.resourceType(), loader);
     }
 
@@ -632,6 +635,7 @@ public final class ResourceFactory {
     public int registerConfiguration(final Class configuareClass) {
         int count = 0;
         Object instance = Creator.create(configuareClass).create();
+        inject(instance);
         for (Method method : configuareClass.getDeclaredMethods()) {
             Resource res = method.getAnnotation(Resource.class);
             if (res == null) {
@@ -801,6 +805,21 @@ public final class ResourceFactory {
             return parent.findResourceFactory(name, clazz);
         }
         return null;
+    }
+
+    /**
+     * 获取类型对应的ResourceAnnotationLoader <br>
+     *
+     * @param <A> 泛型
+     * @param clazz 类型
+     * @return ResourceAnnotationLoader
+     */
+    public <A extends Annotation> ResourceAnnotationLoader<A> findResourceAnnotationLoader(Class<A> clazz) {
+        ResourceAnnotationLoader<A> it = this.resAnnotationLoaderMap.get(clazz);
+        if (it != null) {
+            return it;
+        }
+        return parent == null ? null : parent.findResourceAnnotationLoader(clazz);
     }
 
     /**
@@ -1246,7 +1265,6 @@ public final class ResourceFactory {
         try {
             list.add(srcObj);
             Class clazz = srcObj.getClass();
-            final boolean diyLoaderFlag = !parentRoot().resAnnotationLoaderMap.isEmpty();
             do {
                 if (java.lang.Enum.class.isAssignableFrom(clazz)) {
                     break;
@@ -1287,14 +1305,13 @@ public final class ResourceFactory {
                                 break;
                             }
                         }
-                        if (flag && diyLoaderFlag) {
-                            parentRoot().resAnnotationLoaderMap.values().stream()
-                                    .forEach(iloader -> {
-                                        Annotation ann = field.getAnnotation(iloader.annotationType());
-                                        if (ann != null) {
-                                            iloader.load(this, srcResourceName, srcObj, ann, field, attachment);
-                                        }
-                                    });
+                        if (flag) {
+                            for (Annotation ann : field.getAnnotations()) {
+                                ResourceAnnotationLoader iloader = findResourceAnnotationLoader(ann.annotationType());
+                                if (iloader != null) {
+                                    iloader.load(this, srcResourceName, srcObj, ann, field, attachment);
+                                }
+                            }
                         }
                         if (ns == null) {
                             continue;
@@ -1488,11 +1505,11 @@ public final class ResourceFactory {
      *
      * @return  ResourceFactory
      */
-    private ResourceFactory parentRoot() {
+    private ResourceFactory parentRoot2() {
         if (parent == null) {
             return this;
         }
-        return parent.parentRoot();
+        return parent.parentRoot2();
     }
 
     /**

@@ -23,6 +23,7 @@ import org.redkale.util.Utility;
  *
  * @author zhangjx
  */
+@AutoLoad(false)
 class NodeAutoServiceLoader implements ResourceTypeLoader {
 
     private final Logger logger = Logger.getLogger(getClass().getSimpleName());

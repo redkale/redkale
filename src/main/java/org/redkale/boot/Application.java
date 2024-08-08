@@ -34,6 +34,7 @@ import org.redkale.convert.Convert;
 import org.redkale.convert.bson.BsonFactory;
 import org.redkale.convert.json.*;
 import org.redkale.convert.proto.ProtobufFactory;
+import org.redkale.inject.ResourceAnnotationLoader;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
@@ -51,6 +52,7 @@ import org.redkale.source.*;
 import org.redkale.source.spi.SourceModuleEngine;
 import org.redkale.util.AnyValue;
 import org.redkale.util.AnyValueWriter;
+import org.redkale.util.Creator;
 import org.redkale.util.Environment;
 import org.redkale.util.Redkale;
 import org.redkale.util.RedkaleClassLoader;
@@ -702,23 +704,67 @@ public final class Application {
             }
         });
         // 加载Configuration
-        ClassFilter<?> filter = new ClassFilter(this.getClassLoader(), Configuration.class, Object.class);
+        ClassFilter<?> resConfigFilter = new ClassFilter(this.getClassLoader(), Configuration.class, Object.class);
+        ClassFilter<ResourceAnnotationLoader> resAnnFilter =
+                new ClassFilter(this.getClassLoader(), ResourceAnnotationLoader.class);
+        ClassFilter<ResourceTypeLoader> resTypeFilter =
+                new ClassFilter(this.getClassLoader(), ResourceTypeLoader.class);
         try {
-            loadClassByFilters(filter);
+            loadClassByFilters(resConfigFilter, resAnnFilter, resTypeFilter);
         } catch (IOException e) {
             throw new RedkaleException(e);
         }
-        StringBuilder sb = new StringBuilder();
-        filter.getFilterEntrys().forEach(en -> {
-            int c = resourceFactory.registerConfiguration(en.getType());
-            sb.append("Load Configuration (type=")
-                    .append(en.getType().getName())
-                    .append(") ")
-                    .append(c)
-                    .append(" resources\r\n");
-        });
-        if (sb.length() > 0) {
-            logger.log(Level.INFO, sb.toString().trim());
+        { // Configuration
+            StringBuilder sb = new StringBuilder();
+            resConfigFilter.getFilterEntrys().forEach(en -> {
+                AutoLoad auto = en.getType().getAnnotation(AutoLoad.class);
+                if (auto == null || auto.value()) {
+                    int c = resourceFactory.registerConfiguration(en.getType());
+                    sb.append("Load Configuration (type=")
+                            .append(en.getType().getName())
+                            .append(") ")
+                            .append(c)
+                            .append(" resources\r\n");
+                }
+            });
+            if (sb.length() > 0) {
+                logger.log(Level.INFO, sb.toString().trim());
+            }
+        }
+        { // ResourceAnnotationLoader
+            StringBuilder sb = new StringBuilder();
+            resAnnFilter.getFilterEntrys().forEach(en -> {
+                AutoLoad auto = en.getType().getAnnotation(AutoLoad.class);
+                if (auto == null || auto.value()) {
+                    ResourceAnnotationLoader loader =
+                            Creator.create(en.getType()).create();
+                    resourceFactory.register(loader);
+                    sb.append("Load ResourceAnnotationLoader (type=")
+                            .append(en.getType().getName())
+                            .append(", annotation=")
+                            .append(loader.annotationType().getName())
+                            .append(")\r\n");
+                }
+            });
+            if (sb.length() > 0) {
+                logger.log(Level.INFO, sb.toString().trim());
+            }
+        }
+        { // ResourceTypeLoader
+            StringBuilder sb = new StringBuilder();
+            resTypeFilter.getFilterEntrys().forEach(en -> {
+                AutoLoad auto = en.getType().getAnnotation(AutoLoad.class);
+                if (auto == null || auto.value()) {
+                    ResourceTypeLoader loader = Creator.create(en.getType()).create();
+                    resourceFactory.register(loader);
+                    sb.append("Load ResourceTypeLoader (type=")
+                            .append(en.getType().getName())
+                            .append(")\r\n");
+                }
+            });
+            if (sb.length() > 0) {
+                logger.log(Level.INFO, sb.toString().trim());
+            }
         }
     }
 

@@ -8,6 +8,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.redkale.annotation.AutoLoad;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
 import org.redkale.net.sncp.Sncp;
@@ -19,6 +20,7 @@ import org.redkale.util.RedkaleException;
  *
  * @author zhangjx
  */
+@AutoLoad(false)
 class DataSourceLoader implements ResourceTypeLoader {
 
     private final Logger logger = Logger.getLogger(getClass().getSimpleName());

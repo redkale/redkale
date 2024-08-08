@@ -11,6 +11,7 @@ import java.net.SocketAddress;
 import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.redkale.annotation.AutoLoad;
 import org.redkale.asm.AsmMethodBoost;
 import static org.redkale.boot.Application.RESNAME_SNCP_ADDRESS;
 import org.redkale.inject.ResourceFactory;
@@ -29,6 +30,7 @@ import org.redkale.util.RedkaleException;
  *
  * @author zhangjx
  */
+@AutoLoad(false)
 class NodeWebSocketNodeLoader implements ResourceTypeLoader {
 
     private final Logger logger = Logger.getLogger(getClass().getSimpleName());
