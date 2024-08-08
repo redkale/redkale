@@ -27,12 +27,17 @@ public class ConfigurationTest {
         factory.register("a.name", "my a name");
         factory.register("b.id", 4321);
         factory.register("b.name", "my b name");
+        factory.register("c.id", 8888);
+        factory.register("c.name", "my c name");
+        factory.register("c.desc", "my desc");
         factory.registerConfiguration(DiyConfiguration.class);
 
         BeanB pb = new BeanB();
         factory.inject(pb);
         Assertions.assertEquals(new BeanA(1234, "my a name", "auto").toString(), pb.bean.toString());
+        Assertions.assertEquals(new BeanA(8888, "my c name", "my desc").toString(), pb.beanc.toString());
         System.out.println(pb.bean);
+        System.out.println(pb.beanc);
     }
 
     @Configuration
@@ -40,9 +45,17 @@ public class ConfigurationTest {
 
         @Resource(name = "a")
         BeanA createBeanA() {
-            System.out.println("创建一个Bean");
+            System.out.println("创建一个a Bean");
             BeanA bean = new BeanA();
             bean.desc = "auto";
+            return bean;
+        }
+
+        @Resource(name = "c")
+        static BeanA createBeanC(@Resource(name = "c.desc") String desc) {
+            System.out.println("创建一个c Bean");
+            BeanA bean = new BeanA();
+            bean.desc = desc;
             return bean;
         }
     }
@@ -51,6 +64,9 @@ public class ConfigurationTest {
 
         @Resource(name = "a")
         public BeanA bean;
+
+        @Resource(name = "c")
+        public BeanA beanc;
     }
 
     public static class BeanA {

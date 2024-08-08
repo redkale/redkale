@@ -708,7 +708,18 @@ public final class Application {
         } catch (IOException e) {
             throw new RedkaleException(e);
         }
-        filter.getFilterEntrys().forEach(en -> resourceFactory.register(en.getType()));
+        StringBuilder sb = new StringBuilder();
+        filter.getFilterEntrys().forEach(en -> {
+            int c = resourceFactory.registerConfiguration(en.getType());
+            sb.append("Load Configuration (type=")
+                    .append(en.getType().getName())
+                    .append(") ")
+                    .append(c)
+                    .append(" resources\r\n");
+        });
+        if (sb.length() > 0) {
+            logger.log(Level.INFO, sb.toString().trim());
+        }
     }
 
     private void registerResourceEnvs(boolean first, Properties... envs) {

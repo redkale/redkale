@@ -625,7 +625,8 @@ public final class ResourceFactory {
      * @param configuareClass 标记Configuration的类
      *
      */
-    public void registerConfiguration(final Class configuareClass) {
+    public int registerConfiguration(final Class configuareClass) {
+        int count = 0;
         Object instance = Creator.create(configuareClass).create();
         for (Method method : configuareClass.getDeclaredMethods()) {
             Resource res = method.getAnnotation(Resource.class);
@@ -647,13 +648,14 @@ public final class ResourceFactory {
             String resName = getResourceName(res.name());
             Type resType = method.getGenericReturnType();
             method.setAccessible(true);
+            Object obj = Modifier.isStatic(method.getModifiers()) ? null : instance;
             Supplier resSupplier = () -> {
                 Object[] args = new Object[paramSuppliers.length];
                 for (int i = 0; i < paramSuppliers.length; i++) {
                     args[i] = paramSuppliers[i].get();
                 }
                 try {
-                    return method.invoke(instance, args);
+                    return method.invoke(obj, args);
                 } catch (Exception e) {
                     throw new RedkaleException(method + " invoke error", e);
                 }
@@ -662,7 +664,9 @@ public final class ResourceFactory {
             resConfigureSupplierMap
                     .computeIfAbsent(resType, k -> new ConcurrentHashMap<>())
                     .put(resName, resSupplier);
+            count++;
         }
+        return count;
     }
 
     /**
@@ -1460,13 +1464,13 @@ public final class ResourceFactory {
                         try {
                             oldVal = element.field.get(dest);
                         } catch (Throwable e) {
-                            //do nothing
+                            // do nothing
                         }
                     }
                     try {
                         element.field.set(dest, newVal);
                     } catch (Throwable e) {
-                        //do nothing
+                        // do nothing
                     }
                     if (element.changedMethod != null) {
                         try {
