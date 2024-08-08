@@ -718,7 +718,7 @@ public final class Application {
             StringBuilder sb = new StringBuilder();
             resConfigFilter.getFilterEntrys().forEach(en -> {
                 AutoLoad auto = en.getType().getAnnotation(AutoLoad.class);
-                if (auto == null || auto.value()) {
+                if (Modifier.isPublic(en.getType().getModifiers()) && (auto == null || auto.value())) {
                     int c = resourceFactory.registerConfiguration(en.getType());
                     sb.append("Load Configuration (type=")
                             .append(en.getType().getName())
@@ -735,7 +735,7 @@ public final class Application {
             StringBuilder sb = new StringBuilder();
             resAnnFilter.getFilterEntrys().forEach(en -> {
                 AutoLoad auto = en.getType().getAnnotation(AutoLoad.class);
-                if (auto == null || auto.value()) {
+                if (Modifier.isPublic(en.getType().getModifiers()) && (auto == null || auto.value())) {
                     ResourceAnnotationLoader loader =
                             Creator.create(en.getType()).create();
                     resourceFactory.register(loader);
@@ -754,7 +754,7 @@ public final class Application {
             StringBuilder sb = new StringBuilder();
             resTypeFilter.getFilterEntrys().forEach(en -> {
                 AutoLoad auto = en.getType().getAnnotation(AutoLoad.class);
-                if (auto == null || auto.value()) {
+                if (Modifier.isPublic(en.getType().getModifiers()) && (auto == null || auto.value())) {
                     ResourceTypeLoader loader = Creator.create(en.getType()).create();
                     resourceFactory.register(loader);
                     sb.append("Load ResourceTypeLoader (type=")
