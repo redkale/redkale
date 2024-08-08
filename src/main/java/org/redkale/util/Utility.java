@@ -347,7 +347,7 @@ public final class Utility {
                     }
                 }
             } catch (Throwable e) { // 不会发生
-                e.printStackTrace();
+                // do nothing
             }
         }
         unsafeInstance = unsafe0;
@@ -3598,7 +3598,7 @@ public final class Utility {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            // do nothing
         }
         return back;
     }

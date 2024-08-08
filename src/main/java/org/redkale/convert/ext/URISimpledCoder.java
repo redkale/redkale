@@ -37,7 +37,6 @@ public class URISimpledCoder<R extends Reader, W extends Writer> extends Simpled
         try {
             return new URI(str);
         } catch (Exception e) {
-            e.printStackTrace();
             return null;
         }
     }

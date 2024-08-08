@@ -620,14 +620,13 @@ public final class ResourceFactory {
     }
 
     /**
-     * 注册 Configuration子类
+     * 注册Configuration配置类
      *
-     * @param <T> 泛型
-     * @param configuareClass Configuration的实现类
+     * @param configuareClass 标记Configuration的类
      *
      */
-    public <T extends Configuration> void register(final Class<T> configuareClass) {
-        Configuration instance = Creator.create(configuareClass).create();
+    public void registerConfiguration(final Class configuareClass) {
+        Object instance = Creator.create(configuareClass).create();
         for (Method method : configuareClass.getDeclaredMethods()) {
             Resource res = method.getAnnotation(Resource.class);
             if (res == null) {
@@ -1461,13 +1460,13 @@ public final class ResourceFactory {
                         try {
                             oldVal = element.field.get(dest);
                         } catch (Throwable e) {
-                            e.printStackTrace();
+                            //do nothing
                         }
                     }
                     try {
                         element.field.set(dest, newVal);
                     } catch (Throwable e) {
-                        e.printStackTrace();
+                        //do nothing
                     }
                     if (element.changedMethod != null) {
                         try {

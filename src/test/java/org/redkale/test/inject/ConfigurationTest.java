@@ -4,9 +4,9 @@
 package org.redkale.test.inject;
 
 import org.junit.jupiter.api.*;
+import org.redkale.annotation.Configuration;
 import org.redkale.annotation.Resource;
 import org.redkale.convert.json.JsonFactory;
-import org.redkale.inject.Configuration;
 import org.redkale.inject.ResourceFactory;
 
 /**
@@ -27,7 +27,7 @@ public class ConfigurationTest {
         factory.register("a.name", "my a name");
         factory.register("b.id", 4321);
         factory.register("b.name", "my b name");
-        factory.register(DiyConfiguration.class);
+        factory.registerConfiguration(DiyConfiguration.class);
 
         BeanB pb = new BeanB();
         factory.inject(pb);
@@ -35,7 +35,8 @@ public class ConfigurationTest {
         System.out.println(pb.bean);
     }
 
-    public static class DiyConfiguration implements Configuration {
+    @Configuration
+    public static class DiyConfiguration {
 
         @Resource(name = "a")
         BeanA createBeanA() {

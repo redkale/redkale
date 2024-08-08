@@ -1844,7 +1844,7 @@ public final class Rest {
         } catch (ClassNotFoundException e) {
             // do nothing
         } catch (Throwable e) {
-            e.printStackTrace();
+            //do nothing
         }
         // ------------------------------------------------------------------------------
         final String defModuleName = getWebModuleNameLowerCase(serviceType);

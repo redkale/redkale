@@ -1317,7 +1317,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                             RedkaleClassLoader.putReflectionMethod(subclazz.getName(), method);
                             break;
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            // do nothing
                         }
                     }
                     if (simpleCoder != null) {
@@ -1462,7 +1462,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                             RedkaleClassLoader.putReflectionMethod(subclazz.getName(), method);
                             break;
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            // do nothing
                         }
                     }
                     if (simpleCoder != null) {

@@ -20,6 +20,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.logging.*;
 import org.redkale.annotation.AutoLoad;
+import org.redkale.annotation.Configuration;
 import org.redkale.annotation.Nonnull;
 import org.redkale.asm.AsmMethodBoost;
 import org.redkale.boot.ClassFilter.FilterEntry;
@@ -33,7 +34,6 @@ import org.redkale.convert.Convert;
 import org.redkale.convert.bson.BsonFactory;
 import org.redkale.convert.json.*;
 import org.redkale.convert.proto.ProtobufFactory;
-import org.redkale.inject.Configuration;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
@@ -702,12 +702,13 @@ public final class Application {
             }
         });
         // 加载Configuration
-        ClassFilter<Configuration> filter = new ClassFilter(this.getClassLoader(), Configuration.class);
+        ClassFilter<?> filter = new ClassFilter(this.getClassLoader(), Configuration.class, Object.class);
         try {
             loadClassByFilters(filter);
         } catch (IOException e) {
             throw new RedkaleException(e);
         }
+        filter.getFilterEntrys().forEach(en -> resourceFactory.register(en.getType()));
     }
 
     private void registerResourceEnvs(boolean first, Properties... envs) {

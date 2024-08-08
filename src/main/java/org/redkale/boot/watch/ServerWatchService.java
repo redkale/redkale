@@ -74,7 +74,6 @@ public class ServerWatchService extends AbstractWatchService {
         try {
             server.changeAddress(application, newAddr);
         } catch (IOException e) {
-            e.printStackTrace();
             return new RetResult(RET_SERVER_CHANGEPORT_ERROR, "changeAddress error");
         }
         return RetResult.success();
