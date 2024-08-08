@@ -9,6 +9,54 @@ import org.redkale.annotation.Nullable;
 /**
  * 自定义注入加载器
  *
+ * <blockquote>
+ * <pre>
+ *
+ *  public class CustomConfProvider implements ResourceAnnotationLoader&lt;CustomConf&gt; {
+ *
+ *      &#064;Override
+ *      public Object load(
+ *              ResourceFactory factory,
+ *              String srcResourceName,
+ *              Object srcObj,
+ *              CustomConf annotation,
+ *              Field field,
+ *              Object attachment) {
+ *          DataSource source = new DataMemorySource(resourceName);
+ *          factory.register(resourceName, DataSource.class, source);
+ *          if (field != null) {
+ *              try {
+ *                  field.set(srcObj, source);
+ *              } catch (Exception e) {
+ *                  e.printStackTrace();
+ *              }
+ *          }
+ *          return source;
+ *      }
+ *
+ *      &#064;Override
+ *      public Type resourceType() {
+ *          return DataSource.class;
+ *      }
+ *  }
+ *
+ *
+ *  public class InjectBean {
+ *
+ *      &#064;Resource(name = "platf")
+ *      public DataSource source;
+ *  }
+ *
+ *
+ *  ResourceFactory factory = ResourceFactory.create();
+ *  factory.register(new DataSourceProvider());
+ *  InjectBean bean = new InjectBean();
+ *  factory.inject(bean);
+ *
+ *
+ * </pre>
+ * </blockquote>
+ *
  * <p>详情见: https://redkale.org
  *
  * @author zhangjx

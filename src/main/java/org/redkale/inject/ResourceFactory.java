@@ -106,17 +106,23 @@ public final class ResourceFactory {
         return result;
     }
 
-    /** 清空当前已注入资源的缓存 */
+    /**
+     * 清空当前已注入资源的缓存
+     */
     public void release() {
         this.entryStore.clear();
     }
 
-    /** inject时的锁 */
+    /**
+     * inject时的锁
+     */
     public void lock() {
         lock.lock();
     }
 
-    /** inject时的锁 */
+    /**
+     * inject时的锁
+     */
     public void unlock() {
         lock.unlock();
     }
@@ -279,10 +285,7 @@ public final class ResourceFactory {
      * @return 旧资源对象
      */
     public <A> A register(final boolean autoSync, final A rs) {
-        if (rs == null) {
-            return null;
-        }
-        return register(autoSync, "", rs);
+        return rs == null ? null : register(autoSync, "", rs);
     }
 
     /**
@@ -623,6 +626,7 @@ public final class ResourceFactory {
      * 注册Configuration配置类
      *
      * @param configuareClass 标记Configuration的类
+     * @return 方法数
      *
      */
     public int registerConfiguration(final Class configuareClass) {
@@ -871,20 +875,62 @@ public final class ResourceFactory {
         return parent == null ? null : parent.findSuperTypeLoader(ft, field);
     }
 
+    /**
+     * 找指定类型对应的资源对象
+     *
+     * @param <A> 泛型
+     * @param clazz 资源类型
+     * @return  资源对象
+     */
     public <A> A find(Class<? extends A> clazz) {
         return find("", clazz);
     }
 
-    public <A> A find(String name, Type clazz) {
-        ResourceEntry re = findEntry(name, clazz);
-        return re == null ? null : (A) re.value;
-    }
-
+    /**
+     * 找指定类型和资源名对应的资源对象
+     *
+     * @param <A> 泛型
+     * @param name 资源名
+     * @param clazz 资源类型
+     * @return  资源对象
+     */
     public <A> A find(String name, Class<? extends A> clazz) {
         ResourceEntry<A> re = findEntry(name, clazz);
         return re == null ? null : re.value;
     }
 
+    /**
+     * 找指定类型对应的资源对象
+     *
+     * @param <A> 泛型
+     * @param clazz 资源类型
+     * @return  资源对象
+     */
+    public <A> A find(Type clazz) {
+        return find("", clazz);
+    }
+
+    /**
+     * 找指定类型和资源名对应的资源对象
+     *
+     * @param <A> 泛型
+     * @param name 资源名
+     * @param clazz 资源类型
+     * @return  资源对象
+     */
+    public <A> A find(String name, Type clazz) {
+        ResourceEntry re = findEntry(name, clazz);
+        return re == null ? null : (A) re.value;
+    }
+
+    /**
+     * 找指定类型或子类型和资源名对应的资源对象
+     *
+     * @param <A> 泛型
+     * @param name 资源名
+     * @param clazz 资源类型
+     * @return 资源对象
+     */
     public <A> A findChild(final String name, final Class<? extends A> clazz) {
         A rs = find(name, clazz);
         if (rs != null) {
@@ -905,6 +951,13 @@ public final class ResourceFactory {
         return null;
     }
 
+    /**
+     * 找指定类型和资源名对应的资源对象
+     * @param <A> 泛型
+     * @param name 资源名
+     * @param clazz 资源类型
+     * @return  资源对象
+     */
     private <A> ResourceEntry<A> findEntry(String name, Type clazz) {
         Map<String, ResourceEntry> map = this.entryStore.get(clazz);
         if (map != null) {
@@ -917,6 +970,33 @@ public final class ResourceFactory {
             return parent.findEntry(name, clazz);
         }
         return null;
+    }
+
+    /**
+     * 加载资源对象， 没有返回null
+     *
+     * @param <A> 泛型
+     * @param clazz 资源类型
+     * @return  资源对象
+     *
+     * @since 2.8.0
+     */
+    public <A> A load(Class<A> clazz) {
+        return load("", (Type) clazz);
+    }
+
+    /**
+     * 加载资源对象， 没有返回null
+     *
+     * @param <A> 泛型
+     * @param name 资源名
+     * @param clazz 资源类型
+     * @return  资源对象
+     *
+     * @since 2.8.0
+     */
+    public <A> A load(String name, Class<A> clazz) {
+        return load(name, (Type) clazz);
     }
 
     /**
@@ -962,14 +1042,36 @@ public final class ResourceFactory {
         return val;
     }
 
+    /**
+     * 获取指定类型的资源对象
+     *
+     * @param <A> 泛型
+     * @param clazz 资源类型
+     * @return  资源集合
+     */
     public <A> List<A> query(Class<? extends A> clazz) {
         return query(new ArrayList<>(), clazz);
     }
 
+    /**
+     * 获取指定类型的资源对象
+     *
+     * @param <A> 泛型
+     * @param clazz 资源类型
+     * @return  资源集合
+     */
     public <A> List<A> query(Type clazz) {
         return query(new ArrayList<>(), clazz);
     }
 
+    /**
+     * 获取指定类型的资源对象
+     *
+     * @param <A> 泛型
+     * @param list 资源集合
+     * @param clazz 资源类型
+     * @return  资源集合
+     */
     private <A> List<A> query(final List<A> list, Type clazz) {
         Map<String, ResourceEntry> map = this.entryStore.get(clazz);
         if (map != null) {
@@ -985,10 +1087,25 @@ public final class ResourceFactory {
         return list;
     }
 
+    /**
+     * 获取符合过滤条件的资源对象
+     *
+     * @param <A> 泛型
+     * @param predicate 资源过滤条件
+     * @return  资源集合
+     */
     public <A> List<A> query(final BiPredicate<String, Object> predicate) {
         return query(new ArrayList<>(), predicate);
     }
 
+    /**
+     * 获取符合过滤条件的资源对象
+     *
+     * @param <A> 泛型
+     * @param list 资源集合
+     * @param predicate 资源过滤条件
+     * @return  资源集合
+     */
     private <A> List<A> query(final List<A> list, final BiPredicate<String, Object> predicate) {
         if (predicate == null) {
             return list;
@@ -1452,11 +1569,11 @@ public final class ResourceFactory {
             this.name = name;
             this.value = value;
             this.elements = elements == null ? new CopyOnWriteArrayList<>() : elements;
-            if (sync && Utility.isNotEmpty(elements)) {
+            if (sync && elements != null && !elements.isEmpty()) {
                 for (ResourceElement element : elements) {
                     Object dest = element.dest.get();
-                    if (dest == null) {
-                        continue; // 依赖对象可能被销毁了
+                    if (dest == null) { // 依赖对象可能被销毁了
+                        continue;
                     }
                     Object newVal = Utility.convertValue(element.fieldType, value);
                     Object oldVal = null;
