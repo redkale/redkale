@@ -68,7 +68,16 @@ import java.lang.reflect.Field;
  * @param <T> Annotation
  */
 public interface ResourceAnnotationLoader<T extends Annotation> {
-
+    /**
+     * 自定义的对象注入
+     *
+     * @param factory ResourceFactory
+     * @param srcResourceName 依附对象的资源名
+     * @param srcObj  资源依附对象
+     * @param annotation  注解
+     * @param field  字段对象
+     * @param attachment  附加对象
+     */
     public void load(
             ResourceFactory factory,
             String srcResourceName,
@@ -76,6 +85,10 @@ public interface ResourceAnnotationLoader<T extends Annotation> {
             T annotation,
             Field field,
             Object attachment);
-
+    /**
+     * 注入加载器对应的注解类型
+     *
+     * @return  类型
+     */
     public Class<T> annotationType();
 }

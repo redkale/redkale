@@ -68,7 +68,7 @@ public interface ResourceTypeLoader {
      *
      * @param factory ResourceFactory
      * @param srcResourceName 依附对象的资源名
-     * @param srcObj  依附对象
+     * @param srcObj  资源依附对象
      * @param resourceName  资源名
      * @param field  字段对象
      * @param attachment  附加对象

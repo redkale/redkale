@@ -1191,7 +1191,7 @@ public final class ResourceFactory {
     /**
      * 注入资源对象
      *
-     * @param srcResourceName 资源名
+     * @param srcResourceName 依附对象的资源名
      * @param srcObj 资源依附对象
      * @return 是否成功注入
      */
@@ -1203,7 +1203,7 @@ public final class ResourceFactory {
      * 注入资源对象
      *
      * @param <T> 泛型
-     * @param srcResourceName 资源名
+     * @param srcResourceName 依附对象的资源名
      * @param srcObj 资源依附对象
      * @param attachment 附加对象
      * @return 是否成功注入
@@ -1215,7 +1215,7 @@ public final class ResourceFactory {
     /**
      * 注入资源对象
      *
-     * @param srcResourceName 资源名
+     * @param srcResourceName 依附对象的资源名
      * @param srcObj 资源依附对象
      * @param consumer 字段处理函数
      * @return 是否成功注入
@@ -1228,7 +1228,7 @@ public final class ResourceFactory {
      * 注入资源对象
      *
      * @param <T> 泛型
-     * @param srcResourceName 资源名
+     * @param srcResourceName 依附对象的资源名
      * @param srcObj 资源依附对象
      * @param attachment 附加对象
      * @param consumer 字段处理函数
@@ -1246,7 +1246,7 @@ public final class ResourceFactory {
      * 注入资源对象
      *
      * @param <T> 泛型
-     * @param srcResourceName 资源名
+     * @param srcResourceName 依附对象的资源名
      * @param srcObj 资源依附对象
      * @param attachment 附加对象
      * @param consumer 字段处理函数
