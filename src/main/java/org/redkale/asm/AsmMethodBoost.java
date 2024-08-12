@@ -96,10 +96,10 @@ public abstract class AsmMethodBoost<T> {
      * @param fieldPrefix 动态字段的前缀
      * @param filterAnns 需要过滤的注解
      * @param method 操作的方法
-     * @param newMethodName 新的方法名, 可能为null
+     * @param newMethod 新的方法名, 可能为null
      * @return 下一个新的方法名，不做任何处理应返回参数newMethodName
      */
-    public abstract String doMethod(
+    public abstract AsmNewMethod doMethod(
             ClassLoader classLoader,
             ClassWriter cw,
             Class serviceImplClass,
@@ -107,7 +107,7 @@ public abstract class AsmMethodBoost<T> {
             String fieldPrefix,
             List<Class<? extends Annotation>> filterAnns,
             Method method,
-            @Nullable String newMethodName);
+            @Nullable AsmNewMethod newMethod);
 
     /**
      * 处理所有动态方法后调用
@@ -134,24 +134,24 @@ public abstract class AsmMethodBoost<T> {
     }
 
     protected MethodVisitor createMethodVisitor(
-            ClassWriter cw, Method method, String newMethodName, AsmMethodBean methodBean) {
+            ClassWriter cw, Method method, AsmNewMethod newMethod, int newMethodAcc, AsmMethodBean methodBean) {
         return new MethodDebugVisitor(cw.visitMethod(
-                getAcc(method, newMethodName),
-                getNowMethodName(method, newMethodName),
+                getAcc(method, newMethod),
+                getNowMethodName(method, newMethod),
                 Type.getMethodDescriptor(method),
                 getMethodSignature(method, methodBean),
                 getMethodExceptions(method, methodBean)));
     }
 
-    protected int getAcc(Method method, String newMethodName) {
-        if (newMethodName != null) {
+    protected int getAcc(Method method, AsmNewMethod newMethod) {
+        if (newMethod != null) {
             return ACC_PRIVATE;
         }
         return Modifier.isProtected(method.getModifiers()) ? ACC_PROTECTED : ACC_PUBLIC;
     }
 
-    protected String getNowMethodName(Method method, String newMethodName) {
-        return newMethodName == null ? method.getName() : newMethodName;
+    protected String getNowMethodName(Method method, AsmNewMethod newMethod) {
+        return newMethod == null ? method.getName() : newMethod.getMethodName();
     }
 
     protected String getMethodSignature(Method method, AsmMethodBean methodBean) {
@@ -175,13 +175,13 @@ public abstract class AsmMethodBoost<T> {
     }
 
     protected void visitRawAnnotation(
-            Method method, String newMethodName, MethodVisitor mv, Class selfAnnType, List filterAnns) {
-        if (newMethodName == null) {
+            Method method, AsmNewMethod newMethod, MethodVisitor mv, Class skipAnnType, List skipAnns) {
+        if (newMethod == null) {
             // 给方法加上原有的Annotation
             final Annotation[] anns = method.getAnnotations();
             for (Annotation ann : anns) {
-                if (ann.annotationType() != selfAnnType
-                        && (filterAnns == null || !filterAnns.contains(ann.annotationType()))) {
+                if (ann.annotationType() != skipAnnType
+                        && (skipAnns == null || !skipAnns.contains(ann.annotationType()))) {
                     Asms.visitAnnotation(
                             mv.visitAnnotation(Type.getDescriptor(ann.annotationType()), true),
                             ann.annotationType(),
@@ -305,7 +305,7 @@ public abstract class AsmMethodBoost<T> {
         }
 
         @Override
-        public String doMethod(
+        public AsmNewMethod doMethod(
                 ClassLoader classLoader,
                 ClassWriter cw,
                 Class serviceImplClass,
@@ -313,22 +313,15 @@ public abstract class AsmMethodBoost<T> {
                 String fieldPrefix,
                 List<Class<? extends Annotation>> filterAnns,
                 Method method,
-                String newMethodName) {
-            String newName = newMethodName;
+                AsmNewMethod newMethod) {
+            AsmNewMethod newResult = newMethod;
             for (AsmMethodBoost item : items) {
                 if (item != null) {
-                    newName = item.doMethod(
-                            classLoader,
-                            cw,
-                            serviceImplClass,
-                            newDynName,
-                            fieldPrefix,
-                            filterAnns,
-                            method,
-                            newName);
+                    newResult = item.doMethod(
+                            classLoader, cw, serviceImplClass, newDynName, fieldPrefix, filterAnns, method, newResult);
                 }
             }
-            return newName;
+            return newResult;
         }
 
         @Override

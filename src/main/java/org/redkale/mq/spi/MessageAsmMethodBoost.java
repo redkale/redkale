@@ -16,6 +16,7 @@ import org.redkale.annotation.AutoLoad;
 import org.redkale.asm.AnnotationVisitor;
 import org.redkale.asm.AsmMethodBean;
 import org.redkale.asm.AsmMethodBoost;
+import org.redkale.asm.AsmNewMethod;
 import org.redkale.asm.Asms;
 import org.redkale.asm.ClassWriter;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
@@ -81,7 +82,7 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
     }
 
     @Override
-    public String doMethod(
+    public AsmNewMethod doMethod(
             ClassLoader classLoader,
             ClassWriter cw,
             Class serviceImplClass,
@@ -89,25 +90,30 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
             String fieldPrefix,
             List filterAnns,
             Method method,
-            String newMethodName) {
-        if (serviceType.getAnnotation(DynForMessage.class) != null) {
-            return newMethodName;
+            AsmNewMethod newMethod) {
+        if (serviceType.getAnnotation(DynForMessaged.class) != null) {
+            return newMethod;
         }
         Messaged messaged = method.getAnnotation(Messaged.class);
         if (messaged == null) {
-            return newMethodName;
+            return newMethod;
         }
         if (!LoadMode.matches(remote, messaged.mode())) {
-            return newMethodName;
+            return newMethod;
         }
         if (Modifier.isFinal(method.getModifiers()) || Modifier.isStatic(method.getModifiers())) {
             throw new RedkaleException(
                     "@" + Messaged.class.getSimpleName() + " cannot on final or static method, but on " + method);
         }
+        if (Modifier.isProtected(method.getModifiers()) && Modifier.isFinal(method.getModifiers())) {
+            throw new RedkaleException(
+                    "@" + Messaged.class.getSimpleName() + " cannot on protected final method, but on " + method);
+        }
         if (!Modifier.isProtected(method.getModifiers()) && !Modifier.isPublic(method.getModifiers())) {
             throw new RedkaleException(
                     "@" + Messaged.class.getSimpleName() + " must on protected or public method, but on " + method);
         }
+
         int paramCount = method.getParameterCount();
         if (paramCount != 1 && paramCount != 2) {
             throw new RedkaleException(
@@ -135,9 +141,8 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
         ConvertFactory factory =
                 ConvertFactory.findConvert(messaged.convertType()).getFactory();
         factory.loadDecoder(messageType);
-        createInnerConsumer(
-                cw, method, paramKind, TypeToken.typeToClass(messageType), messaged, newDynName, newMethodName);
-        return newMethodName;
+        createInnerConsumer(cw, method, paramKind, TypeToken.typeToClass(messageType), messaged, newDynName, newMethod);
+        return newMethod;
     }
 
     // paramKind:  1:单个MessageType;  2: MessageConext & MessageType; 3: MessageType & MessageConext;
@@ -148,7 +153,7 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
             Class msgType,
             Messaged messaged,
             String newDynName,
-            String newMethodName) {
+            AsmNewMethod newMethod) {
         final String newDynDesc = "L" + newDynName + ";";
         final String innerClassName = "Dyn" + MessageConsumer.class.getSimpleName() + index.incrementAndGet();
         final String innerFullName = newDynName + "$" + innerClassName;
@@ -221,7 +226,7 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
             mv.visitEnd();
         }
         {
-            String methodName = newMethodName == null ? method.getName() : newMethodName;
+            String methodName = newMethod == null ? method.getName() : newMethod.getMethodName();
             mv = cw.visitMethod(
                     ACC_PUBLIC,
                     "onMessage",
@@ -325,7 +330,8 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
     @Override
     public void doAfterMethods(ClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {
         if (Utility.isNotEmpty(consumerBytes)) {
-            AnnotationVisitor av = cw.visitAnnotation(org.redkale.asm.Type.getDescriptor(DynForMessage.class), true);
+            AnnotationVisitor av =
+                    cw.visitAnnotation(org.redkale.asm.Type.getDescriptor(DynForMessaged.class), true);
             av.visit("value", org.redkale.asm.Type.getType("L" + newDynName.replace('.', '/') + ";"));
             av.visitEnd();
         }
@@ -333,7 +339,7 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
 
     @Override
     public void doInstance(ClassLoader classLoader, ResourceFactory resourceFactory, Object service) {
-        DynForMessage[] dyns = service.getClass().getAnnotationsByType(DynForMessage.class);
+        DynForMessaged[] dyns = service.getClass().getAnnotationsByType(DynForMessaged.class);
         if (Utility.isEmpty(dyns)) {
             return;
         }
@@ -358,12 +364,13 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
                     messageEngine.addMessageConsumer(consumer);
                 }
             } else {
-                for (DynForMessage item : dyns) {
+                for (DynForMessaged item : dyns) {
                     Class<? extends MessageConsumer> clazz = item.value();
                     MessageConsumer consumer = (MessageConsumer) clazz.getConstructors()[0].newInstance(service);
                     messageEngine.addMessageConsumer(consumer);
                 }
             }
+
         } catch (Exception e) {
             throw new RedkaleException(e);
         }

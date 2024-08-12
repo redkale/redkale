@@ -21,8 +21,8 @@ import org.redkale.mq.MessageConsumer;
 @Documented
 @Target({TYPE})
 @Retention(RUNTIME)
-@Repeatable(DynForMessage.DynForMessages.class)
-public @interface DynForMessage {
+@Repeatable(DynForMessaged.DynForMessageds.class)
+public @interface DynForMessaged {
 
     Class<? extends MessageConsumer> value();
 
@@ -30,8 +30,8 @@ public @interface DynForMessage {
     @Documented
     @Target({TYPE})
     @Retention(RUNTIME)
-    @interface DynForMessages {
+    @interface DynForMessageds {
 
-        DynForMessage[] value();
+        DynForMessaged[] value();
     }
 }

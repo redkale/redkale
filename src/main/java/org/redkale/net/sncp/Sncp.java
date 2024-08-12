@@ -658,9 +658,9 @@ public abstract class Sncp {
                 }
                 methodKeys.add(mk);
                 List<Class<? extends Annotation>> filterAnns = methodBoost.filterMethodAnnotations(method);
-                String newMethodName =
+                AsmNewMethod newMethod =
                         methodBoost.doMethod(classLoader, cw, clazz, newDynName, FIELDPREFIX, filterAnns, method, null);
-                if (newMethodName != null) {
+                if (newMethod != null) {
                     String desc = Type.getMethodDescriptor(method);
                     AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
                     String signature = null;
@@ -678,8 +678,8 @@ public abstract class Sncp {
                         exceptions = methodBean.getExceptions();
                     }
                     // 需要定义一个新方法调用 super.method
-                    mv = new MethodDebugVisitor(
-                            cw.visitMethod(ACC_PRIVATE, newMethodName, desc, signature, exceptions));
+                    mv = new MethodDebugVisitor(cw.visitMethod(
+                            newMethod.getMethodAccs(), newMethod.getMethodName(), desc, signature, exceptions));
                     Label l0 = new Label();
                     mv.visitLabel(l0);
                     // mv.setDebug(true);
@@ -1106,14 +1106,16 @@ public abstract class Sncp {
             methodKeys.add(mk);
 
             int acc = ACC_PUBLIC;
+            AsmNewMethod newMethod = null;
             String newMethodName = null;
             if (methodBoost != null) {
                 List<Class<? extends Annotation>> filterAnns = methodBoost.filterMethodAnnotations(method);
-                newMethodName = methodBoost.doMethod(
+                newMethod = methodBoost.doMethod(
                         classLoader, cw, serviceTypeOrImplClass, newDynName, FIELDPREFIX, filterAnns, method, null);
             }
-            if (newMethodName != null) {
-                acc = ACC_PRIVATE;
+            if (newMethod != null) {
+                acc = newMethod.getMethodAccs();
+                newMethodName = newMethod.getMethodName();
             } else {
                 newMethodName = method.getName();
             }

@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 import org.redkale.asm.AnnotationVisitor;
 import org.redkale.asm.AsmMethodBean;
 import org.redkale.asm.AsmMethodBoost;
+import org.redkale.asm.AsmNewMethod;
 import org.redkale.asm.Asms;
 import org.redkale.asm.ClassWriter;
 import org.redkale.asm.FieldVisitor;
@@ -60,7 +61,7 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
     }
 
     @Override
-    public String doMethod(
+    public AsmNewMethod doMethod(
             final ClassLoader classLoader,
             final ClassWriter cw,
             final Class serviceImplClass,
@@ -68,7 +69,7 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
             final String fieldPrefix,
             final List filterAnns,
             final Method method,
-            final String newMethodName) {
+            final AsmNewMethod newMethod) {
         Map<String, CachedAction> actions = this.actionMap;
         if (actions == null) {
             actions = new LinkedHashMap<>();
@@ -76,13 +77,13 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
         }
         Cached cached = method.getAnnotation(Cached.class);
         if (cached == null) {
-            return newMethodName;
-        }
-        if (!LoadMode.matches(remote, cached.mode())) {
-            return newMethodName;
+            return newMethod;
         }
         if (method.getAnnotation(DynForCached.class) != null) {
-            return newMethodName;
+            return newMethod;
+        }
+        if (!LoadMode.matches(remote, cached.mode())) {
+            return newMethod;
         }
         if (Modifier.isFinal(method.getModifiers()) || Modifier.isStatic(method.getModifiers())) {
             throw new RedkaleException(
@@ -102,12 +103,12 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
         final AsmMethodBean methodBean = getMethodBean(method);
         { // 定义一个新方法调用 this.rsMethodName
             final String cacheDynDesc = Type.getDescriptor(DynForCached.class);
-            final MethodVisitor mv = createMethodVisitor(cw, method, newMethodName, methodBean);
+            final MethodVisitor mv = createMethodVisitor(cw, method, newMethod, ACC_PRIVATE, methodBean);
             // mv.setDebug(true);
             AnnotationVisitor av = mv.visitAnnotation(cacheDynDesc, true);
             av.visit("dynField", dynFieldName);
             Asms.visitAnnotation(av, DynForCached.class, cached);
-            visitRawAnnotation(method, newMethodName, mv, Cached.class, filterAnns);
+            visitRawAnnotation(method, newMethod, mv, Cached.class, filterAnns);
 
             Label l0 = new Label();
             mv.visitLabel(l0);
@@ -210,7 +211,7 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
                     "Lookup",
                     ACC_PUBLIC + ACC_FINAL + ACC_STATIC);
         }
-        return rsMethodName;
+        return new AsmNewMethod(rsMethodName, ACC_PRIVATE);
     }
 
     @Override

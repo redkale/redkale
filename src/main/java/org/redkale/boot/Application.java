@@ -1139,6 +1139,7 @@ public final class Application {
         if (list == null) {
             return null;
         }
+        Utility.sortPriority(list);
         return list.size() == 1 ? list.get(0) : AsmMethodBoost.create(remote, list);
     }
 

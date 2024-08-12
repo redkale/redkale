@@ -26,6 +26,7 @@ import java.util.zip.GZIPInputStream;
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
 import org.redkale.annotation.ClassDepends;
+import org.redkale.annotation.Priority;
 import org.redkale.convert.json.JsonConvert;
 
 /**
@@ -1719,6 +1720,21 @@ public final class Utility {
             }
         }
         return 0;
+    }
+
+    /**
+     * 排序, 值大排前面
+     * @param <P> 泛型
+     * @param list 集合
+     * @return  排序后的集合
+     */
+    public static <P> List<P> sortPriority(List<P> list) {
+        Collections.sort(list, (a, b) -> {
+            Priority p1 = a == null ? null : a.getClass().getAnnotation(Priority.class);
+            Priority p2 = b == null ? null : b.getClass().getAnnotation(Priority.class);
+            return (p2 == null ? 0 : p2.value()) - (p1 == null ? 0 : p1.value());
+        });
+        return list;
     }
 
     /**

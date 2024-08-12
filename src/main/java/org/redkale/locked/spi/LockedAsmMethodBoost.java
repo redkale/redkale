@@ -10,6 +10,7 @@ import java.util.List;
 import org.redkale.asm.AnnotationVisitor;
 import org.redkale.asm.AsmMethodBean;
 import org.redkale.asm.AsmMethodBoost;
+import org.redkale.asm.AsmNewMethod;
 import org.redkale.asm.Asms;
 import org.redkale.asm.ClassWriter;
 import org.redkale.asm.Label;
@@ -36,7 +37,7 @@ public class LockedAsmMethodBoost extends AsmMethodBoost {
     }
 
     @Override
-    public String doMethod(
+    public AsmNewMethod doMethod(
             ClassLoader classLoader,
             ClassWriter cw,
             Class serviceImplClass,
@@ -44,16 +45,16 @@ public class LockedAsmMethodBoost extends AsmMethodBoost {
             String fieldPrefix,
             List filterAnns,
             Method method,
-            final String newMethodName) {
+            final AsmNewMethod newMethod) {
         Locked locked = method.getAnnotation(Locked.class);
         if (locked == null) {
-            return newMethodName;
+            return newMethod;
         }
         if (!LoadMode.matches(remote, locked.mode())) {
-            return newMethodName;
+            return newMethod;
         }
         if (method.getAnnotation(DynForLocked.class) != null) {
-            return newMethodName;
+            return newMethod;
         }
         if (Modifier.isFinal(method.getModifiers()) || Modifier.isStatic(method.getModifiers())) {
             throw new RedkaleException(
@@ -70,14 +71,14 @@ public class LockedAsmMethodBoost extends AsmMethodBoost {
         { // 定义一个新方法调用 this.rsMethodName
             final AsmMethodBean methodBean = getMethodBean(method);
             final String lockDynDesc = Type.getDescriptor(DynForLocked.class);
-            final MethodVisitor mv = createMethodVisitor(cw, method, newMethodName, methodBean);
+            final MethodVisitor mv = createMethodVisitor(cw, method, newMethod, ACC_PRIVATE, methodBean);
             // mv.setDebug(true);
             Label l0 = new Label();
             mv.visitLabel(l0);
             AnnotationVisitor av = mv.visitAnnotation(lockDynDesc, true);
             av.visit("dynField", dynFieldName);
             Asms.visitAnnotation(av, DynForLocked.class, locked);
-            visitRawAnnotation(method, newMethodName, mv, Locked.class, filterAnns);
+            visitRawAnnotation(method, newMethod, mv, Locked.class, filterAnns);
             mv.visitVarInsn(ALOAD, 0);
             List<Integer> insns = visitVarInsnParamTypes(mv, method, 0);
             mv.visitMethodInsn(INVOKESPECIAL, newDynName, rsMethodName, Type.getMethodDescriptor(method), false);
@@ -85,7 +86,7 @@ public class LockedAsmMethodBoost extends AsmMethodBoost {
             mv.visitMaxs(20, 20);
             mv.visitEnd();
         }
-        return rsMethodName;
+        return new AsmNewMethod(rsMethodName, ACC_PRIVATE);
     }
 
     @Override
