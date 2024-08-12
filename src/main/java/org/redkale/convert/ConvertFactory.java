@@ -766,7 +766,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                         try {
                             Field instanceField = enClazz.getField("instance");
                             if (instanceField.getType() == enClazz && Modifier.isStatic(instanceField.getModifiers())) {
-                                RedkaleClassLoader.putReflectionField("instance", instanceField);
+                                RedkaleClassLoader.putReflectionField(enClazz.getName(), instanceField);
                                 encoder = (Encodeable) instanceField.get(null);
                             }
                         } catch (Exception e) {
@@ -842,7 +842,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                         try {
                             Field instanceField = deClazz.getField("instance");
                             if (instanceField.getType() == deClazz && Modifier.isStatic(instanceField.getModifiers())) {
-                                RedkaleClassLoader.putReflectionField("instance", instanceField);
+                                RedkaleClassLoader.putReflectionField(deClazz.getName(), instanceField);
                                 decoder = (Decodeable) instanceField.get(null);
                             }
                         } catch (Exception e) {

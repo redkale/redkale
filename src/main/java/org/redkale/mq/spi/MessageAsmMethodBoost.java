@@ -4,6 +4,7 @@
 package org.redkale.mq.spi;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
@@ -335,14 +336,43 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
                 String clzName = innerFullName.replace('/', '.');
                 Class clazz = classLoader.loadClass(clzName, bytes);
                 RedkaleClassLoader.putDynClass(clzName, bytes, clazz);
+                RedkaleClassLoader.putReflectionPublicConstructors(clazz, clzName);
                 AnnotationVisitor av2 =
                         av1.visitAnnotation(null, org.redkale.asm.Type.getDescriptor(DynForMessaged.class));
-                av2.visit("value", org.redkale.asm.Type.getType("L" + innerFullName + ";"));
+                av2.visit("dynField", getFieldName(innerFullName));
+                av2.visit("consumer", org.redkale.asm.Type.getType("L" + innerFullName + ";"));
                 av2.visitEnd();
             });
             av1.visitEnd();
             av0.visitEnd();
+            String consumerDesc = org.redkale.asm.Type.getDescriptor(MessageConsumer.class);
+            consumerBytes.forEach((innerFullName, bytes) -> {
+                FieldVisitor fv = cw.visitField(ACC_PRIVATE, getFieldName(innerFullName), consumerDesc, null, null);
+                fv.visitEnd();
+            });
         }
+    }
+
+    @Override
+    public void doConstructorMethod(
+            DynBytesClassLoader classLoader,
+            ClassWriter cw,
+            MethodVisitor mv,
+            String newDynName,
+            String fieldPrefix,
+            boolean remote) {
+        if (remote || Utility.isEmpty(consumerBytes)) {
+            return;
+        }
+        String consumerDesc = org.redkale.asm.Type.getDescriptor(MessageConsumer.class);
+        consumerBytes.forEach((innerFullName, bytes) -> {
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitTypeInsn(NEW, innerFullName);
+            mv.visitInsn(DUP);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitMethodInsn(INVOKESPECIAL, innerFullName, "<init>", "(L" + newDynName + ";)V", false);
+            mv.visitFieldInsn(PUTFIELD, newDynName, getFieldName(innerFullName), consumerDesc);
+        });
     }
 
     @Override
@@ -351,13 +381,23 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
         if (Utility.isNotEmpty(dyns)) {
             try {
                 for (DynForMessaged item : dyns) {
-                    Class<? extends MessageConsumer> clazz = item.value();
-                    MessageConsumer consumer = (MessageConsumer) clazz.getConstructors()[0].newInstance(service);
+                    // Class<? extends MessageConsumer> clazz = item.value();
+                    // MessageConsumer consumer = (MessageConsumer) clazz.getConstructors()[0].newInstance(service);
+                    String fieldName = item.dynField();
+                    Field field = service.getClass().getDeclaredField(fieldName);
+                    RedkaleClassLoader.putReflectionField(service.getClass().getName(), field);
+                    field.setAccessible(true);
+                    MessageConsumer consumer = (MessageConsumer) field.get(service);
                     messageEngine.addMessageConsumer(consumer);
                 }
             } catch (Exception e) {
                 throw new RedkaleException(e);
             }
         }
+    }
+
+    private String getFieldName(String innerFullName) {
+        String simpleClassName = innerFullName.substring(innerFullName.lastIndexOf('$') + 1);
+        return "_dyn" + simpleClassName;
     }
 }

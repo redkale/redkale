@@ -39,7 +39,7 @@ public final class EnumSimpledCoder<R extends Reader, W extends Writer, E extend
             try {
                 String fieldName = cev.value();
                 Field field = type.getDeclaredField(fieldName);
-                RedkaleClassLoader.putReflectionField(fieldName, field);
+                RedkaleClassLoader.putReflectionField(type.getName(), field);
                 char[] chs = fieldName.toCharArray();
                 chs[0] = Character.toUpperCase(chs[0]);
                 String methodName = "get" + new String(chs);

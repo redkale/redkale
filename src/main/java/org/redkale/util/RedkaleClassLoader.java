@@ -168,14 +168,14 @@ public class RedkaleClassLoader extends URLClassLoader {
         dynClassBytesMap.forEach(action);
     }
 
-    public static void putReflectionClass(String name) {
+    public static void putReflectionClass(String className) {
         reflectionLock.lock();
         try {
-            Map<String, Object> map = reflectionMap.get(name);
+            Map<String, Object> map = reflectionMap.get(className);
             if (map == null) {
                 map = new LinkedHashMap<>();
-                map.put("name", name);
-                reflectionMap.put(name, map);
+                map.put("name", className);
+                reflectionMap.put(className, map);
             }
         } finally {
             reflectionLock.unlock();
@@ -191,14 +191,14 @@ public class RedkaleClassLoader extends URLClassLoader {
         serviceLoaderMap.forEach(action);
     }
 
-    public static void putReflectionField(String name, Field field) {
+    public static void putReflectionField(String className, Field field) {
         reflectionLock.lock();
         try {
-            Map<String, Object> map = reflectionMap.get(name);
+            Map<String, Object> map = reflectionMap.get(className);
             if (map == null) {
                 map = new LinkedHashMap();
-                map.put("name", name);
-                reflectionMap.put(name, map);
+                map.put("name", className);
+                reflectionMap.put(className, map);
             }
             List<Map<String, Object>> list = (List) map.get("fields");
             if (list == null) {
@@ -222,14 +222,14 @@ public class RedkaleClassLoader extends URLClassLoader {
         }
     }
 
-    public static void putReflectionMethod(String name, Method method) {
+    public static void putReflectionMethod(String className, Method method) {
         reflectionLock.lock();
         try {
-            Map<String, Object> map = reflectionMap.get(name);
+            Map<String, Object> map = reflectionMap.get(className);
             if (map == null) {
                 map = new LinkedHashMap();
-                map.put("name", name);
-                reflectionMap.put(name, map);
+                map.put("name", className);
+                reflectionMap.put(className, map);
             }
             List<Map<String, Object>> list = (List) map.get("methods");
             if (list == null) {
@@ -259,14 +259,14 @@ public class RedkaleClassLoader extends URLClassLoader {
         }
     }
 
-    public static void putReflectionDeclaredConstructors(Class clazz, String name, Class... cts) {
+    public static void putReflectionDeclaredConstructors(Class clazz, String className, Class... cts) {
         reflectionLock.lock();
         try {
-            Map<String, Object> map = reflectionMap.get(name);
+            Map<String, Object> map = reflectionMap.get(className);
             if (map == null) {
                 map = new LinkedHashMap();
-                map.put("name", name);
-                reflectionMap.put(name, map);
+                map.put("name", className);
+                reflectionMap.put(className, map);
             }
             map.put("allDeclaredConstructors", true);
 
@@ -310,14 +310,14 @@ public class RedkaleClassLoader extends URLClassLoader {
         }
     }
 
-    public static void putReflectionPublicConstructors(Class clazz, String name) {
+    public static void putReflectionPublicConstructors(Class clazz, String className) {
         reflectionLock.lock();
         try {
-            Map<String, Object> map = reflectionMap.get(name);
+            Map<String, Object> map = reflectionMap.get(className);
             if (map == null) {
                 map = new LinkedHashMap();
-                map.put("name", name);
-                reflectionMap.put(name, map);
+                map.put("name", className);
+                reflectionMap.put(className, map);
             }
             map.put("allPublicConstructors", true);
 
@@ -356,14 +356,14 @@ public class RedkaleClassLoader extends URLClassLoader {
         }
     }
 
-    public static void putReflectionDeclaredMethods(String name) {
+    public static void putReflectionDeclaredMethods(String className) {
         reflectionLock.lock();
         try {
-            Map<String, Object> map = reflectionMap.get(name);
+            Map<String, Object> map = reflectionMap.get(className);
             if (map == null) {
                 map = new LinkedHashMap();
-                map.put("name", name);
-                reflectionMap.put(name, map);
+                map.put("name", className);
+                reflectionMap.put(className, map);
             }
             map.put("allDeclaredMethods", true);
         } finally {
@@ -371,14 +371,14 @@ public class RedkaleClassLoader extends URLClassLoader {
         }
     }
 
-    public static void putReflectionPublicMethods(String name) {
+    public static void putReflectionPublicMethods(String className) {
         reflectionLock.lock();
         try {
-            Map<String, Object> map = reflectionMap.get(name);
+            Map<String, Object> map = reflectionMap.get(className);
             if (map == null) {
                 map = new LinkedHashMap();
-                map.put("name", name);
-                reflectionMap.put(name, map);
+                map.put("name", className);
+                reflectionMap.put(className, map);
             }
             map.put("allPublicMethods", true);
         } finally {
@@ -386,14 +386,14 @@ public class RedkaleClassLoader extends URLClassLoader {
         }
     }
 
-    public static void putReflectionDeclaredFields(String name) {
+    public static void putReflectionDeclaredFields(String className) {
         reflectionLock.lock();
         try {
-            Map<String, Object> map = reflectionMap.get(name);
+            Map<String, Object> map = reflectionMap.get(className);
             if (map == null) {
                 map = new LinkedHashMap();
-                map.put("name", name);
-                reflectionMap.put(name, map);
+                map.put("name", className);
+                reflectionMap.put(className, map);
             }
             map.put("allDeclaredFields", true);
         } finally {
@@ -401,14 +401,14 @@ public class RedkaleClassLoader extends URLClassLoader {
         }
     }
 
-    public static void putReflectionPublicFields(String name) {
+    public static void putReflectionPublicFields(String className) {
         reflectionLock.lock();
         try {
-            Map<String, Object> map = reflectionMap.get(name);
+            Map<String, Object> map = reflectionMap.get(className);
             if (map == null) {
                 map = new LinkedHashMap();
-                map.put("name", name);
-                reflectionMap.put(name, map);
+                map.put("name", className);
+                reflectionMap.put(className, map);
             }
             map.put("allPublicFields", true);
         } finally {
@@ -416,14 +416,14 @@ public class RedkaleClassLoader extends URLClassLoader {
         }
     }
 
-    public static void putReflectionDeclaredClasses(String name) {
+    public static void putReflectionDeclaredClasses(String className) {
         reflectionLock.lock();
         try {
-            Map<String, Object> map = reflectionMap.get(name);
+            Map<String, Object> map = reflectionMap.get(className);
             if (map == null) {
                 map = new LinkedHashMap();
-                map.put("name", name);
-                reflectionMap.put(name, map);
+                map.put("name", className);
+                reflectionMap.put(className, map);
             }
             map.put("allDeclaredClasses", true);
         } finally {
@@ -431,14 +431,14 @@ public class RedkaleClassLoader extends URLClassLoader {
         }
     }
 
-    public static void putReflectionPublicClasses(String name) {
+    public static void putReflectionPublicClasses(String className) {
         reflectionLock.lock();
         try {
-            Map<String, Object> map = reflectionMap.get(name);
+            Map<String, Object> map = reflectionMap.get(className);
             if (map == null) {
                 map = new LinkedHashMap();
-                map.put("name", name);
-                reflectionMap.put(name, map);
+                map.put("name", className);
+                reflectionMap.put(className, map);
             }
             map.put("allPublicClasses", true);
         } finally {

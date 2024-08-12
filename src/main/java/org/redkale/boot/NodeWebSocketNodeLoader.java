@@ -166,7 +166,7 @@ class NodeWebSocketNodeLoader implements ResourceTypeLoader {
                     MessageAgent messageAgent = null;
                     try {
                         Field c = WebSocketServlet.class.getDeclaredField("messageAgent");
-                        RedkaleClassLoader.putReflectionField("messageAgent", c);
+                        RedkaleClassLoader.putReflectionField(WebSocketServlet.class.getName(), c);
                         c.setAccessible(true);
                         messageAgent = (MessageAgent) c.get(srcObj);
                     } catch (Exception ex) {
