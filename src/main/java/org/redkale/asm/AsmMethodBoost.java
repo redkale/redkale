@@ -120,10 +120,11 @@ public abstract class AsmMethodBoost<T> {
     /**
      * 实例对象进行操作，通常用于给动态的字段赋值
      *
+     * @param classLoader ClassLoader
      * @param resourceFactory ResourceFactory
      * @param service 实例对象
      */
-    public abstract void doInstance(ResourceFactory resourceFactory, T service);
+    public abstract void doInstance(ClassLoader classLoader, ResourceFactory resourceFactory, T service);
 
     protected AsmMethodBean getMethodBean(Method method) {
         Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBeans(serviceType);
@@ -324,10 +325,10 @@ public abstract class AsmMethodBoost<T> {
         }
 
         @Override
-        public void doInstance(ResourceFactory resourceFactory, T service) {
+        public void doInstance(ClassLoader classLoader, ResourceFactory resourceFactory, T service) {
             for (AsmMethodBoost item : items) {
                 if (item != null) {
-                    item.doInstance(resourceFactory, service);
+                    item.doInstance(classLoader, resourceFactory, service);
                 }
             }
         }

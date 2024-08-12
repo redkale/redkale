@@ -261,7 +261,7 @@ public abstract class MessageAgent implements MessageManager {
                 ResourceConsumer res = consumer.getClass().getAnnotation(ResourceConsumer.class);
                 String group = environment.getPropertyValue(res.group());
                 if (Utility.isBlank(group)) {
-                    group = consumer.getClass().getName();
+                    group = consumer.getClass().getName().replace('$', '.');
                 }
                 Map<String, MessageConsumerWrapper> map = maps.computeIfAbsent(group, g -> new HashMap<>());
                 List<String> topics = new ArrayList<>();

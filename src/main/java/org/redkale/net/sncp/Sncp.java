@@ -827,7 +827,8 @@ public abstract class Sncp {
                 c.set(service, agent == null ? null : agent.getName());
             }
             if (methodBoost != null) {
-                methodBoost.doInstance(resourceFactory, service);
+                // 必须用servcie的ClassLoader， 因为service是动态ClassLoader会与doMethod里的动态ClassLoader不一致
+                methodBoost.doInstance(service.getClass().getClassLoader(), resourceFactory, service);
             }
             return service;
         } catch (RuntimeException rex) {
@@ -982,7 +983,8 @@ public abstract class Sncp {
                 c.set(service, info);
             }
             if (methodBoost != null) {
-                methodBoost.doInstance(resourceFactory, service);
+                // 必须用servcie的ClassLoader， 因为service是动态ClassLoader会与doMethod里的动态ClassLoader不一致
+                methodBoost.doInstance(service.getClass().getClassLoader(), resourceFactory, service);
             }
             return service;
         } catch (Throwable ex) {
@@ -1264,7 +1266,8 @@ public abstract class Sncp {
                 RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), c);
             }
             if (methodBoost != null) {
-                methodBoost.doInstance(resourceFactory, service);
+                // 必须用servcie的ClassLoader， 因为service是动态ClassLoader会与doMethod里的动态ClassLoader不一致
+                methodBoost.doInstance(service.getClass().getClassLoader(), resourceFactory, service);
             }
             return service;
         } catch (Exception ex) {

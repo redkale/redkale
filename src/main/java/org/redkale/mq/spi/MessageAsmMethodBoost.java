@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -66,7 +67,7 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
 
     private RedkaleClassLoader.DynBytesClassLoader newLoader;
 
-    private List<Class<? extends MessageConsumer>> consumers;
+    private Map<String, byte[]> consumerBytes;
 
     public MessageAsmMethodBoost(boolean remote, Class serviceType, MessageModuleEngine messageEngine) {
         super(remote, serviceType);
@@ -132,10 +133,6 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
         ConvertFactory factory =
                 ConvertFactory.findConvert(messaged.convertType()).getFactory();
         factory.loadDecoder(messageType);
-        if (newLoader == null) {
-            newLoader = new RedkaleClassLoader.DynBytesClassLoader(
-                    classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader);
-        }
         createInnerConsumer(
                 cw, method, paramKind, TypeToken.typeToClass(messageType), messaged, newDynName, newMethodName);
         return newMethodName;
@@ -153,6 +150,8 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
         final String newDynDesc = "L" + newDynName + ";";
         final String innerClassName = "Dyn" + MessageConsumer.class.getSimpleName() + index.incrementAndGet();
         final String innerFullName = newDynName + "$" + innerClassName;
+        final String msgTypeName =
+                TypeToken.primitiveToWrapper(msgType).getName().replace('.', '/');
         final String msgTypeDesc = org.redkale.asm.Type.getDescriptor(TypeToken.primitiveToWrapper(msgType));
         final String messageConsumerName = MessageConsumer.class.getName().replace('.', '/');
         final String messageConsumerDesc = org.redkale.asm.Type.getDescriptor(MessageConsumer.class);
@@ -165,7 +164,7 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
         }
         AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
         String genericMsgTypeDesc = msgTypeDesc;
-        if (!msgType.isPrimitive()) {
+        if (!msgType.isPrimitive() && Utility.isNotEmpty(methodBean.getSignature())) {
             String methodSignature = methodBean.getSignature().replace(messageConextDesc, "");
             genericMsgTypeDesc = methodSignature.substring(1, methodSignature.lastIndexOf(')')); // 获取()中的值
         }
@@ -300,7 +299,7 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
             mv.visitVarInsn(ALOAD, 0);
             mv.visitVarInsn(ALOAD, 1);
             mv.visitVarInsn(ALOAD, 2);
-            mv.visitTypeInsn(CHECKCAST, "java/lang/String");
+            mv.visitTypeInsn(CHECKCAST, msgTypeName);
             mv.visitMethodInsn(
                     INVOKEVIRTUAL, innerFullName, "onMessage", "(" + messageConextDesc + msgTypeDesc + ")V", false);
             mv.visitInsn(RETURN);
@@ -310,22 +309,39 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
         cw.visitEnd();
 
         byte[] bytes = cw.toByteArray();
-        Class cz = newLoader.loadClass((innerFullName).replace('/', '.'), bytes);
-        if (consumers == null) {
-            consumers = new ArrayList<>();
+        if (consumerBytes == null) {
+            consumerBytes = new LinkedHashMap<>();
         }
-        consumers.add(cz);
-        RedkaleClassLoader.putDynClass((innerFullName).replace('/', '.'), bytes, cz);
+        consumerBytes.put(innerFullName.replace('/', '.'), bytes);
     }
 
     @Override
-    public void doInstance(ResourceFactory resourceFactory, Object service) {
+    public void doAfterMethods(ClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {
+        if (Utility.isNotEmpty(consumerBytes)) {
+            AnnotationVisitor av = cw.visitAnnotation(org.redkale.asm.Type.getDescriptor(DynForMessage.class), true);
+            av.visit("value", org.redkale.asm.Type.getType("L" + newDynName.replace('.', '/') + ";"));
+            av.visitEnd();
+        }
+    }
+
+    @Override
+    public void doInstance(ClassLoader classLoader, ResourceFactory resourceFactory, Object service) {
         DynForMessage[] dyns = service.getClass().getAnnotationsByType(DynForMessage.class);
         if (Utility.isEmpty(dyns)) {
             return;
         }
         try {
-            if (Utility.isNotEmpty(consumers)) {
+            if (Utility.isNotEmpty(consumerBytes)) {
+                if (newLoader == null) {
+                    newLoader = new RedkaleClassLoader.DynBytesClassLoader(
+                            classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader);
+                }
+                List<Class<? extends MessageConsumer>> consumers = new ArrayList<>();
+                consumerBytes.forEach((clzName, bytes) -> {
+                    Class<? extends MessageConsumer> clazz = (Class) newLoader.loadClass(clzName, bytes);
+                    RedkaleClassLoader.putDynClass(clzName, bytes, clazz);
+                    consumers.add(clazz);
+                });
                 for (Class<? extends MessageConsumer> clazz : consumers) {
                     MessageConsumer consumer = (MessageConsumer) clazz.getConstructors()[0].newInstance(service);
                     messageEngine.addMessageConsumer(consumer);

@@ -54,6 +54,8 @@ public class MessageModuleEngine extends ModuleEngine {
     // @since 2.1.0
     private MessageAgent[] messageAgents;
 
+    private List<ClassFilter.FilterEntry<? extends MessageConsumer>> allMessageConsumerEntrys;
+
     public MessageModuleEngine(Application application) {
         super(application);
     }
@@ -70,11 +72,16 @@ public class MessageModuleEngine extends ModuleEngine {
         return new MessageAsmMethodBoost(remote, serviceClass, this);
     }
 
+    // 在doInstance方法里被调用
     void addMessageConsumer(MessageConsumer consumer) {
-        String agentName = environment.getPropertyValue(
+        String mqName = environment.getPropertyValue(
                 consumer.getClass().getAnnotation(ResourceConsumer.class).mq());
+        if (findMessageAgent(mqName) == null) {
+            throw new RedkaleException("Not found " + MessageAgent.class.getSimpleName() + "(name = " + mqName + ") on "
+                    + consumer.getClass().getName());
+        }
         agentConsumers
-                .computeIfAbsent(agentName, v -> new CopyOnWriteArrayList<>())
+                .computeIfAbsent(mqName, v -> new CopyOnWriteArrayList<>())
                 .add(consumer);
     }
 
@@ -251,6 +258,22 @@ public class MessageModuleEngine extends ModuleEngine {
             this.resourceFactory.register(agentName, MessageAgent.class, agent);
         }
         logger.info("MessageAgent init in " + (System.currentTimeMillis() - s) + " ms");
+        // 加载MessageConsumer
+        s = System.currentTimeMillis();
+        final RedkaleClassLoader cl = application.getServerClassLoader();
+        ClassFilter allFilter = new ClassFilter(cl, ResourceConsumer.class, MessageConsumer.class);
+        application.loadServerClassFilters(allFilter);
+        List<ClassFilter.FilterEntry<? extends MessageConsumer>> allEntrys = new ArrayList(allFilter.getFilterEntrys());
+        for (ClassFilter.FilterEntry<? extends MessageConsumer> en : allEntrys) {
+            Class<? extends MessageConsumer> clazz = en.getType();
+            ResourceConsumer res = clazz.getAnnotation(ResourceConsumer.class);
+            if (res != null && res.required() && findMessageAgent(res.mq()) == null) {
+                throw new RedkaleException("Not found " + MessageAgent.class.getSimpleName() + "(name = " + res.mq()
+                        + ") on " + clazz.getName());
+            }
+        }
+        this.allMessageConsumerEntrys = allEntrys;
+        logger.info("MessageAgent load MessageConsumer in " + (System.currentTimeMillis() - s) + " ms");
     }
 
     /**
@@ -419,8 +442,8 @@ public class MessageModuleEngine extends ModuleEngine {
                     agentConsumers.getOrDefault(agent.getName(), new CopyOnWriteArrayList<>());
             AnyValue consumerConf = agent.getConfig().getAnyValue("consumer");
             if (consumerConf != null) { // 加载 MessageConsumer
-                ClassFilter filter = new ClassFilter(
-                        application.getServerClassLoader(), ResourceConsumer.class, MessageConsumer.class, null, null);
+                final RedkaleClassLoader cl = application.getServerClassLoader();
+                ClassFilter filter = new ClassFilter(cl, ResourceConsumer.class, MessageConsumer.class);
                 if (consumerConf.getBoolValue("autoload", true)) {
                     String includes = consumerConf.getValue("includes", "");
                     String excludes = consumerConf.getValue("excludes", "");
@@ -431,13 +454,11 @@ public class MessageModuleEngine extends ModuleEngine {
                 }
 
                 try {
-                    application.loadServerClassFilters(filter);
-                    List<ClassFilter.FilterEntry<? extends MessageConsumer>> entrys =
-                            new ArrayList(filter.getFilterEntrys());
-                    for (ClassFilter.FilterEntry<? extends MessageConsumer> en : entrys) {
+                    for (ClassFilter.FilterEntry<? extends MessageConsumer> en : allMessageConsumerEntrys) {
                         Class<? extends MessageConsumer> clazz = en.getType();
                         ResourceConsumer res = clazz.getAnnotation(ResourceConsumer.class);
-                        if (!Objects.equals(agent.getName(), environment.getPropertyValue(res.mq()))) {
+                        if (!filter.accept(clazz.getName())
+                                || !Objects.equals(agent.getName(), environment.getPropertyValue(res.mq()))) {
                             continue;
                         }
                         RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());
@@ -507,6 +528,18 @@ public class MessageModuleEngine extends ModuleEngine {
                 ((AnyValueWriter) confNode).setValue("name", mqName);
             }
             return confNode;
+        }
+        return null;
+    }
+
+    public MessageAgent findMessageAgent(String mqName) {
+        if (this.messageAgents != null) {
+            String name = environment.getPropertyValue(mqName);
+            for (MessageAgent agent : this.messageAgents) {
+                if (Objects.equals(agent.getName(), name)) {
+                    return agent;
+                }
+            }
         }
         return null;
     }

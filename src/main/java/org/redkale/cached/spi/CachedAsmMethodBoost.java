@@ -213,7 +213,7 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
     }
 
     @Override
-    public void doInstance(ResourceFactory resourceFactory, Object service) {
+    public void doInstance(ClassLoader classLoader, ResourceFactory resourceFactory, Object service) {
         Class clazz = service.getClass();
         if (actionMap == null) { // 为null表示没有调用过doMethod， 动态类在编译是已经生成好了
             actionMap = new LinkedHashMap<>();

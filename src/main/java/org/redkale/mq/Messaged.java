@@ -52,12 +52,39 @@ import org.redkale.service.LoadMode;
 @Retention(RUNTIME)
 public @interface Messaged {
 
+    /**
+     * {@link org.redkale.mq.spi.MessageAgent}对象对应名称
+     *
+     * @return MQ名称
+     */
     String mq() default "";
 
+    /**
+     * MQ客户端分组名称
+     *
+     * @return 组名称
+     */
     String group() default "";
 
+    /**
+     * 是否必须要加载，为ture时若mq()值对应{@link org.redkale.mq.spi.MessageAgent}对象不存在的情况下会抛异常
+     *
+     * @return 是否必须要加载
+     */
+    boolean required() default true;
+
+    /**
+     * 监听的topic
+     *
+     * @return  topic
+     */
     String[] topics();
 
+    /**
+     * 消息序列化类型
+     *
+     * @return  序列化类型
+     */
     ConvertType convertType() default ConvertType.JSON;
 
     /**

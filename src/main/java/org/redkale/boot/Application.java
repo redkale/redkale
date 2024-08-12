@@ -709,11 +709,8 @@ public final class Application {
                 new ClassFilter(this.getClassLoader(), ResourceAnnotationLoader.class);
         ClassFilter<ResourceTypeLoader> resTypeFilter =
                 new ClassFilter(this.getClassLoader(), ResourceTypeLoader.class);
-        try {
-            loadClassByFilters(resConfigFilter, resAnnFilter, resTypeFilter);
-        } catch (IOException e) {
-            throw new RedkaleException(e);
-        }
+
+        loadClassByFilters(resConfigFilter, resAnnFilter, resTypeFilter);
         { // Configuration
             StringBuilder sb = new StringBuilder();
             resConfigFilter.getFilterEntrys().forEach(en -> {
@@ -1689,12 +1686,20 @@ public final class Application {
         return moduleEngines;
     }
 
-    public void loadClassByFilters(final ClassFilter... filters) throws IOException {
-        ClassFilter.Loader.load(getHome(), getClassLoader(), filters);
+    public void loadClassByFilters(final ClassFilter... filters) {
+        try {
+            ClassFilter.Loader.load(getHome(), getClassLoader(), filters);
+        } catch (IOException e) {
+            throw new RedkaleException(e);
+        }
     }
 
-    public void loadServerClassFilters(final ClassFilter... filters) throws IOException {
-        ClassFilter.Loader.load(getHome(), getServerClassLoader(), filters);
+    public void loadServerClassFilters(final ClassFilter... filters) {
+        try {
+            ClassFilter.Loader.load(getHome(), getServerClassLoader(), filters);
+        } catch (IOException e) {
+            throw new RedkaleException(e);
+        }
     }
 
     public DataSource loadDataSource(final String sourceName, boolean autoMemory) {

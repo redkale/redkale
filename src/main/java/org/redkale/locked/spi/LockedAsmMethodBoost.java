@@ -93,7 +93,7 @@ public class LockedAsmMethodBoost extends AsmMethodBoost {
     }
 
     @Override
-    public void doInstance(ResourceFactory resourceFactory, Object service) {
+    public void doInstance(ClassLoader classLoader, ResourceFactory resourceFactory, Object service) {
         // do nothing
     }
 }
