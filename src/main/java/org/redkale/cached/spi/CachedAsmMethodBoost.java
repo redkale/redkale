@@ -30,6 +30,7 @@ import org.redkale.cached.Cached;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.service.LoadMode;
 import org.redkale.util.RedkaleClassLoader;
+import org.redkale.util.RedkaleClassLoader.DynBytesClassLoader;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.ThrowSupplier;
 import org.redkale.util.TypeToken;
@@ -62,7 +63,7 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
 
     @Override
     public AsmNewMethod doMethod(
-            final ClassLoader classLoader,
+            final DynBytesClassLoader classLoader,
             final ClassWriter cw,
             final Class serviceImplClass,
             final String newDynName,
@@ -215,7 +216,7 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
     }
 
     @Override
-    public void doInstance(ClassLoader classLoader, ResourceFactory resourceFactory, Object service) {
+    public void doInstance(DynBytesClassLoader classLoader, ResourceFactory resourceFactory, Object service) {
         Class clazz = service.getClass();
         if (actionMap == null) { // 为null表示没有调用过doMethod， 动态类在编译是已经生成好了
             actionMap = new LinkedHashMap<>();

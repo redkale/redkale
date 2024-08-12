@@ -7,7 +7,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,8 +49,10 @@ import org.redkale.mq.MessageConext;
 import org.redkale.mq.MessageConsumer;
 import org.redkale.mq.Messaged;
 import org.redkale.mq.ResourceConsumer;
+import org.redkale.mq.spi.DynForMessaged.DynForMessageds;
 import org.redkale.service.LoadMode;
 import org.redkale.util.RedkaleClassLoader;
+import org.redkale.util.RedkaleClassLoader.DynBytesClassLoader;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.TypeToken;
 import org.redkale.util.Utility;
@@ -67,8 +68,6 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
 
     private Map<String, AsmMethodBean> methodBeans;
 
-    private RedkaleClassLoader.DynBytesClassLoader newLoader;
-
     private Map<String, byte[]> consumerBytes;
 
     public MessageAsmMethodBoost(boolean remote, Class serviceType, MessageModuleEngine messageEngine) {
@@ -83,7 +82,7 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
 
     @Override
     public AsmNewMethod doMethod(
-            ClassLoader classLoader,
+            DynBytesClassLoader classLoader,
             ClassWriter cw,
             Class serviceImplClass,
             String newDynName,
@@ -324,55 +323,41 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
         if (consumerBytes == null) {
             consumerBytes = new LinkedHashMap<>();
         }
-        consumerBytes.put(innerFullName.replace('/', '.'), bytes);
+        consumerBytes.put(innerFullName, bytes);
     }
 
     @Override
-    public void doAfterMethods(ClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {
+    public void doAfterMethods(DynBytesClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {
         if (Utility.isNotEmpty(consumerBytes)) {
-            AnnotationVisitor av =
-                    cw.visitAnnotation(org.redkale.asm.Type.getDescriptor(DynForMessaged.class), true);
-            av.visit("value", org.redkale.asm.Type.getType("L" + newDynName.replace('.', '/') + ";"));
-            av.visitEnd();
+            AnnotationVisitor av0 = cw.visitAnnotation(org.redkale.asm.Type.getDescriptor(DynForMessageds.class), true);
+            AnnotationVisitor av1 = av0.visitArray("value");
+            consumerBytes.forEach((innerFullName, bytes) -> {
+                String clzName = innerFullName.replace('/', '.');
+                Class clazz = classLoader.loadClass(clzName, bytes);
+                RedkaleClassLoader.putDynClass(clzName, bytes, clazz);
+                AnnotationVisitor av2 =
+                        av1.visitAnnotation(null, org.redkale.asm.Type.getDescriptor(DynForMessaged.class));
+                av2.visit("value", org.redkale.asm.Type.getType("L" + innerFullName + ";"));
+                av2.visitEnd();
+            });
+            av1.visitEnd();
+            av0.visitEnd();
         }
     }
 
     @Override
-    public void doInstance(ClassLoader classLoader, ResourceFactory resourceFactory, Object service) {
+    public void doInstance(DynBytesClassLoader classLoader, ResourceFactory resourceFactory, Object service) {
         DynForMessaged[] dyns = service.getClass().getAnnotationsByType(DynForMessaged.class);
-        if (Utility.isEmpty(dyns)) {
-            return;
-        }
-        try {
-            if (Utility.isNotEmpty(consumerBytes)) {
-                if (newLoader == null) {
-                    if (classLoader instanceof RedkaleClassLoader.DynBytesClassLoader) {
-                        newLoader = (RedkaleClassLoader.DynBytesClassLoader) classLoader;
-                    } else {
-                        newLoader = new RedkaleClassLoader.DynBytesClassLoader(
-                                classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader);
-                    }
-                }
-                List<Class<? extends MessageConsumer>> consumers = new ArrayList<>();
-                consumerBytes.forEach((clzName, bytes) -> {
-                    Class<? extends MessageConsumer> clazz = (Class) newLoader.loadClass(clzName, bytes);
-                    RedkaleClassLoader.putDynClass(clzName, bytes, clazz);
-                    consumers.add(clazz);
-                });
-                for (Class<? extends MessageConsumer> clazz : consumers) {
-                    MessageConsumer consumer = (MessageConsumer) clazz.getConstructors()[0].newInstance(service);
-                    messageEngine.addMessageConsumer(consumer);
-                }
-            } else {
+        if (Utility.isNotEmpty(dyns)) {
+            try {
                 for (DynForMessaged item : dyns) {
                     Class<? extends MessageConsumer> clazz = item.value();
                     MessageConsumer consumer = (MessageConsumer) clazz.getConstructors()[0].newInstance(service);
                     messageEngine.addMessageConsumer(consumer);
                 }
+            } catch (Exception e) {
+                throw new RedkaleException(e);
             }
-
-        } catch (Exception e) {
-            throw new RedkaleException(e);
         }
     }
 }

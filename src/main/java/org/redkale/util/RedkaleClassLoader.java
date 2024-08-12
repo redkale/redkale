@@ -587,6 +587,15 @@ public class RedkaleClassLoader extends URLClassLoader {
             super(parent);
         }
 
+        public static DynBytesClassLoader create(ClassLoader parent) {
+            if (parent == null) {
+                parent = Thread.currentThread().getContextClassLoader();
+            }
+            return parent instanceof DynBytesClassLoader
+                    ? (DynBytesClassLoader) parent
+                    : new DynBytesClassLoader(parent);
+        }
+
         @Override
         public Class<?> findClass(String name) throws ClassNotFoundException {
             byte[] classData = classes.get(name);

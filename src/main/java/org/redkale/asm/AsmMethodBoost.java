@@ -29,6 +29,7 @@ import static org.redkale.asm.Opcodes.LLOAD;
 import static org.redkale.asm.Opcodes.LRETURN;
 import static org.redkale.asm.Opcodes.RETURN;
 import org.redkale.inject.ResourceFactory;
+import org.redkale.util.RedkaleClassLoader.DynBytesClassLoader;
 import org.redkale.util.Utility;
 
 /**
@@ -100,7 +101,7 @@ public abstract class AsmMethodBoost<T> {
      * @return 下一个新的方法名，不做任何处理应返回参数newMethodName
      */
     public abstract AsmNewMethod doMethod(
-            ClassLoader classLoader,
+            DynBytesClassLoader classLoader,
             ClassWriter cw,
             Class serviceImplClass,
             String newDynName,
@@ -117,7 +118,8 @@ public abstract class AsmMethodBoost<T> {
      * @param newDynName 动态新类名
      * @param fieldPrefix 动态字段的前缀
      */
-    public void doAfterMethods(ClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {}
+    public void doAfterMethods(
+            DynBytesClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {}
 
     /**
      * 实例对象进行操作，通常用于给动态的字段赋值
@@ -126,7 +128,7 @@ public abstract class AsmMethodBoost<T> {
      * @param resourceFactory ResourceFactory
      * @param service 实例对象
      */
-    public abstract void doInstance(ClassLoader classLoader, ResourceFactory resourceFactory, T service);
+    public abstract void doInstance(DynBytesClassLoader classLoader, ResourceFactory resourceFactory, T service);
 
     protected AsmMethodBean getMethodBean(Method method) {
         Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBeans(serviceType);
@@ -306,7 +308,7 @@ public abstract class AsmMethodBoost<T> {
 
         @Override
         public AsmNewMethod doMethod(
-                ClassLoader classLoader,
+                DynBytesClassLoader classLoader,
                 ClassWriter cw,
                 Class serviceImplClass,
                 String newDynName,
@@ -325,7 +327,8 @@ public abstract class AsmMethodBoost<T> {
         }
 
         @Override
-        public void doAfterMethods(ClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {
+        public void doAfterMethods(
+                DynBytesClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {
             for (AsmMethodBoost item : items) {
                 if (item != null) {
                     item.doAfterMethods(classLoader, cw, newDynName, fieldPrefix);
@@ -334,7 +337,7 @@ public abstract class AsmMethodBoost<T> {
         }
 
         @Override
-        public void doInstance(ClassLoader classLoader, ResourceFactory resourceFactory, T service) {
+        public void doInstance(DynBytesClassLoader classLoader, ResourceFactory resourceFactory, T service) {
             for (AsmMethodBoost item : items) {
                 if (item != null) {
                     item.doInstance(classLoader, resourceFactory, service);
