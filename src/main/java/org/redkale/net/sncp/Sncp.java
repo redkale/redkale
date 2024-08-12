@@ -585,18 +585,21 @@ public abstract class Sncp {
             fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_mq", Type.getDescriptor(String.class), null, null);
             fv.visitEnd();
         }
+        if (methodBoost != null) {
+            createNewMethods(dynLoader, serviceImplClass, methodBoost, new HashSet<>(), cw, newDynName, supDynName);
+            methodBoost.doAfterMethods(dynLoader, cw, newDynName, FIELDPREFIX);
+        }
         { // 构造函数
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
             // mv.setDebug(true);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
+            if (methodBoost != null) {
+                methodBoost.doConstructorMethod(dynLoader, cw, mv, newDynName, FIELDPREFIX, false);
+            }
             mv.visitInsn(RETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();
-        }
-        if (methodBoost != null) {
-            createNewMethods(dynLoader, serviceImplClass, methodBoost, new HashSet<>(), cw, newDynName, supDynName);
-            methodBoost.doAfterMethods(dynLoader, cw, newDynName, FIELDPREFIX);
         }
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();
@@ -1044,20 +1047,6 @@ public abstract class Sncp {
             fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_sncp", sncpInfoDesc, null, null);
             fv.visitEnd();
         }
-        { // 构造函数
-            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
-            // mv.setDebug(true);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(
-                    INVOKESPECIAL,
-                    serviceTypeOrImplClass.isInterface() ? "java/lang/Object" : supDynName,
-                    "<init>",
-                    "()V",
-                    false);
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
         { // init
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "init", "(" + anyValueDesc + ")V", null, null));
             mv.visitInsn(RETURN);
@@ -1237,6 +1226,23 @@ public abstract class Sncp {
         if (methodBoost != null) {
             createNewMethods(dynLoader, serviceTypeOrImplClass, methodBoost, methodKeys, cw, newDynName, supDynName);
             methodBoost.doAfterMethods(dynLoader, cw, newDynName, FIELDPREFIX);
+        }
+        { // 构造函数
+            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
+            // mv.setDebug(true);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitMethodInsn(
+                    INVOKESPECIAL,
+                    serviceTypeOrImplClass.isInterface() ? "java/lang/Object" : supDynName,
+                    "<init>",
+                    "()V",
+                    false);
+            if (methodBoost != null) {
+                methodBoost.doConstructorMethod(dynLoader, cw, mv, newDynName, FIELDPREFIX, true);
+            }
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
         }
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();

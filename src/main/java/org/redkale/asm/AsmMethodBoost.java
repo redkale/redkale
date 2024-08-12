@@ -122,6 +122,23 @@ public abstract class AsmMethodBoost<T> {
             DynBytesClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {}
 
     /**
+     * 处理所有动态方法后调用
+     *
+     * @param classLoader ClassLoader
+     * @param cw 动态字节码Writer
+     * @param mv 构造函数MethodVisitor
+     * @param newDynName 动态新类名
+     * @param fieldPrefix 动态字段的前缀
+     * @param remote 是否远程模式
+     */
+    public void doConstructorMethod(
+            DynBytesClassLoader classLoader,
+            ClassWriter cw,
+            MethodVisitor mv,
+            String newDynName,
+            String fieldPrefix,
+            boolean remote) {}
+    /**
      * 实例对象进行操作，通常用于给动态的字段赋值
      *
      * @param classLoader ClassLoader
@@ -332,6 +349,21 @@ public abstract class AsmMethodBoost<T> {
             for (AsmMethodBoost item : items) {
                 if (item != null) {
                     item.doAfterMethods(classLoader, cw, newDynName, fieldPrefix);
+                }
+            }
+        }
+
+        @Override
+        public void doConstructorMethod(
+                DynBytesClassLoader classLoader,
+                ClassWriter cw,
+                MethodVisitor mv,
+                String newDynName,
+                String fieldPrefix,
+                boolean remote) {
+            for (AsmMethodBoost item : items) {
+                if (item != null) {
+                    item.doConstructorMethod(classLoader, cw, mv, newDynName, fieldPrefix, remote);
                 }
             }
         }
