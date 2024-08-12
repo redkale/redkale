@@ -340,8 +340,12 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
         try {
             if (Utility.isNotEmpty(consumerBytes)) {
                 if (newLoader == null) {
-                    newLoader = new RedkaleClassLoader.DynBytesClassLoader(
-                            classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader);
+                    if (classLoader instanceof RedkaleClassLoader.DynBytesClassLoader) {
+                        newLoader = (RedkaleClassLoader.DynBytesClassLoader) classLoader;
+                    } else {
+                        newLoader = new RedkaleClassLoader.DynBytesClassLoader(
+                                classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader);
+                    }
                 }
                 List<Class<? extends MessageConsumer>> consumers = new ArrayList<>();
                 consumerBytes.forEach((clzName, bytes) -> {

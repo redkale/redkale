@@ -7,7 +7,6 @@ package org.redkale.mq.spi;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -554,17 +553,12 @@ public abstract class MessageAgent implements MessageManager {
             MessageConsumer m = this.consumer;
             return messageAgent.submit(() -> {
                 Traces.computeIfAbsent(traceid);
+                T msg = null;
                 try {
-                    m.onMessage(context, (T) c.convertFrom(messageType, message));
+                    msg = (T) c.convertFrom(messageType, message);
+                    m.onMessage(context, msg);
                 } catch (Throwable t) {
-                    messageAgent
-                            .getLogger()
-                            .log(
-                                    Level.SEVERE,
-                                    m.getClass().getSimpleName()
-                                            + " onMessage error, topic: " + context.getTopic()
-                                            + ", messages: " + new String(message, StandardCharsets.UTF_8),
-                                    t);
+                    messageAgent.getLogger().log(Level.SEVERE, "MessageConsumer.onMessage error, message: " + msg, t);
                 }
                 Traces.removeTraceid();
             });
