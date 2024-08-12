@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.redkale.annotation.AutoLoad;
 import org.redkale.asm.AnnotationVisitor;
 import org.redkale.asm.AsmMethodBean;
 import org.redkale.asm.AsmMethodBoost;
@@ -83,6 +84,7 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
     public String doMethod(
             ClassLoader classLoader,
             ClassWriter cw,
+            Class serviceImplClass,
             String newDynName,
             String fieldPrefix,
             List filterAnns,
@@ -183,7 +185,12 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
                 new String[] {messageConsumerName});
         {
             AnnotationVisitor av = cw.visitAnnotation(org.redkale.asm.Type.getDescriptor(ResourceConsumer.class), true);
-            Asms.visitAnnotation(av, messaged);
+            Asms.visitAnnotation(av, ResourceConsumer.class, messaged);
+            av.visitEnd();
+        }
+        { // 必须设置成@AutoLoad(false)， 否则预编译打包后会被自动加载
+            AnnotationVisitor av = cw.visitAnnotation(org.redkale.asm.Type.getDescriptor(AutoLoad.class), true);
+            av.visit("value", false);
             av.visitEnd();
         }
         cw.visitInnerClass(innerFullName, newDynName, innerClassName, ACC_PUBLIC + ACC_STATIC);

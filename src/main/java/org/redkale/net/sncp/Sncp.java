@@ -563,7 +563,8 @@ public abstract class Sncp {
                 if (ann instanceof Resource || ann instanceof SncpDyn || ann instanceof ResourceType) {
                     continue;
                 }
-                Asms.visitAnnotation(cw.visitAnnotation(Type.getDescriptor(ann.annotationType()), true), ann);
+                Asms.visitAnnotation(
+                        cw.visitAnnotation(Type.getDescriptor(ann.annotationType()), true), ann.annotationType(), ann);
             }
         }
         {
@@ -658,7 +659,7 @@ public abstract class Sncp {
                 methodKeys.add(mk);
                 List<Class<? extends Annotation>> filterAnns = methodBoost.filterMethodAnnotations(method);
                 String newMethodName =
-                        methodBoost.doMethod(classLoader, cw, newDynName, FIELDPREFIX, filterAnns, method, null);
+                        methodBoost.doMethod(classLoader, cw, clazz, newDynName, FIELDPREFIX, filterAnns, method, null);
                 if (newMethodName != null) {
                     String desc = Type.getMethodDescriptor(method);
                     AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
@@ -1030,7 +1031,8 @@ public abstract class Sncp {
                 if (ann instanceof Resource || ann instanceof SncpDyn || ann instanceof ResourceType) {
                     continue;
                 }
-                Asms.visitAnnotation(cw.visitAnnotation(Type.getDescriptor(ann.annotationType()), true), ann);
+                Asms.visitAnnotation(
+                        cw.visitAnnotation(Type.getDescriptor(ann.annotationType()), true), ann.annotationType(), ann);
             }
         }
         {
@@ -1107,8 +1109,8 @@ public abstract class Sncp {
             String newMethodName = null;
             if (methodBoost != null) {
                 List<Class<? extends Annotation>> filterAnns = methodBoost.filterMethodAnnotations(method);
-                newMethodName =
-                        methodBoost.doMethod(classLoader, cw, newDynName, FIELDPREFIX, filterAnns, method, null);
+                newMethodName = methodBoost.doMethod(
+                        classLoader, cw, serviceTypeOrImplClass, newDynName, FIELDPREFIX, filterAnns, method, null);
             }
             if (newMethodName != null) {
                 acc = ACC_PRIVATE;
@@ -1125,7 +1127,9 @@ public abstract class Sncp {
                 for (int k = 0; k < anns.length; k++) {
                     for (Annotation ann : anns[k]) {
                         Asms.visitAnnotation(
-                                mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true), ann);
+                                mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true),
+                                ann.annotationType(),
+                                ann);
                     }
                 }
             }

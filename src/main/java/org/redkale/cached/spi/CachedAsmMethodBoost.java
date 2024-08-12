@@ -63,6 +63,7 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
     public String doMethod(
             final ClassLoader classLoader,
             final ClassWriter cw,
+            final Class serviceImplClass,
             final String newDynName,
             final String fieldPrefix,
             final List filterAnns,
@@ -105,7 +106,7 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
             // mv.setDebug(true);
             AnnotationVisitor av = mv.visitAnnotation(cacheDynDesc, true);
             av.visit("dynField", dynFieldName);
-            Asms.visitAnnotation(av, cached);
+            Asms.visitAnnotation(av, DynForCached.class, cached);
             visitRawAnnotation(method, newMethodName, mv, Cached.class, filterAnns);
 
             Label l0 = new Label();

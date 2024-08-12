@@ -91,6 +91,7 @@ public abstract class AsmMethodBoost<T> {
      *
      * @param classLoader ClassLoader
      * @param cw 动态字节码Writer
+     * @param serviceImplClass 原始实现类
      * @param newDynName 动态新类名
      * @param fieldPrefix 动态字段的前缀
      * @param filterAnns 需要过滤的注解
@@ -101,6 +102,7 @@ public abstract class AsmMethodBoost<T> {
     public abstract String doMethod(
             ClassLoader classLoader,
             ClassWriter cw,
+            Class serviceImplClass,
             String newDynName,
             String fieldPrefix,
             List<Class<? extends Annotation>> filterAnns,
@@ -180,7 +182,10 @@ public abstract class AsmMethodBoost<T> {
             for (Annotation ann : anns) {
                 if (ann.annotationType() != selfAnnType
                         && (filterAnns == null || !filterAnns.contains(ann.annotationType()))) {
-                    Asms.visitAnnotation(mv.visitAnnotation(Type.getDescriptor(ann.annotationType()), true), ann);
+                    Asms.visitAnnotation(
+                            mv.visitAnnotation(Type.getDescriptor(ann.annotationType()), true),
+                            ann.annotationType(),
+                            ann);
                 }
             }
             // 给参数加上原有的Annotation
@@ -188,7 +193,9 @@ public abstract class AsmMethodBoost<T> {
             for (int k = 0; k < annss.length; k++) {
                 for (Annotation ann : annss[k]) {
                     Asms.visitAnnotation(
-                            mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true), ann);
+                            mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true),
+                            ann.annotationType(),
+                            ann);
                 }
             }
         }
@@ -301,6 +308,7 @@ public abstract class AsmMethodBoost<T> {
         public String doMethod(
                 ClassLoader classLoader,
                 ClassWriter cw,
+                Class serviceImplClass,
                 String newDynName,
                 String fieldPrefix,
                 List<Class<? extends Annotation>> filterAnns,
@@ -309,7 +317,15 @@ public abstract class AsmMethodBoost<T> {
             String newName = newMethodName;
             for (AsmMethodBoost item : items) {
                 if (item != null) {
-                    newName = item.doMethod(classLoader, cw, newDynName, fieldPrefix, filterAnns, method, newName);
+                    newName = item.doMethod(
+                            classLoader,
+                            cw,
+                            serviceImplClass,
+                            newDynName,
+                            fieldPrefix,
+                            filterAnns,
+                            method,
+                            newName);
                 }
             }
             return newName;

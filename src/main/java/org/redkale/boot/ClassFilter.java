@@ -340,6 +340,16 @@ public final class ClassFilter<T> {
         if (className.startsWith("java.") || className.startsWith("javax.")) {
             return false;
         }
+        return acceptPattern(className);
+    }
+
+    /**
+     * 判断class是否符合正则表达式
+     *
+     * @param className Class
+     * @return  boolean
+     */
+    public boolean acceptPattern(String className) {
         if (excludePatterns != null) {
             for (Pattern reg : excludePatterns) {
                 if (reg.matcher(className).matches()) {

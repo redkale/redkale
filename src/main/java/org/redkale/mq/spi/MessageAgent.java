@@ -550,10 +550,10 @@ public abstract class MessageAgent implements MessageManager {
         }
 
         public Future onMessage(MessageConext context, String traceid, byte[] message) {
+            Convert c = this.convert;
+            MessageConsumer m = this.consumer;
             return messageAgent.submit(() -> {
                 Traces.computeIfAbsent(traceid);
-                Convert c = this.convert;
-                MessageConsumer m = this.consumer;
                 try {
                     m.onMessage(context, (T) c.convertFrom(messageType, message));
                 } catch (Throwable t) {
@@ -563,10 +563,15 @@ public abstract class MessageAgent implements MessageManager {
                                     Level.SEVERE,
                                     m.getClass().getSimpleName()
                                             + " onMessage error, topic: " + context.getTopic()
-                                            + ", messages: " + new String(message, StandardCharsets.UTF_8));
+                                            + ", messages: " + new String(message, StandardCharsets.UTF_8),
+                                    t);
                 }
                 Traces.removeTraceid();
             });
+        }
+
+        public MessageConsumer getConsumer() {
+            return consumer;
         }
 
         public void destroy(AnyValue config) {

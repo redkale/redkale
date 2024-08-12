@@ -39,6 +39,7 @@ public class LockedAsmMethodBoost extends AsmMethodBoost {
     public String doMethod(
             ClassLoader classLoader,
             ClassWriter cw,
+            Class serviceImplClass,
             String newDynName,
             String fieldPrefix,
             List filterAnns,
@@ -75,7 +76,7 @@ public class LockedAsmMethodBoost extends AsmMethodBoost {
             mv.visitLabel(l0);
             AnnotationVisitor av = mv.visitAnnotation(lockDynDesc, true);
             av.visit("dynField", dynFieldName);
-            Asms.visitAnnotation(av, locked);
+            Asms.visitAnnotation(av, DynForLocked.class, locked);
             visitRawAnnotation(method, newMethodName, mv, Locked.class, filterAnns);
             mv.visitVarInsn(ALOAD, 0);
             List<Integer> insns = visitVarInsnParamTypes(mv, method, 0);

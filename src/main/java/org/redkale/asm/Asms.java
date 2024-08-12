@@ -3,6 +3,10 @@
  */
 package org.redkale.asm;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.Set;
 import static org.redkale.asm.Opcodes.BIPUSH;
 import static org.redkale.asm.Opcodes.CHECKCAST;
 import static org.redkale.asm.Opcodes.GETSTATIC;
@@ -10,9 +14,6 @@ import static org.redkale.asm.Opcodes.ICONST_0;
 import static org.redkale.asm.Opcodes.INVOKESTATIC;
 import static org.redkale.asm.Opcodes.INVOKEVIRTUAL;
 import static org.redkale.asm.Opcodes.SIPUSH;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import org.redkale.util.RedkaleException;
 
 /**
@@ -36,9 +37,18 @@ public final class Asms {
                 false);
     }
 
-    public static void visitAnnotation(final AnnotationVisitor av, final Annotation ann) {
+    // annType与annValue不一定是同一类型
+    public static <T extends Annotation> void visitAnnotation(
+            final AnnotationVisitor av, final Class<T> annType, final Annotation annValue) {
         try {
-            for (Method anm : ann.annotationType().getMethods()) {
+            Set<String> methods = null;
+            if (annType != annValue.annotationType()) {
+                methods = new HashSet<>();
+                for (Method anm : annType.getMethods()) {
+                    methods.add(anm.getName());
+                }
+            }
+            for (Method anm : annValue.annotationType().getMethods()) {
                 final String mname = anm.getName();
                 if ("equals".equals(mname)
                         || "hashCode".equals(mname)
@@ -46,7 +56,10 @@ public final class Asms {
                         || "annotationType".equals(mname)) {
                     continue;
                 }
-                final Object r = anm.invoke(ann);
+                if (methods != null && !methods.contains(mname)) {
+                    continue;
+                }
+                final Object r = anm.invoke(annValue);
                 if (r instanceof String[]) {
                     AnnotationVisitor av1 = av.visitArray(mname);
                     for (String item : (String[]) r) {
@@ -62,14 +75,15 @@ public final class Asms {
                 } else if (r instanceof Enum[]) {
                     AnnotationVisitor av1 = av.visitArray(mname);
                     for (Enum item : (Enum[]) r) {
-                        av1.visitEnum(null, Type.getDescriptor(item.getClass()), ((Enum) item).name());
+                        av1.visitEnum(null, Type.getDescriptor(item.getClass()), item.name());
                     }
                     av1.visitEnd();
                 } else if (r instanceof Annotation[]) {
                     AnnotationVisitor av1 = av.visitArray(mname);
                     for (Annotation item : (Annotation[]) r) {
                         visitAnnotation(
-                                av1.visitAnnotation(null, Type.getDescriptor(((Annotation) item).annotationType())),
+                                av1.visitAnnotation(null, Type.getDescriptor(((Annotation) r).annotationType())),
+                                item.annotationType(),
                                 item);
                     }
                     av1.visitEnd();
@@ -80,6 +94,7 @@ public final class Asms {
                 } else if (r instanceof Annotation) {
                     visitAnnotation(
                             av.visitAnnotation(null, Type.getDescriptor(((Annotation) r).annotationType())),
+                            ((Annotation) r).annotationType(),
                             (Annotation) r);
                 } else {
                     av.visit(mname, r);

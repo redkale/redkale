@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
+import org.redkale.annotation.AutoLoad;
 import org.redkale.asm.AsmMethodBoost;
 import org.redkale.boot.Application;
 import org.redkale.boot.ClassFilter;
@@ -266,6 +267,10 @@ public class MessageModuleEngine extends ModuleEngine {
         List<ClassFilter.FilterEntry<? extends MessageConsumer>> allEntrys = new ArrayList(allFilter.getFilterEntrys());
         for (ClassFilter.FilterEntry<? extends MessageConsumer> en : allEntrys) {
             Class<? extends MessageConsumer> clazz = en.getType();
+            AutoLoad auto = clazz.getAnnotation(AutoLoad.class);
+            if (auto != null && !auto.value()) {
+                continue;
+            }
             ResourceConsumer res = clazz.getAnnotation(ResourceConsumer.class);
             if (res != null && res.required() && findMessageAgent(res.mq()) == null) {
                 throw new RedkaleException("Not found " + MessageAgent.class.getSimpleName() + "(name = " + res.mq()
@@ -459,6 +464,11 @@ public class MessageModuleEngine extends ModuleEngine {
                         ResourceConsumer res = clazz.getAnnotation(ResourceConsumer.class);
                         if (!filter.accept(clazz.getName())
                                 || !Objects.equals(agent.getName(), environment.getPropertyValue(res.mq()))) {
+                            continue;
+                        }
+                        AutoLoad auto = clazz.getAnnotation(AutoLoad.class);
+                        if ((auto != null && !auto.value())
+                                && (filter.getIncludePatterns() == null || !filter.acceptPattern(clazz.getName()))) {
                             continue;
                         }
                         RedkaleClassLoader.putReflectionDeclaredConstructors(clazz, clazz.getName());
