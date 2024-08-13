@@ -1,4 +1,4 @@
-# 消息中心
+# 消息队列
 &emsp;&emsp; MessageAgent是消息中心抽象接口。
 ## 配置
 ```xml

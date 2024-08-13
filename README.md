@@ -23,6 +23,7 @@
 * [native-image](docs/native-image.md)
 * [方法缓存Cached](docs/cached.md)
 * [定时任务Scheduled](docs/scheduled.md)
+* [消息队列MQ](docs/agent-message.md)
 * [基本配置](docs/config.md)
 * [FAQ](docs/faq.md)
 
