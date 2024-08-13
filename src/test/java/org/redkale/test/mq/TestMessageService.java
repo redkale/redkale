@@ -32,7 +32,7 @@ public class TestMessageService extends AbstractService {
             if (t != null) {
                 t.printStackTrace();
             }
-            System.out.println("消息发送结果: " + v);
+            System.out.println("消息发送完成: " + v);
         });
     }
 

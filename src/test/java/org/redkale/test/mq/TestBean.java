@@ -11,9 +11,9 @@ import org.redkale.convert.json.JsonConvert;
  * @author zhangjx
  */
 public class TestBean {
-    
+
     private int userid;
-    
+
     private String message;
 
     public TestBean() {}

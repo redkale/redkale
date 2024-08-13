@@ -11,6 +11,27 @@ import org.redkale.convert.ConvertType;
 /**
  * MQ资源注解, 只能标记在{@link org.redkale.mq.MessageProducer}类型字段上
  *
+ * <blockquote>
+ * <pre>
+ * public class TestMessageService extends AbstractService {
+ *
+ *     &#64;ResourceProducer(mq = "mymq")
+ *      private MessageProducer producer;
+ *
+ *      &#64;Override
+ *      public void init(AnyValue config) {
+ *           sendMessage();
+ *      }
+ *
+ *      public void sendMessage() {
+ *           TestBean bean = new TestBean(12345, "this is a message");
+ *           System.out.println("生产消息: " + bean);
+ *           producer.sendMessage("test_bean_topic", bean);
+ *      }
+ * }
+ * </pre>
+ * </blockquote>
+ *
  * <p>详情见: https://redkale.org
  *
  * @see org.redkale.mq.MessageProducer

@@ -16,8 +16,8 @@ import org.redkale.service.LoadMode;
  * 1、方法必须是protected/public   <br>
  * 2、方法不能是final/static  <br>
  * 3、方法的参数只能是1个或者2个， 1个参数视为Message数据类型，2个参数则另一个必须是{@link org.redkale.mq.MessageConext} <br>
- * <blockquote>
  *
+ * <blockquote>
  * <pre>
  * public class MyMessageService extends AbstractService {
  *
@@ -37,7 +37,6 @@ import org.redkale.service.LoadMode;
  *    }
  * }
  * </pre>
- *
  * </blockquote>
  *
  * <p>详情见: https://redkale.org
