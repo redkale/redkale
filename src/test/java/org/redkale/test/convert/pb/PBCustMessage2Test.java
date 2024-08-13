@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.test.convert.proto;
+package org.redkale.test.convert.pb;
 
 import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
@@ -13,10 +13,10 @@ import java.util.function.*;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.convert.proto.ProtobufConvert;
-import org.redkale.convert.proto.ProtobufObjectDecoder;
-import org.redkale.convert.proto.ProtobufObjectEncoder;
-import org.redkale.convert.proto.ProtobufReader;
+import org.redkale.convert.pb.ProtobufConvert;
+import org.redkale.convert.pb.ProtobufObjectDecoder;
+import org.redkale.convert.pb.ProtobufObjectEncoder;
+import org.redkale.convert.pb.ProtobufReader;
 import org.redkale.util.*;
 
 /** @author zhangjx */

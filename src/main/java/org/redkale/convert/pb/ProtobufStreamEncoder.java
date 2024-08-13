@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.convert.proto;
+package org.redkale.convert.pb;
 
 import java.lang.reflect.Type;
 import java.util.concurrent.atomic.*;
@@ -13,11 +13,11 @@ import org.redkale.convert.*;
  * @author zhangjx
  * @param <T> T
  */
-public class ProtobufArrayEncoder<T> extends ArrayEncoder<T> {
+public class ProtobufStreamEncoder<T> extends StreamEncoder<T> {
 
     protected final boolean simple;
 
-    public ProtobufArrayEncoder(ConvertFactory factory, Type type) {
+    public ProtobufStreamEncoder(ConvertFactory factory, Type type) {
         super(factory, type);
         Type comtype = this.getComponentType();
         this.simple = Boolean.class == comtype
@@ -32,8 +32,7 @@ public class ProtobufArrayEncoder<T> extends ArrayEncoder<T> {
     }
 
     @Override
-    protected void writeMemberValue(
-            Writer out, EnMember member, Encodeable<Writer, Object> encoder, Object item, int index) {
+    protected void writeMemberValue(Writer out, EnMember member, Object item, boolean first) {
         if (simple) {
             if (item == null) {
                 ((ProtobufWriter) out).writeUInt32(0);
@@ -43,13 +42,11 @@ public class ProtobufArrayEncoder<T> extends ArrayEncoder<T> {
             return;
         }
         if (member != null) out.writeFieldName(member);
-        if (item == null) {
-            ((ProtobufWriter) out).writeUInt32(0);
-        } else if (item instanceof CharSequence) {
-            encoder.convertTo(out, item);
+        if (item instanceof CharSequence) {
+            componentEncoder.convertTo(out, item);
         } else {
             ProtobufWriter tmp = new ProtobufWriter().configFieldFunc(out);
-            encoder.convertTo(tmp, item);
+            componentEncoder.convertTo(tmp, item);
             int length = tmp.count();
             ((ProtobufWriter) out).writeUInt32(length);
             ((ProtobufWriter) out).writeTo(tmp.toArray());

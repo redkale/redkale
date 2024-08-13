@@ -1,4 +1,4 @@
-package org.redkale.test.convert.proto;
+package org.redkale.test.convert.pb;
 
 /// *
 // * To change this license header, choose License Headers in Project Properties.
@@ -7,8 +7,8 @@ package org.redkale.test.convert.proto;
 // */
 // package org.redkalex.test.protobuf;
 //
-// import org.redkalex.convert.protobuf.ProtobufReader;
-// import org.redkalex.convert.protobuf.ProtobufConvert;
+// import org.redkale.convert.pb.ProtobufReader;
+// import org.redkale.convert.pb.ProtobufConvert;
 // import com.google.protobuf.*;
 // import java.util.*;
 // import org.redkale.convert.ConvertColumn;

@@ -22,12 +22,12 @@ public class TestMessageManager extends AbstractService {
     public void initTopic() {
         manager.createTopic("topic_1", "topic_2").join();
     }
-    
-    // 创建topic
+
+    // 删除topic
     public void deleteTopic() {
         manager.deleteTopic("topic_1", "topic_2").join();
     }
-    
+
     // 查询topic
     public void printTopic() {
         List<String> topics = manager.queryTopic().join();

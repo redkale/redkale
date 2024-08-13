@@ -33,7 +33,7 @@ import org.redkale.cluster.spi.HttpLocalRpcClient;
 import org.redkale.convert.Convert;
 import org.redkale.convert.bson.BsonFactory;
 import org.redkale.convert.json.*;
-import org.redkale.convert.proto.ProtobufFactory;
+import org.redkale.convert.pb.ProtobufFactory;
 import org.redkale.inject.ResourceAnnotationLoader;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
