@@ -69,7 +69,7 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
 
     private Map<String, AsmMethodBean> methodBeans;
 
-    private Map<String, byte[]> consumerBytes;
+    Map<String, byte[]> consumerBytes;
 
     public MessageAsmMethodBoost(boolean remote, Class serviceType, MessageModuleEngine messageEngine) {
         super(remote, serviceType);
@@ -143,7 +143,15 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
         if (Modifier.isProtected(method.getModifiers())) {
             createMessageMethod(cw, method, serviceImplClass, filterAnns, newMethod);
         }
-        createInnerConsumer(cw, method, paramKind, TypeToken.typeToClass(messageType), messaged, newDynName, newMethod);
+        createInnerConsumer(
+                cw,
+                serviceImplClass,
+                method,
+                paramKind,
+                TypeToken.typeToClass(messageType),
+                messaged,
+                newDynName,
+                newMethod);
         return newMethod;
     }
 
@@ -166,17 +174,19 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
     }
 
     // paramKind:  1:单个MessageType;  2: MessageConext & MessageType; 3: MessageType & MessageConext;
-    private void createInnerConsumer(
+    protected void createInnerConsumer(
             ClassWriter pcw,
+            Class serviceImplClass,
             Method method,
             int paramKind,
             Class msgType,
             Messaged messaged,
             String newDynName,
             AsmNewMethod newMethod) {
-        final String newDynDesc = "L" + newDynName + ";";
+        final String newDynDesc =
+                pcw == null ? org.redkale.asm.Type.getDescriptor(serviceImplClass) : ("L" + newDynName + ";");
         final String innerClassName = "Dyn" + MessageConsumer.class.getSimpleName() + index.incrementAndGet();
-        final String innerFullName = newDynName + "$" + innerClassName;
+        final String innerFullName = newDynName + (pcw == null ? "" : "$") + innerClassName;
         final String msgTypeName =
                 TypeToken.primitiveToWrapper(msgType).getName().replace('.', '/');
         final String msgTypeDesc = org.redkale.asm.Type.getDescriptor(TypeToken.primitiveToWrapper(msgType));
@@ -195,9 +205,9 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
             String methodSignature = methodBean.getSignature().replace(messageConextDesc, "");
             genericMsgTypeDesc = methodSignature.substring(1, methodSignature.lastIndexOf(')')); // 获取()中的值
         }
-
-        pcw.visitInnerClass(innerFullName, newDynName, innerClassName, ACC_PUBLIC + ACC_STATIC);
-
+        if (pcw != null) { // 不一定是关联类
+            pcw.visitInnerClass(innerFullName, newDynName, innerClassName, ACC_PUBLIC + ACC_STATIC);
+        }
         MethodVisitor mv;
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         //
@@ -218,7 +228,9 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
             av.visit("value", false);
             av.visitEnd();
         }
-        cw.visitInnerClass(innerFullName, newDynName, innerClassName, ACC_PUBLIC + ACC_STATIC);
+        if (pcw != null) { // 不一定是关联类
+            cw.visitInnerClass(innerFullName, newDynName, innerClassName, ACC_PUBLIC + ACC_STATIC);
+        }
         {
             FieldVisitor fv = cw.visitField(ACC_PRIVATE, "service", newDynDesc, null, null);
             fv.visitEnd();
@@ -276,8 +288,9 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
                 Asms.visitPrimitiveVirtual(mv, msgType);
                 mv.visitVarInsn(ALOAD, 1);
             }
-            mv.visitMethodInsn(
-                    INVOKEVIRTUAL, newDynName, methodName, org.redkale.asm.Type.getMethodDescriptor(method), false);
+            String methodDesc = org.redkale.asm.Type.getMethodDescriptor(method);
+            String owner = pcw == null ? serviceImplClass.getName().replace('.', '/') : newDynName;
+            mv.visitMethodInsn(INVOKEVIRTUAL, owner, methodName, methodDesc, false);
             if (method.getReturnType() != void.class) {
                 mv.visitInsn(POP);
             }

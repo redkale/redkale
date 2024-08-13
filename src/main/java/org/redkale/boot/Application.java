@@ -1216,30 +1216,30 @@ public final class Application {
     }
 
     /** 执行Service.init方法前被调用 */
-    void onServicePreInit(Service service) {
+    void onServicePreInit(NodeServer server, Service service) {
         for (ModuleEngine item : moduleEngines) {
-            item.onServicePreInit(service);
+            item.onServicePreInit(server, service);
         }
     }
 
     /** 执行Service.init方法后被调用 */
-    void onServicePostInit(Service service) {
+    void onServicePostInit(NodeServer server, Service service) {
         for (ModuleEngine item : moduleEngines) {
-            item.onServicePostInit(service);
+            item.onServicePostInit(server, service);
         }
     }
 
     /** 执行Service.destroy方法前被调用 */
-    void onServicePreDestroy(Service service) {
+    void onServicePreDestroy(NodeServer server, Service service) {
         for (ModuleEngine item : moduleEngines) {
-            item.onServicePreDestroy(service);
+            item.onServicePreDestroy(server, service);
         }
     }
 
     /** 执行Service.destroy方法后被调用 */
-    void onServicePostDestroy(Service service) {
+    void onServicePostDestroy(NodeServer server, Service service) {
         for (ModuleEngine item : moduleEngines) {
-            item.onServicePostDestroy(service);
+            item.onServicePostDestroy(server, service);
         }
     }
 

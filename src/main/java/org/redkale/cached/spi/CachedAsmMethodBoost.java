@@ -44,7 +44,7 @@ import org.redkale.util.TypeToken;
  */
 public class CachedAsmMethodBoost extends AsmMethodBoost {
 
-    private static final java.lang.reflect.Type FUTURE_VOID = new TypeToken<CompletableFuture<Void>>() {}.getType();
+    static final java.lang.reflect.Type FUTURE_VOID = new TypeToken<CompletableFuture<Void>>() {}.getType();
 
     private static final List<Class<? extends Annotation>> FILTER_ANN = List.of(Cached.class, DynForCached.class);
 

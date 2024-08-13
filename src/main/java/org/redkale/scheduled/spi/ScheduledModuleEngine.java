@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.ServiceLoader;
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
+import org.redkale.boot.NodeServer;
 import org.redkale.scheduled.ScheduledManager;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
@@ -65,20 +66,22 @@ public class ScheduledModuleEngine extends ModuleEngine {
     /**
      * 执行Service.init方法后被调用
      *
+     * @param server NodeServer
      * @param service Service
      */
     @Override
-    public void onServicePostInit(Service service) {
+    public void onServicePostInit(NodeServer server, Service service) {
         this.scheduledManager.schedule(service);
     }
 
     /**
      * 执行Service.destroy方法后被调用
      *
+     * @param server NodeServer
      * @param service Service
      */
     @Override
-    public void onServicePreDestroy(Service service) {
+    public void onServicePreDestroy(NodeServer server, Service service) {
         this.scheduledManager.unschedule(service);
     }
 

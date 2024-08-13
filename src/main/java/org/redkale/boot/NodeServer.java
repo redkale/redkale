@@ -403,9 +403,9 @@ public abstract class NodeServer {
         } else {
             localServices.stream().forEach(y -> {
                 long s = System.currentTimeMillis();
-                application.onServicePreInit(y);
+                application.onServicePreInit(this, y);
                 y.init(Sncp.getResourceConf(y));
-                application.onServicePostInit(y);
+                application.onServicePostInit(this, y);
                 long e = System.currentTimeMillis() - s;
                 if (slist != null) {
                     String serstr = Sncp.toSimpleString(y, maxNameLength, maxTypeLength);
@@ -707,12 +707,12 @@ public abstract class NodeServer {
             if (finest) {
                 logger.finest(Sncp.getResourceType(y) + " is destroying");
             }
-            application.onServicePreDestroy(y);
+            application.onServicePreDestroy(this, y);
             y.destroy(Sncp.getResourceConf(y));
             if (finest) {
                 logger.finest(Sncp.getResourceType(y) + " was destroyed");
             }
-            application.onServicePostDestroy(y);
+            application.onServicePostDestroy(this, y);
             long e = System.currentTimeMillis() - s;
             if (e > 2 && sb != null) {
                 sb.append(Sncp.toSimpleString(y, maxNameLength, maxTypeLength))

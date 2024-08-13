@@ -3,6 +3,7 @@
  */
 package org.redkale.cached.spi;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -10,10 +11,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
+import org.redkale.annotation.Component;
 import org.redkale.asm.AsmMethodBoost;
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
+import org.redkale.boot.NodeServer;
+import org.redkale.cached.Cached;
 import org.redkale.cached.CachedManager;
+import org.redkale.net.sncp.Sncp;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
 import org.redkale.util.InstanceProvider;
@@ -87,6 +92,24 @@ public class CachedModuleEngine extends ModuleEngine {
         }
         this.resourceFactory.register(new CachedManagerLoader(this, configMap));
         this.resourceFactory.register(new CachedKeyGeneratorLoader(this));
+    }
+
+    /**
+     * 执行Service.init方法后被调用
+     *
+     * @param service Service
+     */
+    @Override
+    public void onServicePostInit(NodeServer server, Service service) {
+        if (Sncp.isSncpDyn(service)) {
+            return; // 跳过动态生成的Service
+        }
+        for (Method method : service.getClass().getDeclaredMethods()) {
+            if (method.getAnnotation(Cached.class) != null) {
+                throw new RedkaleException("@" + Cached.class.getSimpleName() + " cannot on final or @"
+                        + Component.class.getSimpleName() + " class, but on " + method);
+            }
+        }
     }
 
     /**

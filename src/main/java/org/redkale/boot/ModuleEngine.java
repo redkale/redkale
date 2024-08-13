@@ -136,36 +136,40 @@ public abstract class ModuleEngine {
     /**
      * 执行Service.init方法前被调用
      *
+     * @param server NodeServer
      * @param service Service
      */
-    public void onServicePreInit(Service service) {
+    public void onServicePreInit(NodeServer server, Service service) {
         // do nothing
     }
 
     /**
      * 执行Service.init方法后被调用
      *
+     * @param server NodeServer
      * @param service Service
      */
-    public void onServicePostInit(Service service) {
+    public void onServicePostInit(NodeServer server, Service service) {
         // do nothing
     }
 
     /**
      * 执行Service.destroy方法前被调用
      *
+     * @param server NodeServer
      * @param service Service
      */
-    public void onServicePreDestroy(Service service) {
+    public void onServicePreDestroy(NodeServer server, Service service) {
         // do nothing
     }
 
     /**
      * 执行Service.destroy方法后被调用
      *
+     * @param server NodeServer
      * @param service Service
      */
-    public void onServicePostDestroy(Service service) {
+    public void onServicePostDestroy(NodeServer server, Service service) {
         // do nothing
     }
 

@@ -3,18 +3,24 @@
  */
 package org.redkale.locked.spi;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
+import org.redkale.annotation.Component;
 import org.redkale.asm.AsmMethodBoost;
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
+import org.redkale.boot.NodeServer;
+import org.redkale.locked.Locked;
 import org.redkale.locked.LockedManager;
+import org.redkale.net.sncp.Sncp;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
 import org.redkale.util.InstanceProvider;
 import org.redkale.util.RedkaleClassLoader;
+import org.redkale.util.RedkaleException;
 
 /** @author zhangjx */
 public class LockedModuleEngine extends ModuleEngine {
@@ -71,6 +77,25 @@ public class LockedModuleEngine extends ModuleEngine {
             }
         }
         this.resourceFactory.register("", LockedManager.class, this.lockManager);
+    }
+
+    /**
+     * 执行Service.init方法后被调用
+     *
+     * @param server NodeServer
+     * @param service Service
+     */
+    @Override
+    public void onServicePostInit(NodeServer server, Service service) {
+        if (Sncp.isSncpDyn(service)) {
+            return; // 跳过动态生成的Service
+        }
+        for (Method method : service.getClass().getDeclaredMethods()) {
+            if (method.getAnnotation(Locked.class) != null) {
+                throw new RedkaleException("@" + Locked.class.getSimpleName() + " cannot on final or @"
+                        + Component.class.getSimpleName() + " class, but on " + method);
+            }
+        }
     }
 
     /** 进入Application.shutdown方法被调用 */

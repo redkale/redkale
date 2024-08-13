@@ -4,6 +4,8 @@
 package org.redkale.mq.spi;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -19,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import org.redkale.annotation.AutoLoad;
+import org.redkale.annotation.Component;
 import org.redkale.asm.AsmMethodBoost;
 import org.redkale.boot.Application;
 import org.redkale.boot.ClassFilter;
@@ -29,16 +32,22 @@ import org.redkale.inject.ResourceAnnotationLoader;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
+import org.redkale.mq.MessageConext;
 import org.redkale.mq.MessageConsumer;
 import org.redkale.mq.MessageManager;
 import org.redkale.mq.MessageProducer;
+import org.redkale.mq.Messaged;
 import org.redkale.mq.ResourceConsumer;
 import org.redkale.mq.ResourceProducer;
 import org.redkale.net.http.RestException;
+import org.redkale.net.sncp.Sncp;
+import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
 import org.redkale.util.AnyValueWriter;
 import org.redkale.util.RedkaleClassLoader;
+import org.redkale.util.RedkaleClassLoader.DynBytesClassLoader;
 import org.redkale.util.RedkaleException;
+import org.redkale.util.TypeToken;
 import org.redkale.util.Utility;
 
 /** @author zhangjx */
@@ -393,6 +402,81 @@ public class MessageModuleEngine extends ModuleEngine {
             }
             messageRemovedKeys.forEach(this.messageProperties::remove);
             this.messageProperties.putAll(messageChangedProps);
+        }
+    }
+
+    /**
+     * 执行Service.init方法后被调用
+     *
+     * @param server NodeServer
+     * @param service Service
+     */
+    @Override
+    public void onServicePostInit(NodeServer server, Service service) {
+        if (Sncp.isSncpDyn(service)) {
+            return; // 跳过动态生成的Service
+        }
+        MessageAsmMethodBoost boost = null;
+        for (Method method : service.getClass().getDeclaredMethods()) {
+            Messaged messaged = method.getAnnotation(Messaged.class);
+            if (messaged == null) {
+                continue;
+            }
+            if (Modifier.isStatic(method.getModifiers())) {
+                throw new RedkaleException(
+                        "@" + Messaged.class.getSimpleName() + " cannot on static method, but on " + method);
+            }
+            if (!Modifier.isPublic(method.getModifiers())) {
+                throw new RedkaleException("@" + Messaged.class.getSimpleName() + " must on public method in @"
+                        + Component.class.getSimpleName() + " class, but on " + method);
+            }
+            int paramCount = method.getParameterCount();
+            if (paramCount != 1 && paramCount != 2) {
+                throw new RedkaleException("@" + Messaged.class.getSimpleName()
+                        + " must on one or two parameter method, but on " + method);
+            }
+            int paramKind = 1; // 1:单个MessageType;  2: MessageConext & MessageType; 3: MessageType & MessageConext;
+            Type messageType;
+            Type[] paramTypes = method.getGenericParameterTypes();
+            if (paramCount == 1) {
+                messageType = paramTypes[0];
+                paramKind = 1;
+            } else {
+                if (paramTypes[0] == MessageConext.class) {
+                    messageType = paramTypes[1];
+                    paramKind = 2;
+                } else if (paramTypes[1] == MessageConext.class) {
+                    messageType = paramTypes[0];
+                    paramKind = 3;
+                } else {
+                    throw new RedkaleException(
+                            "@" + Messaged.class.getSimpleName() + " on two-parameter method must contains "
+                                    + MessageConext.class.getSimpleName() + " parameter type, but on " + method);
+                }
+            }
+            if (boost == null) {
+                boost = new MessageAsmMethodBoost(false, service.getClass(), this);
+                String newDynName = "org/redkaledyn/service/local/_DynMessageService__"
+                        + service.getClass().getName().replace('.', '_').replace('$', '_');
+                Class msgType = TypeToken.typeToClass(messageType);
+                boost.createInnerConsumer(
+                        null, service.getClass(), method, paramKind, msgType, messaged, newDynName, null);
+            }
+        }
+        if (boost != null && Utility.isNotEmpty(boost.consumerBytes)) {
+            DynBytesClassLoader classLoader = DynBytesClassLoader.create(null);
+            boost.consumerBytes.forEach((innerFullName, bytes) -> {
+                try {
+                    String clzName = innerFullName.replace('/', '.');
+                    Class<? extends MessageConsumer> clazz = (Class) classLoader.loadClass(clzName, bytes);
+                    RedkaleClassLoader.putDynClass(clzName, bytes, clazz);
+                    RedkaleClassLoader.putReflectionPublicConstructors(clazz, clzName);
+                    MessageConsumer consumer = (MessageConsumer) clazz.getConstructors()[0].newInstance(service);
+                    addMessageConsumer(consumer);
+                } catch (Exception e) {
+                    throw new RedkaleException(e);
+                }
+            });
         }
     }
 
