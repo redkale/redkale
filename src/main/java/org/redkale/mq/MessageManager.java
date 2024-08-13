@@ -38,5 +38,5 @@ public interface MessageManager extends Resourcable {
      *
      * @return topic集合
      */
-    public abstract CompletableFuture<List<String>> queryTopic();
+    public CompletableFuture<List<String>> queryTopic();
 }
