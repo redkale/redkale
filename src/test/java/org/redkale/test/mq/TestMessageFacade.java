@@ -13,7 +13,7 @@ import org.redkale.service.AbstractService;
  * @author zhangjx
  */
 @Component
-public class TestMessageFacde extends AbstractService {
+public class TestMessageFacade extends AbstractService {
 
     @Messaged(mq = "mymq", topics = "test_bean_topic", group = "group_5")
     public int runMessage5(TestBean message) {
