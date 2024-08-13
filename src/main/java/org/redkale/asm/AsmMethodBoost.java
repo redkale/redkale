@@ -153,7 +153,7 @@ public abstract class AsmMethodBoost<T> {
     }
 
     protected MethodVisitor createMethodVisitor(
-            ClassWriter cw, Method method, AsmNewMethod newMethod, int newMethodAcc, AsmMethodBean methodBean) {
+            ClassWriter cw, Method method, AsmNewMethod newMethod, AsmMethodBean methodBean) {
         return new MethodDebugVisitor(cw.visitMethod(
                 getAcc(method, newMethod),
                 getNowMethodName(method, newMethod),
@@ -162,7 +162,7 @@ public abstract class AsmMethodBoost<T> {
                 getMethodExceptions(method, methodBean)));
     }
 
-    protected int getAcc(Method method, AsmNewMethod newMethod) {
+    protected final int getAcc(Method method, AsmNewMethod newMethod) {
         if (newMethod != null) {
             return ACC_PRIVATE;
         }

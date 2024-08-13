@@ -72,7 +72,7 @@ public class LockedAsmMethodBoost extends AsmMethodBoost {
         { // 定义一个新方法调用 this.rsMethodName
             final AsmMethodBean methodBean = getMethodBean(method);
             final String lockDynDesc = Type.getDescriptor(DynForLocked.class);
-            final MethodVisitor mv = createMethodVisitor(cw, method, newMethod, ACC_PRIVATE, methodBean);
+            final MethodVisitor mv = createMethodVisitor(cw, method, newMethod, methodBean);
             // mv.setDebug(true);
             Label l0 = new Label();
             mv.visitLabel(l0);

@@ -104,7 +104,7 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
         final AsmMethodBean methodBean = getMethodBean(method);
         { // 定义一个新方法调用 this.rsMethodName
             final String cacheDynDesc = Type.getDescriptor(DynForCached.class);
-            final MethodVisitor mv = createMethodVisitor(cw, method, newMethod, ACC_PRIVATE, methodBean);
+            final MethodVisitor mv = createMethodVisitor(cw, method, newMethod, methodBean);
             // mv.setDebug(true);
             AnnotationVisitor av = mv.visitAnnotation(cacheDynDesc, true);
             av.visit("dynField", dynFieldName);

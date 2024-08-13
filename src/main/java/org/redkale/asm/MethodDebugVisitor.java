@@ -193,8 +193,9 @@ public class MethodDebugVisitor extends MethodVisitor {
     public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
         visitor.visitLocalVariable(name, desc, signature, start, end, index);
         if (debug) {
-            System.out.println("mv.visitLocalVariable(\"" + name + "\", \"" + desc + "\", \"" + signature
-                    + "\", null, null, " + index + ");");
+            String s = signature == null ? null : ("\"" + signature + "\"");
+            System.out.println(
+                    "mv.visitLocalVariable(\"" + name + "\", \"" + desc + "\", " + s + ", null, null, " + index + ");");
         }
     }
 

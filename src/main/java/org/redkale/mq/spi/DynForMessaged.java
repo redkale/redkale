@@ -24,8 +24,6 @@ import org.redkale.mq.MessageConsumer;
 @Repeatable(DynForMessaged.DynForMessageds.class)
 public @interface DynForMessaged {
 
-    String dynField();
-
     Class<? extends MessageConsumer> consumer();
 
     @Inherited

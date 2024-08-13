@@ -486,7 +486,7 @@ public abstract class Sncp {
      * 创建Service的本地模式Class
      *
      * @param <T> Service子类
-     * @param classLoader ClassLoader
+     * @param dynLoader DynBytesClassLoader
      * @param name 资源名
      * @param serviceImplClass Service类
      * @param methodBoost 方法扩展
@@ -532,8 +532,9 @@ public abstract class Sncp {
         }
         if (methodBoost == null) { // 加强动态时不能重复加载
             try {
-                Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-                return (Class<T>) (clz == null ? dynLoader.loadClass(newDynName.replace('/', '.')) : clz);
+                final String newDynClass = newDynName.replace('/', '.');
+                Class clz = RedkaleClassLoader.findDynClass(newDynClass);
+                return (Class<T>) (clz == null ? dynLoader.loadClass(newDynClass) : clz);
             } catch (ClassNotFoundException e) {
                 // do nothing
             } catch (Throwable t) {
@@ -603,27 +604,18 @@ public abstract class Sncp {
         }
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();
-        Class<?> newClazz = null;
-        if (methodBoost != null) {
-            try {
-                Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-                newClazz = (clz == null ? dynLoader.loadClass(newDynName.replace('/', '.')) : clz);
-            } catch (Throwable t) {
-                // do nothing
-            }
-        }
-        if (newClazz == null) {
-            newClazz = dynLoader.loadClass(newDynName.replace('/', '.'), bytes);
-        }
-        RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
-        RedkaleClassLoader.putReflectionPublicClasses(newDynName.replace('/', '.'));
-        RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
+        final String newDynClass = newDynName.replace('/', '.');
+        Class<?> newClazz = dynLoader.loadClass(newDynClass, bytes);
+
+        RedkaleClassLoader.putDynClass(newDynClass, bytes, newClazz);
+        RedkaleClassLoader.putReflectionPublicClasses(newDynClass);
+        RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynClass);
         try {
             Field c = newClazz.getDeclaredField(FIELDPREFIX + "_conf");
-            RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), c);
+            RedkaleClassLoader.putReflectionField(newDynClass, c);
 
             c = newClazz.getDeclaredField(FIELDPREFIX + "_mq");
-            RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), c);
+            RedkaleClassLoader.putReflectionField(newDynClass, c);
         } catch (Exception e) {
             // do nothing
         }
@@ -965,8 +957,9 @@ public abstract class Sncp {
             newDynName += "_" + (normal ? name : hash(name));
         }
         try {
-            Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-            Class newClazz = clz == null ? dynLoader.loadClass(newDynName.replace('/', '.')) : clz;
+            final String newDynClass = newDynName.replace('/', '.');
+            Class clz = RedkaleClassLoader.findDynClass(newDynClass);
+            Class newClazz = clz == null ? dynLoader.loadClass(newDynClass) : clz;
             T service = (T) newClazz.getDeclaredConstructor().newInstance();
             {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_conf");
@@ -1246,29 +1239,30 @@ public abstract class Sncp {
         }
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();
-        Class<?> newClazz = dynLoader.loadClass(newDynName.replace('/', '.'), bytes);
-        RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
-        RedkaleClassLoader.putReflectionPublicConstructors(newClazz, newDynName.replace('/', '.'));
-        RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
+        final String newDynClass = newDynName.replace('/', '.');
+        Class<?> newClazz = dynLoader.loadClass(newDynClass, bytes);
+        RedkaleClassLoader.putDynClass(newDynClass, bytes, newClazz);
+        RedkaleClassLoader.putReflectionPublicConstructors(newClazz, newDynClass);
+        RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynClass);
         try {
             T service = (T) newClazz.getDeclaredConstructor().newInstance();
             {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_conf");
                 c.setAccessible(true);
                 c.set(service, conf);
-                RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), c);
+                RedkaleClassLoader.putReflectionField(newDynClass, c);
             }
             {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_mq");
                 c.setAccessible(true);
                 c.set(service, agent == null ? null : agent.getName());
-                RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), c);
+                RedkaleClassLoader.putReflectionField(newDynClass, c);
             }
             {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_sncp");
                 c.setAccessible(true);
                 c.set(service, info);
-                RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), c);
+                RedkaleClassLoader.putReflectionField(newDynClass, c);
             }
             if (methodBoost != null) {
                 // 必须用servcie的ClassLoader， 因为service是动态ClassLoader会与doMethod里的动态ClassLoader不一致
