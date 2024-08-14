@@ -31,11 +31,7 @@ public class YmlReader {
     }
 
     public AnyValue read() {
-        YmlProvider provider = loadProvider();
-        if (provider == YmlProvider.NIL) {
-            throw new UnsupportedOperationException("Not supported yml.");
-        }
-        return provider.read(text);
+        return loadProvider().read(text);
     }
 
     /**
@@ -60,8 +56,16 @@ public class YmlReader {
                 currentProvider = provider;
                 return provider;
             }
-            currentProvider = YmlProvider.NIL;
+            currentProvider = new DefaultYmlProvider();
         }
         return currentProvider;
+    }
+
+    protected static class DefaultYmlProvider implements YmlProvider {
+
+        @Override
+        public AnyValue read(String content) {
+            throw new UnsupportedOperationException("Not supported yml.");
+        }
     }
 }

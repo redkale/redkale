@@ -1164,4 +1164,8 @@ public abstract class AnyValue {
         sb.append('}');
         return sb.toString();
     }
+
+    public Properties toProperties() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

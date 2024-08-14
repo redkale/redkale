@@ -14,12 +14,9 @@ package org.redkale.util;
  */
 public interface YmlProvider {
 
-    public static final YmlProvider NIL = c -> {
-        throw new UnsupportedOperationException("Not supported yet.");
-    };
-
     /**
      * 将yml内容转换成AnyValue
+     * 
      * @param content yml内容
      * @return  AnyValue
      */
