@@ -20,13 +20,13 @@ import org.redkale.annotation.Nonnull;
  * @since 2.8.0
  * @author zhangjx
  */
-public class YmlReader {
+public class YamlReader {
 
-    private static YmlProvider currentProvider;
+    private static YamlProvider currentProvider;
 
     private final String text;
 
-    public YmlReader(String text) {
+    public YamlReader(String text) {
         this.text = Objects.requireNonNull(text);
     }
 
@@ -37,22 +37,22 @@ public class YmlReader {
     /**
      * 加载解析器的实现对象
      *
-     * @return YmlProvider
+     * @return YamlProvider
      */
-    private static @Nonnull YmlProvider loadProvider() {
+    protected static @Nonnull YamlProvider loadProvider() {
         if (currentProvider == null) {
-            Iterator<YmlProvider> it = ServiceLoader.load(YmlProvider.class).iterator();
-            RedkaleClassLoader.putServiceLoader(YmlProvider.class);
-            List<YmlProvider> providers = new ArrayList<>();
+            Iterator<YamlProvider> it = ServiceLoader.load(YamlProvider.class).iterator();
+            RedkaleClassLoader.putServiceLoader(YamlProvider.class);
+            List<YamlProvider> providers = new ArrayList<>();
             while (it.hasNext()) {
-                YmlProvider provider = it.next();
+                YamlProvider provider = it.next();
                 if (provider != null) {
                     RedkaleClassLoader.putReflectionPublicConstructors(
                             provider.getClass(), provider.getClass().getName());
                     providers.add(provider);
                 }
             }
-            for (YmlProvider provider : Utility.sortPriority(providers)) {
+            for (YamlProvider provider : Utility.sortPriority(providers)) {
                 currentProvider = provider;
                 return provider;
             }
@@ -61,7 +61,7 @@ public class YmlReader {
         return currentProvider;
     }
 
-    protected static class DefaultYmlProvider implements YmlProvider {
+    protected static class DefaultYmlProvider implements YamlProvider {
 
         @Override
         public AnyValue read(String content) {

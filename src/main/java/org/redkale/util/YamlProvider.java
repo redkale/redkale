@@ -12,7 +12,7 @@ package org.redkale.util;
  * @since 2.8.0
  * @author zhangjx
  */
-public interface YmlProvider {
+public interface YamlProvider {
 
     /**
      * 将yml内容转换成AnyValue

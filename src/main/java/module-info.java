@@ -42,7 +42,7 @@ module org.redkale {
     exports org.redkale.util;
     exports org.redkale.watch;
 
-    uses org.redkale.util.YmlProvider;
+    uses org.redkale.util.YamlProvider;
     uses org.redkale.props.spi.PropertiesAgentProvider;
     uses org.redkale.cached.spi.CachedManagerProvider;
     uses org.redkale.cluster.spi.ClusterAgentProvider;

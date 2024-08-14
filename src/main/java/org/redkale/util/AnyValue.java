@@ -229,7 +229,7 @@ public abstract class AnyValue {
      * @return AnyValue
      */
     public static AnyValue loadFromYml(String text) {
-        return new YmlReader(text).read();
+        return new YamlReader(text).read();
     }
 
     /**
@@ -1179,12 +1179,12 @@ public abstract class AnyValue {
                         String key = prefix;
                         int index = keyPrefixs.get(key);
                         if (index == -1) {
-                            key = parent + k + "[" + (++index) + "]";
+                            key = prefix + "[" + (++index) + "]";
                             props.put(key, props.remove(prefix));
                         }
-                        key = parent + k + "[" + (++index) + "]";
+                        key = prefix + "[" + (++index) + "]";
                         while (props.containsKey(key)) {
-                            key = parent + k + "[" + (++index) + "]";
+                            key = prefix + "[" + (++index) + "]";
                         }
                         props.put(key, v);
                         keyPrefixs.put(prefix, index);
