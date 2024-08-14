@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.ServiceLoader;
 import org.redkale.annotation.Nonnull;
+import org.redkale.util.YamlProvider.YamlLoader;
 
 /**
  * 简单的yml读取器
@@ -22,7 +23,7 @@ import org.redkale.annotation.Nonnull;
  */
 public class YamlReader {
 
-    private static YamlProvider currentProvider;
+    private static YamlLoader currentYamlLoader;
 
     private final String text;
 
@@ -31,7 +32,7 @@ public class YamlReader {
     }
 
     public AnyValue read() {
-        return loadProvider().read(text);
+        return loadYamlLoader().read(text);
     }
 
     /**
@@ -39,8 +40,8 @@ public class YamlReader {
      *
      * @return YamlProvider
      */
-    protected static @Nonnull YamlProvider loadProvider() {
-        if (currentProvider == null) {
+    protected static @Nonnull YamlLoader loadYamlLoader() {
+        if (currentYamlLoader == null) {
             Iterator<YamlProvider> it = ServiceLoader.load(YamlProvider.class).iterator();
             RedkaleClassLoader.putServiceLoader(YamlProvider.class);
             List<YamlProvider> providers = new ArrayList<>();
@@ -53,19 +54,22 @@ public class YamlReader {
                 }
             }
             for (YamlProvider provider : Utility.sortPriority(providers)) {
-                currentProvider = provider;
-                return provider;
+                YamlLoader leader = provider.createLoader();
+                if (leader != null) {
+                    currentYamlLoader = leader;
+                    return leader;
+                }
             }
-            currentProvider = new DefaultYmlProvider();
+            currentYamlLoader = new DefaultYamlLoader();
         }
-        return currentProvider;
+        return currentYamlLoader;
     }
 
-    protected static class DefaultYmlProvider implements YamlProvider {
+    protected static class DefaultYamlLoader implements YamlLoader {
 
         @Override
         public AnyValue read(String content) {
-            throw new UnsupportedOperationException("Not supported yml.");
+            throw new UnsupportedOperationException("Not supported yaml.");
         }
     }
 }
