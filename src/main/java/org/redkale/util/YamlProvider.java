@@ -9,13 +9,17 @@ package org.redkale.util;
  *
  * <p>详情见: https://redkale.org
  *
+ * @see org.redkale.util.YamlReader
  * @since 2.8.0
  * @author zhangjx
  */
 public interface YamlProvider {
 
     /**
+     *
      * 创建 YamlLoader
+     *
+     * @return  YamlLoader
      */
     public YamlLoader createLoader();
 
