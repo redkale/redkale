@@ -5,14 +5,13 @@
  */
 package org.redkale.util;
 
-import static org.redkale.util.Utility.isEmpty;
-
 import java.io.*;
 import java.nio.charset.*;
 import java.util.*;
 import java.util.function.*;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.ConvertColumn;
+import static org.redkale.util.Utility.isEmpty;
 
 /**
  * 该类提供类似JSONObject的数据结构，主要用于读取xml配置文件和http-header存储
@@ -220,6 +219,17 @@ public abstract class AnyValue {
      */
     public static AnyValueWriter create() {
         return new AnyValueWriter();
+    }
+
+    /**
+     * yml内容流转换成AnyValue对象
+     *
+     *
+     * @param text 文本内容
+     * @return AnyValue
+     */
+    public static AnyValue loadFromYml(String text) {
+        return new YmlReader(text).read();
     }
 
     /**

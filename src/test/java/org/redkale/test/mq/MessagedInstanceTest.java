@@ -35,7 +35,7 @@ public class MessagedInstanceTest {
     private static Application application;
 
     private static MessageModuleEngine engine;
-    
+
     private static ResourceFactory resourceFactory;
 
     public static void main(String[] args) throws Throwable {
@@ -76,7 +76,7 @@ public class MessagedInstanceTest {
     @Test
     public void run2() throws Exception {
         TestMessageFacade facade = new TestMessageFacade();
-        engine.onServicePostInit(null, facade); 
+        engine.onServicePostInit(null, facade);
     }
 
     public static MessageAgent createMessageAgent(Application application, String name) throws Exception {
