@@ -249,7 +249,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
             BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader) {
         return EntityInfo.load(clazz, cacheForbidden, props, this, fullloader);
     }
-    
+
     /**
      * 加载指定类的EntityInfo
      *
