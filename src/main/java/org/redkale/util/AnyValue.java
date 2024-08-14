@@ -1166,6 +1166,35 @@ public abstract class AnyValue {
     }
 
     public Properties toProperties() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Properties props = new Properties();
+        toProperties(props, new HashMap<>(), "", this);
+        return props;
+    }
+
+    private static void toProperties(Properties props, Map<String, Integer> keyPrefixs, String parent, AnyValue conf) {
+        conf.forEach(
+                (k, v) -> {
+                    final String prefix = parent + k;
+                    if (keyPrefixs.containsKey(prefix)) {
+                        String key = prefix;
+                        int index = keyPrefixs.get(key);
+                        if (index == -1) {
+                            key = parent + k + "[" + (++index) + "]";
+                            props.put(key, props.remove(prefix));
+                        }
+                        key = parent + k + "[" + (++index) + "]";
+                        while (props.containsKey(key)) {
+                            key = parent + k + "[" + (++index) + "]";
+                        }
+                        props.put(key, v);
+                        keyPrefixs.put(prefix, index);
+                    } else {
+                        props.put(prefix, v);
+                        keyPrefixs.put(prefix, -1);
+                    }
+                },
+                (k, c) -> {
+                    toProperties(props, keyPrefixs, parent + k + ".", c);
+                });
     }
 }

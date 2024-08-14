@@ -15,7 +15,11 @@ public class AnyValuePropertiesTest {
 
     public static void main(String[] args) throws Throwable {
         AnyValuePropertiesTest test = new AnyValuePropertiesTest();
+        test.run1();
+        test.run2();
+        test.run3();
         test.run4();
+        test.run5();
     }
 
     @Test
@@ -84,6 +88,7 @@ public class AnyValuePropertiesTest {
                 + "    }\r\n"
                 + "}";
         Assertions.assertEquals(result, AnyValue.loadFromProperties(properties).toString());
+        System.out.println("------------------------ 01 ------------------------");
     }
 
     @Test
@@ -111,6 +116,7 @@ public class AnyValuePropertiesTest {
 
         // System.out.println(conf.copy().merge(conf2));
         // System.out.println(conf);
+        System.out.println("------------------------ 02 ------------------------");
     }
 
     @Test
@@ -125,6 +131,7 @@ public class AnyValuePropertiesTest {
                         .addValue("desc", "nothing !!!"));
         String json = "{\"name\":\"haha\",\"value\":{\"id\":\"1234\",\"key\":null,\"desc\":\"nothing !!!\"}}";
         Assertions.assertEquals(json, conf.toJsonString());
+        System.out.println("------------------------ 03 ------------------------");
     }
 
     @Test
@@ -139,5 +146,30 @@ public class AnyValuePropertiesTest {
 
         AnyValue conf = AnyValue.loadFromProperties(prop);
         System.out.println(conf);
+        System.out.println("------------------------ 04 ------------------------");
+    }
+
+    @Test
+    public void run5() {
+        AnyValueWriter conf = AnyValue.create();
+        conf.addValue("name", "haha");
+        conf.addValue("name", "hehe");
+        conf.addValue("status", 45);
+        conf.addValue("name", AnyValueWriter.create("id", 123).addValue("desc", "test"));
+        conf.addValue("nodes", AnyValueWriter.create("time", 123).addValue("time", 456));
+
+        Properties props1 = conf.toProperties();
+        props1.forEach((k, v) -> System.out.println(k + " = " + v));
+        Properties props2 = new Properties();
+        props2.put("name[0]", "haha");
+        props2.put("name[1]", "hehe");
+        props2.put("status", "45");
+        props2.put("name.desc", "test");
+        props2.put("name.id", "123");
+        props2.put("nodes.time[0]", "123");
+        props2.put("nodes.time[1]", "456");
+
+        Assertions.assertEquals(props1.toString(), props2.toString());
+        System.out.println("------------------------ 05 ------------------------");
     }
 }
