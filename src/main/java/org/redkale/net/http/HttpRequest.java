@@ -383,6 +383,11 @@ public class HttpRequest extends Request<HttpContext> {
                 }
                 return lr > 0 ? lr : 0;
             }
+            // keep-alive=true:  Content-Length和chunk必然是二选一。
+            // keep-alive=false: Content-Length可有可无.
+            if (keepAlive && this.contentLength < 0) {
+                return -1;
+            }
             if (buffer.hasRemaining() && (this.boundary || !this.keepAlive)) {
                 bytes.put(buffer, buffer.remaining()); // 文件上传、HTTP1.0或Connection:close
             }
