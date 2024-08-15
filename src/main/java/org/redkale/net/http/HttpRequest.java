@@ -118,6 +118,13 @@ public class HttpRequest extends Request<HttpContext> {
 
     private boolean expect = false; // 是否Expect:100-continue
 
+    // @since 2.8.0
+    protected boolean chunked = false;
+
+    protected int chunkedLength = -1;
+
+    protected byte[] chunkedHalfLenBytes;
+
     protected boolean rpc;
 
     protected int readState = READ_STATE_ROUTE;
@@ -152,8 +159,6 @@ public class HttpRequest extends Request<HttpContext> {
     protected String newSessionid;
 
     protected final HttpParameters params = HttpParameters.create();
-
-    protected boolean chunked = false;
 
     protected boolean boundary = false;
 
@@ -295,6 +300,10 @@ public class HttpRequest extends Request<HttpContext> {
         return expect;
     }
 
+    protected boolean isChunked() {
+        return chunked;
+    }
+
     protected void setKeepAlive(boolean keepAlive) {
         this.keepAlive = keepAlive;
     }
@@ -339,6 +348,8 @@ public class HttpRequest extends Request<HttpContext> {
                 this.keepAlive = httpLast.keepAlive;
                 this.maybews = httpLast.maybews;
                 this.expect = httpLast.expect;
+                this.chunked = httpLast.chunked;
+                this.chunkedLength = httpLast.chunkedLength;
                 this.rpc = httpLast.rpc;
                 this.traceid = httpLast.traceid;
                 this.currentUserid = httpLast.currentUserid;
@@ -1092,6 +1103,7 @@ public class HttpRequest extends Request<HttpContext> {
         req.keepAlive = this.keepAlive;
         req.maybews = this.maybews;
         req.expect = this.expect;
+        req.chunked = this.chunked;
         req.rpc = this.rpc;
         req.traceid = this.traceid;
         req.currentUserid = this.currentUserid;
@@ -1129,6 +1141,9 @@ public class HttpRequest extends Request<HttpContext> {
         this.cookies = null;
         this.maybews = false;
         this.expect = false;
+        this.chunked = false;
+        this.chunkedLength = -1;
+        this.chunkedHalfLenBytes = null;
         this.rpc = false;
         this.readState = READ_STATE_ROUTE;
         this.currentUserid = CURRUSERID_NIL;
@@ -1146,7 +1161,6 @@ public class HttpRequest extends Request<HttpContext> {
         this.requestPath = null;
         this.queryBytes = null;
         this.boundary = false;
-        this.chunked = false;
         this.bodyParsed = false;
         this.moduleid = 0;
         this.actionid = 0;
@@ -1176,7 +1190,7 @@ public class HttpRequest extends Request<HttpContext> {
         }
     }
 
-    private void unzipEncoding() {
+    protected void unzipEncoding() {
         try {
             if ("gzip".contains(this.contentEncoding)) {
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -1746,6 +1760,7 @@ public class HttpRequest extends Request<HttpContext> {
                 + (this.protocol != null ? (", \r\n    protocol: " + this.protocol) : "")
                 + (this.getHost() != null ? (", \r\n    host: " + this.host) : "")
                 + (this.getContentLength() >= 0 ? (", \r\n    contentLength: " + this.contentLength) : "")
+                + (this.contentEncoding != null ? (", \r\n    contentEncoding: " + this.contentEncoding) : "")
                 + (this.array.length() > 0 ? (", \r\n    bodyLength: " + this.array.length()) : "")
                 + (this.boundary || this.array.isEmpty()
                         ? ""
