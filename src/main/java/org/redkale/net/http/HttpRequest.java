@@ -74,6 +74,8 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected static final String HEAD_CONTENT_LENGTH = "Content-Length";
 
+    protected static final String HEAD_TRANSFER_ENCODING = "Transfer-Encoding";
+
     protected static final String HEAD_ACCEPT = "Accept";
 
     protected static final String HEAD_HOST = "Host";
@@ -140,6 +142,8 @@ public class HttpRequest extends Request<HttpContext> {
     protected String newSessionid;
 
     protected final HttpParameters params = HttpParameters.create();
+
+    protected boolean chunked = false;
 
     protected boolean boundary = false;
 
@@ -837,6 +841,17 @@ public class HttpRequest extends Request<HttpContext> {
                             && content[8] == 't';
                     headers.setValid(HEAD_UPGRADE, this.maybews ? "websocket" : bytes.toString(true, charset));
                     break;
+                case HEAD_TRANSFER_ENCODING: // Transfer-Encoding
+                    this.chunked = vlen == 7
+                            && content[0] == 'c'
+                            && content[1] == 'h'
+                            && content[2] == 'u'
+                            && content[3] == 'n'
+                            && content[4] == 'k'
+                            && content[5] == 'e'
+                            && content[6] == 'd';
+                    headers.setValid(HEAD_TRANSFER_ENCODING, this.chunked ? "chunked" : bytes.toString(true, charset));
+                    break;
                 case HEAD_EXPECT: // Expect
                     this.expect = vlen == 12
                             && content[0] == '1'
@@ -927,6 +942,25 @@ public class HttpRequest extends Request<HttpContext> {
         } else if ((first == 'A' || first == 'a') && size == 6) { // Accept
             if (bs[1] == 'c' && bs[2] == 'c' && bs[3] == 'e' && bs[4] == 'p' && bs[5] == 't') {
                 return HEAD_ACCEPT;
+            }
+        } else if ((first == 'T' || first == 't') && size == 17) { // Transfer-Encoding
+            if (bs[1] == 'r'
+                    && bs[2] == 'a'
+                    && bs[3] == 'n'
+                    && bs[4] == 's'
+                    && bs[5] == 'f'
+                    && bs[6] == 'e'
+                    && bs[7] == 'r'
+                    && bs[8] == '-'
+                    && (bs[9] == 'E' || bs[9] == 'e')
+                    && bs[10] == 'n'
+                    && bs[11] == 'c'
+                    && bs[12] == 'o'
+                    && bs[13] == 'd'
+                    && bs[14] == 'i'
+                    && bs[15] == 'n'
+                    && bs[16] == 'g') {
+                return HEAD_TRANSFER_ENCODING;
             }
         } else if (first == 'C' || first == 'c') {
             if (size == 10) { // Connection
@@ -1072,6 +1106,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.requestPath = null;
         this.queryBytes = null;
         this.boundary = false;
+        this.chunked = false;
         this.bodyParsed = false;
         this.moduleid = 0;
         this.actionid = 0;
