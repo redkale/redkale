@@ -13,6 +13,8 @@ import java.nio.charset.*;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.logging.Level;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.Inflater;
 import org.redkale.annotation.ClassDepends;
 import org.redkale.annotation.Comment;
 import org.redkale.convert.*;
@@ -74,6 +76,14 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected static final String HEAD_CONTENT_LENGTH = "Content-Length";
 
+    protected static final String HEAD_CONTENT_ENCODING = "Content-Encoding";
+
+    protected static final String HEAD_TRANSFER_ENCODING = "Transfer-Encoding";
+    /*
+     * Maximum chunk header size of 2KB + 2 bytes for CRLF
+     */
+    protected static final int MAX_CHUNK_HEADER_SIZE = 2050;
+
     protected static final String HEAD_ACCEPT = "Accept";
 
     protected static final String HEAD_HOST = "Host";
@@ -94,6 +104,8 @@ public class HttpRequest extends Request<HttpContext> {
     protected String contentType;
 
     protected long contentLength = -1;
+
+    protected String contentEncoding;
 
     protected String host;
 
@@ -140,6 +152,8 @@ public class HttpRequest extends Request<HttpContext> {
     protected String newSessionid;
 
     protected final HttpParameters params = HttpParameters.create();
+
+    protected boolean chunked = false;
 
     protected boolean boundary = false;
 
@@ -306,9 +320,9 @@ public class HttpRequest extends Request<HttpContext> {
         }
         if (this.readState == READ_STATE_HEADER) {
             if (last != null && ((HttpRequest) last).headerLength > 0) {
-                final HttpRequest httplast = (HttpRequest) last;
+                final HttpRequest httpLast = (HttpRequest) last;
                 int bufremain = buffer.remaining();
-                int remainHalf = httplast.headerLength - this.headerHalfLen;
+                int remainHalf = httpLast.headerLength - this.headerHalfLen;
                 if (remainHalf > bufremain) {
                     bytes.put(buffer);
                     this.headerHalfLen += bufremain;
@@ -316,26 +330,27 @@ public class HttpRequest extends Request<HttpContext> {
                     return 1;
                 }
                 buffer.position(buffer.position() + remainHalf);
-                this.contentType = httplast.contentType;
-                this.contentLength = httplast.contentLength;
-                this.host = httplast.host;
-                this.cookie = httplast.cookie;
-                this.cookies = httplast.cookies;
-                this.keepAlive = httplast.keepAlive;
-                this.maybews = httplast.maybews;
-                this.expect = httplast.expect;
-                this.rpc = httplast.rpc;
-                this.traceid = httplast.traceid;
-                this.currentUserid = httplast.currentUserid;
-                this.reqConvertType = httplast.reqConvertType;
-                this.reqConvert = httplast.reqConvert;
-                this.respConvertType = httplast.respConvertType;
-                this.respConvert = httplast.respConvert;
-                this.headerLength = httplast.headerLength;
-                this.headerHalfLen = httplast.headerHalfLen;
-                this.headerBytes = httplast.headerBytes;
-                this.headerParsed = httplast.headerParsed;
-                this.headers.setAll(httplast.headers);
+                this.contentType = httpLast.contentType;
+                this.contentLength = httpLast.contentLength;
+                this.contentEncoding = httpLast.contentEncoding;
+                this.host = httpLast.host;
+                this.cookie = httpLast.cookie;
+                this.cookies = httpLast.cookies;
+                this.keepAlive = httpLast.keepAlive;
+                this.maybews = httpLast.maybews;
+                this.expect = httpLast.expect;
+                this.rpc = httpLast.rpc;
+                this.traceid = httpLast.traceid;
+                this.currentUserid = httpLast.currentUserid;
+                this.reqConvertType = httpLast.reqConvertType;
+                this.reqConvert = httpLast.reqConvert;
+                this.respConvertType = httpLast.respConvertType;
+                this.respConvert = httpLast.respConvert;
+                this.headerLength = httpLast.headerLength;
+                this.headerHalfLen = httpLast.headerHalfLen;
+                this.headerBytes = httpLast.headerBytes;
+                this.headerParsed = httpLast.headerParsed;
+                this.headers.setAll(httpLast.headers);
             } else if (context.lazyHeaders && getmethod) { // 非GET必须要读header，会有Content-Length
                 int rs = loadHeaderBytes(buffer);
                 if (rs != 0) {
@@ -360,13 +375,18 @@ public class HttpRequest extends Request<HttpContext> {
                 this.boundary = true;
             }
             if (this.boundary) {
-                this.keepAlive = false; // 文件上传必须设置keepAlive为false，因为文件过大时用户不一定会skip掉多余的数据
+                // 文件上传必须设置keepAlive为false，因为文件过大时用户不一定会skip掉多余的数据
+                this.keepAlive = false;
             }
             // completed=true时ProtocolCodec会继续读下一个request
             this.completed = !this.boundary && !maybews && this.headerParsed;
             this.readState = READ_STATE_BODY;
         }
         if (this.readState == READ_STATE_BODY) {
+            if (this.chunked) {
+                // TODO 待实现
+                return -1;
+            }
             if (this.contentLength > 0 && (this.contentType == null || !this.boundary)) {
                 if (this.contentLength > context.getMaxBody()) {
                     return -1;
@@ -388,8 +408,9 @@ public class HttpRequest extends Request<HttpContext> {
             if (keepAlive && this.contentLength < 0) {
                 return -1;
             }
+            // 文件上传、HTTP1.0或Connection:close
             if (buffer.hasRemaining() && (this.boundary || !this.keepAlive)) {
-                bytes.put(buffer, buffer.remaining()); // 文件上传、HTTP1.0或Connection:close
+                bytes.put(buffer, buffer.remaining());
             }
             this.readState = READ_STATE_END;
             if (bytes.isEmpty()) {
@@ -782,6 +803,9 @@ public class HttpRequest extends Request<HttpContext> {
                 case HEAD_CONTENT_LENGTH: // Content-Length
                     this.contentLength = Long.decode(bytes.toString(true, charset));
                     break;
+                case HEAD_CONTENT_ENCODING: // Content-Encoding
+                    this.contentEncoding = bytes.toString(true, charset);
+                    break;
                 case HEAD_HOST: // Host
                     this.host = bytes.toString(charset);
                     break;
@@ -836,6 +860,17 @@ public class HttpRequest extends Request<HttpContext> {
                             && content[7] == 'e'
                             && content[8] == 't';
                     headers.setValid(HEAD_UPGRADE, this.maybews ? "websocket" : bytes.toString(true, charset));
+                    break;
+                case HEAD_TRANSFER_ENCODING: // Transfer-Encoding
+                    this.chunked = vlen == 7
+                            && content[0] == 'c'
+                            && content[1] == 'h'
+                            && content[2] == 'u'
+                            && content[3] == 'n'
+                            && content[4] == 'k'
+                            && content[5] == 'e'
+                            && content[6] == 'd';
+                    headers.setValid(HEAD_TRANSFER_ENCODING, this.chunked ? "chunked" : bytes.toString(true, charset));
                     break;
                 case HEAD_EXPECT: // Expect
                     this.expect = vlen == 12
@@ -928,6 +963,25 @@ public class HttpRequest extends Request<HttpContext> {
             if (bs[1] == 'c' && bs[2] == 'c' && bs[3] == 'e' && bs[4] == 'p' && bs[5] == 't') {
                 return HEAD_ACCEPT;
             }
+        } else if ((first == 'T' || first == 't') && size == 17) { // Transfer-Encoding
+            if (bs[1] == 'r'
+                    && bs[2] == 'a'
+                    && bs[3] == 'n'
+                    && bs[4] == 's'
+                    && bs[5] == 'f'
+                    && bs[6] == 'e'
+                    && bs[7] == 'r'
+                    && bs[8] == '-'
+                    && (bs[9] == 'E' || bs[9] == 'e')
+                    && bs[10] == 'n'
+                    && bs[11] == 'c'
+                    && bs[12] == 'o'
+                    && bs[13] == 'd'
+                    && bs[14] == 'i'
+                    && bs[15] == 'n'
+                    && bs[16] == 'g') {
+                return HEAD_TRANSFER_ENCODING;
+            }
         } else if (first == 'C' || first == 'c') {
             if (size == 10) { // Connection
                 if (bs[1] == 'o'
@@ -971,6 +1025,24 @@ public class HttpRequest extends Request<HttpContext> {
                         && bs[13] == 'h') {
                     return HEAD_CONTENT_LENGTH;
                 }
+            } else if (size == 16) { // Content-Encoding
+                if (bs[1] == 'o'
+                        && bs[2] == 'n'
+                        && bs[3] == 't'
+                        && bs[4] == 'e'
+                        && bs[5] == 'n'
+                        && bs[6] == 't'
+                        && bs[7] == '-'
+                        && (bs[8] == 'E' || bs[8] == 'e')
+                        && bs[9] == 'n'
+                        && bs[10] == 'c'
+                        && bs[11] == 'o'
+                        && bs[12] == 'd'
+                        && bs[13] == 'i'
+                        && bs[14] == 'n'
+                        && bs[15] == 'g') {
+                    return HEAD_CONTENT_ENCODING;
+                }
             } else if (size == 6) { // Cookie
                 if (bs[1] == 'o' && bs[2] == 'o' && bs[3] == 'k' && bs[4] == 'i' && bs[5] == 'e') {
                     return HEAD_COOKIE;
@@ -1013,6 +1085,7 @@ public class HttpRequest extends Request<HttpContext> {
         req.headerParsed = this.headerParsed;
         req.contentType = this.contentType;
         req.contentLength = this.contentLength;
+        req.contentEncoding = this.contentEncoding;
         req.host = this.host;
         req.cookie = this.cookie;
         req.cookies = this.cookies;
@@ -1050,6 +1123,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.headerParsed = false;
         this.contentType = null;
         this.contentLength = -1;
+        this.contentEncoding = null;
         this.host = null;
         this.cookie = null;
         this.cookies = null;
@@ -1072,6 +1146,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.requestPath = null;
         this.queryBytes = null;
         this.boundary = false;
+        this.chunked = false;
         this.bodyParsed = false;
         this.moduleid = 0;
         this.actionid = 0;
@@ -1093,8 +1168,46 @@ public class HttpRequest extends Request<HttpContext> {
             return;
         }
         bodyParsed = true;
+        if (this.contentEncoding != null) {
+            unzipEncoding();
+        }
         if (this.getContentType() != null && this.contentType.toLowerCase().contains("x-www-form-urlencoded")) {
             addParameter(array, true, 0, array.length());
+        }
+    }
+
+    private void unzipEncoding() {
+        try {
+            if ("gzip".contains(this.contentEncoding)) {
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                ByteArrayInputStream in = new ByteArrayInputStream(array.content(), 0, array.length());
+                GZIPInputStream ungzip = new GZIPInputStream(in);
+                int n;
+                byte[] buffer = new byte[512];
+                while ((n = ungzip.read(buffer)) >= 0) {
+                    out.write(buffer, 0, n);
+                }
+                array.clear();
+                array.put(out.toByteArray());
+            } else if ("deflate".contains(this.contentEncoding)) {
+                Inflater infl = new Inflater();
+                infl.setInput(array.content(), 0, array.length());
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                int n;
+                byte[] buffer = new byte[512];
+                while (!infl.finished()) {
+                    n = infl.inflate(buffer);
+                    if (n == 0) {
+                        break;
+                    }
+                    out.write(buffer, 0, n);
+                }
+                infl.end();
+                array.clear();
+                array.put(out.toByteArray());
+            }
+        } catch (Exception e) {
+            // do nothing
         }
     }
 
@@ -1321,7 +1434,7 @@ public class HttpRequest extends Request<HttpContext> {
     public <T extends Serializable> T currentUserid(Class<T> type) {
         if (currentUserid == CURRUSERID_NIL || currentUserid == null) {
             if (type == int.class || type == Integer.class) {
-                return (T) (Integer) (int) 0;
+                return (T) (Integer) 0;
             }
             if (type == long.class || type == Long.class) {
                 return (T) (Long) (long) 0;
