@@ -253,7 +253,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
         if (sort.indexOf(';') >= 0 || sort.indexOf('\n') >= 0) {
             return "";
         }
-        return sortOrderbySqls.computeIfAbsent(sort, s -> {
+        return sortOrderbySqls.computeIfAbsent(sort.trim(), s -> {
             final StringBuilder sb = new StringBuilder();
             sb.append(" ORDER BY ");
             if (info.getBuilder().isNoAlias()) {
@@ -261,6 +261,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             } else {
                 boolean flag = false;
                 for (String item : s.split(",")) {
+                    item = item.trim();
                     if (item.isEmpty()) {
                         continue;
                     }

@@ -23,11 +23,11 @@ import org.redkale.util.RedkaleException;
 public class CachedInstance implements Service {
 
     @Resource
-    private CachedManager cacheManager;
+    private CachedManager cachedManager;
 
     // 修改远程缓存的key值
     public void updateName(String code, Map<String, Long> map) {
-        cacheManager.remoteSetString(code, code + "_" + map.get("id"), Duration.ofMillis(60));
+        cachedManager.remoteSetString(code + "_" + map.get("id"), code + "-" + map, Duration.ofMillis(60));
     }
 
     @Cached(key = "#{code}_#{map.id}", remoteExpire = "60", timeUnit = TimeUnit.MILLISECONDS)
@@ -41,7 +41,7 @@ public class CachedInstance implements Service {
     }
 
     public void updateName(String val) {
-        cacheManager.bothSet("name_2", String.class, val, Duration.ofSeconds(31), Duration.ofSeconds(60));
+        cachedManager.bothSet("name_2", String.class, val, Duration.ofSeconds(31), Duration.ofSeconds(60));
     }
 
     @Cached(key = "name_2", localExpire = "31", remoteExpire = "60")
@@ -86,8 +86,8 @@ public class CachedInstance implements Service {
         return CompletableFuture.completedFuture(null);
     }
 
-    public CachedManager getCacheManager() {
-        return cacheManager;
+    public CachedManager getCachedManager() {
+        return cachedManager;
     }
 
     public static class ParamBean {

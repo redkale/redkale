@@ -42,7 +42,7 @@
 
     //实时修改远程缓存的key值
     public void updateName(String code, Map<String, Long> map) {
-        cachedManager.remoteSetString(code + "_" + map.get("id"), Duration.ofMillis(60));
+        cachedManager.remoteSetString(code + "_" + map.get("id"), code + "-" + map, Duration.ofMillis(60));
     }
 
     @Cached(key = "#{code}_#{map.id}", remoteExpire = "60", timeUnit = TimeUnit.MILLISECONDS)
@@ -104,7 +104,7 @@
 
     //第一个缓存器实时修改远程缓存的key值
     public void updateName(String code, Map<String, Long> map) {
-        cachedManager.remoteSetString(code + "_" + map.get("id"), Duration.ofMillis(60));
+        cachedManager.remoteSetString(code + "_" + map.get("id"), code + "-" + map, Duration.ofMillis(60));
     }
 
     //使用第一个缓存器
