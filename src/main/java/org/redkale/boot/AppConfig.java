@@ -29,6 +29,7 @@ import static org.redkale.util.RedkaleClassLoader.putReflectionClass;
 import static org.redkale.util.RedkaleClassLoader.putReflectionPublicConstructors;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Utility;
+import org.redkale.util.YamlReader;
 
 /**
  * 加载系统参数配置
@@ -246,41 +247,72 @@ class AppConfig {
         if ("file".equals(this.confDir.getScheme())) {
             File sourceFile = new File(new File(confDir), "source.properties");
             if (sourceFile.isFile() && sourceFile.canRead()) {
-                Properties props = new Properties();
                 try {
                     InputStream in = new FileInputStream(sourceFile);
+                    Properties props = new Properties();
                     props.load(in);
                     in.close();
+                    this.localEnvProperties.putAll(props);
                 } catch (IOException e) {
                     throw new RedkaleException(e);
                 }
-                this.localEnvProperties.putAll(props);
             } else {
-                // 兼容 persistence.xml 【已废弃】
-                File persist = new File(new File(confDir), "persistence.xml");
-                if (persist.isFile() && persist.canRead()) {
-                    System.err.println("persistence.xml is deprecated, replaced by source.properties");
+                sourceFile = new File(new File(confDir), "source.yml");
+                if (!sourceFile.isFile() || !sourceFile.canRead()) {
+                    sourceFile = new File(new File(confDir), "source.yaml");
+                }
+                if (sourceFile.isFile() && sourceFile.canRead()) {
                     try {
-                        InputStream in = new FileInputStream(persist);
-                        this.localEnvProperties.putAll(DataSources.loadSourceProperties(in));
-                        in.close();
+                        InputStream in = new FileInputStream(sourceFile);
+                        String content = Utility.readThenClose(in);
+                        Properties props = new YamlReader(content).read().toProperties();
+                        this.localEnvProperties.putAll(props);
                     } catch (IOException e) {
                         throw new RedkaleException(e);
+                    }
+                } else {
+                    // 兼容 persistence.xml 【已废弃】
+                    File persist = new File(new File(confDir), "persistence.xml");
+                    if (persist.isFile() && persist.canRead()) {
+                        System.err.println("persistence.xml is deprecated, replaced by source.properties");
+                        try {
+                            InputStream in = new FileInputStream(persist);
+                            this.localEnvProperties.putAll(DataSources.loadSourceProperties(in));
+                            in.close();
+                        } catch (IOException e) {
+                            throw new RedkaleException(e);
+                        }
                     }
                 }
             }
         } else { // 从url或jar文件中resources读取
+            Properties props = new Properties();
             try {
                 final URI sourceURI = RedkaleClassLoader.getConfResourceAsURI(
                         configFromCache ? null : this.confDir.toString(), "source.properties");
                 InputStream in = sourceURI.toURL().openStream();
-                Properties props = new Properties();
                 props.load(in);
                 in.close();
-                this.localEnvProperties.putAll(props);
             } catch (Exception e) {
-                // 没有文件 跳过
+                try {
+                    final URI sourceURI = RedkaleClassLoader.getConfResourceAsURI(
+                            configFromCache ? null : this.confDir.toString(), "source.yml");
+                    InputStream in = sourceURI.toURL().openStream();
+                    String content = Utility.readThenClose(in);
+                    props.putAll(new YamlReader(content).read().toProperties());
+                } catch (Exception e2) {
+                    try {
+                        final URI sourceURI = RedkaleClassLoader.getConfResourceAsURI(
+                                configFromCache ? null : this.confDir.toString(), "source.yaml");
+                        InputStream in = sourceURI.toURL().openStream();
+                        String content = Utility.readThenClose(in);
+                        props.putAll(new YamlReader(content).read().toProperties());
+                    } catch (Exception e3) {
+                        // 没有文件 跳过
+                    }
+                }
             }
+            this.localEnvProperties.putAll(props);
         }
     }
 
@@ -349,7 +381,10 @@ class AppConfig {
                     throw new IOException("Read application conf file (" + sysConfFile + ") error ");
                 }
             }
-            return text.trim().startsWith("<")
+            if (sysConfFile.endsWith(".yml") || sysConfFile.endsWith(".yaml")) {
+                return AnyValue.loadFromYaml(text).getAnyValue("redkale");
+            }
+            return sysConfFile.endsWith(".xml")
                     ? AnyValue.loadFromXml(text, (k, v) -> v.replace("${" + RESNAME_APP_HOME + "}", home))
                             .getAnyValue("application")
                     : AnyValue.loadFromProperties(text).getAnyValue("redkale");
@@ -357,18 +392,25 @@ class AppConfig {
         String confDir = System.getProperty(RESNAME_APP_CONF_DIR, "conf");
         URI appConfFile;
         boolean fromCache = false;
-        boolean yml = false;
+        boolean yaml = false;
         if (confDir.contains("://")) { // jar内部资源
             appConfFile = URI.create(confDir + (confDir.endsWith("/") ? "" : "/") + "application.xml");
             try {
                 appConfFile.toURL().openStream().close();
-            } catch (IOException e) { // 没有application.xml就尝试读application.yml
+            } catch (IOException e) { // 没有application.xml就尝试读application.yaml
                 appConfFile = URI.create(confDir + (confDir.endsWith("/") ? "" : "/") + "application.yml");
                 try {
                     appConfFile.toURL().openStream().close();
-                    yml = true;
-                } catch (IOException e2) { // 没有application.xml就尝试读application.properties
-                    appConfFile = URI.create(confDir + (confDir.endsWith("/") ? "" : "/") + "application.properties");
+                    yaml = true;
+                } catch (IOException e2) { // 没有application.yml就尝试读application.yaml
+                    appConfFile = URI.create(confDir + (confDir.endsWith("/") ? "" : "/") + "application.yaml");
+                    try {
+                        appConfFile.toURL().openStream().close();
+                        yaml = true;
+                    } catch (IOException e3) { // 没有application.yaml就尝试读application.properties
+                        appConfFile =
+                                URI.create(confDir + (confDir.endsWith("/") ? "" : "/") + "application.properties");
+                    }
                 }
             }
         } else if (confDir.charAt(0) == '/' || confDir.indexOf(':') > 0) { // 绝对路径
@@ -381,31 +423,47 @@ class AppConfig {
                 if (f.isFile() && f.canRead()) {
                     appConfFile = f.toURI();
                     confDir = f.getParentFile().getCanonicalPath();
-                    yml = true;
+                    yaml = true;
                 } else {
-                    f = new File(confDir, "application.properties");
+                    f = new File(confDir, "application.yaml");
                     if (f.isFile() && f.canRead()) {
                         appConfFile = f.toURI();
                         confDir = f.getParentFile().getCanonicalPath();
+                        yaml = true;
                     } else {
-                        appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.xml"); // 不能传confDir
-                        try {
-                            appConfFile.toURL().openStream().close();
-                        } catch (IOException e) { // 没有application.xml就尝试读application.yml
-                            appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.yml");
+                        f = new File(confDir, "application.properties");
+                        if (f.isFile() && f.canRead()) {
+                            appConfFile = f.toURI();
+                            confDir = f.getParentFile().getCanonicalPath();
+                        } else {
+                            // 不能传confDir
+                            appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.xml");
                             try {
                                 appConfFile.toURL().openStream().close();
-                                yml = true;
-                            } catch (IOException e2) { // 没有application.xml就尝试读application.properties
-                                appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.properties");
+                            } catch (IOException e) { // 没有application.xml就尝试读application.yml
+                                appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.yml");
+                                try {
+                                    appConfFile.toURL().openStream().close();
+                                    yaml = true;
+                                } catch (IOException e2) { // 没有application.yml就尝试读application.yaml
+                                    appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.yaml");
+                                    try {
+                                        appConfFile.toURL().openStream().close();
+                                        yaml = true;
+                                    } catch (IOException e3) { // 没有application.yaml就尝试读application.properties
+                                        appConfFile =
+                                                RedkaleClassLoader.getConfResourceAsURI(null, "application.properties");
+                                    }
+                                }
                             }
+                            confDir = appConfFile
+                                    .toString()
+                                    .replace("/application.xml", "")
+                                    .replace("/application.yml", "")
+                                    .replace("/application.yaml", "")
+                                    .replace("/application.properties", "");
+                            fromCache = true;
                         }
-                        confDir = appConfFile
-                                .toString()
-                                .replace("/application.xml", "")
-                                .replace("/application.yml", "")
-                                .replace("/application.properties", "");
-                        fromCache = true;
                     }
                 }
             }
@@ -419,31 +477,47 @@ class AppConfig {
                 if (f.isFile() && f.canRead()) {
                     appConfFile = f.toURI();
                     confDir = f.getParentFile().getCanonicalPath();
-                    yml = true;
+                    yaml = true;
                 } else {
-                    f = new File(new File(home, confDir), "application.properties");
+                    f = new File(new File(home, confDir), "application.yaml");
                     if (f.isFile() && f.canRead()) {
                         appConfFile = f.toURI();
                         confDir = f.getParentFile().getCanonicalPath();
+                        yaml = true;
                     } else {
-                        appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.xml"); // 不能传confDir
-                        try {
-                            appConfFile.toURL().openStream().close();
-                        } catch (IOException e) { // 没有application.xml就尝试读application.yml
-                            appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.yml");
+                        f = new File(new File(home, confDir), "application.properties");
+                        if (f.isFile() && f.canRead()) {
+                            appConfFile = f.toURI();
+                            confDir = f.getParentFile().getCanonicalPath();
+                        } else {
+                            // 不能传confDir
+                            appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.xml");
                             try {
                                 appConfFile.toURL().openStream().close();
-                                yml = true;
-                            } catch (IOException e2) { // 没有application.xml就尝试读application.properties
-                                appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.properties");
+                            } catch (IOException e) { // 没有application.xml就尝试读application.yaml
+                                appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.yml");
+                                try {
+                                    appConfFile.toURL().openStream().close();
+                                    yaml = true;
+                                } catch (IOException e2) { // 没有application.yml就尝试读application.yaml
+                                    appConfFile = RedkaleClassLoader.getConfResourceAsURI(null, "application.yaml");
+                                    try {
+                                        appConfFile.toURL().openStream().close();
+                                        yaml = true;
+                                    } catch (IOException e3) { // 没有application.yaml就尝试读application.properties
+                                        appConfFile =
+                                                RedkaleClassLoader.getConfResourceAsURI(null, "application.properties");
+                                    }
+                                }
                             }
+                            confDir = appConfFile
+                                    .toString()
+                                    .replace("/application.xml", "")
+                                    .replace("/application.yml", "")
+                                    .replace("/application.yaml", "")
+                                    .replace("/application.properties", "");
+                            fromCache = true;
                         }
-                        confDir = appConfFile
-                                .toString()
-                                .replace("/application.xml", "")
-                                .replace("/application.yml", "")
-                                .replace("/application.properties", "");
-                        fromCache = true;
                     }
                 }
             }
@@ -451,8 +525,8 @@ class AppConfig {
         System.setProperty(RESNAME_APP_CONF_DIR, confDir);
         String text = Utility.readThenClose(appConfFile.toURL().openStream());
         AnyValue conf;
-        if (yml) {
-            conf = AnyValue.loadFromYml(text).getAnyValue("redkale");
+        if (yaml) {
+            conf = AnyValue.loadFromYaml(text).getAnyValue("redkale");
         } else if (text.trim().startsWith("<")) {
             conf = AnyValue.loadFromXml(text, (k, v) -> v.replace("${APP_HOME}", home))
                     .getAnyValue("application");

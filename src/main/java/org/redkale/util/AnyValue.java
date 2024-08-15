@@ -222,13 +222,13 @@ public abstract class AnyValue {
     }
 
     /**
-     * yml内容流转换成AnyValue对象
+     * yaml内容流转换成AnyValue对象
      *
      *
      * @param text 文本内容
      * @return AnyValue
      */
-    public static AnyValue loadFromYml(String text) {
+    public static AnyValue loadFromYaml(String text) {
         return new YamlReader(text).read();
     }
 
@@ -360,6 +360,7 @@ public abstract class AnyValue {
                             try {
                                 realIndex = Integer.parseInt(keyOrIndex);
                             } catch (NumberFormatException e) {
+                                // do nothing
                             }
                         }
                         if (realIndex >= 0) { // 数组结构
