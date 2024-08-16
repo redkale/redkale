@@ -66,12 +66,12 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
                 }
             };
 
-    protected final AtomicBoolean pauseWriting = new AtomicBoolean();
+    final AtomicBoolean pauseWriting = new AtomicBoolean();
 
     final ConcurrentLinkedQueue<ClientFuture> pauseRequests = new ConcurrentLinkedQueue<>();
 
     // pauseWriting=true，此字段才会有值; pauseWriting=false，此字段值为null
-    protected ClientFuture currHalfWriteFuture;
+    ClientFuture currHalfWriteFuture;
 
     @Nonnull
     private Client.AddressConnEntry connEntry;

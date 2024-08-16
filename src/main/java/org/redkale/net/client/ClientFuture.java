@@ -19,6 +19,8 @@ import org.redkale.util.Traces;
  */
 public class ClientFuture<R extends ClientRequest, T> extends CompletableFuture<T> implements Runnable {
 
+    public static final ClientFuture NIL = new ClientFuture() {};
+
     @Nonnull
     protected final R request;
 
@@ -26,6 +28,12 @@ public class ClientFuture<R extends ClientRequest, T> extends CompletableFuture<
     protected final ClientConnection conn;
 
     private ScheduledFuture timeout;
+
+    private ClientFuture() {
+        super();
+        this.conn = null;
+        this.request = null;
+    }
 
     ClientFuture(ClientConnection conn, R request) {
         super();
