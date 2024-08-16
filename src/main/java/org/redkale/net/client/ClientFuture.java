@@ -8,6 +8,7 @@ package org.redkale.net.client;
 import java.util.Objects;
 import java.util.concurrent.*;
 import org.redkale.annotation.Nonnull;
+import org.redkale.annotation.Nullable;
 import org.redkale.net.*;
 import org.redkale.util.Traces;
 
@@ -24,7 +25,7 @@ public class ClientFuture<R extends ClientRequest, T> extends CompletableFuture<
     @Nonnull
     protected final R request;
 
-    @Nonnull
+    @Nullable
     protected final ClientConnection conn;
 
     private ScheduledFuture timeout;
@@ -37,7 +38,6 @@ public class ClientFuture<R extends ClientRequest, T> extends CompletableFuture<
 
     ClientFuture(ClientConnection conn, R request) {
         super();
-        Objects.requireNonNull(conn);
         Objects.requireNonNull(request);
         this.conn = conn;
         this.request = request;
@@ -79,7 +79,7 @@ public class ClientFuture<R extends ClientRequest, T> extends CompletableFuture<
 
     private void runTimeout() {
         String traceid = request != null ? request.getTraceid() : null;
-        if (request != null) {
+        if (request != null && conn != null) {
             conn.removeRespFuture(request.getRequestid(), this);
         }
         TimeoutException ex = new TimeoutException("client-request: " + request);
@@ -88,17 +88,26 @@ public class ClientFuture<R extends ClientRequest, T> extends CompletableFuture<
             workThread = request.workThread;
             request.workThread = null;
         }
-        if (workThread == null || workThread.getWorkExecutor() == null) {
+        if (conn != null && (workThread == null || workThread.getWorkExecutor() == null)) {
             workThread = conn.getChannel().getReadIOThread();
         }
-        workThread.runWork(() -> {
+        if (workThread == null) {
             Traces.currentTraceid(traceid);
             if (!isDone()) {
                 completeExceptionally(ex);
             }
-            Traces.removeTraceid();
-        });
-        conn.dispose(ex);
+        } else {
+            workThread.runWork(() -> {
+                Traces.currentTraceid(traceid);
+                if (!isDone()) {
+                    completeExceptionally(ex);
+                }
+                Traces.removeTraceid();
+            });
+        }
+        if (conn != null) {
+            conn.dispose(ex);
+        }
     }
 
     @Override

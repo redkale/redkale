@@ -114,21 +114,21 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
         return writeChannel((Function) null, request);
     }
 
-    protected final CompletableFuture<List<P>> writeChannel(R[] requests) {
-        return writeChannel((Function) null, requests);
+    protected final CompletableFuture<P>[] writeChannel(R[] requests) {
+        return writeChannel0((Function) null, requests);
     }
 
     protected final <T> CompletableFuture<T> writeChannel(Function<P, T> respTransfer, R request) {
-        return writeChannel0(respTransfer, request).thenApply(v -> Utility.isEmpty(v) ? null : v.get(0));
+        return writeChannel0(respTransfer, request)[0];
     }
 
     // respTransfer只会在ClientCodec的读线程里调用
-    protected final <T> CompletableFuture<List<T>> writeChannel(Function<P, T> respTransfer, R... requests) {
+    protected final <T> CompletableFuture<T>[] writeChannel(Function<P, T> respTransfer, R... requests) {
         return writeChannel0(respTransfer, requests);
     }
 
     // respTransfer只会在ClientCodec的读线程里调用
-    protected final <T> CompletableFuture<List<T>> writeChannel0(Function<P, T> respTransfer, R... requests) {
+    protected final <T> CompletableFuture<T>[] writeChannel0(Function<P, T> respTransfer, R... requests) {
         if (client.debug) {
             client.logger.log(
                     Level.FINEST,
@@ -136,11 +136,10 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
                             + Arrays.toString(requests));
         }
         ClientFuture[] respFutures = new ClientFuture[requests.length];
-        int rts = this.client.getReadTimeoutSeconds();
         for (int i = 0; i < respFutures.length; i++) {
             R request = requests[i];
             request.respTransfer = respTransfer;
-            respFutures[i] = createClientFuture(requests[i]);
+            respFutures[i] = client.createClientFuture(this, requests[i]);
         }
         respWaitingCounter.add(respFutures.length); // 放在writeChannelInWriteThread计数会延迟，导致不准确
 
@@ -160,7 +159,7 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
         } finally {
             writeLock.unlock();
         }
-        return Utility.allOfFutures(respFutures);
+        return respFutures;
     }
 
     protected void sendRequestInLocking(ClientFuture... respFutures) {
@@ -257,7 +256,7 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
             return CompletableFuture.failedFuture(
                     new RuntimeException("ClientVirtualRequest must be virtualType = true"));
         }
-        ClientFuture<R, P> respFuture = createClientFuture(request);
+        ClientFuture<R, P> respFuture = client.createClientFuture(this, request);
         writeLock.lock();
         try {
             offerRespFuture(respFuture);
@@ -269,15 +268,6 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
     }
 
     protected void preComplete(P resp, R req, Throwable exc) {}
-
-    protected ClientFuture<R, P> createClientFuture(R request) {
-        ClientFuture respFuture = new ClientFuture(this, request);
-        int rts = this.client.getReadTimeoutSeconds();
-        if (rts > 0 && !request.isCloseType()) {
-            respFuture.setTimeout(client.timeoutScheduler.schedule(respFuture, rts, TimeUnit.SECONDS));
-        }
-        return respFuture;
-    }
 
     @Override // AsyncConnection.beforeCloseListener
     public void accept(AsyncConnection t) {
