@@ -66,12 +66,12 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
                 }
             };
 
-    final AtomicBoolean pauseWriting = new AtomicBoolean();
+    protected final AtomicBoolean pauseWriting = new AtomicBoolean();
 
     final ConcurrentLinkedQueue<ClientFuture> pauseRequests = new ConcurrentLinkedQueue<>();
 
     // pauseWriting=true，此字段才会有值; pauseWriting=false，此字段值为null
-    ClientFuture currHalfWriteFuture;
+    protected ClientFuture currHalfWriteFuture;
 
     @Nonnull
     private Client.AddressConnEntry connEntry;
@@ -151,7 +151,7 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
         return respFuture;
     }
 
-    private void sendRequestInLocking(R request, ClientFuture respFuture) {
+    protected void sendRequestInLocking(R request, ClientFuture respFuture) {
         // 发送请求数据包
         writeArray.clear();
         request.writeTo(this, writeArray);
@@ -209,7 +209,7 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
         return Utility.allOfFutures(respFutures);
     }
 
-    private void sendRequestInLocking(ClientFuture[] respFutures) {
+    protected void sendRequestInLocking(ClientFuture[] respFutures) {
         // 发送请求数据包
         writeArray.clear();
         for (ClientFuture respFuture : respFutures) {
