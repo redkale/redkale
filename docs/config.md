@@ -445,3 +445,19 @@ java.util.logging.FileHandler.append = true
 #指定写进SearchSource的表名，默认值为log-record
 #java.util.logging.SearchHandler.tag = log-${APP_NAME}-%tY%tm%td
 ```
+
+# yaml配置：
+&emsp;&emsp;application和source的配置文件支持yaml格式，需要依赖第三方包， 默认的yaml配置文件名为 application.yml、source.yml。
+```xml
+<dependency>
+    <groupId>org.redkalex</groupId>
+    <artifactId>redkale-plugins</artifactId>
+    <version>2.8.0</version>
+</dependency>
+
+<dependency>
+    <groupId>org.yaml</groupId>
+    <artifactId>snakeyaml</artifactId>
+    <version>2.2</version>
+</dependency>
+```
