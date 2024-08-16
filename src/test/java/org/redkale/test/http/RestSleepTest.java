@@ -54,12 +54,15 @@ public class RestSleepTest {
         OutputStream out = socket.getOutputStream();
         out.write(("GET /test/sleep200  HTTP/1.1\r\n"
                         + "Connection: Keep-Alive\r\n"
+                        + "Content-Length: 0\r\n"
                         + "\r\n"
                         + "GET /test/sleep300  HTTP/1.1\r\n"
                         + "Connection: Keep-Alive\r\n"
+                        + "Content-Length: 0\r\n"
                         + "\r\n"
                         + "GET /test/sleep500  HTTP/1.1\r\n"
                         + "Connection: Keep-Alive\r\n"
+                        + "Content-Length: 0\r\n"
                         + "\r\n")
                 .getBytes());
         InputStream in = socket.getInputStream();

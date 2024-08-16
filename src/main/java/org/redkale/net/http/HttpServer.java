@@ -398,6 +398,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         final List<String[]> defaultAddHeaders = new ArrayList<>();
         final List<String[]> defaultSetHeaders = new ArrayList<>();
         boolean autoOptions = false;
+        boolean lazyHeader = false;
         int datePeriod = 0;
         String plainContentType = null;
         String jsonContentType = null;
@@ -408,10 +409,12 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         AnyValue rpcAuthenticatorConfig = null;
 
         if (config != null) {
-            AnyValue reqs = config.getAnyValue("request");
-            if (reqs != null) {
-                rpcAuthenticatorConfig = reqs.getAnyValue("rpc");
-                AnyValue raddr = reqs.getAnyValue("remoteaddr");
+            lazyHeader = config.getBoolValue("lazy", false); // 兼容旧配置
+            AnyValue reqConf = config.getAnyValue("request");
+            if (reqConf != null) {
+                lazyHeader = reqConf.getBoolValue("lazyHeader", lazyHeader);
+                rpcAuthenticatorConfig = reqConf.getAnyValue("rpc");
+                AnyValue raddr = reqConf.getAnyValue("remoteaddr");
                 remoteAddrHeader = raddr == null ? null : raddr.getValue("value");
                 if (remoteAddrHeader != null) {
                     if (remoteAddrHeader.startsWith("request.headers.")) {
@@ -420,7 +423,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                         remoteAddrHeader = null;
                     }
                 }
-                AnyValue rlocale = reqs.getAnyValue("locale");
+                AnyValue rlocale = reqConf.getAnyValue("locale");
                 String vlocale = rlocale == null ? null : rlocale.getValue("value");
                 if (vlocale != null && !vlocale.isEmpty()) {
                     if (vlocale.startsWith("request.headers.")) {
@@ -436,17 +439,17 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                 }
             }
 
-            AnyValue resps = config.getAnyValue("response");
-            if (resps != null) {
-                AnyValue contenttypes = resps.getAnyValue("content-type");
+            AnyValue respConf = config.getAnyValue("response");
+            if (respConf != null) {
+                AnyValue contenttypes = respConf.getAnyValue("content-type");
                 if (contenttypes == null) {
-                    contenttypes = resps.getAnyValue("contenttype"); // 兼容旧的
+                    contenttypes = respConf.getAnyValue("contenttype"); // 兼容旧的
                 }
                 if (contenttypes != null) {
                     plainContentType = contenttypes.getValue("plain");
                     jsonContentType = contenttypes.getValue("json");
                 }
-                AnyValue[] addHeaders = resps.getAnyValues("addheader");
+                AnyValue[] addHeaders = respConf.getAnyValues("addheader");
                 if (addHeaders.length > 0) {
                     for (AnyValue addHeader : addHeaders) {
                         String val = addHeader.getValue("value");
@@ -471,7 +474,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                         }
                     }
                 }
-                AnyValue[] setHeaders = resps.getAnyValues("setheader");
+                AnyValue[] setHeaders = respConf.getAnyValues("setheader");
                 if (setHeaders.length > 0) {
                     for (AnyValue setHeader : setHeaders) {
                         String val = setHeader.getValue("value");
@@ -496,7 +499,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                         }
                     }
                 }
-                AnyValue defcookieValue = resps.getAnyValue("defcookie");
+                AnyValue defcookieValue = respConf.getAnyValue("defcookie");
                 if (defcookieValue != null) {
                     String domain = defcookieValue.getValue("domain");
                     String path = defcookieValue.getValue("path");
@@ -506,10 +509,10 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
                         defaultCookie.setPath(path);
                     }
                 }
-                AnyValue options = resps.getAnyValue("options");
+                AnyValue options = respConf.getAnyValue("options");
                 autoOptions = options != null && options.getBoolValue("auto", false);
 
-                AnyValue dates = resps.getAnyValue("date");
+                AnyValue dates = respConf.getAnyValue("date");
                 datePeriod = dates == null ? 0 : dates.getIntValue("period", 0);
             }
         }
@@ -549,7 +552,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
             }
         }
         HttpRender httpRender = null;
-        AnyValue renderConfig = null;
+        AnyValue renderConfig;
         { // 设置TemplateEngine
             renderConfig = config.getAnyValue("render");
             if (renderConfig != null) {
@@ -592,6 +595,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
             contextConfig.remoteAddrHeader = addrHeader;
             contextConfig.remoteAddrHeaders = null;
         }
+        contextConfig.lazyHeaders = lazyHeader;
         contextConfig.localHeader = localHeader;
         contextConfig.localParameter = localParameter;
         contextConfig.rpcAuthenticatorConfig = rpcAuthenticatorConfig;

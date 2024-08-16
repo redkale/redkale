@@ -43,14 +43,15 @@ public class HttpContext extends Context {
 
     protected final AnyValue rpcAuthenticatorConfig;
 
-    // 所有Servlet方法都不需要读取http-header且RestBaseServlet不是自定义HttpServlet且不存在HttpFilter、WebSocket的情况下，lazyHeaders=true
-    protected boolean lazyHeaders; // 存在动态改值
+    // 延迟解析header
+    protected final boolean lazyHeaders; // 存在动态改值
 
     // 不带通配符的mapping url的缓存对象
     final Map<ByteArray, String>[] uriPathCaches = new Map[100];
 
     public HttpContext(HttpContextConfig config) {
         super(config);
+        this.lazyHeaders = config.lazyHeaders;
         this.remoteAddrHeader = config.remoteAddrHeader;
         this.remoteAddrHeaders = config.remoteAddrHeaders;
         this.localHeader = config.localHeader;
@@ -232,6 +233,8 @@ public class HttpContext extends Context {
     }
 
     public static class HttpContextConfig extends ContextConfig {
+        // 是否延迟解析http-header
+        public boolean lazyHeaders;
 
         public String remoteAddrHeader;
 

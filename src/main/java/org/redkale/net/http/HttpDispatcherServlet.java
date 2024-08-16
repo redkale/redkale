@@ -48,9 +48,6 @@ public class HttpDispatcherServlet
 
     protected HttpContext context;
 
-    // 所有Servlet方法都不需要读取http-header且不存在HttpFilter的情况下，lazyHeaders=true
-    protected boolean lazyHeaders = true;
-
     private Map<String, BiPredicate<String, String>> forbidURIMaps; // 禁用的URL的正则表达式, 必须与 forbidURIPredicates 保持一致
 
     private BiPredicate<String, String>[] forbidURIPredicates; // 禁用的URL的Predicate, 必须与 forbidURIMaps 保持一致
@@ -259,7 +256,6 @@ public class HttpDispatcherServlet
     public void init(HttpContext context, AnyValue config) {
         super.init(context, config); // 必须要执行
         this.context = context;
-        context.lazyHeaders = lazyHeaders;
         Collection<HttpServlet> servlets = getServlets();
         servlets.forEach(s -> {
             s.preInit(application, context, getServletConf(s));
@@ -381,10 +377,6 @@ public class HttpDispatcherServlet
     @Override
     public void addFilter(Filter<HttpContext, HttpRequest, HttpResponse> filter, AnyValue conf) {
         super.addFilter(filter, conf);
-        this.lazyHeaders = false;
-        if (context != null) {
-            context.lazyHeaders = this.lazyHeaders; // 启动后运行过程中执行addFilter
-        }
     }
 
     /**
@@ -407,12 +399,6 @@ public class HttpDispatcherServlet
                 if (!ws.repair()) {
                     prefix = ""; // 被设置为不自动追加前缀则清空prefix
                 }
-            }
-        }
-        if (this.lazyHeaders && !Rest.isSimpleRestDyn(servlet)) {
-            this.lazyHeaders = false;
-            if (context != null) {
-                context.lazyHeaders = this.lazyHeaders; // 启动后运行过程中执行addServlet
             }
         }
         allMapLock.lock();

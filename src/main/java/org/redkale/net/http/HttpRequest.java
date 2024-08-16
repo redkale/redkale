@@ -123,6 +123,8 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected int chunkedLength = -1;
 
+    protected int chunkedCurrOffset = -1;
+
     protected byte[] chunkedHalfLenBytes;
 
     protected boolean rpc;
@@ -172,11 +174,13 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected String locale;
 
+    private ByteArray array;
+
     private String lastPathString;
 
     private byte[] lastPathBytes;
 
-    private final ByteArray array;
+    private final ByteArray body;
 
     private byte[] headerBytes;
 
@@ -201,9 +205,9 @@ public class HttpRequest extends Request<HttpContext> {
         this(context, new ByteArray());
     }
 
-    protected HttpRequest(HttpContext context, ByteArray array) {
+    protected HttpRequest(HttpContext context, ByteArray body) {
         super(context);
-        this.array = array;
+        this.body = body;
         this.remoteAddrHeader = context.remoteAddrHeader;
         this.remoteAddrHeaders = context.remoteAddrHeaders;
         this.localHeader = context.localHeader;
@@ -214,7 +218,7 @@ public class HttpRequest extends Request<HttpContext> {
     @SuppressWarnings("OverridableMethodCallInConstructor")
     protected HttpRequest(HttpContext context, WebRequest req) {
         super(context);
-        this.array = new ByteArray();
+        this.body = new ByteArray();
         this.remoteAddrHeader = null;
         this.remoteAddrHeaders = null;
         this.localHeader = null;
@@ -230,7 +234,7 @@ public class HttpRequest extends Request<HttpContext> {
             this.rpc = req.rpc;
             this.traceid = req.getTraceid();
             if (req.getBody() != null) {
-                this.array.put(req.getBody());
+                this.body.put(req.getBody());
             }
             if (req.getHeaders() != null) {
                 this.headers.setAll(req.getHeaders());
@@ -261,7 +265,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     public WebRequest createSimpleRequest(String contextPath) {
         WebRequest req = new WebRequest();
-        req.setBody(array.length() == 0 ? null : array.getBytes());
+        req.setBody(body.length() == 0 ? null : body.getBytes());
         if (!getHeaders().isEmpty()) {
             req.setHeaders(headers);
             if (headers.contains(Rest.REST_HEADER_RPC)) { // 外部request不能包含RPC的header信息
@@ -319,7 +323,7 @@ public class HttpRequest extends Request<HttpContext> {
     @Override
     protected int readHeader(final ByteBuffer buf, final Request last) {
         final ByteBuffer buffer = buf;
-        ByteArray bytes = array;
+        ByteArray bytes = body;
         if (this.readState == READ_STATE_ROUTE) {
             int rs = readMethodUriLine(buffer);
             if (rs != 0) {
@@ -350,6 +354,7 @@ public class HttpRequest extends Request<HttpContext> {
                 this.expect = httpLast.expect;
                 this.chunked = httpLast.chunked;
                 this.chunkedLength = httpLast.chunkedLength;
+                this.chunkedCurrOffset = httpLast.chunkedCurrOffset;
                 this.rpc = httpLast.rpc;
                 this.traceid = httpLast.traceid;
                 this.currentUserid = httpLast.currentUserid;
@@ -362,7 +367,7 @@ public class HttpRequest extends Request<HttpContext> {
                 this.headerBytes = httpLast.headerBytes;
                 this.headerParsed = httpLast.headerParsed;
                 this.headers.setAll(httpLast.headers);
-            } else if (context.lazyHeaders && getmethod) { // 非GET必须要读header，会有Content-Length
+            } else if (context.lazyHeaders) { // 非lazy必须要读header，会有Content-Length
                 int rs = loadHeaderBytes(buffer);
                 if (rs != 0) {
                     buffer.clear();
@@ -395,8 +400,7 @@ public class HttpRequest extends Request<HttpContext> {
         }
         if (this.readState == READ_STATE_BODY) {
             if (this.chunked) {
-                // TODO 待实现
-                return -1;
+                return readChunkedBody(buffer);
             }
             if (this.contentLength > 0 && (this.contentType == null || !this.boundary)) {
                 if (this.contentLength > context.getMaxBody()) {
@@ -432,9 +436,18 @@ public class HttpRequest extends Request<HttpContext> {
         return 0;
     }
 
+    // TODO 待实现
+    private int readChunkedBody(final ByteBuffer buf) {
+        if (this.chunkedLength < 0) {
+            int size;
+        }
+        ByteArray bodyBytes = this.body;
+        return -1;
+    }
+
     private int loadHeaderBytes(final ByteBuffer buf) {
         final ByteBuffer buffer = buf;
-        ByteArray bytes = array;
+        ByteArray bytes = body; // body当temp buffer使用
         int remain = buffer.remaining();
         byte b1, b2, b3, b4;
         for (; ; ) {
@@ -507,7 +520,7 @@ public class HttpRequest extends Request<HttpContext> {
         Charset charset = this.context.getCharset();
         int remain = buffer.remaining();
         int size;
-        ByteArray bytes = array;
+        ByteArray bytes = body; // body当temp buffer使用
         // 读method
         if (this.method == null) {
             boolean flag = false;
@@ -954,10 +967,10 @@ public class HttpRequest extends Request<HttpContext> {
         if (headerBytes == null) {
             return;
         }
-        if (array.isEmpty()) {
-            readHeaderLines(ByteBuffer.wrap(headerBytes), array);
-            array.clear();
-        } else { // array存有body数据
+        if (body.isEmpty()) { // body当temp buffer使用
+            readHeaderLines(ByteBuffer.wrap(headerBytes), body);
+            body.clear();
+        } else { // 存有body数据
             readHeaderLines(ByteBuffer.wrap(headerBytes), new ByteArray());
         }
     }
@@ -1090,7 +1103,7 @@ public class HttpRequest extends Request<HttpContext> {
         if (!PIPELINE_SAME_HEADERS || !context.lazyHeaders) {
             return null;
         }
-        HttpRequest req = new HttpRequest(context, this.array);
+        HttpRequest req = new HttpRequest(context, this.body);
         req.headerLength = this.headerLength;
         req.headerBytes = this.headerBytes;
         req.headerParsed = this.headerParsed;
@@ -1143,6 +1156,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.expect = false;
         this.chunked = false;
         this.chunkedLength = -1;
+        this.chunkedCurrOffset = -1;
         this.chunkedHalfLenBytes = null;
         this.rpc = false;
         this.readState = READ_STATE_ROUTE;
@@ -1167,7 +1181,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.annotations = null;
         this.remoteAddr = null;
         this.params.clear();
-        this.array.clear();
+        this.body.clear();
         // 内部
         this.actionEntry = null;
         super.recycle();
@@ -1186,29 +1200,36 @@ public class HttpRequest extends Request<HttpContext> {
             unzipEncoding();
         }
         if (this.getContentType() != null && this.contentType.toLowerCase().contains("x-www-form-urlencoded")) {
-            addParameter(array, true, 0, array.length());
+            addParameter(body, true, 0, body.length());
         }
+    }
+
+    protected ByteArray array() {
+        if (array == null) {
+            array = new ByteArray();
+        }
+        return array;
     }
 
     protected void unzipEncoding() {
         try {
-            if ("gzip".contains(this.contentEncoding)) {
+            if ("gzip".equalsIgnoreCase(this.contentEncoding)) {
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
-                ByteArrayInputStream in = new ByteArrayInputStream(array.content(), 0, array.length());
+                ByteArrayInputStream in = new ByteArrayInputStream(body.content(), 0, body.length());
                 GZIPInputStream ungzip = new GZIPInputStream(in);
                 int n;
-                byte[] buffer = new byte[512];
-                while ((n = ungzip.read(buffer)) >= 0) {
+                byte[] buffer = array().content();
+                while ((n = ungzip.read(buffer)) > 0) {
                     out.write(buffer, 0, n);
                 }
-                array.clear();
-                array.put(out.toByteArray());
-            } else if ("deflate".contains(this.contentEncoding)) {
+                body.clear();
+                body.put(out.toByteArray());
+            } else if ("deflate".equalsIgnoreCase(this.contentEncoding)) {
                 Inflater infl = new Inflater();
-                infl.setInput(array.content(), 0, array.length());
+                infl.setInput(body.content(), 0, body.length());
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 int n;
-                byte[] buffer = new byte[512];
+                byte[] buffer = array().content();
                 while (!infl.finished()) {
                     n = infl.inflate(buffer);
                     if (n == 0) {
@@ -1217,37 +1238,37 @@ public class HttpRequest extends Request<HttpContext> {
                     out.write(buffer, 0, n);
                 }
                 infl.end();
-                array.clear();
-                array.put(out.toByteArray());
+                body.clear();
+                body.put(out.toByteArray());
             }
         } catch (Exception e) {
             // do nothing
         }
     }
 
-    private void addParameter(final ByteArray array, final boolean body, final int offset, final int len) {
+    private void addParameter(final ByteArray bytes, final boolean body, final int offset, final int len) {
         if (len < 1) {
             return;
         }
         Charset charset = this.context.getCharset();
         int limit = offset + len;
-        int keypos = array.indexOf(offset, limit, '=');
-        int valpos = array.indexOf(offset, limit, '&');
+        int keypos = bytes.indexOf(offset, limit, '=');
+        int valpos = bytes.indexOf(offset, limit, '&');
         if (keypos <= 0 || (valpos >= 0 && valpos < keypos)) {
             if (valpos > 0) {
-                addParameter(array, body, valpos + 1, limit - valpos - 1);
+                addParameter(bytes, body, valpos + 1, limit - valpos - 1);
             }
             return;
         }
-        String name = toDecodeString(array, offset, keypos - offset, charset);
+        String name = toDecodeString(bytes, offset, keypos - offset, charset);
         if (body && !name.isEmpty() && name.charAt(0) == '<') {
             return; // 内容可能是xml格式; 如: <?xml version="1.0"
         }
         ++keypos;
-        String value = toDecodeString(array, keypos, (valpos < 0) ? (limit - keypos) : (valpos - keypos), charset);
+        String value = toDecodeString(bytes, keypos, (valpos < 0) ? (limit - keypos) : (valpos - keypos), charset);
         this.params.put(name, value);
         if (valpos >= 0) {
-            addParameter(array, body, valpos + 1, limit - valpos - 1);
+            addParameter(bytes, body, valpos + 1, limit - valpos - 1);
         }
     }
 
@@ -1297,8 +1318,8 @@ public class HttpRequest extends Request<HttpContext> {
         return this;
     }
 
-    protected static String toDecodeString(ByteArray array, int offset, int len, final Charset charset) {
-        byte[] content = array.content();
+    protected static String toDecodeString(ByteArray bytes, int offset, int len, final Charset charset) {
+        byte[] content = bytes.content();
         if (len == 1) {
             return Character.toString(content[offset]);
         } else if (len == 2 && content[offset] >= 0x20 && content[offset] < 0x80) {
@@ -1672,7 +1693,7 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 内容
      */
     public String getBody(final Charset charset) {
-        return charset == null ? array.toString() : array.toString(charset);
+        return charset == null ? body.toString() : body.toString(charset);
     }
 
     /**
@@ -1682,7 +1703,7 @@ public class HttpRequest extends Request<HttpContext> {
      */
     @ConvertDisabled
     public String getBodyUTF8() {
-        return array.toString(StandardCharsets.UTF_8);
+        return body.toString(StandardCharsets.UTF_8);
     }
 
     /**
@@ -1693,7 +1714,7 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 内容
      */
     public <T> T getBodyJson(java.lang.reflect.Type type) {
-        if (isEmpty(array)) {
+        if (isEmpty(body)) {
             return null;
         }
         Convert convert = this.reqConvert;
@@ -1701,9 +1722,9 @@ public class HttpRequest extends Request<HttpContext> {
             convert = context.getJsonConvert();
         }
         if (type == byte[].class) {
-            return (T) array.getBytes();
+            return (T) body.getBytes();
         }
-        return (T) convert.convertFrom(type, array.content());
+        return (T) convert.convertFrom(type, body.content());
     }
 
     /**
@@ -1715,13 +1736,13 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 内容
      */
     public <T> T getBodyJson(Convert convert, java.lang.reflect.Type type) {
-        if (isEmpty(array)) {
+        if (isEmpty(body)) {
             return null;
         }
         if (type == byte[].class) {
-            return (T) array.getBytes();
+            return (T) body.getBytes();
         }
-        return (T) convert.convertFrom(type, array.content());
+        return (T) convert.convertFrom(type, body.content());
     }
 
     /**
@@ -1730,7 +1751,7 @@ public class HttpRequest extends Request<HttpContext> {
      * @return 内容
      */
     public byte[] getBody() {
-        return array.length() == 0 ? null : array.getBytes();
+        return body.length() == 0 ? null : body.getBytes();
     }
 
     /**
@@ -1740,7 +1761,7 @@ public class HttpRequest extends Request<HttpContext> {
      */
     @ConvertDisabled
     protected ByteArray getDirectBody() {
-        return array;
+        return body;
     }
 
     @Override
@@ -1761,8 +1782,8 @@ public class HttpRequest extends Request<HttpContext> {
                 + (this.getHost() != null ? (", \r\n    host: " + this.host) : "")
                 + (this.getContentLength() >= 0 ? (", \r\n    contentLength: " + this.contentLength) : "")
                 + (this.contentEncoding != null ? (", \r\n    contentEncoding: " + this.contentEncoding) : "")
-                + (this.array.length() > 0 ? (", \r\n    bodyLength: " + this.array.length()) : "")
-                + (this.boundary || this.array.isEmpty()
+                + (this.body.length() > 0 ? (", \r\n    bodyLength: " + this.body.length()) : "")
+                + (this.boundary || this.body.isEmpty()
                         ? ""
                         : (", \r\n    bodyContent: "
                                 + (this.respConvertType == null || this.respConvertType == ConvertType.JSON
@@ -1815,10 +1836,10 @@ public class HttpRequest extends Request<HttpContext> {
                 context.getCharset(),
                 this.getContentType(),
                 this.params.map(),
-                new BufferedInputStream(in, Math.max(array.length(), 8192)) {
+                new BufferedInputStream(in, Math.max(body.length(), 8192)) {
                     {
-                        array.copyTo(this.buf);
-                        this.count = array.length();
+                        body.copyTo(this.buf);
+                        this.count = body.length();
                     }
                 },
                 null);
