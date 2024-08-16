@@ -865,6 +865,13 @@ public final class Utility {
     }
 
     public static <T> CompletableFuture<List<T>> allOfFutures(CompletableFuture<T>[] futures) {
+        if (futures.length == 1) {
+            return futures[0].thenApply(v -> {
+                List<T> rs = new ArrayList<>(1);
+                rs.add(v);
+                return rs;
+            });
+        }
         return CompletableFuture.allOf(futures).thenApply(v -> {
             int size = futures.length;
             List<T> rs = new ArrayList<>(size);
@@ -907,6 +914,14 @@ public final class Utility {
 
     public static <T> CompletableFuture<List<T>> allOfFutures(
             CompletableFuture<T>[] futures, BiConsumer<Integer, T> consumer) {
+        if (futures.length == 1) {
+            return futures[0].thenApply(v -> {
+                List<T> rs = new ArrayList<>(1);
+                consumer.accept(0, v);
+                rs.add(v);
+                return rs;
+            });
+        }
         return CompletableFuture.allOf(futures).thenApply(v -> {
             int size = futures.length;
             List<T> rs = new ArrayList<>(size);

@@ -111,70 +111,24 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
     protected abstract ClientCodec createCodec();
 
     protected final CompletableFuture<P> writeChannel(R request) {
-        return writeChannel(request, null);
+        return writeChannel((Function) null, request);
     }
 
     protected final CompletableFuture<List<P>> writeChannel(R[] requests) {
-        return writeChannel(requests, null);
+        return writeChannel((Function) null, requests);
+    }
+
+    protected final <T> CompletableFuture<T> writeChannel(Function<P, T> respTransfer, R request) {
+        return writeChannel0(respTransfer, request).thenApply(v -> Utility.isEmpty(v) ? null : v.get(0));
     }
 
     // respTransfer只会在ClientCodec的读线程里调用
-    protected final <T> CompletableFuture<T> writeChannel(R request, Function<P, T> respTransfer) {
-        request.respTransfer = respTransfer;
-        ClientFuture respFuture = createClientFuture(request);
-        if (client.debug) {
-            client.logger.log(
-                    Level.FINEST,
-                    Times.nowMillis() + ": " + Thread.currentThread().getName() + ": " + this + ", sendRequest: "
-                            + request + ", respFuture: " + respFuture);
-        }
-        respWaitingCounter.increment(); // 放在writeChannelInWriteThread计数会延迟，导致不准确
-        writeLock.lock();
-        try {
-            offerRespFuture(respFuture);
-            if (pauseWriting.get()) {
-                pauseRequests.add(respFuture);
-            } else {
-                sendRequestInLocking(request, respFuture);
-            }
-        } finally {
-            writeLock.unlock();
-        }
-        if (client.debug) {
-            return respFuture.whenComplete((v, t) -> {
-                client.logger.log(
-                        Level.FINEST,
-                        Times.nowMillis() + ": " + Thread.currentThread().getName() + ": " + this + ", respResult: "
-                                + (t != null ? t : v));
-            });
-        }
-        return respFuture;
-    }
-
-    protected void sendRequestInLocking(R request, ClientFuture respFuture) {
-        // 发送请求数据包
-        writeArray.clear();
-        request.writeTo(this, writeArray);
-        if (request.isCompleted()) {
-            doneRequestCounter.increment();
-        } else { // 还剩半包没发送完
-            pauseWriting.set(true);
-            currHalfWriteFuture = respFuture;
-        }
-        if (writeArray.length() > 0) {
-            if (writeBuffer.capacity() >= writeArray.length()) {
-                writeBuffer.clear();
-                writeBuffer.put(writeArray.content(), 0, writeArray.length());
-                writeBuffer.flip();
-                channel.write(writeBuffer, this, writeHandler);
-            } else {
-                channel.write(writeArray, this, writeHandler);
-            }
-        }
+    protected final <T> CompletableFuture<List<T>> writeChannel(Function<P, T> respTransfer, R... requests) {
+        return writeChannel0(respTransfer, requests);
     }
 
     // respTransfer只会在ClientCodec的读线程里调用
-    protected final <T> CompletableFuture<List<T>> writeChannel(R[] requests, Function<P, T> respTransfer) {
+    protected final <T> CompletableFuture<List<T>> writeChannel0(Function<P, T> respTransfer, R... requests) {
         if (client.debug) {
             client.logger.log(
                     Level.FINEST,
@@ -209,7 +163,11 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
         return Utility.allOfFutures(respFutures);
     }
 
-    protected void sendRequestInLocking(ClientFuture[] respFutures) {
+    protected void sendRequestInLocking(ClientFuture... respFutures) {
+        sendRequestToChannel(respFutures);
+    }
+
+    protected final void sendRequestToChannel(ClientFuture... respFutures) {
         // 发送请求数据包
         writeArray.clear();
         for (ClientFuture respFuture : respFutures) {
@@ -280,13 +238,14 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
                 this.currHalfWriteFuture = null;
                 if (halfRequestExc == null) {
                     offerFirstRespFuture(respFuture);
-                    sendRequestInLocking(request, respFuture);
+                    // sendRequestInLocking(request, respFuture);
+                    sendRequestToChannel(respFuture);
                 } else {
                     codec.responseComplete(true, respFuture, null, halfRequestExc);
                 }
             }
             while (!pauseWriting.get() && (respFuture = pauseRequests.poll()) != null) {
-                sendRequestInLocking((R) respFuture.getRequest(), respFuture);
+                sendRequestToChannel(respFuture);
             }
         } finally {
             writeLock.unlock();
@@ -357,7 +316,7 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
     }
 
     // 只会在WriteIOThread中调用, 必须在writeLock内执行
-    void offerFirstRespFuture(ClientFuture<R, P> respFuture) {
+    protected void offerFirstRespFuture(ClientFuture<R, P> respFuture) {
         Serializable requestid = respFuture.request.getRequestid();
         if (requestid == null) {
             respFutureQueue.offerFirst(respFuture);
@@ -367,7 +326,7 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
     }
 
     // 必须在writeLock内执行
-    void offerRespFuture(ClientFuture<R, P> respFuture) {
+    protected void offerRespFuture(ClientFuture<R, P> respFuture) {
         Serializable requestid = respFuture.request.getRequestid();
         if (requestid == null) {
             respFutureQueue.offer(respFuture);
@@ -377,7 +336,7 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
     }
 
     // 只会被Timeout在ReadIOThread中调用
-    void removeRespFuture(Serializable requestid, ClientFuture<R, P> respFuture) {
+    protected void removeRespFuture(Serializable requestid, ClientFuture<R, P> respFuture) {
         if (requestid == null) {
             respFutureQueue.remove(respFuture);
         } else {

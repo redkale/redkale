@@ -257,66 +257,62 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         }
     }
 
-    public final CompletableFuture<P> sendAsync(R request) {
-        return sendAsync(getAddress(request), request, (Function) null);
+    protected <T> CompletableFuture<T> writeChannel(ClientConnection conn, Function<P, T> respTransfer, R request) {
+        return conn.writeChannel(respTransfer, request);
     }
 
-    public final <T> CompletableFuture<T> sendAsync(R request, Function<P, T> respTransfer) {
-        return sendAsync(getAddress(request), request, respTransfer);
+    public final CompletableFuture<P> sendAsync(R request) {
+        return sendAsync(getAddress(request), (Function) null, request);
+    }
+
+    public final CompletableFuture<List<P>> sendAsync(R... requests) {
+        return sendAsync(getAddress(requests[0]), (Function) null, requests);
+    }
+
+    public final <T> CompletableFuture<T> sendAsync(Function<P, T> respTransfer, R request) {
+        return sendAsync(getAddress(request), respTransfer, request);
+    }
+
+    public final <T> CompletableFuture<List<T>> sendAsync(Function<P, T> respTransfer, R... requests) {
+        return sendAsync(getAddress(requests[0]), respTransfer, requests);
     }
 
     public final CompletableFuture<P> sendAsync(SocketAddress addr, R request) {
-        return sendAsync(addr, request, (Function) null);
+        return sendAsync(addr, (Function) null, request);
     }
 
-    public final <T> CompletableFuture<T> sendAsync(SocketAddress addr, R request, Function<P, T> respTransfer) {
+    public final CompletableFuture<List<P>> sendAsync(SocketAddress addr, R... requests) {
+        return sendAsync(addr, (Function) null, requests);
+    }
+
+    public final <T> CompletableFuture<T> sendAsync(SocketAddress addr, Function<P, T> respTransfer, R request) {
         request.traceid = Traces.computeIfAbsent(request.traceid, Traces.currentTraceid());
         request.computeWorkThreadIfAbsent();
-        return connect(request.workThread, addr).thenCompose(conn -> writeChannel(conn, request, respTransfer));
+        return connect(request.workThread, addr).thenCompose(conn -> writeChannel(conn, respTransfer, request));
+    }
+
+    public final <T> CompletableFuture<List<T>> sendAsync(
+            SocketAddress addr, Function<P, T> respTransfer, R... requests) {
+        String traceid = Traces.computeIfAbsent(requests[0].traceid, Traces.currentTraceid());
+        for (R request : requests) {
+            request.traceid = traceid;
+            request.computeWorkThreadIfAbsent();
+        }
+        return connect(requests[0].workThread, addr).thenCompose(conn -> writeChannel(conn, respTransfer, requests));
     }
 
     protected CompletableFuture<P> writeChannel(ClientConnection conn, R request) {
         return conn.writeChannel(request);
     }
 
-    protected <T> CompletableFuture<T> writeChannel(ClientConnection conn, R request, Function<P, T> respTransfer) {
-        return conn.writeChannel(request, respTransfer);
-    }
-
-    public final CompletableFuture<List<P>> sendAsync(R[] requests) {
-        return sendAsync(getAddress(requests[0]), requests, (Function) null);
-    }
-
-    public final <T> CompletableFuture<List<T>> sendAsync(R[] requests, Function<P, T> respTransfer) {
-        return sendAsync(getAddress(requests[0]), requests, respTransfer);
-    }
-
-    public final CompletableFuture<List<P>> sendAsync(SocketAddress addr, R[] requests) {
-        return sendAsync(addr, requests, (Function) null);
-    }
-
-    public final <T> CompletableFuture<List<T>> sendAsync(
-            SocketAddress addr, R[] requests, Function<P, T> respTransfer) {
-        String traceid = Traces.computeIfAbsent(requests[0].traceid, Traces.currentTraceid());
-        for (R request : requests) {
-            request.traceid = traceid;
-            request.computeWorkThreadIfAbsent();
-        }
-        return connect(requests[0].workThread, addr).thenCompose(conn -> writeChannel(conn, requests, respTransfer));
-    }
-
-    protected CompletableFuture<List<P>> writeChannelBatch(ClientConnection conn, R... requests) {
+    protected CompletableFuture<List<P>> writeChannel(ClientConnection conn, R... requests) {
         requests[0].traceid = Traces.computeIfAbsent(requests[0].traceid, Traces.currentTraceid());
         return conn.writeChannel(requests);
     }
 
-    protected CompletableFuture<List<P>> writeChannel(ClientConnection conn, R[] requests) {
-        return conn.writeChannel(requests);
-    }
-
     protected <T> CompletableFuture<List<T>> writeChannel(
-            ClientConnection conn, R[] requests, Function<P, T> respTransfer) {
-        return conn.writeChannel(requests, respTransfer);
+            ClientConnection conn, Function<P, T> respTransfer, R[] requests) {
+        return conn.writeChannel(respTransfer, requests);
     }
 
     // 根据请求获取地址

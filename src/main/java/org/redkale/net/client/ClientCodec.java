@@ -125,12 +125,11 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
         final WorkThread workThread = request.workThread == null ? readThread : request.workThread;
         try {
             if (!halfCompleted && !request.isCompleted()) {
+                connection.sendHalfWriteInReadThread(request, exc);
                 if (exc == null) {
-                    connection.sendHalfWriteInReadThread(request, exc);
                     // request没有发送完，respFuture需要再次接收
                     return;
                 } else {
-                    connection.sendHalfWriteInReadThread(request, exc);
                     // 异常了需要清掉半包
                 }
             }
