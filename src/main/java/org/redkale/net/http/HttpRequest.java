@@ -120,6 +120,8 @@ public class HttpRequest extends Request<HttpContext> {
 
     // @since 2.8.0
     protected boolean chunked = false;
+    // 是否已读\r
+    protected boolean chunkedCR = false;
 
     protected int chunkedLength = -1;
 
@@ -174,6 +176,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected String locale;
 
+    // 主要给chunked和unzip用的
     private ByteArray array;
 
     private String lastPathString;
@@ -367,7 +370,7 @@ public class HttpRequest extends Request<HttpContext> {
                 this.headerBytes = httpLast.headerBytes;
                 this.headerParsed = httpLast.headerParsed;
                 this.headers.setAll(httpLast.headers);
-            } else if (context.lazyHeaders) { // 非lazy必须要读header，会有Content-Length
+            } else if (context.lazyHeaders && getmethod) { // 非GET必须要读header，会有Content-Length
                 int rs = loadHeaderBytes(buffer);
                 if (rs != 0) {
                     buffer.clear();
@@ -418,11 +421,6 @@ public class HttpRequest extends Request<HttpContext> {
                 }
                 return lr > 0 ? lr : 0;
             }
-            // keep-alive=true:  Content-Length和chunk必然是二选一。
-            // keep-alive=false: Content-Length可有可无.
-            if (keepAlive && this.contentLength < 0) {
-                return -1;
-            }
             // 文件上传、HTTP1.0或Connection:close
             if (buffer.hasRemaining() && (this.boundary || !this.keepAlive)) {
                 bytes.put(buffer, buffer.remaining());
@@ -430,6 +428,10 @@ public class HttpRequest extends Request<HttpContext> {
             this.readState = READ_STATE_END;
             if (bytes.isEmpty()) {
                 this.bodyParsed = true; // no body data
+            } else if (!getmethod && this.contentLength < 0 && keepAlive) {
+                // keep-alive=true:  Content-Length和chunk必然是二选一。
+                // keep-alive=false: Content-Length可有可无.
+                return -1;
             }
         }
         // 暂不考虑是keep-alive且存在body却没有指定Content-Length的情况
@@ -438,11 +440,123 @@ public class HttpRequest extends Request<HttpContext> {
 
     // TODO 待实现
     private int readChunkedBody(final ByteBuffer buf) {
-        if (this.chunkedLength < 0) {
-            int size;
+        final ByteBuffer buffer = buf;
+        int remain = buffer.remaining();
+        if (this.chunkedLength < 0) { // 需要读取length
+            ByteArray input = array();
+            input.clear();
+            if (this.chunkedHalfLenBytes != null) {
+                input.put(this.chunkedHalfLenBytes);
+                this.chunkedHalfLenBytes = null;
+            }
+            for (; ; ) {
+                if (remain-- < 1) {
+                    buffer.clear();
+                    if (input.length() > 0) {
+                        this.chunkedHalfLenBytes = input.getBytes();
+                    }
+                    return 1;
+                }
+                byte b = buffer.get();
+                if (b == '\n') {
+                    break;
+                }
+                input.put(b);
+            }
+            this.chunkedLength = parseHexLength(input);
+            this.chunkedCurrOffset = 0;
+            this.chunkedCR = false;
         }
-        ByteArray bodyBytes = this.body;
-        return -1;
+        if (this.chunkedLength == 0) {
+            if (remain < 1) {
+                buffer.clear();
+                return 1;
+            }
+            if (!this.chunkedCR) { // 读\r
+                remain--;
+                if (buffer.get() != '\r') {
+                    throw new RedkaleException("invalid chunk end");
+                }
+                this.chunkedCR = true;
+                if (remain < 1) {
+                    buffer.clear();
+                    return 1;
+                }
+            }
+            // 读\n
+            remain--;
+            if (buffer.get() != '\n') {
+                throw new RedkaleException("invalid chunk end");
+            }
+            this.readState = READ_STATE_END;
+            if (this.body.isEmpty()) {
+                this.bodyParsed = true; // no body data
+            }
+            return 0;
+        } else {
+            ByteArray bodyBytes = this.body;
+            if (this.chunkedCurrOffset < this.chunkedLength) {
+                for (; ; ) {
+                    if (remain-- < 1) {
+                        buffer.clear();
+                        return 1;
+                    }
+                    byte b = buffer.get();
+                    bodyBytes.put(b);
+                    this.chunkedCurrOffset++;
+                    if (this.chunkedCurrOffset == this.chunkedLength) {
+                        this.chunkedCR = false;
+                        break;
+                    }
+                }
+            }
+            if (remain < 1) {
+                buffer.clear();
+                return 1;
+            }
+            // 读\r
+            if (!this.chunkedCR) {
+                remain--;
+                if (buffer.get() != '\r') {
+                    throw new RedkaleException("invalid chunk end");
+                }
+                this.chunkedCR = true;
+                if (remain < 1) {
+                    buffer.clear();
+                    return 1;
+                }
+            }
+            // 读\n
+            remain--;
+            if (buffer.get() != '\n') {
+                throw new RedkaleException("invalid chunk end");
+            }
+            this.chunkedLength = -1;
+            // 继续读下一个chunk
+            return readChunkedBody(buffer);
+        }
+    }
+
+    private static int parseHexLength(ByteArray input) {
+        int count = input.length();
+        int len = 0;
+        for (int i = 0; i < count; i++) {
+            byte c = input.get(i);
+            int val = 0;
+            if (c >= '0' && c <= '9') {
+                val = c - '0';
+            } else if (c >= 'a' && c <= 'f') {
+                val = c - 'a' + 10;
+            } else if (c >= 'A' && c <= 'F') {
+                val = c - 'A' + 10;
+            } else if (c == '\r' || c == ';') { // ;后面是注释内容
+                break;
+            } else {
+                throw new RedkaleException("invalid chunk length");
+            }
+            len = len * 16 + val;
+        }
+        return len;
     }
 
     private int loadHeaderBytes(final ByteBuffer buf) {
@@ -1155,6 +1269,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.maybews = false;
         this.expect = false;
         this.chunked = false;
+        this.chunkedCR = false;
         this.chunkedLength = -1;
         this.chunkedCurrOffset = -1;
         this.chunkedHalfLenBytes = null;
@@ -1242,7 +1357,7 @@ public class HttpRequest extends Request<HttpContext> {
                 body.put(out.toByteArray());
             }
         } catch (Exception e) {
-            // do nothing
+            throw new RedkaleException("invalid encoding content");
         }
     }
 

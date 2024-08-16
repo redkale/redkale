@@ -63,6 +63,18 @@ public class RestSleepTest {
                         + "GET /test/sleep500  HTTP/1.1\r\n"
                         + "Connection: Keep-Alive\r\n"
                         + "Content-Length: 0\r\n"
+                        + "\r\n"
+                        + "GET /test/sleepName  HTTP/1.1\r\n"
+                        + "Connection: Keep-Alive\r\n"
+                        + "Transfer-Encoding: chunked\r\n"
+                        + "\r\n"
+                        + "4\r\n"
+                        + "this\r\n"
+                        + "6\r\n"
+                        + " is a \r\n"
+                        + "5\r\n"
+                        + "name!\r\n"
+                        + "0\r\n"
                         + "\r\n")
                 .getBytes());
         InputStream in = socket.getInputStream();

@@ -5,6 +5,7 @@
  */
 package org.redkale.test.http;
 
+import org.redkale.net.http.RestBody;
 import org.redkale.net.http.RestService;
 import org.redkale.service.AbstractService;
 import org.redkale.util.Utility;
@@ -32,5 +33,10 @@ public class RestSleepService extends AbstractService {
     public String sleep500() {
         Utility.sleep(500);
         return "ok500";
+    }
+
+    public String sleepName(@RestBody String name) {
+        System.out.println("获取到的名字: " + name);
+        return "sleep: " + name;
     }
 }
