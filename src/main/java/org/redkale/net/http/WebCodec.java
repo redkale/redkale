@@ -3,16 +3,25 @@
  */
 package org.redkale.net.http;
 
-import static org.redkale.net.http.HttpRequest.*;
-
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 import org.redkale.net.client.ClientCodec;
+import static org.redkale.net.http.HttpRequest.*;
 import org.redkale.util.ByteArray;
 
-/** @author zhangjx */
+/**
+ * 详情见: https://redkale.org
+ *
+ * @see org.redkale.net.http.WebClient
+ * @see org.redkale.net.http.WebConnection
+ * @see org.redkale.net.http.WebRequest
+ * @see org.redkale.net.http.WebResult
+ *
+ * @author zhangjx
+ * @since 2.8.0
+ */
 class WebCodec extends ClientCodec<WebRequest, WebResult> {
 
     protected static final Logger logger = Logger.getLogger(WebCodec.class.getSimpleName());

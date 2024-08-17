@@ -10,6 +10,10 @@ import org.redkale.net.client.ClientResult;
 /**
  * 详情见: https://redkale.org
  *
+ * @see org.redkale.net.http.WebClient
+ * @see org.redkale.net.http.WebConnection
+ * @see org.redkale.net.http.WebRequest
+ *
  * @author zhangjx
  * @param <T> T
  * @since 2.8.0

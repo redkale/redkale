@@ -5,9 +5,6 @@
  */
 package org.redkale.net.http;
 
-import static org.redkale.net.http.WebClient.*;
-import static org.redkale.util.Utility.isNotEmpty;
-
 import java.io.Serializable;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -19,16 +16,22 @@ import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.client.ClientConnection;
 import org.redkale.net.client.ClientRequest;
+import static org.redkale.net.http.WebClient.*;
 import org.redkale.util.ByteArray;
 import org.redkale.util.Copier;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Traces;
 import org.redkale.util.Utility;
+import static org.redkale.util.Utility.isNotEmpty;
 
 /**
  * HttpRequest的缩减版, 只提供部分字段
  *
  * <p>详情见: https://redkale.org
+ *
+ * @see org.redkale.net.http.WebClient
+ * @see org.redkale.net.http.WebConnection
+ * @see org.redkale.net.http.WebResult
  *
  * @author zhangjx
  * @since 2.1.0
