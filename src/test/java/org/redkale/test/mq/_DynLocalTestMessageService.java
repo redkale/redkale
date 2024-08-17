@@ -6,8 +6,8 @@ package org.redkale.test.mq;
 
 import org.redkale.annotation.AutoLoad;
 import org.redkale.convert.ConvertType;
-import org.redkale.mq.MessageConext;
 import org.redkale.mq.MessageConsumer;
+import org.redkale.mq.MessageEvent;
 import org.redkale.mq.ResourceConsumer;
 
 @AutoLoad(false)
@@ -31,8 +31,8 @@ public class _DynLocalTestMessageService extends TestMessageService {
             this.service = service;
         }
 
-        public void onMessage(MessageConext context, TestBean message) {
-            this.service.runMessage4(message);
+        public void onMessage(MessageEvent<TestBean>[] events) {
+            this.service.runMessage4(events);
         }
     }
 
@@ -50,8 +50,8 @@ public class _DynLocalTestMessageService extends TestMessageService {
             this.service = service;
         }
 
-        public void onMessage(MessageConext context, TestBean message) {
-            this.service.runMessage3(message);
+        public void onMessage(MessageEvent<TestBean>[] events) {
+            this.service.runMessage3(events);
         }
     }
 
@@ -69,8 +69,8 @@ public class _DynLocalTestMessageService extends TestMessageService {
             this.service = service;
         }
 
-        public void onMessage(MessageConext context, TestBean message) {
-            this.service.runMessage2(context, message);
+        public void onMessage(MessageEvent<TestBean>[] events) {
+            this.service.runMessage2(events);
         }
     }
 }

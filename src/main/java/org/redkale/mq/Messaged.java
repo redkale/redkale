@@ -15,25 +15,25 @@ import org.redkale.service.LoadMode;
  * MQ资源注解, 只能标记在Service类方法上, 方法会被框架动态生成{@link org.redkale.mq.MessageConsumer}对象供内部调用  <br>
  * 1、方法必须是protected/public   <br>
  * 2、方法不能是final/static  <br>
- * 3、方法的参数只能是1个或者2个， 1个参数视为Message数据类型，2个参数则另一个必须是{@link org.redkale.mq.MessageConext} <br>
+ * 3、方法的参数只能是1个且为MessageEvent[] <br>
  *
  * <blockquote>
  * <pre>
  * public class MyMessageService extends AbstractService {
  *
  *    &#64;Messaged(mq="defaultmq", topics={"test-topic"})
- *    protected void onMessage(Record msg) {
- *        //打印msg
+ *    protected void onMessage(MessageEvent&lt;Record&gt;[] events) {
+ *        //打印events
  *    }
  *
  *    &#64;Messaged(topics={"test-topic2"})
- *    protected void onMessage2(MessageConext context, Record msg) {
- *        //打印msg
+ *    protected void onMessage2(MessageEvent&lt;Record&gt;[] events) {
+ *        //打印events
  *    }
  *
  *    &#64;Messaged(topics={"test-topic3"})
- *    public void onMessage3(Record msg, MessageConext context) {
- *        //打印msg
+ *    public void onMessage3(MessageEvent&lt;Record&gt;[] events) {
+ *        //打印events
  *    }
  * }
  * </pre>
@@ -42,7 +42,7 @@ import org.redkale.service.LoadMode;
  * <p>详情见: https://redkale.org
  *
  * @see org.redkale.mq.ResourceConsumer
- * @see org.redkale.mq.MessageConext
+ * @see org.redkale.mq.MessageEvent
  * @author zhangjx
  * @since 2.8.0
  */

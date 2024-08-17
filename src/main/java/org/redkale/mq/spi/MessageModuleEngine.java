@@ -27,13 +27,15 @@ import org.redkale.boot.Application;
 import org.redkale.boot.ClassFilter;
 import org.redkale.boot.ModuleEngine;
 import org.redkale.boot.NodeServer;
+import org.redkale.convert.Convert;
+import org.redkale.convert.ConvertFactory;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.inject.ResourceAnnotationLoader;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
-import org.redkale.mq.MessageConext;
 import org.redkale.mq.MessageConsumer;
+import org.redkale.mq.MessageEvent;
 import org.redkale.mq.MessageManager;
 import org.redkale.mq.MessageProducer;
 import org.redkale.mq.Messaged;
@@ -47,7 +49,6 @@ import org.redkale.util.AnyValueWriter;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleClassLoader.DynBytesClassLoader;
 import org.redkale.util.RedkaleException;
-import org.redkale.util.TypeToken;
 import org.redkale.util.Utility;
 
 /** @author zhangjx */
@@ -430,37 +431,19 @@ public class MessageModuleEngine extends ModuleEngine {
                 throw new RedkaleException("@" + Messaged.class.getSimpleName() + " must on public method in @"
                         + Component.class.getSimpleName() + " class, but on " + method);
             }
-            int paramCount = method.getParameterCount();
-            if (paramCount != 1 && paramCount != 2) {
+            if (method.getParameterCount() != 1 || method.getParameterTypes()[0] != MessageEvent[].class) {
                 throw new RedkaleException("@" + Messaged.class.getSimpleName()
-                        + " must on one or two parameter method, but on " + method);
+                        + " must on one parameter(type: MessageEvent[]) method, but on " + method);
             }
-            int paramKind = 1; // 1:单个MessageType;  2: MessageConext & MessageType; 3: MessageType & MessageConext;
-            Type messageType;
-            Type[] paramTypes = method.getGenericParameterTypes();
-            if (paramCount == 1) {
-                messageType = paramTypes[0];
-                paramKind = 1;
-            } else {
-                if (paramTypes[0] == MessageConext.class) {
-                    messageType = paramTypes[1];
-                    paramKind = 2;
-                } else if (paramTypes[1] == MessageConext.class) {
-                    messageType = paramTypes[0];
-                    paramKind = 3;
-                } else {
-                    throw new RedkaleException(
-                            "@" + Messaged.class.getSimpleName() + " on two-parameter method must contains "
-                                    + MessageConext.class.getSimpleName() + " parameter type, but on " + method);
-                }
-            }
+
+            Type messageType = MessageAsmMethodBoost.getMethodMessageType(method);
+            Convert convert = ConvertFactory.findConvert(messaged.convertType());
+            convert.getFactory().loadDecoder(messageType);
             if (boost == null) {
                 boost = new MessageAsmMethodBoost(false, service.getClass(), this);
                 String newDynName = "org/redkaledyn/service/local/_DynMessageService__"
                         + service.getClass().getName().replace('.', '_').replace('$', '_');
-                Class msgType = TypeToken.typeToClass(messageType);
-                boost.createInnerConsumer(
-                        null, service.getClass(), method, paramKind, msgType, messaged, newDynName, null);
+                boost.createInnerConsumer(null, service.getClass(), method, messageType, messaged, newDynName, null);
             }
         }
         if (boost != null && Utility.isNotEmpty(boost.consumerBytes)) {

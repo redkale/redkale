@@ -24,8 +24,8 @@ import org.redkale.convert.ConvertFactory;
 import org.redkale.convert.ConvertType;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.inject.ResourceEvent;
-import org.redkale.mq.MessageConext;
 import org.redkale.mq.MessageConsumer;
+import org.redkale.mq.MessageEvent;
 import org.redkale.mq.MessageManager;
 import org.redkale.mq.MessageProducer;
 import org.redkale.mq.ResourceConsumer;
@@ -225,10 +225,6 @@ public abstract class MessageAgent implements MessageManager {
         if (this.workExecutor != application.getWorkExecutor()) {
             this.workExecutor.shutdown();
         }
-    }
-
-    public MessageConext createMessageConext(String topic, Integer partition) {
-        return new MessageConext(topic, partition);
     }
 
     public MessageProducer loadMessageProducer(ResourceProducer ann) {
@@ -548,17 +544,21 @@ public abstract class MessageAgent implements MessageManager {
             consumer.init(config);
         }
 
-        public Future onMessage(MessageConext context, String traceid, byte[] message) {
+        public Future onMessage(List<MessageEvent<byte[]>> events) {
             Convert c = this.convert;
             MessageConsumer m = this.consumer;
             return messageAgent.submit(() -> {
-                Traces.computeIfAbsent(traceid);
-                T msg = null;
+                if (events.size() == 1) {
+                    Traces.computeIfAbsent(events.get(0).getTraceid());
+                }
                 try {
-                    msg = (T) c.convertFrom(messageType, message);
-                    m.onMessage(context, msg);
+                    for (MessageEvent event : events) {
+                        event.setMessage((T) c.convertFrom(messageType, (byte[]) event.getMessage()));
+                    }
+                    m.onMessage(events.toArray(new MessageEvent[events.size()]));
                 } catch (Throwable t) {
-                    messageAgent.getLogger().log(Level.SEVERE, "MessageConsumer.onMessage error, message: " + msg, t);
+                    String msg = JsonConvert.root().convertTo(events);
+                    messageAgent.getLogger().log(Level.SEVERE, "MessageConsumer.onMessage error, events: " + msg, t);
                 }
                 Traces.removeTraceid();
             });

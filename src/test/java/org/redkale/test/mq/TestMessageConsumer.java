@@ -4,8 +4,8 @@
 
 package org.redkale.test.mq;
 
-import org.redkale.mq.MessageConext;
 import org.redkale.mq.MessageConsumer;
+import org.redkale.mq.MessageEvent;
 import org.redkale.mq.ResourceConsumer;
 import org.redkale.util.AnyValue;
 
@@ -22,8 +22,10 @@ public class TestMessageConsumer implements MessageConsumer<TestBean> {
     }
 
     @Override
-    public void onMessage(MessageConext context, TestBean message) {
-        System.out.println("TestMessageConsumer消费消息, context: " + context + ", message: " + message);
+    public void onMessage(MessageEvent<TestBean>[] events) {
+        for (MessageEvent<TestBean> event : events) {
+            System.out.println("TestMessageConsumer消费消息, message: " + event.getMessage());
+        }
     }
 
     @Override

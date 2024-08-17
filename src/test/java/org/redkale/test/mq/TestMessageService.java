@@ -4,7 +4,7 @@
 
 package org.redkale.test.mq;
 
-import org.redkale.mq.MessageConext;
+import org.redkale.mq.MessageEvent;
 import org.redkale.mq.MessageProducer;
 import org.redkale.mq.Messaged;
 import org.redkale.mq.ResourceProducer;
@@ -37,18 +37,24 @@ public class TestMessageService extends AbstractService {
     }
 
     @Messaged(mq = "mymq", topics = "test_bean_topic", group = "group_2")
-    protected void runMessage2(MessageConext context, TestBean message) {
-        System.out.println("TestMessageService 消费消息2, context: " + context + ", message: " + message);
+    protected void runMessage2(MessageEvent<TestBean>[] events) {
+        for (MessageEvent<TestBean> event : events) {
+            System.out.println("TestMessageService 消费消息2,  message: " + event.getMessage());
+        }
     }
 
     @Messaged(mq = "mymq", topics = "test_bean_topic", group = "group_3")
-    protected void runMessage3(TestBean message) {
-        System.out.println("TestMessageService 消费消息3,  message: " + message);
+    protected void runMessage3(MessageEvent<TestBean>[] events) {
+        for (MessageEvent<TestBean> event : events) {
+            System.out.println("TestMessageService 消费消息3,  message: " + event.getMessage());
+        }
     }
 
     @Messaged(mq = "mymq", topics = "test_bean_topic", group = "group_4")
-    protected int runMessage4(TestBean message) {
-        System.out.println("TestMessageService 消费消息4,  message: " + message);
+    protected int runMessage4(MessageEvent<TestBean>[] events) {
+        for (MessageEvent<TestBean> event : events) {
+            System.out.println("TestMessageService 消费消息4,  message: " + event.getMessage());
+        }
         return 0;
     }
 }

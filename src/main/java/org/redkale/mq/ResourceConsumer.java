@@ -23,8 +23,10 @@ import org.redkale.convert.ConvertType;
  *     }
  *
  *     &#64;Override
- *     public void onMessage(MessageConext context, TestBean message) {
- *         System.out.println("TestMessageConsumer消费消息, context: " + context + ", message: " + message);
+ *     public void onMessage(MessageEvent&lt;TestBean&gt;[] events) {
+ *        for(MessageEvent&lt;TestBean&gt; event : events) {
+ *          System.out.println("TestMessageConsumer消费消息, message: " + event.getMessage());
+ *        }
  *     }
  *
  *     &#64;Override

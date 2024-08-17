@@ -22,8 +22,10 @@ import org.redkale.util.AnyValue;
  *     }
  *
  *     &#64;Override
- *     public void onMessage(MessageConext context, TestBean message) {
- *         System.out.println("TestMessageConsumer消费消息, context: " + context + ", message: " + message);
+ *     public void onMessage(MessageEvent&lt;TestBean&gt;[] events) {
+ *        for(MessageEvent&lt;TestBean&gt; event : events) {
+ *          System.out.println("TestMessageConsumer消费消息, message: " + event.getMessage());
+ *        }
  *     }
  *
  *     &#64;Override
@@ -36,7 +38,7 @@ import org.redkale.util.AnyValue;
  *
  * <p>详情见: https://redkale.org
  *
- * @see org.redkale.mq.MessageConext
+ * @see org.redkale.mq.MessageEvent
  * @see org.redkale.mq.ResourceConsumer
  * @see org.redkale.mq.Messaged
  * @author zhangjx
@@ -50,7 +52,7 @@ public interface MessageConsumer<T> {
 
     default void init(AnyValue config) {}
 
-    public void onMessage(MessageConext context, T message);
+    public void onMessage(MessageEvent<T>[] events);
 
     default void destroy(AnyValue config) {}
 }
