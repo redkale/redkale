@@ -3,10 +3,14 @@
  */
 package org.redkale.net.http;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.Inflater;
 import org.redkale.net.client.ClientCodec;
 import static org.redkale.net.http.HttpRequest.*;
 import org.redkale.util.ByteArray;
@@ -158,15 +162,69 @@ class WebCodec extends ClientCodec<WebRequest, WebResult> {
     }
 
     private int readBody(final WebResult result, final ByteBuffer buffer, final ByteArray array) {
-        if (result.contentLength >= 0) {
+        if (result.chunked) {
+            if (result.chunkBody == null) {
+                result.chunkBody = new ByteArray();
+            }
+            int rs = result.readChunkedBody(buffer);
+            if (rs == 0) {
+                rs = unzipEncoding(result, result.chunkBody);
+                result.result(result.chunkBody.getBytes());
+                result.array = null;
+                result.chunkBody = null;
+            }
+            return rs;
+        } else if (result.contentLength >= 0) {
             array.put(buffer, Math.min((int) result.contentLength, buffer.remaining()));
             int lr = (int) result.contentLength - array.length();
             if (lr == 0) {
+                lr = unzipEncoding(result, array);
                 result.result(array.getBytes());
+                if (lr < 0) {
+                    return lr;
+                }
             }
             return lr > 0 ? lr : 0;
         }
         return -1;
+    }
+
+    private int unzipEncoding(final WebResult result, ByteArray body) {
+        if (result.contentEncoding != null) {
+            try {
+                if ("gzip".equalsIgnoreCase(result.contentEncoding)) {
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    ByteArrayInputStream in = new ByteArrayInputStream(body.content(), 0, body.length());
+                    GZIPInputStream ungzip = new GZIPInputStream(in);
+                    int n;
+                    byte[] buffer = result.array().content();
+                    while ((n = ungzip.read(buffer)) > 0) {
+                        out.write(buffer, 0, n);
+                    }
+                    body.clear();
+                    body.put(out.toByteArray());
+                } else if ("deflate".equalsIgnoreCase(result.contentEncoding)) {
+                    Inflater infl = new Inflater();
+                    infl.setInput(body.content(), 0, body.length());
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    int n;
+                    byte[] buffer = result.array().content();
+                    while (!infl.finished()) {
+                        n = infl.inflate(buffer);
+                        if (n == 0) {
+                            break;
+                        }
+                        out.write(buffer, 0, n);
+                    }
+                    infl.end();
+                    body.clear();
+                    body.put(out.toByteArray());
+                }
+            } catch (Exception e) {
+                return -1;
+            }
+        }
+        return 0;
     }
 
     private void readHeaderLines(final WebResult result, ByteArray bytes) {
@@ -179,8 +237,12 @@ class WebCodec extends ClientCodec<WebRequest, WebResult> {
             posR = bytes.indexOf(posC + 1, '\r');
             String value = bytes.toString(posC + 1, posR - posC - 1, charset).trim();
             result.header(name, value);
-            if ("Content-Length".equalsIgnoreCase(name)) {
+            if (HEAD_CONTENT_LENGTH.equalsIgnoreCase(name)) {
                 result.contentLength = Integer.parseInt(value);
+            } else if (HEAD_CONTENT_ENCODING.equalsIgnoreCase(name)) {
+                result.contentEncoding = value;
+            } else if (HEAD_TRANSFER_ENCODING.equalsIgnoreCase(name)) {
+                result.chunked = "chunked".equalsIgnoreCase(value);
             }
             start = posR + 2; // 跳过\r\n
         }

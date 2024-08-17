@@ -438,7 +438,6 @@ public class HttpRequest extends Request<HttpContext> {
         return 0;
     }
 
-    // TODO 待实现
     private int readChunkedBody(final ByteBuffer buf) {
         final ByteBuffer buffer = buf;
         int remain = buffer.remaining();
@@ -537,7 +536,7 @@ public class HttpRequest extends Request<HttpContext> {
         }
     }
 
-    private static int parseHexLength(ByteArray input) {
+    static int parseHexLength(ByteArray input) {
         int count = input.length();
         int len = 0;
         for (int i = 0; i < count; i++) {
