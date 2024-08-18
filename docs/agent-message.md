@@ -20,8 +20,10 @@ public class TestMessageConsumer implements MessageConsumer<TestBean> {
     }
 
     @Override
-    public void onMessage(MessageConext context, TestBean message) {
-        System.out.println("消费消息, message: " + message);
+    public void onMessage(MessageEvent<TestBean>[] events) {
+        for (MessageEvent<TestBean> event : events) {
+            System.out.println("消费消息, message: " + event.getMessage());
+        }
     }
 
     @Override
@@ -36,8 +38,10 @@ public class TestMessageConsumer implements MessageConsumer<TestBean> {
 public class TestMessageService extends AbstractService {
 
     @Messaged(mq = "mymq", topics = "test_bean_topic")
-    protected void runMessage(TestBean message) {
-        System.out.println("消费消息,  message: " + message);
+    protected void runMessage(MessageEvent<TestBean>[] events) {
+        for (MessageEvent<TestBean> event : events) {
+            System.out.println("消费消息, message: " + event.getMessage());
+        }
     }
 }
 ```
@@ -48,8 +52,10 @@ public class TestMessageService extends AbstractService {
 public final class TestMessageService extends AbstractService {
 
     @Messaged(mq = "mymq", topics = "test_bean_topic")
-    public int runMessage(TestBean message) {
-        System.out.println("消费消息,  message: " + message);
+    public int runMessage(MessageEvent<TestBean>[] events) {
+        for (MessageEvent<TestBean> event : events) {
+            System.out.println("消费消息, message: " + event.getMessage());
+        }
         return 0;
     }
 }
