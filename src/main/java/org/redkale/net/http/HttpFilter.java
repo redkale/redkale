@@ -28,6 +28,10 @@ public abstract class HttpFilter extends Filter<HttpContext, HttpRequest, HttpRe
         request.setRequestPath(path);
     }
 
+    protected void setBody(HttpRequest request, byte[] body) {
+        request.updateBody(body);
+    }
+
     protected void setRemoteAddr(HttpRequest request, String remoteAddr) {
         request.setRemoteAddr(remoteAddr);
     }

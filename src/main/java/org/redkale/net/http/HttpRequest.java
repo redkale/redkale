@@ -1878,6 +1878,13 @@ public class HttpRequest extends Request<HttpContext> {
         return body;
     }
 
+    protected void updateBody(byte[] body) {
+        this.body.clear();
+        if (body != null) {
+            this.body.put(body);
+        }
+    }
+
     @Override
     public String toString() {
         parseBody();

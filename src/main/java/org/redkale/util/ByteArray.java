@@ -11,6 +11,8 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.redkale.annotation.Nonnull;
+import org.redkale.annotation.Nullable;
 
 /**
  * 简单的byte[]操作类。
@@ -934,7 +936,7 @@ public final class ByteArray implements ByteTuple {
      * @param values 一组byte值
      * @return ByteArray
      */
-    public ByteArray put(byte... values) {
+    public ByteArray put(@Nonnull byte... values) {
         if (values.length < 1) {
             return this;
         }
@@ -955,7 +957,7 @@ public final class ByteArray implements ByteTuple {
      * @param values 一组byte值
      * @return ByteArray
      */
-    public ByteArray put(int offset, byte... values) {
+    public ByteArray put(int offset, @Nonnull byte... values) {
         if (values.length < 1) {
             throw new IllegalArgumentException();
         }
@@ -971,7 +973,7 @@ public final class ByteArray implements ByteTuple {
      * @param length 长度
      * @return ByteArray
      */
-    public ByteArray put(byte[] values, int offset, int length) {
+    public ByteArray put(@Nonnull byte[] values, int offset, int length) {
         if (count >= content.length - length) {
             byte[] ns = new byte[content.length + Math.max(16, length)];
             System.arraycopy(content, 0, ns, 0, count);
@@ -988,7 +990,7 @@ public final class ByteArray implements ByteTuple {
      * @param tuple 内容
      * @return ByteArray
      */
-    public ByteArray put(ByteTuple tuple) {
+    public ByteArray put(@Nonnull ByteTuple tuple) {
         return put(tuple.content(), tuple.offset(), tuple.length());
     }
 
@@ -1001,7 +1003,7 @@ public final class ByteArray implements ByteTuple {
      * @param length 长度
      * @return ByteArray
      */
-    public ByteArray put(int poffset, byte[] values, int offset, int length) {
+    public ByteArray put(int poffset, @Nonnull byte[] values, int offset, int length) {
         System.arraycopy(values, offset, content, poffset, length);
         return this;
     }
@@ -1011,7 +1013,7 @@ public final class ByteArray implements ByteTuple {
      *
      * @param buffer ByteBuffer
      */
-    public void put(ByteBuffer buffer) {
+    public void put(@Nullable ByteBuffer buffer) {
         if (buffer == null) {
             return;
         }
@@ -1039,7 +1041,7 @@ public final class ByteArray implements ByteTuple {
      * @param length 长度
      * @return ByteArray
      */
-    public ByteArray put(ByteArray array, int offset, int length) {
+    public ByteArray put(@Nonnull ByteArray array, int offset, int length) {
         if (count >= content.length - length) {
             byte[] ns = new byte[content.length + Math.max(16, length)];
             System.arraycopy(content, 0, ns, 0, count);
@@ -1057,7 +1059,7 @@ public final class ByteArray implements ByteTuple {
      * @param length 指定长度
      * @return ByteArray
      */
-    public ByteArray put(ByteBuffer buffer, int length) {
+    public ByteArray put(@Nonnull ByteBuffer buffer, int length) {
         int len = Math.min(buffer.remaining(), length);
         if (len < 1) {
             return this;

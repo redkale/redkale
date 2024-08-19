@@ -5,9 +5,6 @@
  */
 package org.redkale.net.http;
 
-import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
-import static org.redkale.util.Utility.append;
-
 import java.io.*;
 import java.lang.reflect.Type;
 import java.net.*;
@@ -15,10 +12,12 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.file.StandardOpenOption;
 import java.time.ZoneId;
+import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.*;
+import org.redkale.annotation.Nonnull;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.net.*;
@@ -26,6 +25,7 @@ import org.redkale.net.Filter;
 import org.redkale.service.RetResult;
 import org.redkale.util.*;
 import org.redkale.util.AnyValue.Entry;
+import static org.redkale.util.Utility.append;
 
 /**
  * Http响应包 与javax.servlet.http.HttpServletResponse 基本类似。 <br>
@@ -293,7 +293,12 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         return httpCodes.get(status);
     }
 
-    protected HttpRequest getRequest() {
+    /**
+     * 获取HttpRequest
+     *
+     * @return HttpRequest
+     */
+    public HttpRequest getRequest() {
         return request;
     }
 
@@ -973,9 +978,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      *
      * @param kill kill
      * @param contentType ContentType
-     * @param bs 输出内容
-     * @param offset 偏移量
-     * @param length 长度
+     * @param bodyContent 输出内容
+     * @param bodyOffset 偏移量
+     * @param bodyLength 长度
      * @param callback Consumer
      * @param attachment ConvertWriter
      * @param <A> A
@@ -983,9 +988,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     protected <A> void finish(
             boolean kill,
             final String contentType,
-            final byte[] bs,
-            int offset,
-            int length,
+            @Nonnull final byte[] bodyContent,
+            int bodyOffset,
+            int bodyLength,
             Consumer<A> callback,
             A attachment) {
         if (isClosed()) {
@@ -995,11 +1000,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             if (contentType != null) {
                 this.contentType = contentType;
             }
-            this.contentLength = length;
+            this.contentLength = bodyLength;
             createHeader();
         }
         ByteArray data = headerArray;
-        data.put(bs, offset, length);
+        data.put(bodyContent, bodyOffset, bodyLength);
         if (callback != null) {
             callback.accept(attachment);
         }
@@ -1212,11 +1217,10 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     /**
      * 异步输出指定内容
      *
-     * @param <A> 泛型
      * @param buffer 输出内容
      * @param handler 异步回调函数
      */
-    protected <A> void sendBody(ByteBuffer buffer, CompletionHandler<Integer, Void> handler) {
+    protected void sendBody(ByteBuffer buffer, CompletionHandler<Integer, Void> handler) {
         if (this.headWritedSize < 0) {
             if (this.contentLength < 0) {
                 this.contentLength = buffer == null ? 0 : buffer.remaining();
@@ -1431,6 +1435,16 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public boolean existsHeader(String name) {
         return this.header.getValue(name) != null;
+    }
+
+    /**
+     * 获取Header值
+     *
+     * @param name header名
+     * @return header值
+     */
+    public String getHeader(String name) {
+        return this.header.getValue(name);
     }
 
     /**

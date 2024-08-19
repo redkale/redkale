@@ -523,7 +523,7 @@ public class HttpDispatcherServlet
     }
 
     public HttpServlet findServletByTopic(String topic) {
-        return filterServlets(x -> x._reqtopic != null && x._reqtopic.equals(topic))
+        return filterServlets(x -> Objects.equals(x._reqtopic, topic))
                 .findFirst()
                 .orElse(null);
     }
@@ -573,9 +573,9 @@ public class HttpDispatcherServlet
         public final HttpServlet servlet;
 
         public MappingEntry(String mapping, Predicate<String> predicate, HttpServlet servlet) {
-            this.mapping = mapping;
+            this.mapping = Objects.requireNonNull(mapping);
             this.predicate = predicate;
-            this.servlet = servlet;
+            this.servlet = Objects.requireNonNull(servlet);
         }
 
         @Override
