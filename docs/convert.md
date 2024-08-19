@@ -34,7 +34,7 @@ JsonConvert 反序列化decode方法：
 
     public <T> T convertFrom(Type type, JsonReader reader);
 ```
-## Json基本用法
+## JSON基本用法
 ```java
     @Data
     public class UserRecord {
@@ -123,8 +123,6 @@ public class UserSimpleInfo {
 
 }
 
-
-
 public class UserInfoServlet extends HttpBaseServlet {
 
     @Resource
@@ -163,7 +161,8 @@ public class UserInfoServlet extends HttpBaseServlet {
 ```
 
 &emsp;&emsp;Convert 支持带参数构造函数。
-  1. public 带参数的构造函数加上 @ConstructorParameters 注解：
+
+&emsp;&emsp;&emsp;&emsp;1. public 带参数的构造函数加上 @ConstructorParameters 注解：
 ```java
 public class UserRecord {
 
@@ -193,7 +192,7 @@ public class UserRecord {
     }
 }
 ```
-  2. 自定义Creator：
+&emsp;&emsp;&emsp;&emsp;2. 自定义Creator：
 ```java
 public class UserRecord {
 
@@ -246,7 +245,8 @@ public class UserRecord {
 
 ## 自定义
 &emsp;&emsp;Convert 支持自定义Decode、Encode。
-    1. 通过ConvertFactory显式的注册：
+
+&emsp;&emsp;&emsp;&emsp;1. 通过ConvertFactory显式的注册：
 ```java
 public class FileSimpleCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, File> {
 
@@ -268,7 +268,7 @@ JsonFactory.root().register(File.class, FileSimpleCoder.instance);
 
 BsonFactory.root().register(File.class, FileSimpleCoder.instance);
 ```
-    2. 通过JavaBean类自定义静态方法自动加载：
+&emsp;&emsp;&emsp;&emsp;2. 通过JavaBean类自定义静态方法自动加载：
 ```java
 public class InnerCoderEntity {
 
@@ -360,7 +360,7 @@ public class InnerCoderEntity {
 }
 ```
 
-## Bson数据格式
+## BSON数据格式
 &emsp;&emsp;BSON类似Java自带的Serializable， 其格式如下: 
 
 &emsp;&emsp;&emsp;&emsp;1). 基本数据类型: 直接转换成byte[]
