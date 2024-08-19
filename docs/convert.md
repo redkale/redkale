@@ -108,6 +108,7 @@ public class XXXServlet extends HttpServlet {
 ```
 &emsp;&emsp; 同一类型数据通过设置新的JsonFactory可以有不同的输出。
 ```java
+@Data
 public class UserSimpleInfo {
 
     private int userid;
@@ -120,7 +121,6 @@ public class UserSimpleInfo {
     @ConvertColumn(ignore = true, type = ConvertType.JSON)
     private String regaddr = ""; //注册IP
 
-    /** 以下省略getter setter方法 */
 }
 
 
@@ -299,7 +299,7 @@ public class InnerCoderEntity {
      * @param factory
      * @return
      */
-    private static SimpledCoder<Reader, Writer, InnerCoderEntity> createConvertCoder(final org.redkale.convert.ConvertFactory factory) {
+    private static SimpledCoder<Reader, Writer, InnerCoderEntity> createConvertCoder(final ConvertFactory factory) {
         return new SimpledCoder<Reader, Writer, InnerCoderEntity>() {
 
             //必须与EnMember[] 顺序一致
