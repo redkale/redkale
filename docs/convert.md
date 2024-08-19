@@ -58,7 +58,8 @@ JsonConvert 反序列化decode方法：
         String json = convert.convertTo(user);
         System.out.println(json);  //应该是 {"password":"123456","userid":100,"username":"redkalename"}
         UserRecord user2 = convert.convertFrom(UserRecord.class, json);
-        System.out.println(convert.convertTo(user2)); //应该也是 {"password":"123456","userid":100,"username":"redkalename"}
+        //应该也是 {"password":"123456","userid":100,"username":"redkalename"}
+        System.out.println(convert.convertTo(user2)); 
         
         /**
          * 以下功能是为了屏蔽password字段。
@@ -76,7 +77,8 @@ JsonConvert 反序列化decode方法：
         json = childConvert.convertTo(user);
         System.out.println(json);  //应该是 {"userid":100,"username":"redkalename"}
         user2 = childConvert.convertFrom(UserRecord.class, json);
-        System.out.println(childConvert.convertTo(user2)); //应该也是 {"userid":100,"username":"redkalename"}
+        //应该也是 {"userid":100,"username":"redkalename"}
+        System.out.println(childConvert.convertTo(user2)); 
     }
 ```
 &emsp;&emsp;在Redkale里存在默认的JsonConvert、BsonConvert、ProtobufConvert对象。 只需在所有Service、Servlet中增加依赖注入资源。
@@ -234,7 +236,8 @@ public class UserRecord {
             @Override
             @ConstructorParameters({"userid", "username", "password"}) //带参数的构造函数必须有ConstructorParameters注解
             public UserRecord create(Object... params) {
-                return new UserRecord((params[0] == null ? 0 : (Integer) params[0]), (String) params[1], (String) params[2]);
+                int userid = (params[0] == null ? 0 : (Integer) params[0]);
+                return new UserRecord(userid, (String) params[1], (String) params[2]);
             }
         };
     }
@@ -290,11 +293,12 @@ public class InnerCoderEntity {
      * 1) 方法名可以随意。
      * 2) 方法必须是static
      * 3）方法的参数有且只能有一个， 且必须是org.redkale.convert.ConvertFactory或子类。
-     * —3.1) 参数类型为org.redkale.convert.ConvertFactory 表示适合JSON和BSON。
+     * —3.1) 参数类型为org.redkale.convert.ConvertFactory 表示适合JSON,BSON,PROTOBUF。
      * —3.2) 参数类型为org.redkale.convert.json.JsonFactory 表示仅适合JSON。
      * —3.3) 参数类型为org.redkale.convert.bson.BsonFactory 表示仅适合BSON。
-     * 4）方法的返回类型必须是org.redkale.convert.Decodeable/org.redkale.convert.Encodeable/org.redkale.convert.SimpledCoder
-     * 若返回类型不是org.redkale.convert.SimpledCoder, 就必须提供两个方法： 一个返回Decodeable 一个返回 Encodeable。
+     * —3.3) 参数类型为org.redkale.convert.pb.ProtobufFactory 表示仅适合PROTOBUF。
+     * 4）方法的返回类型必须是 Decodeable/Encodeable/SimpledCoder
+     * 若返回类型不是SimpledCoder, 就必须提供两个方法： 一个返回Decodeable 一个返回 Encodeable。
      *
      * @param factory
      * @return
