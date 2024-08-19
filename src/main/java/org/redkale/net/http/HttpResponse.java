@@ -162,6 +162,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private BiFunction<HttpRequest, RetResult, RetResult> retResultHandler;
 
+    private BiFunction<HttpResponse, ByteArray, ByteArray> sendHandler;
+
     // ------------------------------------------------
     private final String plainContentType;
 
@@ -255,6 +257,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         this.headerArray.clear();
         this.cacheHandler = null;
         this.retResultHandler = null;
+        this.sendHandler = null;
         this.respHeadContainsConnection = false;
         this.jsonWriter.recycle();
         return super.recycle();
@@ -988,7 +991,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     protected <A> void finish(
             boolean kill,
             final String contentType,
-            @Nonnull final byte[] bodyContent,
+            @Nonnull byte[] bodyContent,
             int bodyOffset,
             int bodyLength,
             Consumer<A> callback,
@@ -996,6 +999,14 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         if (isClosed()) {
             return; // 避免重复关闭
         }
+        if (sendHandler != null) {
+            ByteArray bodyArray = new ByteArray(bodyContent, bodyOffset, bodyLength);
+            bodyArray = sendHandler.apply(this, bodyArray);
+            bodyContent = bodyArray.content();
+            bodyOffset = bodyArray.offset();
+            bodyLength = bodyArray.length();
+        }
+
         if (this.headWritedSize < 0) {
             if (contentType != null) {
                 this.contentType = contentType;
@@ -1590,6 +1601,24 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      */
     public void retResultHandler(BiFunction<HttpRequest, RetResult, RetResult> retResultHandler) {
         this.retResultHandler = retResultHandler;
+    }
+
+    /**
+     * 获取输出RetResult时的拦截器
+     *
+     * @return 拦截器
+     */
+    protected BiFunction<HttpResponse, ByteArray, ByteArray> getSendHandler() {
+        return sendHandler;
+    }
+
+    /**
+     * 设置输出结果时的拦截器
+     *
+     * @param sendHandler 拦截器
+     */
+    public void sendHandler(BiFunction<HttpResponse, ByteArray, ByteArray> sendHandler) {
+        this.sendHandler = sendHandler;
     }
 
     //    protected final class TransferFileHandler implements CompletionHandler<Integer, Void> {

@@ -46,6 +46,16 @@ public final class ByteArray implements ByteTuple {
         this.count = bs.length;
     }
 
+    public ByteArray(byte[] bs, int offset, int length) {
+        if (offset == 0) {
+            this.content = bs;
+            this.count = bs.length >= length ? length : bs.length;
+        } else {
+            this.content = Arrays.copyOfRange(bs, offset, length);
+            this.count = bs.length;
+        }
+    }
+
     /**
      * 清空数据,将count置为0,并不清掉byte[]的内容
      *
