@@ -23,6 +23,8 @@ import org.redkale.annotation.Nullable;
  */
 public final class ByteArray implements ByteTuple {
 
+    static final byte[] EMPTY_BYTES = new byte[0];
+
     private byte[] content;
 
     private int count;
@@ -431,7 +433,7 @@ public final class ByteArray implements ByteTuple {
      */
     public byte[] getBytes(int offset, int length) {
         if (length < 1) {
-            return new byte[0];
+            return EMPTY_BYTES;
         }
         byte[] bs = new byte[length];
         System.arraycopy(this.content, offset, bs, 0, length);

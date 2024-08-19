@@ -27,4 +27,22 @@ public interface ByteTuple {
         int o = offset();
         return Arrays.copyOfRange(content(), o, o + length());
     }
+
+    public static final ByteTuple EMPTY = new ByteTuple() {
+
+        @Override
+        public byte[] content() {
+            return ByteArray.EMPTY_BYTES;
+        }
+
+        @Override
+        public int offset() {
+            return 0;
+        }
+
+        @Override
+        public int length() {
+            return 0;
+        }
+    };
 }
