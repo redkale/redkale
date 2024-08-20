@@ -26,6 +26,7 @@ public abstract class JsonWriter extends Writer {
         this.features = JsonFactory.root().getFeatures();
     }
 
+    @Override
     public JsonWriter withFeatures(int features) {
         return (JsonWriter) super.withFeatures(features);
     }

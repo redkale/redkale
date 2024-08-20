@@ -15,7 +15,7 @@ import org.redkale.convert.*;
  */
 public class ProtobufMapDecoder<K, V> extends MapDecoder<K, V> {
 
-    private final boolean enumtostring;
+    protected final boolean enumtostring;
 
     public ProtobufMapDecoder(ConvertFactory factory, Type type) {
         super(factory, type);

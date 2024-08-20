@@ -32,7 +32,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     protected ProtobufWriter parent;
 
     public static ObjectPool<ProtobufWriter> createPool(int max) {
-        return ObjectPool.createSafePool(max, (Object... params) -> new ProtobufWriter(), null, (t) -> t.recycle());
+        return ObjectPool.createSafePool(max, (Object... params) -> new ProtobufWriter(), null, t -> t.recycle());
     }
 
     protected ProtobufWriter(ProtobufWriter parent, int features) {
@@ -48,6 +48,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         this.content = bs;
     }
 
+    @Override
     public ProtobufWriter withFeatures(int features) {
         super.withFeatures(features);
         return this;
@@ -131,6 +132,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         handler.completed(content, 0, count, callback, this);
     }
 
+    @Override
     public byte[] toArray() {
         if (count == content.length) {
             return content;

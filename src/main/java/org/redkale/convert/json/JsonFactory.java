@@ -60,22 +60,27 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
         }
     }
 
+    @Override
     public JsonFactory withFeatures(int features) {
         return super.withFeatures(features);
     }
 
+    @Override
     public JsonFactory addFeature(int feature) {
         return super.addFeature(feature);
     }
 
+    @Override
     public JsonFactory removeFeature(int feature) {
         return super.removeFeature(feature);
     }
 
+    @Override
     public JsonFactory withTinyFeature(boolean tiny) {
         return super.withTinyFeature(tiny);
     }
 
+    @Override
     public JsonFactory withNullableFeature(boolean nullable) {
         return super.withNullableFeature(nullable);
     }

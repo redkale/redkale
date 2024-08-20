@@ -31,7 +31,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     private final ThreadLocal<JsonBytesWriter> bytesWriterPool = Utility.withInitialThreadLocal(JsonBytesWriter::new);
 
-    private final Consumer<JsonBytesWriter> offerBytesConsumer = w -> offerJsonBytesWriter(w);
+    private final Consumer<JsonBytesWriter> offerBytesConsumer = this::offerJsonBytesWriter;
 
     private final ThreadLocal<JsonReader> readerPool = Utility.withInitialThreadLocal(JsonReader::new);
 

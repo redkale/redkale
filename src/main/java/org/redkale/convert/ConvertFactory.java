@@ -19,7 +19,6 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.*;
-import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.ext.*;
 import org.redkale.convert.json.JsonConvert;
@@ -43,7 +42,11 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     protected Convert<R, W> convert;
 
-    // 配置属性集合
+    /**
+     * 配置属性集合
+     * @see org.redkale.convert.Convert#FEATURE_NULLABLE
+     * @see org.redkale.convert.Convert#FEATURE_TINY
+     */
     protected int features;
 
     private final Encodeable<W, ?> anyEncoder = new AnyEncoder(this);
@@ -148,13 +151,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             this.register(String[].class, StringArraySimpledCoder.instance);
             // ---------------------------------------------------------
             this.register(AnyValue.class, Creator.create(AnyValueWriter.class));
-            this.register(HttpCookie.class, new Creator<HttpCookie>() {
-                @Override
-                @ConstructorParameters({"name", "value"})
-                public HttpCookie create(Object... params) {
-                    return new HttpCookie((String) params[0], (String) params[1]);
-                }
-            });
+            this.register(
+                    HttpCookie.class, (Object... params) -> new HttpCookie((String) params[0], (String) params[1]));
             try {
                 Class sqldateClass =
                         Thread.currentThread().getContextClassLoader().loadClass("java.sql.Date");
@@ -900,14 +898,14 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             return this;
         }
         ConvertFactory child = createChild();
-        if (encode) {
+        if (encode && encoderList != null) {
             for (Encodeable item : encoderList) {
                 child.register(item.getType(), item);
                 if (item instanceof ObjectEncoder) {
                     ((ObjectEncoder) item).init(child);
                 }
             }
-        } else {
+        } else if (decoderList != null) {
             for (Decodeable item : decoderList) {
                 child.register(item.getType(), item);
                 if (item instanceof ObjectDecoder) {

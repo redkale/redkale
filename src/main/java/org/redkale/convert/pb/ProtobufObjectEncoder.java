@@ -10,7 +10,10 @@ import org.redkale.convert.*;
 import org.redkale.util.Attribute;
 import org.redkale.util.Utility;
 
-/** @author zhangjx */
+/**
+ * @author zhangjx
+ * @param <T> T
+ */
 public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T> {
 
     protected ProtobufObjectEncoder(Type type) {

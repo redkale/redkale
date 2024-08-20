@@ -41,7 +41,7 @@ class ProtobufStreamWriter extends ProtobufByteBufferWriter {
     @Override
     public void writeTo(final byte ch) {
         try {
-            out.write((byte) ch);
+            out.write(ch);
         } catch (IOException e) {
             throw new ConvertException(e);
         }

@@ -26,7 +26,7 @@ public class ProtobufReader extends Reader {
     protected boolean enumtostring;
 
     public static ObjectPool<ProtobufReader> createPool(int max) {
-        return ObjectPool.createSafePool(max, (Object... params) -> new ProtobufReader(), null, (t) -> t.recycle());
+        return ObjectPool.createSafePool(max, (Object... params) -> new ProtobufReader(), null, t -> t.recycle());
     }
 
     public ProtobufReader() {}
