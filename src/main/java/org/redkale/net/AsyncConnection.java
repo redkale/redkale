@@ -224,10 +224,28 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
 
     protected abstract void readImpl(CompletionHandler<Integer, ByteBuffer> handler);
 
-    // src写完才会回调
+    /**
+     * src写完才会回调
+     *
+     * @see org.redkale.net.AsyncNioConnection#writeImpl(java.nio.ByteBuffer, java.lang.Object, java.nio.channels.CompletionHandler)
+     * @param <A> A
+     * @param src ByteBuffer
+     * @param attachment A
+     * @param handler CompletionHandler
+     */
     protected abstract <A> void writeImpl(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler);
 
-    // srcs写完才会回调
+    /**
+     *  srcs写完才会回调
+     *
+     * @see org.redkale.net.AsyncNioConnection#writeImpl(java.nio.ByteBuffer[], int, int, java.lang.Object, java.nio.channels.CompletionHandler)
+     * @param <A> A
+     * @param srcs ByteBuffer[]
+     * @param offset offset
+     * @param length length
+     * @param attachment A
+     * @param handler  CompletionHandler
+     */
     protected abstract <A> void writeImpl(
             ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler);
 

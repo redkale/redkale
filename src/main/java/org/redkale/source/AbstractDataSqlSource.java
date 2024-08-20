@@ -1289,7 +1289,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
                         .toString();
             }
             return String.valueOf(value);
-        } else if (value != null && value instanceof CharSequence && "postgresql".equals(dbtype)) {
+        } else if (value instanceof CharSequence && "postgresql".equals(dbtype)) {
             String s = String.valueOf(value);
             int pos = s.indexOf('\'');
             if (pos >= 0) {
@@ -1564,7 +1564,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
 
     protected <T> String[] deleteSql(
             final EntityInfo<T> info, String[] tables, final Flipper flipper, final FilterNode node) {
-        Map<Class, String> joinTabalis = null;
+        Map<Class, String> joinTabalis;
         CharSequence join = null;
         CharSequence where = null;
         if (node != null) {
@@ -3003,24 +3003,24 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             final FilterNode node) {
         final StringBuilder groupBySqlColumns = new StringBuilder();
         if (groupByColumns != null && groupByColumns.length > 0) {
-            for (int i = 0; i < groupByColumns.length; i++) {
+            for (String groupByColumn : groupByColumns) {
                 if (groupBySqlColumns.length() > 0) {
                     groupBySqlColumns.append(", ");
                 }
-                groupBySqlColumns.append(info.getSQLColumn("a", groupByColumns[i]));
+                groupBySqlColumns.append(info.getSQLColumn("a", groupByColumn));
             }
         }
         final StringBuilder funcSqlColumns = new StringBuilder();
-        for (int i = 0; i < funcNodes.length; i++) {
+        for (ColumnNode funcNode : funcNodes) {
             if (funcSqlColumns.length() > 0) {
                 funcSqlColumns.append(", ");
             }
-            if (funcNodes[i] instanceof ColumnFuncNode) {
+            if (funcNode instanceof ColumnFuncNode) {
                 funcSqlColumns.append(info.formatColumnFuncNodeSQLValue(
-                        (Attribute) null, "a", (ColumnFuncNode) funcNodes[i], sqlFormatter));
+                        (Attribute) null, "a", (ColumnFuncNode) funcNode, sqlFormatter));
             } else {
                 funcSqlColumns.append(info.formatColumnExpNodeSQLValue(
-                        (Attribute) null, "a", (ColumnExpNode) funcNodes[i], sqlFormatter));
+                        (Attribute) null, "a", (ColumnExpNode) funcNode, sqlFormatter));
             }
         }
         final Map<Class, String> joinTabalis = node == null ? null : node.getJoinTabalis();
@@ -3786,7 +3786,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
         if (isAsync()) {
             return querySheetAsync(true, false, true, clazz, selects, flipper, node)
-                    .thenApply((rs) -> new LinkedHashSet<>(rs.list(true)))
+                    .thenApply(rs -> new LinkedHashSet<>(rs.list(true)))
                     .join();
         } else {
             return new LinkedHashSet<>(
@@ -3799,10 +3799,10 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
         if (isAsync()) {
             return querySheetAsync(true, false, true, clazz, selects, flipper, node)
-                    .thenApply((rs) -> new LinkedHashSet<>(rs.list(true)));
+                    .thenApply(rs -> new LinkedHashSet<>(rs.list(true)));
         } else {
             return supplyAsync(() -> querySheet(true, false, true, clazz, selects, flipper, node))
-                    .thenApply((rs) -> new LinkedHashSet<>(rs.list(true)));
+                    .thenApply(rs -> new LinkedHashSet<>(rs.list(true)));
         }
     }
 
@@ -3811,7 +3811,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
         if (isAsync()) {
             return querySheetAsync(true, false, false, clazz, selects, flipper, node)
-                    .thenApply((rs) -> rs.list(true))
+                    .thenApply(rs -> rs.list(true))
                     .join();
         } else {
             return querySheet(true, false, false, clazz, selects, flipper, node).list(true);
@@ -3823,10 +3823,10 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             final Class<T> clazz, final SelectColumn selects, final Flipper flipper, final FilterNode node) {
         if (isAsync()) {
             return querySheetAsync(true, false, false, clazz, selects, flipper, node)
-                    .thenApply((rs) -> rs.list(true));
+                    .thenApply(rs -> rs.list(true));
         } else {
             return supplyAsync(() -> querySheet(true, false, false, clazz, selects, flipper, node))
-                    .thenApply((rs) -> rs.list(true));
+                    .thenApply(rs -> rs.list(true));
         }
     }
 
