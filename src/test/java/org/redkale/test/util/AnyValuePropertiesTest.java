@@ -6,6 +6,7 @@
 package org.redkale.test.util;
 
 import java.util.Properties;
+import java.util.TreeMap;
 import org.junit.jupiter.api.*;
 import org.redkale.util.AnyValue;
 import org.redkale.util.AnyValueWriter;
@@ -152,22 +153,31 @@ public class AnyValuePropertiesTest {
     @Test
     public void run5() {
         AnyValueWriter conf = AnyValue.create();
-        conf.addValue("name", "haha");
-        conf.addValue("name", "hehe");
+        conf.addValue("ns", "haha");
+        conf.addValue("ns", "hehe");
         conf.addValue("status", 45);
         conf.addValue("name", AnyValueWriter.create("id", 123).addValue("desc", "test"));
         conf.addValue("nodes", AnyValueWriter.create("time", 123).addValue("time", 456));
+        conf.addValue("area", AnyValueWriter.create("areaid", 123).addValue("name", "aaa"));
+        conf.addValue("area", AnyValueWriter.create("areaid", 456).addValue("name", "bbb"));
 
         Properties props1 = conf.toProperties();
-        props1.forEach((k, v) -> System.out.println(k + " = " + v));
+        System.out.println(conf);
+        System.out.println(conf.toJsonObject());
+        System.out.println("----------------------------------------------------");
+        new TreeMap(props1).forEach((k, v) -> System.out.println(k + " = " + v));
         Properties props2 = new Properties();
-        props2.put("name[0]", "haha");
-        props2.put("name[1]", "hehe");
+        props2.put("ns[0]", "haha");
+        props2.put("ns[1]", "hehe");
         props2.put("status", "45");
         props2.put("name.desc", "test");
         props2.put("name.id", "123");
         props2.put("nodes.time[0]", "123");
         props2.put("nodes.time[1]", "456");
+        props2.put("area[0].areaid", "123");
+        props2.put("area[0].name", "aaa");
+        props2.put("area[1].areaid", "456");
+        props2.put("area[1].name", "bbb");
 
         Assertions.assertEquals(props1.toString(), props2.toString());
         System.out.println("------------------------ 05 ------------------------");

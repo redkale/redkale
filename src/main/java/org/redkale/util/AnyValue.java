@@ -11,6 +11,8 @@ import java.util.*;
 import java.util.function.*;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.ConvertColumn;
+import org.redkale.convert.json.JsonArray;
+import org.redkale.convert.json.JsonObject;
 import static org.redkale.util.Utility.isEmpty;
 
 /**
@@ -1168,34 +1170,89 @@ public abstract class AnyValue {
 
     public Properties toProperties() {
         Properties props = new Properties();
-        toProperties(props, new HashMap<>(), "", this);
+        toProperties(props, "", this);
         return props;
     }
 
-    private static void toProperties(Properties props, Map<String, Integer> keyPrefixs, String parent, AnyValue conf) {
-        conf.forEach(
-                (k, v) -> {
-                    final String prefix = parent + k;
-                    if (keyPrefixs.containsKey(prefix)) {
-                        String key = prefix;
-                        int index = keyPrefixs.get(key);
-                        if (index == -1) {
-                            key = prefix + "[" + (++index) + "]";
-                            props.put(key, props.remove(prefix));
-                        }
-                        key = prefix + "[" + (++index) + "]";
-                        while (props.containsKey(key)) {
-                            key = prefix + "[" + (++index) + "]";
-                        }
-                        props.put(key, v);
-                        keyPrefixs.put(prefix, index);
-                    } else {
-                        props.put(prefix, v);
-                        keyPrefixs.put(prefix, -1);
+    protected static void toProperties(Properties props, String parent, AnyValue conf) {
+        Map<String, List> tmp = new HashMap<>();
+        Entry<String>[] strs = conf.getStringEntrys();
+        if (strs != null && strs.length > 0) {
+            for (Entry<String> en : strs) {
+                tmp.computeIfAbsent(en.getName(), k -> new ArrayList<>()).add(en.getValue());
+            }
+            tmp.forEach((k, list) -> {
+                if (list.size() == 1) {
+                    props.put(parent + k, list.get(0));
+                } else {
+                    int i = -1;
+                    for (Object item : list) {
+                        props.put(parent + k + "[" + (++i) + "]", item);
                     }
-                },
-                (k, c) -> {
-                    toProperties(props, keyPrefixs, parent + k + ".", c);
-                });
+                }
+            });
+        }
+        Entry<AnyValue>[] entrys = conf.getAnyEntrys();
+        if (entrys != null && entrys.length > 0) {
+            tmp.clear();
+            for (Entry<AnyValue> en : entrys) {
+                tmp.computeIfAbsent(en.getName(), k -> new ArrayList<>()).add(en.getValue());
+            }
+            tmp.forEach((k, list) -> {
+                if (list.size() == 1) {
+                    toProperties(props, parent + k + ".", (AnyValue) list.get(0));
+                } else {
+                    int i = -1;
+                    for (Object item : list) {
+                        toProperties(props, parent + k + "[" + (++i) + "].", (AnyValue) item);
+                    }
+                }
+            });
+        }
+    }
+
+    public JsonObject toJsonObject() {
+        JsonObject json = new JsonObject();
+        toJsonObject(json, this);
+        return json;
+    }
+
+    protected static void toJsonObject(JsonObject json, AnyValue conf) {
+        Map<String, JsonArray> tmp = new HashMap<>();
+        Entry<String>[] strs = conf.getStringEntrys();
+        if (strs != null && strs.length > 0) {
+            for (Entry<String> en : strs) {
+                tmp.computeIfAbsent(en.getName(), k -> new JsonArray()).add(en.getValue());
+            }
+            tmp.forEach((k, list) -> {
+                if (list.size() == 1) {
+                    json.put(k, list.get(0));
+                } else {
+                    json.put(k, list);
+                }
+            });
+        }
+        Entry<AnyValue>[] entrys = conf.getAnyEntrys();
+        if (entrys != null && entrys.length > 0) {
+            tmp.clear();
+            for (Entry<AnyValue> en : entrys) {
+                tmp.computeIfAbsent(en.getName(), k -> new JsonArray()).add(en.getValue());
+            }
+            tmp.forEach((k, list) -> {
+                if (list.size() == 1) {
+                    JsonObject val = new JsonObject();
+                    toJsonObject(val, (AnyValue) list.get(0));
+                    json.put(k, val);
+                } else {
+                    JsonArray array = new JsonArray();
+                    for (Object item : list) {
+                        JsonObject val = new JsonObject();
+                        toJsonObject(val, (AnyValue) item);
+                        array.add(val);
+                    }
+                    json.put(k, array);
+                }
+            });
+        }
     }
 }
