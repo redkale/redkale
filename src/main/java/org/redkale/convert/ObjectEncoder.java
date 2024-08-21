@@ -184,7 +184,8 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                     if (small != null && method.getReturnType() == String.class) {
                         fieldCoder = StringSimpledCoder.SmallStringSimpledCoder.instance;
                     } else {
-                        fieldCoder = colFactory.findFieldCoder(clazz, ConvertFactory.readGetSetFieldName(method));
+                        String fieldName = ConvertFactory.readGetSetFieldName(method);
+                        fieldCoder = colFactory.findFieldCoder(clazz, fieldName);
                     }
                     if (fieldCoder == null) {
                         Type t = TypeToken.createClassType(
@@ -279,8 +280,9 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                     if (member.index > 0) {
                         member.position = member.index;
                     } else {
-                        while (pos.contains(++pidx))
-                            ;
+                        while (pos.contains(++pidx)) {
+                            // do nothing
+                        }
                         member.position = pidx;
                     }
                     initForEachEnMember(factory, member);
@@ -288,7 +290,6 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
 
                 this.members = list.toArray(new EnMember[list.size()]);
                 Arrays.sort(this.members, (a, b) -> a.compareTo(factory.isFieldSort(), b));
-
                 afterInitEnMember(factory);
             } catch (Exception ex) {
                 throw new ConvertException("ObjectEncoder init type=" + this.type + " error", ex);

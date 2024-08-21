@@ -209,6 +209,9 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 if (ref != null && ref.ignore()) {
                     continue;
                 }
+                if (factory.findFieldCoder(clazz, field.getName()) != null) {
+                    return null;
+                }
                 if (!(checkMemberType(factory, clazz, field.getGenericType(), field.getType()))) {
                     return null;
                 }
@@ -266,6 +269,9 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 String name = convertFieldName(factory, clazz, method);
                 if (names.contains(name)) {
                     continue;
+                }
+                if (factory.findFieldCoder(clazz, name) != null) {
+                    return null;
                 }
                 names.add(name);
                 if (members == null) {

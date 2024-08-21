@@ -125,29 +125,30 @@ public final class Rest {
         Set<Class> reloadTypes = new HashSet<>();
         if (coders != null) {
             for (RestConvertCoder rcc : coders) {
+                Creator<? extends SimpledCoder> creator = Creator.create(rcc.coder());
+                childFactory.register(rcc.type(), rcc.field(), creator.create());
                 reloadTypes.add(rcc.type());
-                childFactory.register(rcc.type(), rcc.field(), (SimpledCoder)
-                        Creator.create(rcc.coder()).create());
             }
         }
         if (converts != null) {
             for (RestConvert rc : converts) {
                 if (rc.type() == void.class || rc.type() == Void.class) {
-                    return JsonFactory.create().skipAllIgnore(true);
+                    childFactory.skipAllIgnore(true);
+                    break;
                 }
                 if (types.contains(rc.type())) {
                     throw new RestException("@RestConvert type(" + rc.type() + ") repeat");
                 }
                 if (rc.skipIgnore()) {
                     childFactory.registerSkipIgnore(rc.type());
-                    childFactory.reloadCoder(rc.type());
+                    reloadTypes.add(rc.type());
                 } else if (rc.onlyColumns().length > 0) {
                     childFactory.registerIgnoreAll(rc.type(), rc.onlyColumns());
-                    childFactory.reloadCoder(rc.type());
+                    reloadTypes.add(rc.type());
                 } else {
                     childFactory.register(rc.type(), false, rc.convertColumns());
                     childFactory.register(rc.type(), true, rc.ignoreColumns());
-                    childFactory.reloadCoder(rc.type());
+                    reloadTypes.add(rc.type());
                 }
                 types.add(rc.type());
                 if (rc.features() > -1) {
@@ -1396,7 +1397,8 @@ public final class Rest {
                     final Parameter[] params = method.getParameters();
                     final RestConvert[] rcs = method.getAnnotationsByType(RestConvert.class);
                     final RestConvertCoder[] rcc = method.getAnnotationsByType(RestConvertCoder.class);
-                    if ((rcs != null && rcs.length > 0) || (rcc != null && rcc.length > 0)) {
+                    final boolean hasResConvert = Utility.isNotEmpty(rcs) || Utility.isNotEmpty(rcc);
+                    if (hasResConvert) {
                         restConverts.add(new Object[] {rcs, rcc});
                     }
                     // 解析方法中的每个参数
@@ -1749,11 +1751,8 @@ public final class Rest {
                 Field genField = newClazz.getDeclaredField(REST_CONVERT_FIELD_PREFIX + (i + 1));
                 genField.setAccessible(true);
                 Object[] rc = restConverts.get(i);
-
-                genField.set(
-                        obj,
-                        createJsonFactory((RestConvert[]) rc[0], (RestConvertCoder[]) rc[1])
-                                .getConvert());
+                JsonFactory childFactory = createJsonFactory((RestConvert[]) rc[0], (RestConvertCoder[]) rc[1]);
+                genField.set(obj, childFactory.getConvert());
             }
             Field typesfield = newClazz.getDeclaredField(REST_PARAMTYPES_FIELD_NAME);
             typesfield.setAccessible(true);
@@ -1844,7 +1843,7 @@ public final class Rest {
         } catch (ClassNotFoundException e) {
             // do nothing
         } catch (Throwable e) {
-            //do nothing
+            // do nothing
         }
         // ------------------------------------------------------------------------------
         final String defModuleName = getWebModuleNameLowerCase(serviceType);
@@ -2117,7 +2116,8 @@ public final class Rest {
 
             final RestConvert[] rcs = method.getAnnotationsByType(RestConvert.class);
             final RestConvertCoder[] rcc = method.getAnnotationsByType(RestConvertCoder.class);
-            if ((rcs != null && rcs.length > 0) || (rcc != null && rcc.length > 0)) {
+            final boolean hasResConvert = Utility.isNotEmpty(rcs) || Utility.isNotEmpty(rcc);
+            if (hasResConvert) {
                 restConverts.add(new Object[] {rcs, rcc});
             }
             if (dynsimple && entry.rpcOnly) { // 需要读取http header
@@ -3710,7 +3710,7 @@ public final class Rest {
             } else if (RetResult.class.isAssignableFrom(returnType)) {
                 mv.visitVarInsn(ASTORE, maxLocals);
                 mv.visitVarInsn(ALOAD, 2); // response
-                if (rcs != null && rcs.length > 0) {
+                if (hasResConvert) {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(
                             GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
@@ -3739,7 +3739,7 @@ public final class Rest {
             } else if (HttpResult.class.isAssignableFrom(returnType)) {
                 mv.visitVarInsn(ASTORE, maxLocals);
                 mv.visitVarInsn(ALOAD, 2); // response
-                if (rcs != null && rcs.length > 0) {
+                if (hasResConvert) {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(
                             GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
@@ -3768,7 +3768,7 @@ public final class Rest {
             } else if (HttpScope.class.isAssignableFrom(returnType)) {
                 mv.visitVarInsn(ASTORE, maxLocals);
                 mv.visitVarInsn(ALOAD, 2); // response
-                if (rcs != null && rcs.length > 0) {
+                if (hasResConvert) {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(
                             GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
@@ -3786,7 +3786,7 @@ public final class Rest {
                 mv.visitVarInsn(ALOAD, 2); // response
                 Class returnNoFutureType = TypeToken.typeToClassOrElse(returnGenericNoFutureType, Object.class);
                 if (returnNoFutureType == HttpScope.class) {
-                    if (rcs != null && rcs.length > 0) {
+                    if (hasResConvert) {
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(
                                 GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
@@ -3809,7 +3809,7 @@ public final class Rest {
                         && !((returnGenericNoFutureType instanceof Class)
                                 && (((Class) returnGenericNoFutureType).isPrimitive()
                                         || CharSequence.class.isAssignableFrom((Class) returnGenericNoFutureType)))) {
-                    if (rcs != null && rcs.length > 0) {
+                    if (hasResConvert) {
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(
                                 GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
@@ -3840,7 +3840,7 @@ public final class Rest {
                                 false);
                     }
                 } else {
-                    if (rcs != null && rcs.length > 0) {
+                    if (hasResConvert) {
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(
                                 GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
@@ -3876,7 +3876,7 @@ public final class Rest {
             } else if (Flows.maybePublisherClass(returnType)) { // Flow.Publisher
                 mv.visitVarInsn(ASTORE, maxLocals);
                 mv.visitVarInsn(ALOAD, 2); // response
-                if (rcs != null && rcs.length > 0) {
+                if (hasResConvert) {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(
                             GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
@@ -3909,7 +3909,7 @@ public final class Rest {
             } else if (returnType == retvalType) { // 普通JavaBean或JavaBean[]
                 mv.visitVarInsn(ASTORE, maxLocals);
                 mv.visitVarInsn(ALOAD, 2); // response
-                if (rcs != null && rcs.length > 0) {
+                if (hasResConvert) {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(
                             GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
@@ -3942,7 +3942,7 @@ public final class Rest {
             } else {
                 mv.visitVarInsn(ASTORE, maxLocals);
                 mv.visitVarInsn(ALOAD, 2); // response
-                if (rcs != null && rcs.length > 0) {
+                if (hasResConvert) {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(
                             GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
@@ -4239,10 +4239,8 @@ public final class Rest {
                 Field genField = newClazz.getDeclaredField(REST_CONVERT_FIELD_PREFIX + (i + 1));
                 genField.setAccessible(true);
                 Object[] rc = restConverts.get(i);
-                genField.set(
-                        obj,
-                        createJsonFactory((RestConvert[]) rc[0], (RestConvertCoder[]) rc[1])
-                                .getConvert());
+                JsonFactory childFactory = createJsonFactory((RestConvert[]) rc[0], (RestConvertCoder[]) rc[1]);
+                genField.set(obj, childFactory.getConvert());
                 RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), genField);
             }
             Field typesfield = newClazz.getDeclaredField(REST_PARAMTYPES_FIELD_NAME);

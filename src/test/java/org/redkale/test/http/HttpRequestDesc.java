@@ -341,5 +341,5 @@ public interface HttpRequestDesc {
     public void setAttribute(String name, Object value);
 
     // 获取request创建时间
-    public long getCreatetime();
+    public long getCreateTime();
 }
