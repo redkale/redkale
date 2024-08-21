@@ -364,6 +364,87 @@ public class InnerCoderEntity {
 }
 ```
 
+## RestConvert
+&emsp;&emsp;```@RestConvert```、```@RestConvertCoder```是针对```@RestService```接口进行自定义序列化注解
+```java
+@Data
+public class RestConvertItem {
+
+    private long createTime;
+
+    @ConvertColumn(ignore = true)
+    private String aesKey;
+}
+
+@Data
+public class RestConvertBean {
+
+    private int id;
+
+    private boolean enable;
+
+    private String name;
+
+    private RestConvertItem content;
+}
+
+//将boolean类型值转换成0/1的int值
+public class RestConvertBoolCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, Boolean> {
+
+    @Override
+    public void convertTo(W out, Boolean value) {
+        out.writeInt(value == null || !value ? 0 : 1);
+    }
+
+    @Override
+    public Boolean convertFrom(R in) {
+        return in.readInt() == 1;
+    }
+}
+
+@RestService(name = "test", autoMapping = true)
+public class RestConvertService extends AbstractService {
+
+    //输出: {"content":{"createTime":100},"enable":true,"id":123,"name":"haha"}
+    public RestConvertBean load1() {
+        return createBean();
+    }
+    
+    //输出: {"content":{"aesKey":"keykey","createTime":100},"enable":true,"id":123,"name":"haha"}
+    //aesKey字段也会被输出
+    @RestConvert(type = RestConvertItem.class, skipIgnore = true)
+    public RestConvertBean load2() {
+        return createBean();
+    }
+
+    //输出: {"id":123}
+    //只输出id字段
+    @RestConvert(type = RestConvertBean.class, onlyColumns = "id")
+    public RestConvertBean load3() {
+        return createBean();
+    }
+
+    //输出: {"content":{"createTime":100},"enable":1,"id":123,"name":"haha"}
+    //enable字段输出1，而不是true
+    @RestConvertCoder(type = RestConvertBean.class, field = "enable", coder = RestConvertBoolCoder.class)
+    public RestConvertBean load4() {
+        return createBean();
+    }
+
+    private RestConvertBean createBean() {
+        RestConvertBean bean = new RestConvertBean();
+        bean.setId(123);
+        bean.setName("haha");
+        bean.setEnable(true);
+        RestConvertItem item = new RestConvertItem();
+        item.setCreateTime(100);
+        item.setAesKey("keykey");
+        bean.setContent(item);
+        return bean;
+    }
+}
+```
+
 ## BSON数据格式
 &emsp;&emsp;BSON类似Java自带的Serializable， 其格式如下: 
 

@@ -13,9 +13,9 @@ import org.redkale.convert.json.JsonConvert;
 public class RestConvertBean {
 
     private int id;
-    
+
     private boolean enable;
-    
+
     private String name;
 
     private RestConvertItem content;
