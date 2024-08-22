@@ -81,7 +81,10 @@ public abstract class MessageAgent implements MessageManager {
     protected final CopyOnWriteArrayList<MessageConsumer> messageConsumerList = new CopyOnWriteArrayList<>();
 
     // key: group, sub-key: topic
-    protected final Map<String, Map<String, MessageConsumerWrapper>> messageConsumerMap = new HashMap<>();
+    protected final Map<String, Map<String, MessageConsumerWrapper>> messageTopicConsumerMap = new HashMap<>();
+
+    // key: group, sub-key: regexTopic
+    protected final Map<String, Map<String, MessageConsumerWrapper>> messageRegexConsumerMap = new HashMap<>();
 
     // -------------------------- HttpRpcClient、SncpMessageClient --------------------------
     // cluster和mq同名组件时，HttpRpcClient优先使用MQ，默认不优先走MQ。
@@ -211,7 +214,8 @@ public abstract class MessageAgent implements MessageManager {
             consumer.destroy(config);
         }
         this.messageConsumerList.clear();
-        this.messageConsumerMap.clear();
+        this.messageTopicConsumerMap.clear();
+        this.messageRegexConsumerMap.clear();
         // -------------- MessageClient --------------
         if (this.messageClientProducer != null) {
             this.messageClientProducer.stop();
@@ -248,23 +252,31 @@ public abstract class MessageAgent implements MessageManager {
         final StringBuilder sb = new StringBuilder();
         clientConsumerLock.lock();
         try {
-            Map<String, Map<String, MessageConsumerWrapper>> maps = new HashMap<>();
+            Map<String, Map<String, MessageConsumerWrapper>> topicMaps = new HashMap<>();
+            Map<String, Map<String, MessageConsumerWrapper>> regexMaps = new HashMap<>();
+            AtomicInteger groupMax = new AtomicInteger();
             AtomicInteger typeMax = new AtomicInteger();
             AtomicInteger topicMax = new AtomicInteger();
-            Map<String, String> views = new LinkedHashMap<>();
+            Map<String, String[]> views = new LinkedHashMap<>();
             for (MessageConsumer consumer : consumers) {
                 ResourceConsumer res = consumer.getClass().getAnnotation(ResourceConsumer.class);
                 String group = environment.getPropertyValue(res.group());
+                final String typeName =
+                        Sncp.getResourceType((Class) consumer.getClass()).getName();
                 if (Utility.isBlank(group)) {
-                    group = consumer.getClass().getName().replace('$', '.');
+                    DynForConsumer dc = consumer.getClass().getAnnotation(DynForConsumer.class);
+                    group = dc == null ? typeName.replace('$', '.') : dc.group();
                 }
-                Map<String, MessageConsumerWrapper> map = maps.computeIfAbsent(group, g -> new HashMap<>());
+                boolean regex = Utility.isNotEmpty(res.regexTopic());
+                Map<String, MessageConsumerWrapper> map =
+                        (regex ? regexMaps : topicMaps).computeIfAbsent(group, g -> new HashMap<>());
                 List<String> topics = new ArrayList<>();
-                for (String t : res.topics()) {
-                    String topic = environment.getPropertyValue(t);
-                    if (!topic.trim().isEmpty()) {
+                String[] ts = regex ? new String[] {res.regexTopic()} : res.topics();
+                for (String t : ts) {
+                    String topic = environment.getPropertyValue(t).trim();
+                    if (!topic.isEmpty()) {
                         topics.add(topic);
-                        if (map.containsKey(topic.trim())) {
+                        if (map.containsKey(topic)) {
                             throw new RedkaleException(MessageConsumer.class.getSimpleName()
                                     + " consume topic (" + topic + ") repeat with "
                                     + map.get(topic).getClass().getName() + " and "
@@ -279,29 +291,39 @@ public abstract class MessageAgent implements MessageManager {
                                         + ")");
                             }
                         }
-                        map.put(topic.trim(), new MessageConsumerWrapper(this, consumer, res.convertType()));
+                        MessageConsumerWrapper wrapper =
+                                new MessageConsumerWrapper(this, consumer, regex ? topic : null, res.convertType());
+                        map.put(topic, wrapper);
                     }
                 }
-                String typestr = consumer.getClass().getName();
+                String typestr = typeName;
                 String topicstr = JsonConvert.root().convertTo(topics.size() == 1 ? topics.get(0) : topics);
+                if (group.length() > groupMax.get()) {
+                    groupMax.set(group.length());
+                }
                 if (typestr.length() > typeMax.get()) {
                     typeMax.set(typestr.length());
                 }
                 if (topicstr.length() > topicMax.get()) {
                     topicMax.set(topicstr.length());
                 }
-                views.put(typestr, topicstr);
+                views.put(typestr, new String[]{group, topicstr});
             }
-            views.forEach((typestr, topicstr) -> {
+            views.forEach((typestr, strs) -> {
+                String groupstr = strs[0];
+                String topicstr = strs[1];
                 sb.append(MessageConsumer.class.getSimpleName())
                         .append(" (type=")
                         .append(alignString(typestr, typeMax.get()))
+                        .append(", group=")
+                        .append(alignString(groupstr, groupMax.get()))
                         .append(", topics=")
                         .append(alignString(topicstr, topicMax.get()))
                         .append(") startuped\r\n");
             });
             messageConsumerList.addAll(consumers);
-            messageConsumerMap.putAll(maps);
+            messageTopicConsumerMap.putAll(topicMaps);
+            messageRegexConsumerMap.putAll(regexMaps);
         } finally {
             clientConsumerLock.unlock();
         }
@@ -511,13 +533,17 @@ public abstract class MessageAgent implements MessageManager {
 
         private final Type messageType;
 
-        public MessageConsumerWrapper(MessageAgent messageAgent, MessageConsumer<T> consumer, ConvertType convertType) {
+        private final String regexTopic;
+
+        public MessageConsumerWrapper(
+                MessageAgent messageAgent, MessageConsumer<T> consumer, String regexTopic, ConvertType convertType) {
             Objects.requireNonNull(messageAgent);
             Objects.requireNonNull(consumer);
             Objects.requireNonNull(convertType);
             this.messageAgent = messageAgent;
             this.convertType = convertType;
             this.consumer = consumer;
+            this.regexTopic = regexTopic;
             this.convert = ConvertFactory.findConvert(convertType);
             this.messageType = parseMessageType(consumer.getClass());
         }
@@ -562,6 +588,10 @@ public abstract class MessageAgent implements MessageManager {
                 }
                 Traces.removeTraceid();
             });
+        }
+
+        public String getRegexTopic() {
+            return regexTopic;
         }
 
         public MessageConsumer getConsumer() {

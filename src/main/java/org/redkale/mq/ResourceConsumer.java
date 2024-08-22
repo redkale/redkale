@@ -71,11 +71,18 @@ public @interface ResourceConsumer {
     boolean required() default true;
 
     /**
-     * 监听的topic
+     * 监听的topic, 当{@link #regexTopic() }值不为空时忽略此值
      *
      * @return  topic
      */
-    String[] topics();
+    String[] topics() default {};
+
+    /**
+     * 监听的topic， 与 {@link  #topics() }的值必须二选一，优先级高
+     *
+     * @return  topic正则表达式
+     */
+    String regexTopic() default "";
 
     /**
      * 消息序列化类型

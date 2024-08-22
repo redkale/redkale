@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.redkale.annotation.AutoLoad;
+import org.redkale.annotation.Nonnull;
 import org.redkale.asm.AnnotationVisitor;
 import org.redkale.asm.AsmMethodBean;
 import org.redkale.asm.AsmMethodBoost;
@@ -97,6 +98,14 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
         if (messaged == null) {
             return newMethod;
         }
+        if (Utility.isEmpty(messaged.regexTopic()) && Utility.isEmpty(messaged.topics())) {
+            throw new RedkaleException(
+                    "@" + Messaged.class.getSimpleName() + " regexTopic and topics both empty on " + method);
+        }
+        if (Utility.isNotEmpty(messaged.regexTopic()) && Utility.isNotEmpty(messaged.topics())) {
+            throw new RedkaleException(
+                    "@" + Messaged.class.getSimpleName() + " regexTopic and topics both not empty on " + method);
+        }
         if (!LoadMode.matches(remote, messaged.mode())) {
             return newMethod;
         }
@@ -157,8 +166,8 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
 
     protected void createInnerConsumer(
             ClassWriter pcw,
-            Class serviceImplClass,
-            Method method,
+            @Nonnull Class serviceImplClass,
+            @Nonnull Method method,
             Type messageType,
             Messaged messaged,
             String newDynName,
@@ -168,7 +177,6 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
         final String innerClassName = "Dyn" + MessageConsumer.class.getSimpleName() + index.incrementAndGet();
         final String innerFullName = newDynName + (pcw == null ? "" : "$") + innerClassName;
         final Class msgTypeClass = TypeToken.typeToClass(messageType);
-        final String msgTypeName = msgTypeClass.getName().replace('.', '/');
         final String msgTypeDesc = org.redkale.asm.Type.getDescriptor(msgTypeClass);
         final String messageConsumerName = MessageConsumer.class.getName().replace('.', '/');
         final String messageConsumerDesc = org.redkale.asm.Type.getDescriptor(MessageConsumer.class);
@@ -180,10 +188,9 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
             methodBeans = AsmMethodBoost.getMethodBeans(serviceType);
         }
         AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
-        String methodSignature = null;
         String genericMsgTypeDesc = msgTypeDesc;
         if (Utility.isNotEmpty(methodBean.getSignature())) {
-            methodSignature = methodBean.getSignature();
+            String methodSignature = methodBean.getSignature();
             methodSignature = methodSignature.substring(0, methodSignature.lastIndexOf(')') + 1) + "V";
             int start = methodSignature.indexOf('<') + 1;
             genericMsgTypeDesc = methodSignature.substring(start, methodSignature.lastIndexOf('>')); // 获取<>中的值
@@ -204,6 +211,15 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
         {
             AnnotationVisitor av = cw.visitAnnotation(org.redkale.asm.Type.getDescriptor(ResourceConsumer.class), true);
             Asms.visitAnnotation(av, ResourceConsumer.class, messaged);
+            av.visitEnd();
+        }
+        { // 设置DynForConsumer
+            AnnotationVisitor av = cw.visitAnnotation(org.redkale.asm.Type.getDescriptor(DynForConsumer.class), true);
+            String group = messaged.group();
+            if (Utility.isBlank(group)) {
+                group = serviceImplClass.getName().replace('$', '.');
+            }
+            av.visit("group", group);
             av.visitEnd();
         }
         { // 必须设置成@AutoLoad(false)， 否则预编译打包后会被自动加载

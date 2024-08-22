@@ -286,6 +286,14 @@ public class MessageModuleEngine extends ModuleEngine {
                 throw new RedkaleException("Not found " + MessageAgent.class.getSimpleName() + "(name = " + res.mq()
                         + ") on " + clazz.getName());
             }
+            if (res != null && Utility.isEmpty(res.regexTopic()) && Utility.isEmpty(res.topics())) {
+                throw new RedkaleException("@" + ResourceConsumer.class.getSimpleName()
+                        + " regexTopic and topics both empty on " + clazz.getName());
+            }
+            if (res != null && Utility.isNotEmpty(res.regexTopic()) && Utility.isNotEmpty(res.topics())) {
+                throw new RedkaleException("@" + ResourceConsumer.class.getSimpleName()
+                        + " regexTopic and topics both not empty on " + clazz.getName());
+            }
         }
         this.allMessageConsumerEntrys = allEntrys;
         logger.info("MessageAgent load MessageConsumer in " + (System.currentTimeMillis() - s) + " ms");
