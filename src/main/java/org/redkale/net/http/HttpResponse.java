@@ -22,6 +22,7 @@ import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.net.*;
 import org.redkale.net.Filter;
+import org.redkale.service.RetException;
 import org.redkale.service.RetResult;
 import org.redkale.util.*;
 import org.redkale.util.AnyValue.Entry;
@@ -374,7 +375,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     @Override
     protected void defaultError(Throwable t) {
-        finish(500, null);
+        if (t instanceof RetException) {
+            finish(jsonRootConvert, RetResult.TYPE_RET_STRING, ((RetException) t).retResult());
+        } else {
+            finish(500, null);
+        }
     }
 
     /**
@@ -1164,10 +1169,10 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             } else {
                 domain = "Domain=" + domain + "; ";
             }
-            String path = defaultCookie == null ? null : defaultCookie.getPath();
-            if (path == null || path.isEmpty()) {
-                path = "/";
-            }
+            //            String path = defaultCookie == null ? null : defaultCookie.getPath();
+            //            if (path == null || path.isEmpty()) {
+            //                path = "/";
+            //            }
             if (request.newSessionid.isEmpty()) {
                 headerArray.put(("Set-Cookie: " + HttpRequest.SESSIONID_NAME + "=; " + domain
                                 + "Path=/; Max-Age=0; HttpOnly\r\n")

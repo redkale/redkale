@@ -40,4 +40,8 @@ public class RetException extends RedkaleException {
     public int getCode() {
         return code;
     }
+
+    public RetResult retResult() {
+        return new RetResult(code, getMessage());
+    }
 }
