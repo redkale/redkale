@@ -10,9 +10,11 @@ import org.redkale.util.AnyValue;
 
 /**
  * HTTP 过滤器 <br>
+ * 可通过{@link org.redkale.annotation.Priority}进行顺序设置
  *
  * <p>详情见: https://redkale.org
  *
+ * @see org.redkale.annotation.Priority
  * @author zhangjx
  */
 public abstract class HttpFilter extends Filter<HttpContext, HttpRequest, HttpResponse> {

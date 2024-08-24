@@ -33,4 +33,3 @@ public class TestMessageRegexConsumer implements MessageConsumer<TestBean> {
         System.out.println("执行 TestMessageRegexConsumer.destroy");
     }
 }
-

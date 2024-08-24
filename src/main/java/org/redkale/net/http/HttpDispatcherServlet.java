@@ -13,6 +13,7 @@ import java.util.function.*;
 import java.util.logging.*;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+import org.redkale.annotation.Nonnull;
 import org.redkale.net.*;
 import org.redkale.net.Filter;
 import org.redkale.net.http.Rest.RestDynSourceType;
@@ -388,7 +389,7 @@ public class HttpDispatcherServlet
      * @param mappingPaths 匹配规则
      */
     @Override
-    public void addServlet(HttpServlet servlet, Object prefix, AnyValue conf, String... mappingPaths) {
+    public void addServlet(@Nonnull HttpServlet servlet, Object prefix, AnyValue conf, String... mappingPaths) {
         if (prefix == null) {
             prefix = "";
         }
