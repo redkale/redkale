@@ -5,6 +5,7 @@
  */
 package org.redkale.net.client;
 
+import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.*;
 import org.redkale.annotation.Nonnull;
@@ -51,6 +52,10 @@ public class ClientFuture<R extends ClientRequest, T> extends CompletableFuture<
         if (timeout != null && !timeout.isDone()) {
             timeout.cancel(true);
         }
+    }
+
+    public static ClientFuture[] array(Collection<ClientFuture> list) {
+        return list.toArray(new ClientFuture[list.size()]);
     }
 
     @Override // JDK9+

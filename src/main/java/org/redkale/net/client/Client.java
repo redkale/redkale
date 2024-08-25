@@ -43,6 +43,8 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
 
     protected final ScheduledThreadPoolExecutor timeoutScheduler;
 
+    protected final Random random = new Random();
+
     // 结合ClientRequest.isCompleted()使用
     // 使用场景：批量request提交时，后面的request需响应上一个request返回值来构建
     // 例如： MySQL批量提交PrepareSQL场景
@@ -404,7 +406,6 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         if (workThread != null && workThread.threads() == entrys.length && workThread.index() > -1) {
             return entrys[workThread.index()];
         }
-        ThreadLocalRandom random = ThreadLocalRandom.current();
         int index = workThread == null || workThread.index() < 0
                 ? random.nextInt(entrys.length)
                 : workThread.index() % entrys.length;

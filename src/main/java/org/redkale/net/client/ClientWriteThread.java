@@ -51,7 +51,7 @@ public class ClientWriteThread extends Thread {
                         list.add(respFuture);
                     }
                 }
-                conn.sendRequestToChannel(list.toArray(new ClientFuture[list.size()]));
+                conn.sendRequestToChannel(ClientFuture.array(list));
                 list.clear();
                 if (over) {
                     return;

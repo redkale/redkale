@@ -195,38 +195,6 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
         }
     }
 
-    //    private void sendFastRequestInLocking(R request, ClientFuture respFuture) {
-    //        ByteArray array = arrayThreadLocal.get();
-    //        array.clear();
-    //        request.writeTo(this, array);
-    //        if (request.isCompleted()) {
-    //            doneRequestCounter.increment();
-    //        } else { //还剩半包没发送完
-    //            pauseWriting.set(true);
-    //            currHalfWriteFuture = respFuture;
-    //        }
-    //        channel.fastWrite(array.getBytes());
-    //    }
-    //
-    //    private void sendFastRequestInLocking(ClientFuture[] respFutures) {
-    //        ByteArray array = arrayThreadLocal.get();
-    //        array.clear();
-    //        for (ClientFuture respFuture : respFutures) {
-    //            if (pauseWriting.get()) {
-    //                pauseRequests.add(respFuture);
-    //            } else {
-    //                ClientRequest request = respFuture.request;
-    //                request.writeTo(this, array);
-    //                if (request.isCompleted()) {
-    //                    doneRequestCounter.increment();
-    //                } else { //还剩半包没发送完
-    //                    pauseWriting.set(true);
-    //                    currHalfWriteFuture = respFuture;
-    //                }
-    //            }
-    //        }
-    //        channel.fastWrite(array.getBytes());
-    //    }
     // 发送半包和积压的请求数据包
     void sendHalfWriteInReadThread(R request, Throwable halfRequestExc) {
         writeLock.lock();
@@ -237,7 +205,6 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
                 this.currHalfWriteFuture = null;
                 if (halfRequestExc == null) {
                     offerFirstRespFuture(respFuture);
-                    // sendRequestInLocking(request, respFuture);
                     sendRequestToChannel(respFuture);
                 } else {
                     codec.responseComplete(true, respFuture, null, halfRequestExc);
