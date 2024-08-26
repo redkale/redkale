@@ -530,7 +530,7 @@ public abstract class Sncp {
             }
             newDynName += "_" + (normal ? name : hash(name));
         }
-        if (methodBoost == null) { // 加强动态时不能重复加载
+        if (Utility.inNativeImage() || methodBoost == null) { // 加强动态时不能重复加载
             try {
                 final String newDynClass = newDynName.replace('/', '.');
                 Class clz = RedkaleClassLoader.findDynClass(newDynClass);

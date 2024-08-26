@@ -41,8 +41,6 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
 
     protected final LongAdder doneResponseCounter = new LongAdder();
 
-    protected final AtomicBoolean writePending = new AtomicBoolean();
-
     protected final ReentrantLock writeLock = new ReentrantLock();
 
     protected final ByteArray writeArray = new ByteArray();
@@ -61,7 +59,6 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
 
                 @Override
                 public void failed(Throwable exc, ClientConnection attachment) {
-                    writePending.set(false);
                     attachment.dispose(exc);
                 }
             };

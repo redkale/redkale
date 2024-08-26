@@ -398,6 +398,10 @@ public final class Utility {
         return CPUS;
     }
 
+    public static boolean inNativeImage() {
+        return NATIVE_IMAGE_ENV;
+    }
+
     public static Function<String, ExecutorService> virtualExecutorFunction() {
         return virtualPoolFunction;
     }
