@@ -175,7 +175,7 @@ public final class Flipper extends RowBound {
         return flipper;
     }
 
-    public static boolean validLimit(Flipper flipper) {
+    public static boolean hasLimit(Flipper flipper) {
         return flipper != null && flipper.getLimit() > 0;
     }
 }

@@ -2488,7 +2488,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         //            if (flipper != null && flipper.getOffset() > 0) {
         //                set.absolute(flipper.getOffset());
         //            }
-        //            final int limit = Flipper.validLimit(flipper) ? flipper.getLimit() : Integer.MAX_VALUE;
+        //            final int limit = Flipper.hasLimit(flipper) ? flipper.getLimit() : Integer.MAX_VALUE;
         //            int i = 0;
         //            final DataResultSet rr = createDataResultSet(info, set);
         //            EntityBuilder<T> builder = info.getBuilder();

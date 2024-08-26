@@ -199,7 +199,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
         }
         // pageSql
         pageSql = listSubSql + createOrderbySql(info, flipper);
-        if (Flipper.validLimit(flipper)) {
+        if (Flipper.hasLimit(flipper)) {
             if ("oracle".equals(dbtype)) {
                 int start = flipper.getOffset();
                 int end = flipper.getOffset() + flipper.getLimit();

@@ -151,7 +151,7 @@ public class RowBound implements Serializable, Cloneable {
         return this;
     }
 
-    public static boolean validLimit(RowBound round) {
+    public static boolean hasLimit(RowBound round) {
         return round != null && round.getLimit() > 0;
     }
 
