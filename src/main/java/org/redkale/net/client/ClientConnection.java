@@ -34,9 +34,6 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
 
     protected final Client client;
 
-    @Nonnull
-    protected LongAdder respWaitingCounter;
-
     protected final LongAdder doneRequestCounter = new LongAdder();
 
     protected final LongAdder doneResponseCounter = new LongAdder();
@@ -45,9 +42,9 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
 
     protected final ByteArray writeArray = new ByteArray();
 
-    protected final ThreadLocal<ByteArray> arrayThreadLocal = Utility.withInitialThreadLocal(ByteArray::new);
-
     protected final ByteBuffer writeBuffer;
+
+    protected final AsyncConnection channel;
 
     protected final CompletionHandler<Integer, ClientConnection> writeHandler =
             new CompletionHandler<Integer, ClientConnection>() {
@@ -63,17 +60,11 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
                 }
             };
 
-    final AtomicBoolean pauseWriting = new AtomicBoolean();
-
-    final ConcurrentLinkedQueue<ClientFuture> pauseRequests = new ConcurrentLinkedQueue<>();
-
-    // pauseWriting=true，此字段才会有值; pauseWriting=false，此字段值为null
-    ClientFuture currHalfWriteFuture;
+    @Nonnull
+    protected LongAdder respWaitingCounter;
 
     @Nonnull
-    private Client.AddressConnEntry connEntry;
-
-    protected final AsyncConnection channel;
+    protected Client.AddressConnEntry connEntry;
 
     private final ClientCodec<R, P> codec;
 
@@ -84,6 +75,13 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
     private final ConcurrentHashMap<Serializable, ClientFuture<R, P>> respFutureMap = new ConcurrentHashMap<>();
 
     private final AtomicBoolean closed = new AtomicBoolean();
+
+    final AtomicBoolean pauseWriting = new AtomicBoolean();
+
+    final ConcurrentLinkedQueue<ClientFuture> pauseRequests = new ConcurrentLinkedQueue<>();
+
+    // pauseWriting=true，此字段才会有值; pauseWriting=false，此字段值为null
+    ClientFuture currHalfWriteFuture;
 
     Iterator<ClientFuture<R, P>> currRespIterator; // 必须在调用decodeMessages之前重置为null
 
@@ -193,18 +191,18 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
     }
 
     // 发送半包和积压的请求数据包
-    void sendHalfWriteInReadThread(R request, Throwable halfRequestExc) {
+    void sendHalfWriteInReadThread(R halfRequest, Throwable halfException) {
         writeLock.lock();
         try {
             pauseWriting.set(false);
             ClientFuture respFuture = this.currHalfWriteFuture;
             if (respFuture != null) {
                 this.currHalfWriteFuture = null;
-                if (halfRequestExc == null) {
+                if (halfException == null) {
                     offerFirstRespFuture(respFuture);
                     sendRequestToChannel(respFuture);
                 } else {
-                    codec.responseComplete(true, respFuture, null, halfRequestExc);
+                    codec.responseComplete(true, respFuture, null, halfException);
                 }
             }
             while (!pauseWriting.get() && (respFuture = pauseRequests.poll()) != null) {
