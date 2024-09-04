@@ -1247,7 +1247,7 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     @Override
-    protected Serializable getRequestid() {
+    protected final Serializable getRequestid() {
         return null;
     }
 

@@ -858,7 +858,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         } else if (val instanceof CompletionStage) {
             finishFuture(convert, val == obj ? type : null, (CompletionStage) val);
         } else if (val instanceof CharSequence) {
-            finish((String) val.toString());
+            finish(val.toString());
         } else if (val instanceof byte[]) {
             finish((byte[]) val);
         } else if (val instanceof File) {

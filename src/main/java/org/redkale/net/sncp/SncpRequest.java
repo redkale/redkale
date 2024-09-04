@@ -5,8 +5,6 @@
  */
 package org.redkale.net.sncp;
 
-import static org.redkale.net.client.ClientRequest.EMPTY_TRACEID;
-
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -15,6 +13,7 @@ import java.util.logging.Level;
 import org.redkale.convert.*;
 import org.redkale.convert.bson.BsonReader;
 import org.redkale.net.Request;
+import static org.redkale.net.client.ClientRequest.EMPTY_TRACEID;
 import org.redkale.util.*;
 
 /**
@@ -159,7 +158,7 @@ public class SncpRequest extends Request<SncpContext> {
     }
 
     @Override
-    protected Serializable getRequestid() {
+    protected final Serializable getRequestid() {
         return header.getSeqid();
     }
 

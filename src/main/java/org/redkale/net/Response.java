@@ -214,7 +214,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                     inNonBlocking = false;
                     workExecutor.execute(() -> {
                         try {
-                            f.doFilter(request, Response.this);
+                            f.doFilter(request, this);
                         } catch (Throwable t) {
                             context.getLogger().log(Level.WARNING, "Filter occur exception. request = " + request, t);
                             finishError(t);
@@ -236,7 +236,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                     inNonBlocking = false;
                     workExecutor.execute(() -> {
                         try {
-                            s.execute(request, Response.this);
+                            s.execute(request, this);
                         } catch (Throwable t) {
                             context.getLogger().log(Level.WARNING, "Servlet occur exception. request = " + request, t);
                             finishError(t);
