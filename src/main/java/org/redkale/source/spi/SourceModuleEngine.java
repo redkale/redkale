@@ -35,6 +35,7 @@ import org.redkale.source.DataSources;
 import org.redkale.source.DataSqlSource;
 import org.redkale.source.SearchSource;
 import org.redkale.source.SourceManager;
+import org.redkale.source.SourceType;
 import org.redkale.util.AnyValue;
 import org.redkale.util.AnyValueWriter;
 import org.redkale.util.InstanceProvider;
@@ -390,6 +391,11 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                         loadCacheSource(sourceConf.getValue(AbstractCacheSource.CACHE_SOURCE_RESOURCE), autoMemory);
                 if (source != null) {
                     resourceFactory.register(sourceName, CacheSource.class, source);
+                    for (SourceType t : source.getClass().getAnnotationsByType(SourceType.class)) {
+                        if (t.value() != CacheSource.class) {
+                            resourceFactory.register(sourceName, t.value(), source);
+                        }
+                    }
                 }
                 return source;
             }
@@ -403,6 +409,11 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
 
                 cacheSources.add(source);
                 resourceFactory.register(sourceName, CacheSource.class, source);
+                for (SourceType t : source.getClass().getAnnotationsByType(SourceType.class)) {
+                    if (t.value() != CacheSource.class) {
+                        resourceFactory.register(sourceName, t.value(), source);
+                    }
+                }
                 logger.info("Load CacheSource resourceName='" + sourceName + "', source=" + source + " in "
                         + (System.currentTimeMillis() - st) + " ms");
                 return source;
@@ -464,8 +475,10 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                         if (source instanceof DataSqlSource) {
                             resourceFactory.register(sourceName, DataSqlSource.class, source);
                         }
-                        if (source instanceof DataJdbcSource) {
-                            resourceFactory.register(sourceName, DataJdbcSource.class, source);
+                        for (SourceType t : source.getClass().getAnnotationsByType(SourceType.class)) {
+                            if (t.value() != DataSqlSource.class) {
+                                resourceFactory.register(sourceName, t.value(), source);
+                            }
                         }
                     }
                 }
@@ -536,5 +549,4 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
         ((AnyValueWriter) conf).setValue("name", sourceName);
         return conf;
     }
-
 }

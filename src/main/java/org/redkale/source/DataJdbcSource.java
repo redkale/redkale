@@ -32,6 +32,7 @@ import org.redkale.util.*;
 @AutoLoad(false)
 @SuppressWarnings("unchecked")
 @ResourceType(DataSource.class)
+@SourceType(DataJdbcSource.class)
 public class DataJdbcSource extends AbstractDataSqlSource {
 
     protected JdbcConnectionPool readPool;
