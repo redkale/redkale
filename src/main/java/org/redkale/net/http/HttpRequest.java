@@ -315,6 +315,10 @@ public class HttpRequest extends Request<HttpContext> {
         this.keepAlive = keepAlive;
     }
 
+    protected void setAnnotations(Annotation[] annotations) {
+        this.annotations = annotations;
+    }
+
     protected ConvertType getRespConvertType() {
         return this.respConvertType;
     }

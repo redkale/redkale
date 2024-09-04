@@ -6,11 +6,14 @@
 package org.redkale.net;
 
 import java.io.*;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.util.*;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.util.Creator;
 
 /**
  * 协议请求对象
@@ -44,6 +47,9 @@ public abstract class Request<C extends Context> {
 
     protected String traceid;
 
+    // Service动态生成接口的方法上的注解
+    protected Annotation[] annotations;
+
     protected AsyncConnection channel;
 
     /** properties 与 attributes 的区别在于：调用recycle时， attributes会被清空而properties会保留; properties 通常存放需要永久绑定在request里的一些对象 */
@@ -68,6 +74,7 @@ public abstract class Request<C extends Context> {
         this.pipelineCount = request.pipelineCount;
         this.pipelineCompleted = request.pipelineCompleted;
         this.traceid = request.traceid;
+        this.annotations = request.annotations;
         this.channel = request.channel;
     }
 
@@ -103,6 +110,7 @@ public abstract class Request<C extends Context> {
         completed = false;
         keepAlive = false;
         attributes.clear();
+        annotations = null;
         channel = null; // close it by response
     }
 
@@ -158,6 +166,38 @@ public abstract class Request<C extends Context> {
 
     public long getCreateTime() {
         return createTime;
+    }
+
+    public Annotation[] getAnnotations() {
+        if (annotations == null) {
+            return new Annotation[0];
+        }
+        return Arrays.copyOfRange(annotations, 0, annotations.length);
+    }
+
+    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
+        if (annotations != null) {
+            for (Annotation ann : annotations) {
+                if (ann.annotationType() == annotationClass) {
+                    return annotationClass.cast(ann);
+                }
+            }
+        }
+        return null;
+    }
+
+    public <T extends Annotation> T[] getAnnotationsByType(Class<T> annotationClass) {
+        if (annotations == null) {
+            return (T[]) Array.newInstance(annotationClass, 0);
+        } else {
+            List<T> list = new ArrayList<>();
+            for (Annotation ann : annotations) {
+                if (ann.annotationType() == annotationClass) {
+                    list.add(annotationClass.cast(ann));
+                }
+            }
+            return list.toArray(Creator.funcArray(annotationClass));
+        }
     }
 
     /**

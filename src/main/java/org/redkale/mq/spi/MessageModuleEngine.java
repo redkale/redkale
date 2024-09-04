@@ -85,9 +85,9 @@ public class MessageModuleEngine extends ModuleEngine {
 
     // 在doInstance方法里被调用
     void addMessageConsumer(MessageConsumer consumer) {
-        String mqName = environment.getPropertyValue(
-                consumer.getClass().getAnnotation(ResourceConsumer.class).mq());
-        if (findMessageAgent(mqName) == null) {
+        ResourceConsumer rc = consumer.getClass().getAnnotation(ResourceConsumer.class);
+        String mqName = environment.getPropertyValue(rc.mq());
+        if (rc.required() && findMessageAgent(mqName) == null) {
             throw new RedkaleException("Not found " + MessageAgent.class.getSimpleName() + "(name = " + mqName + ") on "
                     + consumer.getClass().getName());
         }

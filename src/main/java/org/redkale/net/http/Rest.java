@@ -65,13 +65,17 @@ public final class Rest {
 
     static final String REST_SERVICE_FIELD_NAME = "_redkale_service";
 
-    static final String REST_SERVICEMAP_FIELD_NAME =
-            "_redkale_serviceMap"; // 如果只有name=""的Service资源，则实例中_servicemap必须为null
+    // 如果只有name=""的Service资源，则实例中_servicemap必须为null
+    static final String REST_SERVICEMAP_FIELD_NAME = "_redkale_serviceMap";
 
-    private static final String REST_PARAMTYPES_FIELD_NAME =
-            "_redkale_paramTypes"; // 存在泛型的参数数组 Type[][] 第1维度是方法的下标， 第二维度是参数的下标
+    // 存在存在方法注解数组 Annotation[][] 第1维度是方法的下标， 第二维度是参数的下标
+    private static final String REST_METHOD_ANNS_NAME = "_redkale_methodAnns";
 
-    private static final String REST_RETURNTYPES_FIELD_NAME = "_redkale_returnTypes"; // 存在泛型的结果数组
+    // 存在泛型的参数数组 Type[][] 第1维度是方法的下标， 第二维度是参数的下标
+    private static final String REST_PARAMTYPES_FIELD_NAME = "_redkale_paramTypes";
+
+    // 存在泛型的结果数组
+    private static final String REST_RETURNTYPES_FIELD_NAME = "_redkale_returnTypes";
 
     private static final java.lang.reflect.Type TYPE_RETRESULT_STRING = new TypeToken<RetResult<String>>() {}.getType();
 
@@ -289,6 +293,12 @@ public final class Rest {
 
     public static String getHttpRespTopicPrefix() {
         return "http.resp.";
+    }
+
+    // 仅供Rest动态构建里使用
+    @ClassDepends
+    public static void setRequestAnnotations(HttpRequest request, Annotation[] annotations) {
+        request.setAnnotations(annotations);
     }
 
     // 仅供Rest动态构建里 currentUserid() 使用
@@ -1306,6 +1316,7 @@ public final class Rest {
             final Map<String, Object> classMap = new LinkedHashMap<>();
 
             final List<MappingEntry> entrys = new ArrayList<>();
+            final List<Annotation[]> methodAnns = new ArrayList<>();
             final List<java.lang.reflect.Type[]> paramTypes = new ArrayList<>();
             final List<java.lang.reflect.Type> retvalTypes = new ArrayList<>();
 
@@ -1352,7 +1363,7 @@ public final class Rest {
                     if (mappings == null) {
                         continue;
                     }
-
+                    methodAnns.add(method.getAnnotations());
                     java.lang.reflect.Type[] ptypes =
                             TypeToken.getGenericType(method.getGenericParameterTypes(), serviceType);
                     for (java.lang.reflect.Type t : ptypes) {
@@ -1368,6 +1379,7 @@ public final class Rest {
                                 + ", serviceType is " + serviceType.getName());
                     }
                     retvalTypes.add(rtype);
+
                     if (mappings.isEmpty()) { // 没有Mapping，设置一个默认值
                         MappingEntry entry = new MappingEntry(
                                 serRpcOnly,
@@ -1754,6 +1766,12 @@ public final class Rest {
                 JsonFactory childFactory = createJsonFactory((RestConvert[]) rc[0], (RestConvertCoder[]) rc[1]);
                 genField.set(obj, childFactory.getConvert());
             }
+            Field annsfield = newClazz.getDeclaredField(REST_METHOD_ANNS_NAME);
+            annsfield.setAccessible(true);
+            Annotation[][] methodAnnArray = new Annotation[methodAnns.size()][];
+            methodAnnArray = methodAnns.toArray(methodAnnArray);
+            annsfield.set(obj, methodAnnArray);
+
             Field typesfield = newClazz.getDeclaredField(REST_PARAMTYPES_FIELD_NAME);
             typesfield.setAccessible(true);
             java.lang.reflect.Type[][] paramtypeArray = new java.lang.reflect.Type[paramTypes.size()][];
@@ -1866,6 +1884,7 @@ public final class Rest {
         final Map<String, org.redkale.util.Attribute> restAttributes = new LinkedHashMap<>();
         final Map<String, Object> classMap = new LinkedHashMap<>();
         final Map<java.lang.reflect.Type, String> typeRefs = new LinkedHashMap<>();
+        final List<Annotation[]> methodAnns = new ArrayList<>();
         final List<java.lang.reflect.Type[]> paramTypes = new ArrayList<>();
         final List<java.lang.reflect.Type> retvalTypes = new ArrayList<>();
         final Map<String, java.lang.reflect.Type> bodyTypes = new HashMap<>();
@@ -1926,6 +1945,7 @@ public final class Rest {
                     }
                 }
             }
+            methodAnns.add(method.getAnnotations());
             java.lang.reflect.Type[] ptypes = TypeToken.getGenericType(method.getGenericParameterTypes(), serviceType);
             for (java.lang.reflect.Type t : ptypes) {
                 if (!TypeToken.isClassType(t)) {
@@ -2159,6 +2179,19 @@ public final class Rest {
             mv.visitLabel(lserif);
             mv.visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[] {serviceTypeInternalName});
             mv.visitVarInsn(ASTORE, 3);
+
+            // 执行setRequestAnnotations
+            mv.visitVarInsn(ALOAD, 1);
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitFieldInsn(GETFIELD, newDynName, REST_METHOD_ANNS_NAME, "[[Ljava/lang/annotation/Annotation;");
+            Asms.visitInsn(mv, entry.methodIdx); // 方法下标
+            mv.visitInsn(AALOAD);
+            mv.visitMethodInsn(
+                    INVOKESTATIC,
+                    restInternalName,
+                    "setRequestAnnotations",
+                    "(" + reqDesc + "[Ljava/lang/annotation/Annotation;)V",
+                    false);
 
             final int maxStack = 3 + params.length;
             List<int[]> varInsns = new ArrayList<>();
@@ -4153,6 +4186,17 @@ public final class Rest {
             fv.visitEnd();
         }
 
+        { // _methodAnns字段 Annotation[][]
+            fv = cw.visitField(ACC_PRIVATE, REST_METHOD_ANNS_NAME, "[[Ljava/lang/annotation/Annotation;", null, null);
+            av0 = fv.visitAnnotation(Type.getDescriptor(Comment.class), true);
+            StringBuilder sb = new StringBuilder().append('[');
+            for (Annotation[] rs : methodAnns) {
+                sb.append(Arrays.toString(rs)).append(',');
+            }
+            av0.visit("value", sb.append(']').toString());
+            av0.visitEnd();
+            fv.visitEnd();
+        }
         { // _paramtypes字段 java.lang.reflect.Type[][]
             fv = cw.visitField(ACC_PRIVATE, REST_PARAMTYPES_FIELD_NAME, "[[Ljava/lang/reflect/Type;", null, null);
             av0 = fv.visitAnnotation(Type.getDescriptor(Comment.class), true);
@@ -4243,6 +4287,13 @@ public final class Rest {
                 genField.set(obj, childFactory.getConvert());
                 RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), genField);
             }
+            Field annsfield = newClazz.getDeclaredField(REST_METHOD_ANNS_NAME);
+            annsfield.setAccessible(true);
+            Annotation[][] methodAnnArray = new Annotation[methodAnns.size()][];
+            methodAnnArray = methodAnns.toArray(methodAnnArray);
+            annsfield.set(obj, methodAnnArray);
+            RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), annsfield);
+
             Field typesfield = newClazz.getDeclaredField(REST_PARAMTYPES_FIELD_NAME);
             typesfield.setAccessible(true);
             java.lang.reflect.Type[][] paramtypeArray = new java.lang.reflect.Type[paramTypes.size()][];

@@ -3,8 +3,6 @@
  */
 package org.redkale.util;
 
-import static org.redkale.asm.Opcodes.*;
-
 import java.io.*;
 import java.lang.reflect.*;
 import java.math.*;
@@ -16,6 +14,7 @@ import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Stream;
 import org.redkale.asm.*;
+import static org.redkale.asm.Opcodes.*;
 
 /** @author zhangjx */
 class Inners {
@@ -224,6 +223,9 @@ class Inners {
         }
 
         public static <T> IntFunction<T[]> createArrayFunction(final Class<T> clazz) {
+            if (Utility.inNativeImage()) {
+                return t -> (T[]) Array.newInstance(clazz, t);
+            }
             final String interName = clazz.getName().replace('.', '/');
             final String interDesc = org.redkale.asm.Type.getDescriptor(clazz);
             final ClassLoader loader = clazz.getClassLoader();
