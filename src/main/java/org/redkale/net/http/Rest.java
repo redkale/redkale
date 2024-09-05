@@ -94,7 +94,7 @@ public final class Rest {
     @Retention(RUNTIME)
     public static @interface RestDyn {
 
-        // 是否不需要解析HttpHeader，对应HttpContext.lazyHeaders
+        // 是否不需要解析HttpHeader，对应HttpContext.lazyHeader
         boolean simple() default false;
 
         // 动态生成的类的子类需要关联一下，否则在运行过程中可能出现NoClassDefFoundError

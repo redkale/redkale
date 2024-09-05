@@ -44,14 +44,14 @@ public class HttpContext extends Context {
     protected final AnyValue rpcAuthenticatorConfig;
 
     // 延迟解析header
-    protected final boolean lazyHeaders;
+    protected final boolean lazyHeader;
 
     // 不带通配符的mapping url的缓存对象
     final Map<ByteArray, String>[] uriPathCaches = new Map[100];
 
     public HttpContext(HttpContextConfig config) {
         super(config);
-        this.lazyHeaders = config.lazyHeaders;
+        this.lazyHeader = config.lazyHeader;
         this.remoteAddrHeader = config.remoteAddrHeader;
         this.remoteAddrHeaders = config.remoteAddrHeaders;
         this.localHeader = config.localHeader;
@@ -234,7 +234,7 @@ public class HttpContext extends Context {
 
     public static class HttpContextConfig extends ContextConfig {
         // 是否延迟解析http-header
-        public boolean lazyHeaders;
+        public boolean lazyHeader;
 
         public String remoteAddrHeader;
 

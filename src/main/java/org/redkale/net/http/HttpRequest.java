@@ -374,7 +374,7 @@ public class HttpRequest extends Request<HttpContext> {
                 this.headerBytes = httpLast.headerBytes;
                 this.headerParsed = httpLast.headerParsed;
                 this.headers.setAll(httpLast.headers);
-            } else if (context.lazyHeaders && getmethod) { // 非GET必须要读header，会有Content-Length
+            } else if (context.lazyHeader && getmethod) { // 非GET必须要读header，会有Content-Length
                 int rs = loadHeaderBytes(buffer);
                 if (rs != 0) {
                     buffer.clear();
@@ -789,7 +789,7 @@ public class HttpRequest extends Request<HttpContext> {
                     this.requestPath = toDecodeString(bytes, 0, bytes.length(), charset);
                     this.lastPathString = null;
                     this.lastPathBytes = null;
-                } else if (context.lazyHeaders) {
+                } else if (context.lazyHeader) {
                     byte[] lastURIBytes = lastPathBytes;
                     if (lastURIBytes != null && lastURIBytes.length == size && bytes.deepEquals(lastURIBytes)) {
                         this.requestPath = this.lastPathString;
@@ -1217,7 +1217,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     @Override
     protected HttpRequest copyHeader() {
-        if (!PIPELINE_SAME_HEADERS || !context.lazyHeaders) {
+        if (!PIPELINE_SAME_HEADERS || !context.lazyHeader) {
             return null;
         }
         HttpRequest req = new HttpRequest(context, this.body);

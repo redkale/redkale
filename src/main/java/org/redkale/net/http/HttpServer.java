@@ -101,7 +101,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
     @Override
     protected String startExtLog() {
-        return context.lazyHeaders ? ", lazyHeaders: true" : "";
+        return context.lazyHeader ? ", lazyHeader: true" : "";
     }
 
     public List<HttpServlet> getHttpServlets() {
@@ -595,7 +595,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
             contextConfig.remoteAddrHeader = addrHeader;
             contextConfig.remoteAddrHeaders = null;
         }
-        contextConfig.lazyHeaders = lazyHeader;
+        contextConfig.lazyHeader = lazyHeader;
         contextConfig.localHeader = localHeader;
         contextConfig.localParameter = localParameter;
         contextConfig.rpcAuthenticatorConfig = rpcAuthenticatorConfig;
