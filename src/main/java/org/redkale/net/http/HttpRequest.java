@@ -1670,6 +1670,7 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @return Annotation[]
      */
+    @Override
     @ConvertDisabled
     public Annotation[] getAnnotations() {
         if (this.annotations == null) {
@@ -1687,6 +1688,7 @@ public class HttpRequest extends Request<HttpContext> {
      * @param annotationClass 注解类型
      * @return Annotation
      */
+    @Override
     public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
         if (this.annotations == null) {
             return null;
@@ -1706,6 +1708,7 @@ public class HttpRequest extends Request<HttpContext> {
      * @param annotationClass 注解类型
      * @return Annotation[]
      */
+    @Override
     public <T extends Annotation> T[] getAnnotationsByType(Class<T> annotationClass) {
         if (this.annotations == null) {
             return Creator.newArray(annotationClass, 0);

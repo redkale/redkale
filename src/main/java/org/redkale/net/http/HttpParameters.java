@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.TextConvert;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.RedkaleException;
@@ -164,6 +165,7 @@ public class HttpParameters implements RestParams, Serializable {
         return this.map;
     }
 
+    @ConvertDisabled
     public boolean isEmpty() {
         return this.map == null || this.map.isEmpty();
     }

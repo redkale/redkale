@@ -144,8 +144,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
         }
     }
 
-    protected void decode(
-            final ByteBuffer buffer, final Response response, final int pipelineIndex, final Request lastReq) {
+    protected void decode(ByteBuffer buffer, Response response, int pipelineIndex, Request lastReq) {
         response.init(channel);
         final Request request = response.request;
         final int rs = request.readHeader(buffer, lastReq);
@@ -163,12 +162,8 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
         } else if (rs == 0) {
             context.dispatcher.incrExecuteCounter();
             int pindex = pipelineIndex;
-            boolean pipeline = false;
-            boolean seted = false;
-            boolean completed = request.completed;
             Request hreq = lastReq;
-            if (buffer.hasRemaining()) {
-                pipeline = true;
+            if (buffer.hasRemaining()) { // pipeline模式
                 if (pindex == 0) {
                     pindex++;
                 }
@@ -178,15 +173,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
                 if (hreq == null) {
                     hreq = request.copyHeader();
                 }
-            } else {
-                if (request.getRequestid() == null) { // 存在requestid则无视pipeline模式
-                    request.pipeline(pindex, pindex);
-                }
-                channel.setReadBuffer(buffer.clear());
-                seted = true;
-            }
-            context.executeDispatch(request, response);
-            if (pipeline) {
+                context.executeDispatch(request, response);
                 final Response pipelineResponse = createResponse();
                 try {
                     decode(buffer, pipelineResponse, pindex + 1, hreq);
@@ -194,13 +181,15 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
                     context.logger.log(Level.WARNING, "dispatch pipeline servlet abort, force to close channel ", t);
                     pipelineResponse.codecError(t);
                 }
-            } else if (completed) {
-                if (!seted) {
-                    channel.setReadBuffer(buffer.clear());
+            } else {
+                if (request.getRequestid() == null) { // 存在requestid则无视pipeline模式
+                    request.pipeline(pindex, pindex);
                 }
+                channel.setReadBuffer(buffer.clear());
+                context.executeDispatch(request, response);
                 channel.readRegister(this);
             }
-        } else {
+        } else { // rs > 0
             channel.setReadBuffer(buffer);
             channel.read(readHandler.prepare(request, response, pipelineIndex, lastReq));
         }

@@ -44,7 +44,7 @@ public class HttpContext extends Context {
     protected final AnyValue rpcAuthenticatorConfig;
 
     // 延迟解析header
-    protected final boolean lazyHeaders; // 存在动态改值
+    protected final boolean lazyHeaders;
 
     // 不带通配符的mapping url的缓存对象
     final Map<ByteArray, String>[] uriPathCaches = new Map[100];
