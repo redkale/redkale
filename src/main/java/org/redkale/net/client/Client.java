@@ -81,7 +81,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     protected Supplier<R> closeRequestSupplier;
 
     // 创建连接后进行的登录鉴权操作
-    protected Function<String, Function<C, CompletableFuture<C>>> authenticate;
+    protected BiFunction<WorkThread, String, Function<C, CompletableFuture<C>>> authenticate;
 
     protected Client(String name, AsyncGroup group, ClientAddress address) {
         this(name, group, true, address, Utility.cpus(), DEFAULT_MAX_PIPELINES, null, null, null);
@@ -106,7 +106,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
             boolean tcp,
             ClientAddress address,
             int maxConns,
-            Function<String, Function<C, CompletableFuture<C>>> authenticate) {
+            BiFunction<WorkThread, String, Function<C, CompletableFuture<C>>> authenticate) {
         this(name, group, tcp, address, maxConns, DEFAULT_MAX_PIPELINES, null, null, authenticate);
     }
 
@@ -117,7 +117,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
             ClientAddress address,
             int maxConns,
             Supplier<R> closeRequestSupplier,
-            Function<String, Function<C, CompletableFuture<C>>> authenticate) {
+            BiFunction<WorkThread, String, Function<C, CompletableFuture<C>>> authenticate) {
         this(name, group, tcp, address, maxConns, DEFAULT_MAX_PIPELINES, null, closeRequestSupplier, authenticate);
     }
 
@@ -131,7 +131,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
             int maxPipelines,
             Supplier<R> pingRequestSupplier,
             Supplier<R> closeRequestSupplier,
-            Function<String, Function<C, CompletableFuture<C>>> authenticate) {
+            BiFunction<WorkThread, String, Function<C, CompletableFuture<C>>> authenticate) {
         if (maxPipelines < 1) {
             throw new IllegalArgumentException("maxPipelines must bigger 0");
         }
@@ -346,6 +346,9 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
             R virtualReq = createVirtualRequestAfterConnect();
             if (virtualReq != null) {
                 virtualReq.traceid = traceid;
+                if (virtualReq.workThread == null) {
+                    virtualReq.workThread = workThread;
+                }
                 future = future.thenCompose(conn -> {
                     Traces.currentTraceid(traceid);
                     return conn.writeVirtualRequest(virtualReq).thenApply(v -> conn);
@@ -357,7 +360,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
                 });
             }
             if (authenticate != null) {
-                future = future.thenCompose(authenticate.apply(traceid));
+                future = future.thenCompose(authenticate.apply(workThread, traceid));
             }
             return future.thenApply(c -> {
                         c.setAuthenticated(true);
