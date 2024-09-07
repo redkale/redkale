@@ -392,6 +392,9 @@ public class HttpRequest extends Request<HttpContext> {
                 this.headerHalfLen = this.headerLength;
             }
             bytes.clear();
+            if (this.headerLength > context.getMaxHeader()) {
+                return -1;
+            }
             if (this.contentType != null && this.contentType.contains("boundary=")) {
                 this.boundary = true;
             }

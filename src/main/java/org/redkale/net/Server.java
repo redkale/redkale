@@ -101,6 +101,9 @@ public abstract class Server<
     // 最大连接数, 为0表示没限制
     protected int maxConns;
 
+    // 请求头大小的上限，单位:字节
+    protected int maxHeader;
+
     // 请求包大小的上限，单位:字节
     protected int maxBody;
 
@@ -131,14 +134,15 @@ public abstract class Server<
         Objects.requireNonNull(config);
         this.config = config;
         this.address = new InetSocketAddress(config.getValue("host", "0.0.0.0"), config.getIntValue("port", 80));
-        this.charset = Charset.forName(config.getValue("charset", "UTF-8"));
-        this.maxConns = config.getIntValue("maxconns", 0);
         this.aliveTimeoutSeconds = config.getIntValue("aliveTimeoutSeconds", 30);
         this.readTimeoutSeconds = config.getIntValue("readTimeoutSeconds", 0);
         this.writeTimeoutSeconds = config.getIntValue("writeTimeoutSeconds", 0);
         this.backlog = parseLenth(config.getValue("backlog"), 1024);
+        this.charset = Charset.forName(config.getValue("charset", "UTF-8"));
+        this.maxConns = config.getIntValue("maxConns", 0);
+        this.maxHeader = parseLenth(config.getValue("maxHeader"), 16 * 1024);
         this.maxBody =
-                parseLenth(config.getValue("maxbody"), "UDP".equalsIgnoreCase(netprotocol) ? 16 * 1024 : 256 * 1024);
+                parseLenth(config.getValue("maxBody"), "UDP".equalsIgnoreCase(netprotocol) ? 16 * 1024 : 256 * 1024);
         int bufCapacity = parseLenth(
                 config.getValue("bufferCapacity"),
                 "UDP".equalsIgnoreCase(netprotocol) ? UDP_BUFFER_CAPACITY : 32 * 1024);
@@ -298,10 +302,6 @@ public abstract class Server<
         return responsePoolSize;
     }
 
-    public int getMaxBody() {
-        return maxBody;
-    }
-
     public int getAliveTimeoutSeconds() {
         return aliveTimeoutSeconds;
     }
@@ -316,6 +316,14 @@ public abstract class Server<
 
     public int getMaxConns() {
         return maxConns;
+    }
+
+    public int getMaxHeader() {
+        return maxHeader;
+    }
+
+    public int getMaxBody() {
+        return maxBody;
     }
 
     @SuppressWarnings("unchecked")
@@ -402,6 +410,13 @@ public abstract class Server<
         }
     }
 
+    public void changeCharset(final Charset newCharset) {
+        this.charset = newCharset;
+        if (this.context != null) {
+            this.context.charset = newCharset;
+        }
+    }
+
     public void changeMaxconns(final int newMaxConns) {
         this.maxConns = newMaxConns;
         if (this.context != null) {
@@ -412,17 +427,17 @@ public abstract class Server<
         }
     }
 
-    public void changeCharset(final Charset newcharset) {
-        this.charset = newcharset;
+    public void changeMaxHeader(final int newMaxHeader) {
+        this.maxHeader = newMaxHeader;
         if (this.context != null) {
-            this.context.charset = newcharset;
+            this.context.maxHeader = newMaxHeader;
         }
     }
 
-    public void changeMaxbody(final int newmaxbody) {
-        this.maxBody = newmaxbody;
+    public void changeMaxBody(final int newMaxBody) {
+        this.maxBody = newMaxBody;
         if (this.context != null) {
-            this.context.maxBody = newmaxbody;
+            this.context.maxBody = newMaxBody;
         }
     }
 
@@ -460,6 +475,7 @@ public abstract class Server<
         contextConfig.sslContext = this.sslContext;
         contextConfig.bufferCapacity = this.bufferCapacity;
         contextConfig.maxConns = this.maxConns;
+        contextConfig.maxHeader = this.maxHeader;
         contextConfig.maxBody = this.maxBody;
         contextConfig.charset = this.charset;
         contextConfig.serverAddress = this.address;
@@ -522,11 +538,10 @@ public abstract class Server<
     /**
      * 判断是否存在Filter
      *
-     * @param <T> 泛型
      * @param filterClassName Filter类
      * @return boolean
      */
-    public <T extends Filter> boolean containsFilter(String filterClassName) {
+    public boolean containsFilter(String filterClassName) {
         return this.dispatcher.containsFilter(filterClassName);
     }
 

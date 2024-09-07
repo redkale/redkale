@@ -60,6 +60,9 @@ public class Context {
     // 最大连接数, 为0表示没限制
     protected int maxConns;
 
+    // 请求头的大小上限, 默认16K
+    protected int maxHeader;
+
     // 请求内容的大小上限, 默认64K
     protected int maxBody;
 
@@ -88,6 +91,7 @@ public class Context {
                 config.sslContext,
                 config.bufferCapacity,
                 config.maxConns,
+                config.maxHeader,
                 config.maxBody,
                 config.charset,
                 config.serverAddress,
@@ -107,6 +111,7 @@ public class Context {
             SSLContext sslContext,
             int bufferCapacity,
             final int maxConns,
+            final int maxHeader,
             final int maxBody,
             Charset charset,
             InetSocketAddress address,
@@ -123,6 +128,7 @@ public class Context {
         this.sslContext = sslContext;
         this.bufferCapacity = bufferCapacity;
         this.maxConns = maxConns;
+        this.maxHeader = maxHeader;
         this.maxBody = maxBody;
         this.charset = StandardCharsets.UTF_8.equals(charset) ? null : charset;
         this.serverAddress = address;
@@ -193,6 +199,10 @@ public class Context {
         return maxConns;
     }
 
+    public int getMaxHeader() {
+        return maxHeader;
+    }
+    
     public int getMaxBody() {
         return maxBody;
     }
@@ -269,6 +279,9 @@ public class Context {
 
         // 字符集
         public Charset charset;
+
+        // 请求头的大小上限, 默认16K
+        public int maxHeader;
 
         // 请求内容的大小上限, 默认64K
         public int maxBody;

@@ -155,8 +155,9 @@ serviceid1_name1  serviceid1_name2   serviceid2_name1  serviceid2_name2
         lib:                 server额外的class目录， 默认为${APP_HOME}/libs/*;
         charset:             文本编码， 默认: UTF-8
         backlog:             默认10K
-        maxconns：           最大连接数, 小于1表示无限制， 默认: 0
-        maxbody:             request.body最大值， 默认: 256K
+        maxConns：           最大连接数, 小于1表示无限制， 默认: 0
+        maxHeader:           request.header最大值， 默认: 16K
+        maxBody:             request.body最大值， 默认: 256K
         bufferCapacity:      ByteBuffer的初始化大小， TCP默认: 32K;  (HTTP 2.0、WebSocket，必须要16k以上); UDP默认: 8K
         bufferPoolSize：     ByteBuffer池的大小，默认: 线程数*4
         responsePoolSize：   Response池的大小，默认: 1024

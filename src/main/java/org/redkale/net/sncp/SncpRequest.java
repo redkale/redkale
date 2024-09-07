@@ -81,6 +81,14 @@ public class SncpRequest extends Request<SncpContext> {
                                         + this.headerSize);
                 return -1;
             }
+            if (this.headerSize > context.getMaxHeader()) {
+                context.getLogger()
+                        .log(
+                                Level.WARNING,
+                                "sncp buffer header.length must lower " + context.getMaxHeader() + ", but "
+                                        + this.headerSize);
+                return -1;
+            }
             this.readState = READ_STATE_HEADER;
         }
         // ---------------------head----------------------------------
