@@ -37,8 +37,6 @@ public final class EntityInfo<T> {
     // 全局静态资源
     private static final ConcurrentHashMap<Class, EntityInfo> entityInfos = new ConcurrentHashMap<>();
 
-    private static final ReentrantLock infosLock = new ReentrantLock();
-
     // 日志
     private static final Logger logger = Logger.getLogger(EntityInfo.class.getSimpleName());
 
@@ -218,27 +216,13 @@ public final class EntityInfo<T> {
             final Properties conf,
             DataSource source,
             BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader) {
-        EntityInfo rs = entityInfos.get(clazz);
-        if (rs != null && (rs.cache == null || rs.cache.isFullLoaded())) {
-            return rs;
-        }
-        infosLock.lock();
-        try {
-            rs = entityInfos.get(clazz);
-            if (rs == null) {
-                rs = new EntityInfo(clazz, cacheForbidden, conf, source, fullloader);
-                entityInfos.put(clazz, rs);
-            }
-            if (rs.cache != null && !rs.isCacheFullLoaded()) {
-                if (fullloader == null) {
-                    throw new IllegalArgumentException(clazz.getName() + " auto loader  is illegal");
-                }
+        return entityInfos.computeIfAbsent(clazz, clz -> {
+            EntityInfo rs = new EntityInfo(clz, cacheForbidden, conf, source, fullloader);
+            if (rs.cache != null) {
                 rs.cache.fullLoadAsync();
             }
             return rs;
-        } finally {
-            infosLock.unlock();
-        }
+        });
     }
 
     /**
