@@ -21,6 +21,7 @@ import static org.redkale.boot.Application.*;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.net.AsyncGroup;
+import org.redkale.net.WorkThread;
 import org.redkale.persistence.Table;
 import org.redkale.service.Local;
 import static org.redkale.source.DataSources.*;
@@ -93,6 +94,9 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
     // 超过多少毫秒视为很慢, 会打印错误级别的日志, 默认值: 3000
     protected long slowmsError;
 
+    // 是否非阻塞式, 非阻塞模式下不会在runWork里执行结果回调, 默认值: false
+    protected boolean clientNonBlocking;
+
     // 用于反向LIKE使用
     protected String containSQL;
 
@@ -139,11 +143,6 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
     }
 
     protected void afterResourceChange() {
-        this.autoDDL = "true"
-                .equals(readConfProps
-                        .getProperty(DATA_SOURCE_TABLE_AUTODDL, "false")
-                        .trim());
-
         this.containSQL =
                 readConfProps.getProperty(DATA_SOURCE_CONTAIN_SQLTEMPLATE, "LOCATE(#{keystr}, #{column}) > 0");
         this.notContainSQL =
@@ -154,7 +153,9 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
         this.tablecopySQL = readConfProps.getProperty(
                 DATA_SOURCE_TABLECOPY_SQLTEMPLATE, "CREATE TABLE IF NOT EXISTS #{newtable} LIKE #{oldtable}");
 
+        this.autoDDL = "true".equals(readConfProps.getProperty(DATA_SOURCE_TABLE_AUTODDL, "false"));
         this.cacheForbidden = "NONE".equalsIgnoreCase(readConfProps.getProperty(DATA_SOURCE_CACHEMODE));
+        this.clientNonBlocking = "true".equalsIgnoreCase(readConfProps.getProperty(DATA_SOURCE_NON_BLOCKING, "false"));
         this.slowmsWarn = Integer.parseInt(
                 readConfProps.getProperty(DATA_SOURCE_SLOWMS_WARN, "2000").trim());
         this.slowmsError = Integer.parseInt(
@@ -372,6 +373,15 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
         afterResourceChange();
         if (sb.length() > 0) {
             logger.log(Level.INFO, sb.toString());
+        }
+    }
+
+    @Override
+    protected <T> void complete(WorkThread workThread, CompletableFuture<T> future, T value) {
+        if (clientNonBlocking) {
+            future.complete(value);
+        } else {
+            super.complete(workThread, future, value);
         }
     }
 

@@ -77,6 +77,9 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
 
     protected int writeTimeoutSeconds;
 
+    // 是否非阻塞式, 非阻塞模式下不会在runWork里执行结果回调, 默认值: false
+    protected boolean nonBlocking;
+
     // ------------------ 可选项 ------------------
     // PING心跳的请求数据，为null且pingInterval<1表示不需要定时ping
     protected Supplier<R> pingRequestSupplier;

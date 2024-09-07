@@ -101,7 +101,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
 
     @Override
     protected String startExtLog() {
-        return context.lazyHeader ? ", lazyHeader: true" : "";
+        return (context.lazyHeader ? ", lazyHeader: true" : "") + (context.sameHeader ? ", sameHeader: true" : "");
     }
 
     public List<HttpServlet> getHttpServlets() {
@@ -399,6 +399,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         final List<String[]> defaultSetHeaders = new ArrayList<>();
         boolean autoOptions = false;
         boolean lazyHeader = false;
+        boolean sameHeader = false;
         int datePeriod = 0;
         String plainContentType = null;
         String jsonContentType = null;
@@ -409,10 +410,10 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
         AnyValue rpcAuthenticatorConfig = null;
 
         if (config != null) {
-            lazyHeader = config.getBoolValue("lazy", false); // 兼容旧配置
             AnyValue reqConf = config.getAnyValue("request");
             if (reqConf != null) {
                 lazyHeader = reqConf.getBoolValue("lazyHeader", lazyHeader);
+                sameHeader = reqConf.getBoolValue("sameHeader", sameHeader);
                 rpcAuthenticatorConfig = reqConf.getAnyValue("rpc");
                 AnyValue raddr = reqConf.getAnyValue("remoteaddr");
                 remoteAddrHeader = raddr == null ? null : raddr.getValue("value");
@@ -596,6 +597,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
             contextConfig.remoteAddrHeaders = null;
         }
         contextConfig.lazyHeader = lazyHeader;
+        contextConfig.sameHeader = sameHeader;
         contextConfig.localHeader = localHeader;
         contextConfig.localParameter = localParameter;
         contextConfig.rpcAuthenticatorConfig = rpcAuthenticatorConfig;

@@ -149,11 +149,17 @@ public abstract class ClientCodec<R extends ClientRequest, P extends ClientResul
             if (exc == null) {
                 final Object rs = request.respTransfer == null ? message : request.respTransfer.apply(message);
                 // workThread不区分IO线程，respFuture.complete中使用CompletableFuture.join会一直阻塞
-                workThread.runWork(() -> {
+                if (connection.client.nonBlocking) {
                     Traces.currentTraceid(request.traceid);
                     respFuture.complete(rs);
                     Traces.removeTraceid();
-                });
+                } else {
+                    workThread.runWork(() -> {
+                        Traces.currentTraceid(request.traceid);
+                        respFuture.complete(rs);
+                        Traces.removeTraceid();
+                    });
+                }
             } else { // 异常
                 workThread.runWork(() -> {
                     Traces.currentTraceid(request.traceid);

@@ -39,9 +39,6 @@ import static org.redkale.util.Utility.isNotEmpty;
  */
 public class HttpRequest extends Request<HttpContext> {
 
-    private static final boolean PIPELINE_SAME_HEADERS =
-            Boolean.getBoolean("redkale.http.request.pipeline.sameheaders");
-
     protected static final Serializable CURRUSERID_NIL = new Serializable() {};
 
     protected static final int READ_STATE_ROUTE = 1;
@@ -202,7 +199,8 @@ public class HttpRequest extends Request<HttpContext> {
 
     final HttpRpcAuthenticator rpcAuthenticator;
 
-    HttpServlet.ActionEntry actionEntry; // 仅供HttpServlet传递Entry使用
+    // 仅供HttpServlet传递Entry使用
+    HttpServlet.ActionEntry actionEntry;
 
     public HttpRequest(HttpContext context) {
         this(context, new ByteArray());
@@ -1217,7 +1215,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     @Override
     protected HttpRequest copyHeader() {
-        if (!PIPELINE_SAME_HEADERS || !context.lazyHeader) {
+        if (!context.sameHeader || !context.lazyHeader) {
             return null;
         }
         HttpRequest req = new HttpRequest(context, this.body);

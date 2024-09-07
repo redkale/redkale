@@ -62,7 +62,10 @@ public final class DataSources {
 
     // @since 2.8.0 //超过多少毫秒视为较慢, 会打印警告级别的日志, 默认值: 3000
     public static final String DATA_SOURCE_SLOWMS_ERROR = "error-slowms";
-
+    
+    // @since 2.8.0 //是否非阻塞式
+    public static final String DATA_SOURCE_NON_BLOCKING = "non-blocking";
+    
     // @since 2.8.0 //sourceExecutor线程数, 默认值: 内核数
     public static final String DATA_SOURCE_THREADS = "threads";
 
