@@ -483,8 +483,9 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             if (pos > 0) {
                 url = url.substring(0, pos) + "...";
             }
+            String nb = clientNonBlocking ? (", " + DATA_SOURCE_NON_BLOCKING + "=true") : "";
             return getClass().getSimpleName() + "{url=" + url + ", maxconns=" + readMaxConns() + ", dbtype=" + dbtype()
-                    + ", " + DATA_SOURCE_TABLE_AUTODDL + "=" + autoDDL + executorToString() + "}";
+                    + nb + ", " + DATA_SOURCE_TABLE_AUTODDL + "=" + autoDDL + executorToString() + "}";
         } else {
             String readUrl = readConfProps.getProperty(DATA_SOURCE_URL);
             int pos = readUrl.indexOf('?');
