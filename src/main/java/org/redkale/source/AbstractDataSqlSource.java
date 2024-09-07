@@ -3105,11 +3105,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             return info.getArrayer().apply(0);
         }
         final EntityCache<T> cache = info.getCache();
-        if (cache != null) {
-            T[] rs = selects == null ? cache.finds(pks) : cache.finds(selects, pks);
-            if (cache.isFullLoaded() || rs != null) {
-                return rs;
-            }
+        if (cache != null && cache.isFullLoaded()) {
+            return selects == null ? cache.finds(pks) : cache.finds(selects, pks);
         }
         return findsDBAsync(info, selects, pks).join();
     }
@@ -3121,11 +3118,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             return CompletableFuture.completedFuture(info.getArrayer().apply(0));
         }
         final EntityCache<T> cache = info.getCache();
-        if (cache != null) {
-            T[] rs = selects == null ? cache.finds(pks) : cache.finds(selects, pks);
-            if (cache.isFullLoaded() || rs != null) {
-                return CompletableFuture.completedFuture(rs);
-            }
+        if (cache != null && cache.isFullLoaded()) {
+            return CompletableFuture.completedFuture(selects == null ? cache.finds(pks) : cache.finds(selects, pks));
         }
         return findsDBAsync(info, selects, pks);
     }
@@ -3511,11 +3505,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
     public <T> boolean exists(final Class<T> clazz, final FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
-        if (cache != null) {
-            boolean rs = cache.exists(node);
-            if (rs || cache.isFullLoaded()) {
-                return rs;
-            }
+        if (cache != null && cache.isFullLoaded()) {
+            return cache.exists(node);
         }
         final String[] tables = info.getTables(node);
         String sql = existsSql(info, tables, node);
@@ -3533,11 +3524,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
     public <T> CompletableFuture<Boolean> existsAsync(final Class<T> clazz, final FilterNode node) {
         final EntityInfo<T> info = loadEntityInfo(clazz);
         final EntityCache<T> cache = info.getCache();
-        if (cache != null) {
-            boolean rs = cache.exists(node);
-            if (rs || cache.isFullLoaded()) {
-                return CompletableFuture.completedFuture(rs);
-            }
+        if (cache != null && cache.isFullLoaded()) {
+            return CompletableFuture.completedFuture(cache.exists(node));
         }
 
         final String[] tables = info.getTables(node);

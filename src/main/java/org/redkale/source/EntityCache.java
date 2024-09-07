@@ -5,8 +5,6 @@
  */
 package org.redkale.source;
 
-import static org.redkale.source.FilterFunc.*;
-
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.*;
@@ -16,6 +14,7 @@ import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.*;
 import org.redkale.persistence.*;
+import static org.redkale.source.FilterFunc.*;
 import org.redkale.util.*;
 
 /**
@@ -126,13 +125,6 @@ public final class EntityCache<T> {
                 return true;
             }
         });
-    }
-
-    public void fullLoad() {
-        CompletableFuture<List<T>> future = fullLoadAsync();
-        if (future != null) {
-            future.join();
-        }
     }
 
     public CompletableFuture<List<T>> fullLoadAsync() {
@@ -1174,7 +1166,7 @@ public final class EntityCache<T> {
                         numb = numb.floatValue() + val.floatValue();
                     } else if (numb instanceof Double || val instanceof Double) {
                         numb = numb.doubleValue() + val.doubleValue();
-                    } else {
+                    } else if (val != null) {
                         numb = numb.longValue() + val.longValue();
                     }
                 }
@@ -1187,7 +1179,7 @@ public final class EntityCache<T> {
                         numb = numb.floatValue() - val.floatValue();
                     } else if (numb instanceof Double || val instanceof Double) {
                         numb = numb.doubleValue() - val.doubleValue();
-                    } else {
+                    } else if (val != null) {
                         numb = numb.longValue() - val.longValue();
                     }
                 }
