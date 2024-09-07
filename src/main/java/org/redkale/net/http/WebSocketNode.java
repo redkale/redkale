@@ -18,6 +18,7 @@ import static org.redkale.boot.Application.RESNAME_APP_NODEID;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.mq.spi.MessageAgent;
+import org.redkale.net.WorkThread;
 import static org.redkale.net.http.WebSocket.RETCODE_GROUP_EMPTY;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;
@@ -81,7 +82,7 @@ public abstract class WebSocketNode implements Service {
         if (localEngine != null) {
             int wsthreads = localEngine.wsThreads;
             if (wsthreads == 0) {
-                wsthreads = Utility.cpus() * 8;
+                wsthreads = WorkThread.DEFAULT_WORK_POOL_SIZE;
             }
             if (wsthreads > 0) {
                 this.semaphore = new Semaphore(wsthreads);

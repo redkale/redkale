@@ -18,6 +18,10 @@ import java.util.concurrent.atomic.LongAdder;
  */
 public class ByteBufferPool extends ObjectPool<ByteBuffer> {
 
+    public static final int DEFAULT_BUFFER_POOL_SIZE = Utility.cpus() * 4;
+    
+    public static final int DEFAULT_BUFFER_CAPACITY = 16 * 1024;
+
     private final int bufferCapacity;
 
     protected ByteBufferPool(

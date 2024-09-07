@@ -144,7 +144,7 @@ public abstract class Server<
                 "UDP".equalsIgnoreCase(netprotocol) ? UDP_BUFFER_CAPACITY : 32 * 1024);
         this.bufferCapacity =
                 "UDP".equalsIgnoreCase(netprotocol) ? bufCapacity : (bufCapacity < 1024 ? 1024 : bufCapacity);
-        this.bufferPoolSize = config.getIntValue("bufferPoolSize", Utility.cpus() * 8);
+        this.bufferPoolSize = config.getIntValue("bufferPoolSize", ByteBufferPool.DEFAULT_BUFFER_POOL_SIZE);
         this.responsePoolSize = config.getIntValue("responsePoolSize", 1024);
         this.name = config.getValue(
                 "name",

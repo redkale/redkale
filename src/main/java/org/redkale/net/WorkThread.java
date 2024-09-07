@@ -19,7 +19,9 @@ import org.redkale.util.Utility;
  * @author zhangjx
  */
 public class WorkThread extends Thread implements Executor {
-
+    
+    public static final int DEFAULT_WORK_POOL_SIZE = Utility.cpus() * 8;
+    
     protected final ExecutorService workExecutor;
 
     // WorkThread下标，从0开始

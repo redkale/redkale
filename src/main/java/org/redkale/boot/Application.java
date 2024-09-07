@@ -52,6 +52,7 @@ import org.redkale.source.*;
 import org.redkale.source.spi.SourceModuleEngine;
 import org.redkale.util.AnyValue;
 import org.redkale.util.AnyValueWriter;
+import org.redkale.util.ByteBufferPool;
 import org.redkale.util.Creator;
 import org.redkale.util.Environment;
 import org.redkale.util.Redkale;
@@ -810,11 +811,12 @@ public final class Application {
     /** 设置WorkExecutor */
     private void initWorkExecutor() {
         int bufferCapacity = 32 * 1024;
-        int bufferPoolSize = Utility.cpus() * 8;
+        int bufferPoolSize = ByteBufferPool.DEFAULT_BUFFER_POOL_SIZE;
         final AnyValue executorConf = config.getAnyValue("executor", true);
         StringBuilder executorLog = new StringBuilder();
 
-        final int workThreads = Math.max(Utility.cpus(), executorConf.getIntValue("threads", Utility.cpus() * 10));
+        int confThreads = executorConf.getIntValue("threads", WorkThread.DEFAULT_WORK_POOL_SIZE);
+        final int workThreads = Math.max(Utility.cpus(), confThreads);
         // 指定threads则不使用虚拟线程池
         this.workExecutor = executorConf.getValue("threads") != null
                 ? WorkThread.createExecutor(workThreads, "Redkale-WorkThread-%s")
@@ -832,7 +834,7 @@ public final class Application {
             executorLog.append(", clientWorkExecutor: [workExecutor]");
         } else {
             // 给所有client给一个新的默认ExecutorService
-            int clientThreads = executorConf.getIntValue("clients", Utility.cpus() * 4);
+            int clientThreads = executorConf.getIntValue("clients", WorkThread.DEFAULT_WORK_POOL_SIZE);
             clientWorkExecutor = WorkThread.createWorkExecutor(clientThreads, "Redkale-DefaultClient-WorkThread-%s");
             executorLog.append(", threads=").append(clientThreads).append("}");
         }
