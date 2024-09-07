@@ -15,7 +15,6 @@ import java.util.logging.*;
 import javax.net.ssl.SSLContext;
 import org.redkale.boot.Application;
 import org.redkale.inject.ResourceFactory;
-import static org.redkale.net.AsyncGroup.UDP_BUFFER_CAPACITY;
 import org.redkale.net.Filter;
 import org.redkale.util.*;
 
@@ -143,12 +142,10 @@ public abstract class Server<
         this.maxHeader = parseLenth(config.getValue("maxHeader"), 16 * 1024);
         this.maxBody =
                 parseLenth(config.getValue("maxBody"), "UDP".equalsIgnoreCase(netprotocol) ? 16 * 1024 : 256 * 1024);
-        int bufCapacity = parseLenth(
-                config.getValue("bufferCapacity"),
-                "UDP".equalsIgnoreCase(netprotocol) ? UDP_BUFFER_CAPACITY : 32 * 1024);
+        int bufCapacity = getConfBufferCapacity(config, netprotocol);
         this.bufferCapacity =
                 "UDP".equalsIgnoreCase(netprotocol) ? bufCapacity : (bufCapacity < 1024 ? 1024 : bufCapacity);
-        this.bufferPoolSize = config.getIntValue("bufferPoolSize", ByteBufferPool.DEFAULT_BUFFER_POOL_SIZE);
+        this.bufferPoolSize = getConfBufferPoolSize(config);
         this.responsePoolSize = config.getIntValue("responsePoolSize", 1024);
         this.name = config.getValue(
                 "name",
@@ -192,6 +189,28 @@ public abstract class Server<
             }
         }
         this.context = this.createContext();
+    }
+
+    public static int getConfBufferCapacity(AnyValue config, String netprotocol) {
+        return parseLenth(
+                config.getValue("bufferCapacity"),
+                "UDP".equalsIgnoreCase(netprotocol)
+                        ? ByteBufferPool.DEFAULT_BUFFER_UDP_CAPACITY
+                        : ByteBufferPool.DEFAULT_BUFFER_TCP_CAPACITY);
+    }
+
+    public static int getConfBufferPoolSize(AnyValue config) {
+        return config.getIntValue("bufferPoolSize", ByteBufferPool.DEFAULT_BUFFER_POOL_SIZE);
+    }
+
+    public static String getConfNetprotocol(AnyValue config) {
+        if (config != null) {
+            String protocol = config.getValue("protocol", "").toUpperCase();
+            if ("UDP".equals(protocol) || protocol.endsWith(".UDP")) {
+                return "UDP";
+            }
+        }
+        return "TCP";
     }
 
     protected static int parseLenth(String value, int defValue) {

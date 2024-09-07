@@ -18,9 +18,13 @@ import java.util.concurrent.atomic.LongAdder;
  */
 public class ByteBufferPool extends ObjectPool<ByteBuffer> {
 
-    public static final int DEFAULT_BUFFER_POOL_SIZE = Utility.cpus() * 4;
-    
-    public static final int DEFAULT_BUFFER_CAPACITY = 16 * 1024;
+    public static final int DEFAULT_BUFFER_POOL_SIZE =
+            Integer.getInteger("redkale.bytebuffer.pool.size", Utility.cpus() * 4);
+
+    public static final int DEFAULT_BUFFER_TCP_CAPACITY =
+            Integer.getInteger("redkale.bytebuffer.tcp.apacity", 32 * 1024);
+
+    public static final int DEFAULT_BUFFER_UDP_CAPACITY = Integer.getInteger("redkale.bytebuffer.udp.apacity", 1350);
 
     private final int bufferCapacity;
 

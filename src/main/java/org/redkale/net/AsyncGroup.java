@@ -19,8 +19,6 @@ import org.redkale.util.ByteBufferPool;
  */
 public abstract class AsyncGroup {
 
-    public static final int UDP_BUFFER_CAPACITY = Integer.getInteger("redkale.udp.buffer.apacity", 1350);
-
     public static AsyncGroup create(
             String threadNameFormat,
             final ExecutorService workExecutor,

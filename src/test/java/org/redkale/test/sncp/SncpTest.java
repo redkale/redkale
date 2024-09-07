@@ -29,7 +29,8 @@ public class SncpTest {
 
     private static final String protocol = "SNCP.TCP"; // TCP UDP
 
-    private static final int clientCapacity = protocol.endsWith(".UDP") ? AsyncGroup.UDP_BUFFER_CAPACITY : 8192;
+    private static final int clientCapacity =
+            protocol.endsWith(".UDP") ? ByteBufferPool.DEFAULT_BUFFER_UDP_CAPACITY : 8192;
 
     private static ResourceFactory factory;
 

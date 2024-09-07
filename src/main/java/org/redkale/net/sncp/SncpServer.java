@@ -34,18 +34,7 @@ public class SncpServer extends Server<Uint128, SncpContext, SncpRequest, SncpRe
 
     public SncpServer(
             Application application, long serverStartTime, AnyValue serconf, ResourceFactory resourceFactory) {
-        super(application, serverStartTime, netprotocol(serconf), resourceFactory, new SncpDispatcherServlet());
-    }
-
-    private static String netprotocol(AnyValue serconf) {
-        if (serconf == null) {
-            return "TCP";
-        }
-        String protocol = serconf.getValue("protocol", "").toUpperCase();
-        if (protocol.endsWith(".UDP")) {
-            return "UDP";
-        }
-        return "TCP";
+        super(application, serverStartTime, getConfNetprotocol(serconf), resourceFactory, new SncpDispatcherServlet());
     }
 
     @Override

@@ -180,6 +180,9 @@ public final class Application {
     // 给客户端使用，包含SNCP客户端、自定义数据库客户端连接池
     private AsyncIOGroup clientAsyncGroup;
 
+    // 给单一服务使用，有且仅有一个Server配置且buffer相关配置都是默认值的情况下才有值
+    private AsyncIOGroup shareAsyncGroup;
+
     // 服务配置项
     final AnyValue config;
 
@@ -838,11 +841,33 @@ public final class Application {
             clientWorkExecutor = WorkThread.createWorkExecutor(clientThreads, "Redkale-DefaultClient-WorkThread-%s");
             executorLog.append(", threads=").append(clientThreads).append("}");
         }
-        AsyncIOGroup ioGroup = new AsyncIOGroup(
-                        "Redkale-DefaultClient-IOThread-%s", clientWorkExecutor, bufferCapacity, bufferPoolSize)
-                .skipClose(true);
-        this.clientAsyncGroup = ioGroup.start();
-
+        if (config.getAnyValues("server").length == 1) {
+            AnyValue servConf = config.getAnyValues("server")[0];
+            if ("true".equals(servConf.getValue("shareio"))) {
+                String servNetprotocol = Server.getConfNetprotocol(servConf);
+                int servBufferCapacity = Server.getConfBufferCapacity(servConf, servNetprotocol);
+                int serverBufferPoolSize = Server.getConfBufferPoolSize(servConf);
+                int defBufferCapacity = "UDP".equals(servNetprotocol)
+                        ? ByteBufferPool.DEFAULT_BUFFER_UDP_CAPACITY
+                        : ByteBufferPool.DEFAULT_BUFFER_TCP_CAPACITY;
+                if (serverBufferPoolSize == ByteBufferPool.DEFAULT_BUFFER_POOL_SIZE
+                        && servBufferCapacity == defBufferCapacity) {
+                    AsyncIOGroup ioGroup = new AsyncIOGroup(
+                                    "Redkale-DefaultServlet-IOThread-%s",
+                                    workExecutor, servBufferCapacity, serverBufferPoolSize)
+                            .skipClose(true);
+                    this.shareAsyncGroup = ioGroup.start();
+                }
+            }
+        }
+        if (this.shareAsyncGroup != null) {
+            this.clientAsyncGroup = this.shareAsyncGroup;
+        } else {
+            AsyncIOGroup ioGroup = new AsyncIOGroup(
+                            "Redkale-DefaultClient-IOThread-%s", clientWorkExecutor, bufferCapacity, bufferPoolSize)
+                    .skipClose(true);
+            this.clientAsyncGroup = ioGroup.start();
+        }
         if (executorLog.length() > 0) {
             logger.log(Level.INFO, executorLog.toString());
         }
@@ -1506,10 +1531,15 @@ public final class Application {
         stopServers();
         this.propertiesModule.destroy();
         this.workExecutor.shutdownNow();
-        if (this.clientAsyncGroup != null) {
+        if (this.shareAsyncGroup != null) {
+            long s = System.currentTimeMillis();
+            this.shareAsyncGroup.dispose();
+            logger.info("default.share.AsyncGroup destroy in " + (System.currentTimeMillis() - s) + " ms");
+        }
+        if (this.clientAsyncGroup != null && this.clientAsyncGroup != this.shareAsyncGroup) {
             long s = System.currentTimeMillis();
             this.clientAsyncGroup.dispose();
-            logger.info("AsyncGroup destroy in " + (System.currentTimeMillis() - s) + " ms");
+            logger.info("default.client.AsyncGroup destroy in " + (System.currentTimeMillis() - s) + " ms");
         }
         this.onAppPostShutdown();
 
@@ -1724,6 +1754,10 @@ public final class Application {
 
     public AsyncGroup getClientAsyncGroup() {
         return clientAsyncGroup;
+    }
+
+    public AsyncIOGroup getShareAsyncGroup() {
+        return shareAsyncGroup;
     }
 
     public ResourceFactory getResourceFactory() {

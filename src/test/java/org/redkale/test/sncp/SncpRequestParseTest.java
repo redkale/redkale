@@ -36,6 +36,7 @@ public class SncpRequestParseTest {
         SncpContext.SncpContextConfig config = new SncpContext.SncpContextConfig();
         config.logger = Logger.getLogger(SncpRequestParseTest.class.getSimpleName());
         config.serverAddress = sncpAddress;
+        config.maxHeader = 16 * 1024;
         config.maxBody = 1024 * 1024 * 1024;
         SncpContext context = new SncpContext(config);
 

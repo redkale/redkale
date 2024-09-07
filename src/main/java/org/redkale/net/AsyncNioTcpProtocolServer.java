@@ -87,8 +87,6 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
         LongAdder createResponseCounter = new LongAdder();
         LongAdder cycleResponseCounter = new LongAdder();
 
-        ByteBufferPool safeBufferPool =
-                server.createSafeBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
         ObjectPool<Response> safeResponsePool =
                 server.createSafeResponsePool(createResponseCounter, cycleResponseCounter, server.responsePoolSize);
         final int respPoolMax = server.getResponsePoolSize();
@@ -125,8 +123,14 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
                 ? "Redkale-IOServletThread-%s"
                 : ("Redkale-" + server.name.replace("Server-", "") + "-IOServletThread-%s");
         if (this.ioGroup == null) {
-            this.ioGroup = new AsyncIOGroup(threadNameFormat, null, safeBufferPool);
-            this.ioGroup.start();
+            if (application != null && application.getShareAsyncGroup() != null) {
+                this.ioGroup = application.getShareAsyncGroup();
+            } else {
+                ByteBufferPool safeBufferPool =
+                        server.createSafeBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
+                this.ioGroup = new AsyncIOGroup(threadNameFormat, null, safeBufferPool);
+                this.ioGroup.start();
+            }
         }
 
         Thread acceptThread = new Thread() {
