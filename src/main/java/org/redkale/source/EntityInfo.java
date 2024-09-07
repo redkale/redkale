@@ -233,7 +233,7 @@ public final class EntityInfo<T> {
                 if (fullloader == null) {
                     throw new IllegalArgumentException(clazz.getName() + " auto loader  is illegal");
                 }
-                rs.cache.fullLoad();
+                rs.cache.fullLoadAsync();
             }
             return rs;
         } finally {
