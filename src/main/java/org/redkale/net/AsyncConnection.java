@@ -41,9 +41,11 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
 
     protected volatile boolean writePending;
 
-    private Map<String, Object> attributes; // 用于存储绑定在Connection上的对象集合
+    // 用于存储绑定在Connection上的对象集合
+    private Map<String, Object> attributes;
 
-    private Object subobject; // 用于存储绑定在Connection上的对象， 同attributes， 只绑定单个对象时尽量使用subobject而非attributes
+    // 用于存储绑定在Connection上的对象， 同attributes， 只绑定单个对象时尽量使用subobject而非attributes
+    private Object subobject;
 
     protected final AsyncIOGroup ioGroup;
 

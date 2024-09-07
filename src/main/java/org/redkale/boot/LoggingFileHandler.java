@@ -73,19 +73,24 @@ public class LoggingFileHandler extends LoggingBaseHandler {
 
     protected String pattern;
 
-    protected String patternDateFormat; // 需要时间格式化
+    // 需要时间格式化
+    protected String patternDateFormat;
 
-    protected String unusual; // 不为null表示将 WARNING、SEVERE 级别的日志写入单独的文件中
+    // 不为null表示将 WARNING、SEVERE 级别的日志写入单独的文件中
+    protected String unusual;
 
-    protected String unusualDateFormat; // 需要时间格式化
+    // 需要时间格式化
+    protected String unusualDateFormat;
 
-    private int limit; // 文件大小限制
+    // 文件大小限制
+    private int limit;
 
     private final AtomicInteger logIndex = new AtomicInteger();
 
     private final AtomicInteger logUnusualIndex = new AtomicInteger();
 
-    private int count = 1; // 文件限制
+    // 文件限制
+    private int count = 1;
 
     private long tomorrow;
 

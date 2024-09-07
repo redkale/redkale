@@ -220,17 +220,17 @@ public class AsyncIOGroup extends AsyncGroup {
         AsyncIOThread currThread = AsyncIOThread.currentAsyncIOThread();
         if (currThread != null) {
             if (this.ioReadThreads[0].getThreadGroup() == currThread.getThreadGroup()) {
-                for (int i = 0; i < this.ioReadThreads.length; i++) {
-                    if (this.ioReadThreads[i].index() == currThread.index()) {
-                        readThread = this.ioReadThreads[i];
+                for (AsyncIOThread ioReadThread : this.ioReadThreads) {
+                    if (ioReadThread.index() == currThread.index()) {
+                        readThread = ioReadThread;
                         break;
                     }
                 }
             }
             if (this.ioWriteThreads[0].getThreadGroup() == currThread.getThreadGroup()) {
-                for (int i = 0; i < this.ioWriteThreads.length; i++) {
-                    if (this.ioWriteThreads[i].index() == currThread.index()) {
-                        writeThread = this.ioWriteThreads[i];
+                for (AsyncIOThread ioWriteThread : this.ioWriteThreads) {
+                    if (ioWriteThread.index() == currThread.index()) {
+                        writeThread = ioWriteThread;
                         break;
                     }
                 }
@@ -299,15 +299,15 @@ public class AsyncIOGroup extends AsyncGroup {
         AsyncIOThread writeThread = null;
         AsyncIOThread currThread = AsyncIOThread.currentAsyncIOThread();
         if (currThread != null) {
-            for (int i = 0; i < this.ioReadThreads.length; i++) {
-                if (this.ioReadThreads[i].index() == currThread.index()) {
-                    readThread = this.ioReadThreads[i];
+            for (AsyncIOThread ioReadThread : this.ioReadThreads) {
+                if (ioReadThread.index() == currThread.index()) {
+                    readThread = ioReadThread;
                     break;
                 }
             }
-            for (int i = 0; i < this.ioWriteThreads.length; i++) {
-                if (this.ioWriteThreads[i].index() == currThread.index()) {
-                    writeThread = this.ioWriteThreads[i];
+            for (AsyncIOThread ioWriteThread : this.ioWriteThreads) {
+                if (ioWriteThread.index() == currThread.index()) {
+                    writeThread = ioWriteThread;
                     break;
                 }
             }

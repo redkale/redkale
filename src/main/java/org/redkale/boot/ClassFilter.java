@@ -43,27 +43,38 @@ public final class ClassFilter<T> {
 
     private Predicate<String> expectPredicate;
 
-    private boolean refused; // 是否拒绝所有数据,设置true，则其他规则失效,都是拒绝.
+    // 是否拒绝所有数据,设置true，则其他规则失效,都是拒绝.
+    private boolean refused;
 
-    private Class superClass; // 符合的父类型。不为空时，扫描结果的class必须是superClass的子类
+    // 符合的父类型。不为空时，扫描结果的class必须是superClass的子类
+    private Class superClass;
 
-    private Class[] excludeSuperClasses; // 不符合的父类型。
+    // 不符合的父类型。
+    private Class[] excludeSuperClasses;
 
-    private Class<? extends Annotation> annotationClass; // 符合的注解。不为空时，扫描结果的class必须包含该注解
+    // 符合的注解。不为空时，扫描结果的class必须包含该注解
+    private Class<? extends Annotation> annotationClass;
 
-    private Pattern[] includePatterns; // 符合的className正则表达式
+    // 符合的className正则表达式
+    private Pattern[] includePatterns;
 
-    private Pattern[] excludePatterns; // 拒绝的className正则表达式
+    // 拒绝的className正则表达式
+    private Pattern[] excludePatterns;
 
-    private Set<String> privilegeIncludes; // 特批符合条件的className
+    // 特批符合条件的className
+    private Set<String> privilegeIncludes;
 
-    private Set<String> privilegeExcludes; // 特批拒绝条件的className
+    // 特批拒绝条件的className
+    private Set<String> privilegeExcludes;
 
-    private List<ClassFilter> ors; // 或关系的其他ClassFilter
+    // 或关系的其他ClassFilter
+    private List<ClassFilter> ors;
 
-    private List<ClassFilter> ands; // 与关系的其他ClassFilter
+    // 与关系的其他ClassFilter
+    private List<ClassFilter> ands;
 
-    private AnyValue conf; // 基本配置信息, 当符合条件时将conf的属性赋值到FilterEntry中去。
+    // 基本配置信息, 当符合条件时将conf的属性赋值到FilterEntry中去。
+    private AnyValue conf;
 
     private final ClassLoader classLoader;
 

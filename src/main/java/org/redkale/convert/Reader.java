@@ -29,7 +29,8 @@ public abstract class Reader {
 
     public static final short SIGN_NOLENGTH = -2;
 
-    public static final short SIGN_NOLENBUTBYTES = -3; // 目前只适合于protobuf的boolean[]...double[]类型
+    // 目前只适合于protobuf的boolean[]...double[]类型
+    public static final short SIGN_NOLENBUTBYTES = -3;
 
     /**
      * 设置Reader的内容，通常结合对象池使用

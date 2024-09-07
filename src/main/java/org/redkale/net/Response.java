@@ -28,9 +28,11 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected final C context;
 
-    protected Supplier<Response> responseSupplier; // 虚拟构建的Response可能不存在responseSupplier
+    // 虚拟构建的Response可能不存在responseSupplier
+    protected Supplier<Response> responseSupplier;
 
-    protected Consumer<Response> responseConsumer; // 虚拟构建的Response可能不存在responseConsumer
+    // 虚拟构建的Response可能不存在responseConsumer
+    protected Consumer<Response> responseConsumer;
 
     protected final ExecutorService workExecutor;
 
@@ -44,7 +46,8 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected boolean inNonBlocking = true;
 
-    protected Object output; // 输出的结果对象
+    // 输出的结果对象
+    protected Object output;
 
     protected BiConsumer<R, Response<C, R>> recycleListener;
 

@@ -36,7 +36,7 @@ public class ByteBufferPool extends ObjectPool<ByteBuffer> {
                 max,
                 (Object... params) -> ByteBuffer.allocateDirect(bufferCapacity),
                 null,
-                (e) -> {
+                e -> {
                     if (e == null || e.isReadOnly() || e.capacity() != bufferCapacity) {
                         return false;
                     }

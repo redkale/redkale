@@ -83,9 +83,11 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
     // pauseWriting=true，此字段才会有值; pauseWriting=false，此字段值为null
     ClientFuture currHalfWriteFuture;
 
-    Iterator<ClientFuture<R, P>> currRespIterator; // 必须在调用decodeMessages之前重置为null
+    // 必须在调用decodeMessages之前重置为null
+    Iterator<ClientFuture<R, P>> currRespIterator;
 
-    private int maxPipelines; // 最大并行处理数
+    // 最大并行处理数
+    private int maxPipelines;
 
     private boolean authenticated;
 

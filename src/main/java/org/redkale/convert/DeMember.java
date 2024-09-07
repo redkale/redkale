@@ -22,17 +22,22 @@ import org.redkale.util.Attribute;
 @SuppressWarnings("unchecked")
 public final class DeMember<R extends Reader, T, F> {
 
-    final Field field; // 对应类成员的Field， 也可能为null
+    // 对应类成员的Field， 也可能为null
+    final Field field;
 
-    final Method method; // 对应类成员的Method也可能为null
+    // 对应类成员的Method也可能为null
+    final Method method;
 
     final String comment;
 
-    protected int index; // 从1开始
+    // 从1开始
+    protected int index;
 
-    protected int position; // 从1开始
+    // 从1开始
+    protected int position;
 
-    protected int tag; // 主要给protobuf使用  从1开始
+    // 主要给protobuf使用  从1开始
+    protected int tag;
 
     protected final Attribute<T, F> attribute;
 
@@ -42,7 +47,6 @@ public final class DeMember<R extends Reader, T, F> {
         this.attribute = attribute;
         this.tag = tag;
         this.index = tag;
-        this.position = position;
         this.decoder = decoder;
         this.comment = "";
         this.field = null;

@@ -42,7 +42,8 @@ public final class ApiDocCommand {
 
     private static final java.lang.reflect.Type TYPE_RETRESULT_LONG = new TypeToken<RetResult<Long>>() {}.getType();
 
-    private final Application app; // Application全局对象
+    // Application全局对象
+    private final Application app;
 
     public ApiDocCommand(Application app) {
         this.app = app;

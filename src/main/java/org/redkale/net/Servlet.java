@@ -20,9 +20,11 @@ import org.redkale.util.AnyValue;
  */
 public abstract class Servlet<C extends Context, R extends Request<C>, P extends Response<C, R>> {
 
-    AnyValue _conf; // 当前Servlet的配置
+    // 当前Servlet的配置
+    AnyValue _conf;
 
-    protected boolean _nonBlocking; // 当前Servlet.execute方法是否为非阻塞模式
+    // 当前Servlet.execute方法是否为非阻塞模式
+    protected boolean _nonBlocking;
 
     // Server执行start时运行此方法
     public void init(C context, AnyValue config) {}

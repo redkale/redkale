@@ -18,8 +18,9 @@ import org.redkale.annotation.Nullable;
  */
 public class ClientResponse<R extends ClientRequest, P extends ClientResult> {
 
+    // 服务端返回一个不存在的requestid，可能为null
     @Nullable
-    protected R request; // 服务端返回一个不存在的requestid，可能为null
+    protected R request;
 
     protected P message;
 

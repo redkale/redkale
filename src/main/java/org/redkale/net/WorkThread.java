@@ -22,9 +22,11 @@ public class WorkThread extends Thread implements Executor {
 
     protected final ExecutorService workExecutor;
 
-    private final int index; // WorkThread下标，从0开始
+    // WorkThread下标，从0开始
+    private final int index;
 
-    private final int threads; // WorkThread个数
+    // WorkThread个数
+    private final int threads;
 
     public WorkThread(
             ThreadGroup g, String name, int index, int threads, ExecutorService workExecutor, Runnable target) {

@@ -34,9 +34,11 @@ public class LoggingSearchHandler extends LoggingBaseHandler {
 
     protected final AtomicInteger retryCount = new AtomicInteger(3);
 
-    protected String tag = DEFAULT_TABLE_NAME; // 用于表前缀， 默认是
+    // 用于表前缀， 默认是
+    protected String tag = DEFAULT_TABLE_NAME;
 
-    protected String tagDateFormat; // 需要时间格式化
+    // 需要时间格式化
+    protected String tagDateFormat;
 
     protected String pattern;
 

@@ -28,7 +28,8 @@ public abstract class LoggingBaseHandler extends Handler {
     public static final String FORMATTER_FORMAT3 =
             "[%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%tL] [%7$s] %8$s %4$s %2$s\r\n%5$s%6$s\r\n";
 
-    static boolean traceEnable = false; // 防止设置system.property前调用Traces类导致enable提前初始化
+    // 防止设置system.property前调用Traces类导致enable提前初始化
+    static boolean traceEnable = false;
 
     /** 默认的日志时间格式化类 与SimpleFormatter的区别在于level不使用本地化 */
     public static class LoggingFormater extends Formatter {

@@ -157,7 +157,8 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private boolean respHeadContainsConnection;
 
-    private int headWritedSize = -1; // 0表示跳过header，正数表示header的字节长度。
+    // 0表示跳过header，正数表示header的字节长度。
+    private int headWritedSize = -1;
 
     private BiConsumer<HttpResponse, byte[]> cacheHandler;
 

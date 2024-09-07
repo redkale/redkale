@@ -37,9 +37,11 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
 
     protected final String name;
 
-    protected final AsyncGroup group; // 连接构造器
+    // 连接构造器
+    protected final AsyncGroup group;
 
-    protected final boolean tcp; // 是否TCP协议
+    // 是否TCP协议
+    protected final boolean tcp;
 
     protected final ScheduledThreadPoolExecutor timeoutScheduler;
 
@@ -55,17 +57,19 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     private final AtomicBoolean closed = new AtomicBoolean();
 
     // 不可protected、public
-    private final ClientAddress address; // 连接的地址
+    // 连接的地址
+    private final ClientAddress address;
 
-    // 连随机地址模式
-    private final int connLimit; // 最大连接数
+    // 连随机地址模式，最大连接数
+    private final int connLimit;
 
     // 连指定地址模式
     private final ConcurrentHashMap<SocketAddress, AddressConnEntry[]> connAddrEntrys = new ConcurrentHashMap<>();
 
     protected ScheduledFuture timeoutFuture;
 
-    protected int maxPipelines = DEFAULT_MAX_PIPELINES; // 单个连接最大并行处理数
+    // 单个连接最大并行处理数
+    protected int maxPipelines = DEFAULT_MAX_PIPELINES;
 
     protected int connectTimeoutSeconds;
 

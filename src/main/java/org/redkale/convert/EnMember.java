@@ -38,17 +38,23 @@ public final class EnMember<W extends Writer, T, F> {
 
     final byte[] jsonFieldNameBytes;
 
-    final Field field; // 对应类成员的Field也可能为null
+    // 对应类成员的Field也可能为null
+    final Field field;
 
-    final Method method; // 对应类成员的Method也可能为null
+    // 对应类成员的Method也可能为null
+    final Method method;
 
-    final BiFunction<String, Object, Object> fieldFunc; // 一般为null
+    // 一般为null
+    final BiFunction<String, Object, Object> fieldFunc;
 
-    int index; // 从1开始
+    // 从1开始
+    int index;
 
-    int position; // 从1开始
+    // 从1开始
+    int position;
 
-    int tag; // 主要给protobuf使用 从1开始
+    // 主要给protobuf使用 从1开始
+    int tag;
 
     public EnMember(Attribute<T, F> attribute, int tag, Encodeable<W, F> encoder) {
         this.attribute = attribute;
