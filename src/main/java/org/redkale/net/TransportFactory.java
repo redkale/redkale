@@ -354,7 +354,7 @@ public class TransportFactory {
                     continue; // 可用
                 }
                 CompletableFuture<AsyncConnection> future =
-                        Utility.orTimeout(asyncGroup.createTCPClient(node.address), null, 2, TimeUnit.SECONDS);
+                        Utility.orTimeout(asyncGroup.createTCPClientConnection(node.address), null, 2, TimeUnit.SECONDS);
                 future.whenComplete((r, t) -> {
                     node.disabletime = t == null ? 0 : System.currentTimeMillis();
                     if (r != null) {

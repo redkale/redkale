@@ -246,7 +246,7 @@ public class AsyncIOGroup extends AsyncGroup {
     }
 
     @Override
-    public CompletableFuture<AsyncConnection> createTCPClient(SocketAddress address, int connectTimeoutSeconds) {
+    public CompletableFuture<AsyncConnection> createTCPClientConnection(SocketAddress address, int connectTimeoutSeconds) {
         Objects.requireNonNull(address);
         AsyncNioTcpConnection conn;
         try {
@@ -322,7 +322,7 @@ public class AsyncIOGroup extends AsyncGroup {
     }
 
     @Override
-    public CompletableFuture<AsyncConnection> createUDPClient(SocketAddress address, int connectTimeoutSeconds) {
+    public CompletableFuture<AsyncConnection> createUDPClientConnection(SocketAddress address, int connectTimeoutSeconds) {
         AsyncNioUdpConnection conn;
         try {
             conn = newUDPClientConnection(address);

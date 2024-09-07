@@ -347,7 +347,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         }
         final Queue<CompletableFuture<C>> waitQueue = entry.connAcquireWaitings;
         if (!pool || entry.connOpenState.compareAndSet(false, true)) {
-            CompletableFuture<C> future = group.createClient(tcp, addr, connectTimeoutSeconds)
+            CompletableFuture<C> future = group.createClientConnection(tcp, addr, connectTimeoutSeconds)
                     .thenApply(c ->
                             (C) createClientConnection(c).setConnEntry(entry).setMaxPipelines(maxPipelines));
             R virtualReq = createVirtualRequestAfterConnect();
