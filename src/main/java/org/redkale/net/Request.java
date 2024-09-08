@@ -10,6 +10,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.function.Function;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.json.JsonConvert;
@@ -52,10 +53,10 @@ public abstract class Request<C extends Context> {
 
     protected AsyncConnection channel;
 
-    // properties与attributes的区别在于：
-    //   调用recycle时， attributes会被清空而properties会保留;
-    //   properties 通常存放需要永久绑定在request里的一些对象
-    private final Map<String, Object> properties = new HashMap<>();
+    // subobjects与attributes的区别在于：
+    //   调用recycle时， attributes会被清空而subobjects会保留;
+    //   subobjects通常存放需要永久绑定在request里的一些对象
+    private final Map<String, Object> subobjects = new HashMap<>();
 
     /** 每次新请求都会清空 */
     protected final Map<String, Object> attributes = new HashMap<>();
@@ -116,46 +117,51 @@ public abstract class Request<C extends Context> {
         channel = null; // close it by response
     }
 
-    protected <T> T setProperty(String name, T value) {
-        properties.put(name, value);
+    @SuppressWarnings("unchecked")
+    public <V> V getSubobject(String name) {
+        return (V) this.subobjects.get(name);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <V> V getSubobjectIfAbsent(String name, Function<String, ? extends V> func) {
+        return (V) this.subobjects.computeIfAbsent(name, func);
+    }
+
+    public <V> V setSubobject(String name, V value) {
+        this.subobjects.put(name, value);
         return value;
     }
 
     @SuppressWarnings("unchecked")
-    protected <T> T getProperty(String name) {
-        return (T) properties.get(name);
+    public <V> V removeSubobject(String name) {
+        return (V) this.subobjects.remove(name);
     }
 
-    @SuppressWarnings("unchecked")
-    protected <T> T removeProperty(String name) {
-        return (T) properties.remove(name);
+    protected Map<String, Object> getSubobjects() {
+        return subobjects;
     }
 
-    protected Map<String, Object> getProperties() {
-        return properties;
-    }
-
-    protected InputStream newInputStream() {
-        return ((AsyncNioConnection) channel).newInputStream();
-    }
-
-    public <T> T setAttribute(String name, T value) {
+    public <V> V setAttribute(String name, V value) {
         attributes.put(name, value);
         return value;
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T getAttribute(String name) {
-        return (T) attributes.get(name);
+    public <V> V getAttribute(String name) {
+        return (V) attributes.get(name);
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T removeAttribute(String name) {
-        return (T) attributes.remove(name);
+    public <V> V removeAttribute(String name) {
+        return (V) attributes.remove(name);
     }
 
     public Map<String, Object> getAttributes() {
         return attributes;
+    }
+
+    protected InputStream newInputStream() {
+        return ((AsyncNioConnection) channel).newInputStream();
     }
 
     public boolean isKeepAlive() {
