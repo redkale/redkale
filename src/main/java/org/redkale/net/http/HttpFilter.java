@@ -42,18 +42,6 @@ public abstract class HttpFilter extends Filter<HttpContext, HttpRequest, HttpRe
         request.setLocale(locale);
     }
 
-    protected <T> T setProperty(HttpRequest request, String name, T value) {
-        return request.setProperty(name, value);
-    }
-
-    protected <T> T getProperty(HttpRequest request, String name) {
-        return request.getProperty(name);
-    }
-
-    protected void removeProperty(HttpRequest request, String name) {
-        request.removeProperty(name);
-    }
-
     protected void addHeader(HttpRequest request, String name, String value) {
         request.addHeader(name, value);
     }

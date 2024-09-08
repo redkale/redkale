@@ -1492,22 +1492,6 @@ public class HttpRequest extends Request<HttpContext> {
         return b;
     }
 
-    @Override
-    protected <T> T setProperty(String name, T value) {
-        return super.setProperty(name, value);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    protected <T> T getProperty(String name) {
-        return super.getProperty(name);
-    }
-
-    @Override
-    protected <T> T removeProperty(String name) {
-        return super.removeProperty(name);
-    }
-
     /**
      * 设置当前用户ID, 通常在HttpServlet.preExecute方法里设置currentUserid <br>
      * 数据类型只能是int、long、String、JavaBean
