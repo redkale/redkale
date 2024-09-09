@@ -22,8 +22,6 @@ public class SncpDispatcherServlet
 
     private final ReentrantLock updateLock = new ReentrantLock();
 
-    private final ThreadLocal<ByteArray> localArray = Utility.withInitialThreadLocal(ByteArray::new);
-
     protected SncpDispatcherServlet() {
         super();
     }
@@ -84,7 +82,7 @@ public class SncpDispatcherServlet
     public void execute(SncpRequest request, SncpResponse response) throws IOException {
         try {
             if (request.isPing()) {
-                ByteArray array = localArray.get().clear();
+                ByteArray array = request.getTempByteArray();
                 int headerSize = SncpHeader.calcHeaderSize(request);
                 array.putPlaceholder(headerSize);
                 response.writeHeader(array, 0, 0);

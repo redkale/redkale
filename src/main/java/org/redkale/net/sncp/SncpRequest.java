@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.logging.Level;
 import org.redkale.convert.*;
 import org.redkale.convert.bson.BsonReader;
@@ -30,6 +31,10 @@ public class SncpRequest extends Request<SncpContext> {
     protected static final int READ_STATE_BODY = 3;
 
     protected static final int READ_STATE_END = 4;
+
+    private static final String tbaName = "_tba";
+
+    private static final Function<String, ByteArray> tbaFunc = s -> new ByteArray();
 
     protected final BsonReader reader = new BsonReader();
 
@@ -214,5 +219,9 @@ public class SncpRequest extends Request<SncpContext> {
 
     public SncpHeader getHeader() {
         return header;
+    }
+
+    public ByteArray getTempByteArray() {
+        return getSubobjectIfAbsent(tbaName, tbaFunc).clear();
     }
 }
