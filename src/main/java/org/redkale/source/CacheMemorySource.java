@@ -2401,7 +2401,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
         List<T> list = new ArrayList<>();
         CacheEntry entry = find(key, CacheEntryType.ZSET);
         if (entry == null) {
-            for (int i = 0; i < members.length; i++) {
+            for (String member : members) {
                 list.add(null);
             }
             return list;

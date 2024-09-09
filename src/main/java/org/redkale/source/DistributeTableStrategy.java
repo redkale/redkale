@@ -36,11 +36,11 @@ public interface DistributeTableStrategy<T> {
      * 获取DataSource资源名，为null表示没有分布物理库 <br>
      * 新增对象或更新单个对象（DataSource.insert、DataSource.update）时调用本方法 <br>
      *
-     * @param bean 实体对象
+     * @param entity 实体对象
      * @return DataSource资源名
      * @since 2.8.0
      */
-    default String getSource(T bean) {
+    default String getSource(T entity) {
         return null;
     }
 
@@ -71,10 +71,10 @@ public interface DistributeTableStrategy<T> {
      * 新增对象或更新单个对象（DataSource.insert、DataSource.update）时调用本方法获取表名 <br>
      *
      * @param table 模板表的表名
-     * @param bean 实体对象
+     * @param entity 实体对象
      * @return 带库名的全表名
      */
-    public String getTable(String table, T bean);
+    public String getTable(String table, T entity);
 
     /**
      * 获取对象的表名 <br>

@@ -107,7 +107,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
     protected String tableNotExistSqlstates;
 
     // 用于复制表结构使用, sql语句必须包含IF NOT EXISTS判断，确保重复执行不会报错
-    protected String tablecopySQL;
+    protected String tableCopySQL;
 
     protected AnyValue config;
 
@@ -150,7 +150,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
 
         this.tableNotExistSqlstates =
                 ";" + readConfProps.getProperty(DATA_SOURCE_TABLENOTEXIST_SQLSTATES, "42000;42S02") + ";";
-        this.tablecopySQL = readConfProps.getProperty(
+        this.tableCopySQL = readConfProps.getProperty(
                 DATA_SOURCE_TABLECOPY_SQLTEMPLATE, "CREATE TABLE IF NOT EXISTS #{newtable} LIKE #{oldtable}");
 
         this.autoDDL = "true".equals(readConfProps.getProperty(DATA_SOURCE_TABLE_AUTODDL, "false"));
@@ -851,7 +851,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
     }
 
     protected String getTableCopySql(EntityInfo info, String newTable) {
-        return tablecopySQL.replace("#{newtable}", newTable).replace("#{oldtable}", info.table);
+        return tableCopySQL.replace("#{newtable}", newTable).replace("#{oldtable}", info.table);
     }
 
     protected Serializable getSQLAttrValue(EntityInfo info, Attribute attr, Serializable val) {

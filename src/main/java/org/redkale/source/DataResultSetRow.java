@@ -6,6 +6,7 @@ package org.redkale.source;
 
 import java.io.Serializable;
 import java.util.List;
+import org.redkale.annotation.Nullable;
 import org.redkale.util.Attribute;
 
 /**
@@ -15,7 +16,7 @@ import org.redkale.util.Attribute;
 public interface DataResultSetRow {
 
     // 可以为空
-    public EntityInfo getEntityInfo();
+    public @Nullable EntityInfo getEntityInfo();
 
     // index从1开始
     public Object getObject(int index);
@@ -40,4 +41,4 @@ public interface DataResultSetRow {
      * @return List
      */
     public List<String> getColumnLabels();
-    }
+}
