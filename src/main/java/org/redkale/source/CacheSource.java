@@ -125,6 +125,108 @@ public interface CacheSource extends Resourcable {
 
     public CompletableFuture<Integer> publishAsync(String topic, byte[] message);
 
+    // ------------------------ 令牌桶算法限流 ------------------------
+    /**
+     * 令牌桶算法限流， 返回负数表示无令牌， 其他为有令牌
+     *
+     * <pre>
+     * 每秒限制请求1次:     rate:1,     capacity:1,     requested:1
+     * 每秒限制请求10次:    rate:10,    capacity:10,    requested:1
+     * 每分钟限制请求1次:   rate:1,     capacity:60,    requested:60
+     * 每分钟限制请求10次:  rate:1,     capacity:60,    requested:6
+     * 每小时限制请求1次:   rate:1,     capacity:3600,  requested:3600
+     * 每小时限制请求10次:  rate:1,     capacity:3600,  requested:360
+     * </pre>
+     *
+     * @param key 限流的键
+     * @param rate 令牌桶每秒填充平均速率
+     * @param capacity 令牌桶总容量
+     * @param requested 需要的令牌数
+     * @return 可用令牌数
+     */
+    default long rateLimit(String key, long rate, long capacity, long requested) {
+        return rateLimitAsync(key, rate, capacity, requested).join();
+    }
+
+    /**
+     * 令牌桶算法限流， 返回负数表示无令牌， 其他为有令牌
+     *
+     * <pre>
+     * 每秒限制请求1次:     rate:1,     capacity:1,     requested:1
+     * 每秒限制请求10次:    rate:10,    capacity:10,    requested:1
+     * 每分钟限制请求1次:   rate:1,     capacity:60,    requested:60
+     * 每分钟限制请求10次:  rate:1,     capacity:60,    requested:6
+     * 每小时限制请求1次:   rate:1,     capacity:3600,  requested:3600
+     * 每小时限制请求10次:  rate:1,     capacity:3600,  requested:360
+     * </pre>
+     *
+     * @param key 限流的键
+     * @param rate 令牌桶每秒填充平均速率
+     * @param capacity 令牌桶总容量
+     * @return 可用令牌数
+     */
+    default long rateLimit(String key, long rate, long capacity) {
+        return rateLimit(key, rate, capacity, 1);
+    }
+
+    /**
+     * 令牌桶算法限流， 返回负数表示无令牌， 其他为有令牌
+     *
+     * <pre>
+     * 每秒限制请求1次:     rate:1,     capacity:1,     requested:1
+     * 每秒限制请求10次:    rate:10,    capacity:10,    requested:1
+     * 每分钟限制请求1次:   rate:1,     capacity:60,    requested:60
+     * 每分钟限制请求10次:  rate:1,     capacity:60,    requested:6
+     * 每小时限制请求1次:   rate:1,     capacity:3600,  requested:3600
+     * 每小时限制请求10次:  rate:1,     capacity:3600,  requested:360
+     * </pre>
+     *
+     * @param key 限流的键
+     * @param rate 令牌桶每秒填充平均速率
+     * @param capacity 令牌桶总容量
+     * @param requested 需要的令牌数
+     * @return 可用令牌数
+     */
+    public CompletableFuture<Long> rateLimitAsync(String key, long rate, long capacity, long requested);
+
+    /**
+     * 令牌桶算法限流， 返回负数表示无令牌， 其他为有令牌
+     *
+     * <pre>
+     * 每秒限制请求1次:     rate:1,     capacity:1,     requested:1
+     * 每秒限制请求10次:    rate:10,    capacity:10,    requested:1
+     * 每分钟限制请求1次:   rate:1,     capacity:60,    requested:60
+     * 每分钟限制请求10次:  rate:1,     capacity:60,    requested:6
+     * 每小时限制请求1次:   rate:1,     capacity:3600,  requested:3600
+     * 每小时限制请求10次:  rate:1,     capacity:3600,  requested:360
+     * </pre>
+     *
+     * @param key 限流的键
+     * @param rate 令牌桶每秒填充平均速率
+     * @param capacity 令牌桶总容量
+     * @return 可用令牌数
+     */
+    default CompletableFuture<Long> rateLimitAsync(String key, long rate, long capacity) {
+        return rateLimitAsync(key, rate, capacity, 1);
+    }
+
+    // ------------------------ Lock ------------------------
+    default boolean lock(String key, int expireSeconds) {
+        return setnxexString(key, expireSeconds, "1");
+    }
+
+    default void unlock(String key) {
+        del(key);
+    }
+
+    default CompletableFuture<Boolean> lockAsync(String key, int expireSeconds) {
+        return setnxexStringAsync(key, expireSeconds, "1");
+    }
+
+    default CompletableFuture<Void> unlockAsync(String key) {
+        return delAsync(key).thenApply(v -> null);
+    }
+
     // ------------------------ 字符串 String ------------------------
     default long incr(String key) {
         return incrAsync(key).join();
@@ -366,49 +468,6 @@ public interface CacheSource extends Resourcable {
     }
 
     // ------------------------ 键 Keys ------------------------
-    /**
-     * 令牌桶算法限流， 返回负数表示无令牌， 其他为有令牌
-     *
-     * <pre>
-     * 每秒限制请求1次:     rate:1,     capacity:1,     requested:1
-     * 每秒限制请求10次:    rate:10,    capacity:10,    requested:1
-     * 每分钟限制请求1次:   rate:1,     capacity:60,    requested:60
-     * 每分钟限制请求10次:  rate:1,     capacity:60,    requested:6
-     * 每小时限制请求1次:   rate:1,     capacity:3600,  requested:3600
-     * 每小时限制请求10次:  rate:1,     capacity:3600,  requested:360
-     * </pre>
-     *
-     * @param key 限流的键
-     * @param rate 令牌桶每秒填充平均速率
-     * @param capacity 令牌桶总容量
-     * @param requested 需要的令牌数
-     * @return 可用令牌数
-     */
-    default long rateLimit(String key, long rate, long capacity, long requested) {
-        return rateLimitAsync(key, rate, capacity, requested).join();
-    }
-
-    /**
-     * 令牌桶算法限流， 返回负数表示无令牌， 其他为有令牌
-     *
-     * <pre>
-     * 每秒限制请求1次:     rate:1,     capacity:1,     requested:1
-     * 每秒限制请求10次:    rate:10,    capacity:10,    requested:1
-     * 每分钟限制请求1次:   rate:1,     capacity:60,    requested:60
-     * 每分钟限制请求10次:  rate:1,     capacity:60,    requested:6
-     * 每小时限制请求1次:   rate:1,     capacity:3600,  requested:3600
-     * 每小时限制请求10次:  rate:1,     capacity:3600,  requested:360
-     * </pre>
-     *
-     * @param key 限流的键
-     * @param rate 令牌桶每秒填充平均速率
-     * @param capacity 令牌桶总容量
-     * @return 可用令牌数
-     */
-    default long rateLimit(String key, long rate, long capacity) {
-        return rateLimit(key, rate, capacity, 1);
-    }
-
     default long del(String... keys) {
         return delAsync(keys).join();
     }
@@ -1360,47 +1419,6 @@ public interface CacheSource extends Resourcable {
     }
 
     // ------------------------ 键 Keys ------------------------
-    /**
-     * 令牌桶算法限流， 返回负数表示无令牌， 其他为有令牌
-     *
-     * <pre>
-     * 每秒限制请求1次:     rate:1,     capacity:1,     requested:1
-     * 每秒限制请求10次:    rate:10,    capacity:10,    requested:1
-     * 每分钟限制请求1次:   rate:1,     capacity:60,    requested:60
-     * 每分钟限制请求10次:  rate:1,     capacity:60,    requested:6
-     * 每小时限制请求1次:   rate:1,     capacity:3600,  requested:3600
-     * 每小时限制请求10次:  rate:1,     capacity:3600,  requested:360
-     * </pre>
-     *
-     * @param key 限流的键
-     * @param rate 令牌桶每秒填充平均速率
-     * @param capacity 令牌桶总容量
-     * @param requested 需要的令牌数
-     * @return 可用令牌数
-     */
-    public CompletableFuture<Long> rateLimitAsync(String key, long rate, long capacity, long requested);
-
-    /**
-     * 令牌桶算法限流， 返回负数表示无令牌， 其他为有令牌
-     *
-     * <pre>
-     * 每秒限制请求1次:     rate:1,     capacity:1,     requested:1
-     * 每秒限制请求10次:    rate:10,    capacity:10,    requested:1
-     * 每分钟限制请求1次:   rate:1,     capacity:60,    requested:60
-     * 每分钟限制请求10次:  rate:1,     capacity:60,    requested:6
-     * 每小时限制请求1次:   rate:1,     capacity:3600,  requested:3600
-     * 每小时限制请求10次:  rate:1,     capacity:3600,  requested:360
-     * </pre>
-     *
-     * @param key 限流的键
-     * @param rate 令牌桶每秒填充平均速率
-     * @param capacity 令牌桶总容量
-     * @return 可用令牌数
-     */
-    default CompletableFuture<Long> rateLimitAsync(String key, long rate, long capacity) {
-        return rateLimitAsync(key, rate, capacity, 1);
-    }
-
     public CompletableFuture<Long> delexAsync(String key, String expectedValue);
 
     public CompletableFuture<Long> delAsync(String... keys);
