@@ -82,7 +82,7 @@ public class SncpRequest extends Request<SncpContext> {
                 context.getLogger()
                         .log(
                                 Level.WARNING,
-                                "sncp buffer header.length must more " + SncpHeader.HEADER_SUBSIZE + ", but "
+                                "sncp header.length must more " + SncpHeader.HEADER_SUBSIZE + ", but "
                                         + this.headerSize);
                 return -1;
             }
@@ -90,8 +90,7 @@ public class SncpRequest extends Request<SncpContext> {
                 context.getLogger()
                         .log(
                                 Level.WARNING,
-                                "sncp buffer header.length must lower " + context.getMaxHeader() + ", but "
-                                        + this.headerSize);
+                                "sncp header.length must lower " + context.getMaxHeader() + ", but " + this.headerSize);
                 return -1;
             }
             this.readState = READ_STATE_HEADER;
@@ -116,14 +115,14 @@ public class SncpRequest extends Request<SncpContext> {
                 halfArray.clear();
             }
             if (this.header.getRetcode() != 0) { // retcode
-                context.getLogger().log(Level.WARNING, "sncp buffer header.retcode not 0");
+                context.getLogger().log(Level.WARNING, "sncp header.retcode not 0");
                 return -1;
             }
             if (this.header.getBodyLength() > context.getMaxBody()) {
                 context.getLogger()
                         .log(
                                 Level.WARNING,
-                                "sncp buffer body.length must lower " + context.getMaxBody() + ", but "
+                                "sncp body.length must lower " + context.getMaxBody() + ", but "
                                         + this.header.getBodyLength());
                 return -1;
             }

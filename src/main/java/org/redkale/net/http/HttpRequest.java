@@ -374,6 +374,14 @@ public class HttpRequest extends Request<HttpContext> {
                 this.headers.setAll(httpLast.headers);
             } else if (context.lazyHeader && getmethod) { // 非GET必须要读header，会有Content-Length
                 int rs = loadHeaderBytes(buffer);
+                if (rs >= 0 && this.headerLength > context.getMaxHeader()) {
+                    context.getLogger()
+                            .log(
+                                    Level.WARNING,
+                                    "http header.length must lower " + context.getMaxHeader() + ", but "
+                                            + this.headerLength + ", path: " + requestPath);
+                    return -1;
+                }
                 if (rs != 0) {
                     buffer.clear();
                     return rs;
@@ -382,6 +390,14 @@ public class HttpRequest extends Request<HttpContext> {
             } else {
                 int startpos = buffer.position();
                 int rs = readHeaderLines(buffer, bytes);
+                if (rs >= 0 && this.headerLength > context.getMaxHeader()) {
+                    context.getLogger()
+                            .log(
+                                    Level.WARNING,
+                                    "http header.length must lower " + context.getMaxHeader() + ", but "
+                                            + this.headerLength + ", path: " + requestPath);
+                    return -1;
+                }
                 if (rs != 0) {
                     this.headerHalfLen = bytes.length();
                     buffer.clear();
@@ -392,9 +408,6 @@ public class HttpRequest extends Request<HttpContext> {
                 this.headerHalfLen = this.headerLength;
             }
             bytes.clear();
-            if (this.headerLength > context.getMaxHeader()) {
-                return -1;
-            }
             if (this.contentType != null && this.contentType.contains("boundary=")) {
                 this.boundary = true;
             }
@@ -412,6 +425,11 @@ public class HttpRequest extends Request<HttpContext> {
             }
             if (this.contentLength > 0 && (this.contentType == null || !this.boundary)) {
                 if (this.contentLength > context.getMaxBody()) {
+                    context.getLogger()
+                            .log(
+                                    Level.WARNING,
+                                    "http body.length must lower " + context.getMaxBody() + ", but "
+                                            + this.contentLength + ", path: " + requestPath);
                     return -1;
                 }
                 bytes.put(buffer, Math.min((int) this.contentLength, buffer.remaining()));
@@ -436,6 +454,7 @@ public class HttpRequest extends Request<HttpContext> {
             } else if (!getmethod && this.contentLength < 0 && keepAlive) {
                 // keep-alive=true:  Content-Length和chunk必然是二选一。
                 // keep-alive=false: Content-Length可有可无.
+                context.getLogger().log(Level.WARNING, "http not found content-length or chunk, path: " + requestPath);
                 return -1;
             }
         }
