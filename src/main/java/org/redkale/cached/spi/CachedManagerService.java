@@ -47,8 +47,6 @@ import org.redkale.util.Utility;
 @ResourceType(CachedManager.class)
 public class CachedManagerService implements CachedManager, CachedActionFunc, Service {
 
-    public static final String CACHED_CHANNEL_TOPIC_PREFIX = "cached-update-channel";
-
     protected final Logger logger = Logger.getLogger(getClass().getSimpleName());
 
     protected Level logLevel = Level.FINER;
@@ -120,7 +118,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         }
         this.name = conf.getValue("name", "");
         this.enabled = conf.getBoolValue("enabled", true);
-        this.schema = checkSchema(conf.getValue("schema", DEFAULT_SCHEMA));
+        this.schema = checkSchema(conf.getValue("schema", CACHED_SCHEMA));
         if (this.enabled) {
             this.localSource.init(conf);
             String remoteSourceName = conf.getValue("remote", "");
