@@ -341,14 +341,15 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      *
      * @param <T> 泛型
      * @param name 缓存名称
-     * @param key 缓存键
+     * @param key 缓存键     *
+     * @param localLimit 本地缓存数量上限
      * @param type 数据类型
      * @param value 数据值
      * @param expire 过期时长，Duration.ZERO为永不过期
      */
     @Override
-    public <T> void localSet(String name, String key, Type type, T value, Duration expire) {
-        localSetCache(name, key, 0, type, value, expire);
+    public <T> void localSet(String name, String key, int localLimit, Type type, T value, Duration expire) {
+        localSetCache(name, key, localLimit, type, value, expire);
     }
 
     /**

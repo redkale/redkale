@@ -165,11 +165,39 @@ public interface CachedManager extends Resourcable {
      * @param <T> 泛型
      * @param name 缓存名称
      * @param key 缓存键
+     * @param localLimit 本地缓存数量上限
      * @param type 数据类型
      * @param value 数据值
      * @param expire 过期时长，Duration.ZERO为永不过期
      */
-    public <T> void localSet(String name, String key, Type type, T value, Duration expire);
+    public <T> void localSet(String name, String key, int localLimit, Type type, T value, Duration expire);
+
+    /**
+     * 本地缓存数据
+     *
+     * @param <T> 泛型
+     * @param name 缓存名称
+     * @param key 缓存键
+     * @param type 数据类型
+     * @param value 数据值
+     * @param expire 过期时长，Duration.ZERO为永不过期
+     */
+    default <T> void localSet(String name, String key, Type type, T value, Duration expire) {
+        localSet(name, key, 0, type, value, expire);
+    }
+
+    /**
+     * 本地缓存字符串数据
+     *
+     * @param name 缓存名称
+     * @param key 缓存键
+     * @param localLimit 本地缓存数量上限
+     * @param value 数据值
+     * @param expire 过期时长，Duration.ZERO为永不过期
+     */
+    default void localSetString(String name, String key, int localLimit, String value, Duration expire) {
+        localSet(name, key, localLimit, String.class, value, expire);
+    }
 
     /**
      * 本地缓存字符串数据
@@ -180,7 +208,7 @@ public interface CachedManager extends Resourcable {
      * @param expire 过期时长，Duration.ZERO为永不过期
      */
     default void localSetString(String name, String key, String value, Duration expire) {
-        localSet(name, key, String.class, value, expire);
+        localSetString(name, key, 0, value, expire);
     }
 
     /**
