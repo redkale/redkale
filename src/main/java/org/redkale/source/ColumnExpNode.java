@@ -5,10 +5,9 @@
  */
 package org.redkale.source;
 
-import static org.redkale.source.ColumnExpress.*;
-
 import java.io.Serializable;
 import org.redkale.convert.ConvertColumn;
+import static org.redkale.source.ColumnExpress.*;
 
 /**
  * 作为ColumnValue的value字段值，用于复杂的字段表达式 。 <br>
@@ -27,14 +26,17 @@ import org.redkale.convert.ConvertColumn;
  */
 public class ColumnExpNode implements ColumnNode {
 
+    // 类型只能是ColumnNameNode、ColumnNumberNode、ColumnExpNode
     @ConvertColumn(index = 1)
-    protected ColumnNode left; // 类型只能是ColumnNameNode、ColumnNumberNode、ColumnExpNode
+    protected ColumnNode left;
 
+    // SET时，left必须是ColumnNameNode, right必须是null
     @ConvertColumn(index = 2)
-    protected ColumnExpress express; // SET时，left必须是ColumnNameNode, right必须是null
+    protected ColumnExpress express;
 
+    // 类型只能是ColumnNameNode、ColumnNumberNode、ColumnExpNode
     @ConvertColumn(index = 3)
-    protected ColumnNode right; // 类型只能是ColumnNameNode、ColumnNumberNode、ColumnExpNode
+    protected ColumnNode right;
 
     public ColumnExpNode() {}
 

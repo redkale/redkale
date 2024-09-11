@@ -187,7 +187,7 @@ public final class EntityCache<T> {
             List<T> all = l;
             ConcurrentHashMap newmap = new ConcurrentHashMap();
             if (all != null) {
-                all.stream().filter(x -> x != null).forEach(x -> {
+                all.stream().filter(Objects::nonNull).forEach(x -> {
                     newmap.put(this.primary.get(x), x);
                 });
             }

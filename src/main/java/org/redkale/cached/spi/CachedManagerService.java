@@ -330,7 +330,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      */
     @Override
     public <T> void localSet(String key, Type type, T value, Duration expire) {
-        setCache(localSource, key, type, value, expire);
+        localSetCache(key, type, value, expire);
     }
 
     /**
@@ -434,7 +434,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      */
     @Override
     public <T> void remoteSet(final String key, final Type type, final T value, Duration expire) {
-        setCache(remoteSource, key, type, value, expire);
+        remoteSetCache(key, type, value, expire);
     }
 
     /**
@@ -448,7 +448,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      */
     @Override
     public <T> CompletableFuture<Void> remoteSetAsync(String key, Type type, T value, Duration expire) {
-        return setCacheAsync(remoteSource, key, type, value, expire);
+        return remoteSetCacheAsync(key, type, value, expire);
     }
 
     /**
@@ -621,10 +621,10 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
             final String key, final Type type, final T value, Duration localExpire, Duration remoteExpire) {
         checkEnable();
         if (localExpire != null) {
-            setCache(localSource, key, type, value, localExpire);
+            localSetCache(key, type, value, localExpire);
         }
         if (remoteExpire != null && remoteSource != null) {
-            setCache(remoteSource, key, type, value, remoteExpire);
+            remoteSetCache(key, type, value, remoteExpire);
         }
         if (remoteSource != null && broadcastable) {
             remoteSource.publish(getChannelTopic(), new CachedEventMessage(node, key));
@@ -647,11 +647,11 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
             String key, Type type, T value, Duration localExpire, Duration remoteExpire) {
         checkEnable();
         if (localExpire != null) {
-            setCache(localSource, key, type, value, localExpire);
+            localSetCache(key, type, value, localExpire);
         }
         CompletableFuture<Void> future = CompletableFuture.completedFuture(null);
         if (remoteSource != null && remoteExpire != null) {
-            future = setCacheAsync(remoteSource, key, type, value, remoteExpire);
+            future = remoteSetCacheAsync(key, type, value, remoteExpire);
         }
         if (remoteSource != null && broadcastable) {
             future = future.thenCompose(r -> remoteSource
@@ -824,67 +824,86 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         });
     }
 
+    protected <T> void localSetCache(String key, Type type, T value, Duration expire) {
+        localSetCache(key, expire, loadCacheType(type, value), CachedValue.create(value));
+    }
+
+    protected <T> void localSetCache(String key, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
+        checkEnable();
+        boolean logable = logger.isLoggable(logLevel);
+        Objects.requireNonNull(expire);
+        long millis = expire.toMillis();
+        String id = idFor(key);
+        if (logable) {
+            logger.log(logLevel, "Cached set id(" + id + ") value to localSource expire " + millis + " ms");
+        }
+        if (millis > 0) {
+            localSource.psetex(id, millis, cacheType, cacheVal);
+        } else {
+            localSource.set(id, cacheType, cacheVal);
+        }
+    }
+
+    protected <T> void remoteSetCache(String key, Type type, T value, Duration expire) {
+        remoteSetCache(key, expire, loadCacheType(type, value), CachedValue.create(value));
+    }
+
+    protected <T> void remoteSetCache(String key, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
+        checkEnable();
+        boolean logable = logger.isLoggable(logLevel);
+        Objects.requireNonNull(expire);
+        long millis = expire.toMillis();
+        String id = idFor(key);
+        if (logable) {
+            logger.log(logLevel, "Cached set id(" + id + ") value to remoteSource expire " + millis + " ms");
+        }
+        if (millis > 0) {
+            remoteSource.psetex(id, millis, cacheType, cacheVal);
+        } else {
+            remoteSource.set(id, cacheType, cacheVal);
+        }
+    }
+
+    protected <T> CompletableFuture<Void> localSetCacheAsync(String key, Type type, T value, Duration expire) {
+        return localSetCacheAsync(key, expire, loadCacheType(type, value), CachedValue.create(value));
+    }
+
     protected <T> CompletableFuture<Void> localSetCacheAsync(
             String key, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
-        return setCacheAsync(localSource, key, expire, cacheType, cacheVal);
+        checkEnable();
+        boolean logable = logger.isLoggable(logLevel);
+        Objects.requireNonNull(expire);
+        String id = idFor(key);
+        long millis = expire.toMillis();
+        if (logable) {
+            logger.log(logLevel, "Cached set id(" + id + ") value to localSource expire " + millis + " ms");
+        }
+        if (millis > 0) {
+            return localSource.psetexAsync(id, millis, cacheType, cacheVal);
+        } else {
+            return localSource.setAsync(id, cacheType, cacheVal);
+        }
+    }
+
+    protected <T> CompletableFuture<Void> remoteSetCacheAsync(String key, Type type, T value, Duration expire) {
+        return remoteSetCacheAsync(key, expire, loadCacheType(type, value), CachedValue.create(value));
     }
 
     protected <T> CompletableFuture<Void> remoteSetCacheAsync(
             String key, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
-        return setCacheAsync(remoteSource, key, expire, cacheType, cacheVal);
-    }
-
-    protected <T> void localSetCache(String key, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
-        setCache(localSource, key, expire, cacheType, cacheVal);
-    }
-
-    protected <T> void remoteSetCache(String key, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
-        setCache(remoteSource, key, expire, cacheType, cacheVal);
-    }
-
-    protected <T> void setCache(
-            CacheSource source, String key, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
-        checkEnable();
-        boolean logable = logger.isLoggable(logLevel);
-        Objects.requireNonNull(expire);
-        long millis = expire.toMillis();
-        String id = idFor(key);
-        if (logable) {
-            String s = source == localSource ? "localSource" : "remoteSource";
-            logger.log(logLevel, "Cached set id(" + id + ") value to " + s + " expire " + millis + " ms");
-        }
-        if (millis > 0) {
-            source.psetex(id, millis, cacheType, cacheVal);
-        } else {
-            source.set(id, cacheType, cacheVal);
-        }
-    }
-
-    protected <T> CompletableFuture<Void> setCacheAsync(
-            CacheSource source, String key, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
         checkEnable();
         boolean logable = logger.isLoggable(logLevel);
         Objects.requireNonNull(expire);
         String id = idFor(key);
         long millis = expire.toMillis();
         if (logable) {
-            String s = source == localSource ? "localSource" : "remoteSource";
-            logger.log(logLevel, "Cached set id(" + id + ") value to " + s + " expire " + millis + " ms");
+            logger.log(logLevel, "Cached set id(" + id + ") value to remoteSource expire " + millis + " ms");
         }
         if (millis > 0) {
-            return source.psetexAsync(id, millis, cacheType, cacheVal);
+            return remoteSource.psetexAsync(id, millis, cacheType, cacheVal);
         } else {
-            return source.setAsync(id, cacheType, cacheVal);
+            return remoteSource.setAsync(id, cacheType, cacheVal);
         }
-    }
-
-    protected <T> void setCache(CacheSource source, String key, Type type, T value, Duration expire) {
-        setCache(source, key, expire, loadCacheType(type, value), CachedValue.create(value));
-    }
-
-    protected <T> CompletableFuture<Void> setCacheAsync(
-            CacheSource source, String key, Type type, T value, Duration expire) {
-        return setCacheAsync(source, key, expire, loadCacheType(type, value), CachedValue.create(value));
     }
 
     protected <T> CachedValue<T> bothGetCache(final String key, final Duration expire, final Type cacheType) {
@@ -905,7 +924,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
                     if (logable) {
                         logger.log(logLevel, "Cached set id(" + id + ") value to localSource from remoteSource");
                     }
-                    setCache(localSource, key, expire, cacheType, cacheVal);
+                    localSetCache(key, expire, cacheType, cacheVal);
                 }
                 if (logable) {
                     logger.log(logLevel, "Cached got id(" + id + ") value from remoteSource");
@@ -945,7 +964,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
                         if (logable) {
                             logger.log(logLevel, "Cached set id(" + id + ") value to localSource from remoteSource");
                         }
-                        setCache(localSource, id, expire, cacheType, v);
+                        localSetCache(id, expire, cacheType, v);
                     }
                     if (logable) {
                         logger.log(logLevel, "Cached got id(" + id + ") value from remoteSource");

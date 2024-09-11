@@ -21,8 +21,9 @@ public class ColumnFuncNode implements ColumnNode {
     @ConvertColumn(index = 1)
     protected FilterFunc func;
 
+    // 类型只能是ColumnNameNode、ColumnExpNode、ColumnFuncNode
     @ConvertColumn(index = 2)
-    protected ColumnNode value; // 类型只能是ColumnNameNode、ColumnExpNode、ColumnFuncNode
+    protected ColumnNode value;
 
     public ColumnFuncNode() {}
 
