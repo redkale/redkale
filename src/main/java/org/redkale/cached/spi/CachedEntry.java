@@ -20,7 +20,8 @@ public class CachedEntry {
 
     private String manager;
 
-    private String templetKey;
+    private String name;
+    private String key;
 
     private String localExpire;
 
@@ -34,7 +35,8 @@ public class CachedEntry {
 
     public CachedEntry(DynForCached cached) {
         this.manager = cached.manager();
-        this.templetKey = cached.key();
+        this.name = cached.name();
+        this.key = cached.key();
         this.localExpire = cached.localExpire();
         this.remoteExpire = cached.remoteExpire();
         this.timeUnit = cached.timeUnit();
@@ -43,7 +45,8 @@ public class CachedEntry {
 
     public CachedEntry(Cached cached) {
         this.manager = cached.manager();
-        this.templetKey = cached.key();
+        this.name = cached.name();
+        this.key = cached.key();
         this.localExpire = cached.localExpire();
         this.remoteExpire = cached.remoteExpire();
         this.timeUnit = cached.timeUnit();
@@ -54,8 +57,12 @@ public class CachedEntry {
         return manager;
     }
 
-    public String getTempletKey() {
-        return templetKey;
+    public String getName() {
+        return name;
+    }
+
+    public String getKey() {
+        return key;
     }
 
     public String getLocalExpire() {

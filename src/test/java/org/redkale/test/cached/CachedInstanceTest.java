@@ -83,12 +83,12 @@ public class CachedInstanceTest {
         System.out.println("instance1.manager = " + instance.getCachedManager());
         System.out.println("instance2.manager = " + instance2.getCachedManager());
         manager.updateBroadcastable(false);
-        instance.updateName("gege");
+        instance.updateName2("gege");
         Assertions.assertEquals("gege", instance.getName2());
         Assertions.assertEquals("haha", instance2.getName2());
         manager.updateBroadcastable(true);
         System.out.println("准备设置 updateName");
-        instance.updateName("gege");
+        instance.updateName2("gege");
         System.out.println("设置结束 updateName");
         Utility.sleep(10);
         Assertions.assertEquals("gege", instance.getName2());

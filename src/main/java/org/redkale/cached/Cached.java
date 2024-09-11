@@ -17,6 +17,8 @@ import org.redkale.service.LoadMode;
  * 2、方法返回类型必须可json序列化  <br>
  * 3、方法必须是protected/public  <br>
  * 4、方法不能是final/static <br>
+ *<br>
+ * 远程缓存里中存放的key值为: {CachedManager.schema}:{Cached.name}:{Cached.key}
  *
  * @since 2.8.0
  */
@@ -26,10 +28,17 @@ import org.redkale.service.LoadMode;
 public @interface Cached {
 
     /**
+     * 缓存的name <br>
+     *
+     * @return name
+     */
+    String name();
+
+    /**
      * 缓存的key，支持参数动态组合，比如"key_#{id}" <br>
      * <b>'@'开头的key值视为CacheKeyGenerator对象名称</b> <br>
      *
-     * @see org.redkale.cached.spi.CachedKeyGenerator#name()
+     * @see org.redkale.cached.spi.CachedKeyGenerator#key()
      *
      * @return 键
      */

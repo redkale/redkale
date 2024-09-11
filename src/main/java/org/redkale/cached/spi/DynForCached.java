@@ -26,6 +26,8 @@ public @interface DynForCached {
 
     String manager();
 
+    String name();
+
     String key();
 
     String localExpire();

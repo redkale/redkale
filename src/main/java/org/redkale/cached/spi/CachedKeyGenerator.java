@@ -34,9 +34,9 @@ public interface CachedKeyGenerator {
      *
      * @see org.redkale.cached.Cached#key()
      *
-     * @return  name
+     * @return  key
      */
-    public String name();
+    public String key();
 
     /**
      * 根据MultiHashKey生成一个CachedKeyGenerator
@@ -52,7 +52,7 @@ public interface CachedKeyGenerator {
             }
 
             @Override
-            public String name() {
+            public String key() {
                 return "";
             }
         };

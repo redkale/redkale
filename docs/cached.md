@@ -9,6 +9,7 @@
 ## 属性说明
 |属性|默认值|说明|
 | --- | --- | --- |
+|name|未定义|缓存的名称|
 |key|未定义|缓存的key，支持参数动态组合，比如"key_#{id}"|
 |manager|空|缓存管理器名称, 不能含有':'、'#'、'@'字符|
 |localExpire|-1|本地缓存过期时长， 0表示永不过期， -1表示不作本地缓存。 <br> 参数值支持方式:<br> &emsp;100: 设置数值 <br> &emsp;${env.cache.expires}: 读取系统配置项  |
@@ -21,7 +22,7 @@
 ## 基本用法
 &emsp;&emsp;将结果进行本地缓存30秒且远程缓存60秒
 ```java
-    @Cached(key = "name", localExpire = "30", remoteExpire = "60")
+    @Cached(name = "name", key = "name", localExpire = "30", remoteExpire = "60")
     public String getName() {
         return "haha";
     }
@@ -29,7 +30,7 @@
 
 &emsp;&emsp;以参数code为key将结果进行本地缓存(时长由环境变量```env.cache.expire```配置，没配置采用默认值30秒)
 ```java
-    @Cached(key = "#{code}", localExpire = "${env.cache.expire:30}")
+    @Cached(name = "name", key = "#{code}", localExpire = "${env.cache.expire:30}")
     public CompletableFuture<String> getNameAsync(String code) {
         return redis.getStringAsync(code);
     }
@@ -42,10 +43,10 @@
 
     //实时修改远程缓存的key值
     public void updateName(String code, Map<String, Long> map) {
-        cachedManager.remoteSetString(code + "_" + map.get("id"), code + "-" + map, Duration.ofMillis(60));
+        cachedManager.remoteSetString("name", code + "_" + map.get("id"), code + "-" + map, Duration.ofMillis(60));
     }
 
-    @Cached(key = "#{code}_#{map.id}", remoteExpire = "60", timeUnit = TimeUnit.MILLISECONDS)
+    @Cached(name = "name", key = "#{code}_#{map.id}", remoteExpire = "60", timeUnit = TimeUnit.MILLISECONDS)
     public String getName(String code, Map<String, Long> map) {
         return code + "-" + map;
     }
@@ -58,14 +59,14 @@
     @Resource
     private CachedManager cachedManager;
 
-    @Cached(key = "#{code}_#{map.id}", remoteExpire = "60", timeUnit = TimeUnit.MILLISECONDS)
+    @Cached(name = "name", key = "#{code}_#{map.id}", remoteExpire = "60", timeUnit = TimeUnit.MILLISECONDS)
     public String getName(String code, Map<String, Long> map) {
         return code + "-" + map;
     }
 
     public void updateExpire() {
         Duration expire = Duration.ofMillis(600);
-        cachedManager.acceptCachedAction("#{code}_#{map.id}", action -> {
+        cachedManager.acceptCachedAction("name", action -> {
             //将缓存时长改成600毫秒，并开启本地缓存
             action.setLocalExpire(expire);
             action.setRemoteExpire(expire);
@@ -104,17 +105,17 @@
 
     //第一个缓存器实时修改远程缓存的key值
     public void updateName(String code, Map<String, Long> map) {
-        cachedManager.remoteSetString(code + "_" + map.get("id"), code + "-" + map, Duration.ofMillis(60));
+        cachedManager.remoteSetString("name", code + "_" + map.get("id"), code + "-" + map, Duration.ofMillis(60));
     }
 
     //使用第一个缓存器
-    @Cached(key = "#{code}_#{map.id}", remoteExpire = "60", timeUnit = TimeUnit.MILLISECONDS)
+    @Cached(name = "name", key = "#{code}_#{map.id}", remoteExpire = "60", timeUnit = TimeUnit.MILLISECONDS)
     public String getName(String code, Map<String, Long> map) {
         return code + "-" + map;
     }
 
     //使用第二个缓存器
-    @Cached(manager = "backup", key = "#{code}_#{map.id}_2", remoteExpire = "60", timeUnit = TimeUnit.MILLISECONDS)
+    @Cached(manager = "backup", name = "name", key = "#{code}_#{map.id}_2", remoteExpire = "60", timeUnit = TimeUnit.MILLISECONDS)
     public String getName2(String code, Map<String, Long> map) {
         return code + "-" + map;
     }

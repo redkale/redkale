@@ -62,8 +62,11 @@ public class CachedAction {
     @Nullable
     private final String[] paramNames;
 
+    // 缓存名称
+    final String name;
+
     // 模板key
-    final String templetKey;
+    final String key;
 
     // 缓存key生成器
     private CachedKeyGenerator keyGenerator;
@@ -85,7 +88,8 @@ public class CachedAction {
         this.paramNames = paramNames;
         this.methodName = method.getName();
         this.fieldName = Objects.requireNonNull(fieldName);
-        this.templetKey = cached.getTempletKey();
+        this.name = cached.getName();
+        this.key = cached.getKey();
         Type returnType = method.getGenericReturnType();
         this.async = CompletableFuture.class.isAssignableFrom(TypeToken.typeToClass(returnType));
         this.resultType = this.async ? ((ParameterizedType) returnType).getActualTypeArguments()[0] : returnType;
@@ -93,24 +97,25 @@ public class CachedAction {
 
     String init(ResourceFactory resourceFactory, Object service) {
         this.manager = resourceFactory.load(cached.getManager(), CachedManager.class);
-        final String key = environment.getPropertyValue(cached.getTempletKey());
-        if (key.startsWith("@")) { // 动态加载缓存key生成器
-            String generatorName = key.substring(1);
+        final String realKey = environment.getPropertyValue(cached.getKey());
+        if (realKey.startsWith("@")) { // 动态加载缓存key生成器
+            String generatorName = realKey.substring(1);
             this.keyGenerator = resourceFactory.findChild(generatorName, CachedKeyGenerator.class);
         } else {
-            MultiHashKey dynKey = MultiHashKey.create(paramNames, key);
+            MultiHashKey dynKey = MultiHashKey.create(paramNames, realKey);
             this.keyGenerator = CachedKeyGenerator.create(dynKey);
         }
         this.localExpire = createDuration(cached.getLocalExpire());
         this.remoteExpire = createDuration(cached.getRemoteExpire());
         ((CachedActionFunc) this.manager).addAction(this);
-        return key;
+        return realKey;
     }
 
     @ClassDepends
     public <T> T get(ThrowSupplier<T> supplier, Object... args) {
         if (async) {
             return (T) manager.bothGetSetAsync(
+                    name,
                     keyGenerator.generate(service, this, args),
                     resultType,
                     nullable,
@@ -119,6 +124,7 @@ public class CachedAction {
                     (ThrowSupplier) supplier);
         } else {
             return manager.bothGetSet(
+                    name,
                     keyGenerator.generate(service, this, args),
                     resultType,
                     nullable,
@@ -161,8 +167,12 @@ public class CachedAction {
         return method;
     }
 
-    public String getTempletKey() {
-        return templetKey;
+    public String getName() {
+        return name;
+    }
+
+    public String getKey() {
+        return key;
     }
 
     public Duration getLocalExpire() {
@@ -189,7 +199,7 @@ public class CachedAction {
                 + ",\"fieldName\":\"" + fieldName + "\""
                 + ",\"paramTypes\":" + JsonConvert.root().convertTo(method.getParameterTypes())
                 + ",\"paramNames\":" + JsonConvert.root().convertTo(paramNames)
-                + ",\"templetKey\":\"" + templetKey + "\""
+                + ",\"templetKey\":\"" + key + "\""
                 + ",\"resultType\":\"" + resultType + "\""
                 + ",\"cache\":" + cached
                 + "}";

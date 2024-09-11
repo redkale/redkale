@@ -51,7 +51,7 @@ class CachedKeyGeneratorLoader implements ResourceTypeLoader {
             generator = generatorMap.computeIfAbsent(resourceName, n -> {
                 for (CachedKeyGenerator instance : ServiceLoader.load(
                         CachedKeyGenerator.class, engine.getApplication().getClassLoader())) {
-                    if (Objects.equals(n, instance.name())) {
+                    if (Objects.equals(n, instance.key())) {
                         rf.inject(instance);
                         if (instance instanceof Service) {
                             ((Service) instance).init(null);

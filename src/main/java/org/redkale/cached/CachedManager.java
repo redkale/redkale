@@ -91,39 +91,42 @@ public interface CachedManager extends Resourcable {
     public List<CachedAction> getCachedActions();
 
     /**
-     * 处理指定缓存key的{@link org.redkale.cached.spi.CachedAction}<br>
+     * 处理指定缓存名称的{@link org.redkale.cached.spi.CachedAction}<br>
      * 可用于动态调整缓存时长
      *
-     * @param templetKey 模板key
+     * @param name 缓存名称
      * @param consumer 处理函数
      */
-    public void acceptCachedAction(String templetKey, Consumer<CachedAction> consumer);
+    public void acceptCachedAction(String name, Consumer<CachedAction> consumer);
 
     // -------------------------------------- 本地缓存 --------------------------------------
     /**
      * 本地获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @return 数据值
      */
-    public <T> T localGet(final String key, final Type type);
+    public <T> T localGet(String name, String key, Type type);
 
     /**
      * 本地获取字符串缓存数据, 过期返回null
      *
+     * @param name 缓存名称
      * @param key 缓存键
      * @return 数据值
      */
-    default String localGetString(final String key) {
-        return localGet(key, String.class);
+    default String localGetString(String name, String key) {
+        return localGet(name, key, String.class);
     }
 
     /**
      * 本地获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -131,12 +134,14 @@ public interface CachedManager extends Resourcable {
      * @param supplier 数据函数
      * @return 数据值
      */
-    public <T> T localGetSet(String key, Type type, boolean nullable, Duration expire, ThrowSupplier<T> supplier);
+    public <T> T localGetSet(
+            String name, String key, Type type, boolean nullable, Duration expire, ThrowSupplier<T> supplier);
 
     /**
      * 本地异步获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -145,83 +150,96 @@ public interface CachedManager extends Resourcable {
      * @return 数据值
      */
     public <T> CompletableFuture<T> localGetSetAsync(
-            String key, Type type, boolean nullable, Duration expire, ThrowSupplier<CompletableFuture<T>> supplier);
+            String name,
+            String key,
+            Type type,
+            boolean nullable,
+            Duration expire,
+            ThrowSupplier<CompletableFuture<T>> supplier);
 
     /**
      * 本地缓存数据
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param value 数据值
      * @param expire 过期时长，Duration.ZERO为永不过期
      */
-    public <T> void localSet(String key, Type type, T value, Duration expire);
+    public <T> void localSet(String name, String key, Type type, T value, Duration expire);
 
     /**
      * 本地缓存字符串数据
      *
+     * @param name 缓存名称
      * @param key 缓存键
      * @param value 数据值
      * @param expire 过期时长，Duration.ZERO为永不过期
      */
-    default void localSetString(final String key, final String value, Duration expire) {
-        localSet(key, String.class, value, expire);
+    default void localSetString(String name, String key, String value, Duration expire) {
+        localSet(name, key, String.class, value, expire);
     }
 
     /**
      * 本地删除缓存数据
      *
+     * @param name 缓存名称
      * @param key 缓存键
      * @return 删除数量
      */
-    public long localDel(String key);
+    public long localDel(String name, String key);
 
     // -------------------------------------- 远程缓存 --------------------------------------
     /**
      * 远程获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @return 数据值
      */
-    public <T> T remoteGet(final String key, final Type type);
+    public <T> T remoteGet(String name, String key, final Type type);
 
     /**
      * 远程获取字符串缓存数据, 过期返回null
      *
+     * @param name 缓存名称
      * @param key 缓存键
      * @return 数据值
      */
-    default String remoteGetString(final String key) {
-        return remoteGet(key, String.class);
+    default String remoteGetString(String name, String key) {
+        return remoteGet(name, key, String.class);
     }
 
     /**
      * 远程异步获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @return 数据值
      */
-    public <T> CompletableFuture<T> remoteGetAsync(final String key, final Type type);
+    public <T> CompletableFuture<T> remoteGetAsync(String name, String key, final Type type);
 
     /**
      * 远程异步获取字符串缓存数据, 过期返回null
      *
+     * @param name 缓存名称
      * @param key 缓存键
      * @return 数据值
      */
-    default CompletableFuture<String> remoteGetStringAsync(final String key) {
-        return remoteGetAsync(key, String.class);
+    default CompletableFuture<String> remoteGetStringAsync(String name, String key) {
+        return remoteGetAsync(name, key, String.class);
     }
 
     /**
      * 远程获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -229,12 +247,14 @@ public interface CachedManager extends Resourcable {
      * @param supplier 数据函数
      * @return 数据值
      */
-    public <T> T remoteGetSet(String key, Type type, boolean nullable, Duration expire, ThrowSupplier<T> supplier);
+    public <T> T remoteGetSet(
+            String name, String key, Type type, boolean nullable, Duration expire, ThrowSupplier<T> supplier);
 
     /**
      * 远程异步获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -243,115 +263,131 @@ public interface CachedManager extends Resourcable {
      * @return 数据值
      */
     public <T> CompletableFuture<T> remoteGetSetAsync(
-            String key, Type type, boolean nullable, Duration expire, ThrowSupplier<CompletableFuture<T>> supplier);
+            String name,
+            String key,
+            Type type,
+            boolean nullable,
+            Duration expire,
+            ThrowSupplier<CompletableFuture<T>> supplier);
 
     /**
      * 远程缓存数据
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param value 数据值
      * @param expire 过期时长，Duration.ZERO为永不过期
      */
-    public <T> void remoteSet(final String key, final Type type, final T value, Duration expire);
+    public <T> void remoteSet(String name, String key, Type type, T value, Duration expire);
 
     /**
      * 远程缓存字符串数据
      *
+     * @param name 缓存名称
      * @param key 缓存键
      * @param value 数据值
      * @param expire 过期时长，Duration.ZERO为永不过期
      */
-    default void remoteSetString(final String key, final String value, Duration expire) {
-        remoteSet(key, String.class, value, expire);
+    default void remoteSetString(String name, String key, String value, Duration expire) {
+        remoteSet(name, key, String.class, value, expire);
     }
 
     /**
      * 远程异步缓存数据
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param value 数据值
      * @param expire 过期时长，Duration.ZERO为永不过期
      * @return void
      */
-    public <T> CompletableFuture<Void> remoteSetAsync(String key, Type type, T value, Duration expire);
+    public <T> CompletableFuture<Void> remoteSetAsync(String name, String key, Type type, T value, Duration expire);
 
     /**
      * 远程异步缓存字符串数据
      *
+     * @param name 缓存名称
      * @param key 缓存键
      * @param value 数据值
      * @param expire 过期时长，Duration.ZERO为永不过期
      * @return void
      */
-    default CompletableFuture<Void> remoteSetStringAsync(final String key, final String value, Duration expire) {
-        return remoteSetAsync(key, String.class, value, expire);
+    default CompletableFuture<Void> remoteSetStringAsync(String name, String key, String value, Duration expire) {
+        return remoteSetAsync(name, key, String.class, value, expire);
     }
 
     /**
      * 远程删除缓存数据
      *
+     * @param name 缓存名称
      * @param key 缓存键
      * @return 删除数量
      */
-    public long remoteDel(String key);
+    public long remoteDel(String name, String key);
 
     /**
      * 远程异步删除缓存数据
      *
+     * @param name 缓存名称
      * @param key 缓存键
      * @return 删除数量
      */
-    public CompletableFuture<Long> remoteDelAsync(String key);
+    public CompletableFuture<Long> remoteDelAsync(String name, String key);
 
     // -------------------------------------- both缓存 --------------------------------------
     /**
      * 本地或远程获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @return 数据值
      */
-    public <T> T bothGet(final String key, final Type type);
+    public <T> T bothGet(String name, String key, Type type);
 
     /**
      * 本地或远程获取字符串缓存数据, 过期返回null
      *
+     * @param name 缓存名称
      * @param key 缓存键
      * @return 数据值
      */
-    default String bothGetString(final String key) {
-        return bothGet(key, String.class);
+    default String bothGetString(String name, String key) {
+        return bothGet(name, key, String.class);
     }
 
     /**
      * 本地或远程异步获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @return 数据值
      */
-    public <T> CompletableFuture<T> bothGetAsync(final String key, final Type type);
+    public <T> CompletableFuture<T> bothGetAsync(String name, String key, Type type);
 
     /**
      * 本地或远程异步获取字符串缓存数据, 过期返回null
      *
+     * @param name 缓存名称
      * @param key 缓存键
      * @return 数据值
      */
-    default CompletableFuture<String> bothGetStringAsync(final String key) {
-        return bothGetAsync(key, String.class);
+    default CompletableFuture<String> bothGetStringAsync(String name, String key) {
+        return bothGetAsync(name, key, String.class);
     }
 
     /**
      * 本地或远程获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -361,6 +397,7 @@ public interface CachedManager extends Resourcable {
      * @return 数据值
      */
     public <T> T bothGetSet(
+            String name,
             String key,
             Type type,
             boolean nullable,
@@ -372,6 +409,7 @@ public interface CachedManager extends Resourcable {
      * 本地或远程异步获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -381,6 +419,7 @@ public interface CachedManager extends Resourcable {
      * @return 数据值
      */
     public <T> CompletableFuture<T> bothGetSetAsync(
+            String name,
             String key,
             Type type,
             boolean nullable,
@@ -392,30 +431,33 @@ public interface CachedManager extends Resourcable {
      * 本地和远程缓存数据
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param value 数据值
      * @param localExpire 本地过期时长，Duration.ZERO为永不过期，为null表示不本地缓存
      * @param remoteExpire 远程过期时长，Duration.ZERO为永不过期，为null表示不远程缓存
      */
-    public <T> void bothSet(String key, Type type, T value, Duration localExpire, Duration remoteExpire);
+    public <T> void bothSet(String name, String key, Type type, T value, Duration localExpire, Duration remoteExpire);
 
     /**
      * 本地和远程缓存字符串数据
      *
+     * @param name 缓存名称
      * @param key 缓存键
      * @param value 数据值
      * @param localExpire 本地过期时长，Duration.ZERO为永不过期，为null表示不本地缓存
      * @param remoteExpire 远程过期时长，Duration.ZERO为永不过期，为null表示不远程缓存
      */
-    default void bothSetString(final String key, final String value, Duration localExpire, Duration remoteExpire) {
-        bothSet(key, String.class, value, localExpire, remoteExpire);
+    default void bothSetString(String name, String key, String value, Duration localExpire, Duration remoteExpire) {
+        bothSet(name, key, String.class, value, localExpire, remoteExpire);
     }
 
     /**
      * 本地和远程异步缓存数据
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param value 数据值
@@ -424,11 +466,12 @@ public interface CachedManager extends Resourcable {
      * @return void
      */
     public <T> CompletableFuture<Void> bothSetAsync(
-            String key, Type type, T value, Duration localExpire, Duration remoteExpire);
+            String name, String key, Type type, T value, Duration localExpire, Duration remoteExpire);
 
     /**
      * 本地和远程异步缓存字符串数据
      *
+     * @param name 缓存名称
      * @param key 缓存键
      * @param value 数据值
      * @param localExpire 本地过期时长，Duration.ZERO为永不过期，为null表示不本地缓存
@@ -436,23 +479,25 @@ public interface CachedManager extends Resourcable {
      * @return void
      */
     default CompletableFuture<Void> bothSetStringAsync(
-            String key, String value, Duration localExpire, Duration remoteExpire) {
-        return bothSetAsync(key, String.class, value, localExpire, remoteExpire);
+            String name, String key, String value, Duration localExpire, Duration remoteExpire) {
+        return bothSetAsync(name, key, String.class, value, localExpire, remoteExpire);
     }
 
     /**
      * 本地和远程删除缓存数据
      *
+     * @param name 缓存名称
      * @param key 缓存键
      * @return 删除数量
      */
-    public long bothDel(String key);
+    public long bothDel(String name, String key);
 
     /**
      * 本地和远程异步删除缓存数据
      *
+     * @param name 缓存名称
      * @param key 缓存键
      * @return 删除数量
      */
-    public CompletableFuture<Long> bothDelAsync(String key);
+    public CompletableFuture<Long> bothDelAsync(String name, String key);
 }

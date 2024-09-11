@@ -21,6 +21,8 @@ public class CachedEventMessage implements Serializable {
     // CachedManager唯一标识
     protected String node;
 
+    // name
+    protected String name;
     // key
     protected String key;
 
@@ -29,8 +31,9 @@ public class CachedEventMessage implements Serializable {
 
     public CachedEventMessage() {}
 
-    public CachedEventMessage(String node, String key) {
+    public CachedEventMessage(String node, String name, String key) {
         this.node = node;
+        this.name = name;
         this.key = key;
         this.time = System.currentTimeMillis();
     }
@@ -41,6 +44,14 @@ public class CachedEventMessage implements Serializable {
 
     public void setNode(String node) {
         this.node = node;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getKey() {

@@ -37,22 +37,22 @@ public class CachedManagerTest {
     @Test
     public void run1() throws Exception {
         Duration expire = Duration.ofMillis(290);
-        manager.localSetString("cached-schema:name:haha", "myha", expire);
-        Assertions.assertEquals(manager.localGetString("cached-schema:name:haha"), "myha");
+        manager.localSetString("name", "haha", "myha", expire);
+        Assertions.assertEquals(manager.localGetString("name", "haha"), "myha");
         Utility.sleep(300);
-        Assertions.assertTrue(manager.localGetString("cached-schema:name:haha") == null);
+        Assertions.assertTrue(manager.localGetString("name", "haha") == null);
 
         CachingBean bean = new CachingBean();
         bean.setName("tom");
         bean.setRemark("这是名字备注");
 
         String json = bean.toString();
-        manager.localSet(bean.getName(), CachingBean.class, bean, expire);
+        manager.localSet("name", bean.getName(), CachingBean.class, bean, expire);
         Assertions.assertEquals(
-                manager.localGet(bean.getName(), CachingBean.class).toString(), json);
+                manager.localGet("name", bean.getName(), CachingBean.class).toString(), json);
         bean.setRemark(bean.getRemark() + "-新备注");
         Assertions.assertEquals(
-                manager.localGet(bean.getName(), CachingBean.class).toString(), json);
+                manager.localGet("name", bean.getName(), CachingBean.class).toString(), json);
     }
 
     @Test
@@ -67,7 +67,13 @@ public class CachedManagerTest {
             for (int i = 0; i < count; i++) {
                 new Thread(() -> {
                             manager.bothGetSet(
-                                    "name", String.class, false, localExpire, remoteExpire, () -> bean.getName());
+                                    "name",
+                                    "name",
+                                    String.class,
+                                    false,
+                                    localExpire,
+                                    remoteExpire,
+                                    () -> bean.getName());
                             cdl.countDown();
                         })
                         .start();
@@ -76,7 +82,7 @@ public class CachedManagerTest {
         }
         Assertions.assertEquals(1, ParallelBean.c1.get());
         Utility.sleep(200);
-        manager.bothGetSet("name", String.class, false, localExpire, remoteExpire, () -> bean.getName());
+        manager.bothGetSet("name", "name", String.class, false, localExpire, remoteExpire, () -> bean.getName());
         Assertions.assertEquals(1, ParallelBean.c1.get());
         Utility.sleep(300);
         {
@@ -84,7 +90,13 @@ public class CachedManagerTest {
             for (int i = 0; i < count; i++) {
                 new Thread(() -> {
                             manager.bothGetSet(
-                                    "name", String.class, false, localExpire, remoteExpire, () -> bean.getName());
+                                    "name",
+                                    "name",
+                                    String.class,
+                                    false,
+                                    localExpire,
+                                    remoteExpire,
+                                    () -> bean.getName());
                             cdl.countDown();
                         })
                         .start();

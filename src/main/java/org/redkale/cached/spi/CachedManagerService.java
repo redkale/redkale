@@ -241,14 +241,12 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     /**
      * 处理指定缓存key的{@link org.redkale.cached.spi.CachedAction}
      *
-     * @param templetKey 缓存key
+     * @param name 缓存名称
      * @param consumer 处理函数
      */
     @Override
-    public void acceptCachedAction(String templetKey, Consumer<CachedAction> consumer) {
-        actions.stream()
-                .filter(v -> Objects.equals(v.getTempletKey(), templetKey))
-                .forEach(consumer);
+    public void acceptCachedAction(String name, Consumer<CachedAction> consumer) {
+        actions.stream().filter(v -> Objects.equals(v.getName(), name)).forEach(consumer);
     }
 
     @Override
@@ -261,20 +259,22 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      * 本地获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @return 数据值
      */
     @Override
-    public <T> T localGet(final String key, final Type type) {
+    public <T> T localGet(String name, String key, Type type) {
         checkEnable();
-        return CachedValue.get(localSource.get(idFor(key), loadCacheType(type)));
+        return CachedValue.get(localSource.get(idFor(name, key), loadCacheType(type)));
     }
 
     /**
      * 本地获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -284,10 +284,11 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      */
     @Override
     public <T> T localGetSet(
-            final String key, final Type type, boolean nullable, Duration expire, ThrowSupplier<T> supplier) {
+            String name, String key, Type type, boolean nullable, Duration expire, ThrowSupplier<T> supplier) {
         return getSet(
-                (k, ex, ct) -> localSource.get(idFor(k), ct),
+                (n, k, ex, ct) -> localSource.get(idFor(n, k), ct),
                 this::localSetCache,
+                name,
                 key,
                 type,
                 nullable,
@@ -299,6 +300,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      * 本地异步获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -308,10 +310,16 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      */
     @Override
     public <T> CompletableFuture<T> localGetSetAsync(
-            String key, Type type, boolean nullable, Duration expire, ThrowSupplier<CompletableFuture<T>> supplier) {
+            String name,
+            String key,
+            Type type,
+            boolean nullable,
+            Duration expire,
+            ThrowSupplier<CompletableFuture<T>> supplier) {
         return getSetAsync(
-                (id, ex, ct) -> localSource.getAsync(id, ct),
+                (n, k, e, c) -> localSource.getAsync(idFor(n, k), c),
                 this::localSetCacheAsync,
+                name,
                 key,
                 type,
                 nullable,
@@ -323,26 +331,28 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      * 本地缓存数据
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param value 数据值
      * @param expire 过期时长，Duration.ZERO为永不过期
      */
     @Override
-    public <T> void localSet(String key, Type type, T value, Duration expire) {
-        localSetCache(key, type, value, expire);
+    public <T> void localSet(String name, String key, Type type, T value, Duration expire) {
+        localSetCache(name, key, type, value, expire);
     }
 
     /**
      * 本地删除缓存数据
      *
+     * @param name 缓存名称
      * @param key 缓存键
      * @return 删除数量
      */
     @Override
-    public long localDel(String key) {
+    public long localDel(String name, String key) {
         checkEnable();
-        return localSource.del(idFor(key));
+        return localSource.del(idFor(name, key));
     }
 
     // -------------------------------------- 远程缓存 --------------------------------------
@@ -350,28 +360,30 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      * 远程获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @return 数据值
      */
     @Override
-    public <T> T remoteGet(final String key, final Type type) {
+    public <T> T remoteGet(String name, String key, Type type) {
         checkEnable();
-        return CachedValue.get(remoteSource.get(idFor(key), loadCacheType(type)));
+        return CachedValue.get(remoteSource.get(idFor(name, key), loadCacheType(type)));
     }
 
     /**
      * 远程异步获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @return 数据值
      */
     @Override
-    public <T> CompletableFuture<T> remoteGetAsync(final String key, final Type type) {
+    public <T> CompletableFuture<T> remoteGetAsync(String name, String key, Type type) {
         checkEnable();
-        CompletableFuture<CachedValue<T>> future = remoteSource.getAsync(idFor(key), loadCacheType(type));
+        CompletableFuture<CachedValue<T>> future = remoteSource.getAsync(idFor(name, key), loadCacheType(type));
         return future.thenApply(CachedValue::get);
     }
 
@@ -379,6 +391,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      * 远程获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -388,10 +401,11 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      */
     @Override
     public <T> T remoteGetSet(
-            final String key, final Type type, boolean nullable, Duration expire, ThrowSupplier<T> supplier) {
+            String name, String key, Type type, boolean nullable, Duration expire, ThrowSupplier<T> supplier) {
         return getSet(
-                (k, ex, ct) -> remoteSource.get(idFor(k), ct),
+                (n, k, ex, ct) -> remoteSource.get(idFor(n, k), ct),
                 this::remoteSetCache,
+                name,
                 key,
                 type,
                 nullable,
@@ -403,6 +417,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      * 远程异步获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -412,10 +427,16 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      */
     @Override
     public <T> CompletableFuture<T> remoteGetSetAsync(
-            String key, Type type, boolean nullable, Duration expire, ThrowSupplier<CompletableFuture<T>> supplier) {
+            String name,
+            String key,
+            Type type,
+            boolean nullable,
+            Duration expire,
+            ThrowSupplier<CompletableFuture<T>> supplier) {
         return getSetAsync(
-                (k, ex, ct) -> remoteSource.getAsync(idFor(k), ct),
+                (n, k, ex, ct) -> remoteSource.getAsync(idFor(n, k), ct),
                 this::remoteSetCacheAsync,
+                name,
                 key,
                 type,
                 nullable,
@@ -427,52 +448,56 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      * 远程缓存数据
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param value 数据值
      * @param expire 过期时长，Duration.ZERO为永不过期
      */
     @Override
-    public <T> void remoteSet(final String key, final Type type, final T value, Duration expire) {
-        remoteSetCache(key, type, value, expire);
+    public <T> void remoteSet(String name, String key, Type type, T value, Duration expire) {
+        remoteSetCache(name, key, type, value, expire);
     }
 
     /**
      * 远程异步缓存数据
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param value 数据值
      * @param expire 过期时长，Duration.ZERO为永不过期
      */
     @Override
-    public <T> CompletableFuture<Void> remoteSetAsync(String key, Type type, T value, Duration expire) {
-        return remoteSetCacheAsync(key, type, value, expire);
+    public <T> CompletableFuture<Void> remoteSetAsync(String name, String key, Type type, T value, Duration expire) {
+        return remoteSetCacheAsync(name, key, type, value, expire);
     }
 
     /**
      * 远程删除缓存数据
      *
+     * @param name 缓存名称
      * @param key 缓存键
      * @return 删除数量
      */
     @Override
-    public long remoteDel(String key) {
+    public long remoteDel(String name, String key) {
         checkEnable();
-        return remoteSource.del(idFor(key));
+        return remoteSource.del(idFor(name, key));
     }
 
     /**
      * 远程异步删除缓存数据
      *
+     * @param name 缓存名称
      * @param key 缓存键
      * @return 删除数量
      */
     @Override
-    public CompletableFuture<Long> remoteDelAsync(String key) {
+    public CompletableFuture<Long> remoteDelAsync(String name, String key) {
         checkEnable();
-        return remoteSource.delAsync(idFor(key));
+        return remoteSource.delAsync(idFor(name, key));
     }
 
     // -------------------------------------- both缓存 --------------------------------------
@@ -480,32 +505,35 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      * 远程获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @return 数据值
      */
     @Override
-    public <T> T bothGet(final String key, final Type type) {
-        return CachedValue.get(bothGetCache(key, (Duration) null, type));
+    public <T> T bothGet(String name, String key, Type type) {
+        return CachedValue.get(bothGetCache(name, key, (Duration) null, type));
     }
 
     /**
      * 远程异步获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @return 数据值
      */
     @Override
-    public <T> CompletableFuture<T> bothGetAsync(final String key, final Type type) {
-        return bothGetCacheAsync(key, (Duration) null, type).thenApply(CachedValue::get);
+    public <T> CompletableFuture<T> bothGetAsync(String name, String key, Type type) {
+        return bothGetCacheAsync(name, key, (Duration) null, type).thenApply(CachedValue::get);
     }
 
     /**
      * 远程获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -516,8 +544,9 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      */
     @Override
     public <T> T bothGetSet(
-            final String key,
-            final Type type,
+            String name,
+            String key,
+            Type type,
             boolean nullable,
             Duration localExpire,
             Duration remoteExpire,
@@ -533,20 +562,21 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         }
         if (remoteExpire == null) { // 只有本地缓存
             Objects.requireNonNull(localExpire);
-            return localGetSet(key, type, nullable, localExpire, supplier);
+            return localGetSet(name, key, type, nullable, localExpire, supplier);
         }
         if (localExpire == null) { // 只有远程缓存
             Objects.requireNonNull(remoteExpire);
-            return remoteGetSet(key, type, nullable, remoteExpire, supplier);
+            return remoteGetSet(name, key, type, nullable, remoteExpire, supplier);
         }
         return getSet(
                 this::bothGetCache,
-                (k, e, t, v) -> {
-                    localSetCache(k, localExpire, t, v);
+                (n, k, e, t, v) -> {
+                    localSetCache(n, k, localExpire, t, v);
                     if (remoteSource != null) {
-                        remoteSetCache(k, remoteExpire, t, v);
+                        remoteSetCache(n, k, remoteExpire, t, v);
                     }
                 },
+                name,
                 key,
                 type,
                 nullable,
@@ -558,6 +588,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      * 远程异步获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -568,6 +599,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      */
     @Override
     public <T> CompletableFuture<T> bothGetSetAsync(
+            String name,
             String key,
             Type type,
             boolean nullable,
@@ -583,22 +615,23 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         }
         if (remoteExpire == null) { // 只有本地缓存
             Objects.requireNonNull(localExpire);
-            return localGetSetAsync(key, type, nullable, localExpire, supplier);
+            return localGetSetAsync(name, key, type, nullable, localExpire, supplier);
         }
         if (localExpire == null) { // 只有远程缓存
             Objects.requireNonNull(remoteExpire);
-            return remoteGetSetAsync(key, type, nullable, remoteExpire, supplier);
+            return remoteGetSetAsync(name, key, type, nullable, remoteExpire, supplier);
         }
         return getSetAsync(
                 this::bothGetCacheAsync,
-                (k, e, t, v) -> {
-                    localSetCache(k, localExpire, t, v);
+                (n, k, e, t, v) -> {
+                    localSetCache(n, k, localExpire, t, v);
                     if (remoteSource != null) {
-                        return remoteSetCacheAsync(k, remoteExpire, t, v);
+                        return remoteSetCacheAsync(n, k, remoteExpire, t, v);
                     } else {
                         return CompletableFuture.completedFuture(null);
                     }
                 },
+                name,
                 key,
                 type,
                 nullable,
@@ -610,6 +643,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      * 远程缓存数据
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param value 数据值
@@ -617,17 +651,16 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      * @param remoteExpire 远程过期时长，Duration.ZERO为永不过期，为null表示不远程缓存
      */
     @Override
-    public <T> void bothSet(
-            final String key, final Type type, final T value, Duration localExpire, Duration remoteExpire) {
+    public <T> void bothSet(String name, String key, Type type, T value, Duration localExpire, Duration remoteExpire) {
         checkEnable();
         if (localExpire != null) {
-            localSetCache(key, type, value, localExpire);
+            localSetCache(name, key, type, value, localExpire);
         }
         if (remoteExpire != null && remoteSource != null) {
-            remoteSetCache(key, type, value, remoteExpire);
+            remoteSetCache(name, key, type, value, remoteExpire);
         }
         if (remoteSource != null && broadcastable) {
-            remoteSource.publish(getChannelTopic(), new CachedEventMessage(node, key));
+            remoteSource.publish(getChannelTopic(), new CachedEventMessage(node, name, key));
         }
     }
 
@@ -635,6 +668,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      * 远程异步缓存数据
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param value 数据值
@@ -644,18 +678,18 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      */
     @Override
     public <T> CompletableFuture<Void> bothSetAsync(
-            String key, Type type, T value, Duration localExpire, Duration remoteExpire) {
+            String name, String key, Type type, T value, Duration localExpire, Duration remoteExpire) {
         checkEnable();
         if (localExpire != null) {
-            localSetCache(key, type, value, localExpire);
+            localSetCache(name, key, type, value, localExpire);
         }
         CompletableFuture<Void> future = CompletableFuture.completedFuture(null);
         if (remoteSource != null && remoteExpire != null) {
-            future = remoteSetCacheAsync(key, type, value, remoteExpire);
+            future = remoteSetCacheAsync(name, key, type, value, remoteExpire);
         }
         if (remoteSource != null && broadcastable) {
             future = future.thenCompose(r -> remoteSource
-                    .publishAsync(getChannelTopic(), new CachedEventMessage(node, key))
+                    .publishAsync(getChannelTopic(), new CachedEventMessage(node, name, key))
                     .thenApply(n -> r));
         }
         return future;
@@ -664,18 +698,19 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     /**
      * 远程删除缓存数据
      *
+     * @param name 缓存名称
      * @param key 缓存键
      * @return 删除数量
      */
     @Override
-    public long bothDel(String key) {
+    public long bothDel(String name, String key) {
         checkEnable();
-        String id = idFor(key);
+        String id = idFor(name, key);
         long v = localSource.del(id);
         if (remoteSource != null) {
             v = remoteSource.del(id);
             if (broadcastable) {
-                remoteSource.publish(getChannelTopic(), new CachedEventMessage(node, key));
+                remoteSource.publish(getChannelTopic(), new CachedEventMessage(node, name, key));
             }
         }
         return v;
@@ -684,19 +719,20 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     /**
      * 远程异步删除缓存数据
      *
+     * @param name 缓存名称
      * @param key 缓存键
      * @return 删除数量
      */
     @Override
-    public CompletableFuture<Long> bothDelAsync(String key) {
+    public CompletableFuture<Long> bothDelAsync(String name, String key) {
         checkEnable();
-        String id = idFor(key);
+        String id = idFor(name, key);
         long v = localSource.del(id); // 内存操作，无需异步
         if (remoteSource != null) {
             return remoteSource.delAsync(id).thenCompose(r -> {
                 return broadcastable
                         ? remoteSource
-                                .publishAsync(getChannelTopic(), new CachedEventMessage(node, key))
+                                .publishAsync(getChannelTopic(), new CachedEventMessage(node, name, key))
                                 .thenApply(n -> r)
                         : CompletableFuture.completedFuture(v);
             });
@@ -712,6 +748,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      * @param <T> 泛型
      * @param getter 获取数据函数
      * @param setter 设置数据函数
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -722,6 +759,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     protected <T> T getSet(
             GetterFunc<CachedValue<T>> getter,
             SetterSyncFunc setter,
+            String name,
             String key,
             Type type,
             boolean nullable,
@@ -732,8 +770,8 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         Objects.requireNonNull(expire);
         Objects.requireNonNull(supplier);
         final Type cacheType = loadCacheType(type);
-        final String id = idFor(key);
-        CachedValue<T> cacheVal = getter.get(key, expire, cacheType);
+        final String id = idFor(name, key);
+        CachedValue<T> cacheVal = getter.get(name, key, expire, cacheType);
         if (CachedValue.isValid(cacheVal)) {
             if (logable) {
                 logger.log(logLevel, "Cached got id(" + id + ") value from eitherSource");
@@ -741,7 +779,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
             return cacheVal.getVal();
         }
         Function<String, CachedValue> func = k -> {
-            CachedValue<T> oldCacheVal = getter.get(key, expire, cacheType);
+            CachedValue<T> oldCacheVal = getter.get(name, key, expire, cacheType);
             if (CachedValue.isValid(oldCacheVal)) {
                 return oldCacheVal;
             }
@@ -754,7 +792,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
                 throw new RedkaleException(t);
             }
             if (CachedValue.isValid(newCacheVal)) {
-                setter.set(key, expire, cacheType, newCacheVal);
+                setter.set(name, key, expire, cacheType, newCacheVal);
             }
             return newCacheVal;
         };
@@ -772,6 +810,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      * @param <T> 泛型
      * @param getter 获取数据函数
      * @param setter 设置数据函数
+     * @param name 缓存名称
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
@@ -782,6 +821,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     protected <T> CompletableFuture<T> getSetAsync(
             GetterFunc<CompletableFuture<CachedValue<T>>> getter,
             SetterAsyncFunc setter,
+            String name,
             String key,
             Type type,
             boolean nullable,
@@ -791,8 +831,8 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         boolean logable = logger.isLoggable(logLevel);
         Objects.requireNonNull(supplier);
         final Type cacheType = loadCacheType(type);
-        final String id = idFor(key);
-        CompletableFuture<CachedValue<T>> sourceFuture = getter.get(key, expire, cacheType);
+        final String id = idFor(name, key);
+        CompletableFuture<CachedValue<T>> sourceFuture = getter.get(name, key, expire, cacheType);
         return sourceFuture.thenCompose(val -> {
             if (CachedValue.isValid(val)) {
                 if (logable) {
@@ -810,7 +850,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
                         }
                         CachedValue<T> cacheVal = toCacheValue(nullable, v);
                         if (CachedValue.isValid(cacheVal)) {
-                            setter.set(key, expire, cacheType, cacheVal)
+                            setter.set(name, key, expire, cacheType, cacheVal)
                                     .whenComplete((v2, e2) -> lock.success(CachedValue.get(cacheVal)));
                         } else {
                             lock.success(CachedValue.get(cacheVal));
@@ -824,16 +864,17 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         });
     }
 
-    protected <T> void localSetCache(String key, Type type, T value, Duration expire) {
-        localSetCache(key, expire, loadCacheType(type, value), CachedValue.create(value));
+    protected <T> void localSetCache(String name, String key, Type type, T value, Duration expire) {
+        localSetCache(name, key, expire, loadCacheType(type, value), CachedValue.create(value));
     }
 
-    protected <T> void localSetCache(String key, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
+    protected <T> void localSetCache(
+            String name, String key, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
         checkEnable();
         boolean logable = logger.isLoggable(logLevel);
         Objects.requireNonNull(expire);
         long millis = expire.toMillis();
-        String id = idFor(key);
+        String id = idFor(name, key);
         if (logable) {
             logger.log(logLevel, "Cached set id(" + id + ") value to localSource expire " + millis + " ms");
         }
@@ -844,16 +885,17 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         }
     }
 
-    protected <T> void remoteSetCache(String key, Type type, T value, Duration expire) {
-        remoteSetCache(key, expire, loadCacheType(type, value), CachedValue.create(value));
+    protected <T> void remoteSetCache(String name, String key, Type type, T value, Duration expire) {
+        remoteSetCache(name, key, expire, loadCacheType(type, value), CachedValue.create(value));
     }
 
-    protected <T> void remoteSetCache(String key, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
+    protected <T> void remoteSetCache(
+            String name, String key, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
         checkEnable();
         boolean logable = logger.isLoggable(logLevel);
         Objects.requireNonNull(expire);
         long millis = expire.toMillis();
-        String id = idFor(key);
+        String id = idFor(name, key);
         if (logable) {
             logger.log(logLevel, "Cached set id(" + id + ") value to remoteSource expire " + millis + " ms");
         }
@@ -864,16 +906,17 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         }
     }
 
-    protected <T> CompletableFuture<Void> localSetCacheAsync(String key, Type type, T value, Duration expire) {
-        return localSetCacheAsync(key, expire, loadCacheType(type, value), CachedValue.create(value));
+    protected <T> CompletableFuture<Void> localSetCacheAsync(
+            String name, String key, Type type, T value, Duration expire) {
+        return localSetCacheAsync(name, key, expire, loadCacheType(type, value), CachedValue.create(value));
     }
 
     protected <T> CompletableFuture<Void> localSetCacheAsync(
-            String key, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
+            String name, String key, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
         checkEnable();
         boolean logable = logger.isLoggable(logLevel);
         Objects.requireNonNull(expire);
-        String id = idFor(key);
+        String id = idFor(name, key);
         long millis = expire.toMillis();
         if (logable) {
             logger.log(logLevel, "Cached set id(" + id + ") value to localSource expire " + millis + " ms");
@@ -885,16 +928,17 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         }
     }
 
-    protected <T> CompletableFuture<Void> remoteSetCacheAsync(String key, Type type, T value, Duration expire) {
-        return remoteSetCacheAsync(key, expire, loadCacheType(type, value), CachedValue.create(value));
+    protected <T> CompletableFuture<Void> remoteSetCacheAsync(
+            String name, String key, Type type, T value, Duration expire) {
+        return remoteSetCacheAsync(name, key, expire, loadCacheType(type, value), CachedValue.create(value));
     }
 
     protected <T> CompletableFuture<Void> remoteSetCacheAsync(
-            String key, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
+            String name, String key, Duration expire, Type cacheType, CachedValue<T> cacheVal) {
         checkEnable();
         boolean logable = logger.isLoggable(logLevel);
         Objects.requireNonNull(expire);
-        String id = idFor(key);
+        String id = idFor(name, key);
         long millis = expire.toMillis();
         if (logable) {
             logger.log(logLevel, "Cached set id(" + id + ") value to remoteSource expire " + millis + " ms");
@@ -906,10 +950,11 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         }
     }
 
-    protected <T> CachedValue<T> bothGetCache(final String key, final Duration expire, final Type cacheType) {
+    protected <T> CachedValue<T> bothGetCache(
+            final String name, final String key, final Duration expire, final Type cacheType) {
         checkEnable();
         boolean logable = logger.isLoggable(logLevel);
-        String id = idFor(key);
+        String id = idFor(name, key);
         CachedValue<T> cacheVal = localSource.get(id, cacheType);
         if (CachedValue.isValid(cacheVal)) {
             if (logable) {
@@ -924,7 +969,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
                     if (logable) {
                         logger.log(logLevel, "Cached set id(" + id + ") value to localSource from remoteSource");
                     }
-                    localSetCache(key, expire, cacheType, cacheVal);
+                    localSetCache(name, key, expire, cacheType, cacheVal);
                 }
                 if (logable) {
                     logger.log(logLevel, "Cached got id(" + id + ") value from remoteSource");
@@ -940,15 +985,17 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      * 远程异步获取缓存数据, 过期返回null
      *
      * @param <T> 泛型
+     * @param name 缓存名称
      * @param key 缓存键
      * @param expire 过期时长，Duration.ZERO为永不过期
      * @param cacheType 数据类型
      * @return 数据值
      */
-    protected <T> CompletableFuture<CachedValue<T>> bothGetCacheAsync(String key, Duration expire, Type cacheType) {
+    protected <T> CompletableFuture<CachedValue<T>> bothGetCacheAsync(
+            String name, String key, Duration expire, Type cacheType) {
         checkEnable();
         boolean logable = logger.isLoggable(logLevel);
-        String id = idFor(key);
+        String id = idFor(name, key);
         CachedValue<T> val = localSource.get(id, cacheType); // 内存操作，无需异步
         if (CachedValue.isValid(val)) {
             if (logable) {
@@ -964,7 +1011,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
                         if (logable) {
                             logger.log(logLevel, "Cached set id(" + id + ") value to localSource from remoteSource");
                         }
-                        localSetCache(id, expire, cacheType, v);
+                        localSetCache(name, key, expire, cacheType, v);
                     }
                     if (logable) {
                         logger.log(logLevel, "Cached got id(" + id + ") value from remoteSource");
@@ -986,11 +1033,12 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     /**
      * 创建一个锁key
      *
+     * @param name 缓存名称
      * @param key 缓存键
      * @return key
      */
-    protected String idFor(String key) {
-        return schema + ':' + key;
+    protected String idFor(String name, String key) {
+        return schema + ':' + name + ':' + key;
     }
 
     /**
@@ -1044,17 +1092,18 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
 
     protected static interface GetterFunc<R> {
 
-        public R get(String key, Duration expire, Type cacheType);
+        public R get(String name, String key, Duration expire, Type cacheType);
     }
 
     protected static interface SetterSyncFunc {
 
-        public void set(String key, Duration expire, Type cacheType, CachedValue cacheVal);
+        public void set(String name, String key, Duration expire, Type cacheType, CachedValue cacheVal);
     }
 
     protected static interface SetterAsyncFunc {
 
-        public CompletableFuture<Void> set(String key, Duration expire, Type cacheType, CachedValue cacheVal);
+        public CompletableFuture<Void> set(
+                String name, String key, Duration expire, Type cacheType, CachedValue cacheVal);
     }
 
     public class CacheRemoteListener implements CacheEventListener<CachedEventMessage> {
@@ -1062,7 +1111,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         @Override
         public void onMessage(String topic, CachedEventMessage message) {
             if (!Objects.equals(getNode(), message.getNode())) {
-                localSource.del(idFor(message.getKey()));
+                localSource.del(idFor(message.getName(), message.getKey()));
             }
         }
     }

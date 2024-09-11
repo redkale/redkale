@@ -46,6 +46,7 @@ public class _DynLocalCacheInstance extends CachedInstance {
     @DynForCached(
             dynField = "_redkale_getNameCachedAction1",
             manager = "",
+            name = "name",
             key = "name",
             nullable = false,
             timeUnit = TimeUnit.SECONDS,
@@ -63,7 +64,8 @@ public class _DynLocalCacheInstance extends CachedInstance {
     @DynForCached(
             dynField = "_redkale_getInfoCachedAction2",
             manager = "",
-            key = "info_#{id}_file#{files.one}",
+            name = "info",
+            key = "#{id}_#{files.one}",
             nullable = false,
             timeUnit = TimeUnit.SECONDS,
             remoteExpire = "60",
@@ -81,6 +83,7 @@ public class _DynLocalCacheInstance extends CachedInstance {
     @DynForCached(
             dynField = "_redkale_getNameAsyncCachedAction3",
             manager = "",
+            name = "name",
             key = "name",
             nullable = false,
             timeUnit = TimeUnit.SECONDS,
@@ -98,7 +101,8 @@ public class _DynLocalCacheInstance extends CachedInstance {
     @DynForCached(
             dynField = "_redkale_getInfo2AsyncCachedAction4",
             manager = "",
-            key = "info_#{id}_file#{files.one}",
+            name = "info",
+            key = "#{id}_#{files.one}",
             nullable = false,
             timeUnit = TimeUnit.SECONDS,
             remoteExpire = "60",
@@ -120,6 +124,7 @@ public class _DynLocalCacheInstance extends CachedInstance {
     @DynForCached(
             dynField = "_redkale_getName2AsyncCachedAction5",
             manager = "",
+            name = "name",
             key = "name",
             nullable = false,
             timeUnit = TimeUnit.SECONDS,
@@ -137,7 +142,8 @@ public class _DynLocalCacheInstance extends CachedInstance {
     @DynForCached(
             dynField = "_redkale_getInfoAsyncCachedAction6",
             manager = "",
-            key = "info_#{id}_file#{files.one}",
+            name = "info",
+            key = "#{id}_#{files.one}",
             nullable = false,
             timeUnit = TimeUnit.SECONDS,
             remoteExpire = "60",
@@ -156,6 +162,7 @@ public class _DynLocalCacheInstance extends CachedInstance {
     @DynForCached(
             dynField = "_redkale_getName2CachedAction7",
             manager = "",
+            name = "name",
             key = "name",
             nullable = false,
             timeUnit = TimeUnit.SECONDS,
