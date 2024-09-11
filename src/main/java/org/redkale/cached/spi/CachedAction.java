@@ -31,11 +31,6 @@ import org.redkale.util.TypeToken;
 @ClassDepends
 public class CachedAction {
 
-    @Resource
-    private Environment environment;
-
-    private CachedManager manager;
-
     private final CachedEntry cached;
 
     private final Method method;
@@ -62,11 +57,16 @@ public class CachedAction {
     @Nullable
     private final String[] paramNames;
 
+    @Resource
+    private Environment environment;
+    
+    private CachedManager manager;
+    
     // 缓存名称
-    final String name;
+    private String name;
 
     // 模板key
-    final String key;
+    private String key;
 
     // 缓存key生成器
     private CachedKeyGenerator keyGenerator;
@@ -96,19 +96,20 @@ public class CachedAction {
     }
 
     String init(ResourceFactory resourceFactory, Object service) {
-        this.manager = resourceFactory.load(cached.getManager(), CachedManager.class);
-        final String realKey = environment.getPropertyValue(cached.getKey());
-        if (realKey.startsWith("@")) { // 动态加载缓存key生成器
-            String generatorName = realKey.substring(1);
+        this.manager = resourceFactory.load(environment.getPropertyValue(cached.getManager()), CachedManager.class);
+        this.name = environment.getPropertyValue(cached.getName());
+        this.key = environment.getPropertyValue(cached.getKey());
+        if (key.startsWith("@")) { // 动态加载缓存key生成器
+            String generatorName = key.substring(1);
             this.keyGenerator = resourceFactory.findChild(generatorName, CachedKeyGenerator.class);
         } else {
-            MultiHashKey dynKey = MultiHashKey.create(paramNames, realKey);
+            MultiHashKey dynKey = MultiHashKey.create(paramNames, key);
             this.keyGenerator = CachedKeyGenerator.create(dynKey);
         }
         this.localExpire = createDuration(cached.getLocalExpire());
         this.remoteExpire = createDuration(cached.getRemoteExpire());
         ((CachedActionFunc) this.manager).addAction(this);
-        return realKey;
+        return key;
     }
 
     @ClassDepends
@@ -199,7 +200,8 @@ public class CachedAction {
                 + ",\"fieldName\":\"" + fieldName + "\""
                 + ",\"paramTypes\":" + JsonConvert.root().convertTo(method.getParameterTypes())
                 + ",\"paramNames\":" + JsonConvert.root().convertTo(paramNames)
-                + ",\"templetKey\":\"" + key + "\""
+                + ",\"name\":\"" + name + "\""
+                + ",\"key\":\"" + key + "\""
                 + ",\"resultType\":\"" + resultType + "\""
                 + ",\"cache\":" + cached
                 + "}";
