@@ -137,7 +137,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     }
 
     /**
-     * 检查name是否含特殊字符
+     * 检查schema是否含特殊字符
      *
      * @param value 参数
      * @return value
@@ -145,8 +145,13 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     protected String checkSchema(String value) {
         if (value != null && !value.isEmpty()) {
             for (char ch : value.toCharArray()) {
-                if (ch == ':' || ch == '#' || ch == '@') { // 不能含特殊字符
-                    throw new RedkaleException("schema cannot contains : # @");
+                if (!((ch >= '0' && ch <= '9')
+                        || (ch >= 'a' && ch <= 'z')
+                        || (ch >= 'A' && ch <= 'Z')
+                        || ch == '-'
+                        || ch == '_'
+                        || ch == '.')) { // 不能含特殊字符: # @
+                    throw new RedkaleException("schema only contains 0-9 a-z A-Z . - _");
                 }
             }
         }

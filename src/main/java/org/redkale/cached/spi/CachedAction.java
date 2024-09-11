@@ -17,6 +17,7 @@ import org.redkale.convert.json.JsonConvert;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.util.Environment;
 import org.redkale.util.MultiHashKey;
+import org.redkale.util.RedkaleException;
 import org.redkale.util.ThrowSupplier;
 import org.redkale.util.TypeToken;
 
@@ -100,7 +101,7 @@ public class CachedAction {
 
     String init(ResourceFactory resourceFactory, Object service) {
         this.manager = resourceFactory.load(environment.getPropertyValue(cached.getManager()), CachedManager.class);
-        this.name = environment.getPropertyValue(cached.getName());
+        this.name = checkName(environment.getPropertyValue(cached.getName()));
         this.key = environment.getPropertyValue(cached.getKey());
         if (key.startsWith("@")) { // 动态加载缓存key生成器
             String generatorName = key.substring(1);
@@ -114,6 +115,28 @@ public class CachedAction {
         this.remoteExpire = createDuration(cached.getRemoteExpire());
         ((CachedActionFunc) this.manager).addAction(this);
         return key;
+    }
+
+    /**
+     * 检查name是否含特殊字符
+     *
+     * @param value 参数
+     * @return value
+     */
+    protected String checkName(String value) {
+        if (value != null && !value.isEmpty()) {
+            for (char ch : value.toCharArray()) {
+                if (!((ch >= '0' && ch <= '9')
+                        || (ch >= 'a' && ch <= 'z')
+                        || (ch >= 'A' && ch <= 'Z')
+                        || ch == '-'
+                        || ch == '_'
+                        || ch == '.')) { // 不能含特殊字符: # @
+                    throw new RedkaleException("name only contains 0-9 a-z A-Z . - _");
+                }
+            }
+        }
+        return value;
     }
 
     @ClassDepends
