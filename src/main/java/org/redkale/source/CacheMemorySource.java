@@ -159,7 +159,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
                             keys.clear();
                             long now = System.currentTimeMillis();
                             container.forEach((k, x) -> {
-                                if (x.expireMills > 0 && (now > (x.lastAccessed + x.expireMills))) {
+                                if (x.isExpired(now)) {
                                     keys.add(x.key);
                                 }
                             });
@@ -171,7 +171,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
                             }
                             long now2 = System.currentTimeMillis();
                             rateLimitContainer.forEach((k, x) -> {
-                                if (x.expireMills > 0 && (now2 > (x.lastAccessed + x.expireMills))) {
+                                if (x.isExpired(now2)) {
                                     keys.add(x.key);
                                 }
                             });
@@ -2604,10 +2604,13 @@ public final class CacheMemorySource extends AbstractCacheSource {
             return JsonFactory.root().getConvert().convertTo(this);
         }
 
+        public boolean isExpired(long now) {
+            return expireMills > 0 && (initTime + expireMills) < now;
+        }
+
         @ConvertColumn(ignore = true)
         public boolean isExpired() {
-            long now = System.currentTimeMillis();
-            return expireMills > 0 && (initTime + expireMills) < now;
+            return isExpired(System.currentTimeMillis());
         }
 
         public void lock() {
@@ -2700,13 +2703,16 @@ public final class CacheMemorySource extends AbstractCacheSource {
             return JsonFactory.root().getConvert().convertTo(this);
         }
 
-        @ConvertColumn(ignore = true)
-        public boolean isExpired() {
-            long now = System.currentTimeMillis();
+        public boolean isExpired(long now) {
             if (endTime > 0) {
                 return now >= endTime;
             }
             return expireMills > 0 && (initTime + expireMills) < now;
+        }
+
+        @ConvertColumn(ignore = true)
+        public boolean isExpired() {
+            return isExpired(System.currentTimeMillis());
         }
 
         // value类型只能是byte[]/String/AtomicLong

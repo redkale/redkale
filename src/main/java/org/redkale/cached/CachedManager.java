@@ -94,7 +94,7 @@ public interface CachedManager extends Resourcable {
      * 处理指定缓存key的{@link org.redkale.cached.spi.CachedAction}<br>
      * 可用于动态调整缓存时长
      *
-     * @param templetKey 缓存key
+     * @param templetKey 模板key
      * @param consumer 处理函数
      */
     public void acceptCachedAction(String templetKey, Consumer<CachedAction> consumer);

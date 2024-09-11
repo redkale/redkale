@@ -85,7 +85,7 @@ public class CachedAction {
         this.paramNames = paramNames;
         this.methodName = method.getName();
         this.fieldName = Objects.requireNonNull(fieldName);
-        this.templetKey = cached.getKey();
+        this.templetKey = cached.getTempletKey();
         Type returnType = method.getGenericReturnType();
         this.async = CompletableFuture.class.isAssignableFrom(TypeToken.typeToClass(returnType));
         this.resultType = this.async ? ((ParameterizedType) returnType).getActualTypeArguments()[0] : returnType;
@@ -93,7 +93,7 @@ public class CachedAction {
 
     String init(ResourceFactory resourceFactory, Object service) {
         this.manager = resourceFactory.load(cached.getManager(), CachedManager.class);
-        final String key = environment.getPropertyValue(cached.getKey());
+        final String key = environment.getPropertyValue(cached.getTempletKey());
         if (key.startsWith("@")) { // 动态加载缓存key生成器
             String generatorName = key.substring(1);
             this.keyGenerator = resourceFactory.findChild(generatorName, CachedKeyGenerator.class);
