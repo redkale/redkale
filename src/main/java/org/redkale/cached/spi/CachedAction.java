@@ -182,6 +182,15 @@ public class CachedAction {
         return key;
     }
 
+    public int getLocalLimit() {
+        return localLimit;
+    }
+
+    public void setLocalLimit(int localLimit) {
+        this.localLimit = localLimit;
+        ((CachedManagerService) manager).getLocalSource().updateLimit(getName(), localLimit);
+    }
+
     public Duration getLocalExpire() {
         return localExpire;
     }

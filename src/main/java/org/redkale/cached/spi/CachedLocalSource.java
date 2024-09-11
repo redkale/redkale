@@ -136,6 +136,7 @@ public class CachedLocalSource implements Service {
         }
         int old = map.limit;
         map.limit = limit;
+        map.checkLimit();
         return old;
     }
 

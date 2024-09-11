@@ -75,10 +75,10 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     protected final CachedLocalSource localSource = new CachedLocalSource();
 
     // 缓存无效时使用的同步锁
-    private final ConcurrentHashMap<String, CachedValue> syncLockMap = new ConcurrentHashMap<>();
+    protected final ConcurrentHashMap<String, CachedValue> syncLockMap = new ConcurrentHashMap<>();
 
     // 缓存无效时使用的异步锁
-    private final ConcurrentHashMap<String, CachedAsyncLock> asyncLockMap = new ConcurrentHashMap<>();
+    protected final ConcurrentHashMap<String, CachedAsyncLock> asyncLockMap = new ConcurrentHashMap<>();
 
     protected final List<CachedAction> actions = new CopyOnWriteArrayList<>();
 
@@ -232,7 +232,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     }
 
     /**
-     * 处理指定缓存key的{@link org.redkale.cached.spi.CachedAction}
+     * 处理指定缓存名称的{@link org.redkale.cached.spi.CachedAction}
      *
      * @param name 缓存名称
      * @param consumer 处理函数

@@ -54,11 +54,15 @@ public class CachedManagerTest {
         Assertions.assertEquals(
                 manager.localGet("name", bean.getName(), CachingBean.class).toString(), json);
 
-        manager.localGetSet("group", "key1", CachingBean.class, true, 2, expire, () -> new CachingBean("v1", "r1"));
+        manager.localGetSet("group", "key1", CachingBean.class, true, 3, expire, () -> new CachingBean("v1", "r1"));
         Utility.sleep(2);
-        manager.localGetSet("group", "key2", CachingBean.class, true, 2, expire, () -> new CachingBean("v2", "r2"));
+        manager.localGetSet("group", "key2", CachingBean.class, true, 3, expire, () -> new CachingBean("v2", "r2"));
         Utility.sleep(2);
-        manager.localGetSet("group", "key3", CachingBean.class, true, 2, expire, () -> new CachingBean("v3", "r3"));
+        manager.localGetSet("group", "key3", CachingBean.class, true, 3, expire, () -> new CachingBean("v3", "r3"));
+        Utility.sleep(2);
+        manager.localGetSet("group", "key4", CachingBean.class, true, 3, expire, () -> new CachingBean("v4", "r4"));
+        Assertions.assertEquals(3, manager.getLocalSource().getSize("group"));
+        manager.getLocalSource().updateLimit("group", 2);
         Assertions.assertEquals(2, manager.getLocalSource().getSize("group"));
     }
 
