@@ -59,7 +59,7 @@ public class CachedManagerTest {
         manager.localGetSet("group", "key2", CachingBean.class, true, 2, expire, () -> new CachingBean("v2", "r2"));
         Utility.sleep(2);
         manager.localGetSet("group", "key3", CachingBean.class, true, 2, expire, () -> new CachingBean("v3", "r3"));
-        Assertions.assertEquals(2, manager.getLocalSource().getKeyCount("group"));
+        Assertions.assertEquals(2, manager.getLocalSource().getSize("group"));
     }
 
     @Test

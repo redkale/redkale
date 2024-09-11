@@ -52,7 +52,7 @@ public class CachedLocalSource implements Service {
             this.scheduler = Utility.newScheduledExecutor(
                     1, "Redkale-" + CachedLocalSource.class.getSimpleName() + "-Expirer-Thread");
             final List<String> keys = new ArrayList<>();
-            int interval = 30;
+            int interval = 15;
             scheduler.scheduleWithFixedDelay(
                     () -> {
                         try {
@@ -69,7 +69,11 @@ public class CachedLocalSource implements Service {
                                 }
                             });
                         } catch (Throwable t) {
-                            logger.log(Level.SEVERE, "CachedLocalSource schedule(interval=" + interval + "s) error", t);
+                            logger.log(
+                                    Level.SEVERE,
+                                    CachedLocalSource.class.getSimpleName() + " schedule(interval=" + interval
+                                            + "s) error",
+                                    t);
                         }
                     },
                     interval,
@@ -120,9 +124,19 @@ public class CachedLocalSource implements Service {
         return CompletableFuture.runAsync(() -> set(name, key, localLimit, millis, type, value));
     }
 
-    public int getKeyCount(String name) {
+    public int getSize(String name) {
         CacheMap map = container.get(name);
         return map == null ? -1 : map.size();
+    }
+
+    public int updateLimit(String name, int limit) {
+        CacheMap map = container.get(name);
+        if (map == null) {
+            return -1;
+        }
+        int old = map.limit;
+        map.limit = limit;
+        return old;
     }
 
     protected static class CacheMap {
@@ -169,7 +183,7 @@ public class CachedLocalSource implements Service {
             return map.size();
         }
 
-        void checkLimit() {
+        protected void checkLimit() {
             int l = limit;
             if (l > 0 && map.size() > l) {
                 lock.lock();
@@ -197,7 +211,7 @@ public class CachedLocalSource implements Service {
         protected String value;
 
         // 为0表示永久， 大于0表示有过期时间
-        private long endMillis;
+        protected long endMillis;
 
         private long createTime = System.currentTimeMillis();
 
