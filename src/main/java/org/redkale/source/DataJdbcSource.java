@@ -2329,7 +2329,8 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             final boolean distinct,
             SelectColumn selects,
             Flipper flipper,
-            FilterNode node) {
+            FilterNode node,
+            final boolean inCacheLoad) {
         return supplyAsync(() -> querySheetDB(info, readCache, needTotal, distinct, selects, flipper, node));
     }
 

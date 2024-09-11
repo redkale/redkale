@@ -308,46 +308,51 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
     }
 
     public final CompletableFuture<C> newConnection() {
-        return connect(getAddress(null), WorkThread.currentWorkThread(), false);
+        return connect(getAddress(null), WorkThread.currentWorkThread(), -1, false);
     }
 
     // 指定地址获取连接
     public final CompletableFuture<C> newConnection(final SocketAddress addr) {
-        return connect(addr, WorkThread.currentWorkThread(), false);
+        return connect(addr, WorkThread.currentWorkThread(), -1, false);
     }
 
     public final CompletableFuture<C> connect() {
-        return connect(getAddress(null), WorkThread.currentWorkThread(), true);
+        return connect(getAddress(null), WorkThread.currentWorkThread(), -1, true);
+    }
+
+    public final CompletableFuture<C> connect(int excludeIndex) {
+        return connect(getAddress(null), excludeIndex > -1 ? null : WorkThread.currentWorkThread(), excludeIndex, true);
     }
 
     protected CompletableFuture<C> connect(R request) {
-        return connect(getAddress(request), request.workThread, true);
+        return connect(getAddress(request), request.workThread, -1, true);
     }
 
     // 指定地址获取连接
     public final CompletableFuture<C> connect(final SocketAddress addr) {
-        return connect(addr, WorkThread.currentWorkThread(), true);
+        return connect(addr, WorkThread.currentWorkThread(), -1, true);
     }
 
     // 指定地址获取连接
     protected CompletableFuture<C> connect(WorkThread workThread, final SocketAddress addr) {
-        return connect(addr, workThread, true);
+        return connect(addr, workThread, -1, true);
     }
 
     // 指定地址获取连接
-    private CompletableFuture<C> connect(@Nonnull SocketAddress addr, @Nullable WorkThread workThread, boolean pool) {
+    private CompletableFuture<C> connect(
+            @Nonnull SocketAddress addr, @Nullable WorkThread workThread, int excludeIndex, boolean pool) {
         if (addr == null) {
             return CompletableFuture.failedFuture(new NullPointerException("address is empty"));
         }
         final String traceid = Traces.currentTraceid();
-        final AddressConnEntry<C> entry = getAddressConnEntry(addr, workThread);
+        final AddressConnEntry<C> entry = getAddressConnEntry(addr, workThread, excludeIndex);
         C ec = entry.connection;
         if (pool && ec != null && ec.isOpen()) {
             return CompletableFuture.completedFuture(ec);
         }
         final Queue<CompletableFuture<C>> waitQueue = entry.connAcquireWaitings;
         if (!pool || entry.connOpenState.compareAndSet(false, true)) {
-            CompletableFuture<C> future = group.createClientConnection(tcp, addr, connectTimeoutSeconds)
+            CompletableFuture<C> future = group.createClientConnection(tcp, entry.index, addr, connectTimeoutSeconds)
                     .thenApply(c ->
                             (C) createClientConnection(c).setConnEntry(entry).setMaxPipelines(maxPipelines));
             R virtualReq = createVirtualRequestAfterConnect();
@@ -405,11 +410,11 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         }
     }
 
-    private AddressConnEntry<C> getAddressConnEntry(SocketAddress addr, WorkThread workThread) {
+    private AddressConnEntry<C> getAddressConnEntry(SocketAddress addr, WorkThread workThread, int excludeIndex) {
         final AddressConnEntry<C>[] entrys = connAddrEntrys.computeIfAbsent(addr, a -> {
             AddressConnEntry<C>[] array = new AddressConnEntry[connLimit];
             for (int i = 0; i < array.length; i++) {
-                array[i] = new AddressConnEntry<>();
+                array[i] = new AddressConnEntry<>(i);
             }
             return array;
         });
@@ -417,9 +422,15 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
             return entrys[workThread.index()];
         }
         int index = workThread == null || workThread.index() < 0
-                ? random.nextInt(entrys.length)
+                ? randomIndex(entrys.length, excludeIndex)
                 : workThread.index() % entrys.length;
         return entrys[index];
+    }
+
+    private int randomIndex(int len, int excludeIndex) {
+        if (len == 1) return 0;
+        int i = random.nextInt(len);
+        return i != excludeIndex ? i : ((i + 1) < len ? (i + 1) : (i - 1));
     }
 
     protected ClientFuture<R, P> createClientFuture(ClientConnection conn, R request) {
@@ -472,12 +483,16 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
 
         public C connection;
 
+        public final int index;
+
         public final LongAdder connRespWaiting = new LongAdder();
 
         public final AtomicBoolean connOpenState = new AtomicBoolean();
 
         public final Queue<CompletableFuture<C>> connAcquireWaitings = new ConcurrentLinkedDeque();
 
-        AddressConnEntry() {}
+        AddressConnEntry(int index) {
+            this.index = index;
+        }
     }
 }

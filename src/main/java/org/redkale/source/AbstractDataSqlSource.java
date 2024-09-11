@@ -80,7 +80,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
     };
 
     protected final BiFunction<DataSource, EntityInfo, CompletableFuture<List>> fullloader = (s, i) ->
-            ((CompletableFuture<Sheet>) querySheetDBAsync(i, false, false, false, null, null, (FilterNode) null))
+            ((CompletableFuture<Sheet>) querySheetDBAsync(i, false, false, false, null, null, (FilterNode) null, true))
                     .thenApply(e -> e == null ? new ArrayList() : e.list(true));
 
     protected final IntFunction<String> signFunc = this::prepareParamSign;
@@ -1075,7 +1075,8 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             final boolean distinct,
             final SelectColumn selects,
             final Flipper flipper,
-            final FilterNode node);
+            final FilterNode node,
+            final boolean inCacheLoad);
 
     // 插入纪录
     protected <T> int insertDB(final EntityInfo<T> info, T... entitys) {
@@ -1213,7 +1214,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             final SelectColumn selects,
             final Flipper flipper,
             final FilterNode node) {
-        return querySheetDBAsync(info, readcache, needtotal, distinct, selects, flipper, node)
+        return querySheetDBAsync(info, readcache, needtotal, distinct, selects, flipper, node, false)
                 .join();
     }
 
@@ -3891,7 +3892,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
                 return CompletableFuture.completedFuture(cache.querySheet(needTotal, distinct, selects, flipper, node));
             }
         }
-        return querySheetDBAsync(info, readCache, needTotal, distinct, selects, flipper, node);
+        return querySheetDBAsync(info, readCache, needTotal, distinct, selects, flipper, node, false);
     }
 
     // -------------------------------------------- native SQL --------------------------------------------

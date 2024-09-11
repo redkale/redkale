@@ -202,13 +202,13 @@ public class AsyncIOGroup extends AsyncGroup {
     // 创建一个AsyncConnection对象，只给测试代码使用
     public AsyncConnection newTCPClientConnection() {
         try {
-            return newTCPClientConnection(null);
+            return newTCPClientConnection(-1, null);
         } catch (IOException e) {
             throw new RedkaleException(e);
         }
     }
 
-    private AsyncNioTcpConnection newTCPClientConnection(final SocketAddress address) throws IOException {
+    private AsyncNioTcpConnection newTCPClientConnection(int ioIndex, SocketAddress address) throws IOException {
         SocketChannel channel = SocketChannel.open();
         channel.configureBlocking(false);
         channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
@@ -218,7 +218,10 @@ public class AsyncIOGroup extends AsyncGroup {
         AsyncIOThread readThread = null;
         AsyncIOThread writeThread = null;
         AsyncIOThread currThread = AsyncIOThread.currentAsyncIOThread();
-        if (currThread != null) {
+        if (ioIndex >= 0 && ioIndex < this.ioReadThreads.length) {
+            readThread = this.ioReadThreads[ioIndex];
+            writeThread = this.ioWriteThreads[ioIndex];
+        } else if (currThread != null) {
             if (this.ioReadThreads[0].getThreadGroup() == currThread.getThreadGroup()) {
                 for (AsyncIOThread ioReadThread : this.ioReadThreads) {
                     if (ioReadThread.index() == currThread.index()) {
@@ -246,11 +249,12 @@ public class AsyncIOGroup extends AsyncGroup {
     }
 
     @Override
-    public CompletableFuture<AsyncConnection> createTCPClientConnection(SocketAddress address, int connectTimeoutSeconds) {
+    public CompletableFuture<AsyncConnection> createTCPClientConnection(
+            int ioIndex, SocketAddress address, int connectTimeoutSeconds) {
         Objects.requireNonNull(address);
         AsyncNioTcpConnection conn;
         try {
-            conn = newTCPClientConnection(address);
+            conn = newTCPClientConnection(ioIndex, address);
         } catch (IOException e) {
             return CompletableFuture.failedFuture(e);
         }
@@ -286,19 +290,22 @@ public class AsyncIOGroup extends AsyncGroup {
     // 创建一个AsyncConnection对象，只给测试代码使用
     public AsyncConnection newUDPClientConnection() {
         try {
-            return newUDPClientConnection(null);
+            return newUDPClientConnection(-1, null);
         } catch (IOException e) {
             throw new RedkaleException(e);
         }
     }
 
-    private AsyncNioUdpConnection newUDPClientConnection(final SocketAddress address) throws IOException {
+    private AsyncNioUdpConnection newUDPClientConnection(int ioIndex, SocketAddress address) throws IOException {
         DatagramChannel channel = DatagramChannel.open();
         channel.configureBlocking(false);
         AsyncIOThread readThread = null;
         AsyncIOThread writeThread = null;
         AsyncIOThread currThread = AsyncIOThread.currentAsyncIOThread();
-        if (currThread != null) {
+        if (ioIndex >= 0 && ioIndex < this.ioReadThreads.length) {
+            readThread = this.ioReadThreads[ioIndex];
+            writeThread = this.ioWriteThreads[ioIndex];
+        } else if (currThread != null) {
             for (AsyncIOThread ioReadThread : this.ioReadThreads) {
                 if (ioReadThread.index() == currThread.index()) {
                     readThread = ioReadThread;
@@ -322,10 +329,11 @@ public class AsyncIOGroup extends AsyncGroup {
     }
 
     @Override
-    public CompletableFuture<AsyncConnection> createUDPClientConnection(SocketAddress address, int connectTimeoutSeconds) {
+    public CompletableFuture<AsyncConnection> createUDPClientConnection(
+            int ioIndex, SocketAddress address, int connectTimeoutSeconds) {
         AsyncNioUdpConnection conn;
         try {
-            conn = newUDPClientConnection(address);
+            conn = newUDPClientConnection(ioIndex, address);
         } catch (IOException e) {
             return CompletableFuture.failedFuture(e);
         }
