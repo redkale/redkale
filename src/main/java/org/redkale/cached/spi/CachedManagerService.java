@@ -202,6 +202,10 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         }
     }
 
+    public CachedLocalSource getLocalSource() {
+        return localSource;
+    }
+
     /**
      * 获取远程缓存Source, 可能为null
      *
