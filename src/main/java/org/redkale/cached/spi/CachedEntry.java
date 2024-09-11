@@ -21,7 +21,10 @@ public class CachedEntry {
     private String manager;
 
     private String name;
+
     private String key;
+
+    private String localLimit;
 
     private String localExpire;
 
@@ -37,6 +40,7 @@ public class CachedEntry {
         this.manager = cached.manager();
         this.name = cached.name();
         this.key = cached.key();
+        this.localLimit = cached.localLimit();
         this.localExpire = cached.localExpire();
         this.remoteExpire = cached.remoteExpire();
         this.timeUnit = cached.timeUnit();
@@ -47,6 +51,7 @@ public class CachedEntry {
         this.manager = cached.manager();
         this.name = cached.name();
         this.key = cached.key();
+        this.localLimit = cached.localLimit();
         this.localExpire = cached.localExpire();
         this.remoteExpire = cached.remoteExpire();
         this.timeUnit = cached.timeUnit();
@@ -63,6 +68,10 @@ public class CachedEntry {
 
     public String getKey() {
         return key;
+    }
+
+    public String getLocalLimit() {
+        return localLimit;
     }
 
     public String getLocalExpire() {

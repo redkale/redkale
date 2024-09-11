@@ -52,6 +52,15 @@ public @interface Cached {
     String manager() default "";
 
     /**
+     * 本地缓存数量上限， 小于1表示无上限<br>
+     * 参数值支持方式:<br>
+     * 100: 设置数值 ${env.cache.limit}: 读取系统配置项
+     *
+     * @return 数量上限
+     */
+    String localLimit() default "-1";
+
+    /**
      * 本地缓存过期时长， 0表示永不过期， -1表示不作本地缓存。<br>
      * 参数值支持方式:<br>
      * 100: 设置数值 ${env.cache.expires}: 读取系统配置项

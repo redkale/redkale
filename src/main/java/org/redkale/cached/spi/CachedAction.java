@@ -74,6 +74,9 @@ public class CachedAction {
     // 父对象
     private Object service;
 
+    // 本地缓存数量上线，> 0才有效
+    private int localLimit;
+
     // 本地缓存过期时长，Duration.ZERO为永不过期，为null表示不本地缓存
     private Duration localExpire;
 
@@ -106,6 +109,7 @@ public class CachedAction {
             MultiHashKey dynKey = MultiHashKey.create(paramNames, key);
             this.keyGenerator = CachedKeyGenerator.create(dynKey);
         }
+        this.localLimit = Integer.parseInt(environment.getPropertyValue(cached.getLocalLimit()));
         this.localExpire = createDuration(cached.getLocalExpire());
         this.remoteExpire = createDuration(cached.getRemoteExpire());
         ((CachedActionFunc) this.manager).addAction(this);
@@ -120,6 +124,7 @@ public class CachedAction {
                     keyGenerator.generate(service, this, args),
                     resultType,
                     nullable,
+                    localLimit,
                     localExpire,
                     remoteExpire,
                     (ThrowSupplier) supplier);
@@ -129,6 +134,7 @@ public class CachedAction {
                     keyGenerator.generate(service, this, args),
                     resultType,
                     nullable,
+                    localLimit,
                     localExpire,
                     remoteExpire,
                     supplier);

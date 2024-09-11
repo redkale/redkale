@@ -50,6 +50,7 @@ public class _DynLocalCacheInstance extends CachedInstance {
             key = "name",
             nullable = false,
             timeUnit = TimeUnit.SECONDS,
+            localLimit = "-1",
             remoteExpire = "-1",
             localExpire = "30")
     public String getName() {
@@ -68,6 +69,7 @@ public class _DynLocalCacheInstance extends CachedInstance {
             key = "#{id}_#{files.one}",
             nullable = false,
             timeUnit = TimeUnit.SECONDS,
+            localLimit = "-1",
             remoteExpire = "60",
             localExpire = "30")
     public File getInfo(CachedInstance.ParamBean bean, int id, List<String> idList, Map<String, File> files) {
@@ -87,6 +89,7 @@ public class _DynLocalCacheInstance extends CachedInstance {
             key = "name",
             nullable = false,
             timeUnit = TimeUnit.SECONDS,
+            localLimit = "-1",
             remoteExpire = "-1",
             localExpire = "30")
     public CompletableFuture<String> getNameAsync() {
@@ -105,6 +108,7 @@ public class _DynLocalCacheInstance extends CachedInstance {
             key = "#{id}_#{files.one}",
             nullable = false,
             timeUnit = TimeUnit.SECONDS,
+            localLimit = "-1",
             remoteExpire = "60",
             localExpire = "30")
     public CompletableFuture<Map<String, Integer>> getInfo2Async(
@@ -128,6 +132,7 @@ public class _DynLocalCacheInstance extends CachedInstance {
             key = "name",
             nullable = false,
             timeUnit = TimeUnit.SECONDS,
+            localLimit = "-1",
             remoteExpire = "60",
             localExpire = "30")
     public CompletableFuture<String> getName2Async() throws IOException, InstantiationException {
@@ -146,6 +151,7 @@ public class _DynLocalCacheInstance extends CachedInstance {
             key = "#{id}_#{files.one}",
             nullable = false,
             timeUnit = TimeUnit.SECONDS,
+            localLimit = "-1",
             remoteExpire = "60",
             localExpire = "30")
     public CompletableFuture<File> getInfoAsync(
@@ -166,6 +172,7 @@ public class _DynLocalCacheInstance extends CachedInstance {
             key = "name",
             nullable = false,
             timeUnit = TimeUnit.SECONDS,
+            localLimit = "-1",
             remoteExpire = "60",
             localExpire = "30")
     public String getName2() throws RedkaleException {

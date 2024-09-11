@@ -123,12 +123,19 @@ public interface CachedManager extends Resourcable {
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
+     * @param localLimit 本地缓存数量上限
      * @param expire 过期时长，Duration.ZERO为永不过期
      * @param supplier 数据函数
      * @return 数据值
      */
     public <T> T localGetSet(
-            String name, String key, Type type, boolean nullable, Duration expire, ThrowSupplier<T> supplier);
+            String name,
+            String key,
+            Type type,
+            boolean nullable,
+            int localLimit,
+            Duration expire,
+            ThrowSupplier<T> supplier);
 
     /**
      * 本地异步获取缓存数据, 过期返回null
@@ -138,6 +145,7 @@ public interface CachedManager extends Resourcable {
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
+     * @param localLimit 本地缓存数量上限
      * @param expire 过期时长，Duration.ZERO为永不过期
      * @param supplier 数据函数
      * @return 数据值
@@ -147,6 +155,7 @@ public interface CachedManager extends Resourcable {
             String key,
             Type type,
             boolean nullable,
+            int localLimit,
             Duration expire,
             ThrowSupplier<CompletableFuture<T>> supplier);
 
@@ -384,6 +393,7 @@ public interface CachedManager extends Resourcable {
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
+     * @param localLimit 本地缓存数量上限
      * @param localExpire 本地过期时长，Duration.ZERO为永不过期，为null表示不本地缓存
      * @param remoteExpire 远程过期时长，Duration.ZERO为永不过期，为null表示不远程缓存
      * @param supplier 数据函数
@@ -394,6 +404,7 @@ public interface CachedManager extends Resourcable {
             String key,
             Type type,
             boolean nullable,
+            int localLimit,
             Duration localExpire,
             Duration remoteExpire,
             ThrowSupplier<T> supplier);
@@ -406,6 +417,7 @@ public interface CachedManager extends Resourcable {
      * @param key 缓存键
      * @param type 数据类型
      * @param nullable 是否缓存null值
+     * @param localLimit 本地缓存数量上限
      * @param localExpire 本地过期时长，Duration.ZERO为永不过期，为null表示不本地缓存
      * @param remoteExpire 远程过期时长，Duration.ZERO为永不过期，为null表示不远程缓存
      * @param supplier 数据函数
@@ -416,6 +428,7 @@ public interface CachedManager extends Resourcable {
             String key,
             Type type,
             boolean nullable,
+            int localLimit,
             Duration localExpire,
             Duration remoteExpire,
             ThrowSupplier<CompletableFuture<T>> supplier);

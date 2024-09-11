@@ -30,6 +30,8 @@ public @interface DynForCached {
 
     String key();
 
+    String localLimit();
+
     String localExpire();
 
     String remoteExpire();
