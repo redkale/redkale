@@ -56,13 +56,6 @@ public interface CachedManager extends Resourcable {
     public String getSchema();
 
     /**
-     * 获取本地缓存Source
-     *
-     * @return  {@link org.redkale.source.CacheSource}
-     */
-    public CacheSource getLocalSource();
-
-    /**
      * 获取远程缓存Source, 可能为null
      *
      * @return  {@link org.redkale.source.CacheSource}

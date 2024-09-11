@@ -59,9 +59,9 @@ public class CachedAction {
 
     @Resource
     private Environment environment;
-    
+
     private CachedManager manager;
-    
+
     // 缓存名称
     private String name;
 

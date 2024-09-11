@@ -25,7 +25,6 @@ import org.redkale.cached.CachedManager;
 import org.redkale.service.Local;
 import org.redkale.service.Service;
 import org.redkale.source.CacheEventListener;
-import org.redkale.source.CacheMemorySource;
 import org.redkale.source.CacheSource;
 import org.redkale.util.AnyValue;
 import org.redkale.util.RedkaleException;
@@ -73,7 +72,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     private final ConcurrentHashMap<Type, Type> cacheValueTypes = new ConcurrentHashMap<>();
 
     // 本地缓存Source
-    protected final CacheMemorySource localSource = new CacheMemorySource("cache-local");
+    protected final CachedLocalSource localSource = new CachedLocalSource();
 
     // 缓存无效时使用的同步锁
     private final ConcurrentHashMap<String, CachedValue> syncLockMap = new ConcurrentHashMap<>();
@@ -204,16 +203,6 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     }
 
     /**
-     * 获取本地缓存Source
-     *
-     * @return  {@link org.redkale.source.CacheSource}
-     */
-    @Override
-    public CacheSource getLocalSource() {
-        return localSource;
-    }
-
-    /**
      * 获取远程缓存Source, 可能为null
      *
      * @return  {@link org.redkale.source.CacheSource}
@@ -267,7 +256,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     @Override
     public <T> T localGet(String name, String key, Type type) {
         checkEnable();
-        return CachedValue.get(localSource.get(idFor(name, key), loadCacheType(type)));
+        return CachedValue.get(localSource.get(name, idFor(name, key), loadCacheType(type)));
     }
 
     /**
@@ -286,7 +275,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     public <T> T localGetSet(
             String name, String key, Type type, boolean nullable, Duration expire, ThrowSupplier<T> supplier) {
         return getSet(
-                (n, k, ex, ct) -> localSource.get(idFor(n, k), ct),
+                (n, k, ex, ct) -> localSource.get(name, idFor(n, k), ct),
                 this::localSetCache,
                 name,
                 key,
@@ -317,7 +306,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
             Duration expire,
             ThrowSupplier<CompletableFuture<T>> supplier) {
         return getSetAsync(
-                (n, k, e, c) -> localSource.getAsync(idFor(n, k), c),
+                (n, k, e, c) -> localSource.getAsync(name, idFor(n, k), c),
                 this::localSetCacheAsync,
                 name,
                 key,
@@ -352,7 +341,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     @Override
     public long localDel(String name, String key) {
         checkEnable();
-        return localSource.del(idFor(name, key));
+        return localSource.del(name, idFor(name, key));
     }
 
     // -------------------------------------- 远程缓存 --------------------------------------
@@ -706,7 +695,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     public long bothDel(String name, String key) {
         checkEnable();
         String id = idFor(name, key);
-        long v = localSource.del(id);
+        long v = localSource.del(name, id);
         if (remoteSource != null) {
             v = remoteSource.del(id);
             if (broadcastable) {
@@ -727,7 +716,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     public CompletableFuture<Long> bothDelAsync(String name, String key) {
         checkEnable();
         String id = idFor(name, key);
-        long v = localSource.del(id); // 内存操作，无需异步
+        long v = localSource.del(name, id); // 内存操作，无需异步
         if (remoteSource != null) {
             return remoteSource.delAsync(id).thenCompose(r -> {
                 return broadcastable
@@ -878,11 +867,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         if (logable) {
             logger.log(logLevel, "Cached set id(" + id + ") value to localSource expire " + millis + " ms");
         }
-        if (millis > 0) {
-            localSource.psetex(id, millis, cacheType, cacheVal);
-        } else {
-            localSource.set(id, cacheType, cacheVal);
-        }
+        localSource.set(name, id, millis, cacheType, cacheVal);
     }
 
     protected <T> void remoteSetCache(String name, String key, Type type, T value, Duration expire) {
@@ -921,11 +906,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         if (logable) {
             logger.log(logLevel, "Cached set id(" + id + ") value to localSource expire " + millis + " ms");
         }
-        if (millis > 0) {
-            return localSource.psetexAsync(id, millis, cacheType, cacheVal);
-        } else {
-            return localSource.setAsync(id, cacheType, cacheVal);
-        }
+        return localSource.setAsync(name, id, millis, cacheType, cacheVal);
     }
 
     protected <T> CompletableFuture<Void> remoteSetCacheAsync(
@@ -955,7 +936,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         checkEnable();
         boolean logable = logger.isLoggable(logLevel);
         String id = idFor(name, key);
-        CachedValue<T> cacheVal = localSource.get(id, cacheType);
+        CachedValue<T> cacheVal = localSource.get(name, id, cacheType);
         if (CachedValue.isValid(cacheVal)) {
             if (logable) {
                 logger.log(logLevel, "Cached got id(" + id + ") value from localSource");
@@ -996,7 +977,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         checkEnable();
         boolean logable = logger.isLoggable(logLevel);
         String id = idFor(name, key);
-        CachedValue<T> val = localSource.get(id, cacheType); // 内存操作，无需异步
+        CachedValue<T> val = localSource.get(name, id, cacheType); // 内存操作，无需异步
         if (CachedValue.isValid(val)) {
             if (logable) {
                 logger.log(logLevel, "Cached got id(" + id + ") value from localSource");
@@ -1111,7 +1092,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         @Override
         public void onMessage(String topic, CachedEventMessage message) {
             if (!Objects.equals(getNode(), message.getNode())) {
-                localSource.del(idFor(message.getName(), message.getKey()));
+                localSource.del(message.getName(), idFor(message.getName(), message.getKey()));
             }
         }
     }

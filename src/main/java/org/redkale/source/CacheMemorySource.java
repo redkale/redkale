@@ -153,6 +153,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
             this.scheduler = Utility.newScheduledExecutor(
                     1, "Redkale-" + CacheMemorySource.class.getSimpleName() + "-" + resourceName() + "-Expirer-Thread");
             final List<String> keys = new ArrayList<>();
+            int interval = 30;
             scheduler.scheduleWithFixedDelay(
                     () -> {
                         try {
@@ -179,11 +180,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
                                 rateLimitContainer.remove(key);
                             }
                         } catch (Throwable t) {
-                            logger.log(Level.SEVERE, "CacheMemorySource schedule(interval=" + 10 + "s) error", t);
+                            logger.log(Level.SEVERE, "CacheMemorySource schedule(interval=" + interval + "s) error", t);
                         }
                     },
-                    10,
-                    10,
+                    interval,
+                    interval,
                     TimeUnit.SECONDS);
             logger.info(
                     self.getClass().getSimpleName() + ":" + self.resourceName() + " start schedule expire executor");
@@ -204,9 +205,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
     public void destroy(AnyValue conf) {
         if (scheduler != null) {
             scheduler.shutdownNow();
+            scheduler = null;
         }
         if (subExecutor != null) {
             subExecutor.shutdown();
+            subExecutor = null;
         }
     }
 
