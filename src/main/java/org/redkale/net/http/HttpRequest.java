@@ -373,6 +373,7 @@ public class HttpRequest extends Request<HttpContext> {
             } else {
                 int startpos = buffer.position();
                 int rs = readHeaderLines(buffer, bytes);
+                this.headerLength = buffer.position() - startpos + this.headerHalfLen;
                 if (rs >= 0 && this.headerLength > context.getMaxHeader()) {
                     context.getLogger()
                             .log(
@@ -387,7 +388,6 @@ public class HttpRequest extends Request<HttpContext> {
                     return rs;
                 }
                 this.headerParsed = true;
-                this.headerLength = buffer.position() - startpos + this.headerHalfLen;
                 this.headerHalfLen = this.headerLength;
             }
             bytes.clear();
@@ -500,7 +500,7 @@ public class HttpRequest extends Request<HttpContext> {
             }
             return 0;
         } else {
-            ByteArray bodyBytes = this.bodyBytes;
+            ByteArray body = this.bodyBytes;
             if (this.chunkedCurrOffset < this.chunkedLength) {
                 for (; ; ) {
                     if (remain-- < 1) {
@@ -508,7 +508,7 @@ public class HttpRequest extends Request<HttpContext> {
                         return 1;
                     }
                     byte b = buffer.get();
-                    bodyBytes.put(b);
+                    body.put(b);
                     this.chunkedCurrOffset++;
                     if (this.chunkedCurrOffset == this.chunkedLength) {
                         this.chunkedCR = false;
@@ -1213,6 +1213,72 @@ public class HttpRequest extends Request<HttpContext> {
         } else if ((first == 'E' || first == 'e') && size == 6) { // Expect
             if (bs[1] == 'x' && bs[2] == 'p' && bs[3] == 'e' && bs[4] == 'c' && bs[5] == 't') {
                 return HEAD_EXPECT;
+            }
+        } else if ((first == 'R' || first == 'r')
+                && size > 5
+                && bs[1] == 'e'
+                && bs[2] == 's'
+                && bs[3] == 't'
+                && bs[4] == '-') { // Rest-XXX
+            if (size == 8 && (bs[5] == 'R' || bs[5] == 'r') && bs[6] == 'p' && bs[7] == 'c') { // Rest-Rpc
+                return Rest.REST_HEADER_RPC;
+            } else if (size == 12
+                    && (bs[5] == 'R' || bs[5] == 'r')
+                    && bs[6] == 'e'
+                    && bs[7] == 's'
+                    && bs[8] == 'n'
+                    && bs[9] == 'a'
+                    && bs[10] == 'm'
+                    && bs[11] == 'e') { // Rest-Resname
+                return Rest.REST_HEADER_RESNAME;
+            } else if (size == 12
+                    && (bs[5] == 'T' || bs[5] == 't')
+                    && bs[6] == 'r'
+                    && bs[7] == 'a'
+                    && bs[8] == 'c'
+                    && bs[9] == 'e'
+                    && bs[10] == 'i'
+                    && bs[11] == 'd') { // Rest-Traceid
+                return Rest.REST_HEADER_TRACEID;
+            } else if (size == 15
+                    && (bs[5] == 'C' || bs[5] == 'c')
+                    && bs[6] == 'u'
+                    && bs[7] == 'r'
+                    && bs[8] == 'r'
+                    && bs[9] == 'u'
+                    && bs[10] == 's'
+                    && bs[11] == 'e'
+                    && bs[12] == 'r'
+                    && bs[13] == 'i'
+                    && bs[14] == 'd') { // Rest-Curruserid
+                return Rest.REST_HEADER_CURRUSERID;
+            } else if (size == 16
+                    && (bs[5] == 'R' || bs[5] == 'r')
+                    && bs[6] == 'e'
+                    && bs[7] == 'q'
+                    && bs[8] == '-'
+                    && (bs[9] == 'C' || bs[9] == 'c')
+                    && bs[10] == 'o'
+                    && bs[11] == 'n'
+                    && bs[12] == 'v'
+                    && bs[13] == 'e'
+                    && bs[14] == 'r'
+                    && bs[15] == 't') { // Rest-Req-Convert
+                return Rest.REST_HEADER_REQ_CONVERT;
+            } else if (size == 17
+                    && (bs[5] == 'R' || bs[5] == 'r')
+                    && bs[6] == 'e'
+                    && bs[7] == 's'
+                    && bs[8] == 'p'
+                    && bs[9] == '-'
+                    && (bs[10] == 'C' || bs[10] == 'c')
+                    && bs[11] == 'o'
+                    && bs[12] == 'n'
+                    && bs[13] == 'v'
+                    && bs[14] == 'e'
+                    && bs[15] == 'r'
+                    && bs[16] == 't') { // Rest-Resp-Convert
+                return Rest.REST_HEADER_RESP_CONVERT;
             }
         }
         return bytes.toString(latin1, charset);
