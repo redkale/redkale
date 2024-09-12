@@ -326,7 +326,12 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     @Override
-    protected int readHeader(final ByteBuffer buf, final Request last) {
+    protected int pipelineHeaderLength() {
+        return (!context.sameHeader || !context.lazyHeader) ? -1 : headerLength;
+    }
+
+    @Override
+    protected int readHeader(final ByteBuffer buf, final int pipelineHeaderLength) {
         final ByteBuffer buffer = buf;
         ByteArray bytes = bodyBytes;
         if (this.readState == READ_STATE_ROUTE) {
@@ -337,41 +342,19 @@ public class HttpRequest extends Request<HttpContext> {
             this.readState = READ_STATE_HEADER;
         }
         if (this.readState == READ_STATE_HEADER) {
-            if (last != null && ((HttpRequest) last).headerLength > 0) {
-                final HttpRequest httpLast = (HttpRequest) last;
+            if (pipelineHeaderLength > 0) {
                 int bufremain = buffer.remaining();
-                int remainHalf = httpLast.headerLength - this.headerHalfLen;
+                int remainHalf = pipelineHeaderLength - this.headerHalfLen;
                 if (remainHalf > bufremain) {
                     bytes.put(buffer);
                     this.headerHalfLen += bufremain;
                     buffer.clear();
                     return 1;
                 }
-                buffer.position(buffer.position() + remainHalf);
-                this.contentType = httpLast.contentType;
-                this.contentLength = httpLast.contentLength;
-                this.contentEncoding = httpLast.contentEncoding;
-                this.host = httpLast.host;
-                this.cookie = httpLast.cookie;
-                this.cookies = httpLast.cookies;
-                this.keepAlive = httpLast.keepAlive;
-                this.maybews = httpLast.maybews;
-                this.expect = httpLast.expect;
-                this.chunked = httpLast.chunked;
-                this.chunkedLength = httpLast.chunkedLength;
-                this.chunkedCurrOffset = httpLast.chunkedCurrOffset;
-                this.rpc = httpLast.rpc;
-                this.traceid = httpLast.traceid;
-                this.currentUserid = httpLast.currentUserid;
-                this.reqConvertType = httpLast.reqConvertType;
-                this.reqConvert = httpLast.reqConvert;
-                this.respConvertType = httpLast.respConvertType;
-                this.respConvert = httpLast.respConvert;
-                this.headerLength = httpLast.headerLength;
-                this.headerHalfLen = httpLast.headerHalfLen;
-                this.headerBytes = httpLast.headerBytes;
-                this.headerParsed = httpLast.headerParsed;
-                this.headers.setAll(httpLast.headers);
+                bytes.put(buffer, remainHalf);
+                this.headerBytes = bytes.getBytes();
+                this.headerLength = this.headerBytes.length;
+                this.headerParsed = false;
             } else if (context.lazyHeader && getmethod) { // 非GET必须要读header，会有Content-Length
                 int rs = loadHeaderBytes(buffer);
                 if (rs >= 0 && this.headerLength > context.getMaxHeader()) {
@@ -1233,37 +1216,6 @@ public class HttpRequest extends Request<HttpContext> {
             }
         }
         return bytes.toString(latin1, charset);
-    }
-
-    @Override
-    protected HttpRequest copyHeader() {
-        if (!context.sameHeader || !context.lazyHeader) {
-            return null;
-        }
-        HttpRequest req = new HttpRequest(context, this.bodyBytes);
-        req.headerLength = this.headerLength;
-        req.headerBytes = this.headerBytes;
-        req.headerParsed = this.headerParsed;
-        req.contentType = this.contentType;
-        req.contentLength = this.contentLength;
-        req.contentEncoding = this.contentEncoding;
-        req.host = this.host;
-        req.cookie = this.cookie;
-        req.cookies = this.cookies;
-        req.keepAlive = this.keepAlive;
-        req.maybews = this.maybews;
-        req.expect = this.expect;
-        req.chunked = this.chunked;
-        req.rpc = this.rpc;
-        req.traceid = this.traceid;
-        req.currentUserid = this.currentUserid;
-        req.currentUserSupplier = this.currentUserSupplier;
-        req.reqConvertType = this.reqConvertType;
-        req.reqConvert = this.reqConvert;
-        req.respConvert = this.respConvert;
-        req.respConvertType = this.respConvertType;
-        req.headers.setAll(this.headers);
-        return req;
     }
 
     @Override

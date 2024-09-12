@@ -51,22 +51,20 @@ public class SncpRequestParseTest {
         System.out.println("                           " + Arrays.toString(Arrays.copyOfRange(bs, 2, bs.length)));
 
         SncpRequestTest request = new SncpRequestTest(context);
-        Assertions.assertEquals(1, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, 0, 1)), null));
-        Assertions.assertEquals(
-                headerSize - 2, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, 1, 2)), null));
-        Assertions.assertEquals(0, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, 2, bs.length)), null));
+        Assertions.assertEquals(1, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, 0, 1)), -1));
+        Assertions.assertEquals(headerSize - 2, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, 1, 2)), -1));
+        Assertions.assertEquals(0, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, 2, bs.length)), -1));
         Assertions.assertEquals("aa", request.getHeader().getTraceid());
 
         System.out.println("测试第二段");
         request = new SncpRequestTest(context);
-        Assertions.assertEquals(1, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, 0, 1)), null));
-        Assertions.assertEquals(
-                headerSize - 2, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, 1, 2)), null));
+        Assertions.assertEquals(1, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, 0, 1)), -1));
+        Assertions.assertEquals(headerSize - 2, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, 1, 2)), -1));
         Assertions.assertEquals(
                 headerSize - headerSize / 2,
-                request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, 2, headerSize / 2)), null));
+                request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, 2, headerSize / 2)), -1));
         Assertions.assertEquals(
-                0, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, headerSize / 2, bs.length)), null));
+                0, request.readHeader(ByteBuffer.wrap(Arrays.copyOfRange(bs, headerSize / 2, bs.length)), -1));
         Assertions.assertEquals("aa", request.getHeader().getTraceid());
     }
 
@@ -77,8 +75,8 @@ public class SncpRequestParseTest {
         }
 
         @Override
-        protected int readHeader(ByteBuffer buffer, Request last) {
-            return super.readHeader(buffer, last);
+        protected int readHeader(ByteBuffer buffer, int pipelineHeaderLength) {
+            return super.readHeader(buffer, pipelineHeaderLength);
         }
     }
 }

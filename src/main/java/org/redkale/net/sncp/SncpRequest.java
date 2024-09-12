@@ -40,7 +40,7 @@ public class SncpRequest extends Request<SncpContext> {
 
     protected int readState = READ_STATE_ROUTE;
 
-    private int headerSize;
+    private int headerLength;
 
     private ByteArray halfArray;
 
@@ -55,7 +55,7 @@ public class SncpRequest extends Request<SncpContext> {
     }
 
     @Override // request.header与response.header数据格式保持一致
-    protected int readHeader(ByteBuffer buffer, Request last) {
+    protected int readHeader(ByteBuffer buffer, int pipelineHeaderLength) {
         // ---------------------route----------------------------------
         if (this.readState == READ_STATE_ROUTE) {
             int remain = buffer.remaining();
@@ -71,26 +71,24 @@ public class SncpRequest extends Request<SncpContext> {
                 return expect - remain; // 小于2
             } else {
                 if (halfArray == null) {
-                    this.headerSize = buffer.getChar();
+                    this.headerLength = buffer.getChar();
                 } else {
                     halfArray.put(buffer.get());
-                    this.headerSize = halfArray.getChar(0);
+                    this.headerLength = halfArray.getChar(0);
                     halfArray.clear();
                 }
             }
-            if (this.headerSize < SncpHeader.HEADER_SUBSIZE) {
+            if (this.headerLength < SncpHeader.HEADER_SUBSIZE) {
                 context.getLogger()
-                        .log(
-                                Level.WARNING,
+                        .log(Level.WARNING,
                                 "sncp header.length must more " + SncpHeader.HEADER_SUBSIZE + ", but "
-                                        + this.headerSize);
+                                        + this.headerLength);
                 return -1;
             }
-            if (this.headerSize > context.getMaxHeader()) {
+            if (this.headerLength > context.getMaxHeader()) {
                 context.getLogger()
-                        .log(
-                                Level.WARNING,
-                                "sncp header.length must lower " + context.getMaxHeader() + ", but " + this.headerSize);
+                        .log(Level.WARNING,
+                                "sncp header.length must lower " + context.getMaxHeader() + ", but " + this.headerLength);
                 return -1;
             }
             this.readState = READ_STATE_HEADER;
@@ -98,7 +96,7 @@ public class SncpRequest extends Request<SncpContext> {
         // ---------------------head----------------------------------
         if (this.readState == READ_STATE_HEADER) {
             int remain = buffer.remaining();
-            int expect = halfArray == null ? this.headerSize - 2 : this.headerSize - 2 - halfArray.length();
+            int expect = halfArray == null ? this.headerLength - 2 : this.headerLength - 2 - halfArray.length();
             if (remain < expect) {
                 if (halfArray == null) {
                     halfArray = new ByteArray();
@@ -108,10 +106,10 @@ public class SncpRequest extends Request<SncpContext> {
                 return expect - remain;
             }
             if (halfArray == null || halfArray.length() == 0) {
-                this.header = SncpHeader.read(buffer, this.headerSize);
+                this.header = SncpHeader.read(buffer, this.headerLength);
             } else {
                 halfArray.put(buffer, expect);
-                this.header = SncpHeader.read(halfArray, this.headerSize);
+                this.header = SncpHeader.read(halfArray, this.headerLength);
                 halfArray.clear();
             }
             if (this.header.getRetcode() != 0) { // retcode

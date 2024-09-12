@@ -81,8 +81,8 @@ public abstract class Request<C extends Context> {
         this.channel = request.channel;
     }
 
-    protected Request copyHeader() {
-        return null;
+    protected int pipelineHeaderLength() {
+        return -1;
     }
 
     protected Request pipeline(int pipelineIndex, int pipelineCount) {
@@ -95,10 +95,10 @@ public abstract class Request<C extends Context> {
      * 返回值：Integer.MIN_VALUE: 帧数据； -1：数据不合法； 0：解析完毕； &gt;0: 需再读取的字节数。
      *
      * @param buffer ByteBuffer对象
-     * @param last 同一Channel的上一个Request
+     * @param pipelineHeaderLength 同一Channel的pipelien模式下上一个Request的header长度
      * @return 缺少的字节数
      */
-    protected abstract int readHeader(ByteBuffer buffer, Request last);
+    protected abstract int readHeader(ByteBuffer buffer, int pipelineHeaderLength);
 
     protected abstract Serializable getRequestid();
 

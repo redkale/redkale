@@ -417,8 +417,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         }
     }
 
-    public void finish(
-            boolean kill, final byte[] bs1, int offset1, int length1, final byte[] bs2, int offset2, int length2) {
+    public void finish(boolean kill, byte[] bs1, int offset1, int length1, byte[] bs2, int offset2, int length2) {
         if (kill) {
             refuseAlive();
         }
@@ -517,7 +516,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         }
     }
 
-    protected <A> void send(final ByteBuffer buffer, final A attachment, final CompletionHandler<Integer, A> handler) {
+    protected <A> void send(ByteBuffer buffer, A attachment, CompletionHandler<Integer, A> handler) {
         this.channel.write(buffer, attachment, new CompletionHandler<Integer, A>() {
 
             @Override
@@ -546,7 +545,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         });
     }
 
-    protected <A> void send(final ByteBuffer[] buffers, A attachment, final CompletionHandler<Integer, A> handler) {
+    protected <A> void send(ByteBuffer[] buffers, A attachment, CompletionHandler<Integer, A> handler) {
         this.channel.write(buffers, attachment, new CompletionHandler<Integer, A>() {
 
             @Override
