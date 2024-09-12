@@ -344,12 +344,11 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             }
             this.recycleListener = null;
         }
-        boolean completed = request.completed;
         if (request.keepAlive && (request.pipelineIndex == 0 || request.pipelineCompleted)) {
             AsyncConnection conn = removeChannel();
             if (conn != null && conn.protocolCodec != null) {
                 this.responseConsumer.accept(this);
-                if (!completed) {
+                if (!request.completed) {
                     conn.readRegister(conn.protocolCodec);
                     this.readRegistered = true;
                 }

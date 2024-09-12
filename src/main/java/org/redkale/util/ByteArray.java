@@ -76,6 +76,10 @@ public final class ByteArray implements ByteTuple {
         return true;
     }
 
+    public ByteBuffer wrapByteBuffer() {
+        return ByteBuffer.wrap(content, 0, count);
+    }
+
     public ReadableByteChannel toChannel() {
         final byte[] bytes = getBytes();
         final AtomicInteger offset = new AtomicInteger();
@@ -897,22 +901,6 @@ public final class ByteArray implements ByteTuple {
      * 写入一个byte值
      *
      * @param value byte值
-     * @return ByteArray
-     */
-    public ByteArray put(byte value) {
-        if (count >= content.length - 1) {
-            byte[] ns = new byte[content.length + 8];
-            System.arraycopy(content, 0, ns, 0, count);
-            this.content = ns;
-        }
-        content[count++] = value;
-        return this;
-    }
-
-    /**
-     * 写入一个byte值
-     *
-     * @param value byte值
      */
     public void putWithoutCheck(byte value) {
         content[count++] = value;
@@ -939,6 +927,60 @@ public final class ByteArray implements ByteTuple {
      */
     public ByteArray putByte(int offset, int value) {
         content[offset] = (byte) value;
+        return this;
+    }
+
+    /**
+     * 写入一个byte值
+     *
+     * @param value byte值
+     * @return ByteArray
+     */
+    public ByteArray put(byte value) {
+        if (count >= content.length - 1) {
+            byte[] ns = new byte[content.length + 8];
+            System.arraycopy(content, 0, ns, 0, count);
+            this.content = ns;
+        }
+        content[count++] = value;
+        return this;
+    }
+
+    /**
+     * 写入两个byte值
+     *
+     * @param value1 byte值
+     * @param value2 byte值
+     * @return ByteArray
+     */
+    public ByteArray put(byte value1, byte value2) {
+        if (count >= content.length - 2) {
+            byte[] ns = new byte[content.length + 8];
+            System.arraycopy(content, 0, ns, 0, count);
+            this.content = ns;
+        }
+        content[count++] = value1;
+        content[count++] = value2;
+        return this;
+    }
+
+    /**
+     * 写入三个byte值
+     *
+     * @param value1 byte值
+     * @param value2 byte值
+     * @param value3 byte值
+     * @return ByteArray
+     */
+    public ByteArray put(byte value1, byte value2, byte value3) {
+        if (count >= content.length - 3) {
+            byte[] ns = new byte[content.length + 8];
+            System.arraycopy(content, 0, ns, 0, count);
+            this.content = ns;
+        }
+        content[count++] = value1;
+        content[count++] = value2;
+        content[count++] = value3;
         return this;
     }
 
