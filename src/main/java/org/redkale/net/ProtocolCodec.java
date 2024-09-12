@@ -187,7 +187,9 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
                 }
                 channel.setReadBuffer(buffer.clear());
                 context.executeDispatch(request, response);
-                channel.readRegister(this);
+                if (!response.readRegistered) {
+                    channel.readRegister(this);
+                }
             }
         } else { // rs > 0
             channel.setReadBuffer(buffer);

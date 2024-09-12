@@ -416,7 +416,7 @@ public class HttpRequest extends Request<HttpContext> {
                 this.keepAlive = false;
             }
             // completed=true时ProtocolCodec会继续读下一个request
-            this.completed = !this.boundary && !maybews && this.headerParsed;
+            this.completed = !this.boundary && !maybews;
             this.readState = READ_STATE_BODY;
         }
         if (this.readState == READ_STATE_BODY) {

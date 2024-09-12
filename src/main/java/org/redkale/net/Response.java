@@ -46,6 +46,8 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected boolean inNonBlocking = true;
 
+    protected boolean readRegistered;
+
     // 输出的结果对象
     protected Object output;
 
@@ -139,6 +141,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
     protected void prepare() {
         inited = true;
         inNonBlocking = true;
+        readRegistered = false;
         request.prepare();
     }
 
@@ -348,6 +351,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                 this.responseConsumer.accept(this);
                 if (!completed) {
                     conn.readRegister(conn.protocolCodec);
+                    this.readRegistered = true;
                 }
             } else {
                 Supplier<Response> poolSupplier = this.responseSupplier;
@@ -356,6 +360,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                 new ProtocolCodec(context, poolSupplier, poolConsumer, conn)
                         .response(this)
                         .run(null);
+                this.readRegistered = true;
             }
         } else {
             this.responseConsumer.accept(this);
