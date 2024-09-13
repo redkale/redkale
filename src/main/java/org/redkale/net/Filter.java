@@ -26,11 +26,14 @@ import org.redkale.util.AnyValue;
  */
 public abstract class Filter<C extends Context, R extends Request<C>, P extends Response<C, R>> implements Comparable {
 
-    AnyValue _conf; // 当前Filter的配置
+    // 当前Filter的配置
+    AnyValue _conf;
 
-    final boolean _nonBlocking; // 当前Filter.doFilter方法是否为阻塞模式
+    // 当前Filter.doFilter方法是否为阻塞模式
+    final boolean _nonBlocking;
 
-    Filter<C, R, P> _next; // 下一个Filter
+    // 下一个Filter
+    Filter<C, R, P> _next;
 
     protected Filter() {
         NonBlocking a = getClass().getAnnotation(NonBlocking.class);

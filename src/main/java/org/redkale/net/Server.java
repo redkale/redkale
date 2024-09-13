@@ -5,17 +5,26 @@
  */
 package org.redkale.net;
 
-import java.io.*;
-import java.net.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.net.URI;
 import java.nio.charset.Charset;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.LongAdder;
-import java.util.logging.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.net.ssl.SSLContext;
 import org.redkale.boot.Application;
 import org.redkale.inject.ResourceFactory;
-import org.redkale.net.Filter;
 import org.redkale.util.*;
 
 /**
@@ -159,7 +168,7 @@ public abstract class Server<
         AnyValue sslConf = config.getAnyValue("ssl");
         if (sslConf != null) {
             String builderClass = sslConf.getValue("builder", SSLBuilder.class.getName());
-            SSLBuilder builder = null;
+            SSLBuilder builder;
             if (SSLBuilder.class.getName().equals(builderClass) || builderClass.isEmpty()) {
                 builder = new SSLBuilder();
             } else {

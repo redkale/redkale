@@ -26,7 +26,8 @@ public abstract class ProtocolServer {
     // 最大连接数，小于1表示无限制
     protected int maxConns;
 
-    @Resource(required = false) // 独立创建HttpServer时没有Application
+    // 独立创建HttpServer时没有Application
+    @Resource(required = false)
     protected Application application;
 
     public abstract void open(AnyValue config) throws IOException;
