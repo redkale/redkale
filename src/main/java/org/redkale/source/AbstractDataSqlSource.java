@@ -155,7 +155,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
 
         this.autoDDL = "true".equals(readConfProps.getProperty(DATA_SOURCE_TABLE_AUTODDL, "false"));
         this.cacheForbidden = "NONE".equalsIgnoreCase(readConfProps.getProperty(DATA_SOURCE_CACHEMODE));
-        this.clientNonBlocking = "true".equalsIgnoreCase(readConfProps.getProperty(DATA_SOURCE_NON_BLOCKING, "false"));
+        this.clientNonBlocking = true || "true".equalsIgnoreCase(readConfProps.getProperty(DATA_SOURCE_NON_BLOCKING, "false"));
         this.slowmsWarn = Integer.parseInt(
                 readConfProps.getProperty(DATA_SOURCE_SLOWMS_WARN, "2000").trim());
         this.slowmsError = Integer.parseInt(

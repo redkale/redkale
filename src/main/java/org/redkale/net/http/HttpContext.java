@@ -55,8 +55,8 @@ public class HttpContext extends Context {
 
     public HttpContext(HttpContextConfig config) {
         super(config);
-        this.lazyHeader = config.lazyHeader;
-        this.sameHeader = config.sameHeader;
+        this.lazyHeader = true || config.lazyHeader;
+        this.sameHeader = true || config.sameHeader;
         this.remoteAddrHeader = config.remoteAddrHeader;
         this.remoteAddrHeaders = config.remoteAddrHeaders;
         this.localHeader = config.localHeader;
