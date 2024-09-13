@@ -180,9 +180,6 @@ public final class Application {
     // 给客户端使用，包含SNCP客户端、自定义数据库客户端连接池
     private AsyncIOGroup clientAsyncGroup;
 
-    // 给单一服务使用，有且仅有一个Server配置且buffer相关配置都是默认值的情况下才有值
-    private AsyncIOGroup shareAsyncGroup;
-
     // 服务配置项
     final AnyValue config;
 
@@ -635,13 +632,13 @@ public final class Application {
                     Field field,
                     Object attachment) {
                 try {
-                    WebClient httpClient = WebClient.create(workExecutor, clientAsyncGroup);
+                    WebClient webClient = WebClient.create(workExecutor, clientAsyncGroup);
                     if (field != null) {
-                        field.set(srcObj, httpClient);
+                        field.set(srcObj, webClient);
                     }
-                    rf.inject(resourceName, httpClient, null); // 给其可能包含@Resource的字段赋值;
-                    rf.register(resourceName, WebClient.class, httpClient);
-                    return httpClient;
+                    rf.inject(resourceName, webClient, null); // 给其可能包含@Resource的字段赋值;
+                    rf.register(resourceName, WebClient.class, webClient);
+                    return webClient;
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, WebClient.class.getSimpleName() + " inject error", e);
                     throw e instanceof RuntimeException ? (RuntimeException) e : new RedkaleException(e);
@@ -841,28 +838,7 @@ public final class Application {
             clientWorkExecutor = WorkThread.createWorkExecutor(clientThreads, "Redkale-DefaultClient-WorkThread-%s");
             executorLog.append(", threads=").append(clientThreads).append("}");
         }
-        if (config.getAnyValues("server").length == 1) {
-            AnyValue servConf = config.getAnyValues("server")[0];
-            if ("true".equals(servConf.getValue("shareio"))) {
-                String servNetprotocol = Server.getConfNetprotocol(servConf);
-                int servBufferCapacity = Server.getConfBufferCapacity(servConf, servNetprotocol);
-                int serverBufferPoolSize = Server.getConfBufferPoolSize(servConf);
-                int defBufferCapacity = "UDP".equals(servNetprotocol)
-                        ? ByteBufferPool.DEFAULT_BUFFER_UDP_CAPACITY
-                        : ByteBufferPool.DEFAULT_BUFFER_TCP_CAPACITY;
-                if (serverBufferPoolSize == ByteBufferPool.DEFAULT_BUFFER_POOL_SIZE
-                        && servBufferCapacity == defBufferCapacity) {
-                    AsyncIOGroup ioGroup = new AsyncIOGroup(
-                                    "Redkale-DefaultServlet-IOThread-%s",
-                                    workExecutor, servBufferCapacity, serverBufferPoolSize)
-                            .skipClose(true);
-                    this.shareAsyncGroup = ioGroup.start();
-                }
-            }
-        }
-        if (this.shareAsyncGroup != null) {
-            this.clientAsyncGroup = this.shareAsyncGroup;
-        } else {
+        {
             AsyncIOGroup ioGroup = new AsyncIOGroup(
                             "Redkale-DefaultClient-IOThread-%s", clientWorkExecutor, bufferCapacity, bufferPoolSize)
                     .skipClose(true);
@@ -1531,12 +1507,7 @@ public final class Application {
         stopServers();
         this.propertiesModule.destroy();
         this.workExecutor.shutdownNow();
-        if (this.shareAsyncGroup != null) {
-            long s = System.currentTimeMillis();
-            this.shareAsyncGroup.dispose();
-            logger.info("default.share.AsyncGroup destroy in " + (System.currentTimeMillis() - s) + " ms");
-        }
-        if (this.clientAsyncGroup != null && this.clientAsyncGroup != this.shareAsyncGroup) {
+        if (this.clientAsyncGroup != null) {
             long s = System.currentTimeMillis();
             this.clientAsyncGroup.dispose();
             logger.info("default.client.AsyncGroup destroy in " + (System.currentTimeMillis() - s) + " ms");
@@ -1754,10 +1725,6 @@ public final class Application {
 
     public AsyncGroup getClientAsyncGroup() {
         return clientAsyncGroup;
-    }
-
-    public AsyncIOGroup getShareAsyncGroup() {
-        return shareAsyncGroup;
     }
 
     public ResourceFactory getResourceFactory() {

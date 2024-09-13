@@ -123,14 +123,10 @@ class AsyncNioTcpProtocolServer extends ProtocolServer {
                 ? "Redkale-IOServletThread-%s"
                 : ("Redkale-" + server.name.replace("Server-", "") + "-IOServletThread-%s");
         if (this.ioGroup == null) {
-            if (application != null && application.getShareAsyncGroup() != null) {
-                this.ioGroup = application.getShareAsyncGroup();
-            } else {
-                ByteBufferPool safeBufferPool =
-                        server.createSafeBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
-                this.ioGroup = new AsyncIOGroup(threadNameFormat, null, safeBufferPool);
-                this.ioGroup.start();
-            }
+            ByteBufferPool safeBufferPool =
+                    server.createSafeBufferPool(createBufferCounter, cycleBufferCounter, server.bufferPoolSize);
+            this.ioGroup = new AsyncIOGroup(threadNameFormat, null, safeBufferPool);
+            this.ioGroup.start();
         }
 
         Thread acceptThread = new Thread() {
