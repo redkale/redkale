@@ -182,7 +182,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     private final ByteArray bodyBytes;
 
-    private byte[] headerBytes;
+    private final ByteArray headerBytes;
 
     private boolean headerParsed = false;
 
@@ -203,11 +203,12 @@ public class HttpRequest extends Request<HttpContext> {
     HttpServlet.ActionEntry actionEntry;
 
     public HttpRequest(HttpContext context) {
-        this(context, new ByteArray());
+        this(context, new ByteArray(), new ByteArray());
     }
 
-    protected HttpRequest(HttpContext context, ByteArray bodyBytes) {
+    protected HttpRequest(HttpContext context, ByteArray headerBytes, ByteArray bodyBytes) {
         super(context);
+        this.headerBytes = headerBytes;
         this.bodyBytes = bodyBytes;
         this.remoteAddrHeader = context.remoteAddrHeader;
         this.remoteAddrHeaders = context.remoteAddrHeaders;
@@ -219,6 +220,7 @@ public class HttpRequest extends Request<HttpContext> {
     @SuppressWarnings("OverridableMethodCallInConstructor")
     protected HttpRequest(HttpContext context, WebRequest req) {
         super(context);
+        this.headerBytes = new ByteArray();
         this.bodyBytes = new ByteArray();
         this.remoteAddrHeader = null;
         this.remoteAddrHeaders = null;
@@ -333,27 +335,30 @@ public class HttpRequest extends Request<HttpContext> {
     @Override
     protected int readHeader(final ByteBuffer buf, final int pipelineHeaderLength) {
         final ByteBuffer buffer = buf;
-        ByteArray bytes = bodyBytes;
         if (this.readState == READ_STATE_ROUTE) {
             int rs = readMethodUriLine(buffer);
             if (rs != 0) {
                 return rs;
             }
+            this.headerBytes.clear();
+            this.headerLength = 0;
+            this.headerHalfLen = 0;
             this.readState = READ_STATE_HEADER;
         }
         if (this.readState == READ_STATE_HEADER) {
             if (pipelineHeaderLength > 0) {
+                ByteArray hbytes = this.headerBytes;
                 int bufremain = buffer.remaining();
                 int remainHalf = pipelineHeaderLength - this.headerHalfLen;
                 if (remainHalf > bufremain) {
-                    bytes.put(buffer);
+                    hbytes.put(buffer);
                     this.headerHalfLen += bufremain;
                     buffer.clear();
                     return 1;
                 }
-                bytes.put(buffer, remainHalf);
-                this.headerBytes = bytes.getBytes();
-                this.headerLength = this.headerBytes.length;
+                hbytes.put(buffer, remainHalf);
+                this.headerLength = this.headerBytes.length();
+                this.headerHalfLen = this.headerLength;
                 this.headerParsed = false;
             } else if (context.lazyHeader && getmethod) { // 非GET必须要读header，会有Content-Length
                 int rs = loadHeaderBytes(buffer);
@@ -372,7 +377,8 @@ public class HttpRequest extends Request<HttpContext> {
                 this.headerParsed = false;
             } else {
                 int startpos = buffer.position();
-                int rs = readHeaderLines(buffer, bytes);
+                ByteArray hbytes = this.headerBytes;
+                int rs = readHeaderLines(buffer, hbytes);
                 this.headerLength = buffer.position() - startpos + this.headerHalfLen;
                 if (rs >= 0 && this.headerLength > context.getMaxHeader()) {
                     context.getLogger()
@@ -383,14 +389,13 @@ public class HttpRequest extends Request<HttpContext> {
                     return -1;
                 }
                 if (rs != 0) {
-                    this.headerHalfLen = bytes.length();
+                    this.headerHalfLen = hbytes.length();
                     buffer.clear();
                     return rs;
                 }
                 this.headerParsed = true;
                 this.headerHalfLen = this.headerLength;
             }
-            bytes.clear();
             if (this.contentType != null && this.contentType.contains("boundary=")) {
                 this.boundary = true;
             }
@@ -400,12 +405,14 @@ public class HttpRequest extends Request<HttpContext> {
             }
             // completed=true时ProtocolCodec会继续读下一个request
             this.completed = !this.boundary && !maybews;
+            this.bodyBytes.clear();
             this.readState = READ_STATE_BODY;
         }
         if (this.readState == READ_STATE_BODY) {
             if (this.chunked) {
                 return readChunkedBody(buffer);
             }
+            ByteArray bbytes = this.bodyBytes;
             if (this.contentLength > 0 && (this.contentType == null || !this.boundary)) {
                 if (this.contentLength > context.getMaxBody()) {
                     context.getLogger()
@@ -415,12 +422,12 @@ public class HttpRequest extends Request<HttpContext> {
                                             + this.contentLength + ", path: " + requestPath);
                     return -1;
                 }
-                bytes.put(buffer, Math.min((int) this.contentLength, buffer.remaining()));
-                int lr = (int) this.contentLength - bytes.length();
+                bbytes.put(buffer, Math.min((int) this.contentLength, buffer.remaining()));
+                int lr = (int) this.contentLength - bbytes.length();
                 if (lr == 0) {
                     this.readState = READ_STATE_END;
-                    if (bytes.isEmpty()) {
-                        this.bodyParsed = true; // no bodyBytes data
+                    if (bbytes.isEmpty()) {
+                        this.bodyParsed = true; // no body data
                     }
                 } else {
                     buffer.clear();
@@ -429,11 +436,11 @@ public class HttpRequest extends Request<HttpContext> {
             }
             // 文件上传、HTTP1.0或Connection:close
             if (buffer.hasRemaining() && (this.boundary || !this.keepAlive)) {
-                bytes.put(buffer, buffer.remaining());
+                bbytes.put(buffer, buffer.remaining());
             }
             this.readState = READ_STATE_END;
-            if (bytes.isEmpty()) {
-                this.bodyParsed = true; // no bodyBytes data
+            if (bbytes.isEmpty()) {
+                this.bodyParsed = true; // no body data
             } else if (!getmethod && this.contentLength < 0 && keepAlive) {
                 // keep-alive=true:  Content-Length和chunk必然是二选一。
                 // keep-alive=false: Content-Length可有可无.
@@ -567,29 +574,29 @@ public class HttpRequest extends Request<HttpContext> {
 
     private int loadHeaderBytes(final ByteBuffer buf) {
         final ByteBuffer buffer = buf;
-        ByteArray bytes = bodyBytes; // body当temp buffer使用
+        ByteArray hbytes = this.headerBytes;
         int remain = buffer.remaining();
         byte b1, b2, b3, b4;
         for (; ; ) {
             if (remain-- < 4) { // bytes不存放\r\n\r\n这4个字节
-                bytes.put(buffer);
+                hbytes.put(buffer);
                 buffer.clear();
-                if (bytes.length() > 0) {
+                if (hbytes.length() > 0) {
                     byte rn1 = 0, rn2 = 0, rn3 = 0;
-                    byte b = bytes.getLastByte();
+                    byte b = hbytes.getLastByte();
                     if (b == '\r' || b == '\n') {
                         rn3 = b;
-                        bytes.backCount();
-                        if (bytes.length() > 0) {
-                            b = bytes.getLastByte();
+                        hbytes.backCount();
+                        if (hbytes.length() > 0) {
+                            b = hbytes.getLastByte();
                             if (b == '\r' || b == '\n') {
                                 rn2 = b;
-                                bytes.backCount();
-                                if (bytes.length() > 0) {
-                                    b = bytes.getLastByte();
+                                hbytes.backCount();
+                                if (hbytes.length() > 0) {
+                                    b = hbytes.getLastByte();
                                     if (b == '\r' || b == '\n') {
                                         rn1 = b;
-                                        bytes.backCount();
+                                        hbytes.backCount();
                                     }
                                 }
                             }
@@ -605,30 +612,31 @@ public class HttpRequest extends Request<HttpContext> {
                         buffer.put(rn3);
                     }
                 }
+                this.headerHalfLen = hbytes.length();
                 return 1;
             }
             b1 = buffer.get();
-            bytes.put(b1);
+            hbytes.put(b1);
             if (b1 == '\r') {
                 remain--;
                 b2 = buffer.get();
-                bytes.put(b2);
                 if (b2 == '\n') {
                     remain--;
                     b3 = buffer.get();
-                    bytes.put(b3);
                     if (b3 == '\r') {
                         remain--;
                         b4 = buffer.get();
-                        bytes.put(b4);
+                        hbytes.put(b2, b3, b4);
                         if (b4 == '\n') {
-                            this.headerBytes = Utility.append(this.headerBytes, bytes.content(), 0, bytes.length());
-                            this.headerLength = this.headerBytes.length;
+                            this.headerLength = hbytes.length();
                             this.headerHalfLen = this.headerLength;
-                            bytes.clear();
                             return 0;
                         }
+                    } else {
+                        hbytes.put(b2, b3);
                     }
+                } else {
+                    hbytes.put(b2);
                 }
             }
         }
@@ -1088,10 +1096,10 @@ public class HttpRequest extends Request<HttpContext> {
             return;
         }
         if (bodyBytes.isEmpty()) { // body当temp buffer使用
-            readHeaderLines(ByteBuffer.wrap(headerBytes), bodyBytes);
+            readHeaderLines(this.headerBytes.wrapByteBuffer(), bodyBytes);
             bodyBytes.clear();
         } else { // 存有body数据
-            readHeaderLines(ByteBuffer.wrap(headerBytes), new ByteArray());
+            readHeaderLines(this.headerBytes.wrapByteBuffer(), array().clear());
         }
     }
 
@@ -1299,7 +1307,7 @@ public class HttpRequest extends Request<HttpContext> {
         // header
         this.headerLength = 0;
         this.headerHalfLen = 0;
-        this.headerBytes = null;
+        this.headerBytes.clear();
         this.headerParsed = false;
         this.contentType = null;
         this.contentLength = -1;
