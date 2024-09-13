@@ -242,6 +242,7 @@ public class HttpRequest extends Request<HttpContext> {
             if (req.getHeaders() != null) {
                 this.headers.setAll(req.getHeaders());
             }
+            this.headerParsed = true;
             this.reqConvertType = req.getReqConvertType();
             this.reqConvert =
                     req.getReqConvertType() == null ? null : ConvertFactory.findConvert(req.getReqConvertType());
@@ -456,8 +457,7 @@ public class HttpRequest extends Request<HttpContext> {
         final ByteBuffer buffer = buf;
         int remain = buffer.remaining();
         if (this.chunkedLength < 0) { // 需要读取length
-            ByteArray input = array();
-            input.clear();
+            ByteArray input = array().clear();
             if (this.chunkedHalfLenBytes != null) {
                 input.put(this.chunkedHalfLenBytes);
                 this.chunkedHalfLenBytes = null;
@@ -651,7 +651,7 @@ public class HttpRequest extends Request<HttpContext> {
         ByteArray bytes = bodyBytes; // body当temp buffer使用
         // 读method
         if (this.method == null) {
-            boolean flag = false;
+            boolean bigger = false;
             if (remain >= 5) {
                 byte b1 = buffer.get();
                 byte b2 = buffer.get();
@@ -694,14 +694,14 @@ public class HttpRequest extends Request<HttpContext> {
                                     this.getmethod = false;
                                 }
                             } else {
-                                flag = true;
+                                bigger = true;
                                 bytes.put(b1, b2, b3, b4, b5);
                             }
                         }
                     }
                 }
             }
-            if (flag) {
+            if (bigger) { // method长度大于4
                 for (; ; ) {
                     if (remain-- < 1) {
                         buffer.clear();
@@ -727,7 +727,6 @@ public class HttpRequest extends Request<HttpContext> {
                         this.getmethod = false;
                     }
                 } else if (size == 4) {
-                    this.getmethod = false;
                     if (content[0] == 'P' && content[1] == 'O' && content[2] == 'S' && content[3] == 'T') {
                         this.method = METHOD_POST;
                     } else if (content[0] == 'H' && content[1] == 'E' && content[2] == 'A' && content[3] == 'D') {
@@ -735,19 +734,17 @@ public class HttpRequest extends Request<HttpContext> {
                     } else {
                         this.method = bytes.toString(true, charset);
                     }
-                } else if (size == 7) {
                     this.getmethod = false;
-                    if (content[0] == 'O'
-                            && content[1] == 'P'
-                            && content[2] == 'T'
-                            && content[3] == 'I'
-                            && content[4] == 'O'
-                            && content[5] == 'N'
-                            && content[6] == 'S') {
-                        this.method = METHOD_OPTIONS;
-                    } else {
-                        this.method = bytes.toString(true, charset);
-                    }
+                } else if (size == 7
+                        && content[0] == 'O'
+                        && content[1] == 'P'
+                        && content[2] == 'T'
+                        && content[3] == 'I'
+                        && content[4] == 'O'
+                        && content[5] == 'N'
+                        && content[6] == 'S') {
+                    this.method = METHOD_OPTIONS;
+                    this.getmethod = false;
                 } else {
                     this.method = bytes.toString(true, charset);
                     this.getmethod = false;
@@ -779,6 +776,7 @@ public class HttpRequest extends Request<HttpContext> {
                 }
                 bytes.put(b);
             }
+
             size = bytes.length();
             if (qst > 0) { // 带?参数
                 this.requestPath = decodeable
@@ -1092,13 +1090,7 @@ public class HttpRequest extends Request<HttpContext> {
             return;
         }
         headerParsed = true;
-        if (headerBytes == null) {
-            return;
-        }
-        if (bodyBytes.isEmpty()) { // body当temp buffer使用
-            readHeaderLines(this.headerBytes.wrapByteBuffer(), bodyBytes);
-            bodyBytes.clear();
-        } else { // 存有body数据
+        if (headerBytes.length() > 0) {
             readHeaderLines(this.headerBytes.wrapByteBuffer(), array().clear());
         }
     }
@@ -1382,7 +1374,7 @@ public class HttpRequest extends Request<HttpContext> {
                 ByteArrayInputStream in = new ByteArrayInputStream(bodyBytes.content(), 0, bodyBytes.length());
                 GZIPInputStream ungzip = new GZIPInputStream(in);
                 int n;
-                byte[] buffer = array().content();
+                byte[] buffer = array().clear().content();
                 while ((n = ungzip.read(buffer)) > 0) {
                     out.write(buffer, 0, n);
                 }
@@ -1393,7 +1385,7 @@ public class HttpRequest extends Request<HttpContext> {
                 infl.setInput(bodyBytes.content(), 0, bodyBytes.length());
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 int n;
-                byte[] buffer = array().content();
+                byte[] buffer = array().clear().content();
                 while (!infl.finished()) {
                     n = infl.inflate(buffer);
                     if (n == 0) {
