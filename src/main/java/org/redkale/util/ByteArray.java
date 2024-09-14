@@ -146,10 +146,7 @@ public final class ByteArray implements ByteTuple {
      * @return 是否相同
      */
     public boolean deepEquals(final byte[] bytes) {
-        if (bytes == null) {
-            return false;
-        }
-        return deepEquals(bytes, 0, bytes.length);
+        return bytes != null && deepEquals(bytes, 0, bytes.length);
     }
 
     /**
@@ -167,11 +164,12 @@ public final class ByteArray implements ByteTuple {
         if (count != length) {
             return false;
         }
-        byte[] ba = content;
+        byte[] bs1 = content;
+        byte[] bs2 = bytes;
         int len = count;
         int off = offset;
         for (int i = 0; i < len; i++) {
-            if (ba[i] != bytes[off + i]) {
+            if (bs1[i] != bs2[off + i]) {
                 return false;
             }
         }
@@ -185,10 +183,7 @@ public final class ByteArray implements ByteTuple {
      * @return 是否相同
      */
     public boolean deepEquals(final ByteTuple tuple) {
-        if (tuple == null) {
-            return false;
-        }
-        return deepEquals(tuple.content(), 0, tuple.length());
+        return tuple != null && deepEquals(tuple.content(), 0, tuple.length());
     }
 
     /**
@@ -198,10 +193,7 @@ public final class ByteArray implements ByteTuple {
      * @return 是否相同
      */
     public boolean deepEquals(final ByteArray array) {
-        if (array == null) {
-            return false;
-        }
-        return deepEquals(array.content, 0, array.count);
+        return array != null && deepEquals(array.content, 0, array.count);
     }
 
     /**

@@ -781,7 +781,7 @@ public class HttpRequest extends Request<HttpContext> {
             if (qst > 0) { // 带?参数
                 this.requestPath = decodeable
                         ? toDecodeString(bytes, 0, qst, charset)
-                        : context.loadUriPath(bytes, qst, latin1, charset); // bytes.toString(latin1, 0, qst, charset);
+                        : context.loadUriPath(bytes, qst, latin1, charset);
                 int qlen = size - qst - 1;
                 this.queryBytes = bytes.getBytes(qst + 1, qlen);
                 this.lastPathString = null;
@@ -793,7 +793,7 @@ public class HttpRequest extends Request<HttpContext> {
                             .getLogger()
                             .log(Level.WARNING, "HttpRequest.addParameter error: " + bytes.toString(), e);
                 }
-            } else {
+            } else { // 没有带?参数
                 if (decodeable) { // 需要转义
                     this.requestPath = toDecodeString(bytes, 0, bytes.length(), charset);
                     this.lastPathString = null;
@@ -803,13 +803,12 @@ public class HttpRequest extends Request<HttpContext> {
                     if (lastURIBytes != null && lastURIBytes.length == size && bytes.deepEquals(lastURIBytes)) {
                         this.requestPath = this.lastPathString;
                     } else {
-                        this.requestPath =
-                                context.loadUriPath(bytes, latin1, charset); // bytes.toString(latin1, charset);
+                        this.requestPath = context.loadUriPath(bytes, latin1, charset);
                         this.lastPathString = this.requestPath;
                         this.lastPathBytes = bytes.getBytes();
                     }
                 } else {
-                    this.requestPath = context.loadUriPath(bytes, latin1, charset); // bytes.toString(latin1, charset);
+                    this.requestPath = context.loadUriPath(bytes, latin1, charset);
                     this.lastPathString = null;
                     this.lastPathBytes = null;
                 }
