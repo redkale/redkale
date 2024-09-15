@@ -5,9 +5,6 @@
  */
 package org.redkale.net.http;
 
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
-
 import java.io.*;
 import java.lang.annotation.*;
 import java.lang.reflect.*;
@@ -17,6 +14,8 @@ import java.util.function.*;
 import java.util.logging.*;
 import org.redkale.annotation.*;
 import org.redkale.asm.*;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.boot.*;
 import org.redkale.net.*;
 import org.redkale.util.*;
@@ -36,16 +35,22 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
     // @Deprecated(since = "2.8.0")
     // public static final int RET_METHOD_ERROR = 1200_0002;
     //
-    String _actionSimpleMappingUrl; // 只给HttpActionServlet使用，_actionSimpleMappingUrl不能包含正则表达式，比如: /json、/createRecord,
+
+    // 只给HttpActionServlet使用，_actionSimpleMappingUrl不能包含正则表达式，比如: /json、/createRecord,
     // 不能是/user/**
+    String _actionSimpleMappingUrl;
 
-    String _prefix = ""; // 当前HttpServlet的path前缀
+    // 当前HttpServlet的path前缀
+    String _prefix = "";
 
-    String _reqtopic; // 根据RestService+MQ生成的值 @since 2.5.0
+    // 根据RestService+MQ生成的值 @since 2.5.0
+    String _reqtopic;
 
-    HashMap<String, ActionEntry> _actionmap; // Rest生成时赋值, 字段名Rest有用到
+    // Rest生成时赋值, 字段名Rest有用到
+    HashMap<String, ActionEntry> _actionmap;
 
-    private Map.Entry<String, ActionEntry>[] mappings; // 字段名Rest有用到
+    // 字段名Rest有用到
+    private Map.Entry<String, ActionEntry>[] mappings;
 
     // 这里不能直接使用HttpServlet，会造成死循环初始化HttpServlet
     private final Servlet<HttpContext, HttpRequest, HttpResponse> authSuccessServlet =
@@ -114,8 +119,6 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                     if (request.actionEntry != null) {
                         ActionEntry entry = request.actionEntry;
                         if (!entry.checkMethod(request.getMethod())) {
-                            // response.finishJson(new RetResult(RET_METHOD_ERROR, "Method(" + request.getMethod() + ")
-                            // Error"));
                             finish405(request, response);
                             return;
                         }
@@ -134,8 +137,6 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                         if (request.getRequestPath().startsWith(en.getKey())) {
                             ActionEntry entry = en.getValue();
                             if (!entry.checkMethod(request.getMethod())) {
-                                // response.finishJson(new RetResult(RET_METHOD_ERROR, "Method(" + request.getMethod() +
-                                // ") Error"));
                                 finish405(request, response);
                                 return;
                             }
@@ -153,8 +154,6 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                         }
                     }
                     finish404(request, response);
-                    // throw new IOException(this.getClass().getName() + " not found method for URI(" +
-                    // request.getRequestPath() + ")");
                 }
             };
 
@@ -330,7 +329,6 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                         NonBlocking non = method.getAnnotation(NonBlocking.class);
                         exeNonBlocking = non != null && non.value();
                     }
-                    continue;
                 }
             }
         } while ((clz = clz.getSuperclass()) != HttpServlet.class);

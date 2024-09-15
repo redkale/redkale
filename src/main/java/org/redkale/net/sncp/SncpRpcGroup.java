@@ -22,14 +22,17 @@ public class SncpRpcGroup {
 
     protected final ReentrantLock lock = new ReentrantLock();
 
+    // 地址
     @ConvertColumn(index = 1)
-    protected String name; // 地址
+    protected String name;
 
+    // 协议 取值范围:  TCP、UDP
     @ConvertColumn(index = 2)
-    protected String protocol; // 协议 取值范围:  TCP、UDP
+    protected String protocol;
 
+    // 地址列表， 对应 resources-&#62;group-&#62;node节点信息
     @ConvertColumn(index = 3)
-    protected Set<InetSocketAddress> addresses; // 地址列表， 对应 resources-&#62;group-&#62;node节点信息
+    protected Set<InetSocketAddress> addresses;
 
     public SncpRpcGroup() {}
 

@@ -81,10 +81,11 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     private final ObjectPool<ByteArray> byteArrayPool =
             ObjectPool.createSafePool(1000, () -> new ByteArray(), null, ByteArray::recycle);
 
-    protected Type messageRestType; // RestWebSocket时会被修改
+    // RestWebSocket时会被修改
+    protected Type messageRestType;
 
-    // 同RestWebSocket.single
-    protected boolean single = true; // 是否单用户单连接
+    // 同RestWebSocket.single，是否单用户单连接
+    protected boolean single = true;
 
     // 同RestWebSocket.liveinterval
     protected int liveinterval = DEFAILT_LIVEINTERVAL;

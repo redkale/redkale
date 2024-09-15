@@ -17,6 +17,7 @@ import java.util.logging.*;
 import java.util.stream.Stream;
 import java.util.zip.*;
 import org.redkale.annotation.Comment;
+import org.redkale.annotation.Nonnull;
 import org.redkale.convert.Convert;
 import org.redkale.net.AsyncConnection;
 import org.redkale.net.http.WebSocketPacket.FrameType;
@@ -88,41 +89,65 @@ public abstract class WebSocket<G extends Serializable, T> {
     @Comment("WebSocket将延迟发送")
     public static final int RETCODE_DELAYSEND = 1 << 9; // 512
 
-    WebSocketEngine _engine; // 不可能为空
+    // 不可能为空
+    @Nonnull
+    WebSocketEngine _engine;
 
     WebSocketReadHandler _readHandler;
 
     WebSocketWriteHandler _writeHandler;
 
-    InetSocketAddress _sncpAddress; // 分布式下不可为空
+    // 分布式下不可为空
+    InetSocketAddress _sncpAddress;
 
-    AsyncConnection _channel; // 不可能为空
+    // 不可能为空
+    @Nonnull
+    AsyncConnection _channel;
 
-    String _sessionid; // 不可能为空
+    // 不可能为空
+    @Nonnull
+    String _sessionid;
 
-    G _userid; // 不可能为空
+    // 不可能为空
+    @Nonnull
+    G _userid;
 
-    SocketAddress _remoteAddress; // 不可能为空
+    // 不可能为空
+    @Nonnull
+    SocketAddress _remoteAddress;
 
-    String _remoteAddr; // 不可能为空
+    // 不可能为空
+    @Nonnull
+    String _remoteAddr;
 
-    Convert _textConvert; // 不可能为空
+    // 不可能为空
+    @Nonnull
+    Convert _textConvert;
 
-    Convert _binaryConvert; // 可能为空
+    // 不可能为空
+    @Nonnull
+    Convert _binaryConvert;
 
-    Convert _sendConvert; // 不可能为空
+    // 不可能为空
+    @Nonnull
+    Convert _sendConvert;
 
-    java.lang.reflect.Type _messageRestType; // 不可能为空
+    // 不可能为空
+    @Nonnull
+    java.lang.reflect.Type _messageRestType;
 
-    Deflater deflater; // 压缩
+    // 压缩
+    Deflater deflater;
 
-    Inflater inflater; // 解压
+    // 解压
+    Inflater inflater;
 
     long createTime = System.currentTimeMillis();
 
     List<WebSocketPacket> delayPackets;
 
-    private Map<String, Object> attributes = new HashMap<>(); // 非线程安全
+    // 非线程安全
+    private Map<String, Object> attributes = new HashMap<>();
 
     private long lastPingTime;
 
@@ -130,7 +155,8 @@ public abstract class WebSocket<G extends Serializable, T> {
 
     long lastSendTime;
 
-    boolean initiateClosed; // 收到客户端发送的CLOSE消息
+    // 收到客户端发送的CLOSE消息
+    boolean initiateClosed;
 
     private final AtomicBoolean closed = new AtomicBoolean();
 
