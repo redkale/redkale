@@ -35,7 +35,7 @@ public class StringWrapperTest {
         {
             String emoji =
                     new String(new byte[] {(byte) 0xF0, (byte) 0x9F, (byte) 0x98, (byte) 0x81}, StandardCharsets.UTF_8);
-            String val = "{id:'带中文" + emoji + "'}";
+            String val = "{id:'z带中文" + emoji + "a'}";
             StringWrapper wrapper = new StringWrapper(val);
             if (!main) Assertions.assertEquals(val, convert.convertTo(wrapper));
             if (!main)

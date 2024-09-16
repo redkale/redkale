@@ -52,6 +52,10 @@ public abstract class JsonWriter extends Writer {
         return this.objExtFunc == null && this.objFieldFunc == null;
     }
 
+    public boolean charsMode() {
+        return false;
+    }
+
     // -----------------------------------------------------------------------
     public abstract void writeTo(final char ch); // 只能是 0 - 127 的字符
 
@@ -71,37 +75,52 @@ public abstract class JsonWriter extends Writer {
     public abstract void writeLatin1To(final boolean quote, final String value);
 
     @ClassDepends
-    public abstract void writeFieldShortValue(final byte[] fieldBytes, final short value);
+    public void writeField(final byte[] fieldBytes, final char[] fieldChars) {
+        if (charsMode()) {
+            writeTo(fieldChars, 0, fieldChars.length);
+        } else {
+            writeTo(fieldBytes, 0, fieldBytes.length);
+        }
+    }
 
     @ClassDepends
-    public abstract void writeFieldIntValue(final byte[] fieldBytes, final int value);
+    public abstract void writeFieldShortValue(final byte[] fieldBytes, final char[] fieldChars, final short value);
 
     @ClassDepends
-    public abstract void writeFieldLongValue(final byte[] fieldBytes, final long value);
+    public abstract void writeFieldIntValue(final byte[] fieldBytes, final char[] fieldChars, final int value);
 
     @ClassDepends
-    public abstract void writeFieldLatin1Value(final byte[] fieldBytes, final String value);
+    public abstract void writeFieldLongValue(final byte[] fieldBytes, final char[] fieldChars, final long value);
 
     @ClassDepends
-    public abstract void writeLastFieldShortValue(final byte[] fieldBytes, final short value);
+    public abstract void writeFieldLatin1Value(final byte[] fieldBytes, final char[] fieldChars, final String value);
 
     @ClassDepends
-    public abstract void writeLastFieldIntValue(final byte[] fieldBytes, final int value);
+    public abstract void writeLastFieldShortValue(final byte[] fieldBytes, final char[] fieldChars, final short value);
 
     @ClassDepends
-    public abstract void writeLastFieldLongValue(final byte[] fieldBytes, final long value);
+    public abstract void writeLastFieldIntValue(final byte[] fieldBytes, final char[] fieldChars, final int value);
 
     @ClassDepends
-    public abstract void writeLastFieldLatin1Value(final byte[] fieldBytes, final String value);
+    public abstract void writeLastFieldLongValue(final byte[] fieldBytes, final char[] fieldChars, final long value);
+
+    @ClassDepends
+    public abstract void writeLastFieldLatin1Value(final byte[] fieldBytes, final char[] fieldChars, String value);
 
     // firstFieldBytes 必须带{开头
     @ClassDepends
-    public abstract void writeObjectByOnlyOneLatin1FieldValue(final byte[] firstFieldBytes, final String value);
+    public abstract void writeObjectByOnlyOneLatin1FieldValue(
+            final byte[] firstFieldBytes, final char[] firstFieldChars, final String value);
 
     // firstFieldBytes 必须带{开头, lastFieldBytes必须,开头
     @ClassDepends
     public abstract void writeObjectByOnlyTwoIntFieldValue(
-            final byte[] firstFieldBytes, final int value1, final byte[] lastFieldBytes, final int value2);
+            final byte[] firstFieldBytes,
+            final char[] firstFieldChars,
+            final int value1,
+            final byte[] lastFieldBytes,
+            final char[] lastFieldChars,
+            final int value2);
 
     @Override
     @ClassDepends
@@ -127,7 +146,12 @@ public abstract class JsonWriter extends Writer {
             writeTo(BYTE_COMMA);
         }
         if (member != null) {
-            writeTo(member.getJsonFieldNameBytes());
+            if (charsMode()) {
+                char[] chs = member.getJsonFieldNameChars();
+                writeTo(chs, 0, chs.length);
+            } else {
+                writeTo(member.getJsonFieldNameBytes());
+            }
         } else {
             writeLatin1To(true, fieldName);
             writeTo(BYTE_COLON);

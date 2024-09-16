@@ -511,6 +511,12 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
             fv.visitEnd();
             fv = cw.visitField(ACC_PROTECTED + ACC_FINAL, fieldname + "FirstFieldBytes", "[B", null, null);
             fv.visitEnd();
+            fv = cw.visitField(ACC_PROTECTED + ACC_FINAL, fieldname + "FieldChars", "[C", null, null);
+            fv.visitEnd();
+            fv = cw.visitField(ACC_PROTECTED + ACC_FINAL, fieldname + "CommaFieldChars", "[C", null, null);
+            fv.visitEnd();
+            fv = cw.visitField(ACC_PROTECTED + ACC_FINAL, fieldname + "FirstFieldChars", "[C", null, null);
+            fv.visitEnd();
             final Class fieldType = readGetSetFieldType(element);
             if (fieldType != String.class && !fieldType.isPrimitive()) {
                 fv = cw.visitField(ACC_PROTECTED, fieldname + "Encoder", encodeableDesc, null, null);
@@ -561,6 +567,21 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 mv.visitLdcInsn("{\"" + fieldname + "\":");
                 mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "getBytes", "()[B", false);
                 mv.visitFieldInsn(PUTFIELD, newDynName, fieldname + "FirstFieldBytes", "[B");
+                // xxxFieldChars
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitLdcInsn("\"" + fieldname + "\":");
+                mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "toCharArray", "()[C", false);
+                mv.visitFieldInsn(PUTFIELD, newDynName, fieldname + "FieldChars", "[C");
+                // xxxCommaFieldChars
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitLdcInsn(",\"" + fieldname + "\":");
+                mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "toCharArray", "()[C", false);
+                mv.visitFieldInsn(PUTFIELD, newDynName, fieldname + "CommaFieldChars", "[C");
+                // xxxFirstFieldChars
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitLdcInsn("{\"" + fieldname + "\":");
+                mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "toCharArray", "()[C", false);
+                mv.visitFieldInsn(PUTFIELD, newDynName, fieldname + "FirstFieldChars", "[C");
             }
             mv.visitInsn(RETURN);
             mv.visitMaxs(1 + members.size(), 1 + members.size());
@@ -614,13 +635,15 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 elementIndex++;
                 AccessibleObject element = members.get(elementIndex);
                 ConvertColumnEntry ref1 = factory.findRef(clazz, element);
-                final String fieldname =
+                final String fieldName =
                         ref1 == null || ref1.name().isEmpty() ? readGetSetFieldName(element) : ref1.name();
                 final Class fieldtype = readGetSetFieldType(element);
 
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, fieldname + "FirstFieldBytes", "[B");
+                mv.visitFieldInsn(GETFIELD, newDynName, fieldName + "FirstFieldBytes", "[B");
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitFieldInsn(GETFIELD, newDynName, fieldName + "FirstFieldChars", "[C");
 
                 mv.visitVarInsn(ALOAD, 2); // String message = value.getMessage(); 加载 value
                 if (element instanceof Field) {
@@ -641,7 +664,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                         INVOKEVIRTUAL,
                         writerName,
                         "writeObjectByOnlyOneLatin1FieldValue",
-                        "([BLjava/lang/String;)V",
+                        "([B[CLjava/lang/String;)V",
                         false);
                 maxLocals++;
             } else if (onlyTwoIntFieldObjectFlag) {
@@ -650,7 +673,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 ConvertColumnEntry ref1 = factory.findRef(clazz, element1);
                 final String fieldName1 =
                         ref1 == null || ref1.name().isEmpty() ? readGetSetFieldName(element1) : ref1.name();
-                final Class fieldtype1 = readGetSetFieldType(element1);
+                final Class fieldType1 = readGetSetFieldType(element1);
 
                 elementIndex++;
                 AccessibleObject element2 = members.get(elementIndex);
@@ -663,6 +686,8 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
 
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, fieldName1 + "FirstFieldBytes", "[B");
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitFieldInsn(GETFIELD, newDynName, fieldName1 + "FirstFieldChars", "[C");
 
                 mv.visitVarInsn(ALOAD, 2); // String message = value.getMessage(); 加载 value
                 if (element1 instanceof Field) {
@@ -670,19 +695,21 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                             GETFIELD,
                             valtypeName,
                             ((Field) element1).getName(),
-                            org.redkale.asm.Type.getDescriptor(fieldtype1));
+                            org.redkale.asm.Type.getDescriptor(fieldType1));
                 } else {
                     mv.visitMethodInsn(
                             INVOKEVIRTUAL,
                             valtypeName,
                             ((Method) element1).getName(),
-                            "()" + org.redkale.asm.Type.getDescriptor(fieldtype1),
+                            "()" + org.redkale.asm.Type.getDescriptor(fieldType1),
                             false);
                 }
                 maxLocals++;
 
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, fieldName2 + "CommaFieldBytes", "[B");
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitFieldInsn(GETFIELD, newDynName, fieldName2 + "CommaFieldChars", "[C");
 
                 mv.visitVarInsn(ALOAD, 2); // String message = value.getMessage(); 加载 value
                 if (element2 instanceof Field) {
@@ -701,7 +728,8 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 }
                 maxLocals++;
 
-                mv.visitMethodInsn(INVOKEVIRTUAL, writerName, "writeObjectByOnlyTwoIntFieldValue", "([BI[BI)V", false);
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL, writerName, "writeObjectByOnlyTwoIntFieldValue", "([B[CI[B[CI)V", false);
 
             } else if (onlyShotIntLongLatin1MoreFieldObjectFlag && mustHadComma) {
                 for (AccessibleObject element : members) {
@@ -718,6 +746,12 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                             newDynName,
                             fieldname + (elementIndex == 0 ? "FirstFieldBytes" : "CommaFieldBytes"),
                             "[B");
+                    mv.visitVarInsn(ALOAD, 0);
+                    mv.visitFieldInsn(
+                            GETFIELD,
+                            newDynName,
+                            fieldname + (elementIndex == 0 ? "FirstFieldChars" : "CommaFieldChars"),
+                            "[C");
 
                     mv.visitVarInsn(ALOAD, 2); // String message = value.getMessage(); 加载 value
                     if (element instanceof Field) {
@@ -739,28 +773,28 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                                 INVOKEVIRTUAL,
                                 writerName,
                                 elementIndex + 1 == membersSize ? "writeLastFieldShortValue" : "writeFieldShortValue",
-                                "([BS)V",
+                                "([B[CS)V",
                                 false);
                     } else if (fieldtype == int.class) {
                         mv.visitMethodInsn(
                                 INVOKEVIRTUAL,
                                 writerName,
                                 elementIndex + 1 == membersSize ? "writeLastFieldIntValue" : "writeFieldIntValue",
-                                "([BI)V",
+                                "([B[CI)V",
                                 false);
                     } else if (fieldtype == long.class) {
                         mv.visitMethodInsn(
                                 INVOKEVIRTUAL,
                                 writerName,
                                 elementIndex + 1 == membersSize ? "writeLastFieldLongValue" : "writeFieldLongValue",
-                                "([BJ)V",
+                                "([B[CJ)V",
                                 false);
                     } else {
                         mv.visitMethodInsn(
                                 INVOKEVIRTUAL,
                                 writerName,
                                 elementIndex + 1 == membersSize ? "writeLastFieldLatin1Value" : "writeFieldLatin1Value",
-                                "([BLjava/lang/String;)V",
+                                "([B[CLjava/lang/String;)V",
                                 false);
                     }
 
@@ -864,13 +898,17 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                             mv.visitVarInsn(ALOAD, 1);
                             mv.visitVarInsn(ALOAD, 0);
                             mv.visitFieldInsn(GETFIELD, newDynName, fieldname + "FieldBytes", "[B");
-                            mv.visitMethodInsn(INVOKEVIRTUAL, writerName, "writeTo", "([B)V", false);
+                            mv.visitVarInsn(ALOAD, 0);
+                            mv.visitFieldInsn(GETFIELD, newDynName, fieldname + "FieldChars", "[C");
+                            mv.visitMethodInsn(INVOKEVIRTUAL, writerName, "writeField", "([B[C)V", false);
                         } else {
                             // out.writeTo(messageCommaFieldBytes);
                             mv.visitVarInsn(ALOAD, 1);
                             mv.visitVarInsn(ALOAD, 0);
                             mv.visitFieldInsn(GETFIELD, newDynName, fieldname + "CommaFieldBytes", "[B");
-                            mv.visitMethodInsn(INVOKEVIRTUAL, writerName, "writeTo", "([B)V", false);
+                            mv.visitVarInsn(ALOAD, 0);
+                            mv.visitFieldInsn(GETFIELD, newDynName, fieldname + "CommaFieldChars", "[C");
+                            mv.visitMethodInsn(INVOKEVIRTUAL, writerName, "writeField", "([B[C)V", false);
                         }
                     } else { // if(comma) {} else {}  代码块
                         // if (comma) { start
@@ -882,7 +920,9 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(GETFIELD, newDynName, fieldname + "CommaFieldBytes", "[B");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, writerName, "writeTo", "([B)V", false);
+                        mv.visitVarInsn(ALOAD, 0);
+                        mv.visitFieldInsn(GETFIELD, newDynName, fieldname + "CommaFieldChars", "[C");
+                        mv.visitMethodInsn(INVOKEVIRTUAL, writerName, "writeField", "([B[C)V", false);
 
                         Label commaelse = new Label();
                         mv.visitJumpInsn(GOTO, commaelse);
@@ -915,7 +955,9 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(GETFIELD, newDynName, fieldname + "FieldBytes", "[B");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, writerName, "writeTo", "([B)V", false);
+                        mv.visitVarInsn(ALOAD, 0);
+                        mv.visitFieldInsn(GETFIELD, newDynName, fieldname + "FieldChars", "[C");
+                        mv.visitMethodInsn(INVOKEVIRTUAL, writerName, "writeField", "([B[C)V", false);
                         // comma = true;
                         mv.visitInsn(ICONST_1);
                         mv.visitVarInsn(ISTORE, 3);

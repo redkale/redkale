@@ -31,17 +31,11 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     private static final int TENTHOUSAND_MAX = 10001;
 
     private static final byte[][] TENTHOUSAND_BYTES = new byte[TENTHOUSAND_MAX][];
+    private static final byte[][] TENTHOUSAND_BYTES2 = new byte[TENTHOUSAND_MAX][];
 
     static {
         for (int i = 0; i < TENTHOUSAND_BYTES.length; i++) {
             TENTHOUSAND_BYTES[i] = String.valueOf(i).getBytes();
-        }
-    }
-
-    private static final byte[][] TENTHOUSAND_BYTES2 = new byte[TENTHOUSAND_MAX][];
-
-    static {
-        for (int i = 0; i < TENTHOUSAND_BYTES2.length; i++) {
             TENTHOUSAND_BYTES2[i] = String.valueOf(-i).getBytes();
         }
     }
@@ -191,7 +185,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     }
 
     @Override
-    public void writeFieldShortValue(final byte[] fieldBytes, final short value) {
+    public void writeFieldShortValue(final byte[] fieldBytes, final char[] fieldChars, final short value) {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = (value >= 0 && value < TENTHOUSAND_MAX)
                 ? TENTHOUSAND_BYTES[value]
@@ -208,7 +202,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     }
 
     @Override
-    public void writeFieldIntValue(final byte[] fieldBytes, final int value) {
+    public void writeFieldIntValue(final byte[] fieldBytes, final char[] fieldChars, final int value) {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = (value >= 0 && value < TENTHOUSAND_MAX)
                 ? TENTHOUSAND_BYTES[value]
@@ -225,7 +219,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     }
 
     @Override
-    public void writeFieldLongValue(final byte[] fieldBytes, final long value) {
+    public void writeFieldLongValue(final byte[] fieldBytes, final char[] fieldChars, final long value) {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = (value >= 0 && value < TENTHOUSAND_MAX)
                 ? TENTHOUSAND_BYTES[(int) value]
@@ -242,7 +236,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     }
 
     @Override
-    public void writeFieldLatin1Value(final byte[] fieldBytes, final String value) {
+    public void writeFieldLatin1Value(final byte[] fieldBytes, final char[] fieldChars, final String value) {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = Utility.latin1ByteArray(value);
         int len1 = bs1.length;
@@ -257,7 +251,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     }
 
     @Override
-    public void writeLastFieldShortValue(final byte[] fieldBytes, final short value) {
+    public void writeLastFieldShortValue(final byte[] fieldBytes, final char[] fieldChars, final short value) {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = (value >= 0 && value < TENTHOUSAND_MAX)
                 ? TENTHOUSAND_BYTES[value]
@@ -275,7 +269,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     }
 
     @Override
-    public void writeLastFieldIntValue(final byte[] fieldBytes, final int value) {
+    public void writeLastFieldIntValue(final byte[] fieldBytes, final char[] fieldChars, final int value) {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = (value >= 0 && value < TENTHOUSAND_MAX)
                 ? TENTHOUSAND_BYTES[value]
@@ -293,7 +287,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     }
 
     @Override
-    public void writeLastFieldLongValue(final byte[] fieldBytes, final long value) {
+    public void writeLastFieldLongValue(final byte[] fieldBytes, final char[] fieldChars, final long value) {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = (value >= 0 && value < TENTHOUSAND_MAX)
                 ? TENTHOUSAND_BYTES[(int) value]
@@ -311,7 +305,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     }
 
     @Override
-    public void writeLastFieldLatin1Value(final byte[] fieldBytes, final String value) {
+    public void writeLastFieldLatin1Value(final byte[] fieldBytes, final char[] fieldChars, final String value) {
         if (value == null && nullable()) {
             writeTo(fieldBytes);
             writeNull();
@@ -340,7 +334,8 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     }
 
     @Override // firstFieldBytes 必须带{开头
-    public void writeObjectByOnlyOneLatin1FieldValue(final byte[] firstFieldBytes, final String value) {
+    public void writeObjectByOnlyOneLatin1FieldValue(
+            final byte[] firstFieldBytes, final char[] firstFieldChars, final String value) {
         if (value == null && nullable()) {
             writeTo(BYTE_LBRACE);
             writeTo(firstFieldBytes);
@@ -372,7 +367,12 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
 
     @Override // firstFieldBytes 必须带{开头, lastFieldBytes必须,开头
     public void writeObjectByOnlyTwoIntFieldValue(
-            final byte[] firstFieldBytes, final int value1, final byte[] lastFieldBytes, final int value2) {
+            final byte[] firstFieldBytes,
+            final char[] firstFieldChars,
+            final int value1,
+            final byte[] lastFieldBytes,
+            final char[] lastFieldChars,
+            final int value2) {
         byte[] bs1 = firstFieldBytes;
         byte[] bs2 = (value1 >= 0 && value1 < TENTHOUSAND_MAX)
                 ? TENTHOUSAND_BYTES[value1]
@@ -466,6 +466,14 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
                     bytes[curr++] = '\\';
                     bytes[curr++] = 'r';
                     break;
+                case '\f':
+                    bytes[curr++] = '\\';
+                    bytes[curr++] = 'f';
+                    break;
+                case '\b':
+                    bytes[curr++] = '\\';
+                    bytes[curr++] = 'b';
+                    break;
                 case '\t':
                     bytes[curr++] = '\\';
                     bytes[curr++] = 't';
@@ -474,9 +482,9 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
                     bytes[curr++] = '\\';
                     bytes[curr++] = '\\';
                     break;
-                case '"':
+                case BYTE_DQUOTE:
                     bytes[curr++] = '\\';
-                    bytes[curr++] = '"';
+                    bytes[curr++] = BYTE_DQUOTE;
                     break;
                 default:
                     if (ch < 0x80) {
@@ -521,7 +529,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             if (b2 == 0 && b >= 0) {
                 if (b == BYTE_DQUOTE) {
                     bytes[curr++] = '\\';
-                    bytes[curr++] = '"';
+                    bytes[curr++] = BYTE_DQUOTE;
                 } else if (b == '\\') {
                     bytes[curr++] = '\\';
                     bytes[curr++] = '\\';
@@ -583,14 +591,14 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         count = curr;
     }
 
-    private static final char MIN_LOW_SURROGATE = '\uDC00';
-    private static final char MAX_LOW_SURROGATE = '\uDFFF';
-    private static final char MIN_HIGH_SURROGATE = '\uD800';
-    private static final char MAX_HIGH_SURROGATE = '\uDBFF';
-    private static final int MIN_SUPPLEMENTARY_CODE_POINT = 0x010000;
-    private static final char MAX_LOW_SURROGATE_MORE = MAX_LOW_SURROGATE + 1;
-    private static final char MAX_HIGH_SURROGATE_MORE = MAX_HIGH_SURROGATE + 1;
-    private static final int MIN_SUPPLEMENTARY_CODE_POINT_MORE =
+    static final char MIN_LOW_SURROGATE = '\uDC00';
+    static final char MAX_LOW_SURROGATE = '\uDFFF';
+    static final char MIN_HIGH_SURROGATE = '\uD800';
+    static final char MAX_HIGH_SURROGATE = '\uDBFF';
+    static final int MIN_SUPPLEMENTARY_CODE_POINT = 0x010000;
+    static final char MAX_LOW_SURROGATE_MORE = MAX_LOW_SURROGATE + 1;
+    static final char MAX_HIGH_SURROGATE_MORE = MAX_HIGH_SURROGATE + 1;
+    static final int MIN_SUPPLEMENTARY_CODE_POINT_MORE =
             (MIN_SUPPLEMENTARY_CODE_POINT - (MIN_HIGH_SURROGATE << 10) - MIN_LOW_SURROGATE);
 
     private void writeEscapeLatinString(final boolean quote, byte[] value) {
@@ -602,7 +610,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         for (byte b : value) {
             if (b == BYTE_DQUOTE) {
                 bytes[curr++] = '\\';
-                bytes[curr++] = '"';
+                bytes[curr++] = BYTE_DQUOTE;
             } else if (b == '\\') {
                 bytes[curr++] = '\\';
                 bytes[curr++] = '\\';

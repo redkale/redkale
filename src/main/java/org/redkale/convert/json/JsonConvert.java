@@ -31,6 +31,8 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     private final ThreadLocal<JsonBytesWriter> bytesWriterPool = Utility.withInitialThreadLocal(JsonBytesWriter::new);
 
+    private final ThreadLocal<JsonCharsWriter> charsWriterPool = Utility.withInitialThreadLocal(JsonCharsWriter::new);
+
     private final Consumer<JsonBytesWriter> offerBytesConsumer = this::offerJsonBytesWriter;
 
     private final ThreadLocal<JsonReader> readerPool = Utility.withInitialThreadLocal(JsonReader::new);
@@ -138,6 +140,22 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         }
     }
 
+    private JsonCharsWriter pollJsonCharsWriter() {
+        JsonCharsWriter writer = charsWriterPool.get();
+        if (writer == null) {
+            writer = new JsonCharsWriter();
+        } else {
+            charsWriterPool.set(null);
+        }
+        return configWrite((JsonCharsWriter) writer.withFeatures(features));
+    }
+
+    private void offerJsonCharsWriter(final JsonCharsWriter writer) {
+        if (writer != null) {
+            writer.recycle();
+            charsWriterPool.set(writer);
+        }
+    }
     // ------------------------------ convertFrom -----------------------------------------------------------
     @Override
     public <T> T convertFrom(final Type type, final byte[] bytes) {
@@ -305,7 +323,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         if (value == null) {
             return "null";
         }
-        JsonBytesWriter writer = pollJsonBytesWriter();
+        JsonCharsWriter writer = pollJsonCharsWriter();
         final Type t = type == null ? value.getClass() : type;
         Encodeable encoder = this.lastConvertEncodeable;
         if (encoder == null || encoder.getType() != t) {
@@ -318,7 +336,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         encoder.convertTo(writer, value);
 
         String result = writer.toString();
-        offerJsonBytesWriter(writer);
+        offerJsonCharsWriter(writer);
         return result;
     }
 

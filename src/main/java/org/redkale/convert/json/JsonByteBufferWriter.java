@@ -348,7 +348,7 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override
-    public void writeFieldShortValue(final byte[] fieldBytes, final short value) {
+    public void writeFieldShortValue(final byte[] fieldBytes, final char[] fieldChars, final short value) {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = Utility.latin1ByteArray(String.valueOf(value));
         int expandsize = expand(bs1.length + bs2.length);
@@ -374,7 +374,7 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override
-    public void writeFieldIntValue(final byte[] fieldBytes, final int value) {
+    public void writeFieldIntValue(final byte[] fieldBytes, final char[] fieldChars, final int value) {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = Utility.latin1ByteArray(String.valueOf(value));
         int expandsize = expand(bs1.length + bs2.length);
@@ -400,7 +400,7 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override
-    public void writeFieldLongValue(final byte[] fieldBytes, final long value) {
+    public void writeFieldLongValue(final byte[] fieldBytes, final char[] fieldChars, final long value) {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = Utility.latin1ByteArray(String.valueOf(value));
         int expandsize = expand(bs1.length + bs2.length);
@@ -426,7 +426,7 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override
-    public void writeFieldLatin1Value(final byte[] fieldBytes, final String value) {
+    public void writeFieldLatin1Value(final byte[] fieldBytes, final char[] fieldChars, final String value) {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = Utility.latin1ByteArray(value);
         int expandsize = expand(bs1.length + bs2.length + 2);
@@ -466,7 +466,7 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override
-    public void writeLastFieldShortValue(final byte[] fieldBytes, final short value) {
+    public void writeLastFieldShortValue(final byte[] fieldBytes, final char[] fieldChars, final short value) {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = Utility.latin1ByteArray(String.valueOf(value));
         int expandsize = expand(bs1.length + bs2.length + 1);
@@ -499,7 +499,7 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override
-    public void writeLastFieldIntValue(final byte[] fieldBytes, final int value) {
+    public void writeLastFieldIntValue(final byte[] fieldBytes, final char[] fieldChars, final int value) {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = Utility.latin1ByteArray(String.valueOf(value));
         int expandsize = expand(bs1.length + bs2.length + 1);
@@ -532,7 +532,7 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override
-    public void writeLastFieldLongValue(final byte[] fieldBytes, final long value) {
+    public void writeLastFieldLongValue(final byte[] fieldBytes, final char[] fieldChars, final long value) {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = Utility.latin1ByteArray(String.valueOf(value));
         int expandsize = expand(bs1.length + bs2.length + 1);
@@ -565,7 +565,7 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override
-    public void writeLastFieldLatin1Value(final byte[] fieldBytes, final String value) {
+    public void writeLastFieldLatin1Value(final byte[] fieldBytes, final char[] fieldChars, final String value) {
         if (value == null && nullable()) {
             writeTo(fieldBytes);
             writeNull();
@@ -623,7 +623,8 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override // firstFieldBytes 必须带{开头
-    public void writeObjectByOnlyOneLatin1FieldValue(final byte[] firstFieldBytes, final String value) {
+    public void writeObjectByOnlyOneLatin1FieldValue(
+            final byte[] firstFieldBytes, final char[] firstFieldChars, final String value) {
         if (value == null && nullable()) {
             writeTo('{');
             writeTo(firstFieldBytes);
@@ -692,7 +693,12 @@ public class JsonByteBufferWriter extends JsonWriter {
 
     @Override // firstFieldBytes 必须带{开头, lastFieldBytes必须,开头
     public void writeObjectByOnlyTwoIntFieldValue(
-            final byte[] firstFieldBytes, final int value1, final byte[] lastFieldBytes, final int value2) {
+            final byte[] firstFieldBytes,
+            final char[] firstFieldChars,
+            final int value1,
+            final byte[] lastFieldBytes,
+            final char[] lastFieldChars,
+            final int value2) {
         byte[] bs1 = firstFieldBytes;
         byte[] bs2 = Utility.latin1ByteArray(String.valueOf(value1));
         byte[] bs3 = lastFieldBytes;
