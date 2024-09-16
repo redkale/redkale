@@ -25,7 +25,7 @@ public class ScheduledTest {
         System.out.println("开始执行");
         Utility.sleep(2000);
         manager.stop("task2");
-        Utility.sleep(1010);
+        Utility.sleep(1001);
         manager.unschedule(service);
         manager.destroy(null);
         Assertions.assertEquals(3, service.count1.get());

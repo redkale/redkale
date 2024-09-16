@@ -22,6 +22,22 @@ public abstract class JsonWriter extends Writer {
             "redkale.convert.json.writer.buffer.defsize",
             Integer.getInteger("redkale.convert.writer.buffer.defsize", 1024));
 
+    private static final char[] CHARS_NULL = new char[] {'n', 'u', 'l', 'l'};
+
+    protected static final byte BYTE_COMMA = ',';
+
+    protected static final byte BYTE_COLON = ':';
+
+    protected static final byte BYTE_LBRACE = '{';
+
+    protected static final byte BYTE_RBRACE = '}';
+
+    protected static final byte BYTE_LBRACKET = '[';
+
+    protected static final byte BYTE_RBRACKET = ']';
+
+    protected static final byte BYTE_DQUOTE = '"';
+
     protected JsonWriter() {
         this.features = JsonFactory.root().getFeatures();
     }
@@ -108,13 +124,13 @@ public abstract class JsonWriter extends Writer {
     @Override // 只容许JsonBytesWriter重写此方法
     public void writeFieldName(EnMember member, String fieldName, Type fieldType, int fieldPos) {
         if (this.comma) {
-            writeTo(',');
+            writeTo(BYTE_COMMA);
         }
         if (member != null) {
             writeTo(member.getJsonFieldNameChars());
         } else {
             writeLatin1To(true, fieldName);
-            writeTo(':');
+            writeTo(BYTE_COLON);
         }
     }
 
@@ -186,52 +202,52 @@ public abstract class JsonWriter extends Writer {
     @Override
     public final int writeObjectB(Object obj) {
         super.writeObjectB(obj);
-        writeTo('{');
+        writeTo(BYTE_LBRACE);
         return -1;
     }
 
     @Override
     public final void writeObjectE(Object obj) {
-        writeTo('}');
+        writeTo(BYTE_RBRACE);
     }
 
     @Override
-    public final void writeNull() {
-        writeTo('n', 'u', 'l', 'l');
+    public void writeNull() {
+        writeTo(CHARS_NULL);
     }
 
     @Override
     public final int writeArrayB(
             int size, Encodeable arrayEncoder, Encodeable<Writer, Object> componentEncoder, Object obj) {
-        writeTo('[');
+        writeTo(BYTE_LBRACKET);
         return -1;
     }
 
     @Override
     public final void writeArrayMark() {
-        writeTo(',');
+        writeTo(BYTE_COMMA);
     }
 
     @Override
     public final void writeArrayE() {
-        writeTo(']');
+        writeTo(BYTE_RBRACKET);
     }
 
     @Override
     public final int writeMapB(
             int size, Encodeable<Writer, Object> keyEncoder, Encodeable<Writer, Object> valueEncoder, Object obj) {
-        writeTo('{');
+        writeTo(BYTE_LBRACE);
         return -1;
     }
 
     @Override
     public final void writeMapMark() {
-        writeTo(':');
+        writeTo(BYTE_COLON);
     }
 
     @Override
     public final void writeMapE() {
-        writeTo('}');
+        writeTo(BYTE_RBRACE);
     }
 
     static final char[] DigitTens = {

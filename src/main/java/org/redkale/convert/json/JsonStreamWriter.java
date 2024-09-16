@@ -37,6 +37,15 @@ class JsonStreamWriter extends JsonByteBufferWriter {
     }
 
     @Override
+    public void writeTo(final byte ch) {
+        try {
+            out.write(ch);
+        } catch (IOException e) {
+            throw new ConvertException(e);
+        }
+    }
+
+    @Override
     public void writeTo(final char ch) {
         if (ch > Byte.MAX_VALUE) {
             throw new ConvertException("writeTo char(int.value = " + (int) ch + ") must be less 127");

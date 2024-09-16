@@ -5,12 +5,11 @@
  */
 package org.redkale.convert.json;
 
-import static org.redkale.convert.json.JsonWriter.*;
-
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
 import org.redkale.convert.*;
+import static org.redkale.convert.json.JsonWriter.*;
 import org.redkale.util.*;
 
 /**
@@ -26,6 +25,8 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     private static final byte[] BYTES_TUREVALUE = "true".getBytes();
 
     private static final byte[] BYTES_FALSEVALUE = "false".getBytes();
+
+    private static final byte[] BYTES_NULL = new byte[] {'n', 'u', 'l', 'l'};
 
     private static final int TENTHOUSAND_MAX = 10001;
 
@@ -106,9 +107,14 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     }
 
     @Override
+    public void writeNull() {
+        writeTo(BYTES_NULL);
+    }
+
+    @Override
     public final void writeFieldName(EnMember member, String fieldName, Type fieldType, int fieldPos) {
         if (this.comma) {
-            writeTo(',');
+            writeTo(BYTE_COMMA);
         }
         if (member != null) {
             byte[] bs = member.getJsonFieldNameBytes();
@@ -117,7 +123,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             count += bs.length;
         } else {
             writeLatin1To(true, fieldName);
-            writeTo(':');
+            writeTo(BYTE_COLON);
         }
     }
 
@@ -165,10 +171,10 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         int len = bs.length;
         if (quote) {
             byte[] src = expand(len + 2);
-            src[count++] = '"';
+            src[count++] = BYTE_DQUOTE;
             System.arraycopy(bs, 0, src, count, bs.length);
             count += len;
-            src[count++] = '"';
+            src[count++] = BYTE_DQUOTE;
         } else {
             byte[] src = expand(len);
             System.arraycopy(bs, 0, src, count, bs.length);
@@ -230,10 +236,10 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         byte[] src = expand(len1 + len2 + 2);
         System.arraycopy(bs1, 0, src, count, len1);
         count += len1;
-        src[count++] = '"';
+        src[count++] = BYTE_DQUOTE;
         System.arraycopy(bs2, 0, src, count, len2);
         count += len2;
-        src[count++] = '"';
+        src[count++] = BYTE_DQUOTE;
     }
 
     @Override
@@ -249,7 +255,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         count += len1;
         System.arraycopy(bs2, 0, src, count, len2);
         count += len2;
-        src[count++] = '}';
+        src[count++] = BYTE_RBRACE;
     }
 
     @Override
@@ -265,7 +271,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         count += len1;
         System.arraycopy(bs2, 0, src, count, len2);
         count += len2;
-        src[count++] = '}';
+        src[count++] = BYTE_RBRACE;
     }
 
     @Override
@@ -281,7 +287,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         count += len1;
         System.arraycopy(bs2, 0, src, count, len2);
         count += len2;
-        src[count++] = '}';
+        src[count++] = BYTE_RBRACE;
     }
 
     @Override
@@ -289,12 +295,12 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         if (value == null && nullable()) {
             writeTo(fieldBytes);
             writeNull();
-            writeTo('}');
+            writeTo(BYTE_RBRACE);
             return;
         }
         if (value == null || (tiny() && value.isEmpty())) {
             expand(1);
-            content[count++] = '}';
+            content[count++] = BYTE_RBRACE;
         } else {
             byte[] bs1 = fieldBytes;
             byte[] bs2 = Utility.latin1ByteArray(value);
@@ -304,11 +310,11 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             int c = count;
             System.arraycopy(bs1, 0, src, c, len1);
             c += len1;
-            src[c++] = '"';
+            src[c++] = BYTE_DQUOTE;
             System.arraycopy(bs2, 0, src, c, len2);
             c += len2;
-            src[c++] = '"';
-            src[c++] = '}';
+            src[c++] = BYTE_DQUOTE;
+            src[c++] = BYTE_RBRACE;
             count = c;
         }
     }
@@ -316,16 +322,16 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     @Override // firstFieldBytes 必须带{开头
     public void writeObjectByOnlyOneLatin1FieldValue(final byte[] firstFieldBytes, final String value) {
         if (value == null && nullable()) {
-            writeTo('{');
+            writeTo(BYTE_LBRACE);
             writeTo(firstFieldBytes);
             writeNull();
-            writeTo('}');
+            writeTo(BYTE_RBRACE);
             return;
         }
         if (value == null || (tiny() && value.isEmpty())) {
             expand(2);
-            content[count++] = '{';
-            content[count++] = '}';
+            content[count++] = BYTE_LBRACE;
+            content[count++] = BYTE_RBRACE;
         } else {
             byte[] bs1 = firstFieldBytes;
             byte[] bs2 = Utility.latin1ByteArray(value);
@@ -335,11 +341,11 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             int c = count;
             System.arraycopy(bs1, 0, src, c, len1);
             c += len1;
-            src[c++] = '"';
+            src[c++] = BYTE_DQUOTE;
             System.arraycopy(bs2, 0, src, c, len2);
             c += len2;
-            src[c++] = '"';
-            src[c++] = '}';
+            src[c++] = BYTE_DQUOTE;
+            src[c++] = BYTE_RBRACE;
             count = c;
         }
     }
@@ -368,7 +374,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         count += len3;
         System.arraycopy(bs4, 0, src, count, len4);
         count += len4;
-        src[count++] = '}';
+        src[count++] = BYTE_RBRACE;
     }
 
     public JsonBytesWriter clear() {
@@ -403,7 +409,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         byte[] bytes = expand(value.length * 2 + 2);
         int curr = count;
         if (quote) {
-            bytes[curr++] = '"';
+            bytes[curr++] = BYTE_DQUOTE;
         }
         for (byte b : value) {
             if (b == '"') {
@@ -430,7 +436,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             }
         }
         if (quote) {
-            bytes[curr++] = '"';
+            bytes[curr++] = BYTE_DQUOTE;
         }
         count = curr;
     }
@@ -453,7 +459,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         byte[] bytes = expand(value.length() * 4 + 2);
         int curr = count;
         if (quote) {
-            bytes[curr++] = '"';
+            bytes[curr++] = BYTE_DQUOTE;
         }
         int len = value.length();
         for (int i = 0; i < len; i++) {
@@ -500,7 +506,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             }
         }
         if (quote) {
-            bytes[curr++] = '"';
+            bytes[curr++] = BYTE_DQUOTE;
         }
         count = curr;
     }

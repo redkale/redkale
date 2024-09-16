@@ -176,10 +176,6 @@ public class HttpRequest extends Request<HttpContext> {
     // 主要给chunked和unzip用的
     private ByteArray array;
 
-    private String lastPathString;
-
-    private byte[] lastPathBytes;
-
     private final ByteArray bodyBytes;
 
     private final ByteArray headerBytes;
@@ -784,8 +780,6 @@ public class HttpRequest extends Request<HttpContext> {
                         : context.loadUriPath(bytes, qst, latin1, charset);
                 int qlen = size - qst - 1;
                 this.queryBytes = bytes.getBytes(qst + 1, qlen);
-                this.lastPathString = null;
-                this.lastPathBytes = null;
                 try {
                     addParameter(bytes, false, qst + 1, qlen);
                 } catch (Exception e) {
@@ -796,21 +790,8 @@ public class HttpRequest extends Request<HttpContext> {
             } else { // 没有带?参数
                 if (decodeable) { // 需要转义
                     this.requestPath = toDecodeString(bytes, 0, bytes.length(), charset);
-                    this.lastPathString = null;
-                    this.lastPathBytes = null;
-                } else if (context.lazyHeader) {
-                    byte[] lastURIBytes = lastPathBytes;
-                    if (lastURIBytes != null && lastURIBytes.length == size && bytes.deepEquals(lastURIBytes)) {
-                        this.requestPath = this.lastPathString;
-                    } else {
-                        this.requestPath = context.loadUriPath(bytes, latin1, charset);
-                        this.lastPathString = this.requestPath;
-                        this.lastPathBytes = bytes.getBytes();
-                    }
                 } else {
                     this.requestPath = context.loadUriPath(bytes, latin1, charset);
-                    this.lastPathString = null;
-                    this.lastPathBytes = null;
                 }
                 this.queryBytes = EMPTY_BYTES;
             }

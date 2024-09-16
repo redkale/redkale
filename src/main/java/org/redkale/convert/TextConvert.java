@@ -29,9 +29,24 @@ public abstract class TextConvert<R extends Reader, W extends Writer> extends Co
 
     public abstract <T> T convertFrom(final Type type, final String text);
 
+    /**
+     * 序列化
+     *
+     * @see org.redkale.convert.json.JsonConvert#convertTo(java.lang.reflect.Type, java.lang.Object)
+     * @param value Object
+     * @return String
+     */
     public final String convertTo(final Object value) {
         return convertTo((Type) null, value);
     }
 
+    /**
+     * 序列化
+     *
+     * @see org.redkale.convert.json.JsonConvert#convertTo(java.lang.reflect.Type, java.lang.Object)
+     * @param type Type
+     * @param value Object
+     * @return String
+     */
     public abstract String convertTo(final Type type, final Object value);
 }
