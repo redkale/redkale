@@ -314,10 +314,11 @@ public final class Utility {
                             StringBuilder.class.getSuperclass().getDeclaredField("value"));
                     final long fd3 = unsafe0.objectFieldOffset(String.class.getDeclaredField("coder"));
                     final long fd4 = unsafe0.objectFieldOffset(Buffer.class.getDeclaredField("address"));
-
+                    Field cf = String.class.getDeclaredField("COMPACT_STRINGS");
+                    final boolean compact = unsafe.getBoolean(String.class, unsafe0.staticFieldOffset(cf));
                     strByteFunction0 = (Object t) -> unsafe.getObject(t, fd1);
                     sbByteFunction0 = (Object t) -> unsafe.getObject(t, fd2);
-                    strLatin1Function0 = (Object t) -> unsafe.getByte(t, fd3) == 0; // LATIN1:0  UTF16:1
+                    strLatin1Function0 = (Object t) -> compact && unsafe.getByte(t, fd3) == 0; // LATIN1:0  UTF16:1
                     bufferAddrFunction0 = (Object t) -> unsafe.getLong(t, fd4);
                 }
                 { // signalShutdown

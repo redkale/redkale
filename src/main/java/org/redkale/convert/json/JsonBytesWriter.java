@@ -519,7 +519,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             byte b2 = src[i + 1];
             i += 2;
             if (b2 == 0 && b >= 0) {
-                if (b == '"') {
+                if (b == BYTE_DQUOTE) {
                     bytes[curr++] = '\\';
                     bytes[curr++] = '"';
                 } else if (b == '\\') {
@@ -552,12 +552,12 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
                 if (c < 0x800) {
                     bytes[curr++] = (byte) (0xc0 | (c >> 6));
                     bytes[curr++] = (byte) (0x80 | (c & 0x3f));
-                } else if (Character.isSurrogate(c)) {
+                } else if (c >= MIN_HIGH_SURROGATE && c < MAX_LOW_SURROGATE_MORE) { // Character.isSurrogate(c)
                     int uc = -1;
-                    if (Character.isHighSurrogate(c) && i < len) {
+                    if (c < MAX_HIGH_SURROGATE_MORE && i < len) { // Character.isHighSurrogate(c)
                         char c2 = (char) ((src[i] & 0xff) | ((src[i + 1] & 0xff) << 8));
-                        if (Character.isLowSurrogate(c2)) {
-                            uc = Character.toCodePoint(c, c2);
+                        if (c2 >= MIN_LOW_SURROGATE && c2 < MAX_LOW_SURROGATE_MORE) { // Character.isLowSurrogate(c2)
+                            uc = (c << 10) + c2 + MIN_SUPPLEMENTARY_CODE_POINT_MORE;
                         }
                     }
                     if (uc < 0) {
@@ -583,6 +583,16 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         count = curr;
     }
 
+    private static final char MIN_LOW_SURROGATE = '\uDC00';
+    private static final char MAX_LOW_SURROGATE = '\uDFFF';
+    private static final char MIN_HIGH_SURROGATE = '\uD800';
+    private static final char MAX_HIGH_SURROGATE = '\uDBFF';
+    private static final int MIN_SUPPLEMENTARY_CODE_POINT = 0x010000;
+    private static final char MAX_LOW_SURROGATE_MORE = MAX_LOW_SURROGATE + 1;
+    private static final char MAX_HIGH_SURROGATE_MORE = MAX_HIGH_SURROGATE + 1;
+    private static final int MIN_SUPPLEMENTARY_CODE_POINT_MORE =
+            (MIN_SUPPLEMENTARY_CODE_POINT - (MIN_HIGH_SURROGATE << 10) - MIN_LOW_SURROGATE);
+
     private void writeEscapeLatinString(final boolean quote, byte[] value) {
         byte[] bytes = expand(value.length * 2 + 2);
         int curr = count;
@@ -590,7 +600,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             bytes[curr++] = BYTE_DQUOTE;
         }
         for (byte b : value) {
-            if (b == '"') {
+            if (b == BYTE_DQUOTE) {
                 bytes[curr++] = '\\';
                 bytes[curr++] = '"';
             } else if (b == '\\') {
@@ -667,7 +677,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return new String(content, 0, count, StandardCharsets.UTF_8);
     }
 
