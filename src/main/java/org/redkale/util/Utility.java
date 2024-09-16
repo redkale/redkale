@@ -114,10 +114,6 @@ public final class Utility {
 
     private static final Function<Object, Object> sbByteFunction;
 
-    private static final Function<Object, Object> strCharFunction;
-
-    private static final Function<Object, Object> sbCharFunction;
-
     private static final Predicate<Object> strLatin1Function;
 
     private static final ToLongFunction<Object> bufferAddrFunction;
@@ -146,8 +142,6 @@ public final class Utility {
                 .setRemoveOnCancelPolicy(true);
 
         Unsafe unsafe0 = null;
-        Function<Object, Object> strCharFunction0 = null;
-        Function<Object, Object> sbCharFunction0 = null;
         Function<Object, Object> strByteFunction0 = null;
         Function<Object, Object> sbByteFunction0 = null;
         Predicate<Object> strLatin1Function0 = null;
@@ -352,8 +346,6 @@ public final class Utility {
             }
         }
         unsafeInstance = unsafe0;
-        strCharFunction = strCharFunction0;
-        sbCharFunction = sbCharFunction0;
         strByteFunction = strByteFunction0;
         sbByteFunction = sbByteFunction0;
         strLatin1Function = strLatin1Function0;
@@ -4849,10 +4841,7 @@ public final class Utility {
         if (value == null) {
             return new byte[0];
         }
-        if (strCharFunction == null) {
-            return encodeUTF8(value.toCharArray());
-        }
-        return encodeUTF8((char[]) strCharFunction.apply(value));
+        return encodeUTF8(value.toCharArray());
     }
 
     public static byte[] encodeUTF8(final char[] array) {
@@ -4921,24 +4910,25 @@ public final class Utility {
         return true;
     }
 
+    public static byte[] byteUTF16Array(String value) {
+        if (value == null || strByteFunction == null) {
+            return null;
+        }
+        return (byte[]) strByteFunction.apply(value);
+    }
+
     public static char[] charArray(String value) {
         if (value == null) {
             return null;
         }
-        if (strCharFunction == null) {
-            return value.toCharArray();
-        }
-        return (char[]) strCharFunction.apply(value);
+        return value.toCharArray();
     }
 
     public static char[] charArray(StringBuilder value) {
         if (value == null) {
             return null;
         }
-        if (sbCharFunction == null) {
-            return value.toString().toCharArray();
-        }
-        return (char[]) sbCharFunction.apply(value);
+        return value.toString().toCharArray();
     }
 
     // 只能是单字节字符串
@@ -4975,10 +4965,7 @@ public final class Utility {
         if (value == null) {
             return -1;
         }
-        if (strCharFunction == null) {
-            return encodeUTF8Length(value.toCharArray());
-        }
-        return encodeUTF8Length((char[]) strCharFunction.apply(value));
+        return encodeUTF8Length(value.toCharArray());
     }
 
     public static int encodeUTF8Length(final char[] text) {

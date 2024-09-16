@@ -7,6 +7,11 @@ package org.redkale.convert.json;
 
 import java.lang.reflect.*;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import org.redkale.asm.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
@@ -51,6 +56,48 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
             return true;
         }
         if (clazz.isEnum()) {
+            return true;
+        }
+        if (type == Boolean.class) {
+            return true;
+        }
+        if (type == Byte.class) {
+            return true;
+        }
+        if (type == Short.class) {
+            return true;
+        }
+        if (type == Character.class) {
+            return true;
+        }
+        if (type == Integer.class) {
+            return true;
+        }
+        if (type == Float.class) {
+            return true;
+        }
+        if (type == Long.class) {
+            return true;
+        }
+        if (type == Double.class) {
+            return true;
+        }
+        if (type == BigInteger.class) {
+            return true;
+        }
+        if (type == BigDecimal.class) {
+            return true;
+        }
+        if (type == LocalDate.class) {
+            return true;
+        }
+        if (type == LocalTime.class) {
+            return true;
+        }
+        if (type == LocalDateTime.class) {
+            return true;
+        }
+        if (type == java.util.Date.class) {
             return true;
         }
         if (type == boolean[].class) {
@@ -121,6 +168,12 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                         || t == Long.class
                         || t == Double.class
                         || t == String.class
+                        || t == BigInteger.class
+                        || t == BigDecimal.class
+                        || t == LocalDate.class
+                        || t == LocalTime.class
+                        || t == LocalDateTime.class
+                        || t == java.util.Date.class
                         || ((t instanceof Class) && ((Class) t).isEnum())) {
                     return true;
                 }

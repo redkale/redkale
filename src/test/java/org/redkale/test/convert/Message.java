@@ -73,15 +73,15 @@ public final class Message {
         longs.add(2222L);
         longs.add(3333L);
         msg.longs = longs;
-        msg.ints = new int[] {2, 3, 4};
+        msg.ints = new int[] {-2, 3, 4};
         JsonConvert convert = JsonFactory.root().getConvert();
         Encodeable encoder = JsonFactory.root().loadEncoder(Message.class);
         System.out.println(encoder);
         ByteArray array = new ByteArray();
         array.put("数据: ".getBytes(StandardCharsets.UTF_8));
-        JsonConvert.root().convertToBytes(array, msg);
+        convert.convertToBytes(array, msg);
         System.out.println(array);
         Message[] mss = new Message[] {msg};
-        System.out.println(JsonConvert.root().convertTo(mss));
+        System.out.println(convert.convertTo(mss));
     }
 }

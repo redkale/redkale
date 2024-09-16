@@ -38,6 +38,14 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         }
     }
 
+    private static final byte[][] TENTHOUSAND_BYTES2 = new byte[TENTHOUSAND_MAX][];
+
+    static {
+        for (int i = 0; i < TENTHOUSAND_BYTES2.length; i++) {
+            TENTHOUSAND_BYTES2[i] = String.valueOf(-i).getBytes();
+        }
+    }
+
     private int count;
 
     private byte[] content;
@@ -186,8 +194,10 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     public void writeFieldShortValue(final byte[] fieldBytes, final short value) {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = (value >= 0 && value < TENTHOUSAND_MAX)
-                ? TENTHOUSAND_BYTES[(int) value]
-                : Utility.latin1ByteArray(String.valueOf(value));
+                ? TENTHOUSAND_BYTES[value]
+                : ((value < 0 && value > -TENTHOUSAND_MAX)
+                        ? TENTHOUSAND_BYTES2[-value]
+                        : Utility.latin1ByteArray(String.valueOf(value)));
         int len1 = bs1.length;
         int len2 = bs2.length;
         byte[] src = expand(len1 + len2);
@@ -202,7 +212,9 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = (value >= 0 && value < TENTHOUSAND_MAX)
                 ? TENTHOUSAND_BYTES[value]
-                : Utility.latin1ByteArray(String.valueOf(value));
+                : ((value < 0 && value > -TENTHOUSAND_MAX)
+                        ? TENTHOUSAND_BYTES2[-value]
+                        : Utility.latin1ByteArray(String.valueOf(value)));
         int len1 = bs1.length;
         int len2 = bs2.length;
         byte[] src = expand(len1 + len2);
@@ -217,7 +229,9 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = (value >= 0 && value < TENTHOUSAND_MAX)
                 ? TENTHOUSAND_BYTES[(int) value]
-                : Utility.latin1ByteArray(String.valueOf(value));
+                : ((value < 0 && value > -TENTHOUSAND_MAX)
+                        ? TENTHOUSAND_BYTES2[(int) -value]
+                        : Utility.latin1ByteArray(String.valueOf(value)));
         int len1 = bs1.length;
         int len2 = bs2.length;
         byte[] src = expand(len1 + len2);
@@ -246,8 +260,10 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     public void writeLastFieldShortValue(final byte[] fieldBytes, final short value) {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = (value >= 0 && value < TENTHOUSAND_MAX)
-                ? TENTHOUSAND_BYTES[(int) value]
-                : Utility.latin1ByteArray(String.valueOf(value));
+                ? TENTHOUSAND_BYTES[value]
+                : ((value < 0 && value > -TENTHOUSAND_MAX)
+                        ? TENTHOUSAND_BYTES2[-value]
+                        : Utility.latin1ByteArray(String.valueOf(value)));
         int len1 = bs1.length;
         int len2 = bs2.length;
         byte[] src = expand(len1 + len2 + 1);
@@ -263,7 +279,9 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = (value >= 0 && value < TENTHOUSAND_MAX)
                 ? TENTHOUSAND_BYTES[value]
-                : Utility.latin1ByteArray(String.valueOf(value));
+                : ((value < 0 && value > -TENTHOUSAND_MAX)
+                        ? TENTHOUSAND_BYTES2[-value]
+                        : Utility.latin1ByteArray(String.valueOf(value)));
         int len1 = bs1.length;
         int len2 = bs2.length;
         byte[] src = expand(len1 + len2 + 1);
@@ -279,7 +297,9 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         byte[] bs1 = fieldBytes;
         byte[] bs2 = (value >= 0 && value < TENTHOUSAND_MAX)
                 ? TENTHOUSAND_BYTES[(int) value]
-                : Utility.latin1ByteArray(String.valueOf(value));
+                : ((value < 0 && value > -TENTHOUSAND_MAX)
+                        ? TENTHOUSAND_BYTES2[(int) -value]
+                        : Utility.latin1ByteArray(String.valueOf(value)));
         int len1 = bs1.length;
         int len2 = bs2.length;
         byte[] src = expand(len1 + len2 + 1);
@@ -356,11 +376,15 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         byte[] bs1 = firstFieldBytes;
         byte[] bs2 = (value1 >= 0 && value1 < TENTHOUSAND_MAX)
                 ? TENTHOUSAND_BYTES[value1]
-                : Utility.latin1ByteArray(String.valueOf(value1));
+                : ((value1 < 0 && value1 > -TENTHOUSAND_MAX)
+                        ? TENTHOUSAND_BYTES2[-value1]
+                        : Utility.latin1ByteArray(String.valueOf(value1)));
         byte[] bs3 = lastFieldBytes;
         byte[] bs4 = (value2 >= 0 && value2 < TENTHOUSAND_MAX)
                 ? TENTHOUSAND_BYTES[value2]
-                : Utility.latin1ByteArray(String.valueOf(value2));
+                : ((value2 < 0 && value2 > -TENTHOUSAND_MAX)
+                        ? TENTHOUSAND_BYTES2[-value2]
+                        : Utility.latin1ByteArray(String.valueOf(value2)));
         int len1 = bs1.length;
         int len2 = bs2.length;
         int len3 = bs3.length;
@@ -405,42 +429,6 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         return this.count;
     }
 
-    private void writeEscapeLatinString(final boolean quote, byte[] value) {
-        byte[] bytes = expand(value.length * 2 + 2);
-        int curr = count;
-        if (quote) {
-            bytes[curr++] = BYTE_DQUOTE;
-        }
-        for (byte b : value) {
-            if (b == '"') {
-                bytes[curr++] = '\\';
-                bytes[curr++] = '"';
-            } else if (b == '\\') {
-                bytes[curr++] = '\\';
-                bytes[curr++] = '\\';
-            } else if (b < 32) {
-                if (b == '\n') {
-                    bytes[curr++] = '\\';
-                    bytes[curr++] = 'n';
-                } else if (b == '\r') {
-                    bytes[curr++] = '\\';
-                    bytes[curr++] = 'r';
-                } else if (b == '\t') {
-                    bytes[curr++] = '\\';
-                    bytes[curr++] = 't';
-                } else {
-                    bytes[curr++] = b;
-                }
-            } else {
-                bytes[curr++] = b;
-            }
-        }
-        if (quote) {
-            bytes[curr++] = BYTE_DQUOTE;
-        }
-        count = curr;
-    }
-
     @Override
     public void writeString(String value) {
         writeString(true, value);
@@ -456,12 +444,17 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             writeEscapeLatinString(quote, Utility.latin1ByteArray(value));
             return;
         }
-        byte[] bytes = expand(value.length() * 4 + 2);
+        byte[] utf16s = Utility.byteUTF16Array(value);
+        if (utf16s != null) { // JDK9+
+            writeUTF16String(quote, utf16s);
+            return;
+        }
+        int len = value.length();
+        byte[] bytes = expand(len * 4 + 2);
         int curr = count;
         if (quote) {
             bytes[curr++] = BYTE_DQUOTE;
         }
-        int len = value.length();
         for (int i = 0; i < len; i++) {
             char ch = value.charAt(i);
             switch (ch) {
@@ -493,16 +486,137 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
                         bytes[curr++] = (byte) (0x80 | (ch & 0x3f));
                     } else if (Character.isSurrogate(ch)) { // 连取两个
                         int uc = Character.toCodePoint(ch, value.charAt(++i));
-                        bytes[curr++] = (byte) (0xf0 | ((uc >> 18)));
+                        bytes[curr++] = (byte) (0xf0 | (uc >> 18));
                         bytes[curr++] = (byte) (0x80 | ((uc >> 12) & 0x3f));
                         bytes[curr++] = (byte) (0x80 | ((uc >> 6) & 0x3f));
                         bytes[curr++] = (byte) (0x80 | (uc & 0x3f));
                     } else {
-                        bytes[curr++] = (byte) (0xe0 | ((ch >> 12)));
+                        bytes[curr++] = (byte) (0xe0 | (ch >> 12));
                         bytes[curr++] = (byte) (0x80 | ((ch >> 6) & 0x3f));
                         bytes[curr++] = (byte) (0x80 | (ch & 0x3f));
                     }
                     break;
+            }
+        }
+        if (quote) {
+            bytes[curr++] = BYTE_DQUOTE;
+        }
+        count = curr;
+    }
+
+    // see java.lang.StringCoding.encodeUTF8_UTF16 方法
+    private void writeUTF16String(final boolean quote, byte[] value) {
+        int len = value.length;
+        byte[] bytes = expand(len * 4 + 2);
+        int curr = count;
+        if (quote) {
+            bytes[curr++] = BYTE_DQUOTE;
+        }
+        byte[] src = value;
+        int i = 0;
+        while (i < len) {
+            byte b = src[i];
+            byte b2 = src[i + 1];
+            i += 2;
+            if (b2 == 0 && b >= 0) {
+                if (b == '"') {
+                    bytes[curr++] = '\\';
+                    bytes[curr++] = '"';
+                } else if (b == '\\') {
+                    bytes[curr++] = '\\';
+                    bytes[curr++] = '\\';
+                } else if (b < 32) {
+                    if (b == '\n') {
+                        bytes[curr++] = '\\';
+                        bytes[curr++] = 'n';
+                    } else if (b == '\r') {
+                        bytes[curr++] = '\\';
+                        bytes[curr++] = 'r';
+                    } else if (b == '\f') {
+                        bytes[curr++] = '\\';
+                        bytes[curr++] = 'f';
+                    } else if (b == '\b') {
+                        bytes[curr++] = '\\';
+                        bytes[curr++] = 'b';
+                    } else if (b == '\t') {
+                        bytes[curr++] = '\\';
+                        bytes[curr++] = 't';
+                    } else {
+                        bytes[curr++] = b;
+                    }
+                } else {
+                    bytes[curr++] = b;
+                }
+            } else {
+                char c = (char) ((b & 0xff) | ((b2 & 0xff) << 8));
+                if (c < 0x800) {
+                    bytes[curr++] = (byte) (0xc0 | (c >> 6));
+                    bytes[curr++] = (byte) (0x80 | (c & 0x3f));
+                } else if (Character.isSurrogate(c)) {
+                    int uc = -1;
+                    if (Character.isHighSurrogate(c) && i < len) {
+                        char c2 = (char) ((src[i] & 0xff) | ((src[i + 1] & 0xff) << 8));
+                        if (Character.isLowSurrogate(c2)) {
+                            uc = Character.toCodePoint(c, c2);
+                        }
+                    }
+                    if (uc < 0) {
+                        bytes[curr++] = '?';
+                    } else {
+                        bytes[curr++] = (byte) (0xf0 | (uc >> 18));
+                        bytes[curr++] = (byte) (0x80 | ((uc >> 12) & 0x3f));
+                        bytes[curr++] = (byte) (0x80 | ((uc >> 6) & 0x3f));
+                        bytes[curr++] = (byte) (0x80 | (uc & 0x3f));
+                        i += 2; // 2 chars
+                    }
+                } else {
+                    // 3 bytes, 16 bits
+                    bytes[curr++] = (byte) (0xe0 | (c >> 12));
+                    bytes[curr++] = (byte) (0x80 | ((c >> 6) & 0x3f));
+                    bytes[curr++] = (byte) (0x80 | (c & 0x3f));
+                }
+            }
+        }
+        if (quote) {
+            bytes[curr++] = BYTE_DQUOTE;
+        }
+        count = curr;
+    }
+
+    private void writeEscapeLatinString(final boolean quote, byte[] value) {
+        byte[] bytes = expand(value.length * 2 + 2);
+        int curr = count;
+        if (quote) {
+            bytes[curr++] = BYTE_DQUOTE;
+        }
+        for (byte b : value) {
+            if (b == '"') {
+                bytes[curr++] = '\\';
+                bytes[curr++] = '"';
+            } else if (b == '\\') {
+                bytes[curr++] = '\\';
+                bytes[curr++] = '\\';
+            } else if (b < 32) {
+                if (b == '\n') {
+                    bytes[curr++] = '\\';
+                    bytes[curr++] = 'n';
+                } else if (b == '\r') {
+                    bytes[curr++] = '\\';
+                    bytes[curr++] = 'r';
+                } else if (b == '\f') {
+                    bytes[curr++] = '\\';
+                    bytes[curr++] = 'f';
+                } else if (b == '\b') {
+                    bytes[curr++] = '\\';
+                    bytes[curr++] = 'b';
+                } else if (b == '\t') {
+                    bytes[curr++] = '\\';
+                    bytes[curr++] = 't';
+                } else {
+                    bytes[curr++] = b;
+                }
+            } else {
+                bytes[curr++] = b;
             }
         }
         if (quote) {
@@ -522,6 +636,11 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             writeTo(Utility.latin1ByteArray(value));
             return;
         }
+        byte[] utf16s = Utility.byteUTF16Array(value);
+        if (utf16s != null) { // JDK9+
+            writeUTF16String(false, utf16s);
+            return;
+        }
         byte[] bytes = expand(value.length() * 4 + 2);
         int curr = count;
         int len = value.length();
@@ -534,12 +653,12 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
                 bytes[curr++] = (byte) (0x80 | (ch & 0x3f));
             } else if (Character.isSurrogate(ch)) { // 连取两个
                 int uc = Character.toCodePoint(ch, value.charAt(++i));
-                bytes[curr++] = (byte) (0xf0 | ((uc >> 18)));
+                bytes[curr++] = (byte) (0xf0 | (uc >> 18));
                 bytes[curr++] = (byte) (0x80 | ((uc >> 12) & 0x3f));
                 bytes[curr++] = (byte) (0x80 | ((uc >> 6) & 0x3f));
                 bytes[curr++] = (byte) (0x80 | (uc & 0x3f));
             } else {
-                bytes[curr++] = (byte) (0xe0 | ((ch >> 12)));
+                bytes[curr++] = (byte) (0xe0 | (ch >> 12));
                 bytes[curr++] = (byte) (0x80 | ((ch >> 6) & 0x3f));
                 bytes[curr++] = (byte) (0x80 | (ch & 0x3f));
             }
@@ -565,6 +684,13 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     public void writeInt(int value) {
         if (value >= 0 && value < TENTHOUSAND_MAX) {
             byte[] bs = TENTHOUSAND_BYTES[value];
+            expand(bs.length);
+            System.arraycopy(bs, 0, content, count, bs.length);
+            count += bs.length;
+            return;
+        }
+        if (value < 0 && value > -TENTHOUSAND_MAX) {
+            byte[] bs = TENTHOUSAND_BYTES2[-value];
             expand(bs.length);
             System.arraycopy(bs, 0, content, count, bs.length);
             count += bs.length;
@@ -620,6 +746,13 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     public void writeLong(long value) {
         if (value >= 0 && value < TENTHOUSAND_MAX) {
             byte[] bs = TENTHOUSAND_BYTES[(int) value];
+            expand(bs.length);
+            System.arraycopy(bs, 0, content, count, bs.length);
+            count += bs.length;
+            return;
+        }
+        if (value < 0 && value > -TENTHOUSAND_MAX) {
+            byte[] bs = TENTHOUSAND_BYTES2[(int) -value];
             expand(bs.length);
             System.arraycopy(bs, 0, content, count, bs.length);
             count += bs.length;
