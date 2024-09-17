@@ -5,11 +5,14 @@
  */
 package org.redkale.test.convert;
 
+import java.lang.reflect.Type;
 import java.util.*;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.Convert;
 import org.redkale.convert.ConvertSmallString;
+import org.redkale.convert.Decodeable;
 import org.redkale.convert.json.*;
+import org.redkale.util.TypeToken;
 
 /** @author zhangjx */
 public class Json5Test {
@@ -18,6 +21,7 @@ public class Json5Test {
         Json5Test test = new Json5Test();
         test.run1();
         test.run2();
+        test.run3();
     }
 
     @Test
@@ -54,6 +58,28 @@ public class Json5Test {
         bean.id = 60;
         System.out.println(convert.convertTo(bean));
     }
+
+    @Test
+    public void run3() throws Exception {
+        Decodeable<JsonReader, String> decoder = JsonFactory.root().loadDecoder(String.class);
+        String val = decoder.convertFrom(new JsonReader("null"));
+        Assertions.assertTrue(val == null);
+        val = decoder.convertFrom(new JsonReader("nullable"));
+        Assertions.assertEquals("nullable", val);
+
+        LinkedHashMap<String, String> map = new LinkedHashMap<>();
+        map.put("name1", null);
+        map.put("name2", "nullable");
+        map.put("site", "002");
+        String json = JsonConvert.root().convertTo(map);
+        System.out.println(json);
+        Map<String, String> rs = JsonConvert.root().convertFrom(MAP_TYPE, json.replace("\"nullable\"", "nullable"));
+        String json2 = JsonConvert.root().convertTo(rs);
+        System.out.println(json2);
+        Assertions.assertEquals(json, json2);
+    }
+
+    private static Type MAP_TYPE = new TypeToken<LinkedHashMap<String, String>>() {}.getType();
 
     public static class Json5Bean {
 

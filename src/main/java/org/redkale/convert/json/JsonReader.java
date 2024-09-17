@@ -877,44 +877,43 @@ public class JsonReader extends Reader {
 
     protected String readString(boolean flag) {
         final char[] text0 = this.text;
-        char expected = nextGoodChar(true);
+        final int end = limit;
+        char quote = nextGoodChar(true);
         int curr = this.position;
-        if (expected != '"' && expected != '\'') {
-            if (expected == 'n'
-                    && text0.length > curr + 3
-                    && (text0[1 + curr] == 'u' && text0[2 + curr] == 'l' && text0[3 + curr] == 'l')) {
-                if (text0[++curr] == 'u' && text0[++curr] == 'l' && text0[++curr] == 'l') {
-                    this.position = curr;
-                    if (text0.length > curr + 4) {
-                        char ch = text0[curr + 1];
-                        if (ch == ',' || ch <= ' ' || ch == '}' || ch == ']' || (flag && ch == ':')) {
-                            return null;
-                        }
-                        final int start = curr - 3;
-                        for (; ; ) {
-                            if (curr >= text0.length) {
-                                break;
-                            }
-                            ch = text0[curr];
-                            if (ch == ',' || ch <= ' ' || ch == '}' || ch == ']' || (flag && ch == ':')) {
-                                break;
-                            }
-                            curr++;
-                        }
-                        if (curr == start) {
-                            throw new ConvertException("expected a string after a key but '" + text0[position]
-                                    + "' (position = " + position + ") in " + new String(this.text));
-                        }
-                        this.position = curr - 1;
-                        return new String(text0, start, curr - start);
-                    } else {
+        if (quote != '"' && quote != '\'') {
+            final int start = curr;
+            if (quote == 'n'
+                    && end >= curr + 3
+                    && text0[1 + curr] == 'u'
+                    && text0[2 + curr] == 'l'
+                    && text0[3 + curr] == 'l') {
+                curr += 3;
+                this.position = curr;
+                if (curr < end) {
+                    char ch = text0[++curr];
+                    if (ch == ',' || ch <= ' ' || ch == '}' || ch == ']' || (flag && ch == ':')) {
+                        // null值
                         return null;
                     }
+                    // null开头的字符串
+                    for (; curr <= end; curr++) {
+                        ch = text0[curr];
+                        if (ch == ',' || ch <= ' ' || ch == '}' || ch == ']' || (flag && ch == ':')) {
+                            break;
+                        }
+                    }
+                    if (curr == start) {
+                        throw new ConvertException("expected a string after a key but '" + text0[position]
+                                + "' (position = " + position + ") in " + new String(this.text));
+                    }
+                    this.position = curr - 1;
+                    return new String(text0, start, curr - start);
+                } else { // null值，已到尾部
+                    return null;
                 }
             } else {
-                final int start = curr;
                 for (; ; ) {
-                    if (curr >= text0.length) {
+                    if (curr > end) {
                         break;
                     }
                     char ch = text0[curr];
@@ -930,17 +929,13 @@ public class JsonReader extends Reader {
                 this.position = curr - 1;
                 return new String(text0, start, curr - start);
             }
-            this.position = curr;
-            throw new ConvertException("expected a ':' after a key but '" + text0[position] + "' (position = "
-                    + position + ") in " + new String(this.text));
         }
         final int start = ++curr;
-        int end = limit;
         CharArray array = null;
         char c;
         for (; curr <= end; curr++) {
             char ch = text0[curr];
-            if (ch == expected) {
+            if (ch == quote) {
                 break;
             } else if (ch == '\\') {
                 if (array == null) {
