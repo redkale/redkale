@@ -89,6 +89,11 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
         return this;
     }
 
+    @Override
+    protected ConvertFactory rootFactory() {
+        return instance;
+    }
+
     public static BsonFactory root() {
         return instance;
     }

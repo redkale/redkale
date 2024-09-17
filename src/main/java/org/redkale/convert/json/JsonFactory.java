@@ -91,6 +91,11 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
         return this;
     }
 
+    @Override
+    protected ConvertFactory rootFactory() {
+        return instance;
+    }
+
     public static JsonFactory root() {
         return instance;
     }

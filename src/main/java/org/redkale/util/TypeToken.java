@@ -4,12 +4,11 @@
  */
 package org.redkale.util;
 
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
-
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
 
 /**
  * 获取泛型的Type类
@@ -568,7 +567,8 @@ public abstract class TypeToken<T> {
     }
 
     /**
-     * 动态创建 ParameterizedType
+     * 动态创建 ParameterizedType <br>
+     * 例如: List&lt;String&gt;: createParameterizedType(null, List.class, String.class)
      *
      * @param ownerType0 ParameterizedType 的 ownerType, 一般为null
      * @param rawType0 ParameterizedType 的 rawType

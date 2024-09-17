@@ -53,6 +53,11 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
         }
     }
 
+    @Override
+    protected ConvertFactory rootFactory() {
+        return instance;
+    }
+
     public static ProtobufFactory root() {
         return instance;
     }

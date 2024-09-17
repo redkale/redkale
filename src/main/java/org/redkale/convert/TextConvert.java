@@ -6,6 +6,7 @@
 package org.redkale.convert;
 
 import java.lang.reflect.Type;
+import java.util.List;
 
 /**
  * 文本序列化/反序列化操作类
@@ -28,6 +29,10 @@ public abstract class TextConvert<R extends Reader, W extends Writer> extends Co
     }
 
     public abstract <T> T convertFrom(final Type type, final String text);
+
+    public <T> List<T> convertListFrom(final Type componentType, final String text) {
+        return (List) convertFrom(factory.createGenericListType(componentType), text);
+    }
 
     /**
      * 序列化

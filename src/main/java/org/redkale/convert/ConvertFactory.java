@@ -66,6 +66,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     private final ConcurrentHashMap<Class, BiFunction> fieldFuncs = new ConcurrentHashMap();
 
+    private final ConcurrentHashMap<Type, Type> genericListTypes = new ConcurrentHashMap<>();
+
     private final Set<Class> skipIgnores = new HashSet();
 
     final Set<String> ignoreMapColumns = new HashSet();
@@ -253,6 +255,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     public abstract ConvertFactory createChild(int features);
 
+    protected abstract ConvertFactory rootFactory();
+
     protected SimpledCoder createEnumSimpledCoder(Class enumClass) {
         return new EnumSimpledCoder(this, enumClass);
     }
@@ -370,6 +374,11 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     protected <F extends ConvertFactory<R, W>> F withNullableFeature(boolean nullable) {
         return nullable ? addFeature(Convert.FEATURE_NULLABLE) : removeFeature(Convert.FEATURE_NULLABLE);
+    }
+
+    protected Type createGenericListType(Type componentType) {
+        ConcurrentHashMap<Type, Type> map = rootFactory().genericListTypes;
+        return map.computeIfAbsent(componentType, t -> TypeToken.createParameterizedType(null, List.class, t));
     }
 
     public static boolean checkTinyFeature(int features) {
