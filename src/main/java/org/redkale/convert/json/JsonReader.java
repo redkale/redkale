@@ -408,7 +408,7 @@ public class JsonReader extends Reader {
             if (firstchar < '0' || firstchar > '9') {
                 throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
             }
-            value = firstchar - '0';
+            value = digits[firstchar];
         }
         if (firstchar == 'N') {
             if (negative) {
@@ -505,6 +505,7 @@ public class JsonReader extends Reader {
                 }
                 value = (value << 4) + digits[ch];
             } else if (quote && ch <= ' ') {
+                // do nothing
             } else if (ch == '.') {
                 dot = true;
             } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
@@ -542,7 +543,7 @@ public class JsonReader extends Reader {
             if (firstchar < '0' || firstchar > '9') {
                 throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
             }
-            value = firstchar - '0';
+            value = digits[firstchar];
         }
         if (firstchar == 'N') {
             if (negative) {
@@ -639,6 +640,7 @@ public class JsonReader extends Reader {
                 }
                 value = (value << 4) + digits[ch];
             } else if (quote && ch <= ' ') {
+                // do nothing
             } else if (ch == '.') {
                 dot = true;
             } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
@@ -657,7 +659,6 @@ public class JsonReader extends Reader {
 
     @Override
     public DeMember readFieldName(final DeMemberInfo memberInfo) {
-
         final int eof = this.limit;
         if (this.position == eof) {
             return null;
@@ -1026,7 +1027,7 @@ public class JsonReader extends Reader {
         }
     }
 
-    static final int[] digits = new int[255];
+    protected static final int[] digits = new int[255];
 
     static {
         for (int i = 0; i < digits.length; i++) {

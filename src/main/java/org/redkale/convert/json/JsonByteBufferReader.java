@@ -198,6 +198,276 @@ public class JsonByteBufferReader extends JsonReader {
     }
 
     /**
+     * 读取一个int值
+     *
+     * @return int值
+     */
+    @Override
+    public int readInt() {
+        char firstchar = nextGoodChar(true);
+        boolean quote = false;
+        if (firstchar == '"' || firstchar == '\'') {
+            quote = true;
+            firstchar = nextGoodChar(false);
+            if (firstchar == '"' || firstchar == '\'') {
+                return 0;
+            }
+        }
+        int value = 0;
+        final boolean negative = firstchar == '-';
+        if (!negative) {
+            if (firstchar == '+') {
+                firstchar = nextChar(); // 兼容+开头的
+            }
+            if (firstchar < '0' || firstchar > '9') {
+                throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
+            }
+            value = digits[firstchar];
+        }
+        if (firstchar == 'N') {
+            if (negative) {
+                throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
+            }
+            char c = nextChar();
+            if (c != 'a') {
+                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            c = nextChar();
+            if (c != 'N') {
+                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            if (quote) {
+                c = nextChar();
+                if (c != '"' && c != '\'') {
+                    throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+                }
+            }
+            return 0; // NaN 返回0;
+        } else if (firstchar == 'I') { // Infinity
+            char c = nextChar();
+            if (c != 'n') {
+                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            c = nextChar();
+            if (c != 'f') {
+                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            c = nextChar();
+            if (c != 'i') {
+                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            c = nextChar();
+            if (c != 'n') {
+                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            c = nextChar();
+            if (c != 'i') {
+                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            c = nextChar();
+            if (c != 't') {
+                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            c = nextChar();
+            if (c != 'y') {
+                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            if (quote) {
+                c = nextChar();
+                if (c != '"' && c != '\'') {
+                    throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+                }
+            }
+            return negative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+        }
+        boolean hex = false;
+        boolean dot = false;
+        for (; ; ) {
+            char ch = nextChar();
+            if (ch == 0) {
+                break;
+            }
+            if (ch >= '0' && ch <= '9') {
+                if (dot) {
+                    continue;
+                }
+                value = (hex ? (value << 4) : ((value << 3) + (value << 1))) + digits[ch];
+            } else if (ch == '"' || ch == '\'') {
+                if (quote) {
+                    break;
+                }
+                throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+            } else if (ch == 'x' || ch == 'X') {
+                if (value != 0) {
+                    throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                }
+                hex = true;
+            } else if (ch >= 'a' && ch <= 'f') {
+                if (!hex) {
+                    throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                }
+                if (dot) {
+                    continue;
+                }
+                value = (value << 4) + digits[ch];
+            } else if (ch >= 'A' && ch <= 'F') {
+                if (!hex) {
+                    throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                }
+                if (dot) {
+                    continue;
+                }
+                value = (value << 4) + digits[ch];
+            } else if (quote && ch <= ' ') {
+                // do nothing
+            } else if (ch == '.') {
+                dot = true;
+            } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
+                backChar(ch);
+                break;
+            } else {
+                throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+            }
+        }
+        return negative ? -value : value;
+    }
+
+    /**
+     * 读取一个long值
+     *
+     * @return long值
+     */
+    @Override
+    public long readLong() {
+        char firstchar = nextGoodChar(true);
+        boolean quote = false;
+        if (firstchar == '"' || firstchar == '\'') {
+            quote = true;
+            firstchar = nextGoodChar(false);
+            if (firstchar == '"' || firstchar == '\'') {
+                return 0L;
+            }
+        }
+        long value = 0;
+        final boolean negative = firstchar == '-';
+        if (!negative) {
+            if (firstchar == '+') {
+                firstchar = nextChar(); // 兼容+开头的
+            }
+            if (firstchar < '0' || firstchar > '9') {
+                throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
+            }
+            value = digits[firstchar];
+        }
+        if (firstchar == 'N') {
+            if (negative) {
+                throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
+            }
+            char c = nextChar();
+            if (c != 'a') {
+                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            c = nextChar();
+            if (c != 'N') {
+                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            if (quote) {
+                c = nextChar();
+                if (c != '"' && c != '\'') {
+                    throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+                }
+            }
+            return 0L; // NaN 返回0;
+        } else if (firstchar == 'I') { // Infinity
+            char c = nextChar();
+            if (c != 'n') {
+                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            c = nextChar();
+            if (c != 'f') {
+                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            c = nextChar();
+            if (c != 'i') {
+                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            c = nextChar();
+            if (c != 'n') {
+                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            c = nextChar();
+            if (c != 'i') {
+                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            c = nextChar();
+            if (c != 't') {
+                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            c = nextChar();
+            if (c != 'y') {
+                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            }
+            if (quote) {
+                c = nextChar();
+                if (c != '"' && c != '\'') {
+                    throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+                }
+            }
+            return negative ? Long.MIN_VALUE : Long.MAX_VALUE;
+        }
+        boolean hex = false;
+        boolean dot = false;
+        for (; ; ) {
+            char ch = nextChar();
+            if (ch == 0) {
+                break;
+            }
+            if (ch >= '0' && ch <= '9') {
+                if (dot) {
+                    continue;
+                }
+                value = (hex ? (value << 4) : ((value << 3) + (value << 1))) + digits[ch];
+            } else if (ch == '"' || ch == '\'') {
+                if (quote) {
+                    break;
+                }
+                throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+            } else if (ch == 'x' || ch == 'X') {
+                if (value != 0) {
+                    throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                }
+                hex = true;
+            } else if (ch >= 'a' && ch <= 'f') {
+                if (!hex) {
+                    throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                }
+                if (dot) {
+                    continue;
+                }
+                value = (value << 4) + digits[ch];
+            } else if (ch >= 'A' && ch <= 'F') {
+                if (!hex) {
+                    throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                }
+                if (dot) {
+                    continue;
+                }
+                value = (value << 4) + digits[ch];
+            } else if (quote && ch <= ' ') {
+                // do nothing
+            } else if (ch == '.') {
+                dot = true;
+            } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
+                backChar(ch);
+                break;
+            } else {
+                throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+            }
+        }
+        return negative ? -value : value;
+    }
+
+    /**
      * 读取小字符串
      *
      * @return String值
