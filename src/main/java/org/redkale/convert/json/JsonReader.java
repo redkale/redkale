@@ -162,7 +162,7 @@ public class JsonReader extends Reader {
      */
     protected char nextChar() {
         int p = ++this.position;
-        if (p >= text.length) {
+        if (p >= limit) {
             return 0;
         }
         return this.text[p];
@@ -818,38 +818,38 @@ public class JsonReader extends Reader {
         }
         char ch = nextGoodChar(true); // 需要跳过注释
         final char[] text0 = this.text;
-        int currpos = this.position;
+        int curr = this.position;
         if (ch == '"' || ch == '\'') {
             final char quote = ch;
-            final int start = currpos + 1;
+            final int start = curr + 1;
             for (; ; ) {
-                ch = text0[++currpos];
+                ch = text0[++curr];
                 if (ch == '\\') {
-                    this.position = currpos - 1;
+                    this.position = curr - 1;
                     return readEscapeValue(quote, start);
                 } else if (ch == quote) {
                     break;
                 }
             }
-            this.position = currpos;
-            return new String(text0, start, currpos - start);
+            this.position = curr;
+            return new String(text0, start, curr - start);
         } else {
-            int start = currpos;
+            int start = curr;
             for (; ; ) {
-                if (currpos == eof) {
+                if (curr == eof) {
                     break;
                 }
-                ch = text0[++currpos];
+                ch = text0[++curr];
                 if (ch == ',' || ch == ']' || ch == '}' || ch <= ' ' || ch == ':') {
                     break;
                 }
             }
-            int len = currpos - start;
+            int len = curr - start;
             if (len < 1) {
-                this.position = currpos;
+                this.position = curr;
                 return String.valueOf(ch);
             }
-            this.position = currpos - 1;
+            this.position = curr - 1;
             if (len == 4
                     && text0[start] == 'n'
                     && text0[start + 1] == 'u'
@@ -878,75 +878,76 @@ public class JsonReader extends Reader {
     protected String readString(boolean flag) {
         final char[] text0 = this.text;
         char expected = nextGoodChar(true);
-        int currpos = this.position;
+        int curr = this.position;
         if (expected != '"' && expected != '\'') {
             if (expected == 'n'
-                    && text0.length > currpos + 3
-                    && (text0[1 + currpos] == 'u' && text0[2 + currpos] == 'l' && text0[3 + currpos] == 'l')) {
-                if (text0[++currpos] == 'u' && text0[++currpos] == 'l' && text0[++currpos] == 'l') {
-                    this.position = currpos;
-                    if (text0.length > currpos + 4) {
-                        char ch = text0[currpos + 1];
+                    && text0.length > curr + 3
+                    && (text0[1 + curr] == 'u' && text0[2 + curr] == 'l' && text0[3 + curr] == 'l')) {
+                if (text0[++curr] == 'u' && text0[++curr] == 'l' && text0[++curr] == 'l') {
+                    this.position = curr;
+                    if (text0.length > curr + 4) {
+                        char ch = text0[curr + 1];
                         if (ch == ',' || ch <= ' ' || ch == '}' || ch == ']' || (flag && ch == ':')) {
                             return null;
                         }
-                        final int start = currpos - 3;
+                        final int start = curr - 3;
                         for (; ; ) {
-                            if (currpos >= text0.length) {
+                            if (curr >= text0.length) {
                                 break;
                             }
-                            ch = text0[currpos];
+                            ch = text0[curr];
                             if (ch == ',' || ch <= ' ' || ch == '}' || ch == ']' || (flag && ch == ':')) {
                                 break;
                             }
-                            currpos++;
+                            curr++;
                         }
-                        if (currpos == start) {
+                        if (curr == start) {
                             throw new ConvertException("expected a string after a key but '" + text0[position]
-                                    + "' (position = " + position + ") in (" + new String(this.text) + ")");
+                                    + "' (position = " + position + ") in " + new String(this.text));
                         }
-                        this.position = currpos - 1;
-                        return new String(text0, start, currpos - start);
+                        this.position = curr - 1;
+                        return new String(text0, start, curr - start);
                     } else {
                         return null;
                     }
                 }
             } else {
-                final int start = currpos;
+                final int start = curr;
                 for (; ; ) {
-                    if (currpos >= text0.length) {
+                    if (curr >= text0.length) {
                         break;
                     }
-                    char ch = text0[currpos];
+                    char ch = text0[curr];
                     if (ch == ',' || ch <= ' ' || ch == '}' || ch == ']' || (flag && ch == ':')) {
                         break;
                     }
-                    currpos++;
+                    curr++;
                 }
-                if (currpos == start) {
+                if (curr == start) {
                     throw new ConvertException("expected a string after a key but '" + text0[position]
-                            + "' (position = " + position + ") in (" + new String(this.text) + ")");
+                            + "' (position = " + position + ") in " + new String(this.text));
                 }
-                this.position = currpos - 1;
-                return new String(text0, start, currpos - start);
+                this.position = curr - 1;
+                return new String(text0, start, curr - start);
             }
-            this.position = currpos;
+            this.position = curr;
             throw new ConvertException("expected a ':' after a key but '" + text0[position] + "' (position = "
-                    + position + ") in (" + new String(this.text) + ")");
+                    + position + ") in " + new String(this.text));
         }
-        final int start = ++currpos;
+        final int start = ++curr;
+        int end = limit;
         CharArray array = null;
         char c;
-        for (; ; ) {
-            char ch = text0[currpos];
+        for (; curr <= end; curr++) {
+            char ch = text0[curr];
             if (ch == expected) {
                 break;
             } else if (ch == '\\') {
                 if (array == null) {
                     array = array();
-                    array.append(text0, start, currpos - start);
+                    array.append(text0, start, curr - start);
                 }
-                c = text0[++currpos];
+                c = text0[++curr];
                 switch (c) {
                     case '"':
                     case '\'':
@@ -962,9 +963,7 @@ public class JsonReader extends Reader {
                         break;
                     case 'u':
                         array.append((char) Integer.parseInt(
-                                new String(new char[] {
-                                    text0[++currpos], text0[++currpos], text0[++currpos], text0[++currpos]
-                                }),
+                                new String(new char[] {text0[++curr], text0[++curr], text0[++curr], text0[++curr]}),
                                 16));
                         break;
                     case 't':
@@ -977,32 +976,31 @@ public class JsonReader extends Reader {
                         array.append('\f');
                         break;
                     default:
-                        this.position = currpos;
-                        throw new ConvertException("illegal escape(" + c + ") (position = " + this.position + ") in ("
-                                + new String(this.text) + ")");
+                        this.position = curr;
+                        throw new ConvertException("illegal escape(" + c + ") (position = " + this.position + ") in "
+                                + new String(this.text));
                 }
             } else if (array != null) {
                 array.append(ch);
             }
-            currpos++;
         }
-        this.position = currpos;
-        return array != null ? array.toStringThenClear() : new String(text0, start, currpos - start);
+        this.position = curr;
+        return array != null ? array.toStringThenClear() : new String(text0, start, curr - start);
     }
 
     private String readEscapeValue(final char expected, int start) {
         CharArray array = this.array();
         final char[] text0 = this.text;
-        int pos = this.position;
-        array.append(text0, start, pos + 1 - start);
+        int curr = this.position;
+        array.append(text0, start, curr + 1 - start);
         char c;
         for (; ; ) {
-            c = text0[++pos];
+            c = text0[++curr];
             if (c == expected) {
-                this.position = pos;
+                this.position = curr;
                 return array.toStringThenClear();
             } else if (c == '\\') {
-                c = text0[++pos];
+                c = text0[++curr];
                 switch (c) {
                     case '"':
                     case '\'':
@@ -1018,7 +1016,8 @@ public class JsonReader extends Reader {
                         break;
                     case 'u':
                         array.append((char) Integer.parseInt(
-                                new String(new char[] {text0[++pos], text0[++pos], text0[++pos], text0[++pos]}), 16));
+                                new String(new char[] {text0[++curr], text0[++curr], text0[++curr], text0[++curr]}),
+                                16));
                         break;
                     case 't':
                         array.append('\t');
@@ -1030,9 +1029,9 @@ public class JsonReader extends Reader {
                         array.append('\f');
                         break;
                     default:
-                        this.position = pos;
-                        throw new ConvertException("illegal escape(" + c + ") (position = " + this.position + ") in ("
-                                + new String(this.text) + ")");
+                        this.position = curr;
+                        throw new ConvertException("illegal escape(" + c + ") (position = " + this.position + ") in "
+                                + new String(this.text));
                 }
             } else {
                 array.append(c);
