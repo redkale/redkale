@@ -7,6 +7,7 @@ package org.redkale.convert.json;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Objects;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.*;
 import org.redkale.convert.Reader.ValueType;
@@ -32,15 +33,19 @@ public class JsonReader extends Reader {
     public JsonReader() {}
 
     public JsonReader(String json) {
-        setText(Utility.charArray(json));
+        char[] chs = Utility.charArray(json);
+        this.text = chs;
+        this.limit = chs.length - 1;
     }
 
     public JsonReader(char[] text) {
-        setText(text, 0, text.length);
+        this(text, 0, text.length);
     }
 
     public JsonReader(char[] text, int start, int len) {
-        setText(text, start, len);
+        this.text = Objects.requireNonNull(text);
+        this.position = start - 1;
+        this.limit = start + len - 1;
     }
 
     public final JsonReader setText(String text) {
@@ -79,7 +84,7 @@ public class JsonReader extends Reader {
         return true;
     }
 
-    protected CharArray array() {
+    protected final CharArray array() {
         if (array == null) {
             array = new CharArray();
         }
@@ -221,7 +226,7 @@ public class JsonReader extends Reader {
      *
      * @return 是否对象字符
      */
-    public boolean isNextObject() {
+    public final boolean isNextObject() {
         char ch = nextGoodChar(true);
         backChar(ch);
         return ch == '{';
@@ -232,7 +237,7 @@ public class JsonReader extends Reader {
      *
      * @return 是否数组字符
      */
-    public boolean isNextArray() {
+    public final boolean isNextArray() {
         char ch = nextGoodChar(true);
         backChar(ch);
         return ch == '[';
@@ -280,7 +285,9 @@ public class JsonReader extends Reader {
     }
 
     @Override
-    public final void readObjectE(final Class clazz) {}
+    public final void readObjectE(final Class clazz) {
+        // do nothing
+    }
 
     /**
      * 判断下一个非空白字符是否为{
@@ -297,7 +304,9 @@ public class JsonReader extends Reader {
     }
 
     @Override
-    public final void readMapE() {}
+    public final void readMapE() {
+        // do nothing
+    }
 
     /**
      * 判断下一个非空白字符是否为[
@@ -330,7 +339,9 @@ public class JsonReader extends Reader {
     }
 
     @Override
-    public final void readArrayE() {}
+    public final void readArrayE() {
+        // do nothing
+    }
 
     /** 判断下一个非空白字符是否: */
     @Override
@@ -361,7 +372,7 @@ public class JsonReader extends Reader {
      * @return 是否存在
      */
     @Override
-    public boolean hasNext(int startPosition, int contentLength) {
+    public final boolean hasNext(int startPosition, int contentLength) {
         char ch = nextGoodChar(true);
         if (ch == ',') {
             char nt = nextGoodChar(true);
@@ -854,7 +865,7 @@ public class JsonReader extends Reader {
      * @return String值
      */
     @Override
-    public String readString() {
+    public final String readString() {
         return readString(true);
     }
 

@@ -105,6 +105,49 @@ public class JsonByteBufferReader extends JsonReader {
     }
 
     /**
+     * 跳过空白字符、单行或多行注释， 返回一个非空白字符
+     *
+     * @param allowComment 是否容许含注释
+     * @return 有效字符
+     */
+    protected char nextGoodChar(boolean allowComment) {
+        char c;
+        for (; ; ) {
+            c = nextChar();
+            if (c == 0) {
+                return c; // 0 表示buffer结尾了
+            }
+            if (c > ' ') {
+                if (allowComment && c == '/') { // 支持单行和多行注释
+                    char n = nextChar();
+                    if (n == '/') {
+                        for (; ; ) {
+                            if (nextChar() == '\n') {
+                                break;
+                            }
+                        }
+                        return nextGoodChar(allowComment);
+                    } else if (n == '*') {
+                        char nc;
+                        char lc = 0;
+                        for (; ; ) {
+                            nc = nextChar();
+                            if (nc == '/' && lc == '*') {
+                                break;
+                            }
+                            lc = nc;
+                        }
+                        return nextGoodChar(allowComment);
+                    } else {
+                        throw new ConvertException("illegal escape(" + n + ") (position = " + this.position + ")");
+                    }
+                }
+                return c;
+            }
+        }
+    }
+
+    /**
      * 回退最后读取的字符
      *
      * @param ch 回退的字符
@@ -166,16 +209,7 @@ public class JsonByteBufferReader extends JsonReader {
             return SIGN_NULL;
         }
         int pos = this.position;
-        StringBuilder sb = new StringBuilder();
-        sb.append(ch);
-        char one;
-        try {
-            while ((one = nextChar()) != 0) sb.append(one);
-        } catch (Exception e) {
-            // do nothing
-        }
-        throw new ConvertException(
-                "a json array text must begin with '[' (position = " + pos + ") but '" + ch + "' in (" + sb + ")");
+        throw new ConvertException("a json array must begin with '[' (position = " + pos + ") but '" + ch + "'");
     }
 
     /** 判断下一个非空白字符是否: */
@@ -185,16 +219,7 @@ public class JsonByteBufferReader extends JsonReader {
         if (ch == ':') {
             return;
         }
-        int pos = this.position;
-        StringBuilder sb = new StringBuilder();
-        sb.append(ch);
-        char one;
-        try {
-            while ((one = nextChar()) != 0) sb.append(one);
-        } catch (Exception e) {
-            // do nothing
-        }
-        throw new ConvertException("expected a ':' but '" + ch + "'(position = " + pos + ") in (" + sb + ")");
+        throw new ConvertException("expected a ':' but '" + ch + "'(position = " + this.position + ")");
     }
 
     /**
@@ -474,16 +499,6 @@ public class JsonByteBufferReader extends JsonReader {
      */
     @Override
     public final String readSmallString() {
-        return readString(true);
-    }
-
-    /**
-     * 读取字符串， 必须是"或者'包围的字符串值
-     *
-     * @return String值
-     */
-    @Override
-    public final String readString() {
         return readString(true);
     }
 
