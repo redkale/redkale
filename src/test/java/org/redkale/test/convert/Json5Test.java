@@ -22,15 +22,6 @@ public class Json5Test {
 
     @Test
     public void run1() throws Exception {
-        JsonFactory factory = JsonFactory.root().withFeatures(Convert.FEATURE_TINY | Convert.FEATURE_NULLABLE);
-        final JsonConvert convert = factory.getConvert();
-        Json5Bean bean = new Json5Bean();
-        bean.id = 60;
-        System.out.println(convert.convertTo(bean));
-    }
-
-    @Test
-    public void run2() throws Exception {
         JsonConvert convert = JsonConvert.root();
         Json5Bean bean = new Json5Bean();
         bean.id = 500;
@@ -55,11 +46,20 @@ public class Json5Test {
         System.out.println(Arrays.toString(ints1));
     }
 
+    @Test
+    public void run2() throws Exception {
+        JsonFactory factory = JsonFactory.root().withFeatures(Convert.FEATURE_TINY | Convert.FEATURE_NULLABLE);
+        final JsonConvert convert = factory.getConvert();
+        Json5Bean bean = new Json5Bean();
+        bean.id = 60;
+        System.out.println(convert.convertTo(bean));
+    }
+
     public static class Json5Bean {
 
         public int id;
 
-        public int idx;
+        public long idx;
 
         public float decmails;
 
@@ -74,7 +74,7 @@ public class Json5Test {
         public int hashCode() {
             int hash = 7;
             hash = 47 * hash + this.id;
-            hash = 47 * hash + this.idx;
+            hash = 47 * hash + (int) this.idx;
             hash = 47 * hash + Float.floatToIntBits(this.decmails);
             hash = 47 * hash + (int) (this.value ^ (this.value >>> 32));
             hash = 47 * hash + Objects.hashCode(this.name);

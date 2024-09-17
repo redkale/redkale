@@ -175,41 +175,45 @@ public class JsonReader extends Reader {
      * @return 有效字符
      */
     protected char nextGoodChar(boolean allowComment) {
-        char c;
-        for (; ; ) {
-            c = nextChar();
-            if (c == 0) {
-                return c; // 0 表示buffer结尾了
-            }
+        char c = 0;
+        char[] text0 = this.text;
+        int end = this.limit;
+        int curr = ++this.position;
+        for (; curr <= end; curr++) {
+            c = text0[curr];
             if (c > ' ') {
-                if (allowComment && c == '/') { // 支持单行和多行注释
-                    char n = nextChar();
-                    if (n == '/') {
-                        for (; ; ) {
-                            if (nextChar() == '\n') {
+                if (c == '/' && allowComment) { // 支持单行和多行注释
+                    char n = text0[++curr];
+                    if (n == '/') { // 单行注释
+                        for (++curr; curr <= end; curr++) {
+                            if (text0[curr] == '\n') {
                                 break;
                             }
                         }
+                        this.position = curr;
                         return nextGoodChar(allowComment);
-                    } else if (n == '*') {
+                    } else if (n == '*') { // 多行注释
                         char nc;
                         char lc = 0;
-                        for (; ; ) {
-                            nc = nextChar();
+                        for (++curr; curr <= end; curr++) {
+                            nc = text0[curr];
                             if (nc == '/' && lc == '*') {
                                 break;
                             }
                             lc = nc;
                         }
+                        this.position = curr;
                         return nextGoodChar(allowComment);
                     } else {
-                        throw new ConvertException("illegal escape(" + n + ") (position = " + this.position + ") in '"
-                                + new String(text) + "'");
+                        throw new ConvertException(
+                                "illegal escape(" + n + ") (position = " + curr + ") in " + new String(text));
                     }
                 }
-                return c;
+                break;
             }
         }
+        this.position = curr;
+        return c;
     }
 
     /**
@@ -266,7 +270,6 @@ public class JsonReader extends Reader {
      */
     @Override
     public String readObjectB(final Class clazz) {
-        this.fieldIndex = 0; // 必须要重置为0
         if (this.text.length == 0) {
             return null;
         }
@@ -280,7 +283,7 @@ public class JsonReader extends Reader {
         if (ch == 'N' && text[++position] == 'U' && text[++position] == 'L' && text[++position] == 'L') {
             return null;
         }
-        throw new ConvertException("a json object text must begin with '{' (position = " + position + ") but '" + ch
+        throw new ConvertException("a json object must begin with '{' (position = " + position + ") but '" + ch
                 + "' in " + new String(this.text));
     }
 
@@ -350,8 +353,8 @@ public class JsonReader extends Reader {
         if (ch == ':') {
             return;
         }
-        throw new ConvertException("'" + new String(text) + "'expected a ':' but '" + ch + "'(position = " + position
-                + ") in (" + new String(this.text) + ")");
+        throw new ConvertException(
+                "expected a ':' but '" + ch + "'(position = " + position + ") in " + new String(this.text));
     }
 
     @Override
@@ -477,13 +480,14 @@ public class JsonReader extends Reader {
             }
             return negative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         }
+        int curr = ++this.position;
+        int end = this.limit;
+        char[] text0 = this.text;
+        char ch;
         boolean hex = false;
         boolean dot = false;
-        for (; ; ) {
-            char ch = nextChar();
-            if (ch == 0) {
-                break;
-            }
+        for (; curr <= end; curr++) {
+            ch = text0[curr];
             if (ch >= '0' && ch <= '9') {
                 if (dot) {
                     continue;
@@ -520,12 +524,13 @@ public class JsonReader extends Reader {
             } else if (ch == '.') {
                 dot = true;
             } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
-                backChar(ch);
+                curr--;
                 break;
             } else {
                 throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
             }
         }
+        this.position = curr;
         return negative ? -value : value;
     }
 
@@ -612,13 +617,14 @@ public class JsonReader extends Reader {
             }
             return negative ? Long.MIN_VALUE : Long.MAX_VALUE;
         }
+        int curr = ++this.position;
+        int end = this.limit;
+        char[] text0 = this.text;
+        char ch;
         boolean hex = false;
         boolean dot = false;
-        for (; ; ) {
-            char ch = nextChar();
-            if (ch == 0) {
-                break;
-            }
+        for (; curr <= end; curr++) {
+            ch = text0[curr];
             if (ch >= '0' && ch <= '9') {
                 if (dot) {
                     continue;
@@ -655,12 +661,13 @@ public class JsonReader extends Reader {
             } else if (ch == '.') {
                 dot = true;
             } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
-                backChar(ch);
+                curr--;
                 break;
             } else {
                 throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
             }
         }
+        this.position = curr;
         return negative ? -value : value;
     }
 
@@ -677,37 +684,32 @@ public class JsonReader extends Reader {
         DeMemberNode node = memberInfo.getMemberNode();
         char ch = nextGoodChar(true); // 需要跳过注释
         final char[] text0 = this.text;
-        int currpos = this.position;
+        int curr = this.position;
         if (ch == '"' || ch == '\'') {
             final char quote = ch;
             for (; ; ) {
-                ch = text0[++currpos];
+                ch = text0[++curr];
                 if (ch == quote) {
                     break;
                 }
                 node = node == null ? null : node.getNode(ch);
             }
-            this.position = currpos;
+            this.position = curr;
             return node == null ? null : node.getValue();
         } else {
             node = node == null ? null : node.getNode(ch);
-            int start = currpos;
             for (; ; ) {
-                if (currpos == eof) {
+                if (curr == eof) {
                     break;
                 }
-                ch = text0[++currpos];
+                ch = text0[++curr];
                 if (ch == ',' || ch == ']' || ch == '}' || ch <= ' ' || ch == ':') {
+                    curr--;
                     break;
                 }
                 node = node == null ? null : node.getNode(ch);
             }
-            int len = currpos - start;
-            if (len < 1) {
-                this.position = currpos;
-            } else {
-                this.position = currpos - 1;
-            }
+            this.position = curr;
             return node == null ? null : node.getValue();
         }
     }

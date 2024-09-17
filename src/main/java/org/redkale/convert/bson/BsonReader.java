@@ -138,7 +138,6 @@ public class BsonReader extends Reader {
 
     @Override
     public final String readObjectB(final Class clazz) {
-        this.fieldIndex = 0; // 必须要重置为0
         final String newcls = readClassName();
         if (newcls != null && !newcls.isEmpty()) {
             return newcls;

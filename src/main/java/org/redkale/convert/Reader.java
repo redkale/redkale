@@ -20,9 +20,6 @@ public abstract class Reader {
         MAP;
     }
 
-    // 当前对象字段名的游标
-    protected int fieldIndex;
-
     public static final short SIGN_NULL = -1;
 
     public static final short SIGN_NOLENGTH = -2;
@@ -93,7 +90,6 @@ public abstract class Reader {
      * @return 返回字段数
      */
     public String readObjectB(final Class clazz) {
-        this.fieldIndex = 0;
         return null;
     }
 

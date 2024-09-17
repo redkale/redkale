@@ -164,7 +164,6 @@ public class JsonByteBufferReader extends JsonReader {
      */
     @Override
     public final String readObjectB(final Class clazz) {
-        this.fieldIndex = 0; // 必须要重置为0
         char ch = nextGoodChar(true);
         if (ch == '{') {
             return "";
@@ -175,17 +174,7 @@ public class JsonByteBufferReader extends JsonReader {
         if (ch == 'N' && nextChar() == 'U' && nextChar() == 'L' && nextChar() == 'L') {
             return null;
         }
-        int pos = this.position;
-        StringBuilder sb = new StringBuilder();
-        sb.append(ch);
-        char one;
-        try {
-            while ((one = nextChar()) != 0) sb.append(one);
-        } catch (Exception e) {
-            // do nothing
-        }
-        throw new ConvertException(
-                "a json object text must begin with '{' (position = " + pos + ") but '" + ch + "' in (" + sb + ")");
+        throw new ConvertException("a json object must begin with '{' (position = " + position + ") but '" + ch + "'");
     }
 
     /**
