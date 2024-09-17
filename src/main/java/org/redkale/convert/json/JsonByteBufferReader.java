@@ -5,11 +5,11 @@
  */
 package org.redkale.convert.json;
 
-import static org.redkale.convert.Reader.*;
-
 import java.nio.ByteBuffer;
 import java.nio.charset.UnmappableCharacterException;
+import java.util.Map;
 import org.redkale.convert.*;
+import static org.redkale.convert.Reader.*;
 
 /**
  * 以ByteBuffer为数据载体的JsonReader <br>
@@ -311,6 +311,41 @@ public class JsonByteBufferReader extends JsonReader {
             }
             String rs = sb.toString();
             return "null".equalsIgnoreCase(rs) ? null : rs;
+        }
+    }
+
+    @Override
+    public DeMember readFieldName(
+            final DeMemberNode fieldNode, Map<String, DeMember> memberFieldMap, Map<Integer, DeMember> memberTagMap) {
+        char ch = nextGoodChar(true);
+        if (ch == 0) {
+            return null;
+        }
+        DeMemberNode node = fieldNode;
+        StringBuilder sb = new StringBuilder();
+        if (ch == '"' || ch == '\'') {
+            final char quote = ch;
+            for (; ; ) {
+                ch = nextChar(sb);
+                if (ch == quote || ch == 0) {
+                    break;
+                } else {
+                    node = node == null ? null : node.getNode(ch);
+                }
+            }
+            return node == null ? null : node.getValue();
+        } else {
+            node = node == null ? null : node.getNode(ch);
+            for (; ; ) {
+                ch = nextChar(sb);
+                if (ch == ',' || ch == ']' || ch == '}' || ch <= ' ' || ch == ':') { //  ch <= ' ' 包含 0
+                    backChar(ch);
+                    break;
+                } else {
+                    node = node == null ? null : node.getNode(ch);
+                }
+            }
+            return node == null ? null : node.getValue();
         }
     }
 }

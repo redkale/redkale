@@ -136,13 +136,13 @@ public abstract class Reader {
     /**
      * 根据字段读取字段对应的DeMember
      *
-     * @param members DeMember的全量集合
+     * @param fieldNode DeMember的全量集合
      * @param memberFieldMap DeMember的字段名map
      * @param memberTagMap DeMember的tag map
      * @return 匹配的DeMember
      */
     public abstract DeMember readFieldName(
-            final DeMember[] members, Map<String, DeMember> memberFieldMap, Map<Integer, DeMember> memberTagMap);
+            final DeMemberNode fieldNode, Map<String, DeMember> memberFieldMap, Map<Integer, DeMember> memberTagMap);
 
     /**
      * 读取一个boolean值

@@ -87,7 +87,7 @@ public class PBCustMessageTest {
                     setIndex(member, 1);
                     setPosition(member, 1);
                     initForEachEnMember(factory, member);
-                    this.members = new EnMember[] {member};
+                    this.initFieldMember(new EnMember[] {member});
                 }
             };
             encoder.init(factory);
@@ -107,7 +107,7 @@ public class PBCustMessageTest {
                     setIndex(member, 1);
                     setPosition(member, 1);
                     initForEachDeMember(factory, member);
-                    this.members = new DeMember[] {member};
+                    this.initFieldMember(new DeMember[] {member});
                 }
 
                 @Override

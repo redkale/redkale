@@ -41,6 +41,8 @@ public class InnerCoderEntity {
             final org.redkale.convert.ConvertFactory factory) {
         return new SimpledCoder<Reader, Writer, InnerCoderEntity>() {
 
+            private DeMemberNode memberNode;
+
             private Map<String, DeMember> deMemberFieldMap;
 
             private Map<Integer, DeMember> deMemberTagMap;
@@ -64,6 +66,7 @@ public class InnerCoderEntity {
                     this.deMemberFieldMap.put(member.getAttribute().field(), member);
                     this.deMemberTagMap.put(member.getTag(), member);
                 }
+                this.memberNode = DeMemberNode.create(deMembers);
             }
 
             @Override
@@ -85,7 +88,7 @@ public class InnerCoderEntity {
                 int index = 0;
                 final Object[] params = new Object[deMembers.length];
                 while (in.hasNext()) {
-                    DeMember member = in.readFieldName(deMembers, deMemberFieldMap, deMemberTagMap); // 读取字段名
+                    DeMember member = in.readFieldName(memberNode, deMemberFieldMap, deMemberTagMap); // 读取字段名
                     in.readBlank(); // 读取字段名与字段值之间的间隔符，JSON则是跳过冒号:
                     if (member == null) {
                         in.skipValue(); // 跳过不存在的字段的值, 一般不会发生

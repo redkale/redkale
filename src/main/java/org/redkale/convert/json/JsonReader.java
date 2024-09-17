@@ -5,11 +5,10 @@
  */
 package org.redkale.convert.json;
 
-import static org.redkale.convert.Reader.*;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.redkale.convert.*;
+import static org.redkale.convert.Reader.*;
 import org.redkale.convert.Reader.ValueType;
 import org.redkale.util.Utility;
 
@@ -696,30 +695,48 @@ public class JsonReader extends Reader {
     }
 
     @Override
-    public final DeMember readFieldName(
-            final DeMember[] members, Map<String, DeMember> memberFieldMap, Map<Integer, DeMember> memberTagMap) {
-        final String exceptedField = this.readSmallString();
-        if (exceptedField == null) {
+    public DeMember readFieldName(
+            final DeMemberNode fieldNode, Map<String, DeMember> memberFieldMap, Map<Integer, DeMember> memberTagMap) {
+
+        final int eof = this.limit;
+        if (this.position == eof) {
             return null;
         }
-        final int len = members.length;
-        if (this.fieldIndex >= len) {
-            this.fieldIndex = 0;
-        }
-        for (int k = this.fieldIndex; k < len; k++) {
-            if (exceptedField.equals(members[k].getAttribute().field())) {
-                this.fieldIndex = k;
-                return members[k];
+        DeMemberNode node = fieldNode;
+        char ch = nextGoodChar(true); // 需要跳过注释
+        final char[] text0 = this.text;
+        int currpos = this.position;
+        if (ch == '"' || ch == '\'') {
+            final char quote = ch;
+            for (; ; ) {
+                ch = text0[++currpos];
+                if (ch == quote) {
+                    break;
+                }
+                node = node == null ? null : node.getNode(ch);
             }
-        }
-        for (int k = 0; k < this.fieldIndex; k++) {
-            if (exceptedField.equals(members[k].getAttribute().field())) {
-                this.fieldIndex = k;
-                return members[k];
+            this.position = currpos;
+            return node == null ? null : node.getValue();
+        } else {
+            int start = currpos;
+            for (; ; ) {
+                if (currpos == eof) {
+                    break;
+                }
+                ch = text0[++currpos];
+                if (ch == ',' || ch == ']' || ch == '}' || ch <= ' ' || ch == ':') {
+                    break;
+                }
+                node = node == null ? null : node.getNode(ch);
             }
+            int len = currpos - start;
+            if (len < 1) {
+                this.position = currpos;
+            } else {
+                this.position = currpos - 1;
+            }
+            return node == null ? null : node.getValue();
         }
-        return null;
-        // if (result == null && len == 1 && text0[start] == '@') return REFER;
     }
     // ------------------------------------------------------------
 

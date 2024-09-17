@@ -211,12 +211,11 @@ public class ProtobufReader extends Reader {
 
     @Override
     public final DeMember readFieldName(
-            final DeMember[] members, Map<String, DeMember> memberFieldMap, Map<Integer, DeMember> memberTagMap) {
+            final DeMemberNode fieldNode, Map<String, DeMember> memberFieldMap, Map<Integer, DeMember> memberTagMap) {
         int tag = readTag();
-        for (DeMember member : members) {
-            if (member.getTag() == tag) {
-                return member;
-            }
+        DeMember member = memberTagMap.get(tag);
+        if (member != null) {
+            return member;
         }
         backTag(tag);
         return null;

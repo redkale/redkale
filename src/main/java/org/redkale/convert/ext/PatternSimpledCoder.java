@@ -5,7 +5,6 @@
  */
 package org.redkale.convert.ext;
 
-import java.util.HashMap;
 import java.util.regex.Pattern;
 import org.redkale.convert.*;
 import org.redkale.util.Attribute;
@@ -48,7 +47,7 @@ public class PatternSimpledCoder<R extends Reader, W extends Writer> extends Sim
                     Attribute.create(Pattern.class, "pattern", String.class, t -> t.pattern(), null),
                     2,
                     StringSimpledCoder.instance);
-            this.members = new EnMember[] {flagsMember, patternMember};
+            this.initFieldMember(new EnMember[] {flagsMember, patternMember});
             this.inited = true;
         }
     }
@@ -65,14 +64,8 @@ public class PatternSimpledCoder<R extends Reader, W extends Writer> extends Sim
                     2,
                     StringSimpledCoder.instance);
             this.creator = args -> Pattern.compile((String) args[1], (Integer) args[0]);
-            this.members = new DeMember[] {flagsMember, patternMember};
+            this.initFieldMember(new DeMember[] {flagsMember, patternMember});
             this.creatorConstructorMembers = this.members;
-            this.memberFieldMap = new HashMap<>(this.members.length);
-            this.memberTagMap = new HashMap<>(this.members.length);
-            for (DeMember member : this.members) {
-                this.memberFieldMap.put(member.getAttribute().field(), member);
-                this.memberTagMap.put(member.getTag(), member);
-            }
             this.inited = true;
         }
     }

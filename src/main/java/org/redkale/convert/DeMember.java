@@ -183,4 +183,5 @@ public final class DeMember<R extends Reader, T, F> {
         return "DeMember{" + "attribute=" + attribute.field() + ", position=" + position + ", tag=" + tag + ", decoder="
                 + (decoder == null ? null : decoder.getClass().getName()) + '}';
     }
+
 }

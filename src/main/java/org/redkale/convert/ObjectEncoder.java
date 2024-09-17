@@ -287,9 +287,9 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                     }
                     initForEachEnMember(factory, member);
                 }
-
-                this.members = list.toArray(new EnMember[list.size()]);
-                Arrays.sort(this.members, (a, b) -> a.compareTo(factory.isFieldSort(), b));
+                EnMember[] enMembers = list.toArray(new EnMember[list.size()]);
+                Arrays.sort(enMembers, (a, b) -> a.compareTo(factory.isFieldSort(), b));
+                this.initFieldMember(enMembers);
                 afterInitEnMember(factory);
             } catch (Exception ex) {
                 throw new ConvertException("ObjectEncoder init type=" + this.type + " error", ex);
@@ -303,6 +303,10 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                 lock.unlock();
             }
         }
+    }
+
+    protected void initFieldMember(EnMember[] enMembers) {
+        this.members = enMembers;
     }
 
     @Override

@@ -34,6 +34,8 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
 
     protected DeMember[] members;
 
+    protected DeMemberNode memberNode;
+
     protected Map<String, DeMember> memberFieldMap;
 
     protected Map<Integer, DeMember> memberTagMap;
@@ -69,6 +71,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
         this.factory = factory;
         try {
             if (type == Object.class) {
+                this.memberNode = DeMemberNode.create();
                 this.creatorConstructorMembers = null;
                 return;
             }
@@ -304,15 +307,9 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                     }
                     initForEachDeMember(factory, member);
                 }
-
-                this.members = list.toArray(new DeMember[list.size()]);
+                DeMember[] deMembers = list.toArray(new DeMember[list.size()]);
                 Arrays.sort(this.members, (a, b) -> a.compareTo(factory.isFieldSort(), b));
-                this.memberFieldMap = new HashMap<>(this.members.length);
-                this.memberTagMap = new HashMap<>(this.members.length);
-                for (DeMember member : this.members) {
-                    this.memberFieldMap.put(member.getAttribute().field(), member);
-                    this.memberTagMap.put(member.getTag(), member);
-                }
+                this.initFieldMember(deMembers);
 
                 if (cps != null) {
                     final String[] fields = cps;
@@ -341,6 +338,17 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                 lock.unlock();
             }
         }
+    }
+
+    protected void initFieldMember(DeMember[] deMembers) {
+        this.members = deMembers;
+        this.memberFieldMap = new HashMap<>(this.members.length);
+        this.memberTagMap = new HashMap<>(this.members.length);
+        for (DeMember member : this.members) {
+            this.memberFieldMap.put(member.getAttribute().field(), member);
+            this.memberTagMap.put(member.getTag(), member);
+        }
+        this.memberNode = DeMemberNode.create(this.members);
     }
 
     /**
@@ -376,14 +384,14 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
             }
         }
 
-        DeMember[] memberArray = this.members;
+        DeMemberNode fieldNode = this.memberNode;
         Map<String, DeMember> fieldMap = this.memberFieldMap;
         Map<Integer, DeMember> tagMap = this.memberTagMap;
         if (this.creatorConstructorMembers == null) { // 空构造函数
             final T result = this.creator == null ? null : this.creator.create();
             boolean first = true;
             while (objin.hasNext()) {
-                DeMember member = objin.readFieldName(memberArray, fieldMap, tagMap);
+                DeMember member = objin.readFieldName(fieldNode, fieldMap, tagMap);
                 objin.readBlank();
                 if (member == null) {
                     objin.skipValue(); // 跳过不存在的属性的值
@@ -401,7 +409,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
             int oc = 0;
             boolean first = true;
             while (objin.hasNext()) {
-                DeMember member = objin.readFieldName(memberArray, fieldMap, tagMap);
+                DeMember member = objin.readFieldName(fieldNode, fieldMap, tagMap);
                 objin.readBlank();
                 if (member == null) {
                     objin.skipValue(); // 跳过不存在的属性的值
