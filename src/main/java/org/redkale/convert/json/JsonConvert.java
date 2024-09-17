@@ -37,9 +37,9 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     private final ThreadLocal<JsonReader> readerPool = Utility.withInitialThreadLocal(JsonReader::new);
 
-    private Encodeable lastConvertEncodeable;
+    private Encodeable lastEncodeable;
 
-    private Decodeable lastConvertDecodeable;
+    private Decodeable lastDecodeable;
 
     protected JsonConvert(JsonFactory factory, int features) {
         super(factory, features);
@@ -192,12 +192,14 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         if (text == null || type == null) {
             return null;
         }
-        Decodeable decoder = this.lastConvertDecodeable;
+        Decodeable decoder = this.lastDecodeable;
         if (decoder == null || decoder.getType() != type) {
             decoder = factory.loadDecoder(type);
-            this.lastConvertDecodeable = decoder;
+            this.lastDecodeable = decoder;
         }
-        T rs = (T) decoder.convertFrom(new JsonReader(text, offset, length));
+        JsonReader reader = pollReader().setText(text, offset, length);
+        T rs = (T) decoder.convertFrom(reader);
+        offerReader(reader);
         return rs;
     }
 
@@ -205,10 +207,10 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         if (type == null || in == null) {
             return null;
         }
-        Decodeable decoder = this.lastConvertDecodeable;
+        Decodeable decoder = this.lastDecodeable;
         if (decoder == null || decoder.getType() != type) {
             decoder = factory.loadDecoder(type);
-            this.lastConvertDecodeable = decoder;
+            this.lastDecodeable = decoder;
         }
         return (T) decoder.convertFrom(new JsonStreamReader(in));
     }
@@ -218,10 +220,10 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         if (type == null || buffers == null || buffers.length == 0) {
             return null;
         }
-        Decodeable decoder = this.lastConvertDecodeable;
+        Decodeable decoder = this.lastDecodeable;
         if (decoder == null || decoder.getType() != type) {
             decoder = factory.loadDecoder(type);
-            this.lastConvertDecodeable = decoder;
+            this.lastDecodeable = decoder;
         }
         return (T) decoder.convertFrom(new JsonByteBufferReader(buffers));
     }
@@ -231,10 +233,10 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         if (type == null) {
             return null;
         }
-        Decodeable decoder = this.lastConvertDecodeable;
+        Decodeable decoder = this.lastDecodeable;
         if (decoder == null || decoder.getType() != type) {
             decoder = factory.loadDecoder(type);
-            this.lastConvertDecodeable = decoder;
+            this.lastDecodeable = decoder;
         }
         @SuppressWarnings("unchecked")
         T rs = (T) decoder.convertFrom(reader);
@@ -325,10 +327,10 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         }
         JsonCharsWriter writer = pollJsonCharsWriter();
         final Type t = type == null ? value.getClass() : type;
-        Encodeable encoder = this.lastConvertEncodeable;
+        Encodeable encoder = this.lastEncodeable;
         if (encoder == null || encoder.getType() != t) {
             encoder = factory.loadEncoder(t);
-            this.lastConvertEncodeable = encoder;
+            this.lastEncodeable = encoder;
         }
         if (encoder.specifyable()) {
             writer.specificObjectType(t);
@@ -347,10 +349,10 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         }
         JsonBytesWriter writer = pollJsonBytesWriter();
         final Type t = type == null ? value.getClass() : type;
-        Encodeable encoder = this.lastConvertEncodeable;
+        Encodeable encoder = this.lastEncodeable;
         if (encoder == null || encoder.getType() != t) {
             encoder = factory.loadEncoder(t);
-            this.lastConvertEncodeable = encoder;
+            this.lastEncodeable = encoder;
         }
         if (encoder.specifyable()) {
             writer.specificObjectType(t);
@@ -369,10 +371,10 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
             writer.writeNull();
         } else {
             final Type t = type == null ? value.getClass() : type;
-            Encodeable encoder = this.lastConvertEncodeable;
+            Encodeable encoder = this.lastEncodeable;
             if (encoder == null || encoder.getType() != t) {
                 encoder = factory.loadEncoder(t);
-                this.lastConvertEncodeable = encoder;
+                this.lastEncodeable = encoder;
             }
             if (encoder.specifyable()) {
                 writer.specificObjectType(t);
@@ -390,10 +392,10 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
             writer.writeNull();
         } else {
             final Type t = type == null ? value.getClass() : type;
-            Encodeable encoder = this.lastConvertEncodeable;
+            Encodeable encoder = this.lastEncodeable;
             if (encoder == null || encoder.getType() != t) {
                 encoder = factory.loadEncoder(t);
-                this.lastConvertEncodeable = encoder;
+                this.lastEncodeable = encoder;
             }
             if (encoder.specifyable()) {
                 writer.specificObjectType(t);
@@ -409,10 +411,10 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         } else {
             final Type t = type == null ? value.getClass() : type;
             JsonStreamWriter writer = configWrite(new JsonStreamWriter(features, out));
-            Encodeable encoder = this.lastConvertEncodeable;
+            Encodeable encoder = this.lastEncodeable;
             if (encoder == null || encoder.getType() != t) {
                 encoder = factory.loadEncoder(t);
-                this.lastConvertEncodeable = encoder;
+                this.lastEncodeable = encoder;
             }
             if (encoder.specifyable()) {
                 writer.specificObjectType(t);
@@ -441,10 +443,10 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
             writer.writeNull();
         } else {
             final Type t = type == null ? value.getClass() : type;
-            Encodeable encoder = this.lastConvertEncodeable;
+            Encodeable encoder = this.lastEncodeable;
             if (encoder == null || encoder.getType() != t) {
                 encoder = factory.loadEncoder(t);
-                this.lastConvertEncodeable = encoder;
+                this.lastEncodeable = encoder;
             }
             if (encoder.specifyable()) {
                 writer.specificObjectType(t);

@@ -29,9 +29,6 @@ public class JsonReader extends Reader {
 
     private CharArray array;
 
-    //    public static ObjectPool<JsonReader> createPool(int max) {
-    //        return new ObjectPool<>(max, (Object... params) -> new JsonReader(), null, JsonReader::recycle);
-    //    }
     public JsonReader() {}
 
     public JsonReader(String json) {
@@ -46,18 +43,19 @@ public class JsonReader extends Reader {
         setText(text, start, len);
     }
 
-    public final void setText(String text) {
-        setText(Utility.charArray(text));
+    public final JsonReader setText(String text) {
+        return setText(Utility.charArray(text));
     }
 
-    public final void setText(char[] text) {
-        setText(text, 0, text.length);
+    public final JsonReader setText(char[] text) {
+        return setText(text, 0, text.length);
     }
 
-    public final void setText(char[] text, int start, int len) {
+    public final JsonReader setText(char[] text, int start, int len) {
         this.text = text;
         this.position = start - 1;
         this.limit = start + len - 1;
+        return this;
     }
 
     @Override
@@ -72,7 +70,7 @@ public class JsonReader extends Reader {
         this.limit = -1;
         this.text = null;
         if (this.array != null) {
-            if (this.array.content.length > 102400) {
+            if (this.array.content.length > CharArray.DEFAULT_SIZE * 200) {
                 this.array = null;
             } else {
                 this.array.clear();
@@ -278,7 +276,7 @@ public class JsonReader extends Reader {
             return null;
         }
         throw new ConvertException("a json object text must begin with '{' (position = " + position + ") but '" + ch
-                + "' in (" + new String(this.text) + ")");
+                + "' in " + new String(this.text));
     }
 
     @Override
@@ -328,7 +326,7 @@ public class JsonReader extends Reader {
             return SIGN_NULL;
         }
         throw new ConvertException("a json array text must begin with '[' (position = " + position + ") but '" + ch
-                + "' in (" + new String(this.text) + ")");
+                + "' in " + new String(this.text));
     }
 
     @Override
@@ -1050,9 +1048,11 @@ public class JsonReader extends Reader {
 
     protected static class CharArray {
 
+        private static final int DEFAULT_SIZE = 1024;
+
         private int count;
 
-        private char[] content = new char[1024];
+        private char[] content = new char[DEFAULT_SIZE];
 
         private char[] expand(int len) {
             int newcount = count + len;
