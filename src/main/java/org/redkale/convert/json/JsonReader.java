@@ -6,6 +6,7 @@
 package org.redkale.convert.json;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Map;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.*;
@@ -26,6 +27,8 @@ public class JsonReader extends Reader {
     private char[] text;
 
     private int limit;
+
+    private CharArray array;
 
     //    public static ObjectPool<JsonReader> createPool(int max) {
     //        return new ObjectPool<>(max, (Object... params) -> new JsonReader(), null, JsonReader::recycle);
@@ -69,7 +72,21 @@ public class JsonReader extends Reader {
         this.position = -1;
         this.limit = -1;
         this.text = null;
+        if (this.array != null) {
+            if (this.array.content.length > 102400) {
+                this.array = null;
+            } else {
+                this.array.clear();
+            }
+        }
         return true;
+    }
+
+    protected CharArray array() {
+        if (array == null) {
+            array = new CharArray();
+        }
+        return array.clear();
     }
 
     public void close() {
@@ -367,59 +384,6 @@ public class JsonReader extends Reader {
     @Override
     public final String readClassName() {
         return null;
-    }
-
-    @Override
-    public String readSmallString() {
-        final int eof = this.limit;
-        if (this.position == eof) {
-            return null;
-        }
-        char ch = nextGoodChar(true); // 需要跳过注释
-        final char[] text0 = this.text;
-        int currpos = this.position;
-        if (ch == '"' || ch == '\'') {
-            final char quote = ch;
-            final int start = currpos + 1;
-            for (; ; ) {
-                ch = text0[++currpos];
-                if (ch == '\\') {
-                    this.position = currpos - 1;
-                    return readEscapeValue(quote, start);
-                } else if (ch == quote) {
-                    break;
-                }
-            }
-            this.position = currpos;
-            char[] chs = new char[currpos - start];
-            System.arraycopy(text0, start, chs, 0, chs.length);
-            return new String(chs);
-        } else {
-            int start = currpos;
-            for (; ; ) {
-                if (currpos == eof) {
-                    break;
-                }
-                ch = text0[++currpos];
-                if (ch == ',' || ch == ']' || ch == '}' || ch <= ' ' || ch == ':') {
-                    break;
-                }
-            }
-            int len = currpos - start;
-            if (len < 1) {
-                this.position = currpos;
-                return String.valueOf(ch);
-            }
-            this.position = currpos - 1;
-            if (len == 4
-                    && text0[start] == 'n'
-                    && text0[start + 1] == 'u'
-                    && text0[start + 2] == 'l'
-                    && text0[start + 3] == 'l') {
-                return null;
-            }
-            return new String(text0, start, len == eof ? (len + 1) : len);
-        }
     }
 
     /**
@@ -835,6 +799,57 @@ public class JsonReader extends Reader {
         }
     }
 
+    @Override
+    public String readSmallString() {
+        final int eof = this.limit;
+        if (this.position == eof) {
+            return null;
+        }
+        char ch = nextGoodChar(true); // 需要跳过注释
+        final char[] text0 = this.text;
+        int currpos = this.position;
+        if (ch == '"' || ch == '\'') {
+            final char quote = ch;
+            final int start = currpos + 1;
+            for (; ; ) {
+                ch = text0[++currpos];
+                if (ch == '\\') {
+                    this.position = currpos - 1;
+                    return readEscapeValue(quote, start);
+                } else if (ch == quote) {
+                    break;
+                }
+            }
+            this.position = currpos;
+            return new String(text0, start, currpos - start);
+        } else {
+            int start = currpos;
+            for (; ; ) {
+                if (currpos == eof) {
+                    break;
+                }
+                ch = text0[++currpos];
+                if (ch == ',' || ch == ']' || ch == '}' || ch <= ' ' || ch == ':') {
+                    break;
+                }
+            }
+            int len = currpos - start;
+            if (len < 1) {
+                this.position = currpos;
+                return String.valueOf(ch);
+            }
+            this.position = currpos - 1;
+            if (len == 4
+                    && text0[start] == 'n'
+                    && text0[start + 1] == 'u'
+                    && text0[start + 2] == 'l'
+                    && text0[start + 3] == 'l') {
+                return null;
+            }
+            return new String(text0, start, len == eof ? (len + 1) : len);
+        }
+    }
+
     /**
      * 读取字符串， 必须是"或者'包围的字符串值
      *
@@ -909,22 +924,63 @@ public class JsonReader extends Reader {
                     + position + ") in (" + new String(this.text) + ")");
         }
         final int start = ++currpos;
+        CharArray array = null;
+        char c;
         for (; ; ) {
             char ch = text0[currpos];
             if (ch == expected) {
                 break;
             } else if (ch == '\\') {
-                this.position = currpos - 1;
-                return readEscapeValue(expected, start);
+                if (array == null) {
+                    array = array();
+                    array.append(text0, start, currpos - start);
+                }
+                c = text0[++currpos];
+                switch (c) {
+                    case '"':
+                    case '\'':
+                    case '\\':
+                    case '/':
+                        array.append(c);
+                        break;
+                    case 'n':
+                        array.append('\n');
+                        break;
+                    case 'r':
+                        array.append('\r');
+                        break;
+                    case 'u':
+                        array.append((char) Integer.parseInt(
+                                new String(new char[] {
+                                    text0[++currpos], text0[++currpos], text0[++currpos], text0[++currpos]
+                                }),
+                                16));
+                        break;
+                    case 't':
+                        array.append('\t');
+                        break;
+                    case 'b':
+                        array.append('\b');
+                        break;
+                    case 'f':
+                        array.append('\f');
+                        break;
+                    default:
+                        this.position = currpos;
+                        throw new ConvertException("illegal escape(" + c + ") (position = " + this.position + ") in ("
+                                + new String(this.text) + ")");
+                }
+            } else if (array != null) {
+                array.append(ch);
             }
             currpos++;
         }
         this.position = currpos;
-        return new String(text0, start, currpos - start);
+        return array != null ? array.toStringThenClear() : new String(text0, start, currpos - start);
     }
 
     private String readEscapeValue(final char expected, int start) {
-        StringBuilder array = new StringBuilder();
+        CharArray array = this.array();
         final char[] text0 = this.text;
         int pos = this.position;
         array.append(text0, start, pos + 1 - start);
@@ -933,7 +989,7 @@ public class JsonReader extends Reader {
             c = text0[++pos];
             if (c == expected) {
                 this.position = pos;
-                return array.toString();
+                return array.toStringThenClear();
             } else if (c == '\\') {
                 c = text0[++pos];
                 switch (c) {
@@ -991,5 +1047,64 @@ public class JsonReader extends Reader {
         digits['"'] = digits['\''] = -2; // -2 跳过
         digits[' '] = digits['\t'] = digits['\r'] = digits['\n'] = -3; // -3可能跳过
         digits[','] = digits['}'] = digits[']'] = digits[':'] = -4; // -4退出
+    }
+
+    protected static class CharArray {
+
+        private int count;
+
+        private char[] content = new char[1024];
+
+        private char[] expand(int len) {
+            int newcount = count + len;
+            if (newcount <= content.length) {
+                return content;
+            }
+            char[] newdata = new char[Math.max(content.length * 2, newcount)];
+            System.arraycopy(content, 0, newdata, 0, count);
+            this.content = newdata;
+            return newdata;
+        }
+
+        public CharArray append(char[] str, int offset, int len) {
+            char[] chs = expand(len);
+            System.arraycopy(str, offset, chs, count, len);
+            count += len;
+            return this;
+        }
+
+        public CharArray append(char ch) {
+            char[] chs = expand(1);
+            chs[count++] = ch;
+            return this;
+        }
+
+        public CharArray clear() {
+            this.count = 0;
+            return this;
+        }
+
+        public char[] content() {
+            return content;
+        }
+
+        public int length() {
+            return count;
+        }
+
+        public char[] getChars() {
+            return Arrays.copyOfRange(content, 0, count);
+        }
+
+        public String toStringThenClear() {
+            String s = toString();
+            this.count = 0;
+            return s;
+        }
+
+        @Override
+        public String toString() {
+            return new String(content, 0, count);
+        }
     }
 }

@@ -123,6 +123,10 @@ public class JsonCharsWriter extends JsonWriter {
      */
     @Override
     public void writeLatin1To(final boolean quote, final String value) {
+        if (value == null) {
+            writeNull();
+            return;
+        }
         int len = value.length();
         if (quote) {
             expand(len + 2);

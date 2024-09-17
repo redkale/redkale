@@ -8,16 +8,14 @@ package org.redkale.test.convert;
 import java.util.*;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.Convert;
+import org.redkale.convert.ConvertSmallString;
 import org.redkale.convert.json.*;
 
 /** @author zhangjx */
 public class Json5Test {
 
-    private boolean main;
-
     public static void main(String[] args) throws Throwable {
         Json5Test test = new Json5Test();
-        test.main = true;
         test.run1();
         test.run2();
     }
@@ -36,14 +34,16 @@ public class Json5Test {
         JsonConvert convert = JsonConvert.root();
         Json5Bean bean = new Json5Bean();
         bean.id = 500;
+        bean.idx = 600;
         bean.decmails = 3.2f;
         bean.value = 44444;
-        bean.name = "haha";
-        String json = "{/*多行\r\n注释**/\"decmails\":3.2,//单行注释\r\n\"id\":0x1F4,\"name\":\"haha\",\"value\":44444,}";
+        bean.name = "ha\t\"ha";
+        bean.desc = "normal";
+        String json =
+                "{/*多行\r\n注释**/\"decmails\":3.2,//单行注释\r\n\"id\":0x1F4,\"idx\":600,\"name\":\"ha\\t\\\"ha\",\"desc\":\"normal\",\"value\":44444,}";
         Json5Bean bean2 = convert.convertFrom(Json5Bean.class, json);
-        if (!main) {
-            Assertions.assertTrue(bean.equals(bean2));
-        }
+        System.out.println(bean2.name);
+        Assertions.assertTrue(bean.equals(bean2));
         System.out.println(convert.convertTo(bean2));
 
         String arrayJson = "[" + json + "," + json + "," + "]";
@@ -59,16 +59,22 @@ public class Json5Test {
 
         public int id;
 
+        public int idx;
+
         public float decmails;
 
         public long value;
 
         public String name;
 
+        @ConvertSmallString
+        public String desc;
+
         @Override
         public int hashCode() {
             int hash = 7;
             hash = 47 * hash + this.id;
+            hash = 47 * hash + this.idx;
             hash = 47 * hash + Float.floatToIntBits(this.decmails);
             hash = 47 * hash + (int) (this.value ^ (this.value >>> 32));
             hash = 47 * hash + Objects.hashCode(this.name);
@@ -88,6 +94,9 @@ public class Json5Test {
             }
             final Json5Bean other = (Json5Bean) obj;
             if (this.id != other.id) {
+                return false;
+            }
+            if (this.idx != other.idx) {
                 return false;
             }
             if (Float.floatToIntBits(this.decmails) != Float.floatToIntBits(other.decmails)) {
