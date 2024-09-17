@@ -65,7 +65,7 @@ public class PatternSimpledCoder<R extends Reader, W extends Writer> extends Sim
                     StringSimpledCoder.instance);
             this.creator = args -> Pattern.compile((String) args[1], (Integer) args[0]);
             this.initFieldMember(new DeMember[] {flagsMember, patternMember});
-            this.creatorConstructorMembers = this.members;
+            this.creatorConstructorMembers = this.getMembers();
             this.inited = true;
         }
     }

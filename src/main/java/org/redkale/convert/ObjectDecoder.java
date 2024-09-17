@@ -32,13 +32,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
 
     protected DeMember<R, T, ?>[] creatorConstructorMembers = null;
 
-    protected DeMember[] members;
-
-    protected DeMemberNode memberNode;
-
-    protected Map<String, DeMember> memberFieldMap;
-
-    protected Map<Integer, DeMember> memberTagMap;
+    protected DeMemberInfo memberInfo;
 
     @Nullable
     protected ConvertFactory factory;
@@ -64,14 +58,13 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
         } else {
             this.typeClass = (Class) type;
         }
-        this.members = new DeMember[0];
+        this.memberInfo = DeMemberInfo.create();
     }
 
     public void init(final ConvertFactory factory) {
         this.factory = factory;
         try {
             if (type == Object.class) {
-                this.memberNode = DeMemberNode.create();
                 this.creatorConstructorMembers = null;
                 return;
             }
@@ -308,14 +301,14 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                     initForEachDeMember(factory, member);
                 }
                 DeMember[] deMembers = list.toArray(new DeMember[list.size()]);
-                Arrays.sort(this.members, (a, b) -> a.compareTo(factory.isFieldSort(), b));
+                Arrays.sort(deMembers, (a, b) -> a.compareTo(factory.isFieldSort(), b));
                 this.initFieldMember(deMembers);
 
                 if (cps != null) {
                     final String[] fields = cps;
                     final DeMember<R, T, ?>[] ms = new DeMember[fields.length];
                     for (int i = 0; i < fields.length; i++) {
-                        for (DeMember m : this.members) {
+                        for (DeMember m : memberInfo.members) {
                             if (m.attribute.field().equals(fields[i])) {
                                 ms[i] = m;
                                 break;
@@ -341,14 +334,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
     }
 
     protected void initFieldMember(DeMember[] deMembers) {
-        this.members = deMembers;
-        this.memberFieldMap = new HashMap<>(this.members.length);
-        this.memberTagMap = new HashMap<>(this.members.length);
-        for (DeMember member : this.members) {
-            this.memberFieldMap.put(member.getAttribute().field(), member);
-            this.memberTagMap.put(member.getTag(), member);
-        }
-        this.memberNode = DeMemberNode.create(this.members);
+        this.memberInfo = DeMemberInfo.create(deMembers);
     }
 
     /**
@@ -384,14 +370,12 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
             }
         }
 
-        DeMemberNode fieldNode = this.memberNode;
-        Map<String, DeMember> fieldMap = this.memberFieldMap;
-        Map<Integer, DeMember> tagMap = this.memberTagMap;
+        DeMemberInfo info = this.memberInfo;
         if (this.creatorConstructorMembers == null) { // 空构造函数
             final T result = this.creator == null ? null : this.creator.create();
             boolean first = true;
             while (objin.hasNext()) {
-                DeMember member = objin.readFieldName(fieldNode, fieldMap, tagMap);
+                DeMember member = objin.readFieldName(info);
                 objin.readBlank();
                 if (member == null) {
                     objin.skipValue(); // 跳过不存在的属性的值
@@ -405,11 +389,11 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
         } else { // 带参数的构造函数
             final DeMember<R, T, ?>[] constructorFields = this.creatorConstructorMembers;
             final Object[] constructorParams = new Object[constructorFields.length];
-            final Object[][] otherParams = new Object[this.members.length][2];
+            final Object[][] otherParams = new Object[info.length()][2];
             int oc = 0;
             boolean first = true;
             while (objin.hasNext()) {
-                DeMember member = objin.readFieldName(fieldNode, fieldMap, tagMap);
+                DeMember member = objin.readFieldName(info);
                 objin.readBlank();
                 if (member == null) {
                     objin.skipValue(); // 跳过不存在的属性的值
@@ -485,19 +469,11 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
     }
 
     public DeMember[] getMembers() {
-        return members;
+        return memberInfo.getMembers();
     }
 
-    public DeMember getMember(String fieldName) {
-        return memberFieldMap.get(fieldName);
-    }
-
-    public Map<String, DeMember> getMemberFieldMap() {
-        return memberFieldMap;
-    }
-
-    public Map<Integer, DeMember> getMemberTagMap() {
-        return memberTagMap;
+    public DeMemberInfo getMemberInfo() {
+        return memberInfo;
     }
 
     public DeMember<R, T, ?>[] getConstructorMembers() {
@@ -510,6 +486,6 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
 
     @Override
     public String toString() {
-        return "ObjectDecoder{" + "type=" + type + ", members=" + Arrays.toString(members) + '}';
+        return "ObjectDecoder{" + "type=" + type + ", members=" + Arrays.toString(memberInfo.members) + '}';
     }
 }

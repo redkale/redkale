@@ -6,7 +6,6 @@
 package org.redkale.convert.bson;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.SIGN_NULL;
 import org.redkale.convert.ext.ByteSimpledCoder;
@@ -251,11 +250,10 @@ public class BsonReader extends Reader {
     }
 
     @Override
-    public final DeMember readFieldName(
-            final DeMemberNode fieldNode, Map<String, DeMember> memberFieldMap, Map<Integer, DeMember> memberTagMap) {
+    public final DeMember readFieldName(final DeMemberInfo memberInfo) {
         final String exceptedField = readSmallString();
         this.typeval = readByte();
-        return fieldNode.getMember(exceptedField);
+        return memberInfo.getMemberByField(exceptedField);
     }
 
     // ------------------------------------------------------------

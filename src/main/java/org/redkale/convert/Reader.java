@@ -5,8 +5,6 @@
  */
 package org.redkale.convert;
 
-import java.util.Map;
-
 /**
  * 反序列化的数据读取流
  *
@@ -136,13 +134,11 @@ public abstract class Reader {
     /**
      * 根据字段读取字段对应的DeMember
      *
-     * @param fieldNode DeMember的全量集合
-     * @param memberFieldMap DeMember的字段名map
-     * @param memberTagMap DeMember的tag map
+     * @param memberInfo DeMember信息
+     *
      * @return 匹配的DeMember
      */
-    public abstract DeMember readFieldName(
-            final DeMemberNode fieldNode, Map<String, DeMember> memberFieldMap, Map<Integer, DeMember> memberTagMap);
+    public abstract DeMember readFieldName(final DeMemberInfo memberInfo);
 
     /**
      * 读取一个boolean值

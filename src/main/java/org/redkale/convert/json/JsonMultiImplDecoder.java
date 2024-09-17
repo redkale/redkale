@@ -114,7 +114,7 @@ public class JsonMultiImplDecoder<T> implements Decodeable<JsonReader, T> {
         final Object[][] params = new Object[this.maxMemberCount][2];
         while (in.hasNext()) {
             String fieldName = in.readFieldName();
-            DeMember member = decoder.getMember(fieldName);
+            DeMember member = decoder.getMemberInfo().getMemberByField(fieldName);
             // new Set[]{Utility.ofSet("1", "2", "3"), Utility.ofSet("2", "3"), Utility.ofSet("4", "2", "3"),
             // Utility.ofSet("6", "7", "8"), Utility.ofSet("6", "9")};
             if (member == null && !finaled) {
@@ -123,10 +123,10 @@ public class JsonMultiImplDecoder<T> implements Decodeable<JsonReader, T> {
                     de = repeats.get(fieldName);
                     if (de != null) {
                         decoder = de;
-                        member = de.getMember(fieldName);
+                        member = de.getMemberInfo().getMemberByField(fieldName);
                         for (int i = 0; i <= index; i++) { // 迁移params中的DeMember.Attribute
                             if (params[i] != null) {
-                                DeMember dm = de.getMember(((Attribute) params[i][0]).field());
+                                DeMember dm = de.getMemberInfo().getMemberByField(((Attribute) params[i][0]).field());
                                 params[i][0] = dm == null ? null : dm.getAttribute();
                             }
                         }
@@ -134,10 +134,10 @@ public class JsonMultiImplDecoder<T> implements Decodeable<JsonReader, T> {
                 } else {
                     finaled = true;
                     decoder = de;
-                    member = de.getMember(fieldName);
+                    member = de.getMemberInfo().getMemberByField(fieldName);
                     for (int i = 0; i <= index; i++) { // 迁移params中的DeMember.Attribute
                         if (params[i] != null) {
-                            DeMember dm = de.getMember(((Attribute) params[i][0]).field());
+                            DeMember dm = de.getMemberInfo().getMemberByField(((Attribute) params[i][0]).field());
                             params[i][0] = dm == null ? null : dm.getAttribute();
                         }
                     }

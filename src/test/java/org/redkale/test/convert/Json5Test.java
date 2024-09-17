@@ -40,7 +40,7 @@ public class Json5Test {
         bean.name = "ha\t\"ha";
         bean.desc = "normal";
         String json =
-                "{/*多行\r\n注释**/\"decmails\":3.2,//单行注释\r\n\"id\":0x1F4,\"idx\":600,\"name\":\"ha\\t\\\"ha\",\"desc\":\"normal\",\"value\":44444,}";
+                "{/*多行\r\n注释**/\"decmails\":3.2,//单行注释\r\n\"id\":0x1F4,\"idx\":600,name:\"ha\\t\\\"ha\",\"desc\":\"normal\",\"value\":44444,}";
         Json5Bean bean2 = convert.convertFrom(Json5Bean.class, json);
         System.out.println(bean2.name);
         Assertions.assertTrue(bean.equals(bean2));

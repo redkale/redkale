@@ -7,7 +7,6 @@ package org.redkale.convert.json;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Map;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.*;
 import org.redkale.convert.Reader.ValueType;
@@ -659,14 +658,13 @@ public class JsonReader extends Reader {
     }
 
     @Override
-    public DeMember readFieldName(
-            final DeMemberNode fieldNode, Map<String, DeMember> memberFieldMap, Map<Integer, DeMember> memberTagMap) {
+    public DeMember readFieldName(final DeMemberInfo memberInfo) {
 
         final int eof = this.limit;
         if (this.position == eof) {
             return null;
         }
-        DeMemberNode node = fieldNode;
+        DeMemberNode node = memberInfo.getMemberNode();
         char ch = nextGoodChar(true); // 需要跳过注释
         final char[] text0 = this.text;
         int currpos = this.position;
@@ -682,6 +680,7 @@ public class JsonReader extends Reader {
             this.position = currpos;
             return node == null ? null : node.getValue();
         } else {
+            node = node == null ? null : node.getNode(ch);
             int start = currpos;
             for (; ; ) {
                 if (currpos == eof) {

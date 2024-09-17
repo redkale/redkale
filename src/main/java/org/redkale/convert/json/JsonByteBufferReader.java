@@ -7,7 +7,6 @@ package org.redkale.convert.json;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.UnmappableCharacterException;
-import java.util.Map;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.*;
 
@@ -315,13 +314,12 @@ public class JsonByteBufferReader extends JsonReader {
     }
 
     @Override
-    public DeMember readFieldName(
-            final DeMemberNode fieldNode, Map<String, DeMember> memberFieldMap, Map<Integer, DeMember> memberTagMap) {
+    public DeMember readFieldName(final DeMemberInfo memberInfo) {
         char ch = nextGoodChar(true);
         if (ch == 0) {
             return null;
         }
-        DeMemberNode node = fieldNode;
+        DeMemberNode node = memberInfo.getMemberNode();
         StringBuilder sb = new StringBuilder();
         if (ch == '"' || ch == '\'') {
             final char quote = ch;
