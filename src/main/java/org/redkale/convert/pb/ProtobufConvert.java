@@ -34,10 +34,10 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
     private final ThreadLocal<ProtobufReader> readerPool = Utility.withInitialThreadLocal(ProtobufReader::new);
 
     @Nullable
-    private Encodeable lastConvertEncodeable;
+    private Encodeable lastEncodeable;
 
     @Nullable
-    private Decodeable lastConvertDecodeable;
+    private Decodeable lastDecodeable;
 
     protected ProtobufConvert(ConvertFactory<ProtobufReader, ProtobufWriter> factory, int features) {
         super(factory, features);
@@ -600,10 +600,10 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
             return null;
         }
         final ProtobufReader reader = new ProtobufReader(bytes, offset, len);
-        Decodeable decoder = this.lastConvertDecodeable;
+        Decodeable decoder = this.lastDecodeable;
         if (decoder == null || decoder.getType() != type) {
             decoder = factory.loadDecoder(type);
-            this.lastConvertDecodeable = decoder;
+            this.lastDecodeable = decoder;
         }
         if (!(decoder instanceof ObjectDecoder) && !(decoder instanceof SimpledCoder)) {
             throw new ConvertException(this.getClass().getSimpleName() + " not supported type(" + type + ")");
@@ -620,10 +620,10 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
         if (type == null || in == null) {
             return null;
         }
-        Decodeable decoder = this.lastConvertDecodeable;
+        Decodeable decoder = this.lastDecodeable;
         if (decoder == null || decoder.getType() != type) {
             decoder = factory.loadDecoder(type);
-            this.lastConvertDecodeable = decoder;
+            this.lastDecodeable = decoder;
         }
         if (!(decoder instanceof ObjectDecoder)) {
             throw new ConvertException(this.getClass().getSimpleName() + " not supported type(" + type + ")");
@@ -640,10 +640,10 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
         if (type == null || Utility.isEmpty(buffers)) {
             return null;
         }
-        Decodeable decoder = this.lastConvertDecodeable;
+        Decodeable decoder = this.lastDecodeable;
         if (decoder == null || decoder.getType() != type) {
             decoder = factory.loadDecoder(type);
-            this.lastConvertDecodeable = decoder;
+            this.lastDecodeable = decoder;
         }
         if (!(decoder instanceof ObjectDecoder)) {
             throw new ConvertException(this.getClass().getSimpleName() + " not supported type(" + type + ")");
@@ -657,10 +657,10 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
         if (type == null) {
             return null;
         }
-        Decodeable decoder = this.lastConvertDecodeable;
+        Decodeable decoder = this.lastDecodeable;
         if (decoder == null || decoder.getType() != type) {
             decoder = factory.loadDecoder(type);
-            this.lastConvertDecodeable = decoder;
+            this.lastDecodeable = decoder;
         }
         if (!(decoder instanceof ObjectDecoder)) {
             throw new ConvertException(this.getClass().getSimpleName() + " not supported type(" + type + ")");
@@ -681,10 +681,10 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
         }
         final Type t = type == null ? value.getClass() : type;
         final ProtobufWriter writer = pollWriter();
-        Encodeable encoder = this.lastConvertEncodeable;
+        Encodeable encoder = this.lastEncodeable;
         if (encoder == null || encoder.getType() != t) {
             encoder = factory.loadEncoder(t);
-            this.lastConvertEncodeable = encoder;
+            this.lastEncodeable = encoder;
         }
         if (encoder.specifyable()) {
             writer.specificObjectType(t);
@@ -707,10 +707,10 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
             return null;
         }
         final ProtobufWriter writer = pollWriter();
-        Encodeable encoder = this.lastConvertEncodeable;
+        Encodeable encoder = this.lastEncodeable;
         if (encoder == null || encoder.getType() != type) {
             encoder = factory.loadEncoder(type);
-            this.lastConvertEncodeable = encoder;
+            this.lastEncodeable = encoder;
         }
         if (encoder.specifyable()) {
             writer.specificObjectType(type);
@@ -739,10 +739,10 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
             writer.writeNull();
         } else {
             final Type t = type == null ? value.getClass() : type;
-            Encodeable encoder = this.lastConvertEncodeable;
+            Encodeable encoder = this.lastEncodeable;
             if (encoder == null || encoder.getType() != t) {
                 encoder = factory.loadEncoder(t);
-                this.lastConvertEncodeable = encoder;
+                this.lastEncodeable = encoder;
             }
             if (encoder.specifyable()) {
                 writer.specificObjectType(t);
@@ -765,10 +765,10 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
             writer.writeNull();
         } else {
             final Type t = type == null ? value.getClass() : type;
-            Encodeable encoder = this.lastConvertEncodeable;
+            Encodeable encoder = this.lastEncodeable;
             if (encoder == null || encoder.getType() != t) {
                 encoder = factory.loadEncoder(t);
-                this.lastConvertEncodeable = encoder;
+                this.lastEncodeable = encoder;
             }
             if (encoder.specifyable()) {
                 writer.specificObjectType(t);
@@ -790,10 +790,10 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
             writer.writeNull();
         } else {
             final Type t = type == null ? value.getClass() : type;
-            Encodeable encoder = this.lastConvertEncodeable;
+            Encodeable encoder = this.lastEncodeable;
             if (encoder == null || encoder.getType() != t) {
                 encoder = factory.loadEncoder(t);
-                this.lastConvertEncodeable = encoder;
+                this.lastEncodeable = encoder;
             }
             if (encoder.specifyable()) {
                 writer.specificObjectType(t);
@@ -815,10 +815,10 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
             writer.writeNull();
         } else {
             final Type t = type == null ? value.getClass() : type;
-            Encodeable encoder = this.lastConvertEncodeable;
+            Encodeable encoder = this.lastEncodeable;
             if (encoder == null || encoder.getType() != t) {
                 encoder = factory.loadEncoder(t);
-                this.lastConvertEncodeable = encoder;
+                this.lastEncodeable = encoder;
             }
             if (encoder.specifyable()) {
                 writer.specificObjectType(t);
@@ -839,10 +839,10 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
         }
         writer.initOffset = writer.count;
         final Type t = type == null ? value.getClass() : type;
-        Encodeable encoder = this.lastConvertEncodeable;
+        Encodeable encoder = this.lastEncodeable;
         if (encoder == null || encoder.getType() != t) {
             encoder = factory.loadEncoder(t);
-            this.lastConvertEncodeable = encoder;
+            this.lastEncodeable = encoder;
         }
         if (encoder.specifyable()) {
             writer.specificObjectType(t);
@@ -856,10 +856,10 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
         }
         final ProtobufWriter writer = pollWriter();
         final Type t = type == null ? value.getClass() : type;
-        Encodeable encoder = this.lastConvertEncodeable;
+        Encodeable encoder = this.lastEncodeable;
         if (encoder == null || encoder.getType() != t) {
             encoder = factory.loadEncoder(t);
-            this.lastConvertEncodeable = encoder;
+            this.lastEncodeable = encoder;
         }
         if (encoder.specifyable()) {
             writer.specificObjectType(t);

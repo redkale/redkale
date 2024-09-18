@@ -175,10 +175,13 @@ public class JsonReader extends Reader {
      * @return 有效字符
      */
     protected char nextGoodChar(boolean allowComment) {
-        char c = 0;
         char[] text0 = this.text;
         int end = this.limit;
         int curr = ++this.position;
+        char c = text0[curr];
+        if (c > ' ' && c != '/') {
+            return c;
+        }
         for (; curr <= end; curr++) {
             c = text0[curr];
             if (c > ' ') {

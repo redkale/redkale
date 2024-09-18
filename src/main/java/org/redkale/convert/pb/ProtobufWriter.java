@@ -72,7 +72,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     public ProtobufWriter(int size) {
-        this.content = new byte[size > 128 ? size : 128];
+        this.content = new byte[Math.max(size, DEFAULT_SIZE)];
     }
 
     public ProtobufWriter(ByteArray array) {
@@ -150,7 +150,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     protected int expand(int len) {
         int newcount = count + len;
         if (newcount > content.length) {
-            byte[] newdata = new byte[Math.max(content.length * 3 / 2, newcount)];
+            byte[] newdata = new byte[Math.max(content.length * 2, newcount)];
             System.arraycopy(content, 0, newdata, 0, count);
             this.content = newdata;
         }
@@ -330,10 +330,6 @@ public class ProtobufWriter extends Writer implements ByteTuple {
                         for (Double item : (Collection<Double>) obj) {
                             tmp.writeDouble(item);
                         }
-                    } else if (componentType == Long.class) {
-                        for (Long item : (Collection<Long>) obj) {
-                            tmp.writeLong(item);
-                        }
                     } else if (componentType == AtomicInteger.class) {
                         for (AtomicInteger item : (Collection<AtomicInteger>) obj) {
                             tmp.writeInt(item == null ? 0 : item.get());
@@ -351,17 +347,17 @@ public class ProtobufWriter extends Writer implements ByteTuple {
                 Type componentType = streamEncoder.getComponentType();
                 if (streamEncoder.simple) {
                     if (componentType == Boolean.class) {
-                        ((Stream<Boolean>) obj).forEach(item -> tmp.writeBoolean(item));
+                        ((Stream<Boolean>) obj).forEach(tmp::writeBoolean);
                     } else if (componentType == Short.class) {
-                        ((Stream<Short>) obj).forEach(item -> tmp.writeShort(item));
+                        ((Stream<Short>) obj).forEach(tmp::writeShort);
                     } else if (componentType == Integer.class) {
-                        ((Stream<Integer>) obj).forEach(item -> tmp.writeInt(item));
+                        ((Stream<Integer>) obj).forEach(tmp::writeInt);
                     } else if (componentType == Float.class) {
-                        ((Stream<Float>) obj).forEach(item -> tmp.writeFloat(item));
+                        ((Stream<Float>) obj).forEach(tmp::writeFloat);
                     } else if (componentType == Long.class) {
-                        ((Stream<Long>) obj).forEach(item -> tmp.writeLong(item));
+                        ((Stream<Long>) obj).forEach(tmp::writeLong);
                     } else if (componentType == Double.class) {
-                        ((Stream<Double>) obj).forEach(item -> tmp.writeDouble(item));
+                        ((Stream<Double>) obj).forEach(tmp::writeDouble);
                     } else if (componentType == AtomicInteger.class) {
                         ((Stream<AtomicInteger>) obj).forEach(item -> tmp.writeInt(item == null ? 0 : item.get()));
                     } else if (componentType == AtomicLong.class) {
@@ -374,7 +370,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
                 return -1;
             }
             int length = tmp.count();
-            writeUInt32(length);
+            writeLength(length);
             writeTo(tmp.toArray());
             return length;
         }
@@ -408,8 +404,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
 
     @Override
     public void writeFieldName(EnMember member, String fieldName, Type fieldType, int fieldPos) {
-        int tag = ProtobufFactory.getTag(fieldName, fieldType, fieldPos, enumtostring);
-        writeUInt32(tag);
+        writeTag(member.getTag());
     }
 
     @Override
@@ -579,7 +574,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     @Override
     public void writeString(String value) {
         byte[] bs = Utility.isLatin1(value) ? Utility.latin1ByteArray(value) : Utility.encodeUTF8(value);
-        writeUInt32(bs.length);
+        writeLength(bs.length);
         writeTo(bs);
     }
 
@@ -601,6 +596,22 @@ public class ProtobufWriter extends Writer implements ByteTuple {
                 bs[pos++] = ((byte) ((value & 0x7F) | 0x80));
                 value >>>= 7;
             }
+        }
+    }
+
+    protected void writeTag(int tag) {
+        if (tag < 128) {
+            writeTo((byte) tag);
+        } else {
+            writeUInt32(tag);
+        }
+    }
+
+    protected void writeLength(int value) {
+        if (value < 128) {
+            writeTo((byte) value);
+        } else {
+            writeUInt32(value);
         }
     }
 
