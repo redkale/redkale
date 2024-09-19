@@ -115,7 +115,7 @@ public abstract class ProtobufDynEncoder<T> implements Encodeable<ProtobufWriter
                 if (!factory.isSimpleMemberType(clazz, field.getGenericType(), field.getType())) {
                     return null;
                 }
-                String name = convertFieldName(factory, clazz, field);
+                String name = factory.readConvertFieldName(clazz, field);
                 if (names.contains(name)) {
                     continue;
                 }
@@ -166,7 +166,7 @@ public abstract class ProtobufDynEncoder<T> implements Encodeable<ProtobufWriter
                 if (!factory.isSimpleMemberType(clazz, method.getGenericReturnType(), method.getReturnType())) {
                     return null;
                 }
-                String name = convertFieldName(factory, clazz, method);
+                String name = factory.readConvertFieldName(clazz, method);
                 if (names.contains(name)) {
                     continue;
                 }
@@ -188,12 +188,6 @@ public abstract class ProtobufDynEncoder<T> implements Encodeable<ProtobufWriter
             ex.printStackTrace();
             return null;
         }
-    }
-
-    protected static String convertFieldName(final ProtobufFactory factory, Class clazz, AccessibleObject element) {
-        ConvertColumnEntry ref = factory.findRef(clazz, element);
-        String name = ref == null || ref.name().isEmpty() ? factory.readGetSetFieldName(element) : ref.name();
-        return name;
     }
 
     protected static ProtobufDynEncoder generateDyncEncoder(

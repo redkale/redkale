@@ -553,6 +553,12 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return fname;
     }
 
+    public String readConvertFieldName(Class clazz, AccessibleObject element) {
+        ConvertColumnEntry ref = findRef(clazz, element);
+        String name = ref == null || ref.name().isEmpty() ? readGetSetFieldName(element) : ref.name();
+        return name;
+    }
+
     public String readGetSetFieldName(AccessibleObject element) {
         if (element instanceof Field) {
             return ((Field) element).getName();
