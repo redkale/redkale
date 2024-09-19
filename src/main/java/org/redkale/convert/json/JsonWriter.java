@@ -241,8 +241,7 @@ public abstract class JsonWriter extends Writer {
     }
 
     @Override
-    public final int writeArrayB(
-            int size, Encodeable arrayEncoder, Encodeable<Writer, Object> componentEncoder, Object obj) {
+    public final int writeArrayB(int size, Encodeable arrayEncoder, Encodeable componentEncoder, Object obj) {
         writeTo(BYTE_LBRACKET);
         return -1;
     }
@@ -258,8 +257,7 @@ public abstract class JsonWriter extends Writer {
     }
 
     @Override
-    public final int writeMapB(
-            int size, Encodeable<Writer, Object> keyEncoder, Encodeable<Writer, Object> valueEncoder, Object obj) {
+    public final int writeMapB(int size, Encodeable keyEncoder, Encodeable valueEncoder, Object obj) {
         writeTo(BYTE_LBRACE);
         return -1;
     }

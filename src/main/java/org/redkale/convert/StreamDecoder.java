@@ -17,16 +17,17 @@ import java.util.stream.Stream;
  * <p>详情见: https://redkale.org
  *
  * @author zhangjx
+ * @param <R> Reader
  * @param <T> 反解析的集合元素类型
  */
 @SuppressWarnings("unchecked")
-public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
+public class StreamDecoder<R extends Reader, T> implements Decodeable<R, Stream<T>> {
 
     protected final Type type;
 
     protected final Type componentType;
 
-    protected final Decodeable<Reader, T> componentDecoder;
+    protected final Decodeable<R, T> componentDecoder;
 
     protected volatile boolean inited = false;
 
@@ -57,11 +58,11 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
     }
 
     @Override
-    public Stream<T> convertFrom(Reader in) {
+    public Stream<T> convertFrom(R in) {
         return convertFrom(in, null);
     }
 
-    public Stream<T> convertFrom(Reader in, DeMember member) {
+    public Stream<T> convertFrom(R in, DeMember member) {
         byte[] typevals = new byte[1];
         int len = in.readArrayB(member, typevals, this.componentDecoder);
         int contentLength = -1;
@@ -84,13 +85,13 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
                 }
             }
         }
-        final Decodeable<Reader, T> localdecoder = getComponentDecoder(this.componentDecoder, typevals);
+        final Decodeable<R, T> localdecoder = getComponentDecoder(this.componentDecoder, typevals);
         final List<T> result = new ArrayList();
         boolean first = true;
         if (len == Reader.SIGN_NOLENGTH) {
             int startPosition = in.position();
             while (hasNext(in, member, startPosition, contentLength, first)) {
-                Reader itemReader = getItemReader(in, member, first);
+                R itemReader = getItemReader(in, member, first);
                 if (itemReader == null) {
                     break;
                 }
@@ -106,19 +107,19 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
         return result.stream();
     }
 
-    protected boolean hasNext(Reader in, DeMember member, int startPosition, int contentLength, boolean first) {
+    protected boolean hasNext(R in, DeMember member, int startPosition, int contentLength, boolean first) {
         return in.hasNext(startPosition, contentLength);
     }
 
-    protected Decodeable<Reader, T> getComponentDecoder(Decodeable<Reader, T> decoder, byte[] typevals) {
+    protected Decodeable<R, T> getComponentDecoder(Decodeable<R, T> decoder, byte[] typevals) {
         return decoder;
     }
 
-    protected Reader getItemReader(Reader in, DeMember member, boolean first) {
+    protected R getItemReader(R in, DeMember member, boolean first) {
         return in;
     }
 
-    protected T readMemberValue(Reader in, DeMember member, Decodeable<Reader, T> decoder, boolean first) {
+    protected T readMemberValue(R in, DeMember member, Decodeable<R, T> decoder, boolean first) {
         return decoder.convertFrom(in);
     }
 
@@ -131,7 +132,7 @@ public class StreamDecoder<T> implements Decodeable<Reader, Stream<T>> {
         return componentType;
     }
 
-    public Decodeable<Reader, T> getComponentDecoder() {
+    public Decodeable<R, T> getComponentDecoder() {
         return componentDecoder;
     }
 }

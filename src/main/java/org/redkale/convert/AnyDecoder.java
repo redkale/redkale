@@ -5,11 +5,10 @@
  */
 package org.redkale.convert;
 
-import static org.redkale.convert.Reader.ValueType.MAP;
-
 import java.lang.reflect.Type;
 import java.util.*;
 import org.redkale.convert.Reader.ValueType;
+import static org.redkale.convert.Reader.ValueType.MAP;
 import org.redkale.util.*;
 
 /**
@@ -18,8 +17,9 @@ import org.redkale.util.*;
  * 详情见: https://redkale.org
  *
  * @author zhangjx
+ * @param <R> Reader
  */
-public class AnyDecoder<T> implements Decodeable<Reader, T> {
+public class AnyDecoder<R extends Reader, T> implements Decodeable<R, T> {
 
     private static final Type collectionObjectType = new TypeToken<Collection<Object>>() {}.getType();
 

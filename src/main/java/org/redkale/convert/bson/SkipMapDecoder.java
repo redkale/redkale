@@ -17,14 +17,14 @@ import org.redkale.convert.*;
  * @param <K> Map key的数据类型
  * @param <V> Map value的数据类型
  */
-public class SkipMapDecoder<K, V> extends MapDecoder<K, V> {
+public class SkipMapDecoder<K, V> extends MapDecoder<BsonReader, K, V> {
 
-    public SkipMapDecoder(final ConvertFactory factory, final Type type) {
+    public SkipMapDecoder(final BsonFactory factory, final Type type) {
         super(factory, type);
     }
 
     @Override
-    protected Decodeable<Reader, K> getKeyDecoder(Decodeable<Reader, K> decoder, byte[] typevals) {
+    protected Decodeable<BsonReader, K> getKeyDecoder(Decodeable<BsonReader, K> decoder, byte[] typevals) {
         if (typevals != null) {
             return BsonFactory.typeEnum(typevals[0]);
         }
@@ -32,7 +32,7 @@ public class SkipMapDecoder<K, V> extends MapDecoder<K, V> {
     }
 
     @Override
-    protected Decodeable<Reader, V> getValueDecoder(Decodeable<Reader, V> decoder, byte[] typevals) {
+    protected Decodeable<BsonReader, V> getValueDecoder(Decodeable<BsonReader, V> decoder, byte[] typevals) {
         if (typevals != null) {
             return BsonFactory.typeEnum(typevals[1]);
         }

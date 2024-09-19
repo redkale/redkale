@@ -17,10 +17,11 @@ import org.redkale.util.Creator;
  * <p>详情见: https://redkale.org
  *
  * @author zhangjx
+ * @param <R> Reader
  * @param <T> 反解析的集合元素类型
  */
 @SuppressWarnings("unchecked")
-public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
+public class CollectionDecoder<R extends Reader, T> implements Decodeable<R, Collection<T>> {
 
     protected final Type type;
 
@@ -28,7 +29,7 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
 
     protected Creator<Collection<T>> creator;
 
-    protected final Decodeable<Reader, T> componentDecoder;
+    protected final Decodeable<R, T> componentDecoder;
 
     protected volatile boolean inited = false;
 
@@ -66,10 +67,7 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
 
     // 仅供类似JsonAnyDecoder这种动态创建使用， 不得调用 factory.register
     public CollectionDecoder(
-            Type type,
-            Type componentType,
-            Creator<Collection<T>> creator,
-            final Decodeable<Reader, T> componentDecoder) {
+            Type type, Type componentType, Creator<Collection<T>> creator, final Decodeable<R, T> componentDecoder) {
         Objects.requireNonNull(componentDecoder);
         this.type = type;
         this.componentType = componentType;
@@ -79,11 +77,11 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
     }
 
     @Override
-    public Collection<T> convertFrom(Reader in) {
+    public Collection<T> convertFrom(R in) {
         return convertFrom(in, null);
     }
 
-    public Collection<T> convertFrom(Reader in, DeMember member) {
+    public Collection<T> convertFrom(R in, DeMember member) {
         byte[] typevals = new byte[1];
         int len = in.readArrayB(member, typevals, componentDecoder);
         int contentLength = -1;
@@ -106,13 +104,13 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
                 }
             }
         }
-        final Decodeable<Reader, T> localdecoder = getComponentDecoder(this.componentDecoder, typevals);
+        final Decodeable<R, T> localdecoder = getComponentDecoder(this.componentDecoder, typevals);
         final Collection<T> result = this.creator.create();
         boolean first = true;
         if (len == Reader.SIGN_NOLENGTH) {
             int startPosition = in.position();
             while (hasNext(in, member, startPosition, contentLength, first)) {
-                Reader itemReader = getItemReader(in, member, first);
+                R itemReader = getItemReader(in, member, first);
                 if (itemReader == null) {
                     break;
                 }
@@ -128,19 +126,19 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
         return result;
     }
 
-    protected boolean hasNext(Reader in, DeMember member, int startPosition, int contentLength, boolean first) {
+    protected boolean hasNext(R in, DeMember member, int startPosition, int contentLength, boolean first) {
         return in.hasNext(startPosition, contentLength);
     }
 
-    protected Decodeable<Reader, T> getComponentDecoder(Decodeable<Reader, T> decoder, byte[] typevals) {
+    protected Decodeable<R, T> getComponentDecoder(Decodeable<R, T> decoder, byte[] typevals) {
         return decoder;
     }
 
-    protected Reader getItemReader(Reader in, DeMember member, boolean first) {
+    protected R getItemReader(R in, DeMember member, boolean first) {
         return in;
     }
 
-    protected T readMemberValue(Reader in, DeMember member, Decodeable<Reader, T> decoder, boolean first) {
+    protected T readMemberValue(R in, DeMember member, Decodeable<R, T> decoder, boolean first) {
         if (in == null) {
             return null;
         }
@@ -156,7 +154,7 @@ public class CollectionDecoder<T> implements Decodeable<Reader, Collection<T>> {
         return componentType;
     }
 
-    public Decodeable<Reader, T> getComponentDecoder() {
+    public Decodeable<R, T> getComponentDecoder() {
         return componentDecoder;
     }
 }

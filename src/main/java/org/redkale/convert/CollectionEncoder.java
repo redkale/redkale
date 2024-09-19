@@ -16,14 +16,15 @@ import java.util.concurrent.locks.*;
  * <p>详情见: https://redkale.org
  *
  * @author zhangjx
+ * @param <W> Writer
  * @param <T> 序列化的集合元素类型
  */
 @SuppressWarnings("unchecked")
-public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
+public class CollectionEncoder<W extends Writer, T> implements Encodeable<W, Collection<T>> {
 
     protected final Type type;
 
-    protected final Encodeable<Writer, Object> componentEncoder;
+    protected final Encodeable<W, Object> componentEncoder;
 
     protected volatile boolean inited = false;
 
@@ -56,11 +57,11 @@ public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
     }
 
     @Override
-    public void convertTo(Writer out, Collection<T> value) {
+    public void convertTo(W out, Collection<T> value) {
         convertTo(out, null, value);
     }
 
-    public void convertTo(Writer out, EnMember member, Collection<T> value) {
+    public void convertTo(W out, EnMember member, Collection<T> value) {
         if (value == null) {
             out.writeNull();
             return;
@@ -97,7 +98,7 @@ public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
         out.writeArrayE();
     }
 
-    protected void writeMemberValue(Writer out, EnMember member, Object value, boolean first) {
+    protected void writeMemberValue(W out, EnMember member, Object value, boolean first) {
         componentEncoder.convertTo(out, value);
     }
 
@@ -117,7 +118,7 @@ public class CollectionEncoder<T> implements Encodeable<Writer, Collection<T>> {
                 + "}";
     }
 
-    public Encodeable<Writer, Object> getComponentEncoder() {
+    public Encodeable<W, Object> getComponentEncoder() {
         return componentEncoder;
     }
 

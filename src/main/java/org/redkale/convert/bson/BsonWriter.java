@@ -311,8 +311,7 @@ public class BsonWriter extends Writer implements ByteTuple {
     }
 
     @Override
-    public final int writeArrayB(
-            int size, Encodeable arrayEncoder, Encodeable<Writer, Object> componentEncoder, Object obj) {
+    public final int writeArrayB(int size, Encodeable arrayEncoder, Encodeable componentEncoder, Object obj) {
         writeInt(size);
         if (componentEncoder != null && componentEncoder != ByteSimpledCoder.instance) {
             writeByte(BsonFactory.typeEnum(componentEncoder.getType()));
@@ -331,8 +330,7 @@ public class BsonWriter extends Writer implements ByteTuple {
     }
 
     @Override
-    public int writeMapB(
-            int size, Encodeable<Writer, Object> keyEncoder, Encodeable<Writer, Object> valueEncoder, Object obj) {
+    public int writeMapB(int size, Encodeable keyEncoder, Encodeable valueEncoder, Object obj) {
         writeInt(size);
         writeByte(BsonFactory.typeEnum(keyEncoder.getType()));
         writeByte(BsonFactory.typeEnum(valueEncoder.getType()));

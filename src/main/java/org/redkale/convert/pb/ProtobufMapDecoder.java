@@ -13,7 +13,7 @@ import org.redkale.convert.*;
  * @param <K> K
  * @param <V> V
  */
-public class ProtobufMapDecoder<K, V> extends MapDecoder<K, V> {
+public class ProtobufMapDecoder<K, V> extends MapDecoder<ProtobufReader, K, V> {
 
     protected final boolean enumtostring;
 
@@ -23,30 +23,29 @@ public class ProtobufMapDecoder<K, V> extends MapDecoder<K, V> {
     }
 
     @Override
-    protected Reader getEntryReader(Reader in, DeMember member, boolean first) {
-        ProtobufReader reader = (ProtobufReader) in;
+    protected ProtobufReader getEntryReader(ProtobufReader in, DeMember member, boolean first) {
         if (!first && member != null) {
-            int tag = reader.readTag();
+            int tag = in.readTag();
             if (tag != member.getTag()) {
-                reader.backTag(tag);
+                in.backTag(tag);
                 return null;
             }
         }
-        byte[] bs = reader.readByteArray();
+        byte[] bs = in.readByteArray();
         return new ProtobufReader(bs);
     }
 
     @Override
-    protected K readKeyMember(Reader in, DeMember member, Decodeable<Reader, K> decoder, boolean first) {
-        ProtobufReader reader = (ProtobufReader) in;
-        reader.readTag();
+    protected K readKeyMember(
+            ProtobufReader in, DeMember member, Decodeable<ProtobufReader, K> decoder, boolean first) {
+        in.readTag();
         return decoder.convertFrom(in);
     }
 
     @Override
-    protected V readValueMember(Reader in, DeMember member, Decodeable<Reader, V> decoder, boolean first) {
-        ProtobufReader reader = (ProtobufReader) in;
-        reader.readTag();
+    protected V readValueMember(
+            ProtobufReader in, DeMember member, Decodeable<ProtobufReader, V> decoder, boolean first) {
+        in.readTag();
         return decoder.convertFrom(in);
     }
 }

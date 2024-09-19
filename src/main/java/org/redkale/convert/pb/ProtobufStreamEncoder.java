@@ -13,7 +13,7 @@ import org.redkale.convert.*;
  * @author zhangjx
  * @param <T> T
  */
-public class ProtobufStreamEncoder<T> extends StreamEncoder<T> {
+public class ProtobufStreamEncoder<T> extends StreamEncoder<ProtobufWriter, T> {
 
     protected final boolean simple;
 
@@ -32,24 +32,25 @@ public class ProtobufStreamEncoder<T> extends StreamEncoder<T> {
     }
 
     @Override
-    protected void writeMemberValue(Writer out, EnMember member, Object item, boolean first) {
+    protected void writeMemberValue(ProtobufWriter out, EnMember member, Object item, boolean first) {
         if (simple) {
             if (item == null) {
-                ((ProtobufWriter) out).writeUInt32(0);
+                out.writeUInt32(0);
             } else {
                 componentEncoder.convertTo(out, item);
             }
             return;
         }
-        if (member != null) out.writeFieldName(member);
+        if (member != null) {
+            out.writeFieldName(member);
+        }
         if (item instanceof CharSequence) {
             componentEncoder.convertTo(out, item);
         } else {
             ProtobufWriter tmp = new ProtobufWriter().configFieldFunc(out);
             componentEncoder.convertTo(tmp, item);
-            int length = tmp.count();
-            ((ProtobufWriter) out).writeUInt32(length);
-            ((ProtobufWriter) out).writeTo(tmp.toArray());
+            out.writeUInt32(tmp.count());
+            out.writeTo(tmp.toArray());
         }
     }
 }

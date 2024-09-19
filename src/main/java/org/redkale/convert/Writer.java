@@ -237,8 +237,7 @@ public abstract class Writer {
      * @param obj 对象, 不一定是数组、Collection对象，也可能是伪Collection对象
      * @return 返回-1表示还没有写入对象内容，大于-1表示已写入对象内容，返回对象内容大小
      */
-    public abstract int writeArrayB(
-            int size, Encodeable arrayEncoder, Encodeable<Writer, Object> componentEncoder, Object obj);
+    public abstract int writeArrayB(int size, Encodeable arrayEncoder, Encodeable componentEncoder, Object obj);
 
     /** 输出数组元素间的间隔符 */
     public abstract void writeArrayMark();
@@ -255,8 +254,7 @@ public abstract class Writer {
      * @param obj 对象, 不一定是Map对象，也可能是伪Map对象
      * @return 返回-1表示还没有写入对象内容，大于-1表示已写入对象内容，返回对象内容大小
      */
-    public abstract int writeMapB(
-            int size, Encodeable<Writer, Object> keyEncoder, Encodeable<Writer, Object> valueEncoder, Object obj);
+    public abstract int writeMapB(int size, Encodeable keyEncoder, Encodeable valueEncoder, Object obj);
 
     /** 输出一个Map中key与value间的间隔符 */
     public abstract void writeMapMark();

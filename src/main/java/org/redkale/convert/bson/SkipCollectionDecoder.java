@@ -17,14 +17,14 @@ import org.redkale.convert.*;
  * @author zhangjx
  * @param <T> 反解析的集合元素类型
  */
-public class SkipCollectionDecoder<T> extends CollectionDecoder<T> {
+public class SkipCollectionDecoder<T> extends CollectionDecoder<BsonReader, T> {
 
     public SkipCollectionDecoder(final ConvertFactory factory, final Type type) {
         super(factory, type);
     }
 
     @Override
-    protected Decodeable<Reader, T> getComponentDecoder(Decodeable<Reader, T> decoder, byte[] typevals) {
+    protected Decodeable<BsonReader, T> getComponentDecoder(Decodeable<BsonReader, T> decoder, byte[] typevals) {
         if (typevals != null) {
             return BsonFactory.typeEnum(typevals[0]);
         }

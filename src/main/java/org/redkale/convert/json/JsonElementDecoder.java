@@ -17,7 +17,7 @@ import org.redkale.util.*;
  * @author zhangjx
  * @since 2.8.0
  */
-class JsonElementDecoder extends AnyDecoder<JsonElement> {
+class JsonElementDecoder extends AnyDecoder<JsonReader, JsonElement> {
 
     private static final Type arrayType = new TypeToken<Collection<JsonElement>>() {}.getType();
 

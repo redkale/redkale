@@ -13,7 +13,7 @@ import org.redkale.convert.*;
  * @author zhangjx
  * @param <T> 泛型
  */
-public class ProtobufStreamDecoder<T> extends StreamDecoder<T> {
+public class ProtobufStreamDecoder<T> extends StreamDecoder<ProtobufReader, T> {
 
     protected final boolean simple;
 
@@ -38,7 +38,7 @@ public class ProtobufStreamDecoder<T> extends StreamDecoder<T> {
     }
 
     @Override
-    protected Reader getItemReader(Reader in, DeMember member, boolean first) {
+    protected ProtobufReader getItemReader(ProtobufReader in, DeMember member, boolean first) {
         if (simple) return in;
         return ProtobufFactory.getItemReader(string, simple, in, member, enumtostring, first);
     }

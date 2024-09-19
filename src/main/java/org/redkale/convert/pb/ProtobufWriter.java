@@ -54,11 +54,10 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         return this;
     }
 
-    protected ProtobufWriter configFieldFunc(Writer writer) {
-        if (writer == null) {
+    protected ProtobufWriter configFieldFunc(ProtobufWriter out) {
+        if (out == null) {
             return this;
         }
-        ProtobufWriter out = (ProtobufWriter) writer;
         this.mapFieldFunc = out.mapFieldFunc;
         this.objFieldFunc = out.objFieldFunc;
         this.objExtFunc = out.objExtFunc;
@@ -223,7 +222,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @Override
-    public int writeArrayB(int size, Encodeable encoder, Encodeable<Writer, Object> componentEncoder, Object obj) {
+    public int writeArrayB(int size, Encodeable encoder, Encodeable componentEncoder, Object obj) {
         if (obj == null) {
             writeNull();
             return 0;
@@ -387,8 +386,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @Override
-    public int writeMapB(
-            int size, Encodeable<Writer, Object> keyEncoder, Encodeable<Writer, Object> valueEncoder, Object obj) {
+    public int writeMapB(int size, Encodeable keyEncoder, Encodeable valueEncoder, Object obj) {
         return -1;
     }
 

@@ -27,13 +27,8 @@ public class ProtobufObjectDecoder<T> extends ObjectDecoder<ProtobufReader, T> {
                     + ConvertColumn.class.getSimpleName() + ".index");
         }
         Attribute attr = member.getAttribute();
-        setTag(
-                member,
-                ProtobufFactory.getTag(
-                        attr.field(),
-                        attr.genericType(),
-                        member.getPosition(),
-                        ((ProtobufFactory) factory).enumtostring));
+        boolean enumtostring = ((ProtobufFactory) factory).enumtostring;
+        setTag(member, ProtobufFactory.getTag(attr.field(), attr.genericType(), member.getPosition(), enumtostring));
     }
 
     @Override

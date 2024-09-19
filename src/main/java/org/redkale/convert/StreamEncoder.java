@@ -16,10 +16,11 @@ import java.util.stream.Stream;
  * <p>详情见: https://redkale.org
  *
  * @author zhangjx
+ * @param <W> Writer
  * @param <T> 序列化的集合元素类型
  */
 @SuppressWarnings("unchecked")
-public class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
+public class StreamEncoder<W extends Writer, T> implements Encodeable<W, Stream<T>> {
 
     protected final Type type;
 
@@ -56,11 +57,11 @@ public class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
     }
 
     @Override
-    public void convertTo(Writer out, Stream<T> value) {
+    public void convertTo(W out, Stream<T> value) {
         convertTo(out, null, value);
     }
 
-    public void convertTo(Writer out, EnMember member, Stream<T> value) {
+    public void convertTo(W out, EnMember member, Stream<T> value) {
         if (value == null) {
             out.writeNull();
             return;
@@ -98,7 +99,7 @@ public class StreamEncoder<T> implements Encodeable<Writer, Stream<T>> {
         out.writeArrayE();
     }
 
-    protected void writeMemberValue(Writer out, EnMember member, Object value, boolean first) {
+    protected void writeMemberValue(W out, EnMember member, Object value, boolean first) {
         componentEncoder.convertTo(out, value);
     }
 

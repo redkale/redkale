@@ -16,10 +16,11 @@ import java.util.concurrent.locks.*;
  * <p>详情见: https://redkale.org
  *
  * @author zhangjx
+ * @param <W> Writer
  * @param <T> 序列化的数组元素类型
  */
 @SuppressWarnings("unchecked")
-public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
+public class ArrayEncoder<W extends Writer, T> implements Encodeable<W, T[]> {
 
     protected final Type type;
 
@@ -27,7 +28,7 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
 
     protected final Encodeable anyEncoder;
 
-    protected final Encodeable<Writer, Object> componentEncoder;
+    protected final Encodeable<W, Object> componentEncoder;
 
     protected final boolean subTypeFinal;
 
@@ -69,11 +70,11 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
     }
 
     @Override
-    public void convertTo(Writer out, T[] value) {
+    public void convertTo(W out, T[] value) {
         convertTo(out, null, value);
     }
 
-    public void convertTo(Writer out, EnMember member, T[] value) {
+    public void convertTo(W out, EnMember member, T[] value) {
         if (value == null) {
             out.writeNull();
             return;
@@ -84,7 +85,7 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
             out.writeArrayE();
             return;
         }
-        Encodeable<Writer, Object> itemEncoder = this.componentEncoder;
+        Encodeable<W, Object> itemEncoder = this.componentEncoder;
         if (itemEncoder == null) {
             if (!this.inited) {
                 lock.lock();
@@ -131,8 +132,7 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
         out.writeArrayE();
     }
 
-    protected void writeMemberValue(
-            Writer out, EnMember member, Encodeable<Writer, Object> encoder, Object value, int index) {
+    protected void writeMemberValue(W out, EnMember member, Encodeable<W, Object> encoder, Object value, int index) {
         encoder.convertTo(out, value);
     }
 
@@ -156,7 +156,7 @@ public class ArrayEncoder<T> implements Encodeable<Writer, T[]> {
         return componentType;
     }
 
-    public Encodeable<Writer, Object> getComponentEncoder() {
+    public Encodeable<W, Object> getComponentEncoder() {
         return componentEncoder;
     }
 }

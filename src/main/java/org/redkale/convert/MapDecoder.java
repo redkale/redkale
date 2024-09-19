@@ -16,11 +16,12 @@ import org.redkale.util.Creator;
  * <p>详情见: https://redkale.org
  *
  * @author zhangjx
+ * @param <R> Reader
  * @param <K> Map key的数据类型
  * @param <V> Map value的数据类型
  */
 @SuppressWarnings("unchecked")
-public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
+public class MapDecoder<R extends Reader, K, V> implements Decodeable<R, Map<K, V>> {
 
     protected final Type type;
 
@@ -30,9 +31,9 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
 
     protected Creator<Map<K, V>> creator;
 
-    protected final Decodeable<Reader, K> keyDecoder;
+    protected final Decodeable<R, K> keyDecoder;
 
-    protected final Decodeable<Reader, V> valueDecoder;
+    protected final Decodeable<R, V> valueDecoder;
 
     protected volatile boolean inited = false;
 
@@ -84,8 +85,8 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
             Type keyType,
             Type valueType,
             Creator<Map<K, V>> creator,
-            final Decodeable<Reader, K> keyDecoder,
-            Decodeable<Reader, V> valueDecoder) {
+            final Decodeable<R, K> keyDecoder,
+            Decodeable<R, V> valueDecoder) {
         Objects.requireNonNull(keyDecoder);
         Objects.requireNonNull(valueDecoder);
         this.type = type;
@@ -98,11 +99,11 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
     }
 
     @Override
-    public Map<K, V> convertFrom(Reader in) {
+    public Map<K, V> convertFrom(R in) {
         return convertFrom(in, null);
     }
 
-    public Map<K, V> convertFrom(Reader in, DeMember member) {
+    public Map<K, V> convertFrom(R in, DeMember member) {
         if (this.keyDecoder == null || this.valueDecoder == null) {
             if (!this.inited) {
                 lock.lock();
@@ -127,12 +128,12 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
         }
         final Map<K, V> result = this.creator.create();
         boolean first = true;
-        Decodeable<Reader, K> kdecoder = getKeyDecoder(this.keyDecoder, typevals);
-        Decodeable<Reader, V> vdecoder = getValueDecoder(this.valueDecoder, typevals);
+        Decodeable<R, K> kdecoder = getKeyDecoder(this.keyDecoder, typevals);
+        Decodeable<R, V> vdecoder = getValueDecoder(this.valueDecoder, typevals);
         if (len == Reader.SIGN_NOLENGTH) {
             int startPosition = in.position();
             while (hasNext(in, member, startPosition, contentLength, first)) {
-                Reader entryReader = getEntryReader(in, member, first);
+                R entryReader = getEntryReader(in, member, first);
                 if (entryReader == null) {
                     break;
                 }
@@ -155,27 +156,27 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
         return result;
     }
 
-    protected boolean hasNext(Reader in, DeMember member, int startPosition, int contentLength, boolean first) {
+    protected boolean hasNext(R in, DeMember member, int startPosition, int contentLength, boolean first) {
         return in.hasNext(startPosition, contentLength);
     }
 
-    protected Decodeable<Reader, K> getKeyDecoder(Decodeable<Reader, K> decoder, byte[] typevals) {
+    protected Decodeable<R, K> getKeyDecoder(Decodeable<R, K> decoder, byte[] typevals) {
         return decoder;
     }
 
-    protected Decodeable<Reader, V> getValueDecoder(Decodeable<Reader, V> decoder, byte[] typevals) {
+    protected Decodeable<R, V> getValueDecoder(Decodeable<R, V> decoder, byte[] typevals) {
         return decoder;
     }
 
-    protected Reader getEntryReader(Reader in, DeMember member, boolean first) {
+    protected R getEntryReader(R in, DeMember member, boolean first) {
         return in;
     }
 
-    protected K readKeyMember(Reader in, DeMember member, Decodeable<Reader, K> decoder, boolean first) {
+    protected K readKeyMember(R in, DeMember member, Decodeable<R, K> decoder, boolean first) {
         return decoder.convertFrom(in);
     }
 
-    protected V readValueMember(Reader in, DeMember member, Decodeable<Reader, V> decoder, boolean first) {
+    protected V readValueMember(R in, DeMember member, Decodeable<R, V> decoder, boolean first) {
         return decoder.convertFrom(in);
     }
 
@@ -192,11 +193,11 @@ public class MapDecoder<K, V> implements Decodeable<Reader, Map<K, V>> {
         return valueType;
     }
 
-    public Decodeable<Reader, K> getKeyDecoder() {
+    public Decodeable<R, K> getKeyDecoder() {
         return keyDecoder;
     }
 
-    public Decodeable<Reader, V> getValueDecoder() {
+    public Decodeable<R, V> getValueDecoder() {
         return valueDecoder;
     }
 }

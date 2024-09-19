@@ -16,17 +16,18 @@ import java.util.function.BiFunction;
  * <p>详情见: https://redkale.org
  *
  * @author zhangjx
+ * @param <W> Writer
  * @param <K> Map key的数据类型
  * @param <V> Map value的数据类型
  */
 @SuppressWarnings("unchecked")
-public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
+public class MapEncoder<W extends Writer, K, V> implements Encodeable<W, Map<K, V>> {
 
     protected final Type type;
 
-    protected final Encodeable<Writer, K> keyEncoder;
+    protected final Encodeable<W, K> keyEncoder;
 
-    protected final Encodeable<Writer, V> valueEncoder;
+    protected final Encodeable<W, V> valueEncoder;
 
     protected volatile boolean inited = false;
 
@@ -66,11 +67,11 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
     }
 
     @Override
-    public void convertTo(Writer out, Map<K, V> value) {
+    public void convertTo(W out, Map<K, V> value) {
         convertTo(out, null, value);
     }
 
-    public void convertTo(Writer out, EnMember member, Map<K, V> value) {
+    public void convertTo(W out, EnMember member, Map<K, V> value) {
         final Map<K, V> values = value;
         if (values == null) {
             out.writeNull();
@@ -110,7 +111,7 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
         out.writeMapE();
     }
 
-    protected void writeMemberValue(Writer out, EnMember member, K key, V value, boolean first) {
+    protected void writeMemberValue(W out, EnMember member, K key, V value, boolean first) {
         keyEncoder.convertTo(out, key);
         out.writeMapMark();
         valueEncoder.convertTo(out, value);
@@ -134,11 +135,11 @@ public class MapEncoder<K, V> implements Encodeable<Writer, Map<K, V>> {
         return valueEncoder == null ? null : valueEncoder.getType();
     }
 
-    public Encodeable<Writer, K> getKeyEncoder() {
+    public Encodeable<W, K> getKeyEncoder() {
         return keyEncoder;
     }
 
-    public Encodeable<Writer, V> getValueEncoder() {
+    public Encodeable<W, V> getValueEncoder() {
         return valueEncoder;
     }
 }

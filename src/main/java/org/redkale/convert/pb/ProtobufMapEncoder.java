@@ -13,7 +13,7 @@ import org.redkale.convert.*;
  * @param <K> K
  * @param <V> V
  */
-public class ProtobufMapEncoder<K, V> extends MapEncoder<K, V> {
+public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V> {
 
     private final boolean enumtostring;
 
@@ -23,15 +23,14 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<K, V> {
     }
 
     @Override
-    protected void writeMemberValue(Writer out, EnMember member, K key, V value, boolean first) {
+    protected void writeMemberValue(ProtobufWriter out, EnMember member, K key, V value, boolean first) {
         ProtobufWriter tmp = new ProtobufWriter().configFieldFunc(out);
         if (member != null) out.writeFieldName(member);
         tmp.writeUInt32(1 << 3 | ProtobufFactory.wireType(keyEncoder.getType(), enumtostring));
         keyEncoder.convertTo(tmp, key);
         tmp.writeUInt32(2 << 3 | ProtobufFactory.wireType(valueEncoder.getType(), enumtostring));
         valueEncoder.convertTo(tmp, value);
-        int length = tmp.count();
-        ((ProtobufWriter) out).writeUInt32(length);
-        ((ProtobufWriter) out).writeTo(tmp.toArray());
+        out.writeLength(tmp.count());
+        out.writeTo(tmp.toArray());
     }
 }

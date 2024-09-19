@@ -18,14 +18,14 @@ import org.redkale.convert.*;
  * @author zhangjx
  * @param <T> 反解析的数组元素类型
  */
-public class SkipArrayDecoder<T> extends ArrayDecoder<T> {
+public class SkipArrayDecoder<T> extends ArrayDecoder<BsonReader, T> {
 
-    public SkipArrayDecoder(final ConvertFactory factory, final Type type) {
+    public SkipArrayDecoder(final BsonFactory factory, final Type type) {
         super(factory, type);
     }
 
     @Override
-    protected Decodeable<Reader, T> getComponentDecoder(Decodeable<Reader, T> decoder, byte[] typevals) {
+    protected Decodeable<BsonReader, T> getComponentDecoder(Decodeable<BsonReader, T> decoder, byte[] typevals) {
         if (typevals != null) {
             return BsonFactory.typeEnum(typevals[0]);
         }

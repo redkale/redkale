@@ -13,11 +13,11 @@ import org.redkale.convert.*;
  * @author zhangjx
  * @param <T> T
  */
-public class ProtobufCollectionEncoder<T> extends CollectionEncoder<T> {
+public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWriter, T> {
 
     protected final boolean simple;
 
-    public ProtobufCollectionEncoder(ConvertFactory factory, Type type) {
+    public ProtobufCollectionEncoder(ProtobufFactory factory, Type type) {
         super(factory, type);
         Type comtype = this.getComponentType();
         this.simple = Boolean.class == comtype
@@ -32,7 +32,7 @@ public class ProtobufCollectionEncoder<T> extends CollectionEncoder<T> {
     }
 
     @Override
-    protected void writeMemberValue(Writer out, EnMember member, Object item, boolean first) {
+    protected void writeMemberValue(ProtobufWriter out, EnMember member, Object item, boolean first) {
         if (simple) {
             if (item == null) {
                 ((ProtobufWriter) out).writeUInt32(0);
@@ -43,15 +43,14 @@ public class ProtobufCollectionEncoder<T> extends CollectionEncoder<T> {
         }
         if (member != null) out.writeFieldName(member);
         if (item == null) {
-            ((ProtobufWriter) out).writeUInt32(0);
+            out.writeUInt32(0);
         } else if (item instanceof CharSequence) {
             componentEncoder.convertTo(out, item);
         } else {
             ProtobufWriter tmp = new ProtobufWriter().configFieldFunc(out);
             componentEncoder.convertTo(tmp, item);
-            int length = tmp.count();
-            ((ProtobufWriter) out).writeUInt32(length);
-            ((ProtobufWriter) out).writeTo(tmp.toArray());
+            out.writeLength(tmp.count());
+            out.writeTo(tmp.toArray());
         }
     }
 }
