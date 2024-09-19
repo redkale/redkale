@@ -553,6 +553,127 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return fname;
     }
 
+    public String readGetSetFieldName(AccessibleObject element) {
+        if (element instanceof Field) {
+            return ((Field) element).getName();
+        }
+        return readGetSetFieldName((Method) element);
+    }
+
+    public boolean isSimpleMemberType(Class declaringClass, Type type, Class clazz) {
+        if (type == String.class) {
+            return true;
+        }
+        if (clazz.isPrimitive()) {
+            return true;
+        }
+        if (clazz.isEnum()) {
+            return true;
+        }
+        if (type == Boolean.class) {
+            return true;
+        }
+        if (type == Byte.class) {
+            return true;
+        }
+        if (type == Short.class) {
+            return true;
+        }
+        if (type == Character.class) {
+            return true;
+        }
+        if (type == Integer.class) {
+            return true;
+        }
+        if (type == Float.class) {
+            return true;
+        }
+        if (type == Long.class) {
+            return true;
+        }
+        if (type == Double.class) {
+            return true;
+        }
+        if (type == boolean[].class) {
+            return true;
+        }
+        if (type == byte[].class) {
+            return true;
+        }
+        if (type == short[].class) {
+            return true;
+        }
+        if (type == char[].class) {
+            return true;
+        }
+        if (type == int[].class) {
+            return true;
+        }
+        if (type == float[].class) {
+            return true;
+        }
+        if (type == long[].class) {
+            return true;
+        }
+        if (type == double[].class) {
+            return true;
+        }
+        if (type == Boolean[].class) {
+            return true;
+        }
+        if (type == Byte[].class) {
+            return true;
+        }
+        if (type == Short[].class) {
+            return true;
+        }
+        if (type == Character[].class) {
+            return true;
+        }
+        if (type == Integer[].class) {
+            return true;
+        }
+        if (type == Float[].class) {
+            return true;
+        }
+        if (type == Long[].class) {
+            return true;
+        }
+        if (type == Double[].class) {
+            return true;
+        }
+        if (type == String[].class) {
+            return true;
+        }
+        if (rootFactory().findEncoder(type) != null) {
+            return true;
+        }
+        if (declaringClass == clazz) {
+            return false;
+        }
+        if (Collection.class.isAssignableFrom(clazz) && type instanceof ParameterizedType) {
+            Type[] ts = ((ParameterizedType) type).getActualTypeArguments();
+            if (ts.length == 1) {
+                Type t = ts[0];
+                if (t == Boolean.class
+                        || t == Byte.class
+                        || t == Short.class
+                        || t == Character.class
+                        || t == Integer.class
+                        || t == Float.class
+                        || t == Long.class
+                        || t == Double.class
+                        || t == String.class
+                        || rootFactory().findEncoder(t) != null
+                        || ((t instanceof Class) && ((Class) t).isEnum())) {
+                    return true;
+                }
+                return false;
+            }
+        }
+        return false;
+    }
+
     final String getEntityAlias(Class clazz) {
         if (clazz == String.class) {
             return "A";

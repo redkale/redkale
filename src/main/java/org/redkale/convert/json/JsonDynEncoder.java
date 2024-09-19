@@ -42,121 +42,6 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
         return false;
     }
 
-    private static boolean checkMemberType(
-            final JsonFactory factory, final Class declaringClass, Type type, Class clazz) {
-        if (type == String.class) {
-            return true;
-        }
-        if (clazz.isPrimitive()) {
-            return true;
-        }
-        if (clazz.isEnum()) {
-            return true;
-        }
-        if (type == Boolean.class) {
-            return true;
-        }
-        if (type == Byte.class) {
-            return true;
-        }
-        if (type == Short.class) {
-            return true;
-        }
-        if (type == Character.class) {
-            return true;
-        }
-        if (type == Integer.class) {
-            return true;
-        }
-        if (type == Float.class) {
-            return true;
-        }
-        if (type == Long.class) {
-            return true;
-        }
-        if (type == Double.class) {
-            return true;
-        }
-        if (type == boolean[].class) {
-            return true;
-        }
-        if (type == byte[].class) {
-            return true;
-        }
-        if (type == short[].class) {
-            return true;
-        }
-        if (type == char[].class) {
-            return true;
-        }
-        if (type == int[].class) {
-            return true;
-        }
-        if (type == float[].class) {
-            return true;
-        }
-        if (type == long[].class) {
-            return true;
-        }
-        if (type == double[].class) {
-            return true;
-        }
-        if (type == Boolean[].class) {
-            return true;
-        }
-        if (type == Byte[].class) {
-            return true;
-        }
-        if (type == Short[].class) {
-            return true;
-        }
-        if (type == Character[].class) {
-            return true;
-        }
-        if (type == Integer[].class) {
-            return true;
-        }
-        if (type == Float[].class) {
-            return true;
-        }
-        if (type == Long[].class) {
-            return true;
-        }
-        if (type == Double[].class) {
-            return true;
-        }
-        if (type == String[].class) {
-            return true;
-        }
-        if (factory.rootFactory().findEncoder(type) != null) {
-            return true;
-        }
-        if (declaringClass == clazz) {
-            return false;
-        }
-        if (Collection.class.isAssignableFrom(clazz) && type instanceof ParameterizedType) {
-            Type[] ts = ((ParameterizedType) type).getActualTypeArguments();
-            if (ts.length == 1) {
-                Type t = ts[0];
-                if (t == Boolean.class
-                        || t == Byte.class
-                        || t == Short.class
-                        || t == Character.class
-                        || t == Integer.class
-                        || t == Float.class
-                        || t == Long.class
-                        || t == Double.class
-                        || t == String.class
-                        || factory.rootFactory().findEncoder(t) != null
-                        || ((t instanceof Class) && ((Class) t).isEnum())) {
-                    return true;
-                }
-                return false;
-            }
-        }
-        return false;
-    }
-
     // 字段全部是primitive或String类型，且没有泛型的类才能动态生成JsonDynEncoder， 不支持的返回null
     public static JsonDynEncoder createDyncEncoder(final JsonFactory factory, final Type type) {
         if (!(type instanceof Class)) {
@@ -239,7 +124,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 if (factory.findFieldCoder(clazz, field.getName()) != null) {
                     return null;
                 }
-                if (!(checkMemberType(factory, clazz, field.getGenericType(), field.getType()))) {
+                if (!factory.isSimpleMemberType(clazz, field.getGenericType(), field.getType())) {
                     return null;
                 }
                 String name = convertFieldName(factory, clazz, field);
@@ -290,7 +175,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 if (ref != null && ref.fieldFunc() != null) {
                     return null;
                 }
-                if (!(checkMemberType(factory, clazz, method.getGenericReturnType(), method.getReturnType()))) {
+                if (!factory.isSimpleMemberType(clazz, method.getGenericReturnType(), method.getReturnType())) {
                     return null;
                 }
                 String name = convertFieldName(factory, clazz, method);
@@ -319,8 +204,8 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                         return idx1 - idx2;
                     }
                 }
-                String n1 = ref1 == null || ref1.name().isEmpty() ? readGetSetFieldName(o1) : ref1.name();
-                String n2 = ref2 == null || ref2.name().isEmpty() ? readGetSetFieldName(o2) : ref2.name();
+                String n1 = ref1 == null || ref1.name().isEmpty() ? factory.readGetSetFieldName(o1) : ref1.name();
+                String n2 = ref2 == null || ref2.name().isEmpty() ? factory.readGetSetFieldName(o2) : ref2.name();
                 if (n1 == null && n2 == null) {
                     return 0;
                 }
@@ -341,11 +226,11 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
 
     protected static String convertFieldName(final JsonFactory factory, Class clazz, AccessibleObject element) {
         ConvertColumnEntry ref = factory.findRef(clazz, element);
-        String name = ref == null || ref.name().isEmpty() ? readGetSetFieldName(element) : ref.name();
+        String name = ref == null || ref.name().isEmpty() ? factory.readGetSetFieldName(element) : ref.name();
         return name;
     }
 
-    protected static ConvertSmallString readConvertSmallString(AccessibleObject element) {
+    protected static ConvertSmallString readConvertSmallString(JsonFactory factory, AccessibleObject element) {
         if (element instanceof Field) {
             return ((Field) element).getAnnotation(ConvertSmallString.class);
         }
@@ -353,7 +238,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
         ConvertSmallString small = method.getAnnotation(ConvertSmallString.class);
         if (small == null) {
             try {
-                Field f = method.getDeclaringClass().getDeclaredField(readGetSetFieldName(method));
+                Field f = method.getDeclaringClass().getDeclaredField(factory.readGetSetFieldName(method));
                 if (f != null) {
                     small = f.getAnnotation(ConvertSmallString.class);
                 }
@@ -369,26 +254,6 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
             return ((Field) element).getType();
         }
         return ((Method) element).getReturnType();
-    }
-
-    protected static String readGetSetFieldName(AccessibleObject element) {
-        if (element instanceof Field) {
-            return ((Field) element).getName();
-        }
-        Method method = (Method) element;
-        String fname = method.getName();
-        if (!(fname.startsWith("is") && fname.length() > 2)
-                && !(fname.startsWith("get") && fname.length() > 3)
-                && !(fname.startsWith("set") && fname.length() > 3)) {
-            return fname;
-        }
-        fname = fname.substring(fname.startsWith("is") ? 2 : 3);
-        if (fname.length() > 1 && !(fname.charAt(1) >= 'A' && fname.charAt(1) <= 'Z')) {
-            fname = Character.toLowerCase(fname.charAt(0)) + fname.substring(1);
-        } else if (fname.length() == 1) {
-            fname = "" + Character.toLowerCase(fname.charAt(0));
-        }
-        return fname;
     }
 
     protected static JsonDynEncoder generateDyncEncoder(
@@ -415,7 +280,8 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
         StringBuilder memberb = new StringBuilder();
         for (AccessibleObject element : members) {
             ConvertColumnEntry ref1 = factory.findRef(clazz, element);
-            final String fieldname = ref1 == null || ref1.name().isEmpty() ? readGetSetFieldName(element) : ref1.name();
+            final String fieldname =
+                    ref1 == null || ref1.name().isEmpty() ? factory.readGetSetFieldName(element) : ref1.name();
             memberb.append(fieldname).append(',');
             final Class fieldType = readGetSetFieldType(element);
             if (fieldType != String.class && !fieldType.isPrimitive()) {
@@ -478,7 +344,8 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
         int intFieldCount = 0;
         for (AccessibleObject element : members) {
             ConvertColumnEntry ref1 = factory.findRef(clazz, element);
-            final String fieldname = ref1 == null || ref1.name().isEmpty() ? readGetSetFieldName(element) : ref1.name();
+            final String fieldname =
+                    ref1 == null || ref1.name().isEmpty() ? factory.readGetSetFieldName(element) : ref1.name();
             fv = cw.visitField(ACC_PROTECTED + ACC_FINAL, fieldname + "FieldBytes", "[B", null, null);
             fv.visitEnd();
             fv = cw.visitField(ACC_PROTECTED + ACC_FINAL, fieldname + "CommaFieldBytes", "[B", null, null);
@@ -499,12 +366,12 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
             if (fieldType == int.class) {
                 intFieldCount++;
             }
-            if (fieldType == String.class && membersSize == 1 && readConvertSmallString(element) != null) {
+            if (fieldType == String.class && membersSize == 1 && readConvertSmallString(factory, element) != null) {
                 onlyOneLatin1FieldObjectFlag = true;
             } else if (fieldType != short.class
                     && fieldType != int.class
                     && fieldType != long.class
-                    && !(fieldType == String.class && readConvertSmallString(element) != null)) {
+                    && !(fieldType == String.class && readConvertSmallString(factory, element) != null)) {
                 onlyShotIntLongLatin1MoreFieldObjectFlag = false;
             }
         }
@@ -525,7 +392,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
             for (AccessibleObject element : members) {
                 ConvertColumnEntry ref1 = factory.findRef(clazz, element);
                 final String fieldname =
-                        ref1 == null || ref1.name().isEmpty() ? readGetSetFieldName(element) : ref1.name();
+                        ref1 == null || ref1.name().isEmpty() ? factory.readGetSetFieldName(element) : ref1.name();
                 // xxxFieldBytes
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitLdcInsn("\"" + fieldname + "\":");
@@ -610,7 +477,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 AccessibleObject element = members.get(elementIndex);
                 ConvertColumnEntry ref1 = factory.findRef(clazz, element);
                 final String fieldName =
-                        ref1 == null || ref1.name().isEmpty() ? readGetSetFieldName(element) : ref1.name();
+                        ref1 == null || ref1.name().isEmpty() ? factory.readGetSetFieldName(element) : ref1.name();
                 final Class fieldtype = readGetSetFieldType(element);
 
                 mv.visitVarInsn(ALOAD, 1);
@@ -646,14 +513,14 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 AccessibleObject element1 = members.get(elementIndex);
                 ConvertColumnEntry ref1 = factory.findRef(clazz, element1);
                 final String fieldName1 =
-                        ref1 == null || ref1.name().isEmpty() ? readGetSetFieldName(element1) : ref1.name();
+                        ref1 == null || ref1.name().isEmpty() ? factory.readGetSetFieldName(element1) : ref1.name();
                 final Class fieldType1 = readGetSetFieldType(element1);
 
                 elementIndex++;
                 AccessibleObject element2 = members.get(elementIndex);
                 ConvertColumnEntry ref2 = factory.findRef(clazz, element2);
                 final String fieldName2 =
-                        ref2 == null || ref2.name().isEmpty() ? readGetSetFieldName(element2) : ref2.name();
+                        ref2 == null || ref2.name().isEmpty() ? factory.readGetSetFieldName(element2) : ref2.name();
                 final Class fieldtype2 = readGetSetFieldType(element2);
 
                 mv.visitVarInsn(ALOAD, 1);
@@ -710,7 +577,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                     elementIndex++;
                     ConvertColumnEntry ref1 = factory.findRef(clazz, element);
                     final String fieldname =
-                            ref1 == null || ref1.name().isEmpty() ? readGetSetFieldName(element) : ref1.name();
+                            ref1 == null || ref1.name().isEmpty() ? factory.readGetSetFieldName(element) : ref1.name();
                     final Class fieldtype = readGetSetFieldType(element);
 
                     mv.visitVarInsn(ALOAD, 1);
@@ -793,7 +660,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                     elementIndex++;
                     ConvertColumnEntry ref1 = factory.findRef(clazz, element);
                     final String fieldname =
-                            ref1 == null || ref1.name().isEmpty() ? readGetSetFieldName(element) : ref1.name();
+                            ref1 == null || ref1.name().isEmpty() ? factory.readGetSetFieldName(element) : ref1.name();
                     final Class fieldtype = readGetSetFieldType(element);
                     int storeid = ASTORE;
                     int loadid = ALOAD;
@@ -972,7 +839,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                         mv.visitVarInsn(loadid, maxLocals);
                         mv.visitMethodInsn(INVOKEVIRTUAL, writerName, "writeDouble", "(D)V", false);
                     } else if (fieldtype == String.class) {
-                        if (readConvertSmallString(element) == null) {
+                        if (readConvertSmallString(factory, element) == null) {
                             mv.visitVarInsn(ALOAD, 1);
                             mv.visitVarInsn(loadid, maxLocals);
                             mv.visitMethodInsn(

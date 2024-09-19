@@ -92,6 +92,11 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
     }
 
     @Override
+    protected <E> Encodeable<ProtobufWriter, E> createDyncEncoder(Type type) {
+        return ProtobufDynEncoder.createDyncEncoder(this, type);
+    }
+
+    @Override
     protected SimpledCoder createEnumSimpledCoder(Class enumClass) {
         return new ProtobufEnumSimpledCoder(enumClass, this.enumtostring);
     }
