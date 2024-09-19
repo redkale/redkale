@@ -13,22 +13,22 @@ import org.redkale.convert.json.JsonConvert;
  * @author zhangjx
  */
 public class User {
-    @ConvertColumn(index = 1)
+    @ConvertColumn(index = 3)
     private Long id;
 
-    @ConvertColumn(index = 2)
+    @ConvertColumn(index = 4)
     private String name;
 
-    @ConvertColumn(index = 3)
+    @ConvertColumn(index = 5)
     private String nickName;
 
-    @ConvertColumn(index = 4)
+    @ConvertColumn(index = 1)
     private Integer age;
 
-    @ConvertColumn(index = 5)
+    @ConvertColumn(index = 6)
     private String sex;
 
-    @ConvertColumn(index = 6)
+    @ConvertColumn(index = 2)
     private Date createTime;
 
     public static User create() {

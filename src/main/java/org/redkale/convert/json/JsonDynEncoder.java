@@ -6,10 +6,14 @@
 package org.redkale.convert.json;
 
 import java.lang.reflect.*;
-import java.lang.reflect.Type;
 import java.util.*;
-import org.redkale.asm.*;
+import org.redkale.asm.AnnotationVisitor;
+import org.redkale.asm.ClassWriter;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import org.redkale.asm.FieldVisitor;
+import org.redkale.asm.Label;
+import org.redkale.asm.MethodVisitor;
+import org.redkale.asm.Opcodes;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.convert.*;
 import org.redkale.convert.ext.*;
@@ -194,29 +198,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
             if (members == null) {
                 return null;
             }
-            Collections.sort(members, (o1, o2) -> {
-                ConvertColumnEntry ref1 = factory.findRef(clazz, o1);
-                ConvertColumnEntry ref2 = factory.findRef(clazz, o2);
-                if ((ref1 != null && ref1.getIndex() > 0) || (ref2 != null && ref2.getIndex() > 0)) {
-                    int idx1 = ref1 == null ? Integer.MAX_VALUE / 2 : ref1.getIndex();
-                    int idx2 = ref2 == null ? Integer.MAX_VALUE / 2 : ref2.getIndex();
-                    if (idx1 != idx2) {
-                        return idx1 - idx2;
-                    }
-                }
-                String n1 = ref1 == null || ref1.name().isEmpty() ? factory.readGetSetFieldName(o1) : ref1.name();
-                String n2 = ref2 == null || ref2.name().isEmpty() ? factory.readGetSetFieldName(o2) : ref2.name();
-                if (n1 == null && n2 == null) {
-                    return 0;
-                }
-                if (n1 == null) {
-                    return -1;
-                }
-                if (n2 == null) {
-                    return 1;
-                }
-                return n1.compareTo(n2);
-            });
+            factory.sortFieldIndex(clazz, members);
             return generateDyncEncoder(factory, clazz, members);
         } catch (Exception ex) {
             ex.printStackTrace();

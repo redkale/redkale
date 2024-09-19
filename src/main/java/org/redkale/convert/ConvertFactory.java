@@ -560,6 +560,32 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return readGetSetFieldName((Method) element);
     }
 
+    public void sortFieldIndex(final Class clazz, List<AccessibleObject> members) {
+        Collections.sort(members, (o1, o2) -> {
+            ConvertColumnEntry ref1 = findRef(clazz, o1);
+            ConvertColumnEntry ref2 = findRef(clazz, o2);
+            if ((ref1 != null && ref1.getIndex() > 0) || (ref2 != null && ref2.getIndex() > 0)) {
+                int idx1 = ref1 == null ? Integer.MAX_VALUE / 2 : ref1.getIndex();
+                int idx2 = ref2 == null ? Integer.MAX_VALUE / 2 : ref2.getIndex();
+                if (idx1 != idx2) {
+                    return idx1 - idx2;
+                }
+            }
+            String n1 = ref1 == null || ref1.name().isEmpty() ? readGetSetFieldName(o1) : ref1.name();
+            String n2 = ref2 == null || ref2.name().isEmpty() ? readGetSetFieldName(o2) : ref2.name();
+            if (n1 == null && n2 == null) {
+                return 0;
+            }
+            if (n1 == null) {
+                return -1;
+            }
+            if (n2 == null) {
+                return 1;
+            }
+            return n1.compareTo(n2);
+        });
+    }
+
     public boolean isSimpleMemberType(Class declaringClass, Type type, Class clazz) {
         if (type == String.class) {
             return true;

@@ -10,31 +10,11 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.redkale.convert.ConvertColumnEntry;
-import org.redkale.convert.Encodeable;
-import org.redkale.convert.ObjectEncoder;
-import org.redkale.convert.ext.BoolArraySimpledCoder;
-import org.redkale.convert.ext.BoolSimpledCoder;
-import org.redkale.convert.ext.ByteArraySimpledCoder;
-import org.redkale.convert.ext.ByteSimpledCoder;
-import org.redkale.convert.ext.CharArraySimpledCoder;
-import org.redkale.convert.ext.CharSimpledCoder;
-import org.redkale.convert.ext.DoubleArraySimpledCoder;
-import org.redkale.convert.ext.DoubleSimpledCoder;
-import org.redkale.convert.ext.FloatArraySimpledCoder;
-import org.redkale.convert.ext.FloatSimpledCoder;
-import org.redkale.convert.ext.IntArraySimpledCoder;
-import org.redkale.convert.ext.IntSimpledCoder;
-import org.redkale.convert.ext.LongArraySimpledCoder;
-import org.redkale.convert.ext.LongSimpledCoder;
-import org.redkale.convert.ext.ShortArraySimpledCoder;
-import org.redkale.convert.ext.ShortSimpledCoder;
-import org.redkale.convert.ext.StringArraySimpledCoder;
-import org.redkale.convert.ext.StringSimpledCoder;
+import org.redkale.convert.*;
+import org.redkale.convert.ext.*;
 import org.redkale.util.RedkaleClassLoader;
 
 /**
@@ -202,29 +182,7 @@ public abstract class ProtobufDynEncoder<T> implements Encodeable<ProtobufWriter
             if (members == null) {
                 return null;
             }
-            Collections.sort(members, (o1, o2) -> {
-                ConvertColumnEntry ref1 = factory.findRef(clazz, o1);
-                ConvertColumnEntry ref2 = factory.findRef(clazz, o2);
-                if ((ref1 != null && ref1.getIndex() > 0) || (ref2 != null && ref2.getIndex() > 0)) {
-                    int idx1 = ref1 == null ? Integer.MAX_VALUE / 2 : ref1.getIndex();
-                    int idx2 = ref2 == null ? Integer.MAX_VALUE / 2 : ref2.getIndex();
-                    if (idx1 != idx2) {
-                        return idx1 - idx2;
-                    }
-                }
-                String n1 = ref1 == null || ref1.name().isEmpty() ? factory.readGetSetFieldName(o1) : ref1.name();
-                String n2 = ref2 == null || ref2.name().isEmpty() ? factory.readGetSetFieldName(o2) : ref2.name();
-                if (n1 == null && n2 == null) {
-                    return 0;
-                }
-                if (n1 == null) {
-                    return -1;
-                }
-                if (n2 == null) {
-                    return 1;
-                }
-                return n1.compareTo(n2);
-            });
+            factory.sortFieldIndex(clazz, members);
             return generateDyncEncoder(factory, clazz, members);
         } catch (Exception ex) {
             ex.printStackTrace();
