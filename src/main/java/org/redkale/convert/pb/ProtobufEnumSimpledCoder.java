@@ -20,7 +20,7 @@ import org.redkale.util.RedkaleClassLoader;
  * @param <W> Writer输出的子类型
  * @param <E> Enum的子类
  */
-public class ProtobufEnumSimpledCoder<R extends Reader, W extends Writer, E extends Enum>
+public class ProtobufEnumSimpledCoder<R extends ProtobufReader, W extends ProtobufWriter, E extends Enum>
         extends SimpledCoder<R, W, E> {
 
     private final Map<Integer, E> values = new HashMap<>();
@@ -48,7 +48,7 @@ public class ProtobufEnumSimpledCoder<R extends Reader, W extends Writer, E exte
         } else if (enumtostring) {
             out.writeSmallString(value.toString());
         } else {
-            ((ProtobufWriter) out).writeUInt32(value.ordinal());
+            out.writeUInt32(value.ordinal());
         }
     }
 

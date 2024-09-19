@@ -31,10 +31,6 @@ public class ProtobufWriter extends Writer implements ByteTuple {
 
     protected ProtobufWriter parent;
 
-    public static ObjectPool<ProtobufWriter> createPool(int max) {
-        return ObjectPool.createSafePool(max, (Object... params) -> new ProtobufWriter(), null, t -> t.recycle());
-    }
-
     protected ProtobufWriter(ProtobufWriter parent, int features) {
         this();
         this.parent = parent;
@@ -484,8 +480,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
                     this.writeFieldName(member);
                     ProtobufWriter tmp = new ProtobufWriter().configFieldFunc(this);
                     collectionEncoder.convertTo(tmp, member, (Collection) value);
-                    int length = tmp.count();
-                    this.writeUInt32(length);
+                    this.writeLength(tmp.count());
                     this.writeTo(tmp.toArray());
                 }
             } else {
@@ -497,8 +492,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
                 this.writeFieldName(member);
                 ProtobufWriter tmp = new ProtobufWriter().configFieldFunc(this);
                 streamEncoder.convertTo(tmp, member, (Stream) value);
-                int length = tmp.count();
-                this.writeUInt32(length);
+                this.writeLength(tmp.count());
                 this.writeTo(tmp.toArray());
             } else {
                 streamEncoder.convertTo(this, member, (Stream) value);
@@ -614,6 +608,10 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     protected void writeUInt32(int value) {
+        if (value >= 0 && value < 128) {
+            writeTo((byte) value);
+            return;
+        }
         while (true) {
             if ((value & ~0x7F) == 0) {
                 writeTo((byte) value);

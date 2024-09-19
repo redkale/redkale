@@ -4,6 +4,7 @@
  */
 package org.redkale.test.convert.pb;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.redkale.convert.pb.ProtobufConvert;
 
@@ -22,6 +23,10 @@ public class UserTest {
     public void run() throws Exception {
         User user = User.create();
         ProtobufConvert convert = ProtobufConvert.root();
-        convert.convertTo(user);
+        byte[] bytes = convert.convertTo(user);
+        User user2 = convert.convertFrom(User.class, bytes);
+        System.out.println(user);
+        System.out.println(user2);
+        Assertions.assertEquals(user.toString(), user2.toString());
     }
 }

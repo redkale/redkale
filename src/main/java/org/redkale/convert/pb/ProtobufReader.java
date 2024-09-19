@@ -10,7 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 import org.redkale.convert.*;
-import org.redkale.util.ObjectPool;
 
 /** @author zhangjx */
 public class ProtobufReader extends Reader {
@@ -25,11 +24,9 @@ public class ProtobufReader extends Reader {
 
     protected boolean enumtostring;
 
-    public static ObjectPool<ProtobufReader> createPool(int max) {
-        return ObjectPool.createSafePool(max, (Object... params) -> new ProtobufReader(), null, t -> t.recycle());
+    public ProtobufReader() {
+        // do nothing
     }
-
-    public ProtobufReader() {}
 
     public ProtobufReader(byte[] bytes) {
         setBytes(bytes, 0, bytes.length);

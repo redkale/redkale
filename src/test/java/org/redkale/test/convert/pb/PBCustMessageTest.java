@@ -20,11 +20,8 @@ import org.redkale.util.*;
 /** @author zhangjx */
 public class PBCustMessageTest {
 
-    private boolean main;
-
     public static void main(String[] args) throws Throwable {
         PBCustMessageTest test = new PBCustMessageTest();
-        test.main = true;
         test.run();
     }
 
@@ -40,20 +37,19 @@ public class PBCustMessageTest {
         byte[] bs2 = ProtobufConvert.root().convertTo(msg2);
         System.out.println(Arrays.toString(bs1));
         System.out.println(Arrays.toString(bs2));
-        if (!main) Assertions.assertEquals(Arrays.toString(bs1), Arrays.toString(bs2));
+        Assertions.assertEquals(Arrays.toString(bs1), Arrays.toString(bs2));
         System.out.println();
 
         OnPlayerLeaveMessage2 newmsg2 = ProtobufConvert.root().convertFrom(OnPlayerLeaveMessage2.class, bs1);
         byte[] newbs2 = ProtobufConvert.root().convertTo(newmsg2);
         System.out.println(Arrays.toString(newbs2));
-        if (!main) Assertions.assertEquals(Arrays.toString(bs1), Arrays.toString(newbs2));
+        Assertions.assertEquals(Arrays.toString(bs1), Arrays.toString(newbs2));
         System.out.println();
 
         ProtobufConvert convert = ProtobufConvert.root().newConvert(objFieldFunc);
         System.out.println(Arrays.toString(convert.convertTo(msg1)));
         System.out.println(Arrays.toString(convert.convertTo(msg2)));
-        if (!main)
-            Assertions.assertEquals(Arrays.toString(convert.convertTo(msg1)), Arrays.toString(convert.convertTo(msg2)));
+        Assertions.assertEquals(Arrays.toString(convert.convertTo(msg1)), Arrays.toString(convert.convertTo(msg2)));
         System.out.println();
     }
 

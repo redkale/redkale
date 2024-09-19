@@ -20,7 +20,7 @@ public class User {
     private String name;
 
     @ConvertColumn(index = 3)
-    private String trueName;
+    private String nickName;
 
     @ConvertColumn(index = 4)
     private Integer age;
@@ -34,10 +34,10 @@ public class User {
     public static User create() {
         User user = new User();
         user.setId(1L);
-        user.setName("赵侠客"); //
-        user.setAge(29);
+        user.setName("Hello");
+        user.setAge(18);
         user.setSex("男");
-        user.setTrueName("公众号");
+        user.setNickName("测试号");
         user.setCreateTime(new Date(1451577600000L));
         return user;
     }
@@ -58,12 +58,12 @@ public class User {
         this.name = name;
     }
 
-    public String getTrueName() {
-        return trueName;
+    public String getNickName() {
+        return nickName;
     }
 
-    public void setTrueName(String trueName) {
-        this.trueName = trueName;
+    public void setNickName(String nickName) {
+        this.nickName = nickName;
     }
 
     public Integer getAge() {

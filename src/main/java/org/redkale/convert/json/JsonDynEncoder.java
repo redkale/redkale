@@ -7,11 +7,6 @@ package org.redkale.convert.json;
 
 import java.lang.reflect.*;
 import java.lang.reflect.Type;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.*;
 import org.redkale.asm.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
@@ -82,24 +77,6 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
         if (type == Double.class) {
             return true;
         }
-        if (type == BigInteger.class) {
-            return true;
-        }
-        if (type == BigDecimal.class) {
-            return true;
-        }
-        if (type == LocalDate.class) {
-            return true;
-        }
-        if (type == LocalTime.class) {
-            return true;
-        }
-        if (type == LocalDateTime.class) {
-            return true;
-        }
-        if (type == java.util.Date.class) {
-            return true;
-        }
         if (type == boolean[].class) {
             return true;
         }
@@ -151,7 +128,9 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
         if (type == String[].class) {
             return true;
         }
-
+        if (factory.rootFactory().findEncoder(type) != null) {
+            return true;
+        }
         if (declaringClass == clazz) {
             return false;
         }
@@ -168,12 +147,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                         || t == Long.class
                         || t == Double.class
                         || t == String.class
-                        || t == BigInteger.class
-                        || t == BigDecimal.class
-                        || t == LocalDate.class
-                        || t == LocalTime.class
-                        || t == LocalDateTime.class
-                        || t == java.util.Date.class
+                        || factory.rootFactory().findEncoder(t) != null
                         || ((t instanceof Class) && ((Class) t).isEnum())) {
                     return true;
                 }

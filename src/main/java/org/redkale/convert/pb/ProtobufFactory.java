@@ -190,23 +190,21 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
             if (member == null || first) {
                 return in;
             }
-            ProtobufReader reader = (ProtobufReader) in;
-            int tag = reader.readTag();
+            int tag = in.readTag();
             if (tag != member.getTag()) {
-                reader.backTag(tag);
+                in.backTag(tag);
                 return null;
             }
             return in;
         } else {
-            ProtobufReader reader = (ProtobufReader) in;
             if (!first && member != null) {
-                int tag = reader.readTag();
+                int tag = in.readTag();
                 if (tag != member.getTag()) {
-                    reader.backTag(tag);
+                    in.backTag(tag);
                     return null;
                 }
             }
-            byte[] bs = reader.readByteArray();
+            byte[] bs = in.readByteArray();
             return new ProtobufReader(bs);
         }
     }

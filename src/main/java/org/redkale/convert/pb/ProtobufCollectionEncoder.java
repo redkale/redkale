@@ -35,7 +35,7 @@ public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWrit
     protected void writeMemberValue(ProtobufWriter out, EnMember member, Object item, boolean first) {
         if (simple) {
             if (item == null) {
-                ((ProtobufWriter) out).writeUInt32(0);
+                out.writeUInt32(0);
             } else {
                 componentEncoder.convertTo(out, item);
             }
