@@ -7,7 +7,6 @@ package org.redkale.net;
 
 import java.io.*;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.function.Function;
@@ -176,6 +175,12 @@ public abstract class Request<C extends Context> {
         return createTime;
     }
 
+    /**
+     * 获取当前操作Method上的注解集合
+     *
+     * @return Annotation[]
+     */
+    @ConvertDisabled
     public Annotation[] getAnnotations() {
         if (annotations == null) {
             return new Annotation[0];
@@ -183,6 +188,13 @@ public abstract class Request<C extends Context> {
         return Arrays.copyOfRange(annotations, 0, annotations.length);
     }
 
+    /**
+     * 获取当前操作Method上的注解
+     *
+     * @param <T> 注解泛型
+     * @param annotationClass 注解类型
+     * @return Annotation
+     */
     public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
         if (annotations != null) {
             for (Annotation ann : annotations) {
@@ -194,9 +206,16 @@ public abstract class Request<C extends Context> {
         return null;
     }
 
+    /**
+     * 获取当前操作Method上的注解集合
+     *
+     * @param <T> 注解泛型
+     * @param annotationClass 注解类型
+     * @return Annotation[]
+     */
     public <T extends Annotation> T[] getAnnotationsByType(Class<T> annotationClass) {
         if (annotations == null) {
-            return (T[]) Array.newInstance(annotationClass, 0);
+            return Creator.newArray(annotationClass, 0);
         } else {
             List<T> list = new ArrayList<>();
             for (Annotation ann : annotations) {

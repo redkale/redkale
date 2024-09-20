@@ -167,8 +167,6 @@ public class HttpRequest extends Request<HttpContext> {
 
     protected int actionid;
 
-    protected Annotation[] annotations;
-
     protected String remoteAddr;
 
     protected String locale;
@@ -354,7 +352,7 @@ public class HttpRequest extends Request<HttpContext> {
                     return 1;
                 }
                 hbytes.put(buffer, remainHalf);
-                this.headerLength = this.headerBytes.length();
+                this.headerLength = hbytes.length();
                 this.headerHalfLen = this.headerLength;
                 this.headerParsed = false;
             } else if (context.lazyHeader && getmethod) { // 非GET必须要读header，会有Content-Length
@@ -390,8 +388,8 @@ public class HttpRequest extends Request<HttpContext> {
                     buffer.clear();
                     return rs;
                 }
-                this.headerParsed = true;
                 this.headerHalfLen = this.headerLength;
+                this.headerParsed = true;
             }
             if (this.contentType != null && this.contentType.contains("boundary=")) {
                 this.boundary = true;
@@ -1313,7 +1311,6 @@ public class HttpRequest extends Request<HttpContext> {
         this.boundary = false;
         this.moduleid = 0;
         this.actionid = 0;
-        this.annotations = null;
         this.remoteAddr = null;
         this.params.clear();
         this.bodyBytes.clear();
@@ -1665,67 +1662,6 @@ public class HttpRequest extends Request<HttpContext> {
     @ConvertDisabled
     public int getActionid() {
         return this.actionid;
-    }
-
-    /**
-     * 获取当前操作Method上的注解集合
-     *
-     * @return Annotation[]
-     */
-    @Override
-    @ConvertDisabled
-    public Annotation[] getAnnotations() {
-        if (this.annotations == null) {
-            return new Annotation[0];
-        }
-        Annotation[] newanns = new Annotation[this.annotations.length];
-        System.arraycopy(this.annotations, 0, newanns, 0, newanns.length);
-        return newanns;
-    }
-
-    /**
-     * 获取当前操作Method上的注解
-     *
-     * @param <T> 注解泛型
-     * @param annotationClass 注解类型
-     * @return Annotation
-     */
-    @Override
-    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
-        if (this.annotations == null) {
-            return null;
-        }
-        for (Annotation ann : this.annotations) {
-            if (ann.getClass() == annotationClass) {
-                return (T) ann;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * 获取当前操作Method上的注解集合
-     *
-     * @param <T> 注解泛型
-     * @param annotationClass 注解类型
-     * @return Annotation[]
-     */
-    @Override
-    public <T extends Annotation> T[] getAnnotationsByType(Class<T> annotationClass) {
-        if (this.annotations == null) {
-            return Creator.newArray(annotationClass, 0);
-        }
-        T[] news = Creator.newArray(annotationClass, this.annotations.length);
-        int index = 0;
-        for (Annotation ann : this.annotations) {
-            if (ann.getClass() == annotationClass) {
-                news[index++] = (T) ann;
-            }
-        }
-        if (index < 1) {
-            return Creator.newArray(annotationClass, 0);
-        }
-        return Arrays.copyOf(news, index);
     }
 
     /**

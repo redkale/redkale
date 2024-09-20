@@ -124,7 +124,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                         }
                         request.moduleid = entry.moduleid;
                         request.actionid = entry.actionid;
-                        request.annotations = entry.annotations;
+                        request.setAnnotations(entry.annotations);
                         if (entry.auth) {
                             response.thenEvent(authSuccessServlet);
                             authenticate(request, response);
@@ -143,7 +143,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                             request.actionEntry = entry;
                             request.moduleid = entry.moduleid;
                             request.actionid = entry.actionid;
-                            request.annotations = entry.annotations;
+                            request.setAnnotations(entry.annotations);
                             if (entry.auth) {
                                 response.thenEvent(authSuccessServlet);
                                 authenticate(request, response);
