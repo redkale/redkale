@@ -216,32 +216,20 @@ public interface DataResultSet extends DataResultSetRow {
     public static <T> Serializable getRowColumnValue(
             DataResultSetRow row, Attribute<T, Serializable> attr, int index, String column) {
         final Class t = attr.type();
-        Serializable o = null;
-        try {
-            if (t == byte[].class) {
-                Object blob = index > 0 ? row.getObject(index) : row.getObject(column);
-                if (blob == null) {
-                    o = null;
-                } else { // 不支持超过2G的数据
-                    //                if (blob instanceof java.sql.Blob) {
-                    //                    java.sql.Blob b = (java.sql.Blob) blob;
-                    //                    try {
-                    //                        o = b.getBytes(1, (int) b.length());
-                    //                    } catch (Exception e) { //一般不会发生
-                    //                        o = null;
-                    //                    }
-                    //                } else {
-                    o = (byte[]) blob;
-                    // }
+        if (t == byte[].class) {
+            return (byte[]) (index > 0 ? row.getObject(index) : row.getObject(column));
+        } else {
+            Serializable o = (Serializable) (index > 0 ? row.getObject(index) : row.getObject(column));
+            if (o != null) {
+                if (t == String.class && o instanceof String) {
+                    return o;
+                } else if ((t == Integer.class || t == int.class) && o instanceof Integer) {
+                    return o;
+                } else if ((t == Long.class || t == long.class) && o instanceof Long) {
+                    return o;
                 }
-            } else {
-                o = (Serializable) (index > 0 ? row.getObject(index) : row.getObject(column));
-                o = formatColumnValue(t, attr.genericType(), o);
             }
-        } catch (Exception e) {
-            throw new SourceException(
-                    row.getEntityInfo() + "." + attr.field() + ".value=" + o + ": " + e.getMessage(), e.getCause());
+            return formatColumnValue(t, attr.genericType(), o);
         }
-        return o;
     }
 }

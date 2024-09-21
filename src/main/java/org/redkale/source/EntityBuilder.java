@@ -483,19 +483,17 @@ public class EntityBuilder<T> {
             Object[] cps = new Object[this.constructorParameters.length];
             for (int i = 0; i < constructorAttrs.length; i++) {
                 Attribute<T, Serializable> attr = constructorAttrs[i];
-                if (attr == null) {
-                    continue;
+                if (attr != null) {
+                    cps[i] = getFieldValue(row, attr, ++index);
                 }
-                cps[i] = getFieldValue(row, attr, ++index);
             }
             obj = creator.create(cps);
         }
         if (unconstructorAttrs != null) {
             for (Attribute<T, Serializable> attr : unconstructorAttrs) {
-                if (attr == null) {
-                    continue;
+                if (attr != null) {
+                    attr.set(obj, getFieldValue(row, attr, ++index));
                 }
-                attr.set(obj, getFieldValue(row, attr, ++index));
             }
         }
         return obj;
