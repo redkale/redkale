@@ -220,15 +220,6 @@ public interface DataResultSet extends DataResultSetRow {
             return (byte[]) (index > 0 ? row.getObject(index) : row.getObject(column));
         } else {
             Serializable o = (Serializable) (index > 0 ? row.getObject(index) : row.getObject(column));
-            if (o != null) {
-                if (t == String.class && o instanceof String) {
-                    return o;
-                } else if ((t == Integer.class || t == int.class) && o instanceof Integer) {
-                    return o;
-                } else if ((t == Long.class || t == long.class) && o instanceof Long) {
-                    return o;
-                }
-            }
             return formatColumnValue(t, attr.genericType(), o);
         }
     }

@@ -67,6 +67,9 @@ public class EntityBuilder<T> {
     // 数据库中所有字段, 顺序必须与querySqlColumns、querySqlColumnSequence一致
     private final Attribute<T, Serializable>[] attributes;
 
+    // 创建全字段对应对象的函数
+    private final EntityFullFunc<T> fullFunc;
+
     EntityBuilder(
             Class<T> type,
             Creator<T> creator,
@@ -92,6 +95,11 @@ public class EntityBuilder<T> {
             sqlAttrMap.put(col, v);
             sqlLowerAttrMap.put(lowerCaseColumn(col), v);
         });
+        if (constructorAttributes == null && !entityIsMap) {
+            this.fullFunc = EntityFullFunc.create(type, creator, unconstructorAttributes);
+        } else {
+            this.fullFunc = null;
+        }
     }
 
     public static boolean isSimpleType(Class type) {
@@ -444,6 +452,9 @@ public class EntityBuilder<T> {
     }
 
     public T getFullEntityValue(final DataResultSetRow row) {
+        if (this.fullFunc != null) {
+            return this.fullFunc.getObject(row);
+        }
         return getEntityValue(
                 constructorAttributes, constructorAttributes == null ? attributes : unconstructorAttributes, row);
     }
@@ -476,7 +487,7 @@ public class EntityBuilder<T> {
             return (T) map;
         }
         T obj;
-        int index = 0;
+        int columnIndex = 0;
         if (this.constructorParameters == null) {
             obj = creator.create();
         } else {
@@ -484,7 +495,7 @@ public class EntityBuilder<T> {
             for (int i = 0; i < constructorAttrs.length; i++) {
                 Attribute<T, Serializable> attr = constructorAttrs[i];
                 if (attr != null) {
-                    cps[i] = getFieldValue(row, attr, ++index);
+                    cps[i] = getFieldValue(row, attr, ++columnIndex);
                 }
             }
             obj = creator.create(cps);
@@ -492,7 +503,7 @@ public class EntityBuilder<T> {
         if (unconstructorAttrs != null) {
             for (Attribute<T, Serializable> attr : unconstructorAttrs) {
                 if (attr != null) {
-                    attr.set(obj, getFieldValue(row, attr, ++index));
+                    attr.set(obj, getFieldValue(row, attr, ++columnIndex));
                 }
             }
         }
@@ -542,8 +553,8 @@ public class EntityBuilder<T> {
         return (Serializable) row.getObject(sqlColumn);
     }
 
-    protected Serializable getFieldValue(final DataResultSetRow row, Attribute<T, Serializable> attr, int index) {
-        return row.getObject(attr, index, index > 0 ? null : this.getSQLColumn(null, attr.field()));
+    protected Serializable getFieldValue(DataResultSetRow row, Attribute<T, Serializable> attr, int columnIndex) {
+        return row.getObject(attr, columnIndex, columnIndex > 0 ? null : this.getSQLColumn(null, attr.field()));
     }
 
     /**
