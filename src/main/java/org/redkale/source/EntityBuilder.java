@@ -96,7 +96,7 @@ public class EntityBuilder<T> {
             sqlLowerAttrMap.put(lowerCaseColumn(col), v);
         });
         if (constructorAttributes == null && !entityIsMap) {
-            this.fullFunc = EntityFullFunc.create(type, creator, unconstructorAttributes);
+            this.fullFunc = EntityFullFunc.create(type, creator, attributes);
         } else {
             this.fullFunc = null;
         }
@@ -574,6 +574,10 @@ public class EntityBuilder<T> {
 
     public boolean hasConstructorAttribute() {
         return constructorAttributes != null;
+    }
+
+    public EntityFullFunc<T> getFullFunc() {
+        return fullFunc;
     }
 
     /**
