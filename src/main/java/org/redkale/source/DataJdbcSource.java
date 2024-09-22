@@ -2881,11 +2881,11 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         @Override
         public <T> Serializable getObject(Attribute<T, Serializable> attr, int index, String columnLabel) {
             Class t = attr.type();
-            if (t == int.class) {
-                return index > 0 ? getInt(index) : getInt(columnLabel);
-            } else if (t == String.class) {
+            if (t == String.class) {
                 return index > 0 ? getString(index) : getString(columnLabel);
-            } else if (t == long.class) {
+            } else if (t == int.class || t == Integer.class) {
+                return index > 0 ? getInteger(index) : getInteger(columnLabel);
+            } else if (t == long.class || t == Long.class) {
                 return index > 0 ? getLong(index) : getLong(columnLabel);
             } else if (t == java.util.Date.class) {
                 Object val = index > 0 ? getObject(index) : getObject(columnLabel);
@@ -2965,38 +2965,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             }
         }
 
-        public int getInt(int index) {
-            try {
-                return rr.getInt(index);
-            } catch (SQLException e) {
-                throw new SourceException(e);
-            }
-        }
-
-        public int getInt(String column) {
-            try {
-                return rr.getInt(column);
-            } catch (SQLException e) {
-                throw new SourceException(e);
-            }
-        }
-
-        public long getLong(int index) {
-            try {
-                return rr.getLong(index);
-            } catch (SQLException e) {
-                throw new SourceException(e);
-            }
-        }
-
-        public long getLong(String column) {
-            try {
-                return rr.getLong(column);
-            } catch (SQLException e) {
-                throw new SourceException(e);
-            }
-        }
-
+        @Override
         public String getString(int index) {
             try {
                 return rr.getString(index);
@@ -3005,9 +2974,136 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             }
         }
 
+        @Override
         public String getString(String column) {
             try {
                 return rr.getString(column);
+            } catch (SQLException e) {
+                throw new SourceException(e);
+            }
+        }
+
+        @Override
+        public byte[] getBytes(int index) {
+            try {
+                return rr.getBytes(index);
+            } catch (SQLException e) {
+                throw new SourceException(e);
+            }
+        }
+
+        @Override
+        public byte[] getBytes(String column) {
+            try {
+                return rr.getBytes(column);
+            } catch (SQLException e) {
+                throw new SourceException(e);
+            }
+        }
+
+        @Override
+        public Boolean getBoolean(int index) {
+            try {
+                return rr.getBoolean(index);
+            } catch (SQLException e) {
+                throw new SourceException(e);
+            }
+        }
+
+        @Override
+        public Boolean getBoolean(String column) {
+            try {
+                return rr.getBoolean(column);
+            } catch (SQLException e) {
+                throw new SourceException(e);
+            }
+        }
+
+        @Override
+        public Short getShort(int index) {
+            try {
+                return rr.getShort(index);
+            } catch (SQLException e) {
+                throw new SourceException(e);
+            }
+        }
+
+        @Override
+        public Short getShort(String column) {
+            try {
+                return rr.getShort(column);
+            } catch (SQLException e) {
+                throw new SourceException(e);
+            }
+        }
+
+        @Override
+        public Integer getInteger(int index) {
+            try {
+                return rr.getInt(index);
+            } catch (SQLException e) {
+                throw new SourceException(e);
+            }
+        }
+
+        @Override
+        public Integer getInteger(String column) {
+            try {
+                return rr.getInt(column);
+            } catch (SQLException e) {
+                throw new SourceException(e);
+            }
+        }
+
+        @Override
+        public Float getFloat(int index) {
+            try {
+                return rr.getFloat(index);
+            } catch (SQLException e) {
+                throw new SourceException(e);
+            }
+        }
+
+        @Override
+        public Float getFloat(String column) {
+            try {
+                return rr.getFloat(column);
+            } catch (SQLException e) {
+                throw new SourceException(e);
+            }
+        }
+
+        @Override
+        public Long getLong(int index) {
+            try {
+                return rr.getLong(index);
+            } catch (SQLException e) {
+                throw new SourceException(e);
+            }
+        }
+
+        @Override
+        public Long getLong(String column) {
+            try {
+                return rr.getLong(column);
+            } catch (SQLException e) {
+                throw new SourceException(e);
+            }
+        }
+
+        @Override
+        public Double getDouble(int index) {
+            try {
+                return rr.getDouble(index);
+            } catch (SQLException e) {
+                throw new SourceException(e);
+            }
+        }
+
+        @Override
+        public Double getDouble(String column) {
+            try {
+                return rr.getDouble(column);
             } catch (SQLException e) {
                 throw new SourceException(e);
             }
