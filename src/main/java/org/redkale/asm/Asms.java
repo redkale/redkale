@@ -201,9 +201,10 @@ public final class Asms {
             mv.visitTypeInsn(CHECKCAST, "[J");
         } else if (clazz == double[].class) {
             mv.visitTypeInsn(CHECKCAST, "[D");
+        } else if (clazz.isArray()) {
+            mv.visitTypeInsn(CHECKCAST, Type.getDescriptor(clazz));
         } else {
-            mv.visitTypeInsn(
-                    CHECKCAST, (clazz.isArray() ? "[" : "") + clazz.getName().replace('.', '/'));
+            mv.visitTypeInsn(CHECKCAST, clazz.getName().replace('.', '/'));
         }
     }
 

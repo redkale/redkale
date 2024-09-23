@@ -5,6 +5,7 @@
 package org.redkale.test.source;
 
 import java.math.BigInteger;
+import java.util.Set;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.persistence.Id;
 
@@ -17,6 +18,8 @@ public class FullBean {
     private long seqid;
 
     private String name;
+
+    private String[] remarks;
 
     private byte[] img;
 
@@ -48,6 +51,8 @@ public class FullBean {
 
     private Double money2;
 
+    private Set<Integer> ids;
+
     public long getSeqid() {
         return seqid;
     }
@@ -62,6 +67,23 @@ public class FullBean {
 
     public FullBean setName(String name) {
         this.name = name;
+        return this;
+    }
+
+    public String[] getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String[] remarks) {
+        this.remarks = remarks;
+    }
+
+    public Set<Integer> getIds() {
+        return ids;
+    }
+
+    public FullBean setIds(Set<Integer> ids) {
+        this.ids = ids;
         return this;
     }
 

@@ -5,6 +5,7 @@
 package org.redkale.test.source;
 
 import java.math.BigInteger;
+import java.util.Set;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.persistence.Id;
 
@@ -17,6 +18,8 @@ public class FullBean2 {
     public long seqid;
 
     public String name;
+
+    public String[] remarks;
 
     public byte[] img;
 
@@ -35,7 +38,7 @@ public class FullBean2 {
     public double money;
 
     public byte bit;
-    
+
     public Boolean flag2;
 
     public Short status2;
@@ -47,6 +50,8 @@ public class FullBean2 {
     public Float point2;
 
     public Double money2;
+
+    public Set<Integer> ids;
 
     @Override
     public String toString() {

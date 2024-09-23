@@ -34,7 +34,7 @@ public class FullBeanDynFunc extends EntityFullFunc<FullBean> {
         setFieldValue(4, row, rs); // number: BigInteger
 
         setFieldValue(4, row, rs); // bit: Byte
-        
+
         rs.setFlag(row.getBoolean(5, false));
         rs.setStatus(row.getShort(6, (short) 0));
         rs.setId(row.getInteger(7, 0));
