@@ -53,6 +53,9 @@ public abstract class AbstractCacheSource extends AbstractService implements Cac
     // @since 2.7.0
     public static final String CACHE_SOURCE_PIPELINES = "pipelines";
 
+    // @since 2.8.0 //是否非阻塞式
+    public static final String CACHE_SOURCE_NON_BLOCKING = "non-blocking";
+
     @ResourceChanged
     public abstract void onResourceChange(ResourceEvent[] events);
 
