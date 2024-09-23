@@ -13,31 +13,7 @@ import org.redkale.asm.ClassWriter;
 import org.redkale.asm.Label;
 import org.redkale.asm.MethodVisitor;
 import org.redkale.asm.Opcodes;
-import static org.redkale.asm.Opcodes.AALOAD;
-import static org.redkale.asm.Opcodes.ACC_BRIDGE;
-import static org.redkale.asm.Opcodes.ACC_FINAL;
-import static org.redkale.asm.Opcodes.ACC_PUBLIC;
-import static org.redkale.asm.Opcodes.ACC_SUPER;
-import static org.redkale.asm.Opcodes.ACC_SYNTHETIC;
-import static org.redkale.asm.Opcodes.ACC_VARARGS;
-import static org.redkale.asm.Opcodes.ACONST_NULL;
-import static org.redkale.asm.Opcodes.ALOAD;
-import static org.redkale.asm.Opcodes.ANEWARRAY;
-import static org.redkale.asm.Opcodes.ARETURN;
-import static org.redkale.asm.Opcodes.ASTORE;
-import static org.redkale.asm.Opcodes.CHECKCAST;
-import static org.redkale.asm.Opcodes.DCONST_0;
-import static org.redkale.asm.Opcodes.FCONST_0;
-import static org.redkale.asm.Opcodes.GETFIELD;
-import static org.redkale.asm.Opcodes.ICONST_0;
-import static org.redkale.asm.Opcodes.IFEQ;
-import static org.redkale.asm.Opcodes.INVOKEINTERFACE;
-import static org.redkale.asm.Opcodes.INVOKESPECIAL;
-import static org.redkale.asm.Opcodes.INVOKEVIRTUAL;
-import static org.redkale.asm.Opcodes.LCONST_0;
-import static org.redkale.asm.Opcodes.PUTFIELD;
-import static org.redkale.asm.Opcodes.RETURN;
-import static org.redkale.asm.Opcodes.V11;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.util.Attribute;
 import org.redkale.util.Creator;
@@ -182,7 +158,11 @@ public abstract class EntityFullFunc<T> {
                     try {
                         field = entityType.getField(attr.field());
                     } catch (Exception e2) {
-                        // do nothing
+                        try {
+                            setter = entityType.getMethod(attr.field(), attr.type());
+                        } catch (Exception e3) {
+                            // do nothing
+                        }
                     }
                 }
                 if (attr.type() == boolean.class) {
@@ -501,7 +481,11 @@ public abstract class EntityFullFunc<T> {
                     try {
                         field = entityType.getField(attr.field());
                     } catch (Exception e2) {
-                        // do nothing
+                        try {
+                            setter = entityType.getMethod(attr.field(), attr.type());
+                        } catch (Exception e3) {
+                            // do nothing
+                        }
                     }
                 }
                 if (setter == null && field == null) {
