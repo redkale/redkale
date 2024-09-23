@@ -50,7 +50,7 @@ public class JsonCharsWriter extends JsonWriter {
     }
 
     public JsonCharsWriter(int size) {
-        this.content = new char[size > 1024 ? size : 1024];
+        this.content = new char[size > DEFAULT_SIZE ? size : DEFAULT_SIZE];
     }
 
     // -----------------------------------------------------------------------
@@ -66,7 +66,7 @@ public class JsonCharsWriter extends JsonWriter {
         if (ncount <= content.length) {
             return content;
         }
-        char[] newdata = new char[Math.max(content.length * 3 / 2, ncount)];
+        char[] newdata = new char[Math.max(content.length * 2, ncount)];
         System.arraycopy(content, 0, newdata, 0, count);
         this.content = newdata;
         return newdata;
@@ -369,8 +369,17 @@ public class JsonCharsWriter extends JsonWriter {
             return;
         }
         final String str = value;
+        if (Utility.isLatin1(str)) {
+            writeEscapeLatinString(quote, Utility.latin1ByteArray(str));
+            return;
+        }
+//        byte[] utf16s = Utility.byteUTF16Array(value);
+//        if (utf16s != null) { // JDK9+
+//            writeEscapeUTF16String(quote, utf16s);
+//            return;
+//        }
         final int len = str.length();
-        char[] chars = expand(len + 2);
+        char[] chars = expand(len * 2 + 2);
         int curr = count;
         if (quote) {
             chars[curr++] = BYTE_DQUOTE;
@@ -409,6 +418,101 @@ public class JsonCharsWriter extends JsonWriter {
                 default:
                     chars[curr++] = ch;
                     break;
+            }
+        }
+        if (quote) {
+            chars[curr++] = BYTE_DQUOTE;
+        }
+        count = curr;
+    }
+
+    private void writeEscapeUTF16String(final boolean quote, byte[] value) {
+        byte[] bytes = value;
+        int len = bytes.length;
+        char[] chars = expand(len + 2);
+        int curr = count;
+        if (quote) {
+            chars[curr++] = BYTE_DQUOTE;
+        }
+        byte b1, b2;
+        for (int i = 0; i < len; i += 2) {
+            b1 = bytes[i];
+            b2 = bytes[i + 1];
+            char ch = (char) ((b2 == 0 && b1 >= 0) ? b1 : ((b1 & 0xff) | ((b2 & 0xff) << 8)));
+            switch (ch) {
+                case '\n':
+                    chars[curr++] = '\\';
+                    chars[curr++] = 'n';
+                    break;
+                case '\r':
+                    chars[curr++] = '\\';
+                    chars[curr++] = 'r';
+                    break;
+                case '\f':
+                    chars[curr++] = '\\';
+                    chars[curr++] = 'f';
+                    break;
+                case '\b':
+                    chars[curr++] = '\\';
+                    chars[curr++] = 'b';
+                    break;
+                case '\t':
+                    chars[curr++] = '\\';
+                    chars[curr++] = 't';
+                    break;
+                case '\\':
+                    chars[curr++] = '\\';
+                    chars[curr++] = ch;
+                    break;
+                case '"':
+                    chars[curr++] = '\\';
+                    chars[curr++] = ch;
+                    break;
+                default:
+                    chars[curr++] = ch;
+                    break;
+            }
+        }
+        if (quote) {
+            chars[curr++] = BYTE_DQUOTE;
+        }
+        count = curr;
+    }
+
+    private void writeEscapeLatinString(final boolean quote, byte[] value) {
+        char[] chars = expand(value.length * 2 + 2);
+        int curr = count;
+        if (quote) {
+            chars[curr++] = BYTE_DQUOTE;
+        }
+        for (byte b : value) {
+            if (b == BYTE_DQUOTE) {
+                chars[curr++] = '\\';
+                chars[curr++] = BYTE_DQUOTE;
+            } else if (b == '\\') {
+                chars[curr++] = '\\';
+                chars[curr++] = '\\';
+            } else if (b < 32) {
+                if (b == '\n') {
+                    chars[curr++] = '\\';
+                    chars[curr++] = 'n';
+                } else if (b == '\r') {
+                    chars[curr++] = '\\';
+                    chars[curr++] = 'r';
+                } else if (b == '\f') {
+                    chars[curr++] = '\\';
+                    chars[curr++] = 'f';
+                } else if (b == '\b') {
+                    chars[curr++] = '\\';
+                    chars[curr++] = 'b';
+                } else if (b == '\t') {
+                    chars[curr++] = '\\';
+                    chars[curr++] = 't';
+                } else {
+                    chars[curr++] = (char) b;
+                }
+            } else {
+                chars[curr++] = (char) b;
             }
         }
         if (quote) {

@@ -110,9 +110,9 @@ public final class Utility {
     private static final Unsafe unsafeInstance;
 
     // -------------------------------------------------------------------------------
-    private static final Function<Object, Object> strByteFunction;
+    private static final Function<String, byte[]> strByteFunction;
 
-    private static final Function<Object, Object> sbByteFunction;
+    private static final Function<StringBuilder, byte[]> sbByteFunction;
 
     private static final Predicate<Object> strLatin1Function;
 
@@ -142,8 +142,8 @@ public final class Utility {
                 .setRemoveOnCancelPolicy(true);
 
         Unsafe unsafe0 = null;
-        Function<Object, Object> strByteFunction0 = null;
-        Function<Object, Object> sbByteFunction0 = null;
+        Function<String, byte[]> strByteFunction0 = null;
+        Function<StringBuilder, byte[]> sbByteFunction0 = null;
         Predicate<Object> strLatin1Function0 = null;
         ToLongFunction<Object> bufferAddrFunction0 = null;
         Consumer<Consumer<String>> signalShutdownConsumer0 = null;
@@ -315,10 +315,11 @@ public final class Utility {
                     final long fd3 = unsafe0.objectFieldOffset(String.class.getDeclaredField("coder"));
                     final long fd4 = unsafe0.objectFieldOffset(Buffer.class.getDeclaredField("address"));
                     Field cf = String.class.getDeclaredField("COMPACT_STRINGS");
+                    strByteFunction0 = (String t) -> (byte[]) unsafe.getObject(t, fd1);
+                    sbByteFunction0 = (StringBuilder t) -> (byte[]) unsafe.getObject(t, fd2);
                     final boolean compact = unsafe.getBoolean(String.class, unsafe0.staticFieldOffset(cf));
-                    strByteFunction0 = (Object t) -> unsafe.getObject(t, fd1);
-                    sbByteFunction0 = (Object t) -> unsafe.getObject(t, fd2);
-                    strLatin1Function0 = (Object t) -> compact && unsafe.getByte(t, fd3) == 0; // LATIN1:0  UTF16:1
+                    // LATIN1:0  UTF16:1
+                    strLatin1Function0 = compact ? (Object t) -> unsafe.getByte(t, fd3) == 0 : (Object t) -> false;
                     bufferAddrFunction0 = (Object t) -> unsafe.getLong(t, fd4);
                 }
                 { // signalShutdown
@@ -4915,7 +4916,7 @@ public final class Utility {
         if (value == null || strByteFunction == null) {
             return null;
         }
-        return (byte[]) strByteFunction.apply(value);
+        return strByteFunction.apply(value);
     }
 
     public static char[] charArray(String value) {
@@ -4940,7 +4941,7 @@ public final class Utility {
         if (strByteFunction == null) {
             return latin1Value.getBytes();
         }
-        return (byte[]) strByteFunction.apply(latin1Value);
+        return strByteFunction.apply(latin1Value);
     }
 
     // 只能是单字节字符串
@@ -4951,7 +4952,7 @@ public final class Utility {
         if (sbByteFunction == null) {
             return latin1Value.toString().getBytes();
         }
-        return (byte[]) sbByteFunction.apply(latin1Value);
+        return sbByteFunction.apply(latin1Value);
     }
 
     public static ByteBuffer encodeUTF8(final ByteBuffer buffer, final char[] array) {

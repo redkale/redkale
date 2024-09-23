@@ -446,7 +446,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         }
         byte[] utf16s = Utility.byteUTF16Array(value);
         if (utf16s != null) { // JDK9+
-            writeUTF16String(quote, utf16s);
+            writeEscapeUTF16String(quote, utf16s);
             return;
         }
         int len = value.length();
@@ -513,7 +513,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     }
 
     // see java.lang.StringCoding.encodeUTF8_UTF16 方法
-    private void writeUTF16String(final boolean quote, byte[] value) {
+    private void writeEscapeUTF16String(final boolean quote, byte[] value) {
         int len = value.length;
         byte[] bytes = expand(len * 4 + 2);
         int curr = count;
@@ -591,14 +591,14 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         count = curr;
     }
 
-    static final char MIN_LOW_SURROGATE = '\uDC00';
-    static final char MAX_LOW_SURROGATE = '\uDFFF';
-    static final char MIN_HIGH_SURROGATE = '\uD800';
-    static final char MAX_HIGH_SURROGATE = '\uDBFF';
-    static final int MIN_SUPPLEMENTARY_CODE_POINT = 0x010000;
-    static final char MAX_LOW_SURROGATE_MORE = MAX_LOW_SURROGATE + 1;
-    static final char MAX_HIGH_SURROGATE_MORE = MAX_HIGH_SURROGATE + 1;
-    static final int MIN_SUPPLEMENTARY_CODE_POINT_MORE =
+    private static final char MIN_LOW_SURROGATE = '\uDC00';
+    private static final char MAX_LOW_SURROGATE = '\uDFFF';
+    private static final char MIN_HIGH_SURROGATE = '\uD800';
+    private static final char MAX_HIGH_SURROGATE = '\uDBFF';
+    private static final int MIN_SUPPLEMENTARY_CODE_POINT = 0x010000;
+    private static final char MAX_LOW_SURROGATE_MORE = MAX_LOW_SURROGATE + 1;
+    private static final char MAX_HIGH_SURROGATE_MORE = MAX_HIGH_SURROGATE + 1;
+    private static final int MIN_SUPPLEMENTARY_CODE_POINT_MORE =
             (MIN_SUPPLEMENTARY_CODE_POINT - (MIN_HIGH_SURROGATE << 10) - MIN_LOW_SURROGATE);
 
     private void writeEscapeLatinString(final boolean quote, byte[] value) {
@@ -654,11 +654,8 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             writeTo(Utility.latin1ByteArray(value));
             return;
         }
-        byte[] utf16s = Utility.byteUTF16Array(value);
-        if (utf16s != null) { // JDK9+
-            writeUTF16String(false, utf16s);
-            return;
-        }
+        // 不能使用writeEscapeUTF16String
+        //
         byte[] bytes = expand(value.length() * 4 + 2);
         int curr = count;
         int len = value.length();
