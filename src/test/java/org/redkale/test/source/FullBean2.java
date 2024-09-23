@@ -34,6 +34,8 @@ public class FullBean2 {
 
     public double money;
 
+    public byte bit;
+    
     public Boolean flag2;
 
     public Short status2;

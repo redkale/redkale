@@ -185,8 +185,25 @@ public final class Asms {
         } else if (clazz == double.class) {
             mv.visitTypeInsn(CHECKCAST, "java/lang/Double");
             mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Double", "doubleValue", "()D", false);
+        } else if (clazz == boolean[].class) {
+            mv.visitTypeInsn(CHECKCAST, "[Z");
+        } else if (clazz == byte[].class) {
+            mv.visitTypeInsn(CHECKCAST, "[B");
+        } else if (clazz == short[].class) {
+            mv.visitTypeInsn(CHECKCAST, "[S");
+        } else if (clazz == char[].class) {
+            mv.visitTypeInsn(CHECKCAST, "[C");
+        } else if (clazz == int[].class) {
+            mv.visitTypeInsn(CHECKCAST, "[I");
+        } else if (clazz == float[].class) {
+            mv.visitTypeInsn(CHECKCAST, "[F");
+        } else if (clazz == long[].class) {
+            mv.visitTypeInsn(CHECKCAST, "[J");
+        } else if (clazz == double[].class) {
+            mv.visitTypeInsn(CHECKCAST, "[D");
         } else {
-            mv.visitTypeInsn(CHECKCAST, clazz.getName().replace('.', '/'));
+            mv.visitTypeInsn(
+                    CHECKCAST, (clazz.isArray() ? "[" : "") + clazz.getName().replace('.', '/'));
         }
     }
 

@@ -362,9 +362,10 @@ public class EntityBuilder<T> {
                 }
             }
         } else {
-            Object[] cps = new Object[this.constructorParameters.length];
-            for (int i = 0; i < this.constructorAttributes.length; i++) {
-                Attribute<T, Serializable> attr = this.constructorAttributes[i];
+            Attribute<T, Serializable>[] constructorAttrs = this.constructorAttributes;
+            Object[] cps = new Object[constructorAttrs.length];
+            for (int i = 0; i < constructorAttrs.length; i++) {
+                Attribute<T, Serializable> attr = constructorAttrs[i];
                 String sqlCol = getSQLColumn(null, attr.field());
                 if (sqlColumns.contains(sqlCol)) {
                     cps[i] = getFieldValue(row, attr, 0);
@@ -425,9 +426,10 @@ public class EntityBuilder<T> {
         if (this.constructorParameters == null) {
             obj = creator.create();
         } else {
-            Object[] cps = new Object[this.constructorParameters.length];
-            for (int i = 0; i < this.constructorAttributes.length; i++) {
-                Attribute<T, Serializable> attr = this.constructorAttributes[i];
+            Attribute<T, Serializable>[] constructorAttrs = this.constructorAttributes;
+            Object[] cps = new Object[constructorAttrs.length];
+            for (int i = 0; i < constructorAttrs.length; i++) {
+                Attribute<T, Serializable> attr = constructorAttrs[i];
                 if (sels.test(attr.field())) {
                     cps[i] = getFieldValue(row, attr, 0);
                 }
@@ -460,6 +462,9 @@ public class EntityBuilder<T> {
     }
 
     public T getFullEntityValue(final Serializable... values) {
+        if (this.fullFunc != null) {
+            return this.fullFunc.getObject(values);
+        }
         return getEntityValue(
                 constructorAttributes, constructorAttributes == null ? attributes : unconstructorAttributes, values);
     }
@@ -491,7 +496,7 @@ public class EntityBuilder<T> {
         if (this.constructorParameters == null) {
             obj = creator.create();
         } else {
-            Object[] cps = new Object[this.constructorParameters.length];
+            Object[] cps = new Object[constructorAttrs.length];
             for (int i = 0; i < constructorAttrs.length; i++) {
                 Attribute<T, Serializable> attr = constructorAttrs[i];
                 if (attr != null) {
@@ -530,7 +535,7 @@ public class EntityBuilder<T> {
         if (this.constructorParameters == null) {
             obj = creator.create();
         } else {
-            Object[] cps = new Object[this.constructorParameters.length];
+            Object[] cps = new Object[constructorAttrs.length];
             for (int i = 0; i < constructorAttrs.length; i++) {
                 Attribute<T, Serializable> attr = constructorAttrs[i];
                 if (attr != null) {

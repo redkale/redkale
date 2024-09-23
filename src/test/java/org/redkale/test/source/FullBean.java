@@ -34,6 +34,8 @@ public class FullBean {
 
     private double money;
 
+    private byte bit;
+
     private Boolean flag2;
 
     private Short status2;
@@ -58,8 +60,17 @@ public class FullBean {
         return name;
     }
 
-    public void setName(String name) {
+    public FullBean setName(String name) {
         this.name = name;
+        return this;
+    }
+
+    public byte getBit() {
+        return bit;
+    }
+
+    public void setBit(byte bit) {
+        this.bit = bit;
     }
 
     public byte[] getImg() {
