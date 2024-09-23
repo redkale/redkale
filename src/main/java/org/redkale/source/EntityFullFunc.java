@@ -5,6 +5,7 @@
 package org.redkale.source;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Objects;
 import org.redkale.annotation.ClassDepends;
 import org.redkale.asm.Asms;
@@ -434,6 +435,25 @@ public abstract class EntityFullFunc<T> {
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "[B");
                         continue;
                     }
+                } else if (attr.type() == BigDecimal.class) {
+                    if (setter != null) {
+                        String desc = Type.getMethodDescriptor(setter);
+                        mv.visitVarInsn(ALOAD, 2); // obj
+                        mv.visitVarInsn(ALOAD, 1); // row
+                        Asms.visitInsn(mv, attrIndex);
+                        mv.visitMethodInsn(
+                                INVOKEINTERFACE, rowName, "getBigDecimal", "(I)Ljava/math/BigDecimal;", true);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
+                        continue;
+                    } else if (field != null) {
+                        mv.visitVarInsn(ALOAD, 2); // obj
+                        mv.visitVarInsn(ALOAD, 1); // row
+                        Asms.visitInsn(mv, attrIndex);
+                        mv.visitMethodInsn(
+                                INVOKEINTERFACE, rowName, "getBigDecimal", "(I)Ljava/math/BigDecimal;", true);
+                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/math/BigDecimal;");
+                        continue;
+                    }
                 }
                 mv.visitVarInsn(ALOAD, 0);
                 Asms.visitInsn(mv, attrIndex);
@@ -736,6 +756,23 @@ public abstract class EntityFullFunc<T> {
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "[B");
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "[B");
+                    }
+                } else if (attr.type() == BigDecimal.class) {
+                    if (setter != null) {
+                        String desc = Type.getMethodDescriptor(setter);
+                        mv.visitVarInsn(ALOAD, 2); // obj
+                        mv.visitVarInsn(ALOAD, 1); // values
+                        Asms.visitInsn(mv, attrIndex);
+                        mv.visitInsn(AALOAD);
+                        mv.visitTypeInsn(CHECKCAST, "java/math/BigDecimal");
+                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
+                    } else if (field != null) {
+                        mv.visitVarInsn(ALOAD, 2); // obj
+                        mv.visitVarInsn(ALOAD, 1); // values
+                        Asms.visitInsn(mv, attrIndex);
+                        mv.visitInsn(AALOAD);
+                        mv.visitTypeInsn(CHECKCAST, "java/math/BigDecimal");
+                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/math/BigDecimal;");
                     }
                 } else {
                     if (setter != null) {

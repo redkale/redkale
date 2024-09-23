@@ -6,6 +6,7 @@
 package org.redkale.source;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -2996,6 +2997,24 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         public byte[] getBytes(String column) {
             try {
                 return rr.getBytes(column);
+            } catch (SQLException e) {
+                throw new SourceException(e);
+            }
+        }
+
+        @Override
+        public BigDecimal getBigDecimal(int index) {
+            try {
+                return rr.getBigDecimal(index);
+            } catch (SQLException e) {
+                throw new SourceException(e);
+            }
+        }
+
+        @Override
+        public BigDecimal getBigDecimal(String column) {
+            try {
+                return rr.getBigDecimal(column);
             } catch (SQLException e) {
                 throw new SourceException(e);
             }

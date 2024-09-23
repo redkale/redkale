@@ -4,6 +4,7 @@
  */
 package org.redkale.test.source;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Set;
 import org.redkale.convert.json.JsonConvert;
@@ -24,6 +25,8 @@ public class FullBean {
     private byte[] img;
 
     private BigInteger number;
+
+    private BigDecimal scale;
 
     private boolean flag;
 
@@ -109,6 +112,14 @@ public class FullBean {
 
     public void setNumber(BigInteger number) {
         this.number = number;
+    }
+
+    public BigDecimal getScale() {
+        return scale;
+    }
+
+    public void setScale(BigDecimal scale) {
+        this.scale = scale;
     }
 
     public boolean isFlag() {

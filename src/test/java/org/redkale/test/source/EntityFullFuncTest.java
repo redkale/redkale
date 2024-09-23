@@ -4,6 +4,7 @@
  */
 package org.redkale.test.source;
 
+import java.math.BigDecimal;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -76,6 +77,16 @@ public class EntityFullFuncTest {
         @Override
         public byte[] getBytes(String columnLabel) {
             return null;
+        }
+
+        @Override
+        public BigDecimal getBigDecimal(int columnIdex) {
+            return BigDecimal.ZERO;
+        }
+
+        @Override
+        public BigDecimal getBigDecimal(String columnLabel) {
+            return BigDecimal.ZERO;
         }
 
         @Override

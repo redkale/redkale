@@ -5,6 +5,7 @@
 package org.redkale.source;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.List;
 import org.redkale.annotation.ClassDepends;
 import org.redkale.annotation.Nullable;
@@ -43,6 +44,13 @@ public interface DataResultSetRow {
 
     @ClassDepends
     public byte[] getBytes(String columnLabel);
+
+    // columnIdex从1开始
+    @ClassDepends
+    public BigDecimal getBigDecimal(int columnIdex);
+
+    @ClassDepends
+    public BigDecimal getBigDecimal(String columnLabel);
 
     // columnIdex从1开始
     @ClassDepends
