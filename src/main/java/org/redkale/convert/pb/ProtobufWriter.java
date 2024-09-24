@@ -264,7 +264,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             return 0;
         } else if (obj instanceof byte[]) {
             int length = ((byte[]) obj).length;
-            writeUInt32(length);
+            writeLength(length);
             writeTo((byte[]) obj);
             return length;
         } else {
@@ -447,10 +447,6 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             value = objFieldFunc.apply(member.getAttribute(), obj);
         }
         if (value == null) {
-            if (nullable()) {
-                this.writeFieldName(member);
-                writeNull();
-            }
             return;
         }
         if (tiny()) {
@@ -544,7 +540,6 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @Override
-    @ClassDepends
     public final void writeByteArray(byte[] values) {
         if (values == null) {
             writeNull();
@@ -564,25 +559,21 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @Override
-    @ClassDepends
     public void writeByte(byte value) {
         writeInt(value);
     }
 
     @Override
-    @ClassDepends
     public void writeChar(char value) {
         writeInt(value);
     }
 
     @Override
-    @ClassDepends
     public void writeShort(short value) {
         writeInt(value);
     }
 
     @Override
-    @ClassDepends
     public void writeInt(int value) { // writeSInt32
         if (value >= 0 && value < TENTHOUSAND_MAX) {
             writeTo(TENTHOUSAND_SINT32_BYTES[value]);
@@ -595,7 +586,6 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @Override
-    @ClassDepends
     public void writeLong(long value) { // writeSInt64
         if (value >= 0 && value < TENTHOUSAND_MAX) {
             writeTo(TENTHOUSAND_SINT64_BYTES[(int) value]);
@@ -608,29 +598,339 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @Override
-    @ClassDepends
     public void writeFloat(float value) {
         writeFixed32(Float.floatToRawIntBits(value));
     }
 
     @Override
-    @ClassDepends
     public void writeDouble(double value) {
         writeFixed64(Double.doubleToRawLongBits(value));
     }
 
     @Override
-    @ClassDepends
     public void writeSmallString(String value) {
         writeString(value);
     }
 
     @Override
-    @ClassDepends
     public void writeString(String value) {
         byte[] bs = Utility.isLatin1(value) ? Utility.latin1ByteArray(value) : Utility.encodeUTF8(value);
         writeLength(bs.length);
         writeTo(bs);
+    }
+
+    public void writeStrings(int tag, String[] value) {
+        String[] array = value;
+        if (array != null && array.length > 0) {
+            for (String item : array) {
+                writeTag(tag);
+                byte[] bs = item == null ? new byte[0] : Utility.encodeUTF8(item);
+                writeBytes(bs);
+            }
+        }
+    }
+
+    public void writeStrings(int tag, Collection<String> value) {
+        Collection<String> array = value;
+        if (array != null && !array.isEmpty()) {
+            for (String item : array) {
+                writeTag(tag);
+                byte[] bs = item == null ? new byte[0] : Utility.encodeUTF8(item);
+                writeBytes(bs);
+            }
+        }
+    }
+
+    public void writeBools(boolean[] value) {
+        boolean[] array = value;
+        if (array != null && array.length > 0) {
+            writeLength(array.length);
+            for (boolean item : array) {
+                writeTo(item ? (byte) 1 : (byte) 0);
+            }
+        }
+    }
+
+    public void writeBools(Boolean[] value) {
+        Boolean[] array = value;
+        if (array != null && array.length > 0) {
+            writeLength(array.length);
+            for (Boolean item : array) {
+                writeTo(item != null && item ? (byte) 1 : (byte) 0);
+            }
+        }
+    }
+
+    public void writeBools(Collection<Boolean> value) {
+        Collection<Boolean> array = value;
+        if (array != null && !array.isEmpty()) {
+            writeLength(array.size());
+            for (Boolean item : array) {
+                writeTo(item != null && item ? (byte) 1 : (byte) 0);
+            }
+        }
+    }
+
+    public void writeBytes(byte[] value) {
+        byte[] array = value;
+        if (array != null && array.length > 0) {
+            writeLength(array.length);
+            writeTo(array);
+        }
+    }
+
+    public void writeBytes(Byte[] value) {
+        Byte[] array = value;
+        if (array != null && array.length > 0) {
+            writeLength(array.length);
+            for (Byte item : array) {
+                writeTo(item == null ? (byte) 0 : item);
+            }
+        }
+    }
+
+    public void writeBytes(Collection<Byte> value) {
+        Collection<Byte> array = value;
+        if (array != null && !array.isEmpty()) {
+            writeLength(array.size());
+            for (Byte item : array) {
+                writeTo(item == null ? (byte) 0 : item);
+            }
+        }
+    }
+
+    public void writeChars(char[] value) {
+        char[] array = value;
+        if (array != null && array.length > 0) {
+            int len = 0;
+            for (char item : array) {
+                len += computeSInt32SizeNoTag(item);
+            }
+            writeLength(len);
+            for (char item : array) {
+                writeChar(item);
+            }
+        }
+    }
+
+    public void writeChars(Character[] value) {
+        Character[] array = value;
+        if (array != null && array.length > 0) {
+            int len = 0;
+            for (Character item : array) {
+                len += computeSInt32SizeNoTag(item);
+            }
+            writeLength(len);
+            for (Character item : array) {
+                writeChar(item == null ? 0 : item);
+            }
+        }
+    }
+
+    public void writeChars(Collection<Character> value) {
+        Collection<Character> array = value;
+        if (array != null && !array.isEmpty()) {
+            int len = 0;
+            for (Character item : array) {
+                len += computeSInt32SizeNoTag(item);
+            }
+            writeLength(len);
+            for (Character item : array) {
+                writeChar(item == null ? 0 : item);
+            }
+        }
+    }
+
+    public void writeShorts(short[] value) {
+        short[] array = value;
+        if (array != null && array.length > 0) {
+            int len = 0;
+            for (short item : array) {
+                len += computeSInt32SizeNoTag(item);
+            }
+            writeLength(len);
+            for (short item : array) {
+                writeShort(item);
+            }
+        }
+    }
+
+    public void writeShorts(Short[] value) {
+        Short[] array = value;
+        if (array != null && array.length > 0) {
+            int len = 0;
+            for (Short item : array) {
+                len += computeSInt32SizeNoTag(item == null ? 0 : item);
+            }
+            writeLength(len);
+            for (Short item : array) {
+                writeShort(item == null ? 0 : item);
+            }
+        }
+    }
+
+    public void writeShorts(Collection<Short> value) {
+        Collection<Short> array = value;
+        if (array != null && !array.isEmpty()) {
+            int len = 0;
+            for (Short item : array) {
+                len += computeSInt32SizeNoTag(item == null ? 0 : item);
+            }
+            writeLength(len);
+            for (Short item : array) {
+                writeShort(item == null ? 0 : item);
+            }
+        }
+    }
+
+    public void writeInts(int[] value) {
+        int[] array = value;
+        if (array != null && array.length > 0) {
+            int len = 0;
+            for (int item : array) {
+                len += computeSInt32SizeNoTag(item);
+            }
+            writeLength(len);
+            for (int item : array) {
+                writeInt(item);
+            }
+        }
+    }
+
+    public void writeInts(Integer[] value) {
+        Integer[] array = value;
+        if (array != null && array.length > 0) {
+            int len = 0;
+            for (Integer item : array) {
+                len += computeSInt32SizeNoTag(item == null ? 0 : item);
+            }
+            writeLength(len);
+            for (Integer item : array) {
+                writeInt(item == null ? 0 : item);
+            }
+        }
+    }
+
+    public void writeInts(Collection<Integer> value) {
+        Collection<Integer> array = value;
+        if (array != null && !array.isEmpty()) {
+            int len = 0;
+            for (Integer item : array) {
+                len += computeSInt32SizeNoTag(item == null ? 0 : item);
+            }
+            writeLength(len);
+            for (Integer item : array) {
+                writeInt(item == null ? 0 : item);
+            }
+        }
+    }
+
+    public void writeFloats(float[] value) {
+        float[] array = value;
+        if (array != null && array.length > 0) {
+            int len = array.length * 4;
+            writeLength(len);
+            for (float item : array) {
+                writeFloat(item);
+            }
+        }
+    }
+
+    public void writeFloats(Float[] value) {
+        Float[] array = value;
+        if (array != null && array.length > 0) {
+            int len = array.length * 4;
+            writeLength(len);
+            for (Float item : array) {
+                writeFloat(item == null ? 0 : item);
+            }
+        }
+    }
+
+    public void writeFloats(Collection<Float> value) {
+        Collection<Float> array = value;
+        if (array != null && !array.isEmpty()) {
+            int len = array.size() * 4;
+            writeLength(len);
+            for (Float item : array) {
+                writeFloat(item == null ? 0 : item);
+            }
+        }
+    }
+
+    public void writeLongs(long[] value) {
+        long[] array = value;
+        if (array != null && array.length > 0) {
+            int len = 0;
+            for (long item : array) {
+                len += computeSInt64SizeNoTag(item);
+            }
+            writeLength(len);
+            for (long item : array) {
+                writeLong(item);
+            }
+        }
+    }
+
+    public void writeLongs(Long[] value) {
+        Long[] array = value;
+        if (array != null && array.length > 0) {
+            int len = 0;
+            for (Long item : array) {
+                len += computeSInt64SizeNoTag(item == null ? 0 : item);
+            }
+            writeLength(len);
+            for (Long item : array) {
+                writeLong(item == null ? 0 : item);
+            }
+        }
+    }
+
+    public void writeLongs(Collection<Long> value) {
+        Collection<Long> array = value;
+        if (array != null && !array.isEmpty()) {
+            int len = 0;
+            for (Long item : array) {
+                len += computeSInt64SizeNoTag(item == null ? 0 : item);
+            }
+            writeLength(len);
+            for (Long item : array) {
+                writeLong(item == null ? 0 : item);
+            }
+        }
+    }
+
+    public void writeDoubles(double[] value) {
+        double[] array = value;
+        if (array != null && array.length > 0) {
+            int len = array.length * 8;
+            writeLength(len);
+            for (double item : array) {
+                writeDouble(item);
+            }
+        }
+    }
+
+    public void writeDoubles(Double[] value) {
+        Double[] array = value;
+        if (array != null && array.length > 0) {
+            int len = array.length * 8;
+            writeLength(len);
+            for (Double item : array) {
+                writeDouble(item == null ? 0 : item);
+            }
+        }
+    }
+
+    public void writeDoubles(Collection<Double> value) {
+        Collection<Double> array = value;
+        if (array != null && !array.isEmpty()) {
+            int len = array.size() * 8;
+            writeLength(len);
+            for (Double item : array) {
+                writeDouble(item == null ? 0 : item);
+            }
+        }
     }
 
     @Override
@@ -641,18 +941,160 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @ClassDepends
-    public boolean canWriteString(String value) {
-        return value == null ? nullable() : (!value.isEmpty() || !tiny());
+    public void writeFieldValue(int tag, boolean value) {
+        if (value) {
+            writeTag(tag);
+            writeBoolean(value);
+        }
     }
 
     @ClassDepends
-    public boolean canWriteBoolean(Boolean value) {
-        return value == null ? nullable() : (value || !tiny());
+    public void writeFieldValue(int tag, byte value) {
+        if (value != 0) {
+            writeTag(tag);
+            writeByte(value);
+        }
     }
 
     @ClassDepends
-    public boolean canWriteBoolean(boolean value) {
-        return value || !tiny();
+    public void writeFieldValue(int tag, char value) {
+        if (value != 0) {
+            writeTag(tag);
+            writeChar(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, short value) {
+        if (value != 0) {
+            writeTag(tag);
+            writeShort(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, int value) {
+        if (value != 0) {
+            writeTag(tag);
+            writeInt(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, float value) {
+        if (value != 0) {
+            writeTag(tag);
+            writeFloat(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, long value) {
+        if (value != 0) {
+            writeTag(tag);
+            writeLong(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, double value) {
+        if (value != 0) {
+            writeTag(tag);
+            writeDouble(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, Boolean value) {
+        if (value != null && !value) {
+            writeTag(tag);
+            writeBoolean(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, Byte value) {
+        if (value != null && value != 0) {
+            writeTag(tag);
+            writeByte(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, Character value) {
+        if (value != null && value != 0) {
+            writeTag(tag);
+            writeChar(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, Short value) {
+        if (value != null && value != 0) {
+            writeTag(tag);
+            writeShort(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, Integer value) {
+        if (value != null && value != 0) {
+            writeTag(tag);
+            writeInt(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, Float value) {
+        if (value != null && value != 0) {
+            writeTag(tag);
+            writeFloat(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, Long value) {
+        if (value != null && value != 0) {
+            writeTag(tag);
+            writeLong(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, Double value) {
+        if (value != null && value != 0) {
+            writeTag(tag);
+            writeDouble(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, byte[] value) {
+        if (value != null && value.length > 0) {
+            writeTag(tag);
+            writeLength(value.length);
+            writeTo(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, String value) {
+        if (value != null && (!value.isEmpty() || !tiny())) {
+            writeTag(tag);
+            writeString(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, Enum value) {
+        if (value != null) {
+            writeTag(tag);
+            if (enumtostring) {
+                writeString(value.name());
+            } else {
+                writeInt(value.ordinal());
+            }
+        }
     }
 
     @ClassDepends
@@ -797,5 +1239,57 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             (byte) ((int) (value >> 48) & 0xFF),
             (byte) ((int) (value >> 56) & 0xFF)
         };
+    }
+
+    /**  see com.google.protobuf.CodedOutputStream   **/
+    protected static int computeInt32SizeNoTag(final int value) {
+        if (value == 0) {
+            return 1;
+        }
+        return computeUInt64SizeNoTag(value);
+    }
+
+    protected static int computeUInt64SizeNoTag(final long value) {
+        if (value == 0) {
+            return 1;
+        }
+        int clz = Long.numberOfLeadingZeros(value);
+        return ((Long.SIZE * 9 + (1 << 6)) - (clz * 9)) >>> 6;
+    }
+
+    protected static int computeSInt32SizeNoTag(final int value) {
+        if (value == 0) {
+            return 1;
+        }
+        return computeUInt32SizeNoTag(encodeZigZag32(value));
+    }
+
+    protected static int computeSInt64SizeNoTag(final long value) {
+        if (value == 0) {
+            return 1;
+        }
+        return computeUInt64SizeNoTag(encodeZigZag64(value));
+    }
+
+    protected static int computeUInt32SizeNoTag(final int value) {
+        if (value == 0) {
+            return 1;
+        }
+        int clz = Integer.numberOfLeadingZeros(value);
+        return ((Integer.SIZE * 9 + (1 << 6)) - (clz * 9)) >>> 6;
+    }
+
+    protected static int encodeZigZag32(final int n) {
+        if (n == 0) {
+            return 0;
+        }
+        return (n << 1) ^ (n >> 31);
+    }
+
+    protected static long encodeZigZag64(final long n) {
+        if (n == 0) {
+            return 0L;
+        }
+        return (n << 1) ^ (n >> 63);
     }
 }
