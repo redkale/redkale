@@ -28,7 +28,18 @@ import org.redkale.util.RedkaleClassLoader;
  */
 public abstract class ProtobufDynEncoder<T> implements Encodeable<ProtobufWriter, T> {
 
+    protected Type type;
+
+    protected ProtobufDynEncoder(Class<T> clazz) {
+        this.type = clazz;
+    }
+
     public abstract void init(final ProtobufFactory factory);
+
+    @Override
+    public Type getType() {
+        return type;
+    }
 
     // 字段全部是primitive或String类型，且没有泛型的类才能动态生成ProtobufDynEncoder， 不支持的返回null
     public static ProtobufDynEncoder createDyncEncoder(final ProtobufFactory factory, final Type type) {

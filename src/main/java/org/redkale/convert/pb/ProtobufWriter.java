@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+import org.redkale.annotation.ClassDepends;
 import org.redkale.convert.*;
 import org.redkale.util.*;
 
@@ -20,6 +21,42 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     private static final int DEFAULT_SIZE = Integer.getInteger(
             "redkale.convert.protobuf.writer.buffer.defsize",
             Integer.getInteger("redkale.convert.writer.buffer.defsize", 1024));
+
+    private static final int TENTHOUSAND_MAX = 10001;
+
+    private static final byte[][] TENTHOUSAND_UINT_BYTES = new byte[TENTHOUSAND_MAX][];
+    private static final byte[][] TENTHOUSAND_UINT_BYTES2 = new byte[TENTHOUSAND_MAX][];
+
+    private static final byte[][] TENTHOUSAND_SINT32_BYTES = new byte[TENTHOUSAND_MAX][];
+    private static final byte[][] TENTHOUSAND_SINT32_BYTES2 = new byte[TENTHOUSAND_MAX][];
+
+    private static final byte[][] TENTHOUSAND_SINT64_BYTES = new byte[TENTHOUSAND_MAX][];
+    private static final byte[][] TENTHOUSAND_SINT64_BYTES2 = new byte[TENTHOUSAND_MAX][];
+
+    private static final byte[][] TENTHOUSAND_FIXED32_BYTES = new byte[TENTHOUSAND_MAX][];
+    private static final byte[][] TENTHOUSAND_FIXED32_BYTES2 = new byte[TENTHOUSAND_MAX][];
+
+    private static final byte[][] TENTHOUSAND_FIXED64_BYTES = new byte[TENTHOUSAND_MAX][];
+    private static final byte[][] TENTHOUSAND_FIXED64_BYTES2 = new byte[TENTHOUSAND_MAX][];
+
+    static {
+        for (int i = 0; i < TENTHOUSAND_UINT_BYTES.length; i++) {
+            TENTHOUSAND_UINT_BYTES[i] = uint32(i);
+            TENTHOUSAND_UINT_BYTES2[i] = uint32(-i);
+
+            TENTHOUSAND_SINT32_BYTES[i] = sint32(i);
+            TENTHOUSAND_SINT32_BYTES2[i] = sint32(-i);
+
+            TENTHOUSAND_SINT64_BYTES[i] = sint64(i);
+            TENTHOUSAND_SINT64_BYTES2[i] = sint64(-i);
+
+            TENTHOUSAND_FIXED32_BYTES[i] = fixed32(i);
+            TENTHOUSAND_FIXED32_BYTES2[i] = fixed32(-i);
+
+            TENTHOUSAND_FIXED64_BYTES[i] = fixed64(i);
+            TENTHOUSAND_FIXED64_BYTES2[i] = fixed64(-i);
+        }
+    }
 
     private byte[] content;
 
@@ -212,7 +249,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     @Override
     public void writeObjectE(Object obj) {
         if (parent != null) {
-            parent.writeUInt32(count());
+            parent.writeLength(count());
             parent.writeTo(toArray());
         }
     }
@@ -507,11 +544,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @Override
-    public void writeByte(byte value) {
-        writeInt(value);
-    }
-
-    @Override
+    @ClassDepends
     public final void writeByteArray(byte[] values) {
         if (values == null) {
             writeNull();
@@ -531,41 +564,69 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @Override
+    @ClassDepends
+    public void writeByte(byte value) {
+        writeInt(value);
+    }
+
+    @Override
+    @ClassDepends
     public void writeChar(char value) {
         writeInt(value);
     }
 
     @Override
+    @ClassDepends
     public void writeShort(short value) {
         writeInt(value);
     }
 
     @Override
+    @ClassDepends
     public void writeInt(int value) { // writeSInt32
+        if (value >= 0 && value < TENTHOUSAND_MAX) {
+            writeTo(TENTHOUSAND_SINT32_BYTES[value]);
+            return;
+        } else if (value < 0 && value > TENTHOUSAND_MAX) {
+            writeTo(TENTHOUSAND_SINT32_BYTES2[-value]);
+            return;
+        }
         writeUInt32((value << 1) ^ (value >> 31));
     }
 
     @Override
+    @ClassDepends
     public void writeLong(long value) { // writeSInt64
+        if (value >= 0 && value < TENTHOUSAND_MAX) {
+            writeTo(TENTHOUSAND_SINT64_BYTES[(int) value]);
+            return;
+        } else if (value < 0 && value > TENTHOUSAND_MAX) {
+            writeTo(TENTHOUSAND_SINT64_BYTES2[(int) -value]);
+            return;
+        }
         writeUInt64((value << 1) ^ (value >> 63));
     }
 
     @Override
+    @ClassDepends
     public void writeFloat(float value) {
         writeFixed32(Float.floatToRawIntBits(value));
     }
 
     @Override
+    @ClassDepends
     public void writeDouble(double value) {
         writeFixed64(Double.doubleToRawLongBits(value));
     }
 
     @Override
+    @ClassDepends
     public void writeSmallString(String value) {
         writeString(value);
     }
 
     @Override
+    @ClassDepends
     public void writeString(String value) {
         byte[] bs = Utility.isLatin1(value) ? Utility.latin1ByteArray(value) : Utility.encodeUTF8(value);
         writeLength(bs.length);
@@ -579,21 +640,23 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         }
     }
 
-    public static byte[] uint32(int value) {
-        byte[] bs = new byte[8];
-        int pos = 0;
-        while (true) {
-            if ((value & ~0x7F) == 0) {
-                bs[pos++] = ((byte) value);
-                return pos == bs.length ? bs : Arrays.copyOf(bs, pos);
-            } else {
-                bs[pos++] = ((byte) ((value & 0x7F) | 0x80));
-                value >>>= 7;
-            }
-        }
+    @ClassDepends
+    public boolean canWriteString(String value) {
+        return value == null ? nullable() : (!value.isEmpty() || !tiny());
     }
 
-    protected void writeTag(int tag) {
+    @ClassDepends
+    public boolean canWriteBoolean(Boolean value) {
+        return value == null ? nullable() : (value || !tiny());
+    }
+
+    @ClassDepends
+    public boolean canWriteBoolean(boolean value) {
+        return value || !tiny();
+    }
+
+    @ClassDepends
+    public void writeTag(int tag) {
         if (tag < 128) {
             writeTo((byte) tag);
         } else {
@@ -610,8 +673,11 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     protected void writeUInt32(int value) {
-        if (value >= 0 && value < 128) {
-            writeTo((byte) value);
+        if (value >= 0 && value < TENTHOUSAND_MAX) {
+            writeTo(TENTHOUSAND_UINT_BYTES[value]);
+            return;
+        } else if (value < 0 && value > TENTHOUSAND_MAX) {
+            writeTo(TENTHOUSAND_UINT_BYTES2[-value]);
             return;
         }
         while (true) {
@@ -626,6 +692,13 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     protected void writeUInt64(long value) {
+        if (value >= 0 && value < TENTHOUSAND_MAX) {
+            writeTo(TENTHOUSAND_UINT_BYTES[(int) value]);
+            return;
+        } else if (value < 0 && value > TENTHOUSAND_MAX) {
+            writeTo(TENTHOUSAND_UINT_BYTES2[(int) -value]);
+            return;
+        }
         while (true) {
             if ((value & ~0x7FL) == 0) {
                 writeTo((byte) value);
@@ -638,11 +711,25 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     protected void writeFixed32(int value) {
+        if (value >= 0 && value < TENTHOUSAND_MAX) {
+            writeTo(TENTHOUSAND_FIXED32_BYTES[value]);
+            return;
+        } else if (value < 0 && value > TENTHOUSAND_MAX) {
+            writeTo(TENTHOUSAND_FIXED32_BYTES2[-value]);
+            return;
+        }
         writeTo((byte) (value & 0xFF), (byte) ((value >> 8) & 0xFF), (byte) ((value >> 16) & 0xFF), (byte)
                 ((value >> 24) & 0xFF));
     }
 
     protected void writeFixed64(long value) {
+        if (value >= 0 && value < TENTHOUSAND_MAX) {
+            writeTo(TENTHOUSAND_FIXED64_BYTES[(int) value]);
+            return;
+        } else if (value < 0 && value > TENTHOUSAND_MAX) {
+            writeTo(TENTHOUSAND_FIXED64_BYTES2[(int) -value]);
+            return;
+        }
         writeTo(
                 (byte) ((int) (value) & 0xFF),
                 (byte) ((int) (value >> 8) & 0xFF),
@@ -652,5 +739,63 @@ public class ProtobufWriter extends Writer implements ByteTuple {
                 (byte) ((int) (value >> 40) & 0xFF),
                 (byte) ((int) (value >> 48) & 0xFF),
                 (byte) ((int) (value >> 56) & 0xFF));
+    }
+
+    public static byte[] uint32(int value) {
+        byte[] bs = new byte[8];
+        int pos = 0;
+        while (true) {
+            if ((value & ~0x7F) == 0) {
+                bs[pos++] = ((byte) value);
+                return pos == bs.length ? bs : Arrays.copyOf(bs, pos);
+            } else {
+                bs[pos++] = ((byte) ((value & 0x7F) | 0x80));
+                value >>>= 7;
+            }
+        }
+    }
+
+    public static byte[] uint64(long value) {
+        byte[] bs = new byte[16];
+        int pos = 0;
+        while (true) {
+            if ((value & ~0x7FL) == 0) {
+                bs[pos++] = ((byte) value);
+                return pos == bs.length ? bs : Arrays.copyOf(bs, pos);
+            } else {
+                bs[pos++] = (byte) (((int) value & 0x7F) | 0x80);
+                value >>>= 7;
+            }
+        }
+    }
+
+    public static byte[] sint32(int value) {
+        return uint32((value << 1) ^ (value >> 31));
+    }
+
+    public static byte[] sint64(long value) {
+        return uint64((value << 1) ^ (value >> 63));
+    }
+
+    public static byte[] fixed32(int value) {
+        return new byte[] {
+            (byte) (value & 0xFF),
+            (byte) ((value >> 8) & 0xFF),
+            (byte) ((value >> 16) & 0xFF),
+            (byte) ((value >> 24) & 0xFF)
+        };
+    }
+
+    public static byte[] fixed64(long value) {
+        return new byte[] {
+            (byte) ((int) (value) & 0xFF),
+            (byte) ((int) (value >> 8) & 0xFF),
+            (byte) ((int) (value >> 16) & 0xFF),
+            (byte) ((int) (value >> 24) & 0xFF),
+            (byte) ((int) (value >> 32) & 0xFF),
+            (byte) ((int) (value >> 40) & 0xFF),
+            (byte) ((int) (value >> 48) & 0xFF),
+            (byte) ((int) (value >> 56) & 0xFF)
+        };
     }
 }
