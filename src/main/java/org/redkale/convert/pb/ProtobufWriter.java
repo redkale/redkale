@@ -1069,11 +1069,210 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @ClassDepends
+    public void writeFieldValue(int tag, boolean[] value) {
+        if (value != null && value.length > 0) {
+            writeTag(tag);
+            writeBools(value);
+        }
+    }
+
+    @ClassDepends
     public void writeFieldValue(int tag, byte[] value) {
         if (value != null && value.length > 0) {
             writeTag(tag);
-            writeLength(value.length);
-            writeTo(value);
+            writeBytes(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, char[] value) {
+        if (value != null && value.length > 0) {
+            writeTag(tag);
+            writeChars(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, short[] value) {
+        if (value != null && value.length > 0) {
+            writeTag(tag);
+            writeShorts(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, int[] value) {
+        if (value != null && value.length > 0) {
+            writeTag(tag);
+            writeInts(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, float[] value) {
+        if (value != null && value.length > 0) {
+            writeTag(tag);
+            writeFloats(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, long[] value) {
+        if (value != null && value.length > 0) {
+            writeTag(tag);
+            writeLongs(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, double[] value) {
+        if (value != null && value.length > 0) {
+            writeTag(tag);
+            writeDoubles(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldBoolsValue(int tag, Boolean[] value) {
+        if (value != null && value.length > 0) {
+            writeTag(tag);
+            writeBools(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldBytesValue(int tag, Byte[] value) {
+        if (value != null && value.length > 0) {
+            writeTag(tag);
+            writeBytes(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldCharsValue(int tag, Character[] value) {
+        if (value != null && value.length > 0) {
+            writeTag(tag);
+            writeChars(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldShortsValue(int tag, Short[] value) {
+        if (value != null && value.length > 0) {
+            writeTag(tag);
+            writeShorts(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldIntsValue(int tag, Integer[] value) {
+        if (value != null && value.length > 0) {
+            writeTag(tag);
+            writeInts(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldFloatsValue(int tag, Float[] value) {
+        if (value != null && value.length > 0) {
+            writeTag(tag);
+            writeFloats(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldLongsValue(int tag, Long[] value) {
+        if (value != null && value.length > 0) {
+            writeTag(tag);
+            writeLongs(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldDoublesValue(int tag, Double[] value) {
+        if (value != null && value.length > 0) {
+            writeTag(tag);
+            writeDoubles(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldStringsValue(int tag, String[] value) {
+        if (value != null && value.length > 0) {
+            writeTag(tag);
+            writeStrings(tag, value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldBoolsValue(int tag, Collection<Boolean> value) {
+        if (value != null && !value.isEmpty()) {
+            writeTag(tag);
+            writeBools(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldBytesValue(int tag, Collection<Byte> value) {
+        if (value != null && !value.isEmpty()) {
+            writeTag(tag);
+            writeBytes(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldCharsValue(int tag, Collection<Character> value) {
+        if (value != null && !value.isEmpty()) {
+            writeTag(tag);
+            writeChars(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldShortsValue(int tag, Collection<Short> value) {
+        if (value != null && !value.isEmpty()) {
+            writeTag(tag);
+            writeShorts(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldIntsValue(int tag, Collection<Integer> value) {
+        if (value != null && !value.isEmpty()) {
+            writeTag(tag);
+            writeInts(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldFloatsValue(int tag, Collection<Float> value) {
+        if (value != null && !value.isEmpty()) {
+            writeTag(tag);
+            writeFloats(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldLongsValue(int tag, Collection<Long> value) {
+        if (value != null && !value.isEmpty()) {
+            writeTag(tag);
+            writeLongs(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldDoublesValue(int tag, Collection<Double> value) {
+        if (value != null && !value.isEmpty()) {
+            writeTag(tag);
+            writeDoubles(value);
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldStringsValue(int tag, Collection<String> value) {
+        if (value != null && !value.isEmpty()) {
+            writeTag(tag);
+            writeStrings(tag, value);
         }
     }
 
