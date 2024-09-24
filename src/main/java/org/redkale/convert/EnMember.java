@@ -219,7 +219,7 @@ public final class EnMember<W extends Writer, T, F> {
 
     @Override
     public String toString() {
-        return "EnMember{" + "attribute=" + attribute.field() + ", position=" + position + ", encoder="
+        return "EnMember{" + "attribute=" + attribute.field() + ", position=" + position + ", tag=" + tag + ", encoder="
                 + (encoder == null ? null : encoder.getClass().getName()) + '}';
     }
 }

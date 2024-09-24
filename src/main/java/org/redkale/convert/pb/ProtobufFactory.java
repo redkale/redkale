@@ -25,7 +25,7 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
                             "redkale.convert.nullable",
                             false,
                             Convert.FEATURE_NULLABLE),
-            Boolean.parseBoolean(System.getProperty("redkale.convert.protobuf.enumtostring", "true")));
+            Boolean.parseBoolean(System.getProperty("redkale.convert.protobuf.enumtostring", "false")));
 
     static final Decodeable objectDecoder = instance.loadDecoder(Object.class);
 

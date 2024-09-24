@@ -410,8 +410,10 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             value = objFieldFunc.apply(member.getAttribute(), obj);
         }
         if (value == null) {
-            this.writeFieldName(member);
-            writeNull();
+            if (nullable()) {
+                this.writeFieldName(member);
+                writeNull();
+            }
             return;
         }
         if (tiny()) {
