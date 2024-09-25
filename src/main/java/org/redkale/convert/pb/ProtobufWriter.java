@@ -207,12 +207,9 @@ public class ProtobufWriter extends Writer implements ByteTuple {
 
     @Override
     public byte[] toArray() {
-        if (count == content.length) {
-            return content;
-        }
-        byte[] newdata = new byte[count];
-        System.arraycopy(content, 0, newdata, 0, count);
-        return newdata;
+        byte[] copy = new byte[count];
+        System.arraycopy(content, 0, copy, 0, count);
+        return copy;
     }
 
     public ProtobufWriter enumtostring(boolean enumtostring) {

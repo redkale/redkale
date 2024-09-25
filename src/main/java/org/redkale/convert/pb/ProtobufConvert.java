@@ -685,12 +685,12 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
         if (encoder == null || encoder.getType() != t) {
             encoder = factory.loadEncoder(t);
             this.lastEncodeable = encoder;
+            if (!(encoder instanceof ObjectEncoder) && !(encoder instanceof SimpledCoder)) {
+                throw new ConvertException(this.getClass().getSimpleName() + " not supported type(" + t + ")");
+            }
         }
         if (encoder.specifyable()) {
             writer.specificObjectType(t);
-        }
-        if (!(encoder instanceof ObjectEncoder) && !(encoder instanceof SimpledCoder)) {
-            throw new ConvertException(this.getClass().getSimpleName() + " not supported type(" + t + ")");
         }
         encoder.convertTo(writer, value);
         byte[] result = writer.toArray();
