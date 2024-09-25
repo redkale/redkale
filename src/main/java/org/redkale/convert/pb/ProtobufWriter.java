@@ -1601,7 +1601,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
                 : null;
     }
 
-    /**  see com.google.protobuf.CodedOutputStream   **/
+    // see com.google.protobuf.CodedOutputStream
     protected static int computeInt32SizeNoTag(final int value) {
         if (value == 0) {
             return 1;
