@@ -5,7 +5,6 @@
  */
 package org.redkale.convert.pb;
 
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -872,6 +871,62 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         }
     }
 
+    public void writeAtomicIntegers(AtomicInteger[] value) {
+        AtomicInteger[] array = value;
+        if (array != null && array.length > 0) {
+            int len = 0;
+            for (AtomicInteger item : array) {
+                len += computeSInt32SizeNoTag(item == null ? 0 : item.get());
+            }
+            writeLength(len);
+            for (AtomicInteger item : array) {
+                writeInt(item == null ? 0 : item.get());
+            }
+        }
+    }
+
+    public void writeAtomicIntegers(Collection<AtomicInteger> value) {
+        Collection<AtomicInteger> array = value;
+        if (array != null && !array.isEmpty()) {
+            int len = 0;
+            for (AtomicInteger item : array) {
+                len += computeSInt32SizeNoTag(item == null ? 0 : item.get());
+            }
+            writeLength(len);
+            for (AtomicInteger item : array) {
+                writeInt(item == null ? 0 : item.get());
+            }
+        }
+    }
+
+    public void writeAtomicLongs(AtomicLong[] value) {
+        AtomicLong[] array = value;
+        if (array != null && array.length > 0) {
+            int len = 0;
+            for (AtomicLong item : array) {
+                len += computeSInt64SizeNoTag(item == null ? 0 : item.get());
+            }
+            writeLength(len);
+            for (AtomicLong item : array) {
+                writeLong(item == null ? 0 : item.get());
+            }
+        }
+    }
+
+    public void writeAtomicLongs(Collection<AtomicLong> value) {
+        Collection<AtomicLong> array = value;
+        if (array != null && !array.isEmpty()) {
+            int len = 0;
+            for (AtomicLong item : array) {
+                len += computeSInt64SizeNoTag(item == null ? 0 : item.get());
+            }
+            writeLength(len);
+            for (AtomicLong item : array) {
+                writeLong(item == null ? 0 : item.get());
+            }
+        }
+    }
+
     @Override
     public void writeWrapper(StringWrapper value) {
         if (value != null) {
@@ -1024,6 +1079,24 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @ClassDepends
+    public void writeFieldValue(int tag, AtomicInteger value) {
+        if (value != null && value.get() != 0) {
+            writeTag(tag);
+            writeInt(value.get());
+            this.comma = true;
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, AtomicLong value) {
+        if (value != null && value.get() != 0) {
+            writeTag(tag);
+            writeLong(value.get());
+            this.comma = true;
+        }
+    }
+
+    @ClassDepends
     public void writeFieldValue(int tag, boolean[] value) {
         if (value != null && value.length > 0) {
             writeTag(tag);
@@ -1168,6 +1241,24 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @ClassDepends
+    public void writeFieldValue(int tag, AtomicInteger[] value) {
+        if (value != null && value.length > 0) {
+            writeTag(tag);
+            writeAtomicIntegers(value);
+            this.comma = true;
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, AtomicLong[] value) {
+        if (value != null && value.length > 0) {
+            writeTag(tag);
+            writeAtomicLongs(value);
+            this.comma = true;
+        }
+    }
+
+    @ClassDepends
     public void writeFieldValue(int tag, String[] value) {
         if (value != null && value.length > 0) {
             writeStrings(tag, value);
@@ -1243,6 +1334,24 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && !value.isEmpty()) {
             writeTag(tag);
             writeDoubles(value);
+            this.comma = true;
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldAtomicIntegersValue(int tag, Collection<AtomicInteger> value) {
+        if (value != null && !value.isEmpty()) {
+            writeTag(tag);
+            writeAtomicIntegers(value);
+            this.comma = true;
+        }
+    }
+
+    @ClassDepends
+    public void writeFieldAtomicLongsValue(int tag, Collection<AtomicLong> value) {
+        if (value != null && !value.isEmpty()) {
+            writeTag(tag);
+            writeAtomicLongs(value);
             this.comma = true;
         }
     }
@@ -1533,70 +1642,6 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             (byte) ((int) (value >> 48) & 0xFF),
             (byte) ((int) (value >> 56) & 0xFF)
         };
-    }
-
-    public static boolean isSimpleType(Class fieldClass) {
-        return fieldClass.isPrimitive()
-                || fieldClass == Boolean.class
-                || fieldClass == Byte.class
-                || fieldClass == Character.class
-                || fieldClass == Short.class
-                || fieldClass == Integer.class
-                || fieldClass == Float.class
-                || fieldClass == Long.class
-                || fieldClass == Double.class
-                || fieldClass == String.class
-                || fieldClass == boolean[].class
-                || fieldClass == byte[].class
-                || fieldClass == char[].class
-                || fieldClass == short[].class
-                || fieldClass == int[].class
-                || fieldClass == float[].class
-                || fieldClass == long[].class
-                || fieldClass == double[].class
-                || fieldClass == Boolean[].class
-                || fieldClass == Byte[].class
-                || fieldClass == Character[].class
-                || fieldClass == Short[].class
-                || fieldClass == Integer[].class
-                || fieldClass == Float[].class
-                || fieldClass == Long[].class
-                || fieldClass == Double[].class
-                || fieldClass == String[].class;
-    }
-
-    public static boolean supportSimpleCollectionType(Type type) {
-        if (!(type instanceof ParameterizedType)) {
-            return false;
-        }
-        ParameterizedType ptype = (ParameterizedType) type;
-        if (!(ptype.getRawType() instanceof Class)) {
-            return false;
-        }
-        Type[] ptargs = ptype.getActualTypeArguments();
-        if (ptargs == null || ptargs.length != 1) {
-            return false;
-        }
-        Class ownerType = (Class) ptype.getRawType();
-        if (!Collection.class.isAssignableFrom(ownerType)) {
-            return false;
-        }
-        Type componentType = ptargs[0];
-        return componentType == Boolean.class
-                || componentType == Byte.class
-                || componentType == Character.class
-                || componentType == Short.class
-                || componentType == Integer.class
-                || componentType == Float.class
-                || componentType == Long.class
-                || componentType == Double.class
-                || componentType == String.class;
-    }
-
-    public static Class getSimpleCollectionComponentType(Type type) {
-        return supportSimpleCollectionType(type)
-                ? (Class) ((ParameterizedType) type).getActualTypeArguments()[0]
-                : null;
     }
 
     // see com.google.protobuf.CodedOutputStream

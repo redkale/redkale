@@ -228,6 +228,76 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
                 || type == AtomicLong.class;
     }
 
+    protected static boolean isSimpleType(Class fieldClass) {
+        return fieldClass.isPrimitive()
+                || fieldClass == Boolean.class
+                || fieldClass == Byte.class
+                || fieldClass == Character.class
+                || fieldClass == Short.class
+                || fieldClass == Integer.class
+                || fieldClass == Float.class
+                || fieldClass == Long.class
+                || fieldClass == Double.class
+                || fieldClass == AtomicInteger.class
+                || fieldClass == AtomicLong.class
+                || fieldClass == String.class
+                || fieldClass == boolean[].class
+                || fieldClass == byte[].class
+                || fieldClass == char[].class
+                || fieldClass == short[].class
+                || fieldClass == int[].class
+                || fieldClass == float[].class
+                || fieldClass == long[].class
+                || fieldClass == double[].class
+                || fieldClass == Boolean[].class
+                || fieldClass == Byte[].class
+                || fieldClass == Character[].class
+                || fieldClass == Short[].class
+                || fieldClass == Integer[].class
+                || fieldClass == Float[].class
+                || fieldClass == Long[].class
+                || fieldClass == Double[].class
+                || fieldClass == AtomicInteger[].class
+                || fieldClass == AtomicLong[].class
+                || fieldClass == String[].class;
+    }
+
+    protected static boolean supportSimpleCollectionType(Type type) {
+        if (!(type instanceof ParameterizedType)) {
+            return false;
+        }
+        ParameterizedType ptype = (ParameterizedType) type;
+        if (!(ptype.getRawType() instanceof Class)) {
+            return false;
+        }
+        Type[] ptargs = ptype.getActualTypeArguments();
+        if (ptargs == null || ptargs.length != 1) {
+            return false;
+        }
+        Class ownerType = (Class) ptype.getRawType();
+        if (!Collection.class.isAssignableFrom(ownerType)) {
+            return false;
+        }
+        Type componentType = ptargs[0];
+        return componentType == Boolean.class
+                || componentType == Byte.class
+                || componentType == Character.class
+                || componentType == Short.class
+                || componentType == Integer.class
+                || componentType == Float.class
+                || componentType == Long.class
+                || componentType == Double.class
+                || componentType == AtomicInteger.class
+                || componentType == AtomicLong.class
+                || componentType == String.class;
+    }
+
+    public static Class getSimpleCollectionComponentType(Type type) {
+        return supportSimpleCollectionType(type)
+                ? (Class) ((ParameterizedType) type).getActualTypeArguments()[0]
+                : null;
+    }
+
     public static int getTag(String fieldName, Type fieldType, int fieldPos, boolean enumtostring) {
         int wiretype = ProtobufFactory.wireType(fieldType, enumtostring);
         return (fieldPos << 3 | wiretype);

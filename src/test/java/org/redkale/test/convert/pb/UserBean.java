@@ -9,6 +9,8 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.persistence.Id;
@@ -144,6 +146,12 @@ public class UserBean {
 
     @ConvertColumn(index = 42)
     public UserKind kind;
+
+    @ConvertColumn(index = 43)
+    public AtomicInteger count;
+
+    @ConvertColumn(index = 44)
+    public AtomicLong[] count2;
 
     public Map<String, String> getMap() {
         return map;

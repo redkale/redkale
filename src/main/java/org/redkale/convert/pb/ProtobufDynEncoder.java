@@ -8,6 +8,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import org.redkale.asm.Asms;
 import org.redkale.asm.ClassWriter;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
@@ -67,9 +69,9 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
             final Class fieldClass = member.getAttribute().type();
             final Type fieldType = member.getAttribute().genericType();
             elementb.append(fieldName).append(',');
-            if (!ProtobufWriter.isSimpleType(fieldClass)
+            if (!ProtobufFactory.isSimpleType(fieldClass)
                     && !fieldClass.isEnum()
-                    && !ProtobufWriter.supportSimpleCollectionType(fieldType)) {
+                    && !ProtobufFactory.supportSimpleCollectionType(fieldType)) {
                 if ((member.getEncoder() instanceof SimpledCoder)) {
                     simpledCoders.put(fieldName, (SimpledCoder) member.getEncoder());
                 } else {
@@ -185,7 +187,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                 final String fieldName = member.getAttribute().field();
                 final Type fieldType = member.getAttribute().genericType();
                 final Class fieldClass = member.getAttribute().type();
-                if (ProtobufWriter.isSimpleType(fieldClass)) {
+                if (ProtobufFactory.isSimpleType(fieldClass)) {
                     mv.visitVarInsn(ALOAD, 3); // out
                     Asms.visitInsn(mv, member.getTag()); // tag
                     mv.visitVarInsn(ALOAD, 2); // value
@@ -216,7 +218,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                         mv.visitFieldInsn(GETFIELD, valtypeName, fname, fdesc);
                     }
                     mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, "writeFieldValue", "(ILjava/lang/Enum;)V", false);
-                } else if (ProtobufWriter.supportSimpleCollectionType(fieldType)) {
+                } else if (ProtobufFactory.supportSimpleCollectionType(fieldType)) {
                     mv.visitVarInsn(ALOAD, 3); // out
                     Asms.visitInsn(mv, member.getTag()); // tag
                     mv.visitVarInsn(ALOAD, 2); // value
@@ -230,7 +232,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                         String fdesc = org.redkale.asm.Type.getDescriptor(field.getType());
                         mv.visitFieldInsn(GETFIELD, valtypeName, fname, fdesc);
                     }
-                    Class componentType = ProtobufWriter.getSimpleCollectionComponentType(fieldType);
+                    Class componentType = ProtobufFactory.getSimpleCollectionComponentType(fieldType);
                     String wmethodName = null;
                     if (componentType == Boolean.class) {
                         wmethodName = "writeFieldBoolsValue";
@@ -248,6 +250,10 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                         wmethodName = "writeFieldLongsValue";
                     } else if (componentType == Double.class) {
                         wmethodName = "writeFieldDoublesValue";
+                    } else if (componentType == AtomicInteger.class) {
+                        wmethodName = "writeFieldAtomicIntegersValue";
+                    } else if (componentType == AtomicLong.class) {
+                        wmethodName = "writeFieldAtomicLongsValue";
                     } else if (componentType == String.class) {
                         wmethodName = "writeFieldStringValue";
                     }
