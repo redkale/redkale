@@ -8,6 +8,8 @@ package org.redkale.convert.pb;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import org.redkale.convert.*;
 
 /** @author zhangjx */
@@ -210,7 +212,16 @@ public class ProtobufReader extends Reader {
     // ------------------------------------------------------------
     @Override
     public final boolean readBoolean() {
-        return readRawVarint64() != 0;
+        return content[++this.position] != 0;
+    }
+
+    public boolean[] readBools() {
+        int size = readRawVarint32();
+        boolean[] data = new boolean[size];
+        for (int i = 0; i < size; i++) {
+            data[i] = readBoolean();
+        }
+        return data;
     }
 
     @Override
@@ -218,14 +229,48 @@ public class ProtobufReader extends Reader {
         return (byte) readInt();
     }
 
+    public byte[] readBytes() {
+        return readByteArray();
+    }
+
     @Override
     public final char readChar() {
         return (char) readInt();
     }
 
+    public char[] readChars() {
+        int len = readRawVarint32();
+        List<Integer> list = new ArrayList<>(len);
+        while (len > 0) {
+            int val = readChar();
+            list.add(val);
+            len -= ProtobufFactory.computeSInt32SizeNoTag(val);
+        }
+        char[] rs = new char[list.size()];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = (char) list.get(i).intValue();
+        }
+        return rs;
+    }
+
     @Override
     public final short readShort() {
         return (short) readInt();
+    }
+
+    public short[] readShorts() {
+        int len = readRawVarint32();
+        List<Short> list = new ArrayList<>(len);
+        while (len > 0) {
+            short val = readShort();
+            list.add(val);
+            len -= ProtobufFactory.computeSInt32SizeNoTag(val);
+        }
+        short[] rs = new short[list.size()];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = list.get(i);
+        }
+        return rs;
     }
 
     @Override
@@ -234,10 +279,30 @@ public class ProtobufReader extends Reader {
         return (n >>> 1) ^ -(n & 1);
     }
 
-    @Override
-    public final long readLong() { // readSInt64
-        long n = readRawVarint64();
-        return (n >>> 1) ^ -(n & 1);
+    public int[] readInts() {
+        int len = readRawVarint32();
+        List<Integer> list = new ArrayList<>(len);
+        while (len > 0) {
+            int val = readInt();
+            list.add(val);
+            len -= ProtobufFactory.computeSInt32SizeNoTag(val);
+        }
+        int[] rs = new int[list.size()];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = list.get(i);
+        }
+        return rs;
+    }
+
+    public AtomicInteger[] readAtomicIntegers() {
+        int len = readRawVarint32();
+        List<AtomicInteger> list = new ArrayList<>(len);
+        while (len > 0) {
+            int val = readInt();
+            list.add(new AtomicInteger(val));
+            len -= ProtobufFactory.computeSInt32SizeNoTag(val);
+        }
+        return list.toArray(new AtomicInteger[list.size()]);
     }
 
     @Override
@@ -245,9 +310,59 @@ public class ProtobufReader extends Reader {
         return Float.intBitsToFloat(readRawLittleEndian32());
     }
 
+    public float[] readFloats() {
+        int len = readRawVarint32();
+        float[] rs = new float[len / 4];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = readFloat();
+        }
+        return rs;
+    }
+
+    @Override
+    public final long readLong() { // readSInt64
+        long n = readRawVarint64();
+        return (n >>> 1) ^ -(n & 1);
+    }
+
+    public long[] readLongs() {
+        int len = readRawVarint32();
+        List<Long> list = new ArrayList<>(len);
+        while (len > 0) {
+            long val = readLong();
+            list.add(val);
+            len -= ProtobufFactory.computeSInt64SizeNoTag(val);
+        }
+        long[] rs = new long[list.size()];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = list.get(i);
+        }
+        return rs;
+    }
+
+    public AtomicLong[] readAtomicLongs() {
+        int len = readRawVarint32();
+        List<AtomicLong> list = new ArrayList<>(len);
+        while (len > 0) {
+            long val = readInt();
+            list.add(new AtomicLong(val));
+            len -= ProtobufFactory.computeSInt64SizeNoTag(val);
+        }
+        return list.toArray(new AtomicLong[list.size()]);
+    }
+
     @Override
     public final double readDouble() {
         return Double.longBitsToDouble(readRawLittleEndian64());
+    }
+
+    public double[] readDoubles() {
+        int len = readRawVarint32();
+        double[] rs = new double[len / 8];
+        for (int i = 0; i < rs.length; i++) {
+            rs[i] = readDouble();
+        }
+        return rs;
     }
 
     @Override

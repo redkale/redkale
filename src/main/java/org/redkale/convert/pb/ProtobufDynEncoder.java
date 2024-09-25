@@ -19,7 +19,6 @@ import org.redkale.asm.MethodVisitor;
 import org.redkale.asm.Opcodes;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.convert.*;
-import org.redkale.convert.ext.*;
 import org.redkale.util.AnyValue;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
@@ -367,61 +366,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
         if (!(type instanceof Class)) {
             return null;
         }
-        if (AnyValue.class.isAssignableFrom((Class) type)) {
-            return null;
-        }
-
-        // 发现有自定义的基础数据类型Encoder就不动态生成ProtobufDynEncoder了
-        if (factory.loadEncoder(boolean.class) != BoolSimpledCoder.instance) {
-            return null;
-        }
-        if (factory.loadEncoder(byte.class) != ByteSimpledCoder.instance) {
-            return null;
-        }
-        if (factory.loadEncoder(short.class) != ShortSimpledCoder.instance) {
-            return null;
-        }
-        if (factory.loadEncoder(char.class) != CharSimpledCoder.instance) {
-            return null;
-        }
-        if (factory.loadEncoder(int.class) != IntSimpledCoder.instance) {
-            return null;
-        }
-        if (factory.loadEncoder(float.class) != FloatSimpledCoder.instance) {
-            return null;
-        }
-        if (factory.loadEncoder(long.class) != LongSimpledCoder.instance) {
-            return null;
-        }
-        if (factory.loadEncoder(double.class) != DoubleSimpledCoder.instance) {
-            return null;
-        }
-        if (factory.loadEncoder(String.class) != StringSimpledCoder.instance) {
-            return null;
-        }
-        // array
-        if (factory.loadEncoder(boolean[].class) != BoolArraySimpledCoder.instance) {
-            return null;
-        }
-        if (factory.loadEncoder(byte[].class) != ByteArraySimpledCoder.instance) {
-            return null;
-        }
-        if (factory.loadEncoder(short[].class) != ShortArraySimpledCoder.instance) {
-            return null;
-        }
-        if (factory.loadEncoder(char[].class) != CharArraySimpledCoder.instance) {
-            return null;
-        }
-        if (factory.loadEncoder(int[].class) != IntArraySimpledCoder.instance) {
-            return null;
-        }
-        if (factory.loadEncoder(float[].class) != FloatArraySimpledCoder.instance) {
-            return null;
-        }
-        if (factory.loadEncoder(long[].class) != LongArraySimpledCoder.instance) {
-            return null;
-        }
-        if (factory.loadEncoder(double[].class) != DoubleArraySimpledCoder.instance) {
+        if (AnyValue.class.isAssignableFrom((Class) type)) { // 不支持
             return null;
         }
         return generateDyncEncoder(factory, (Class) type);

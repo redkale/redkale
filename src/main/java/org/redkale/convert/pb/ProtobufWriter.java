@@ -642,7 +642,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (array != null && array.length > 0) {
             int len = 0;
             for (char item : array) {
-                len += computeSInt32SizeNoTag(item);
+                len += ProtobufFactory.computeSInt32SizeNoTag(item);
             }
             writeLength(len);
             for (char item : array) {
@@ -656,7 +656,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (array != null && array.length > 0) {
             int len = 0;
             for (Character item : array) {
-                len += computeSInt32SizeNoTag(item);
+                len += ProtobufFactory.computeSInt32SizeNoTag(item);
             }
             writeLength(len);
             for (Character item : array) {
@@ -670,7 +670,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (array != null && !array.isEmpty()) {
             int len = 0;
             for (Character item : array) {
-                len += computeSInt32SizeNoTag(item);
+                len += ProtobufFactory.computeSInt32SizeNoTag(item);
             }
             writeLength(len);
             for (Character item : array) {
@@ -684,7 +684,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (array != null && array.length > 0) {
             int len = 0;
             for (short item : array) {
-                len += computeSInt32SizeNoTag(item);
+                len += ProtobufFactory.computeSInt32SizeNoTag(item);
             }
             writeLength(len);
             for (short item : array) {
@@ -698,7 +698,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (array != null && array.length > 0) {
             int len = 0;
             for (Short item : array) {
-                len += computeSInt32SizeNoTag(item == null ? 0 : item);
+                len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : item);
             }
             writeLength(len);
             for (Short item : array) {
@@ -712,7 +712,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (array != null && !array.isEmpty()) {
             int len = 0;
             for (Short item : array) {
-                len += computeSInt32SizeNoTag(item == null ? 0 : item);
+                len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : item);
             }
             writeLength(len);
             for (Short item : array) {
@@ -726,7 +726,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (array != null && array.length > 0) {
             int len = 0;
             for (int item : array) {
-                len += computeSInt32SizeNoTag(item);
+                len += ProtobufFactory.computeSInt32SizeNoTag(item);
             }
             writeLength(len);
             for (int item : array) {
@@ -740,7 +740,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (array != null && array.length > 0) {
             int len = 0;
             for (Integer item : array) {
-                len += computeSInt32SizeNoTag(item == null ? 0 : item);
+                len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : item);
             }
             writeLength(len);
             for (Integer item : array) {
@@ -754,7 +754,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (array != null && !array.isEmpty()) {
             int len = 0;
             for (Integer item : array) {
-                len += computeSInt32SizeNoTag(item == null ? 0 : item);
+                len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : item);
             }
             writeLength(len);
             for (Integer item : array) {
@@ -801,7 +801,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (array != null && array.length > 0) {
             int len = 0;
             for (long item : array) {
-                len += computeSInt64SizeNoTag(item);
+                len += ProtobufFactory.computeSInt64SizeNoTag(item);
             }
             writeLength(len);
             for (long item : array) {
@@ -815,7 +815,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (array != null && array.length > 0) {
             int len = 0;
             for (Long item : array) {
-                len += computeSInt64SizeNoTag(item == null ? 0 : item);
+                len += ProtobufFactory.computeSInt64SizeNoTag(item == null ? 0 : item);
             }
             writeLength(len);
             for (Long item : array) {
@@ -829,7 +829,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (array != null && !array.isEmpty()) {
             int len = 0;
             for (Long item : array) {
-                len += computeSInt64SizeNoTag(item == null ? 0 : item);
+                len += ProtobufFactory.computeSInt64SizeNoTag(item == null ? 0 : item);
             }
             writeLength(len);
             for (Long item : array) {
@@ -876,7 +876,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (array != null && array.length > 0) {
             int len = 0;
             for (AtomicInteger item : array) {
-                len += computeSInt32SizeNoTag(item == null ? 0 : item.get());
+                len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : item.get());
             }
             writeLength(len);
             for (AtomicInteger item : array) {
@@ -890,7 +890,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (array != null && !array.isEmpty()) {
             int len = 0;
             for (AtomicInteger item : array) {
-                len += computeSInt32SizeNoTag(item == null ? 0 : item.get());
+                len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : item.get());
             }
             writeLength(len);
             for (AtomicInteger item : array) {
@@ -904,7 +904,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (array != null && array.length > 0) {
             int len = 0;
             for (AtomicLong item : array) {
-                len += computeSInt64SizeNoTag(item == null ? 0 : item.get());
+                len += ProtobufFactory.computeSInt64SizeNoTag(item == null ? 0 : item.get());
             }
             writeLength(len);
             for (AtomicLong item : array) {
@@ -918,7 +918,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (array != null && !array.isEmpty()) {
             int len = 0;
             for (AtomicLong item : array) {
-                len += computeSInt64SizeNoTag(item == null ? 0 : item.get());
+                len += ProtobufFactory.computeSInt64SizeNoTag(item == null ? 0 : item.get());
             }
             writeLength(len);
             for (AtomicLong item : array) {
@@ -1642,57 +1642,5 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             (byte) ((int) (value >> 48) & 0xFF),
             (byte) ((int) (value >> 56) & 0xFF)
         };
-    }
-
-    // see com.google.protobuf.CodedOutputStream
-    protected static int computeInt32SizeNoTag(final int value) {
-        if (value == 0) {
-            return 1;
-        }
-        return computeUInt64SizeNoTag(value);
-    }
-
-    protected static int computeUInt64SizeNoTag(final long value) {
-        if (value == 0) {
-            return 1;
-        }
-        int clz = Long.numberOfLeadingZeros(value);
-        return ((Long.SIZE * 9 + (1 << 6)) - (clz * 9)) >>> 6;
-    }
-
-    protected static int computeSInt32SizeNoTag(final int value) {
-        if (value == 0) {
-            return 1;
-        }
-        return computeUInt32SizeNoTag(encodeZigZag32(value));
-    }
-
-    protected static int computeSInt64SizeNoTag(final long value) {
-        if (value == 0) {
-            return 1;
-        }
-        return computeUInt64SizeNoTag(encodeZigZag64(value));
-    }
-
-    protected static int computeUInt32SizeNoTag(final int value) {
-        if (value == 0) {
-            return 1;
-        }
-        int clz = Integer.numberOfLeadingZeros(value);
-        return ((Integer.SIZE * 9 + (1 << 6)) - (clz * 9)) >>> 6;
-    }
-
-    protected static int encodeZigZag32(final int n) {
-        if (n == 0) {
-            return 0;
-        }
-        return (n << 1) ^ (n >> 31);
-    }
-
-    protected static long encodeZigZag64(final long n) {
-        if (n == 0) {
-            return 0L;
-        }
-        return (n << 1) ^ (n >> 63);
     }
 }

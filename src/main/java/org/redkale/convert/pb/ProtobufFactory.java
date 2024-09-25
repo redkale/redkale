@@ -41,6 +41,24 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
 
         instance.register(AnyValue.class, instance.loadDecoder(AnyValueWriter.class));
         instance.register(AnyValue.class, instance.loadEncoder(AnyValueWriter.class));
+        instance.register(boolean[].class, ProtobufCoders.ProtobufBoolArraySimpledCoder.instance);
+        instance.register(byte[].class, ProtobufCoders.ProtobufByteArraySimpledCoder.instance);
+        instance.register(char[].class, ProtobufCoders.ProtobufCharArraySimpledCoder.instance);
+        instance.register(short[].class, ProtobufCoders.ProtobufShortArraySimpledCoder.instance);
+        instance.register(int[].class, ProtobufCoders.ProtobufIntArraySimpledCoder.instance);
+        instance.register(float[].class, ProtobufCoders.ProtobufFloatArraySimpledCoder.instance);
+        instance.register(long[].class, ProtobufCoders.ProtobufLongArraySimpledCoder.instance);
+        instance.register(double[].class, ProtobufCoders.ProtobufDoubleArraySimpledCoder.instance);
+        instance.register(Boolean[].class, ProtobufCoders.ProtobufBoolArraySimpledCoder2.instance);
+        instance.register(Byte[].class, ProtobufCoders.ProtobufByteArraySimpledCoder2.instance);
+        instance.register(Character[].class, ProtobufCoders.ProtobufCharArraySimpledCoder2.instance);
+        instance.register(Short[].class, ProtobufCoders.ProtobufShortArraySimpledCoder2.instance);
+        instance.register(Integer[].class, ProtobufCoders.ProtobufIntArraySimpledCoder2.instance);
+        instance.register(Float[].class, ProtobufCoders.ProtobufFloatArraySimpledCoder2.instance);
+        instance.register(Long[].class, ProtobufCoders.ProtobufLongArraySimpledCoder2.instance);
+        instance.register(Double[].class, ProtobufCoders.ProtobufDoubleArraySimpledCoder2.instance);
+        instance.register(AtomicInteger[].class, ProtobufCoders.ProtobufAtomicIntegerArraySimpledCoder.instance);
+        instance.register(AtomicLong[].class, ProtobufCoders.ProtobufAtomicLongArraySimpledCoder.instance);
     }
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
@@ -290,6 +308,58 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
                 || componentType == AtomicInteger.class
                 || componentType == AtomicLong.class
                 || componentType == String.class;
+    }
+
+    // see com.google.protobuf.CodedOutputStream
+    protected static int computeInt32SizeNoTag(final int value) {
+        if (value == 0) {
+            return 1;
+        }
+        return computeUInt64SizeNoTag(value);
+    }
+
+    protected static int computeUInt64SizeNoTag(final long value) {
+        if (value == 0) {
+            return 1;
+        }
+        int clz = Long.numberOfLeadingZeros(value);
+        return ((Long.SIZE * 9 + (1 << 6)) - (clz * 9)) >>> 6;
+    }
+
+    protected static int computeSInt32SizeNoTag(final int value) {
+        if (value == 0) {
+            return 1;
+        }
+        return computeUInt32SizeNoTag(encodeZigZag32(value));
+    }
+
+    protected static int computeSInt64SizeNoTag(final long value) {
+        if (value == 0) {
+            return 1;
+        }
+        return computeUInt64SizeNoTag(encodeZigZag64(value));
+    }
+
+    protected static int computeUInt32SizeNoTag(final int value) {
+        if (value == 0) {
+            return 1;
+        }
+        int clz = Integer.numberOfLeadingZeros(value);
+        return ((Integer.SIZE * 9 + (1 << 6)) - (clz * 9)) >>> 6;
+    }
+
+    protected static int encodeZigZag32(final int n) {
+        if (n == 0) {
+            return 0;
+        }
+        return (n << 1) ^ (n >> 31);
+    }
+
+    protected static long encodeZigZag64(final long n) {
+        if (n == 0) {
+            return 0L;
+        }
+        return (n << 1) ^ (n >> 63);
     }
 
     public static Class getSimpleCollectionComponentType(Type type) {
