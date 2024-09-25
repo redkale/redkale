@@ -8,6 +8,7 @@ package org.redkale.convert.pb;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.Consumer;
@@ -552,7 +553,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
 
     @Override
     public void writeString(String value) {
-        byte[] bs = Utility.isLatin1(value) ? Utility.latin1ByteArray(value) : Utility.encodeUTF8(value);
+        byte[] bs = Utility.isLatin1(value) ? Utility.latin1ByteArray(value) : value.getBytes(StandardCharsets.UTF_8);
         writeLength(bs.length);
         writeTo(bs);
     }
@@ -562,7 +563,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (array != null && array.length > 0) {
             for (String item : array) {
                 writeTag(tag);
-                byte[] bs = item == null ? new byte[0] : Utility.encodeUTF8(item);
+                byte[] bs = item == null ? new byte[0] : item.getBytes(StandardCharsets.UTF_8);
                 writeBytes(bs);
             }
         }
@@ -573,7 +574,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (array != null && !array.isEmpty()) {
             for (String item : array) {
                 writeTag(tag);
-                byte[] bs = item == null ? new byte[0] : Utility.encodeUTF8(item);
+                byte[] bs = item == null ? new byte[0] : item.getBytes(StandardCharsets.UTF_8);
                 writeBytes(bs);
             }
         }
