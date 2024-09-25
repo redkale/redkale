@@ -8,7 +8,6 @@ package org.redkale.convert.pb;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.atomic.*;
 import org.redkale.convert.*;
 
 /** @author zhangjx */
@@ -20,7 +19,7 @@ public class ProtobufReader extends Reader {
 
     private byte[] content;
 
-    protected int cachetag = Integer.MIN_VALUE;
+    protected int cacheTag = Integer.MIN_VALUE;
 
     protected boolean enumtostring;
 
@@ -106,6 +105,8 @@ public class ProtobufReader extends Reader {
             case 5:
                 readRawLittleEndian32();
                 break;
+            default:
+                break;
         }
     }
 
@@ -146,18 +147,7 @@ public class ProtobufReader extends Reader {
         if (!(type instanceof Class)) {
             return Reader.SIGN_NOLENBUTBYTES;
         }
-        Class clazz = (Class) type;
-        if (clazz.isPrimitive()
-                || clazz == Boolean.class
-                || clazz == Byte.class
-                || clazz == Short.class
-                || clazz == Character.class
-                || clazz == Integer.class
-                || clazz == Float.class
-                || clazz == Long.class
-                || clazz == Double.class
-                || clazz == AtomicInteger.class
-                || clazz == AtomicLong.class) {
+        if (ProtobufFactory.isNoLenBytesType(type)) {
             return Reader.SIGN_NOLENBUTBYTES;
         }
         return Reader.SIGN_NOLENGTH;
@@ -276,16 +266,16 @@ public class ProtobufReader extends Reader {
     }
 
     protected final int readTag() {
-        if (cachetag != Integer.MIN_VALUE) {
-            int tag = cachetag;
-            cachetag = Integer.MIN_VALUE;
+        if (cacheTag != Integer.MIN_VALUE) {
+            int tag = cacheTag;
+            cacheTag = Integer.MIN_VALUE;
             return tag;
         }
         return readRawVarint32();
     }
 
     protected final void backTag(int tag) {
-        this.cachetag = tag;
+        this.cacheTag = tag;
     }
 
     protected byte currentByte() {

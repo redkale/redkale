@@ -214,6 +214,20 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
         }
     }
 
+    protected static boolean isNoLenBytesType(Type type) {
+        return (type instanceof Class && ((Class) type).isPrimitive())
+                || type == Boolean.class
+                || type == Byte.class
+                || type == Short.class
+                || type == Character.class
+                || type == Integer.class
+                || type == Float.class
+                || type == Long.class
+                || type == Double.class
+                || type == AtomicInteger.class
+                || type == AtomicLong.class;
+    }
+
     public static int getTag(String fieldName, Type fieldType, int fieldPos, boolean enumtostring) {
         int wiretype = ProtobufFactory.wireType(fieldType, enumtostring);
         return (fieldPos << 3 | wiretype);

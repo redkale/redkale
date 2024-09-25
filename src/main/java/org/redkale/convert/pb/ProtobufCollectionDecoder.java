@@ -6,7 +6,6 @@
 package org.redkale.convert.pb;
 
 import java.lang.reflect.Type;
-import java.util.concurrent.atomic.*;
 import org.redkale.convert.*;
 
 /**
@@ -26,15 +25,7 @@ public class ProtobufCollectionDecoder<T> extends CollectionDecoder<ProtobufRead
         this.enumtostring = factory.enumtostring;
         Type comtype = this.getComponentType();
         this.string = String.class == comtype;
-        this.simple = Boolean.class == comtype
-                || Short.class == comtype
-                || Character.class == comtype
-                || Integer.class == comtype
-                || Float.class == comtype
-                || Long.class == comtype
-                || Double.class == comtype
-                || AtomicInteger.class == comtype
-                || AtomicLong.class == comtype;
+        this.simple = ProtobufFactory.isNoLenBytesType(comtype);
     }
 
     @Override

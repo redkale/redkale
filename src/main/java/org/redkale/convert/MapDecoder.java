@@ -21,7 +21,7 @@ import org.redkale.util.Creator;
  * @param <V> Map value的数据类型
  */
 @SuppressWarnings("unchecked")
-public class MapDecoder<R extends Reader, K, V> implements Decodeable<R, Map<K, V>> {
+public class MapDecoder<R extends Reader, K, V> implements TagDecodeable<R, Map<K, V>> {
 
     protected final Type type;
 

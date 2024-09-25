@@ -6,7 +6,6 @@
 package org.redkale.convert.pb;
 
 import java.lang.reflect.Type;
-import java.util.concurrent.atomic.*;
 import org.redkale.convert.*;
 
 /**
@@ -19,16 +18,7 @@ public class ProtobufStreamEncoder<T> extends StreamEncoder<ProtobufWriter, T> {
 
     public ProtobufStreamEncoder(ConvertFactory factory, Type type) {
         super(factory, type);
-        Type comtype = this.getComponentType();
-        this.simple = Boolean.class == comtype
-                || Short.class == comtype
-                || Character.class == comtype
-                || Integer.class == comtype
-                || Float.class == comtype
-                || Long.class == comtype
-                || Double.class == comtype
-                || AtomicInteger.class == comtype
-                || AtomicLong.class == comtype;
+        this.simple = ProtobufFactory.isNoLenBytesType(getComponentType());
     }
 
     @Override

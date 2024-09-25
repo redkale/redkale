@@ -21,7 +21,7 @@ import java.util.stream.Stream;
  * @param <T> 反解析的集合元素类型
  */
 @SuppressWarnings("unchecked")
-public class StreamDecoder<R extends Reader, T> implements Decodeable<R, Stream<T>> {
+public class StreamDecoder<R extends Reader, T> implements TagDecodeable<R, Stream<T>> {
 
     protected final Type type;
 

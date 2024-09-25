@@ -23,7 +23,7 @@ import org.redkale.util.Creator;
  * @param <T> 反解析的数组元素类型
  */
 @SuppressWarnings("unchecked")
-public class ArrayDecoder<R extends Reader, T> implements Decodeable<R, T[]> {
+public class ArrayDecoder<R extends Reader, T> implements TagDecodeable<R, T[]> {
 
     protected final Type type;
 
