@@ -79,7 +79,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
         }
 
         final ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        final String newDynName = "org/redkaledyn/pb/_Dyn" + ProtobufDynEncoder.class.getSimpleName() + "__"
+        final String newDynName = "org/redkaledyn/convert/pb/_Dyn" + ProtobufDynEncoder.class.getSimpleName() + "__"
                 + clazz.getName().replace('.', '_').replace('$', '_') + "_" + factory.getFeatures() + "_"
                 + Utility.md5Hex(elementb.toString()); // tiny必须要加上, 同一个类会有多个字段定制Convert
         try {
