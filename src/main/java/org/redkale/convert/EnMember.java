@@ -8,6 +8,7 @@ package org.redkale.convert;
 import java.lang.reflect.*;
 import java.util.function.BiFunction;
 import org.redkale.annotation.Comment;
+import org.redkale.annotation.Nullable;
 import org.redkale.util.Attribute;
 
 /**
@@ -39,9 +40,11 @@ public final class EnMember<W extends Writer, T, F> {
     final byte[] jsonFieldNameBytes;
 
     // 对应类成员的Field也可能为null
+    @Nullable
     final Field field;
 
     // 对应类成员的Method也可能为null
+    @Nullable
     final Method method;
 
     // 一般为null

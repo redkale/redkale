@@ -28,17 +28,24 @@ import org.redkale.util.RedkaleClassLoader;
  */
 public abstract class ProtobufDynEncoder<T> implements Encodeable<ProtobufWriter, T> {
 
-    protected Type type;
+    protected final Class typeClass;
 
-    protected ProtobufDynEncoder(Class<T> clazz) {
-        this.type = clazz;
+    protected final ObjectEncoder<ProtobufWriter, T> objectEncoder;
+
+    protected ProtobufDynEncoder(final ProtobufFactory factory, Type type) {
+        this.typeClass = (Class) type;
+        factory.register(type, this);
+        this.objectEncoder = factory.createObjectEncoder(type);
     }
 
-    public abstract void init(final ProtobufFactory factory);
-
-    @Override
-    public Type getType() {
-        return type;
+    protected static ProtobufDynEncoder generateDyncEncoder(
+            final ProtobufFactory factory, final Class clazz, final List<AccessibleObject> members) {
+        final ObjectEncoder selfObjEncoder = factory.createObjectEncoder(clazz);
+        selfObjEncoder.init(factory);
+        if (selfObjEncoder.getMembers().length != members.size()) {
+            return null; // 存在ignore等定制配置
+        }
+        return null;
     }
 
     // 字段全部是primitive或String类型，且没有泛型的类才能动态生成ProtobufDynEncoder， 不支持的返回null
@@ -201,13 +208,8 @@ public abstract class ProtobufDynEncoder<T> implements Encodeable<ProtobufWriter
         }
     }
 
-    protected static ProtobufDynEncoder generateDyncEncoder(
-            final ProtobufFactory factory, final Class clazz, final List<AccessibleObject> members) {
-        final ObjectEncoder selfObjEncoder = factory.createObjectEncoder(clazz);
-        selfObjEncoder.init(factory);
-        if (selfObjEncoder.getMembers().length != members.size()) {
-            return null; // 存在ignore等定制配置
-        }
-        return null;
+    @Override
+    public Type getType() {
+        return typeClass;
     }
 }

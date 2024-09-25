@@ -439,107 +439,6 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @Override
-    public void writeObjectField(final EnMember member, Object obj) {
-        Object value;
-        if (objFieldFunc == null) {
-            value = member.getFieldValue(obj);
-        } else {
-            value = objFieldFunc.apply(member.getAttribute(), obj);
-        }
-        if (value == null) {
-            return;
-        }
-        if (tiny()) {
-            if (member.isStringType()) {
-                if (((CharSequence) value).length() == 0) {
-                    return;
-                }
-            } else if (member.isBoolType()) {
-                if (!((Boolean) value)) {
-                    return;
-                }
-            }
-        }
-        Type mtype = member.getAttribute().type();
-        if (mtype == boolean[].class && ((boolean[]) value).length < 1) {
-            return;
-        }
-        if (mtype == byte[].class && ((byte[]) value).length < 1) {
-            return;
-        }
-        if (mtype == short[].class && ((short[]) value).length < 1) {
-            return;
-        }
-        if (mtype == char[].class && ((char[]) value).length < 1) {
-            return;
-        }
-        if (mtype == int[].class && ((int[]) value).length < 1) {
-            return;
-        }
-        if (mtype == float[].class && ((float[]) value).length < 1) {
-            return;
-        }
-        if (mtype == long[].class && ((long[]) value).length < 1) {
-            return;
-        }
-        if (mtype == double[].class && ((double[]) value).length < 1) {
-            return;
-        }
-
-        Encodeable encoder = member.getEncoder();
-        if (encoder == null) {
-            return;
-        }
-        if (encoder instanceof MapEncoder) {
-            if (!((Map) value).isEmpty()) {
-                ((MapEncoder) encoder).convertTo(this, member, (Map) value);
-            }
-        } else if (encoder instanceof ProtobufArrayEncoder) {
-            ProtobufArrayEncoder arrayEncoder = (ProtobufArrayEncoder) encoder;
-            if (arrayEncoder.simple) {
-                if (((Object[]) value).length < 1) {
-                    this.writeFieldName(member);
-                    ProtobufWriter tmp = new ProtobufWriter().configFieldFunc(this);
-                    arrayEncoder.convertTo(tmp, member, (Object[]) value);
-                    // int length = tmp.count();
-                    // this.writeUInt32(length);
-                    this.writeTo(tmp.toArray());
-                }
-            } else {
-                arrayEncoder.convertTo(this, member, (Object[]) value);
-            }
-        } else if (encoder instanceof ProtobufCollectionEncoder) {
-            ProtobufCollectionEncoder collectionEncoder = (ProtobufCollectionEncoder) encoder;
-            if (collectionEncoder.simple) {
-                if (!((Collection) value).isEmpty()) {
-                    this.writeFieldName(member);
-                    ProtobufWriter tmp = new ProtobufWriter().configFieldFunc(this);
-                    collectionEncoder.convertTo(tmp, member, (Collection) value);
-                    this.writeLength(tmp.count());
-                    this.writeTo(tmp.toArray());
-                }
-            } else {
-                collectionEncoder.convertTo(this, member, (Collection) value);
-            }
-        } else if (encoder instanceof ProtobufStreamEncoder) {
-            ProtobufStreamEncoder streamEncoder = (ProtobufStreamEncoder) encoder;
-            if (streamEncoder.simple) {
-                this.writeFieldName(member);
-                ProtobufWriter tmp = new ProtobufWriter().configFieldFunc(this);
-                streamEncoder.convertTo(tmp, member, (Stream) value);
-                this.writeLength(tmp.count());
-                this.writeTo(tmp.toArray());
-            } else {
-                streamEncoder.convertTo(this, member, (Stream) value);
-            }
-        } else {
-            this.writeFieldName(member);
-            encoder.convertTo(this, value);
-        }
-        this.comma = true;
-    }
-
-    @Override
     public final void writeByteArray(byte[] values) {
         if (values == null) {
             writeNull();
@@ -945,6 +844,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value) {
             writeTag(tag);
             writeBoolean(value);
+            this.comma = true;
         }
     }
 
@@ -953,6 +853,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != 0) {
             writeTag(tag);
             writeByte(value);
+            this.comma = true;
         }
     }
 
@@ -961,6 +862,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != 0) {
             writeTag(tag);
             writeChar(value);
+            this.comma = true;
         }
     }
 
@@ -969,6 +871,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != 0) {
             writeTag(tag);
             writeShort(value);
+            this.comma = true;
         }
     }
 
@@ -977,6 +880,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != 0) {
             writeTag(tag);
             writeInt(value);
+            this.comma = true;
         }
     }
 
@@ -985,6 +889,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != 0) {
             writeTag(tag);
             writeFloat(value);
+            this.comma = true;
         }
     }
 
@@ -993,6 +898,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != 0) {
             writeTag(tag);
             writeLong(value);
+            this.comma = true;
         }
     }
 
@@ -1001,6 +907,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != 0) {
             writeTag(tag);
             writeDouble(value);
+            this.comma = true;
         }
     }
 
@@ -1009,6 +916,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && !value) {
             writeTag(tag);
             writeBoolean(value);
+            this.comma = true;
         }
     }
 
@@ -1017,6 +925,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value != 0) {
             writeTag(tag);
             writeByte(value);
+            this.comma = true;
         }
     }
 
@@ -1025,6 +934,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value != 0) {
             writeTag(tag);
             writeChar(value);
+            this.comma = true;
         }
     }
 
@@ -1033,6 +943,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value != 0) {
             writeTag(tag);
             writeShort(value);
+            this.comma = true;
         }
     }
 
@@ -1041,6 +952,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value != 0) {
             writeTag(tag);
             writeInt(value);
+            this.comma = true;
         }
     }
 
@@ -1049,6 +961,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value != 0) {
             writeTag(tag);
             writeFloat(value);
+            this.comma = true;
         }
     }
 
@@ -1057,6 +970,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value != 0) {
             writeTag(tag);
             writeLong(value);
+            this.comma = true;
         }
     }
 
@@ -1065,6 +979,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value != 0) {
             writeTag(tag);
             writeDouble(value);
+            this.comma = true;
         }
     }
 
@@ -1073,6 +988,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeBools(value);
+            this.comma = true;
         }
     }
 
@@ -1081,6 +997,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeBytes(value);
+            this.comma = true;
         }
     }
 
@@ -1089,6 +1006,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeChars(value);
+            this.comma = true;
         }
     }
 
@@ -1097,6 +1015,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeShorts(value);
+            this.comma = true;
         }
     }
 
@@ -1105,6 +1024,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeInts(value);
+            this.comma = true;
         }
     }
 
@@ -1113,6 +1033,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeFloats(value);
+            this.comma = true;
         }
     }
 
@@ -1121,6 +1042,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeLongs(value);
+            this.comma = true;
         }
     }
 
@@ -1129,6 +1051,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeDoubles(value);
+            this.comma = true;
         }
     }
 
@@ -1137,6 +1060,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeBools(value);
+            this.comma = true;
         }
     }
 
@@ -1145,6 +1069,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeBytes(value);
+            this.comma = true;
         }
     }
 
@@ -1153,6 +1078,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeChars(value);
+            this.comma = true;
         }
     }
 
@@ -1161,6 +1087,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeShorts(value);
+            this.comma = true;
         }
     }
 
@@ -1169,6 +1096,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeInts(value);
+            this.comma = true;
         }
     }
 
@@ -1177,6 +1105,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeFloats(value);
+            this.comma = true;
         }
     }
 
@@ -1185,6 +1114,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeLongs(value);
+            this.comma = true;
         }
     }
 
@@ -1193,6 +1123,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeDoubles(value);
+            this.comma = true;
         }
     }
 
@@ -1201,6 +1132,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeStrings(tag, value);
+            this.comma = true;
         }
     }
 
@@ -1209,6 +1141,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && !value.isEmpty()) {
             writeTag(tag);
             writeBools(value);
+            this.comma = true;
         }
     }
 
@@ -1217,6 +1150,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && !value.isEmpty()) {
             writeTag(tag);
             writeBytes(value);
+            this.comma = true;
         }
     }
 
@@ -1225,6 +1159,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && !value.isEmpty()) {
             writeTag(tag);
             writeChars(value);
+            this.comma = true;
         }
     }
 
@@ -1233,6 +1168,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && !value.isEmpty()) {
             writeTag(tag);
             writeShorts(value);
+            this.comma = true;
         }
     }
 
@@ -1241,6 +1177,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && !value.isEmpty()) {
             writeTag(tag);
             writeInts(value);
+            this.comma = true;
         }
     }
 
@@ -1249,6 +1186,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && !value.isEmpty()) {
             writeTag(tag);
             writeFloats(value);
+            this.comma = true;
         }
     }
 
@@ -1257,6 +1195,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && !value.isEmpty()) {
             writeTag(tag);
             writeLongs(value);
+            this.comma = true;
         }
     }
 
@@ -1265,6 +1204,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && !value.isEmpty()) {
             writeTag(tag);
             writeDoubles(value);
+            this.comma = true;
         }
     }
 
@@ -1273,6 +1213,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && !value.isEmpty()) {
             writeTag(tag);
             writeStrings(tag, value);
+            this.comma = true;
         }
     }
 
@@ -1281,6 +1222,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && (!value.isEmpty() || !tiny())) {
             writeTag(tag);
             writeString(value);
+            this.comma = true;
         }
     }
 
@@ -1293,7 +1235,119 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             } else {
                 writeInt(value.ordinal());
             }
+            this.comma = true;
         }
+    }
+
+    @ClassDepends
+    public void writeFieldValue(int tag, SimpledCoder encoder, Object value) {
+        if (value != null) {
+            writeTag(tag);
+            encoder.convertTo(this, value);
+            this.comma = true;
+        }
+    }
+
+    @Override
+    @ClassDepends
+    public void writeObjectField(final EnMember member, Object obj) {
+        Object value;
+        if (objFieldFunc == null) {
+            value = member.getFieldValue(obj);
+        } else {
+            value = objFieldFunc.apply(member.getAttribute(), obj);
+        }
+        if (value == null) {
+            return;
+        }
+        if (tiny()) {
+            if (member.isStringType()) {
+                if (((CharSequence) value).length() == 0) {
+                    return;
+                }
+            } else if (member.isBoolType()) {
+                if (!((Boolean) value)) {
+                    return;
+                }
+            }
+        }
+        Type mtype = member.getAttribute().type();
+        if (mtype == boolean[].class && ((boolean[]) value).length < 1) {
+            return;
+        }
+        if (mtype == byte[].class && ((byte[]) value).length < 1) {
+            return;
+        }
+        if (mtype == short[].class && ((short[]) value).length < 1) {
+            return;
+        }
+        if (mtype == char[].class && ((char[]) value).length < 1) {
+            return;
+        }
+        if (mtype == int[].class && ((int[]) value).length < 1) {
+            return;
+        }
+        if (mtype == float[].class && ((float[]) value).length < 1) {
+            return;
+        }
+        if (mtype == long[].class && ((long[]) value).length < 1) {
+            return;
+        }
+        if (mtype == double[].class && ((double[]) value).length < 1) {
+            return;
+        }
+
+        Encodeable encoder = member.getEncoder();
+        if (encoder == null) {
+            return;
+        }
+        if (encoder instanceof MapEncoder) {
+            if (!((Map) value).isEmpty()) {
+                ((MapEncoder) encoder).convertTo(this, member, (Map) value);
+            }
+        } else if (encoder instanceof ProtobufArrayEncoder) {
+            ProtobufArrayEncoder arrayEncoder = (ProtobufArrayEncoder) encoder;
+            if (arrayEncoder.simple) {
+                if (((Object[]) value).length < 1) {
+                    this.writeFieldName(member);
+                    ProtobufWriter tmp = new ProtobufWriter().configFieldFunc(this);
+                    arrayEncoder.convertTo(tmp, member, (Object[]) value);
+                    // int length = tmp.count();
+                    // this.writeUInt32(length);
+                    this.writeTo(tmp.toArray());
+                }
+            } else {
+                arrayEncoder.convertTo(this, member, (Object[]) value);
+            }
+        } else if (encoder instanceof ProtobufCollectionEncoder) {
+            ProtobufCollectionEncoder collectionEncoder = (ProtobufCollectionEncoder) encoder;
+            if (collectionEncoder.simple) {
+                if (!((Collection) value).isEmpty()) {
+                    this.writeFieldName(member);
+                    ProtobufWriter tmp = new ProtobufWriter().configFieldFunc(this);
+                    collectionEncoder.convertTo(tmp, member, (Collection) value);
+                    this.writeLength(tmp.count());
+                    this.writeTo(tmp.toArray());
+                }
+            } else {
+                collectionEncoder.convertTo(this, member, (Collection) value);
+            }
+        } else if (encoder instanceof ProtobufStreamEncoder) {
+            ProtobufStreamEncoder streamEncoder = (ProtobufStreamEncoder) encoder;
+            if (streamEncoder.simple) {
+                this.writeFieldName(member);
+                ProtobufWriter tmp = new ProtobufWriter().configFieldFunc(this);
+                streamEncoder.convertTo(tmp, member, (Stream) value);
+                this.writeLength(tmp.count());
+                this.writeTo(tmp.toArray());
+            } else {
+                streamEncoder.convertTo(this, member, (Stream) value);
+            }
+        } else {
+            this.writeFieldName(member);
+            encoder.convertTo(this, value);
+        }
+        this.comma = true;
     }
 
     @ClassDepends
