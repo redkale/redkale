@@ -7,7 +7,6 @@ package org.redkale.convert.json;
 
 import java.lang.reflect.*;
 import java.util.*;
-import org.redkale.asm.AnnotationVisitor;
 import org.redkale.asm.ClassWriter;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.FieldVisitor;
@@ -42,30 +41,18 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
     }
 
     protected static JsonDynEncoder generateDyncEncoder(
-            final JsonFactory factory, final Class clazz, final List<AccessibleObject> members) {
+            final JsonFactory factory, final Class clazz, final List<AccessibleObject> elements) {
         final ObjectEncoder selfObjEncoder = factory.createObjectEncoder(clazz);
-        selfObjEncoder.init(factory);
-        if (selfObjEncoder.getMembers().length != members.size()) {
+        selfObjEncoder.init(factory); // 必须执行，初始化EnMember内部信息
+        if (selfObjEncoder.getMembers().length != elements.size()) {
             return null; // 存在ignore等定制配置
         }
-        final String supDynName = JsonDynEncoder.class.getName().replace('.', '/');
-        final String valtypeName = clazz.getName().replace('.', '/');
-        final String writerName = JsonWriter.class.getName().replace('.', '/');
-        final String encodeableName = Encodeable.class.getName().replace('.', '/');
-        final String objEncoderName = ObjectEncoder.class.getName().replace('.', '/');
-        final String typeDesc = org.redkale.asm.Type.getDescriptor(Type.class);
-        final String jsonfactoryDesc = org.redkale.asm.Type.getDescriptor(JsonFactory.class);
-        final String jsonwriterDesc = org.redkale.asm.Type.getDescriptor(JsonWriter.class);
-        final String writerDesc = org.redkale.asm.Type.getDescriptor(Writer.class);
-        final String encodeableDesc = org.redkale.asm.Type.getDescriptor(Encodeable.class);
-        final String objEncoderDesc = org.redkale.asm.Type.getDescriptor(ObjectEncoder.class);
-        final String valtypeDesc = org.redkale.asm.Type.getDescriptor(clazz);
 
         Map<String, AccessibleObject> mixedNames0 = null;
-        StringBuilder memberb = new StringBuilder();
-        for (AccessibleObject element : members) {
+        StringBuilder elementb = new StringBuilder();
+        for (AccessibleObject element : elements) {
             final String fieldName = factory.readConvertFieldName(clazz, element);
-            memberb.append(fieldName).append(',');
+            elementb.append(fieldName).append(',');
             final Class fieldType = readGetSetFieldType(element);
             if (fieldType != String.class && !fieldType.isPrimitive()) {
                 if (mixedNames0 == null) {
@@ -78,7 +65,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
         final ClassLoader loader = Thread.currentThread().getContextClassLoader();
         final String newDynName = "org/redkaledyn/json/_Dyn" + JsonDynEncoder.class.getSimpleName() + "__"
                 + clazz.getName().replace('.', '_').replace('$', '_') + "_" + factory.getFeatures() + "_"
-                + Utility.md5Hex(memberb.toString()); // tiny必须要加上, 同一个类会有多个字段定制Convert
+                + Utility.md5Hex(elementb.toString()); // tiny必须要加上, 同一个类会有多个字段定制Convert
         try {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
             Class newClazz = clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz;
@@ -104,12 +91,23 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
         } catch (Throwable ex) {
             // do nothing
         }
+
+        final String supDynName = JsonDynEncoder.class.getName().replace('.', '/');
+        final String valtypeName = clazz.getName().replace('.', '/');
+        final String writerName = JsonWriter.class.getName().replace('.', '/');
+        final String encodeableName = Encodeable.class.getName().replace('.', '/');
+        final String objEncoderName = ObjectEncoder.class.getName().replace('.', '/');
+        final String typeDesc = org.redkale.asm.Type.getDescriptor(Type.class);
+        final String jsonfactoryDesc = org.redkale.asm.Type.getDescriptor(JsonFactory.class);
+        final String jsonwriterDesc = org.redkale.asm.Type.getDescriptor(JsonWriter.class);
+        final String writerDesc = org.redkale.asm.Type.getDescriptor(Writer.class);
+        final String encodeableDesc = org.redkale.asm.Type.getDescriptor(Encodeable.class);
+        final String objEncoderDesc = org.redkale.asm.Type.getDescriptor(ObjectEncoder.class);
+        final String valtypeDesc = org.redkale.asm.Type.getDescriptor(clazz);
         // ------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
         MethodVisitor mv;
-        AnnotationVisitor av0;
-
         cw.visit(
                 V11,
                 ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
@@ -120,12 +118,12 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
 
         fv = cw.visitField(ACC_PROTECTED, "objectEncoderSelf", objEncoderDesc, null, null);
         fv.visitEnd();
-        final int membersSize = members.size();
+        final int membersSize = elements.size();
         boolean onlyTwoIntFieldObjectFlag = false; // 只包含两个int字段
         boolean onlyOneLatin1FieldObjectFlag = false; // 只包含一个Latin1 String字段
         boolean onlyShotIntLongLatin1MoreFieldObjectFlag = true;
         int intFieldCount = 0;
-        for (AccessibleObject element : members) {
+        for (AccessibleObject element : elements) {
             final String fieldName = factory.readConvertFieldName(clazz, element);
             fv = cw.visitField(ACC_PROTECTED + ACC_FINAL, fieldName + "FieldBytes", "[B", null, null);
             fv.visitEnd();
@@ -170,7 +168,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
             mv.visitVarInsn(ALOAD, 2);
             mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "(" + jsonfactoryDesc + typeDesc + ")V", false);
 
-            for (AccessibleObject element : members) {
+            for (AccessibleObject element : elements) {
                 final String fieldName = factory.readConvertFieldName(clazz, element);
                 // xxxFieldBytes
                 mv.visitVarInsn(ALOAD, 0);
@@ -204,11 +202,11 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 mv.visitFieldInsn(PUTFIELD, newDynName, fieldName + "FirstFieldChars", "[C");
             }
             mv.visitInsn(RETURN);
-            mv.visitMaxs(1 + members.size(), 1 + members.size());
+            mv.visitMaxs(1 + elements.size(), 1 + elements.size());
             mv.visitEnd();
         }
 
-        {
+        { // convertTo 方法
             mv = (cw.visitMethod(ACC_PUBLIC, "convertTo", "(" + jsonwriterDesc + valtypeDesc + ")V", null, null));
             // mv.setDebug(true);
             { // if (value == null) { out.writeObjectNull(null);  return; }
@@ -246,14 +244,14 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
             int elementIndex = -1;
             final boolean tiny = ConvertFactory.checkTinyFeature(factory.getFeatures());
             final boolean nullable = ConvertFactory.checkNullableFeature(factory.getFeatures());
-            final Class firstType = readGetSetFieldType(members.get(0));
+            final Class firstType = readGetSetFieldType(elements.get(0));
             final boolean mustHadComma = firstType.isPrimitive()
                     && (firstType != boolean.class || !tiny || nullable); // byte/short/char/int/float/long/double
 
             if (onlyOneLatin1FieldObjectFlag) {
                 // out.writeObjectByOnlyOneLatin1FieldValue(messageFirstFieldBytes, value.getMessage());elementIndex++;
                 elementIndex++;
-                AccessibleObject element = members.get(elementIndex);
+                AccessibleObject element = elements.get(elementIndex);
                 final String fieldName = factory.readConvertFieldName(clazz, element);
                 final Class fieldType = readGetSetFieldType(element);
 
@@ -287,12 +285,12 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 maxLocals++;
             } else if (onlyTwoIntFieldObjectFlag) {
                 elementIndex++;
-                AccessibleObject element1 = members.get(elementIndex);
+                AccessibleObject element1 = elements.get(elementIndex);
                 final String fieldName1 = factory.readConvertFieldName(clazz, element1);
                 final Class fieldType1 = readGetSetFieldType(element1);
 
                 elementIndex++;
-                AccessibleObject element2 = members.get(elementIndex);
+                AccessibleObject element2 = elements.get(elementIndex);
                 final String fieldName2 = factory.readConvertFieldName(clazz, element2);
                 final Class fieldtype2 = readGetSetFieldType(element2);
 
@@ -346,7 +344,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                         INVOKEVIRTUAL, writerName, "writeObjectByOnlyTwoIntFieldValue", "([B[CI[B[CI)V", false);
 
             } else if (onlyShotIntLongLatin1MoreFieldObjectFlag && mustHadComma) {
-                for (AccessibleObject element : members) {
+                for (AccessibleObject element : elements) {
                     elementIndex++;
                     final String fieldName = factory.readConvertFieldName(clazz, element);
                     final Class fieldType = readGetSetFieldType(element);
@@ -427,7 +425,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                     mv.visitInsn(ICONST_0);
                     mv.visitVarInsn(ISTORE, 3);
                 }
-                for (AccessibleObject element : members) {
+                for (AccessibleObject element : elements) {
                     elementIndex++;
                     final String fieldName = factory.readConvertFieldName(clazz, element);
                     final Class fieldType = readGetSetFieldType(element);
@@ -655,7 +653,7 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
             mv.visitMaxs(maxLocals, maxLocals);
             mv.visitEnd();
         }
-        {
+        { // convertTo 虚拟方法
             mv = (cw.visitMethod(
                     ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC,
                     "convertTo",

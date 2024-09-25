@@ -5,6 +5,7 @@
  */
 package org.redkale.convert.pb;
 
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -1056,7 +1057,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @ClassDepends
-    public void writeFieldBoolsValue(int tag, Boolean[] value) {
+    public void writeFieldValue(int tag, Boolean[] value) {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeBools(value);
@@ -1065,7 +1066,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @ClassDepends
-    public void writeFieldBytesValue(int tag, Byte[] value) {
+    public void writeFieldValue(int tag, Byte[] value) {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeBytes(value);
@@ -1074,7 +1075,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @ClassDepends
-    public void writeFieldCharsValue(int tag, Character[] value) {
+    public void writeFieldValue(int tag, Character[] value) {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeChars(value);
@@ -1083,7 +1084,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @ClassDepends
-    public void writeFieldShortsValue(int tag, Short[] value) {
+    public void writeFieldValue(int tag, Short[] value) {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeShorts(value);
@@ -1092,7 +1093,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @ClassDepends
-    public void writeFieldIntsValue(int tag, Integer[] value) {
+    public void writeFieldValue(int tag, Integer[] value) {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeInts(value);
@@ -1101,7 +1102,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @ClassDepends
-    public void writeFieldFloatsValue(int tag, Float[] value) {
+    public void writeFieldValue(int tag, Float[] value) {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeFloats(value);
@@ -1110,7 +1111,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @ClassDepends
-    public void writeFieldLongsValue(int tag, Long[] value) {
+    public void writeFieldValue(int tag, Long[] value) {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeLongs(value);
@@ -1119,7 +1120,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @ClassDepends
-    public void writeFieldDoublesValue(int tag, Double[] value) {
+    public void writeFieldValue(int tag, Double[] value) {
         if (value != null && value.length > 0) {
             writeTag(tag);
             writeDoubles(value);
@@ -1128,9 +1129,8 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @ClassDepends
-    public void writeFieldStringsValue(int tag, String[] value) {
+    public void writeFieldValue(int tag, String[] value) {
         if (value != null && value.length > 0) {
-            writeTag(tag);
             writeStrings(tag, value);
             this.comma = true;
         }
@@ -1211,7 +1211,6 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     @ClassDepends
     public void writeFieldStringsValue(int tag, Collection<String> value) {
         if (value != null && !value.isEmpty()) {
-            writeTag(tag);
             writeStrings(tag, value);
             this.comma = true;
         }
@@ -1233,7 +1232,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             if (enumtostring) {
                 writeString(value.name());
             } else {
-                writeInt(value.ordinal());
+                writeUInt32(value.ordinal());
             }
             this.comma = true;
         }
@@ -1492,6 +1491,70 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             (byte) ((int) (value >> 48) & 0xFF),
             (byte) ((int) (value >> 56) & 0xFF)
         };
+    }
+
+    public static boolean isSimpleType(Class fieldClass) {
+        return fieldClass.isPrimitive()
+                || fieldClass == Boolean.class
+                || fieldClass == Byte.class
+                || fieldClass == Character.class
+                || fieldClass == Short.class
+                || fieldClass == Integer.class
+                || fieldClass == Float.class
+                || fieldClass == Long.class
+                || fieldClass == Double.class
+                || fieldClass == String.class
+                || fieldClass == boolean[].class
+                || fieldClass == byte[].class
+                || fieldClass == char[].class
+                || fieldClass == short[].class
+                || fieldClass == int[].class
+                || fieldClass == float[].class
+                || fieldClass == long[].class
+                || fieldClass == double[].class
+                || fieldClass == Boolean[].class
+                || fieldClass == Byte[].class
+                || fieldClass == Character[].class
+                || fieldClass == Short[].class
+                || fieldClass == Integer[].class
+                || fieldClass == Float[].class
+                || fieldClass == Long[].class
+                || fieldClass == Double[].class
+                || fieldClass == String[].class;
+    }
+
+    public static boolean supportSimpleCollectionType(Type type) {
+        if (!(type instanceof ParameterizedType)) {
+            return false;
+        }
+        ParameterizedType ptype = (ParameterizedType) type;
+        if (!(ptype.getRawType() instanceof Class)) {
+            return false;
+        }
+        Type[] ptargs = ptype.getActualTypeArguments();
+        if (ptargs == null || ptargs.length != 1) {
+            return false;
+        }
+        Class ownerType = (Class) ptype.getRawType();
+        if (!Collection.class.isAssignableFrom(ownerType)) {
+            return false;
+        }
+        Type componentType = ptargs[0];
+        return componentType == Boolean.class
+                || componentType == Byte.class
+                || componentType == Character.class
+                || componentType == Short.class
+                || componentType == Integer.class
+                || componentType == Float.class
+                || componentType == Long.class
+                || componentType == Double.class
+                || componentType == String.class;
+    }
+
+    public static Class getSimpleCollectionComponentType(Type type) {
+        return supportSimpleCollectionType(type)
+                ? (Class) ((ParameterizedType) type).getActualTypeArguments()[0]
+                : null;
     }
 
     /**  see com.google.protobuf.CodedOutputStream   **/
