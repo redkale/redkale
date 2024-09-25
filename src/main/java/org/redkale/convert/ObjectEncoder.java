@@ -360,6 +360,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
             }
         }
         objout.writeObjectE(value);
+        offerWriter(out, objout);
     }
 
     // ---------------------------------- 可定制方法 ----------------------------------
@@ -373,6 +374,10 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
 
     protected W objectWriter(W out, T value) {
         return out;
+    }
+
+    protected void offerWriter(W parent, W out) {
+        // do nothing
     }
 
     // ---------------------------------------------------------------------------------

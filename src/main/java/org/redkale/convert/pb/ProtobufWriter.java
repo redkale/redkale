@@ -23,6 +23,8 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             "redkale.convert.protobuf.writer.buffer.defsize",
             Integer.getInteger("redkale.convert.writer.buffer.defsize", 1024));
 
+    private static final int CHILD_SIZE = 8;
+
     private static final int TENTHOUSAND_MAX = 10001;
 
     private static final byte[][] TENTHOUSAND_UINT_BYTES = new byte[TENTHOUSAND_MAX][];
@@ -69,11 +71,13 @@ public class ProtobufWriter extends Writer implements ByteTuple {
 
     protected ProtobufWriter parent;
 
-    protected ProtobufWriter(ProtobufWriter parent, int features) {
+    private ArrayDeque<ProtobufWriter> childWriters;
+
+    protected ProtobufWriter(ProtobufWriter parent) {
         this();
         this.parent = parent;
-        this.features = features;
         if (parent != null) {
+            this.features = parent.features;
             this.enumtostring = parent.enumtostring;
         }
     }
@@ -85,6 +89,15 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     @Override
     public ProtobufWriter withFeatures(int features) {
         super.withFeatures(features);
+        return this;
+    }
+
+    protected ProtobufWriter configParentFunc(ProtobufWriter parent) {
+        this.parent = parent;
+        if (parent != null) {
+            this.features = parent.features;
+            this.enumtostring = parent.enumtostring;
+        }
         return this;
     }
 
@@ -116,12 +129,39 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     @Override
     protected boolean recycle() {
         super.recycle();
+        this.parent = null;
+        this.mapFieldFunc = null;
+        this.objFieldFunc = null;
+        this.objExtFunc = null;
+        this.features = 0;
+        this.enumtostring = false;
         this.count = 0;
         this.initOffset = 0;
         if (this.content.length > DEFAULT_SIZE) {
             this.content = new byte[DEFAULT_SIZE];
         }
         return true;
+    }
+
+    public final ProtobufWriter pollChild() {
+        Queue<ProtobufWriter> queue = this.childWriters;
+        if (queue == null) {
+            this.childWriters = new ArrayDeque<>(CHILD_SIZE);
+            queue = this.childWriters;
+        }
+        ProtobufWriter result = queue.poll();
+        if (result == null) {
+            result = new ProtobufWriter();
+        }
+        return result.configFieldFunc(this);
+    }
+
+    public final void offerChild(final ProtobufWriter child) {
+        Queue<ProtobufWriter> queue = this.childWriters;
+        if (child != null && queue != null && queue.size() < CHILD_SIZE) {
+            child.recycle();
+            queue.offer(child);
+        }
     }
 
     @Override
@@ -270,7 +310,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             return length;
         } else {
             final Class type = obj.getClass();
-            ProtobufWriter tmp = new ProtobufWriter().configFieldFunc(this);
+            ProtobufWriter tmp = pollChild();
             if (type == boolean[].class) {
                 for (boolean item : (boolean[]) obj) {
                     tmp.writeBoolean(item);
@@ -405,6 +445,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             int length = tmp.count();
             writeLength(length);
             writeTo(tmp.toArray());
+            offerChild(tmp);
             return length;
         }
     }
@@ -1309,11 +1350,12 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             if (arrayEncoder.simple) {
                 if (((Object[]) value).length < 1) {
                     this.writeFieldName(member);
-                    ProtobufWriter tmp = new ProtobufWriter().configFieldFunc(this);
+                    ProtobufWriter tmp = pollChild();
                     arrayEncoder.convertTo(tmp, member, (Object[]) value);
                     // int length = tmp.count();
                     // this.writeUInt32(length);
                     this.writeTo(tmp.toArray());
+                    offerChild(tmp);
                 }
             } else {
                 arrayEncoder.convertTo(this, member, (Object[]) value);
@@ -1323,10 +1365,11 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             if (collectionEncoder.simple) {
                 if (!((Collection) value).isEmpty()) {
                     this.writeFieldName(member);
-                    ProtobufWriter tmp = new ProtobufWriter().configFieldFunc(this);
+                    ProtobufWriter tmp = pollChild();
                     collectionEncoder.convertTo(tmp, member, (Collection) value);
                     this.writeLength(tmp.count());
                     this.writeTo(tmp.toArray());
+                    offerChild(tmp);
                 }
             } else {
                 collectionEncoder.convertTo(this, member, (Collection) value);
@@ -1335,10 +1378,11 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             ProtobufStreamEncoder streamEncoder = (ProtobufStreamEncoder) encoder;
             if (streamEncoder.simple) {
                 this.writeFieldName(member);
-                ProtobufWriter tmp = new ProtobufWriter().configFieldFunc(this);
+                ProtobufWriter tmp = pollChild();
                 streamEncoder.convertTo(tmp, member, (Stream) value);
                 this.writeLength(tmp.count());
                 this.writeTo(tmp.toArray());
+                offerChild(tmp);
             } else {
                 streamEncoder.convertTo(this, member, (Stream) value);
             }

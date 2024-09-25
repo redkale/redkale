@@ -6,6 +6,7 @@
 package org.redkale.test.convert;
 
 import java.lang.reflect.Type;
+import org.redkale.convert.ObjectEncoder;
 import org.redkale.convert.json.*;
 
 /** @author zhangjx */
@@ -15,8 +16,8 @@ public class _DyncFortuneJsonEncoder extends JsonDynEncoder<Fortune> {
 
     protected final byte[] messageCommaFieldBytes = ",\"message\":".getBytes();
 
-    public _DyncFortuneJsonEncoder(JsonFactory factory, Type type) {
-        super(factory, type);
+    public _DyncFortuneJsonEncoder(JsonFactory factory, Type type, ObjectEncoder objectEncoderSelf) {
+        super(factory, type, objectEncoderSelf);
     }
 
     @Override
@@ -26,7 +27,7 @@ public class _DyncFortuneJsonEncoder extends JsonDynEncoder<Fortune> {
             return;
         }
         if (!out.isExtFuncEmpty()) {
-            objectEncoder.convertTo(out, value);
+            objectEncoderSelf.convertTo(out, value);
             return;
         }
 

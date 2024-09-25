@@ -28,7 +28,7 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V> {
 
     @Override
     protected void writeMemberValue(ProtobufWriter out, EnMember member, K key, V value, boolean first) {
-        ProtobufWriter tmp = new ProtobufWriter().configFieldFunc(out);
+        ProtobufWriter tmp = out.pollChild();
         if (member != null) {
             out.writeFieldName(member);
         }
@@ -38,5 +38,6 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V> {
         valueEncoder.convertTo(tmp, value);
         out.writeLength(tmp.count());
         out.writeTo(tmp.toArray());
+        out.offerChild(tmp);
     }
 }

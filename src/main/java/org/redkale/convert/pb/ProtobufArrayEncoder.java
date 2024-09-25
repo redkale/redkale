@@ -47,10 +47,11 @@ public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T> {
         } else if (item instanceof CharSequence) {
             encoder.convertTo(out, item);
         } else {
-            ProtobufWriter tmp = new ProtobufWriter().configFieldFunc(out);
+            ProtobufWriter tmp = out.pollChild();
             encoder.convertTo(tmp, item);
             out.writeLength(tmp.count());
             out.writeTo(tmp.toArray());
+            out.offerChild(tmp);
         }
     }
 }

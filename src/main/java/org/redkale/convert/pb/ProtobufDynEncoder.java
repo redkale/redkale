@@ -4,9 +4,7 @@
  */
 package org.redkale.convert.pb;
 
-import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,22 +15,7 @@ import org.redkale.asm.FieldVisitor;
 import org.redkale.asm.Label;
 import org.redkale.asm.MethodVisitor;
 import org.redkale.asm.Opcodes;
-import static org.redkale.asm.Opcodes.ACC_BRIDGE;
-import static org.redkale.asm.Opcodes.ACC_FINAL;
-import static org.redkale.asm.Opcodes.ACC_PROTECTED;
-import static org.redkale.asm.Opcodes.ACC_PUBLIC;
-import static org.redkale.asm.Opcodes.ACC_SUPER;
-import static org.redkale.asm.Opcodes.ACC_SYNTHETIC;
-import static org.redkale.asm.Opcodes.ALOAD;
-import static org.redkale.asm.Opcodes.ASTORE;
-import static org.redkale.asm.Opcodes.CHECKCAST;
-import static org.redkale.asm.Opcodes.GETFIELD;
-import static org.redkale.asm.Opcodes.IFNONNULL;
-import static org.redkale.asm.Opcodes.INVOKESPECIAL;
-import static org.redkale.asm.Opcodes.INVOKEVIRTUAL;
-import static org.redkale.asm.Opcodes.POP;
-import static org.redkale.asm.Opcodes.RETURN;
-import static org.redkale.asm.Opcodes.V11;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.convert.*;
 import org.redkale.convert.ext.*;
 import org.redkale.util.AnyValue;
@@ -59,7 +42,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
 
     // 动态字段: protected EnMember xxxEnMember;
 
-    protected ProtobufDynEncoder(final ProtobufFactory factory, Type type, ObjectEncoder objectEncoderSelf) {
+    protected ProtobufDynEncoder(ProtobufFactory factory, Type type, ObjectEncoder objectEncoderSelf) {
         super((Class) type);
         this.typeClass = (Class) type;
         this.factory = factory;
@@ -429,13 +412,6 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
             return null;
         }
         return generateDyncEncoder(factory, (Class) type);
-    }
-
-    protected static Class readGetSetFieldType(AccessibleObject element) {
-        if (element instanceof Field) {
-            return ((Field) element).getType();
-        }
-        return ((Method) element).getReturnType();
     }
 
     @Override

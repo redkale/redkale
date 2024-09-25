@@ -47,10 +47,11 @@ public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWrit
         } else if (item instanceof CharSequence) {
             componentEncoder.convertTo(out, item);
         } else {
-            ProtobufWriter tmp = new ProtobufWriter().configFieldFunc(out);
+            ProtobufWriter tmp = out.pollChild();
             componentEncoder.convertTo(tmp, item);
             out.writeLength(tmp.count());
             out.writeTo(tmp.toArray());
+            out.offerChild(tmp);
         }
     }
 }

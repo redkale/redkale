@@ -28,16 +28,20 @@ import org.redkale.util.*;
  * @param <T> 序列化的数据类型
  */
 @SuppressWarnings("unchecked")
-public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
+public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
 
     protected final Class typeClass;
 
-    protected final ObjectEncoder<JsonWriter, T> objectEncoder;
+    protected final ObjectEncoder<JsonWriter, T> objectEncoderSelf;
 
-    protected JsonDynEncoder(final JsonFactory factory, Type type) {
+    protected JsonDynEncoder(JsonFactory factory, Type type, ObjectEncoder objectEncoderSelf) {
+        super(type);
         this.typeClass = (Class) type;
+        this.factory = factory;
+        this.objectEncoderSelf = objectEncoderSelf;
+        this.members = objectEncoderSelf.getMembers();
+        this.inited = true;
         factory.register(type, this);
-        this.objectEncoder = factory.createObjectEncoder(type);
     }
 
     protected static JsonDynEncoder generateDyncEncoder(
@@ -70,11 +74,8 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
             Class newClazz = clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz;
             JsonDynEncoder resultEncoder =
-                    (JsonDynEncoder) newClazz.getDeclaredConstructor(JsonFactory.class, Type.class)
-                            .newInstance(factory, clazz);
-            Field selfField = newClazz.getDeclaredField("objectEncoderSelf");
-            selfField.setAccessible(true);
-            selfField.set(resultEncoder, selfObjEncoder);
+                    (JsonDynEncoder) newClazz.getConstructor(JsonFactory.class, Type.class, ObjectEncoder.class)
+                            .newInstance(factory, clazz, selfObjEncoder);
             if (mixedNames != null) {
                 for (Map.Entry<String, AccessibleObject> en : mixedNames.entrySet()) {
                     Field f = newClazz.getDeclaredField(en.getKey() + "Encoder");
@@ -116,8 +117,6 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 supDynName,
                 null);
 
-        fv = cw.visitField(ACC_PROTECTED, "objectEncoderSelf", objEncoderDesc, null, null);
-        fv.visitEnd();
         final int membersSize = elements.size();
         boolean onlyTwoIntFieldObjectFlag = false; // 只包含两个int字段
         boolean onlyOneLatin1FieldObjectFlag = false; // 只包含一个Latin1 String字段
@@ -161,12 +160,19 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
             onlyShotIntLongLatin1MoreFieldObjectFlag = false; // 字段个数必须大于1
         }
         { // 构造函数
-            mv = (cw.visitMethod(ACC_PUBLIC, "<init>", "(" + jsonfactoryDesc + typeDesc + ")V", null, null));
+            mv = (cw.visitMethod(
+                    ACC_PUBLIC, "<init>", "(" + jsonfactoryDesc + typeDesc + objEncoderDesc + ")V", null, null));
             // mv.setDebug(true);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitVarInsn(ALOAD, 1);
             mv.visitVarInsn(ALOAD, 2);
-            mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "(" + jsonfactoryDesc + typeDesc + ")V", false);
+            mv.visitVarInsn(ALOAD, 3);
+            mv.visitMethodInsn(
+                    INVOKESPECIAL,
+                    supDynName,
+                    "<init>",
+                    "(" + jsonfactoryDesc + typeDesc + objEncoderDesc + ")V",
+                    false);
 
             for (AccessibleObject element : elements) {
                 final String fieldName = factory.readConvertFieldName(clazz, element);
@@ -684,12 +690,8 @@ public abstract class JsonDynEncoder<T> implements Encodeable<JsonWriter, T> {
                 newClazz, newDynName.replace('/', '.'), JsonFactory.class, Type.class);
         try {
             JsonDynEncoder resultEncoder =
-                    (JsonDynEncoder) newClazz.getDeclaredConstructor(JsonFactory.class, Type.class)
-                            .newInstance(factory, clazz);
-            Field selfField = newClazz.getDeclaredField("objectEncoderSelf");
-            selfField.setAccessible(true);
-            selfField.set(resultEncoder, selfObjEncoder);
-            RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), selfField);
+                    (JsonDynEncoder) newClazz.getConstructor(JsonFactory.class, Type.class, ObjectEncoder.class)
+                            .newInstance(factory, clazz, selfObjEncoder);
             if (mixedNames != null) {
                 for (Map.Entry<String, AccessibleObject> en : mixedNames.entrySet()) {
                     Field f = newClazz.getDeclaredField(en.getKey() + "Encoder");
