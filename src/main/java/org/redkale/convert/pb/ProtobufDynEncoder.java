@@ -287,10 +287,17 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                             false);
                 }
             }
-
+            // out.writeObjectE(value);
             mv.visitVarInsn(ALOAD, 3); // out
             mv.visitVarInsn(ALOAD, 2); // value
             mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, "writeObjectE", "(Ljava/lang/Object;)V", false);
+            // offerWriter(out0, out);
+            mv.visitVarInsn(ALOAD, 0); // this
+            mv.visitVarInsn(ALOAD, 1); // out0
+            mv.visitVarInsn(ALOAD, 3); // out
+            mv.visitMethodInsn(
+                    INVOKEVIRTUAL, newDynName, "offerWriter", "(" + pbwriterDesc + pbwriterDesc + ")V", false);
+
             mv.visitInsn(RETURN);
             mv.visitMaxs(4, 3);
             mv.visitEnd();
