@@ -793,7 +793,9 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
                 if (factory.findFieldCoder(clazz, field.getName()) != null) {
                     return null;
                 }
-                if (!factory.isSimpleMemberType(clazz, field.getGenericType(), field.getType())) {
+                Type fieldType = field.getGenericType();
+                if (!(factory.findEncoder(fieldType) instanceof JsonDynEncoder)
+                        && !factory.isSimpleMemberType(clazz, fieldType, field.getType())) {
                     return null;
                 }
                 String name = factory.readConvertFieldName(clazz, field);
@@ -844,7 +846,9 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
                 if (ref != null && ref.fieldFunc() != null) {
                     return null;
                 }
-                if (!factory.isSimpleMemberType(clazz, method.getGenericReturnType(), method.getReturnType())) {
+                Type getterType = method.getGenericReturnType();
+                if (!(factory.findEncoder(getterType) instanceof JsonDynEncoder)
+                        && !factory.isSimpleMemberType(clazz, getterType, method.getReturnType())) {
                     return null;
                 }
                 String name = factory.readConvertFieldName(clazz, method);
