@@ -8,8 +8,7 @@ package org.redkale.convert.pb;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.*;
 import org.redkale.convert.*;
 import org.redkale.util.Creator;
 
@@ -177,26 +176,7 @@ public class ProtobufReader extends Reader {
         if (member == null && decoder == null) {
             return -1; // 为byte[]
         }
-        if (member != null) {
-            if (member.getDecoder() instanceof ProtobufArrayDecoder) {
-                ProtobufArrayDecoder pdecoder = (ProtobufArrayDecoder) member.getDecoder();
-                if (pdecoder.simple) {
-                    return readRawVarint32();
-                }
-            } else if (member.getDecoder() instanceof ProtobufCollectionDecoder) {
-                ProtobufCollectionDecoder pdecoder = (ProtobufCollectionDecoder) member.getDecoder();
-                if (pdecoder.simple) {
-                    return readRawVarint32();
-                }
-            } else if (member.getDecoder() instanceof ProtobufStreamDecoder) {
-                ProtobufStreamDecoder pdecoder = (ProtobufStreamDecoder) member.getDecoder();
-                if (pdecoder.simple) {
-                    return readRawVarint32();
-                }
-            }
-            return -1;
-        }
-        return readRawVarint32(); // readUInt32
+        return member != null ? -1 : readRawVarint32(); // readUInt32
     }
 
     @Override
@@ -479,7 +459,10 @@ public class ProtobufReader extends Reader {
 
     @Override
     public final String readString() {
-        return new String(readByteArray(), StandardCharsets.UTF_8);
+        final int size = readRawVarint32();
+        String val = new String(content, position + 1, size, StandardCharsets.UTF_8);
+        position += size;
+        return val;
     }
 
     protected final int readTag() {
@@ -497,6 +480,10 @@ public class ProtobufReader extends Reader {
 
     protected byte currentByte() {
         return this.content[this.position];
+    }
+
+    public boolean hasNext() {
+        return (this.position + 1) < this.content.length;
     }
 
     /**

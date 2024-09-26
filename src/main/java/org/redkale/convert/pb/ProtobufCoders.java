@@ -4,8 +4,9 @@
  */
 package org.redkale.convert.pb;
 
-import java.util.Collection;
+import java.util.*;
 import java.util.concurrent.atomic.*;
+import java.util.stream.Stream;
 import org.redkale.convert.SimpledCoder;
 import org.redkale.util.*;
 
@@ -14,7 +15,9 @@ import org.redkale.util.*;
  * @author zhangjx
  */
 public abstract class ProtobufCoders {
-    
+
+    private static final Creator<List> LIST_CREATOR = Creator.load(List.class);
+
     private ProtobufCoders() {
         // do nothing
     }
@@ -466,6 +469,210 @@ public abstract class ProtobufCoders {
         @Override
         public Collection<Double> convertFrom(ProtobufReader in) {
             return in.readDoubles(creator);
+        }
+    }
+
+    public static class ProtobufAtomicIntegerCollectionSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<AtomicInteger>>
+            implements ProtobufPrimitivable {
+
+        private final Creator<? extends Collection> creator;
+
+        public ProtobufAtomicIntegerCollectionSimpledCoder(Creator<? extends Collection> creator) {
+            this.creator = creator;
+        }
+
+        @Override
+        public void convertTo(ProtobufWriter out, Collection<AtomicInteger> values) {
+            out.writeAtomicIntegers(values);
+        }
+
+        @Override
+        public Collection<AtomicInteger> convertFrom(ProtobufReader in) {
+            return in.readAtomicIntegers(creator);
+        }
+    }
+
+    public static class ProtobufAtomicLongCollectionSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<AtomicLong>>
+            implements ProtobufPrimitivable {
+
+        private final Creator<? extends Collection> creator;
+
+        public ProtobufAtomicLongCollectionSimpledCoder(Creator<? extends Collection> creator) {
+            this.creator = creator;
+        }
+
+        @Override
+        public void convertTo(ProtobufWriter out, Collection<AtomicLong> values) {
+            out.writeAtomicLongs(values);
+        }
+
+        @Override
+        public Collection<AtomicLong> convertFrom(ProtobufReader in) {
+            return in.readAtomicLongs(creator);
+        }
+    }
+
+    public static class ProtobufBoolStreamSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Boolean>> implements ProtobufPrimitivable {
+
+        public static final ProtobufBoolStreamSimpledCoder instance = new ProtobufBoolStreamSimpledCoder();
+
+        @Override
+        public void convertTo(ProtobufWriter out, Stream<Boolean> values) {
+            out.writeBools(values);
+        }
+
+        @Override
+        public Stream<Boolean> convertFrom(ProtobufReader in) {
+            return in.readBools(LIST_CREATOR).stream();
+        }
+    }
+
+    public static class ProtobufByteStreamSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Byte>> implements ProtobufPrimitivable {
+
+        public static final ProtobufByteStreamSimpledCoder instance = new ProtobufByteStreamSimpledCoder();
+
+        @Override
+        public void convertTo(ProtobufWriter out, Stream<Byte> values) {
+            out.writeBytes(values);
+        }
+
+        @Override
+        public Stream<Byte> convertFrom(ProtobufReader in) {
+            return in.readBytes(LIST_CREATOR).stream();
+        }
+    }
+
+    public static class ProtobufCharStreamSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Character>> implements ProtobufPrimitivable {
+
+        public static final ProtobufCharStreamSimpledCoder instance = new ProtobufCharStreamSimpledCoder();
+
+        @Override
+        public void convertTo(ProtobufWriter out, Stream<Character> values) {
+            out.writeChars(values);
+        }
+
+        @Override
+        public Stream<Character> convertFrom(ProtobufReader in) {
+            return in.readChars(LIST_CREATOR).stream();
+        }
+    }
+
+    public static class ProtobufShortStreamSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Short>> implements ProtobufPrimitivable {
+
+        public static final ProtobufShortStreamSimpledCoder instance = new ProtobufShortStreamSimpledCoder();
+
+        @Override
+        public void convertTo(ProtobufWriter out, Stream<Short> values) {
+            out.writeShorts(values);
+        }
+
+        @Override
+        public Stream<Short> convertFrom(ProtobufReader in) {
+            return in.readShorts(LIST_CREATOR).stream();
+        }
+    }
+
+    public static class ProtobufIntStreamSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Integer>> implements ProtobufPrimitivable {
+
+        public static final ProtobufIntStreamSimpledCoder instance = new ProtobufIntStreamSimpledCoder();
+
+        @Override
+        public void convertTo(ProtobufWriter out, Stream<Integer> values) {
+            out.writeInts(values);
+        }
+
+        @Override
+        public Stream<Integer> convertFrom(ProtobufReader in) {
+            return in.readInts(LIST_CREATOR).stream();
+        }
+    }
+
+    public static class ProtobufFloatStreamSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Float>> implements ProtobufPrimitivable {
+
+        public static final ProtobufFloatStreamSimpledCoder instance = new ProtobufFloatStreamSimpledCoder();
+
+        @Override
+        public void convertTo(ProtobufWriter out, Stream<Float> values) {
+            out.writeFloats(values);
+        }
+
+        @Override
+        public Stream<Float> convertFrom(ProtobufReader in) {
+            return in.readFloats(LIST_CREATOR).stream();
+        }
+    }
+
+    public static class ProtobufLongStreamSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Long>> implements ProtobufPrimitivable {
+
+        public static final ProtobufLongStreamSimpledCoder instance = new ProtobufLongStreamSimpledCoder();
+
+        @Override
+        public void convertTo(ProtobufWriter out, Stream<Long> values) {
+            out.writeLongs(values);
+        }
+
+        @Override
+        public Stream<Long> convertFrom(ProtobufReader in) {
+            return in.readLongs(LIST_CREATOR).stream();
+        }
+    }
+
+    public static class ProtobufDoubleStreamSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Double>> implements ProtobufPrimitivable {
+
+        public static final ProtobufDoubleStreamSimpledCoder instance = new ProtobufDoubleStreamSimpledCoder();
+
+        @Override
+        public void convertTo(ProtobufWriter out, Stream<Double> values) {
+            out.writeDoubles(values);
+        }
+
+        @Override
+        public Stream<Double> convertFrom(ProtobufReader in) {
+            return in.readDoubles(LIST_CREATOR).stream();
+        }
+    }
+
+    public static class ProtobufAtomicIntegerStreamSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<AtomicInteger>>
+            implements ProtobufPrimitivable {
+
+        public static final ProtobufAtomicIntegerStreamSimpledCoder instance =
+                new ProtobufAtomicIntegerStreamSimpledCoder();
+
+        @Override
+        public void convertTo(ProtobufWriter out, Stream<AtomicInteger> values) {
+            out.writeAtomicIntegers(values);
+        }
+
+        @Override
+        public Stream<AtomicInteger> convertFrom(ProtobufReader in) {
+            return in.readAtomicIntegers(LIST_CREATOR).stream();
+        }
+    }
+
+    public static class ProtobufAtomicLongStreamSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<AtomicLong>> implements ProtobufPrimitivable {
+
+        public static final ProtobufAtomicLongStreamSimpledCoder instance = new ProtobufAtomicLongStreamSimpledCoder();
+
+        @Override
+        public void convertTo(ProtobufWriter out, Stream<AtomicLong> values) {
+            out.writeAtomicLongs(values);
+        }
+
+        @Override
+        public Stream<AtomicLong> convertFrom(ProtobufReader in) {
+            return in.readAtomicLongs(LIST_CREATOR).stream();
         }
     }
 }

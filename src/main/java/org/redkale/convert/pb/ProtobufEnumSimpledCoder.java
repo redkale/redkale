@@ -57,11 +57,11 @@ public class ProtobufEnumSimpledCoder<R extends ProtobufReader, W extends Protob
     public E convertFrom(final R in) {
         if (enumtostring) {
             String value = in.readSmallString();
-            if (value == null) return null;
-            return (E) Enum.valueOf((Class<E>) type, value);
+            return value == null ? null : (E) Enum.valueOf((Class<E>) type, value);
+        } else {
+            int value = in.readRawVarint32();
+            return values.get(value);
         }
-        int value = ((ProtobufReader) in).readRawVarint32();
-        return values.get(value);
     }
 
     @Override

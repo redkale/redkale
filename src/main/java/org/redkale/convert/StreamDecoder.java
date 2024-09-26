@@ -85,22 +85,22 @@ public class StreamDecoder<R extends Reader, T> implements TagDecodeable<R, Stre
                 }
             }
         }
-        final Decodeable<R, T> localdecoder = getComponentDecoder(this.componentDecoder, typevals);
+        final Decodeable<R, T> localDecoder = getComponentDecoder(this.componentDecoder, typevals);
         final List<T> result = new ArrayList();
         boolean first = true;
         if (len == Reader.SIGN_NOLENGTH) {
             int startPosition = in.position();
             while (hasNext(in, member, startPosition, contentLength, first)) {
                 R itemReader = getItemReader(in, member, first);
-                if (itemReader == null) {
+                if (itemReader == null) { // 元素读取完毕
                     break;
                 }
-                result.add(readMemberValue(itemReader, member, localdecoder, first));
+                result.add(readMemberValue(itemReader, member, localDecoder, first));
                 first = false;
             }
         } else {
             for (int i = 0; i < len; i++) {
-                result.add(localdecoder.convertFrom(in));
+                result.add(localDecoder.convertFrom(in));
             }
         }
         in.readArrayE();

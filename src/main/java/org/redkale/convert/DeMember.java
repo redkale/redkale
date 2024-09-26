@@ -107,8 +107,16 @@ public final class DeMember<R extends Reader, T, F> {
         this.attribute.set(obj, decoder.convertFrom(in));
     }
 
+    public final void readByTag(R in, T obj) {
+        this.attribute.set(obj, ((TagDecodeable<R, F>) decoder).convertFrom(in, this));
+    }
+
     public final F read(R in) {
         return decoder.convertFrom(in);
+    }
+
+    public final F readByTag(R in) {
+        return ((TagDecodeable<R, F>) decoder).convertFrom(in, this);
     }
 
     public Attribute<T, F> getAttribute() {
@@ -183,5 +191,4 @@ public final class DeMember<R extends Reader, T, F> {
         return "DeMember{" + "attribute=" + attribute.field() + ", position=" + position + ", tag=" + tag + ", decoder="
                 + (decoder == null ? null : decoder.getClass().getName()) + '}';
     }
-
 }

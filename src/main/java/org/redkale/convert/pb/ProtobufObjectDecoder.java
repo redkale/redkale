@@ -7,8 +7,7 @@ package org.redkale.convert.pb;
 
 import java.lang.reflect.Type;
 import org.redkale.convert.*;
-import org.redkale.util.Attribute;
-import org.redkale.util.Utility;
+import org.redkale.util.*;
 
 /**
  * @author zhangjx
@@ -48,7 +47,7 @@ public class ProtobufObjectDecoder<T> extends ObjectDecoder<ProtobufReader, T> {
     protected Object readDeMemberValue(ProtobufReader in, DeMember member, boolean first) {
         Decodeable decoder = member.getDecoder();
         if (decoder instanceof TagDecodeable) {
-            return ((TagDecodeable) decoder).convertFrom(in, member);
+            return member.readByTag(in);
         } else {
             return member.read(in);
         }
@@ -58,7 +57,7 @@ public class ProtobufObjectDecoder<T> extends ObjectDecoder<ProtobufReader, T> {
     protected void readDeMemberValue(ProtobufReader in, DeMember member, T result, boolean first) {
         Decodeable decoder = member.getDecoder();
         if (decoder instanceof TagDecodeable) {
-            member.getAttribute().set(result, ((TagDecodeable) decoder).convertFrom(in, member));
+            member.readByTag(in, result);
         } else {
             member.read(in, result);
         }

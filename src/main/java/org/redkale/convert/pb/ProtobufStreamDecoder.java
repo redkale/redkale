@@ -14,23 +14,15 @@ import org.redkale.convert.*;
  */
 public class ProtobufStreamDecoder<T> extends StreamDecoder<ProtobufReader, T> {
 
-    protected final boolean simple;
-
-    private final boolean string;
-
-    private final boolean enumtostring;
+    protected final boolean componentSimpled;
 
     public ProtobufStreamDecoder(ConvertFactory factory, Type type) {
         super(factory, type);
-        this.enumtostring = ((ProtobufFactory) factory).enumtostring;
-        Type comtype = this.getComponentType();
-        this.string = String.class == comtype;
-        this.simple = ProtobufFactory.isNoLenBytesType(comtype);
+        this.componentSimpled = getComponentDecoder() instanceof SimpledCoder;
     }
 
     @Override
     protected ProtobufReader getItemReader(ProtobufReader in, DeMember member, boolean first) {
-        if (simple) return in;
-        return ProtobufFactory.getItemReader(string, simple, in, member, enumtostring, first);
+        return ProtobufFactory.getItemReader(in, member, componentSimpled, first);
     }
 }

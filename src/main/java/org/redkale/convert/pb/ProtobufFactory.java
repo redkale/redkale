@@ -12,30 +12,42 @@ import java.util.concurrent.atomic.*;
 import java.util.stream.Stream;
 import org.redkale.convert.*;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufAtomicIntegerArraySimpledCoder;
+import org.redkale.convert.pb.ProtobufCoders.ProtobufAtomicIntegerCollectionSimpledCoder;
+import org.redkale.convert.pb.ProtobufCoders.ProtobufAtomicIntegerStreamSimpledCoder;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufAtomicLongArraySimpledCoder;
+import org.redkale.convert.pb.ProtobufCoders.ProtobufAtomicLongCollectionSimpledCoder;
+import org.redkale.convert.pb.ProtobufCoders.ProtobufAtomicLongStreamSimpledCoder;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufBoolArraySimpledCoder2;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufBoolCollectionSimpledCoder;
+import org.redkale.convert.pb.ProtobufCoders.ProtobufBoolStreamSimpledCoder;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufByteArraySimpledCoder;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufByteArraySimpledCoder2;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufByteCollectionSimpledCoder;
+import org.redkale.convert.pb.ProtobufCoders.ProtobufByteStreamSimpledCoder;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufCharArraySimpledCoder;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufCharArraySimpledCoder2;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufCharCollectionSimpledCoder;
+import org.redkale.convert.pb.ProtobufCoders.ProtobufCharStreamSimpledCoder;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufDoubleArraySimpledCoder;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufDoubleArraySimpledCoder2;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufDoubleCollectionSimpledCoder;
+import org.redkale.convert.pb.ProtobufCoders.ProtobufDoubleStreamSimpledCoder;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufFloatArraySimpledCoder;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufFloatArraySimpledCoder2;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufFloatCollectionSimpledCoder;
+import org.redkale.convert.pb.ProtobufCoders.ProtobufFloatStreamSimpledCoder;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufIntArraySimpledCoder;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufIntArraySimpledCoder2;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufIntCollectionSimpledCoder;
+import org.redkale.convert.pb.ProtobufCoders.ProtobufIntStreamSimpledCoder;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufLongArraySimpledCoder;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufLongArraySimpledCoder2;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufLongCollectionSimpledCoder;
+import org.redkale.convert.pb.ProtobufCoders.ProtobufLongStreamSimpledCoder;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufShortArraySimpledCoder;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufShortArraySimpledCoder2;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufShortCollectionSimpledCoder;
+import org.redkale.convert.pb.ProtobufCoders.ProtobufShortStreamSimpledCoder;
 import org.redkale.util.*;
 
 /** @author zhangjx */
@@ -202,6 +214,12 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
             } else if (componentType == Double.class) {
                 Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
                 return (Decodeable) new ProtobufDoubleCollectionSimpledCoder(creator);
+            } else if (componentType == AtomicInteger.class) {
+                Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
+                return (Decodeable) new ProtobufAtomicIntegerCollectionSimpledCoder(creator);
+            } else if (componentType == AtomicLong.class) {
+                Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
+                return (Decodeable) new ProtobufAtomicLongCollectionSimpledCoder(creator);
             }
         }
         return new ProtobufCollectionDecoder(this, type);
@@ -214,6 +232,31 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
 
     @Override
     protected <E> Decodeable<ProtobufReader, E> createStreamDecoder(Type type) {
+        if (type instanceof ParameterizedType) {
+            ParameterizedType pt = (ParameterizedType) type;
+            Type componentType = pt.getActualTypeArguments()[0];
+            if (componentType == Boolean.class) {
+                return (Decodeable) ProtobufBoolStreamSimpledCoder.instance;
+            } else if (componentType == Byte.class) {
+                return (Decodeable) ProtobufByteStreamSimpledCoder.instance;
+            } else if (componentType == Character.class) {
+                return (Decodeable) ProtobufCharStreamSimpledCoder.instance;
+            } else if (componentType == Short.class) {
+                return (Decodeable) ProtobufShortStreamSimpledCoder.instance;
+            } else if (componentType == Integer.class) {
+                return (Decodeable) ProtobufIntStreamSimpledCoder.instance;
+            } else if (componentType == Float.class) {
+                return (Decodeable) ProtobufFloatStreamSimpledCoder.instance;
+            } else if (componentType == Long.class) {
+                return (Decodeable) ProtobufLongStreamSimpledCoder.instance;
+            } else if (componentType == Double.class) {
+                return (Decodeable) ProtobufDoubleStreamSimpledCoder.instance;
+            } else if (componentType == AtomicInteger.class) {
+                return (Decodeable) ProtobufAtomicIntegerStreamSimpledCoder.instance;
+            } else if (componentType == AtomicLong.class) {
+                return (Decodeable) ProtobufAtomicLongStreamSimpledCoder.instance;
+            }
+        }
         return new ProtobufStreamDecoder(this, type);
     }
 
@@ -260,14 +303,13 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
         return true;
     }
 
-    protected static ProtobufReader getItemReader(
-            boolean string, boolean simple, ProtobufReader in, DeMember member, boolean enumtostring, boolean first) {
-        if (string) {
+    protected static ProtobufReader getItemReader(ProtobufReader in, DeMember member, boolean simpled, boolean first) {
+        if (simpled) {
             if (member == null || first) {
                 return in;
             }
             int tag = in.readTag();
-            if (tag != member.getTag()) {
+            if (tag != member.getTag()) { // 元素结束
                 in.backTag(tag);
                 return null;
             }
@@ -275,7 +317,7 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
         } else {
             if (!first && member != null) {
                 int tag = in.readTag();
-                if (tag != member.getTag()) {
+                if (tag != member.getTag()) { // 元素结束
                     in.backTag(tag);
                     return null;
                 }
