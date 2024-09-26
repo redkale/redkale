@@ -2,7 +2,7 @@
  * Copyright (c) 2016-2116 Redkale
  * All rights reserved.
  */
-package org.redkale.test.source;
+package org.redkale.test.source.func;
 
 import java.io.Serializable;
 import java.math.BigDecimal;

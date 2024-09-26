@@ -2,7 +2,7 @@
  * Copyright (c) 2016-2116 Redkale
  * All rights reserved.
  */
-package org.redkale.test.source;
+package org.redkale.test.source.func;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -50,7 +50,8 @@ public class EntityFullFuncTest {
         }
 
         @Override
-        public Object getObject(int columnIdex) {
+        public Object getObject(int columnIndex) {
+            if (columnIndex < 1) throw new IllegalArgumentException();
             return null;
         }
 
@@ -60,7 +61,8 @@ public class EntityFullFuncTest {
         }
 
         @Override
-        public String getString(int columnIdex) {
+        public String getString(int columnIndex) {
+            if (columnIndex < 1) throw new IllegalArgumentException();
             return "mystring";
         }
 
@@ -70,7 +72,8 @@ public class EntityFullFuncTest {
         }
 
         @Override
-        public byte[] getBytes(int columnIdex) {
+        public byte[] getBytes(int columnIndex) {
+            if (columnIndex < 1) throw new IllegalArgumentException();
             return null;
         }
 
@@ -80,7 +83,8 @@ public class EntityFullFuncTest {
         }
 
         @Override
-        public BigDecimal getBigDecimal(int columnIdex) {
+        public BigDecimal getBigDecimal(int columnIndex) {
+            if (columnIndex < 1) throw new IllegalArgumentException();
             return BigDecimal.ZERO;
         }
 
@@ -90,7 +94,8 @@ public class EntityFullFuncTest {
         }
 
         @Override
-        public Boolean getBoolean(int columnIdex) {
+        public Boolean getBoolean(int columnIndex) {
+            if (columnIndex < 1) throw new IllegalArgumentException();
             return true;
         }
 
@@ -100,7 +105,8 @@ public class EntityFullFuncTest {
         }
 
         @Override
-        public Short getShort(int columnIdex) {
+        public Short getShort(int columnIndex) {
+            if (columnIndex < 1) throw new IllegalArgumentException();
             return 111;
         }
 
@@ -110,7 +116,8 @@ public class EntityFullFuncTest {
         }
 
         @Override
-        public Integer getInteger(int columnIdex) {
+        public Integer getInteger(int columnIndex) {
+            if (columnIndex < 1) throw new IllegalArgumentException();
             return 222;
         }
 
@@ -120,7 +127,8 @@ public class EntityFullFuncTest {
         }
 
         @Override
-        public Float getFloat(int columnIdex) {
+        public Float getFloat(int columnIndex) {
+            if (columnIndex < 1) throw new IllegalArgumentException();
             return 333.f;
         }
 
@@ -130,7 +138,8 @@ public class EntityFullFuncTest {
         }
 
         @Override
-        public Long getLong(int columnIdex) {
+        public Long getLong(int columnIndex) {
+            if (columnIndex < 1) throw new IllegalArgumentException();
             return 444L;
         }
 
@@ -140,7 +149,8 @@ public class EntityFullFuncTest {
         }
 
         @Override
-        public Double getDouble(int columnIdex) {
+        public Double getDouble(int columnIndex) {
+            if (columnIndex < 1) throw new IllegalArgumentException();
             return 555.d;
         }
 

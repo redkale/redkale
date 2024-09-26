@@ -21,151 +21,341 @@ public interface DataResultSetRow {
     // 可以为空
     public @Nullable EntityInfo getEntityInfo();
 
-    // columnIdex从1开始
-    public Object getObject(int columnIdex);
+    /**
+     * 根据字段序号获取字段值， index从1开始
+     *
+     * @param columnIndex 字段序号
+     * @return 字段值
+     */
+    public Object getObject(int columnIndex);
 
+    /**
+     * 根据字段名获取字段值
+     *
+     * @param columnLabel 字段名
+     * @return  字段值
+     */
     public Object getObject(String columnLabel);
 
-    // columnIdex从1开始
+    /**
+     * 根据字段序号获取字段值， index从1开始
+     *
+     * @param <T> 泛型
+     * @param attr  Attribute
+     * @param columnIndex 字段序号
+     * @param columnLabel 字段名
+     * @return 字段值
+     */
     default <T> Serializable getObject(Attribute<T, Serializable> attr, int columnIndex, String columnLabel) {
         return DataResultSet.getRowColumnValue(this, attr, columnIndex, columnLabel);
     }
 
-    // columnIdex从1开始
+    /**
+     * 根据字段序号获取字段值， index从1开始
+     *
+     * @param columnIndex 字段序号
+     * @return 字段值
+     */
     @ClassDepends
-    public String getString(int columnIdex);
+    public String getString(int columnIndex);
 
+    /**
+     * 根据字段名获取字段值
+     *
+     * @param columnLabel 字段名
+     * @return  字段值
+     */
     @ClassDepends
     public String getString(String columnLabel);
-
-    // columnIdex从1开始
+    /**
+     * 根据字段序号获取字段值， index从1开始
+     *
+     * @param columnIndex 字段序号
+     * @return 字段值
+     */
     @ClassDepends
-    public byte[] getBytes(int columnIdex);
+    public byte[] getBytes(int columnIndex);
 
+    /**
+     * 根据字段名获取字段值
+     *
+     * @param columnLabel 字段名
+     * @return  字段值
+     */
     @ClassDepends
     public byte[] getBytes(String columnLabel);
 
-    // columnIdex从1开始
+    /**
+     * 根据字段序号获取字段值， index从1开始
+     *
+     * @param columnIndex 字段序号
+     * @return 字段值
+     */
     @ClassDepends
-    public BigDecimal getBigDecimal(int columnIdex);
+    public BigDecimal getBigDecimal(int columnIndex);
 
+    /**
+     * 根据字段名获取字段值
+     *
+     * @param columnLabel 字段名
+     * @return  字段值
+     */
     @ClassDepends
     public BigDecimal getBigDecimal(String columnLabel);
 
-    // columnIdex从1开始
+    /**
+     * 根据字段序号获取字段值， index从1开始
+     *
+     * @param columnIndex 字段序号
+     * @return 字段值
+     */
     @ClassDepends
-    public Boolean getBoolean(int columnIdex);
+    public Boolean getBoolean(int columnIndex);
 
+    /**
+     * 根据字段名获取字段值
+     *
+     * @param columnLabel 字段名
+     * @return  字段值
+     */
     @ClassDepends
     public Boolean getBoolean(String columnLabel);
 
-    // columnIdex从1开始
+    /**
+     * 根据字段序号获取字段值， index从1开始
+     *
+     * @param columnIndex 字段序号
+     * @return 字段值
+     */
     @ClassDepends
-    public Short getShort(int columnIdex);
+    public Short getShort(int columnIndex);
 
+    /**
+     * 根据字段名获取字段值
+     *
+     * @param columnLabel 字段名
+     * @return  字段值
+     */
     @ClassDepends
     public Short getShort(String columnLabel);
 
-    // columnIdex从1开始
+    /**
+     * 根据字段序号获取字段值， index从1开始
+     *
+     * @param columnIndex 字段序号
+     * @return 字段值
+     */
     @ClassDepends
-    public Integer getInteger(int columnIdex);
+    public Integer getInteger(int columnIndex);
 
+    /**
+     * 根据字段名获取字段值
+     *
+     * @param columnLabel 字段名
+     * @return  字段值
+     */
     @ClassDepends
     public Integer getInteger(String columnLabel);
 
-    // columnIdex从1开始
+    /**
+     * 根据字段序号获取字段值， index从1开始
+     *
+     * @param columnIndex 字段序号
+     * @return 字段值
+     */
     @ClassDepends
-    public Float getFloat(int columnIdex);
+    public Float getFloat(int columnIndex);
 
+    /**
+     * 根据字段名获取字段值
+     *
+     * @param columnLabel 字段名
+     * @return  字段值
+     */
     @ClassDepends
     public Float getFloat(String columnLabel);
 
-    // columnIdex从1开始
+    /**
+     * 根据字段序号获取字段值， index从1开始
+     *
+     * @param columnIndex 字段序号
+     * @return 字段值
+     */
     @ClassDepends
-    public Long getLong(int columnIdex);
+    public Long getLong(int columnIndex);
 
+    /**
+     * 根据字段名获取字段值
+     *
+     * @param columnLabel 字段名
+     * @return  字段值
+     */
     @ClassDepends
     public Long getLong(String columnLabel);
 
-    // columnIdex从1开始
+    /**
+     * 根据字段序号获取字段值， index从1开始
+     *
+     * @param columnIndex 字段序号
+     * @return 字段值
+     */
     @ClassDepends
-    public Double getDouble(int columnIdex);
+    public Double getDouble(int columnIndex);
 
+    /**
+     * 根据字段名获取字段值
+     *
+     * @param columnLabel 字段名
+     * @return  字段值
+     */
     @ClassDepends
     public Double getDouble(String columnLabel);
 
-    // columnIdex从1开始
+    /**
+     * 根据字段序号获取字段值， index从1开始
+     *
+     * @param columnIndex 字段序号
+     * @param defValue 默认值
+     * @return 字段值
+     */
     @ClassDepends
-    default boolean getBoolean(int columnIdex, boolean defValue) {
-        Boolean val = getBoolean(columnIdex);
+    default boolean getBoolean(int columnIndex, boolean defValue) {
+        Boolean val = getBoolean(columnIndex);
         return val == null ? defValue : val;
     }
 
+    /**
+     * 根据字段名获取字段值
+     *
+     * @param columnLabel 字段名
+     * @param defValue 默认值
+     * @return  字段值
+     */
     @ClassDepends
     default boolean getBoolean(String columnLabel, boolean defValue) {
         Boolean val = getBoolean(columnLabel);
         return val == null ? defValue : val;
     }
 
-    // columnIdex从1开始
+    /**
+     * 根据字段序号获取字段值， index从1开始
+     *
+     * @param columnIndex 字段序号
+     * @param defValue 默认值
+     * @return 字段值
+     */
     @ClassDepends
-    default short getShort(int columnIdex, short defValue) {
-        Short val = getShort(columnIdex);
+    default short getShort(int columnIndex, short defValue) {
+        Short val = getShort(columnIndex);
         return val == null ? defValue : val;
     }
-
+    /**
+     * 根据字段名获取字段值
+     *
+     * @param columnLabel 字段名
+     * @param defValue 默认值
+     * @return  字段值
+     */
     @ClassDepends
     default short getShort(String columnLabel, short defValue) {
         Short val = getShort(columnLabel);
         return val == null ? defValue : val;
     }
 
-    // columnIdex从1开始
+    /**
+     * 根据字段序号获取字段值， index从1开始
+     *
+     * @param columnIndex 字段序号
+     * @param defValue 默认值
+     * @return 字段值
+     */
     @ClassDepends
-    default int getInteger(int columnIdex, int defValue) {
-        Integer val = getInteger(columnIdex);
+    default int getInteger(int columnIndex, int defValue) {
+        Integer val = getInteger(columnIndex);
         return val == null ? defValue : val;
     }
-
+    /**
+     * 根据字段名获取字段值
+     *
+     * @param columnLabel 字段名
+     * @param defValue 默认值
+     * @return  字段值
+     */
     @ClassDepends
     default int getInteger(String columnLabel, int defValue) {
         Integer val = getInteger(columnLabel);
         return val == null ? defValue : val;
     }
 
-    // columnIdex从1开始
+    /**
+     * 根据字段序号获取字段值， index从1开始
+     *
+     * @param columnIndex 字段序号
+     * @param defValue 默认值
+     * @return 字段值
+     */
     @ClassDepends
-    default float getFloat(int columnIdex, float defValue) {
-        Float val = getFloat(columnIdex);
+    default float getFloat(int columnIndex, float defValue) {
+        Float val = getFloat(columnIndex);
         return val == null ? defValue : val;
     }
-
+    /**
+     * 根据字段名获取字段值
+     *
+     * @param columnLabel 字段名
+     * @param defValue 默认值
+     * @return  字段值
+     */
     @ClassDepends
     default float getFloat(String columnLabel, float defValue) {
         Float val = getFloat(columnLabel);
         return val == null ? defValue : val;
     }
 
-    // columnIdex从1开始
+    /**
+     * 根据字段序号获取字段值， index从1开始
+     *
+     * @param columnIndex 字段序号
+     * @param defValue 默认值
+     * @return 字段值
+     */
     @ClassDepends
-    default long getLong(int columnIdex, long defValue) {
-        Long val = getLong(columnIdex);
+    default long getLong(int columnIndex, long defValue) {
+        Long val = getLong(columnIndex);
         return val == null ? defValue : val;
     }
-
+    /**
+     * 根据字段名获取字段值
+     *
+     * @param columnLabel 字段名
+     * @param defValue 默认值
+     * @return  字段值
+     */
     @ClassDepends
     default long getLong(String columnLabel, long defValue) {
         Long val = getLong(columnLabel);
         return val == null ? defValue : val;
     }
 
-    // columnIdex从1开始
+    /**
+     * 根据字段序号获取字段值， index从1开始
+     *
+     * @param columnIndex 字段序号
+     * @param defValue 默认值
+     * @return 字段值
+     */
     @ClassDepends
-    default double getDouble(int columnIdex, double defValue) {
-        Double val = getDouble(columnIdex);
+    default double getDouble(int columnIndex, double defValue) {
+        Double val = getDouble(columnIndex);
         return val == null ? defValue : val;
     }
-
+    /**
+     * 根据字段名获取字段值
+     *
+     * @param columnLabel 字段名
+     * @param defValue 默认值
+     * @return  字段值
+     */
     @ClassDepends
     default double getDouble(String columnLabel, double defValue) {
         Double val = getDouble(columnLabel);
