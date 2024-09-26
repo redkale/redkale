@@ -10,12 +10,12 @@ import java.lang.reflect.*;
 import java.math.*;
 import java.net.*;
 import java.net.http.HttpClient;
-import java.nio.*;
+import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.nio.charset.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import java.security.*;
-import java.time.*;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -25,8 +25,7 @@ import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
-import org.redkale.annotation.ClassDepends;
-import org.redkale.annotation.Priority;
+import org.redkale.annotation.*;
 import org.redkale.convert.json.JsonConvert;
 
 /**
@@ -112,11 +111,7 @@ public final class Utility {
     // -------------------------------------------------------------------------------
     private static final Function<String, byte[]> strByteFunction;
 
-    private static final Function<StringBuilder, byte[]> sbByteFunction;
-
     private static final Predicate<Object> strLatin1Function;
-
-    private static final ToLongFunction<Object> bufferAddrFunction;
 
     private static final ReentrantLock clientLock = new ReentrantLock();
 
@@ -143,9 +138,7 @@ public final class Utility {
 
         Unsafe unsafe0 = null;
         Function<String, byte[]> strByteFunction0 = null;
-        Function<StringBuilder, byte[]> sbByteFunction0 = null;
         Predicate<Object> strLatin1Function0 = null;
-        ToLongFunction<Object> bufferAddrFunction0 = null;
         Consumer<Consumer<String>> signalShutdownConsumer0 = null;
         Function<Supplier, ThreadLocal> virtualThreadLocalFunction0 = null;
         Function<String, ThreadFactory> virtualThreadFactoryFunction0 = null;
@@ -310,17 +303,12 @@ public final class Utility {
 
                     final Unsafe unsafe = unsafe0;
                     final long fd1 = unsafe0.objectFieldOffset(f);
-                    final long fd2 = unsafe0.objectFieldOffset(
-                            StringBuilder.class.getSuperclass().getDeclaredField("value"));
-                    final long fd3 = unsafe0.objectFieldOffset(String.class.getDeclaredField("coder"));
-                    final long fd4 = unsafe0.objectFieldOffset(Buffer.class.getDeclaredField("address"));
+                    final long fd2 = unsafe0.objectFieldOffset(String.class.getDeclaredField("coder"));
                     Field cf = String.class.getDeclaredField("COMPACT_STRINGS");
                     strByteFunction0 = (String t) -> (byte[]) unsafe.getObject(t, fd1);
-                    sbByteFunction0 = (StringBuilder t) -> (byte[]) unsafe.getObject(t, fd2);
                     final boolean compact = unsafe.getBoolean(String.class, unsafe0.staticFieldOffset(cf));
                     // LATIN1:0  UTF16:1
-                    strLatin1Function0 = compact ? (Object t) -> unsafe.getByte(t, fd3) == 0 : (Object t) -> false;
-                    bufferAddrFunction0 = (Object t) -> unsafe.getLong(t, fd4);
+                    strLatin1Function0 = compact ? (Object t) -> unsafe.getByte(t, fd2) == 0 : (Object t) -> false;
                 }
                 { // signalShutdown
                     Class<Consumer<Consumer<String>>> shutdownClazz1 = null;
@@ -349,9 +337,7 @@ public final class Utility {
         }
         unsafeInstance = unsafe0;
         strByteFunction = strByteFunction0;
-        sbByteFunction = sbByteFunction0;
         strLatin1Function = strLatin1Function0;
-        bufferAddrFunction = bufferAddrFunction0;
         signalShutdownConsumer = signalShutdownConsumer0;
         virtualPoolFunction = virtualPoolFunction0;
         virtualThreadLocalFunction = virtualThreadLocalFunction0;
@@ -4843,7 +4829,45 @@ public final class Utility {
         if (value == null) {
             return new byte[0];
         }
-        return encodeUTF8(value.toCharArray());
+        char c;
+        int size = 0;
+        final String str = value;
+        final int limit = str.length();
+        for (int i = 0; i < limit; i++) {
+            c = str.charAt(i);
+            if (c < 0x80) {
+                size++;
+            } else if (c < 0x800) {
+                size += 2;
+            } else if (Character.isSurrogate(c)) {
+                size += 2;
+            } else {
+                size += 3;
+            }
+        }
+        final byte[] bytes = new byte[size];
+        size = 0;
+        for (int i = 0; i < limit; i++) {
+            c = str.charAt(i);
+            if (c < 0x80) {
+                bytes[size++] = (byte) c;
+            } else if (c < 0x800) {
+                bytes[size++] = (byte) (0xc0 | (c >> 6));
+                bytes[size++] = (byte) (0x80 | (c & 0x3f));
+            } else if (Character.isSurrogate(c)) { // 连取两个
+                int uc = Character.toCodePoint(c, str.charAt(i + 1));
+                bytes[size++] = (byte) (0xf0 | (uc >> 18));
+                bytes[size++] = (byte) (0x80 | ((uc >> 12) & 0x3f));
+                bytes[size++] = (byte) (0x80 | ((uc >> 6) & 0x3f));
+                bytes[size++] = (byte) (0x80 | (uc & 0x3f));
+                i++;
+            } else {
+                bytes[size++] = (byte) (0xe0 | (c >> 12));
+                bytes[size++] = (byte) (0x80 | ((c >> 6) & 0x3f));
+                bytes[size++] = (byte) (0x80 | (c & 0x3f));
+            }
+        }
+        return bytes;
     }
 
     public static byte[] encodeUTF8(final char[] array) {
@@ -4878,81 +4902,18 @@ public final class Utility {
                 bytes[size++] = (byte) (0x80 | (c & 0x3f));
             } else if (Character.isSurrogate(c)) { // 连取两个
                 int uc = Character.toCodePoint(c, chs[i + 1]);
-                bytes[size++] = (byte) (0xf0 | ((uc >> 18)));
+                bytes[size++] = (byte) (0xf0 | (uc >> 18));
                 bytes[size++] = (byte) (0x80 | ((uc >> 12) & 0x3f));
                 bytes[size++] = (byte) (0x80 | ((uc >> 6) & 0x3f));
                 bytes[size++] = (byte) (0x80 | (uc & 0x3f));
                 i++;
             } else {
-                bytes[size++] = (byte) (0xe0 | ((c >> 12)));
+                bytes[size++] = (byte) (0xe0 | (c >> 12));
                 bytes[size++] = (byte) (0x80 | ((c >> 6) & 0x3f));
                 bytes[size++] = (byte) (0x80 | (c & 0x3f));
             }
         }
         return bytes;
-    }
-
-    public static long getAddress(ByteBuffer buffer) {
-        return bufferAddrFunction.applyAsLong(buffer);
-    }
-
-    public static boolean isLatin1(String value) {
-        if (value == null) {
-            return true;
-        }
-        if (strLatin1Function != null) {
-            return strLatin1Function.test(value); // LATIN1:0  UTF16:1
-        }
-        char[] chs = charArray(value);
-        for (char ch : chs) {
-            if (ch >= 0x80) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public static byte[] byteUTF16Array(String value) {
-        if (value == null || strByteFunction == null) {
-            return null;
-        }
-        return strByteFunction.apply(value);
-    }
-
-    public static char[] charArray(String value) {
-        if (value == null) {
-            return null;
-        }
-        return value.toCharArray();
-    }
-
-    public static char[] charArray(StringBuilder value) {
-        if (value == null) {
-            return null;
-        }
-        return value.toString().toCharArray();
-    }
-
-    // 只能是单字节字符串
-    public static byte[] latin1ByteArray(String latin1Value) {
-        if (latin1Value == null) {
-            return null;
-        }
-        if (strByteFunction == null) {
-            return latin1Value.getBytes();
-        }
-        return strByteFunction.apply(latin1Value);
-    }
-
-    // 只能是单字节字符串
-    public static byte[] latin1ByteArray(StringBuilder latin1Value) {
-        if (latin1Value == null) {
-            return null;
-        }
-        if (sbByteFunction == null) {
-            return latin1Value.toString().getBytes();
-        }
-        return sbByteFunction.apply(latin1Value);
     }
 
     public static ByteBuffer encodeUTF8(final ByteBuffer buffer, final char[] array) {
@@ -4967,7 +4928,23 @@ public final class Utility {
         if (value == null) {
             return -1;
         }
-        return encodeUTF8Length(value.toCharArray());
+        char c;
+        int size = 0;
+        final String str = value;
+        final int limit = str.length();
+        for (int i = 0; i < limit; i++) {
+            c = str.charAt(i);
+            if (c < 0x80) {
+                size++;
+            } else if (c < 0x800) {
+                size += 2;
+            } else if (Character.isSurrogate(c)) {
+                size += 2;
+            } else {
+                size += 3;
+            }
+        }
+        return size;
     }
 
     public static int encodeUTF8Length(final char[] text) {
@@ -4992,6 +4969,54 @@ public final class Utility {
             }
         }
         return size;
+    }
+
+    public static char[] charArray(StringBuilder value) {
+        if (value == null) {
+            return null;
+        }
+        return value.toString().toCharArray();
+    }
+
+    public static boolean isLatin1(String value) {
+        if (value == null) {
+            return true;
+        }
+        if (strLatin1Function != null) {
+            return strLatin1Function.test(value); // LATIN1:0  UTF16:1
+        }
+        char[] chs = charArray(value);
+        for (char ch : chs) {
+            if (ch >= 0x80) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // 只能是单字节字符串
+    public static byte[] latin1ByteArray(String latin1Value) {
+        if (latin1Value == null) {
+            return null;
+        }
+        if (strByteFunction == null) {
+            return latin1Value.getBytes();
+        }
+        return strByteFunction.apply(latin1Value);
+    }
+
+    public static byte[] utf16ByteArray(String value) {
+        if (value == null || strByteFunction == null) {
+            return null;
+        }
+        return strByteFunction.apply(value);
+    }
+
+    public static char[] charArray(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value.toCharArray();
     }
 
     /**

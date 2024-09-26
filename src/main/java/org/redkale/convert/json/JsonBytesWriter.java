@@ -444,7 +444,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             writeEscapeLatinString(quote, Utility.latin1ByteArray(value));
             return;
         }
-        byte[] utf16s = Utility.byteUTF16Array(value);
+        byte[] utf16s = Utility.utf16ByteArray(value);
         if (utf16s != null) { // JDK9+
             writeEscapeUTF16String(quote, utf16s);
             return;
