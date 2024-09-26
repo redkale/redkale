@@ -4,16 +4,17 @@
  */
 package org.redkale.convert.pb;
 
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Collection;
+import java.util.concurrent.atomic.*;
 import org.redkale.convert.SimpledCoder;
-import org.redkale.util.Utility;
+import org.redkale.util.*;
 
 /**
  *
  * @author zhangjx
  */
-public class ProtobufCoders {
+public abstract class ProtobufCoders {
+    
     private ProtobufCoders() {
         // do nothing
     }
@@ -304,6 +305,167 @@ public class ProtobufCoders {
         @Override
         public AtomicLong[] convertFrom(ProtobufReader in) {
             return in.readAtomicLongs();
+        }
+    }
+
+    public static class ProtobufBoolCollectionSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<Boolean>> implements ProtobufPrimitivable {
+
+        private final Creator<? extends Collection> creator;
+
+        public ProtobufBoolCollectionSimpledCoder(Creator<? extends Collection> creator) {
+            this.creator = creator;
+        }
+
+        @Override
+        public void convertTo(ProtobufWriter out, Collection<Boolean> values) {
+            out.writeBools(values);
+        }
+
+        @Override
+        public Collection<Boolean> convertFrom(ProtobufReader in) {
+            return in.readBools(creator);
+        }
+    }
+
+    public static class ProtobufByteCollectionSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<Byte>> implements ProtobufPrimitivable {
+
+        private final Creator<? extends Collection> creator;
+
+        public ProtobufByteCollectionSimpledCoder(Creator<? extends Collection> creator) {
+            this.creator = creator;
+        }
+
+        @Override
+        public void convertTo(ProtobufWriter out, Collection<Byte> values) {
+            out.writeBytes(values);
+        }
+
+        @Override
+        public Collection<Byte> convertFrom(ProtobufReader in) {
+            return in.readBytes(creator);
+        }
+    }
+
+    public static class ProtobufCharCollectionSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<Character>>
+            implements ProtobufPrimitivable {
+
+        private final Creator<? extends Collection> creator;
+
+        public ProtobufCharCollectionSimpledCoder(Creator<? extends Collection> creator) {
+            this.creator = creator;
+        }
+
+        @Override
+        public void convertTo(ProtobufWriter out, Collection<Character> values) {
+            out.writeChars(values);
+        }
+
+        @Override
+        public Collection<Character> convertFrom(ProtobufReader in) {
+            return in.readChars(creator);
+        }
+    }
+
+    public static class ProtobufShortCollectionSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<Short>> implements ProtobufPrimitivable {
+
+        private final Creator<? extends Collection> creator;
+
+        public ProtobufShortCollectionSimpledCoder(Creator<? extends Collection> creator) {
+            this.creator = creator;
+        }
+
+        @Override
+        public void convertTo(ProtobufWriter out, Collection<Short> values) {
+            out.writeShorts(values);
+        }
+
+        @Override
+        public Collection<Short> convertFrom(ProtobufReader in) {
+            return in.readShorts(creator);
+        }
+    }
+
+    public static class ProtobufIntCollectionSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<Integer>> implements ProtobufPrimitivable {
+
+        private final Creator<? extends Collection> creator;
+
+        public ProtobufIntCollectionSimpledCoder(Creator<? extends Collection> creator) {
+            this.creator = creator;
+        }
+
+        @Override
+        public void convertTo(ProtobufWriter out, Collection<Integer> values) {
+            out.writeInts(values);
+        }
+
+        @Override
+        public Collection<Integer> convertFrom(ProtobufReader in) {
+            return in.readInts(creator);
+        }
+    }
+
+    public static class ProtobufFloatCollectionSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<Float>> implements ProtobufPrimitivable {
+
+        private final Creator<? extends Collection> creator;
+
+        public ProtobufFloatCollectionSimpledCoder(Creator<? extends Collection> creator) {
+            this.creator = creator;
+        }
+
+        @Override
+        public void convertTo(ProtobufWriter out, Collection<Float> values) {
+            out.writeFloats(values);
+        }
+
+        @Override
+        public Collection<Float> convertFrom(ProtobufReader in) {
+            return in.readFloats(creator);
+        }
+    }
+
+    public static class ProtobufLongCollectionSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<Long>> implements ProtobufPrimitivable {
+
+        private final Creator<? extends Collection> creator;
+
+        public ProtobufLongCollectionSimpledCoder(Creator<? extends Collection> creator) {
+            this.creator = creator;
+        }
+
+        @Override
+        public void convertTo(ProtobufWriter out, Collection<Long> values) {
+            out.writeLongs(values);
+        }
+
+        @Override
+        public Collection<Long> convertFrom(ProtobufReader in) {
+            return in.readLongs(creator);
+        }
+    }
+
+    public static class ProtobufDoubleCollectionSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<Double>> implements ProtobufPrimitivable {
+
+        private final Creator<? extends Collection> creator;
+
+        public ProtobufDoubleCollectionSimpledCoder(Creator<? extends Collection> creator) {
+            this.creator = creator;
+        }
+
+        @Override
+        public void convertTo(ProtobufWriter out, Collection<Double> values) {
+            out.writeDoubles(values);
+        }
+
+        @Override
+        public Collection<Double> convertFrom(ProtobufReader in) {
+            return in.readDoubles(creator);
         }
     }
 }

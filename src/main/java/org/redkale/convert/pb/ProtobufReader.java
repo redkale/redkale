@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import org.redkale.convert.*;
+import org.redkale.util.Creator;
 
 /** @author zhangjx */
 public class ProtobufReader extends Reader {
@@ -224,6 +225,15 @@ public class ProtobufReader extends Reader {
         return data;
     }
 
+    public Collection<Boolean> readBools(Creator<? extends Collection> creator) {
+        int size = readRawVarint32();
+        Collection<Boolean> data = creator.create();
+        for (int i = 0; i < size; i++) {
+            data.add(readBoolean());
+        }
+        return data;
+    }
+
     @Override
     public final byte readByte() {
         return (byte) readInt();
@@ -231,6 +241,14 @@ public class ProtobufReader extends Reader {
 
     public byte[] readBytes() {
         return readByteArray();
+    }
+
+    public Collection<Byte> readBytes(Creator<? extends Collection> creator) {
+        Collection<Byte> data = creator.create();
+        for (byte b : readByteArray()) {
+            data.add(b);
+        }
+        return data;
     }
 
     @Override
@@ -253,6 +271,17 @@ public class ProtobufReader extends Reader {
         return rs;
     }
 
+    public Collection<Character> readChars(Creator<? extends Collection> creator) {
+        Collection<Character> data = creator.create();
+        int len = readRawVarint32();
+        while (len > 0) {
+            char val = readChar();
+            data.add(val);
+            len -= ProtobufFactory.computeSInt32SizeNoTag(val);
+        }
+        return data;
+    }
+
     @Override
     public final short readShort() {
         return (short) readInt();
@@ -271,6 +300,17 @@ public class ProtobufReader extends Reader {
             rs[i] = list.get(i);
         }
         return rs;
+    }
+
+    public Collection<Short> readShorts(Creator<? extends Collection> creator) {
+        Collection<Short> data = creator.create();
+        int len = readRawVarint32();
+        while (len > 0) {
+            short val = readShort();
+            data.add(val);
+            len -= ProtobufFactory.computeSInt32SizeNoTag(val);
+        }
+        return data;
     }
 
     @Override
@@ -294,6 +334,17 @@ public class ProtobufReader extends Reader {
         return rs;
     }
 
+    public Collection<Integer> readInts(Creator<? extends Collection> creator) {
+        Collection<Integer> data = creator.create();
+        int len = readRawVarint32();
+        while (len > 0) {
+            int val = readInt();
+            data.add(val);
+            len -= ProtobufFactory.computeSInt32SizeNoTag(val);
+        }
+        return data;
+    }
+
     public AtomicInteger[] readAtomicIntegers() {
         int len = readRawVarint32();
         List<AtomicInteger> list = new ArrayList<>(len);
@@ -303,6 +354,17 @@ public class ProtobufReader extends Reader {
             len -= ProtobufFactory.computeSInt32SizeNoTag(val);
         }
         return list.toArray(new AtomicInteger[list.size()]);
+    }
+
+    public Collection<AtomicInteger> readAtomicIntegers(Creator<? extends Collection> creator) {
+        Collection<AtomicInteger> data = creator.create();
+        int len = readRawVarint32();
+        while (len > 0) {
+            int val = readInt();
+            data.add(new AtomicInteger(val));
+            len -= ProtobufFactory.computeSInt32SizeNoTag(val);
+        }
+        return data;
     }
 
     @Override
@@ -317,6 +379,15 @@ public class ProtobufReader extends Reader {
             rs[i] = readFloat();
         }
         return rs;
+    }
+
+    public Collection<Float> readFloats(Creator<? extends Collection> creator) {
+        Collection<Float> data = creator.create();
+        int len = readRawVarint32() / 4;
+        for (int i = 0; i < len; i++) {
+            data.add(readFloat());
+        }
+        return data;
     }
 
     @Override
@@ -340,6 +411,17 @@ public class ProtobufReader extends Reader {
         return rs;
     }
 
+    public Collection<Long> readLongs(Creator<? extends Collection> creator) {
+        Collection<Long> data = creator.create();
+        int len = readRawVarint32();
+        while (len > 0) {
+            long val = readLong();
+            data.add(val);
+            len -= ProtobufFactory.computeSInt64SizeNoTag(val);
+        }
+        return data;
+    }
+
     public AtomicLong[] readAtomicLongs() {
         int len = readRawVarint32();
         List<AtomicLong> list = new ArrayList<>(len);
@@ -349,6 +431,17 @@ public class ProtobufReader extends Reader {
             len -= ProtobufFactory.computeSInt64SizeNoTag(val);
         }
         return list.toArray(new AtomicLong[list.size()]);
+    }
+
+    public Collection<AtomicLong> readAtomicLongs(Creator<? extends Collection> creator) {
+        Collection<AtomicLong> data = creator.create();
+        int len = readRawVarint32();
+        while (len > 0) {
+            long val = readLong();
+            data.add(new AtomicLong(val));
+            len -= ProtobufFactory.computeSInt64SizeNoTag(val);
+        }
+        return data;
     }
 
     @Override
@@ -363,6 +456,15 @@ public class ProtobufReader extends Reader {
             rs[i] = readDouble();
         }
         return rs;
+    }
+
+    public Collection<Double> readDoubles(Creator<? extends Collection> creator) {
+        Collection<Double> data = creator.create();
+        int len = readRawVarint32() / 8;
+        for (int i = 0; i < len; i++) {
+            data.add(readDouble());
+        }
+        return data;
     }
 
     @Override

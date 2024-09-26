@@ -7,7 +7,8 @@ package org.redkale.convert;
 
 import java.lang.reflect.*;
 import java.util.*;
-import java.util.concurrent.locks.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 import org.redkale.annotation.Nullable;
 import org.redkale.convert.ext.StringSimpledCoder;
 import org.redkale.util.*;
@@ -385,6 +386,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                 first = false;
             }
             objin.readObjectE(typeClass);
+            offerReader(in, objin);
             return result;
         } else { // 带参数的构造函数
             final DeMember<R, T, ?>[] constructorFields = this.creatorConstructorMembers;
@@ -414,6 +416,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                 first = false;
             }
             objin.readObjectE(typeClass);
+            offerReader(in, objin);
             if (this.creator == null) {
                 return null;
             }
@@ -440,6 +443,10 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
 
     protected R objectReader(R in) {
         return in;
+    }
+
+    protected void offerReader(R parent, R out) {
+        // do nothing
     }
 
     protected Object readDeMemberValue(R in, DeMember member, boolean first) {
