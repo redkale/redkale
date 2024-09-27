@@ -30,6 +30,7 @@ public class ArrayEncoder<W extends Writer, T> implements Encodeable<W, T[]> {
 
     protected final Encodeable<W, Object> componentEncoder;
 
+    // 元素类型是final的, final的元素类型不用判断每个元素类型是否与数组类型一直
     protected final boolean subTypeFinal;
 
     protected volatile boolean inited = false;
@@ -101,11 +102,11 @@ public class ArrayEncoder<W extends Writer, T> implements Encodeable<W, T[]> {
             out.writeArrayE();
             return;
         }
-        Encodeable<W, Object> itemEncoder = this.componentEncoder;
-        if (subTypeFinal) {
+        Encodeable itemEncoder = this.componentEncoder;
+        if (subTypeFinal) { // 元素类型是final的，说明所有元素都是同一个类型
             out.writeArrayB(value.length, itemEncoder, value);
             for (int i = 0; ; i++) {
-                writeMemberValue(out, member, itemEncoder, value[i], i);
+                itemEncoder.convertTo(out, value[i]);
                 if (i == iMax) {
                     break;
                 }
@@ -116,14 +117,8 @@ public class ArrayEncoder<W extends Writer, T> implements Encodeable<W, T[]> {
             final Type comp = this.componentType;
             for (int i = 0; ; i++) {
                 Object v = value[i];
-                writeMemberValue(
-                        out,
-                        member,
-                        ((v != null && (v.getClass() == comp || out.specificObjectType() == comp))
-                                ? itemEncoder
-                                : anyEncoder),
-                        v,
-                        i);
+                ((v != null && (v.getClass() == comp || out.specificObjectType() == comp)) ? itemEncoder : anyEncoder)
+                        .convertTo(out, v);
                 if (i == iMax) {
                     break;
                 }
@@ -131,10 +126,6 @@ public class ArrayEncoder<W extends Writer, T> implements Encodeable<W, T[]> {
             }
         }
         out.writeArrayE();
-    }
-
-    protected void writeMemberValue(W out, EnMember member, Encodeable<W, Object> encoder, Object value, int index) {
-        encoder.convertTo(out, value);
     }
 
     @Override

@@ -82,27 +82,24 @@ public class CollectionEncoder<W extends Writer, T> implements Encodeable<W, Col
             out.writeNull();
             return;
         }
+        Encodeable itemEncoder = this.componentEncoder;
         if (value.isEmpty()) {
-            out.writeArrayB(0, componentEncoder, value);
+            out.writeArrayB(0, itemEncoder, value);
             out.writeArrayE();
             return;
         }
-        out.writeArrayB(value.size(), componentEncoder, value);
+        out.writeArrayB(value.size(), itemEncoder, value);
         boolean first = true;
         for (Object v : value) {
             if (!first) {
                 out.writeArrayMark();
             }
-            writeMemberValue(out, member, v, first);
+            itemEncoder.convertTo(out, v);
             if (first) {
                 first = false;
             }
         }
         out.writeArrayE();
-    }
-
-    protected void writeMemberValue(W out, EnMember member, Object value, boolean first) {
-        componentEncoder.convertTo(out, value);
     }
 
     @Override

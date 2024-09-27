@@ -6,6 +6,7 @@
 package org.redkale.convert.pb;
 
 import java.lang.reflect.Type;
+import java.util.Collection;
 import org.redkale.convert.*;
 
 /**
@@ -14,25 +15,35 @@ import org.redkale.convert.*;
  */
 public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWriter, T> {
 
+    protected final boolean componentSimpled;
+
     public ProtobufCollectionEncoder(ProtobufFactory factory, Type type) {
         super(factory, type);
+        this.componentSimpled = getComponentEncoder() instanceof SimpledCoder;
     }
 
     @Override
-    protected void writeMemberValue(ProtobufWriter out, EnMember member, Object item, boolean first) {
-        if (member != null) {
+    public void convertTo(ProtobufWriter out, EnMember member, Collection<T> value) {
+        this.checkInited();
+        if (value == null || value.isEmpty()) {
+            return;
+        }
+        Encodeable itemEncoder = this.componentEncoder;
+        out.writeArrayB(value.size(), itemEncoder, value);
+        for (T item : value) {
             out.writeFieldName(member);
+            if (item == null) {
+                out.writeUInt32(0);
+            } else if (componentSimpled) {
+                itemEncoder.convertTo(out, item);
+            } else {
+                ProtobufWriter tmp = out.pollChild();
+                itemEncoder.convertTo(tmp, item);
+                out.writeLength(tmp.count());
+                out.writeTo(tmp.toArray());
+                out.offerChild(tmp);
+            }
         }
-        if (item == null) {
-            out.writeUInt32(0);
-        } else if (item instanceof CharSequence) {
-            componentEncoder.convertTo(out, item);
-        } else {
-            ProtobufWriter tmp = out.pollChild();
-            componentEncoder.convertTo(tmp, item);
-            out.writeLength(tmp.count());
-            out.writeTo(tmp.toArray());
-            out.offerChild(tmp);
-        }
+        out.writeArrayE();
     }
 }

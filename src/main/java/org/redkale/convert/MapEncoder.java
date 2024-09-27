@@ -7,6 +7,7 @@ package org.redkale.convert;
 
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.*;
 import java.util.function.BiFunction;
 
@@ -95,28 +96,23 @@ public class MapEncoder<W extends Writer, K, V> implements Encodeable<W, Map<K, 
         }
         Set<String> ignoreColumns = this.ignoreMapColumns;
         BiFunction<K, V, V> mapFieldFunc = (BiFunction) out.mapFieldFunc;
-        out.writeMapB(values.size(), (Encodeable) keyEncoder, (Encodeable) valueEncoder, value);
-        boolean first = true;
-        for (Map.Entry<K, V> en : values.entrySet()) {
-            if (ignoreColumns != null && ignoreColumns.contains(en.getKey())) {
-                continue;
+        Encodeable kencoder = this.keyEncoder;
+        Encodeable vencoder = this.valueEncoder;
+        out.writeMapB(values.size(), kencoder, vencoder, value);
+        AtomicBoolean first = new AtomicBoolean(true);
+        values.forEach((key, val) -> {
+            if (ignoreColumns == null || !ignoreColumns.contains(key)) {
+                V v = mapFieldFunc == null ? val : mapFieldFunc.apply(key, val);
+                if (!first.get()) {
+                    out.writeArrayMark();
+                }
+                kencoder.convertTo(out, key);
+                out.writeMapMark();
+                vencoder.convertTo(out, v);
+                first.set(false);
             }
-            V v = mapFieldFunc == null ? en.getValue() : mapFieldFunc.apply(en.getKey(), en.getValue());
-            if (!first) {
-                out.writeArrayMark();
-            }
-            writeMemberValue(out, member, en.getKey(), v, first);
-            if (first) {
-                first = false;
-            }
-        }
+        });
         out.writeMapE();
-    }
-
-    protected void writeMemberValue(W out, EnMember member, K key, V value, boolean first) {
-        keyEncoder.convertTo(out, key);
-        out.writeMapMark();
-        valueEncoder.convertTo(out, value);
     }
 
     @Override

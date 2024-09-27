@@ -82,28 +82,25 @@ public class StreamEncoder<W extends Writer, T> implements Encodeable<W, Stream<
             out.writeNull();
             return;
         }
+        Encodeable itemEncoder = this.componentEncoder;
         Object[] array = value.toArray();
         if (array.length == 0) {
-            out.writeArrayB(0, componentEncoder, array);
+            out.writeArrayB(0, itemEncoder, array);
             out.writeArrayE();
             return;
         }
-        out.writeArrayB(array.length, componentEncoder, array);
+        out.writeArrayB(array.length, itemEncoder, array);
         boolean first = true;
         for (Object v : array) {
             if (!first) {
                 out.writeArrayMark();
             }
-            writeMemberValue(out, member, v, first);
+            itemEncoder.convertTo(out, v);
             if (first) {
                 first = false;
             }
         }
         out.writeArrayE();
-    }
-
-    protected void writeMemberValue(W out, EnMember member, Object value, boolean first) {
-        componentEncoder.convertTo(out, value);
     }
 
     @Override

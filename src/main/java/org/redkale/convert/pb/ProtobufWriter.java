@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.*;
-import java.util.function.Consumer;
+import java.util.function.*;
 import java.util.stream.Stream;
 import org.redkale.annotation.ClassDepends;
 import org.redkale.convert.*;
@@ -111,6 +111,10 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         this.features = out.features;
         this.enumtostring = out.enumtostring;
         return this;
+    }
+
+    protected BiFunction mapFieldFunc() {
+        return mapFieldFunc;
     }
 
     public ProtobufWriter() {

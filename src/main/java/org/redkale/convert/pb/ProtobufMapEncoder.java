@@ -6,6 +6,8 @@
 package org.redkale.convert.pb;
 
 import java.lang.reflect.Type;
+import java.util.*;
+import java.util.function.BiFunction;
 import org.redkale.convert.*;
 
 /**
@@ -27,17 +29,34 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V> {
     }
 
     @Override
-    protected void writeMemberValue(ProtobufWriter out, EnMember member, K key, V value, boolean first) {
-        ProtobufWriter tmp = out.pollChild();
-        if (member != null) {
-            out.writeFieldName(member);
+    public void convertTo(ProtobufWriter out, EnMember member, Map<K, V> value) {
+        this.checkInited();
+        final Map<K, V> values = value;
+        if (values == null || values.isEmpty()) {
+            out.writeNull();
+            return;
         }
-        tmp.writeTag(keyTag);
-        keyEncoder.convertTo(tmp, key);
-        tmp.writeTag(valTag);
-        valueEncoder.convertTo(tmp, value);
-        out.writeLength(tmp.count());
-        out.writeTo(tmp.toArray());
-        out.offerChild(tmp);
+        Set<String> ignoreColumns = this.ignoreMapColumns;
+        BiFunction<K, V, V> mapFieldFunc = out.mapFieldFunc();
+        Encodeable kencoder = this.keyEncoder;
+        Encodeable vencoder = this.valueEncoder;
+        out.writeMapB(values.size(), kencoder, vencoder, value);
+        values.forEach((key, val) -> {
+            if (ignoreColumns == null || !ignoreColumns.contains(key)) {
+                V v = mapFieldFunc == null ? val : mapFieldFunc.apply(key, val);
+                if (v != null) {
+                    out.writeFieldName(member);
+                    ProtobufWriter tmp = out.pollChild();
+                    tmp.writeTag(keyTag);
+                    kencoder.convertTo(tmp, key);
+                    tmp.writeTag(valTag);
+                    vencoder.convertTo(tmp, v);
+                    out.writeLength(tmp.count());
+                    out.writeTo(tmp.toArray());
+                    out.offerChild(tmp);
+                }
+            }
+        });
+        out.writeMapE();
     }
 }
