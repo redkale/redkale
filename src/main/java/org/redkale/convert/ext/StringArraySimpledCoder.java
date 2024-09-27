@@ -44,20 +44,14 @@ public final class StringArraySimpledCoder<R extends Reader, W extends Writer> e
     }
 
     public String[] convertFrom(R in, DeMember member) {
-        int len = in.readArrayB(member, null, StringSimpledCoder.instance);
-        int contentLength = -1;
+        int len = in.readArrayB(member, StringSimpledCoder.instance);
         if (len == Reader.SIGN_NULL) {
             return null;
         }
-        if (len == Reader.SIGN_NOLENBUTBYTES) {
-            contentLength = in.readMemberContentLength(null, StringSimpledCoder.instance);
-            len = Reader.SIGN_NOLENGTH;
-        }
-        if (len == Reader.SIGN_NOLENGTH) {
+        if (len == Reader.SIGN_VARIABLE) {
             int size = 0;
             String[] data = new String[8];
-            int startPosition = in.position();
-            while (in.hasNext(startPosition, contentLength)) {
+            while (in.hasNext()) {
                 if (size >= data.length) {
                     String[] newdata = new String[data.length + 4];
                     System.arraycopy(data, 0, newdata, 0, size);

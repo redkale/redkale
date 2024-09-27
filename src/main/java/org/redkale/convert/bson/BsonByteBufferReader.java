@@ -5,12 +5,12 @@
  */
 package org.redkale.convert.bson;
 
-import static org.redkale.convert.Reader.SIGN_NULL;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import org.redkale.convert.*;
 import org.redkale.convert.ext.ByteSimpledCoder;
+import static org.redkale.convert.Reader.SIGN_NULL;
 
 /**
  * 以ByteBuffer为数据载体的BsonReader

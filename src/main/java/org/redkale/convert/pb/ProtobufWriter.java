@@ -326,9 +326,10 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         // do nothing
     }
 
+    // 被ObjectEncoder调用
     @Override
     public void writeFieldName(EnMember member, String fieldName, Type fieldType, int fieldPos) {
-        writeTag(member.getTag());
+        writeTag(member != null ? member.getTag() : fieldPos);
     }
 
     @Override

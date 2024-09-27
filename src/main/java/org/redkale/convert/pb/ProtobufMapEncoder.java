@@ -46,11 +46,13 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V> {
                 V v = mapFieldFunc == null ? val : mapFieldFunc.apply(key, val);
                 if (v != null) {
                     out.writeFieldName(member);
+
                     ProtobufWriter tmp = out.pollChild();
                     tmp.writeTag(keyTag);
                     kencoder.convertTo(tmp, key);
                     tmp.writeTag(valTag);
                     vencoder.convertTo(tmp, v);
+
                     out.writeLength(tmp.count());
                     out.writeTo(tmp.toArray());
                     out.offerChild(tmp);

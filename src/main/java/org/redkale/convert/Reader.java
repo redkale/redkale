@@ -20,12 +20,19 @@ public abstract class Reader {
         MAP;
     }
 
+    /**
+     * 集合对象为null
+     *
+     * @see #readArrayB(org.redkale.convert.DeMember, org.redkale.convert.Decodeable)
+     */
     public static final short SIGN_NULL = -1;
 
-    public static final short SIGN_NOLENGTH = -2;
-
-    // 目前只适合于protobuf的boolean[]...double[]类型
-    public static final short SIGN_NOLENBUTBYTES = -3;
+    /**
+     * 不确定的长度， 比如解析json数组
+     *
+     * @see #readArrayB(org.redkale.convert.DeMember, org.redkale.convert.Decodeable)
+     */
+    public static final short SIGN_VARIABLE = -2;
 
     /**
      * 设置Reader的内容，通常结合对象池使用
@@ -35,23 +42,11 @@ public abstract class Reader {
     public abstract void prepare(byte[] content);
 
     /**
-     * 是否还存在下个元素或字段 <br>
-     * 注意: 主要用于Array、Collection、Stream或Map等集合对象
-     *
-     * @param startPosition 起始位置
-     * @param contentLength 内容大小， 不确定的传-1
-     * @return 是否还存在下个元素或字段
-     */
-    public abstract boolean hasNext(int startPosition, int contentLength);
-
-    /**
      * 是否还存在下个元素或字段
      *
      * @return 是否还存在下个元素或字段
      */
-    public boolean hasNext() {
-        return hasNext(-1, -1);
-    }
+    public abstract boolean hasNext();
 
     /**
      * 获取当前位置
@@ -59,16 +54,6 @@ public abstract class Reader {
      * @return 当前位置
      */
     public abstract int position();
-
-    /**
-     * 读取字段值内容的字节数 <br>
-     * 只有在readXXXB方法返回SIGN_NOLENBUTBYTES值才会调用此方法
-     *
-     * @param member DeMember
-     * @param decoder Decodeable
-     * @return 内容大小， 不确定返回-1
-     */
-    public abstract int readMemberContentLength(DeMember member, Decodeable decoder);
 
     /** 跳过值(不包含值前面的字段) */
     public abstract void skipValue();
@@ -103,12 +88,13 @@ public abstract class Reader {
     /**
      * 读取数组的开头并返回数组的长度
      *
+     * @see #SIGN_NULL
+     * @see #SIGN_VARIABLE
      * @param member DeMember
-     * @param typevals byte[]
      * @param componentDecoder Decodeable
      * @return 返回数组的长度
      */
-    public abstract int readArrayB(DeMember member, byte[] typevals, Decodeable componentDecoder);
+    public abstract int readArrayB(DeMember member, Decodeable componentDecoder);
 
     /** 读取数组的尾端 */
     public abstract void readArrayE();
@@ -117,12 +103,11 @@ public abstract class Reader {
      * 读取map的开头并返回map的size
      *
      * @param member DeMember
-     * @param typevals byte[]
      * @param keyDecoder Decodeable
      * @param valueDecoder Decodeable
      * @return 返回map的size
      */
-    public abstract int readMapB(DeMember member, byte[] typevals, Decodeable keyDecoder, Decodeable valueDecoder);
+    public abstract int readMapB(DeMember member, Decodeable keyDecoder, Decodeable valueDecoder);
 
     /** 读取数组的尾端 */
     public abstract void readMapE();

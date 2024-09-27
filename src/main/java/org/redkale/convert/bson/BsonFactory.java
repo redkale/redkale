@@ -36,15 +36,15 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
 
     static final Encodeable objectEncoder = instance.loadEncoder(Object.class);
 
-    static final Decodeable skipArrayDecoder = new SkipArrayDecoder(instance, Object[].class);
+    static final Decodeable skipArrayDecoder = new BsonArrayDecoder(instance, Object[].class);
 
     static final Decodeable skipCollectionDecoder =
-            new SkipCollectionDecoder(instance, new TypeToken<Collection<Object>>() {}.getType());
+            new BsonCollectionDecoder(instance, new TypeToken<Collection<Object>>() {}.getType());
 
     static final Decodeable skipStreamDecoder =
-            new SkipStreamDecoder(instance, new TypeToken<Stream<Object>>() {}.getType());
+            new BsonStreamDecoder(instance, new TypeToken<Stream<Object>>() {}.getType());
 
-    static final Decodeable skipMapDecoder = new SkipMapDecoder(instance, Map.class);
+    static final Decodeable skipMapDecoder = new BsonMapDecoder(instance, Map.class);
 
     static {
         instance.register(Serializable.class, objectDecoder);
@@ -118,6 +118,26 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
     @Override
     public BsonFactory createChild(int features) {
         return new BsonFactory(this, features);
+    }
+
+    @Override
+    protected <E> Decodeable<BsonReader, E> createArrayDecoder(Type type) {
+        return new BsonArrayDecoder(this, type);
+    }
+
+    @Override
+    protected <E> Decodeable<BsonReader, E> createCollectionDecoder(Type type) {
+        return new BsonCollectionDecoder(this, type);
+    }
+
+    @Override
+    protected <E> Decodeable<BsonReader, E> createStreamDecoder(Type type) {
+        return new BsonStreamDecoder(this, type);
+    }
+
+    @Override
+    protected <E> Decodeable<BsonReader, E> createMapDecoder(Type type) {
+        return new BsonMapDecoder(this, type);
     }
 
     @Override

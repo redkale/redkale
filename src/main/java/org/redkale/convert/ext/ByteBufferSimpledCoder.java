@@ -41,20 +41,14 @@ public final class ByteBufferSimpledCoder<R extends Reader, W extends Writer> ex
 
     @Override
     public ByteBuffer convertFrom(R in) {
-        int len = in.readArrayB(null, null, ByteSimpledCoder.instance);
-        int contentLength = -1;
+        int len = in.readArrayB(null, ByteSimpledCoder.instance);
         if (len == Reader.SIGN_NULL) {
             return null;
         }
-        if (len == Reader.SIGN_NOLENBUTBYTES) {
-            contentLength = in.readMemberContentLength(null, ByteSimpledCoder.instance);
-            len = Reader.SIGN_NOLENGTH;
-        }
-        if (len == Reader.SIGN_NOLENGTH) {
+        if (len == Reader.SIGN_VARIABLE) {
             int size = 0;
             byte[] data = new byte[8];
-            int startPosition = in.position();
-            while (in.hasNext(startPosition, contentLength)) {
+            while (in.hasNext()) {
                 if (size >= data.length) {
                     byte[] newdata = new byte[data.length + 4];
                     System.arraycopy(data, 0, newdata, 0, size);

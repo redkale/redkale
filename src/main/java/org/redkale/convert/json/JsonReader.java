@@ -6,8 +6,7 @@
 package org.redkale.convert.json;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Objects;
+import java.util.*;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.*;
 import org.redkale.convert.Reader.ValueType;
@@ -299,14 +298,13 @@ public class JsonReader extends Reader {
      * 判断下一个非空白字符是否为{
      *
      * @param member DeMember
-     * @param typevals byte[]
      * @param keyDecoder Decodeable
      * @param valuedecoder Decodeable
-     * @return SIGN_NOLENGTH 或 SIGN_NULL
+     * @return SIGN_VARIABLE 或 SIGN_NULL
      */
     @Override
-    public final int readMapB(DeMember member, byte[] typevals, Decodeable keyDecoder, Decodeable valuedecoder) {
-        return readArrayB(member, typevals, keyDecoder);
+    public final int readMapB(DeMember member, Decodeable keyDecoder, Decodeable valuedecoder) {
+        return readArrayB(member, keyDecoder);
     }
 
     @Override
@@ -318,21 +316,20 @@ public class JsonReader extends Reader {
      * 判断下一个非空白字符是否为[
      *
      * @param member DeMember
-     * @param typevals byte[]
      * @param componentDecoder Decodeable
-     * @return SIGN_NOLENGTH 或 SIGN_NULL
+     * @return SIGN_VARIABLE 或 SIGN_NULL
      */
     @Override
-    public int readArrayB(DeMember member, byte[] typevals, Decodeable componentDecoder) {
+    public int readArrayB(DeMember member, Decodeable componentDecoder) {
         if (this.text.length == 0) {
             return SIGN_NULL;
         }
         char ch = nextGoodChar(true);
         if (ch == '[') {
-            return SIGN_NOLENGTH;
+            return SIGN_VARIABLE;
         }
         if (ch == '{') {
-            return SIGN_NOLENGTH;
+            return SIGN_VARIABLE;
         }
         if (ch == 'n' && text[++position] == 'u' && text[++position] == 'l' && text[++position] == 'l') {
             return SIGN_NULL;
@@ -365,20 +362,13 @@ public class JsonReader extends Reader {
         return this.position;
     }
 
-    @Override
-    public int readMemberContentLength(DeMember member, Decodeable decoder) {
-        return -1;
-    }
-
     /**
      * 判断对象是否存在下一个属性或者数组是否存在下一个元素
      *
-     * @param startPosition 起始位置
-     * @param contentLength 内容大小， 不确定的传-1
      * @return 是否存在
      */
     @Override
-    public final boolean hasNext(int startPosition, int contentLength) {
+    public final boolean hasNext() {
         char ch = nextGoodChar(true);
         if (ch == ',') {
             char nt = nextGoodChar(true);
@@ -730,20 +720,14 @@ public class JsonReader extends Reader {
 
     @Override
     public final byte[] readByteArray() {
-        int len = readArrayB(null, null, null);
-        int contentLength = -1;
+        int len = readArrayB(null, null);
         if (len == Reader.SIGN_NULL) {
             return null;
         }
-        if (len == Reader.SIGN_NOLENBUTBYTES) {
-            contentLength = readMemberContentLength(null, null);
-            len = Reader.SIGN_NOLENGTH;
-        }
-        if (len == Reader.SIGN_NOLENGTH) {
+        if (len == Reader.SIGN_VARIABLE) {
             int size = 0;
             byte[] data = new byte[8];
-            int startPosition = position();
-            while (hasNext(startPosition, contentLength)) {
+            while (hasNext()) {
                 if (size >= data.length) {
                     byte[] newdata = new byte[data.length + 4];
                     System.arraycopy(data, 0, newdata, 0, size);
@@ -755,7 +739,7 @@ public class JsonReader extends Reader {
             byte[] newdata = new byte[size];
             System.arraycopy(data, 0, newdata, 0, size);
             return newdata;
-        } else {
+        } else { // 固定长度
             byte[] values = new byte[len];
             for (int i = 0; i < values.length; i++) {
                 values[i] = readByte();

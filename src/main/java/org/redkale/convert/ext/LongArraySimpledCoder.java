@@ -41,20 +41,14 @@ public final class LongArraySimpledCoder<R extends Reader, W extends Writer> ext
 
     @Override
     public long[] convertFrom(R in) {
-        int len = in.readArrayB(null, null, LongSimpledCoder.instance);
-        int contentLength = -1;
+        int len = in.readArrayB(null, LongSimpledCoder.instance);
         if (len == Reader.SIGN_NULL) {
             return null;
         }
-        if (len == Reader.SIGN_NOLENBUTBYTES) {
-            contentLength = in.readMemberContentLength(null, LongSimpledCoder.instance);
-            len = Reader.SIGN_NOLENGTH;
-        }
-        if (len == Reader.SIGN_NOLENGTH) {
+        if (len == Reader.SIGN_VARIABLE) {
             int size = 0;
             long[] data = new long[8];
-            int startPosition = in.position();
-            while (in.hasNext(startPosition, contentLength)) {
+            while (in.hasNext()) {
                 if (size >= data.length) {
                     long[] newdata = new long[data.length + 4];
                     System.arraycopy(data, 0, newdata, 0, size);

@@ -7,9 +7,9 @@ package org.redkale.convert.bson;
 
 import java.nio.charset.StandardCharsets;
 import org.redkale.convert.*;
-import static org.redkale.convert.Reader.SIGN_NULL;
 import org.redkale.convert.ext.ByteSimpledCoder;
-import org.redkale.util.ObjectPool;
+import org.redkale.util.*;
+import static org.redkale.convert.Reader.SIGN_NULL;
 
 /**
  * BSON数据源
@@ -129,6 +129,7 @@ public class BsonReader extends Reader {
                 break;
             default:
                 Decodeable decoder = BsonFactory.typeEnum(val);
+                System.out.println("val = " + val + ", decoder = " + decoder);
                 if (decoder != null) {
                     decoder.convertFrom(this);
                 }
@@ -139,7 +140,7 @@ public class BsonReader extends Reader {
     @Override
     public final String readObjectB(final Class clazz) {
         final String newcls = readClassName();
-        if (newcls != null && !newcls.isEmpty()) {
+        if (Utility.isNotEmpty(newcls)) {
             return newcls;
         }
         short bt = readShort();
@@ -166,6 +167,10 @@ public class BsonReader extends Reader {
     }
 
     @Override
+    public int readMapB(DeMember member, Decodeable keyDecoder, Decodeable valueDecoder) {
+        return readMapB(member, null, keyDecoder, valueDecoder);
+    }
+
     public int readMapB(DeMember member, byte[] typevals, Decodeable keyDecoder, Decodeable valueDecoder) {
         short bt = readShort();
         if (bt == Reader.SIGN_NULL) {
@@ -186,12 +191,11 @@ public class BsonReader extends Reader {
         // do nothing
     }
 
-    /**
-     * 判断下一个非空白字节是否为[
-     *
-     * @return 数组长度或SIGN_NULL
-     */
     @Override
+    public int readArrayB(DeMember member, Decodeable componentDecoder) {
+        return readArrayB(member, null, componentDecoder);
+    }
+
     public int readArrayB(DeMember member, byte[] typevals, Decodeable componentDecoder) { // componentDecoder可能为null
         short bt = readShort();
         if (bt == Reader.SIGN_NULL) {
@@ -223,20 +227,13 @@ public class BsonReader extends Reader {
         return this.position;
     }
 
-    @Override
-    public int readMemberContentLength(DeMember member, Decodeable decoder) {
-        return -1;
-    }
-
     /**
      * 判断对象是否存在下一个属性或者数组是否存在下一个元素
      *
-     * @param startPosition 起始位置
-     * @param contentLength 内容大小， 不确定的传-1
      * @return 是否存在
      */
     @Override
-    public boolean hasNext(int startPosition, int contentLength) {
+    public boolean hasNext() {
         byte b = readByte();
         if (b == SIGN_HASNEXT) {
             return true;
@@ -269,19 +266,13 @@ public class BsonReader extends Reader {
     @Override
     public final byte[] readByteArray() {
         int len = readArrayB(null, null, null);
-        int contentLength = -1;
         if (len == Reader.SIGN_NULL) {
             return null;
         }
-        if (len == Reader.SIGN_NOLENBUTBYTES) {
-            contentLength = readMemberContentLength(null, null);
-            len = Reader.SIGN_NOLENGTH;
-        }
-        if (len == Reader.SIGN_NOLENGTH) {
+        if (len == Reader.SIGN_VARIABLE) {
             int size = 0;
             byte[] data = new byte[8];
-            int startPosition = position();
-            while (hasNext(startPosition, contentLength)) {
+            while (hasNext()) {
                 if (size >= data.length) {
                     byte[] newdata = new byte[data.length + 4];
                     System.arraycopy(data, 0, newdata, 0, size);
@@ -330,7 +321,7 @@ public class BsonReader extends Reader {
                 | (((long) content[++this.position] & 0xff) << 24)
                 | (((long) content[++this.position] & 0xff) << 16)
                 | (((long) content[++this.position] & 0xff) << 8)
-                | (((long) content[++this.position] & 0xff)));
+                | ((long) content[++this.position] & 0xff));
     }
 
     @Override

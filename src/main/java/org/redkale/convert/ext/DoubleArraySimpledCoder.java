@@ -41,20 +41,14 @@ public final class DoubleArraySimpledCoder<R extends Reader, W extends Writer> e
 
     @Override
     public double[] convertFrom(R in) {
-        int len = in.readArrayB(null, null, DoubleSimpledCoder.instance);
-        int contentLength = -1;
+        int len = in.readArrayB(null, DoubleSimpledCoder.instance);
         if (len == Reader.SIGN_NULL) {
             return null;
         }
-        if (len == Reader.SIGN_NOLENBUTBYTES) {
-            contentLength = in.readMemberContentLength(null, DoubleSimpledCoder.instance);
-            len = Reader.SIGN_NOLENGTH;
-        }
-        if (len == Reader.SIGN_NOLENGTH) {
+        if (len == Reader.SIGN_VARIABLE) {
             int size = 0;
             double[] data = new double[8];
-            int startPosition = in.position();
-            while (in.hasNext(startPosition, contentLength)) {
+            while (in.hasNext()) {
                 if (size >= data.length) {
                     double[] newdata = new double[data.length + 4];
                     System.arraycopy(data, 0, newdata, 0, size);

@@ -160,7 +160,7 @@ public class JsonByteBufferReader extends JsonReader {
     /**
      * 判断下一个非空白字符是否为{
      *
-     * @return SIGN_NOLENGTH 或 SIGN_NULL
+     * @return SIGN_VARIABLE 或 SIGN_NULL
      */
     @Override
     public final String readObjectB(final Class clazz) {
@@ -181,15 +181,14 @@ public class JsonByteBufferReader extends JsonReader {
      * 判断下一个非空白字符是否为[
      *
      * @param member DeMember
-     * @param typevals byte[]
      * @param decoder Decodeable
-     * @return SIGN_NOLENGTH 或 SIGN_NULL
+     * @return SIGN_VARIABLE 或 SIGN_NULL
      */
     @Override
-    public final int readArrayB(DeMember member, byte[] typevals, Decodeable decoder) {
+    public final int readArrayB(DeMember member, Decodeable decoder) {
         char ch = nextGoodChar(true);
         if (ch == '[' || ch == '{') {
-            return SIGN_NOLENGTH;
+            return SIGN_VARIABLE;
         }
         if (ch == 'n' && nextChar() == 'u' && nextChar() == 'l' && nextChar() == 'l') {
             return SIGN_NULL;

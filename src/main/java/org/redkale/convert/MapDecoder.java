@@ -121,68 +121,30 @@ public class MapDecoder<R extends Reader, K, V> implements TagDecodeable<R, Map<
     @Override
     public Map<K, V> convertFrom(R in, DeMember member) {
         this.checkInited();
-        byte[] typevals = new byte[2];
-        int len = in.readMapB(member, typevals, this.keyDecoder, this.valueDecoder);
-        int contentLength = -1;
+        Decodeable<R, K> kdecoder = this.keyDecoder;
+        Decodeable<R, V> vdecoder = this.valueDecoder;
+        int len = in.readMapB(member, kdecoder, vdecoder);
         if (len == Reader.SIGN_NULL) {
             return null;
         }
-        if (len == Reader.SIGN_NOLENBUTBYTES) {
-            contentLength = in.readMemberContentLength(member, null);
-            len = Reader.SIGN_NOLENGTH;
-        }
         final Map<K, V> result = this.creator.create();
-        boolean first = true;
-        Decodeable<R, K> kdecoder = getKeyDecoder(this.keyDecoder, typevals);
-        Decodeable<R, V> vdecoder = getValueDecoder(this.valueDecoder, typevals);
-        if (len == Reader.SIGN_NOLENGTH) {
-            int startPosition = in.position();
-            while (hasNext(in, member, startPosition, contentLength, first)) {
-                R entryReader = getEntryReader(in, member, first);
-                if (entryReader == null) {
-                    break;
-                }
-                K key = readKeyMember(entryReader, member, kdecoder, first);
-                entryReader.readBlank();
-                V value = readValueMember(entryReader, member, vdecoder, first);
-                result.put(key, value);
-                first = false;
-            }
-        } else {
-            for (int i = 0; i < len; i++) {
-                K key = readKeyMember(in, member, kdecoder, first);
+        if (len == Reader.SIGN_VARIABLE) {
+            while (in.hasNext()) {
+                K key = kdecoder.convertFrom(in);
                 in.readBlank();
-                V value = readValueMember(in, member, vdecoder, first);
+                V value = vdecoder.convertFrom(in);
                 result.put(key, value);
-                first = false;
+            }
+        } else { // 固定长度
+            for (int i = 0; i < len; i++) {
+                K key = kdecoder.convertFrom(in);
+                in.readBlank();
+                V value = vdecoder.convertFrom(in);
+                result.put(key, value);
             }
         }
         in.readMapE();
         return result;
-    }
-
-    protected boolean hasNext(R in, DeMember member, int startPosition, int contentLength, boolean first) {
-        return in.hasNext(startPosition, contentLength);
-    }
-
-    protected Decodeable<R, K> getKeyDecoder(Decodeable<R, K> decoder, byte[] typevals) {
-        return decoder;
-    }
-
-    protected Decodeable<R, V> getValueDecoder(Decodeable<R, V> decoder, byte[] typevals) {
-        return decoder;
-    }
-
-    protected R getEntryReader(R in, DeMember member, boolean first) {
-        return in;
-    }
-
-    protected K readKeyMember(R in, DeMember member, Decodeable<R, K> decoder, boolean first) {
-        return decoder.convertFrom(in);
-    }
-
-    protected V readValueMember(R in, DeMember member, Decodeable<R, V> decoder, boolean first) {
-        return decoder.convertFrom(in);
     }
 
     @Override

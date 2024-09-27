@@ -39,16 +39,15 @@ public class JsonMultiArrayDecoder implements Decodeable<JsonReader, Object[]> {
     }
 
     public Object[] convertFrom(JsonReader in, DeMember member) {
-        int len = in.readArrayB(member, null, null);
+        int len = in.readArrayB(member, null);
         if (len == Reader.SIGN_NULL) {
             return null;
         }
-        // len must be Reader.SIGN_NOLENGTH
+        // len must be Reader.SIGN_VARIABLE
         final List<Object> result = new ArrayList();
-        int startPosition = in.position();
         int index = -1;
         final Decodeable[] coders = this.decoders;
-        while (in.hasNext(startPosition, -1)) {
+        while (in.hasNext()) {
             result.add(coders[++index % coders.length].convertFrom(in));
         }
         in.readArrayE();

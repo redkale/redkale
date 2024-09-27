@@ -79,52 +79,23 @@ public class StreamDecoder<R extends Reader, T> implements TagDecodeable<R, Stre
 
     public Stream<T> convertFrom(R in, DeMember member) {
         this.checkInited();
-        byte[] typevals = new byte[1];
-        int len = in.readArrayB(member, typevals, this.componentDecoder);
-        int contentLength = -1;
+        final Decodeable<R, T> itemDecoder = this.componentDecoder;
+        int len = in.readArrayB(member, itemDecoder);
         if (len == Reader.SIGN_NULL) {
             return null;
         }
-        if (len == Reader.SIGN_NOLENBUTBYTES) {
-            contentLength = in.readMemberContentLength(member, this.componentDecoder);
-            len = Reader.SIGN_NOLENGTH;
-        }
-        final Decodeable<R, T> localDecoder = getComponentDecoder(this.componentDecoder, typevals);
         final List<T> result = new ArrayList();
-        boolean first = true;
-        if (len == Reader.SIGN_NOLENGTH) {
-            int startPosition = in.position();
-            while (hasNext(in, member, startPosition, contentLength, first)) {
-                R itemReader = getItemReader(in, member, first);
-                if (itemReader == null) { // 元素读取完毕
-                    break;
-                }
-                result.add(readMemberValue(itemReader, member, localDecoder, first));
-                first = false;
+        if (len == Reader.SIGN_VARIABLE) {
+            while (in.hasNext()) {
+                result.add(itemDecoder.convertFrom(in));
             }
-        } else {
+        } else { // 固定长度
             for (int i = 0; i < len; i++) {
-                result.add(localDecoder.convertFrom(in));
+                result.add(itemDecoder.convertFrom(in));
             }
         }
         in.readArrayE();
         return result.stream();
-    }
-
-    protected boolean hasNext(R in, DeMember member, int startPosition, int contentLength, boolean first) {
-        return in.hasNext(startPosition, contentLength);
-    }
-
-    protected Decodeable<R, T> getComponentDecoder(Decodeable<R, T> decoder, byte[] typevals) {
-        return decoder;
-    }
-
-    protected R getItemReader(R in, DeMember member, boolean first) {
-        return in;
-    }
-
-    protected T readMemberValue(R in, DeMember member, Decodeable<R, T> decoder, boolean first) {
-        return decoder.convertFrom(in);
     }
 
     @Override

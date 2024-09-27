@@ -5,7 +5,6 @@
  */
 package org.redkale.convert.pb;
 
-import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.*;
@@ -123,8 +122,8 @@ public class ProtobufReader extends Reader {
     }
 
     @Override
-    public final int readMapB(DeMember member, byte[] typevals, Decodeable keyDecoder, Decodeable valueDecoder) {
-        return Reader.SIGN_NOLENGTH;
+    public final int readMapB(DeMember member, Decodeable keyDecoder, Decodeable valueDecoder) {
+        return Reader.SIGN_VARIABLE;
     }
 
     @Override
@@ -136,23 +135,12 @@ public class ProtobufReader extends Reader {
      * 判断下一个非空白字符是否为[
      *
      * @param member DeMember
-     * @param typevals byte[]
      * @param componentDecoder Decodeable
-     * @return SIGN_NOLENGTH 或 SIGN_NULL
+     * @return SIGN_VARIABLE 或 SIGN_NULL
      */
     @Override
-    public final int readArrayB(DeMember member, byte[] typevals, Decodeable componentDecoder) {
-        if (member == null || componentDecoder == null) {
-            return Reader.SIGN_NOLENBUTBYTES;
-        }
-        Type type = componentDecoder.getType();
-        if (!(type instanceof Class)) {
-            return Reader.SIGN_NOLENBUTBYTES;
-        }
-        if (ProtobufFactory.isNoLenBytesType(type)) {
-            return Reader.SIGN_NOLENBUTBYTES;
-        }
-        return Reader.SIGN_NOLENGTH;
+    public final int readArrayB(DeMember member, Decodeable componentDecoder) {
+        return Reader.SIGN_VARIABLE;
     }
 
     @Override
@@ -171,7 +159,6 @@ public class ProtobufReader extends Reader {
         return this.position;
     }
 
-    @Override
     public final int readMemberContentLength(DeMember member, Decodeable decoder) {
         if (member == null && decoder == null) {
             return -1; // 为byte[]
@@ -482,6 +469,7 @@ public class ProtobufReader extends Reader {
         return this.content[this.position];
     }
 
+    @Override
     public boolean hasNext() {
         return (this.position + 1) < this.content.length;
     }
@@ -493,7 +481,6 @@ public class ProtobufReader extends Reader {
      * @param contentLength 内容大小， 不确定的传-1
      * @return 是否存在
      */
-    @Override
     public boolean hasNext(int startPosition, int contentLength) {
         // ("-------------: " + startPosition + ", " + contentLength + ", " + this.position);
         if (startPosition >= 0 && contentLength >= 0) {
