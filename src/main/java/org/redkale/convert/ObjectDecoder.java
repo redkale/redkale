@@ -7,8 +7,7 @@ package org.redkale.convert;
 
 import java.lang.reflect.*;
 import java.util.*;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.*;
 import org.redkale.annotation.Nullable;
 import org.redkale.convert.ext.StringSimpledCoder;
 import org.redkale.util.*;
@@ -338,22 +337,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
         this.memberInfo = DeMemberInfo.create(deMembers);
     }
 
-    /**
-     * 对象格式: [0x1][short字段个数][字段名][字段值]...[0x2]
-     *
-     * @param in 输入流
-     * @return 反解析后的对象结果
-     */
-    @Override
-    public T convertFrom(final R in) {
-        R objin = objectReader(in);
-        final String clazz = objin.readObjectB(typeClass);
-        if (clazz == null) {
-            return null;
-        }
-        if (!clazz.isEmpty()) {
-            return (T) factory.loadDecoder(factory.getEntityAlias(clazz)).convertFrom(objin);
-        }
+    protected void checkInited() {
         if (!this.inited) {
             lock.lock();
             try {
@@ -363,6 +347,25 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
             } finally {
                 lock.unlock();
             }
+        }
+    }
+
+    /**
+     * 对象格式: [0x1][short字段个数][字段名][字段值]...[0x2]
+     *
+     * @param in 输入流
+     * @return 反解析后的对象结果
+     */
+    @Override
+    public T convertFrom(final R in) {
+        this.checkInited();
+        R objin = objectReader(in);
+        final String clazz = objin.readObjectB(typeClass);
+        if (clazz == null) {
+            return null;
+        }
+        if (!clazz.isEmpty()) {
+            return (T) factory.loadDecoder(factory.getEntityAlias(clazz)).convertFrom(objin);
         }
         if (this.creator == null) {
             if (typeClass.isInterface() || Modifier.isAbstract(typeClass.getModifiers())) {

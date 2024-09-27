@@ -98,12 +98,7 @@ public class MapDecoder<R extends Reader, K, V> implements TagDecodeable<R, Map<
         this.inited = true;
     }
 
-    @Override
-    public Map<K, V> convertFrom(R in) {
-        return convertFrom(in, null);
-    }
-
-    public Map<K, V> convertFrom(R in, DeMember member) {
+    protected void checkInited() {
         if (this.keyDecoder == null || this.valueDecoder == null) {
             if (!this.inited) {
                 lock.lock();
@@ -116,6 +111,16 @@ public class MapDecoder<R extends Reader, K, V> implements TagDecodeable<R, Map<
                 }
             }
         }
+    }
+
+    @Override
+    public Map<K, V> convertFrom(R in) {
+        return convertFrom(in, null);
+    }
+
+    @Override
+    public Map<K, V> convertFrom(R in, DeMember member) {
+        this.checkInited();
         byte[] typevals = new byte[2];
         int len = in.readMapB(member, typevals, this.keyDecoder, this.valueDecoder);
         int contentLength = -1;

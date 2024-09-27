@@ -66,18 +66,7 @@ public class MapEncoder<W extends Writer, K, V> implements Encodeable<W, Map<K, 
         }
     }
 
-    @Override
-    public void convertTo(W out, Map<K, V> value) {
-        convertTo(out, null, value);
-    }
-
-    public void convertTo(W out, EnMember member, Map<K, V> value) {
-        final Map<K, V> values = value;
-        if (values == null) {
-            out.writeNull();
-            return;
-        }
-
+    protected void checkInited() {
         if (this.keyEncoder == null || this.valueEncoder == null) {
             if (!this.inited) {
                 lock.lock();
@@ -90,22 +79,35 @@ public class MapEncoder<W extends Writer, K, V> implements Encodeable<W, Map<K, 
                 }
             }
         }
+    }
+
+    @Override
+    public void convertTo(W out, Map<K, V> value) {
+        convertTo(out, null, value);
+    }
+
+    public void convertTo(W out, EnMember member, Map<K, V> value) {
+        this.checkInited();
+        final Map<K, V> values = value;
+        if (values == null) {
+            out.writeNull();
+            return;
+        }
         Set<String> ignoreColumns = this.ignoreMapColumns;
         BiFunction<K, V, V> mapFieldFunc = (BiFunction) out.mapFieldFunc;
-        if (out.writeMapB(values.size(), (Encodeable) keyEncoder, (Encodeable) valueEncoder, value) < 0) {
-            boolean first = true;
-            for (Map.Entry<K, V> en : values.entrySet()) {
-                if (ignoreColumns != null && ignoreColumns.contains(en.getKey())) {
-                    continue;
-                }
-                V v = mapFieldFunc == null ? en.getValue() : mapFieldFunc.apply(en.getKey(), en.getValue());
-                if (!first) {
-                    out.writeArrayMark();
-                }
-                writeMemberValue(out, member, en.getKey(), v, first);
-                if (first) {
-                    first = false;
-                }
+        out.writeMapB(values.size(), (Encodeable) keyEncoder, (Encodeable) valueEncoder, value);
+        boolean first = true;
+        for (Map.Entry<K, V> en : values.entrySet()) {
+            if (ignoreColumns != null && ignoreColumns.contains(en.getKey())) {
+                continue;
+            }
+            V v = mapFieldFunc == null ? en.getValue() : mapFieldFunc.apply(en.getKey(), en.getValue());
+            if (!first) {
+                out.writeArrayMark();
+            }
+            writeMemberValue(out, member, en.getKey(), v, first);
+            if (first) {
+                first = false;
             }
         }
         out.writeMapE();

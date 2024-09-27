@@ -71,22 +71,7 @@ public class ArrayDecoder<R extends Reader, T> implements TagDecodeable<R, T[]> 
         }
     }
 
-    @Override
-    public T[] convertFrom(R in) {
-        return convertFrom(in, null);
-    }
-
-    public T[] convertFrom(R in, DeMember member) {
-        byte[] typevals = new byte[1];
-        int len = in.readArrayB(member, typevals, componentDecoder);
-        int contentLength = -1;
-        if (len == Reader.SIGN_NULL) {
-            return null;
-        }
-        if (len == Reader.SIGN_NOLENBUTBYTES) {
-            contentLength = in.readMemberContentLength(member, componentDecoder);
-            len = Reader.SIGN_NOLENGTH;
-        }
+    protected void checkInited() {
         if (this.componentDecoder == null) {
             if (!this.inited) {
                 lock.lock();
@@ -98,6 +83,25 @@ public class ArrayDecoder<R extends Reader, T> implements TagDecodeable<R, T[]> 
                     lock.unlock();
                 }
             }
+        }
+    }
+
+    @Override
+    public T[] convertFrom(R in) {
+        return convertFrom(in, null);
+    }
+
+    public T[] convertFrom(R in, DeMember member) {
+        this.checkInited();
+        byte[] typevals = new byte[1];
+        int len = in.readArrayB(member, typevals, componentDecoder);
+        int contentLength = -1;
+        if (len == Reader.SIGN_NULL) {
+            return null;
+        }
+        if (len == Reader.SIGN_NOLENBUTBYTES) {
+            contentLength = in.readMemberContentLength(member, componentDecoder);
+            len = Reader.SIGN_NOLENGTH;
         }
         final Decodeable<R, T> localDecoder = getComponentDecoder(this.componentDecoder, typevals);
         final List<T> result = new ArrayList();

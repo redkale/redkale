@@ -9,7 +9,7 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.locks.*;
 import org.redkale.annotation.ConstructorParameters;
-import org.redkale.annotation.Nullable;
+import org.redkale.annotation.*;
 import org.redkale.convert.ext.StringSimpledCoder;
 import org.redkale.util.*;
 
@@ -309,12 +309,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
         this.members = enMembers;
     }
 
-    @Override
-    public void convertTo(W out, T value) {
-        if (value == null) {
-            out.writeObjectNull(null);
-            return;
-        }
+    protected void checkInited() {
         if (!this.inited) {
             lock.lock();
             try {
@@ -325,6 +320,15 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                 lock.unlock();
             }
         }
+    }
+
+    @Override
+    public void convertTo(W out, T value) {
+        this.checkInited();
+        if (value == null) {
+            out.writeObjectNull(null);
+            return;
+        }
         if (value.getClass() != this.typeClass && !this.type.equals(out.specificObjectType())) {
             final Class clz = value.getClass();
             if (out.needWriteClassName()) {
@@ -334,28 +338,27 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
             return;
         }
         W objout = objectWriter(out, value);
-        if (objout.writeObjectB(value) < 0) {
-            int maxPosition = 0;
-            for (EnMember member : members) {
-                maxPosition = member.getPosition();
-                objout.writeObjectField(member, value);
-            }
-            if (objout.objExtFunc != null) {
-                ConvertField[] extFields = objout.objExtFunc.apply(value);
-                if (extFields != null) {
-                    Encodeable<W, ?> anyEncoder = factory.getAnyEncoder();
-                    for (ConvertField en : extFields) {
-                        if (en == null) {
-                            continue;
-                        }
-                        maxPosition++;
-                        objout.writeObjectField(
-                                en.getName(),
-                                en.getType(),
-                                Math.max(en.getPosition(), maxPosition),
-                                anyEncoder,
-                                en.getValue());
+        objout.writeObjectB(value);
+        int maxPosition = 0;
+        for (EnMember member : members) {
+            maxPosition = member.getPosition();
+            objout.writeObjectField(member, value);
+        }
+        if (objout.objExtFunc != null) {
+            ConvertField[] extFields = objout.objExtFunc.apply(value);
+            if (extFields != null) {
+                Encodeable<W, ?> anyEncoder = factory.getAnyEncoder();
+                for (ConvertField en : extFields) {
+                    if (en == null) {
+                        continue;
                     }
+                    maxPosition++;
+                    objout.writeObjectField(
+                            en.getName(),
+                            en.getType(),
+                            Math.max(en.getPosition(), maxPosition),
+                            anyEncoder,
+                            en.getValue());
                 }
             }
         }

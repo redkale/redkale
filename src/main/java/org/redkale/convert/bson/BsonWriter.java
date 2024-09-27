@@ -179,7 +179,7 @@ public class BsonWriter extends Writer implements ByteTuple {
             writeNull();
             return;
         }
-        writeArrayB(values.length, null, null, values);
+        writeArrayB(values.length, null, values);
         boolean flag = false;
         for (byte v : values) {
             if (flag) {
@@ -240,11 +240,10 @@ public class BsonWriter extends Writer implements ByteTuple {
     }
 
     @Override
-    public final int writeObjectB(Object obj) {
+    public final void writeObjectB(Object obj) {
         super.writeObjectB(obj);
         writeSmallString("");
         writeShort(BsonReader.SIGN_OBJECTB);
-        return -1;
     }
 
     @Override
@@ -311,12 +310,11 @@ public class BsonWriter extends Writer implements ByteTuple {
     }
 
     @Override
-    public final int writeArrayB(int size, Encodeable arrayEncoder, Encodeable componentEncoder, Object obj) {
+    public final void writeArrayB(int size, Encodeable componentEncoder, Object obj) {
         writeInt(size);
         if (componentEncoder != null && componentEncoder != ByteSimpledCoder.instance) {
             writeByte(BsonFactory.typeEnum(componentEncoder.getType()));
         }
-        return -1;
     }
 
     @Override
@@ -330,11 +328,10 @@ public class BsonWriter extends Writer implements ByteTuple {
     }
 
     @Override
-    public int writeMapB(int size, Encodeable keyEncoder, Encodeable valueEncoder, Object obj) {
+    public void writeMapB(int size, Encodeable keyEncoder, Encodeable valueEncoder, Object obj) {
         writeInt(size);
         writeByte(BsonFactory.typeEnum(keyEncoder.getType()));
         writeByte(BsonFactory.typeEnum(valueEncoder.getType()));
-        return -1;
     }
 
     @Override

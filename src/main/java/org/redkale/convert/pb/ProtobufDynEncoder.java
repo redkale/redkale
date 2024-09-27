@@ -4,25 +4,15 @@
  */
 package org.redkale.convert.pb;
 
-import java.lang.reflect.Field;
+import java.lang.reflect.*;
 import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import org.redkale.asm.Asms;
-import org.redkale.asm.ClassWriter;
+import java.util.*;
+import java.util.concurrent.atomic.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import org.redkale.asm.FieldVisitor;
-import org.redkale.asm.Label;
-import org.redkale.asm.MethodVisitor;
-import org.redkale.asm.Opcodes;
+import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.convert.*;
-import org.redkale.util.AnyValue;
-import org.redkale.util.RedkaleClassLoader;
-import org.redkale.util.RedkaleException;
-import org.redkale.util.Utility;
+import org.redkale.util.*;
 
 /**
  * 简单对象的PROTOBUF序列化操作类
@@ -179,8 +169,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
 
             mv.visitVarInsn(ALOAD, 3);
             mv.visitVarInsn(ALOAD, 2);
-            mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, "writeObjectB", "(Ljava/lang/Object;)I", false);
-            mv.visitInsn(POP);
+            mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, "writeObjectB", "(Ljava/lang/Object;)V", false);
 
             for (EnMember member : selfObjEncoder.getMembers()) {
                 final String fieldName = member.getAttribute().field();

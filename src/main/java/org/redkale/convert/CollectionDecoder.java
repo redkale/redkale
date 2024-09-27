@@ -76,22 +76,7 @@ public class CollectionDecoder<R extends Reader, T> implements TagDecodeable<R, 
         this.inited = true;
     }
 
-    @Override
-    public Collection<T> convertFrom(R in) {
-        return convertFrom(in, null);
-    }
-
-    public Collection<T> convertFrom(R in, DeMember member) {
-        byte[] typevals = new byte[1];
-        int len = in.readArrayB(member, typevals, componentDecoder);
-        int contentLength = -1;
-        if (len == Reader.SIGN_NULL) {
-            return null;
-        }
-        if (len == Reader.SIGN_NOLENBUTBYTES) {
-            contentLength = in.readMemberContentLength(member, componentDecoder);
-            len = Reader.SIGN_NOLENGTH;
-        }
+    protected void checkInited() {
         if (this.componentDecoder == null) {
             if (!this.inited) {
                 lock.lock();
@@ -103,6 +88,25 @@ public class CollectionDecoder<R extends Reader, T> implements TagDecodeable<R, 
                     lock.unlock();
                 }
             }
+        }
+    }
+
+    @Override
+    public Collection<T> convertFrom(R in) {
+        return convertFrom(in, null);
+    }
+
+    public Collection<T> convertFrom(R in, DeMember member) {
+        this.checkInited();
+        byte[] typevals = new byte[1];
+        int len = in.readArrayB(member, typevals, componentDecoder);
+        int contentLength = -1;
+        if (len == Reader.SIGN_NULL) {
+            return null;
+        }
+        if (len == Reader.SIGN_NOLENBUTBYTES) {
+            contentLength = in.readMemberContentLength(member, componentDecoder);
+            len = Reader.SIGN_NOLENGTH;
         }
         final Decodeable<R, T> localDecoder = getComponentDecoder(this.componentDecoder, typevals);
         final Collection<T> result = this.creator.create();

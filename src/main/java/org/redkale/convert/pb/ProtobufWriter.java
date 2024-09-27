@@ -279,9 +279,9 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @Override
-    public int writeObjectB(Object obj) {
-        super.writeObjectB(obj);
-        return -1;
+    @ClassDepends
+    public void writeObjectB(Object obj) {
+        // do nothing
     }
 
     @Override
@@ -293,8 +293,8 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @Override
-    public int writeArrayB(int size, Encodeable encoder, Encodeable componentEncoder, Object obj) {
-        return -1;
+    public void writeArrayB(int size, Encodeable componentEncoder, Object obj) {
+        // do nothing
     }
 
     @Override
@@ -308,8 +308,8 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @Override
-    public int writeMapB(int size, Encodeable keyEncoder, Encodeable valueEncoder, Object obj) {
-        return -1;
+    public void writeMapB(int size, Encodeable keyEncoder, Encodeable valueEncoder, Object obj) {
+        // do nothing
     }
 
     @Override
@@ -329,21 +329,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
 
     @Override
     public final void writeByteArray(byte[] values) {
-        if (values == null) {
-            writeNull();
-            return;
-        }
-        if (writeArrayB(values.length, null, null, values) < 0) {
-            boolean flag = false;
-            for (byte v : values) {
-                if (flag) {
-                    writeArrayMark();
-                }
-                writeByte(v);
-                flag = true;
-            }
-        }
-        writeArrayE();
+        writeBytes(values);
     }
 
     @Override

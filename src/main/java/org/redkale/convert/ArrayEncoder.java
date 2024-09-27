@@ -69,24 +69,8 @@ public class ArrayEncoder<W extends Writer, T> implements Encodeable<W, T[]> {
         }
     }
 
-    @Override
-    public void convertTo(W out, T[] value) {
-        convertTo(out, null, value);
-    }
-
-    public void convertTo(W out, EnMember member, T[] value) {
-        if (value == null) {
-            out.writeNull();
-            return;
-        }
-        int iMax = value.length - 1;
-        if (iMax == -1) {
-            out.writeArrayB(0, this, componentEncoder, value);
-            out.writeArrayE();
-            return;
-        }
-        Encodeable<W, Object> itemEncoder = this.componentEncoder;
-        if (itemEncoder == null) {
+    protected void checkInited() {
+        if (this.componentEncoder == null) {
             if (!this.inited) {
                 lock.lock();
                 try {
@@ -96,37 +80,54 @@ public class ArrayEncoder<W extends Writer, T> implements Encodeable<W, T[]> {
                 } finally {
                     lock.unlock();
                 }
-                itemEncoder = this.componentEncoder;
             }
         }
+    }
+
+    @Override
+    public void convertTo(W out, T[] value) {
+        convertTo(out, null, value);
+    }
+
+    public void convertTo(W out, EnMember member, T[] value) {
+        this.checkInited();
+        if (value == null) {
+            out.writeNull();
+            return;
+        }
+        int iMax = value.length - 1;
+        if (iMax == -1) {
+            out.writeArrayB(0, componentEncoder, value);
+            out.writeArrayE();
+            return;
+        }
+        Encodeable<W, Object> itemEncoder = this.componentEncoder;
         if (subTypeFinal) {
-            if (out.writeArrayB(value.length, this, itemEncoder, value) < 0) {
-                for (int i = 0; ; i++) {
-                    writeMemberValue(out, member, itemEncoder, value[i], i);
-                    if (i == iMax) {
-                        break;
-                    }
-                    out.writeArrayMark();
+            out.writeArrayB(value.length, itemEncoder, value);
+            for (int i = 0; ; i++) {
+                writeMemberValue(out, member, itemEncoder, value[i], i);
+                if (i == iMax) {
+                    break;
                 }
+                out.writeArrayMark();
             }
         } else {
-            if (out.writeArrayB(value.length, this, itemEncoder, value) < 0) {
-                final Type comp = this.componentType;
-                for (int i = 0; ; i++) {
-                    Object v = value[i];
-                    writeMemberValue(
-                            out,
-                            member,
-                            ((v != null && (v.getClass() == comp || out.specificObjectType() == comp))
-                                    ? itemEncoder
-                                    : anyEncoder),
-                            v,
-                            i);
-                    if (i == iMax) {
-                        break;
-                    }
-                    out.writeArrayMark();
+            out.writeArrayB(value.length, itemEncoder, value);
+            final Type comp = this.componentType;
+            for (int i = 0; ; i++) {
+                Object v = value[i];
+                writeMemberValue(
+                        out,
+                        member,
+                        ((v != null && (v.getClass() == comp || out.specificObjectType() == comp))
+                                ? itemEncoder
+                                : anyEncoder),
+                        v,
+                        i);
+                if (i == iMax) {
+                    break;
                 }
+                out.writeArrayMark();
             }
         }
         out.writeArrayE();

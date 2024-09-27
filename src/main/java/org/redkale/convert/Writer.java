@@ -110,17 +110,6 @@ public abstract class Writer {
     public abstract void writeClassName(String clazz);
 
     /**
-     * 输出一个对象前的操作 注： 覆盖此方法必须要先调用父方法 super.writeObjectB(obj);
-     *
-     * @param obj 写入的对象
-     * @return 返回-1表示还没有写入对象内容，大于-1表示已写入对象内容，返回对象内容大小
-     */
-    public int writeObjectB(Object obj) {
-        this.comma = false;
-        return -1;
-    }
-
-    /**
      * 输出一个为null的对象
      *
      * @param clazz 对象的类名
@@ -222,6 +211,15 @@ public abstract class Writer {
     }
 
     /**
+     * 输出一个对象前的操作 注： 覆盖此方法必须要先调用父方法 super.writeObjectB(obj);
+     *
+     * @param obj 写入的对象
+     */
+    public void writeObjectB(Object obj) {
+        this.comma = false;
+    }
+
+    /**
      * 输出一个对象后的操作
      *
      * @param obj 写入的对象
@@ -232,12 +230,10 @@ public abstract class Writer {
      * 输出一个数组前的操作
      *
      * @param size 数组长度
-     * @param arrayEncoder Encodeable 可能是ArrayEncoder、CollectionEncoder或StreamEncoder
      * @param componentEncoder Encodeable
      * @param obj 对象, 不一定是数组、Collection对象，也可能是伪Collection对象
-     * @return 返回-1表示还没有写入对象内容，大于-1表示已写入对象内容，返回对象内容大小
      */
-    public abstract int writeArrayB(int size, Encodeable arrayEncoder, Encodeable componentEncoder, Object obj);
+    public abstract void writeArrayB(int size, Encodeable componentEncoder, Object obj);
 
     /** 输出数组元素间的间隔符 */
     public abstract void writeArrayMark();
@@ -252,9 +248,8 @@ public abstract class Writer {
      * @param keyEncoder Encodeable
      * @param valueEncoder Encodeable
      * @param obj 对象, 不一定是Map对象，也可能是伪Map对象
-     * @return 返回-1表示还没有写入对象内容，大于-1表示已写入对象内容，返回对象内容大小
      */
-    public abstract int writeMapB(int size, Encodeable keyEncoder, Encodeable valueEncoder, Object obj);
+    public abstract void writeMapB(int size, Encodeable keyEncoder, Encodeable valueEncoder, Object obj);
 
     /** 输出一个Map中key与value间的间隔符 */
     public abstract void writeMapMark();

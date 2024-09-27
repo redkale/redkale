@@ -56,21 +56,7 @@ public class CollectionEncoder<W extends Writer, T> implements Encodeable<W, Col
         }
     }
 
-    @Override
-    public void convertTo(W out, Collection<T> value) {
-        convertTo(out, null, value);
-    }
-
-    public void convertTo(W out, EnMember member, Collection<T> value) {
-        if (value == null) {
-            out.writeNull();
-            return;
-        }
-        if (value.isEmpty()) {
-            out.writeArrayB(0, this, componentEncoder, value);
-            out.writeArrayE();
-            return;
-        }
+    protected void checkInited() {
         if (this.componentEncoder == null) {
             if (!this.inited) {
                 lock.lock();
@@ -83,16 +69,33 @@ public class CollectionEncoder<W extends Writer, T> implements Encodeable<W, Col
                 }
             }
         }
-        if (out.writeArrayB(value.size(), this, componentEncoder, value) < 0) {
-            boolean first = true;
-            for (Object v : value) {
-                if (!first) {
-                    out.writeArrayMark();
-                }
-                writeMemberValue(out, member, v, first);
-                if (first) {
-                    first = false;
-                }
+    }
+
+    @Override
+    public void convertTo(W out, Collection<T> value) {
+        convertTo(out, null, value);
+    }
+
+    public void convertTo(W out, EnMember member, Collection<T> value) {
+        this.checkInited();
+        if (value == null) {
+            out.writeNull();
+            return;
+        }
+        if (value.isEmpty()) {
+            out.writeArrayB(0, componentEncoder, value);
+            out.writeArrayE();
+            return;
+        }
+        out.writeArrayB(value.size(), componentEncoder, value);
+        boolean first = true;
+        for (Object v : value) {
+            if (!first) {
+                out.writeArrayMark();
+            }
+            writeMemberValue(out, member, v, first);
+            if (first) {
+                first = false;
             }
         }
         out.writeArrayE();

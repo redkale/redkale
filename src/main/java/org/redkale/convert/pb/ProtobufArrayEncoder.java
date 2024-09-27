@@ -9,29 +9,21 @@ import java.lang.reflect.Type;
 import org.redkale.convert.*;
 
 /**
+ * 非基本类型数组序列化。 注意: 基础类型不能使用此类
  * @author zhangjx
  * @param <T> T
  */
 public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T> {
 
-    protected final boolean simple;
-
     public ProtobufArrayEncoder(ProtobufFactory factory, Type type) {
         super(factory, type);
-        this.simple = ProtobufFactory.isNoLenBytesType(getComponentType());
     }
 
     @Override
     protected void writeMemberValue(ProtobufWriter out, EnMember member, Encodeable encoder, Object item, int index) {
-        if (simple) {
-            if (item == null) {
-                out.writeUInt32(0);
-            } else {
-                componentEncoder.convertTo(out, item);
-            }
-            return;
+        if (member != null) {
+            out.writeFieldName(member);
         }
-        if (member != null) out.writeFieldName(member);
         if (item == null) {
             out.writeUInt32(0);
         } else if (item instanceof CharSequence) {

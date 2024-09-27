@@ -56,22 +56,7 @@ public class StreamEncoder<W extends Writer, T> implements Encodeable<W, Stream<
         }
     }
 
-    @Override
-    public void convertTo(W out, Stream<T> value) {
-        convertTo(out, null, value);
-    }
-
-    public void convertTo(W out, EnMember member, Stream<T> value) {
-        if (value == null) {
-            out.writeNull();
-            return;
-        }
-        Object[] array = value.toArray();
-        if (array.length == 0) {
-            out.writeArrayB(0, this, componentEncoder, array);
-            out.writeArrayE();
-            return;
-        }
+    protected void checkInited() {
         if (this.componentEncoder == null) {
             if (!this.inited) {
                 lock.lock();
@@ -84,16 +69,34 @@ public class StreamEncoder<W extends Writer, T> implements Encodeable<W, Stream<
                 }
             }
         }
-        if (out.writeArrayB(array.length, this, componentEncoder, array) < 0) {
-            boolean first = true;
-            for (Object v : array) {
-                if (!first) {
-                    out.writeArrayMark();
-                }
-                writeMemberValue(out, member, v, first);
-                if (first) {
-                    first = false;
-                }
+    }
+
+    @Override
+    public void convertTo(W out, Stream<T> value) {
+        convertTo(out, null, value);
+    }
+
+    public void convertTo(W out, EnMember member, Stream<T> value) {
+        this.checkInited();
+        if (value == null) {
+            out.writeNull();
+            return;
+        }
+        Object[] array = value.toArray();
+        if (array.length == 0) {
+            out.writeArrayB(0, componentEncoder, array);
+            out.writeArrayE();
+            return;
+        }
+        out.writeArrayB(array.length, componentEncoder, array);
+        boolean first = true;
+        for (Object v : array) {
+            if (!first) {
+                out.writeArrayMark();
+            }
+            writeMemberValue(out, member, v, first);
+            if (first) {
+                first = false;
             }
         }
         out.writeArrayE();

@@ -183,7 +183,7 @@ public abstract class JsonWriter extends Writer {
             writeNull();
             return;
         }
-        writeArrayB(values.length, null, null, values);
+        writeArrayB(values.length, null, values);
         boolean flag = false;
         for (byte v : values) {
             if (flag) {
@@ -224,10 +224,9 @@ public abstract class JsonWriter extends Writer {
     public final void writeClassName(String clazz) {}
 
     @Override
-    public final int writeObjectB(Object obj) {
+    public final void writeObjectB(Object obj) {
         super.writeObjectB(obj);
         writeTo(BYTE_LBRACE);
-        return -1;
     }
 
     @Override
@@ -241,9 +240,8 @@ public abstract class JsonWriter extends Writer {
     }
 
     @Override
-    public final int writeArrayB(int size, Encodeable arrayEncoder, Encodeable componentEncoder, Object obj) {
+    public final void writeArrayB(int size, Encodeable componentEncoder, Object obj) {
         writeTo(BYTE_LBRACKET);
-        return -1;
     }
 
     @Override
@@ -257,9 +255,8 @@ public abstract class JsonWriter extends Writer {
     }
 
     @Override
-    public final int writeMapB(int size, Encodeable keyEncoder, Encodeable valueEncoder, Object obj) {
+    public final void writeMapB(int size, Encodeable keyEncoder, Encodeable valueEncoder, Object obj) {
         writeTo(BYTE_LBRACE);
-        return -1;
     }
 
     @Override

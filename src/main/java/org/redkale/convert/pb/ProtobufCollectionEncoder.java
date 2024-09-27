@@ -14,24 +14,15 @@ import org.redkale.convert.*;
  */
 public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWriter, T> {
 
-    protected final boolean simple;
-
     public ProtobufCollectionEncoder(ProtobufFactory factory, Type type) {
         super(factory, type);
-        this.simple = ProtobufFactory.isNoLenBytesType(getComponentType());
     }
 
     @Override
     protected void writeMemberValue(ProtobufWriter out, EnMember member, Object item, boolean first) {
-        if (simple) {
-            if (item == null) {
-                out.writeUInt32(0);
-            } else {
-                componentEncoder.convertTo(out, item);
-            }
-            return;
+        if (member != null) {
+            out.writeFieldName(member);
         }
-        if (member != null) out.writeFieldName(member);
         if (item == null) {
             out.writeUInt32(0);
         } else if (item instanceof CharSequence) {
