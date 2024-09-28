@@ -125,11 +125,10 @@ public class GenericEntityTest {
         System.out.println("-------------------- runBson1 ---------------------------------");
         BsonConvert convert = BsonConvert.root();
         GenericEntity<Long, String, SimpleEntity> bean = createBean();
-        byte[] bs = convert.convertTo(bean);
-        //        Utility.println("bson", bs);
-        //        String rs = convert.convertFrom(ENTITY_TYPE, bs).toString();
-        //        System.out.println();
-        //        Assertions.assertEquals(JSON, rs);
+        byte[] bs = convert.convertTo(ENTITY_TYPE, bean);
+        Utility.println("bson", bs);
+        String rs = convert.convertFrom(ENTITY_TYPE, bs).toString();
+        Assertions.assertEquals(JSON, rs);
     }
 
     @Test
@@ -137,13 +136,16 @@ public class GenericEntityTest {
         System.out.println("-------------------- runBson2 ---------------------------------");
         BsonConvert convert = BsonConvert.root();
         GenericEntity<Long, String, SimpleEntity> bean = createBean();
-        byte[] bs = convert.convertTo(bean);
-        //        ByteBuffer in = ConvertHelper.createByteBuffer(bs);
-        //        GenericEntity<Long, String, SimpleEntity> rs = convert.convertFrom(ENTITY_TYPE, in);
-        //        Assertions.assertEquals(JSON, rs.toString());
-        //        Supplier<ByteBuffer> out = ConvertHelper.createSupplier();
-        //        ByteBuffer[] buffers = convert.convertTo(out, ENTITY_TYPE, rs);
-        //        Assertions.assertArrayEquals(bs, ConvertHelper.toBytes(buffers));
+        byte[] bs = convert.convertTo(ENTITY_TYPE, bean);
+        Utility.println("bson1 ", bs);
+        ByteBuffer in = ConvertHelper.createByteBuffer(bs);
+        GenericEntity<Long, String, SimpleEntity> rs = convert.convertFrom(ENTITY_TYPE, in);
+        Assertions.assertEquals(JSON, rs.toString());
+        Supplier<ByteBuffer> out = ConvertHelper.createSupplier();
+        ByteBuffer[] buffers = convert.convertTo(out, ENTITY_TYPE, rs);
+        byte[] bs2 = ConvertHelper.toBytes(buffers);
+        Utility.println("bson2 ", bs2);
+        Assertions.assertArrayEquals(bs, bs2);
     }
 
     @Test
@@ -151,13 +153,16 @@ public class GenericEntityTest {
         System.out.println("-------------------- runBson3 ---------------------------------");
         BsonConvert convert = BsonConvert.root();
         GenericEntity<Long, String, SimpleEntity> bean = createBean();
-        byte[] bs = convert.convertTo(bean);
-        //        InputStream in = ConvertHelper.createInputStream(bs);
-        //        GenericEntity<Long, String, SimpleEntity> rs = convert.convertFrom(ENTITY_TYPE, in);
-        //        Assertions.assertEquals(JSON, rs.toString());
-        //        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        //        convert.convertTo(out, ENTITY_TYPE, rs);
-        //        Assertions.assertArrayEquals(bs, out.toByteArray());
+        byte[] bs = convert.convertTo(ENTITY_TYPE, bean);
+        Utility.println("bson1 ", bs);
+        InputStream in = ConvertHelper.createInputStream(bs);
+        GenericEntity<Long, String, SimpleEntity> rs = convert.convertFrom(ENTITY_TYPE, in);
+        Assertions.assertEquals(JSON, rs.toString());
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        convert.convertTo(out, ENTITY_TYPE, rs);
+        byte[] bs2 = out.toByteArray();
+        Utility.println("bson2 ", bs2);
+        Assertions.assertArrayEquals(bs, bs2);
     }
 
     private byte[] createBytes() {
