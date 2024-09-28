@@ -1354,7 +1354,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             writeTo(TENTHOUSAND_UINT_BYTES2[-value]);
             return;
         }
-        expand(6);
+        expand(5);
         int curr = this.count;
         byte[] data = this.content;
         while (true) {
@@ -1377,7 +1377,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             writeTo(TENTHOUSAND_UINT_BYTES2[(int) -value]);
             return;
         }
-        expand(12);
+        expand(10);
         int curr = this.count;
         byte[] data = this.content;
         while (true) {
