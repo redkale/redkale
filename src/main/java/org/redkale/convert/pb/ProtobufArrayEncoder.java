@@ -19,7 +19,7 @@ public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T> {
 
     public ProtobufArrayEncoder(ProtobufFactory factory, Type type) {
         super(factory, type);
-        this.componentSimpled = getComponentEncoder()instanceof SimpledCoder;
+        this.componentSimpled = getComponentEncoder() instanceof SimpledCoder;
     }
 
     @Override
@@ -40,8 +40,7 @@ public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T> {
             } else {
                 ProtobufWriter tmp = out.pollChild();
                 itemEncoder.convertTo(tmp, item);
-                out.writeLength(tmp.count());
-                out.writeTo(tmp.toArray());
+                out.writeTuple(tmp);
                 out.offerChild(tmp);
             }
         }

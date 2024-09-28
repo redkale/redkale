@@ -16,7 +16,7 @@ import org.redkale.util.*;
  */
 public abstract class ProtobufCoders {
 
-    private static final Creator<List> LIST_CREATOR = Creator.load(List.class);
+    static final Creator<List> LIST_CREATOR = Creator.load(List.class);
 
     private ProtobufCoders() {
         // do nothing

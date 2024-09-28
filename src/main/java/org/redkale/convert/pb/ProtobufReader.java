@@ -284,7 +284,6 @@ public class ProtobufReader extends Reader {
 
     public final int[] readInts() {
         int len = readRawVarint32();
-        System.out.println("等到长度: " + len);
         List<Integer> list = new ArrayList<>(len);
         while (len > 0) {
             int val = readInt();

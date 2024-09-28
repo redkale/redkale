@@ -6,6 +6,7 @@
 package org.redkale.convert.pb;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 import org.redkale.convert.ConvertException;
 
 /**
@@ -36,6 +37,7 @@ class ProtobufStreamWriter extends ProtobufByteBufferWriter {
         } catch (IOException e) {
             throw new ConvertException(e);
         }
+        this.count += len;
     }
 
     @Override
@@ -45,5 +47,11 @@ class ProtobufStreamWriter extends ProtobufByteBufferWriter {
         } catch (IOException e) {
             throw new ConvertException(e);
         }
+        count++;
+    }
+
+    @Override
+    public ByteBuffer[] toBuffers() {
+        throw new UnsupportedOperationException("Not supported yet."); // 无需实现
     }
 }

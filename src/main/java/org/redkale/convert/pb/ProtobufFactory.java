@@ -227,6 +227,32 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
 
     @Override
     protected <E> Encodeable<ProtobufWriter, E> createCollectionEncoder(Type type) {
+        if (type instanceof ParameterizedType) {
+            ParameterizedType pt = (ParameterizedType) type;
+            Type componentType = pt.getActualTypeArguments()[0];
+            Creator<? extends Collection> creator = ProtobufCoders.LIST_CREATOR;
+            if (componentType == Boolean.class) {
+                return (Encodeable) new ProtobufBoolCollectionSimpledCoder(creator);
+            } else if (componentType == Byte.class) {
+                return (Encodeable) new ProtobufByteCollectionSimpledCoder(creator);
+            } else if (componentType == Character.class) {
+                return (Encodeable) new ProtobufCharCollectionSimpledCoder(creator);
+            } else if (componentType == Short.class) {
+                return (Encodeable) new ProtobufShortCollectionSimpledCoder(creator);
+            } else if (componentType == Integer.class) {
+                return (Encodeable) new ProtobufIntCollectionSimpledCoder(creator);
+            } else if (componentType == Float.class) {
+                return (Encodeable) new ProtobufFloatCollectionSimpledCoder(creator);
+            } else if (componentType == Long.class) {
+                return (Encodeable) new ProtobufLongCollectionSimpledCoder(creator);
+            } else if (componentType == Double.class) {
+                return (Encodeable) new ProtobufDoubleCollectionSimpledCoder(creator);
+            } else if (componentType == AtomicInteger.class) {
+                return (Encodeable) new ProtobufAtomicIntegerCollectionSimpledCoder(creator);
+            } else if (componentType == AtomicLong.class) {
+                return (Encodeable) new ProtobufAtomicLongCollectionSimpledCoder(creator);
+            }
+        }
         return new ProtobufCollectionEncoder(this, type);
     }
 
@@ -262,6 +288,31 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
 
     @Override
     protected <E> Encodeable<ProtobufWriter, E> createStreamEncoder(Type type) {
+        if (type instanceof ParameterizedType) {
+            ParameterizedType pt = (ParameterizedType) type;
+            Type componentType = pt.getActualTypeArguments()[0];
+            if (componentType == Boolean.class) {
+                return (Encodeable) ProtobufBoolStreamSimpledCoder.instance;
+            } else if (componentType == Byte.class) {
+                return (Encodeable) ProtobufByteStreamSimpledCoder.instance;
+            } else if (componentType == Character.class) {
+                return (Encodeable) ProtobufCharStreamSimpledCoder.instance;
+            } else if (componentType == Short.class) {
+                return (Encodeable) ProtobufShortStreamSimpledCoder.instance;
+            } else if (componentType == Integer.class) {
+                return (Encodeable) ProtobufIntStreamSimpledCoder.instance;
+            } else if (componentType == Float.class) {
+                return (Encodeable) ProtobufFloatStreamSimpledCoder.instance;
+            } else if (componentType == Long.class) {
+                return (Encodeable) ProtobufLongStreamSimpledCoder.instance;
+            } else if (componentType == Double.class) {
+                return (Encodeable) ProtobufDoubleStreamSimpledCoder.instance;
+            } else if (componentType == AtomicInteger.class) {
+                return (Encodeable) ProtobufAtomicIntegerStreamSimpledCoder.instance;
+            } else if (componentType == AtomicLong.class) {
+                return (Encodeable) ProtobufAtomicLongStreamSimpledCoder.instance;
+            }
+        }
         return new ProtobufStreamEncoder(this, type);
     }
 
@@ -366,7 +417,7 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
                 || componentType == AtomicLong.class
                 || componentType == String.class;
     }
-    
+
     // see io.protostuff.ProtobufOutput
     protected static int computeRawVarint32Size(final int value) {
         if (value == 0) return 1;
@@ -390,7 +441,7 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
         if ((value & (0xffffffffffffffffL << 63)) == 0) return 9;
         return 10;
     }
-    
+
     // see com.google.protobuf.CodedOutputStream
     protected static int computeInt32SizeNoTag(final int value) {
         if (value == 0) {

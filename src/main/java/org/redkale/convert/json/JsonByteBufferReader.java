@@ -24,14 +24,14 @@ public class JsonByteBufferReader extends JsonReader {
 
     private ByteBuffer[] buffers;
 
-    private int currentIndex = 0;
-
     private ByteBuffer currentBuffer;
+    
+    private int currBufIndex = 0;
 
     protected JsonByteBufferReader(ByteBuffer... buffers) {
         this.buffers = buffers;
         if (buffers != null && buffers.length > 0) {
-            this.currentBuffer = buffers[currentIndex];
+            this.currentBuffer = buffers[currBufIndex];
         }
     }
 
@@ -40,7 +40,7 @@ public class JsonByteBufferReader extends JsonReader {
         super.recycle(); // this.position 初始化值为-1
         this.currentChar = 0;
         this.buffers = null;
-        this.currentIndex = 0;
+        this.currBufIndex = 0;
         this.currentBuffer = null;
         return false;
     }
@@ -51,7 +51,7 @@ public class JsonByteBufferReader extends JsonReader {
             return this.currentBuffer.get();
         }
         for (; ; ) {
-            this.currentBuffer = this.buffers[++this.currentIndex];
+            this.currentBuffer = this.buffers[++this.currBufIndex];
             if (this.currentBuffer.hasRemaining()) {
                 this.position++;
                 return this.currentBuffer.get();
@@ -77,7 +77,7 @@ public class JsonByteBufferReader extends JsonReader {
         }
         if (this.currentBuffer != null) {
             int remain = this.currentBuffer.remaining();
-            if (remain == 0 && this.currentIndex + 1 >= this.buffers.length) {
+            if (remain == 0 && this.currBufIndex + 1 >= this.buffers.length) {
                 return 0;
             }
         }

@@ -47,7 +47,7 @@ public class GenericEntityTest {
         System.out.println("-------------------- runJson1 ---------------------------------");
         JsonConvert convert = JsonConvert.root();
         GenericEntity<Long, String, SimpleEntity> bean = createBean();
-        String json = convert.convertTo(bean);
+        String json = convert.convertTo(ENTITY_TYPE, bean);
         System.out.println(json);
         System.out.println(convert.convertFrom(ENTITY_TYPE, json).toString());
         Assertions.assertEquals(JSON, json);
@@ -55,7 +55,6 @@ public class GenericEntityTest {
 
     @Test
     public void runJson2() throws Exception {
-        System.out.println("-------------------- runJson2 ---------------------------------");
         JsonConvert convert = JsonConvert.root();
         ByteBuffer in = ConvertHelper.createByteBuffer(createBytes());
         GenericEntity<Long, String, SimpleEntity> bean = convert.convertFrom(ENTITY_TYPE, in);
@@ -67,7 +66,6 @@ public class GenericEntityTest {
 
     @Test
     public void runJson3() throws Exception {
-        System.out.println("-------------------- runJson3 ---------------------------------");
         JsonConvert convert = JsonConvert.root();
         InputStream in = ConvertHelper.createInputStream(createBytes());
         GenericEntity<Long, String, SimpleEntity> bean = convert.convertFrom(ENTITY_TYPE, in);
@@ -82,10 +80,9 @@ public class GenericEntityTest {
         System.out.println("-------------------- runPb1 ---------------------------------");
         ProtobufConvert convert = ProtobufConvert.root();
         GenericEntity<Long, String, SimpleEntity> bean = createBean();
-        byte[] bs = convert.convertTo(bean);
-        Utility.println("proto", bs);
+        byte[] bs = convert.convertTo(ENTITY_TYPE, bean);
+        Utility.println("proto0 ", bs);
         String rs = convert.convertFrom(ENTITY_TYPE, bs).toString();
-        System.out.println();
         Assertions.assertEquals(JSON, rs);
     }
 
@@ -94,13 +91,16 @@ public class GenericEntityTest {
         System.out.println("-------------------- runPb2 ---------------------------------");
         ProtobufConvert convert = ProtobufConvert.root();
         GenericEntity<Long, String, SimpleEntity> bean = createBean();
-        byte[] bs = convert.convertTo(bean);
+        byte[] bs = convert.convertTo(ENTITY_TYPE, bean);
         ByteBuffer in = ConvertHelper.createByteBuffer(bs);
         GenericEntity<Long, String, SimpleEntity> rs = convert.convertFrom(ENTITY_TYPE, in);
         Assertions.assertEquals(JSON, rs.toString());
         Supplier<ByteBuffer> out = ConvertHelper.createSupplier();
         ByteBuffer[] buffers = convert.convertTo(out, ENTITY_TYPE, rs);
-        Assertions.assertArrayEquals(bs, ConvertHelper.toBytes(buffers));
+        byte[] bs2 = ConvertHelper.toBytes(buffers);
+        Utility.println("proto1 ", bs);
+        Utility.println("proto2 ", bs2);
+        Assertions.assertArrayEquals(bs, bs2);
     }
 
     @Test
@@ -108,13 +108,16 @@ public class GenericEntityTest {
         System.out.println("-------------------- runPb3 ---------------------------------");
         ProtobufConvert convert = ProtobufConvert.root();
         GenericEntity<Long, String, SimpleEntity> bean = createBean();
-        byte[] bs = convert.convertTo(bean);
+        byte[] bs = convert.convertTo(ENTITY_TYPE, bean);
+        Utility.println("proto1 ", bs);
         InputStream in = ConvertHelper.createInputStream(bs);
-        //        GenericEntity<Long, String, SimpleEntity> rs = convert.convertFrom(ENTITY_TYPE, in);
-        //        Assertions.assertEquals(JSON, rs.toString());
-        //        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        //        convert.convertTo(out, ENTITY_TYPE, rs);
-        //        Assertions.assertArrayEquals(bs, out.toByteArray());
+        GenericEntity<Long, String, SimpleEntity> rs = convert.convertFrom(ENTITY_TYPE, in);
+        Assertions.assertEquals(JSON, rs.toString());
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        convert.convertTo(out, ENTITY_TYPE, rs);
+        byte[] bs2 = out.toByteArray();
+        Utility.println("proto2 ", bs2);
+        Assertions.assertArrayEquals(bs, bs2);
     }
 
     @Test
@@ -173,26 +176,26 @@ public class GenericEntityTest {
 
     public static class GenericEntity<T, K, V> {
 
-        @ConvertColumn(index = 3)
-        private K oneName;
+        @ConvertColumn(index = 1)
+        private Entry<K, V> oneEntry;
 
         @ConvertColumn(index = 2)
         private List<? extends T> oneList;
 
-        @ConvertColumn(index = 1)
-        private Entry<K, V> oneEntry;
+        @ConvertColumn(index = 3)
+        private K oneName;
 
         @Override
         public String toString() {
             return JsonConvert.root().convertTo(this);
         }
 
-        public K getOneName() {
-            return oneName;
+        public Entry<K, V> getOneEntry() {
+            return oneEntry;
         }
 
-        public void setOneName(K oneName) {
-            this.oneName = oneName;
+        public void setOneEntry(Entry<K, V> oneEntry) {
+            this.oneEntry = oneEntry;
         }
 
         public List<? extends T> getOneList() {
@@ -203,12 +206,12 @@ public class GenericEntityTest {
             this.oneList = oneList;
         }
 
-        public Entry<K, V> getOneEntry() {
-            return oneEntry;
+        public K getOneName() {
+            return oneName;
         }
 
-        public void setOneEntry(Entry<K, V> oneEntry) {
-            this.oneEntry = oneEntry;
+        public void setOneName(K oneName) {
+            this.oneName = oneName;
         }
     }
 

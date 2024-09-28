@@ -6,7 +6,9 @@
 package org.redkale.convert.bson;
 
 import java.nio.ByteBuffer;
+import java.util.Objects;
 import java.util.function.Supplier;
+import org.redkale.util.ByteArray;
 import org.redkale.util.Utility;
 
 /**
@@ -49,24 +51,20 @@ public class BsonByteBufferWriter extends BsonWriter {
     }
 
     @Override
-    public byte[] toArray() {
-        if (buffers == null) {
-            return new byte[0];
+    public ByteArray toByteArray() {
+        ByteArray array = new ByteArray();
+        if (buffers != null) {
+            for (ByteBuffer buf : toBuffers()) {
+                array.put(buf);
+                buf.flip();
+            }
         }
-        int pos = 0;
-        byte[] bytes = new byte[this.count];
-        for (ByteBuffer buf : toBuffers()) {
-            int r = buf.remaining();
-            buf.get(bytes, pos, r);
-            buf.flip();
-            pos += r;
-        }
-        return bytes;
+        return array;
     }
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "[count=" + this.count + "]";
+        return Objects.toString(this);
     }
 
     @Override
@@ -138,17 +136,22 @@ public class BsonByteBufferWriter extends BsonWriter {
     }
 
     @Override
-    public byte[] content() {
+    public final byte[] toArray() {
         throw new UnsupportedOperationException("Not supported yet."); // 无需实现
     }
 
     @Override
-    public int offset() {
+    public final byte[] content() {
         throw new UnsupportedOperationException("Not supported yet."); // 无需实现
     }
 
     @Override
-    public int length() {
+    public final int offset() {
+        throw new UnsupportedOperationException("Not supported yet."); // 无需实现
+    }
+
+    @Override
+    public final int length() {
         throw new UnsupportedOperationException("Not supported yet."); // 无需实现
     }
 }

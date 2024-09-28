@@ -52,9 +52,8 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V> {
                     kencoder.convertTo(tmp, key);
                     tmp.writeTag(valTag);
                     vencoder.convertTo(tmp, v);
-
-                    out.writeLength(tmp.count());
-                    out.writeTo(tmp.toArray());
+                    
+                    out.writeTuple(tmp);
                     out.offerChild(tmp);
                 }
             }

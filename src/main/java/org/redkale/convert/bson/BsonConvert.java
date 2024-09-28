@@ -224,7 +224,7 @@ public class BsonConvert extends BinaryConvert<BsonReader, BsonWriter> {
     @Override
     public void convertToBytes(final Type type, final Object value, final ConvertBytesHandler handler) {
         final BsonWriter writer = pollWriter();
-        if (type == null && type == null) {
+        if (type == null && value == null) {
             writer.writeNull();
         } else {
             factory.loadEncoder(type).convertTo(writer, value);

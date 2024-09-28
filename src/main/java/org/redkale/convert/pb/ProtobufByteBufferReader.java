@@ -17,17 +17,21 @@ public class ProtobufByteBufferReader extends ProtobufReader {
 
     private ByteBuffer currentBuffer;
 
-    private int currentIndex = 0;
+    private int currBufIndex = 0;
+
+    protected ProtobufByteBufferReader() {
+        // do nothing
+    }
 
     protected ProtobufByteBufferReader(ByteBuffer... buffers) {
         this.buffers = buffers;
-        this.currentBuffer = buffers[currentIndex];
+        this.currentBuffer = buffers[currBufIndex];
     }
 
     @Override
     protected boolean recycle() {
         super.recycle();
-        this.currentIndex = 0;
+        this.currBufIndex = 0;
         this.currentBuffer = null;
         this.buffers = null;
         return false;
@@ -39,7 +43,7 @@ public class ProtobufByteBufferReader extends ProtobufReader {
             return this.currentBuffer.get();
         }
         for (; ; ) {
-            this.currentBuffer = this.buffers[++this.currentIndex];
+            this.currentBuffer = this.buffers[++this.currBufIndex];
             if (this.currentBuffer.hasRemaining()) {
                 this.position++;
                 return this.currentBuffer.get();
@@ -67,8 +71,8 @@ public class ProtobufByteBufferReader extends ProtobufReader {
             array.put(currentBuffer);
         }
         int end = buffers.length - 1;
-        while (this.currentIndex < end) {
-            this.currentBuffer = this.buffers[++this.currentIndex];
+        while (this.currBufIndex < end) {
+            this.currentBuffer = this.buffers[++this.currBufIndex];
             array.put(currentBuffer);
         }
         return array.getBytes();
@@ -83,8 +87,8 @@ public class ProtobufByteBufferReader extends ProtobufReader {
             return true;
         }
         int end = buffers.length - 1;
-        while (this.currentIndex < end) {
-            this.currentBuffer = this.buffers[++this.currentIndex];
+        while (this.currBufIndex < end) {
+            this.currentBuffer = this.buffers[++this.currBufIndex];
             if (this.currentBuffer.hasRemaining()) {
                 return true;
             }

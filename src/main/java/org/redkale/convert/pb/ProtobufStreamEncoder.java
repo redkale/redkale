@@ -40,8 +40,7 @@ public class ProtobufStreamEncoder<T> extends StreamEncoder<ProtobufWriter, T> {
             } else {
                 ProtobufWriter tmp = out.pollChild();
                 itemEncoder.convertTo(tmp, item);
-                out.writeLength(tmp.count());
-                out.writeTo(tmp.toArray());
+                out.writeTuple(tmp);
                 out.offerChild(tmp);
             }
         }

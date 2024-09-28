@@ -6,6 +6,7 @@
 package org.redkale.convert.pb;
 
 import java.nio.ByteBuffer;
+import java.util.Objects;
 import java.util.function.Supplier;
 import org.redkale.util.Utility;
 
@@ -16,7 +17,7 @@ public class ProtobufByteBufferWriter extends ProtobufWriter {
 
     private ByteBuffer[] buffers;
 
-    private int index;
+    private int currBufIndex;
 
     public ProtobufByteBufferWriter(int features, boolean enumtostring, Supplier<ByteBuffer> supplier) {
         super((byte[]) null);
@@ -29,7 +30,7 @@ public class ProtobufByteBufferWriter extends ProtobufWriter {
     protected boolean recycle() {
         super.recycle();
         this.buffers = null;
-        this.index = 0;
+        this.currBufIndex = 0;
         return false;
     }
 
@@ -38,7 +39,7 @@ public class ProtobufByteBufferWriter extends ProtobufWriter {
         if (buffers == null) {
             return new ByteBuffer[0];
         }
-        for (int i = index; i < this.buffers.length; i++) {
+        for (int i = currBufIndex; i < this.buffers.length; i++) {
             ByteBuffer buf = this.buffers[i];
             if (buf.position() != 0) {
                 buf.flip();
@@ -48,38 +49,17 @@ public class ProtobufByteBufferWriter extends ProtobufWriter {
     }
 
     @Override
-    public byte[] toArray() {
-        if (buffers == null) {
-            return new byte[0];
-        }
-        int pos = 0;
-        byte[] bytes = new byte[this.count];
-        for (ByteBuffer buf : toBuffers()) {
-            int r = buf.remaining();
-            buf.get(bytes, pos, r);
-            buf.flip();
-            pos += r;
-        }
-        return bytes;
-    }
-
-    @Override
-    public String toString() {
-        return this.getClass().getSimpleName() + "[count=" + this.count + "]";
-    }
-
-    @Override
     protected int expand(final int byteLength) {
         if (this.buffers == null) {
-            this.index = 0;
+            this.currBufIndex = 0;
             this.buffers = new ByteBuffer[] {supplier.get()};
         }
-        ByteBuffer buffer = this.buffers[index];
+        ByteBuffer buffer = this.buffers[currBufIndex];
         if (!buffer.hasRemaining()) {
             buffer.flip();
             buffer = supplier.get();
             this.buffers = Utility.append(this.buffers, buffer);
-            this.index++;
+            this.currBufIndex++;
         }
         int len = buffer.remaining();
         int size = 0;
@@ -93,18 +73,25 @@ public class ProtobufByteBufferWriter extends ProtobufWriter {
     }
 
     @Override
+    public void writeTo(final byte ch) {
+        expand(1);
+        this.buffers[currBufIndex].put(ch);
+        count++;
+    }
+
+    @Override
     public void writeTo(final byte[] chs, final int start, final int len) {
         if (expand(len) == 0) {
-            this.buffers[index].put(chs, start, len);
+            this.buffers[currBufIndex].put(chs, start, len);
         } else {
-            ByteBuffer buffer = this.buffers[index];
+            ByteBuffer buffer = this.buffers[currBufIndex];
             final int end = start + len;
             int remain = len; // 还剩多少没有写
             while (remain > 0) {
                 final int br = buffer.remaining();
                 if (remain > br) { // 一个buffer写不完
-                    buffer.put(chs, end - remain, br);
-                    buffer = nextByteBuffer();
+                    buffer.put(chs, end - remain, br).flip();
+                    buffer = this.buffers[++this.currBufIndex];
                     remain -= br;
                 } else {
                     buffer.put(chs, end - remain, remain);
@@ -115,30 +102,63 @@ public class ProtobufByteBufferWriter extends ProtobufWriter {
         this.count += len;
     }
 
-    private ByteBuffer nextByteBuffer() {
-        this.buffers[this.index].flip();
-        return this.buffers[++this.index];
+    @Override
+    protected final void writeUInt32(int value) {
+        if (value >= 0 && value < TENTHOUSAND_MAX) {
+            writeTo(TENTHOUSAND_UINT_BYTES[value]);
+            return;
+        } else if (value < 0 && value > TENTHOUSAND_MAX) {
+            writeTo(TENTHOUSAND_UINT_BYTES2[-value]);
+            return;
+        }
+        while (true) {
+            if ((value & ~0x7F) == 0) {
+                writeTo((byte) value);
+                return;
+            } else {
+                writeTo((byte) ((value & 0x7F) | 0x80));
+                value >>>= 7;
+            }
+        }
     }
 
     @Override
-    public void writeTo(final byte ch) {
-        expand(1);
-        this.buffers[index].put(ch);
-        count++;
+    protected final void writeUInt64(long value) {
+        if (value >= 0 && value < TENTHOUSAND_MAX) {
+            writeTo(TENTHOUSAND_UINT_BYTES[(int) value]);
+            return;
+        } else if (value < 0 && value > TENTHOUSAND_MAX) {
+            writeTo(TENTHOUSAND_UINT_BYTES2[(int) -value]);
+            return;
+        }
+        while (true) {
+            if ((value & ~0x7FL) == 0) {
+                writeTo((byte) value);
+                return;
+            } else {
+                writeTo((byte) ((value & 0x7F) | 0x80));
+                value >>>= 7;
+            }
+        }
     }
 
     @Override
-    public byte[] content() {
+    public String toString() {
+        return Objects.toString(this);
+    }
+
+    @Override
+    public final ProtobufWriter clear() {
         throw new UnsupportedOperationException("Not supported yet."); // 无需实现
     }
 
     @Override
-    public int offset() {
+    public final byte[] toArray() {
         throw new UnsupportedOperationException("Not supported yet."); // 无需实现
     }
 
     @Override
-    public int length() {
+    public final byte[] content() {
         throw new UnsupportedOperationException("Not supported yet."); // 无需实现
     }
 }

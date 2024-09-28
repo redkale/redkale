@@ -33,7 +33,7 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T> {
 
     @Override
     protected ProtobufWriter objectWriter(ProtobufWriter out, T value) {
-        if (out.count() > out.initOffset) {
+        if (out.length() > out.initOffset) {
             return out.pollChild().configParentFunc(out);
         }
         return out;

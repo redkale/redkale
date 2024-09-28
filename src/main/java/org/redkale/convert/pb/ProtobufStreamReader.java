@@ -38,6 +38,7 @@ class ProtobufStreamReader extends ProtobufByteBufferReader {
         if (backByte != null) {
             byte b = backByte;
             backByte = null;
+            this.position++;
             return b;
         }
         try {
@@ -67,6 +68,7 @@ class ProtobufStreamReader extends ProtobufByteBufferReader {
         try {
             int v;
             while ((v = in.read()) != -1) {
+                this.position++;
                 array.putByte(v);
             }
         } catch (IOException e) {
@@ -77,6 +79,12 @@ class ProtobufStreamReader extends ProtobufByteBufferReader {
 
     @Override
     public boolean hasNext() {
+        if (backByte != null) {
+            return true;
+        }
+        if (this.limit > 0 && (this.position + 1) >= this.limit) {
+            return false;
+        }
         try {
             int v = in.read();
             if (v == -1) {

@@ -105,8 +105,7 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
     // ------------------------------ writer -----------------------------------------------------------
     @Override
     protected <S extends ProtobufWriter> S configWrite(S writer) {
-        writer.initOffset = writer.count;
-        return writer;
+        return (S) writer.configWrite();
     }
 
     public ProtobufByteBufferWriter pollProtobufWriter(final Supplier<ByteBuffer> supplier) {
@@ -826,7 +825,7 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
             writer.writeNull();
             return;
         }
-        writer.initOffset = writer.count;
+        writer.configWrite();
         final Type t = type == null ? value.getClass() : type;
         Encodeable encoder = this.lastEncodeable;
         if (encoder == null || encoder.getType() != t) {
