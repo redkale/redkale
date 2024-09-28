@@ -303,44 +303,6 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
         return true;
     }
 
-    protected static ProtobufReader getItemReader(ProtobufReader in, DeMember member, boolean simpled, boolean first) {
-        if (simpled) {
-            if (member == null || first) {
-                return in;
-            }
-            int tag = in.readTag();
-            if (tag != member.getTag()) { // 元素结束
-                in.backTag(tag);
-                return null;
-            }
-            return in;
-        } else {
-            if (!first && member != null) {
-                int tag = in.readTag();
-                if (tag != member.getTag()) { // 元素结束
-                    in.backTag(tag);
-                    return null;
-                }
-            }
-            byte[] bs = in.readByteArray();
-            return new ProtobufReader(bs);
-        }
-    }
-
-    protected static boolean isNoLenBytesType(Type type) {
-        return (type instanceof Class && ((Class) type).isPrimitive())
-                || type == Boolean.class
-                || type == Byte.class
-                || type == Short.class
-                || type == Character.class
-                || type == Integer.class
-                || type == Float.class
-                || type == Long.class
-                || type == Double.class
-                || type == AtomicInteger.class
-                || type == AtomicLong.class;
-    }
-
     protected static boolean isSimpleType(Class fieldClass) {
         return fieldClass.isPrimitive()
                 || fieldClass == Boolean.class
@@ -476,23 +438,21 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
     public static int wireType(Type javaType, boolean enumtostring) {
         if (javaType == double.class || javaType == Double.class) {
             return 1;
-        }
-        if (javaType == float.class || javaType == Float.class) {
+        } else if (javaType == float.class || javaType == Float.class) {
             return 5;
-        }
-        if (javaType == boolean.class || javaType == Boolean.class) {
+        } else if ((javaType == boolean.class || javaType == Boolean.class)
+                || (javaType == byte.class || javaType == Byte.class)
+                || (javaType == char.class || javaType == Character.class)
+                || (javaType == short.class || javaType == Short.class)
+                || (javaType == int.class || javaType == Integer.class)
+                || (javaType == long.class || javaType == Long.class)
+                || (javaType == AtomicInteger.class || javaType == AtomicLong.class)) {
             return 0;
+        } else if (!enumtostring && (javaType instanceof Class) && ((Class) javaType).isEnum()) {
+            return 0;
+        } else { // byte[]
+            return 2;
         }
-        if (javaType instanceof Class) {
-            Class javaClazz = (Class) javaType;
-            if (javaClazz.isEnum()) {
-                return enumtostring ? 2 : 0;
-            }
-            if (javaClazz.isPrimitive() || Number.class.isAssignableFrom(javaClazz)) {
-                return 0;
-            }
-        }
-        return 2;
     }
 
     public static String wireTypeString(Type javaType, boolean enumtostring) {

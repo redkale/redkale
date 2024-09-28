@@ -595,7 +595,7 @@ public final class ApiDocCommand {
                         if (col != null) {
                             desc = col.comment();
                             if (!col.nullable()) {
-                                requireds.add(member.getAttribute().field());
+                                requireds.add(member.getFieldName());
                             }
                         }
                         if (desc.isEmpty() && member.getField().getAnnotation(Comment.class) != null) {
@@ -613,7 +613,7 @@ public final class ApiDocCommand {
                         if (col != null) {
                             desc = col.comment();
                             if (!col.nullable()) {
-                                requireds.add(member.getAttribute().field());
+                                requireds.add(member.getFieldName());
                             }
                         }
                         if (desc.isEmpty() && member.getMethod().getAnnotation(Comment.class) != null) {
@@ -630,7 +630,7 @@ public final class ApiDocCommand {
                     if (!desc.isEmpty()) {
                         schemaMap.put("description", desc);
                     }
-                    properties.put(member.getAttribute().field(), schemaMap);
+                    properties.put(member.getFieldName(), schemaMap);
                 }
             }
             if (!requireds.isEmpty()) {
@@ -899,7 +899,7 @@ public final class ApiDocCommand {
                         if (index > 0) {
                             json.append(",");
                         }
-                        json.append('"').append(member.getAttribute().field()).append("\":{}");
+                        json.append('"').append(member.getFieldName()).append("\":{}");
                         index++;
                     }
                     json.append("}");

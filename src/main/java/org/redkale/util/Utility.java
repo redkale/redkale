@@ -3562,6 +3562,18 @@ public final class Utility {
      * @param bytes 字节数组
      */
     public static void println(String string, byte... bytes) {
+        println(string, bytes, 0, bytes.length);
+    }
+
+    /**
+     * 将字节数组的内容转换成字符串并打印到控制台, string参数不为空时会追加在字节数组内容字符串之前
+     *
+     * @param string 字符串前缀
+     * @param bytes 字节数组
+     * @param start 起始位置
+     * @param len 长度
+     */
+    public static void println(String string, byte[] bytes, int start, int len) {
         if (bytes == null) {
             return;
         }
@@ -3569,9 +3581,10 @@ public final class Utility {
         if (string != null) {
             sb.append(string);
         }
-        sb.append(bytes.length).append(".[");
+        sb.append(len).append(".[");
         boolean last = false;
-        for (byte b : bytes) {
+        for (int i = 0; i < len; i++) {
+            byte b = bytes[start + i];
             if (last) {
                 sb.append(',');
             }

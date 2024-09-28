@@ -28,34 +28,23 @@ public class ProtobufMapDecoder<K, V> extends MapDecoder<ProtobufReader, K, V> {
         this.checkInited();
         in.readMapB(member, this.keyDecoder, this.valueDecoder);
         final Map<K, V> result = this.creator.create();
-        boolean first = true;
         Decodeable<ProtobufReader, K> kdecoder = this.keyDecoder;
         Decodeable<ProtobufReader, V> vdecoder = this.valueDecoder;
+        final int limit = in.limit();
         while (in.hasNext()) {
-            ProtobufReader entryReader = getEntryReader(in, member, first);
-            if (entryReader == null) {
+            int contentLen = in.readRawVarint32();
+            in.limit(in.position() + contentLen + 1);
+            in.readTag();
+            K key = kdecoder.convertFrom(in);
+            in.readTag();
+            V value = vdecoder.convertFrom(in);
+            result.put(key, value);
+            in.limit(limit);
+            if (!in.readNextTag(member)) { // 元素结束
                 break;
             }
-            entryReader.readTag();
-            K key = kdecoder.convertFrom(entryReader);
-            entryReader.readTag();
-            V value = vdecoder.convertFrom(entryReader);
-            result.put(key, value);
-            first = false;
         }
         in.readMapE();
         return result;
-    }
-
-    protected ProtobufReader getEntryReader(ProtobufReader in, DeMember member, boolean first) {
-        if (!first && member != null) {
-            int tag = in.readTag();
-            if (tag != member.getTag()) {
-                in.backTag(tag);
-                return null;
-            }
-        }
-        byte[] bs = in.readByteArray();
-        return new ProtobufReader(bs);
     }
 }

@@ -16,9 +16,11 @@ public class ProtobufReader extends Reader {
 
     protected int position = -1;
 
-    protected int initoffset;
+    protected byte[] content;
 
-    private byte[] content;
+    //protected int initoffset;
+
+    protected int limit;
 
     protected int cacheTag = Integer.MIN_VALUE;
 
@@ -49,7 +51,8 @@ public class ProtobufReader extends Reader {
     public final void setBytes(byte[] bytes) {
         if (bytes == null) {
             this.position = 0;
-            this.initoffset = 0;
+            //this.initoffset = 0;
+            this.limit = 0;
         } else {
             setBytes(bytes, 0, bytes.length);
         }
@@ -58,17 +61,28 @@ public class ProtobufReader extends Reader {
     public final void setBytes(byte[] bytes, int start, int len) {
         if (bytes == null) {
             this.position = 0;
-            this.initoffset = 0;
+            //this.initoffset = 0;
+            this.limit = 0;
         } else {
             this.content = bytes;
             this.position = start - 1;
-            this.initoffset = this.position;
+            this.limit = start + len;
+            //this.initoffset = this.position;
         }
+    }
+
+    public void limit(int limit) {
+        this.limit = limit;
+    }
+
+    public int limit() {
+        return this.limit;
     }
 
     protected boolean recycle() {
         this.position = -1;
-        this.initoffset = -1;
+        this.limit = -1;
+        //this.initoffset = -1;
         this.content = null;
         return true;
     }
@@ -78,11 +92,12 @@ public class ProtobufReader extends Reader {
         return this;
     }
 
+    // 通常用于尾部解析
     public byte[] remainBytes() {
-        if (this.position >= this.content.length) {
+        if (this.position >= this.limit) {
             return new byte[0];
         }
-        return Arrays.copyOfRange(this.content, this.position + 1, this.content.length);
+        return Arrays.copyOfRange(this.content, this.position + 1, this.limit);
     }
 
     /** 跳过属性的值 */
@@ -113,7 +128,7 @@ public class ProtobufReader extends Reader {
 
     @Override
     public final String readObjectB(final Class clazz) {
-        return (this.position + 1) < this.content.length ? "" : null;
+        return (this.position + 1) < this.limit ? "" : null;
     }
 
     @Override
@@ -157,13 +172,6 @@ public class ProtobufReader extends Reader {
     @Override
     public final int position() {
         return this.position;
-    }
-
-    public final int readMemberContentLength(DeMember member, Decodeable decoder) {
-        if (member == null && decoder == null) {
-            return -1; // 为byte[]
-        }
-        return member != null ? -1 : readRawVarint32(); // readUInt32
     }
 
     @Override
@@ -452,6 +460,18 @@ public class ProtobufReader extends Reader {
         return val;
     }
 
+    public boolean readNextTag(DeMember member) {
+        if (!hasNext()) {
+            return false;
+        }
+        int tag = readTag();
+        if (tag != member.getTag()) { // 元素结束
+            backTag(tag);
+            return false;
+        }
+        return true;
+    }
+
     protected final int readTag() {
         if (cacheTag != Integer.MIN_VALUE) {
             int tag = cacheTag;
@@ -471,22 +491,7 @@ public class ProtobufReader extends Reader {
 
     @Override
     public boolean hasNext() {
-        return (this.position + 1) < this.content.length;
-    }
-
-    /**
-     * 判断对象是否存在下一个属性或者数组是否存在下一个元素
-     *
-     * @param startPosition 起始位置
-     * @param contentLength 内容大小， 不确定的传-1
-     * @return 是否存在
-     */
-    public boolean hasNext(int startPosition, int contentLength) {
-        // ("-------------: " + startPosition + ", " + contentLength + ", " + this.position);
-        if (startPosition >= 0 && contentLength >= 0) {
-            return (this.position) < (startPosition + contentLength);
-        }
-        return (this.position + 1) < this.content.length;
+        return (this.position + 1) < this.limit;
     }
 
     @Override
@@ -503,7 +508,7 @@ public class ProtobufReader extends Reader {
         fastpath:
         {
             int curr = this.position;
-            if ((curr + 1) == data.length) {
+            if ((curr + 1) == limit) {
                 break fastpath;
             }
 
@@ -511,7 +516,7 @@ public class ProtobufReader extends Reader {
             if ((x = data[++curr]) >= 0) {
                 this.position = curr;
                 return x;
-            } else if (data.length - (curr + 1) < 9) {
+            } else if (limit - (curr + 1) < 9) {
                 break fastpath;
             } else if ((x ^= (data[++curr] << 7)) < 0) {
                 x ^= (~0 << 7);
@@ -543,7 +548,7 @@ public class ProtobufReader extends Reader {
         fastpath:
         {
             int curr = this.position;
-            if ((curr + 1) == data.length) {
+            if ((curr + 1) == this.limit) {
                 break fastpath;
             }
 
@@ -552,7 +557,7 @@ public class ProtobufReader extends Reader {
             if ((y = data[++curr]) >= 0) {
                 this.position = curr;
                 return y;
-            } else if (data.length - (curr + 1) < 9) {
+            } else if (this.limit - (curr + 1) < 9) {
                 break fastpath;
             } else if ((y ^= (data[++curr] << 7)) < 0) {
                 x = y ^ (~0 << 7);

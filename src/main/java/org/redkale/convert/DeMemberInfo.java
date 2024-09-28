@@ -30,7 +30,7 @@ public class DeMemberInfo {
         this.memberFieldMap = new HashMap<>(deMembers.length);
         this.memberTagMap = new HashMap<>(deMembers.length);
         for (DeMember member : deMembers) {
-            this.memberFieldMap.put(member.getAttribute().field(), member);
+            this.memberFieldMap.put(member.getFieldName(), member);
             this.memberTagMap.put(member.getTag(), member);
         }
         this.memberNode = DeMemberNode.create(deMembers);

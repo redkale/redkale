@@ -47,7 +47,7 @@ public class JsonMultiImplDecoder<T> implements Decodeable<JsonReader, T> {
                 max = decoder.getMembers().length;
             }
             for (DeMember member : decoder.getMembers()) {
-                String name = member.getAttribute().field();
+                String name = member.getFieldName();
                 this.repeatFieldToDecoders.put(name, decoder);
                 fields[i].add(name);
                 Attribute t = fieldTypes.get(name);
@@ -164,7 +164,7 @@ public class JsonMultiImplDecoder<T> implements Decodeable<JsonReader, T> {
                 for (int j = 0; j < params.length; j++) {
                     if (params[j] != null
                             && params[j][0] != null
-                            && constructorFields[i].getAttribute().field().equals(((Attribute) params[j][0]).field())) {
+                            && constructorFields[i].getFieldName().equals(((Attribute) params[j][0]).field())) {
                         constructorParams[i] = params[j][1];
                         params[j] = null;
                         break;

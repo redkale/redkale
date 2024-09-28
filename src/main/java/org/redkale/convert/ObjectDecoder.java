@@ -359,13 +359,12 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
     @Override
     public T convertFrom(final R in) {
         this.checkInited();
-        R objin = objectReader(in);
-        final String clazz = objin.readObjectB(typeClass);
+        final String clazz = in.readObjectB(typeClass);
         if (clazz == null) {
             return null;
         }
         if (!clazz.isEmpty()) {
-            return (T) factory.loadDecoder(factory.getEntityAlias(clazz)).convertFrom(objin);
+            return (T) factory.loadDecoder(factory.getEntityAlias(clazz)).convertFrom(in);
         }
         if (this.creator == null) {
             if (typeClass.isInterface() || Modifier.isAbstract(typeClass.getModifiers())) {
@@ -378,18 +377,17 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
         if (this.creatorConstructorMembers == null) { // 空构造函数
             final T result = this.creator == null ? null : this.creator.create();
             boolean first = true;
-            while (objin.hasNext()) {
-                DeMember member = objin.readFieldName(info);
-                objin.readBlank();
+            while (in.hasNext()) {
+                DeMember member = in.readFieldName(info);
+                in.readBlank();
                 if (member == null) {
-                    objin.skipValue(); // 跳过不存在的属性的值
+                    in.skipValue(); // 跳过不存在的属性的值
                 } else {
-                    readDeMemberValue(objin, member, result, first);
+                    readDeMemberValue(in, member, result, first);
                 }
                 first = false;
             }
-            objin.readObjectE(typeClass);
-            offerReader(in, objin);
+            in.readObjectE(typeClass);
             return result;
         } else { // 带参数的构造函数
             final DeMember<R, T, ?>[] constructorFields = this.creatorConstructorMembers;
@@ -397,13 +395,13 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
             final Object[][] otherParams = new Object[info.length()][2];
             int oc = 0;
             boolean first = true;
-            while (objin.hasNext()) {
-                DeMember member = objin.readFieldName(info);
-                objin.readBlank();
+            while (in.hasNext()) {
+                DeMember member = in.readFieldName(info);
+                in.readBlank();
                 if (member == null) {
-                    objin.skipValue(); // 跳过不存在的属性的值
+                    in.skipValue(); // 跳过不存在的属性的值
                 } else {
-                    Object val = readDeMemberValue(objin, member, first);
+                    Object val = readDeMemberValue(in, member, first);
                     boolean flag = true;
                     for (int i = 0; i < constructorFields.length; i++) {
                         if (member == constructorFields[i]) {
@@ -418,8 +416,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                 }
                 first = false;
             }
-            objin.readObjectE(typeClass);
-            offerReader(in, objin);
+            in.readObjectE(typeClass);
             if (this.creator == null) {
                 return null;
             }
@@ -437,18 +434,6 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
     }
 
     protected void afterInitDeMember(ConvertFactory factory) {
-        // do nothing
-    }
-
-    protected boolean hasNext(R in, boolean first) {
-        return in.hasNext();
-    }
-
-    protected R objectReader(R in) {
-        return in;
-    }
-
-    protected void offerReader(R parent, R out) {
         // do nothing
     }
 

@@ -13,10 +13,25 @@ import org.redkale.util.*;
  * @author zhangjx
  * @param <T> T
  */
-public class ProtobufObjectDecoder<T> extends ObjectDecoder<ProtobufReader, T> {
+public class ProtobufObjectDecoder<T> extends ObjectDecoder<ProtobufReader, T>
+        implements TagDecodeable<ProtobufReader, T> {
 
     protected ProtobufObjectDecoder(Type type) {
         super(type);
+    }
+
+    @Override
+    public T convertFrom(ProtobufReader in, DeMember member) {
+        if (member == null) {
+            return super.convertFrom(in);
+        } else {
+            final int limit = in.limit();
+            int contentLen = in.readRawVarint32();
+            in.limit(in.position() + contentLen + 1);
+            T result = super.convertFrom(in);
+            in.limit(limit);
+            return result;
+        }
     }
 
     @Override
@@ -28,19 +43,6 @@ public class ProtobufObjectDecoder<T> extends ObjectDecoder<ProtobufReader, T> {
         Attribute attr = member.getAttribute();
         boolean enumtostring = ((ProtobufFactory) factory).enumtostring;
         setTag(member, ProtobufFactory.getTag(attr.field(), attr.genericType(), member.getPosition(), enumtostring));
-    }
-
-    @Override
-    protected ProtobufReader objectReader(ProtobufReader in) {
-        if (in.position() > in.initoffset) {
-            return new ProtobufReader(in.readByteArray());
-        }
-        return in;
-    }
-
-    @Override
-    protected boolean hasNext(ProtobufReader in, boolean first) {
-        return in.hasNext();
     }
 
     @Override
@@ -62,4 +64,5 @@ public class ProtobufObjectDecoder<T> extends ObjectDecoder<ProtobufReader, T> {
             member.read(in, result);
         }
     }
+
 }

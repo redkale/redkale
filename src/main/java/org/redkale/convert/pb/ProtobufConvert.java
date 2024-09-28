@@ -240,7 +240,7 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
                             .append(ProtobufFactory.wireTypeString(
                                     member.getDecoder().getType(), ((ProtobufFactory) factory).enumtostring))
                             .append(" ")
-                            .append(member.getAttribute().field())
+                            .append(member.getFieldName())
                             .append("\" : ")
                             .append(member.getPosition())
                             .append(i == members.size() - 1 ? "\r\n" : ",\r\n");
@@ -389,7 +389,7 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
                             .append(ProtobufFactory.wireTypeString(
                                     member.getEncoder().getType(), ((ProtobufFactory) factory).enumtostring))
                             .append(" ")
-                            .append(member.getAttribute().field())
+                            .append(member.getFieldName())
                             .append("\" : ")
                             .append(member.getPosition())
                             .append(i == members.size() - 1 ? "\r\n" : ",\r\n");
@@ -541,7 +541,7 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
                             .append(ProtobufFactory.wireTypeString(
                                     member.getEncoder().getType(), ((ProtobufFactory) factory).enumtostring))
                             .append(" ")
-                            .append(member.getAttribute().field())
+                            .append(member.getFieldName())
                             .append(" = ")
                             .append(member.getPosition())
                             .append(member.getComment().isEmpty() ? ";\r\n" : ("; //" + member.getComment() + " \r\n"));

@@ -8,8 +8,8 @@ import java.lang.reflect.*;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.atomic.*;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.*;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.convert.*;
 import org.redkale.util.*;
@@ -54,7 +54,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
         final Map<String, EnMember> otherMembers = new HashMap<>();
         StringBuilder elementb = new StringBuilder();
         for (EnMember member : selfObjEncoder.getMembers()) {
-            final String fieldName = member.getAttribute().field();
+            final String fieldName = member.getFieldName();
             final Class fieldClass = member.getAttribute().type();
             final Type fieldType = member.getAttribute().genericType();
             elementb.append(fieldName).append(',');
@@ -172,7 +172,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
             mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, "writeObjectB", "(Ljava/lang/Object;)V", false);
 
             for (EnMember member : selfObjEncoder.getMembers()) {
-                final String fieldName = member.getAttribute().field();
+                final String fieldName = member.getFieldName();
                 final Type fieldType = member.getAttribute().genericType();
                 final Class fieldClass = member.getAttribute().type();
                 if (ProtobufFactory.isSimpleType(fieldClass)) {

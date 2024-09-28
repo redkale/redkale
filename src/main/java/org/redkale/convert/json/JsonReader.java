@@ -44,7 +44,7 @@ public class JsonReader extends Reader {
     public JsonReader(char[] text, int start, int len) {
         this.text = Objects.requireNonNull(text);
         this.position = start - 1;
-        this.limit = start + len - 1;
+        this.limit = this.position + len;
     }
 
     public final JsonReader setText(String text) {
@@ -58,7 +58,7 @@ public class JsonReader extends Reader {
     public final JsonReader setText(char[] text, int start, int len) {
         this.text = text;
         this.position = start - 1;
-        this.limit = start + len - 1;
+        this.limit = this.position + len;
         return this;
     }
 

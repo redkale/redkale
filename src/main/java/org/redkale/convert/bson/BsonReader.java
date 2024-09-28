@@ -7,9 +7,9 @@ package org.redkale.convert.bson;
 
 import java.nio.charset.StandardCharsets;
 import org.redkale.convert.*;
+import static org.redkale.convert.Reader.SIGN_NULL;
 import org.redkale.convert.ext.ByteSimpledCoder;
 import org.redkale.util.*;
-import static org.redkale.convert.Reader.SIGN_NULL;
 
 /**
  * BSON数据源
@@ -129,7 +129,6 @@ public class BsonReader extends Reader {
                 break;
             default:
                 Decodeable decoder = BsonFactory.typeEnum(val);
-                System.out.println("val = " + val + ", decoder = " + decoder);
                 if (decoder != null) {
                     decoder.convertFrom(this);
                 }

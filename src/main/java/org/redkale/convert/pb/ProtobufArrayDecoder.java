@@ -27,26 +27,25 @@ public class ProtobufArrayDecoder<T> extends ArrayDecoder<ProtobufReader, T> {
     @Override
     public T[] convertFrom(ProtobufReader in, DeMember member) {
         this.checkInited();
+        final boolean simpled = this.componentSimpled;
         final Decodeable<ProtobufReader, T> itemDecoder = this.componentDecoder;
         in.readArrayB(member, itemDecoder);
-        int contentLength = in.readMemberContentLength(member, itemDecoder);
         final List<T> result = new ArrayList();
-        boolean first = true;
-        int startPosition = in.position();
-        while (in.hasNext(startPosition, contentLength)) {
-            ProtobufReader itemReader = getItemReader(in, member, first);
-            if (itemReader == null) { // 元素读取完毕
+        final int limit = in.limit();
+        while (in.hasNext()) {
+            ProtobufReader subin = in;
+            if (!simpled) {
+                int contentLen = in.readRawVarint32();
+                in.limit(in.position() + contentLen + 1);
+            }
+            result.add(itemDecoder.convertFrom(subin));
+            in.limit(limit);
+            if (!in.readNextTag(member)) { // 元素结束
                 break;
             }
-            result.add(itemDecoder.convertFrom(itemReader));
-            first = false;
         }
         in.readArrayE();
         T[] rs = this.componentArrayFunction.apply(result.size());
         return result.toArray(rs);
-    }
-
-    protected ProtobufReader getItemReader(ProtobufReader in, DeMember member, boolean first) {
-        return ProtobufFactory.getItemReader(in, member, componentSimpled, first);
     }
 }

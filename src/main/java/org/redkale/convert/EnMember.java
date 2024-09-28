@@ -137,6 +137,10 @@ public final class EnMember<W extends Writer, T, F> {
         return attribute.field().equals(name);
     }
 
+    public String getFieldName() {
+        return this.attribute.field();
+    }
+
     public Attribute<T, F> getAttribute() {
         return attribute;
     }

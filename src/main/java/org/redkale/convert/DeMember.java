@@ -119,6 +119,10 @@ public final class DeMember<R extends Reader, T, F> {
         return ((TagDecodeable<R, F>) decoder).convertFrom(in, this);
     }
 
+    public String getFieldName() {
+        return this.attribute.field();
+    }
+
     public Attribute<T, F> getAttribute() {
         return this.attribute;
     }
