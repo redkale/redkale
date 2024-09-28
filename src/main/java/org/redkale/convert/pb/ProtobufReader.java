@@ -18,13 +18,13 @@ public class ProtobufReader extends Reader {
 
     protected int position = -1;
 
-    protected byte[] content;
-
-    protected int limit;
+    protected int limit = -1;
 
     protected int cacheTag = Integer.MIN_VALUE;
 
     protected boolean enumtostring;
+
+    private byte[] content;
 
     public ProtobufReader() {
         // do nothing
@@ -284,6 +284,7 @@ public class ProtobufReader extends Reader {
 
     public final int[] readInts() {
         int len = readRawVarint32();
+        System.out.println("等到长度: " + len);
         List<Integer> list = new ArrayList<>(len);
         while (len > 0) {
             int val = readInt();

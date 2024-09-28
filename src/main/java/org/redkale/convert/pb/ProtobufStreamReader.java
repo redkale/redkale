@@ -34,12 +34,6 @@ class ProtobufStreamReader extends ProtobufByteBufferReader {
     }
 
     @Override
-    protected int remaining() {
-        int count = 0;
-        return count;
-    }
-
-    @Override
     protected byte nextByte() {
         if (backByte != null) {
             byte b = backByte;

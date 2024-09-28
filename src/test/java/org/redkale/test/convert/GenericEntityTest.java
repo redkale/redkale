@@ -27,7 +27,7 @@ import org.redkale.util.Utility;
 public class GenericEntityTest {
     private static final Type ENTITY_TYPE = new TypeToken<GenericEntity<Long, String, SimpleEntity>>() {}.getType();
     private static final String JSON =
-            "{\"entry\":{\"key\":\"aaaa\",\"value\":{\"addr\":\"127.0.0.1:6666\",\"addrs\":[22222,33333,44444,55555,66666,77777,88888,99999],\"desc\":\"\",\"id\":1000000001,\"lists\":[\"aaaa\",\"bbbb\",\"cccc\"],\"map\":{\"AAA\":111,\"CCC\":333,\"BBB\":222},\"name\":\"this is name\\n \\\"test\",\"strings\":[\"zzz\",\"yyy\",\"xxx\"]}},\"list\":[1234567890],\"name\":\"你好\"}";
+            "{\"oneEntry\":{\"key\":\"aaaa\",\"value\":{\"addr\":\"127.0.0.1:6666\",\"addrs\":[22222,33333,44444,55555,66666,77777,88888,99999],\"desc\":\"\",\"id\":1000000001,\"lists\":[\"aaaa\",\"bbbb\",\"cccc\"],\"map\":{\"AAA\":111,\"CCC\":333,\"BBB\":222},\"name\":\"this is name\\n \\\"test\",\"strings\":[\"zzz\",\"yyy\",\"xxx\"]}},\"oneList\":[1234567890],\"oneName\":\"你好\"}";
 
     public static void main(String[] args) throws Throwable {
         GenericEntityTest test = new GenericEntityTest();
@@ -44,6 +44,7 @@ public class GenericEntityTest {
 
     @Test
     public void runJson1() throws Exception {
+        System.out.println("-------------------- runJson1 ---------------------------------");
         JsonConvert convert = JsonConvert.root();
         GenericEntity<Long, String, SimpleEntity> bean = createBean();
         String json = convert.convertTo(bean);
@@ -54,6 +55,7 @@ public class GenericEntityTest {
 
     @Test
     public void runJson2() throws Exception {
+        System.out.println("-------------------- runJson2 ---------------------------------");
         JsonConvert convert = JsonConvert.root();
         ByteBuffer in = ConvertHelper.createByteBuffer(createBytes());
         GenericEntity<Long, String, SimpleEntity> bean = convert.convertFrom(ENTITY_TYPE, in);
@@ -65,6 +67,7 @@ public class GenericEntityTest {
 
     @Test
     public void runJson3() throws Exception {
+        System.out.println("-------------------- runJson3 ---------------------------------");
         JsonConvert convert = JsonConvert.root();
         InputStream in = ConvertHelper.createInputStream(createBytes());
         GenericEntity<Long, String, SimpleEntity> bean = convert.convertFrom(ENTITY_TYPE, in);
@@ -76,6 +79,7 @@ public class GenericEntityTest {
 
     @Test
     public void runPb1() throws Exception {
+        System.out.println("-------------------- runPb1 ---------------------------------");
         ProtobufConvert convert = ProtobufConvert.root();
         GenericEntity<Long, String, SimpleEntity> bean = createBean();
         byte[] bs = convert.convertTo(bean);
@@ -87,32 +91,35 @@ public class GenericEntityTest {
 
     @Test
     public void runPb2() throws Exception {
+        System.out.println("-------------------- runPb2 ---------------------------------");
         ProtobufConvert convert = ProtobufConvert.root();
         GenericEntity<Long, String, SimpleEntity> bean = createBean();
         byte[] bs = convert.convertTo(bean);
         ByteBuffer in = ConvertHelper.createByteBuffer(bs);
-//        GenericEntity<Long, String, SimpleEntity> rs = convert.convertFrom(ENTITY_TYPE, in);
-//        Assertions.assertEquals(JSON, rs.toString());
-//        Supplier<ByteBuffer> out = ConvertHelper.createSupplier();
-//        ByteBuffer[] buffers = convert.convertTo(out, ENTITY_TYPE, rs);
-//        Assertions.assertArrayEquals(bs, ConvertHelper.toBytes(buffers));
+        GenericEntity<Long, String, SimpleEntity> rs = convert.convertFrom(ENTITY_TYPE, in);
+        Assertions.assertEquals(JSON, rs.toString());
+        Supplier<ByteBuffer> out = ConvertHelper.createSupplier();
+        ByteBuffer[] buffers = convert.convertTo(out, ENTITY_TYPE, rs);
+        Assertions.assertArrayEquals(bs, ConvertHelper.toBytes(buffers));
     }
 
     @Test
     public void runPb3() throws Exception {
+        System.out.println("-------------------- runPb3 ---------------------------------");
         ProtobufConvert convert = ProtobufConvert.root();
         GenericEntity<Long, String, SimpleEntity> bean = createBean();
         byte[] bs = convert.convertTo(bean);
         InputStream in = ConvertHelper.createInputStream(bs);
-//        GenericEntity<Long, String, SimpleEntity> rs = convert.convertFrom(ENTITY_TYPE, in);
-//        Assertions.assertEquals(JSON, rs.toString());
-//        ByteArrayOutputStream out = new ByteArrayOutputStream();
-//        convert.convertTo(out, ENTITY_TYPE, rs);
-//        Assertions.assertArrayEquals(bs, out.toByteArray());
+        //        GenericEntity<Long, String, SimpleEntity> rs = convert.convertFrom(ENTITY_TYPE, in);
+        //        Assertions.assertEquals(JSON, rs.toString());
+        //        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        //        convert.convertTo(out, ENTITY_TYPE, rs);
+        //        Assertions.assertArrayEquals(bs, out.toByteArray());
     }
 
     @Test
     public void runBson1() throws Exception {
+        System.out.println("-------------------- runBson1 ---------------------------------");
         BsonConvert convert = BsonConvert.root();
         GenericEntity<Long, String, SimpleEntity> bean = createBean();
         byte[] bs = convert.convertTo(bean);
@@ -124,6 +131,7 @@ public class GenericEntityTest {
 
     @Test
     public void runBson2() throws Exception {
+        System.out.println("-------------------- runBson2 ---------------------------------");
         BsonConvert convert = BsonConvert.root();
         GenericEntity<Long, String, SimpleEntity> bean = createBean();
         byte[] bs = convert.convertTo(bean);
@@ -137,6 +145,7 @@ public class GenericEntityTest {
 
     @Test
     public void runBson3() throws Exception {
+        System.out.println("-------------------- runBson3 ---------------------------------");
         BsonConvert convert = BsonConvert.root();
         GenericEntity<Long, String, SimpleEntity> bean = createBean();
         byte[] bs = convert.convertTo(bean);
@@ -154,89 +163,89 @@ public class GenericEntityTest {
 
     private GenericEntity<Long, String, SimpleEntity> createBean() {
         GenericEntity<Long, String, SimpleEntity> bean = new GenericEntity<>();
-        bean.setName("你好");
+        bean.setOneName("你好");
         List<Long> list = new ArrayList<>();
         list.add(1234567890L);
-        bean.setList(list);
-        bean.setEntry(new GenericEntity.Entry<>("aaaa", SimpleEntity.create()));
+        bean.setOneList(list);
+        bean.setOneEntry(new Entry<>("aaaa", SimpleEntity.create()));
         return bean;
     }
 
     public static class GenericEntity<T, K, V> {
 
         @ConvertColumn(index = 3)
-        private K name;
+        private K oneName;
 
         @ConvertColumn(index = 2)
-        private List<? extends T> list;
+        private List<? extends T> oneList;
 
         @ConvertColumn(index = 1)
-        private Entry<K, V> entry;
+        private Entry<K, V> oneEntry;
 
         @Override
         public String toString() {
             return JsonConvert.root().convertTo(this);
         }
 
-        public K getName() {
-            return name;
+        public K getOneName() {
+            return oneName;
         }
 
-        public void setName(K name) {
-            this.name = name;
+        public void setOneName(K oneName) {
+            this.oneName = oneName;
         }
 
-        public List<? extends T> getList() {
-            return list;
+        public List<? extends T> getOneList() {
+            return oneList;
         }
 
-        public void setList(List<? extends T> list) {
-            this.list = list;
+        public void setOneList(List<? extends T> oneList) {
+            this.oneList = oneList;
         }
 
-        public Entry<K, V> getEntry() {
-            return entry;
+        public Entry<K, V> getOneEntry() {
+            return oneEntry;
         }
 
-        public void setEntry(Entry<K, V> entry) {
-            this.entry = entry;
+        public void setOneEntry(Entry<K, V> oneEntry) {
+            this.oneEntry = oneEntry;
+        }
+    }
+
+    public static class Entry<K, V> {
+
+        @ConvertColumn(index = 1)
+        private K key;
+
+        @ConvertColumn(index = 2)
+        private V value;
+
+        public Entry() {}
+
+        public Entry(K key, V value) {
+            this.key = key;
+            this.value = value;
         }
 
-        public static class Entry<K, V> {
+        @Override
+        public String toString() {
+            return JsonConvert.root().convertTo(this);
+        }
 
-            @ConvertColumn(index = 1)
-            private K key;
+        public K getKey() {
+            return key;
+        }
 
-            @ConvertColumn(index = 2)
-            private V value;
+        public void setKey(K key) {
+            this.key = key;
+        }
 
-            public Entry() {}
+        public V getValue() {
+            return value;
+        }
 
-            public Entry(K key, V value) {
-                this.key = key;
-                this.value = value;
-            }
-
-            @Override
-            public String toString() {
-                return JsonConvert.root().convertTo(this);
-            }
-
-            public K getKey() {
-                return key;
-            }
-
-            public void setKey(K key) {
-                this.key = key;
-            }
-
-            public V getValue() {
-                return value;
-            }
-
-            public void setValue(V value) {
-                this.value = value;
-            }
+        public void setValue(V value) {
+            this.value = value;
         }
     }
 }

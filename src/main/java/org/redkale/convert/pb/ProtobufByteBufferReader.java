@@ -33,14 +33,6 @@ public class ProtobufByteBufferReader extends ProtobufReader {
         return false;
     }
 
-    protected int remaining() {
-        int count = 0;
-        for (int i = currentIndex; i < buffers.length; i++) {
-            count += buffers[i].remaining();
-        }
-        return count;
-    }
-
     protected byte nextByte() {
         if (this.currentBuffer.hasRemaining()) {
             this.position++;
@@ -84,6 +76,9 @@ public class ProtobufByteBufferReader extends ProtobufReader {
 
     @Override
     public boolean hasNext() {
+        if (this.limit > 0 && (this.position + 1) >= this.limit) {
+            return false;
+        }
         if (currentBuffer.hasRemaining()) {
             return true;
         }
