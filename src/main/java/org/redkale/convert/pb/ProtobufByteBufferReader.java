@@ -114,81 +114,54 @@ public class ProtobufByteBufferReader extends ProtobufReader {
         return nextBytes(size);
     }
 
+    @Override
     protected final int readRawVarint32() { // readUInt32
-        fastpath:
-        {
-            if (!hasNext()) {
-                break fastpath;
-            }
-            int x;
-            if ((x = nextByte()) >= 0) {
-                return x;
-            } else if (remaining() < 9) {
-                break fastpath;
-            } else if ((x ^= (nextByte() << 7)) < 0) {
-                x ^= (~0 << 7);
-            } else if ((x ^= (nextByte() << 14)) >= 0) {
-                x ^= (~0 << 7) ^ (~0 << 14);
-            } else if ((x ^= (nextByte() << 21)) < 0) {
-                x ^= (~0 << 7) ^ (~0 << 14) ^ (~0 << 21);
-            } else {
-                int y = nextByte();
-                x ^= y << 28;
-                x ^= (~0 << 7) ^ (~0 << 14) ^ (~0 << 21) ^ (~0 << 28);
-                if (y < 0 && nextByte() < 0 && nextByte() < 0 && nextByte() < 0 && nextByte() < 0 && nextByte() < 0) {
-                    break fastpath; // Will throw malformedVarint()
-                }
-            }
-            return x;
+        byte b = nextByte();
+        if (b >= 0) {
+            return b;
         }
-        return (int) readRawVarint64SlowPath();
-    }
-
-    protected final long readRawVarint64() {
-        fastpath:
-        {
-            if (!hasNext()) {
-                break fastpath;
-            }
-            long x;
-            int y;
-            if ((y = nextByte()) >= 0) {
-                return y;
-            } else if (remaining() < 9) {
-                break fastpath;
-            } else if ((y ^= (nextByte() << 7)) < 0) {
-                x = y ^ (~0 << 7);
-            } else if ((y ^= (nextByte() << 14)) >= 0) {
-                x = y ^ ((~0 << 7) ^ (~0 << 14));
-            } else if ((y ^= (nextByte() << 21)) < 0) {
-                x = y ^ ((~0 << 7) ^ (~0 << 14) ^ (~0 << 21));
-            } else if ((x = y ^ ((long) nextByte() << 28)) >= 0L) {
-                x ^= (~0L << 7) ^ (~0L << 14) ^ (~0L << 21) ^ (~0L << 28);
-            } else if ((x ^= ((long) nextByte() << 35)) < 0L) {
-                x ^= (~0L << 7) ^ (~0L << 14) ^ (~0L << 21) ^ (~0L << 28) ^ (~0L << 35);
-            } else if ((x ^= ((long) nextByte() << 42)) >= 0L) {
-                x ^= (~0L << 7) ^ (~0L << 14) ^ (~0L << 21) ^ (~0L << 28) ^ (~0L << 35) ^ (~0L << 42);
-            } else if ((x ^= ((long) nextByte() << 49)) < 0L) {
-                x ^= (~0L << 7) ^ (~0L << 14) ^ (~0L << 21) ^ (~0L << 28) ^ (~0L << 35) ^ (~0L << 42) ^ (~0L << 49);
+        int result = b & 0x7f;
+        if ((b = nextByte()) >= 0) {
+            result |= b << 7;
+        } else {
+            result |= (b & 0x7f) << 7;
+            if ((b = nextByte()) >= 0) {
+                result |= b << 14;
             } else {
-                x ^= ((long) nextByte() << 56);
-                x ^= (~0L << 7)
-                        ^ (~0L << 14)
-                        ^ (~0L << 21)
-                        ^ (~0L << 28)
-                        ^ (~0L << 35)
-                        ^ (~0L << 42)
-                        ^ (~0L << 49)
-                        ^ (~0L << 56);
-                if (x < 0L) {
-                    if (nextByte() < 0L) {
-                        break fastpath; // Will throw malformedVarint()
+                result |= (b & 0x7f) << 14;
+                if ((b = nextByte()) >= 0) {
+                    result |= b << 21;
+                } else {
+                    result |= (b & 0x7f) << 21;
+                    result |= (b = nextByte()) << 28;
+                    if (b < 0) {
+                        // Discard upper 32 bits.
+                        for (int i = 0; i < 5; i++) {
+                            if (nextByte() >= 0) {
+                                return result;
+                            }
+                        }
+                        throw new ConvertException("readRawVarint32 error");
                     }
                 }
             }
-            return x;
         }
-        return readRawVarint64SlowPath();
+        return result;
+    }
+
+    @Override
+    protected final long readRawVarint64() {
+        int shift = 0;
+        long result = 0;
+        while (shift < 64) {
+            final byte b = nextByte();
+            result |= (long) (b & 0x7F) << shift;
+            if ((b & 0x80) == 0) {
+                return result;
+            }
+            shift += 7;
+        }
+        throw new ConvertException("readRawVarint64 error");
     }
 
     protected final long readRawVarint64SlowPath() {
