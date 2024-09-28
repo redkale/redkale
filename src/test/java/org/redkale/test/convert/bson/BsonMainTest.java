@@ -3,8 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.test.convert;
+package org.redkale.test.convert.bson;
 
+import org.redkale.test.convert.SimpleEntity;
+import org.redkale.test.convert.SimpleChildEntity;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.*;

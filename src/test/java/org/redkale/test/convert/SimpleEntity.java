@@ -7,26 +7,35 @@ package org.redkale.test.convert;
 
 import java.net.*;
 import java.util.*;
+import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.*;
 import org.redkale.util.Creator;
 
 /** @author zhangjx */
 public class SimpleEntity {
 
+    @ConvertColumn(index = 7)
     private String name;
 
+    @ConvertColumn(index = 3)
     private String desc = "";
 
+    @ConvertColumn(index = 4)
     private int id = (int) System.currentTimeMillis();
 
+    @ConvertColumn(index = 2)
     private int[] addrs;
 
+    @ConvertColumn(index = 5)
     private List<String> lists;
 
+    @ConvertColumn(index = 8)
     private String[] strings;
 
+    @ConvertColumn(index = 6)
     private Map<String, Integer> map;
 
+    @ConvertColumn(index = 1)
     private InetSocketAddress addr;
 
     public static SimpleEntity create() {

@@ -5,6 +5,7 @@
  */
 package org.redkale.test.convert.media;
 
+import org.redkale.test.convert.bson.ConvertRecord;
 import java.util.*;
 import org.redkale.convert.json.*;
 import org.redkale.test.convert.*;

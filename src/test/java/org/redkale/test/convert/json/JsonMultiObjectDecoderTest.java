@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.test.convert;
+package org.redkale.test.convert.json;
 
 import org.junit.jupiter.api.*;
 import org.redkale.convert.ConvertImpl;
@@ -16,7 +16,6 @@ public class JsonMultiObjectDecoderTest {
 
     public static void main(String[] args) throws Throwable {
         JsonMultiObjectDecoderTest test = new JsonMultiObjectDecoderTest();
-        test.main = true;
         test.run();
     }
 
@@ -25,19 +24,19 @@ public class JsonMultiObjectDecoderTest {
         {
             String json = "{\"a0\":\"000\",\"a6\":\"666\"}";
             AbstractBean bean = JsonConvert.root().convertFrom(AbstractBean.class, json);
-            if (!main) Assertions.assertEquals(bean.getClass().getName(), Bean69.class.getName());
+            Assertions.assertEquals(bean.getClass().getName(), Bean69.class.getName());
             System.out.println(bean);
         }
         {
             String json = "{\"a0\":\"000\",\"a2\":\"222\",\"a4\":\"444\"}";
             AbstractBean bean = JsonConvert.root().convertFrom(AbstractBean.class, json);
-            if (!main) Assertions.assertEquals(bean.getClass().getName(), Bean423.class.getName());
+            Assertions.assertEquals(bean.getClass().getName(), Bean423.class.getName());
             System.out.println(bean);
         }
         {
             String json = "{\"a0\":\"000\",\"a6\":\"666\",\"a5\":\"555\"}";
             AbstractBean bean = JsonConvert.root().convertFrom(AbstractBean.class, json);
-            if (!main) Assertions.assertEquals(bean.getClass().getName(), Bean65.class.getName());
+            Assertions.assertEquals(bean.getClass().getName(), Bean65.class.getName());
             System.out.println(bean);
         }
     }

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.test.convert;
+package org.redkale.test.convert.json;
 
 import java.util.*;
 import org.junit.jupiter.api.*;

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.test.convert;
+package org.redkale.test.convert.json;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -11,6 +11,8 @@ import java.util.Map;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.Convert;
 import org.redkale.convert.json.*;
+import org.redkale.test.convert.SimpleChildEntity;
+import org.redkale.test.convert.SimpleEntity;
 
 /** @author zhangjx */
 public class JsonMainTest {

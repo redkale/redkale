@@ -243,7 +243,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                     } else if (componentType == AtomicLong.class) {
                         wmethodName = "writeFieldAtomicLongsValue";
                     } else if (componentType == String.class) {
-                        wmethodName = "writeFieldStringValue";
+                        wmethodName = "writeFieldStringsValue";
                     }
                     mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, wmethodName, "(ILjava/util/Collection;)V", false);
                 } else if (simpledCoders.containsKey(fieldName)) {

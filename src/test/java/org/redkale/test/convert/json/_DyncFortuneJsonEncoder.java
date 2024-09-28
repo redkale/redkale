@@ -3,25 +3,25 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.redkale.test.convert;
+package org.redkale.test.convert.json;
 
 import java.lang.reflect.Type;
 import org.redkale.convert.ObjectEncoder;
 import org.redkale.convert.json.*;
 
 /** @author zhangjx */
-public class _DyncMessageJsonEncoder extends JsonDynEncoder<Message> {
+public class _DyncFortuneJsonEncoder extends JsonDynEncoder<Fortune> {
 
-    protected final byte[] messageFieldBytes = "\"message\":".getBytes();
+    protected final byte[] idFieldBytes = "\"id\":".getBytes();
 
     protected final byte[] messageCommaFieldBytes = ",\"message\":".getBytes();
 
-    public _DyncMessageJsonEncoder(JsonFactory factory, Type type, ObjectEncoder objectEncoderSelf) {
+    public _DyncFortuneJsonEncoder(JsonFactory factory, Type type, ObjectEncoder objectEncoderSelf) {
         super(factory, type, objectEncoderSelf);
     }
 
     @Override
-    public void convertTo(JsonWriter out, Message value) {
+    public void convertTo(JsonWriter out, Fortune value) {
         if (value == null) {
             out.writeObjectNull(null);
             return;
@@ -32,17 +32,16 @@ public class _DyncMessageJsonEncoder extends JsonDynEncoder<Message> {
         }
 
         out.writeTo('{');
-        boolean comma = false;
+
+        out.writeTo(idFieldBytes);
+        out.writeInt(value.getId());
+
         String message = value.getMessage();
         if (message != null) {
-            if (comma) {
-                out.writeTo(messageCommaFieldBytes);
-            } else {
-                out.writeTo(messageFieldBytes);
-                comma = true;
-            }
-            out.writeLatin1To(true, message); // out.writeString(message);
+            out.writeTo(messageCommaFieldBytes);
+            out.writeString(message);
         }
+
         out.writeTo('}');
     }
 }
