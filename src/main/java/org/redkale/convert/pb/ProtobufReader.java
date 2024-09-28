@@ -14,6 +14,8 @@ import org.redkale.util.Creator;
 /** @author zhangjx */
 public class ProtobufReader extends Reader {
 
+    protected static final Creator LIS_CREATOR = Creator.create(List.class);
+
     protected int position = -1;
 
     protected byte[] content;
@@ -315,14 +317,8 @@ public class ProtobufReader extends Reader {
     }
 
     public AtomicInteger[] readAtomicIntegers() {
-        int len = readRawVarint32();
-        List<AtomicInteger> list = new ArrayList<>(len);
-        while (len > 0) {
-            int val = readInt();
-            list.add(new AtomicInteger(val));
-            len -= ProtobufFactory.computeSInt32SizeNoTag(val);
-        }
-        return list.toArray(new AtomicInteger[list.size()]);
+        Collection<AtomicInteger> data = readAtomicIntegers(LIS_CREATOR);
+        return data.toArray(new AtomicInteger[data.size()]);
     }
 
     public Collection<AtomicInteger> readAtomicIntegers(Creator<? extends Collection> creator) {
@@ -392,14 +388,8 @@ public class ProtobufReader extends Reader {
     }
 
     public AtomicLong[] readAtomicLongs() {
-        int len = readRawVarint32();
-        List<AtomicLong> list = new ArrayList<>(len);
-        while (len > 0) {
-            long val = readInt();
-            list.add(new AtomicLong(val));
-            len -= ProtobufFactory.computeSInt64SizeNoTag(val);
-        }
-        return list.toArray(new AtomicLong[list.size()]);
+        Collection<AtomicLong> data = readAtomicLongs(LIS_CREATOR);
+        return data.toArray(new AtomicLong[data.size()]);
     }
 
     public Collection<AtomicLong> readAtomicLongs(Creator<? extends Collection> creator) {
@@ -409,6 +399,22 @@ public class ProtobufReader extends Reader {
             long val = readLong();
             data.add(new AtomicLong(val));
             len -= ProtobufFactory.computeSInt64SizeNoTag(val);
+        }
+        return data;
+    }
+
+    public String[] readStrings(int tag) {
+        Collection<String> data = readStrings(tag, LIS_CREATOR);
+        return data.toArray(new String[data.size()]);
+    }
+
+    public Collection<String> readStrings(int tag, Creator<? extends Collection> creator) {
+        Collection<String> data = creator.create();
+        while (true) {
+            data.add(readString());
+            if (!readNextTag(tag)) {
+                break;
+            }
         }
         return data;
     }
@@ -455,11 +461,15 @@ public class ProtobufReader extends Reader {
     }
 
     public boolean readNextTag(DeMember member) {
+        return readNextTag(member.getTag());
+    }
+
+    public boolean readNextTag(int memberTag) {
         if (!hasNext()) {
             return false;
         }
         int tag = readTag();
-        if (tag != member.getTag()) { // 元素结束
+        if (tag != memberTag) { // 元素结束
             backTag(tag);
             return false;
         }

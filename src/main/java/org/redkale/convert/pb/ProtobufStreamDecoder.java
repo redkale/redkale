@@ -27,7 +27,7 @@ public class ProtobufStreamDecoder<T> extends StreamDecoder<ProtobufReader, T>
     @Override
     public Stream<T> convertFrom(ProtobufReader in, DeMember member) {
         this.checkInited();
-        final boolean simpled = !this.componentSimpled;
+        final boolean simpled = this.componentSimpled;
         final Decodeable<ProtobufReader, T> itemDecoder = this.componentDecoder;
         in.readArrayB(itemDecoder);
         final List<T> result = new ArrayList();

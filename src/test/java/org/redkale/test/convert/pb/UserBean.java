@@ -153,6 +153,9 @@ public class UserBean {
     @ConvertColumn(index = 44)
     public AtomicLong[] count2;
 
+    @ConvertColumn(index = 45)
+    private List<String> strs;
+
     public Map<String, String> getMap() {
         return map;
     }
@@ -481,6 +484,14 @@ public class UserBean {
 
     public void setMoney2(Double money2) {
         this.money2 = money2;
+    }
+
+    public List<String> getStrs() {
+        return strs;
+    }
+
+    public void setStrs(List<String> strs) {
+        this.strs = strs;
     }
 
     @Override

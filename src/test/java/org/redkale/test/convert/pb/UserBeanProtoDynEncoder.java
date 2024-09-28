@@ -76,6 +76,7 @@ public class UserBeanProtoDynEncoder extends ProtobufDynEncoder<UserBean> {
         out.writeFieldFloatsValue(21, value.getPoint6());
         out.writeFieldDoublesValue(22, value.getMoney6());
         out.writeFieldBytesValue(23, value.getBit6());
+        out.writeFieldStringsValue(23, value.getStrs());
 
         out.writeFieldValue(100, value.kind);
         out.writeFieldValue(101, value.count);

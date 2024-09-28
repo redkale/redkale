@@ -435,7 +435,7 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
         }
     }
 
-    public <T> String getProtoDescriptor(Type type) {
+    public String getProtoDescriptor(Type type) {
         StringBuilder sb = new StringBuilder();
         Class clazz = TypeToken.typeToClass(type);
         sb.append("//java ")

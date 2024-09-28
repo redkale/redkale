@@ -9,7 +9,6 @@ import java.net.*;
 import java.util.*;
 import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.*;
-import org.redkale.util.Creator;
 
 /** @author zhangjx */
 public class SimpleEntity {
@@ -56,19 +55,6 @@ public class SimpleEntity {
         v.setMap(map);
         v.setAddr(new InetSocketAddress("127.0.0.1", 6666));
         return v;
-    }
-
-    public static void main(String[] args) throws Exception {
-        System.out.println(JsonConvert.root().convertTo(create()));
-        Creator<SimpleEntity> creator = Creator.create(SimpleEntity.class); // Creator.create(10, SimpleEntity.class);
-        SimpleEntity entry = creator.create();
-        System.out.println(entry);
-        for (int i = 0; i < 10000000; i++) {
-            creator.create();
-        }
-        System.gc();
-        Thread.sleep(2000);
-        System.out.println(creator.create());
     }
 
     @Override

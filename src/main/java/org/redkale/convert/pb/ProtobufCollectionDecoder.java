@@ -10,6 +10,8 @@ import java.util.Collection;
 import org.redkale.convert.*;
 
 /**
+ * 非基本类型的数组反序列化
+ *
  * @author zhangjx
  * @param <T> T
  */
@@ -26,7 +28,7 @@ public class ProtobufCollectionDecoder<T> extends CollectionDecoder<ProtobufRead
     @Override
     public Collection<T> convertFrom(ProtobufReader in, DeMember member) {
         this.checkInited();
-        final boolean simpled = !this.componentSimpled;
+        final boolean simpled = this.componentSimpled;
         final Decodeable<ProtobufReader, T> itemDecoder = this.componentDecoder;
         in.readArrayB(itemDecoder);
         final Collection<T> result = this.creator.create();
