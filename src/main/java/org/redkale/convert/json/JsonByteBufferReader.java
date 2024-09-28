@@ -110,6 +110,7 @@ public class JsonByteBufferReader extends JsonReader {
      * @param allowComment 是否容许含注释
      * @return 有效字符
      */
+    @Override
     protected char nextGoodChar(boolean allowComment) {
         char c;
         for (; ; ) {

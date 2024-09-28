@@ -88,14 +88,6 @@ public class ProtobufReader extends Reader {
         return this;
     }
 
-    // 通常用于尾部解析
-    public byte[] remainBytes() {
-        if (this.position >= this.limit) {
-            return new byte[0];
-        }
-        return Arrays.copyOfRange(this.content, this.position + 1, this.limit);
-    }
-
     /** 跳过属性的值 */
     @Override
     @SuppressWarnings("unchecked")
@@ -124,7 +116,7 @@ public class ProtobufReader extends Reader {
 
     @Override
     public final String readObjectB(final Class clazz) {
-        return (this.position + 1) < this.limit ? "" : null;
+        return hasNext() ? "" : null;
     }
 
     @Override
@@ -183,11 +175,11 @@ public class ProtobufReader extends Reader {
 
     // ------------------------------------------------------------
     @Override
-    public final boolean readBoolean() {
+    public boolean readBoolean() {
         return content[++this.position] != 0;
     }
 
-    public boolean[] readBools() {
+    public final boolean[] readBools() {
         int size = readRawVarint32();
         boolean[] data = new boolean[size];
         for (int i = 0; i < size; i++) {
@@ -196,7 +188,7 @@ public class ProtobufReader extends Reader {
         return data;
     }
 
-    public Collection<Boolean> readBools(Creator<? extends Collection> creator) {
+    public final Collection<Boolean> readBools(Creator<? extends Collection> creator) {
         int size = readRawVarint32();
         Collection<Boolean> data = creator.create();
         for (int i = 0; i < size; i++) {
@@ -210,11 +202,11 @@ public class ProtobufReader extends Reader {
         return (byte) readInt();
     }
 
-    public byte[] readBytes() {
+    public final byte[] readBytes() {
         return readByteArray();
     }
 
-    public Collection<Byte> readBytes(Creator<? extends Collection> creator) {
+    public final Collection<Byte> readBytes(Creator<? extends Collection> creator) {
         Collection<Byte> data = creator.create();
         for (byte b : readByteArray()) {
             data.add(b);
@@ -227,7 +219,7 @@ public class ProtobufReader extends Reader {
         return (char) readInt();
     }
 
-    public char[] readChars() {
+    public final char[] readChars() {
         int len = readRawVarint32();
         List<Integer> list = new ArrayList<>(len);
         while (len > 0) {
@@ -242,7 +234,7 @@ public class ProtobufReader extends Reader {
         return rs;
     }
 
-    public Collection<Character> readChars(Creator<? extends Collection> creator) {
+    public final Collection<Character> readChars(Creator<? extends Collection> creator) {
         Collection<Character> data = creator.create();
         int len = readRawVarint32();
         while (len > 0) {
@@ -258,7 +250,7 @@ public class ProtobufReader extends Reader {
         return (short) readInt();
     }
 
-    public short[] readShorts() {
+    public final short[] readShorts() {
         int len = readRawVarint32();
         List<Short> list = new ArrayList<>(len);
         while (len > 0) {
@@ -273,7 +265,7 @@ public class ProtobufReader extends Reader {
         return rs;
     }
 
-    public Collection<Short> readShorts(Creator<? extends Collection> creator) {
+    public final Collection<Short> readShorts(Creator<? extends Collection> creator) {
         Collection<Short> data = creator.create();
         int len = readRawVarint32();
         while (len > 0) {
@@ -290,7 +282,7 @@ public class ProtobufReader extends Reader {
         return (n >>> 1) ^ -(n & 1);
     }
 
-    public int[] readInts() {
+    public final int[] readInts() {
         int len = readRawVarint32();
         List<Integer> list = new ArrayList<>(len);
         while (len > 0) {
@@ -305,7 +297,7 @@ public class ProtobufReader extends Reader {
         return rs;
     }
 
-    public Collection<Integer> readInts(Creator<? extends Collection> creator) {
+    public final Collection<Integer> readInts(Creator<? extends Collection> creator) {
         Collection<Integer> data = creator.create();
         int len = readRawVarint32();
         while (len > 0) {
@@ -316,12 +308,12 @@ public class ProtobufReader extends Reader {
         return data;
     }
 
-    public AtomicInteger[] readAtomicIntegers() {
+    public final AtomicInteger[] readAtomicIntegers() {
         Collection<AtomicInteger> data = readAtomicIntegers(LIS_CREATOR);
         return data.toArray(new AtomicInteger[data.size()]);
     }
 
-    public Collection<AtomicInteger> readAtomicIntegers(Creator<? extends Collection> creator) {
+    public final Collection<AtomicInteger> readAtomicIntegers(Creator<? extends Collection> creator) {
         Collection<AtomicInteger> data = creator.create();
         int len = readRawVarint32();
         while (len > 0) {
@@ -337,7 +329,7 @@ public class ProtobufReader extends Reader {
         return Float.intBitsToFloat(readRawLittleEndian32());
     }
 
-    public float[] readFloats() {
+    public final float[] readFloats() {
         int len = readRawVarint32();
         float[] rs = new float[len / 4];
         for (int i = 0; i < rs.length; i++) {
@@ -346,7 +338,7 @@ public class ProtobufReader extends Reader {
         return rs;
     }
 
-    public Collection<Float> readFloats(Creator<? extends Collection> creator) {
+    public final Collection<Float> readFloats(Creator<? extends Collection> creator) {
         Collection<Float> data = creator.create();
         int len = readRawVarint32() / 4;
         for (int i = 0; i < len; i++) {
@@ -361,7 +353,7 @@ public class ProtobufReader extends Reader {
         return (n >>> 1) ^ -(n & 1);
     }
 
-    public long[] readLongs() {
+    public final long[] readLongs() {
         int len = readRawVarint32();
         List<Long> list = new ArrayList<>(len);
         while (len > 0) {
@@ -376,7 +368,7 @@ public class ProtobufReader extends Reader {
         return rs;
     }
 
-    public Collection<Long> readLongs(Creator<? extends Collection> creator) {
+    public final Collection<Long> readLongs(Creator<? extends Collection> creator) {
         Collection<Long> data = creator.create();
         int len = readRawVarint32();
         while (len > 0) {
@@ -387,12 +379,12 @@ public class ProtobufReader extends Reader {
         return data;
     }
 
-    public AtomicLong[] readAtomicLongs() {
+    public final AtomicLong[] readAtomicLongs() {
         Collection<AtomicLong> data = readAtomicLongs(LIS_CREATOR);
         return data.toArray(new AtomicLong[data.size()]);
     }
 
-    public Collection<AtomicLong> readAtomicLongs(Creator<? extends Collection> creator) {
+    public final Collection<AtomicLong> readAtomicLongs(Creator<? extends Collection> creator) {
         Collection<AtomicLong> data = creator.create();
         int len = readRawVarint32();
         while (len > 0) {
@@ -403,12 +395,12 @@ public class ProtobufReader extends Reader {
         return data;
     }
 
-    public String[] readStrings(int tag) {
+    public final String[] readStrings(int tag) {
         Collection<String> data = readStrings(tag, LIS_CREATOR);
         return data.toArray(new String[data.size()]);
     }
 
-    public Collection<String> readStrings(int tag, Creator<? extends Collection> creator) {
+    public final Collection<String> readStrings(int tag, Creator<? extends Collection> creator) {
         Collection<String> data = creator.create();
         while (true) {
             data.add(readString());
@@ -424,7 +416,7 @@ public class ProtobufReader extends Reader {
         return Double.longBitsToDouble(readRawLittleEndian64());
     }
 
-    public double[] readDoubles() {
+    public final double[] readDoubles() {
         int len = readRawVarint32();
         double[] rs = new double[len / 8];
         for (int i = 0; i < rs.length; i++) {
@@ -433,7 +425,7 @@ public class ProtobufReader extends Reader {
         return rs;
     }
 
-    public Collection<Double> readDoubles(Creator<? extends Collection> creator) {
+    public final Collection<Double> readDoubles(Creator<? extends Collection> creator) {
         Collection<Double> data = creator.create();
         int len = readRawVarint32() / 8;
         for (int i = 0; i < len; i++) {
@@ -453,18 +445,18 @@ public class ProtobufReader extends Reader {
     }
 
     @Override
-    public final String readString() {
+    public String readString() {
         final int size = readRawVarint32();
         String val = new String(content, position + 1, size, StandardCharsets.UTF_8);
         position += size;
         return val;
     }
 
-    public boolean readNextTag(DeMember member) {
+    public final boolean readNextTag(DeMember member) {
         return readNextTag(member.getTag());
     }
 
-    public boolean readNextTag(int memberTag) {
+    public final boolean readNextTag(int memberTag) {
         if (!hasNext()) {
             return false;
         }
@@ -489,8 +481,9 @@ public class ProtobufReader extends Reader {
         this.cacheTag = tag;
     }
 
-    protected byte currentByte() {
-        return this.content[this.position];
+    @Override
+    public final ValueType readType() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
@@ -505,6 +498,14 @@ public class ProtobufReader extends Reader {
         System.arraycopy(content, position + 1, bs, 0, size);
         position += size;
         return bs;
+    }
+
+    // 通常用于尾部解析
+    public byte[] remainBytes() {
+        if (this.position >= this.limit) {
+            return new byte[0];
+        }
+        return Arrays.copyOfRange(this.content, this.position + 1, this.limit);
     }
 
     protected int readRawVarint32() { // readUInt32
@@ -630,10 +631,5 @@ public class ProtobufReader extends Reader {
                 | ((content[++this.position] & 0xffL) << 40)
                 | ((content[++this.position] & 0xffL) << 48)
                 | ((content[++this.position] & 0xffL) << 56));
-    }
-
-    @Override
-    public ValueType readType() {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

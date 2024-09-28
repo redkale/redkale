@@ -21,7 +21,7 @@ class BsonStreamReader extends BsonByteBufferReader {
 
     protected BsonStreamReader(InputStream in) {
         super();
-        this.in = in;
+        this.in = in instanceof BufferedInputStream ? in : new BufferedInputStream(in);
     }
 
     @Override

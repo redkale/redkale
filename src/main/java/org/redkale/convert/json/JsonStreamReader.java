@@ -19,7 +19,7 @@ class JsonStreamReader extends JsonByteBufferReader {
 
     protected JsonStreamReader(InputStream in) {
         super();
-        this.in = in;
+        this.in = in instanceof BufferedInputStream ? in : new BufferedInputStream(in);
     }
 
     @Override

@@ -1354,12 +1354,16 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             writeTo(TENTHOUSAND_UINT_BYTES2[-value]);
             return;
         }
+        expand(6);
+        int curr = this.count;
+        byte[] data = this.content;
         while (true) {
             if ((value & ~0x7F) == 0) {
-                writeTo((byte) value);
+                data[curr++] = (byte) value;
+                this.count = curr;
                 return;
             } else {
-                writeTo((byte) ((value & 0x7F) | 0x80));
+                data[curr++] = (byte) ((value & 0x7F) | 0x80);
                 value >>>= 7;
             }
         }
@@ -1373,12 +1377,16 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             writeTo(TENTHOUSAND_UINT_BYTES2[(int) -value]);
             return;
         }
+        expand(12);
+        int curr = this.count;
+        byte[] data = this.content;
         while (true) {
             if ((value & ~0x7FL) == 0) {
-                writeTo((byte) value);
+                data[curr++] = (byte) value;
+                this.count = curr;
                 return;
             } else {
-                writeTo((byte) (((int) value & 0x7F) | 0x80));
+                data[curr++] = (byte) (((int) value & 0x7F) | 0x80);
                 value >>>= 7;
             }
         }
@@ -1392,8 +1400,11 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             writeTo(TENTHOUSAND_FIXED32_BYTES2[-value]);
             return;
         }
-        writeTo((byte) (value & 0xFF), (byte) ((value >> 8) & 0xFF), (byte) ((value >> 16) & 0xFF), (byte)
-                ((value >> 24) & 0xFF));
+        writeTo(
+                (byte) (value & 0xFF), // 0
+                (byte) ((value >> 8) & 0xFF), // 1
+                (byte) ((value >> 16) & 0xFF), // 2
+                (byte) ((value >> 24) & 0xFF)); // 3
     }
 
     protected void writeFixed64(long value) {

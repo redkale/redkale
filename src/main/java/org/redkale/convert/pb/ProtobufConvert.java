@@ -614,9 +614,6 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
 
     @SuppressWarnings("unchecked")
     public <T> T convertFrom(final Type type, final InputStream in) {
-        if (true) {
-            throw new ConvertException(this.getClass().getSimpleName() + " not supported convertFrom InputStream");
-        }
         if (type == null || in == null) {
             return null;
         }
@@ -634,9 +631,6 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
     @Override
     @SuppressWarnings("unchecked")
     public <T> T convertFrom(final Type type, final ByteBuffer... buffers) {
-        if (true) {
-            throw new ConvertException(this.getClass().getSimpleName() + " not supported convertFrom ByteBuffer");
-        }
         if (type == null || Utility.isEmpty(buffers)) {
             return null;
         }
@@ -782,9 +776,6 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
     }
 
     public void convertTo(final OutputStream out, final Type type, final Object value) {
-        if (true) {
-            throw new ConvertException(this.getClass().getSimpleName() + " not supported convertTo OutputStream");
-        }
         ProtobufWriter writer = pollProtobufWriter(out);
         if (value == null) {
             writer.writeNull();
@@ -807,8 +798,6 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
 
     @Override
     public ByteBuffer[] convertTo(final Supplier<ByteBuffer> supplier, final Type type, final Object value) {
-        // if (true) throw new ConvertException(this.getClass().getSimpleName() + " not supported convertTo
-        // ByteBuffer");
         Objects.requireNonNull(supplier);
         ProtobufByteBufferWriter writer = pollProtobufWriter(supplier);
         if (value == null) {
