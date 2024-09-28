@@ -46,23 +46,12 @@ public class ProtobufObjectDecoder<T> extends ObjectDecoder<ProtobufReader, T>
     }
 
     @Override
-    protected Object readDeMemberValue(ProtobufReader in, DeMember member, boolean first) {
+    protected Object readDeMemberValue(ProtobufReader in, DeMember member) {
         Decodeable decoder = member.getDecoder();
         if (decoder instanceof ProtobufTagDecodeable) {
             return ((ProtobufTagDecodeable) decoder).convertFrom(in, member);
         } else {
             return member.read(in);
-        }
-    }
-
-    @Override
-    protected void readDeMemberValue(ProtobufReader in, DeMember member, T result, boolean first) {
-        Decodeable decoder = member.getDecoder();
-        if (decoder instanceof ProtobufTagDecodeable) {
-            Object val = ((ProtobufTagDecodeable) decoder).convertFrom(in, member);
-            member.getAttribute().set(result, val);
-        } else {
-            member.read(in, result);
         }
     }
 }

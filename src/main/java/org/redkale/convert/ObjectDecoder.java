@@ -376,16 +376,15 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
         DeMemberInfo info = this.memberInfo;
         if (this.creatorConstructorMembers == null) { // 空构造函数
             final T result = this.creator == null ? null : this.creator.create();
-            boolean first = true;
             while (in.hasNext()) {
                 DeMember member = in.readFieldName(info);
                 in.readBlank();
                 if (member == null) {
                     in.skipValue(); // 跳过不存在的属性的值
                 } else {
-                    readDeMemberValue(in, member, result, first);
+                    Object val = readDeMemberValue(in, member);
+                    member.getAttribute().set(result, val);
                 }
-                first = false;
             }
             in.readObjectE(typeClass);
             return result;
@@ -394,14 +393,13 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
             final Object[] constructorParams = new Object[constructorFields.length];
             final Object[][] otherParams = new Object[info.length()][2];
             int oc = 0;
-            boolean first = true;
             while (in.hasNext()) {
                 DeMember member = in.readFieldName(info);
                 in.readBlank();
                 if (member == null) {
                     in.skipValue(); // 跳过不存在的属性的值
                 } else {
-                    Object val = readDeMemberValue(in, member, first);
+                    Object val = readDeMemberValue(in, member);
                     boolean flag = true;
                     for (int i = 0; i < constructorFields.length; i++) {
                         if (member == constructorFields[i]) {
@@ -414,7 +412,6 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                         otherParams[oc++] = new Object[] {member.attribute, val};
                     }
                 }
-                first = false;
             }
             in.readObjectE(typeClass);
             if (this.creator == null) {
@@ -437,12 +434,8 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
         // do nothing
     }
 
-    protected Object readDeMemberValue(R in, DeMember member, boolean first) {
+    protected Object readDeMemberValue(R in, DeMember member) {
         return member.read(in);
-    }
-
-    protected void readDeMemberValue(R in, DeMember member, T result, boolean first) {
-        member.read(in, result);
     }
 
     // ---------------------------------------------------------------------------------

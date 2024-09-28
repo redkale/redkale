@@ -103,10 +103,6 @@ public final class DeMember<R extends Reader, T, F> {
         return attribute.field().equals(name);
     }
 
-    public final void read(R in, T obj) {
-        this.attribute.set(obj, decoder.convertFrom(in));
-    }
-
     public final F read(R in) {
         return decoder.convertFrom(in);
     }
