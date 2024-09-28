@@ -65,6 +65,17 @@ public class JsonByteBufferWriter extends JsonWriter {
         return this.buffers;
     }
 
+    public ByteArray toByteArray() {
+        ByteArray array = new ByteArray();
+        if (buffers != null) {
+            for (ByteBuffer buf : toBuffers()) {
+                array.put(buf);
+                buf.flip();
+            }
+        }
+        return array;
+    }
+
     public int count() {
         if (this.buffers == null) {
             return 0;

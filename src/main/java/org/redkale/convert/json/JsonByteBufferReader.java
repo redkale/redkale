@@ -25,7 +25,7 @@ public class JsonByteBufferReader extends JsonReader {
     private ByteBuffer[] buffers;
 
     private ByteBuffer currentBuffer;
-    
+
     private int currBufIndex = 0;
 
     protected JsonByteBufferReader(ByteBuffer... buffers) {

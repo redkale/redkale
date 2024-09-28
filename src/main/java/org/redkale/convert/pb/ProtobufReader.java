@@ -137,7 +137,6 @@ public class ProtobufReader extends Reader {
     /**
      * 判断下一个非空白字符是否为[
      *
-     * @param member DeMember
      * @param componentDecoder Decodeable
      * @return SIGN_VARIABLE 或 SIGN_NULL
      */

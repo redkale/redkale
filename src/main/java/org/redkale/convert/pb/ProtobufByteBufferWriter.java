@@ -8,6 +8,7 @@ package org.redkale.convert.pb;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.function.Supplier;
+import org.redkale.util.ByteArray;
 import org.redkale.util.Utility;
 
 /** @author zhangjx */
@@ -46,6 +47,17 @@ public class ProtobufByteBufferWriter extends ProtobufWriter {
             }
         }
         return this.buffers;
+    }
+
+    public ByteArray toByteArray() {
+        ByteArray array = new ByteArray();
+        if (buffers != null) {
+            for (ByteBuffer buf : toBuffers()) {
+                array.put(buf);
+                buf.flip();
+            }
+        }
+        return array;
     }
 
     @Override
@@ -154,7 +166,7 @@ public class ProtobufByteBufferWriter extends ProtobufWriter {
 
     @Override
     public final byte[] toArray() {
-        throw new UnsupportedOperationException("Not supported yet."); // 无需实现
+        return toByteArray().getBytes();
     }
 
     @Override

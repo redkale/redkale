@@ -5,8 +5,6 @@
  */
 package org.redkale.test.convert.bson;
 
-import org.redkale.test.convert.SimpleEntity;
-import org.redkale.test.convert.SimpleChildEntity;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -15,6 +13,8 @@ import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.bson.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.persistence.*;
+import org.redkale.test.convert.SimpleChildEntity;
+import org.redkale.test.convert.SimpleEntity;
 import org.redkale.util.*;
 
 /** @author zhangjx */
@@ -88,7 +88,7 @@ public class BsonMainTest {
         final int len = bytes2.length;
         BsonByteBufferWriter writer = convert.pollWriter(() -> ByteBuffer.allocate(len / 2));
         convert.convertTo(writer, bean);
-        bytes2 = writer.toArray();
+        bytes2 = writer.toByteArray().getBytes();
         System.out.println(convert.convertFrom(ComplextEntity.class, bytes2).toString());
         Assertions.assertEquals(
                 "{\"chname\":\"\",\"flag\":true,\"userid\":0}",

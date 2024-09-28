@@ -137,7 +137,7 @@ public class BsonByteBufferWriter extends BsonWriter {
 
     @Override
     public final byte[] toArray() {
-        throw new UnsupportedOperationException("Not supported yet."); // 无需实现
+        return toByteArray().getBytes();
     }
 
     @Override
