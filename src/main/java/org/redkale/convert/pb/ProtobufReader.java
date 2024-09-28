@@ -18,8 +18,6 @@ public class ProtobufReader extends Reader {
 
     protected byte[] content;
 
-    //protected int initoffset;
-
     protected int limit;
 
     protected int cacheTag = Integer.MIN_VALUE;
@@ -51,7 +49,6 @@ public class ProtobufReader extends Reader {
     public final void setBytes(byte[] bytes) {
         if (bytes == null) {
             this.position = 0;
-            //this.initoffset = 0;
             this.limit = 0;
         } else {
             setBytes(bytes, 0, bytes.length);
@@ -61,13 +58,11 @@ public class ProtobufReader extends Reader {
     public final void setBytes(byte[] bytes, int start, int len) {
         if (bytes == null) {
             this.position = 0;
-            //this.initoffset = 0;
             this.limit = 0;
         } else {
             this.content = bytes;
             this.position = start - 1;
             this.limit = start + len;
-            //this.initoffset = this.position;
         }
     }
 
@@ -82,7 +77,6 @@ public class ProtobufReader extends Reader {
     protected boolean recycle() {
         this.position = -1;
         this.limit = -1;
-        //this.initoffset = -1;
         this.content = null;
         return true;
     }
@@ -137,7 +131,7 @@ public class ProtobufReader extends Reader {
     }
 
     @Override
-    public final int readMapB(DeMember member, Decodeable keyDecoder, Decodeable valueDecoder) {
+    public final int readMapB(Decodeable keyDecoder, Decodeable valueDecoder) {
         return Reader.SIGN_VARIABLE;
     }
 
@@ -154,7 +148,7 @@ public class ProtobufReader extends Reader {
      * @return SIGN_VARIABLE 或 SIGN_NULL
      */
     @Override
-    public final int readArrayB(DeMember member, Decodeable componentDecoder) {
+    public final int readArrayB(Decodeable componentDecoder) {
         return Reader.SIGN_VARIABLE;
     }
 

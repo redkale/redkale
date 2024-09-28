@@ -14,7 +14,8 @@ import org.redkale.convert.*;
  * @author zhangjx
  * @param <T> 泛型
  */
-public class ProtobufStreamDecoder<T> extends StreamDecoder<ProtobufReader, T> {
+public class ProtobufStreamDecoder<T> extends StreamDecoder<ProtobufReader, T>
+        implements ProtobufTagDecodeable<ProtobufReader, Stream<T>> {
 
     protected final boolean componentSimpled;
 
@@ -28,7 +29,7 @@ public class ProtobufStreamDecoder<T> extends StreamDecoder<ProtobufReader, T> {
         this.checkInited();
         final boolean simpled = !this.componentSimpled;
         final Decodeable<ProtobufReader, T> itemDecoder = this.componentDecoder;
-        in.readArrayB(member, itemDecoder);
+        in.readArrayB(itemDecoder);
         final List<T> result = new ArrayList();
         final int limit = in.limit();
         while (in.hasNext()) {

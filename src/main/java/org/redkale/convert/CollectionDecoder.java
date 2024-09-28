@@ -21,7 +21,7 @@ import org.redkale.util.Creator;
  * @param <T> 反解析的集合元素类型
  */
 @SuppressWarnings("unchecked")
-public class CollectionDecoder<R extends Reader, T> implements TagDecodeable<R, Collection<T>> {
+public class CollectionDecoder<R extends Reader, T> implements Decodeable<R, Collection<T>> {
 
     protected final Type type;
 
@@ -93,13 +93,9 @@ public class CollectionDecoder<R extends Reader, T> implements TagDecodeable<R, 
 
     @Override
     public Collection<T> convertFrom(R in) {
-        return convertFrom(in, null);
-    }
-
-    public Collection<T> convertFrom(R in, DeMember member) {
         this.checkInited();
         final Decodeable<R, T> itemDecoder = this.componentDecoder;
-        int size = in.readArrayB(member, itemDecoder);
+        int size = in.readArrayB(itemDecoder);
         if (size == Reader.SIGN_NULL) {
             return null;
         }

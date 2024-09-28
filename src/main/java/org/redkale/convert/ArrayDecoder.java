@@ -23,7 +23,7 @@ import org.redkale.util.Creator;
  * @param <T> 反解析的数组元素类型
  */
 @SuppressWarnings("unchecked")
-public class ArrayDecoder<R extends Reader, T> implements TagDecodeable<R, T[]> {
+public class ArrayDecoder<R extends Reader, T> implements Decodeable<R, T[]> {
 
     protected final Type type;
 
@@ -88,14 +88,9 @@ public class ArrayDecoder<R extends Reader, T> implements TagDecodeable<R, T[]> 
 
     @Override
     public T[] convertFrom(R in) {
-        return convertFrom(in, null);
-    }
-
-    @Override
-    public T[] convertFrom(R in, DeMember member) {
         this.checkInited();
         final Decodeable<R, T> itemDecoder = this.componentDecoder;
-        int len = in.readArrayB(member, itemDecoder);
+        int len = in.readArrayB(itemDecoder);
         if (len == Reader.SIGN_NULL) {
             return null;
         }

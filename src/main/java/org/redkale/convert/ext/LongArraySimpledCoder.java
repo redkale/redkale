@@ -41,7 +41,7 @@ public final class LongArraySimpledCoder<R extends Reader, W extends Writer> ext
 
     @Override
     public long[] convertFrom(R in) {
-        int len = in.readArrayB(null, LongSimpledCoder.instance);
+        int len = in.readArrayB(LongSimpledCoder.instance);
         if (len == Reader.SIGN_NULL) {
             return null;
         }

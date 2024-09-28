@@ -25,10 +25,10 @@ public class BsonMapDecoder<K, V> extends MapDecoder<BsonReader, K, V> {
     }
 
     @Override
-    public Map<K, V> convertFrom(BsonReader in, DeMember member) {
+    public Map<K, V> convertFrom(BsonReader in) {
         this.checkInited();
         byte[] typevals = new byte[2];
-        int len = in.readMapB(member, typevals, this.keyDecoder, this.valueDecoder);
+        int len = in.readMapB(typevals, this.keyDecoder, this.valueDecoder);
         if (len == Reader.SIGN_NULL) {
             return null;
         }

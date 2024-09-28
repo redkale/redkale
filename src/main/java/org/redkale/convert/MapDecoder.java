@@ -21,7 +21,7 @@ import org.redkale.util.Creator;
  * @param <V> Map value的数据类型
  */
 @SuppressWarnings("unchecked")
-public class MapDecoder<R extends Reader, K, V> implements TagDecodeable<R, Map<K, V>> {
+public class MapDecoder<R extends Reader, K, V> implements Decodeable<R, Map<K, V>> {
 
     protected final Type type;
 
@@ -115,15 +115,10 @@ public class MapDecoder<R extends Reader, K, V> implements TagDecodeable<R, Map<
 
     @Override
     public Map<K, V> convertFrom(R in) {
-        return convertFrom(in, null);
-    }
-
-    @Override
-    public Map<K, V> convertFrom(R in, DeMember member) {
         this.checkInited();
         Decodeable<R, K> kdecoder = this.keyDecoder;
         Decodeable<R, V> vdecoder = this.valueDecoder;
-        int len = in.readMapB(member, kdecoder, vdecoder);
+        int len = in.readMapB(kdecoder, vdecoder);
         if (len == Reader.SIGN_NULL) {
             return null;
         }

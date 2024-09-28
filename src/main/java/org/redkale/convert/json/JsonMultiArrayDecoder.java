@@ -35,11 +35,7 @@ public class JsonMultiArrayDecoder implements Decodeable<JsonReader, Object[]> {
 
     @Override
     public Object[] convertFrom(JsonReader in) {
-        return convertFrom(in, null);
-    }
-
-    public Object[] convertFrom(JsonReader in, DeMember member) {
-        int len = in.readArrayB(member, null);
+        int len = in.readArrayB(null);
         if (len == Reader.SIGN_NULL) {
             return null;
         }

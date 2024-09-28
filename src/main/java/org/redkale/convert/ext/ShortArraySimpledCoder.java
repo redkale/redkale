@@ -40,7 +40,7 @@ public final class ShortArraySimpledCoder<R extends Reader, W extends Writer> ex
 
     @Override
     public short[] convertFrom(R in) {
-        int len = in.readArrayB(null, ShortSimpledCoder.instance);
+        int len = in.readArrayB(ShortSimpledCoder.instance);
         if (len == Reader.SIGN_NULL) {
             return null;
         }

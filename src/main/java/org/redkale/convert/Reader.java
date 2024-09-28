@@ -23,14 +23,14 @@ public abstract class Reader {
     /**
      * 集合对象为null
      *
-     * @see #readArrayB(org.redkale.convert.DeMember, org.redkale.convert.Decodeable)
+     * @see #readArrayB(org.redkale.convert.Decodeable)
      */
     public static final short SIGN_NULL = -1;
 
     /**
      * 不确定的长度， 比如解析json数组
      *
-     * @see #readArrayB(org.redkale.convert.DeMember, org.redkale.convert.Decodeable)
+     * @see #readArrayB(org.redkale.convert.Decodeable)
      */
     public static final short SIGN_VARIABLE = -2;
 
@@ -90,11 +90,10 @@ public abstract class Reader {
      *
      * @see #SIGN_NULL
      * @see #SIGN_VARIABLE
-     * @param member DeMember
      * @param componentDecoder Decodeable
      * @return 返回数组的长度
      */
-    public abstract int readArrayB(DeMember member, Decodeable componentDecoder);
+    public abstract int readArrayB(Decodeable componentDecoder);
 
     /** 读取数组的尾端 */
     public abstract void readArrayE();
@@ -102,12 +101,11 @@ public abstract class Reader {
     /**
      * 读取map的开头并返回map的size
      *
-     * @param member DeMember
      * @param keyDecoder Decodeable
      * @param valueDecoder Decodeable
      * @return 返回map的size
      */
-    public abstract int readMapB(DeMember member, Decodeable keyDecoder, Decodeable valueDecoder);
+    public abstract int readMapB(Decodeable keyDecoder, Decodeable valueDecoder);
 
     /** 读取数组的尾端 */
     public abstract void readMapE();

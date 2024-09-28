@@ -9,8 +9,8 @@ package org.redkale.convert.bson;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import org.redkale.convert.*;
-import org.redkale.convert.ext.ByteSimpledCoder;
 import static org.redkale.convert.Reader.SIGN_NULL;
+import org.redkale.convert.ext.ByteSimpledCoder;
 
 /**
  * 以ByteBuffer为数据载体的BsonReader
@@ -49,7 +49,7 @@ public class BsonByteBufferReader extends BsonReader {
     }
 
     @Override
-    public int readMapB(DeMember member, byte[] typevals, Decodeable keyDecoder, Decodeable valueDecoder) {
+    public int readMapB(byte[] typevals, Decodeable keyDecoder, Decodeable valueDecoder) {
         short bt = readShort();
         if (bt == Reader.SIGN_NULL) {
             return bt;
@@ -73,7 +73,7 @@ public class BsonByteBufferReader extends BsonReader {
      * @return 数组长度或 SIGN_NULL
      */
     @Override
-    public final int readArrayB(DeMember member, byte[] typevals, Decodeable componentDecoder) {
+    public final int readArrayB(byte[] typevals, Decodeable componentDecoder) {
         short bt = readShort();
         if (bt == Reader.SIGN_NULL) {
             return bt;

@@ -21,7 +21,7 @@ import java.util.stream.Stream;
  * @param <T> 反解析的集合元素类型
  */
 @SuppressWarnings("unchecked")
-public class StreamDecoder<R extends Reader, T> implements TagDecodeable<R, Stream<T>> {
+public class StreamDecoder<R extends Reader, T> implements Decodeable<R, Stream<T>> {
 
     protected final Type type;
 
@@ -74,13 +74,9 @@ public class StreamDecoder<R extends Reader, T> implements TagDecodeable<R, Stre
 
     @Override
     public Stream<T> convertFrom(R in) {
-        return convertFrom(in, null);
-    }
-
-    public Stream<T> convertFrom(R in, DeMember member) {
         this.checkInited();
         final Decodeable<R, T> itemDecoder = this.componentDecoder;
-        int len = in.readArrayB(member, itemDecoder);
+        int len = in.readArrayB(itemDecoder);
         if (len == Reader.SIGN_NULL) {
             return null;
         }

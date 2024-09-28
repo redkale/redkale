@@ -41,7 +41,7 @@ public final class DoubleArraySimpledCoder<R extends Reader, W extends Writer> e
 
     @Override
     public double[] convertFrom(R in) {
-        int len = in.readArrayB(null, DoubleSimpledCoder.instance);
+        int len = in.readArrayB(DoubleSimpledCoder.instance);
         if (len == Reader.SIGN_NULL) {
             return null;
         }

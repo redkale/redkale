@@ -40,7 +40,7 @@ public final class BoolArraySimpledCoder<R extends Reader, W extends Writer> ext
 
     @Override
     public boolean[] convertFrom(R in) {
-        int len = in.readArrayB(null, BoolSimpledCoder.instance);
+        int len = in.readArrayB(BoolSimpledCoder.instance);
         if (len == Reader.SIGN_NULL) {
             return null;
         }

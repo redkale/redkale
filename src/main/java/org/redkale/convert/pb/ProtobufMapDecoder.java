@@ -14,7 +14,8 @@ import org.redkale.convert.*;
  * @param <K> K
  * @param <V> V
  */
-public class ProtobufMapDecoder<K, V> extends MapDecoder<ProtobufReader, K, V> {
+public class ProtobufMapDecoder<K, V> extends MapDecoder<ProtobufReader, K, V>
+        implements ProtobufTagDecodeable<ProtobufReader, Map<K, V>> {
 
     protected final boolean enumtostring;
 
@@ -26,7 +27,7 @@ public class ProtobufMapDecoder<K, V> extends MapDecoder<ProtobufReader, K, V> {
     @Override
     public Map<K, V> convertFrom(ProtobufReader in, DeMember member) {
         this.checkInited();
-        in.readMapB(member, this.keyDecoder, this.valueDecoder);
+        in.readMapB(this.keyDecoder, this.valueDecoder);
         final Map<K, V> result = this.creator.create();
         Decodeable<ProtobufReader, K> kdecoder = this.keyDecoder;
         Decodeable<ProtobufReader, V> vdecoder = this.valueDecoder;

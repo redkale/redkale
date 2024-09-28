@@ -13,7 +13,8 @@ import org.redkale.convert.*;
  * @author zhangjx
  * @param <T> T
  */
-public class ProtobufCollectionDecoder<T> extends CollectionDecoder<ProtobufReader, T> {
+public class ProtobufCollectionDecoder<T> extends CollectionDecoder<ProtobufReader, T>
+        implements ProtobufTagDecodeable<ProtobufReader, Collection<T>> {
 
     protected final boolean componentSimpled;
 
@@ -27,7 +28,7 @@ public class ProtobufCollectionDecoder<T> extends CollectionDecoder<ProtobufRead
         this.checkInited();
         final boolean simpled = !this.componentSimpled;
         final Decodeable<ProtobufReader, T> itemDecoder = this.componentDecoder;
-        in.readArrayB(member, itemDecoder);
+        in.readArrayB(itemDecoder);
         final Collection<T> result = this.creator.create();
         final int limit = in.limit();
         while (in.hasNext()) {

@@ -26,10 +26,10 @@ public class BsonArrayDecoder<T> extends ArrayDecoder<BsonReader, T> {
     }
 
     @Override
-    public T[] convertFrom(BsonReader in, DeMember member) {
+    public T[] convertFrom(BsonReader in) {
         this.checkInited();
         byte[] typevals = new byte[1];
-        int len = in.readArrayB(member, typevals, this.componentDecoder);
+        int len = in.readArrayB(typevals, this.componentDecoder);
         if (len == Reader.SIGN_NULL) {
             return null;
         }

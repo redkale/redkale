@@ -2,7 +2,9 @@
  * Copyright (c) 2016-2116 Redkale
  * All rights reserved.
  */
-package org.redkale.convert;
+package org.redkale.convert.pb;
+
+import org.redkale.convert.*;
 
 /**
  * 带tag的反序列化操作类
@@ -13,7 +15,7 @@ package org.redkale.convert;
  * @param <R> Reader输入的子类
  * @param <T> 反解析的数据类型
  */
-public interface TagDecodeable<R extends Reader, T> extends Decodeable<R, T> {
+public interface ProtobufTagDecodeable<R extends Reader, T> extends Decodeable<R, T> {
     /**
      * 反序列化操作
      *

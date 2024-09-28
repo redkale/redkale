@@ -297,14 +297,13 @@ public class JsonReader extends Reader {
     /**
      * 判断下一个非空白字符是否为{
      *
-     * @param member DeMember
      * @param keyDecoder Decodeable
      * @param valuedecoder Decodeable
      * @return SIGN_VARIABLE 或 SIGN_NULL
      */
     @Override
-    public final int readMapB(DeMember member, Decodeable keyDecoder, Decodeable valuedecoder) {
-        return readArrayB(member, keyDecoder);
+    public final int readMapB(Decodeable keyDecoder, Decodeable valuedecoder) {
+        return readArrayB(keyDecoder);
     }
 
     @Override
@@ -315,12 +314,11 @@ public class JsonReader extends Reader {
     /**
      * 判断下一个非空白字符是否为[
      *
-     * @param member DeMember
      * @param componentDecoder Decodeable
      * @return SIGN_VARIABLE 或 SIGN_NULL
      */
     @Override
-    public int readArrayB(DeMember member, Decodeable componentDecoder) {
+    public int readArrayB(Decodeable componentDecoder) {
         if (this.text.length == 0) {
             return SIGN_NULL;
         }
@@ -720,7 +718,7 @@ public class JsonReader extends Reader {
 
     @Override
     public final byte[] readByteArray() {
-        int len = readArrayB(null, null);
+        int len = readArrayB(null);
         if (len == Reader.SIGN_NULL) {
             return null;
         }

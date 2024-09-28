@@ -25,10 +25,10 @@ public class BsonCollectionDecoder<T> extends CollectionDecoder<BsonReader, T> {
     }
 
     @Override
-    public Collection<T> convertFrom(BsonReader in, DeMember member) {
+    public Collection<T> convertFrom(BsonReader in) {
         this.checkInited();
         byte[] typevals = new byte[1];
-        int len = in.readArrayB(member, typevals, componentDecoder);
+        int len = in.readArrayB(typevals, componentDecoder);
         if (len == Reader.SIGN_NULL) {
             return null;
         }

@@ -166,11 +166,11 @@ public class BsonReader extends Reader {
     }
 
     @Override
-    public int readMapB(DeMember member, Decodeable keyDecoder, Decodeable valueDecoder) {
-        return readMapB(member, null, keyDecoder, valueDecoder);
+    public int readMapB(Decodeable keyDecoder, Decodeable valueDecoder) {
+        return readMapB(null, keyDecoder, valueDecoder);
     }
 
-    public int readMapB(DeMember member, byte[] typevals, Decodeable keyDecoder, Decodeable valueDecoder) {
+    public int readMapB(byte[] typevals, Decodeable keyDecoder, Decodeable valueDecoder) {
         short bt = readShort();
         if (bt == Reader.SIGN_NULL) {
             return bt;
@@ -191,11 +191,11 @@ public class BsonReader extends Reader {
     }
 
     @Override
-    public int readArrayB(DeMember member, Decodeable componentDecoder) {
-        return readArrayB(member, null, componentDecoder);
+    public int readArrayB(Decodeable componentDecoder) {
+        return readArrayB(null, componentDecoder);
     }
 
-    public int readArrayB(DeMember member, byte[] typevals, Decodeable componentDecoder) { // componentDecoder可能为null
+    public int readArrayB(byte[] typevals, Decodeable componentDecoder) { // componentDecoder可能为null
         short bt = readShort();
         if (bt == Reader.SIGN_NULL) {
             return bt;
@@ -264,7 +264,7 @@ public class BsonReader extends Reader {
 
     @Override
     public final byte[] readByteArray() {
-        int len = readArrayB(null, null, null);
+        int len = readArrayB(null, null);
         if (len == Reader.SIGN_NULL) {
             return null;
         }

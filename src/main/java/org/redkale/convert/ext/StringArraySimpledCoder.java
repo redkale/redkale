@@ -40,11 +40,7 @@ public final class StringArraySimpledCoder<R extends Reader, W extends Writer> e
 
     @Override
     public String[] convertFrom(R in) {
-        return convertFrom(in, null);
-    }
-
-    public String[] convertFrom(R in, DeMember member) {
-        int len = in.readArrayB(member, StringSimpledCoder.instance);
+        int len = in.readArrayB(StringSimpledCoder.instance);
         if (len == Reader.SIGN_NULL) {
             return null;
         }

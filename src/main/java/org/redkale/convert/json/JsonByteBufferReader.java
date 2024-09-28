@@ -180,12 +180,11 @@ public class JsonByteBufferReader extends JsonReader {
     /**
      * 判断下一个非空白字符是否为[
      *
-     * @param member DeMember
      * @param decoder Decodeable
      * @return SIGN_VARIABLE 或 SIGN_NULL
      */
     @Override
-    public final int readArrayB(DeMember member, Decodeable decoder) {
+    public final int readArrayB(Decodeable decoder) {
         char ch = nextGoodChar(true);
         if (ch == '[' || ch == '{') {
             return SIGN_VARIABLE;

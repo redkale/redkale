@@ -41,7 +41,7 @@ public final class ByteBufferSimpledCoder<R extends Reader, W extends Writer> ex
 
     @Override
     public ByteBuffer convertFrom(R in) {
-        int len = in.readArrayB(null, ByteSimpledCoder.instance);
+        int len = in.readArrayB(ByteSimpledCoder.instance);
         if (len == Reader.SIGN_NULL) {
             return null;
         }
