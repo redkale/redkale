@@ -98,7 +98,7 @@ public class ProtobufByteBufferReader extends ProtobufReader {
 
     @Override
     public final boolean readBoolean() {
-        return nextByte() != 0;
+        return nextByte() == 1;
     }
 
     @Override

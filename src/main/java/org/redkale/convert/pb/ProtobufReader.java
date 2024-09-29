@@ -175,7 +175,7 @@ public class ProtobufReader extends Reader {
     // ------------------------------------------------------------
     @Override
     public boolean readBoolean() {
-        return content[++this.position] != 0;
+        return content[++this.position] == 1;
     }
 
     public final boolean[] readBools() {

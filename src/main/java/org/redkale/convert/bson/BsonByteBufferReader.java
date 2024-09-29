@@ -24,11 +24,11 @@ public class BsonByteBufferReader extends BsonReader {
 
     private ByteBuffer currentBuffer;
 
+    protected BsonByteBufferReader() {}
+
     protected BsonByteBufferReader(ByteBuffer... buffers) {
         this.buffers = buffers;
-        if (buffers != null && buffers.length > 0) {
-            this.currentBuffer = buffers[currentIndex];
-        }
+        this.currentBuffer = buffers[currentIndex];
     }
 
     @Override
