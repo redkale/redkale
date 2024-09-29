@@ -43,7 +43,7 @@ public final class EnumSimpledCoder<R extends Reader, W extends Writer, E extend
                 char[] chs = fieldName.toCharArray();
                 chs[0] = Character.toUpperCase(chs[0]);
                 String methodName = "get" + new String(chs);
-                Method method = null;
+                Method method;
                 try {
                     method = type.getMethod(methodName);
                 } catch (NoSuchMethodException | SecurityException me) {
@@ -92,7 +92,7 @@ public final class EnumSimpledCoder<R extends Reader, W extends Writer, E extend
     }
 
     @Override
-    public Class<E> getType() {
-        return (Class<E>) type;
+    public Type getType() {
+        return type;
     }
 }
