@@ -69,7 +69,7 @@ public class JsonByteBufferReader extends JsonReader {
         return nextChar(null);
     }
 
-    protected final char nextChar(StringBuilder sb) {
+    protected final char nextChar(CharArray sb) {
         if (currentChar != 0) {
             char ch = currentChar;
             this.currentChar = 0;
@@ -496,38 +496,38 @@ public class JsonByteBufferReader extends JsonReader {
         if (ch == 0) {
             return null;
         }
-        final StringBuilder sb = new StringBuilder();
+        final CharArray tmp = array();
         if (ch == '"' || ch == '\'') {
             final char quote = ch;
             for (; ; ) {
-                ch = nextChar(sb);
+                ch = nextChar(tmp);
                 if (ch == '\\') {
-                    char c = nextChar(sb);
+                    char c = nextChar(tmp);
                     switch (c) {
                         case '"':
                         case '\'':
                         case '\\':
                         case '/':
-                            sb.append(c);
+                            tmp.append(c);
                             break;
                         case 'n':
-                            sb.append('\n');
+                            tmp.append('\n');
                             break;
                         case 'r':
-                            sb.append('\r');
+                            tmp.append('\r');
                             break;
                         case 'u':
-                            sb.append((char) Integer.parseInt(
+                            tmp.append((char) Integer.parseInt(
                                     new String(new char[] {nextChar(), nextChar(), nextChar(), nextChar()}), 16));
                             break;
                         case 't':
-                            sb.append('\t');
+                            tmp.append('\t');
                             break;
                         case 'b':
-                            sb.append('\b');
+                            tmp.append('\b');
                             break;
                         case 'f':
-                            sb.append('\f');
+                            tmp.append('\f');
                             break;
                         default:
                             throw new ConvertException("illegal escape(" + c + ") (position = " + this.position + ")");
@@ -535,41 +535,44 @@ public class JsonByteBufferReader extends JsonReader {
                 } else if (ch == quote || ch == 0) {
                     break;
                 } else {
-                    sb.append(ch);
+                    tmp.append(ch);
                 }
             }
-            return sb.toString();
+            return tmp.toStringThenClear();
         } else {
-            sb.append(ch);
+            tmp.append(ch);
             for (; ; ) {
-                ch = nextChar(sb);
+                ch = nextChar(tmp);
                 if (ch == '\\') {
-                    char c = nextChar(sb);
+                    char c = nextChar(tmp);
                     switch (c) {
                         case '"':
                         case '\'':
                         case '\\':
                         case '/':
-                            sb.append(c);
+                            tmp.append(c);
                             break;
                         case 'n':
-                            sb.append('\n');
+                            tmp.append('\n');
                             break;
                         case 'r':
-                            sb.append('\r');
+                            tmp.append('\r');
                             break;
                         case 'u':
-                            sb.append((char) Integer.parseInt(
-                                    new String(new char[] {nextChar(), nextChar(), nextChar(), nextChar()}), 16));
+                            int hex = (Character.digit(nextChar(), 16) << 12)
+                                    + (Character.digit(nextChar(), 16) << 8)
+                                    + (Character.digit(nextChar(), 16) << 4)
+                                    + Character.digit(nextChar(), 16);
+                            tmp.append((char) hex);
                             break;
                         case 't':
-                            sb.append('\t');
+                            tmp.append('\t');
                             break;
                         case 'b':
-                            sb.append('\b');
+                            tmp.append('\b');
                             break;
                         case 'f':
-                            sb.append('\f');
+                            tmp.append('\f');
                             break;
                         default:
                             throw new ConvertException("illegal escape(" + c + ") (position = " + this.position + ")");
@@ -578,10 +581,10 @@ public class JsonByteBufferReader extends JsonReader {
                     backChar(ch);
                     break;
                 } else {
-                    sb.append(ch);
+                    tmp.append(ch);
                 }
             }
-            String rs = sb.toString();
+            String rs = tmp.toStringThenClear();
             return "null".equalsIgnoreCase(rs) ? null : rs;
         }
     }
@@ -593,22 +596,23 @@ public class JsonByteBufferReader extends JsonReader {
             return null;
         }
         DeMemberNode node = memberInfo.getMemberNode();
-        StringBuilder sb = new StringBuilder();
+        CharArray tmp = array();
         if (ch == '"' || ch == '\'') {
             final char quote = ch;
             for (; ; ) {
-                ch = nextChar(sb);
+                ch = nextChar(tmp);
                 if (ch == quote || ch == 0) {
                     break;
                 } else {
                     node = node == null ? null : node.getNode(ch);
                 }
             }
+            tmp.clear();
             return node == null ? null : node.getValue();
         } else {
             node = node == null ? null : node.getNode(ch);
             for (; ; ) {
-                ch = nextChar(sb);
+                ch = nextChar(tmp);
                 if (ch == ',' || ch == ']' || ch == '}' || ch <= ' ' || ch == ':') { //  ch <= ' ' 包含 0
                     backChar(ch);
                     break;
@@ -616,6 +620,7 @@ public class JsonByteBufferReader extends JsonReader {
                     node = node == null ? null : node.getNode(ch);
                 }
             }
+            tmp.clear();
             return node == null ? null : node.getValue();
         }
     }

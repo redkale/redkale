@@ -865,13 +865,67 @@ public class JsonReader extends Reader {
         final int end = limit;
         char quote = nextGoodChar(true);
         int curr = this.position;
-        if (quote != '"' && quote != '\'') {
+        if (quote == '"' || quote == '\'') {
+            final int start = ++curr;
+            CharArray tmp = null;
+            char c;
+            for (; curr <= end; curr++) {
+                char ch = text0[curr];
+                if (ch == quote) {
+                    break;
+                } else if (ch == '\\') {
+                    if (tmp == null) {
+                        tmp = array();
+                        tmp.append(text0, start, curr - start);
+                    }
+                    c = text0[++curr];
+                    switch (c) {
+                        case '"':
+                        case '\'':
+                        case '\\':
+                        case '/':
+                            tmp.append(c);
+                            break;
+                        case 'n':
+                            tmp.append('\n');
+                            break;
+                        case 'r':
+                            tmp.append('\r');
+                            break;
+                        case 'u':
+                            int hex = (Character.digit(text0[++curr], 16) << 12)
+                                    + (Character.digit(text0[++curr], 16) << 8)
+                                    + (Character.digit(text0[++curr], 16) << 4)
+                                    + Character.digit(text0[++curr], 16);
+                            tmp.append((char) hex);
+                            break;
+                        case 't':
+                            tmp.append('\t');
+                            break;
+                        case 'b':
+                            tmp.append('\b');
+                            break;
+                        case 'f':
+                            tmp.append('\f');
+                            break;
+                        default:
+                            this.position = curr;
+                            throw new ConvertException("illegal escape(" + c + ") (position = " + this.position
+                                    + ") in " + new String(this.text));
+                    }
+                } else if (tmp != null) {
+                    tmp.append(ch);
+                }
+            }
+            this.position = curr;
+            return tmp != null ? tmp.toStringThenClear() : new String(text0, start, curr - start);
+        } else { // 不带双引号
             final int start = curr;
             if (quote == 'n'
                     && end >= curr + 3
                     && text0[1 + curr] == 'u'
                     && text0[2 + curr] == 'l'
-                    && text0[3 + curr] == 'l') {
+                    && text0[3 + curr] == 'l') { // 为null或者null开头的字符串
                 curr += 3;
                 this.position = curr;
                 if (curr < end) {
@@ -915,57 +969,6 @@ public class JsonReader extends Reader {
                 return new String(text0, start, curr - start);
             }
         }
-        final int start = ++curr;
-        CharArray array = null;
-        char c;
-        for (; curr <= end; curr++) {
-            char ch = text0[curr];
-            if (ch == quote) {
-                break;
-            } else if (ch == '\\') {
-                if (array == null) {
-                    array = array();
-                    array.append(text0, start, curr - start);
-                }
-                c = text0[++curr];
-                switch (c) {
-                    case '"':
-                    case '\'':
-                    case '\\':
-                    case '/':
-                        array.append(c);
-                        break;
-                    case 'n':
-                        array.append('\n');
-                        break;
-                    case 'r':
-                        array.append('\r');
-                        break;
-                    case 'u':
-                        array.append((char) Integer.parseInt(
-                                new String(new char[] {text0[++curr], text0[++curr], text0[++curr], text0[++curr]}),
-                                16));
-                        break;
-                    case 't':
-                        array.append('\t');
-                        break;
-                    case 'b':
-                        array.append('\b');
-                        break;
-                    case 'f':
-                        array.append('\f');
-                        break;
-                    default:
-                        this.position = curr;
-                        throw new ConvertException("illegal escape(" + c + ") (position = " + this.position + ") in "
-                                + new String(this.text));
-                }
-            } else if (array != null) {
-                array.append(ch);
-            }
-        }
-        this.position = curr;
-        return array != null ? array.toStringThenClear() : new String(text0, start, curr - start);
     }
 
     private String readEscapeValue(final char expected, int start) {
