@@ -36,6 +36,9 @@ public abstract class SimpledCoder<R extends Reader, W extends Writer, T>
         if (type == null) {
             Type[] ts = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments();
             type = ts[ts.length - 1];
+            if (!(type instanceof Class)) {
+                throw new ConvertException(type + " is not class");
+            }
         }
         return (Class<T>) type;
     }

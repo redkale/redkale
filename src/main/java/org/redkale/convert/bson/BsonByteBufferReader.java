@@ -5,12 +5,9 @@
  */
 package org.redkale.convert.bson;
 
-
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import org.redkale.convert.*;
 import static org.redkale.convert.Reader.SIGN_NULL;
-import org.redkale.convert.ext.ByteSimpledCoder;
 
 /**
  * 以ByteBuffer为数据载体的BsonReader
@@ -48,44 +45,6 @@ public class BsonByteBufferReader extends BsonReader {
         return currentBuffer.get(currentBuffer.position());
     }
 
-    @Override
-    public int readMapB(byte[] typevals, Decodeable keyDecoder, Decodeable valueDecoder) {
-        short bt = readShort();
-        if (bt == Reader.SIGN_NULL) {
-            return bt;
-        }
-        short lt = readShort();
-        byte kt = readByte();
-        byte vt = readByte();
-        if (typevals != null) {
-            typevals[0] = kt;
-            typevals[1] = vt;
-        }
-        return (bt & 0xffff) << 16 | (lt & 0xffff);
-    }
-
-    /**
-     * 判断下一个非空白字节是否为[
-     *
-     * @param typevals byte[]
-     * @param componentDecoder Decodeable
-     * @return 数组长度或 SIGN_NULL
-     */
-    @Override
-    public final int readArrayB(byte[] typevals, Decodeable componentDecoder) {
-        short bt = readShort();
-        if (bt == Reader.SIGN_NULL) {
-            return bt;
-        }
-        short lt = readShort();
-        if (componentDecoder != null && componentDecoder != ByteSimpledCoder.instance) {
-            byte comval = readByte();
-            if (typevals != null) {
-                typevals[0] = comval;
-            }
-        }
-        return (bt & 0xffff) << 16 | (lt & 0xffff);
-    }
     // ------------------------------------------------------------
 
     @Override

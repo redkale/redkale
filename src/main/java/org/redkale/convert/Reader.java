@@ -5,6 +5,8 @@
  */
 package org.redkale.convert;
 
+import org.redkale.annotation.Nullable;
+
 /**
  * 反序列化的数据读取流
  *
@@ -93,7 +95,7 @@ public abstract class Reader {
      * @param componentDecoder Decodeable
      * @return 返回数组的长度
      */
-    public abstract int readArrayB(Decodeable componentDecoder);
+    public abstract int readArrayB(@Nullable Decodeable componentDecoder);
 
     /** 读取数组的尾端 */
     public abstract void readArrayE();

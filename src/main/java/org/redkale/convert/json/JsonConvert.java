@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.function.*;
+import org.redkale.annotation.Nullable;
 import org.redkale.convert.*;
 import org.redkale.service.RetResult;
 import org.redkale.util.*;
@@ -37,8 +38,10 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     private final ThreadLocal<JsonReader> readerPool = Utility.withInitialThreadLocal(JsonReader::new);
 
+    @Nullable
     private Encodeable lastEncodeable;
 
+    @Nullable
     private Decodeable lastDecodeable;
 
     protected JsonConvert(JsonFactory factory, int features) {

@@ -27,10 +27,6 @@ public class BsonWriter extends Writer implements ByteTuple {
 
     protected int count;
 
-    public static ObjectPool<BsonWriter> createPool(int max) {
-        return ObjectPool.createSafePool(max, (Object... params) -> new BsonWriter(), null, (t) -> t.recycle());
-    }
-
     @Override
     public byte[] content() {
         return content;

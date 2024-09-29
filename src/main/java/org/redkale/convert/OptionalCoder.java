@@ -17,6 +17,7 @@ import java.util.concurrent.locks.*;
  * @author zhangjx
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型
+ * @param <T> T
  */
 public class OptionalCoder<R extends Reader, W extends Writer, T> extends SimpledCoder<R, W, Optional<T>> {
 
@@ -108,5 +109,10 @@ public class OptionalCoder<R extends Reader, W extends Writer, T> extends Simple
             }
         }
         return Optional.ofNullable(this.decoder.convertFrom(in));
+    }
+
+    @Override
+    public Class getType() {
+        return Optional.class;
     }
 }

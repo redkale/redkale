@@ -6,6 +6,7 @@
 package org.redkale.convert.bson;
 
 import java.nio.charset.StandardCharsets;
+import org.redkale.annotation.Nullable;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.SIGN_NULL;
 import org.redkale.convert.ext.ByteSimpledCoder;
@@ -32,17 +33,19 @@ public class BsonReader extends Reader {
 
     public static final byte VERBOSE_YES = 2;
 
-    protected byte typeval; // 字段的类型值  对应  BsonWriter.writeField
+    protected byte fieldTypeEnum; // 字段的类型值  对应  BsonWriter.writeField
+
+    protected byte arrayItemTypeEnum;
+
+    protected byte mapKeyTypeEnum;
+
+    protected byte mapValueTypeEnum;
 
     protected int position = -1;
 
     private byte[] content;
 
     public BsonReader() {}
-
-    public static ObjectPool<BsonReader> createPool(int max) {
-        return ObjectPool.createSafePool(max, (Object... params) -> new BsonReader(), null, (t) -> t.recycle());
-    }
 
     public BsonReader(byte[] bytes) {
         setBytes(bytes, 0, bytes.length);
@@ -79,7 +82,10 @@ public class BsonReader extends Reader {
 
     protected boolean recycle() {
         this.position = -1;
-        this.typeval = 0;
+        this.fieldTypeEnum = 0;
+        this.arrayItemTypeEnum = 0;
+        this.mapKeyTypeEnum = 0;
+        this.mapValueTypeEnum = 0;
         // this.limit = -1;
         this.content = null;
         return true;
@@ -94,11 +100,11 @@ public class BsonReader extends Reader {
     @Override
     @SuppressWarnings("unchecked")
     public final void skipValue() {
-        if (typeval == 0) {
+        final byte val = this.fieldTypeEnum;
+        if (val == 0) {
             return;
         }
-        final byte val = this.typeval;
-        this.typeval = 0;
+        this.fieldTypeEnum = 0;
         switch (val) {
             case 11:
                 readBoolean();
@@ -165,54 +171,57 @@ public class BsonReader extends Reader {
         return this.content[this.position];
     }
 
-    @Override
-    public int readMapB(Decodeable keyDecoder, Decodeable valueDecoder) {
-        return readMapB(null, keyDecoder, valueDecoder);
+    public final byte readMapKeyTypeEnum() {
+        return mapKeyTypeEnum;
     }
 
-    public int readMapB(byte[] typevals, Decodeable keyDecoder, Decodeable valueDecoder) {
+    public final byte readmapValueTypeEnum() {
+        return mapValueTypeEnum;
+    }
+
+    @Override
+    public final int readMapB(Decodeable keyDecoder, Decodeable valueDecoder) {
         short bt = readShort();
         if (bt == Reader.SIGN_NULL) {
+            this.mapKeyTypeEnum = 0;
+            this.mapValueTypeEnum = 0;
             return bt;
         }
-        int rs = (bt & 0xffff) << 16 | ((content[++this.position] & 0xff) << 8) | (content[++this.position] & 0xff);
-        byte kt = readByte();
-        byte vt = readByte();
-        if (typevals != null) {
-            typevals[0] = kt;
-            typevals[1] = vt;
-        }
-        return rs;
+        short lt = readShort();
+        this.mapKeyTypeEnum = readByte();
+        this.mapValueTypeEnum = readByte();
+        return (bt & 0xffff) << 16 | (lt & 0xffff);
     }
 
     @Override
     public final void readMapE() {
-        // do nothing
+        this.mapKeyTypeEnum = 0;
+        this.mapValueTypeEnum = 0;
+    }
+
+    public final byte readArrayItemTypeEnum() {
+        return arrayItemTypeEnum;
     }
 
     @Override
-    public int readArrayB(Decodeable componentDecoder) {
-        return readArrayB(null, componentDecoder);
-    }
-
-    public int readArrayB(byte[] typevals, Decodeable componentDecoder) { // componentDecoder可能为null
+    public final int readArrayB(@Nullable Decodeable componentDecoder) {
         short bt = readShort();
         if (bt == Reader.SIGN_NULL) {
+            this.arrayItemTypeEnum = 0;
             return bt;
         }
-        int rs = (bt & 0xffff) << 16 | ((content[++this.position] & 0xff) << 8) | (content[++this.position] & 0xff);
+        short lt = readShort();
         if (componentDecoder != null && componentDecoder != ByteSimpledCoder.instance) {
-            byte comval = readByte();
-            if (typevals != null) {
-                typevals[0] = comval;
-            }
+            this.arrayItemTypeEnum = readByte();
+        } else {
+            this.arrayItemTypeEnum = 0;
         }
-        return rs;
+        return (bt & 0xffff) << 16 | (lt & 0xffff);
     }
 
     @Override
     public final void readArrayE() {
-        // do nothing
+        this.arrayItemTypeEnum = 0;
     }
 
     /** 判断下一个非空白字节是否: */
@@ -232,7 +241,7 @@ public class BsonReader extends Reader {
      * @return 是否存在
      */
     @Override
-    public boolean hasNext() {
+    public final boolean hasNext() {
         byte b = readByte();
         if (b == SIGN_HASNEXT) {
             return true;
@@ -247,7 +256,7 @@ public class BsonReader extends Reader {
     @Override
     public final DeMember readFieldName(final DeMemberInfo memberInfo) {
         final String exceptedField = readSmallString();
-        this.typeval = readByte();
+        this.fieldTypeEnum = readByte();
         return memberInfo.getMemberByField(exceptedField);
     }
 
@@ -264,7 +273,8 @@ public class BsonReader extends Reader {
 
     @Override
     public final byte[] readByteArray() {
-        int len = readArrayB(null, null);
+        int len = readArrayB(null);
+        this.arrayItemTypeEnum = 0;
         if (len == Reader.SIGN_NULL) {
             return null;
         }

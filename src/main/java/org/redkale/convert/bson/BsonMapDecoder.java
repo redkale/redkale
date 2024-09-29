@@ -27,13 +27,12 @@ public class BsonMapDecoder<K, V> extends MapDecoder<BsonReader, K, V> {
     @Override
     public Map<K, V> convertFrom(BsonReader in) {
         this.checkInited();
-        byte[] typevals = new byte[2];
-        int len = in.readMapB(typevals, this.keyDecoder, this.valueDecoder);
+        int len = in.readMapB(this.keyDecoder, this.valueDecoder);
         if (len == Reader.SIGN_NULL) {
             return null;
         }
-        Decodeable<BsonReader, K> kdecoder = BsonFactory.typeEnum(typevals[0]);
-        Decodeable<BsonReader, V> vdecoder = BsonFactory.typeEnum(typevals[1]);
+        Decodeable<BsonReader, K> kdecoder = BsonFactory.typeEnum(in.readMapKeyTypeEnum());
+        Decodeable<BsonReader, V> vdecoder = BsonFactory.typeEnum(in.readmapValueTypeEnum());
         final Map<K, V> result = this.creator.create();
         // 固定长度
         for (int i = 0; i < len; i++) {

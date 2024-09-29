@@ -28,12 +28,11 @@ public class BsonStreamDecoder<T> extends StreamDecoder<BsonReader, T> {
     @Override
     public Stream<T> convertFrom(BsonReader in) {
         this.checkInited();
-        byte[] typevals = new byte[1];
-        int len = in.readArrayB(typevals, componentDecoder);
+        int len = in.readArrayB(componentDecoder);
         if (len == Reader.SIGN_NULL) {
             return null;
         }
-        final Decodeable<BsonReader, T> itemDecoder = BsonFactory.typeEnum(typevals[0]);
+        final Decodeable<BsonReader, T> itemDecoder = BsonFactory.typeEnum(in.readArrayItemTypeEnum());
         final List<T> result = new ArrayList();
         // 固定长度
         for (int i = 0; i < len; i++) {
