@@ -110,9 +110,4 @@ public class OptionalCoder<R extends Reader, W extends Writer, T> extends Simple
         }
         return Optional.ofNullable(this.decoder.convertFrom(in));
     }
-
-    @Override
-    public Class getType() {
-        return Optional.class;
-    }
 }

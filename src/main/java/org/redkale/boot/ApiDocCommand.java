@@ -699,7 +699,7 @@ public final class ApiDocCommand {
                                 factory,
                                 logger,
                                 componentsMap,
-                                ((SimpledCoder) member.getEncoder()).getType(),
+                                TypeToken.typeToClass(((SimpledCoder) member.getEncoder()).getType()),
                                 ((SimpledCoder) member.getEncoder()).getType(),
                                 new LinkedHashMap<>(),
                                 true);
@@ -756,7 +756,7 @@ public final class ApiDocCommand {
             }
             return sb + (array ? "_Array" : "_Collection");
         } else if (encodeable instanceof SimpledCoder) {
-            Class stype = ((SimpledCoder) encodeable).getType();
+            Class stype = TypeToken.typeToClass(((SimpledCoder) encodeable).getType());
             if (stype.isPrimitive()
                     || stype == Boolean.class
                     || Number.class.isAssignableFrom(stype)

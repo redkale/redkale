@@ -32,7 +32,7 @@ public abstract class SimpledCoder<R extends Reader, W extends Writer, T>
 
     @Override
     @SuppressWarnings("unchecked")
-    public Class<T> getType() {
+    public Type getType() {
         if (type == null) {
             Type[] ts = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments();
             type = ts[ts.length - 1];
@@ -40,7 +40,7 @@ public abstract class SimpledCoder<R extends Reader, W extends Writer, T>
                 throw new ConvertException(type + " is not class");
             }
         }
-        return (Class<T>) type;
+        return type;
     }
 
     @Override
