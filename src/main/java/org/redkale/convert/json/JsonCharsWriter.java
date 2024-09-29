@@ -373,11 +373,13 @@ public class JsonCharsWriter extends JsonWriter {
             writeEscapeLatinString(quote, Utility.latin1ByteArray(str));
             return;
         }
-//        byte[] utf16s = Utility.byteUTF16Array(value);
-//        if (utf16s != null) { // JDK9+
-//            writeEscapeUTF16String(quote, utf16s);
-//            return;
-//        }
+        if (false) {
+            byte[] utf16s = Utility.utf16ByteArray(value);
+            if (utf16s != null) { // JDK9+
+                writeEscapeUTF16String(quote, utf16s);
+                return;
+            }
+        }
         final int len = str.length();
         char[] chars = expand(len * 2 + 2);
         int curr = count;
