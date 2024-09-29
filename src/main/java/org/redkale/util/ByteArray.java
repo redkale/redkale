@@ -76,6 +76,16 @@ public final class ByteArray implements ByteTuple {
         return true;
     }
 
+    public byte[] expand(int len) {
+        int newcount = count + len;
+        if (newcount > content.length) {
+            byte[] newdata = new byte[newcount];
+            System.arraycopy(content, 0, newdata, 0, count);
+            this.content = newdata;
+        }
+        return content;
+    }
+
     public ByteBuffer wrapByteBuffer() {
         return ByteBuffer.wrap(content, 0, count);
     }

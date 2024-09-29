@@ -568,72 +568,27 @@ public class HttpRequest extends Request<HttpContext> {
 
     private int loadHeaderBytes(final ByteBuffer buf) {
         final ByteBuffer buffer = buf;
-        ByteArray hbytes = this.headerBytes;
+        final ByteArray hbytes = this.headerBytes;
         int remain = buffer.remaining();
-        byte b1, b2, b3, b4;
-        for (; ; ) {
-            if (remain-- < 4) { // bytes不存放\r\n\r\n这4个字节
-                hbytes.put(buffer);
-                buffer.clear();
-                if (hbytes.length() > 0) {
-                    byte rn1 = 0, rn2 = 0, rn3 = 0;
-                    byte b = hbytes.getLastByte();
-                    if (b == '\r' || b == '\n') {
-                        rn3 = b;
-                        hbytes.backCount();
-                        if (hbytes.length() > 0) {
-                            b = hbytes.getLastByte();
-                            if (b == '\r' || b == '\n') {
-                                rn2 = b;
-                                hbytes.backCount();
-                                if (hbytes.length() > 0) {
-                                    b = hbytes.getLastByte();
-                                    if (b == '\r' || b == '\n') {
-                                        rn1 = b;
-                                        hbytes.backCount();
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (rn1 != 0) {
-                        buffer.put(rn1);
-                    }
-                    if (rn2 != 0) {
-                        buffer.put(rn2);
-                    }
-                    if (rn3 != 0) {
-                        buffer.put(rn3);
-                    }
-                }
-                this.headerHalfLen = hbytes.length();
-                return 1;
-            }
-            b1 = buffer.get();
-            hbytes.put(b1);
-            if (b1 == '\r') {
-                remain--;
-                b2 = buffer.get();
-                if (b2 == '\n') {
-                    remain--;
-                    b3 = buffer.get();
-                    if (b3 == '\r') {
-                        remain--;
-                        b4 = buffer.get();
-                        hbytes.put(b2, b3, b4);
-                        if (b4 == '\n') {
-                            this.headerLength = hbytes.length();
-                            this.headerHalfLen = this.headerLength;
-                            return 0;
-                        }
-                    } else {
-                        hbytes.put(b2, b3);
-                    }
-                } else {
-                    hbytes.put(b2);
-                }
+        final byte[] content = hbytes.expand(remain);
+        int pos = hbytes.length();
+        int rs = 1;
+        while (remain-- > 0) {
+            byte b = buffer.get();
+            content[pos++] = b;
+            if (b == '\n'
+                    && pos > 3
+                    && content[pos - 2] == '\r'
+                    && content[pos - 3] == '\n'
+                    && content[pos - 4] == '\r') {
+                rs = 0;
+                break;
             }
         }
+        hbytes.position(pos);
+        this.headerLength = hbytes.length();
+        this.headerHalfLen = this.headerLength;
+        return rs;
     }
 
     // 解析 GET /xxx HTTP/1.1
