@@ -728,9 +728,11 @@ public class HttpRequest extends Request<HttpContext> {
 
             size = bytes.length();
             if (qst > 0) { // 带?参数
-                this.requestPath = decodeable
-                        ? toDecodeString(bytes, 0, qst, charset)
-                        : context.loadUriPath(bytes, qst, latin1, charset);
+                if (decodeable) { // 需要转义
+                    this.requestPath = toDecodeString(bytes, 0, qst, charset);
+                } else {
+                    this.requestPath = context.loadUriPath(bytes, qst, latin1, charset);
+                }
                 int qlen = size - qst - 1;
                 this.queryBytes = bytes.getBytes(qst + 1, qlen);
                 try {

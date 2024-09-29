@@ -143,8 +143,8 @@ public final class ByteArray implements ByteTuple {
             }
 
             @Override
-            public void write(byte b[], int off, int len) throws IOException {
-                put(b, off, len);
+            public void write(byte[] bs, int off, int len) throws IOException {
+                put(bs, off, len);
             }
         };
     }
