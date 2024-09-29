@@ -439,7 +439,7 @@ public class ProtobufReader extends Reader {
     }
 
     @Override
-    public final String readSmallString() {
+    public final String readStandardString() {
         return readString();
     }
 

@@ -107,7 +107,7 @@ public class JsonReader extends Reader {
         nextGoodChar(true); // 读掉 { [
         for (String key1 : keys) {
             while (this.hasNext()) {
-                String field = this.readSmallString();
+                String field = this.readStandardString();
                 readBlank();
                 if (key1.equals(field)) {
                     break;
@@ -129,7 +129,7 @@ public class JsonReader extends Reader {
                 break;
             case '{':
                 while (hasNext()) {
-                    this.readSmallString(); // 读掉field
+                    this.readStandardString(); // 读掉field
                     this.readBlank();
                     this.skipValue();
                 }
@@ -663,7 +663,7 @@ public class JsonReader extends Reader {
     }
 
     public final String readFieldName() {
-        return this.readSmallString();
+        return this.readStandardString();
     }
 
     @Override
@@ -708,7 +708,7 @@ public class JsonReader extends Reader {
 
     @Override
     public final boolean readBoolean() {
-        return "true".equalsIgnoreCase(this.readSmallString());
+        return "true".equalsIgnoreCase(this.readStandardString());
     }
 
     @Override
@@ -759,7 +759,7 @@ public class JsonReader extends Reader {
 
     @Override
     public final float readFloat() {
-        String chars = readSmallString();
+        String chars = readStandardString();
         if (chars != null) {
             chars = chars.trim();
         }
@@ -778,7 +778,7 @@ public class JsonReader extends Reader {
 
     @Override
     public final double readDouble() {
-        String chars = readSmallString();
+        String chars = readStandardString();
         if (chars != null) {
             chars = chars.trim();
         }
@@ -796,7 +796,7 @@ public class JsonReader extends Reader {
     }
 
     @Override
-    public String readSmallString() {
+    public String readStandardString() {
         final int eof = this.limit;
         if (this.position == eof) {
             return null;

@@ -234,13 +234,13 @@ public class BsonWriter extends Writer implements ByteTuple {
 
     @Override
     public final void writeClassName(String clazz) {
-        writeSmallString(clazz == null ? "" : clazz);
+        writeStandardString(clazz == null ? "" : clazz);
     }
 
     @Override
     public final void writeObjectB(Object obj) {
         super.writeObjectB(obj);
-        writeSmallString("");
+        writeStandardString("");
         writeShort(BsonReader.SIGN_OBJECTB);
     }
 
@@ -253,7 +253,7 @@ public class BsonWriter extends Writer implements ByteTuple {
     @Override
     public final void writeFieldName(EnMember member, String fieldName, Type fieldType, int fieldPos) {
         writeByte(BsonReader.SIGN_HASNEXT);
-        writeSmallString(fieldName);
+        writeStandardString(fieldName);
         writeByte(BsonFactory.typeEnum(fieldType));
     }
 
@@ -263,7 +263,7 @@ public class BsonWriter extends Writer implements ByteTuple {
      * @param value String值
      */
     @Override
-    public final void writeSmallString(String value) {
+    public final void writeStandardString(String value) {
         if (value.isEmpty()) {
             writeTo((byte) 0);
             return;

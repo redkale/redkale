@@ -385,7 +385,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @Override
-    public final void writeSmallString(String value) {
+    public final void writeStandardString(String value) {
         writeString(value);
     }
 

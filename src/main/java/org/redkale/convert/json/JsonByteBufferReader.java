@@ -486,7 +486,7 @@ public class JsonByteBufferReader extends JsonReader {
      * @return String值
      */
     @Override
-    public final String readSmallString() {
+    public final String readStandardString() {
         return readString(true);
     }
 

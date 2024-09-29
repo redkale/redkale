@@ -144,12 +144,12 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
             if (fieldType == int.class) {
                 intFieldCount++;
             }
-            if (fieldType == String.class && membersSize == 1 && readConvertSmallString(factory, element) != null) {
+            if (fieldType == String.class && membersSize == 1 && isConvertStandardString(factory, element)) {
                 onlyOneLatin1FieldObjectFlag = true;
             } else if (fieldType != short.class
                     && fieldType != int.class
                     && fieldType != long.class
-                    && !(fieldType == String.class && readConvertSmallString(factory, element) != null)) {
+                    && !(fieldType == String.class && isConvertStandardString(factory, element))) {
                 onlyShotIntLongLatin1MoreFieldObjectFlag = false;
             }
         }
@@ -612,7 +612,7 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
                         mv.visitVarInsn(loadid, maxLocals);
                         mv.visitMethodInsn(INVOKEVIRTUAL, writerName, "writeDouble", "(D)V", false);
                     } else if (fieldType == String.class) {
-                        if (readConvertSmallString(factory, element) == null) {
+                        if (!isConvertStandardString(factory, element)) {
                             mv.visitVarInsn(ALOAD, 1);
                             mv.visitVarInsn(loadid, maxLocals);
                             mv.visitMethodInsn(
@@ -875,23 +875,37 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
         }
     }
 
-    protected static ConvertSmallString readConvertSmallString(JsonFactory factory, AccessibleObject element) {
+    protected static boolean isConvertStandardString(JsonFactory factory, AccessibleObject element) {
         if (element instanceof Field) {
-            return ((Field) element).getAnnotation(ConvertSmallString.class);
+            return ((Field) element).getAnnotation(ConvertStandardString.class) != null
+                    || ((Field) element).getAnnotation(ConvertSmallString.class) != null;
         }
         Method method = (Method) element;
-        ConvertSmallString small = method.getAnnotation(ConvertSmallString.class);
-        if (small == null) {
+        ConvertStandardString standard = method.getAnnotation(ConvertStandardString.class);
+        if (standard == null) {
             try {
                 Field f = method.getDeclaringClass().getDeclaredField(factory.readGetSetFieldName(method));
                 if (f != null) {
-                    small = f.getAnnotation(ConvertSmallString.class);
+                    standard = f.getAnnotation(ConvertStandardString.class);
                 }
             } catch (Exception e) {
                 // do nothing
             }
         }
-        return small;
+        if (standard == null) {
+            if (method.getAnnotation(ConvertSmallString.class) != null) {
+                return true;
+            }
+            try {
+                Field f = method.getDeclaringClass().getDeclaredField(factory.readGetSetFieldName(method));
+                if (f != null && f.getAnnotation(ConvertSmallString.class) != null) {
+                    return true;
+                }
+            } catch (Exception e) {
+                // do nothing
+            }
+        }
+        return standard != null;
     }
 
     protected static Class readGetSetFieldType(AccessibleObject element) {

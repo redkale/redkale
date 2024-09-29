@@ -9,7 +9,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.Convert;
-import org.redkale.convert.ConvertSmallString;
+import org.redkale.convert.ConvertStandardString;
 import org.redkale.convert.Decodeable;
 import org.redkale.convert.json.*;
 import org.redkale.util.TypeToken;
@@ -93,7 +93,7 @@ public class Json5Test {
 
         public String name;
 
-        @ConvertSmallString
+        @ConvertStandardString
         public String desc;
 
         @Override

@@ -39,12 +39,12 @@ public final class StringSimpledCoder<R extends Reader, W extends Writer> extend
 
         @Override
         public void convertTo(W out, String value) {
-            out.writeSmallString(value);
+            out.writeStandardString(value);
         }
 
         @Override
         public String convertFrom(R in) {
-            return in.readSmallString();
+            return in.readStandardString();
         }
     }
 }

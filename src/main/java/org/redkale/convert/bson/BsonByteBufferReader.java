@@ -151,7 +151,7 @@ public class BsonByteBufferReader extends BsonReader {
     }
 
     @Override
-    public final String readSmallString() {
+    public final String readStandardString() {
         int len = 0xff & readByte();
         if (len == 0) {
             return "";

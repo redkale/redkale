@@ -189,7 +189,7 @@ public abstract class Reader {
      *
      * @return String值
      */
-    public abstract String readSmallString();
+    public abstract String readStandardString();
 
     /**
      * 读取反解析对象的类名

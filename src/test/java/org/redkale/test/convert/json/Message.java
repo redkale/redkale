@@ -20,7 +20,7 @@ public final class Message {
 
     private List<Long> longs;
 
-    @ConvertSmallString
+    @ConvertStandardString
     private String message;
 
     public Message() {}

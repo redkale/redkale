@@ -255,7 +255,7 @@ public class BsonReader extends Reader {
 
     @Override
     public final DeMember readFieldName(final DeMemberInfo memberInfo) {
-        final String exceptedField = readSmallString();
+        final String exceptedField = readStandardString();
         this.fieldTypeEnum = readByte();
         return memberInfo.getMemberByField(exceptedField);
     }
@@ -345,11 +345,11 @@ public class BsonReader extends Reader {
 
     @Override
     public final String readClassName() {
-        return readSmallString();
+        return readStandardString();
     }
 
     @Override
-    public String readSmallString() {
+    public String readStandardString() {
         int len = 0xff & readByte();
         if (len == 0) {
             return "";

@@ -46,7 +46,7 @@ public class ProtobufEnumSimpledCoder<R extends ProtobufReader, W extends Protob
         if (value == null) {
             out.writeNull();
         } else if (enumtostring) {
-            out.writeSmallString(value.toString());
+            out.writeStandardString(value.toString());
         } else {
             out.writeUInt32(value.ordinal());
         }
@@ -56,7 +56,7 @@ public class ProtobufEnumSimpledCoder<R extends ProtobufReader, W extends Protob
     @SuppressWarnings("unchecked")
     public E convertFrom(final R in) {
         if (enumtostring) {
-            String value = in.readSmallString();
+            String value = in.readStandardString();
             return value == null ? null : (E) Enum.valueOf((Class<E>) type, value);
         } else {
             int value = in.readRawVarint32();

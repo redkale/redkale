@@ -73,14 +73,14 @@ public final class EnumSimpledCoder<R extends Reader, W extends Writer, E extend
         } else if (valueEncoder != null) {
             valueEncoder.convertTo(out, enumToValues.get(value));
         } else {
-            out.writeSmallString(value.toString());
+            out.writeStandardString(value.toString());
         }
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public E convertFrom(final R in) {
-        String value = in.readSmallString();
+        String value = in.readStandardString();
         if (value == null) {
             return null;
         }

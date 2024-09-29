@@ -335,7 +335,7 @@ public abstract class Writer {
      *
      * @param value 非空且不含需要转义的字符的String值
      */
-    public abstract void writeSmallString(String value);
+    public abstract void writeStandardString(String value);
 
     /**
      * 写入一个String值

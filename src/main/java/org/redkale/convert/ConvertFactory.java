@@ -163,12 +163,12 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
                     @Override
                     public void convertTo(W out, Object value) {
-                        out.writeSmallString(value == null ? null : value.toString());
+                        out.writeStandardString(value == null ? null : value.toString());
                     }
 
                     @Override
                     public Object convertFrom(R in) {
-                        String t = in.readSmallString();
+                        String t = in.readStandardString();
                         return t == null ? null : sqldateInvoker.invoke(null, t);
                     }
                 });
@@ -179,12 +179,12 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
                     @Override
                     public void convertTo(W out, Object value) {
-                        out.writeSmallString(value == null ? null : value.toString());
+                        out.writeStandardString(value == null ? null : value.toString());
                     }
 
                     @Override
                     public Object convertFrom(R in) {
-                        String t = in.readSmallString();
+                        String t = in.readStandardString();
                         return t == null ? null : sqltimeInvoker.invoke(null, t);
                     }
                 });
@@ -195,12 +195,12 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
                     @Override
                     public void convertTo(W out, Object value) {
-                        out.writeSmallString(value == null ? null : value.toString());
+                        out.writeStandardString(value == null ? null : value.toString());
                     }
 
                     @Override
                     public Object convertFrom(R in) {
-                        String t = in.readSmallString();
+                        String t = in.readStandardString();
                         return t == null ? null : timestampInvoker.invoke(null, t);
                     }
                 });

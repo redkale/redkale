@@ -159,7 +159,7 @@ public abstract class JsonWriter extends Writer {
     }
 
     @Override
-    public final void writeSmallString(String value) {
+    public final void writeStandardString(String value) {
         writeLatin1To(true, value);
     }
 

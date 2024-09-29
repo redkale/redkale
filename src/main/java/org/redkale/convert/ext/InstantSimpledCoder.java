@@ -43,13 +43,13 @@ public class InstantSimpledCoder<R extends Reader, W extends Writer> extends Sim
             if (value == null) {
                 out.writeNull();
             } else {
-                out.writeSmallString(value.toString());
+                out.writeStandardString(value.toString());
             }
         }
 
         @Override
         public Instant convertFrom(R in) {
-            final String str = in.readSmallString();
+            final String str = in.readStandardString();
             if (str == null) {
                 return null;
             }

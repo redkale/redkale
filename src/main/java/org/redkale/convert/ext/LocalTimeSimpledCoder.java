@@ -57,13 +57,13 @@ public final class LocalTimeSimpledCoder<R extends Reader, W extends Writer> ext
             if (value == null) {
                 out.writeNull();
             } else {
-                out.writeSmallString(value.toString());
+                out.writeStandardString(value.toString());
             }
         }
 
         @Override
         public LocalTime convertFrom(R in) {
-            final String str = in.readSmallString();
+            final String str = in.readStandardString();
             if (str == null) {
                 return null;
             }

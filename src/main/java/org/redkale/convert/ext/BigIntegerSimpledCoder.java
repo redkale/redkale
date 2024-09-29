@@ -55,7 +55,7 @@ public final class BigIntegerSimpledCoder<R extends Reader, W extends Writer> ex
             if (value == null) {
                 out.writeNull();
             } else {
-                out.writeSmallString(value.toString());
+                out.writeStandardString(value.toString());
             }
         }
 
@@ -86,7 +86,7 @@ public final class BigIntegerSimpledCoder<R extends Reader, W extends Writer> ex
                 out.writeNull();
             } else {
                 String s = value.toString(16);
-                out.writeSmallString(s.charAt(0) == '-' ? ("-0x" + s.substring(1)) : ("0x" + s));
+                out.writeStandardString(s.charAt(0) == '-' ? ("-0x" + s.substring(1)) : ("0x" + s));
             }
         }
 

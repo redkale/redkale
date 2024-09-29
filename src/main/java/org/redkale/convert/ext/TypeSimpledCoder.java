@@ -25,13 +25,13 @@ public class TypeSimpledCoder<R extends Reader, W extends Writer> extends Simple
         if (value == null) {
             out.writeNull();
         } else {
-            out.writeSmallString(value.getName());
+            out.writeStandardString(value.getName());
         }
     }
 
     @Override
     public Class convertFrom(R in) {
-        String str = in.readSmallString();
+        String str = in.readStandardString();
         if (str == null) {
             return null;
         }

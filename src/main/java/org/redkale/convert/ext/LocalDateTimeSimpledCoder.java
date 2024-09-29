@@ -92,13 +92,13 @@ public final class LocalDateTimeSimpledCoder<R extends Reader, W extends Writer>
             if (value == null) {
                 out.writeNull();
             } else {
-                out.writeSmallString(value.toString());
+                out.writeStandardString(value.toString());
             }
         }
 
         @Override
         public LocalDateTime convertFrom(R in) {
-            final String str = in.readSmallString();
+            final String str = in.readStandardString();
             if (str == null) {
                 return null;
             }

@@ -29,12 +29,12 @@ public final class BigDecimalSimpledCoder<R extends Reader, W extends Writer> ex
             out.writeNull();
             return;
         }
-        out.writeSmallString(value.toString());
+        out.writeStandardString(value.toString());
     }
 
     @Override
     public BigDecimal convertFrom(R in) {
-        String value = in.readSmallString();
+        String value = in.readStandardString();
         if (value == null) {
             return null;
         }
@@ -57,7 +57,7 @@ public final class BigDecimalSimpledCoder<R extends Reader, W extends Writer> ex
             if (value == null) {
                 out.writeNull();
             } else {
-                out.writeSmallString(value.toString());
+                out.writeStandardString(value.toString());
             }
         }
 

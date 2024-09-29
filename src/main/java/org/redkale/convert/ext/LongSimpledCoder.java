@@ -45,12 +45,12 @@ public final class LongSimpledCoder<R extends Reader, W extends Writer> extends 
         @Override
         public void convertTo(final W out, final Long value) {
             if (value == null) {
-                out.writeSmallString("0x0");
+                out.writeStandardString("0x0");
             } else {
                 if (value < 0) {
                     throw new ConvertException("Negative values (" + value + ") are not supported");
                 }
-                out.writeSmallString("0x" + Long.toHexString(value));
+                out.writeStandardString("0x" + Long.toHexString(value));
             }
         }
 
