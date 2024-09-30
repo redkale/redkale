@@ -34,15 +34,6 @@ public final class LocalDateSimpledCoder<R extends Reader, W extends Writer> ext
         return t == -1 ? null : LocalDate.of(t / 100_00, t % 100_00 / 100, t % 100);
     }
 
-    //    public static void main(String[] args) throws Throwable {
-    //        LocalDate now = LocalDate.now();
-    //        System.out.println(now);
-    //        BsonWriter writer = new BsonWriter();
-    //        LocalDateSimpledCoder.instance.convertTo(writer, now);
-    //        System.out.println(new ByteArray(writer).getInt(0));
-    //        BsonReader reader = new BsonReader(writer.toArray());
-    //        System.out.println(LocalDateSimpledCoder.instance.convertFrom(reader));
-    //    }
     /**
      * java.time.LocalDate 的JsonSimpledCoder实现
      *

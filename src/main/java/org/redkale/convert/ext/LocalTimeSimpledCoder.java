@@ -33,14 +33,6 @@ public final class LocalTimeSimpledCoder<R extends Reader, W extends Writer> ext
         return t == -1 ? null : LocalTime.ofNanoOfDay(t);
     }
 
-    //    public static void main(String[] args) throws Throwable {
-    //        LocalTime now = LocalTime.now();
-    //        System.out.println(now);
-    //        BsonWriter writer = new BsonWriter();
-    //        LocalTimeSimpledCoder.instance.convertTo(writer, now);
-    //        BsonReader reader = new BsonReader(writer.toArray());
-    //        System.out.println(LocalTimeSimpledCoder.instance.convertFrom(reader));
-    //    }
     /**
      * java.time.LocalTime 的JsonSimpledCoder实现
      *

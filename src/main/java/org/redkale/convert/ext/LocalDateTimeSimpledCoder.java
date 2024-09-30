@@ -68,14 +68,6 @@ public final class LocalDateTimeSimpledCoder<R extends Reader, W extends Writer>
         return LocalDateTime.ofEpochSecond(v1, v2, ZoneOffset.UTC);
     }
 
-    //    public static void main(String[] args) throws Throwable {
-    //        LocalDateTime now = LocalDateTime.now();
-    //        System.out.println(now);
-    //        BsonWriter writer = new BsonWriter();
-    //        LocalDateTimeSimpledCoder.instance.convertTo(writer, now);
-    //        BsonReader reader = new BsonReader(writer.toArray());
-    //        System.out.println(LocalDateTimeSimpledCoder.instance.convertFrom(reader));
-    //    }
     /**
      * java.time.LocalDateTime 的JsonSimpledCoder实现
      *

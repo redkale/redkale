@@ -11,45 +11,6 @@ import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.stream.Stream;
 import org.redkale.convert.*;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufAtomicBooleanCollectionSimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufAtomicBooleanStreamSimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufAtomicIntegerArraySimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufAtomicIntegerCollectionSimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufAtomicIntegerStreamSimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufAtomicLongArraySimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufAtomicLongCollectionSimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufAtomicLongStreamSimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufBoolArraySimpledCoder2;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufBoolCollectionSimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufBoolStreamSimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufByteArraySimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufByteArraySimpledCoder2;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufByteCollectionSimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufByteStreamSimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufCharArraySimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufCharArraySimpledCoder2;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufCharCollectionSimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufCharStreamSimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufDoubleArraySimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufDoubleArraySimpledCoder2;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufDoubleCollectionSimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufDoubleStreamSimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufFloatArraySimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufFloatArraySimpledCoder2;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufFloatCollectionSimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufFloatStreamSimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufIntArraySimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufIntArraySimpledCoder2;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufIntCollectionSimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufIntStreamSimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufLongArraySimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufLongArraySimpledCoder2;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufLongCollectionSimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufLongStreamSimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufShortArraySimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufShortArraySimpledCoder2;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufShortCollectionSimpledCoder;
-import org.redkale.convert.pb.ProtobufCoders.ProtobufShortStreamSimpledCoder;
 import org.redkale.util.*;
 
 /** @author zhangjx */
@@ -80,23 +41,23 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
         instance.register(AnyValue.class, instance.loadDecoder(AnyValueWriter.class));
         instance.register(AnyValue.class, instance.loadEncoder(AnyValueWriter.class));
         instance.register(boolean[].class, ProtobufCoders.ProtobufBoolArraySimpledCoder.instance);
-        instance.register(byte[].class, ProtobufByteArraySimpledCoder.instance);
-        instance.register(char[].class, ProtobufCharArraySimpledCoder.instance);
-        instance.register(short[].class, ProtobufShortArraySimpledCoder.instance);
-        instance.register(int[].class, ProtobufIntArraySimpledCoder.instance);
-        instance.register(float[].class, ProtobufFloatArraySimpledCoder.instance);
-        instance.register(long[].class, ProtobufLongArraySimpledCoder.instance);
-        instance.register(double[].class, ProtobufDoubleArraySimpledCoder.instance);
-        instance.register(Boolean[].class, ProtobufBoolArraySimpledCoder2.instance);
-        instance.register(Byte[].class, ProtobufByteArraySimpledCoder2.instance);
-        instance.register(Character[].class, ProtobufCharArraySimpledCoder2.instance);
-        instance.register(Short[].class, ProtobufShortArraySimpledCoder2.instance);
-        instance.register(Integer[].class, ProtobufIntArraySimpledCoder2.instance);
-        instance.register(Float[].class, ProtobufFloatArraySimpledCoder2.instance);
-        instance.register(Long[].class, ProtobufLongArraySimpledCoder2.instance);
-        instance.register(Double[].class, ProtobufDoubleArraySimpledCoder2.instance);
-        instance.register(AtomicInteger[].class, ProtobufAtomicIntegerArraySimpledCoder.instance);
-        instance.register(AtomicLong[].class, ProtobufAtomicLongArraySimpledCoder.instance);
+        instance.register(byte[].class, ProtobufCoders.ProtobufByteArraySimpledCoder.instance);
+        instance.register(char[].class, ProtobufCoders.ProtobufCharArraySimpledCoder.instance);
+        instance.register(short[].class, ProtobufCoders.ProtobufShortArraySimpledCoder.instance);
+        instance.register(int[].class, ProtobufCoders.ProtobufIntArraySimpledCoder.instance);
+        instance.register(float[].class, ProtobufCoders.ProtobufFloatArraySimpledCoder.instance);
+        instance.register(long[].class, ProtobufCoders.ProtobufLongArraySimpledCoder.instance);
+        instance.register(double[].class, ProtobufCoders.ProtobufDoubleArraySimpledCoder.instance);
+        instance.register(Boolean[].class, ProtobufCoders.ProtobufBoolArraySimpledCoder2.instance);
+        instance.register(Byte[].class, ProtobufCoders.ProtobufByteArraySimpledCoder2.instance);
+        instance.register(Character[].class, ProtobufCoders.ProtobufCharArraySimpledCoder2.instance);
+        instance.register(Short[].class, ProtobufCoders.ProtobufShortArraySimpledCoder2.instance);
+        instance.register(Integer[].class, ProtobufCoders.ProtobufIntArraySimpledCoder2.instance);
+        instance.register(Float[].class, ProtobufCoders.ProtobufFloatArraySimpledCoder2.instance);
+        instance.register(Long[].class, ProtobufCoders.ProtobufLongArraySimpledCoder2.instance);
+        instance.register(Double[].class, ProtobufCoders.ProtobufDoubleArraySimpledCoder2.instance);
+        instance.register(AtomicInteger[].class, ProtobufCoders.ProtobufAtomicIntegerArraySimpledCoder.instance);
+        instance.register(AtomicLong[].class, ProtobufCoders.ProtobufAtomicLongArraySimpledCoder.instance);
     }
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
@@ -194,37 +155,37 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
             Type componentType = pt.getActualTypeArguments()[0];
             if (componentType == Boolean.class) {
                 Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufBoolCollectionSimpledCoder(creator);
+                return (Decodeable) new ProtobufCoders.ProtobufBoolCollectionSimpledCoder(creator);
             } else if (componentType == Byte.class) {
                 Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufByteCollectionSimpledCoder(creator);
+                return (Decodeable) new ProtobufCoders.ProtobufByteCollectionSimpledCoder(creator);
             } else if (componentType == Character.class) {
                 Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufCharCollectionSimpledCoder(creator);
+                return (Decodeable) new ProtobufCoders.ProtobufCharCollectionSimpledCoder(creator);
             } else if (componentType == Short.class) {
                 Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufShortCollectionSimpledCoder(creator);
+                return (Decodeable) new ProtobufCoders.ProtobufShortCollectionSimpledCoder(creator);
             } else if (componentType == Integer.class) {
                 Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufIntCollectionSimpledCoder(creator);
+                return (Decodeable) new ProtobufCoders.ProtobufIntCollectionSimpledCoder(creator);
             } else if (componentType == Float.class) {
                 Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufFloatCollectionSimpledCoder(creator);
+                return (Decodeable) new ProtobufCoders.ProtobufFloatCollectionSimpledCoder(creator);
             } else if (componentType == Long.class) {
                 Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufLongCollectionSimpledCoder(creator);
+                return (Decodeable) new ProtobufCoders.ProtobufLongCollectionSimpledCoder(creator);
             } else if (componentType == Double.class) {
                 Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufDoubleCollectionSimpledCoder(creator);
+                return (Decodeable) new ProtobufCoders.ProtobufDoubleCollectionSimpledCoder(creator);
             } else if (componentType == AtomicBoolean.class) {
                 Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufAtomicBooleanCollectionSimpledCoder(creator);
+                return (Decodeable) new ProtobufCoders.ProtobufAtomicBooleanCollectionSimpledCoder(creator);
             } else if (componentType == AtomicInteger.class) {
                 Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufAtomicIntegerCollectionSimpledCoder(creator);
+                return (Decodeable) new ProtobufCoders.ProtobufAtomicIntegerCollectionSimpledCoder(creator);
             } else if (componentType == AtomicLong.class) {
                 Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufAtomicLongCollectionSimpledCoder(creator);
+                return (Decodeable) new ProtobufCoders.ProtobufAtomicLongCollectionSimpledCoder(creator);
             }
         }
         return new ProtobufCollectionDecoder(this, type);
@@ -237,27 +198,27 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
             Type componentType = pt.getActualTypeArguments()[0];
             Creator<? extends Collection> creator = ProtobufCoders.LIST_CREATOR;
             if (componentType == Boolean.class) {
-                return (Encodeable) new ProtobufBoolCollectionSimpledCoder(creator);
+                return (Encodeable) new ProtobufCoders.ProtobufBoolCollectionSimpledCoder(creator);
             } else if (componentType == Byte.class) {
-                return (Encodeable) new ProtobufByteCollectionSimpledCoder(creator);
+                return (Encodeable) new ProtobufCoders.ProtobufByteCollectionSimpledCoder(creator);
             } else if (componentType == Character.class) {
-                return (Encodeable) new ProtobufCharCollectionSimpledCoder(creator);
+                return (Encodeable) new ProtobufCoders.ProtobufCharCollectionSimpledCoder(creator);
             } else if (componentType == Short.class) {
-                return (Encodeable) new ProtobufShortCollectionSimpledCoder(creator);
+                return (Encodeable) new ProtobufCoders.ProtobufShortCollectionSimpledCoder(creator);
             } else if (componentType == Integer.class) {
-                return (Encodeable) new ProtobufIntCollectionSimpledCoder(creator);
+                return (Encodeable) new ProtobufCoders.ProtobufIntCollectionSimpledCoder(creator);
             } else if (componentType == Float.class) {
-                return (Encodeable) new ProtobufFloatCollectionSimpledCoder(creator);
+                return (Encodeable) new ProtobufCoders.ProtobufFloatCollectionSimpledCoder(creator);
             } else if (componentType == Long.class) {
-                return (Encodeable) new ProtobufLongCollectionSimpledCoder(creator);
+                return (Encodeable) new ProtobufCoders.ProtobufLongCollectionSimpledCoder(creator);
             } else if (componentType == Double.class) {
-                return (Encodeable) new ProtobufDoubleCollectionSimpledCoder(creator);
+                return (Encodeable) new ProtobufCoders.ProtobufDoubleCollectionSimpledCoder(creator);
             } else if (componentType == AtomicBoolean.class) {
-                return (Encodeable) new ProtobufAtomicBooleanCollectionSimpledCoder(creator);
+                return (Encodeable) new ProtobufCoders.ProtobufAtomicBooleanCollectionSimpledCoder(creator);
             } else if (componentType == AtomicInteger.class) {
-                return (Encodeable) new ProtobufAtomicIntegerCollectionSimpledCoder(creator);
+                return (Encodeable) new ProtobufCoders.ProtobufAtomicIntegerCollectionSimpledCoder(creator);
             } else if (componentType == AtomicLong.class) {
-                return (Encodeable) new ProtobufAtomicLongCollectionSimpledCoder(creator);
+                return (Encodeable) new ProtobufCoders.ProtobufAtomicLongCollectionSimpledCoder(creator);
             }
         }
         return new ProtobufCollectionEncoder(this, type);
@@ -269,27 +230,27 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
             ParameterizedType pt = (ParameterizedType) type;
             Type componentType = pt.getActualTypeArguments()[0];
             if (componentType == Boolean.class) {
-                return (Decodeable) ProtobufBoolStreamSimpledCoder.instance;
+                return (Decodeable) ProtobufCoders.ProtobufBoolStreamSimpledCoder.instance;
             } else if (componentType == Byte.class) {
-                return (Decodeable) ProtobufByteStreamSimpledCoder.instance;
+                return (Decodeable) ProtobufCoders.ProtobufByteStreamSimpledCoder.instance;
             } else if (componentType == Character.class) {
-                return (Decodeable) ProtobufCharStreamSimpledCoder.instance;
+                return (Decodeable) ProtobufCoders.ProtobufCharStreamSimpledCoder.instance;
             } else if (componentType == Short.class) {
-                return (Decodeable) ProtobufShortStreamSimpledCoder.instance;
+                return (Decodeable) ProtobufCoders.ProtobufShortStreamSimpledCoder.instance;
             } else if (componentType == Integer.class) {
-                return (Decodeable) ProtobufIntStreamSimpledCoder.instance;
+                return (Decodeable) ProtobufCoders.ProtobufIntStreamSimpledCoder.instance;
             } else if (componentType == Float.class) {
-                return (Decodeable) ProtobufFloatStreamSimpledCoder.instance;
+                return (Decodeable) ProtobufCoders.ProtobufFloatStreamSimpledCoder.instance;
             } else if (componentType == Long.class) {
-                return (Decodeable) ProtobufLongStreamSimpledCoder.instance;
+                return (Decodeable) ProtobufCoders.ProtobufLongStreamSimpledCoder.instance;
             } else if (componentType == Double.class) {
-                return (Decodeable) ProtobufDoubleStreamSimpledCoder.instance;
+                return (Decodeable) ProtobufCoders.ProtobufDoubleStreamSimpledCoder.instance;
             } else if (componentType == AtomicBoolean.class) {
-                return (Decodeable) ProtobufAtomicBooleanStreamSimpledCoder.instance;
+                return (Decodeable) ProtobufCoders.ProtobufAtomicBooleanStreamSimpledCoder.instance;
             } else if (componentType == AtomicInteger.class) {
-                return (Decodeable) ProtobufAtomicIntegerStreamSimpledCoder.instance;
+                return (Decodeable) ProtobufCoders.ProtobufAtomicIntegerStreamSimpledCoder.instance;
             } else if (componentType == AtomicLong.class) {
-                return (Decodeable) ProtobufAtomicLongStreamSimpledCoder.instance;
+                return (Decodeable) ProtobufCoders.ProtobufAtomicLongStreamSimpledCoder.instance;
             }
         }
         return new ProtobufStreamDecoder(this, type);
@@ -301,27 +262,27 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
             ParameterizedType pt = (ParameterizedType) type;
             Type componentType = pt.getActualTypeArguments()[0];
             if (componentType == Boolean.class) {
-                return (Encodeable) ProtobufBoolStreamSimpledCoder.instance;
+                return (Encodeable) ProtobufCoders.ProtobufBoolStreamSimpledCoder.instance;
             } else if (componentType == Byte.class) {
-                return (Encodeable) ProtobufByteStreamSimpledCoder.instance;
+                return (Encodeable) ProtobufCoders.ProtobufByteStreamSimpledCoder.instance;
             } else if (componentType == Character.class) {
-                return (Encodeable) ProtobufCharStreamSimpledCoder.instance;
+                return (Encodeable) ProtobufCoders.ProtobufCharStreamSimpledCoder.instance;
             } else if (componentType == Short.class) {
-                return (Encodeable) ProtobufShortStreamSimpledCoder.instance;
+                return (Encodeable) ProtobufCoders.ProtobufShortStreamSimpledCoder.instance;
             } else if (componentType == Integer.class) {
-                return (Encodeable) ProtobufIntStreamSimpledCoder.instance;
+                return (Encodeable) ProtobufCoders.ProtobufIntStreamSimpledCoder.instance;
             } else if (componentType == Float.class) {
-                return (Encodeable) ProtobufFloatStreamSimpledCoder.instance;
+                return (Encodeable) ProtobufCoders.ProtobufFloatStreamSimpledCoder.instance;
             } else if (componentType == Long.class) {
-                return (Encodeable) ProtobufLongStreamSimpledCoder.instance;
+                return (Encodeable) ProtobufCoders.ProtobufLongStreamSimpledCoder.instance;
             } else if (componentType == Double.class) {
-                return (Encodeable) ProtobufDoubleStreamSimpledCoder.instance;
+                return (Encodeable) ProtobufCoders.ProtobufDoubleStreamSimpledCoder.instance;
             } else if (componentType == AtomicBoolean.class) {
-                return (Encodeable) ProtobufAtomicBooleanStreamSimpledCoder.instance;
+                return (Encodeable) ProtobufCoders.ProtobufAtomicBooleanStreamSimpledCoder.instance;
             } else if (componentType == AtomicInteger.class) {
-                return (Encodeable) ProtobufAtomicIntegerStreamSimpledCoder.instance;
+                return (Encodeable) ProtobufCoders.ProtobufAtomicIntegerStreamSimpledCoder.instance;
             } else if (componentType == AtomicLong.class) {
-                return (Encodeable) ProtobufAtomicLongStreamSimpledCoder.instance;
+                return (Encodeable) ProtobufCoders.ProtobufAtomicLongStreamSimpledCoder.instance;
             }
         }
         return new ProtobufStreamEncoder(this, type);
