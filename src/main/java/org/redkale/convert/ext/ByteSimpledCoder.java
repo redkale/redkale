@@ -16,7 +16,7 @@ import org.redkale.convert.*;
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型
  */
-public final class ByteSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, Byte> {
+public class ByteSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, Byte> {
 
     public static final ByteSimpledCoder instance = new ByteSimpledCoder();
 

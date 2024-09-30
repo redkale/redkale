@@ -18,7 +18,7 @@ import org.redkale.convert.Writer;
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型
  */
-public final class StringSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, String> {
+public class StringSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, String> {
 
     public static final StringSimpledCoder instance = new StringSimpledCoder();
 
@@ -32,10 +32,10 @@ public final class StringSimpledCoder<R extends Reader, W extends Writer> extend
         return in.readString();
     }
 
-    public static final class SmallStringSimpledCoder<R extends Reader, W extends Writer>
+    public static final class StandardStringSimpledCoder<R extends Reader, W extends Writer>
             extends SimpledCoder<R, W, String> {
 
-        public static final SmallStringSimpledCoder instance = new SmallStringSimpledCoder();
+        public static final StandardStringSimpledCoder instance = new StandardStringSimpledCoder();
 
         @Override
         public void convertTo(W out, String value) {

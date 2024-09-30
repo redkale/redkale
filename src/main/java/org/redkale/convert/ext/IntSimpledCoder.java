@@ -17,7 +17,7 @@ import org.redkale.convert.json.*;
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型
  */
-public final class IntSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, Integer> {
+public class IntSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, Integer> {
 
     public static final IntSimpledCoder instance = new IntSimpledCoder();
 

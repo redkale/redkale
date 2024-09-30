@@ -5,7 +5,6 @@
  */
 package org.redkale.convert.pb;
 
-import java.io.Serializable;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
@@ -26,45 +25,75 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
                             Convert.FEATURE_NULLABLE),
             Boolean.parseBoolean(System.getProperty("redkale.convert.protobuf.enumtostring", "false")));
 
-    static final Decodeable objectDecoder = instance.loadDecoder(Object.class);
-
-    static final Encodeable objectEncoder = instance.loadEncoder(Object.class);
-
     protected final boolean enumtostring;
 
     protected boolean reversible = false;
-
-    static {
-        instance.register(Serializable.class, objectDecoder);
-        instance.register(Serializable.class, objectEncoder);
-
-        instance.register(AnyValue.class, instance.loadDecoder(AnyValueWriter.class));
-        instance.register(AnyValue.class, instance.loadEncoder(AnyValueWriter.class));
-        instance.register(boolean[].class, ProtobufCoders.ProtobufBoolArraySimpledCoder.instance);
-        instance.register(byte[].class, ProtobufCoders.ProtobufByteArraySimpledCoder.instance);
-        instance.register(char[].class, ProtobufCoders.ProtobufCharArraySimpledCoder.instance);
-        instance.register(short[].class, ProtobufCoders.ProtobufShortArraySimpledCoder.instance);
-        instance.register(int[].class, ProtobufCoders.ProtobufIntArraySimpledCoder.instance);
-        instance.register(float[].class, ProtobufCoders.ProtobufFloatArraySimpledCoder.instance);
-        instance.register(long[].class, ProtobufCoders.ProtobufLongArraySimpledCoder.instance);
-        instance.register(double[].class, ProtobufCoders.ProtobufDoubleArraySimpledCoder.instance);
-        instance.register(Boolean[].class, ProtobufCoders.ProtobufBoolArraySimpledCoder2.instance);
-        instance.register(Byte[].class, ProtobufCoders.ProtobufByteArraySimpledCoder2.instance);
-        instance.register(Character[].class, ProtobufCoders.ProtobufCharArraySimpledCoder2.instance);
-        instance.register(Short[].class, ProtobufCoders.ProtobufShortArraySimpledCoder2.instance);
-        instance.register(Integer[].class, ProtobufCoders.ProtobufIntArraySimpledCoder2.instance);
-        instance.register(Float[].class, ProtobufCoders.ProtobufFloatArraySimpledCoder2.instance);
-        instance.register(Long[].class, ProtobufCoders.ProtobufLongArraySimpledCoder2.instance);
-        instance.register(Double[].class, ProtobufCoders.ProtobufDoubleArraySimpledCoder2.instance);
-        instance.register(AtomicInteger[].class, ProtobufCoders.ProtobufAtomicIntegerArraySimpledCoder.instance);
-        instance.register(AtomicLong[].class, ProtobufCoders.ProtobufAtomicLongArraySimpledCoder.instance);
-    }
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
     private ProtobufFactory(ProtobufFactory parent, int features, boolean enumtostring) {
         super(parent, features);
         this.enumtostring = enumtostring;
         if (parent == null) { // root
+            // ---------------------------------------------------------
+
+            this.register(boolean.class, ProtobufCoders.ProtobufBoolSimpledCoder.instance);
+            this.register(Boolean.class, ProtobufCoders.ProtobufBoolSimpledCoder.instance);
+
+            this.register(byte.class, ProtobufCoders.ProtobufByteSimpledCoder.instance);
+            this.register(Byte.class, ProtobufCoders.ProtobufByteSimpledCoder.instance);
+
+            this.register(char.class, ProtobufCoders.ProtobufCharSimpledCoder.instance);
+            this.register(Character.class, ProtobufCoders.ProtobufCharSimpledCoder.instance);
+
+            this.register(short.class, ProtobufCoders.ProtobufShortSimpledCoder.instance);
+            this.register(Short.class, ProtobufCoders.ProtobufShortSimpledCoder.instance);
+
+            this.register(int.class, ProtobufCoders.ProtobufIntSimpledCoder.instance);
+            this.register(Integer.class, ProtobufCoders.ProtobufIntSimpledCoder.instance);
+
+            this.register(float.class, ProtobufCoders.ProtobufFloatSimpledCoder.instance);
+            this.register(Float.class, ProtobufCoders.ProtobufFloatSimpledCoder.instance);
+
+            this.register(long.class, ProtobufCoders.ProtobufLongSimpledCoder.instance);
+            this.register(Long.class, ProtobufCoders.ProtobufLongSimpledCoder.instance);
+
+            this.register(double.class, ProtobufCoders.ProtobufDoubleSimpledCoder.instance);
+            this.register(Double.class, ProtobufCoders.ProtobufDoubleSimpledCoder.instance);
+
+            this.register(Number.class, ProtobufCoders.ProtobufNumberSimpledCoder.instance);
+            this.register(String.class, ProtobufCoders.ProtobufStringSimpledCoder.instance);
+            this.register(StringWrapper.class, ProtobufCoders.ProtobufStringWrapperSimpledCoder.instance);
+            this.register(CharSequence.class, ProtobufCoders.ProtobufCharSequenceSimpledCoder.instance);
+            this.register(StringBuilder.class, ProtobufCoders.ProtobufStringBuilderSimpledCoder.instance);
+            this.register(java.util.Date.class, ProtobufCoders.ProtobufDateSimpledCoder.instance);
+            this.register(java.time.Instant.class, ProtobufCoders.ProtobufInstantSimpledCoder.instance);
+            this.register(java.time.LocalDate.class, ProtobufCoders.ProtobufLocalDateSimpledCoder.instance);
+            this.register(java.time.LocalTime.class, ProtobufCoders.ProtobufLocalTimeSimpledCoder.instance);
+            this.register(java.time.LocalDateTime.class, ProtobufCoders.ProtobufLocalDateTimeSimpledCoder.instance);
+            this.register(java.time.Duration.class, ProtobufCoders.ProtobufDurationSimpledCoder.instance);
+            this.register(AtomicBoolean.class, ProtobufCoders.ProtobufAtomicBooleanSimpledCoder.instance);
+            this.register(AtomicInteger.class, ProtobufCoders.ProtobufAtomicIntegerSimpledCoder.instance);
+            this.register(AtomicLong.class, ProtobufCoders.ProtobufAtomicLongSimpledCoder.instance);
+
+            this.register(boolean[].class, ProtobufCoders.ProtobufBoolArraySimpledCoder.instance);
+            this.register(byte[].class, ProtobufCoders.ProtobufByteArraySimpledCoder.instance);
+            this.register(char[].class, ProtobufCoders.ProtobufCharArraySimpledCoder.instance);
+            this.register(short[].class, ProtobufCoders.ProtobufShortArraySimpledCoder.instance);
+            this.register(int[].class, ProtobufCoders.ProtobufIntArraySimpledCoder.instance);
+            this.register(float[].class, ProtobufCoders.ProtobufFloatArraySimpledCoder.instance);
+            this.register(long[].class, ProtobufCoders.ProtobufLongArraySimpledCoder.instance);
+            this.register(double[].class, ProtobufCoders.ProtobufDoubleArraySimpledCoder.instance);
+            this.register(Boolean[].class, ProtobufCoders.ProtobufBoolArraySimpledCoder2.instance);
+            this.register(Byte[].class, ProtobufCoders.ProtobufByteArraySimpledCoder2.instance);
+            this.register(Character[].class, ProtobufCoders.ProtobufCharArraySimpledCoder2.instance);
+            this.register(Short[].class, ProtobufCoders.ProtobufShortArraySimpledCoder2.instance);
+            this.register(Integer[].class, ProtobufCoders.ProtobufIntArraySimpledCoder2.instance);
+            this.register(Float[].class, ProtobufCoders.ProtobufFloatArraySimpledCoder2.instance);
+            this.register(Long[].class, ProtobufCoders.ProtobufLongArraySimpledCoder2.instance);
+            this.register(Double[].class, ProtobufCoders.ProtobufDoubleArraySimpledCoder2.instance);
+            this.register(AtomicInteger[].class, ProtobufCoders.ProtobufAtomicIntegerArraySimpledCoder.instance);
+            this.register(AtomicLong[].class, ProtobufCoders.ProtobufAtomicLongArraySimpledCoder.instance);
+
             this.register(String[].class, this.createArrayDecoder(String[].class));
             this.register(String[].class, this.createArrayEncoder(String[].class));
         }

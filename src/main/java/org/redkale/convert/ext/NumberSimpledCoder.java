@@ -18,7 +18,7 @@ import org.redkale.convert.Writer;
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型
  */
-public final class NumberSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, Number> {
+public class NumberSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, Number> {
 
     public static final NumberSimpledCoder instance = new NumberSimpledCoder();
 

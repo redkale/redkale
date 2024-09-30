@@ -112,7 +112,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                             field.getGenericType(), field.getAnnotationsByType(ConvertCoder.class), false);
                     Decodeable<R, ?> fieldCoder;
                     if (small != null && field.getType() == String.class) {
-                        fieldCoder = StringSimpledCoder.SmallStringSimpledCoder.instance;
+                        fieldCoder = StringSimpledCoder.StandardStringSimpledCoder.instance;
                     } else {
                         fieldCoder = colFactory.findFieldCoder(clazz, field.getName());
                     }
@@ -216,7 +216,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                     }
                     Decodeable<R, ?> fieldCoder;
                     if (small != null && method.getParameterTypes()[0] == String.class) {
-                        fieldCoder = StringSimpledCoder.SmallStringSimpledCoder.instance;
+                        fieldCoder = StringSimpledCoder.StandardStringSimpledCoder.instance;
                     } else {
                         fieldCoder = colFactory.findFieldCoder(clazz, ConvertFactory.readGetSetFieldName(method));
                     }

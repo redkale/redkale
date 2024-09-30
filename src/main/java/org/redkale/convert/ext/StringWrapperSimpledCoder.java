@@ -17,7 +17,7 @@ import org.redkale.util.StringWrapper;
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型
  */
-public final class StringWrapperSimpledCoder<R extends Reader, W extends Writer>
+public class StringWrapperSimpledCoder<R extends Reader, W extends Writer>
         extends SimpledCoder<R, W, StringWrapper> {
 
     public static final StringWrapperSimpledCoder instance = new StringWrapperSimpledCoder();

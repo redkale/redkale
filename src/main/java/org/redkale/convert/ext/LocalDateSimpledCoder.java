@@ -18,20 +18,20 @@ import org.redkale.convert.json.*;
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型
  */
-public final class LocalDateSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, LocalDate> {
+public class LocalDateSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, LocalDate> {
 
     public static final LocalDateSimpledCoder instance = new LocalDateSimpledCoder();
 
     @Override
     public void convertTo(W out, LocalDate value) {
         out.writeInt(
-                value == null ? -1 : value.getYear() * 100_00 + value.getMonthValue() * 100 + value.getDayOfMonth());
+                value == null ? 0 : value.getYear() * 100_00 + value.getMonthValue() * 100 + value.getDayOfMonth());
     }
 
     @Override
     public LocalDate convertFrom(R in) {
         int t = in.readInt();
-        return t == -1 ? null : LocalDate.of(t / 100_00, t % 100_00 / 100, t % 100);
+        return t == 0 ? null : LocalDate.of(t / 100_00, t % 100_00 / 100, t % 100);
     }
 
     /**

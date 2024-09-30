@@ -14,7 +14,8 @@ import org.redkale.util.Utility;
  * @author zhangjx
  * @param <T> T
  */
-public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T> {
+public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
+        implements ProtobufEncodeable<ProtobufWriter, T> {
 
     protected ProtobufObjectEncoder(Type type) {
         super(type);
@@ -44,5 +45,15 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T> {
         if (parent != out) {
             parent.offerChild(out);
         }
+    }
+
+    @Override
+    public int computeSize(T value) {
+        return 0;
+    }
+
+    @Override
+    public final boolean requireSize() {
+        return true;
     }
 }

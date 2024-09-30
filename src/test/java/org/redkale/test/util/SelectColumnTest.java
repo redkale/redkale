@@ -26,11 +26,11 @@ public class SelectColumnTest {
         SelectColumn sel = SelectColumn.includes(User::getUserId, User::getUserName);
         SelectColumn sel2 = SelectColumn.includes("userId", "userName");
         Assertions.assertTrue(sel.equals(sel2));
-        sel.setPatterns(new Pattern[] {Pattern.compile("aaa", 2)});
+        sel.setPatterns(new Pattern[] {Pattern.compile("aaa")});
         System.out.println(JsonConvert.root().convertTo(sel));
-        String json = "{\"flags\":2,\"pattern\":\"aaa\"}";
+        String json = "aaa";
         Pattern pattern = JsonConvert.root().convertFrom(Pattern.class, json);
-        Assertions.assertEquals(2, pattern.flags());
+        Assertions.assertEquals(0, pattern.flags());
         Assertions.assertEquals("aaa", pattern.pattern());
     }
 

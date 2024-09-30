@@ -13,13 +13,16 @@ import org.redkale.convert.*;
  * @author zhangjx
  * @param <T> T
  */
-public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T> {
+public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T>
+        implements ProtobufEncodeable<ProtobufWriter, T[]> {
 
     protected final boolean componentSimpled;
+    protected final boolean requireSizeFlag;
 
     public ProtobufArrayEncoder(ProtobufFactory factory, Type type) {
         super(factory, type);
         this.componentSimpled = getComponentEncoder() instanceof SimpledCoder;
+        this.requireSizeFlag = ((ProtobufEncodeable) getComponentEncoder()).requireSize();
     }
 
     @Override
@@ -45,5 +48,23 @@ public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T> {
             }
         }
         out.writeArrayE();
+    }
+
+    @Override
+    public int computeSize(T[] value) {
+        if (value == null || value.length < 1) {
+            return 0;
+        }
+        int len = 0;
+        ProtobufEncodeable itemEncoder = (ProtobufEncodeable) this.componentEncoder;
+        for (T item : value) {
+            len += itemEncoder.computeSize(item);
+        }
+        return len;
+    }
+
+    @Override
+    public boolean requireSize() {
+        return requireSizeFlag;
     }
 }

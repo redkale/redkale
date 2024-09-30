@@ -98,7 +98,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                             field.getGenericType(), field.getAnnotationsByType(ConvertCoder.class), true);
                     Encodeable<W, ?> fieldCoder;
                     if (small != null && field.getType() == String.class) {
-                        fieldCoder = StringSimpledCoder.SmallStringSimpledCoder.instance;
+                        fieldCoder = StringSimpledCoder.StandardStringSimpledCoder.instance;
                     } else {
                         fieldCoder = colFactory.findFieldCoder(clazz, field.getName());
                     }
@@ -182,7 +182,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                     }
                     Encodeable<W, ?> fieldCoder;
                     if (small != null && method.getReturnType() == String.class) {
-                        fieldCoder = StringSimpledCoder.SmallStringSimpledCoder.instance;
+                        fieldCoder = StringSimpledCoder.StandardStringSimpledCoder.instance;
                     } else {
                         String fieldName = ConvertFactory.readGetSetFieldName(method);
                         fieldCoder = colFactory.findFieldCoder(clazz, fieldName);
