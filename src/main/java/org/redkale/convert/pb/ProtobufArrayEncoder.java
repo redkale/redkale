@@ -17,12 +17,12 @@ public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T>
         implements ProtobufEncodeable<ProtobufWriter, T[]> {
 
     protected final boolean componentSimpled;
-    protected final boolean requireSizeFlag;
+    protected final boolean componentSizeRequired;
 
     public ProtobufArrayEncoder(ProtobufFactory factory, Type type) {
         super(factory, type);
         this.componentSimpled = getComponentEncoder() instanceof SimpledCoder;
-        this.requireSizeFlag = ((ProtobufEncodeable) getComponentEncoder()).requireSize();
+        this.componentSizeRequired = !(getComponentEncoder() instanceof ProtobufPrimitivable);
     }
 
     @Override
@@ -65,6 +65,6 @@ public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T>
 
     @Override
     public boolean requireSize() {
-        return !componentSimpled;
+        return componentSizeRequired;
     }
 }

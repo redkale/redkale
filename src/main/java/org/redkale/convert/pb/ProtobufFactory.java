@@ -106,7 +106,7 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
 
             this.register(String[].class, this.createArrayDecoder(String[].class));
             this.register(String[].class, this.createArrayEncoder(String[].class));
-            
+
         }
     }
 

@@ -17,10 +17,12 @@ public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWrit
         implements ProtobufEncodeable<ProtobufWriter, Collection<T>> {
 
     protected final boolean componentSimpled;
+    protected final boolean componentSizeRequired;
 
     public ProtobufCollectionEncoder(ProtobufFactory factory, Type type) {
         super(factory, type);
         this.componentSimpled = getComponentEncoder() instanceof SimpledCoder;
+        this.componentSizeRequired = !(getComponentEncoder() instanceof ProtobufPrimitivable);
     }
 
     @Override
@@ -54,6 +56,6 @@ public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWrit
 
     @Override
     public boolean requireSize() {
-        return !componentSimpled;
+        return componentSizeRequired;
     }
 }

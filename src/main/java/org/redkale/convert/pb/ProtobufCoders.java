@@ -440,6 +440,11 @@ public abstract class ProtobufCoders {
         public Type getType() {
             return BigInteger.class;
         }
+
+        @Override
+        public final boolean requireSize() {
+            return true;
+        }
     }
 
     public static class ProtobufBigDecimalSimpledCoder extends BigDecimalSimpledCoder<ProtobufReader, ProtobufWriter>
@@ -479,6 +484,11 @@ public abstract class ProtobufCoders {
         public Type getType() {
             return InetAddress.class;
         }
+
+        @Override
+        public final boolean requireSize() {
+            return true;
+        }
     }
 
     public static class ProtobufInetSocketAddressSimpledCoder
@@ -500,6 +510,11 @@ public abstract class ProtobufCoders {
         @Override
         public Type getType() {
             return InetSocketAddress.class;
+        }
+
+        @Override
+        public final boolean requireSize() {
+            return true;
         }
     }
 
@@ -537,11 +552,16 @@ public abstract class ProtobufCoders {
         public Type getType() {
             return Uint128.class;
         }
+
+        @Override
+        public final boolean requireSize() {
+            return true;
+        }
     }
 
     // ------------------------------------- boolean[] -------------------------------------
     public static class ProtobufBoolArraySimpledCoder extends SimpledCoder<ProtobufReader, ProtobufWriter, boolean[]>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, boolean[]> {
+            implements ProtobufEncodeable<ProtobufWriter, boolean[]> {
 
         public static final ProtobufBoolArraySimpledCoder instance = new ProtobufBoolArraySimpledCoder();
 
@@ -562,7 +582,7 @@ public abstract class ProtobufCoders {
     }
 
     public static class ProtobufByteArraySimpledCoder extends SimpledCoder<ProtobufReader, ProtobufWriter, byte[]>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, byte[]> {
+            implements ProtobufEncodeable<ProtobufWriter, byte[]> {
 
         public static final ProtobufByteArraySimpledCoder instance = new ProtobufByteArraySimpledCoder();
 
@@ -583,7 +603,7 @@ public abstract class ProtobufCoders {
     }
 
     public static class ProtobufCharArraySimpledCoder extends SimpledCoder<ProtobufReader, ProtobufWriter, char[]>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, char[]> {
+            implements ProtobufEncodeable<ProtobufWriter, char[]> {
 
         public static final ProtobufCharArraySimpledCoder instance = new ProtobufCharArraySimpledCoder();
 
@@ -611,7 +631,7 @@ public abstract class ProtobufCoders {
     }
 
     public static class ProtobufShortArraySimpledCoder extends SimpledCoder<ProtobufReader, ProtobufWriter, short[]>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, short[]> {
+            implements ProtobufEncodeable<ProtobufWriter, short[]> {
 
         public static final ProtobufShortArraySimpledCoder instance = new ProtobufShortArraySimpledCoder();
 
@@ -639,7 +659,7 @@ public abstract class ProtobufCoders {
     }
 
     public static class ProtobufIntArraySimpledCoder extends SimpledCoder<ProtobufReader, ProtobufWriter, int[]>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, int[]> {
+            implements ProtobufEncodeable<ProtobufWriter, int[]> {
 
         public static final ProtobufIntArraySimpledCoder instance = new ProtobufIntArraySimpledCoder();
 
@@ -667,7 +687,7 @@ public abstract class ProtobufCoders {
     }
 
     public static class ProtobufFloatArraySimpledCoder extends SimpledCoder<ProtobufReader, ProtobufWriter, float[]>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, float[]> {
+            implements ProtobufEncodeable<ProtobufWriter, float[]> {
 
         public static final ProtobufFloatArraySimpledCoder instance = new ProtobufFloatArraySimpledCoder();
 
@@ -688,7 +708,7 @@ public abstract class ProtobufCoders {
     }
 
     public static class ProtobufLongArraySimpledCoder extends SimpledCoder<ProtobufReader, ProtobufWriter, long[]>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, long[]> {
+            implements ProtobufEncodeable<ProtobufWriter, long[]> {
 
         public static final ProtobufLongArraySimpledCoder instance = new ProtobufLongArraySimpledCoder();
 
@@ -716,7 +736,7 @@ public abstract class ProtobufCoders {
     }
 
     public static class ProtobufDoubleArraySimpledCoder extends SimpledCoder<ProtobufReader, ProtobufWriter, double[]>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, double[]> {
+            implements ProtobufEncodeable<ProtobufWriter, double[]> {
 
         public static final ProtobufDoubleArraySimpledCoder instance = new ProtobufDoubleArraySimpledCoder();
 
@@ -738,7 +758,7 @@ public abstract class ProtobufCoders {
 
     // ------------------------------------- Boolean[] -------------------------------------
     public static class ProtobufBoolArraySimpledCoder2 extends SimpledCoder<ProtobufReader, ProtobufWriter, Boolean[]>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Boolean[]> {
+            implements ProtobufEncodeable<ProtobufWriter, Boolean[]> {
 
         public static final ProtobufBoolArraySimpledCoder2 instance = new ProtobufBoolArraySimpledCoder2();
 
@@ -759,7 +779,7 @@ public abstract class ProtobufCoders {
     }
 
     public static class ProtobufByteArraySimpledCoder2 extends SimpledCoder<ProtobufReader, ProtobufWriter, Byte[]>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Byte[]> {
+            implements ProtobufEncodeable<ProtobufWriter, Byte[]> {
 
         public static final ProtobufByteArraySimpledCoder2 instance = new ProtobufByteArraySimpledCoder2();
 
@@ -780,7 +800,7 @@ public abstract class ProtobufCoders {
     }
 
     public static class ProtobufCharArraySimpledCoder2 extends SimpledCoder<ProtobufReader, ProtobufWriter, Character[]>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Character[]> {
+            implements ProtobufEncodeable<ProtobufWriter, Character[]> {
 
         public static final ProtobufCharArraySimpledCoder2 instance = new ProtobufCharArraySimpledCoder2();
 
@@ -808,7 +828,7 @@ public abstract class ProtobufCoders {
     }
 
     public static class ProtobufShortArraySimpledCoder2 extends SimpledCoder<ProtobufReader, ProtobufWriter, Short[]>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Short[]> {
+            implements ProtobufEncodeable<ProtobufWriter, Short[]> {
 
         public static final ProtobufShortArraySimpledCoder2 instance = new ProtobufShortArraySimpledCoder2();
 
@@ -836,7 +856,7 @@ public abstract class ProtobufCoders {
     }
 
     public static class ProtobufIntArraySimpledCoder2 extends SimpledCoder<ProtobufReader, ProtobufWriter, Integer[]>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Integer[]> {
+            implements ProtobufEncodeable<ProtobufWriter, Integer[]> {
 
         public static final ProtobufIntArraySimpledCoder2 instance = new ProtobufIntArraySimpledCoder2();
 
@@ -864,7 +884,7 @@ public abstract class ProtobufCoders {
     }
 
     public static class ProtobufFloatArraySimpledCoder2 extends SimpledCoder<ProtobufReader, ProtobufWriter, Float[]>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Float[]> {
+            implements ProtobufEncodeable<ProtobufWriter, Float[]> {
 
         public static final ProtobufFloatArraySimpledCoder2 instance = new ProtobufFloatArraySimpledCoder2();
 
@@ -885,7 +905,7 @@ public abstract class ProtobufCoders {
     }
 
     public static class ProtobufLongArraySimpledCoder2 extends SimpledCoder<ProtobufReader, ProtobufWriter, Long[]>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Long[]> {
+            implements ProtobufEncodeable<ProtobufWriter, Long[]> {
 
         public static final ProtobufLongArraySimpledCoder2 instance = new ProtobufLongArraySimpledCoder2();
 
@@ -913,7 +933,7 @@ public abstract class ProtobufCoders {
     }
 
     public static class ProtobufDoubleArraySimpledCoder2 extends SimpledCoder<ProtobufReader, ProtobufWriter, Double[]>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Double[]> {
+            implements ProtobufEncodeable<ProtobufWriter, Double[]> {
 
         public static final ProtobufDoubleArraySimpledCoder2 instance = new ProtobufDoubleArraySimpledCoder2();
 
@@ -935,7 +955,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufAtomicIntegerArraySimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, AtomicInteger[]>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, AtomicInteger[]> {
+            implements ProtobufEncodeable<ProtobufWriter, AtomicInteger[]> {
 
         public static final ProtobufAtomicIntegerArraySimpledCoder instance =
                 new ProtobufAtomicIntegerArraySimpledCoder();
@@ -965,7 +985,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufAtomicLongArraySimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, AtomicLong[]>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, AtomicLong[]> {
+            implements ProtobufEncodeable<ProtobufWriter, AtomicLong[]> {
 
         public static final ProtobufAtomicLongArraySimpledCoder instance = new ProtobufAtomicLongArraySimpledCoder();
 
@@ -995,7 +1015,7 @@ public abstract class ProtobufCoders {
     // ------------------------------------- Collection<Boolean> -------------------------------------
     public static class ProtobufBoolCollectionSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<Boolean>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Collection<Boolean>> {
+            implements ProtobufEncodeable<ProtobufWriter, Collection<Boolean>> {
 
         private final Creator<? extends Collection> creator;
 
@@ -1021,7 +1041,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufByteCollectionSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<Byte>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Collection<Byte>> {
+            implements ProtobufEncodeable<ProtobufWriter, Collection<Byte>> {
 
         private final Creator<? extends Collection> creator;
 
@@ -1047,7 +1067,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufCharCollectionSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<Character>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Collection<Character>> {
+            implements ProtobufEncodeable<ProtobufWriter, Collection<Character>> {
 
         private final Creator<? extends Collection> creator;
 
@@ -1080,7 +1100,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufShortCollectionSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<Short>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Collection<Short>> {
+            implements ProtobufEncodeable<ProtobufWriter, Collection<Short>> {
 
         private final Creator<? extends Collection> creator;
 
@@ -1113,7 +1133,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufIntCollectionSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<Integer>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Collection<Integer>> {
+            implements ProtobufEncodeable<ProtobufWriter, Collection<Integer>> {
 
         private final Creator<? extends Collection> creator;
 
@@ -1146,7 +1166,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufFloatCollectionSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<Float>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Collection<Float>> {
+            implements ProtobufEncodeable<ProtobufWriter, Collection<Float>> {
 
         private final Creator<? extends Collection> creator;
 
@@ -1172,7 +1192,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufLongCollectionSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<Long>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Collection<Long>> {
+            implements ProtobufEncodeable<ProtobufWriter, Collection<Long>> {
 
         private final Creator<? extends Collection> creator;
 
@@ -1205,7 +1225,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufDoubleCollectionSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<Double>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Collection<Double>> {
+            implements ProtobufEncodeable<ProtobufWriter, Collection<Double>> {
 
         private final Creator<? extends Collection> creator;
 
@@ -1231,7 +1251,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufAtomicBooleanCollectionSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<AtomicBoolean>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Collection<AtomicBoolean>> {
+            implements ProtobufEncodeable<ProtobufWriter, Collection<AtomicBoolean>> {
 
         private final Creator<? extends Collection> creator;
 
@@ -1257,7 +1277,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufAtomicIntegerCollectionSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<AtomicInteger>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Collection<AtomicInteger>> {
+            implements ProtobufEncodeable<ProtobufWriter, Collection<AtomicInteger>> {
 
         private final Creator<? extends Collection> creator;
 
@@ -1290,7 +1310,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufAtomicLongCollectionSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<AtomicLong>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Collection<AtomicLong>> {
+            implements ProtobufEncodeable<ProtobufWriter, Collection<AtomicLong>> {
 
         private final Creator<? extends Collection> creator;
 
@@ -1324,7 +1344,7 @@ public abstract class ProtobufCoders {
     // ------------------------------------- Stream<Boolean> -------------------------------------
     public static class ProtobufBoolStreamSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Boolean>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Stream<Boolean>> {
+            implements ProtobufEncodeable<ProtobufWriter, Stream<Boolean>> {
 
         public static final ProtobufBoolStreamSimpledCoder instance = new ProtobufBoolStreamSimpledCoder();
 
@@ -1346,7 +1366,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufByteStreamSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Byte>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Stream<Byte>> {
+            implements ProtobufEncodeable<ProtobufWriter, Stream<Byte>> {
 
         public static final ProtobufByteStreamSimpledCoder instance = new ProtobufByteStreamSimpledCoder();
 
@@ -1368,7 +1388,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufCharStreamSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Character>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Stream<Character>> {
+            implements ProtobufEncodeable<ProtobufWriter, Stream<Character>> {
 
         public static final ProtobufCharStreamSimpledCoder instance = new ProtobufCharStreamSimpledCoder();
 
@@ -1397,7 +1417,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufShortStreamSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Short>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Stream<Short>> {
+            implements ProtobufEncodeable<ProtobufWriter, Stream<Short>> {
 
         public static final ProtobufShortStreamSimpledCoder instance = new ProtobufShortStreamSimpledCoder();
 
@@ -1426,7 +1446,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufIntStreamSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Integer>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Stream<Integer>> {
+            implements ProtobufEncodeable<ProtobufWriter, Stream<Integer>> {
 
         public static final ProtobufIntStreamSimpledCoder instance = new ProtobufIntStreamSimpledCoder();
 
@@ -1455,7 +1475,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufFloatStreamSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Float>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Stream<Float>> {
+            implements ProtobufEncodeable<ProtobufWriter, Stream<Float>> {
 
         public static final ProtobufFloatStreamSimpledCoder instance = new ProtobufFloatStreamSimpledCoder();
 
@@ -1477,7 +1497,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufLongStreamSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Long>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Stream<Long>> {
+            implements ProtobufEncodeable<ProtobufWriter, Stream<Long>> {
 
         public static final ProtobufLongStreamSimpledCoder instance = new ProtobufLongStreamSimpledCoder();
 
@@ -1506,7 +1526,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufDoubleStreamSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Double>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Stream<Double>> {
+            implements ProtobufEncodeable<ProtobufWriter, Stream<Double>> {
 
         public static final ProtobufDoubleStreamSimpledCoder instance = new ProtobufDoubleStreamSimpledCoder();
 
@@ -1528,7 +1548,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufAtomicBooleanStreamSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<AtomicBoolean>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Stream<AtomicBoolean>> {
+            implements ProtobufEncodeable<ProtobufWriter, Stream<AtomicBoolean>> {
 
         public static final ProtobufAtomicBooleanStreamSimpledCoder instance =
                 new ProtobufAtomicBooleanStreamSimpledCoder();
@@ -1551,7 +1571,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufAtomicIntegerStreamSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<AtomicInteger>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Stream<AtomicInteger>> {
+            implements ProtobufEncodeable<ProtobufWriter, Stream<AtomicInteger>> {
 
         public static final ProtobufAtomicIntegerStreamSimpledCoder instance =
                 new ProtobufAtomicIntegerStreamSimpledCoder();
@@ -1581,7 +1601,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufAtomicLongStreamSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<AtomicLong>>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Stream<AtomicLong>> {
+            implements ProtobufEncodeable<ProtobufWriter, Stream<AtomicLong>> {
 
         public static final ProtobufAtomicLongStreamSimpledCoder instance = new ProtobufAtomicLongStreamSimpledCoder();
 

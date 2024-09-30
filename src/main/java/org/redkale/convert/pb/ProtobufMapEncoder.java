@@ -71,7 +71,7 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
     }
 
     @Override
-    public final boolean requireSize() {
+    public boolean requireSize() {
         return true;
     }
 }

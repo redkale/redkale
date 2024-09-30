@@ -13,13 +13,16 @@ import org.redkale.convert.*;
  * @author zhangjx
  * @param <T> T
  */
-public class ProtobufStreamEncoder<T> extends StreamEncoder<ProtobufWriter, T> {
+public class ProtobufStreamEncoder<T> extends StreamEncoder<ProtobufWriter, T>
+        implements ProtobufEncodeable<ProtobufWriter, Stream<T>> {
 
     protected final boolean componentSimpled;
+    protected final boolean componentSizeRequired;
 
     public ProtobufStreamEncoder(ConvertFactory factory, Type type) {
         super(factory, type);
         this.componentSimpled = getComponentEncoder() instanceof SimpledCoder;
+        this.componentSizeRequired = !(getComponentEncoder() instanceof ProtobufPrimitivable);
     }
 
     @Override
@@ -45,5 +48,15 @@ public class ProtobufStreamEncoder<T> extends StreamEncoder<ProtobufWriter, T> {
             }
         }
         out.writeArrayE();
+    }
+
+    @Override
+    public int computeSize(Stream<T> value) {
+        return 0;
+    }
+
+    @Override
+    public boolean requireSize() {
+        return componentSizeRequired;
     }
 }
