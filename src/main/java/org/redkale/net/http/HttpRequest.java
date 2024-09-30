@@ -585,6 +585,9 @@ public class HttpRequest extends Request<HttpContext> {
                 break;
             }
         }
+        if (rs == 1) {
+            buffer.clear();
+        }
         hbytes.position(pos);
         this.headerLength = hbytes.length();
         this.headerHalfLen = this.headerLength;
