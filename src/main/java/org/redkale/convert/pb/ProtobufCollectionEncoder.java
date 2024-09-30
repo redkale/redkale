@@ -13,7 +13,8 @@ import org.redkale.convert.*;
  * @author zhangjx
  * @param <T> T
  */
-public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWriter, T> {
+public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWriter, T>
+        implements ProtobufEncodeable<ProtobufWriter, Collection<T>> {
 
     protected final boolean componentSimpled;
 
@@ -44,5 +45,15 @@ public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWrit
             }
         }
         out.writeArrayE();
+    }
+
+    @Override
+    public int computeSize(Collection<T> value) {
+        return 0;
+    }
+
+    @Override
+    public boolean requireSize() {
+        return !componentSimpled;
     }
 }

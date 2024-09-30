@@ -6,6 +6,10 @@
 package org.redkale.convert.pb;
 
 import java.lang.reflect.*;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.stream.Stream;
@@ -74,6 +78,12 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
             this.register(AtomicBoolean.class, ProtobufCoders.ProtobufAtomicBooleanSimpledCoder.instance);
             this.register(AtomicInteger.class, ProtobufCoders.ProtobufAtomicIntegerSimpledCoder.instance);
             this.register(AtomicLong.class, ProtobufCoders.ProtobufAtomicLongSimpledCoder.instance);
+            this.register(BigInteger.class, ProtobufCoders.ProtobufBigIntegerSimpledCoder.instance);
+            this.register(BigDecimal.class, ProtobufCoders.ProtobufBigDecimalSimpledCoder.instance);
+            this.register(InetAddress.class, ProtobufCoders.ProtobufInetAddressSimpledCoder.instance);
+            this.register(InetSocketAddress.class, ProtobufCoders.ProtobufInetSocketAddressSimpledCoder.instance);
+            this.register(LongAdder.class, ProtobufCoders.ProtobufLongAdderSimpledCoder.instance);
+            this.register(Uint128.class, ProtobufCoders.ProtobufUint128SimpledCoder.instance);
 
             this.register(boolean[].class, ProtobufCoders.ProtobufBoolArraySimpledCoder.instance);
             this.register(byte[].class, ProtobufCoders.ProtobufByteArraySimpledCoder.instance);
@@ -96,6 +106,7 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
 
             this.register(String[].class, this.createArrayDecoder(String[].class));
             this.register(String[].class, this.createArrayEncoder(String[].class));
+            
         }
     }
 

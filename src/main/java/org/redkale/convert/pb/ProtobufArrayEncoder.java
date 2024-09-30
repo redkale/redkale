@@ -55,16 +55,16 @@ public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T>
         if (value == null || value.length < 1) {
             return 0;
         }
-        int len = 0;
+        int size = 0;
         ProtobufEncodeable itemEncoder = (ProtobufEncodeable) this.componentEncoder;
         for (T item : value) {
-            len += itemEncoder.computeSize(item);
+            size += itemEncoder.computeSize(item);
         }
-        return len;
+        return size;
     }
 
     @Override
     public boolean requireSize() {
-        return requireSizeFlag;
+        return !componentSimpled;
     }
 }

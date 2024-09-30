@@ -128,10 +128,10 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             this.register(BigInteger.class, BigIntegerSimpledCoder.instance);
             this.register(BigDecimal.class, BigDecimalSimpledCoder.instance);
             this.register(InetAddress.class, InetAddressSimpledCoder.instance);
+            this.register(InetSocketAddress.class, InetAddressSimpledCoder.InetSocketAddressSimpledCoder.instance);
             this.register(LongAdder.class, LongAdderSimpledCoder.instance);
             this.register(Uint128.class, Uint128SimpledCoder.instance);
             this.register(Class.class, TypeSimpledCoder.instance);
-            this.register(InetSocketAddress.class, InetAddressSimpledCoder.InetSocketAddressSimpledCoder.instance);
             this.register(Pattern.class, PatternSimpledCoder.instance);
             this.register(File.class, FileSimpledCoder.instance);
             this.register(Throwable.class, ThrowableSimpledCoder.instance);

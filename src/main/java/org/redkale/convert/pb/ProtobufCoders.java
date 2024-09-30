@@ -5,6 +5,10 @@
 package org.redkale.convert.pb;
 
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.stream.Stream;
@@ -12,6 +16,8 @@ import org.redkale.convert.SimpledCoder;
 import org.redkale.convert.ext.AtomicBooleanSimpledCoder;
 import org.redkale.convert.ext.AtomicIntegerSimpledCoder;
 import org.redkale.convert.ext.AtomicLongSimpledCoder;
+import org.redkale.convert.ext.BigDecimalSimpledCoder;
+import org.redkale.convert.ext.BigIntegerSimpledCoder;
 import org.redkale.convert.ext.BoolSimpledCoder;
 import org.redkale.convert.ext.ByteSimpledCoder;
 import org.redkale.convert.ext.CharSequenceSimpledCoder;
@@ -21,16 +27,20 @@ import org.redkale.convert.ext.DateSimpledCoder;
 import org.redkale.convert.ext.DoubleSimpledCoder;
 import org.redkale.convert.ext.DurationSimpledCoder;
 import org.redkale.convert.ext.FloatSimpledCoder;
+import org.redkale.convert.ext.InetAddressSimpledCoder;
+import org.redkale.convert.ext.InetAddressSimpledCoder.InetSocketAddressSimpledCoder;
 import org.redkale.convert.ext.InstantSimpledCoder;
 import org.redkale.convert.ext.IntSimpledCoder;
 import org.redkale.convert.ext.LocalDateSimpledCoder;
 import org.redkale.convert.ext.LocalDateTimeSimpledCoder;
 import org.redkale.convert.ext.LocalTimeSimpledCoder;
+import org.redkale.convert.ext.LongAdderSimpledCoder;
 import org.redkale.convert.ext.LongSimpledCoder;
 import org.redkale.convert.ext.NumberSimpledCoder;
 import org.redkale.convert.ext.ShortSimpledCoder;
 import org.redkale.convert.ext.StringSimpledCoder;
 import org.redkale.convert.ext.StringWrapperSimpledCoder;
+import org.redkale.convert.ext.Uint128SimpledCoder;
 import org.redkale.util.*;
 
 /**
@@ -175,7 +185,7 @@ public abstract class ProtobufCoders {
     }
 
     public static class ProtobufStringSimpledCoder extends StringSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, String> {
+            implements ProtobufEncodeable<ProtobufWriter, String> {
 
         public static final ProtobufStringSimpledCoder instance = new ProtobufStringSimpledCoder();
 
@@ -213,7 +223,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufStringWrapperSimpledCoder
             extends StringWrapperSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, StringWrapper> {
+            implements ProtobufEncodeable<ProtobufWriter, StringWrapper> {
 
         public static final ProtobufStringWrapperSimpledCoder instance = new ProtobufStringWrapperSimpledCoder();
 
@@ -230,7 +240,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufCharSequenceSimpledCoder
             extends CharSequenceSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, CharSequence> {
+            implements ProtobufEncodeable<ProtobufWriter, CharSequence> {
 
         public static final ProtobufCharSequenceSimpledCoder instance = new ProtobufCharSequenceSimpledCoder();
 
@@ -247,7 +257,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufStringBuilderSimpledCoder
             extends StringBuilderSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, StringBuilder> {
+            implements ProtobufEncodeable<ProtobufWriter, StringBuilder> {
 
         public static final ProtobufStringBuilderSimpledCoder instance = new ProtobufStringBuilderSimpledCoder();
 
@@ -331,7 +341,7 @@ public abstract class ProtobufCoders {
 
     public static class ProtobufLocalDateTimeSimpledCoder
             extends LocalDateTimeSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, java.time.LocalDateTime> {
+            implements ProtobufEncodeable<ProtobufWriter, java.time.LocalDateTime> {
 
         public static final ProtobufLocalDateTimeSimpledCoder instance = new ProtobufLocalDateTimeSimpledCoder();
 
@@ -409,6 +419,123 @@ public abstract class ProtobufCoders {
         @Override
         public Type getType() {
             return AtomicLong.class;
+        }
+    }
+
+    public static class ProtobufBigIntegerSimpledCoder extends BigIntegerSimpledCoder<ProtobufReader, ProtobufWriter>
+            implements ProtobufEncodeable<ProtobufWriter, BigInteger> {
+
+        public static final ProtobufBigIntegerSimpledCoder instance = new ProtobufBigIntegerSimpledCoder();
+
+        @Override
+        public int computeSize(BigInteger value) {
+            if (value == null) {
+                return 0;
+            }
+            byte[] bs = value.toByteArray();
+            return ProtobufFactory.computeSInt32SizeNoTag(bs.length) + bs.length;
+        }
+
+        @Override
+        public Type getType() {
+            return BigInteger.class;
+        }
+    }
+
+    public static class ProtobufBigDecimalSimpledCoder extends BigDecimalSimpledCoder<ProtobufReader, ProtobufWriter>
+            implements ProtobufEncodeable<ProtobufWriter, BigDecimal> {
+
+        public static final ProtobufBigDecimalSimpledCoder instance = new ProtobufBigDecimalSimpledCoder();
+
+        @Override
+        public int computeSize(BigDecimal value) {
+            if (value == null) {
+                return 0;
+            }
+            return ProtobufStringSimpledCoder.instance.computeSize(value.toString());
+        }
+
+        @Override
+        public Type getType() {
+            return BigDecimal.class;
+        }
+    }
+
+    public static class ProtobufInetAddressSimpledCoder extends InetAddressSimpledCoder<ProtobufReader, ProtobufWriter>
+            implements ProtobufEncodeable<ProtobufWriter, InetAddress> {
+
+        public static final ProtobufInetAddressSimpledCoder instance = new ProtobufInetAddressSimpledCoder();
+
+        @Override
+        public int computeSize(InetAddress value) {
+            if (value == null) {
+                return 0;
+            }
+            byte[] bs = value.getAddress();
+            return ProtobufFactory.computeSInt32SizeNoTag(bs.length) + bs.length;
+        }
+
+        @Override
+        public Type getType() {
+            return InetAddress.class;
+        }
+    }
+
+    public static class ProtobufInetSocketAddressSimpledCoder
+            extends InetSocketAddressSimpledCoder<ProtobufReader, ProtobufWriter>
+            implements ProtobufEncodeable<ProtobufWriter, InetSocketAddress> {
+
+        public static final ProtobufInetSocketAddressSimpledCoder instance =
+                new ProtobufInetSocketAddressSimpledCoder();
+
+        @Override
+        public int computeSize(InetSocketAddress value) {
+            if (value == null) {
+                return 0;
+            }
+            byte[] bs = value.getAddress().getAddress();
+            return ProtobufFactory.computeSInt32SizeNoTag(bs.length) + bs.length;
+        }
+
+        @Override
+        public Type getType() {
+            return InetSocketAddress.class;
+        }
+    }
+
+    public static class ProtobufLongAdderSimpledCoder extends LongAdderSimpledCoder<ProtobufReader, ProtobufWriter>
+            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, LongAdder> {
+
+        public static final ProtobufLongAdderSimpledCoder instance = new ProtobufLongAdderSimpledCoder();
+
+        @Override
+        public int computeSize(LongAdder value) {
+            return ProtobufLongSimpledCoder.instance.computeSize(value == null ? null : value.longValue());
+        }
+
+        @Override
+        public Type getType() {
+            return LongAdder.class;
+        }
+    }
+
+    public static class ProtobufUint128SimpledCoder extends Uint128SimpledCoder<ProtobufReader, ProtobufWriter>
+            implements ProtobufEncodeable<ProtobufWriter, Uint128> {
+
+        public static final ProtobufUint128SimpledCoder instance = new ProtobufUint128SimpledCoder();
+
+        @Override
+        public int computeSize(Uint128 value) {
+            if (value == null) {
+                return 0;
+            }
+            byte[] bs = value.getBytes();
+            return ProtobufFactory.computeSInt32SizeNoTag(bs.length) + bs.length;
+        }
+
+        @Override
+        public Type getType() {
+            return Uint128.class;
         }
     }
 

@@ -19,7 +19,7 @@ import org.redkale.util.Utility;
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型
  */
-public final class BigDecimalSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, BigDecimal> {
+public class BigDecimalSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, BigDecimal> {
 
     public static final BigDecimalSimpledCoder instance = new BigDecimalSimpledCoder();
 

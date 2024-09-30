@@ -17,6 +17,8 @@ import org.redkale.util.Utility;
 public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
         implements ProtobufEncodeable<ProtobufWriter, T> {
 
+    protected boolean memberSizeRequired;
+
     protected ProtobufObjectEncoder(Type type) {
         super(type);
     }
@@ -29,15 +31,20 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
         }
         Attribute attr = member.getAttribute();
         boolean enumtostring = ((ProtobufFactory) factory).enumtostring;
+        this.memberSizeRequired |= ((ProtobufEncodeable) member.getEncoder()).requireSize();
         setTag(member, ProtobufFactory.getTag(attr.field(), attr.genericType(), member.getPosition(), enumtostring));
     }
 
     @Override
     protected ProtobufWriter objectWriter(ProtobufWriter out, T value) {
-        if (out.length() > out.initOffset) {
-            return out.pollChild().configParentFunc(out);
-        }
-        return out;
+//        if (memberSizeRequired) {
+//            out.writeLength(computeSize(value));
+//        }
+//        return out;
+                if (out.length() > out.initOffset) {
+                    return out.pollChild().configParentFunc(out);
+                }
+                return out;
     }
 
     @Override
@@ -49,7 +56,11 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
 
     @Override
     public int computeSize(T value) {
-        return 0;
+        int size = 0;
+        for (EnMember member : members) {
+            size += ((ProtobufEncodeable) member.getEncoder()).computeSize(member.getFieldValue(value));
+        }
+        return size;
     }
 
     @Override

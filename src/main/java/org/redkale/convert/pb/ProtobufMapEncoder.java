@@ -15,7 +15,8 @@ import org.redkale.convert.*;
  * @param <K> K
  * @param <V> V
  */
-public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V> {
+public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
+        implements ProtobufEncodeable<ProtobufWriter, Map<K, V>> {
 
     private final boolean enumtostring;
     private final int keyTag;
@@ -59,5 +60,18 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V> {
             }
         });
         out.writeMapE();
+    }
+
+    @Override
+    public int computeSize(Map<K, V> value) {
+        if (value == null || value.isEmpty()) {
+            return 0;
+        }
+        return 0;
+    }
+
+    @Override
+    public final boolean requireSize() {
+        return true;
     }
 }

@@ -21,7 +21,7 @@ import org.redkale.util.RedkaleClassLoader;
  * @param <E> Enum的子类
  */
 public class ProtobufEnumSimpledCoder<R extends ProtobufReader, W extends ProtobufWriter, E extends Enum>
-        extends SimpledCoder<R, W, E> {
+        extends SimpledCoder<R, W, E> implements ProtobufEncodeable<W, E> {
 
     private final Map<Integer, E> values = new HashMap<>();
 
@@ -67,5 +67,15 @@ public class ProtobufEnumSimpledCoder<R extends ProtobufReader, W extends Protob
     @Override
     public Class<E> getType() {
         return (Class) type;
+    }
+
+    @Override
+    public int computeSize(E value) {
+        return 0;
+    }
+
+    @Override
+    public boolean requireSize() {
+        return false;
     }
 }
