@@ -578,8 +578,8 @@ public class HttpRequest extends Request<HttpContext> {
             content[pos++] = b;
             if (b == '\n'
                     && pos > 3
-                    && content[pos - 2] == '\r'
                     && content[pos - 3] == '\n'
+                    && content[pos - 2] == '\r'
                     && content[pos - 4] == '\r') {
                 rs = 0;
                 break;
