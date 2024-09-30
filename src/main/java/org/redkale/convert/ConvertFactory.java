@@ -285,6 +285,37 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return type;
     }
 
+    protected boolean isCollectionType(final Type type) {
+        if (type == null) {
+            return false;
+        }
+        if (type instanceof Class) {
+            return Collection.class.isAssignableFrom((Class) type);
+        }
+        ParameterizedType ptype = (ParameterizedType) type;
+        if (!(ptype.getRawType() instanceof Class)) {
+            return false;
+        }
+        Type[] ptargs = ptype.getActualTypeArguments();
+        if (ptargs == null || ptargs.length != 1) {
+            return false;
+        }
+        Class ownerType = (Class) ptype.getRawType();
+        return Collection.class.isAssignableFrom(ownerType);
+    }
+
+    // 返回null表示type不是Collection类型
+    protected Type getCollectionComponentType(final Type type) {
+        if (!isCollectionType(type)) {
+            return null;
+        }
+        if (type instanceof Class) {
+            return Object.class;
+        }
+        ParameterizedType ptype = ((ParameterizedType) type);
+        return ptype.getActualTypeArguments()[0];
+    }
+
     protected <E> Encodeable<W, E> createDyncEncoder(Type type) {
         return null;
     }

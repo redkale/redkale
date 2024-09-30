@@ -104,41 +104,8 @@ public class BsonReader extends Reader {
             return;
         }
         this.fieldTypeEnum = 0;
-        switch (val) {
-            case 11:
-                readBoolean();
-                break;
-            case 12:
-                readByte();
-                break;
-            case 13:
-                readShort();
-                break;
-            case 14:
-                readChar();
-                break;
-            case 15:
-                readInt();
-                break;
-            case 16:
-                readLong();
-                break;
-            case 17:
-                readFloat();
-                break;
-            case 18:
-                readDouble();
-                break;
-            case 19:
-                readString();
-                break;
-            default:
-                Decodeable decoder = BsonFactory.typeEnum(val);
-                if (decoder != null) {
-                    decoder.convertFrom(this);
-                }
-                break;
-        }
+        Decodeable decoder = BsonFactory.typeEnum(val);
+        decoder.convertFrom(this);
     }
 
     @Override

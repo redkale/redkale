@@ -388,23 +388,8 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
                 || fieldClass == String[].class;
     }
 
-    protected static boolean supportSimpleCollectionType(Type type) {
-        if (!(type instanceof ParameterizedType)) {
-            return false;
-        }
-        ParameterizedType ptype = (ParameterizedType) type;
-        if (!(ptype.getRawType() instanceof Class)) {
-            return false;
-        }
-        Type[] ptargs = ptype.getActualTypeArguments();
-        if (ptargs == null || ptargs.length != 1) {
-            return false;
-        }
-        Class ownerType = (Class) ptype.getRawType();
-        if (!Collection.class.isAssignableFrom(ownerType)) {
-            return false;
-        }
-        Type componentType = ptargs[0];
+    protected boolean supportSimpleCollectionType(Type type) {
+        Type componentType = getCollectionComponentType(type);
         return componentType == Boolean.class
                 || componentType == Byte.class
                 || componentType == Character.class
@@ -494,10 +479,8 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
         return (n << 1) ^ (n >> 63);
     }
 
-    public static Class getSimpleCollectionComponentType(Type type) {
-        return supportSimpleCollectionType(type)
-                ? (Class) ((ParameterizedType) type).getActualTypeArguments()[0]
-                : null;
+    protected Class getSimpleCollectionComponentType(Type type) {
+        return supportSimpleCollectionType(type) ? TypeToken.typeToClass(getCollectionComponentType(type)) : null;
     }
 
     public static int getTag(String fieldName, Type fieldType, int fieldPos, boolean enumtostring) {

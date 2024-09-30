@@ -60,7 +60,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
             elementb.append(fieldName).append(',');
             if (!ProtobufFactory.isSimpleType(fieldClass)
                     && !fieldClass.isEnum()
-                    && !ProtobufFactory.supportSimpleCollectionType(fieldType)) {
+                    && !factory.supportSimpleCollectionType(fieldType)) {
                 if ((member.getEncoder() instanceof SimpledCoder)) {
                     simpledCoders.put(fieldName, (SimpledCoder) member.getEncoder());
                 } else {
@@ -206,7 +206,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                         mv.visitFieldInsn(GETFIELD, valtypeName, fname, fdesc);
                     }
                     mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, "writeFieldValue", "(ILjava/lang/Enum;)V", false);
-                } else if (ProtobufFactory.supportSimpleCollectionType(fieldType)) {
+                } else if (factory.supportSimpleCollectionType(fieldType)) {
                     mv.visitVarInsn(ALOAD, 3); // out
                     Asms.visitInsn(mv, member.getTag()); // tag
                     mv.visitVarInsn(ALOAD, 2); // value
@@ -220,7 +220,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                         String fdesc = org.redkale.asm.Type.getDescriptor(field.getType());
                         mv.visitFieldInsn(GETFIELD, valtypeName, fname, fdesc);
                     }
-                    Class componentType = ProtobufFactory.getSimpleCollectionComponentType(fieldType);
+                    Class componentType = factory.getSimpleCollectionComponentType(fieldType);
                     String wmethodName = null;
                     if (componentType == Boolean.class) {
                         wmethodName = "writeFieldBoolsValue";

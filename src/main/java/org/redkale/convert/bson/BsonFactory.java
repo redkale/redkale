@@ -36,13 +36,17 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
 
     static final Encodeable objectEncoder = instance.loadEncoder(Object.class);
 
-    static final Decodeable arrayDecoder = new BsonArrayDecoder(instance, Object[].class);
+    // only for BsonRead.skipValue
+    static final Decodeable skipArrayDecoder = new BsonArrayDecoder(instance, Object[].class);
 
-    static final Decodeable collectionDecoder = new BsonCollectionDecoder(instance, Collection.class);
+    // only for BsonRead.skipValue
+    static final Decodeable skipCollectionDecoder = new BsonCollectionDecoder(instance, Collection.class);
 
-    static final Decodeable streamDecoder = new BsonStreamDecoder(instance, Stream.class);
+    // only for BsonRead.skipValue
+    static final Decodeable skipStreamDecoder = new BsonStreamDecoder(instance, Stream.class);
 
-    static final Decodeable mapDecoder = new BsonMapDecoder(instance, Map.class);
+    // only for BsonRead.skipValue
+    static final Decodeable skipMapDecoder = new BsonMapDecoder(instance, Map.class);
 
     static {
         instance.register(Serializable.class, objectDecoder);
@@ -154,55 +158,52 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
     }
 
     protected static byte typeEnum(final Type type) {
-        return typeEnum(TypeToken.typeToClass(type));
-    }
-
-    protected static byte typeEnum(final Class type) {
         Objects.requireNonNull(type);
+        Class clazz = TypeToken.typeToClass(type);
         byte typeval = 127; // 字段的类型值
-        if (type == boolean.class || type == Boolean.class) {
+        if (clazz == boolean.class || clazz == Boolean.class) {
             typeval = 11;
-        } else if (type == byte.class || type == Byte.class) {
+        } else if (clazz == byte.class || clazz == Byte.class) {
             typeval = 12;
-        } else if (type == short.class || type == Short.class) {
+        } else if (clazz == short.class || clazz == Short.class) {
             typeval = 13;
-        } else if (type == char.class || type == Character.class) {
+        } else if (clazz == char.class || clazz == Character.class) {
             typeval = 14;
-        } else if (type == int.class || type == Integer.class) {
+        } else if (clazz == int.class || clazz == Integer.class) {
             typeval = 15;
-        } else if (type == long.class || type == Long.class) {
+        } else if (clazz == long.class || clazz == Long.class) {
             typeval = 16;
-        } else if (type == float.class || type == Float.class) {
+        } else if (clazz == float.class || clazz == Float.class) {
             typeval = 17;
-        } else if (type == double.class || type == Double.class) {
+        } else if (clazz == double.class || clazz == Double.class) {
             typeval = 18;
-        } else if (type == String.class) {
+        } else if (clazz == String.class) {
             typeval = 19;
-        } else if (type == boolean[].class || type == Boolean[].class) {
+        } else if (clazz == boolean[].class || clazz == Boolean[].class) {
             typeval = 21;
-        } else if (type == byte[].class || type == Byte[].class) {
+        } else if (clazz == byte[].class || clazz == Byte[].class) {
             typeval = 22;
-        } else if (type == short[].class || type == Short[].class) {
+        } else if (clazz == short[].class || clazz == Short[].class) {
             typeval = 23;
-        } else if (type == char[].class || type == Character[].class) {
+        } else if (clazz == char[].class || clazz == Character[].class) {
             typeval = 24;
-        } else if (type == int[].class || type == Integer[].class) {
+        } else if (clazz == int[].class || clazz == Integer[].class) {
             typeval = 25;
-        } else if (type == long[].class || type == Long[].class) {
+        } else if (clazz == long[].class || clazz == Long[].class) {
             typeval = 26;
-        } else if (type == float[].class || type == Float[].class) {
+        } else if (clazz == float[].class || clazz == Float[].class) {
             typeval = 27;
-        } else if (type == double[].class || type == Double[].class) {
+        } else if (clazz == double[].class || clazz == Double[].class) {
             typeval = 28;
-        } else if (type == String[].class) {
+        } else if (clazz == String[].class) {
             typeval = 29;
-        } else if (type.isArray()) {
+        } else if (clazz.isArray()) {
             typeval = 81;
-        } else if (Collection.class.isAssignableFrom(type)) {
+        } else if (Collection.class.isAssignableFrom(clazz)) {
             typeval = 82;
-        } else if (Stream.class.isAssignableFrom(type)) {
+        } else if (Stream.class.isAssignableFrom(clazz)) {
             typeval = 83;
-        } else if (Map.class.isAssignableFrom(type)) {
+        } else if (Map.class.isAssignableFrom(clazz)) {
             typeval = 84;
         }
         return typeval;
@@ -247,15 +248,15 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
             case 29:
                 return StringArraySimpledCoder.instance;
             case 81:
-                return arrayDecoder;
+                return skipArrayDecoder;
             case 82:
-                return collectionDecoder;
+                return skipCollectionDecoder;
             case 83:
-                return streamDecoder;
+                return skipStreamDecoder;
             case 84:
-                return mapDecoder;
+                return skipMapDecoder;
             case 127:
-                return BsonFactory.objectDecoder;
+                return objectDecoder;
             default:
                 return null;
         }
