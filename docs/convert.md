@@ -450,7 +450,7 @@ public class RestConvertService extends AbstractService {
 
 &emsp;&emsp;&emsp;&emsp;1). 基本数据类型: 直接转换成byte[]
 
-&emsp;&emsp;&emsp;&emsp;2). SmallString(无特殊字符且长度小于256的字符串): length(1 byte) + byte[](utf8); 通常用于类名、字段名、枚举。
+&emsp;&emsp;&emsp;&emsp;2). StandardString(无特殊字符且长度小于256的字符串): length(1 byte) + byte[](utf8); 通常用于类名、字段名、枚举。
 
 &emsp;&emsp;&emsp;&emsp;3). String: length(4 bytes) + byte[](utf8);
 
@@ -458,9 +458,9 @@ public class RestConvertService extends AbstractService {
 
 &emsp;&emsp;&emsp;&emsp;5). Object:
 
-&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;1. realclass (SmallString) (如果指定格式化的class与实体对象的class不一致才会有该值, 该值可以使用@ConvertEntity给其取个别名)
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;1. realclass (StandardString) (如果指定格式化的class与实体对象的class不一致才会有该值, 该值可以使用@ConvertEntity给其取个别名)
 
-&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;2. 空字符串(SmallString)
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;2. 空字符串(StandardString)
 
 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;3. SIGN_OBJECTB 标记位，值固定为0xBB (short)
 
@@ -468,9 +468,9 @@ public class RestConvertService extends AbstractService {
 
 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;4.1 SIGN_HASNEXT 标记位，值固定为1 (byte)
 
-&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;4.2 字段类型; 1-9为基本类型&字符串; 101-109为基本类型&字符串的数组; 127为Object
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;4.2 字段类型; 11-19为基本类型&字符串; 21-29为基本类型&字符串的数组; 127为Object
 
-&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;4.3 字段名 (SmallString)
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;4.3 字段名 (StandardString)
 
 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;4.4 字段的值Object
 

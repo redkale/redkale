@@ -43,6 +43,10 @@ public class StreamDecoder<R extends Reader, T> implements Decodeable<R, Stream<
                 this.componentType = pt.getActualTypeArguments()[0];
                 factory.register(type, this);
                 this.componentDecoder = factory.loadDecoder(this.componentType);
+            } else if (factory.isReversible() && type == Stream.class) {
+                this.componentType = Object.class;
+                factory.register(type, this);
+                this.componentDecoder = factory.loadDecoder(this.componentType);
             } else {
                 throw new ConvertException("StreamDecoder not support the type (" + type + ")");
             }

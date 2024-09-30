@@ -9,7 +9,6 @@ import java.nio.charset.StandardCharsets;
 import org.redkale.annotation.Nullable;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.SIGN_NULL;
-import org.redkale.convert.ext.ByteSimpledCoder;
 import org.redkale.util.*;
 
 /**
@@ -211,11 +210,7 @@ public class BsonReader extends Reader {
             return bt;
         }
         short lt = readShort();
-        if (componentDecoder != null && componentDecoder != ByteSimpledCoder.instance) {
-            this.arrayItemTypeEnum = readByte();
-        } else {
-            this.arrayItemTypeEnum = 0;
-        }
+        this.arrayItemTypeEnum = readByte();
         return (bt & 0xffff) << 16 | (lt & 0xffff);
     }
 
@@ -273,34 +268,17 @@ public class BsonReader extends Reader {
 
     @Override
     public final byte[] readByteArray() {
-        int len = readArrayB(null);
-        this.arrayItemTypeEnum = 0;
-        if (len == Reader.SIGN_NULL) {
+        short bt = readShort();
+        if (bt == Reader.SIGN_NULL) {
             return null;
         }
-        if (len == Reader.SIGN_VARIABLE) {
-            int size = 0;
-            byte[] data = new byte[8];
-            while (hasNext()) {
-                if (size >= data.length) {
-                    byte[] newdata = new byte[data.length + 4];
-                    System.arraycopy(data, 0, newdata, 0, size);
-                    data = newdata;
-                }
-                data[size++] = readByte();
-            }
-            readArrayE();
-            byte[] newdata = new byte[size];
-            System.arraycopy(data, 0, newdata, 0, size);
-            return newdata;
-        } else {
-            byte[] values = new byte[len];
-            for (int i = 0; i < values.length; i++) {
-                values[i] = readByte();
-            }
-            readArrayE();
-            return values;
+        short lt = readShort();
+        int len = (bt & 0xffff) << 16 | (lt & 0xffff);
+        byte[] values = new byte[len];
+        for (int i = 0; i < values.length; i++) {
+            values[i] = readByte();
         }
+        return values;
     }
 
     @Override

@@ -36,15 +36,13 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
 
     static final Encodeable objectEncoder = instance.loadEncoder(Object.class);
 
-    static final Decodeable skipArrayDecoder = new BsonArrayDecoder(instance, Object[].class);
+    static final Decodeable arrayDecoder = new BsonArrayDecoder(instance, Object[].class);
 
-    static final Decodeable skipCollectionDecoder =
-            new BsonCollectionDecoder(instance, new TypeToken<Collection<Object>>() {}.getType());
+    static final Decodeable collectionDecoder = new BsonCollectionDecoder(instance, Collection.class);
 
-    static final Decodeable skipStreamDecoder =
-            new BsonStreamDecoder(instance, new TypeToken<Stream<Object>>() {}.getType());
+    static final Decodeable streamDecoder = new BsonStreamDecoder(instance, Stream.class);
 
-    static final Decodeable skipMapDecoder = new BsonMapDecoder(instance, Map.class);
+    static final Decodeable mapDecoder = new BsonMapDecoder(instance, Map.class);
 
     static {
         instance.register(Serializable.class, objectDecoder);
@@ -249,13 +247,13 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
             case 29:
                 return StringArraySimpledCoder.instance;
             case 81:
-                return skipArrayDecoder;
+                return arrayDecoder;
             case 82:
-                return skipCollectionDecoder;
+                return collectionDecoder;
             case 83:
-                return skipStreamDecoder;
+                return streamDecoder;
             case 84:
-                return skipMapDecoder;
+                return mapDecoder;
             case 127:
                 return BsonFactory.objectDecoder;
             default:

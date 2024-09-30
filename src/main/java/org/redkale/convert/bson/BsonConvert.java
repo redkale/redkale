@@ -22,17 +22,17 @@ import org.redkale.util.*;
  * <pre>
  * BSON协议格式:
  *  1) 基本数据类型: 直接转换成byte[]
- *  2) SmallString(无特殊字符且长度小于256的字符串): length(1 byte) + byte[](utf8); 通常用于类名、字段名、枚举。
+ *  2) StandardString(无特殊字符且长度小于256的字符串): length(1 byte) + byte[](utf8); 通常用于类名、字段名、枚举。
  *  3) String: length(4 bytes) + byte[](utf8);
  *  4) 数组: length(4 bytes) + byte[]...
  *  5) Object:
- *      1、 realclass (SmallString) (如果指定格式化的class与实体对象的class不一致才会有该值, 该值可以使用@ConvertEntity给其取个别名)
- *      2、 空字符串(SmallString)
+ *      1、 realclass (StandardString) (如果指定格式化的class与实体对象的class不一致才会有该值, 该值可以使用@ConvertEntity给其取个别名)
+ *      2、 空字符串(StandardString)
  *      3、 SIGN_OBJECTB 标记位，值固定为0xBB (short)
  *      4、 循环字段值:
  *          4.1 SIGN_HASNEXT 标记位，值固定为1 (byte)
- *          4.2 字段类型; 1-9为基本类型和字符串; 101-109为基本类型和字符串的数组; 127为Object
- *          4.3 字段名 (SmallString)
+ *          4.2 字段类型; 11-19为基本类型和字符串; 21-29为基本类型和字符串的数组; 127为Object
+ *          4.3 字段名 (StandardString)
  *          4.4 字段的值Object
  *      5、 SIGN_NONEXT 标记位，值固定为0 (byte)
  *      6、 SIGN_OBJECTE 标记位，值固定为0xEE (short)
