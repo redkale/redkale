@@ -20,7 +20,7 @@ import static org.redkale.convert.Reader.*;
  */
 public class JsonByteBufferReader extends JsonReader {
 
-    private char currentChar;
+    private char cacheChar;
 
     private ByteBuffer[] buffers;
 
@@ -38,7 +38,7 @@ public class JsonByteBufferReader extends JsonReader {
     @Override
     protected boolean recycle() {
         super.recycle(); // this.position 初始化值为-1
-        this.currentChar = 0;
+        this.cacheChar = 0;
         this.buffers = null;
         this.currBufIndex = 0;
         this.currentBuffer = null;
@@ -70,9 +70,9 @@ public class JsonByteBufferReader extends JsonReader {
     }
 
     protected final char nextChar(CharArray sb) {
-        if (currentChar != 0) {
-            char ch = currentChar;
-            this.currentChar = 0;
+        if (cacheChar != 0) {
+            char ch = cacheChar;
+            this.cacheChar = 0;
             return ch;
         }
         if (this.currentBuffer != null) {
@@ -155,7 +155,7 @@ public class JsonByteBufferReader extends JsonReader {
      */
     @Override
     protected final void backChar(char ch) {
-        this.currentChar = ch;
+        this.cacheChar = ch;
     }
 
     /**

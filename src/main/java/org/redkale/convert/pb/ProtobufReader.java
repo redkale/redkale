@@ -20,9 +20,7 @@ public class ProtobufReader extends Reader {
 
     protected int limit = -1;
 
-    protected int cacheTag = Integer.MIN_VALUE;
-
-    protected boolean enumtostring;
+    protected Integer cacheTag;
 
     private byte[] content;
 
@@ -36,11 +34,6 @@ public class ProtobufReader extends Reader {
 
     public ProtobufReader(byte[] bytes, int start, int len) {
         setBytes(bytes, start, len);
-    }
-
-    public ProtobufReader enumtostring(boolean enumtostring) {
-        this.enumtostring = enumtostring;
-        return this;
     }
 
     @Override
@@ -80,6 +73,7 @@ public class ProtobufReader extends Reader {
         this.position = -1;
         this.limit = -1;
         this.content = null;
+        this.cacheTag = null;
         return true;
     }
 
@@ -468,9 +462,9 @@ public class ProtobufReader extends Reader {
     }
 
     protected final int readTag() {
-        if (cacheTag != Integer.MIN_VALUE) {
+        if (cacheTag != null) {
             int tag = cacheTag;
-            cacheTag = Integer.MIN_VALUE;
+            cacheTag = null;
             return tag;
         }
         return readRawVarint32();
