@@ -472,6 +472,27 @@ public abstract class ProtobufCoders {
         }
     }
 
+    public static class ProtobufAtomicBooleanCollectionSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<AtomicBoolean>>
+            implements ProtobufPrimitivable {
+
+        private final Creator<? extends Collection> creator;
+
+        public ProtobufAtomicBooleanCollectionSimpledCoder(Creator<? extends Collection> creator) {
+            this.creator = creator;
+        }
+
+        @Override
+        public void convertTo(ProtobufWriter out, Collection<AtomicBoolean> values) {
+            out.writeAtomicBooleans(values);
+        }
+
+        @Override
+        public Collection<AtomicBoolean> convertFrom(ProtobufReader in) {
+            return in.readAtomicBooleans(creator);
+        }
+    }
+
     public static class ProtobufAtomicIntegerCollectionSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<AtomicInteger>>
             implements ProtobufPrimitivable {
@@ -639,6 +660,24 @@ public abstract class ProtobufCoders {
         @Override
         public Stream<Double> convertFrom(ProtobufReader in) {
             return in.readDoubles(LIST_CREATOR).stream();
+        }
+    }
+
+    public static class ProtobufAtomicBooleanStreamSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<AtomicBoolean>>
+            implements ProtobufPrimitivable {
+
+        public static final ProtobufAtomicBooleanStreamSimpledCoder instance =
+                new ProtobufAtomicBooleanStreamSimpledCoder();
+
+        @Override
+        public void convertTo(ProtobufWriter out, Stream<AtomicBoolean> values) {
+            out.writeAtomicBooleans(values);
+        }
+
+        @Override
+        public Stream<AtomicBoolean> convertFrom(ProtobufReader in) {
+            return in.readAtomicBooleans(LIST_CREATOR).stream();
         }
     }
 

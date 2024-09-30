@@ -8,6 +8,9 @@ package org.redkale.convert.bson;
 import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 import org.redkale.convert.*;
 import org.redkale.convert.ext.*;
@@ -37,16 +40,16 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
     static final Encodeable objectEncoder = instance.loadEncoder(Object.class);
 
     // only for BsonRead.skipValue
-    static final Decodeable skipArrayDecoder = new BsonArrayDecoder(instance, Object[].class);
+    static final Decodeable skipArrayDecoder = new BsonArrayDecoder(instance, Object[].class, true);
 
     // only for BsonRead.skipValue
-    static final Decodeable skipCollectionDecoder = new BsonCollectionDecoder(instance, Collection.class);
+    static final Decodeable skipCollectionDecoder = new BsonCollectionDecoder(instance, Collection.class, true);
 
     // only for BsonRead.skipValue
-    static final Decodeable skipStreamDecoder = new BsonStreamDecoder(instance, Stream.class);
+    static final Decodeable skipStreamDecoder = new BsonStreamDecoder(instance, Stream.class, true);
 
     // only for BsonRead.skipValue
-    static final Decodeable skipMapDecoder = new BsonMapDecoder(instance, Map.class);
+    static final Decodeable skipMapDecoder = new BsonMapDecoder(instance, Map.class, true);
 
     static {
         instance.register(Serializable.class, objectDecoder);
@@ -124,22 +127,22 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
 
     @Override
     protected <E> Decodeable<BsonReader, E> createArrayDecoder(Type type) {
-        return new BsonArrayDecoder(this, type);
+        return new BsonArrayDecoder(this, type, false);
     }
 
     @Override
     protected <E> Decodeable<BsonReader, E> createCollectionDecoder(Type type) {
-        return new BsonCollectionDecoder(this, type);
+        return new BsonCollectionDecoder(this, type, false);
     }
 
     @Override
     protected <E> Decodeable<BsonReader, E> createStreamDecoder(Type type) {
-        return new BsonStreamDecoder(this, type);
+        return new BsonStreamDecoder(this, type, false);
     }
 
     @Override
     protected <E> Decodeable<BsonReader, E> createMapDecoder(Type type) {
-        return new BsonMapDecoder(this, type);
+        return new BsonMapDecoder(this, type, false);
     }
 
     @Override
@@ -161,7 +164,7 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
         Objects.requireNonNull(type);
         Class clazz = TypeToken.typeToClass(type);
         byte typeval = 127; // 字段的类型值
-        if (clazz == boolean.class || clazz == Boolean.class) {
+        if (clazz == boolean.class || clazz == Boolean.class || clazz == AtomicBoolean.class) {
             typeval = 11;
         } else if (clazz == byte.class || clazz == Byte.class) {
             typeval = 12;
@@ -169,9 +172,9 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
             typeval = 13;
         } else if (clazz == char.class || clazz == Character.class) {
             typeval = 14;
-        } else if (clazz == int.class || clazz == Integer.class) {
+        } else if (clazz == int.class || clazz == Integer.class || clazz == AtomicInteger.class) {
             typeval = 15;
-        } else if (clazz == long.class || clazz == Long.class) {
+        } else if (clazz == long.class || clazz == Long.class || clazz == AtomicLong.class) {
             typeval = 16;
         } else if (clazz == float.class || clazz == Float.class) {
             typeval = 17;
@@ -179,7 +182,7 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
             typeval = 18;
         } else if (clazz == String.class) {
             typeval = 19;
-        } else if (clazz == boolean[].class || clazz == Boolean[].class) {
+        } else if (clazz == boolean[].class || clazz == Boolean[].class || clazz == AtomicBoolean[].class) {
             typeval = 21;
         } else if (clazz == byte[].class || clazz == Byte[].class) {
             typeval = 22;
@@ -187,9 +190,9 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
             typeval = 23;
         } else if (clazz == char[].class || clazz == Character[].class) {
             typeval = 24;
-        } else if (clazz == int[].class || clazz == Integer[].class) {
+        } else if (clazz == int[].class || clazz == Integer[].class || clazz == AtomicInteger[].class) {
             typeval = 25;
-        } else if (clazz == long[].class || clazz == Long[].class) {
+        } else if (clazz == long[].class || clazz == Long[].class || clazz == AtomicLong[].class) {
             typeval = 26;
         } else if (clazz == float[].class || clazz == Float[].class) {
             typeval = 27;
@@ -209,7 +212,7 @@ public final class BsonFactory extends ConvertFactory<BsonReader, BsonWriter> {
         return typeval;
     }
 
-    protected static Decodeable typeEnum(final byte typeval) {
+    protected static Decodeable skipTypeEnum(final byte typeval) {
         switch (typeval) {
             case 11:
                 return BoolSimpledCoder.instance;

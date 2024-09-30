@@ -104,7 +104,7 @@ public class BsonReader extends Reader {
             return;
         }
         this.fieldTypeEnum = 0;
-        Decodeable decoder = BsonFactory.typeEnum(val);
+        Decodeable decoder = BsonFactory.skipTypeEnum(val);
         decoder.convertFrom(this);
     }
 

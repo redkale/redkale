@@ -122,6 +122,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             this.register(java.time.LocalTime.class, LocalTimeSimpledCoder.instance);
             this.register(java.time.LocalDateTime.class, LocalDateTimeSimpledCoder.instance);
             this.register(java.time.Duration.class, DurationSimpledCoder.instance);
+            this.register(AtomicBoolean.class, AtomicBooleanSimpledCoder.instance);
             this.register(AtomicInteger.class, AtomicIntegerSimpledCoder.instance);
             this.register(AtomicLong.class, AtomicLongSimpledCoder.instance);
             this.register(BigInteger.class, BigIntegerSimpledCoder.instance);

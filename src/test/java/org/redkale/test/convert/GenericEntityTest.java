@@ -11,6 +11,8 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.ConvertColumn;
@@ -27,7 +29,7 @@ import org.redkale.util.Utility;
 public class GenericEntityTest {
     private static final Type ENTITY_TYPE = new TypeToken<GenericEntity<Long, String, SimpleEntity>>() {}.getType();
     private static final String JSON =
-            "{\"oneEntry\":{\"key\":\"aaaa\",\"value\":{\"addr\":\"127.0.0.1:6666\",\"addrs\":[22222,33333,44444,55555,66666,77777,88888,99999],\"desc\":\"\",\"id\":1000000001,\"lists\":[\"aaaa\",\"bbbb\",\"cccc\"],\"map\":{\"AAA\":111,\"CCC\":333,\"BBB\":222},\"name\":\"this is name\\n \\\"test\",\"strings\":[\"zzz\",\"yyy\",\"xxx\"]}},\"oneList\":[1234567890],\"oneName\":\"你好\"}";
+            "{\"oneEntry\":{\"key\":\"aaaa\",\"value\":{\"addr\":\"127.0.0.1:6666\",\"addrs\":[22222,-33333,44444,-55555,66666,-77777,88888,-99999],\"desc\":\"\",\"id\":1000000001,\"lists\":[\"aaaa\",\"bbbb\",\"cccc\"],\"map\":{\"AAA\":111,\"CCC\":333,\"BBB\":-222},\"name\":\"this is name\\n \\\"test\",\"strings\":[\"zzz\",\"yyy\",\"xxx\"]}},\"oneList\":[1234567890],\"oneName\":\"你好\",\"oneStatus\":[true,false],\"oneTimes\":[128]}";
 
     public static void main(String[] args) throws Throwable {
         GenericEntityTest test = new GenericEntityTest();
@@ -175,6 +177,10 @@ public class GenericEntityTest {
         List<Long> list = new ArrayList<>();
         list.add(1234567890L);
         bean.setOneList(list);
+        bean.setOneStatus(new AtomicBoolean[] {new AtomicBoolean(true), new AtomicBoolean(false)});
+        List<AtomicLong> times = new ArrayList<>();
+        times.add(new AtomicLong(128L));
+        bean.setOneTimes(times);
         bean.setOneEntry(new Entry<>("aaaa", SimpleEntity.create()));
         return bean;
     }
@@ -189,6 +195,12 @@ public class GenericEntityTest {
 
         @ConvertColumn(index = 3)
         private K oneName;
+
+        @ConvertColumn(index = 4)
+        private AtomicBoolean[] oneStatus;
+
+        @ConvertColumn(index = 5)
+        private List<AtomicLong> oneTimes;
 
         @Override
         public String toString() {
@@ -217,6 +229,22 @@ public class GenericEntityTest {
 
         public void setOneName(K oneName) {
             this.oneName = oneName;
+        }
+
+        public AtomicBoolean[] getOneStatus() {
+            return oneStatus;
+        }
+
+        public void setOneStatus(AtomicBoolean[] oneStatus) {
+            this.oneStatus = oneStatus;
+        }
+
+        public List<AtomicLong> getOneTimes() {
+            return oneTimes;
+        }
+
+        public void setOneTimes(List<AtomicLong> oneTimes) {
+            this.oneTimes = oneTimes;
         }
     }
 

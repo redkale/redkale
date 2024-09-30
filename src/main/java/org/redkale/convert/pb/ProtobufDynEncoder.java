@@ -238,6 +238,8 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                         wmethodName = "writeFieldLongsValue";
                     } else if (componentType == Double.class) {
                         wmethodName = "writeFieldDoublesValue";
+                    } else if (componentType == AtomicBoolean.class) {
+                        wmethodName = "writeFieldAtomicBooleansValue";
                     } else if (componentType == AtomicInteger.class) {
                         wmethodName = "writeFieldAtomicIntegersValue";
                     } else if (componentType == AtomicLong.class) {

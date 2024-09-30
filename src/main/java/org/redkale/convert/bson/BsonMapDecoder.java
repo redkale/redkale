@@ -20,8 +20,11 @@ import org.redkale.convert.*;
  */
 public class BsonMapDecoder<K, V> extends MapDecoder<BsonReader, K, V> {
 
-    public BsonMapDecoder(final BsonFactory factory, final Type type) {
+    private final boolean skip;
+
+    public BsonMapDecoder(final BsonFactory factory, final Type type, boolean skip) {
         super(factory, type);
+        this.skip = skip;
     }
 
     @Override
@@ -31,8 +34,12 @@ public class BsonMapDecoder<K, V> extends MapDecoder<BsonReader, K, V> {
         if (len == Reader.SIGN_NULL) {
             return null;
         }
-        Decodeable<BsonReader, K> kdecoder = BsonFactory.typeEnum(in.readMapKeyTypeEnum());
-        Decodeable<BsonReader, V> vdecoder = BsonFactory.typeEnum(in.readmapValueTypeEnum());
+        Decodeable<BsonReader, K> kdecoder = this.keyDecoder;
+        Decodeable<BsonReader, V> vdecoder = this.valueDecoder;
+        if (skip) {
+            kdecoder = BsonFactory.skipTypeEnum(in.readMapKeyTypeEnum());
+            vdecoder = BsonFactory.skipTypeEnum(in.readmapValueTypeEnum());
+        }
         final Map<K, V> result = this.creator.create();
         // 固定长度
         for (int i = 0; i < len; i++) {

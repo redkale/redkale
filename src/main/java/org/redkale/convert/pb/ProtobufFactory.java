@@ -11,6 +11,8 @@ import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.stream.Stream;
 import org.redkale.convert.*;
+import org.redkale.convert.pb.ProtobufCoders.ProtobufAtomicBooleanCollectionSimpledCoder;
+import org.redkale.convert.pb.ProtobufCoders.ProtobufAtomicBooleanStreamSimpledCoder;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufAtomicIntegerArraySimpledCoder;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufAtomicIntegerCollectionSimpledCoder;
 import org.redkale.convert.pb.ProtobufCoders.ProtobufAtomicIntegerStreamSimpledCoder;
@@ -214,6 +216,9 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
             } else if (componentType == Double.class) {
                 Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
                 return (Decodeable) new ProtobufDoubleCollectionSimpledCoder(creator);
+            } else if (componentType == AtomicBoolean.class) {
+                Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
+                return (Decodeable) new ProtobufAtomicBooleanCollectionSimpledCoder(creator);
             } else if (componentType == AtomicInteger.class) {
                 Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
                 return (Decodeable) new ProtobufAtomicIntegerCollectionSimpledCoder(creator);
@@ -247,6 +252,8 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
                 return (Encodeable) new ProtobufLongCollectionSimpledCoder(creator);
             } else if (componentType == Double.class) {
                 return (Encodeable) new ProtobufDoubleCollectionSimpledCoder(creator);
+            } else if (componentType == AtomicBoolean.class) {
+                return (Encodeable) new ProtobufAtomicBooleanCollectionSimpledCoder(creator);
             } else if (componentType == AtomicInteger.class) {
                 return (Encodeable) new ProtobufAtomicIntegerCollectionSimpledCoder(creator);
             } else if (componentType == AtomicLong.class) {
@@ -277,6 +284,8 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
                 return (Decodeable) ProtobufLongStreamSimpledCoder.instance;
             } else if (componentType == Double.class) {
                 return (Decodeable) ProtobufDoubleStreamSimpledCoder.instance;
+            } else if (componentType == AtomicBoolean.class) {
+                return (Decodeable) ProtobufAtomicBooleanStreamSimpledCoder.instance;
             } else if (componentType == AtomicInteger.class) {
                 return (Decodeable) ProtobufAtomicIntegerStreamSimpledCoder.instance;
             } else if (componentType == AtomicLong.class) {
@@ -307,6 +316,8 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
                 return (Encodeable) ProtobufLongStreamSimpledCoder.instance;
             } else if (componentType == Double.class) {
                 return (Encodeable) ProtobufDoubleStreamSimpledCoder.instance;
+            } else if (componentType == AtomicBoolean.class) {
+                return (Encodeable) ProtobufAtomicBooleanStreamSimpledCoder.instance;
             } else if (componentType == AtomicInteger.class) {
                 return (Encodeable) ProtobufAtomicIntegerStreamSimpledCoder.instance;
             } else if (componentType == AtomicLong.class) {
@@ -364,6 +375,7 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
                 || fieldClass == Float.class
                 || fieldClass == Long.class
                 || fieldClass == Double.class
+                || fieldClass == AtomicBoolean.class
                 || fieldClass == AtomicInteger.class
                 || fieldClass == AtomicLong.class
                 || fieldClass == String.class
@@ -383,6 +395,7 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
                 || fieldClass == Float[].class
                 || fieldClass == Long[].class
                 || fieldClass == Double[].class
+                || fieldClass == AtomicBoolean[].class
                 || fieldClass == AtomicInteger[].class
                 || fieldClass == AtomicLong[].class
                 || fieldClass == String[].class;
@@ -398,6 +411,7 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
                 || componentType == Float.class
                 || componentType == Long.class
                 || componentType == Double.class
+                || componentType == AtomicBoolean.class
                 || componentType == AtomicInteger.class
                 || componentType == AtomicLong.class
                 || componentType == String.class;
@@ -429,53 +443,49 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
 
     // see com.google.protobuf.CodedOutputStream
     protected static int computeInt32SizeNoTag(final int value) {
-        if (value == 0) {
-            return 1;
-        }
+        if (value == 0) return 1;
         return computeUInt64SizeNoTag(value);
     }
 
     protected static int computeUInt64SizeNoTag(final long value) {
-        if (value == 0) {
-            return 1;
-        }
+        if (value == 0) return 1;
         int clz = Long.numberOfLeadingZeros(value);
         return ((Long.SIZE * 9 + (1 << 6)) - (clz * 9)) >>> 6;
     }
 
     protected static int computeSInt32SizeNoTag(final int value) {
-        if (value == 0) {
-            return 1;
-        }
+        if (value == 0) return 1;
         return computeUInt32SizeNoTag(encodeZigZag32(value));
     }
 
-    protected static int computeSInt64SizeNoTag(final long value) {
-        if (value == 0) {
-            return 1;
+    public static void main(String[] args) throws Throwable {
+        for (int i = 0; i < 10000; i++) {
+            int len1 = computeRawVarint32Size(encodeZigZag32(i));
+            int len2 = computeSInt32SizeNoTag(i);
+            if (len1 != len2) {
+                throw new RuntimeException(" i = " + i + ", len1: " + len1 + ", len2: " + len2);
+            }
         }
+    }
+
+    protected static int computeSInt64SizeNoTag(final long value) {
+        if (value == 0) return 1;
         return computeUInt64SizeNoTag(encodeZigZag64(value));
     }
 
     protected static int computeUInt32SizeNoTag(final int value) {
-        if (value == 0) {
-            return 1;
-        }
+        if (value == 0) return 1;
         int clz = Integer.numberOfLeadingZeros(value);
         return ((Integer.SIZE * 9 + (1 << 6)) - (clz * 9)) >>> 6;
     }
 
     protected static int encodeZigZag32(final int n) {
-        if (n == 0) {
-            return 0;
-        }
+        if (n == 0) return 0;
         return (n << 1) ^ (n >> 31);
     }
 
     protected static long encodeZigZag64(final long n) {
-        if (n == 0) {
-            return 0L;
-        }
+        if (n == 0) return 0L;
         return (n << 1) ^ (n >> 63);
     }
 
@@ -504,7 +514,8 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
                 || (javaType == short.class || javaType == Short.class)
                 || (javaType == int.class || javaType == Integer.class)
                 || (javaType == long.class || javaType == Long.class)
-                || (javaType == AtomicInteger.class || javaType == AtomicLong.class)) {
+                || (javaType == AtomicBoolean.class || javaType == AtomicInteger.class)
+                || javaType == AtomicLong.class) {
             return 0;
         } else if (!enumtostring && (javaType instanceof Class) && ((Class) javaType).isEnum()) {
             return 0;

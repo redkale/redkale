@@ -20,8 +20,11 @@ import org.redkale.convert.*;
  */
 public class BsonCollectionDecoder<T> extends CollectionDecoder<BsonReader, T> {
 
-    public BsonCollectionDecoder(final ConvertFactory factory, final Type type) {
+    private final boolean skip;
+
+    public BsonCollectionDecoder(final ConvertFactory factory, final Type type, boolean skip) {
         super(factory, type);
+        this.skip = skip;
     }
 
     @Override
@@ -31,7 +34,10 @@ public class BsonCollectionDecoder<T> extends CollectionDecoder<BsonReader, T> {
         if (len == Reader.SIGN_NULL) {
             return null;
         }
-        final Decodeable<BsonReader, T> itemDecoder = BsonFactory.typeEnum(in.readArrayItemTypeEnum());
+        Decodeable<BsonReader, T> itemDecoder = this.componentDecoder;
+        if (skip) {
+            itemDecoder = BsonFactory.skipTypeEnum(in.readArrayItemTypeEnum());
+        }
         final Collection<T> result = this.creator.create();
         // 固定长度
         for (int i = 0; i < len; i++) {

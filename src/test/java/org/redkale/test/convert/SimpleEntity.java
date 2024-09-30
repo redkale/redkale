@@ -41,7 +41,7 @@ public class SimpleEntity {
         SimpleEntity v = new SimpleEntity();
         v.setName("this is name\n \"test");
         v.setId(1000000001);
-        v.setAddrs(new int[] {22222, 33333, 44444, 55555, 66666, 77777, 88888, 99999});
+        v.setAddrs(new int[] {22222, -33333, 44444, -55555, 66666, -77777, 88888, -99999});
         v.setStrings(new String[] {"zzz", "yyy", "xxx"});
         List<String> list = new ArrayList<>();
         list.add("aaaa");
@@ -50,7 +50,7 @@ public class SimpleEntity {
         v.setLists(list);
         Map<String, Integer> map = new HashMap<>();
         map.put("AAA", 111);
-        map.put("BBB", 222);
+        map.put("BBB", -222);
         map.put("CCC", 333);
         v.setMap(map);
         v.setAddr(new InetSocketAddress("127.0.0.1", 6666));

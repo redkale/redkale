@@ -190,6 +190,24 @@ public class ProtobufReader extends Reader {
         return data;
     }
 
+    public final AtomicBoolean readAtomicBoolean() {
+        return new AtomicBoolean(readBoolean());
+    }
+
+    public final AtomicBoolean[] readAtomicBooleans() {
+        Collection<AtomicBoolean> data = readAtomicBooleans(LIS_CREATOR);
+        return data.toArray(new AtomicBoolean[data.size()]);
+    }
+
+    public final Collection<AtomicBoolean> readAtomicBooleans(Creator<? extends Collection> creator) {
+        int size = readRawVarint32();
+        Collection<AtomicBoolean> data = creator.create();
+        for (int i = 0; i < size; i++) {
+            data.add(new AtomicBoolean(readBoolean()));
+        }
+        return data;
+    }
+
     @Override
     public final byte readByte() {
         return (byte) readInt();
