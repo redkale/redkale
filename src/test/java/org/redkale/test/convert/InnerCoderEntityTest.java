@@ -107,7 +107,7 @@ public class InnerCoderEntityTest {
                     int index = 0;
                     final Object[] params = new Object[deMembers.length];
                     while (in.hasNext()) {
-                        DeMember member = in.readFieldName(memberInfo); // 读取字段名
+                        DeMember member = in.readField(memberInfo); // 读取字段名
                         in.readBlank(); // 读取字段名与字段值之间的间隔符，JSON则是跳过冒号:
                         if (member == null) {
                             in.skipValue(); // 跳过不存在的字段的值, 一般不会发生

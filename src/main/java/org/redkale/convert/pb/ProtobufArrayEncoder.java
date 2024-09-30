@@ -32,7 +32,7 @@ public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T> {
         T[] array = value;
         out.writeArrayB(array.length, itemEncoder, array);
         for (T item : array) {
-            out.writeFieldName(member);
+            out.writeField(member);
             if (item == null) {
                 out.writeUInt32(0);
             } else if (componentSimpled) {

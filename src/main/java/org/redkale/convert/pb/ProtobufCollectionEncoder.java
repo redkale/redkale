@@ -31,7 +31,7 @@ public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWrit
         Encodeable itemEncoder = this.componentEncoder;
         out.writeArrayB(value.size(), itemEncoder, value);
         for (T item : value) {
-            out.writeFieldName(member);
+            out.writeField(member);
             if (item == null) {
                 out.writeUInt32(0);
             } else if (componentSimpled) {

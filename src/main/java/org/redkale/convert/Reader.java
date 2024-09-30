@@ -119,7 +119,7 @@ public abstract class Reader {
      *
      * @return 匹配的DeMember
      */
-    public abstract DeMember readFieldName(final DeMemberInfo memberInfo);
+    public abstract DeMember readField(final DeMemberInfo memberInfo);
 
     /**
      * 读取一个boolean值

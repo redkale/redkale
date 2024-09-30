@@ -327,7 +327,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
 
     // 被ObjectEncoder调用
     @Override
-    public final void writeFieldName(EnMember member, String fieldName, Type fieldType, int fieldPos) {
+    public final void writeField(EnMember member, String fieldName, Type fieldType, int fieldPos) {
         writeTag(member != null ? member.getTag() : fieldPos);
     }
 
@@ -1321,7 +1321,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             ProtobufStreamEncoder streamEncoder = (ProtobufStreamEncoder) encoder;
             streamEncoder.convertTo(this, member, (Stream) value);
         } else {
-            this.writeFieldName(member);
+            this.writeField(member);
             encoder.convertTo(this, value);
         }
     }

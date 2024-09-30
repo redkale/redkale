@@ -590,7 +590,7 @@ public class JsonByteBufferReader extends JsonReader {
     }
 
     @Override
-    public DeMember readFieldName(final DeMemberInfo memberInfo) {
+    public DeMember readField(final DeMemberInfo memberInfo) {
         char ch = nextGoodChar(true);
         if (ch == 0) {
             return null;

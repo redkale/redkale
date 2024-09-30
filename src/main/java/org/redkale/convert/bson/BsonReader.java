@@ -216,7 +216,7 @@ public class BsonReader extends Reader {
     }
 
     @Override
-    public final DeMember readFieldName(final DeMemberInfo memberInfo) {
+    public final DeMember readField(final DeMemberInfo memberInfo) {
         final String exceptedField = readStandardString();
         this.fieldTypeEnum = readByte();
         return memberInfo.getMemberByField(exceptedField);

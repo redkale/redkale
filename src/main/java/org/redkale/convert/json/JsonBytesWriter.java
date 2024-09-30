@@ -114,7 +114,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     }
 
     @Override
-    public final void writeFieldName(EnMember member, String fieldName, Type fieldType, int fieldPos) {
+    public final void writeField(EnMember member, String fieldName, Type fieldType, int fieldPos) {
         if (this.comma) {
             writeTo(BYTE_COMMA);
         }

@@ -377,7 +377,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
         if (this.creatorConstructorMembers == null) { // 空构造函数
             final T result = this.creator == null ? null : this.creator.create();
             while (in.hasNext()) {
-                DeMember member = in.readFieldName(info);
+                DeMember member = in.readField(info);
                 in.readBlank();
                 if (member == null) {
                     in.skipValue(); // 跳过不存在的属性的值
@@ -394,7 +394,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
             final Object[][] otherParams = new Object[info.length()][2];
             int oc = 0;
             while (in.hasNext()) {
-                DeMember member = in.readFieldName(info);
+                DeMember member = in.readField(info);
                 in.readBlank();
                 if (member == null) {
                     in.skipValue(); // 跳过不存在的属性的值

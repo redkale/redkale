@@ -251,7 +251,7 @@ public class BsonWriter extends Writer implements ByteTuple {
     }
 
     @Override
-    public final void writeFieldName(EnMember member, String fieldName, Type fieldType, int fieldPos) {
+    public final void writeField(EnMember member, String fieldName, Type fieldType, int fieldPos) {
         writeByte(BsonReader.SIGN_HASNEXT);
         writeStandardString(fieldName);
         writeByte(BsonFactory.typeEnum(fieldType));

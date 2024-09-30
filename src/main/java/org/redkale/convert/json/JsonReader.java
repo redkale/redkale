@@ -667,7 +667,7 @@ public class JsonReader extends Reader {
     }
 
     @Override
-    public DeMember readFieldName(final DeMemberInfo memberInfo) {
+    public DeMember readField(final DeMemberInfo memberInfo) {
         final int eof = this.limit;
         if (this.position == eof) {
             return null;

@@ -458,16 +458,6 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
         return computeUInt32SizeNoTag(encodeZigZag32(value));
     }
 
-    public static void main(String[] args) throws Throwable {
-        for (int i = 0; i < 10000; i++) {
-            int len1 = computeRawVarint32Size(encodeZigZag32(i));
-            int len2 = computeSInt32SizeNoTag(i);
-            if (len1 != len2) {
-                throw new RuntimeException(" i = " + i + ", len1: " + len1 + ", len2: " + len2);
-            }
-        }
-    }
-
     protected static int computeSInt64SizeNoTag(final long value) {
         if (value == 0) return 1;
         return computeUInt64SizeNoTag(encodeZigZag64(value));

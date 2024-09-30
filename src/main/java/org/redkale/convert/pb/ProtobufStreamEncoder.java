@@ -32,7 +32,7 @@ public class ProtobufStreamEncoder<T> extends StreamEncoder<ProtobufWriter, T> {
         Encodeable itemEncoder = this.componentEncoder;
         out.writeArrayB(array.length, itemEncoder, array);
         for (Object item : array) {
-            out.writeFieldName(member);
+            out.writeField(member);
             if (item == null) {
                 out.writeUInt32(0);
             } else if (componentSimpled) {

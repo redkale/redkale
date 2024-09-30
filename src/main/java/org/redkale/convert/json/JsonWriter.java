@@ -141,7 +141,7 @@ public abstract class JsonWriter extends Writer {
     public abstract void writeString(String value);
 
     @Override // 只容许JsonBytesWriter重写此方法
-    public void writeFieldName(EnMember member, String fieldName, Type fieldType, int fieldPos) {
+    public void writeField(EnMember member, String fieldName, Type fieldType, int fieldPos) {
         if (this.comma) {
             writeTo(BYTE_COMMA);
         }

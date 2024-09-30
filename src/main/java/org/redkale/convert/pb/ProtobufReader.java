@@ -156,7 +156,7 @@ public class ProtobufReader extends Reader {
     }
 
     @Override
-    public final DeMember readFieldName(final DeMemberInfo memberInfo) {
+    public final DeMember readField(final DeMemberInfo memberInfo) {
         int tag = readTag();
         DeMember member = memberInfo.getMemberByTag(tag);
         if (member != null) {

@@ -45,7 +45,7 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V> {
             if (ignoreColumns == null || !ignoreColumns.contains(key)) {
                 V v = mapFieldFunc == null ? val : mapFieldFunc.apply(key, val);
                 if (v != null) {
-                    out.writeFieldName(member);
+                    out.writeField(member);
 
                     ProtobufWriter tmp = out.pollChild();
                     tmp.writeTag(keyTag);
