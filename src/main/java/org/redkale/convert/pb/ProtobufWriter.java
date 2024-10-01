@@ -130,14 +130,13 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     protected boolean recycle() {
         super.recycle();
         if (this.delegate != null && this.pool != null) {
-            List<ProtobufWriter> list = new ArrayList<>();
-            ProtobufWriter next = this;
-            while ((next = next.child) != null) {
-                list.add(next);
-            }
-            for (ProtobufWriter item : list) {
-                offerPool(item);
-            }
+            ProtobufWriter s;
+            ProtobufWriter p = this.delegate;
+            do {
+                s = p;
+                p = p.parent;
+                offerPool(s);
+            } while (p != this);
         }
         this.parent = null;
         this.child = null;
@@ -169,7 +168,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         }
         ProtobufWriter result = queue.poll();
         if (result == null) {
-            result = new ProtobufWriter();
+            result = new ProtobufWriter(new byte[256], 0);
         }
         if (delegate == null) {
             result.parent = this;
