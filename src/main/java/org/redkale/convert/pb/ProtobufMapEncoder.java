@@ -25,8 +25,8 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
     public ProtobufMapEncoder(ConvertFactory factory, Type type) {
         super(factory, type);
         this.enumtostring = ((ProtobufFactory) factory).enumtostring;
-        this.keyTag = 1 << 3 | ProtobufFactory.wireType(keyEncoder.getType(), enumtostring);
-        this.valTag = 2 << 3 | ProtobufFactory.wireType(valueEncoder.getType(), enumtostring);
+        this.keyTag = 1 << 3 | ProtobufFactory.wireTypeBit(keyEncoder.getType(), enumtostring);
+        this.valTag = 2 << 3 | ProtobufFactory.wireTypeBit(valueEncoder.getType(), enumtostring);
     }
 
     @Override
@@ -63,7 +63,7 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
     }
 
     @Override
-    public int computeSize(Map<K, V> value) {
+    public int computeSize(ProtobufWriter out, int tagLen, Map<K, V> value) {
         if (value == null || value.isEmpty()) {
             return 0;
         }

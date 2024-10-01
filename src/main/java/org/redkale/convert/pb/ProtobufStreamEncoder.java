@@ -32,7 +32,7 @@ public class ProtobufStreamEncoder<T> extends StreamEncoder<ProtobufWriter, T>
         if (array == null || array.length < 1) {
             return;
         }
-        Encodeable itemEncoder = this.componentEncoder;
+        ProtobufEncodeable itemEncoder = (ProtobufEncodeable)this.componentEncoder;
         out.writeArrayB(array.length, itemEncoder, array);
         for (Object item : array) {
             out.writeField(member);
@@ -51,8 +51,9 @@ public class ProtobufStreamEncoder<T> extends StreamEncoder<ProtobufWriter, T>
     }
 
     @Override
-    public int computeSize(Stream<T> value) {
-        return 0;
+    public int computeSize(ProtobufWriter out, int tagSize, Stream<T> value) {
+        // Stream被forEach之后就不可用了， 所以不能进行遍历
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override

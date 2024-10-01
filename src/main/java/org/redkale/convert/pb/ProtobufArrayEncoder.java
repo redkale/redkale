@@ -6,6 +6,7 @@
 package org.redkale.convert.pb;
 
 import java.lang.reflect.Type;
+import org.redkale.annotation.Nonnull;
 import org.redkale.convert.*;
 
 /**
@@ -26,13 +27,17 @@ public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T>
     }
 
     @Override
-    public void convertTo(ProtobufWriter out, EnMember member, T[] value) {
+    public void convertTo(ProtobufWriter out, @Nonnull EnMember member, T[] value) {
         this.checkInited();
         if (value == null || value.length < 1) {
             return;
         }
         Encodeable itemEncoder = this.componentEncoder;
         T[] array = value;
+        //        if (componentSizeRequired) {
+        //            int tagSize = ProtobufFactory.computeSInt32SizeNoTag(member.getTag());
+        //            out.writeLength(computeSize(tagSize, value));
+        //        }
         out.writeArrayB(array.length, itemEncoder, array);
         for (T item : array) {
             out.writeField(member);
@@ -41,6 +46,7 @@ public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T>
             } else if (componentSimpled) {
                 itemEncoder.convertTo(out, item);
             } else {
+                // itemEncoder.convertTo(out, item);
                 ProtobufWriter tmp = out.pollChild();
                 itemEncoder.convertTo(tmp, item);
                 out.writeTuple(tmp);
@@ -51,16 +57,19 @@ public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T>
     }
 
     @Override
-    public int computeSize(T[] value) {
+    public int computeSize(ProtobufWriter out, int tagSize, T[] value) {
         if (value == null || value.length < 1) {
             return 0;
         }
-        int size = 0;
+        int dataSize = 0;
         ProtobufEncodeable itemEncoder = (ProtobufEncodeable) this.componentEncoder;
         for (T item : value) {
-            size += itemEncoder.computeSize(item);
+            dataSize += itemEncoder.computeSize(out, tagSize, item);
         }
-        return size;
+        if (componentSizeRequired) {
+            dataSize += tagSize * value.length;
+        }
+        return ProtobufFactory.computeSInt32SizeNoTag(dataSize) + dataSize;
     }
 
     @Override

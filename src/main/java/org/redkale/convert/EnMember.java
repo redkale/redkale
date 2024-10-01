@@ -59,6 +59,9 @@ public final class EnMember<W extends Writer, T, F> {
     // 主要给protobuf使用 从1开始
     int tag;
 
+    // 主要给protobuf使用 tag的大小
+    int tagSize;
+
     public EnMember(Attribute<T, F> attribute, int tag, Encodeable<W, F> encoder) {
         this.attribute = attribute;
         this.encoder = encoder;
@@ -187,6 +190,10 @@ public final class EnMember<W extends Writer, T, F> {
 
     public int getTag() {
         return this.tag;
+    }
+
+    public int getTagSize() {
+        return this.tagSize;
     }
 
     public int compareTo(boolean fieldSort, EnMember<W, T, F> o) {

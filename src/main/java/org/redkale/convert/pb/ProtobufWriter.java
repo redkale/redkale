@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.stream.Stream;
 import org.redkale.annotation.ClassDepends;
+import org.redkale.annotation.Nullable;
 import org.redkale.convert.*;
 import org.redkale.util.*;
 
@@ -87,6 +88,20 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         this.content = bs;
     }
 
+    public ProtobufWriter() {
+        this(DEFAULT_SIZE);
+    }
+
+    public ProtobufWriter(int size) {
+        this.content = new byte[Math.max(size, DEFAULT_SIZE)];
+    }
+
+    public ProtobufWriter(ByteArray array) {
+        this.content = array.content();
+        this.initOffset = array.offset();
+        this.count = array.length();
+    }
+
     @Override
     public final ProtobufWriter withFeatures(int features) {
         super.withFeatures(features);
@@ -123,18 +138,8 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         return mapFieldFunc;
     }
 
-    public ProtobufWriter() {
-        this(DEFAULT_SIZE);
-    }
-
-    public ProtobufWriter(int size) {
-        this.content = new byte[Math.max(size, DEFAULT_SIZE)];
-    }
-
-    public ProtobufWriter(ByteArray array) {
-        this.content = array.content();
-        this.initOffset = array.offset();
-        this.count = array.length();
+    protected Function<Object, ConvertField[]> objExtFunc() {
+        return objExtFunc;
     }
 
     @Override
@@ -1294,8 +1299,26 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         }
     }
 
+    @ClassDepends // objExtFunc扩展字段时member=null
+    public final void writeObjectField2(@Nullable EnMember member, Object obj) {
+        Object value;
+        if (objFieldFunc == null) {
+            value = member.getFieldValue(obj);
+        } else {
+            value = objFieldFunc.apply(member.getAttribute(), obj);
+        }
+        if (value == null) {
+            return;
+        }
+        ProtobufEncodeable encoder = (ProtobufEncodeable) member.getEncoder();
+        if (encoder.requireSize()) {
+            writeLength(encoder.computeSize(this, member.getTagSize(), value));
+        }
+        encoder.convertTo(this, member, value);
+    }
+
     @Override
-    @ClassDepends
+    @ClassDepends // objExtFunc扩展字段时member=null
     public final void writeObjectField(final EnMember member, Object obj) {
         Object value;
         if (objFieldFunc == null) {

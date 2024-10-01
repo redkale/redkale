@@ -4,6 +4,7 @@
  */
 package org.redkale.convert.pb;
 
+import org.redkale.convert.EnMember;
 import org.redkale.convert.Encodeable;
 import org.redkale.convert.Writer;
 
@@ -17,11 +18,17 @@ import org.redkale.convert.Writer;
  * @param <T> 序列化的数据类型
  */
 public interface ProtobufEncodeable<W extends Writer, T> extends Encodeable<W, T> {
+
     // 计算内容长度
-    public int computeSize(T value);
+    public int computeSize(ProtobufWriter out, int tagSize, T value);
 
     // 是否需要计算内容长度
     default boolean requireSize() {
         return false;
+    }
+
+    // 序列化
+    default void convertTo(W out, EnMember member, T value) {
+        convertTo(out, value);
     }
 }

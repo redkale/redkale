@@ -485,16 +485,16 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
     }
 
     public static int getTag(String fieldName, Type fieldType, int fieldPos, boolean enumtostring) {
-        int wiretype = ProtobufFactory.wireType(fieldType, enumtostring);
+        int wiretype = ProtobufFactory.wireTypeBit(fieldType, enumtostring);
         return (fieldPos << 3 | wiretype);
     }
 
     public static int getTag(DeMember member, boolean enumtostring) {
-        int wiretype = ProtobufFactory.wireType(member.getAttribute().type(), enumtostring);
+        int wiretype = ProtobufFactory.wireTypeBit(member.getAttribute().type(), enumtostring);
         return (member.getPosition() << 3 | wiretype);
     }
 
-    public static int wireType(Type javaType, boolean enumtostring) {
+    public static int wireTypeBit(Type javaType, boolean enumtostring) {
         if (javaType == double.class || javaType == Double.class) {
             return 1;
         } else if (javaType == float.class || javaType == Float.class) {

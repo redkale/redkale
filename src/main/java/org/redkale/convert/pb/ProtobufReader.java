@@ -91,16 +91,16 @@ public class ProtobufReader extends Reader {
             return;
         }
         switch (tag & 0x7) {
-            case 0:
+            case 0: // boolean/byte/char/short/int/long
                 readRawVarint32();
                 break;
-            case 1:
+            case 1: // double
                 readRawLittleEndian64();
                 break;
-            case 2:
+            case 2: // byte[]
                 readByteArray();
                 break;
-            case 5:
+            case 5: // float
                 readRawLittleEndian32();
                 break;
             default:
@@ -626,14 +626,14 @@ public class ProtobufReader extends Reader {
         throw new ConvertException("readRawVarint64SlowPath error");
     }
 
-    protected int readRawLittleEndian32() {
+    protected int readRawLittleEndian32() { //float
         return ((content[++this.position] & 0xff)
                 | ((content[++this.position] & 0xff) << 8)
                 | ((content[++this.position] & 0xff) << 16)
                 | ((content[++this.position] & 0xff) << 24));
     }
 
-    protected long readRawLittleEndian64() {
+    protected long readRawLittleEndian64() { //double
         return ((content[++this.position] & 0xffL)
                 | ((content[++this.position] & 0xffL) << 8)
                 | ((content[++this.position] & 0xffL) << 16)

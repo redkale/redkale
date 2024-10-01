@@ -33,23 +33,26 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
 
     // 动态字段: protected EnMember xxxEnMember;
 
-    protected ProtobufDynEncoder(ProtobufFactory factory, Type type, ObjectEncoder objectEncoderSelf) {
+    protected ProtobufDynEncoder(ProtobufFactory factory, Type type, ProtobufObjectEncoder objectEncoderSelf) {
         super((Class) type);
         this.typeClass = (Class) type;
         this.factory = factory;
         this.objectEncoderSelf = objectEncoderSelf;
+        this.memberSizeRequired = objectEncoderSelf.memberSizeRequired;
         this.members = objectEncoderSelf.getMembers();
         this.inited = true;
         factory.register(type, this);
     }
 
     @Override
-    public abstract void convertTo(ProtobufWriter out, T value);
+    public abstract void convertTo(ProtobufWriter out, EnMember member, T value);
 
     protected static ProtobufDynEncoder generateDyncEncoder(final ProtobufFactory factory, final Class clazz) {
         final ObjectEncoder selfObjEncoder = factory.createObjectEncoder(clazz);
         selfObjEncoder.init(factory); // 必须执行，初始化EnMember内部信息
-
+        //        if (((ProtobufObjectEncoder) selfObjEncoder).requiredMemberSize()) { // 嵌套对象
+        //            return null;
+        //        }
         final Map<String, SimpledCoder> simpledCoders = new HashMap<>();
         final Map<String, EnMember> otherMembers = new HashMap<>();
         StringBuilder elementb = new StringBuilder();
@@ -76,8 +79,8 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
         try {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
             Class newClazz = clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz;
-            ProtobufDynEncoder resultEncoder =
-                    (ProtobufDynEncoder) newClazz.getConstructor(ProtobufFactory.class, Type.class, ObjectEncoder.class)
+            ProtobufDynEncoder resultEncoder = (ProtobufDynEncoder)
+                    newClazz.getConstructor(ProtobufFactory.class, Type.class, ProtobufObjectEncoder.class)
                             .newInstance(factory, clazz, selfObjEncoder);
             if (!simpledCoders.isEmpty()) {
                 for (Map.Entry<String, SimpledCoder> en : simpledCoders.entrySet()) {
@@ -106,7 +109,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
         final String pbwriterDesc = org.redkale.asm.Type.getDescriptor(ProtobufWriter.class);
         final String simpledCoderDesc = org.redkale.asm.Type.getDescriptor(SimpledCoder.class);
         final String enMemberDesc = org.redkale.asm.Type.getDescriptor(EnMember.class);
-        final String objEncoderDesc = org.redkale.asm.Type.getDescriptor(ObjectEncoder.class);
+        final String pbencoderDesc = org.redkale.asm.Type.getDescriptor(ProtobufObjectEncoder.class);
         final String objectDesc = org.redkale.asm.Type.getDescriptor(Object.class);
         final String valtypeDesc = org.redkale.asm.Type.getDescriptor(clazz);
         // ------------------------------------------------------------------------------
@@ -134,41 +137,54 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
         }
         { // 构造函数
             mv = (cw.visitMethod(
-                    ACC_PUBLIC, "<init>", "(" + pbfactoryDesc + typeDesc + objEncoderDesc + ")V", null, null));
+                    ACC_PUBLIC, "<init>", "(" + pbfactoryDesc + typeDesc + pbencoderDesc + ")V", null, null));
             mv.visitVarInsn(ALOAD, 0);
             mv.visitVarInsn(ALOAD, 1);
             mv.visitVarInsn(ALOAD, 2);
             mv.visitVarInsn(ALOAD, 3);
             mv.visitMethodInsn(
-                    INVOKESPECIAL, supDynName, "<init>", "(" + pbfactoryDesc + typeDesc + objEncoderDesc + ")V", false);
+                    INVOKESPECIAL, supDynName, "<init>", "(" + pbfactoryDesc + typeDesc + pbencoderDesc + ")V", false);
             mv.visitInsn(RETURN);
             mv.visitMaxs(4, 4);
             mv.visitEnd();
         }
         { // convertTo 方法
-            mv = (cw.visitMethod(ACC_PUBLIC, "convertTo", "(" + pbwriterDesc + valtypeDesc + ")V", null, null));
+            mv = (cw.visitMethod(
+                    ACC_PUBLIC, "convertTo", "(" + pbwriterDesc + enMemberDesc + valtypeDesc + ")V", null, null));
             // if (value == null) return;
-            mv.visitVarInsn(ALOAD, 2); // value
+            mv.visitVarInsn(ALOAD, 3); // value
             Label ifLabel = new Label();
             mv.visitJumpInsn(IFNONNULL, ifLabel);
             mv.visitInsn(RETURN);
             mv.visitLabel(ifLabel);
             mv.visitLineNumber(33, ifLabel);
             mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
-            // ProtobufWriter out = objectWriter(out0, value);
-            mv.visitVarInsn(ALOAD, 0);
+
+            // if (parentMember != null) out0.writeField(parentMember);
+            mv.visitVarInsn(ALOAD, 2); // parentMember
+            Label ifMemberLabel = new Label();
+            mv.visitJumpInsn(IFNULL, ifMemberLabel);
             mv.visitVarInsn(ALOAD, 1);
             mv.visitVarInsn(ALOAD, 2);
+            mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, "writeField", "(" + enMemberDesc + ")V", false);
+            mv.visitLabel(ifMemberLabel);
+            mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+
+            // ProtobufWriter out = objectWriter(out0, parentMember, value);
+            mv.visitVarInsn(ALOAD, 0); // this
+            mv.visitVarInsn(ALOAD, 1); // out0
+            mv.visitVarInsn(ALOAD, 2); // member
+            mv.visitVarInsn(ALOAD, 3); // value
             mv.visitMethodInsn(
                     INVOKEVIRTUAL,
                     newDynName,
                     "objectWriter",
-                    "(" + pbwriterDesc + objectDesc + ")" + pbwriterDesc,
+                    "(" + pbwriterDesc + enMemberDesc + objectDesc + ")" + pbwriterDesc,
                     false);
-            mv.visitVarInsn(ASTORE, 3);
+            mv.visitVarInsn(ASTORE, 4);
 
+            mv.visitVarInsn(ALOAD, 4);
             mv.visitVarInsn(ALOAD, 3);
-            mv.visitVarInsn(ALOAD, 2);
             mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, "writeObjectB", "(Ljava/lang/Object;)V", false);
 
             for (EnMember member : selfObjEncoder.getMembers()) {
@@ -176,9 +192,9 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                 final Type fieldType = member.getAttribute().genericType();
                 final Class fieldClass = member.getAttribute().type();
                 if (ProtobufFactory.isSimpleType(fieldClass)) {
-                    mv.visitVarInsn(ALOAD, 3); // out
+                    mv.visitVarInsn(ALOAD, 4); // out
                     Asms.visitInsn(mv, member.getTag()); // tag
-                    mv.visitVarInsn(ALOAD, 2); // value
+                    mv.visitVarInsn(ALOAD, 3); // value
                     if (member.getMethod() != null) {
                         String mname = member.getMethod().getName();
                         String mdesc = org.redkale.asm.Type.getMethodDescriptor(member.getMethod());
@@ -192,9 +208,9 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                     String fieldDesc = org.redkale.asm.Type.getDescriptor(fieldClass);
                     mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, "writeFieldValue", "(I" + fieldDesc + ")V", false);
                 } else if (fieldClass.isEnum()) {
-                    mv.visitVarInsn(ALOAD, 3); // out
+                    mv.visitVarInsn(ALOAD, 4); // out
                     Asms.visitInsn(mv, member.getTag()); // tag
-                    mv.visitVarInsn(ALOAD, 2); // value
+                    mv.visitVarInsn(ALOAD, 3); // value
                     if (member.getMethod() != null) {
                         String mname = member.getMethod().getName();
                         String mdesc = org.redkale.asm.Type.getMethodDescriptor(member.getMethod());
@@ -207,9 +223,9 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                     }
                     mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, "writeFieldValue", "(ILjava/lang/Enum;)V", false);
                 } else if (factory.supportSimpleCollectionType(fieldType)) {
-                    mv.visitVarInsn(ALOAD, 3); // out
+                    mv.visitVarInsn(ALOAD, 4); // out
                     Asms.visitInsn(mv, member.getTag()); // tag
-                    mv.visitVarInsn(ALOAD, 2); // value
+                    mv.visitVarInsn(ALOAD, 3); // value
                     if (member.getMethod() != null) {
                         String mname = member.getMethod().getName();
                         String mdesc = org.redkale.asm.Type.getMethodDescriptor(member.getMethod());
@@ -249,11 +265,11 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                     }
                     mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, wmethodName, "(ILjava/util/Collection;)V", false);
                 } else if (simpledCoders.containsKey(fieldName)) {
-                    mv.visitVarInsn(ALOAD, 3); // out
+                    mv.visitVarInsn(ALOAD, 4); // out
                     Asms.visitInsn(mv, member.getTag()); // tag
                     mv.visitVarInsn(ALOAD, 0); // this
                     mv.visitFieldInsn(GETFIELD, newDynName, fieldName + "SimpledCoder", simpledCoderDesc);
-                    mv.visitVarInsn(ALOAD, 2); // value
+                    mv.visitVarInsn(ALOAD, 3); // value
                     if (member.getMethod() != null) {
                         String mname = member.getMethod().getName();
                         String mdesc = org.redkale.asm.Type.getMethodDescriptor(member.getMethod());
@@ -271,10 +287,10 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                             "(I" + simpledCoderDesc + objectDesc + ")V",
                             false);
                 } else {
-                    mv.visitVarInsn(ALOAD, 3); // out
+                    mv.visitVarInsn(ALOAD, 4); // out
                     mv.visitVarInsn(ALOAD, 0); // this
                     mv.visitFieldInsn(GETFIELD, newDynName, fieldName + "EnMember", enMemberDesc);
-                    mv.visitVarInsn(ALOAD, 2); // value
+                    mv.visitVarInsn(ALOAD, 3); // value
                     mv.visitMethodInsn(
                             INVOKEVIRTUAL,
                             pbwriterName,
@@ -284,13 +300,13 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                 }
             }
             // out.writeObjectE(value);
-            mv.visitVarInsn(ALOAD, 3); // out
-            mv.visitVarInsn(ALOAD, 2); // value
+            mv.visitVarInsn(ALOAD, 4); // out
+            mv.visitVarInsn(ALOAD, 3); // value
             mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, "writeObjectE", "(Ljava/lang/Object;)V", false);
             // offerWriter(out0, out);
             mv.visitVarInsn(ALOAD, 0); // this
             mv.visitVarInsn(ALOAD, 1); // out0
-            mv.visitVarInsn(ALOAD, 3); // out
+            mv.visitVarInsn(ALOAD, 4); // out
             mv.visitMethodInsn(
                     INVOKEVIRTUAL, newDynName, "offerWriter", "(" + pbwriterDesc + pbwriterDesc + ")V", false);
 
@@ -302,15 +318,21 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
             mv = (cw.visitMethod(
                     ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC,
                     "convertTo",
-                    "(" + pbwriterDesc + "Ljava/lang/Object;)V",
+                    "(" + pbwriterDesc + enMemberDesc + "Ljava/lang/Object;)V",
                     null,
                     null));
             // mv.setDebug(true);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitVarInsn(ALOAD, 1);
             mv.visitVarInsn(ALOAD, 2);
+            mv.visitVarInsn(ALOAD, 3);
             mv.visitTypeInsn(CHECKCAST, valtypeName);
-            mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "convertTo", "(" + pbwriterDesc + valtypeDesc + ")V", false);
+            mv.visitMethodInsn(
+                    INVOKEVIRTUAL,
+                    newDynName,
+                    "convertTo",
+                    "(" + pbwriterDesc + enMemberDesc + valtypeDesc + ")V",
+                    false);
             mv.visitInsn(RETURN);
             mv.visitMaxs(3, 3);
             mv.visitEnd();
@@ -327,8 +349,8 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
         RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {
-            ProtobufDynEncoder resultEncoder =
-                    (ProtobufDynEncoder) newClazz.getConstructor(ProtobufFactory.class, Type.class, ObjectEncoder.class)
+            ProtobufDynEncoder resultEncoder = (ProtobufDynEncoder)
+                    newClazz.getConstructor(ProtobufFactory.class, Type.class, ProtobufObjectEncoder.class)
                             .newInstance(factory, clazz, selfObjEncoder);
             if (!simpledCoders.isEmpty()) {
                 for (Map.Entry<String, SimpledCoder> en : simpledCoders.entrySet()) {

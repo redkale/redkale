@@ -70,7 +70,7 @@ public class ProtobufEnumSimpledCoder<R extends ProtobufReader, W extends Protob
     }
 
     @Override
-    public int computeSize(E value) {
+    public int computeSize(ProtobufWriter out, int tagSize, E value) {
         return 0;
     }
 

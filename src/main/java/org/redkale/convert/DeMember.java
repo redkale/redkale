@@ -39,6 +39,9 @@ public final class DeMember<R extends Reader, T, F> {
     // 主要给protobuf使用  从1开始
     protected int tag;
 
+    // 主要给protobuf使用 tag的大小
+    int tagSize;
+
     protected final Attribute<T, F> attribute;
 
     protected Decodeable<R, F> decoder;
@@ -141,6 +144,10 @@ public final class DeMember<R extends Reader, T, F> {
 
     public int getTag() {
         return this.tag;
+    }
+
+    public int getTagSize() {
+        return this.tagSize;
     }
 
     public int compareTo(boolean fieldSort, DeMember<R, T, F> o) {

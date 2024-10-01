@@ -6,10 +6,10 @@ package org.redkale.test.convert.pb;
 
 import java.lang.reflect.Type;
 import org.redkale.convert.EnMember;
-import org.redkale.convert.ObjectEncoder;
 import org.redkale.convert.SimpledCoder;
 import org.redkale.convert.pb.ProtobufDynEncoder;
 import org.redkale.convert.pb.ProtobufFactory;
+import org.redkale.convert.pb.ProtobufObjectEncoder;
 import org.redkale.convert.pb.ProtobufWriter;
 
 /**
@@ -21,16 +21,16 @@ public class UserBeanProtoDynEncoder extends ProtobufDynEncoder<UserBean> {
     protected SimpledCoder scaleSimpledCoder;
     protected EnMember mapEnMember;
 
-    public UserBeanProtoDynEncoder(ProtobufFactory factory, Type type, ObjectEncoder objectEncoder) {
+    public UserBeanProtoDynEncoder(ProtobufFactory factory, Type type, ProtobufObjectEncoder objectEncoder) {
         super(factory, type, objectEncoder);
     }
 
     @Override
-    public void convertTo(ProtobufWriter out0, UserBean value) {
+    public void convertTo(ProtobufWriter out0, EnMember parentMember, UserBean value) {
         if (value == null) {
             return;
         }
-        ProtobufWriter out = objectWriter(out0, value);
+        ProtobufWriter out = objectWriter(out0, parentMember, value);
         out.writeObjectB(value);
         out.writeFieldValue(1, value.getSeqid());
         out.writeFieldValue(2, value.getName());

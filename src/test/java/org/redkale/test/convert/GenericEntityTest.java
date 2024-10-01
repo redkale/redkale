@@ -85,6 +85,7 @@ public class GenericEntityTest {
         byte[] bs = convert.convertTo(ENTITY_TYPE, bean);
         Utility.println("proto0 ", bs);
         String rs = convert.convertFrom(ENTITY_TYPE, bs).toString();
+        System.out.println("反解析: " + rs);
         Assertions.assertEquals(JSON, rs);
     }
 

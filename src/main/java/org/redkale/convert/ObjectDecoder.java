@@ -443,6 +443,10 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
         member.tag = tag;
     }
 
+    protected void setTagSize(DeMember member, int tagSize) {
+        member.tagSize = tagSize;
+    }
+
     protected void setIndex(DeMember member, int index) {
         member.index = index;
     }

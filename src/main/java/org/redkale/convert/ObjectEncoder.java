@@ -8,8 +8,8 @@ package org.redkale.convert;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.locks.*;
-import org.redkale.annotation.ConstructorParameters;
 import org.redkale.annotation.*;
+import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.ext.StringSimpledCoder;
 import org.redkale.util.*;
 
@@ -337,21 +337,20 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
             factory.loadEncoder(clz).convertTo(out, value);
             return;
         }
-        W objout = objectWriter(out, value);
-        objout.writeObjectB(value);
+        out.writeObjectB(value);
         int maxPosition = 0;
         for (EnMember member : members) {
             maxPosition = member.getPosition();
-            objout.writeObjectField(member, value);
+            out.writeObjectField(member, value);
         }
-        if (objout.objExtFunc != null) {
-            ConvertField[] extFields = objout.objExtFunc.apply(value);
+        if (out.objExtFunc != null) {
+            ConvertField[] extFields = out.objExtFunc.apply(value);
             if (extFields != null) {
                 Encodeable<W, ?> anyEncoder = factory.getAnyEncoder();
                 for (ConvertField en : extFields) {
                     if (en != null) {
                         maxPosition++;
-                        objout.writeObjectField(
+                        out.writeObjectField(
                                 en.getName(),
                                 en.getType(),
                                 Math.max(en.getPosition(), maxPosition),
@@ -361,8 +360,7 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                 }
             }
         }
-        objout.writeObjectE(value);
-        offerWriter(out, objout);
+        out.writeObjectE(value);
     }
 
     // ---------------------------------- 可定制方法 ----------------------------------
@@ -374,17 +372,13 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
         // do nothing
     }
 
-    protected W objectWriter(W out, T value) {
-        return out;
-    }
-
-    protected void offerWriter(W parent, W out) {
-        // do nothing
-    }
-
     // ---------------------------------------------------------------------------------
     protected void setTag(EnMember member, int tag) {
         member.tag = tag;
+    }
+
+    protected void setTagSize(EnMember member, int tagSize) {
+        member.tagSize = tagSize;
     }
 
     protected void setIndex(EnMember member, int index) {

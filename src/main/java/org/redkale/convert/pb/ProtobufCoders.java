@@ -62,7 +62,7 @@ public abstract class ProtobufCoders {
         public static final ProtobufBoolSimpledCoder instance = new ProtobufBoolSimpledCoder();
 
         @Override
-        public int computeSize(Boolean value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Boolean value) {
             return value == null ? 0 : 1;
         }
 
@@ -78,7 +78,7 @@ public abstract class ProtobufCoders {
         public static final ProtobufByteSimpledCoder instance = new ProtobufByteSimpledCoder();
 
         @Override
-        public int computeSize(Byte value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Byte value) {
             return value == null ? 0 : 1;
         }
 
@@ -94,7 +94,7 @@ public abstract class ProtobufCoders {
         public static final ProtobufCharSimpledCoder instance = new ProtobufCharSimpledCoder();
 
         @Override
-        public int computeSize(Character value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Character value) {
             return value == null ? 0 : ProtobufFactory.computeSInt32SizeNoTag(value);
         }
 
@@ -110,7 +110,7 @@ public abstract class ProtobufCoders {
         public static final ProtobufShortSimpledCoder instance = new ProtobufShortSimpledCoder();
 
         @Override
-        public int computeSize(Short value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Short value) {
             return value == null ? 0 : ProtobufFactory.computeSInt32SizeNoTag(value);
         }
 
@@ -126,7 +126,7 @@ public abstract class ProtobufCoders {
         public static final ProtobufIntSimpledCoder instance = new ProtobufIntSimpledCoder();
 
         @Override
-        public int computeSize(Integer value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Integer value) {
             return value == null ? 0 : ProtobufFactory.computeSInt32SizeNoTag(value);
         }
 
@@ -142,7 +142,7 @@ public abstract class ProtobufCoders {
         public static final ProtobufFloatSimpledCoder instance = new ProtobufFloatSimpledCoder();
 
         @Override
-        public int computeSize(Float value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Float value) {
             return value == null ? 0 : 4;
         }
 
@@ -158,7 +158,7 @@ public abstract class ProtobufCoders {
         public static final ProtobufLongSimpledCoder instance = new ProtobufLongSimpledCoder();
 
         @Override
-        public int computeSize(Long value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Long value) {
             return value == null ? 0 : ProtobufFactory.computeSInt64SizeNoTag(value);
         }
 
@@ -174,7 +174,7 @@ public abstract class ProtobufCoders {
         public static final ProtobufDoubleSimpledCoder instance = new ProtobufDoubleSimpledCoder();
 
         @Override
-        public int computeSize(Double value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Double value) {
             return value == null ? 0 : 8;
         }
 
@@ -190,7 +190,7 @@ public abstract class ProtobufCoders {
         public static final ProtobufStringSimpledCoder instance = new ProtobufStringSimpledCoder();
 
         @Override
-        public int computeSize(String value) {
+        public int computeSize(ProtobufWriter out, int tagSize, String value) {
             if (value == null || value.isEmpty()) {
                 return 0;
             }
@@ -211,8 +211,9 @@ public abstract class ProtobufCoders {
         public static final ProtobufNumberSimpledCoder instance = new ProtobufNumberSimpledCoder();
 
         @Override
-        public int computeSize(Number value) {
-            return ProtobufLongSimpledCoder.instance.computeSize(value == null ? null : value.longValue());
+        public int computeSize(ProtobufWriter out, int tagSize, Number value) {
+            return ProtobufLongSimpledCoder.instance.computeSize(
+                    out, tagSize, value == null ? null : value.longValue());
         }
 
         @Override
@@ -228,8 +229,9 @@ public abstract class ProtobufCoders {
         public static final ProtobufStringWrapperSimpledCoder instance = new ProtobufStringWrapperSimpledCoder();
 
         @Override
-        public int computeSize(StringWrapper value) {
-            return ProtobufStringSimpledCoder.instance.computeSize(value == null ? null : value.getValue());
+        public int computeSize(ProtobufWriter out, int tagSize, StringWrapper value) {
+            return ProtobufStringSimpledCoder.instance.computeSize(
+                    out, tagSize, value == null ? null : value.getValue());
         }
 
         @Override
@@ -245,8 +247,9 @@ public abstract class ProtobufCoders {
         public static final ProtobufCharSequenceSimpledCoder instance = new ProtobufCharSequenceSimpledCoder();
 
         @Override
-        public int computeSize(CharSequence value) {
-            return ProtobufStringSimpledCoder.instance.computeSize(value == null ? null : value.toString());
+        public int computeSize(ProtobufWriter out, int tagSize, CharSequence value) {
+            return ProtobufStringSimpledCoder.instance.computeSize(
+                    out, tagSize, value == null ? null : value.toString());
         }
 
         @Override
@@ -262,8 +265,9 @@ public abstract class ProtobufCoders {
         public static final ProtobufStringBuilderSimpledCoder instance = new ProtobufStringBuilderSimpledCoder();
 
         @Override
-        public int computeSize(StringBuilder value) {
-            return ProtobufStringSimpledCoder.instance.computeSize(value == null ? null : value.toString());
+        public int computeSize(ProtobufWriter out, int tagSize, StringBuilder value) {
+            return ProtobufStringSimpledCoder.instance.computeSize(
+                    out, tagSize, value == null ? null : value.toString());
         }
 
         @Override
@@ -278,8 +282,8 @@ public abstract class ProtobufCoders {
         public static final ProtobufDateSimpledCoder instance = new ProtobufDateSimpledCoder();
 
         @Override
-        public int computeSize(java.util.Date value) {
-            return ProtobufLongSimpledCoder.instance.computeSize(value == null ? null : value.getTime());
+        public int computeSize(ProtobufWriter out, int tagSize, java.util.Date value) {
+            return ProtobufLongSimpledCoder.instance.computeSize(out, tagSize, value == null ? null : value.getTime());
         }
 
         @Override
@@ -294,8 +298,9 @@ public abstract class ProtobufCoders {
         public static final ProtobufInstantSimpledCoder instance = new ProtobufInstantSimpledCoder();
 
         @Override
-        public int computeSize(java.time.Instant value) {
-            return ProtobufLongSimpledCoder.instance.computeSize(value == null ? null : value.toEpochMilli());
+        public int computeSize(ProtobufWriter out, int tagSize, java.time.Instant value) {
+            return ProtobufLongSimpledCoder.instance.computeSize(
+                    out, tagSize, value == null ? null : value.toEpochMilli());
         }
 
         @Override
@@ -310,8 +315,10 @@ public abstract class ProtobufCoders {
         public static final ProtobufLocalDateSimpledCoder instance = new ProtobufLocalDateSimpledCoder();
 
         @Override
-        public int computeSize(java.time.LocalDate value) {
+        public int computeSize(ProtobufWriter out, int tagSize, java.time.LocalDate value) {
             return ProtobufIntSimpledCoder.instance.computeSize(
+                    out,
+                    tagSize,
                     value == null
                             ? null
                             : (value.getYear() * 100_00 + value.getMonthValue() * 100 + value.getDayOfMonth()));
@@ -329,8 +336,9 @@ public abstract class ProtobufCoders {
         public static final ProtobufLocalTimeSimpledCoder instance = new ProtobufLocalTimeSimpledCoder();
 
         @Override
-        public int computeSize(java.time.LocalTime value) {
-            return ProtobufLongSimpledCoder.instance.computeSize(value == null ? null : value.toNanoOfDay());
+        public int computeSize(ProtobufWriter out, int tagSize, java.time.LocalTime value) {
+            return ProtobufLongSimpledCoder.instance.computeSize(
+                    out, tagSize, value == null ? null : value.toNanoOfDay());
         }
 
         @Override
@@ -346,7 +354,7 @@ public abstract class ProtobufCoders {
         public static final ProtobufLocalDateTimeSimpledCoder instance = new ProtobufLocalDateTimeSimpledCoder();
 
         @Override
-        public int computeSize(java.time.LocalDateTime value) {
+        public int computeSize(ProtobufWriter out, int tagSize, java.time.LocalDateTime value) {
             return value == null ? 0 : (ProtobufFactory.computeSInt64SizeNoTag(12) + 12);
         }
 
@@ -362,8 +370,8 @@ public abstract class ProtobufCoders {
         public static final ProtobufDurationSimpledCoder instance = new ProtobufDurationSimpledCoder();
 
         @Override
-        public int computeSize(java.time.Duration value) {
-            return ProtobufLongSimpledCoder.instance.computeSize(value == null ? null : value.toNanos());
+        public int computeSize(ProtobufWriter out, int tagSize, java.time.Duration value) {
+            return ProtobufLongSimpledCoder.instance.computeSize(out, tagSize, value == null ? null : value.toNanos());
         }
 
         @Override
@@ -379,7 +387,7 @@ public abstract class ProtobufCoders {
         public static final ProtobufAtomicBooleanSimpledCoder instance = new ProtobufAtomicBooleanSimpledCoder();
 
         @Override
-        public int computeSize(AtomicBoolean value) {
+        public int computeSize(ProtobufWriter out, int tagSize, AtomicBoolean value) {
             return value == null ? 0 : 1;
         }
 
@@ -396,8 +404,8 @@ public abstract class ProtobufCoders {
         public static final ProtobufAtomicIntegerSimpledCoder instance = new ProtobufAtomicIntegerSimpledCoder();
 
         @Override
-        public int computeSize(AtomicInteger value) {
-            return ProtobufIntSimpledCoder.instance.computeSize(value == null ? null : value.get());
+        public int computeSize(ProtobufWriter out, int tagSize, AtomicInteger value) {
+            return ProtobufIntSimpledCoder.instance.computeSize(out, tagSize, value == null ? null : value.get());
         }
 
         @Override
@@ -412,8 +420,8 @@ public abstract class ProtobufCoders {
         public static final ProtobufAtomicLongSimpledCoder instance = new ProtobufAtomicLongSimpledCoder();
 
         @Override
-        public int computeSize(AtomicLong value) {
-            return ProtobufLongSimpledCoder.instance.computeSize(value == null ? null : value.get());
+        public int computeSize(ProtobufWriter out, int tagSize, AtomicLong value) {
+            return ProtobufLongSimpledCoder.instance.computeSize(out, tagSize, value == null ? null : value.get());
         }
 
         @Override
@@ -428,7 +436,7 @@ public abstract class ProtobufCoders {
         public static final ProtobufBigIntegerSimpledCoder instance = new ProtobufBigIntegerSimpledCoder();
 
         @Override
-        public int computeSize(BigInteger value) {
+        public int computeSize(ProtobufWriter out, int tagSize, BigInteger value) {
             if (value == null) {
                 return 0;
             }
@@ -453,11 +461,11 @@ public abstract class ProtobufCoders {
         public static final ProtobufBigDecimalSimpledCoder instance = new ProtobufBigDecimalSimpledCoder();
 
         @Override
-        public int computeSize(BigDecimal value) {
+        public int computeSize(ProtobufWriter out, int tagSize, BigDecimal value) {
             if (value == null) {
                 return 0;
             }
-            return ProtobufStringSimpledCoder.instance.computeSize(value.toString());
+            return ProtobufStringSimpledCoder.instance.computeSize(out, tagSize, value.toString());
         }
 
         @Override
@@ -472,7 +480,7 @@ public abstract class ProtobufCoders {
         public static final ProtobufInetAddressSimpledCoder instance = new ProtobufInetAddressSimpledCoder();
 
         @Override
-        public int computeSize(InetAddress value) {
+        public int computeSize(ProtobufWriter out, int tagSize, InetAddress value) {
             if (value == null) {
                 return 0;
             }
@@ -499,7 +507,7 @@ public abstract class ProtobufCoders {
                 new ProtobufInetSocketAddressSimpledCoder();
 
         @Override
-        public int computeSize(InetSocketAddress value) {
+        public int computeSize(ProtobufWriter out, int tagSize, InetSocketAddress value) {
             if (value == null) {
                 return 0;
             }
@@ -524,8 +532,9 @@ public abstract class ProtobufCoders {
         public static final ProtobufLongAdderSimpledCoder instance = new ProtobufLongAdderSimpledCoder();
 
         @Override
-        public int computeSize(LongAdder value) {
-            return ProtobufLongSimpledCoder.instance.computeSize(value == null ? null : value.longValue());
+        public int computeSize(ProtobufWriter out, int tagSize, LongAdder value) {
+            return ProtobufLongSimpledCoder.instance.computeSize(
+                    out, tagSize, value == null ? null : value.longValue());
         }
 
         @Override
@@ -540,7 +549,7 @@ public abstract class ProtobufCoders {
         public static final ProtobufUint128SimpledCoder instance = new ProtobufUint128SimpledCoder();
 
         @Override
-        public int computeSize(Uint128 value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Uint128 value) {
             if (value == null) {
                 return 0;
             }
@@ -576,7 +585,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(boolean[] value) {
+        public int computeSize(ProtobufWriter out, int tagSize, boolean[] value) {
             return value == null ? 0 : value.length;
         }
     }
@@ -597,7 +606,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(byte[] value) {
+        public int computeSize(ProtobufWriter out, int tagSize, byte[] value) {
             return value == null ? 0 : value.length;
         }
     }
@@ -618,7 +627,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(char[] value) {
+        public int computeSize(ProtobufWriter out, int tagSize, char[] value) {
             if (value == null || value.length == 0) {
                 return 0;
             }
@@ -646,7 +655,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(short[] value) {
+        public int computeSize(ProtobufWriter out, int tagSize, short[] value) {
             if (value == null || value.length == 0) {
                 return 0;
             }
@@ -674,7 +683,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(int[] value) {
+        public int computeSize(ProtobufWriter out, int tagSize, int[] value) {
             if (value == null || value.length == 0) {
                 return 0;
             }
@@ -702,7 +711,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(float[] value) {
+        public int computeSize(ProtobufWriter out, int tagSize, float[] value) {
             return value == null ? 0 : value.length * 4;
         }
     }
@@ -723,7 +732,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(long[] value) {
+        public int computeSize(ProtobufWriter out, int tagSize, long[] value) {
             if (value == null || value.length == 0) {
                 return 0;
             }
@@ -751,7 +760,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(double[] value) {
+        public int computeSize(ProtobufWriter out, int tagSize, double[] value) {
             return value == null ? 0 : value.length * 8;
         }
     }
@@ -773,7 +782,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Boolean[] value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Boolean[] value) {
             return value == null ? 0 : value.length;
         }
     }
@@ -794,7 +803,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Byte[] value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Byte[] value) {
             return value == null ? 0 : value.length;
         }
     }
@@ -815,7 +824,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Character[] value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Character[] value) {
             if (value == null || value.length == 0) {
                 return 0;
             }
@@ -843,7 +852,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Short[] value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Short[] value) {
             if (value == null || value.length == 0) {
                 return 0;
             }
@@ -871,7 +880,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Integer[] value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Integer[] value) {
             if (value == null || value.length == 0) {
                 return 0;
             }
@@ -899,7 +908,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Float[] value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Float[] value) {
             return value == null ? 0 : value.length * 4;
         }
     }
@@ -920,7 +929,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Long[] value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Long[] value) {
             if (value == null || value.length == 0) {
                 return 0;
             }
@@ -948,7 +957,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Double[] value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Double[] value) {
             return value == null ? 0 : value.length * 8;
         }
     }
@@ -971,7 +980,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(AtomicInteger[] value) {
+        public int computeSize(ProtobufWriter out, int tagSize, AtomicInteger[] value) {
             if (value == null || value.length == 0) {
                 return 0;
             }
@@ -1000,7 +1009,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(AtomicLong[] value) {
+        public int computeSize(ProtobufWriter out, int tagSize, AtomicLong[] value) {
             if (value == null || value.length == 0) {
                 return 0;
             }
@@ -1034,7 +1043,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Collection<Boolean> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Collection<Boolean> value) {
             return value == null ? 0 : value.size();
         }
     }
@@ -1060,7 +1069,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Collection<Byte> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Collection<Byte> value) {
             return value == null ? 0 : value.size();
         }
     }
@@ -1086,7 +1095,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Collection<Character> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Collection<Character> value) {
             if (value == null || value.isEmpty()) {
                 return 0;
             }
@@ -1119,7 +1128,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Collection<Short> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Collection<Short> value) {
             if (value == null || value.isEmpty()) {
                 return 0;
             }
@@ -1152,7 +1161,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Collection<Integer> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Collection<Integer> value) {
             if (value == null || value.isEmpty()) {
                 return 0;
             }
@@ -1185,7 +1194,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Collection<Float> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Collection<Float> value) {
             return value == null ? 0 : value.size() * 4;
         }
     }
@@ -1211,7 +1220,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Collection<Long> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Collection<Long> value) {
             if (value == null || value.isEmpty()) {
                 return 0;
             }
@@ -1244,7 +1253,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Collection<Double> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Collection<Double> value) {
             return value == null ? 0 : value.size() * 8;
         }
     }
@@ -1270,7 +1279,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Collection<AtomicBoolean> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Collection<AtomicBoolean> value) {
             return value == null ? 0 : value.size();
         }
     }
@@ -1296,7 +1305,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Collection<AtomicInteger> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Collection<AtomicInteger> value) {
             if (value == null || value.isEmpty()) {
                 return 0;
             }
@@ -1329,7 +1338,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Collection<AtomicLong> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Collection<AtomicLong> value) {
             if (value == null || value.isEmpty()) {
                 return 0;
             }
@@ -1359,7 +1368,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Stream<Boolean> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Stream<Boolean> value) {
             return value == null ? 0 : (int) value.count();
         }
     }
@@ -1381,7 +1390,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Stream<Byte> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Stream<Byte> value) {
             return value == null ? 0 : (int) value.count();
         }
     }
@@ -1403,7 +1412,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Stream<Character> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Stream<Character> value) {
             if (value == null) {
                 return 0;
             }
@@ -1432,7 +1441,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Stream<Short> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Stream<Short> value) {
             if (value == null) {
                 return 0;
             }
@@ -1461,7 +1470,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Stream<Integer> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Stream<Integer> value) {
             if (value == null) {
                 return 0;
             }
@@ -1490,7 +1499,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Stream<Float> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Stream<Float> value) {
             return value == null ? 0 : (int) value.count() * 4;
         }
     }
@@ -1512,7 +1521,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Stream<Long> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Stream<Long> value) {
             if (value == null) {
                 return 0;
             }
@@ -1541,7 +1550,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Stream<Double> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Stream<Double> value) {
             return value == null ? 0 : (int) value.count() * 8;
         }
     }
@@ -1564,7 +1573,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Stream<AtomicBoolean> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Stream<AtomicBoolean> value) {
             return value == null ? 0 : (int) value.count();
         }
     }
@@ -1587,7 +1596,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Stream<AtomicInteger> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Stream<AtomicInteger> value) {
             if (value == null) {
                 return 0;
             }
@@ -1616,7 +1625,7 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public int computeSize(Stream<AtomicLong> value) {
+        public int computeSize(ProtobufWriter out, int tagSize, Stream<AtomicLong> value) {
             if (value == null) {
                 return 0;
             }

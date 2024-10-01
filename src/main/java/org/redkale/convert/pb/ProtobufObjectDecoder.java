@@ -43,6 +43,7 @@ public class ProtobufObjectDecoder<T> extends ObjectDecoder<ProtobufReader, T>
         Attribute attr = member.getAttribute();
         boolean enumtostring = ((ProtobufFactory) factory).enumtostring;
         setTag(member, ProtobufFactory.getTag(attr.field(), attr.genericType(), member.getPosition(), enumtostring));
+        setTagSize(member, ProtobufFactory.computeSInt32SizeNoTag(member.getTag()));
     }
 
     @Override
