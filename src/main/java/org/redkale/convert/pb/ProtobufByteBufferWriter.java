@@ -36,6 +36,31 @@ public class ProtobufByteBufferWriter extends ProtobufWriter {
     }
 
     @Override
+    public final ProtobufWriter pollChild() {
+        ProtobufWriter rs = super.pollChild();
+        this.delegate = null;
+        this.child = null;
+        rs.parent = null;
+        return rs;
+    }
+
+    @Override
+    public final void offerChild(ProtobufWriter child) {
+        int total = child.length();
+        ProtobufWriter next = child;
+        while ((next = next.child) != null) {
+            total += next.length();
+        }
+        writeLength(total);
+        writeTo(child.content(), 0, child.length());
+        next = child;
+        while ((next = next.child) != null) {
+            writeTo(next.content(), 0, next.length());
+        }
+        offerPool(child);
+    }
+
+    @Override
     public ByteBuffer[] toBuffers() {
         if (buffers == null) {
             return new ByteBuffer[0];

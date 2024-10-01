@@ -23,7 +23,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             "redkale.convert.protobuf.writer.buffer.defsize",
             Integer.getInteger("redkale.convert.writer.buffer.defsize", 1024));
 
-    private static final int CHILD_SIZE = 8;
+    private static final int CHILD_SIZE = 32;
     protected static final byte[] EMPTY_BYTES = new byte[0];
 
     protected static final int TENTHOUSAND_MAX = 10001;
@@ -62,31 +62,28 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         }
     }
 
-    protected int initOffset;
-
     protected int count;
 
     protected boolean enumtostring;
 
     protected ProtobufWriter parent;
 
-    private byte[] content;
+    protected ProtobufWriter child;
 
-    private List<ProtobufWriter> children;
+    // 链表结构
+    protected ProtobufWriter delegate;
+
+    private byte[] content;
 
     private ArrayDeque<ProtobufWriter> pool;
 
-    protected ProtobufWriter(ProtobufWriter parent) {
-        this();
-        this.parent = parent;
-        if (parent != null) {
-            this.features = parent.features;
-            this.enumtostring = parent.enumtostring;
-        }
-    }
-
     protected ProtobufWriter(byte[] bs) {
         this.content = bs;
+    }
+
+    private ProtobufWriter(byte[] bs, int count) {
+        this.content = bs;
+        this.count = count;
     }
 
     public ProtobufWriter() {
@@ -97,10 +94,9 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         this.content = new byte[Math.max(size, DEFAULT_SIZE)];
     }
 
-    public ProtobufWriter(ByteArray array) {
-        this.content = array.content();
-        this.initOffset = array.offset();
-        this.count = array.length();
+    public ProtobufWriter(ByteTuple tuple) {
+        this.content = tuple.content();
+        this.count = tuple.length();
     }
 
     @Override
@@ -110,23 +106,10 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     protected final ProtobufWriter configWrite() {
-        this.initOffset = this.count;
-        return this;
-    }
-
-    protected final ProtobufWriter configParentFunc(ProtobufWriter parent) {
-        this.parent = parent;
-        if (parent != null) {
-            this.features = parent.features;
-            this.enumtostring = parent.enumtostring;
-        }
         return this;
     }
 
     protected final ProtobufWriter configFieldFunc(ProtobufWriter out) {
-        if (out == null) {
-            return this;
-        }
         this.mapFieldFunc = out.mapFieldFunc;
         this.objFieldFunc = out.objFieldFunc;
         this.objExtFunc = out.objExtFunc;
@@ -146,27 +129,39 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     @Override
     protected boolean recycle() {
         super.recycle();
+        if (this.delegate != null && this.pool != null) {
+            List<ProtobufWriter> list = new ArrayList<>();
+            ProtobufWriter next = this;
+            while ((next = next.child) != null) {
+                list.add(next);
+            }
+            for (ProtobufWriter item : list) {
+                offerPool(item);
+            }
+        }
         this.parent = null;
+        this.child = null;
+        this.delegate = null;
         this.mapFieldFunc = null;
         this.objFieldFunc = null;
         this.objExtFunc = null;
         this.features = 0;
         this.enumtostring = false;
         this.count = 0;
-        this.initOffset = 0;
         if (this.content.length > DEFAULT_SIZE) {
             this.content = new byte[DEFAULT_SIZE];
-        }
-        if (this.children != null) {
-            for (ProtobufWriter child : children) {
-                offerChild2(child);
-            }
-            this.children = null;
         }
         return true;
     }
 
-    public final ProtobufWriter pollChild() {
+    protected final void offerPool(ProtobufWriter item) {
+        if (this.pool != null && this.pool.size() < CHILD_SIZE) {
+            item.recycle();
+            this.pool.offer(item);
+        }
+    }
+
+    public ProtobufWriter pollChild() {
         Queue<ProtobufWriter> queue = this.pool;
         if (queue == null) {
             this.pool = new ArrayDeque<>(CHILD_SIZE);
@@ -176,76 +171,43 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (result == null) {
             result = new ProtobufWriter();
         }
-        return result.configFieldFunc(this);
+        if (delegate == null) {
+            result.parent = this;
+            this.child = result;
+            delegate = result;
+        } else {
+            result.parent = delegate;
+            delegate.child = result;
+            delegate = result;
+        }
+        result.configFieldFunc(result.parent);
+        return result;
     }
 
-    public void offerChild(final ProtobufWriter child) {
-        Queue<ProtobufWriter> queue = this.pool;
-        if (child != null && queue != null && queue.size() < CHILD_SIZE) {
-            child.recycle();
-            queue.offer(child);
-        }
-    }
-
-    public final ProtobufWriter createChild2() {
-        Queue<ProtobufWriter> queue = this.pool;
-        if (queue == null) {
-            this.pool = new ArrayDeque<>(CHILD_SIZE);
-            queue = this.pool;
-        }
-        ProtobufWriter result = queue.poll();
-        if (result == null) {
-            result = new ProtobufWriter();
-        }
-        if (this.children == null) {
-            this.children = new ArrayList<>();
-        }
-        this.children.add(result);
-        return result.configFieldFunc(this);
-    }
-
-    private void offerChild2(final ProtobufWriter child) {
-        Queue<ProtobufWriter> queue = this.pool;
-        if (child != null && queue != null && queue.size() < CHILD_SIZE) {
-            child.recycle();
-            queue.offer(child);
+    public void offerChild(ProtobufWriter child) {
+        if (child != null) {
+            int len = child.length();
+            ProtobufWriter next = child;
+            while ((next = next.child) != null) {
+                len += next.length();
+            }
+            child.parent.writeSelfLength(len);
         }
     }
 
     @Override
     public final int length() {
-        int total = count;
-        if (children != null) {
-            for (ProtobufWriter child : children) {
-                int len = child.length();
-                total += ProtobufFactory.computeSInt32SizeNoTag(len) + len;
-            }
-        }
-        return total;
+        return count;
     }
 
     @Override
     public byte[] content() {
-        if (children != null) {
-            byte[] data = new byte[length()];
-            System.arraycopy(content, 0, data, 0, count);
-            int pos = count;
-            Utility.println("自身对象: ", content, 0, count);
-            for (ProtobufWriter child : children) {
-                int len = child.length();
-                data[pos++] = (byte) len;
-                Utility.println("子对象: ", child.content(), 0, child.length());
-                System.arraycopy(child.content(), 0, data, pos, len);
-                pos += len;
-            }
-            return data;
-        }
         return content;
     }
 
     @Override
     public final int offset() {
-        return initOffset;
+        return 0;
     }
 
     /**
@@ -267,12 +229,26 @@ public class ProtobufWriter extends Writer implements ByteTuple {
 
     @Override
     public byte[] toArray() {
-        if (children != null) {
-            return content();
+        if (delegate == null) {
+            byte[] copy = new byte[count];
+            System.arraycopy(content, 0, copy, 0, count);
+            return copy;
+        } else {
+            int total = count;
+            ProtobufWriter next = this;
+            while ((next = next.child) != null) {
+                total += next.length();
+            }
+            byte[] data = new byte[total];
+            System.arraycopy(content, 0, data, 0, count);
+            next = this;
+            int pos = count;
+            while ((next = next.child) != null) {
+                System.arraycopy(next.content(), 0, data, pos, next.length());
+                pos += next.length();
+            }
+            return data;
         }
-        byte[] copy = new byte[count];
-        System.arraycopy(content, 0, copy, 0, count);
-        return copy;
     }
 
     public ProtobufWriter enumtostring(boolean enumtostring) {
@@ -291,8 +267,12 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     public void writeTo(final byte ch) {
-        expand(1);
-        content[count++] = ch;
+        if (delegate == null) {
+            expand(1);
+            content[count++] = ch;
+        } else {
+            delegate.writeTo(ch);
+        }
     }
 
     public final void writeTo(final byte... chs) {
@@ -300,14 +280,18 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     public void writeTo(final byte[] chs, final int start, final int len) {
-        expand(len);
-        System.arraycopy(chs, start, content, count, len);
-        count += len;
+        if (delegate == null) {
+            expand(len);
+            System.arraycopy(chs, start, content, count, len);
+            count += len;
+        } else {
+            delegate.writeTo(chs, start, len);
+        }
     }
 
     public ProtobufWriter clear() {
         this.count = 0;
-        this.initOffset = 0;
+        this.delegate = null;
         return this;
     }
 
@@ -345,15 +329,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
 
     @Override
     public final void writeObjectE(Object obj) {
-        if (parent != null) {
-            parent.writeTuple(this);
-        }
-    }
-
-    protected final void writeTuple(ByteTuple tuple) {
-        int len = tuple.length();
-        writeLength(len);
-        writeTo(tuple.content(), tuple.offset(), len);
+        // do nothing
     }
 
     @Override
@@ -384,6 +360,15 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     @Override
     public final void writeMapE() {
         // do nothing
+    }
+
+    /**
+     * 输出一个字段名
+     *
+     * @param member 字段
+     */
+    public final void writeField(final EnMember member) {
+        writeTag(member.getTag());
     }
 
     // 被ObjectEncoder调用
@@ -1189,8 +1174,9 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         }
     }
 
+    @Override
     @ClassDepends // objExtFunc扩展字段时member=null
-    public final void writeObjectField2(@Nullable EnMember member, Object obj) {
+    public final void writeObjectField(@Nullable EnMember member, Object obj) {
         Object value;
         if (objFieldFunc == null) {
             value = member.getFieldValue(obj);
@@ -1201,41 +1187,11 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             return;
         }
         ProtobufEncodeable encoder = (ProtobufEncodeable) member.getEncoder();
-        if (encoder.requireSize()) {
-            writeLength(encoder.computeSize(this, member.getTagSize(), value));
-        }
-        encoder.convertTo(this, member, value);
-    }
-
-    @Override
-    @ClassDepends // objExtFunc扩展字段时member=null
-    public final void writeObjectField(final EnMember member, Object obj) {
-        Object value;
-        if (objFieldFunc == null) {
-            value = member.getFieldValue(obj);
-        } else {
-            value = objFieldFunc.apply(member.getAttribute(), obj);
-        }
-        if (value == null) {
-            return;
-        }
-        Encodeable encoder = member.getEncoder();
-        if (encoder instanceof MapEncoder) {
-            if (!((Map) value).isEmpty()) {
-                ((MapEncoder) encoder).convertTo(this, member, (Map) value);
-            }
-        } else if (encoder instanceof ProtobufArrayEncoder) {
-            ProtobufArrayEncoder arrayEncoder = (ProtobufArrayEncoder) encoder;
-            arrayEncoder.convertTo(this, member, (Object[]) value);
-        } else if (encoder instanceof ProtobufCollectionEncoder) {
-            ProtobufCollectionEncoder collectionEncoder = (ProtobufCollectionEncoder) encoder;
-            collectionEncoder.convertTo(this, member, (Collection) value);
-        } else if (encoder instanceof ProtobufStreamEncoder) {
-            ProtobufStreamEncoder streamEncoder = (ProtobufStreamEncoder) encoder;
-            streamEncoder.convertTo(this, member, (Stream) value);
-        } else {
+        if (encoder instanceof SimpledCoder) {
             this.writeField(member);
             encoder.convertTo(this, value);
+        } else {
+            encoder.convertTo(this, member, value);
         }
     }
 
@@ -1256,6 +1212,17 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         }
     }
 
+    protected final void writeSelfLength(int value) {
+        ProtobufWriter old = this.delegate;
+        this.delegate = null;
+        if (value < 128) {
+            writeTo((byte) value);
+        } else {
+            writeUInt32(value);
+        }
+        this.delegate = old;
+    }
+
     protected void writeUInt32(int value) {
         if (value >= 0 && value < TENTHOUSAND_MAX) {
             writeTo(TENTHOUSAND_UINT_BYTES[value]);
@@ -1264,18 +1231,22 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             writeTo(TENTHOUSAND_UINT_BYTES2[-value]);
             return;
         }
-        expand(5);
-        int curr = this.count;
-        byte[] data = this.content;
-        while (true) {
-            if ((value & ~0x7F) == 0) {
-                data[curr++] = (byte) value;
-                this.count = curr;
-                return;
-            } else {
-                data[curr++] = (byte) ((value & 0x7F) | 0x80);
-                value >>>= 7;
+        if (delegate == null) {
+            expand(5);
+            int curr = this.count;
+            byte[] data = this.content;
+            while (true) {
+                if ((value & ~0x7F) == 0) {
+                    data[curr++] = (byte) value;
+                    this.count = curr;
+                    return;
+                } else {
+                    data[curr++] = (byte) ((value & 0x7F) | 0x80);
+                    value >>>= 7;
+                }
             }
+        } else {
+            delegate.writeUInt32(value);
         }
     }
 
@@ -1287,18 +1258,22 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             writeTo(TENTHOUSAND_UINT_BYTES2[(int) -value]);
             return;
         }
-        expand(10);
-        int curr = this.count;
-        byte[] data = this.content;
-        while (true) {
-            if ((value & ~0x7FL) == 0) {
-                data[curr++] = (byte) value;
-                this.count = curr;
-                return;
-            } else {
-                data[curr++] = (byte) (((int) value & 0x7F) | 0x80);
-                value >>>= 7;
+        if (delegate == null) {
+            expand(10);
+            int curr = this.count;
+            byte[] data = this.content;
+            while (true) {
+                if ((value & ~0x7FL) == 0) {
+                    data[curr++] = (byte) value;
+                    this.count = curr;
+                    return;
+                } else {
+                    data[curr++] = (byte) (((int) value & 0x7F) | 0x80);
+                    value >>>= 7;
+                }
             }
+        } else {
+            delegate.writeUInt64(value);
         }
     }
 

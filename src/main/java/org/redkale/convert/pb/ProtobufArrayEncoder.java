@@ -33,13 +33,8 @@ public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T>
             return;
         }
         Encodeable itemEncoder = this.componentEncoder;
-        T[] array = value;
-        //        if (componentSizeRequired) {
-        //            int tagSize = ProtobufFactory.computeSInt32SizeNoTag(member.getTag());
-        //            out.writeLength(computeSize(tagSize, value));
-        //        }
-        out.writeArrayB(array.length, itemEncoder, array);
-        for (T item : array) {
+        out.writeArrayB(value.length, itemEncoder, value);
+        for (T item : value) {
             out.writeField(member);
             if (item == null) {
                 out.writeLength(0);
@@ -48,7 +43,6 @@ public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T>
             } else {
                 ProtobufWriter tmp = out.pollChild();
                 itemEncoder.convertTo(tmp, item);
-                out.writeTuple(tmp);
                 out.offerChild(tmp);
             }
         }

@@ -9,6 +9,8 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.function.BiFunction;
 import org.redkale.convert.*;
+import org.redkale.util.Attribute;
+import org.redkale.util.TypeToken;
 import org.redkale.util.Utility;
 
 /**
@@ -19,13 +21,18 @@ import org.redkale.util.Utility;
 public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
         implements ProtobufEncodeable<ProtobufWriter, Map<K, V>> {
 
-    private final int keyTag;
-    private final int valTag;
+    private final EnMember keyMember;
+
+    private final EnMember valueMember;
 
     public ProtobufMapEncoder(ConvertFactory factory, Type type) {
         super(factory, type);
-        this.keyTag = ProtobufFactory.getTag(1, ((ProtobufEncodeable) keyEncoder).typeEnum());
-        this.valTag = ProtobufFactory.getTag(2, ((ProtobufEncodeable) valueEncoder).typeEnum());
+        this.keyMember = new EnMember(createAttribute("key", keyEncoder.getType()), keyEncoder);
+        this.valueMember = new EnMember(createAttribute("value", valueEncoder.getType()), valueEncoder);
+        setTag(keyMember, ProtobufFactory.getTag(1, ((ProtobufEncodeable) keyEncoder).typeEnum()));
+        setTag(valueMember, ProtobufFactory.getTag(2, ((ProtobufEncodeable) valueEncoder).typeEnum()));
+        setTagSize(keyMember, ProtobufFactory.computeSInt32SizeNoTag(keyMember.getTag()));
+        setTagSize(valueMember, ProtobufFactory.computeSInt32SizeNoTag(valueMember.getTag()));
     }
 
     @Override
@@ -38,22 +45,29 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
         }
         Set<String> ignoreColumns = this.ignoreMapColumns;
         BiFunction<K, V, V> mapFieldFunc = out.mapFieldFunc();
-        Encodeable kencoder = this.keyEncoder;
-        Encodeable vencoder = this.valueEncoder;
+        ProtobufEncodeable kencoder = (ProtobufEncodeable) this.keyEncoder;
+        ProtobufEncodeable vencoder = (ProtobufEncodeable) this.valueEncoder;
+        boolean keySimpled = kencoder instanceof SimpledCoder;
+        boolean valSimpled = vencoder instanceof SimpledCoder;
         out.writeMapB(values.size(), kencoder, vencoder, value);
-        values.forEach((key, val) -> {
+        values.forEach((key, val0) -> {
             if (ignoreColumns == null || !ignoreColumns.contains(key)) {
-                V v = mapFieldFunc == null ? val : mapFieldFunc.apply(key, val);
-                if (v != null) {
+                V val = mapFieldFunc == null ? val0 : mapFieldFunc.apply(key, val0);
+                if (val != null) {
                     out.writeField(member);
-
                     ProtobufWriter tmp = out.pollChild();
-                    tmp.writeTag(keyTag);
-                    kencoder.convertTo(tmp, key);
-                    tmp.writeTag(valTag);
-                    vencoder.convertTo(tmp, v);
-
-                    out.writeTuple(tmp);
+                    if (keySimpled) {
+                        tmp.writeField(keyMember);
+                        kencoder.convertTo(tmp, key);
+                    } else {
+                        kencoder.convertTo(tmp, keyMember, key);
+                    }
+                    if (valSimpled) {
+                        tmp.writeField(valueMember);
+                        vencoder.convertTo(tmp, val);
+                    } else {
+                        vencoder.convertTo(tmp, valueMember, val);
+                    }
                     out.offerChild(tmp);
                 }
             }
@@ -77,5 +91,9 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
     @Override
     public final ProtobufTypeEnum typeEnum() {
         return ProtobufTypeEnum.BYTES;
+    }
+
+    static Attribute createAttribute(String field, Type type) {
+        return Attribute.create(Map.class, field, TypeToken.typeToClass(type), type, null, null, null);
     }
 }

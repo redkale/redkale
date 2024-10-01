@@ -162,4 +162,21 @@ public class MapDecoder<R extends Reader, K, V> implements Decodeable<R, Map<K, 
     public Decodeable<R, V> getValueDecoder() {
         return valueDecoder;
     }
+
+    // ---------------------------------------------------------------------------------
+    protected void setTag(DeMember member, int tag) {
+        member.tag = tag;
+    }
+
+    protected void setTagSize(DeMember member, int tagSize) {
+        member.tagSize = tagSize;
+    }
+
+    protected void setIndex(DeMember member, int index) {
+        member.index = index;
+    }
+
+    protected void setPosition(DeMember member, int position) {
+        member.position = position;
+    }
 }

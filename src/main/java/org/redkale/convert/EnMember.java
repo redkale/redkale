@@ -62,7 +62,7 @@ public final class EnMember<W extends Writer, T, F> {
     // 主要给protobuf使用 tag的大小
     int tagSize;
 
-    public EnMember(Attribute<T, F> attribute, int tag, Encodeable<W, F> encoder) {
+    public EnMember(Attribute<T, F> attribute, Encodeable<W, F> encoder) {
         this.attribute = attribute;
         this.encoder = encoder;
         Class t = attribute.type();

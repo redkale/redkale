@@ -8,6 +8,7 @@ package org.redkale.convert.pb;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import org.redkale.convert.*;
+import org.redkale.util.Utility;
 
 /**
  * @author zhangjx
@@ -28,14 +29,10 @@ public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWrit
     @Override
     public void convertTo(ProtobufWriter out, EnMember member, Collection<T> value) {
         this.checkInited();
-        if (value == null || value.isEmpty()) {
+        if (Utility.isEmpty(value)) {
             return;
         }
         ProtobufEncodeable itemEncoder = (ProtobufEncodeable) this.componentEncoder;
-        //        if (componentSizeRequired) {
-        //            int tagSize = ProtobufFactory.computeSInt32SizeNoTag(member.getTag());
-        //            out.writeLength(computeSize(tagSize, value));
-        //        }
         out.writeArrayB(value.size(), itemEncoder, value);
         for (T item : value) {
             out.writeField(member);
@@ -46,7 +43,6 @@ public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWrit
             } else {
                 ProtobufWriter tmp = out.pollChild();
                 itemEncoder.convertTo(tmp, item);
-                out.writeTuple(tmp);
                 out.offerChild(tmp);
             }
         }

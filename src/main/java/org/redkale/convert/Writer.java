@@ -205,7 +205,7 @@ public abstract class Writer {
      *
      * @param member 字段
      */
-    public final void writeField(final EnMember member) {
+    public void writeField(final EnMember member) {
         Attribute attr = member.getAttribute();
         this.writeField(member, attr.field(), attr.genericType(), member.getPosition());
     }

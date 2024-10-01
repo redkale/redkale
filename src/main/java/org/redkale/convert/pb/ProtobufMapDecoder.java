@@ -8,6 +8,7 @@ package org.redkale.convert.pb;
 import java.lang.reflect.Type;
 import java.util.Map;
 import org.redkale.convert.*;
+import static org.redkale.convert.pb.ProtobufMapEncoder.createAttribute;
 
 /**
  * @author zhangjx
@@ -19,9 +20,19 @@ public class ProtobufMapDecoder<K, V> extends MapDecoder<ProtobufReader, K, V>
 
     protected final boolean enumtostring;
 
+    protected final DeMember keyMember;
+
+    protected final DeMember valueMember;
+
     public ProtobufMapDecoder(ConvertFactory factory, Type type) {
         super(factory, type);
         this.enumtostring = ((ProtobufFactory) factory).enumtostring;
+        int keyTag = ProtobufFactory.getTag(1, ((ProtobufEncodeable) keyDecoder).typeEnum());
+        int valTag = ProtobufFactory.getTag(2, ((ProtobufEncodeable) valueDecoder).typeEnum());
+        this.keyMember = new DeMember(createAttribute("key", keyDecoder.getType()), keyTag, keyDecoder);
+        this.valueMember = new DeMember(createAttribute("value", valueDecoder.getType()), valTag, valueDecoder);
+        setTagSize(keyMember, ProtobufFactory.computeSInt32SizeNoTag(keyMember.getTag()));
+        setTagSize(valueMember, ProtobufFactory.computeSInt32SizeNoTag(valueMember.getTag()));
     }
 
     @Override
@@ -35,9 +46,9 @@ public class ProtobufMapDecoder<K, V> extends MapDecoder<ProtobufReader, K, V>
         while (in.hasNext()) {
             int contentLen = in.readRawVarint32();
             in.limit(in.position() + contentLen + 1);
-            in.readTag();
+            in.readTag(); // key tag
             K key = kdecoder.convertFrom(in);
-            in.readTag();
+            in.readTag(); // value tag
             V value = vdecoder.convertFrom(in);
             result.put(key, value);
             in.limit(limit);

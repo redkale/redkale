@@ -140,4 +140,21 @@ public class MapEncoder<W extends Writer, K, V> implements Encodeable<W, Map<K, 
     public Encodeable<W, V> getValueEncoder() {
         return valueEncoder;
     }
+
+    // ---------------------------------------------------------------------------------
+    protected void setTag(EnMember member, int tag) {
+        member.tag = tag;
+    }
+
+    protected void setTagSize(EnMember member, int tagSize) {
+        member.tagSize = tagSize;
+    }
+
+    protected void setIndex(EnMember member, int index) {
+        member.index = index;
+    }
+
+    protected void setPosition(EnMember member, int position) {
+        member.position = position;
+    }
 }

@@ -69,13 +69,7 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
 
     @ClassDepends
     protected ProtobufWriter objectWriter(ProtobufWriter out, EnMember parentMember, T value) {
-        //        if (parentMember != null) {
-        //            out.writeLength(computeSize(out, parentMember.getTagSize(), value));
-        //        }
-        if (out.length() > out.initOffset) {
-            return out.pollChild().configParentFunc(out);
-        }
-        return out;
+        return parentMember != null ? out.pollChild() : out;
     }
 
     @ClassDepends
