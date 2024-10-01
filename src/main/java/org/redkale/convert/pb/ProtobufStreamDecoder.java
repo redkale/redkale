@@ -33,12 +33,21 @@ public class ProtobufStreamDecoder<T> extends StreamDecoder<ProtobufReader, T>
         final List<T> result = new ArrayList();
         final int limit = in.limit();
         while (in.hasNext()) {
+            boolean nodata = false;
             if (!simpled) {
                 int contentLen = in.readRawVarint32();
-                in.limit(in.position() + contentLen + 1);
+                if (contentLen == 0) {
+                    nodata = true;
+                } else {
+                    in.limit(in.position() + contentLen + 1);
+                }
             }
-            result.add(itemDecoder.convertFrom(in));
-            in.limit(limit);
+            if (nodata) {
+                result.add(null);
+            } else {
+                result.add(itemDecoder.convertFrom(in));
+                in.limit(limit);
+            }
             if (!in.readNextTag(member)) { // 元素结束
                 break;
             }

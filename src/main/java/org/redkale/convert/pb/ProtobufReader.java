@@ -7,7 +7,6 @@ package org.redkale.convert.pb;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.atomic.*;
 import org.redkale.convert.*;
 import org.redkale.util.Creator;
 
@@ -190,24 +189,6 @@ public class ProtobufReader extends Reader {
         return data;
     }
 
-    public final AtomicBoolean readAtomicBoolean() {
-        return new AtomicBoolean(readBoolean());
-    }
-
-    public final AtomicBoolean[] readAtomicBooleans() {
-        Collection<AtomicBoolean> data = readAtomicBooleans(LIS_CREATOR);
-        return data.toArray(new AtomicBoolean[data.size()]);
-    }
-
-    public final Collection<AtomicBoolean> readAtomicBooleans(Creator<? extends Collection> creator) {
-        int size = readRawVarint32();
-        Collection<AtomicBoolean> data = creator.create();
-        for (int i = 0; i < size; i++) {
-            data.add(new AtomicBoolean(readBoolean()));
-        }
-        return data;
-    }
-
     @Override
     public final byte readByte() {
         return (byte) readInt();
@@ -319,22 +300,6 @@ public class ProtobufReader extends Reader {
         return data;
     }
 
-    public final AtomicInteger[] readAtomicIntegers() {
-        Collection<AtomicInteger> data = readAtomicIntegers(LIS_CREATOR);
-        return data.toArray(new AtomicInteger[data.size()]);
-    }
-
-    public final Collection<AtomicInteger> readAtomicIntegers(Creator<? extends Collection> creator) {
-        Collection<AtomicInteger> data = creator.create();
-        int len = readRawVarint32();
-        while (len > 0) {
-            int val = readInt();
-            data.add(new AtomicInteger(val));
-            len -= ProtobufFactory.computeSInt32SizeNoTag(val);
-        }
-        return data;
-    }
-
     @Override
     public final float readFloat() {
         return Float.intBitsToFloat(readRawLittleEndian32());
@@ -390,22 +355,6 @@ public class ProtobufReader extends Reader {
         return data;
     }
 
-    public final AtomicLong[] readAtomicLongs() {
-        Collection<AtomicLong> data = readAtomicLongs(LIS_CREATOR);
-        return data.toArray(new AtomicLong[data.size()]);
-    }
-
-    public final Collection<AtomicLong> readAtomicLongs(Creator<? extends Collection> creator) {
-        Collection<AtomicLong> data = creator.create();
-        int len = readRawVarint32();
-        while (len > 0) {
-            long val = readLong();
-            data.add(new AtomicLong(val));
-            len -= ProtobufFactory.computeSInt64SizeNoTag(val);
-        }
-        return data;
-    }
-
     public final String[] readStrings(int tag) {
         Collection<String> data = readStrings(tag, LIS_CREATOR);
         return data.toArray(new String[data.size()]);
@@ -428,8 +377,8 @@ public class ProtobufReader extends Reader {
     }
 
     public final double[] readDoubles() {
-        int len = readRawVarint32();
-        double[] rs = new double[len / 8];
+        int size = readRawVarint32();
+        double[] rs = new double[size / 8];
         for (int i = 0; i < rs.length; i++) {
             rs[i] = readDouble();
         }
@@ -438,8 +387,8 @@ public class ProtobufReader extends Reader {
 
     public final Collection<Double> readDoubles(Creator<? extends Collection> creator) {
         Collection<Double> data = creator.create();
-        int len = readRawVarint32() / 8;
-        for (int i = 0; i < len; i++) {
+        int size = readRawVarint32() / 8;
+        for (int i = 0; i < size; i++) {
             data.add(readDouble());
         }
         return data;
@@ -626,14 +575,14 @@ public class ProtobufReader extends Reader {
         throw new ConvertException("readRawVarint64SlowPath error");
     }
 
-    protected int readRawLittleEndian32() { //float
+    protected int readRawLittleEndian32() { // float
         return ((content[++this.position] & 0xff)
                 | ((content[++this.position] & 0xff) << 8)
                 | ((content[++this.position] & 0xff) << 16)
                 | ((content[++this.position] & 0xff) << 24));
     }
 
-    protected long readRawLittleEndian64() { //double
+    protected long readRawLittleEndian64() { // double
         return ((content[++this.position] & 0xffL)
                 | ((content[++this.position] & 0xffL) << 8)
                 | ((content[++this.position] & 0xffL) << 16)

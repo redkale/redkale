@@ -5,6 +5,7 @@
  */
 package org.redkale.convert.ext;
 
+import java.util.Objects;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.util.*;
@@ -20,9 +21,17 @@ import org.redkale.util.*;
  */
 public class Uint128SimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, Uint128> {
 
-    private static final ByteArraySimpledCoder bsSimpledCoder = ByteArraySimpledCoder.instance;
-
     public static final Uint128SimpledCoder instance = new Uint128SimpledCoder();
+
+    protected final SimpledCoder<R, W, byte[]> bsSimpledCoder;
+
+    protected Uint128SimpledCoder() {
+        this.bsSimpledCoder = ByteArraySimpledCoder.instance;
+    }
+
+    public Uint128SimpledCoder(SimpledCoder<R, W, byte[]> bSimpledCoder) {
+        this.bsSimpledCoder = Objects.requireNonNull(bSimpledCoder);
+    }
 
     @Override
     @SuppressWarnings("unchecked")

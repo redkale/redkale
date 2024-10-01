@@ -31,7 +31,7 @@ public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWrit
         if (value == null || value.isEmpty()) {
             return;
         }
-        ProtobufEncodeable itemEncoder = (ProtobufEncodeable)this.componentEncoder;
+        ProtobufEncodeable itemEncoder = (ProtobufEncodeable) this.componentEncoder;
         //        if (componentSizeRequired) {
         //            int tagSize = ProtobufFactory.computeSInt32SizeNoTag(member.getTag());
         //            out.writeLength(computeSize(tagSize, value));
@@ -40,7 +40,7 @@ public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWrit
         for (T item : value) {
             out.writeField(member);
             if (item == null) {
-                out.writeUInt32(0);
+                out.writeLength(0);
             } else if (componentSimpled) {
                 itemEncoder.convertTo(out, item);
             } else {
@@ -71,6 +71,11 @@ public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWrit
 
     @Override
     public boolean requireSize() {
-        return componentSizeRequired;
+        return !componentSimpled;
+    }
+
+    @Override
+    public final ProtobufTypeEnum typeEnum() {
+        return ProtobufTypeEnum.BYTES;
     }
 }

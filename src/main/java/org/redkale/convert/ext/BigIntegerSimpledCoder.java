@@ -6,6 +6,7 @@
 package org.redkale.convert.ext;
 
 import java.math.BigInteger;
+import java.util.Objects;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 
@@ -22,6 +23,16 @@ public class BigIntegerSimpledCoder<R extends Reader, W extends Writer> extends 
 
     public static final BigIntegerSimpledCoder instance = new BigIntegerSimpledCoder();
 
+    protected final SimpledCoder<R, W, byte[]> bsSimpledCoder;
+
+    protected BigIntegerSimpledCoder() {
+        this.bsSimpledCoder = ByteArraySimpledCoder.instance;
+    }
+
+    public BigIntegerSimpledCoder(SimpledCoder<R, W, byte[]> bSimpledCoder) {
+        this.bsSimpledCoder = Objects.requireNonNull(bSimpledCoder);
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public void convertTo(W out, BigInteger value) {
@@ -29,13 +40,13 @@ public class BigIntegerSimpledCoder<R extends Reader, W extends Writer> extends 
             out.writeNull();
             return;
         }
-        ByteArraySimpledCoder.instance.convertTo(out, value.toByteArray());
+        bsSimpledCoder.convertTo(out, value.toByteArray());
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public BigInteger convertFrom(R in) {
-        byte[] bytes = ByteArraySimpledCoder.instance.convertFrom(in);
+        byte[] bytes = bsSimpledCoder.convertFrom(in);
         return bytes == null ? null : new BigInteger(bytes);
     }
 

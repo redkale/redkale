@@ -6,6 +6,7 @@
 package org.redkale.convert.ext;
 
 import java.net.*;
+import java.util.Objects;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.util.StringWrapper;
@@ -24,18 +25,29 @@ public class InetAddressSimpledCoder<R extends Reader, W extends Writer> extends
 
     public static final InetAddressSimpledCoder instance = new InetAddressSimpledCoder();
 
+    protected final SimpledCoder<R, W, byte[]> bsSimpledCoder;
+
+    protected InetAddressSimpledCoder() {
+        this.bsSimpledCoder = ByteArraySimpledCoder.instance;
+    }
+
+    public InetAddressSimpledCoder(SimpledCoder<R, W, byte[]> bSimpledCoder) {
+        this.bsSimpledCoder = Objects.requireNonNull(bSimpledCoder);
+    }
+
+
     @Override
     public void convertTo(W out, InetAddress value) {
         if (value == null) {
             out.writeNull();
             return;
         }
-        ByteArraySimpledCoder.instance.convertTo(out, value.getAddress());
+        bsSimpledCoder.convertTo(out, value.getAddress());
     }
 
     @Override
     public InetAddress convertFrom(R in) {
-        byte[] bytes = ByteArraySimpledCoder.instance.convertFrom(in);
+        byte[] bytes = bsSimpledCoder.convertFrom(in);
         if (bytes == null) {
             return null;
         }

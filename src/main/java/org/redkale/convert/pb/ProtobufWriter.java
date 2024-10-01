@@ -9,7 +9,6 @@ import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.stream.Stream;
 import org.redkale.annotation.ClassDepends;
@@ -73,7 +72,9 @@ public class ProtobufWriter extends Writer implements ByteTuple {
 
     private byte[] content;
 
-    private ArrayDeque<ProtobufWriter> childWriters;
+    private List<ProtobufWriter> children;
+
+    private ArrayDeque<ProtobufWriter> pool;
 
     protected ProtobufWriter(ProtobufWriter parent) {
         this();
@@ -156,14 +157,20 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (this.content.length > DEFAULT_SIZE) {
             this.content = new byte[DEFAULT_SIZE];
         }
+        if (this.children != null) {
+            for (ProtobufWriter child : children) {
+                offerChild2(child);
+            }
+            this.children = null;
+        }
         return true;
     }
 
     public final ProtobufWriter pollChild() {
-        Queue<ProtobufWriter> queue = this.childWriters;
+        Queue<ProtobufWriter> queue = this.pool;
         if (queue == null) {
-            this.childWriters = new ArrayDeque<>(CHILD_SIZE);
-            queue = this.childWriters;
+            this.pool = new ArrayDeque<>(CHILD_SIZE);
+            queue = this.pool;
         }
         ProtobufWriter result = queue.poll();
         if (result == null) {
@@ -172,8 +179,33 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         return result.configFieldFunc(this);
     }
 
-    public final void offerChild(final ProtobufWriter child) {
-        Queue<ProtobufWriter> queue = this.childWriters;
+    public void offerChild(final ProtobufWriter child) {
+        Queue<ProtobufWriter> queue = this.pool;
+        if (child != null && queue != null && queue.size() < CHILD_SIZE) {
+            child.recycle();
+            queue.offer(child);
+        }
+    }
+
+    public final ProtobufWriter createChild2() {
+        Queue<ProtobufWriter> queue = this.pool;
+        if (queue == null) {
+            this.pool = new ArrayDeque<>(CHILD_SIZE);
+            queue = this.pool;
+        }
+        ProtobufWriter result = queue.poll();
+        if (result == null) {
+            result = new ProtobufWriter();
+        }
+        if (this.children == null) {
+            this.children = new ArrayList<>();
+        }
+        this.children.add(result);
+        return result.configFieldFunc(this);
+    }
+
+    private void offerChild2(final ProtobufWriter child) {
+        Queue<ProtobufWriter> queue = this.pool;
         if (child != null && queue != null && queue.size() < CHILD_SIZE) {
             child.recycle();
             queue.offer(child);
@@ -182,11 +214,32 @@ public class ProtobufWriter extends Writer implements ByteTuple {
 
     @Override
     public final int length() {
-        return count;
+        int total = count;
+        if (children != null) {
+            for (ProtobufWriter child : children) {
+                int len = child.length();
+                total += ProtobufFactory.computeSInt32SizeNoTag(len) + len;
+            }
+        }
+        return total;
     }
 
     @Override
     public byte[] content() {
+        if (children != null) {
+            byte[] data = new byte[length()];
+            System.arraycopy(content, 0, data, 0, count);
+            int pos = count;
+            Utility.println("自身对象: ", content, 0, count);
+            for (ProtobufWriter child : children) {
+                int len = child.length();
+                data[pos++] = (byte) len;
+                Utility.println("子对象: ", child.content(), 0, child.length());
+                System.arraycopy(child.content(), 0, data, pos, len);
+                pos += len;
+            }
+            return data;
+        }
         return content;
     }
 
@@ -214,6 +267,9 @@ public class ProtobufWriter extends Writer implements ByteTuple {
 
     @Override
     public byte[] toArray() {
+        if (children != null) {
+            return content();
+        }
         byte[] copy = new byte[count];
         System.arraycopy(content, 0, copy, 0, count);
         return copy;
@@ -257,7 +313,7 @@ public class ProtobufWriter extends Writer implements ByteTuple {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "[count=" + this.count + "]";
+        return this.getClass().getSimpleName() + "@" + Objects.hashCode(this) + "[count=" + this.count + "]";
     }
 
     // ------------------------------------------------------------------------
@@ -764,100 +820,6 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         }
     }
 
-    public final void writeAtomicBooleans(AtomicBoolean[] value) {
-        AtomicBoolean[] array = value;
-        if (array != null && array.length > 0) {
-            writeLength(array.length);
-            for (AtomicBoolean item : array) {
-                writeTo(item != null && item.get() ? (byte) 1 : (byte) 0);
-            }
-        }
-    }
-
-    public final void writeAtomicBooleans(Collection<AtomicBoolean> value) {
-        Collection<AtomicBoolean> array = value;
-        if (array != null && !array.isEmpty()) {
-            writeLength(array.size());
-            for (AtomicBoolean item : array) {
-                writeTo(item != null && item.get() ? (byte) 1 : (byte) 0);
-            }
-        }
-    }
-
-    public final void writeAtomicBooleans(Stream<AtomicBoolean> value) {
-        if (value != null) {
-            writeAtomicBooleans(value.toArray(s -> new AtomicBoolean[s]));
-        }
-    }
-
-    public final void writeAtomicIntegers(AtomicInteger[] value) {
-        AtomicInteger[] array = value;
-        if (array != null && array.length > 0) {
-            int len = 0;
-            for (AtomicInteger item : array) {
-                len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : item.get());
-            }
-            writeLength(len);
-            for (AtomicInteger item : array) {
-                writeInt(item == null ? 0 : item.get());
-            }
-        }
-    }
-
-    public final void writeAtomicIntegers(Collection<AtomicInteger> value) {
-        Collection<AtomicInteger> array = value;
-        if (array != null && !array.isEmpty()) {
-            int len = 0;
-            for (AtomicInteger item : array) {
-                len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : item.get());
-            }
-            writeLength(len);
-            for (AtomicInteger item : array) {
-                writeInt(item == null ? 0 : item.get());
-            }
-        }
-    }
-
-    public final void writeAtomicIntegers(Stream<AtomicInteger> value) {
-        if (value != null) {
-            writeAtomicIntegers(value.toArray(s -> new AtomicInteger[s]));
-        }
-    }
-
-    public final void writeAtomicLongs(AtomicLong[] value) {
-        AtomicLong[] array = value;
-        if (array != null && array.length > 0) {
-            int len = 0;
-            for (AtomicLong item : array) {
-                len += ProtobufFactory.computeSInt64SizeNoTag(item == null ? 0 : item.get());
-            }
-            writeLength(len);
-            for (AtomicLong item : array) {
-                writeLong(item == null ? 0 : item.get());
-            }
-        }
-    }
-
-    public final void writeAtomicLongs(Collection<AtomicLong> value) {
-        Collection<AtomicLong> array = value;
-        if (array != null && !array.isEmpty()) {
-            int len = 0;
-            for (AtomicLong item : array) {
-                len += ProtobufFactory.computeSInt64SizeNoTag(item == null ? 0 : item.get());
-            }
-            writeLength(len);
-            for (AtomicLong item : array) {
-                writeLong(item == null ? 0 : item.get());
-            }
-        }
-    }
-
-    public final void writeAtomicLongs(Stream<AtomicLong> value) {
-        if (value != null) {
-            writeAtomicLongs(value.toArray(s -> new AtomicLong[s]));
-        }
-    }
-
     @Override
     public final void writeWrapper(StringWrapper value) {
         if (value != null) {
@@ -994,30 +956,6 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @ClassDepends
-    public final void writeFieldValue(int tag, AtomicBoolean value) {
-        if (value != null && value.get()) {
-            writeTag(tag);
-            writeBoolean(value.get());
-        }
-    }
-
-    @ClassDepends
-    public final void writeFieldValue(int tag, AtomicInteger value) {
-        if (value != null && value.get() != 0) {
-            writeTag(tag);
-            writeInt(value.get());
-        }
-    }
-
-    @ClassDepends
-    public final void writeFieldValue(int tag, AtomicLong value) {
-        if (value != null && value.get() != 0) {
-            writeTag(tag);
-            writeLong(value.get());
-        }
-    }
-
-    @ClassDepends
     public final void writeFieldValue(int tag, boolean[] value) {
         if (value != null && value.length > 0) {
             writeTag(tag);
@@ -1146,30 +1084,6 @@ public class ProtobufWriter extends Writer implements ByteTuple {
     }
 
     @ClassDepends
-    public final void writeFieldValue(int tag, AtomicBoolean[] value) {
-        if (value != null && value.length > 0) {
-            writeTag(tag);
-            writeAtomicBooleans(value);
-        }
-    }
-
-    @ClassDepends
-    public final void writeFieldValue(int tag, AtomicInteger[] value) {
-        if (value != null && value.length > 0) {
-            writeTag(tag);
-            writeAtomicIntegers(value);
-        }
-    }
-
-    @ClassDepends
-    public final void writeFieldValue(int tag, AtomicLong[] value) {
-        if (value != null && value.length > 0) {
-            writeTag(tag);
-            writeAtomicLongs(value);
-        }
-    }
-
-    @ClassDepends
     public final void writeFieldValue(int tag, String[] value) {
         if (value != null && value.length > 0) {
             writeStrings(tag, value);
@@ -1237,30 +1151,6 @@ public class ProtobufWriter extends Writer implements ByteTuple {
         if (value != null && !value.isEmpty()) {
             writeTag(tag);
             writeDoubles(value);
-        }
-    }
-
-    @ClassDepends
-    public final void writeFieldAtomicBooleansValue(int tag, Collection<AtomicBoolean> value) {
-        if (value != null && !value.isEmpty()) {
-            writeTag(tag);
-            writeAtomicBooleans(value);
-        }
-    }
-
-    @ClassDepends
-    public final void writeFieldAtomicIntegersValue(int tag, Collection<AtomicInteger> value) {
-        if (value != null && !value.isEmpty()) {
-            writeTag(tag);
-            writeAtomicIntegers(value);
-        }
-    }
-
-    @ClassDepends
-    public final void writeFieldAtomicLongsValue(int tag, Collection<AtomicLong> value) {
-        if (value != null && !value.isEmpty()) {
-            writeTag(tag);
-            writeAtomicLongs(value);
         }
     }
 

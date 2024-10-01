@@ -42,11 +42,10 @@ public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T>
         for (T item : array) {
             out.writeField(member);
             if (item == null) {
-                out.writeUInt32(0);
+                out.writeLength(0);
             } else if (componentSimpled) {
                 itemEncoder.convertTo(out, item);
             } else {
-                // itemEncoder.convertTo(out, item);
                 ProtobufWriter tmp = out.pollChild();
                 itemEncoder.convertTo(tmp, item);
                 out.writeTuple(tmp);
@@ -74,6 +73,11 @@ public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T>
 
     @Override
     public boolean requireSize() {
-        return componentSizeRequired;
+        return !componentSimpled;
+    }
+
+    @Override
+    public final ProtobufTypeEnum typeEnum() {
+        return ProtobufTypeEnum.BYTES;
     }
 }

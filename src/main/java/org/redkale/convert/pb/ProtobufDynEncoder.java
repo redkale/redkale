@@ -7,7 +7,6 @@ package org.redkale.convert.pb;
 import java.lang.reflect.*;
 import java.lang.reflect.Type;
 import java.util.*;
-import java.util.concurrent.atomic.*;
 import org.redkale.asm.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
@@ -50,9 +49,9 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
     protected static ProtobufDynEncoder generateDyncEncoder(final ProtobufFactory factory, final Class clazz) {
         final ObjectEncoder selfObjEncoder = factory.createObjectEncoder(clazz);
         selfObjEncoder.init(factory); // 必须执行，初始化EnMember内部信息
-        //        if (((ProtobufObjectEncoder) selfObjEncoder).requiredMemberSize()) { // 嵌套对象
-        //            return null;
-        //        }
+        if (((ProtobufObjectEncoder) selfObjEncoder).requiredMemberSize()) { // 嵌套对象
+            return null;
+        }
         final Map<String, SimpledCoder> simpledCoders = new HashMap<>();
         final Map<String, EnMember> otherMembers = new HashMap<>();
         StringBuilder elementb = new StringBuilder();
@@ -254,12 +253,6 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                         wmethodName = "writeFieldLongsValue";
                     } else if (componentType == Double.class) {
                         wmethodName = "writeFieldDoublesValue";
-                    } else if (componentType == AtomicBoolean.class) {
-                        wmethodName = "writeFieldAtomicBooleansValue";
-                    } else if (componentType == AtomicInteger.class) {
-                        wmethodName = "writeFieldAtomicIntegersValue";
-                    } else if (componentType == AtomicLong.class) {
-                        wmethodName = "writeFieldAtomicLongsValue";
                     } else if (componentType == String.class) {
                         wmethodName = "writeFieldStringsValue";
                     }

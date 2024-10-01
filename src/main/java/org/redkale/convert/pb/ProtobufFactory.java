@@ -93,6 +93,7 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
             this.register(float[].class, ProtobufCoders.ProtobufFloatArraySimpledCoder.instance);
             this.register(long[].class, ProtobufCoders.ProtobufLongArraySimpledCoder.instance);
             this.register(double[].class, ProtobufCoders.ProtobufDoubleArraySimpledCoder.instance);
+
             this.register(Boolean[].class, ProtobufCoders.ProtobufBoolArraySimpledCoder2.instance);
             this.register(Byte[].class, ProtobufCoders.ProtobufByteArraySimpledCoder2.instance);
             this.register(Character[].class, ProtobufCoders.ProtobufCharArraySimpledCoder2.instance);
@@ -101,12 +102,9 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
             this.register(Float[].class, ProtobufCoders.ProtobufFloatArraySimpledCoder2.instance);
             this.register(Long[].class, ProtobufCoders.ProtobufLongArraySimpledCoder2.instance);
             this.register(Double[].class, ProtobufCoders.ProtobufDoubleArraySimpledCoder2.instance);
-            this.register(AtomicInteger[].class, ProtobufCoders.ProtobufAtomicIntegerArraySimpledCoder.instance);
-            this.register(AtomicLong[].class, ProtobufCoders.ProtobufAtomicLongArraySimpledCoder.instance);
 
             this.register(String[].class, this.createArrayDecoder(String[].class));
             this.register(String[].class, this.createArrayEncoder(String[].class));
-
         }
     }
 
@@ -190,42 +188,38 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
 
     @Override
     protected <E> Decodeable<ProtobufReader, E> createCollectionDecoder(Type type) {
-        if (type instanceof ParameterizedType) {
-            ParameterizedType pt = (ParameterizedType) type;
-            Type componentType = pt.getActualTypeArguments()[0];
-            if (componentType == Boolean.class) {
-                Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufCoders.ProtobufBoolCollectionSimpledCoder(creator);
-            } else if (componentType == Byte.class) {
-                Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufCoders.ProtobufByteCollectionSimpledCoder(creator);
-            } else if (componentType == Character.class) {
-                Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufCoders.ProtobufCharCollectionSimpledCoder(creator);
-            } else if (componentType == Short.class) {
-                Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufCoders.ProtobufShortCollectionSimpledCoder(creator);
-            } else if (componentType == Integer.class) {
-                Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufCoders.ProtobufIntCollectionSimpledCoder(creator);
-            } else if (componentType == Float.class) {
-                Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufCoders.ProtobufFloatCollectionSimpledCoder(creator);
-            } else if (componentType == Long.class) {
-                Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufCoders.ProtobufLongCollectionSimpledCoder(creator);
-            } else if (componentType == Double.class) {
-                Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufCoders.ProtobufDoubleCollectionSimpledCoder(creator);
-            } else if (componentType == AtomicBoolean.class) {
-                Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufCoders.ProtobufAtomicBooleanCollectionSimpledCoder(creator);
-            } else if (componentType == AtomicInteger.class) {
-                Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufCoders.ProtobufAtomicIntegerCollectionSimpledCoder(creator);
-            } else if (componentType == AtomicLong.class) {
-                Creator<? extends Collection> creator = loadCreator((Class) pt.getRawType());
-                return (Decodeable) new ProtobufCoders.ProtobufAtomicLongCollectionSimpledCoder(creator);
+        Class createClazz = TypeToken.typeToClass(type);
+        Type componentType = getCollectionComponentType(type);
+        if (componentType == Boolean.class) {
+            Creator<? extends Collection> creator = loadCreator(createClazz);
+            return (Decodeable) new ProtobufCoders.ProtobufBoolCollectionSimpledCoder(creator);
+        } else if (componentType == Byte.class) {
+            Creator<? extends Collection> creator = loadCreator(createClazz);
+            return (Decodeable) new ProtobufCoders.ProtobufByteCollectionSimpledCoder(creator);
+        } else if (componentType == Character.class) {
+            Creator<? extends Collection> creator = loadCreator(createClazz);
+            return (Decodeable) new ProtobufCoders.ProtobufCharCollectionSimpledCoder(creator);
+        } else if (componentType == Short.class) {
+            Creator<? extends Collection> creator = loadCreator(createClazz);
+            return (Decodeable) new ProtobufCoders.ProtobufShortCollectionSimpledCoder(creator);
+        } else if (componentType == Integer.class) {
+            Creator<? extends Collection> creator = loadCreator(createClazz);
+            return (Decodeable) new ProtobufCoders.ProtobufIntCollectionSimpledCoder(creator);
+        } else if (componentType == Float.class) {
+            Creator<? extends Collection> creator = loadCreator(createClazz);
+            return (Decodeable) new ProtobufCoders.ProtobufFloatCollectionSimpledCoder(creator);
+        } else if (componentType == Long.class) {
+            Creator<? extends Collection> creator = loadCreator(createClazz);
+            return (Decodeable) new ProtobufCoders.ProtobufLongCollectionSimpledCoder(creator);
+        } else if (componentType == Double.class) {
+            Creator<? extends Collection> creator = loadCreator(createClazz);
+            return (Decodeable) new ProtobufCoders.ProtobufDoubleCollectionSimpledCoder(creator);
+        } else {
+            Decodeable componentCoder = findDecoder(componentType);
+            if (componentCoder instanceof ProtobufPrimitivable) {
+                Creator<? extends Collection> creator = loadCreator(createClazz);
+                ProtobufPrimitivable primCoder = (ProtobufPrimitivable) componentCoder;
+                return (Decodeable) new ProtobufCoders.ProtobufPrimitiveCollectionSimpledCoder(creator, primCoder);
             }
         }
         return new ProtobufCollectionDecoder(this, type);
@@ -233,32 +227,29 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
 
     @Override
     protected <E> Encodeable<ProtobufWriter, E> createCollectionEncoder(Type type) {
-        if (type instanceof ParameterizedType) {
-            ParameterizedType pt = (ParameterizedType) type;
-            Type componentType = pt.getActualTypeArguments()[0];
-            Creator<? extends Collection> creator = ProtobufCoders.LIST_CREATOR;
-            if (componentType == Boolean.class) {
-                return (Encodeable) new ProtobufCoders.ProtobufBoolCollectionSimpledCoder(creator);
-            } else if (componentType == Byte.class) {
-                return (Encodeable) new ProtobufCoders.ProtobufByteCollectionSimpledCoder(creator);
-            } else if (componentType == Character.class) {
-                return (Encodeable) new ProtobufCoders.ProtobufCharCollectionSimpledCoder(creator);
-            } else if (componentType == Short.class) {
-                return (Encodeable) new ProtobufCoders.ProtobufShortCollectionSimpledCoder(creator);
-            } else if (componentType == Integer.class) {
-                return (Encodeable) new ProtobufCoders.ProtobufIntCollectionSimpledCoder(creator);
-            } else if (componentType == Float.class) {
-                return (Encodeable) new ProtobufCoders.ProtobufFloatCollectionSimpledCoder(creator);
-            } else if (componentType == Long.class) {
-                return (Encodeable) new ProtobufCoders.ProtobufLongCollectionSimpledCoder(creator);
-            } else if (componentType == Double.class) {
-                return (Encodeable) new ProtobufCoders.ProtobufDoubleCollectionSimpledCoder(creator);
-            } else if (componentType == AtomicBoolean.class) {
-                return (Encodeable) new ProtobufCoders.ProtobufAtomicBooleanCollectionSimpledCoder(creator);
-            } else if (componentType == AtomicInteger.class) {
-                return (Encodeable) new ProtobufCoders.ProtobufAtomicIntegerCollectionSimpledCoder(creator);
-            } else if (componentType == AtomicLong.class) {
-                return (Encodeable) new ProtobufCoders.ProtobufAtomicLongCollectionSimpledCoder(creator);
+        Creator<? extends Collection> creator = ProtobufCoders.LIST_CREATOR;
+        Type componentType = getCollectionComponentType(type);
+        if (componentType == Boolean.class) {
+            return (Encodeable) new ProtobufCoders.ProtobufBoolCollectionSimpledCoder(creator);
+        } else if (componentType == Byte.class) {
+            return (Encodeable) new ProtobufCoders.ProtobufByteCollectionSimpledCoder(creator);
+        } else if (componentType == Character.class) {
+            return (Encodeable) new ProtobufCoders.ProtobufCharCollectionSimpledCoder(creator);
+        } else if (componentType == Short.class) {
+            return (Encodeable) new ProtobufCoders.ProtobufShortCollectionSimpledCoder(creator);
+        } else if (componentType == Integer.class) {
+            return (Encodeable) new ProtobufCoders.ProtobufIntCollectionSimpledCoder(creator);
+        } else if (componentType == Float.class) {
+            return (Encodeable) new ProtobufCoders.ProtobufFloatCollectionSimpledCoder(creator);
+        } else if (componentType == Long.class) {
+            return (Encodeable) new ProtobufCoders.ProtobufLongCollectionSimpledCoder(creator);
+        } else if (componentType == Double.class) {
+            return (Encodeable) new ProtobufCoders.ProtobufDoubleCollectionSimpledCoder(creator);
+        } else {
+            Encodeable componentCoder = findEncoder(componentType);
+            if (componentCoder instanceof ProtobufPrimitivable) {
+                ProtobufPrimitivable primCoder = (ProtobufPrimitivable) componentCoder;
+                return (Encodeable) new ProtobufCoders.ProtobufPrimitiveCollectionSimpledCoder(creator, primCoder);
             }
         }
         return new ProtobufCollectionEncoder(this, type);
@@ -266,31 +257,28 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
 
     @Override
     protected <E> Decodeable<ProtobufReader, E> createStreamDecoder(Type type) {
-        if (type instanceof ParameterizedType) {
-            ParameterizedType pt = (ParameterizedType) type;
-            Type componentType = pt.getActualTypeArguments()[0];
-            if (componentType == Boolean.class) {
-                return (Decodeable) ProtobufCoders.ProtobufBoolStreamSimpledCoder.instance;
-            } else if (componentType == Byte.class) {
-                return (Decodeable) ProtobufCoders.ProtobufByteStreamSimpledCoder.instance;
-            } else if (componentType == Character.class) {
-                return (Decodeable) ProtobufCoders.ProtobufCharStreamSimpledCoder.instance;
-            } else if (componentType == Short.class) {
-                return (Decodeable) ProtobufCoders.ProtobufShortStreamSimpledCoder.instance;
-            } else if (componentType == Integer.class) {
-                return (Decodeable) ProtobufCoders.ProtobufIntStreamSimpledCoder.instance;
-            } else if (componentType == Float.class) {
-                return (Decodeable) ProtobufCoders.ProtobufFloatStreamSimpledCoder.instance;
-            } else if (componentType == Long.class) {
-                return (Decodeable) ProtobufCoders.ProtobufLongStreamSimpledCoder.instance;
-            } else if (componentType == Double.class) {
-                return (Decodeable) ProtobufCoders.ProtobufDoubleStreamSimpledCoder.instance;
-            } else if (componentType == AtomicBoolean.class) {
-                return (Decodeable) ProtobufCoders.ProtobufAtomicBooleanStreamSimpledCoder.instance;
-            } else if (componentType == AtomicInteger.class) {
-                return (Decodeable) ProtobufCoders.ProtobufAtomicIntegerStreamSimpledCoder.instance;
-            } else if (componentType == AtomicLong.class) {
-                return (Decodeable) ProtobufCoders.ProtobufAtomicLongStreamSimpledCoder.instance;
+        Type componentType = getStreamionComponentType(type);
+        if (componentType == Boolean.class) {
+            return (Decodeable) ProtobufCoders.ProtobufBoolStreamSimpledCoder.instance;
+        } else if (componentType == Byte.class) {
+            return (Decodeable) ProtobufCoders.ProtobufByteStreamSimpledCoder.instance;
+        } else if (componentType == Character.class) {
+            return (Decodeable) ProtobufCoders.ProtobufCharStreamSimpledCoder.instance;
+        } else if (componentType == Short.class) {
+            return (Decodeable) ProtobufCoders.ProtobufShortStreamSimpledCoder.instance;
+        } else if (componentType == Integer.class) {
+            return (Decodeable) ProtobufCoders.ProtobufIntStreamSimpledCoder.instance;
+        } else if (componentType == Float.class) {
+            return (Decodeable) ProtobufCoders.ProtobufFloatStreamSimpledCoder.instance;
+        } else if (componentType == Long.class) {
+            return (Decodeable) ProtobufCoders.ProtobufLongStreamSimpledCoder.instance;
+        } else if (componentType == Double.class) {
+            return (Decodeable) ProtobufCoders.ProtobufDoubleStreamSimpledCoder.instance;
+        } else {
+            Decodeable componentCoder = findDecoder(componentType);
+            if (componentCoder instanceof ProtobufPrimitivable) {
+                ProtobufPrimitivable primCoder = (ProtobufPrimitivable) componentCoder;
+                return (Decodeable) new ProtobufCoders.ProtobufPrimitiveStreamSimpledCoder(primCoder);
             }
         }
         return new ProtobufStreamDecoder(this, type);
@@ -298,31 +286,28 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
 
     @Override
     protected <E> Encodeable<ProtobufWriter, E> createStreamEncoder(Type type) {
-        if (type instanceof ParameterizedType) {
-            ParameterizedType pt = (ParameterizedType) type;
-            Type componentType = pt.getActualTypeArguments()[0];
-            if (componentType == Boolean.class) {
-                return (Encodeable) ProtobufCoders.ProtobufBoolStreamSimpledCoder.instance;
-            } else if (componentType == Byte.class) {
-                return (Encodeable) ProtobufCoders.ProtobufByteStreamSimpledCoder.instance;
-            } else if (componentType == Character.class) {
-                return (Encodeable) ProtobufCoders.ProtobufCharStreamSimpledCoder.instance;
-            } else if (componentType == Short.class) {
-                return (Encodeable) ProtobufCoders.ProtobufShortStreamSimpledCoder.instance;
-            } else if (componentType == Integer.class) {
-                return (Encodeable) ProtobufCoders.ProtobufIntStreamSimpledCoder.instance;
-            } else if (componentType == Float.class) {
-                return (Encodeable) ProtobufCoders.ProtobufFloatStreamSimpledCoder.instance;
-            } else if (componentType == Long.class) {
-                return (Encodeable) ProtobufCoders.ProtobufLongStreamSimpledCoder.instance;
-            } else if (componentType == Double.class) {
-                return (Encodeable) ProtobufCoders.ProtobufDoubleStreamSimpledCoder.instance;
-            } else if (componentType == AtomicBoolean.class) {
-                return (Encodeable) ProtobufCoders.ProtobufAtomicBooleanStreamSimpledCoder.instance;
-            } else if (componentType == AtomicInteger.class) {
-                return (Encodeable) ProtobufCoders.ProtobufAtomicIntegerStreamSimpledCoder.instance;
-            } else if (componentType == AtomicLong.class) {
-                return (Encodeable) ProtobufCoders.ProtobufAtomicLongStreamSimpledCoder.instance;
+        Type componentType = getStreamionComponentType(type);
+        if (componentType == Boolean.class) {
+            return (Encodeable) ProtobufCoders.ProtobufBoolStreamSimpledCoder.instance;
+        } else if (componentType == Byte.class) {
+            return (Encodeable) ProtobufCoders.ProtobufByteStreamSimpledCoder.instance;
+        } else if (componentType == Character.class) {
+            return (Encodeable) ProtobufCoders.ProtobufCharStreamSimpledCoder.instance;
+        } else if (componentType == Short.class) {
+            return (Encodeable) ProtobufCoders.ProtobufShortStreamSimpledCoder.instance;
+        } else if (componentType == Integer.class) {
+            return (Encodeable) ProtobufCoders.ProtobufIntStreamSimpledCoder.instance;
+        } else if (componentType == Float.class) {
+            return (Encodeable) ProtobufCoders.ProtobufFloatStreamSimpledCoder.instance;
+        } else if (componentType == Long.class) {
+            return (Encodeable) ProtobufCoders.ProtobufLongStreamSimpledCoder.instance;
+        } else if (componentType == Double.class) {
+            return (Encodeable) ProtobufCoders.ProtobufDoubleStreamSimpledCoder.instance;
+        } else {
+            Encodeable componentCoder = findEncoder(componentType);
+            if (componentCoder instanceof ProtobufPrimitivable) {
+                ProtobufPrimitivable primCoder = (ProtobufPrimitivable) componentCoder;
+                return (Encodeable) new ProtobufCoders.ProtobufPrimitiveStreamSimpledCoder(primCoder);
             }
         }
         return new ProtobufStreamEncoder(this, type);
@@ -366,6 +351,7 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
         return true;
     }
 
+    // 对应ProtobufWriter.writeFieldValue方法
     protected static boolean isSimpleType(Class fieldClass) {
         return fieldClass.isPrimitive()
                 || fieldClass == Boolean.class
@@ -376,9 +362,6 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
                 || fieldClass == Float.class
                 || fieldClass == Long.class
                 || fieldClass == Double.class
-                || fieldClass == AtomicBoolean.class
-                || fieldClass == AtomicInteger.class
-                || fieldClass == AtomicLong.class
                 || fieldClass == String.class
                 || fieldClass == boolean[].class
                 || fieldClass == byte[].class
@@ -396,9 +379,6 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
                 || fieldClass == Float[].class
                 || fieldClass == Long[].class
                 || fieldClass == Double[].class
-                || fieldClass == AtomicBoolean[].class
-                || fieldClass == AtomicInteger[].class
-                || fieldClass == AtomicLong[].class
                 || fieldClass == String[].class;
     }
 
@@ -412,9 +392,6 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
                 || componentType == Float.class
                 || componentType == Long.class
                 || componentType == Double.class
-                || componentType == AtomicBoolean.class
-                || componentType == AtomicInteger.class
-                || componentType == AtomicLong.class
                 || componentType == String.class;
     }
 
@@ -485,34 +462,18 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
     }
 
     public static int getTag(String fieldName, Type fieldType, int fieldPos, boolean enumtostring) {
-        int wiretype = ProtobufFactory.wireTypeBit(fieldType, enumtostring);
-        return (fieldPos << 3 | wiretype);
+        ProtobufTypeEnum typeEnum = ProtobufTypeEnum.valueOf(fieldType, enumtostring);
+        return (fieldPos << 3 | typeEnum.getValue());
+    }
+
+    public static int getTag(int index, ProtobufTypeEnum typeEnum) {
+        return index << 3 | typeEnum.getValue();
     }
 
     public static int getTag(DeMember member, boolean enumtostring) {
-        int wiretype = ProtobufFactory.wireTypeBit(member.getAttribute().type(), enumtostring);
-        return (member.getPosition() << 3 | wiretype);
-    }
-
-    public static int wireTypeBit(Type javaType, boolean enumtostring) {
-        if (javaType == double.class || javaType == Double.class) {
-            return 1;
-        } else if (javaType == float.class || javaType == Float.class) {
-            return 5;
-        } else if ((javaType == boolean.class || javaType == Boolean.class)
-                || (javaType == byte.class || javaType == Byte.class)
-                || (javaType == char.class || javaType == Character.class)
-                || (javaType == short.class || javaType == Short.class)
-                || (javaType == int.class || javaType == Integer.class)
-                || (javaType == long.class || javaType == Long.class)
-                || (javaType == AtomicBoolean.class || javaType == AtomicInteger.class)
-                || javaType == AtomicLong.class) {
-            return 0;
-        } else if (!enumtostring && (javaType instanceof Class) && ((Class) javaType).isEnum()) {
-            return 0;
-        } else { // byte[]
-            return 2;
-        }
+        ProtobufTypeEnum typeEnum =
+                ProtobufTypeEnum.valueOf(member.getAttribute().type(), enumtostring);
+        return (member.getPosition() << 3 | typeEnum.getValue());
     }
 
     public static String wireTypeString(Type javaType, boolean enumtostring) {

@@ -31,4 +31,8 @@ public interface ProtobufEncodeable<W extends Writer, T> extends Encodeable<W, T
     default void convertTo(W out, EnMember member, T value) {
         convertTo(out, value);
     }
+
+    // 获取数据类型枚举
+    public ProtobufTypeEnum typeEnum();
+
 }

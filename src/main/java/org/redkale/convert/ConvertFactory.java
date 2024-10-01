@@ -317,6 +317,37 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return ptype.getActualTypeArguments()[0];
     }
 
+    protected boolean isStreamType(final Type type) {
+        if (type == null) {
+            return false;
+        }
+        if (type instanceof Class) {
+            return Stream.class.isAssignableFrom((Class) type);
+        }
+        ParameterizedType ptype = (ParameterizedType) type;
+        if (!(ptype.getRawType() instanceof Class)) {
+            return false;
+        }
+        Type[] ptargs = ptype.getActualTypeArguments();
+        if (ptargs == null || ptargs.length != 1) {
+            return false;
+        }
+        Class ownerType = (Class) ptype.getRawType();
+        return Stream.class.isAssignableFrom(ownerType);
+    }
+
+    // 返回null表示type不是Stream类型
+    protected Type getStreamionComponentType(final Type type) {
+        if (!isStreamType(type)) {
+            return null;
+        }
+        if (type instanceof Class) {
+            return Object.class;
+        }
+        ParameterizedType ptype = ((ParameterizedType) type);
+        return ptype.getActualTypeArguments()[0];
+    }
+
     protected <E> Encodeable<W, E> createDyncEncoder(Type type) {
         return null;
     }

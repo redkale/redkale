@@ -9,6 +9,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.function.BiFunction;
 import org.redkale.convert.*;
+import org.redkale.util.Utility;
 
 /**
  * @author zhangjx
@@ -18,22 +19,20 @@ import org.redkale.convert.*;
 public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
         implements ProtobufEncodeable<ProtobufWriter, Map<K, V>> {
 
-    private final boolean enumtostring;
     private final int keyTag;
     private final int valTag;
 
     public ProtobufMapEncoder(ConvertFactory factory, Type type) {
         super(factory, type);
-        this.enumtostring = ((ProtobufFactory) factory).enumtostring;
-        this.keyTag = 1 << 3 | ProtobufFactory.wireTypeBit(keyEncoder.getType(), enumtostring);
-        this.valTag = 2 << 3 | ProtobufFactory.wireTypeBit(valueEncoder.getType(), enumtostring);
+        this.keyTag = ProtobufFactory.getTag(1, ((ProtobufEncodeable) keyEncoder).typeEnum());
+        this.valTag = ProtobufFactory.getTag(2, ((ProtobufEncodeable) valueEncoder).typeEnum());
     }
 
     @Override
     public void convertTo(ProtobufWriter out, EnMember member, Map<K, V> value) {
         this.checkInited();
         final Map<K, V> values = value;
-        if (values == null || values.isEmpty()) {
+        if (Utility.isEmpty(value)) {
             out.writeNull();
             return;
         }
@@ -64,14 +63,19 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
 
     @Override
     public int computeSize(ProtobufWriter out, int tagLen, Map<K, V> value) {
-        if (value == null || value.isEmpty()) {
+        if (Utility.isEmpty(value)) {
             return 0;
         }
         return 0;
     }
 
     @Override
-    public boolean requireSize() {
+    public final boolean requireSize() {
         return true;
+    }
+
+    @Override
+    public final ProtobufTypeEnum typeEnum() {
+        return ProtobufTypeEnum.BYTES;
     }
 }

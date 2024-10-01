@@ -7,7 +7,6 @@ package org.redkale.test.convert.pb;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -142,27 +141,16 @@ public class UserBean {
     private List<Byte> bit6;
 
     @ConvertColumn(index = 41)
-    private Map<String, String> map;
-
-    @ConvertColumn(index = 42)
     public UserKind kind;
 
-    @ConvertColumn(index = 43)
+    @ConvertColumn(index = 42)
     public AtomicInteger count;
 
-    @ConvertColumn(index = 44)
+    @ConvertColumn(index = 43)
     public AtomicLong[] count2;
 
-    @ConvertColumn(index = 45)
+    @ConvertColumn(index = 44)
     private List<String> strs;
-
-    public Map<String, String> getMap() {
-        return map;
-    }
-
-    public void setMap(Map<String, String> map) {
-        this.map = map;
-    }
 
     public List<Integer> getId6() {
         return id6;

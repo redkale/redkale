@@ -107,11 +107,8 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
             int itemDataSize = encodeable.computeSize(out, itemTagSize, member.getFieldValue(value));
             if (itemDataSize > 0) {
                 size += itemTagSize + itemDataSize;
-                System.out.println(
-                        "member: " + member.getFieldName() + ", tag: " + itemTagSize + ", data: " + itemDataSize);
             }
         }
-        System.out.println("对象: " + value + ", 大小: " + size);
         return size;
     }
 
@@ -122,5 +119,10 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
     @Override
     public final boolean requireSize() {
         return true;
+    }
+
+    @Override
+    public final ProtobufTypeEnum typeEnum() {
+        return ProtobufTypeEnum.BYTES;
     }
 }

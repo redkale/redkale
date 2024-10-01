@@ -11,6 +11,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.atomic.*;
+import java.util.function.IntFunction;
 import java.util.stream.Stream;
 import org.redkale.convert.SimpledCoder;
 import org.redkale.convert.ext.AtomicBooleanSimpledCoder;
@@ -57,12 +58,17 @@ public abstract class ProtobufCoders {
 
     // ------------------------------------- boolean -------------------------------------
     public static class ProtobufBoolSimpledCoder extends BoolSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Boolean> {
+            implements ProtobufPrimitivable<Boolean>, ProtobufEncodeable<ProtobufWriter, Boolean> {
 
         public static final ProtobufBoolSimpledCoder instance = new ProtobufBoolSimpledCoder();
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Boolean value) {
+            return computeSize(value);
+        }
+
+        @Override
+        public int computeSize(Boolean value) {
             return value == null ? 0 : 1;
         }
 
@@ -70,15 +76,30 @@ public abstract class ProtobufCoders {
         public Type getType() {
             return Boolean.class;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.INT;
+        }
+
+        @Override
+        public final Class primitiveType() {
+            return boolean.class;
+        }
     }
 
     public static class ProtobufByteSimpledCoder extends ByteSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Byte> {
+            implements ProtobufPrimitivable<Byte>, ProtobufEncodeable<ProtobufWriter, Byte> {
 
         public static final ProtobufByteSimpledCoder instance = new ProtobufByteSimpledCoder();
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Byte value) {
+            return computeSize(value);
+        }
+
+        @Override
+        public int computeSize(Byte value) {
             return value == null ? 0 : 1;
         }
 
@@ -86,15 +107,30 @@ public abstract class ProtobufCoders {
         public Type getType() {
             return Byte.class;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.INT;
+        }
+
+        @Override
+        public final Class primitiveType() {
+            return byte.class;
+        }
     }
 
     public static class ProtobufCharSimpledCoder extends CharSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Character> {
+            implements ProtobufPrimitivable<Character>, ProtobufEncodeable<ProtobufWriter, Character> {
 
         public static final ProtobufCharSimpledCoder instance = new ProtobufCharSimpledCoder();
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Character value) {
+            return computeSize(value);
+        }
+
+        @Override
+        public int computeSize(Character value) {
             return value == null ? 0 : ProtobufFactory.computeSInt32SizeNoTag(value);
         }
 
@@ -102,15 +138,30 @@ public abstract class ProtobufCoders {
         public Type getType() {
             return Character.class;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.INT;
+        }
+
+        @Override
+        public final Class primitiveType() {
+            return char.class;
+        }
     }
 
     public static class ProtobufShortSimpledCoder extends ShortSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Short> {
+            implements ProtobufPrimitivable<Short>, ProtobufEncodeable<ProtobufWriter, Short> {
 
         public static final ProtobufShortSimpledCoder instance = new ProtobufShortSimpledCoder();
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Short value) {
+            return computeSize(value);
+        }
+
+        @Override
+        public int computeSize(Short value) {
             return value == null ? 0 : ProtobufFactory.computeSInt32SizeNoTag(value);
         }
 
@@ -118,15 +169,30 @@ public abstract class ProtobufCoders {
         public Type getType() {
             return Short.class;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.INT;
+        }
+
+        @Override
+        public final Class primitiveType() {
+            return short.class;
+        }
     }
 
     public static class ProtobufIntSimpledCoder extends IntSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Integer> {
+            implements ProtobufPrimitivable<Integer>, ProtobufEncodeable<ProtobufWriter, Integer> {
 
         public static final ProtobufIntSimpledCoder instance = new ProtobufIntSimpledCoder();
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Integer value) {
+            return computeSize(value);
+        }
+
+        @Override
+        public int computeSize(Integer value) {
             return value == null ? 0 : ProtobufFactory.computeSInt32SizeNoTag(value);
         }
 
@@ -134,15 +200,30 @@ public abstract class ProtobufCoders {
         public Type getType() {
             return Integer.class;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.INT;
+        }
+
+        @Override
+        public final Class primitiveType() {
+            return int.class;
+        }
     }
 
     public static class ProtobufFloatSimpledCoder extends FloatSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Float> {
+            implements ProtobufPrimitivable<Float>, ProtobufEncodeable<ProtobufWriter, Float> {
 
         public static final ProtobufFloatSimpledCoder instance = new ProtobufFloatSimpledCoder();
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Float value) {
+            return computeSize(value);
+        }
+
+        @Override
+        public int computeSize(Float value) {
             return value == null ? 0 : 4;
         }
 
@@ -150,15 +231,30 @@ public abstract class ProtobufCoders {
         public Type getType() {
             return Float.class;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.FLOAT;
+        }
+
+        @Override
+        public final Class primitiveType() {
+            return float.class;
+        }
     }
 
     public static class ProtobufLongSimpledCoder extends LongSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Long> {
+            implements ProtobufPrimitivable<Long>, ProtobufEncodeable<ProtobufWriter, Long> {
 
         public static final ProtobufLongSimpledCoder instance = new ProtobufLongSimpledCoder();
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Long value) {
+            return computeSize(value);
+        }
+
+        @Override
+        public int computeSize(Long value) {
             return value == null ? 0 : ProtobufFactory.computeSInt64SizeNoTag(value);
         }
 
@@ -166,21 +262,46 @@ public abstract class ProtobufCoders {
         public Type getType() {
             return Long.class;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.INT;
+        }
+
+        @Override
+        public final Class primitiveType() {
+            return long.class;
+        }
     }
 
     public static class ProtobufDoubleSimpledCoder extends DoubleSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Double> {
+            implements ProtobufPrimitivable<Double>, ProtobufEncodeable<ProtobufWriter, Double> {
 
         public static final ProtobufDoubleSimpledCoder instance = new ProtobufDoubleSimpledCoder();
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Double value) {
+            return computeSize(value);
+        }
+
+        @Override
+        public int computeSize(Double value) {
             return value == null ? 0 : 8;
         }
 
         @Override
         public Type getType() {
             return Double.class;
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.DOUBLE;
+        }
+
+        @Override
+        public final Class primitiveType() {
+            return double.class;
         }
     }
 
@@ -202,23 +323,42 @@ public abstract class ProtobufCoders {
         public Type getType() {
             return String.class;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
     }
 
     // ------------------------------------- simple object -------------------------------------
     public static class ProtobufNumberSimpledCoder extends NumberSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, Number> {
+            implements ProtobufPrimitivable<Number>, ProtobufEncodeable<ProtobufWriter, Number> {
 
         public static final ProtobufNumberSimpledCoder instance = new ProtobufNumberSimpledCoder();
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Number value) {
-            return ProtobufLongSimpledCoder.instance.computeSize(
-                    out, tagSize, value == null ? null : value.longValue());
+            return computeSize(value);
+        }
+
+        @Override
+        public int computeSize(Number value) {
+            return ProtobufLongSimpledCoder.instance.computeSize(value.longValue());
         }
 
         @Override
         public Type getType() {
             return Number.class;
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.INT;
+        }
+
+        @Override
+        public final Class primitiveType() {
+            return long.class;
         }
     }
 
@@ -238,6 +378,11 @@ public abstract class ProtobufCoders {
         public Type getType() {
             return StringWrapper.class;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
     }
 
     public static class ProtobufCharSequenceSimpledCoder
@@ -255,6 +400,11 @@ public abstract class ProtobufCoders {
         @Override
         public Type getType() {
             return CharSequence.class;
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
         }
     }
 
@@ -274,51 +424,89 @@ public abstract class ProtobufCoders {
         public Type getType() {
             return StringBuilder.class;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
     }
 
     public static class ProtobufDateSimpledCoder extends DateSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, java.util.Date> {
+            implements ProtobufPrimitivable<java.util.Date>, ProtobufEncodeable<ProtobufWriter, java.util.Date> {
 
         public static final ProtobufDateSimpledCoder instance = new ProtobufDateSimpledCoder();
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, java.util.Date value) {
-            return ProtobufLongSimpledCoder.instance.computeSize(out, tagSize, value == null ? null : value.getTime());
+            return computeSize(value);
+        }
+
+        @Override
+        public int computeSize(java.util.Date value) {
+            return ProtobufLongSimpledCoder.instance.computeSize(value.getTime());
         }
 
         @Override
         public Type getType() {
             return java.util.Date.class;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.INT;
+        }
+
+        @Override
+        public final Class primitiveType() {
+            return long.class;
+        }
     }
 
     public static class ProtobufInstantSimpledCoder extends InstantSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, java.time.Instant> {
+            implements ProtobufPrimitivable<java.time.Instant>, ProtobufEncodeable<ProtobufWriter, java.time.Instant> {
 
         public static final ProtobufInstantSimpledCoder instance = new ProtobufInstantSimpledCoder();
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, java.time.Instant value) {
-            return ProtobufLongSimpledCoder.instance.computeSize(
-                    out, tagSize, value == null ? null : value.toEpochMilli());
+            return computeSize(value);
+        }
+
+        @Override
+        public int computeSize(java.time.Instant value) {
+            return ProtobufLongSimpledCoder.instance.computeSize(value == null ? null : value.toEpochMilli());
         }
 
         @Override
         public Type getType() {
             return java.time.Instant.class;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.INT;
+        }
+
+        @Override
+        public final Class primitiveType() {
+            return long.class;
+        }
     }
 
     public static class ProtobufLocalDateSimpledCoder extends LocalDateSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, java.time.LocalDate> {
+            implements ProtobufPrimitivable<java.time.LocalDate>,
+                    ProtobufEncodeable<ProtobufWriter, java.time.LocalDate> {
 
         public static final ProtobufLocalDateSimpledCoder instance = new ProtobufLocalDateSimpledCoder();
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, java.time.LocalDate value) {
+            return computeSize(value);
+        }
+
+        @Override
+        public int computeSize(java.time.LocalDate value) {
             return ProtobufIntSimpledCoder.instance.computeSize(
-                    out,
-                    tagSize,
                     value == null
                             ? null
                             : (value.getYear() * 100_00 + value.getMonthValue() * 100 + value.getDayOfMonth()));
@@ -328,22 +516,47 @@ public abstract class ProtobufCoders {
         public Type getType() {
             return java.time.LocalDate.class;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.INT;
+        }
+
+        @Override
+        public final Class primitiveType() {
+            return int.class;
+        }
     }
 
     public static class ProtobufLocalTimeSimpledCoder extends LocalTimeSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, java.time.LocalTime> {
+            implements ProtobufPrimitivable<java.time.LocalTime>,
+                    ProtobufEncodeable<ProtobufWriter, java.time.LocalTime> {
 
         public static final ProtobufLocalTimeSimpledCoder instance = new ProtobufLocalTimeSimpledCoder();
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, java.time.LocalTime value) {
-            return ProtobufLongSimpledCoder.instance.computeSize(
-                    out, tagSize, value == null ? null : value.toNanoOfDay());
+            return computeSize(value);
+        }
+
+        @Override
+        public int computeSize(java.time.LocalTime value) {
+            return ProtobufLongSimpledCoder.instance.computeSize(value == null ? null : value.toNanoOfDay());
         }
 
         @Override
         public Type getType() {
             return java.time.LocalTime.class;
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.INT;
+        }
+
+        @Override
+        public final Class primitiveType() {
+            return long.class;
         }
     }
 
@@ -352,6 +565,10 @@ public abstract class ProtobufCoders {
             implements ProtobufEncodeable<ProtobufWriter, java.time.LocalDateTime> {
 
         public static final ProtobufLocalDateTimeSimpledCoder instance = new ProtobufLocalDateTimeSimpledCoder();
+
+        public ProtobufLocalDateTimeSimpledCoder() {
+            super(ProtobufByteArraySimpledCoder.instance);
+        }
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, java.time.LocalDateTime value) {
@@ -362,32 +579,58 @@ public abstract class ProtobufCoders {
         public Type getType() {
             return java.time.LocalDateTime.class;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
     }
 
     public static class ProtobufDurationSimpledCoder extends DurationSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, java.time.Duration> {
+            implements ProtobufPrimitivable<java.time.Duration>,
+                    ProtobufEncodeable<ProtobufWriter, java.time.Duration> {
 
         public static final ProtobufDurationSimpledCoder instance = new ProtobufDurationSimpledCoder();
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, java.time.Duration value) {
-            return ProtobufLongSimpledCoder.instance.computeSize(out, tagSize, value == null ? null : value.toNanos());
+            return computeSize(value);
+        }
+
+        @Override
+        public int computeSize(java.time.Duration value) {
+            return ProtobufLongSimpledCoder.instance.computeSize(value == null ? null : value.toNanos());
         }
 
         @Override
         public Type getType() {
             return java.time.Duration.class;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.INT;
+        }
+
+        @Override
+        public final Class primitiveType() {
+            return long.class;
+        }
     }
 
     public static class ProtobufAtomicBooleanSimpledCoder
             extends AtomicBooleanSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, AtomicBoolean> {
+            implements ProtobufPrimitivable<AtomicBoolean>, ProtobufEncodeable<ProtobufWriter, AtomicBoolean> {
 
         public static final ProtobufAtomicBooleanSimpledCoder instance = new ProtobufAtomicBooleanSimpledCoder();
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, AtomicBoolean value) {
+            return computeSize(value);
+        }
+
+        @Override
+        public int computeSize(AtomicBoolean value) {
             return value == null ? 0 : 1;
         }
 
@@ -395,38 +638,78 @@ public abstract class ProtobufCoders {
         public Type getType() {
             return AtomicBoolean.class;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.INT;
+        }
+
+        @Override
+        public final Class primitiveType() {
+            return boolean.class;
+        }
     }
 
     public static class ProtobufAtomicIntegerSimpledCoder
             extends AtomicIntegerSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, AtomicInteger> {
+            implements ProtobufPrimitivable<AtomicInteger>, ProtobufEncodeable<ProtobufWriter, AtomicInteger> {
 
         public static final ProtobufAtomicIntegerSimpledCoder instance = new ProtobufAtomicIntegerSimpledCoder();
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, AtomicInteger value) {
-            return ProtobufIntSimpledCoder.instance.computeSize(out, tagSize, value == null ? null : value.get());
+            return computeSize(value);
+        }
+
+        @Override
+        public int computeSize(AtomicInteger value) {
+            return ProtobufIntSimpledCoder.instance.computeSize(value == null ? null : value.get());
         }
 
         @Override
         public Type getType() {
             return AtomicInteger.class;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.INT;
+        }
+
+        @Override
+        public final Class primitiveType() {
+            return int.class;
+        }
     }
 
     public static class ProtobufAtomicLongSimpledCoder extends AtomicLongSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, AtomicLong> {
+            implements ProtobufPrimitivable<AtomicLong>, ProtobufEncodeable<ProtobufWriter, AtomicLong> {
 
         public static final ProtobufAtomicLongSimpledCoder instance = new ProtobufAtomicLongSimpledCoder();
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, AtomicLong value) {
-            return ProtobufLongSimpledCoder.instance.computeSize(out, tagSize, value == null ? null : value.get());
+            return computeSize(value);
+        }
+
+        @Override
+        public int computeSize(AtomicLong value) {
+            return ProtobufLongSimpledCoder.instance.computeSize(value == null ? null : value.get());
         }
 
         @Override
         public Type getType() {
             return AtomicLong.class;
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.INT;
+        }
+
+        @Override
+        public final Class primitiveType() {
+            return long.class;
         }
     }
 
@@ -441,7 +724,7 @@ public abstract class ProtobufCoders {
                 return 0;
             }
             byte[] bs = value.toByteArray();
-            return ProtobufFactory.computeSInt32SizeNoTag(bs.length) + bs.length;
+            return ProtobufByteArraySimpledCoder.instance.computeSize(out, tagSize, bs);
         }
 
         @Override
@@ -450,8 +733,8 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public final boolean requireSize() {
-            return true;
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
         }
     }
 
@@ -472,6 +755,11 @@ public abstract class ProtobufCoders {
         public Type getType() {
             return BigDecimal.class;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
     }
 
     public static class ProtobufInetAddressSimpledCoder extends InetAddressSimpledCoder<ProtobufReader, ProtobufWriter>
@@ -479,13 +767,17 @@ public abstract class ProtobufCoders {
 
         public static final ProtobufInetAddressSimpledCoder instance = new ProtobufInetAddressSimpledCoder();
 
+        public ProtobufInetAddressSimpledCoder() {
+            super(ProtobufByteArraySimpledCoder.instance);
+        }
+
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, InetAddress value) {
             if (value == null) {
                 return 0;
             }
             byte[] bs = value.getAddress();
-            return ProtobufFactory.computeSInt32SizeNoTag(bs.length) + bs.length;
+            return ProtobufByteArraySimpledCoder.instance.computeSize(out, tagSize, bs);
         }
 
         @Override
@@ -494,8 +786,8 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public final boolean requireSize() {
-            return true;
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
         }
     }
 
@@ -512,7 +804,7 @@ public abstract class ProtobufCoders {
                 return 0;
             }
             byte[] bs = value.getAddress().getAddress();
-            return ProtobufFactory.computeSInt32SizeNoTag(bs.length) + bs.length;
+            return ProtobufByteArraySimpledCoder.instance.computeSize(out, tagSize, bs);
         }
 
         @Override
@@ -521,25 +813,39 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public final boolean requireSize() {
-            return true;
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
         }
     }
 
     public static class ProtobufLongAdderSimpledCoder extends LongAdderSimpledCoder<ProtobufReader, ProtobufWriter>
-            implements ProtobufPrimitivable, ProtobufEncodeable<ProtobufWriter, LongAdder> {
+            implements ProtobufPrimitivable<LongAdder>, ProtobufEncodeable<ProtobufWriter, LongAdder> {
 
         public static final ProtobufLongAdderSimpledCoder instance = new ProtobufLongAdderSimpledCoder();
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, LongAdder value) {
-            return ProtobufLongSimpledCoder.instance.computeSize(
-                    out, tagSize, value == null ? null : value.longValue());
+            return computeSize(value);
+        }
+
+        @Override
+        public int computeSize(LongAdder value) {
+            return ProtobufLongSimpledCoder.instance.computeSize(value == null ? null : value.longValue());
         }
 
         @Override
         public Type getType() {
             return LongAdder.class;
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.INT;
+        }
+
+        @Override
+        public final Class primitiveType() {
+            return long.class;
         }
     }
 
@@ -554,7 +860,7 @@ public abstract class ProtobufCoders {
                 return 0;
             }
             byte[] bs = value.getBytes();
-            return ProtobufFactory.computeSInt32SizeNoTag(bs.length) + bs.length;
+            return ProtobufByteArraySimpledCoder.instance.computeSize(out, tagSize, bs);
         }
 
         @Override
@@ -563,8 +869,195 @@ public abstract class ProtobufCoders {
         }
 
         @Override
-        public final boolean requireSize() {
-            return true;
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
+    }
+
+    public static class ProtobufPrimitiveArraySimpledCoder<T> extends SimpledCoder<ProtobufReader, ProtobufWriter, T[]>
+            implements ProtobufEncodeable<ProtobufWriter, T[]> {
+
+        private final IntFunction<T[]> arrayFunc;
+        private final SimpledCoder<ProtobufReader, ProtobufWriter, T> componentCoder;
+
+        public ProtobufPrimitiveArraySimpledCoder(ProtobufPrimitivable primitiveCoder) {
+            this.componentCoder = (SimpledCoder) primitiveCoder;
+            this.arrayFunc = Creator.funcArray(TypeToken.typeToClass(this.componentCoder.getType()));
+        }
+
+        @Override
+        public void convertTo(ProtobufWriter out, T[] value) {
+            if (value == null || value.length == 0) {
+                return;
+            }
+            SimpledCoder<ProtobufReader, ProtobufWriter, T> itemCoder = this.componentCoder;
+            ProtobufPrimitivable primCoder = (ProtobufPrimitivable) itemCoder;
+            T[] array = value;
+            int len = 0;
+            for (T item : array) {
+                len += primCoder.computeSize(item == null ? 0 : item);
+            }
+            out.writeLength(len);
+            for (T item : array) {
+                itemCoder.convertTo(out, item);
+            }
+        }
+
+        @Override
+        public T[] convertFrom(ProtobufReader in) {
+            SimpledCoder<ProtobufReader, ProtobufWriter, T> itemCoder = this.componentCoder;
+            ProtobufPrimitivable primCoder = (ProtobufPrimitivable) itemCoder;
+            List<T> data = new ArrayList<>();
+            int len = in.readRawVarint32();
+            while (len > 0) {
+                T val = itemCoder.convertFrom(in);
+                len -= primCoder.computeSize(val);
+                data.add(val);
+            }
+            return data.toArray(this.arrayFunc);
+        }
+
+        @Override
+        public int computeSize(ProtobufWriter out, int tagSize, T[] value) {
+            if (value == null || value.length == 0) {
+                return 0;
+            }
+            ProtobufPrimitivable primCoder = (ProtobufPrimitivable) this.componentCoder;
+            int len = 0;
+            for (T item : value) {
+                len += primCoder.computeSize(item);
+            }
+            return len;
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
+    }
+
+    public static class ProtobufPrimitiveCollectionSimpledCoder<T>
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<T>>
+            implements ProtobufEncodeable<ProtobufWriter, Collection<T>> {
+
+        private final Creator<? extends Collection> creator;
+
+        private final SimpledCoder<ProtobufReader, ProtobufWriter, T> componentCoder;
+
+        public ProtobufPrimitiveCollectionSimpledCoder(
+                Creator<? extends Collection> creator, ProtobufPrimitivable primitiveCoder) {
+            this.creator = creator;
+            this.componentCoder = (SimpledCoder) primitiveCoder;
+        }
+
+        @Override
+        public void convertTo(ProtobufWriter out, Collection<T> values) {
+            SimpledCoder<ProtobufReader, ProtobufWriter, T> itemCoder = this.componentCoder;
+            ProtobufPrimitivable primCoder = (ProtobufPrimitivable) itemCoder;
+            Collection<T> array = values;
+            if (array != null && !array.isEmpty()) {
+                int len = 0;
+                for (T item : array) {
+                    len += primCoder.computeSize(item == null ? 0 : item);
+                }
+                out.writeLength(len);
+                for (T item : array) {
+                    itemCoder.convertTo(out, item);
+                }
+            }
+        }
+
+        @Override
+        public Collection<T> convertFrom(ProtobufReader in) {
+            SimpledCoder<ProtobufReader, ProtobufWriter, T> itemCoder = this.componentCoder;
+            ProtobufPrimitivable primCoder = (ProtobufPrimitivable) itemCoder;
+            Collection<T> data = creator.create();
+            int len = in.readRawVarint32();
+            while (len > 0) {
+                T val = itemCoder.convertFrom(in);
+                len -= primCoder.computeSize(val);
+                data.add(val);
+            }
+            return data;
+        }
+
+        @Override
+        public int computeSize(ProtobufWriter out, int tagSize, Collection<T> value) {
+            if (value == null || value.isEmpty()) {
+                return 0;
+            }
+            ProtobufPrimitivable primCoder = (ProtobufPrimitivable) this.componentCoder;
+            int len = 0;
+            for (T item : value) {
+                len += primCoder.computeSize(item);
+            }
+            return len;
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
+    }
+
+    public static class ProtobufPrimitiveStreamSimpledCoder<T>
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<T>>
+            implements ProtobufEncodeable<ProtobufWriter, Stream<T>> {
+
+        private final SimpledCoder<ProtobufReader, ProtobufWriter, T> componentCoder;
+
+        public ProtobufPrimitiveStreamSimpledCoder(ProtobufPrimitivable primitiveCoder) {
+            this.componentCoder = (SimpledCoder) primitiveCoder;
+        }
+
+        @Override
+        public void convertTo(ProtobufWriter out, Stream<T> value) {
+            if (value == null) {
+                return;
+            }
+            SimpledCoder<ProtobufReader, ProtobufWriter, T> itemCoder = this.componentCoder;
+            ProtobufPrimitivable primCoder = (ProtobufPrimitivable) itemCoder;
+            Object[] array = value.toArray();
+            int len = 0;
+            for (Object item : array) {
+                len += primCoder.computeSize(item == null ? 0 : item);
+            }
+            out.writeLength(len);
+            for (Object item : array) {
+                itemCoder.convertTo(out, (T) item);
+            }
+        }
+
+        @Override
+        public Stream<T> convertFrom(ProtobufReader in) {
+            SimpledCoder<ProtobufReader, ProtobufWriter, T> itemCoder = this.componentCoder;
+            ProtobufPrimitivable primCoder = (ProtobufPrimitivable) itemCoder;
+            List<T> data = new ArrayList<>();
+            int len = in.readRawVarint32();
+            while (len > 0) {
+                T val = itemCoder.convertFrom(in);
+                len -= primCoder.computeSize(val);
+                data.add(val);
+            }
+            return data.stream();
+        }
+
+        @Override
+        public int computeSize(ProtobufWriter out, int tagSize, Stream<T> value) {
+            if (value == null) {
+                return 0;
+            }
+            ProtobufPrimitivable primCoder = (ProtobufPrimitivable) this.componentCoder;
+            int len = 0;
+            for (Object item : value.toArray()) {
+                len += primCoder.computeSize(item);
+            }
+            return len;
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
         }
     }
 
@@ -588,6 +1081,11 @@ public abstract class ProtobufCoders {
         public int computeSize(ProtobufWriter out, int tagSize, boolean[] value) {
             return value == null ? 0 : value.length;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
     }
 
     public static class ProtobufByteArraySimpledCoder extends SimpledCoder<ProtobufReader, ProtobufWriter, byte[]>
@@ -608,6 +1106,11 @@ public abstract class ProtobufCoders {
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, byte[] value) {
             return value == null ? 0 : value.length;
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
         }
     }
 
@@ -637,6 +1140,11 @@ public abstract class ProtobufCoders {
             }
             return len;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
     }
 
     public static class ProtobufShortArraySimpledCoder extends SimpledCoder<ProtobufReader, ProtobufWriter, short[]>
@@ -664,6 +1172,11 @@ public abstract class ProtobufCoders {
                 len += ProtobufFactory.computeSInt32SizeNoTag(item);
             }
             return len;
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
         }
     }
 
@@ -693,6 +1206,11 @@ public abstract class ProtobufCoders {
             }
             return len;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
     }
 
     public static class ProtobufFloatArraySimpledCoder extends SimpledCoder<ProtobufReader, ProtobufWriter, float[]>
@@ -713,6 +1231,11 @@ public abstract class ProtobufCoders {
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, float[] value) {
             return value == null ? 0 : value.length * 4;
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
         }
     }
 
@@ -742,6 +1265,11 @@ public abstract class ProtobufCoders {
             }
             return len;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
     }
 
     public static class ProtobufDoubleArraySimpledCoder extends SimpledCoder<ProtobufReader, ProtobufWriter, double[]>
@@ -762,6 +1290,11 @@ public abstract class ProtobufCoders {
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, double[] value) {
             return value == null ? 0 : value.length * 8;
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
         }
     }
 
@@ -785,6 +1318,11 @@ public abstract class ProtobufCoders {
         public int computeSize(ProtobufWriter out, int tagSize, Boolean[] value) {
             return value == null ? 0 : value.length;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
     }
 
     public static class ProtobufByteArraySimpledCoder2 extends SimpledCoder<ProtobufReader, ProtobufWriter, Byte[]>
@@ -805,6 +1343,11 @@ public abstract class ProtobufCoders {
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Byte[] value) {
             return value == null ? 0 : value.length;
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
         }
     }
 
@@ -834,6 +1377,11 @@ public abstract class ProtobufCoders {
             }
             return len;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
     }
 
     public static class ProtobufShortArraySimpledCoder2 extends SimpledCoder<ProtobufReader, ProtobufWriter, Short[]>
@@ -861,6 +1409,11 @@ public abstract class ProtobufCoders {
                 len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : item);
             }
             return len;
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
         }
     }
 
@@ -890,6 +1443,11 @@ public abstract class ProtobufCoders {
             }
             return len;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
     }
 
     public static class ProtobufFloatArraySimpledCoder2 extends SimpledCoder<ProtobufReader, ProtobufWriter, Float[]>
@@ -910,6 +1468,11 @@ public abstract class ProtobufCoders {
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Float[] value) {
             return value == null ? 0 : value.length * 4;
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
         }
     }
 
@@ -939,6 +1502,11 @@ public abstract class ProtobufCoders {
             }
             return len;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
     }
 
     public static class ProtobufDoubleArraySimpledCoder2 extends SimpledCoder<ProtobufReader, ProtobufWriter, Double[]>
@@ -960,64 +1528,10 @@ public abstract class ProtobufCoders {
         public int computeSize(ProtobufWriter out, int tagSize, Double[] value) {
             return value == null ? 0 : value.length * 8;
         }
-    }
-
-    public static class ProtobufAtomicIntegerArraySimpledCoder
-            extends SimpledCoder<ProtobufReader, ProtobufWriter, AtomicInteger[]>
-            implements ProtobufEncodeable<ProtobufWriter, AtomicInteger[]> {
-
-        public static final ProtobufAtomicIntegerArraySimpledCoder instance =
-                new ProtobufAtomicIntegerArraySimpledCoder();
 
         @Override
-        public void convertTo(ProtobufWriter out, AtomicInteger[] values) {
-            out.writeAtomicIntegers(values);
-        }
-
-        @Override
-        public AtomicInteger[] convertFrom(ProtobufReader in) {
-            return in.readAtomicIntegers();
-        }
-
-        @Override
-        public int computeSize(ProtobufWriter out, int tagSize, AtomicInteger[] value) {
-            if (value == null || value.length == 0) {
-                return 0;
-            }
-            int len = 0;
-            for (AtomicInteger item : value) {
-                len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : item.get());
-            }
-            return len;
-        }
-    }
-
-    public static class ProtobufAtomicLongArraySimpledCoder
-            extends SimpledCoder<ProtobufReader, ProtobufWriter, AtomicLong[]>
-            implements ProtobufEncodeable<ProtobufWriter, AtomicLong[]> {
-
-        public static final ProtobufAtomicLongArraySimpledCoder instance = new ProtobufAtomicLongArraySimpledCoder();
-
-        @Override
-        public void convertTo(ProtobufWriter out, AtomicLong[] values) {
-            out.writeAtomicLongs(values);
-        }
-
-        @Override
-        public AtomicLong[] convertFrom(ProtobufReader in) {
-            return in.readAtomicLongs();
-        }
-
-        @Override
-        public int computeSize(ProtobufWriter out, int tagSize, AtomicLong[] value) {
-            if (value == null || value.length == 0) {
-                return 0;
-            }
-            int len = 0;
-            for (AtomicLong item : value) {
-                len += ProtobufFactory.computeSInt64SizeNoTag(item == null ? 0 : item.get());
-            }
-            return len;
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
         }
     }
 
@@ -1046,6 +1560,11 @@ public abstract class ProtobufCoders {
         public int computeSize(ProtobufWriter out, int tagSize, Collection<Boolean> value) {
             return value == null ? 0 : value.size();
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
     }
 
     public static class ProtobufByteCollectionSimpledCoder
@@ -1071,6 +1590,11 @@ public abstract class ProtobufCoders {
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Collection<Byte> value) {
             return value == null ? 0 : value.size();
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
         }
     }
 
@@ -1105,6 +1629,11 @@ public abstract class ProtobufCoders {
             }
             return len;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
     }
 
     public static class ProtobufShortCollectionSimpledCoder
@@ -1137,6 +1666,11 @@ public abstract class ProtobufCoders {
                 len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : item);
             }
             return len;
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
         }
     }
 
@@ -1171,6 +1705,11 @@ public abstract class ProtobufCoders {
             }
             return len;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
     }
 
     public static class ProtobufFloatCollectionSimpledCoder
@@ -1196,6 +1735,11 @@ public abstract class ProtobufCoders {
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Collection<Float> value) {
             return value == null ? 0 : value.size() * 4;
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
         }
     }
 
@@ -1230,6 +1774,11 @@ public abstract class ProtobufCoders {
             }
             return len;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
     }
 
     public static class ProtobufDoubleCollectionSimpledCoder
@@ -1256,97 +1805,10 @@ public abstract class ProtobufCoders {
         public int computeSize(ProtobufWriter out, int tagSize, Collection<Double> value) {
             return value == null ? 0 : value.size() * 8;
         }
-    }
-
-    public static class ProtobufAtomicBooleanCollectionSimpledCoder
-            extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<AtomicBoolean>>
-            implements ProtobufEncodeable<ProtobufWriter, Collection<AtomicBoolean>> {
-
-        private final Creator<? extends Collection> creator;
-
-        public ProtobufAtomicBooleanCollectionSimpledCoder(Creator<? extends Collection> creator) {
-            this.creator = creator;
-        }
 
         @Override
-        public void convertTo(ProtobufWriter out, Collection<AtomicBoolean> values) {
-            out.writeAtomicBooleans(values);
-        }
-
-        @Override
-        public Collection<AtomicBoolean> convertFrom(ProtobufReader in) {
-            return in.readAtomicBooleans(creator);
-        }
-
-        @Override
-        public int computeSize(ProtobufWriter out, int tagSize, Collection<AtomicBoolean> value) {
-            return value == null ? 0 : value.size();
-        }
-    }
-
-    public static class ProtobufAtomicIntegerCollectionSimpledCoder
-            extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<AtomicInteger>>
-            implements ProtobufEncodeable<ProtobufWriter, Collection<AtomicInteger>> {
-
-        private final Creator<? extends Collection> creator;
-
-        public ProtobufAtomicIntegerCollectionSimpledCoder(Creator<? extends Collection> creator) {
-            this.creator = creator;
-        }
-
-        @Override
-        public void convertTo(ProtobufWriter out, Collection<AtomicInteger> values) {
-            out.writeAtomicIntegers(values);
-        }
-
-        @Override
-        public Collection<AtomicInteger> convertFrom(ProtobufReader in) {
-            return in.readAtomicIntegers(creator);
-        }
-
-        @Override
-        public int computeSize(ProtobufWriter out, int tagSize, Collection<AtomicInteger> value) {
-            if (value == null || value.isEmpty()) {
-                return 0;
-            }
-            int len = 0;
-            for (AtomicInteger item : value) {
-                len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : item.get());
-            }
-            return len;
-        }
-    }
-
-    public static class ProtobufAtomicLongCollectionSimpledCoder
-            extends SimpledCoder<ProtobufReader, ProtobufWriter, Collection<AtomicLong>>
-            implements ProtobufEncodeable<ProtobufWriter, Collection<AtomicLong>> {
-
-        private final Creator<? extends Collection> creator;
-
-        public ProtobufAtomicLongCollectionSimpledCoder(Creator<? extends Collection> creator) {
-            this.creator = creator;
-        }
-
-        @Override
-        public void convertTo(ProtobufWriter out, Collection<AtomicLong> values) {
-            out.writeAtomicLongs(values);
-        }
-
-        @Override
-        public Collection<AtomicLong> convertFrom(ProtobufReader in) {
-            return in.readAtomicLongs(creator);
-        }
-
-        @Override
-        public int computeSize(ProtobufWriter out, int tagSize, Collection<AtomicLong> value) {
-            if (value == null || value.isEmpty()) {
-                return 0;
-            }
-            int len = 0;
-            for (AtomicLong item : value) {
-                len += ProtobufFactory.computeSInt64SizeNoTag(item == null ? 0 : item.get());
-            }
-            return len;
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
         }
     }
 
@@ -1371,6 +1833,11 @@ public abstract class ProtobufCoders {
         public int computeSize(ProtobufWriter out, int tagSize, Stream<Boolean> value) {
             return value == null ? 0 : (int) value.count();
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
     }
 
     public static class ProtobufByteStreamSimpledCoder
@@ -1392,6 +1859,11 @@ public abstract class ProtobufCoders {
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Stream<Byte> value) {
             return value == null ? 0 : (int) value.count();
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
         }
     }
 
@@ -1422,6 +1894,11 @@ public abstract class ProtobufCoders {
             }
             return len;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
     }
 
     public static class ProtobufShortStreamSimpledCoder
@@ -1450,6 +1927,11 @@ public abstract class ProtobufCoders {
                 len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : (Short) item);
             }
             return len;
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
         }
     }
 
@@ -1480,6 +1962,11 @@ public abstract class ProtobufCoders {
             }
             return len;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
     }
 
     public static class ProtobufFloatStreamSimpledCoder
@@ -1501,6 +1988,11 @@ public abstract class ProtobufCoders {
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Stream<Float> value) {
             return value == null ? 0 : (int) value.count() * 4;
+        }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
         }
     }
 
@@ -1531,6 +2023,11 @@ public abstract class ProtobufCoders {
             }
             return len;
         }
+
+        @Override
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
+        }
     }
 
     public static class ProtobufDoubleStreamSimpledCoder
@@ -1553,87 +2050,10 @@ public abstract class ProtobufCoders {
         public int computeSize(ProtobufWriter out, int tagSize, Stream<Double> value) {
             return value == null ? 0 : (int) value.count() * 8;
         }
-    }
-
-    public static class ProtobufAtomicBooleanStreamSimpledCoder
-            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<AtomicBoolean>>
-            implements ProtobufEncodeable<ProtobufWriter, Stream<AtomicBoolean>> {
-
-        public static final ProtobufAtomicBooleanStreamSimpledCoder instance =
-                new ProtobufAtomicBooleanStreamSimpledCoder();
 
         @Override
-        public void convertTo(ProtobufWriter out, Stream<AtomicBoolean> values) {
-            out.writeAtomicBooleans(values);
-        }
-
-        @Override
-        public Stream<AtomicBoolean> convertFrom(ProtobufReader in) {
-            return in.readAtomicBooleans(LIST_CREATOR).stream();
-        }
-
-        @Override
-        public int computeSize(ProtobufWriter out, int tagSize, Stream<AtomicBoolean> value) {
-            return value == null ? 0 : (int) value.count();
-        }
-    }
-
-    public static class ProtobufAtomicIntegerStreamSimpledCoder
-            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<AtomicInteger>>
-            implements ProtobufEncodeable<ProtobufWriter, Stream<AtomicInteger>> {
-
-        public static final ProtobufAtomicIntegerStreamSimpledCoder instance =
-                new ProtobufAtomicIntegerStreamSimpledCoder();
-
-        @Override
-        public void convertTo(ProtobufWriter out, Stream<AtomicInteger> values) {
-            out.writeAtomicIntegers(values);
-        }
-
-        @Override
-        public Stream<AtomicInteger> convertFrom(ProtobufReader in) {
-            return in.readAtomicIntegers(LIST_CREATOR).stream();
-        }
-
-        @Override
-        public int computeSize(ProtobufWriter out, int tagSize, Stream<AtomicInteger> value) {
-            if (value == null) {
-                return 0;
-            }
-            int len = 0;
-            for (Object item : value.toArray()) {
-                len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : ((AtomicInteger) item).get());
-            }
-            return len;
-        }
-    }
-
-    public static class ProtobufAtomicLongStreamSimpledCoder
-            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<AtomicLong>>
-            implements ProtobufEncodeable<ProtobufWriter, Stream<AtomicLong>> {
-
-        public static final ProtobufAtomicLongStreamSimpledCoder instance = new ProtobufAtomicLongStreamSimpledCoder();
-
-        @Override
-        public void convertTo(ProtobufWriter out, Stream<AtomicLong> values) {
-            out.writeAtomicLongs(values);
-        }
-
-        @Override
-        public Stream<AtomicLong> convertFrom(ProtobufReader in) {
-            return in.readAtomicLongs(LIST_CREATOR).stream();
-        }
-
-        @Override
-        public int computeSize(ProtobufWriter out, int tagSize, Stream<AtomicLong> value) {
-            if (value == null) {
-                return 0;
-            }
-            int len = 0;
-            for (Object item : value.toArray()) {
-                len += ProtobufFactory.computeSInt64SizeNoTag(item == null ? 0 : ((AtomicLong) item).get());
-            }
-            return len;
+        public final ProtobufTypeEnum typeEnum() {
+            return ProtobufTypeEnum.BYTES;
         }
     }
 }

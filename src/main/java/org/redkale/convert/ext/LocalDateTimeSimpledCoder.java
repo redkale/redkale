@@ -6,6 +6,7 @@
 package org.redkale.convert.ext;
 
 import java.time.*;
+import java.util.Objects;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 
@@ -18,12 +19,19 @@ import org.redkale.convert.json.*;
  * @param <R> Reader输入的子类型
  * @param <W> Writer输出的子类型
  */
-public class LocalDateTimeSimpledCoder<R extends Reader, W extends Writer>
-        extends SimpledCoder<R, W, LocalDateTime> {
-
-    private static final ByteArraySimpledCoder bsSimpledCoder = ByteArraySimpledCoder.instance;
+public class LocalDateTimeSimpledCoder<R extends Reader, W extends Writer> extends SimpledCoder<R, W, LocalDateTime> {
 
     public static final LocalDateTimeSimpledCoder instance = new LocalDateTimeSimpledCoder();
+
+    protected final SimpledCoder<R, W, byte[]> bsSimpledCoder;
+
+    protected LocalDateTimeSimpledCoder() {
+        this.bsSimpledCoder = ByteArraySimpledCoder.instance;
+    }
+
+    public LocalDateTimeSimpledCoder(SimpledCoder<R, W, byte[]> bSimpledCoder) {
+        this.bsSimpledCoder = Objects.requireNonNull(bSimpledCoder);
+    }
 
     @Override
     public void convertTo(W out, LocalDateTime value) {

@@ -32,12 +32,12 @@ public class ProtobufStreamEncoder<T> extends StreamEncoder<ProtobufWriter, T>
         if (array == null || array.length < 1) {
             return;
         }
-        ProtobufEncodeable itemEncoder = (ProtobufEncodeable)this.componentEncoder;
+        ProtobufEncodeable itemEncoder = (ProtobufEncodeable) this.componentEncoder;
         out.writeArrayB(array.length, itemEncoder, array);
         for (Object item : array) {
             out.writeField(member);
             if (item == null) {
-                out.writeUInt32(0);
+                out.writeLength(0);
             } else if (componentSimpled) {
                 itemEncoder.convertTo(out, item);
             } else {
@@ -58,6 +58,11 @@ public class ProtobufStreamEncoder<T> extends StreamEncoder<ProtobufWriter, T>
 
     @Override
     public boolean requireSize() {
-        return componentSizeRequired;
+        return !componentSimpled;
+    }
+
+    @Override
+    public final ProtobufTypeEnum typeEnum() {
+        return ProtobufTypeEnum.BYTES;
     }
 }

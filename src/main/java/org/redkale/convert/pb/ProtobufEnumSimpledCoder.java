@@ -78,4 +78,9 @@ public class ProtobufEnumSimpledCoder<R extends ProtobufReader, W extends Protob
     public boolean requireSize() {
         return false;
     }
+
+    @Override
+    public final ProtobufTypeEnum typeEnum() {
+        return enumtostring ? ProtobufTypeEnum.BYTES : ProtobufTypeEnum.INT;
+    }
 }
