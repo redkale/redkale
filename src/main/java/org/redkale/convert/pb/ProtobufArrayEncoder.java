@@ -32,17 +32,17 @@ public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T>
         if (value == null || value.length < 1) {
             return;
         }
-        Encodeable itemEncoder = this.componentEncoder;
+        ProtobufEncodeable itemEncoder = (ProtobufEncodeable) this.componentEncoder;
         out.writeArrayB(value.length, itemEncoder, value);
         for (T item : value) {
             out.writeField(member);
             if (item == null) {
                 out.writeLength(0);
             } else if (componentSimpled) {
-                itemEncoder.convertTo(out, item);
+                itemEncoder.convertTo(out, member, item);
             } else {
                 ProtobufWriter tmp = out.pollChild();
-                itemEncoder.convertTo(tmp, item);
+                itemEncoder.convertTo(tmp, member, item);
                 out.offerChild(tmp);
             }
         }

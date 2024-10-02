@@ -39,10 +39,10 @@ public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWrit
             if (item == null) {
                 out.writeLength(0);
             } else if (componentSimpled) {
-                itemEncoder.convertTo(out, item);
+                itemEncoder.convertTo(out, member, item);
             } else {
                 ProtobufWriter tmp = out.pollChild();
-                itemEncoder.convertTo(tmp, item);
+                itemEncoder.convertTo(tmp, member, item);
                 out.offerChild(tmp);
             }
         }
