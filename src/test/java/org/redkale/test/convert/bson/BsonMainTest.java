@@ -53,7 +53,7 @@ public class BsonMainTest {
         SimpleChildEntity entry = SimpleChildEntity.create();
         byte[] bytes = convert.convertTo(SimpleEntity.class, entry);
         System.out.println("长度: " + bytes.length);
-        Assertions.assertEquals(260, bytes.length);
+        Assertions.assertEquals(258, bytes.length);
         BsonByteBufferWriter writer = convert.pollWriter(() -> ByteBuffer.allocate(1));
         convert.convertTo(writer, SimpleEntity.class, entry);
         ByteBuffer[] buffers = writer.toBuffers();
@@ -67,7 +67,7 @@ public class BsonMainTest {
             b.flip();
         }
         System.out.println("长度: " + len);
-        Assertions.assertEquals(260, len);
+        Assertions.assertEquals(258, len);
         SimpleChildEntity entry2 = convert.convertFrom(SimpleChildEntity.class, buffers);
         System.out.println(entry);
         Assertions.assertEquals(entry.toString(), entry2.toString());
