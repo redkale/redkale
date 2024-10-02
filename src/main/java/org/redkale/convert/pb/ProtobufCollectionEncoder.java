@@ -27,24 +27,24 @@ public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWrit
     }
 
     @Override
-    public void convertTo(ProtobufWriter out, EnMember member, Collection<T> value) {
+    public void convertTo(final ProtobufWriter out, EnMember member, Collection<T> value) {
         this.checkInited();
         if (Utility.isEmpty(value)) {
             return;
         }
         ProtobufEncodeable itemEncoder = (ProtobufEncodeable) this.componentEncoder;
         out.writeArrayB(value.size(), itemEncoder, value);
+        boolean first = true;
         for (T item : value) {
-            out.writeField(member);
+            if (!first) {
+                out.writeField(member);
+            }
             if (item == null) {
                 out.writeLength(0);
-            } else if (componentSimpled) {
-                itemEncoder.convertTo(out, member, item);
             } else {
-                ProtobufWriter tmp = out.pollChild();
-                itemEncoder.convertTo(tmp, member, item);
-                out.offerChild(tmp);
+                itemEncoder.convertTo(out, member, item);
             }
+            first = false;
         }
         out.writeArrayE();
     }

@@ -45,6 +45,7 @@ import org.redkale.convert.ext.Uint128SimpledCoder;
 import org.redkale.util.*;
 
 /**
+ * SimpledCoder子类convertTo方法中都不会执行writeField/writeTag
  *
  * @author zhangjx
  */
@@ -798,13 +799,17 @@ public abstract class ProtobufCoders {
         public static final ProtobufInetSocketAddressSimpledCoder instance =
                 new ProtobufInetSocketAddressSimpledCoder();
 
+        public ProtobufInetSocketAddressSimpledCoder() {
+            super(ProtobufByteArraySimpledCoder.instance);
+        }
+
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, InetSocketAddress value) {
             if (value == null) {
                 return 0;
             }
             byte[] bs = value.getAddress().getAddress();
-            return ProtobufByteArraySimpledCoder.instance.computeSize(out, tagSize, bs);
+            return bs.length + 2; // port固定2字节
         }
 
         @Override

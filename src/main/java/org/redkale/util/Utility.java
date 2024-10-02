@@ -4941,6 +4941,9 @@ public final class Utility {
         if (value == null) {
             return -1;
         }
+        if (value.isEmpty()) {
+            return 0;
+        }
         char c;
         int size = 0;
         final String str = value;

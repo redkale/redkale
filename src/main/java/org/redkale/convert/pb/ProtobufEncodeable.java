@@ -19,17 +19,17 @@ import org.redkale.convert.Writer;
  */
 public interface ProtobufEncodeable<W extends Writer, T> extends Encodeable<W, T> {
 
+    // 序列化
+    default void convertTo(W out, EnMember member, T value) {
+        convertTo(out, value);
+    }
+
     // 计算内容长度
     public int computeSize(ProtobufWriter out, int tagSize, T value);
 
     // 是否需要计算内容长度
     default boolean requireSize() {
         return false;
-    }
-
-    // 序列化
-    default void convertTo(W out, EnMember member, T value) {
-        convertTo(out, value);
     }
 
     // 获取数据类型枚举

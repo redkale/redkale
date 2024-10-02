@@ -26,60 +26,60 @@ public class UserBeanProtoDynEncoder extends ProtobufDynEncoder<UserBean> {
     }
 
     @Override
-    public void convertTo(ProtobufWriter out0, EnMember parentMember, UserBean value) {
+    public void convertTo(ProtobufWriter out, EnMember parentMember, UserBean value) {
         if (value == null) {
             return;
         }
-        ProtobufWriter out = objectWriter(out0, parentMember, value);
-        out.writeObjectB(value);
-        out.writeFieldValue(1, value.getSeqid());
-        out.writeFieldValue(2, value.getName());
-        out.writeFieldValue(3, value.getImg());
-        out.writeFieldValue(4, numberSimpledCoder, value.getNumber());
-        out.writeFieldValue(5, scaleSimpledCoder, value.getScale());
-        out.writeFieldValue(6, value.getBit());
+        ProtobufWriter subout = acceptWriter(out, parentMember);
+        subout.writeObjectB(value);
+        subout.writeFieldValue(1, value.getSeqid());
+        subout.writeFieldValue(2, value.getName());
+        subout.writeFieldValue(3, value.getImg());
+        subout.writeFieldValue(4, numberSimpledCoder, value.getNumber());
+        subout.writeFieldValue(5, scaleSimpledCoder, value.getScale());
+        subout.writeFieldValue(6, value.getBit());
 
-        out.writeFieldValue(7, value.isFlag());
-        out.writeFieldValue(8, value.getStatus());
-        out.writeFieldValue(9, value.getId());
-        out.writeFieldValue(10, value.getCreateTime());
-        out.writeFieldValue(11, value.getPoint());
-        out.writeFieldValue(12, value.getMoney());
+        subout.writeFieldValue(7, value.isFlag());
+        subout.writeFieldValue(8, value.getStatus());
+        subout.writeFieldValue(9, value.getId());
+        subout.writeFieldValue(10, value.getCreateTime());
+        subout.writeFieldValue(11, value.getPoint());
+        subout.writeFieldValue(12, value.getMoney());
 
-        out.writeFieldValue(13, value.getFlag2());
-        out.writeFieldValue(14, value.getStatus2());
-        out.writeFieldValue(15, value.getId2());
-        out.writeFieldValue(16, value.getCreateTime2());
-        out.writeFieldValue(17, value.getPoint2());
-        out.writeFieldValue(18, value.getMoney2());
+        subout.writeFieldValue(13, value.getFlag2());
+        subout.writeFieldValue(14, value.getStatus2());
+        subout.writeFieldValue(15, value.getId2());
+        subout.writeFieldValue(16, value.getCreateTime2());
+        subout.writeFieldValue(17, value.getPoint2());
+        subout.writeFieldValue(18, value.getMoney2());
 
-        out.writeFieldValue(19, value.id3);
-        out.writeFieldValue(20, value.createTime3);
-        out.writeFieldValue(21, value.point3);
-        out.writeFieldValue(22, value.money3);
-        out.writeFieldValue(23, value.bit3);
+        subout.writeFieldValue(19, value.id3);
+        subout.writeFieldValue(20, value.createTime3);
+        subout.writeFieldValue(21, value.point3);
+        subout.writeFieldValue(22, value.money3);
+        subout.writeFieldValue(23, value.bit3);
 
-        out.writeFieldValue(19, value.getId4());
-        out.writeFieldValue(20, value.getCreateTime4());
-        out.writeFieldValue(21, value.getPoint4());
-        out.writeFieldValue(22, value.getMoney4());
-        out.writeFieldValue(23, value.getBit4());
+        subout.writeFieldValue(19, value.getId4());
+        subout.writeFieldValue(20, value.getCreateTime4());
+        subout.writeFieldValue(21, value.getPoint4());
+        subout.writeFieldValue(22, value.getMoney4());
+        subout.writeFieldValue(23, value.getBit4());
 
-        out.writeFieldValue(19, value.getId5());
-        out.writeFieldValue(20, value.getCreateTime5());
-        out.writeFieldValue(21, value.getPoint5());
-        out.writeFieldValue(22, value.getMoney5());
-        out.writeFieldValue(23, value.getBit5());
+        subout.writeFieldValue(19, value.getId5());
+        subout.writeFieldValue(20, value.getCreateTime5());
+        subout.writeFieldValue(21, value.getPoint5());
+        subout.writeFieldValue(22, value.getMoney5());
+        subout.writeFieldValue(23, value.getBit5());
 
-        out.writeFieldIntsValue(19, value.getId6());
-        out.writeFieldLongsValue(20, value.getCreateTime6());
-        out.writeFieldFloatsValue(21, value.getPoint6());
-        out.writeFieldDoublesValue(22, value.getMoney6());
-        out.writeFieldBytesValue(23, value.getBit6());
-        out.writeFieldStringsValue(23, value.getStrs());
+        subout.writeFieldIntsValue(19, value.getId6());
+        subout.writeFieldLongsValue(20, value.getCreateTime6());
+        subout.writeFieldFloatsValue(21, value.getPoint6());
+        subout.writeFieldDoublesValue(22, value.getMoney6());
+        subout.writeFieldBytesValue(23, value.getBit6());
+        subout.writeFieldStringsValue(23, value.getStrs());
 
-        out.writeObjectField(mapEnMember, value);
-        out.writeObjectE(value);
-        offerWriter(out0, out);
+        subout.writeObjectField(mapEnMember, value);
+        subout.writeObjectE(value);
+        offerWriter(out, subout);
     }
 }

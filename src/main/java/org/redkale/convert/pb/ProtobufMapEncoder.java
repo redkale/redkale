@@ -7,7 +7,10 @@ package org.redkale.convert.pb;
 
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
+import org.redkale.annotation.Nonnull;
 import org.redkale.convert.*;
 import org.redkale.util.Attribute;
 import org.redkale.util.TypeToken;
@@ -24,6 +27,8 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
     private final EnMember keyMember;
 
     private final EnMember valueMember;
+    private final boolean keySimpled;
+    private final boolean valueSimpled;
 
     public ProtobufMapEncoder(ConvertFactory factory, Type type) {
         super(factory, type);
@@ -33,10 +38,12 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
         setTag(valueMember, ProtobufFactory.getTag(2, ((ProtobufEncodeable) valueEncoder).typeEnum()));
         setTagSize(keyMember, ProtobufFactory.computeSInt32SizeNoTag(keyMember.getTag()));
         setTagSize(valueMember, ProtobufFactory.computeSInt32SizeNoTag(valueMember.getTag()));
+        this.keySimpled = keyEncoder instanceof SimpledCoder;
+        this.valueSimpled = valueEncoder instanceof SimpledCoder;
     }
 
     @Override
-    public void convertTo(ProtobufWriter out, EnMember member, Map<K, V> value) {
+    public void convertTo(final ProtobufWriter out, @Nonnull EnMember member, Map<K, V> value) {
         this.checkInited();
         final Map<K, V> values = value;
         if (Utility.isEmpty(value)) {
@@ -47,40 +54,71 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
         BiFunction<K, V, V> mapFieldFunc = out.mapFieldFunc();
         ProtobufEncodeable kencoder = (ProtobufEncodeable) this.keyEncoder;
         ProtobufEncodeable vencoder = (ProtobufEncodeable) this.valueEncoder;
-        boolean keySimpled = kencoder instanceof SimpledCoder;
-        boolean valSimpled = vencoder instanceof SimpledCoder;
         out.writeMapB(values.size(), kencoder, vencoder, value);
+        AtomicBoolean first = new AtomicBoolean(true);
         values.forEach((key, val0) -> {
             if (ignoreColumns == null || !ignoreColumns.contains(key)) {
                 V val = mapFieldFunc == null ? val0 : mapFieldFunc.apply(key, val0);
-                if (val != null) {
+                if (!first.get()) {
                     out.writeField(member);
-                    ProtobufWriter tmp = out.pollChild();
-                    if (keySimpled) {
-                        tmp.writeField(keyMember);
-                        kencoder.convertTo(tmp, key);
-                    } else {
-                        kencoder.convertTo(tmp, keyMember, key);
-                    }
-                    if (valSimpled) {
-                        tmp.writeField(valueMember);
-                        vencoder.convertTo(tmp, val);
-                    } else {
-                        vencoder.convertTo(tmp, valueMember, val);
-                    }
-                    out.offerChild(tmp);
                 }
+                ProtobufWriter subout = out.pollChild();
+                subout.writeTag(keyMember.getTag());
+                if (key == null) {
+                    subout.writeLength(0);
+                } else {
+                    kencoder.convertTo(subout, keyMember, key);
+                }
+                subout.writeTag(valueMember.getTag());
+                if (val == null) {
+                    subout.writeLength(0);
+                } else {
+                    vencoder.convertTo(subout, valueMember, val);
+                }
+                out.offerChild(subout);
+                first.set(false);
             }
         });
         out.writeMapE();
     }
 
+    protected ProtobufWriter acceptWriter(ProtobufWriter out, EnMember member) {
+        return member != null ? out.pollChild() : out;
+    }
+
+    protected void offerWriter(ProtobufWriter parent, ProtobufWriter out) {
+        if (parent != out) {
+            parent.offerChild(out);
+        }
+    }
+
+    public int computeSize(ProtobufWriter out, K key, V val) {
+        ProtobufEncodeable kencoder = (ProtobufEncodeable) this.keyEncoder;
+        ProtobufEncodeable vencoder = (ProtobufEncodeable) this.valueEncoder;
+        int keySize = kencoder.computeSize(out, keyMember.getTagSize(), key);
+        int valSize = vencoder.computeSize(out, valueMember.getTagSize(), val);
+        return (keySimpled ? (keyMember.getTagSize() + keySize) : keySize)
+                + (valueSimpled ? (valueMember.getTagSize() + valSize) : valSize);
+    }
+
     @Override
-    public int computeSize(ProtobufWriter out, int tagLen, Map<K, V> value) {
+    public int computeSize(ProtobufWriter out, int tagSize, Map<K, V> value) {
         if (Utility.isEmpty(value)) {
             return 0;
         }
-        return 0;
+        Set<String> ignoreColumns = this.ignoreMapColumns;
+        BiFunction<K, V, V> mapFieldFunc = out.mapFieldFunc();
+        AtomicInteger size = new AtomicInteger();
+        value.forEach((key, val0) -> {
+            if (ignoreColumns == null || !ignoreColumns.contains(key)) {
+                V val = mapFieldFunc == null ? val0 : mapFieldFunc.apply(key, val0);
+                if (val != null) {
+                    size.addAndGet(tagSize);
+                    size.addAndGet(computeSize(out, key, val));
+                }
+            }
+        });
+        return size.get();
     }
 
     @Override

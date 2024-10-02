@@ -7,6 +7,7 @@ package org.redkale.convert.pb;
 
 import java.lang.reflect.Type;
 import org.redkale.annotation.ClassDepends;
+import org.redkale.annotation.Nullable;
 import org.redkale.convert.*;
 import org.redkale.util.Attribute;
 import org.redkale.util.Utility;
@@ -30,30 +31,28 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
     }
 
     @Override
-    public void convertTo(ProtobufWriter out, EnMember parentMember, T value) {
+    public void convertTo(ProtobufWriter out, @Nullable EnMember member, T value) {
         this.checkInited();
         if (value == null) {
             out.writeObjectNull(null);
             return;
         }
-        if (parentMember != null) {
-            out.writeField(parentMember);
-        }
-        ProtobufWriter objout = objectWriter(out, parentMember, value);
-        objout.writeObjectB(value);
+
+        ProtobufWriter subout = acceptWriter(out, member);
+        subout.writeObjectB(value);
         int maxPosition = 0;
-        for (EnMember member : members) {
-            maxPosition = member.getPosition();
-            objout.writeObjectField(member, value);
+        for (EnMember fieldMember : members) {
+            maxPosition = fieldMember.getPosition();
+            subout.writeObjectField(fieldMember, value);
         }
-        if (objout.objExtFunc() != null) {
-            ConvertField[] extFields = objout.objExtFunc().apply(value);
+        if (subout.objExtFunc() != null) {
+            ConvertField[] extFields = subout.objExtFunc().apply(value);
             if (extFields != null) {
                 Encodeable<ProtobufWriter, ?> anyEncoder = factory.getAnyEncoder();
                 for (ConvertField en : extFields) {
                     if (en != null) {
                         maxPosition++;
-                        objout.writeObjectField(
+                        subout.writeObjectField(
                                 en.getName(),
                                 en.getType(),
                                 Math.max(en.getPosition(), maxPosition),
@@ -63,13 +62,13 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
                 }
             }
         }
-        objout.writeObjectE(value);
-        offerWriter(out, objout);
+        subout.writeObjectE(value);
+        offerWriter(out, subout);
     }
 
     @ClassDepends
-    protected ProtobufWriter objectWriter(ProtobufWriter out, EnMember parentMember, T value) {
-        return parentMember != null ? out.pollChild() : out;
+    protected ProtobufWriter acceptWriter(ProtobufWriter out, EnMember member) {
+        return member != null ? out.pollChild() : out;
     }
 
     @ClassDepends
@@ -87,7 +86,8 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
         }
         Attribute attr = member.getAttribute();
         boolean enumtostring = ((ProtobufFactory) factory).enumtostring;
-        this.memberSizeRequired |= ((ProtobufEncodeable) member.getEncoder()).requireSize();
+        this.memberSizeRequired |= !(member.getEncoder() instanceof SimpledCoder)
+                && ((ProtobufEncodeable) member.getEncoder()).requireSize();
         setTag(member, ProtobufFactory.getTag(attr.field(), attr.genericType(), member.getPosition(), enumtostring));
         setTagSize(member, ProtobufFactory.computeSInt32SizeNoTag(member.getTag()));
     }
@@ -107,7 +107,7 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
     }
 
     public boolean requiredMemberSize() {
-        return memberSizeRequired;
+        return true||memberSizeRequired;
     }
 
     @Override

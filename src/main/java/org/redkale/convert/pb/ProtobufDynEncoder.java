@@ -49,9 +49,9 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
     protected static ProtobufDynEncoder generateDyncEncoder(final ProtobufFactory factory, final Class clazz) {
         final ObjectEncoder selfObjEncoder = factory.createObjectEncoder(clazz);
         selfObjEncoder.init(factory); // 必须执行，初始化EnMember内部信息
-        if (((ProtobufObjectEncoder) selfObjEncoder).requiredMemberSize()) { // 嵌套对象
-            return null;
-        }
+        //        if (((ProtobufObjectEncoder) selfObjEncoder).requiredMemberSize()) { // 嵌套对象
+        //            return null;
+        //        }
         final Map<String, SimpledCoder> simpledCoders = new HashMap<>();
         final Map<String, EnMember> otherMembers = new HashMap<>();
         StringBuilder elementb = new StringBuilder();
@@ -159,26 +159,15 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
             mv.visitLineNumber(33, ifLabel);
             mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
 
-            // if (parentMember != null) out0.writeField(parentMember);
-            mv.visitVarInsn(ALOAD, 2); // parentMember
-            Label ifMemberLabel = new Label();
-            mv.visitJumpInsn(IFNULL, ifMemberLabel);
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitVarInsn(ALOAD, 2);
-            mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, "writeField", "(" + enMemberDesc + ")V", false);
-            mv.visitLabel(ifMemberLabel);
-            mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
-
-            // ProtobufWriter out = objectWriter(out0, parentMember, value);
+            // ProtobufWriter out = acceptWriter(out0, member);
             mv.visitVarInsn(ALOAD, 0); // this
             mv.visitVarInsn(ALOAD, 1); // out0
             mv.visitVarInsn(ALOAD, 2); // member
-            mv.visitVarInsn(ALOAD, 3); // value
             mv.visitMethodInsn(
                     INVOKEVIRTUAL,
                     newDynName,
-                    "objectWriter",
-                    "(" + pbwriterDesc + enMemberDesc + objectDesc + ")" + pbwriterDesc,
+                    "acceptWriter",
+                    "(" + pbwriterDesc + enMemberDesc + ")" + pbwriterDesc,
                     false);
             mv.visitVarInsn(ASTORE, 4);
 

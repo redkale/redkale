@@ -437,7 +437,12 @@ public class ProtobufWriter extends Writer implements ByteTuple {
 
     @Override
     public final void writeString(String value) {
-        byte[] bs = Utility.isLatin1(value) ? Utility.latin1ByteArray(value) : value.getBytes(StandardCharsets.UTF_8);
+        byte[] bs;
+        if (Utility.isLatin1(value)) {
+            bs = Utility.latin1ByteArray(value);
+        } else {
+            bs = value.getBytes(StandardCharsets.UTF_8);
+        }
         writeLength(bs.length);
         writeTo(bs);
     }
@@ -1186,12 +1191,8 @@ public class ProtobufWriter extends Writer implements ByteTuple {
             return;
         }
         ProtobufEncodeable encoder = (ProtobufEncodeable) member.getEncoder();
-        if (encoder instanceof SimpledCoder) {
-            this.writeField(member);
-            encoder.convertTo(this, value);
-        } else {
-            encoder.convertTo(this, member, value);
-        }
+        this.writeField(member);
+        encoder.convertTo(this, member, value);
     }
 
     @ClassDepends

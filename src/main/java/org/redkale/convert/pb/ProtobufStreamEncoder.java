@@ -7,6 +7,7 @@ package org.redkale.convert.pb;
 
 import java.lang.reflect.Type;
 import java.util.stream.Stream;
+import org.redkale.annotation.Nonnull;
 import org.redkale.convert.*;
 
 /**
@@ -26,7 +27,7 @@ public class ProtobufStreamEncoder<T> extends StreamEncoder<ProtobufWriter, T>
     }
 
     @Override
-    public void convertTo(ProtobufWriter out, EnMember member, Stream<T> value) {
+    public void convertTo(final ProtobufWriter out, @Nonnull EnMember member, Stream<T> value) {
         this.checkInited();
         Object[] array = value == null ? null : value.toArray();
         if (array == null || array.length < 1) {
@@ -34,17 +35,17 @@ public class ProtobufStreamEncoder<T> extends StreamEncoder<ProtobufWriter, T>
         }
         ProtobufEncodeable itemEncoder = (ProtobufEncodeable) this.componentEncoder;
         out.writeArrayB(array.length, itemEncoder, array);
+        boolean first = true;
         for (Object item : array) {
-            out.writeField(member);
+            if (!first) {
+                out.writeField(member);
+            }
             if (item == null) {
                 out.writeLength(0);
-            } else if (componentSimpled) {
-                itemEncoder.convertTo(out, member, item);
             } else {
-                ProtobufWriter tmp = out.pollChild();
-                itemEncoder.convertTo(tmp, member, item);
-                out.offerChild(tmp);
+                itemEncoder.convertTo(out, member, item);
             }
+            first = false;
         }
         out.writeArrayE();
     }

@@ -27,24 +27,24 @@ public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T>
     }
 
     @Override
-    public void convertTo(ProtobufWriter out, @Nonnull EnMember member, T[] value) {
+    public void convertTo(final ProtobufWriter out, @Nonnull EnMember member, T[] value) {
         this.checkInited();
         if (value == null || value.length < 1) {
             return;
         }
         ProtobufEncodeable itemEncoder = (ProtobufEncodeable) this.componentEncoder;
         out.writeArrayB(value.length, itemEncoder, value);
+        boolean first = true;
         for (T item : value) {
-            out.writeField(member);
+            if (!first) {
+                out.writeField(member);
+            }
             if (item == null) {
                 out.writeLength(0);
-            } else if (componentSimpled) {
-                itemEncoder.convertTo(out, member, item);
             } else {
-                ProtobufWriter tmp = out.pollChild();
-                itemEncoder.convertTo(tmp, member, item);
-                out.offerChild(tmp);
+                itemEncoder.convertTo(out, member, item);
             }
+            first = false;
         }
         out.writeArrayE();
     }
