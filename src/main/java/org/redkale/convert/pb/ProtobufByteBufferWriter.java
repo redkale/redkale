@@ -21,7 +21,7 @@ public class ProtobufByteBufferWriter extends ProtobufWriter {
     private int currBufIndex;
 
     public ProtobufByteBufferWriter(int features, boolean enumtostring, Supplier<ByteBuffer> supplier) {
-        super((byte[]) null);
+        super();
         this.features = features;
         this.enumtostring = enumtostring;
         this.supplier = supplier;
@@ -37,30 +37,31 @@ public class ProtobufByteBufferWriter extends ProtobufWriter {
 
     @Override
     public final ProtobufWriter pollChild() {
-        ProtobufWriter rs = super.pollChild();
-        this.delegate = null;
-        this.child = null;
-        rs.parent = null;
-        return rs;
+        ProtobufBytesWriter result = new ProtobufBytesWriter();
+        return result.configFieldFunc(this);
     }
 
     @Override
     public final void offerChild(ProtobufWriter child) {
-        int total = child.length();
-        ProtobufWriter next = child;
+        ProtobufBytesWriter bw = (ProtobufBytesWriter) child;
+        int total = bw.length();
+        ProtobufBytesWriter next = bw;
         while ((next = next.child) != null) {
             total += next.length();
         }
         writeLength(total);
-        writeTo(child.content(), 0, child.length());
-        next = child;
+        writeTo(bw.content(), 0, bw.length());
+        next = bw;
         while ((next = next.child) != null) {
             writeTo(next.content(), 0, next.length());
         }
-        offerPool(child);
     }
 
     @Override
+    protected final void writeSelfLength(int value) {
+        this.writeLength(value);
+    }
+
     public ByteBuffer[] toBuffers() {
         if (buffers == null) {
             return new ByteBuffer[0];
@@ -182,20 +183,5 @@ public class ProtobufByteBufferWriter extends ProtobufWriter {
     @Override
     public String toString() {
         return Objects.toString(this);
-    }
-
-    @Override
-    public final ProtobufWriter clear() {
-        throw new UnsupportedOperationException("Not supported yet."); // 无需实现
-    }
-
-    @Override
-    public final byte[] toArray() {
-        return toByteArray().getBytes();
-    }
-
-    @Override
-    public final byte[] content() {
-        throw new UnsupportedOperationException("Not supported yet."); // 无需实现
     }
 }

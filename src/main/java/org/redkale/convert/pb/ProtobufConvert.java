@@ -27,7 +27,8 @@ import org.redkale.util.*;
  */
 public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWriter> {
 
-    private final ThreadLocal<ProtobufWriter> writerPool = Utility.withInitialThreadLocal(ProtobufWriter::new);
+    private final ThreadLocal<ProtobufBytesWriter> writerPool =
+            Utility.withInitialThreadLocal(ProtobufBytesWriter::new);
 
     private final Consumer<ProtobufWriter> writerConsumer = this::offerWriter;
 
@@ -105,7 +106,8 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
     // ------------------------------ writer -----------------------------------------------------------
     @Override
     protected <S extends ProtobufWriter> S configWrite(S writer) {
-        return (S) writer.configWrite();
+        writer.withFeatures(features).enumtostring(((ProtobufFactory) factory).enumtostring);
+        return writer;
     }
 
     public ProtobufByteBufferWriter pollProtobufWriter(final Supplier<ByteBuffer> supplier) {
@@ -117,21 +119,21 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
     }
 
     @Override
-    public ProtobufWriter pollWriter() {
-        ProtobufWriter writer = writerPool.get();
+    public ProtobufBytesWriter pollWriter() {
+        ProtobufBytesWriter writer = writerPool.get();
         if (writer == null) {
-            writer = new ProtobufWriter();
+            writer = new ProtobufBytesWriter();
         } else {
             writerPool.set(null);
         }
-        return configWrite(writer.withFeatures(features).enumtostring(((ProtobufFactory) factory).enumtostring));
+        return configWrite(writer);
     }
 
     @Override
     public void offerWriter(final ProtobufWriter out) {
         if (out != null) {
             out.recycle();
-            writerPool.set(out);
+            writerPool.set((ProtobufBytesWriter) out);
         }
     }
 
@@ -666,14 +668,14 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
     @Override
     public byte[] convertTo(final Type type, final Object value) {
         if (value == null) {
-            final ProtobufWriter writer = pollWriter();
+            final ProtobufBytesWriter writer = pollWriter();
             writer.writeNull();
             byte[] result = writer.toArray();
             offerWriter(writer);
             return result;
         }
         final Type t = type == null ? value.getClass() : type;
-        final ProtobufWriter writer = pollWriter();
+        final ProtobufBytesWriter writer = pollWriter();
         Encodeable encoder = this.lastEncodeable;
         if (encoder == null || encoder.getType() != t) {
             encoder = factory.loadEncoder(t);
@@ -699,7 +701,7 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
         if (type == null) {
             return null;
         }
-        final ProtobufWriter writer = pollWriter();
+        final ProtobufBytesWriter writer = pollWriter();
         Encodeable encoder = this.lastEncodeable;
         if (encoder == null || encoder.getType() != type) {
             encoder = factory.loadEncoder(type);
@@ -727,7 +729,7 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
 
     @Override
     public void convertToBytes(final Type type, final Object value, final ConvertBytesHandler handler) {
-        final ProtobufWriter writer = pollWriter();
+        final ProtobufBytesWriter writer = pollWriter();
         if (value == null) {
             writer.writeNull();
         } else {
@@ -751,9 +753,7 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
     @Override
     public void convertToBytes(final ByteArray array, final Type type, final Object value) {
         Objects.requireNonNull(array);
-        final ProtobufWriter writer = configWrite(new ProtobufWriter(array)
-                .withFeatures(features)
-                .enumtostring(((ProtobufFactory) factory).enumtostring));
+        final ProtobufBytesWriter writer = configWrite(new ProtobufBytesWriter(array));
         if (value == null) {
             writer.writeNull();
         } else {
@@ -825,7 +825,7 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
             writer.writeNull();
             return;
         }
-        writer.configWrite();
+        configWrite(writer);
         final Type t = type == null ? value.getClass() : type;
         Encodeable encoder = this.lastEncodeable;
         if (encoder == null || encoder.getType() != t) {
