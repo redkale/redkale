@@ -3541,10 +3541,11 @@ public final class Utility {
      *
      * @param string 字符串前缀
      * @param buffer ByteBuffer
+     * @return 字符串
      */
-    public static void println(String string, ByteBuffer buffer) {
+    public static String println(String string, ByteBuffer buffer) {
         if (buffer == null || !buffer.hasRemaining()) {
-            return;
+            return string;
         }
         int pos = buffer.position();
         int limit = buffer.limit();
@@ -3552,7 +3553,7 @@ public final class Utility {
         buffer.get(bytes);
         buffer.position(pos);
         buffer.limit(limit);
-        println(string, bytes);
+        return println(string, bytes);
     }
 
     /**
@@ -3560,9 +3561,10 @@ public final class Utility {
      *
      * @param string 字符串前缀
      * @param bytes 字节数组
+     * @return 字符串
      */
-    public static void println(String string, byte... bytes) {
-        println(string, bytes, 0, bytes.length);
+    public static String println(String string, byte... bytes) {
+        return println(string, bytes, 0, bytes.length);
     }
 
     /**
@@ -3572,10 +3574,11 @@ public final class Utility {
      * @param bytes 字节数组
      * @param start 起始位置
      * @param len 长度
+     * @return 字符串
      */
-    public static void println(String string, byte[] bytes, int start, int len) {
+    public static String println(String string, byte[] bytes, int start, int len) {
         if (bytes == null) {
-            return;
+            return string;
         }
         StringBuilder sb = new StringBuilder();
         if (string != null) {
@@ -3598,6 +3601,7 @@ public final class Utility {
         }
         sb.append(']');
         (System.out).println(sb);
+        return sb.toString();
     }
 
     /**

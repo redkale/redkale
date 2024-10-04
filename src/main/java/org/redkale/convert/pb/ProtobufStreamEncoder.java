@@ -78,18 +78,10 @@ public class ProtobufStreamEncoder<T> extends StreamEncoder<ProtobufWriter, T>
 
     protected int computeSize(ProtobufWriter out, int tagSize, Object[] value) {
         ProtobufEncodeable itemEncoder = (ProtobufEncodeable) this.componentEncoder;
-        if (componentPrimitived) {
-            int dataSize = 0;
-            for (Object item : value) {
-                dataSize += itemEncoder.computeSize(out, tagSize, item);
-            }
-            return dataSize;
-        } else {
-            int dataSize = tagSize * value.length;
-            for (Object item : value) {
-                dataSize += itemEncoder.computeSize(out, tagSize, item);
-            }
-            return ProtobufFactory.computeSInt32SizeNoTag(dataSize) + dataSize;
+        int dataSize = componentPrimitived ? 0 : tagSize * (value.length - 1);
+        for (Object item : value) {
+            dataSize += itemEncoder.computeSize(out, tagSize, item);
         }
+        return dataSize;
     }
 }

@@ -93,6 +93,10 @@ public abstract class ProtobufWriter extends Writer {
         return mapFieldFunc;
     }
 
+    protected final BiFunction objFieldFunc() {
+        return objFieldFunc;
+    }
+
     protected Function<Object, ConvertField[]> objExtFunc() {
         return objExtFunc;
     }

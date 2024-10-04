@@ -30,7 +30,7 @@ public class UserBeanProtoDynEncoder extends ProtobufDynEncoder<UserBean> {
         if (value == null) {
             return;
         }
-        ProtobufWriter subout = acceptWriter(out, parentMember);
+        ProtobufWriter subout = acceptWriter(out, parentMember, value);
         subout.writeObjectB(value);
         subout.writeFieldValue(1, value.getSeqid());
         subout.writeFieldValue(2, value.getName());

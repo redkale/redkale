@@ -6,6 +6,7 @@
 package org.redkale.convert.pb;
 
 import java.lang.reflect.Type;
+import java.util.function.BiFunction;
 import org.redkale.annotation.ClassDepends;
 import org.redkale.annotation.Nullable;
 import org.redkale.convert.*;
@@ -36,7 +37,7 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
             return;
         }
 
-        ProtobufWriter subout = acceptWriter(out, member);
+        ProtobufWriter subout = acceptWriter(out, member, value);
         subout.writeObjectB(value);
         int maxPosition = 0;
         for (EnMember fieldMember : members) {
@@ -65,7 +66,12 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
     }
 
     @ClassDepends
-    protected ProtobufWriter acceptWriter(ProtobufWriter out, EnMember member) {
+    protected ProtobufWriter acceptWriter(ProtobufWriter out, EnMember member, T value) {
+//        if (member != null) {
+//            out.writeLength(computeSize(out, member.getTagSize(), value));
+//            return out;
+//        }
+//        return out;
         return member != null ? out.pollChild() : out;
     }
 
@@ -90,15 +96,24 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
 
     @Override
     public int computeSize(ProtobufWriter out, int tagSize, T value) {
-        int size = 0;
+        int dataSize = 0;
+        BiFunction objFieldFunc = out.objFieldFunc();
         for (EnMember member : members) {
             ProtobufEncodeable encodeable = (ProtobufEncodeable) member.getEncoder();
-            int itemTagSize = member.getTagSize();
-            int itemDataSize = encodeable.computeSize(out, itemTagSize, member.getFieldValue(value));
-            if (itemDataSize > 0) {
-                size += itemTagSize + itemDataSize;
+            Object val = null;
+            if (objFieldFunc == null) {
+                val = member.getFieldValue(value);
+            } else {
+                val = objFieldFunc.apply(member.getAttribute(), value);
+            }
+            if (val != null) {
+                int itemTagSize = member.getTagSize();
+                int itemDataSize = encodeable.computeSize(out, itemTagSize, val);
+                if (itemDataSize > 0) { // 空集合会返回0
+                    dataSize += itemTagSize + itemDataSize;
+                }
             }
         }
-        return size;
+        return dataSize;
     }
 }

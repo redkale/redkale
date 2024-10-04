@@ -63,7 +63,11 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
                 if (!first.get()) {
                     out.writeField(member);
                 }
-                ProtobufWriter subout = out.pollChild();
+                boolean poll = true;
+                ProtobufWriter subout = poll ? out.pollChild() : out;
+                if (!poll) {
+                    subout.writeLength(computeSize(out, key, val));
+                }
                 subout.writeTag(keyMember.getTag());
                 if (key == null) {
                     subout.writeLength(0);
@@ -76,7 +80,9 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
                 } else {
                     vencoder.convertTo(subout, valueMember, val);
                 }
-                out.offerChild(subout);
+                if (poll) {
+                    out.offerChild(subout);
+                }
                 first.set(false);
             }
         });
@@ -99,13 +105,17 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
         }
         Set<String> ignoreColumns = this.ignoreMapColumns;
         BiFunction<K, V, V> mapFieldFunc = out.mapFieldFunc();
+        AtomicBoolean first = new AtomicBoolean();
         AtomicInteger size = new AtomicInteger();
         value.forEach((key, val0) -> {
             if (ignoreColumns == null || !ignoreColumns.contains(key.toString())) {
                 V val = mapFieldFunc == null ? val0 : mapFieldFunc.apply(key, val0);
                 if (val != null) {
-                    size.addAndGet(tagSize);
+                    if (!first.get()) {
+                        //   size.addAndGet(tagSize);
+                    }
                     size.addAndGet(computeSize(out, key, val));
+                    first.set(false);
                 }
             }
         });
