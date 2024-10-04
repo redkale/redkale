@@ -17,6 +17,7 @@ import org.redkale.convert.*;
  */
 public class ProtobufArrayDecoder<T> extends ArrayDecoder<ProtobufReader, T>
         implements ProtobufTagDecodeable<ProtobufReader, T[]> {
+
     protected final boolean componentPrimitived;
 
     protected final boolean componentSimpled;

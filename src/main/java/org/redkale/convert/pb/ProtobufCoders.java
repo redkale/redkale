@@ -12,34 +12,7 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 import org.redkale.convert.SimpledCoder;
-import org.redkale.convert.ext.AtomicBooleanSimpledCoder;
-import org.redkale.convert.ext.AtomicIntegerSimpledCoder;
-import org.redkale.convert.ext.AtomicLongSimpledCoder;
-import org.redkale.convert.ext.BigDecimalSimpledCoder;
-import org.redkale.convert.ext.BigIntegerSimpledCoder;
-import org.redkale.convert.ext.BoolSimpledCoder;
-import org.redkale.convert.ext.ByteSimpledCoder;
-import org.redkale.convert.ext.CharSequenceSimpledCoder;
-import org.redkale.convert.ext.CharSequenceSimpledCoder.StringBuilderSimpledCoder;
-import org.redkale.convert.ext.CharSimpledCoder;
-import org.redkale.convert.ext.DateSimpledCoder;
-import org.redkale.convert.ext.DoubleSimpledCoder;
-import org.redkale.convert.ext.DurationSimpledCoder;
-import org.redkale.convert.ext.FloatSimpledCoder;
-import org.redkale.convert.ext.InetAddressSimpledCoder;
-import org.redkale.convert.ext.InetAddressSimpledCoder.InetSocketAddressSimpledCoder;
-import org.redkale.convert.ext.InstantSimpledCoder;
-import org.redkale.convert.ext.IntSimpledCoder;
-import org.redkale.convert.ext.LocalDateSimpledCoder;
-import org.redkale.convert.ext.LocalDateTimeSimpledCoder;
-import org.redkale.convert.ext.LocalTimeSimpledCoder;
-import org.redkale.convert.ext.LongAdderSimpledCoder;
-import org.redkale.convert.ext.LongSimpledCoder;
-import org.redkale.convert.ext.NumberSimpledCoder;
-import org.redkale.convert.ext.ShortSimpledCoder;
-import org.redkale.convert.ext.StringSimpledCoder;
-import org.redkale.convert.ext.StringWrapperSimpledCoder;
-import org.redkale.convert.ext.Uint128SimpledCoder;
+import org.redkale.convert.ext.*;
 import org.redkale.util.*;
 
 /**
@@ -348,7 +321,7 @@ public abstract class ProtobufCoders {
     }
 
     public static class ProtobufStringBuilderSimpledCoder
-            extends StringBuilderSimpledCoder<ProtobufReader, ProtobufWriter>
+            extends CharSequenceSimpledCoder.StringBuilderSimpledCoder<ProtobufReader, ProtobufWriter>
             implements ProtobufEncodeable<ProtobufWriter, StringBuilder> {
 
         public static final ProtobufStringBuilderSimpledCoder instance = new ProtobufStringBuilderSimpledCoder();
@@ -668,7 +641,7 @@ public abstract class ProtobufCoders {
     }
 
     public static class ProtobufInetSocketAddressSimpledCoder
-            extends InetSocketAddressSimpledCoder<ProtobufReader, ProtobufWriter>
+            extends InetAddressSimpledCoder.InetSocketAddressSimpledCoder<ProtobufReader, ProtobufWriter>
             implements ProtobufEncodeable<ProtobufWriter, InetSocketAddress> {
 
         public static final ProtobufInetSocketAddressSimpledCoder instance =

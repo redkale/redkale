@@ -27,8 +27,6 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
     private final EnMember keyMember;
 
     private final EnMember valueMember;
-    private final boolean keySimpled;
-    private final boolean valueSimpled;
 
     public ProtobufMapEncoder(ConvertFactory factory, Type type) {
         super(factory, type);
@@ -39,8 +37,6 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
         setTag(valueMember, ProtobufFactory.getTag("value", valueEncoder.getType(), 2, enumtostring));
         setTagSize(keyMember, ProtobufFactory.computeSInt32SizeNoTag(keyMember.getTag()));
         setTagSize(valueMember, ProtobufFactory.computeSInt32SizeNoTag(valueMember.getTag()));
-        this.keySimpled = keyEncoder instanceof SimpledCoder;
-        this.valueSimpled = valueEncoder instanceof SimpledCoder;
     }
 
     @Override
@@ -55,7 +51,7 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
         BiFunction<K, V, V> mapFieldFunc = out.mapFieldFunc();
         ProtobufEncodeable kencoder = (ProtobufEncodeable) this.keyEncoder;
         ProtobufEncodeable vencoder = (ProtobufEncodeable) this.valueEncoder;
-        out.writeMapB(values.size(), kencoder, vencoder, value);
+        //out.writeMapB(values.size(), kencoder, vencoder, value);
         AtomicBoolean first = new AtomicBoolean(true);
         values.forEach((key, val0) -> {
             if (ignoreColumns == null || !ignoreColumns.contains(key.toString())) {
@@ -63,11 +59,7 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
                 if (!first.get()) {
                     out.writeField(member);
                 }
-                boolean poll = true;
-                ProtobufWriter subout = poll ? out.pollChild() : out;
-                if (!poll) {
-                    subout.writeLength(computeSize(out, key, val));
-                }
+                ProtobufWriter subout = out.pollChild();
                 subout.writeTag(keyMember.getTag());
                 if (key == null) {
                     subout.writeLength(0);
@@ -80,16 +72,14 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
                 } else {
                     vencoder.convertTo(subout, valueMember, val);
                 }
-                if (poll) {
-                    out.offerChild(subout);
-                }
+                out.offerChild(subout);
                 first.set(false);
             }
         });
-        out.writeMapE();
+        //out.writeMapE();
     }
 
-    public int computeSize(ProtobufWriter out, K key, V val) {
+    protected int computeSize(ProtobufWriter out, K key, V val) {
         ProtobufEncodeable kencoder = (ProtobufEncodeable) this.keyEncoder;
         ProtobufEncodeable vencoder = (ProtobufEncodeable) this.valueEncoder;
         int keySize = kencoder.computeSize(out, keyMember.getTagSize(), key);

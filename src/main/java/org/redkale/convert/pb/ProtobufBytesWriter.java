@@ -18,6 +18,8 @@ import org.redkale.util.ByteTuple;
  */
 public class ProtobufBytesWriter extends ProtobufWriter {
 
+    private static final int RESET_MAX_SIZE = DEFAULT_SIZE << 4;
+
     byte[] content;
 
     // 链表结构
@@ -60,7 +62,7 @@ public class ProtobufBytesWriter extends ProtobufWriter {
             } while (p != this);
         }
         this.delegate = null;
-        if (this.content.length > DEFAULT_SIZE) {
+        if (this.content.length > RESET_MAX_SIZE) {
             this.content = new byte[DEFAULT_SIZE];
         }
         return true;
@@ -82,7 +84,7 @@ public class ProtobufBytesWriter extends ProtobufWriter {
         }
         ProtobufBytesWriter result = queue.poll();
         if (result == null) {
-            result = new ProtobufBytesWriter(new byte[256], 0);
+            result = new ProtobufBytesWriter(new byte[DEFAULT_SIZE], 0);
         }
         if (delegate == null) {
             result.parent = this;
@@ -171,7 +173,7 @@ public class ProtobufBytesWriter extends ProtobufWriter {
     protected int expand(int len) {
         int newcount = count + len;
         if (newcount > content.length) {
-            byte[] newdata = new byte[Math.max(content.length * 2, newcount)];
+            byte[] newdata = new byte[Math.max(content.length << 1, newcount)];
             System.arraycopy(content, 0, newdata, 0, count);
             this.content = newdata;
         }

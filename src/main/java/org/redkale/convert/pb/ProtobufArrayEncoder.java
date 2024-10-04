@@ -42,7 +42,7 @@ public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T>
 
     protected void convertObjectTo(final ProtobufWriter out, @Nonnull EnMember member, T[] value) {
         ProtobufEncodeable itemEncoder = (ProtobufEncodeable) this.componentEncoder;
-        out.writeArrayB(value.length, itemEncoder, value);
+        //out.writeArrayB(value.length, itemEncoder, value);
         boolean first = true;
         for (T item : value) {
             if (!first) {
@@ -55,7 +55,7 @@ public class ProtobufArrayEncoder<T> extends ArrayEncoder<ProtobufWriter, T>
             }
             first = false;
         }
-        out.writeArrayE();
+        //out.writeArrayE();
     }
 
     protected void convertPrimitivedTo(final ProtobufWriter out, @Nonnull EnMember member, T[] value) {
