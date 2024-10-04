@@ -18,34 +18,41 @@ import org.redkale.convert.*;
 public class ProtobufCollectionDecoder<T> extends CollectionDecoder<ProtobufReader, T>
         implements ProtobufTagDecodeable<ProtobufReader, Collection<T>> {
 
+    protected final boolean componentPrimitived;
+
     protected final boolean componentSimpled;
 
     public ProtobufCollectionDecoder(ProtobufFactory factory, Type type) {
         super(factory, type);
+        this.componentPrimitived = getComponentDecoder() instanceof ProtobufPrimitivable;
         this.componentSimpled = getComponentDecoder() instanceof SimpledCoder;
     }
 
     @Override
     public Collection<T> convertFrom(ProtobufReader in, DeMember member) {
         this.checkInited();
-        final boolean simpled = this.componentSimpled;
+        if (componentPrimitived) {
+            return convertPrimitivedFrom(in, member);
+        } else if (componentSimpled) {
+            return convertSimpledFrom(in, member);
+        } else {
+            return convertObjectFrom(in, member);
+        }
+    }
+
+    protected Collection<T> convertObjectFrom(ProtobufReader in, DeMember member) {
         final Decodeable<ProtobufReader, T> itemDecoder = this.componentDecoder;
         in.readArrayB(itemDecoder);
         final Collection<T> result = this.creator.create();
         final int limit = in.limit();
         while (in.hasNext()) {
-            boolean nodata = false;
-            if (!simpled) {
-                int contentLen = in.readRawVarint32();
-                if (contentLen == 0) {
-                    nodata = true;
-                } else {
-                    in.limit(in.position() + contentLen + 1);
-                }
-            }
-            if (nodata) {
+            // 读长度
+            int contentLen = in.readRawVarint32();
+            // 读数据
+            if (contentLen == 0) {
                 result.add(null);
             } else {
+                in.limit(in.position() + contentLen + 1);
                 result.add(itemDecoder.convertFrom(in));
                 in.limit(limit);
             }
@@ -54,6 +61,33 @@ public class ProtobufCollectionDecoder<T> extends CollectionDecoder<ProtobufRead
             }
         }
         in.readArrayE();
+        return result;
+    }
+
+    protected Collection<T> convertSimpledFrom(ProtobufReader in, DeMember member) {
+        final Decodeable<ProtobufReader, T> itemDecoder = this.componentDecoder;
+        in.readArrayB(itemDecoder);
+        final Collection<T> result = this.creator.create();
+        while (in.hasNext()) {
+            // 读数据
+            result.add(itemDecoder.convertFrom(in));
+            if (!in.readNextTag(member)) { // 元素结束
+                break;
+            }
+        }
+        in.readArrayE();
+        return result;
+    }
+
+    protected Collection<T> convertPrimitivedFrom(ProtobufReader in, DeMember member) {
+        ProtobufPrimitivable<T> primCoder = (ProtobufPrimitivable) this.componentDecoder;
+        Collection<T> result = this.creator.create();
+        int len = in.readRawVarint32();
+        while (len > 0) {
+            T val = primCoder.convertFrom(in);
+            len -= primCoder.computeSize(val);
+            result.add(val);
+        }
         return result;
     }
 }

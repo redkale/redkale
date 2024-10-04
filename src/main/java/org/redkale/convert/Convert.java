@@ -21,10 +21,14 @@ import org.redkale.util.*;
  */
 public abstract class Convert<R extends Reader, W extends Writer> {
 
-    // 值为true时 String类型值为""，Boolean类型值为false时不会输出，默认为false
+    /**
+     *  值为true时 (String)""，(Boolean)false值不会输出，默认为false
+     */
     public static final int FEATURE_TINY = 1 << 1;
 
-    // 值为true时 字段值为null时会输出，默认为false
+    /**
+     * 值为true时 字段值为null时会输出，默认为false
+     */
     public static final int FEATURE_NULLABLE = 1 << 2;
 
     // 配置属性集合， 1<<1至1<<10为系统内置
@@ -42,6 +46,7 @@ public abstract class Convert<R extends Reader, W extends Writer> {
     }
 
     protected <S extends W> S configWrite(S writer) {
+        writer.features = features;
         return writer;
     }
 

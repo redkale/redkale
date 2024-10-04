@@ -214,13 +214,6 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
         } else if (componentType == Double.class) {
             Creator<? extends Collection> creator = loadCreator(createClazz);
             return (Decodeable) new ProtobufCoders.ProtobufDoubleCollectionSimpledCoder(creator);
-        } else {
-            Decodeable componentCoder = findDecoder(componentType);
-            if (componentCoder instanceof ProtobufPrimitivable) {
-                Creator<? extends Collection> creator = loadCreator(createClazz);
-                ProtobufPrimitivable primCoder = (ProtobufPrimitivable) componentCoder;
-                return (Decodeable) new ProtobufCoders.ProtobufPrimitiveCollectionSimpledCoder(creator, primCoder);
-            }
         }
         return new ProtobufCollectionDecoder(this, type);
     }
@@ -245,12 +238,6 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
             return (Encodeable) new ProtobufCoders.ProtobufLongCollectionSimpledCoder(creator);
         } else if (componentType == Double.class) {
             return (Encodeable) new ProtobufCoders.ProtobufDoubleCollectionSimpledCoder(creator);
-        } else {
-            Encodeable componentCoder = findEncoder(componentType);
-            if (componentCoder instanceof ProtobufPrimitivable) {
-                ProtobufPrimitivable primCoder = (ProtobufPrimitivable) componentCoder;
-                return (Encodeable) new ProtobufCoders.ProtobufPrimitiveCollectionSimpledCoder(creator, primCoder);
-            }
         }
         return new ProtobufCollectionEncoder(this, type);
     }
@@ -274,12 +261,6 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
             return (Decodeable) ProtobufCoders.ProtobufLongStreamSimpledCoder.instance;
         } else if (componentType == Double.class) {
             return (Decodeable) ProtobufCoders.ProtobufDoubleStreamSimpledCoder.instance;
-        } else {
-            Decodeable componentCoder = findDecoder(componentType);
-            if (componentCoder instanceof ProtobufPrimitivable) {
-                ProtobufPrimitivable primCoder = (ProtobufPrimitivable) componentCoder;
-                return (Decodeable) new ProtobufCoders.ProtobufPrimitiveStreamSimpledCoder(primCoder);
-            }
         }
         return new ProtobufStreamDecoder(this, type);
     }
@@ -303,12 +284,6 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
             return (Encodeable) ProtobufCoders.ProtobufLongStreamSimpledCoder.instance;
         } else if (componentType == Double.class) {
             return (Encodeable) ProtobufCoders.ProtobufDoubleStreamSimpledCoder.instance;
-        } else {
-            Encodeable componentCoder = findEncoder(componentType);
-            if (componentCoder instanceof ProtobufPrimitivable) {
-                ProtobufPrimitivable primCoder = (ProtobufPrimitivable) componentCoder;
-                return (Encodeable) new ProtobufCoders.ProtobufPrimitiveStreamSimpledCoder(primCoder);
-            }
         }
         return new ProtobufStreamEncoder(this, type);
     }

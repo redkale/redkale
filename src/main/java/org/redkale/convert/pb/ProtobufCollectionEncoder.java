@@ -7,8 +7,8 @@ package org.redkale.convert.pb;
 
 import java.lang.reflect.Type;
 import java.util.Collection;
+import org.redkale.annotation.Nonnull;
 import org.redkale.convert.*;
-import org.redkale.util.Utility;
 
 /**
  * @author zhangjx
@@ -17,21 +17,30 @@ import org.redkale.util.Utility;
 public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWriter, T>
         implements ProtobufEncodeable<ProtobufWriter, Collection<T>> {
 
-    protected final boolean componentSimpled;
-    protected final boolean componentSizeRequired;
+    protected final boolean componentPrimitived;
 
-    public ProtobufCollectionEncoder(ProtobufFactory factory, Type type) {
+    protected final boolean componentSimpled;
+
+    public ProtobufCollectionEncoder(ConvertFactory factory, Type type) {
         super(factory, type);
+        this.componentPrimitived = getComponentEncoder() instanceof ProtobufPrimitivable;
         this.componentSimpled = getComponentEncoder() instanceof SimpledCoder;
-        this.componentSizeRequired = !(getComponentEncoder() instanceof ProtobufPrimitivable);
     }
 
     @Override
-    public void convertTo(final ProtobufWriter out, EnMember member, Collection<T> value) {
+    public void convertTo(final ProtobufWriter out, @Nonnull EnMember member, Collection<T> value) {
         this.checkInited();
-        if (Utility.isEmpty(value)) {
+        if (value == null || value.isEmpty()) {
             return;
         }
+        if (componentPrimitived) {
+            convertPrimitivedTo(out, member, value);
+        } else {
+            convertObjectTo(out, member, value);
+        }
+    }
+
+    protected void convertObjectTo(final ProtobufWriter out, @Nonnull EnMember member, Collection<T> value) {
         ProtobufEncodeable itemEncoder = (ProtobufEncodeable) this.componentEncoder;
         out.writeArrayB(value.size(), itemEncoder, value);
         boolean first = true;
@@ -49,25 +58,38 @@ public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWrit
         out.writeArrayE();
     }
 
+    protected void convertPrimitivedTo(final ProtobufWriter out, @Nonnull EnMember member, Collection<T> value) {
+        out.writeLength(computeSize(out, 0, value));
+        Encodeable itemCoder = getComponentEncoder();
+        for (T item : value) {
+            itemCoder.convertTo(out, item);
+        }
+    }
+
     @Override
     public int computeSize(ProtobufWriter out, int tagSize, Collection<T> value) {
         if (value == null || value.isEmpty()) {
             return 0;
         }
-        int dataSize = 0;
         ProtobufEncodeable itemEncoder = (ProtobufEncodeable) this.componentEncoder;
-        for (T item : value) {
-            dataSize += itemEncoder.computeSize(out, tagSize, item);
+        if (componentPrimitived) {
+            int dataSize = 0;
+            for (Object item : value) {
+                dataSize += itemEncoder.computeSize(out, tagSize, item);
+            }
+            return dataSize;
+        } else {
+            int dataSize = tagSize * value.size();
+            for (Object item : value) {
+                dataSize += itemEncoder.computeSize(out, tagSize, item);
+            }
+            return ProtobufFactory.computeSInt32SizeNoTag(dataSize) + dataSize;
         }
-        if (componentSizeRequired) {
-            dataSize += tagSize * value.size();
-        }
-        return ProtobufFactory.computeSInt32SizeNoTag(dataSize) + dataSize;
     }
 
     @Override
     public boolean requireSize() {
-        return !componentSimpled;
+        return !componentPrimitived;
     }
 
     @Override

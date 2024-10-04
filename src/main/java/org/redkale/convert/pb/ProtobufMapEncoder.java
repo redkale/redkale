@@ -57,7 +57,7 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
         out.writeMapB(values.size(), kencoder, vencoder, value);
         AtomicBoolean first = new AtomicBoolean(true);
         values.forEach((key, val0) -> {
-            if (ignoreColumns == null || !ignoreColumns.contains(key)) {
+            if (ignoreColumns == null || !ignoreColumns.contains(key.toString())) {
                 V val = mapFieldFunc == null ? val0 : mapFieldFunc.apply(key, val0);
                 if (!first.get()) {
                     out.writeField(member);
@@ -82,16 +82,6 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
         out.writeMapE();
     }
 
-    protected ProtobufWriter acceptWriter(ProtobufWriter out, EnMember member) {
-        return member != null ? out.pollChild() : out;
-    }
-
-    protected void offerWriter(ProtobufWriter parent, ProtobufWriter out) {
-        if (parent != out) {
-            parent.offerChild(out);
-        }
-    }
-
     public int computeSize(ProtobufWriter out, K key, V val) {
         ProtobufEncodeable kencoder = (ProtobufEncodeable) this.keyEncoder;
         ProtobufEncodeable vencoder = (ProtobufEncodeable) this.valueEncoder;
@@ -110,7 +100,7 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
         BiFunction<K, V, V> mapFieldFunc = out.mapFieldFunc();
         AtomicInteger size = new AtomicInteger();
         value.forEach((key, val0) -> {
-            if (ignoreColumns == null || !ignoreColumns.contains(key)) {
+            if (ignoreColumns == null || !ignoreColumns.contains(key.toString())) {
                 V val = mapFieldFunc == null ? val0 : mapFieldFunc.apply(key, val0);
                 if (val != null) {
                     size.addAndGet(tagSize);

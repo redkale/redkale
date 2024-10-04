@@ -70,6 +70,8 @@ public abstract class ProtobufWriter extends Writer {
 
     protected ProtobufBytesWriter child;
 
+    protected Map<Stream, Object[]> streamArrayCache;
+
     protected ProtobufWriter() {}
 
     @Override
@@ -111,6 +113,7 @@ public abstract class ProtobufWriter extends Writer {
         this.features = 0;
         this.enumtostring = false;
         this.count = 0;
+        this.streamArrayCache = null;
         return true;
     }
 
@@ -136,6 +139,32 @@ public abstract class ProtobufWriter extends Writer {
 
     public final int length() {
         return count;
+    }
+
+    public final @Nullable Object[] putStreamArray(Stream stream) {
+        if (stream == null) {
+            return null;
+        }
+        if (this.streamArrayCache == null) {
+            this.streamArrayCache = new HashMap<>();
+        }
+        Object[] rs = stream.toArray();
+        this.streamArrayCache.put(stream, rs);
+        return rs;
+    }
+
+    public final @Nullable Object[] getStreamArray(Stream stream) {
+        if (stream == null) {
+            return null;
+        }
+        if (this.streamArrayCache == null) {
+            return stream.toArray();
+        }
+        Object[] rs = this.streamArrayCache.get(stream);
+        if (rs == null) {
+            rs = stream.toArray();
+        }
+        return rs;
     }
 
     @Override
