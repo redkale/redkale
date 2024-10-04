@@ -18,17 +18,15 @@ import static org.redkale.convert.pb.ProtobufMapEncoder.createAttribute;
 public class ProtobufMapDecoder<K, V> extends MapDecoder<ProtobufReader, K, V>
         implements ProtobufTagDecodeable<ProtobufReader, Map<K, V>> {
 
-    protected final boolean enumtostring;
-
     protected final DeMember keyMember;
 
     protected final DeMember valueMember;
 
     public ProtobufMapDecoder(ConvertFactory factory, Type type) {
         super(factory, type);
-        this.enumtostring = ((ProtobufFactory) factory).enumtostring;
-        int keyTag = ProtobufFactory.getTag(1, ((ProtobufEncodeable) keyDecoder).typeEnum());
-        int valTag = ProtobufFactory.getTag(2, ((ProtobufEncodeable) valueDecoder).typeEnum());
+        boolean enumtostring = ((ProtobufFactory) factory).enumtostring;
+        int keyTag = ProtobufFactory.getTag("key", keyDecoder.getType(), 1, enumtostring);
+        int valTag = ProtobufFactory.getTag("value", valueDecoder.getType(), 2, enumtostring);
         this.keyMember = new DeMember(createAttribute("key", keyDecoder.getType()), keyTag, keyDecoder);
         this.valueMember = new DeMember(createAttribute("value", valueDecoder.getType()), valTag, valueDecoder);
         setTagSize(keyMember, ProtobufFactory.computeSInt32SizeNoTag(keyMember.getTag()));

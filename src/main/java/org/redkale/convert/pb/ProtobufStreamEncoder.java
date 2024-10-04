@@ -92,14 +92,4 @@ public class ProtobufStreamEncoder<T> extends StreamEncoder<ProtobufWriter, T>
             return ProtobufFactory.computeSInt32SizeNoTag(dataSize) + dataSize;
         }
     }
-
-    @Override
-    public boolean requireSize() {
-        return !componentPrimitived;
-    }
-
-    @Override
-    public final ProtobufTypeEnum typeEnum() {
-        return ProtobufTypeEnum.BYTES;
-    }
 }

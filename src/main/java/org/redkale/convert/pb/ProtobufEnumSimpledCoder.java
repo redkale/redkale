@@ -71,16 +71,12 @@ public class ProtobufEnumSimpledCoder<R extends ProtobufReader, W extends Protob
 
     @Override
     public int computeSize(ProtobufWriter out, int tagSize, E value) {
-        return 0;
-    }
-
-    @Override
-    public boolean requireSize() {
-        return false;
-    }
-
-    @Override
-    public final ProtobufTypeEnum typeEnum() {
-        return enumtostring ? ProtobufTypeEnum.BYTES : ProtobufTypeEnum.INT;
+        if (value == null) {
+            return 0;
+        } else if (enumtostring) {
+            return ProtobufCoders.ProtobufStringSimpledCoder.instance.computeSize(out, tagSize, value.name());
+        } else {
+            return ProtobufCoders.ProtobufIntSimpledCoder.instance.computeSize(value.ordinal());
+        }
     }
 }

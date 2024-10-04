@@ -86,14 +86,4 @@ public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWrit
             return ProtobufFactory.computeSInt32SizeNoTag(dataSize) + dataSize;
         }
     }
-
-    @Override
-    public boolean requireSize() {
-        return !componentPrimitived;
-    }
-
-    @Override
-    public final ProtobufTypeEnum typeEnum() {
-        return ProtobufTypeEnum.BYTES;
-    }
 }

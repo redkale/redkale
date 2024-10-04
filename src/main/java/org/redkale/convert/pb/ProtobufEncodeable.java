@@ -27,12 +27,5 @@ public interface ProtobufEncodeable<W extends Writer, T> extends Encodeable<W, T
     // 计算内容长度
     public int computeSize(ProtobufWriter out, int tagSize, T value);
 
-    // 是否需要计算内容长度
-    default boolean requireSize() {
-        return false;
-    }
-
-    // 获取数据类型枚举
-    public ProtobufTypeEnum typeEnum();
 
 }

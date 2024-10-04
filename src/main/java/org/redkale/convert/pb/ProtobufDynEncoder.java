@@ -37,7 +37,6 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
         this.typeClass = (Class) type;
         this.factory = factory;
         this.objectEncoderSelf = objectEncoderSelf;
-        this.memberSizeRequired = objectEncoderSelf.memberSizeRequired;
         this.members = objectEncoderSelf.getMembers();
         this.inited = true;
         factory.register(type, this);

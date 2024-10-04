@@ -19,8 +19,6 @@ import org.redkale.util.Utility;
 public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
         implements ProtobufEncodeable<ProtobufWriter, T> {
 
-    protected boolean memberSizeRequired;
-
     protected ProtobufObjectEncoder(Type type) {
         super(type);
     }
@@ -86,8 +84,6 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
         }
         Attribute attr = member.getAttribute();
         boolean enumtostring = ((ProtobufFactory) factory).enumtostring;
-        this.memberSizeRequired |= !(member.getEncoder() instanceof SimpledCoder)
-                && ((ProtobufEncodeable) member.getEncoder()).requireSize();
         setTag(member, ProtobufFactory.getTag(attr.field(), attr.genericType(), member.getPosition(), enumtostring));
         setTagSize(member, ProtobufFactory.computeSInt32SizeNoTag(member.getTag()));
     }
@@ -104,19 +100,5 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
             }
         }
         return size;
-    }
-
-    public boolean requiredMemberSize() {
-        return true||memberSizeRequired;
-    }
-
-    @Override
-    public final boolean requireSize() {
-        return true;
-    }
-
-    @Override
-    public final ProtobufTypeEnum typeEnum() {
-        return ProtobufTypeEnum.BYTES;
     }
 }

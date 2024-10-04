@@ -34,8 +34,9 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
         super(factory, type);
         this.keyMember = new EnMember(createAttribute("key", keyEncoder.getType()), keyEncoder);
         this.valueMember = new EnMember(createAttribute("value", valueEncoder.getType()), valueEncoder);
-        setTag(keyMember, ProtobufFactory.getTag(1, ((ProtobufEncodeable) keyEncoder).typeEnum()));
-        setTag(valueMember, ProtobufFactory.getTag(2, ((ProtobufEncodeable) valueEncoder).typeEnum()));
+        boolean enumtostring = ((ProtobufFactory) factory).enumtostring;
+        setTag(keyMember, ProtobufFactory.getTag("key", keyEncoder.getType(), 1, enumtostring));
+        setTag(valueMember, ProtobufFactory.getTag("value", valueEncoder.getType(), 2, enumtostring));
         setTagSize(keyMember, ProtobufFactory.computeSInt32SizeNoTag(keyMember.getTag()));
         setTagSize(valueMember, ProtobufFactory.computeSInt32SizeNoTag(valueMember.getTag()));
         this.keySimpled = keyEncoder instanceof SimpledCoder;
@@ -109,16 +110,6 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
             }
         });
         return size.get();
-    }
-
-    @Override
-    public final boolean requireSize() {
-        return true;
-    }
-
-    @Override
-    public final ProtobufTypeEnum typeEnum() {
-        return ProtobufTypeEnum.BYTES;
     }
 
     static Attribute createAttribute(String field, Type type) {
