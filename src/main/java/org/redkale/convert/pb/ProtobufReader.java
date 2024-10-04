@@ -470,94 +470,58 @@ public class ProtobufReader extends Reader {
 
     protected int readRawVarint32() { // readUInt32
         byte[] data = content;
-        fastpath:
-        {
-            int curr = this.position;
-            if ((curr + 1) == limit) {
-                break fastpath;
-            }
-
-            int x;
-            if ((x = data[++curr]) >= 0) {
-                this.position = curr;
-                return x;
-            } else if (limit - (curr + 1) < 9) {
-                break fastpath;
-            } else if ((x ^= (data[++curr] << 7)) < 0) {
-                x ^= (~0 << 7);
-            } else if ((x ^= (data[++curr] << 14)) >= 0) {
-                x ^= (~0 << 7) ^ (~0 << 14);
-            } else if ((x ^= (data[++curr] << 21)) < 0) {
-                x ^= (~0 << 7) ^ (~0 << 14) ^ (~0 << 21);
+        int curr = this.position;
+        byte b = data[++curr];
+        if (b >= 0) {
+            this.position = curr;
+            return b;
+        }
+        int result = b & 0x7f;
+        if ((b = data[++curr]) >= 0) {
+            result |= b << 7;
+        } else {
+            result |= (b & 0x7f) << 7;
+            if ((b = data[++curr]) >= 0) {
+                result |= b << 14;
             } else {
-                int y = data[++curr];
-                x ^= y << 28;
-                x ^= (~0 << 7) ^ (~0 << 14) ^ (~0 << 21) ^ (~0 << 28);
-                if (y < 0
-                        && data[++curr] < 0
-                        && data[++curr] < 0
-                        && data[++curr] < 0
-                        && data[++curr] < 0
-                        && data[++curr] < 0) {
-                    break fastpath; // Will throw malformedVarint()
+                result |= (b & 0x7f) << 14;
+                if ((b = data[++curr]) >= 0) {
+                    result |= b << 21;
+                } else {
+                    result |= (b & 0x7f) << 21;
+                    result |= (b = data[++curr]) << 28;
+                    if (b < 0) {
+                        // Discard upper 32 bits.
+                        for (int i = 0; i < 5; i++) {
+                            if (data[++curr] >= 0) {
+                                this.position = curr;
+                                return result;
+                            }
+                        }
+                        throw new ConvertException("readRawVarint32 error");
+                    }
                 }
             }
-            this.position = curr;
-            return x;
         }
-        return (int) readRawVarint64SlowPath();
+        this.position = curr;
+        return result;
     }
 
     protected long readRawVarint64() {
         byte[] data = content;
-        fastpath:
-        {
-            int curr = this.position;
-            if ((curr + 1) == this.limit) {
-                break fastpath;
-            }
-
-            long x;
-            int y;
-            if ((y = data[++curr]) >= 0) {
+        int curr = this.position;
+        int shift = 0;
+        long result = 0;
+        while (shift < 64) {
+            final byte b = data[++curr];
+            result |= (long) (b & 0x7F) << shift;
+            if ((b & 0x80) == 0) {
                 this.position = curr;
-                return y;
-            } else if (this.limit - (curr + 1) < 9) {
-                break fastpath;
-            } else if ((y ^= (data[++curr] << 7)) < 0) {
-                x = y ^ (~0 << 7);
-            } else if ((y ^= (data[++curr] << 14)) >= 0) {
-                x = y ^ ((~0 << 7) ^ (~0 << 14));
-            } else if ((y ^= (data[++curr] << 21)) < 0) {
-                x = y ^ ((~0 << 7) ^ (~0 << 14) ^ (~0 << 21));
-            } else if ((x = y ^ ((long) data[++curr] << 28)) >= 0L) {
-                x ^= (~0L << 7) ^ (~0L << 14) ^ (~0L << 21) ^ (~0L << 28);
-            } else if ((x ^= ((long) data[++curr] << 35)) < 0L) {
-                x ^= (~0L << 7) ^ (~0L << 14) ^ (~0L << 21) ^ (~0L << 28) ^ (~0L << 35);
-            } else if ((x ^= ((long) data[++curr] << 42)) >= 0L) {
-                x ^= (~0L << 7) ^ (~0L << 14) ^ (~0L << 21) ^ (~0L << 28) ^ (~0L << 35) ^ (~0L << 42);
-            } else if ((x ^= ((long) data[++curr] << 49)) < 0L) {
-                x ^= (~0L << 7) ^ (~0L << 14) ^ (~0L << 21) ^ (~0L << 28) ^ (~0L << 35) ^ (~0L << 42) ^ (~0L << 49);
-            } else {
-                x ^= ((long) data[++curr] << 56);
-                x ^= (~0L << 7)
-                        ^ (~0L << 14)
-                        ^ (~0L << 21)
-                        ^ (~0L << 28)
-                        ^ (~0L << 35)
-                        ^ (~0L << 42)
-                        ^ (~0L << 49)
-                        ^ (~0L << 56);
-                if (x < 0L) {
-                    if (data[++curr] < 0L) {
-                        break fastpath; // Will throw malformedVarint()
-                    }
-                }
+                return result;
             }
-            this.position = curr;
-            return x;
+            shift += 7;
         }
-        return readRawVarint64SlowPath();
+        throw new ConvertException("readRawVarint64 error");
     }
 
     protected long readRawVarint64SlowPath() {
