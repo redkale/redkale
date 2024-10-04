@@ -94,8 +94,7 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
         ProtobufEncodeable vencoder = (ProtobufEncodeable) this.valueEncoder;
         int keySize = kencoder.computeSize(out, keyMember.getTagSize(), key);
         int valSize = vencoder.computeSize(out, valueMember.getTagSize(), val);
-        return (keySimpled ? (keyMember.getTagSize() + keySize) : keySize)
-                + (valueSimpled ? (valueMember.getTagSize() + valSize) : valSize);
+        return (keyMember.getTagSize() + keySize) + (valueMember.getTagSize() + valSize);
     }
 
     @Override
@@ -112,7 +111,7 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
                 V val = mapFieldFunc == null ? val0 : mapFieldFunc.apply(key, val0);
                 if (val != null) {
                     if (!first.get()) {
-                        //   size.addAndGet(tagSize);
+                        size.addAndGet(tagSize);
                     }
                     size.addAndGet(computeSize(out, key, val));
                     first.set(false);

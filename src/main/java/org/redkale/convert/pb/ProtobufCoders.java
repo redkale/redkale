@@ -11,7 +11,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.atomic.*;
-import java.util.stream.Stream;
 import org.redkale.convert.SimpledCoder;
 import org.redkale.convert.ext.AtomicBooleanSimpledCoder;
 import org.redkale.convert.ext.AtomicIntegerSimpledCoder;
@@ -276,7 +275,7 @@ public abstract class ProtobufCoders {
                 return 0;
             }
             int len = Utility.encodeUTF8Length(value);
-            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
+            return len;
         }
 
         @Override
@@ -614,7 +613,8 @@ public abstract class ProtobufCoders {
                 return 0;
             }
             byte[] bs = value.toByteArray();
-            return ProtobufByteArraySimpledCoder.instance.computeSize(out, tagSize, bs);
+            int len = bs.length;
+            return len;
         }
 
         @Override
@@ -657,7 +657,8 @@ public abstract class ProtobufCoders {
                 return 0;
             }
             byte[] bs = value.getAddress();
-            return ProtobufByteArraySimpledCoder.instance.computeSize(out, tagSize, bs);
+            int len = bs.length;
+            return len;
         }
 
         @Override
@@ -683,7 +684,8 @@ public abstract class ProtobufCoders {
                 return 0;
             }
             byte[] bs = value.getAddress().getAddress();
-            return bs.length + 2; // port固定2字节
+            int len = bs.length + 2; // port固定2字节
+            return len;
         }
 
         @Override
@@ -729,7 +731,8 @@ public abstract class ProtobufCoders {
                 return 0;
             }
             byte[] bs = value.getBytes();
-            return ProtobufByteArraySimpledCoder.instance.computeSize(out, tagSize, bs);
+            int len = bs.length;
+            return len;
         }
 
         @Override
@@ -756,7 +759,11 @@ public abstract class ProtobufCoders {
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, boolean[] value) {
-            return value == null ? 0 : value.length;
+            if (value == null || value.length == 0) {
+                return 0;
+            }
+            int len = value.length;
+            return len;
         }
     }
 
@@ -777,7 +784,11 @@ public abstract class ProtobufCoders {
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, byte[] value) {
-            return value == null ? 0 : value.length;
+            if (value == null || value.length == 0) {
+                return 0;
+            }
+            int len = value.length;
+            return len;
         }
     }
 
@@ -882,7 +893,11 @@ public abstract class ProtobufCoders {
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, float[] value) {
-            return value == null ? 0 : value.length * 4;
+            if (value == null || value.length == 0) {
+                return 0;
+            }
+            int len = value.length << 2;
+            return len;
         }
     }
 
@@ -931,7 +946,11 @@ public abstract class ProtobufCoders {
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, double[] value) {
-            return value == null ? 0 : value.length * 8;
+            if (value == null || value.length == 0) {
+                return 0;
+            }
+            int len = value.length << 3;
+            return len;
         }
     }
 
@@ -953,7 +972,11 @@ public abstract class ProtobufCoders {
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Boolean[] value) {
-            return value == null ? 0 : value.length;
+            if (value == null || value.length == 0) {
+                return 0;
+            }
+            int len = value.length;
+            return len;
         }
     }
 
@@ -974,7 +997,11 @@ public abstract class ProtobufCoders {
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Byte[] value) {
-            return value == null ? 0 : value.length;
+            if (value == null || value.length == 0) {
+                return 0;
+            }
+            int len = value.length;
+            return len;
         }
     }
 
@@ -1079,7 +1106,11 @@ public abstract class ProtobufCoders {
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Float[] value) {
-            return value == null ? 0 : value.length * 4;
+            if (value == null || value.length == 0) {
+                return 0;
+            }
+            int len = value.length << 2;
+            return len;
         }
     }
 
@@ -1128,7 +1159,11 @@ public abstract class ProtobufCoders {
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Double[] value) {
-            return value == null ? 0 : value.length * 8;
+            if (value == null || value.length == 0) {
+                return 0;
+            }
+            int len = value.length << 3;
+            return len;
         }
     }
 
@@ -1155,7 +1190,11 @@ public abstract class ProtobufCoders {
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Collection<Boolean> value) {
-            return value == null ? 0 : value.size();
+            if (value == null || value.isEmpty()) {
+                return 0;
+            }
+            int len = value.size();
+            return len;
         }
     }
 
@@ -1181,7 +1220,11 @@ public abstract class ProtobufCoders {
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Collection<Byte> value) {
-            return value == null ? 0 : value.size();
+            if (value == null || value.isEmpty()) {
+                return 0;
+            }
+            int len = value.size();
+            return len;
         }
     }
 
@@ -1306,7 +1349,11 @@ public abstract class ProtobufCoders {
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Collection<Float> value) {
-            return value == null ? 0 : value.size() * 4;
+            if (value == null || value.isEmpty()) {
+                return 0;
+            }
+            int len = value.size() << 2;
+            return len;
         }
     }
 
@@ -1365,212 +1412,11 @@ public abstract class ProtobufCoders {
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Collection<Double> value) {
-            return value == null ? 0 : value.size() * 8;
-        }
-    }
-
-    // ------------------------------------- Stream<Boolean> -------------------------------------
-    public static class ProtobufBoolStreamSimpledCoder
-            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Boolean>>
-            implements ProtobufEncodeable<ProtobufWriter, Stream<Boolean>> {
-
-        public static final ProtobufBoolStreamSimpledCoder instance = new ProtobufBoolStreamSimpledCoder();
-
-        @Override
-        public void convertTo(ProtobufWriter out, Stream<Boolean> values) {
-            out.writeBools(values);
-        }
-
-        @Override
-        public Stream<Boolean> convertFrom(ProtobufReader in) {
-            return in.readBools(LIST_CREATOR).stream();
-        }
-
-        @Override
-        public int computeSize(ProtobufWriter out, int tagSize, Stream<Boolean> value) {
-            return value == null ? 0 : (int) value.count();
-        }
-    }
-
-    public static class ProtobufByteStreamSimpledCoder
-            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Byte>>
-            implements ProtobufEncodeable<ProtobufWriter, Stream<Byte>> {
-
-        public static final ProtobufByteStreamSimpledCoder instance = new ProtobufByteStreamSimpledCoder();
-
-        @Override
-        public void convertTo(ProtobufWriter out, Stream<Byte> values) {
-            out.writeBytes(values);
-        }
-
-        @Override
-        public Stream<Byte> convertFrom(ProtobufReader in) {
-            return in.readBytes(LIST_CREATOR).stream();
-        }
-
-        @Override
-        public int computeSize(ProtobufWriter out, int tagSize, Stream<Byte> value) {
-            return value == null ? 0 : (int) value.count();
-        }
-    }
-
-    public static class ProtobufCharStreamSimpledCoder
-            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Character>>
-            implements ProtobufEncodeable<ProtobufWriter, Stream<Character>> {
-
-        public static final ProtobufCharStreamSimpledCoder instance = new ProtobufCharStreamSimpledCoder();
-
-        @Override
-        public void convertTo(ProtobufWriter out, Stream<Character> values) {
-            out.writeChars(values);
-        }
-
-        @Override
-        public Stream<Character> convertFrom(ProtobufReader in) {
-            return in.readChars(LIST_CREATOR).stream();
-        }
-
-        @Override
-        public int computeSize(ProtobufWriter out, int tagSize, Stream<Character> value) {
-            if (value == null) {
+            if (value == null || value.isEmpty()) {
                 return 0;
             }
-            int len = 0;
-            for (Object item : value.toArray()) {
-                len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : (Character) item);
-            }
+            int len = value.size() << 3;
             return len;
-        }
-    }
-
-    public static class ProtobufShortStreamSimpledCoder
-            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Short>>
-            implements ProtobufEncodeable<ProtobufWriter, Stream<Short>> {
-
-        public static final ProtobufShortStreamSimpledCoder instance = new ProtobufShortStreamSimpledCoder();
-
-        @Override
-        public void convertTo(ProtobufWriter out, Stream<Short> values) {
-            out.writeShorts(values);
-        }
-
-        @Override
-        public Stream<Short> convertFrom(ProtobufReader in) {
-            return in.readShorts(LIST_CREATOR).stream();
-        }
-
-        @Override
-        public int computeSize(ProtobufWriter out, int tagSize, Stream<Short> value) {
-            if (value == null) {
-                return 0;
-            }
-            int len = 0;
-            for (Object item : value.toArray()) {
-                len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : (Short) item);
-            }
-            return len;
-        }
-    }
-
-    public static class ProtobufIntStreamSimpledCoder
-            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Integer>>
-            implements ProtobufEncodeable<ProtobufWriter, Stream<Integer>> {
-
-        public static final ProtobufIntStreamSimpledCoder instance = new ProtobufIntStreamSimpledCoder();
-
-        @Override
-        public void convertTo(ProtobufWriter out, Stream<Integer> values) {
-            out.writeInts(values);
-        }
-
-        @Override
-        public Stream<Integer> convertFrom(ProtobufReader in) {
-            return in.readInts(LIST_CREATOR).stream();
-        }
-
-        @Override
-        public int computeSize(ProtobufWriter out, int tagSize, Stream<Integer> value) {
-            if (value == null) {
-                return 0;
-            }
-            int len = 0;
-            for (Object item : value.toArray()) {
-                len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : (Integer) item);
-            }
-            return len;
-        }
-    }
-
-    public static class ProtobufFloatStreamSimpledCoder
-            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Float>>
-            implements ProtobufEncodeable<ProtobufWriter, Stream<Float>> {
-
-        public static final ProtobufFloatStreamSimpledCoder instance = new ProtobufFloatStreamSimpledCoder();
-
-        @Override
-        public void convertTo(ProtobufWriter out, Stream<Float> values) {
-            out.writeFloats(values);
-        }
-
-        @Override
-        public Stream<Float> convertFrom(ProtobufReader in) {
-            return in.readFloats(LIST_CREATOR).stream();
-        }
-
-        @Override
-        public int computeSize(ProtobufWriter out, int tagSize, Stream<Float> value) {
-            return value == null ? 0 : (int) value.count() * 4;
-        }
-    }
-
-    public static class ProtobufLongStreamSimpledCoder
-            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Long>>
-            implements ProtobufEncodeable<ProtobufWriter, Stream<Long>> {
-
-        public static final ProtobufLongStreamSimpledCoder instance = new ProtobufLongStreamSimpledCoder();
-
-        @Override
-        public void convertTo(ProtobufWriter out, Stream<Long> values) {
-            out.writeLongs(values);
-        }
-
-        @Override
-        public Stream<Long> convertFrom(ProtobufReader in) {
-            return in.readLongs(LIST_CREATOR).stream();
-        }
-
-        @Override
-        public int computeSize(ProtobufWriter out, int tagSize, Stream<Long> value) {
-            if (value == null) {
-                return 0;
-            }
-            int len = 0;
-            for (Object item : value.toArray()) {
-                len += ProtobufFactory.computeSInt64SizeNoTag(item == null ? 0 : (Long) item);
-            }
-            return len;
-        }
-    }
-
-    public static class ProtobufDoubleStreamSimpledCoder
-            extends SimpledCoder<ProtobufReader, ProtobufWriter, Stream<Double>>
-            implements ProtobufEncodeable<ProtobufWriter, Stream<Double>> {
-
-        public static final ProtobufDoubleStreamSimpledCoder instance = new ProtobufDoubleStreamSimpledCoder();
-
-        @Override
-        public void convertTo(ProtobufWriter out, Stream<Double> values) {
-            out.writeDoubles(values);
-        }
-
-        @Override
-        public Stream<Double> convertFrom(ProtobufReader in) {
-            return in.readDoubles(LIST_CREATOR).stream();
-        }
-
-        @Override
-        public int computeSize(ProtobufWriter out, int tagSize, Stream<Double> value) {
-            return value == null ? 0 : (int) value.count() * 8;
         }
     }
 }
