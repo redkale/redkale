@@ -244,47 +244,11 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
 
     @Override
     protected <E> Decodeable<ProtobufReader, E> createStreamDecoder(Type type) {
-        Type componentType = getStreamionComponentType(type);
-        if (componentType == Boolean.class) {
-            return (Decodeable) ProtobufCoders.ProtobufBoolStreamSimpledCoder.instance;
-        } else if (componentType == Byte.class) {
-            return (Decodeable) ProtobufCoders.ProtobufByteStreamSimpledCoder.instance;
-        } else if (componentType == Character.class) {
-            return (Decodeable) ProtobufCoders.ProtobufCharStreamSimpledCoder.instance;
-        } else if (componentType == Short.class) {
-            return (Decodeable) ProtobufCoders.ProtobufShortStreamSimpledCoder.instance;
-        } else if (componentType == Integer.class) {
-            return (Decodeable) ProtobufCoders.ProtobufIntStreamSimpledCoder.instance;
-        } else if (componentType == Float.class) {
-            return (Decodeable) ProtobufCoders.ProtobufFloatStreamSimpledCoder.instance;
-        } else if (componentType == Long.class) {
-            return (Decodeable) ProtobufCoders.ProtobufLongStreamSimpledCoder.instance;
-        } else if (componentType == Double.class) {
-            return (Decodeable) ProtobufCoders.ProtobufDoubleStreamSimpledCoder.instance;
-        }
         return new ProtobufStreamDecoder(this, type);
     }
 
     @Override
     protected <E> Encodeable<ProtobufWriter, E> createStreamEncoder(Type type) {
-        Type componentType = getStreamionComponentType(type);
-        if (componentType == Boolean.class) {
-            return (Encodeable) ProtobufCoders.ProtobufBoolStreamSimpledCoder.instance;
-        } else if (componentType == Byte.class) {
-            return (Encodeable) ProtobufCoders.ProtobufByteStreamSimpledCoder.instance;
-        } else if (componentType == Character.class) {
-            return (Encodeable) ProtobufCoders.ProtobufCharStreamSimpledCoder.instance;
-        } else if (componentType == Short.class) {
-            return (Encodeable) ProtobufCoders.ProtobufShortStreamSimpledCoder.instance;
-        } else if (componentType == Integer.class) {
-            return (Encodeable) ProtobufCoders.ProtobufIntStreamSimpledCoder.instance;
-        } else if (componentType == Float.class) {
-            return (Encodeable) ProtobufCoders.ProtobufFloatStreamSimpledCoder.instance;
-        } else if (componentType == Long.class) {
-            return (Encodeable) ProtobufCoders.ProtobufLongStreamSimpledCoder.instance;
-        } else if (componentType == Double.class) {
-            return (Encodeable) ProtobufCoders.ProtobufDoubleStreamSimpledCoder.instance;
-        }
         return new ProtobufStreamEncoder(this, type);
     }
 
