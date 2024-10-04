@@ -16,9 +16,9 @@ import org.redkale.util.ByteTuple;
  *
  * @author zhangjx
  */
-public class ProtobufBytesWriter extends ProtobufWriter implements ByteTuple {
+public class ProtobufBytesWriter extends ProtobufWriter {
 
-    private byte[] content;
+    byte[] content;
 
     // 链表结构
     private ProtobufBytesWriter delegate;
@@ -127,14 +127,23 @@ public class ProtobufBytesWriter extends ProtobufWriter implements ByteTuple {
      * @param array ByteArray
      */
     public void directTo(ByteArray array) {
-        array.directFrom(content, count);
+        if (delegate == null) {
+            array.directFrom(content, count);
+        } else {
+            byte[] data = toArray();
+            array.directFrom(data, data.length);
+        }
     }
 
     public void completed(ConvertBytesHandler handler, Consumer<ProtobufWriter> callback) {
-        handler.completed(content, 0, count, callback, this);
+        if (delegate == null) {
+            handler.completed(content, 0, count, callback, this);
+        } else {
+            byte[] data = toArray();
+            handler.completed(data, 0, data.length, callback, this);
+        }
     }
 
-    @Override
     public byte[] toArray() {
         if (delegate == null) {
             byte[] copy = new byte[count];
@@ -151,7 +160,7 @@ public class ProtobufBytesWriter extends ProtobufWriter implements ByteTuple {
             next = this;
             int pos = count;
             while ((next = next.child) != null) {
-                System.arraycopy(next.content(), 0, data, pos, next.length());
+                System.arraycopy(next.content, 0, data, pos, next.length());
                 pos += next.length();
             }
             return data;
@@ -244,15 +253,5 @@ public class ProtobufBytesWriter extends ProtobufWriter implements ByteTuple {
         } else {
             delegate.writeUInt64(value);
         }
-    }
-
-    @Override
-    public byte[] content() {
-        return content;
-    }
-
-    @Override
-    public int offset() {
-        return 0;
     }
 }

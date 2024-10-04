@@ -50,10 +50,10 @@ public class ProtobufByteBufferWriter extends ProtobufWriter {
             total += next.length();
         }
         writeLength(total);
-        writeTo(bw.content(), 0, bw.length());
+        writeTo(bw.content, 0, bw.length());
         next = bw;
         while ((next = next.child) != null) {
-            writeTo(next.content(), 0, next.length());
+            writeTo(next.content, 0, next.length());
         }
     }
 
