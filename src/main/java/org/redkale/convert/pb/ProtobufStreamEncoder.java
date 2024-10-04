@@ -60,10 +60,14 @@ public class ProtobufStreamEncoder<T> extends StreamEncoder<ProtobufWriter, T>
     }
 
     protected void convertPrimitivedTo(final ProtobufWriter out, @Nonnull EnMember member, Object[] value) {
-        out.writeLength(computeSize(out, 0, value));
-        Encodeable itemCoder = getComponentEncoder();
+        ProtobufEncodeable itemEncoder = (ProtobufEncodeable) this.componentEncoder;
+        int dataSize = 0;
         for (Object item : value) {
-            itemCoder.convertTo(out, (T) item);
+            dataSize += itemEncoder.computeSize(out, 0, item);
+        }
+        out.writeLength(dataSize);
+        for (Object item : value) {
+            itemEncoder.convertTo(out, item);
         }
     }
 
@@ -78,10 +82,18 @@ public class ProtobufStreamEncoder<T> extends StreamEncoder<ProtobufWriter, T>
 
     protected int computeSize(ProtobufWriter out, int tagSize, Object[] value) {
         ProtobufEncodeable itemEncoder = (ProtobufEncodeable) this.componentEncoder;
-        int dataSize = componentPrimitived ? 0 : tagSize * (value.length - 1);
-        for (Object item : value) {
-            dataSize += itemEncoder.computeSize(out, tagSize, item);
+        if (componentPrimitived) {
+            int dataSize = 0;
+            for (Object item : value) {
+                dataSize += itemEncoder.computeSize(out, tagSize, item);
+            }
+            return ProtobufFactory.computeSInt32SizeNoTag(dataSize) + dataSize;
+        } else {
+            int dataSize = tagSize * (value.length - 1);
+            for (Object item : value) {
+                dataSize += itemEncoder.computeSize(out, tagSize, item);
+            }
+            return dataSize;
         }
-        return dataSize;
     }
 }

@@ -145,7 +145,7 @@ public abstract class ProtobufWriter extends Writer {
         return count;
     }
 
-    public final @Nullable Object[] putStreamArray(Stream stream) {
+    public final @Nullable Object[] putStreamArray(@Nullable Stream stream) {
         if (stream == null) {
             return null;
         }
@@ -157,7 +157,7 @@ public abstract class ProtobufWriter extends Writer {
         return rs;
     }
 
-    public final @Nullable Object[] getStreamArray(Stream stream) {
+    public final @Nullable Object[] getStreamArray(@Nullable Stream stream) {
         if (stream == null) {
             return null;
         }

@@ -48,9 +48,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
     protected static ProtobufDynEncoder generateDyncEncoder(final ProtobufFactory factory, final Class clazz) {
         final ObjectEncoder selfObjEncoder = factory.createObjectEncoder(clazz);
         selfObjEncoder.init(factory); // 必须执行，初始化EnMember内部信息
-        if (true) {
-            return null;
-        }
+
         final Map<String, SimpledCoder> simpledCoders = new HashMap<>();
         final Map<String, EnMember> otherMembers = new HashMap<>();
         StringBuilder elementb = new StringBuilder();

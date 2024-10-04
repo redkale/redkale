@@ -67,11 +67,11 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
 
     @ClassDepends
     protected ProtobufWriter acceptWriter(ProtobufWriter out, EnMember member, T value) {
-//        if (member != null) {
-//            out.writeLength(computeSize(out, member.getTagSize(), value));
-//            return out;
-//        }
-//        return out;
+        //        if (member != null) {
+        //            out.writeLength(computeSize(out, member.getTagSize(), value));
+        //            return out;
+        //        }
+        //        return out;
         return member != null ? out.pollChild() : out;
     }
 
@@ -96,6 +96,9 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
 
     @Override
     public int computeSize(ProtobufWriter out, int tagSize, T value) {
+        if (value == null) {
+            return 0;
+        }
         int dataSize = 0;
         BiFunction objFieldFunc = out.objFieldFunc();
         for (EnMember member : members) {

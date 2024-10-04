@@ -275,7 +275,7 @@ public abstract class ProtobufCoders {
                 return 0;
             }
             int len = Utility.encodeUTF8Length(value);
-            return len;
+            return len + ProtobufFactory.computeSInt32SizeNoTag(len);
         }
 
         @Override
@@ -614,7 +614,7 @@ public abstract class ProtobufCoders {
             }
             byte[] bs = value.toByteArray();
             int len = bs.length;
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
 
         @Override
@@ -658,7 +658,7 @@ public abstract class ProtobufCoders {
             }
             byte[] bs = value.getAddress();
             int len = bs.length;
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
 
         @Override
@@ -685,7 +685,7 @@ public abstract class ProtobufCoders {
             }
             byte[] bs = value.getAddress().getAddress();
             int len = bs.length + 2; // port固定2字节
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
 
         @Override
@@ -732,7 +732,7 @@ public abstract class ProtobufCoders {
             }
             byte[] bs = value.getBytes();
             int len = bs.length;
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
 
         @Override
@@ -763,7 +763,7 @@ public abstract class ProtobufCoders {
                 return 0;
             }
             int len = value.length;
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -788,7 +788,7 @@ public abstract class ProtobufCoders {
                 return 0;
             }
             int len = value.length;
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -816,7 +816,7 @@ public abstract class ProtobufCoders {
             for (char item : value) {
                 len += ProtobufFactory.computeSInt32SizeNoTag(item);
             }
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -844,7 +844,7 @@ public abstract class ProtobufCoders {
             for (short item : value) {
                 len += ProtobufFactory.computeSInt32SizeNoTag(item);
             }
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -872,7 +872,7 @@ public abstract class ProtobufCoders {
             for (int item : value) {
                 len += ProtobufFactory.computeSInt32SizeNoTag(item);
             }
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -897,7 +897,7 @@ public abstract class ProtobufCoders {
                 return 0;
             }
             int len = value.length << 2;
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -925,7 +925,7 @@ public abstract class ProtobufCoders {
             for (long item : value) {
                 len += ProtobufFactory.computeSInt64SizeNoTag(item);
             }
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -950,7 +950,7 @@ public abstract class ProtobufCoders {
                 return 0;
             }
             int len = value.length << 3;
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -976,7 +976,7 @@ public abstract class ProtobufCoders {
                 return 0;
             }
             int len = value.length;
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -1001,7 +1001,7 @@ public abstract class ProtobufCoders {
                 return 0;
             }
             int len = value.length;
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -1029,7 +1029,7 @@ public abstract class ProtobufCoders {
             for (Character item : value) {
                 len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : item);
             }
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -1057,7 +1057,7 @@ public abstract class ProtobufCoders {
             for (Short item : value) {
                 len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : item);
             }
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -1085,7 +1085,7 @@ public abstract class ProtobufCoders {
             for (Integer item : value) {
                 len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : item);
             }
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -1110,7 +1110,7 @@ public abstract class ProtobufCoders {
                 return 0;
             }
             int len = value.length << 2;
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -1138,7 +1138,7 @@ public abstract class ProtobufCoders {
             for (Long item : value) {
                 len += ProtobufFactory.computeSInt64SizeNoTag(item == null ? 0 : item);
             }
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -1163,7 +1163,7 @@ public abstract class ProtobufCoders {
                 return 0;
             }
             int len = value.length << 3;
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -1194,7 +1194,7 @@ public abstract class ProtobufCoders {
                 return 0;
             }
             int len = value.size();
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -1224,7 +1224,7 @@ public abstract class ProtobufCoders {
                 return 0;
             }
             int len = value.size();
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -1257,7 +1257,7 @@ public abstract class ProtobufCoders {
             for (Character item : value) {
                 len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : item);
             }
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -1290,7 +1290,7 @@ public abstract class ProtobufCoders {
             for (Short item : value) {
                 len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : item);
             }
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -1323,7 +1323,7 @@ public abstract class ProtobufCoders {
             for (Integer item : value) {
                 len += ProtobufFactory.computeSInt32SizeNoTag(item == null ? 0 : item);
             }
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -1353,7 +1353,7 @@ public abstract class ProtobufCoders {
                 return 0;
             }
             int len = value.size() << 2;
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -1386,7 +1386,7 @@ public abstract class ProtobufCoders {
             for (Long item : value) {
                 len += ProtobufFactory.computeSInt64SizeNoTag(item == null ? 0 : item);
             }
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 
@@ -1416,7 +1416,7 @@ public abstract class ProtobufCoders {
                 return 0;
             }
             int len = value.size() << 3;
-            return len;
+            return ProtobufFactory.computeSInt32SizeNoTag(len) + len;
         }
     }
 }
