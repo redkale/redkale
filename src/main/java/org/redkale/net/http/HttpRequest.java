@@ -20,7 +20,6 @@ import org.redkale.annotation.Comment;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.Request;
-import org.redkale.net.http.HttpContext.UriPathNode;
 import org.redkale.util.*;
 import static org.redkale.util.Utility.isEmpty;
 import static org.redkale.util.Utility.isNotEmpty;
@@ -715,7 +714,7 @@ public class HttpRequest extends Request<HttpContext> {
             boolean decodeable = false;
             boolean latin1 = true;
             boolean finding = true;
-            ByteTreeNode<String> pathNode = context.getUriPathNode();
+            ByteTreeNode<HttpServlet> pathNode = context.getUriPathNode();
             while (remain-- > 0) {
                 b = buffer.get();
                 if (b == ' ') {
@@ -726,7 +725,7 @@ public class HttpRequest extends Request<HttpContext> {
                     finding = false;
                 }
                 if (finding) {
-                    ByteTreeNode<String> nextNode = pathNode.getNode(b);
+                    ByteTreeNode<HttpServlet> nextNode = pathNode.getNode(b);
                     if (nextNode == null) { // not match any path
                         nextNode = pathNode;
                         ByteArray tmp = headerBytes.clear();
@@ -763,12 +762,12 @@ public class HttpRequest extends Request<HttpContext> {
             size = bytes.length();
             if (qst >= 0) { // 带?参数
                 if (pathNode != null) {
-                    this.requestPath = pathNode.getValue();
-                    this.pathServlet = ((UriPathNode) pathNode).getServlet();
+                    this.requestPath = pathNode.getKey();
+                    this.pathServlet = pathNode.getValue();
                 } else if (decodeable) { // 需要转义
                     this.requestPath = toDecodeString(bytes, 0, qst, charset);
                 } else {
-                    this.requestPath = context.loadUriPath(bytes, qst, latin1, charset);
+                    this.requestPath = bytes.toString(latin1, 0, qst, charset);
                 }
                 int qlen = size - qst - 1;
                 this.queryBytes = bytes.getBytes(qst + 1, qlen);
@@ -781,12 +780,12 @@ public class HttpRequest extends Request<HttpContext> {
                 }
             } else { // 没有带?参数
                 if (pathNode != null) {
-                    this.requestPath = pathNode.getValue();
-                    this.pathServlet = ((UriPathNode) pathNode).getServlet();
+                    this.requestPath = pathNode.getKey();
+                    this.pathServlet = pathNode.getValue();
                 } else if (decodeable) { // 需要转义
                     this.requestPath = toDecodeString(bytes, 0, bytes.length(), charset);
                 } else {
-                    this.requestPath = context.loadUriPath(bytes, latin1, charset);
+                    this.requestPath = bytes.toString(latin1, charset);
                 }
                 this.queryBytes = EMPTY_BYTES;
             }

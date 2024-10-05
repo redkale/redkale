@@ -6,11 +6,7 @@
 package org.redkale.net.http;
 
 import java.nio.channels.CompletionHandler;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.asm.*;
@@ -55,9 +51,6 @@ public class HttpContext extends Context {
     // 不带通配符的mapping url的缓存对象
     private final UriPathNode uriPathNode = new UriPathNode();
 
-    // 不带通配符的mapping url的缓存对象
-    private final Map<ByteArray, String>[] uriPathCaches = new Map[100];
-
     public HttpContext(HttpContextConfig config) {
         super(config);
         this.lazyHeader = config.lazyHeader;
@@ -76,38 +69,11 @@ public class HttpContext extends Context {
     }
 
     void addUriPath(final String path, HttpServlet servlet) {
-        this.uriPathNode.put(path, path, servlet);
-        byte[] bs = path.getBytes(StandardCharsets.UTF_8);
-        int index = bs.length >= uriPathCaches.length ? 0 : bs.length;
-        Map<ByteArray, String> map = uriPathCaches[index];
-        if (map == null) {
-            map = new HashMap<>();
-            uriPathCaches[index] = map;
-        }
-        map.put(new ByteArray().put(bs), path);
+        this.uriPathNode.put(path, servlet);
     }
 
-    String loadUriPath(ByteArray array, boolean latin1, Charset charset) {
-        int index = array.length() >= uriPathCaches.length ? 0 : array.length();
-        Map<ByteArray, String> map = uriPathCaches[index];
-        String uri = map == null ? null : map.get(array);
-        if (uri == null) {
-            uri = array.toString(latin1, charset);
-        }
-        return uri;
-    }
-
-    String loadUriPath(ByteArray array, int sublen, boolean latin1, Charset charset) {
-        int pos = array.length();
-        array.position(sublen);
-        int index = array.length() >= uriPathCaches.length ? 0 : array.length();
-        Map<ByteArray, String> map = uriPathCaches[index];
-        String uri = map == null ? null : map.get(array);
-        if (uri == null) {
-            uri = array.toString(latin1, 0, sublen, charset);
-        }
-        array.position(pos);
-        return uri;
+    HttpServlet removeUriPath(final String path) {
+        return this.uriPathNode.remove(path);
     }
 
     @Override
@@ -258,33 +224,20 @@ public class HttpContext extends Context {
         return (Creator<H>) Creator.create(newClazz);
     }
 
-    protected static class UriPathNode extends ByteTreeNode<String> {
-
-        protected HttpServlet servlet;
+    protected static class UriPathNode extends ByteTreeNode<HttpServlet> {
 
         protected UriPathNode() {
             super();
         }
 
-        protected UriPathNode(ByteTreeNode<String> parent, int index) {
-            super(parent, index);
-        }
-
-        protected ByteTreeNode<String> put(String key, String value, HttpServlet servlet) {
-            UriPathNode n = (UriPathNode) super.put(key, value);
-            n.servlet = servlet;
-            return n;
+        @Override
+        protected ByteTreeNode<HttpServlet> put(String key, HttpServlet servlet) {
+            return super.put(key, servlet);
         }
 
         @Override
-        protected ByteTreeNode<String> createNode(ByteTreeNode<String> parent, int index, String key, int subLen) {
-            UriPathNode n = new UriPathNode(parent, index);
-            n.value = key.substring(0, subLen);
-            return n;
-        }
-
-        public HttpServlet getServlet() {
-            return servlet;
+        protected HttpServlet remove(String key) {
+            return super.remove(key);
         }
     }
 

@@ -15,28 +15,31 @@ package org.redkale.util;
  */
 public class ByteTreeNode<T> {
 
+    protected final ByteTreeNode<T> parent;
+
     protected final byte index;
 
-    protected final ByteTreeNode<T> parent;
+    protected final String key;
 
     protected T value;
 
     protected ByteTreeNode<T>[] nodes = new ByteTreeNode[127];
 
     protected ByteTreeNode() {
-        this(null, 0);
+        this(null, 0, "");
     }
 
-    protected ByteTreeNode(ByteTreeNode<T> parent, int index) {
+    private ByteTreeNode(ByteTreeNode<T> parent, int index, String key) {
         this.parent = parent;
         if (index < 0 || index >= nodes.length) {
             throw new RedkaleException(index + " is illegal");
         }
         this.index = (byte) index;
+        this.key = key;
     }
 
     public static <T> ByteTreeNode<T> create() {
-        return new ByteTreeNode(null, 0);
+        return new ByteTreeNode(null, 0, "");
     }
 
     public ByteTreeNode<T> getNode(byte b) {
@@ -55,6 +58,10 @@ public class ByteTreeNode<T> {
         return index;
     }
 
+    public String getKey() {
+        return key;
+    }
+
     public T getValue() {
         return value;
     }
@@ -70,6 +77,19 @@ public class ByteTreeNode<T> {
         return n.value;
     }
 
+    protected T remove(String key) {
+        ByteTreeNode<T> n = this;
+        for (char ch : key.toCharArray()) {
+            n = n.nodes[ch];
+            if (n == null) {
+                return null;
+            }
+        }
+        T rs = n.value;
+        n.value = null;
+        return rs;
+    }
+
     protected ByteTreeNode<T> put(String key, T value) {
         ByteTreeNode<T> n = this;
         int i = 0;
@@ -80,17 +100,13 @@ public class ByteTreeNode<T> {
             i++;
             ByteTreeNode<T> s = n.nodes[ch];
             if (s == null) {
-                s = createNode(n, ch, key, i);
+                s = new ByteTreeNode(n, ch, key.substring(0, i));
                 n.nodes[ch] = s;
             }
             n = s;
         }
         n.value = value;
         return n;
-    }
-
-    protected ByteTreeNode<T> createNode(ByteTreeNode<T> parent, int index, String key, int subLen) {
-        return new ByteTreeNode(parent, index);
     }
 
     @Override
