@@ -17,6 +17,11 @@ import java.util.function.Supplier;
  */
 class Jdk21Inners {
 
+    static {
+        // 加载时进行可用性判断
+        Thread.currentThread().isVirtual();
+    }
+
     private Jdk21Inners() {
         // do nothing
     }
@@ -67,6 +72,7 @@ class Jdk21Inners {
             this.supplier = supplier;
         }
 
+        @Override
         public ThreadLocal<T> apply(Supplier<T> supplier) {
             return new VirtualThreadLocal<>(supplier);
         }

@@ -111,6 +111,6 @@ public class ByteTreeNode<T> {
 
     @Override
     public String toString() {
-        return "ByteTreeNode{" + "index='" + (char) index + "', value=" + value + '}';
+        return "ByteTreeNode{" + "index='" + (char) index + "', key=" + key + "', value=" + value + '}';
     }
 }
