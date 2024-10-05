@@ -8,7 +8,6 @@ module org.redkale {
     requires java.logging;
     requires java.net.http;
     requires java.sql;
-    requires jdk.unsupported; // sun.misc.Unsafe
 
     exports org.redkale.annotation;
     exports org.redkale.boot;
