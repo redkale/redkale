@@ -15,14 +15,28 @@ package org.redkale.util;
  */
 public class ByteTreeNode<T> {
 
+    protected final byte index;
+
+    protected final ByteTreeNode<T> parent;
+
     protected T value;
 
     protected ByteTreeNode<T>[] nodes = new ByteTreeNode[127];
 
-    protected ByteTreeNode() {}
+    protected ByteTreeNode() {
+        this(null, 0);
+    }
+
+    private ByteTreeNode(ByteTreeNode<T> parent, int index) {
+        this.parent = parent;
+        if (index < 0 || index >= nodes.length) {
+            throw new RedkaleException(index + " is illegal");
+        }
+        this.index = (byte) index;
+    }
 
     public static <T> ByteTreeNode<T> create() {
-        return new ByteTreeNode();
+        return new ByteTreeNode(null, 0);
     }
 
     public ByteTreeNode<T> getNode(byte b) {
@@ -31,6 +45,14 @@ public class ByteTreeNode<T> {
 
     public ByteTreeNode<T> getNode(char ch) {
         return ch >= nodes.length ? null : nodes[ch];
+    }
+
+    public ByteTreeNode<T> getParent() {
+        return parent;
+    }
+
+    public byte getIndex() {
+        return index;
     }
 
     public T getValue() {
@@ -56,7 +78,7 @@ public class ByteTreeNode<T> {
             }
             ByteTreeNode s = n.nodes[ch];
             if (s == null) {
-                s = new ByteTreeNode();
+                s = new ByteTreeNode(n, ch);
                 n.nodes[ch] = s;
             }
             n = s;
