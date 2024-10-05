@@ -10,6 +10,7 @@ import java.util.*;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.*;
 import org.redkale.convert.Reader.ValueType;
+import org.redkale.util.ByteTreeNode;
 import org.redkale.util.Utility;
 
 /**
@@ -672,7 +673,7 @@ public class JsonReader extends Reader {
         if (this.position == eof) {
             return null;
         }
-        DeMemberNode node = memberInfo.getMemberNode();
+        ByteTreeNode<DeMember> node = memberInfo.getMemberNode();
         char ch = nextGoodChar(true); // 需要跳过注释
         final char[] text0 = this.text;
         int curr = this.position;

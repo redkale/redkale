@@ -6,6 +6,7 @@ package org.redkale.convert;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.redkale.util.ByteTreeNode;
 
 /**
  * 字段的反序列化集合操作类
@@ -29,11 +30,12 @@ public class DeMemberInfo {
         this.members = deMembers;
         this.memberFieldMap = new HashMap<>(deMembers.length);
         this.memberTagMap = new HashMap<>(deMembers.length);
+        this.memberNode = new DeMemberNode();
         for (DeMember member : deMembers) {
             this.memberFieldMap.put(member.getFieldName(), member);
             this.memberTagMap.put(member.getTag(), member);
+            this.memberNode.put(member.getFieldName(), member);
         }
-        this.memberNode = DeMemberNode.create(deMembers);
     }
 
     public static DeMemberInfo create(DeMember... deMembers) {
@@ -48,7 +50,7 @@ public class DeMemberInfo {
         return members;
     }
 
-    public DeMemberNode getMemberNode() {
+    public ByteTreeNode<DeMember> getMemberNode() {
         return memberNode;
     }
 
@@ -58,5 +60,13 @@ public class DeMemberInfo {
 
     public DeMember getMemberByField(String field) {
         return memberFieldMap.get(field);
+    }
+
+    protected static class DeMemberNode extends ByteTreeNode<DeMember> {
+
+        @Override
+        public void put(String key, DeMember value) {
+            super.put(key, value);
+        }
     }
 }

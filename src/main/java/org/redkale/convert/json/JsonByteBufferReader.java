@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.UnmappableCharacterException;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.*;
+import org.redkale.util.ByteTreeNode;
 
 /**
  * 以ByteBuffer为数据载体的JsonReader <br>
@@ -595,7 +596,7 @@ public class JsonByteBufferReader extends JsonReader {
         if (ch == 0) {
             return null;
         }
-        DeMemberNode node = memberInfo.getMemberNode();
+        ByteTreeNode<DeMember> node = memberInfo.getMemberNode();
         CharArray tmp = array();
         if (ch == '"' || ch == '\'') {
             final char quote = ch;
