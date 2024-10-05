@@ -7,7 +7,9 @@ package org.redkale.net.http;
 
 import java.nio.channels.CompletionHandler;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.redkale.annotation.ConstructorParameters;
@@ -51,7 +53,10 @@ public class HttpContext extends Context {
     final boolean sameHeader;
 
     // 不带通配符的mapping url的缓存对象
-    final Map<ByteArray, String>[] uriPathCaches = new Map[100];
+    private final UriPathNode uriPathNode = new UriPathNode();
+
+    // 不带通配符的mapping url的缓存对象
+    private final Map<ByteArray, String>[] uriPathCaches = new Map[100];
 
     public HttpContext(HttpContextConfig config) {
         super(config);
@@ -64,6 +69,22 @@ public class HttpContext extends Context {
         this.rpcAuthenticator = config.rpcAuthenticator;
         this.rpcAuthenticatorConfig = config.rpcAuthenticatorConfig;
         random.setSeed(Math.abs(System.nanoTime()));
+    }
+
+    ByteTreeNode<String> getUriPathNode() {
+        return uriPathNode;
+    }
+
+    void addUriPath(final String path) {
+        this.uriPathNode.put(path, path);
+        byte[] bs = path.getBytes(StandardCharsets.UTF_8);
+        int index = bs.length >= uriPathCaches.length ? 0 : bs.length;
+        Map<ByteArray, String> map = uriPathCaches[index];
+        if (map == null) {
+            map = new HashMap<>();
+            uriPathCaches[index] = map;
+        }
+        map.put(new ByteArray().put(bs), path);
     }
 
     String loadUriPath(ByteArray array, boolean latin1, Charset charset) {
@@ -235,6 +256,23 @@ public class HttpContext extends Context {
                 }.loadClass(newDynName.replace('/', '.'), bytes);
         RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         return (Creator<H>) Creator.create(newClazz);
+    }
+
+    protected static class UriPathNode extends ByteTreeNode<String> {
+
+        public UriPathNode() {
+            super();
+        }
+
+        @Override
+        protected void put(String key, String value) {
+            super.put(key, value);
+        }
+
+        @Override
+        protected String subNodeValue(ByteTreeNode<String> node, String key, int subLen) {
+            return key.substring(0, subLen);
+        }
     }
 
     public static class HttpContextConfig extends ContextConfig {

@@ -6,7 +6,6 @@
 package org.redkale.net.http;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
@@ -511,16 +510,7 @@ public class HttpDispatcherServlet
         getServlets().forEach(s -> {
             s.postStart(context, getServletConf(s));
         });
-        forEachMappingKey((k, s) -> {
-            byte[] bs = k.getBytes(StandardCharsets.UTF_8);
-            int index = bs.length >= context.uriPathCaches.length ? 0 : bs.length;
-            Map<ByteArray, String> map = context.uriPathCaches[index];
-            if (map == null) {
-                map = new HashMap<>();
-                context.uriPathCaches[index] = map;
-            }
-            map.put(new ByteArray().put(bs), k);
-        });
+        forEachMappingKey((k, s) -> context.addUriPath(k));
     }
 
     public HttpServlet findServletByTopic(String topic) {

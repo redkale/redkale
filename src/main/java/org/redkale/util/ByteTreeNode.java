@@ -71,18 +71,30 @@ public class ByteTreeNode<T> {
     }
 
     protected void put(String key, T value) {
-        ByteTreeNode n = this;
+        ByteTreeNode<T> n = this;
+        int i = 0;
         for (char ch : key.toCharArray()) {
             if (ch >= nodes.length) {
                 throw new RedkaleException(key + " contains illegal char: " + ch);
             }
-            ByteTreeNode s = n.nodes[ch];
+            i++;
+            ByteTreeNode<T> s = n.nodes[ch];
             if (s == null) {
                 s = new ByteTreeNode(n, ch);
+                s.value = subNodeValue(s, key, i);
                 n.nodes[ch] = s;
             }
             n = s;
         }
         n.value = value;
+    }
+
+    protected T subNodeValue(ByteTreeNode<T> node, String key, int subLen) {
+        return null;
+    }
+
+    @Override
+    public String toString() {
+        return "ByteTreeNode{" + "index='" + (char) index + "', value=" + value + '}';
     }
 }

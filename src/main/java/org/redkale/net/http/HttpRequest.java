@@ -595,11 +595,12 @@ public class HttpRequest extends Request<HttpContext> {
     }
 
     // 解析 GET /xxx HTTP/1.1
-    private int readMethodUriLine(final ByteBuffer buf) {
+    protected int readMethodUriLine(final ByteBuffer buf) {
         final ByteBuffer buffer = buf;
         Charset charset = this.context.getCharset();
         int remain = buffer.remaining();
         int size;
+        byte b = 0;
         ByteArray bytes = bodyBytes; // body当temp buffer使用
         // 读method
         if (this.method == null) {
@@ -654,16 +655,16 @@ public class HttpRequest extends Request<HttpContext> {
                 }
             }
             if (bigger) { // method长度大于4
-                for (; ; ) {
-                    if (remain-- < 1) {
-                        buffer.clear();
-                        return 1;
-                    }
-                    byte b = buffer.get();
+                while (remain-- > 0) {
+                    b = buffer.get();
                     if (b == ' ') {
                         break;
                     }
                     bytes.put(b);
+                }
+                if (b != ' ') {
+                    buffer.clear();
+                    return 1;
                 }
                 size = bytes.length();
                 byte[] content = bytes.content();
@@ -710,28 +711,57 @@ public class HttpRequest extends Request<HttpContext> {
             int qst = -1; // ?的位置
             boolean decodeable = false;
             boolean latin1 = true;
-            for (; ; ) {
-                if (remain-- < 1) {
-                    buffer.clear();
-                    return 1;
-                }
-                byte b = buffer.get();
+            boolean finding = true;
+            ByteTreeNode<String> pathNode = context.getUriPathNode();
+            while (remain-- > 0) {
+                b = buffer.get();
                 if (b == ' ') {
                     break;
                 }
                 if (b == '?' && qst < 0) {
                     qst = bytes.length();
-                } else if (!decodeable && (b == '+' || b == '%')) {
-                    decodeable = true;
-                } else if (latin1 && (b < 0x20 || b >= 0x80)) {
-                    latin1 = false;
+                    finding = false;
                 }
-                bytes.put(b);
+                if (finding) {
+                    ByteTreeNode<String> nextNode = pathNode.getNode(b);
+                    if (nextNode == null) { // not match any path
+                        nextNode = pathNode;
+                        ByteArray tmp = headerBytes.clear();
+                        tmp.put(b);
+                        if (pathNode.getIndex() > 0) {
+                            tmp.put(pathNode.getIndex());
+                            while ((nextNode = nextNode.getParent()).getIndex() != 0) {
+                                tmp.put(nextNode.getIndex());
+                            }
+                        }
+                        for (int i = tmp.length() - 1; i >= 0; i--) {
+                            bytes.put(tmp.get(i));
+                        }
+                        tmp.clear();
+                        pathNode = null;
+                        finding = false;
+                    } else {
+                        pathNode = nextNode;
+                    }
+                } else {
+                    if (!decodeable && (b == '+' || b == '%')) {
+                        decodeable = true;
+                    } else if (latin1 && (b < 0x20 || b >= 0x80)) {
+                        latin1 = false;
+                    }
+                    bytes.put(b);
+                }
+            }
+            if (b != ' ') {
+                buffer.clear();
+                return 1;
             }
 
             size = bytes.length();
-            if (qst > 0) { // 带?参数
-                if (decodeable) { // 需要转义
+            if (qst >= 0) { // 带?参数
+                if (pathNode != null) {
+                    this.requestPath = pathNode.getValue();
+                } else if (decodeable) { // 需要转义
                     this.requestPath = toDecodeString(bytes, 0, qst, charset);
                 } else {
                     this.requestPath = context.loadUriPath(bytes, qst, latin1, charset);
@@ -746,7 +776,9 @@ public class HttpRequest extends Request<HttpContext> {
                             .log(Level.WARNING, "HttpRequest.addParameter error: " + bytes.toString(), e);
                 }
             } else { // 没有带?参数
-                if (decodeable) { // 需要转义
+                if (pathNode != null) {
+                    this.requestPath = pathNode.getValue();
+                } else if (decodeable) { // 需要转义
                     this.requestPath = toDecodeString(bytes, 0, bytes.length(), charset);
                 } else {
                     this.requestPath = context.loadUriPath(bytes, latin1, charset);
@@ -756,13 +788,11 @@ public class HttpRequest extends Request<HttpContext> {
             bytes.clear();
         }
         // 读protocol
-        for (; ; ) {
-            if (remain-- < 1) {
-                this.params.clear();
-                buffer.clear();
-                return 1;
-            }
-            byte b = buffer.get();
+        this.protocol = HTTP_1_1;
+        byte last = 0;
+        boolean has = !bytes.isEmpty();
+        while (remain-- > 0) {
+            b = buffer.get();
             if (b == '\r') {
                 if (remain-- < 1) {
                     this.params.clear();
@@ -775,17 +805,28 @@ public class HttpRequest extends Request<HttpContext> {
                 }
                 break;
             }
-            bytes.put(b);
+            last = b;
+            if (has) {
+                bytes.put(b);
+            }
         }
-        size = bytes.length();
-        byte[] content = bytes.content();
-        if (size == 8 && content[0] == 'H' && content[5] == '1' && content[7] == '1') {
-            this.protocol = HTTP_1_1;
-        } else if (size == 8 && content[0] == 'H' && content[5] == '2' && content[7] == '0') {
+        if (b != '\r') {
+            this.params.clear();
+            buffer.clear();
+            return 1;
+        }
+        if (last == '0') {
             this.protocol = HTTP_2_0;
-        } else {
-            this.protocol = bytes.toString(true, charset);
         }
+        //        size = bytes.length();
+        //        byte[] content = bytes.content();
+        //        if (size == 8 && content[0] == 'H' && content[5] == '1' && content[7] == '1') {
+        //            this.protocol = HTTP_1_1;
+        //        } else if (size == 8 && content[0] == 'H' && content[5] == '2' && content[7] == '0') {
+        //            this.protocol = HTTP_2_0;
+        //        } else {
+        //            this.protocol = bytes.toString(true, charset);
+        //        }
         bytes.clear();
         return 0;
     }
