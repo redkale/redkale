@@ -175,25 +175,25 @@ public interface Opcodes {
     // The constructor of Integer was deprecated in 9
     // but we are stuck with it by backward compatibility
     @SuppressWarnings("deprecation")
-    Integer TOP = new Integer(0);
+    Integer TOP = Integer.valueOf(0);
 
     @SuppressWarnings("deprecation")
-    Integer INTEGER = new Integer(1);
+    Integer INTEGER = Integer.valueOf(1);
 
     @SuppressWarnings("deprecation")
-    Integer FLOAT = new Integer(2);
+    Integer FLOAT = Integer.valueOf(2);
 
     @SuppressWarnings("deprecation")
-    Integer DOUBLE = new Integer(3);
+    Integer DOUBLE = Integer.valueOf(3);
 
     @SuppressWarnings("deprecation")
-    Integer LONG = new Integer(4);
+    Integer LONG = Integer.valueOf(4);
 
     @SuppressWarnings("deprecation")
-    Integer NULL = new Integer(5);
+    Integer NULL = Integer.valueOf(5);
 
     @SuppressWarnings("deprecation")
-    Integer UNINITIALIZED_THIS = new Integer(6);
+    Integer UNINITIALIZED_THIS = Integer.valueOf(6);
 
     // opcodes // visit method (- = idem)
 
