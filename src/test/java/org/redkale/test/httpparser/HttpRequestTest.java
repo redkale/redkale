@@ -4,11 +4,13 @@
  */
 package org.redkale.test.httpparser;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import org.junit.jupiter.api.*;
 import org.redkale.net.http.HttpContext;
 import org.redkale.net.http.HttpRequest;
+import org.redkale.net.http.HttpServlet;
 
 /**
  *
@@ -116,11 +118,12 @@ public class HttpRequestTest {
         httpConfig.sameHeader = true;
         httpConfig.maxHeader = 16 * 1024;
         httpConfig.maxBody = 64 * 1024;
+        HttpServlet servlet = new HttpServlet();
         HttpContext context = new HttpContext(httpConfig);
-        Method method = HttpContext.class.getDeclaredMethod("addUriPath", String.class);
+        Method method = HttpContext.class.getDeclaredMethod("addUriPath", String.class, HttpServlet.class);
         method.setAccessible(true);
-        method.invoke(context, "/test/sleep200");
-        method.invoke(context, "/test/aaa");
+        method.invoke(context, "/test/sleep200", servlet);
+        method.invoke(context, "/test/aaa", servlet);
 
         HttpRequestX req = new HttpRequestX(context);
         String text = "GET /test/azzzz  HTTP/1.1\r\nConnection: Keep-Alive\r\nContent-Length: 0\r\n\r\n";
@@ -139,6 +142,9 @@ public class HttpRequestTest {
         r1 = req.readHeader(ByteBuffer.wrap(text.getBytes()), 0);
         Assertions.assertEquals(0, r1);
         Assertions.assertEquals("/test/sleep200", req.getRequestPath());
+        Field serField = HttpRequest.class.getDeclaredField("pathServlet");
+        serField.setAccessible(true);
+        Assertions.assertEquals(servlet, serField.get(req));
 
         req = new HttpRequestX(context);
         text = "GET /test/sleep201  HTTP/1.1\r\nConnection: Keep-Alive\r\nContent-Length: 0\r\n\r\n";

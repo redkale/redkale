@@ -27,7 +27,7 @@ public class ByteTreeNode<T> {
         this(null, 0);
     }
 
-    private ByteTreeNode(ByteTreeNode<T> parent, int index) {
+    protected ByteTreeNode(ByteTreeNode<T> parent, int index) {
         this.parent = parent;
         if (index < 0 || index >= nodes.length) {
             throw new RedkaleException(index + " is illegal");
@@ -70,7 +70,7 @@ public class ByteTreeNode<T> {
         return n.value;
     }
 
-    protected void put(String key, T value) {
+    protected ByteTreeNode<T> put(String key, T value) {
         ByteTreeNode<T> n = this;
         int i = 0;
         for (char ch : key.toCharArray()) {
@@ -80,17 +80,17 @@ public class ByteTreeNode<T> {
             i++;
             ByteTreeNode<T> s = n.nodes[ch];
             if (s == null) {
-                s = new ByteTreeNode(n, ch);
-                s.value = subNodeValue(s, key, i);
+                s = createNode(n, ch, key, i);
                 n.nodes[ch] = s;
             }
             n = s;
         }
         n.value = value;
+        return n;
     }
 
-    protected T subNodeValue(ByteTreeNode<T> node, String key, int subLen) {
-        return null;
+    protected ByteTreeNode<T> createNode(ByteTreeNode<T> parent, int index, String key, int subLen) {
+        return new ByteTreeNode(parent, index);
     }
 
     @Override

@@ -65,8 +65,8 @@ public class DeMemberInfo {
     protected static class DeMemberNode extends ByteTreeNode<DeMember> {
 
         @Override
-        public void put(String key, DeMember value) {
-            super.put(key, value);
+        public ByteTreeNode<DeMember> put(String key, DeMember value) {
+            return super.put(key, value);
         }
     }
 }

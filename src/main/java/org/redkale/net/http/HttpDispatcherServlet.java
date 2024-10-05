@@ -322,7 +322,9 @@ public class HttpDispatcherServlet
                 response.finish(100, response.getHttpCode(100));
                 return;
             }
-            if (request.isWebSocket()) {
+            if (request.pathServlet != null) {
+                servlet = request.pathServlet;
+            } else if (request.isWebSocket()) {
                 servlet = wsMappings.get(uri);
                 if (servlet == null && this.regexWsArray != null) {
                     for (MappingEntry en : regexWsArray) {
@@ -510,7 +512,7 @@ public class HttpDispatcherServlet
         getServlets().forEach(s -> {
             s.postStart(context, getServletConf(s));
         });
-        forEachMappingKey((k, s) -> context.addUriPath(k));
+        forEachMappingKey(context::addUriPath);
     }
 
     public HttpServlet findServletByTopic(String topic) {

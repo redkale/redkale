@@ -20,6 +20,7 @@ import org.redkale.annotation.Comment;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.Request;
+import org.redkale.net.http.HttpContext.UriPathNode;
 import org.redkale.util.*;
 import static org.redkale.util.Utility.isEmpty;
 import static org.redkale.util.Utility.isNotEmpty;
@@ -170,6 +171,8 @@ public class HttpRequest extends Request<HttpContext> {
     protected String remoteAddr;
 
     protected String locale;
+
+    HttpServlet pathServlet;
 
     // 主要给chunked和unzip用的
     private ByteArray array;
@@ -761,6 +764,7 @@ public class HttpRequest extends Request<HttpContext> {
             if (qst >= 0) { // 带?参数
                 if (pathNode != null) {
                     this.requestPath = pathNode.getValue();
+                    this.pathServlet = ((UriPathNode) pathNode).getServlet();
                 } else if (decodeable) { // 需要转义
                     this.requestPath = toDecodeString(bytes, 0, qst, charset);
                 } else {
@@ -778,6 +782,7 @@ public class HttpRequest extends Request<HttpContext> {
             } else { // 没有带?参数
                 if (pathNode != null) {
                     this.requestPath = pathNode.getValue();
+                    this.pathServlet = ((UriPathNode) pathNode).getServlet();
                 } else if (decodeable) { // 需要转义
                     this.requestPath = toDecodeString(bytes, 0, bytes.length(), charset);
                 } else {
@@ -1303,6 +1308,7 @@ public class HttpRequest extends Request<HttpContext> {
         this.respConvertType = null;
         this.headers.clear();
         // 其他
+        this.pathServlet = null;
         this.newSessionid = null;
         this.method = null;
         this.getmethod = false;

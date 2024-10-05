@@ -71,12 +71,12 @@ public class HttpContext extends Context {
         random.setSeed(Math.abs(System.nanoTime()));
     }
 
-    ByteTreeNode<String> getUriPathNode() {
+    UriPathNode getUriPathNode() {
         return uriPathNode;
     }
 
-    void addUriPath(final String path) {
-        this.uriPathNode.put(path, path);
+    void addUriPath(final String path, HttpServlet servlet) {
+        this.uriPathNode.put(path, path, servlet);
         byte[] bs = path.getBytes(StandardCharsets.UTF_8);
         int index = bs.length >= uriPathCaches.length ? 0 : bs.length;
         Map<ByteArray, String> map = uriPathCaches[index];
@@ -260,18 +260,31 @@ public class HttpContext extends Context {
 
     protected static class UriPathNode extends ByteTreeNode<String> {
 
-        public UriPathNode() {
+        protected HttpServlet servlet;
+
+        protected UriPathNode() {
             super();
         }
 
-        @Override
-        protected void put(String key, String value) {
-            super.put(key, value);
+        protected UriPathNode(ByteTreeNode<String> parent, int index) {
+            super(parent, index);
+        }
+
+        protected ByteTreeNode<String> put(String key, String value, HttpServlet servlet) {
+            UriPathNode n = (UriPathNode) super.put(key, value);
+            n.servlet = servlet;
+            return n;
         }
 
         @Override
-        protected String subNodeValue(ByteTreeNode<String> node, String key, int subLen) {
-            return key.substring(0, subLen);
+        protected ByteTreeNode<String> createNode(ByteTreeNode<String> parent, int index, String key, int subLen) {
+            UriPathNode n = new UriPathNode(parent, index);
+            n.value = key.substring(0, subLen);
+            return n;
+        }
+
+        public HttpServlet getServlet() {
+            return servlet;
         }
     }
 
