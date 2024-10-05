@@ -37,7 +37,7 @@ public abstract class Request<C extends Context> {
 
     // 请求包是否完成读取完毕，用于ProtocolCodec继续读的判断条件
     // 需要在readHeader方法中设置
-    protected boolean completed;
+    protected boolean readCompleted;
 
     protected int pipelineIndex;
 
@@ -109,7 +109,7 @@ public abstract class Request<C extends Context> {
         pipelineIndex = 0;
         pipelineCount = 0;
         pipelineCompleted = false;
-        completed = false;
+        readCompleted = false;
         keepAlive = false;
         attributes.clear();
         annotations = null;

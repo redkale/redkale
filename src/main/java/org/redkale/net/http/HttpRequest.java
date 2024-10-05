@@ -400,8 +400,8 @@ public class HttpRequest extends Request<HttpContext> {
                 // 文件上传必须设置keepAlive为false，因为文件过大时用户不一定会skip掉多余的数据
                 this.keepAlive = false;
             }
-            // completed=true时ProtocolCodec会继续读下一个request
-            this.completed = !this.boundary && !maybews;
+            // readCompleted=true时ProtocolCodec会继续读下一个request
+            this.readCompleted = !this.boundary && !maybews;
             this.bodyBytes.clear();
             this.readState = READ_STATE_BODY;
         }

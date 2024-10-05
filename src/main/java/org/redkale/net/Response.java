@@ -348,7 +348,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             AsyncConnection conn = removeChannel();
             if (conn != null && conn.protocolCodec != null) {
                 this.responseConsumer.accept(this);
-                if (!request.completed) {
+                if (!request.readCompleted) {
                     conn.readRegister(conn.protocolCodec);
                     this.readRegistered = true;
                 }

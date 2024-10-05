@@ -125,8 +125,8 @@ public class SncpRequest extends Request<SncpContext> {
                 return -1;
             }
             this.traceid = this.header.getTraceid();
-            // completed=true时ProtocolCodec会继续读下一个request
-            this.completed = true;
+            // readCompleted=true时ProtocolCodec会继续读下一个request
+            this.readCompleted = true;
             this.readState = READ_STATE_BODY;
         }
         // ---------------------body----------------------------------
