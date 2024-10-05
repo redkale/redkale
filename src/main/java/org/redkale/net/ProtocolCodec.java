@@ -114,7 +114,8 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
             return;
         }
         try {
-            //channel.readRegisterInIOThread(this);
+            // channel.readRegisterInIOThread(this);
+            // 服务端接收到一个SocketConnection后调用，因此不存在并发readRegister
             channel.readRegister(this);
         } catch (Exception te) {
             channel.dispose(); // response.init(channel); 在调用之前异常
