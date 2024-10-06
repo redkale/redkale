@@ -70,17 +70,26 @@ public final class Utility {
     static {
         MethodHandles.Lookup defaultLookup0 = null;
         try {
-            Field implLookup = MethodHandles.Lookup.class.getDeclaredField("IMPL_LOOKUP");
-            implLookup.setAccessible(true);
-            defaultLookup0 = (MethodHandles.Lookup) implLookup.get(null);
-            RedkaleClassLoader.putReflectionField(MethodHandles.Lookup.class.getName(), implLookup);
+            final Class lookupClass = MethodHandles.Lookup.class;
+            final ClassLoader loader = Thread.currentThread().getContextClassLoader();
+            Class unsafeClass = loader.loadClass("sun.misc.Unsafe");
+            Field safeField = unsafeClass.getDeclaredField("theUnsafe");
+            RedkaleClassLoader.putReflectionField("sun.misc.Unsafe", safeField);
+            safeField.setAccessible(true);
+            final Object usafe = safeField.get(null);
+            Method staticFieldOffsetMethod = usafe.getClass().getMethod("staticFieldOffset", Field.class);
+            Method getObjectMethod = usafe.getClass().getMethod("getObject", Object.class, long.class);
+            Field implLookup = lookupClass.getDeclaredField("IMPL_LOOKUP");
+            long fieldOffset = (Long) staticFieldOffsetMethod.invoke(usafe, implLookup);
+            defaultLookup0 = (MethodHandles.Lookup) getObjectMethod.invoke(usafe, lookupClass, fieldOffset);
+            RedkaleClassLoader.putReflectionField(lookupClass.getName(), implLookup);
         } catch (Throwable e) {
             defaultLookup0 = MethodHandles.lookup();
         }
         defaultLookup = defaultLookup0;
     }
 
-    private static final Executor defaultExecutorConsumer = command -> command.run();
+    private static final Executor defaultExecutorConsumer = Runnable::run;
 
     // org.redkale.util.JDK21VirtualThreadLocal
     private static final Function<Supplier, ThreadLocal> virtualThreadLocalFunction;
