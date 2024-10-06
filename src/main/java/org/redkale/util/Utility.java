@@ -141,59 +141,56 @@ public final class Utility {
         Function<String, ThreadFactory> virtualThreadFactoryFunction0 = null;
 
         final ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        { // Jdk21Inners
+        try { // Jdk21Inners
+            String virtualName = "org.redkale.util.Jdk21Inners";
+            Class virtualClazz = loader.loadClass(virtualName);
+            Method method = virtualClazz.getMethod("createExecutor");
+            virtualExecutorConsumer0 = (Executor) method.invoke(null);
+            RedkaleClassLoader.putReflectionMethod(virtualName, method);
+
+            method = virtualClazz.getMethod("createPoolFunction");
+            virtualPoolFunction0 = (Function) method.invoke(null);
+            RedkaleClassLoader.putReflectionMethod(virtualName, method);
+
+            method = virtualClazz.getMethod("createThreadLocalFunction");
+            virtualThreadLocalFunction0 = (Function) method.invoke(null);
+            RedkaleClassLoader.putReflectionMethod(virtualName, method);
+
+            method = virtualClazz.getMethod("createThreadFactoryFunction");
+            virtualThreadFactoryFunction0 = (Function) method.invoke(null);
+            RedkaleClassLoader.putReflectionMethod(virtualName, method);
+        } catch (Throwable t) {
+            // do nothing
+        }
+        try {
+            // String-LATIN1
+            MethodHandles.Lookup lookup = defaultLookup;
+            VarHandle compactHandle = lookup.findStaticVarHandle(String.class, "COMPACT_STRINGS", boolean.class);
+            final boolean compact = (Boolean) compactHandle.get(null);
+            VarHandle coderHandle = lookup.findVarHandle(String.class, "coder", byte.class);
+            VarHandle valueHandle = lookup.findVarHandle(String.class, "value", byte[].class);
+            // LATIN1:0  UTF16:1
+            strLatin1Function0 = compact ? (String t) -> (Byte) coderHandle.get(t) == 0 : (String t) -> false;
+            strByteFunction0 = (String t) -> (byte[]) valueHandle.get(t);
+
+            // signalShutdown
+            Class<Consumer<Consumer<String>>> shutdownClazz1 = null;
             try {
-                String virtualName = "org.redkale.util.Jdk21Inners";
-                Class virtualClazz = loader.loadClass(virtualName);
-                Method method = virtualClazz.getMethod("createExecutor");
-                virtualExecutorConsumer0 = (Executor) method.invoke(null);
-                RedkaleClassLoader.putReflectionMethod(virtualName, method);
-
-                method = virtualClazz.getMethod("createPoolFunction");
-                virtualPoolFunction0 = (Function) method.invoke(null);
-                RedkaleClassLoader.putReflectionMethod(virtualName, method);
-
-                method = virtualClazz.getMethod("createThreadLocalFunction");
-                virtualThreadLocalFunction0 = (Function) method.invoke(null);
-                RedkaleClassLoader.putReflectionMethod(virtualName, method);
-
-                method = virtualClazz.getMethod("createThreadFactoryFunction");
-                virtualThreadFactoryFunction0 = (Function) method.invoke(null);
-                RedkaleClassLoader.putReflectionMethod(virtualName, method);
+                shutdownClazz1 = (Class) loader.loadClass("org.redkale.util.SignalShutDown");
             } catch (Throwable t) {
                 // do nothing
             }
-        }
-        try {
-            { // String-LATIN1
-                MethodHandles.Lookup lookup = defaultLookup;
-                VarHandle compactHandle = lookup.findStaticVarHandle(String.class, "COMPACT_STRINGS", boolean.class);
-                final boolean compact = (Boolean) compactHandle.get(null);
-                VarHandle coderHandle = lookup.findVarHandle(String.class, "coder", byte.class);
-                VarHandle valueHandle = lookup.findVarHandle(String.class, "value", byte[].class);
-                // LATIN1:0  UTF16:1
-                strLatin1Function0 = compact ? (String t) -> (Byte) coderHandle.get(t) == 0 : (String t) -> false;
-                strByteFunction0 = (String t) -> (byte[]) valueHandle.get(t);
-            }
-            { // signalShutdown
-                Class<Consumer<Consumer<String>>> shutdownClazz1 = null;
-                try {
-                    shutdownClazz1 = (Class) loader.loadClass("org.redkale.util.SignalShutDown");
-                } catch (Throwable t) {
-                    // do nothing
-                }
-                if (shutdownClazz1 == null) {
-                    byte[] classBytes = hexToBin(consumerSignalShutdownBinary);
-                    shutdownClazz1 = (Class<Consumer<Consumer<String>>>)
-                            new ClassLoader(loader) {
-                                public final Class<?> loadClass(String name, byte[] b) {
-                                    return defineClass(name, b, 0, b.length);
-                                }
-                            }.loadClass("org.redkale.util.SignalShutDown", classBytes);
-                    RedkaleClassLoader.putDynClass(shutdownClazz1.getName(), classBytes, shutdownClazz1);
-                    RedkaleClassLoader.putReflectionDeclaredConstructors(shutdownClazz1, shutdownClazz1.getName());
-                    signalShutdownConsumer0 = shutdownClazz1.getConstructor().newInstance();
-                }
+            if (shutdownClazz1 == null) {
+                byte[] classBytes = hexToBin(consumerSignalShutdownBinary);
+                shutdownClazz1 = (Class<Consumer<Consumer<String>>>)
+                        new ClassLoader(loader) {
+                            public final Class<?> loadClass(String name, byte[] b) {
+                                return defineClass(name, b, 0, b.length);
+                            }
+                        }.loadClass("org.redkale.util.SignalShutDown", classBytes);
+                RedkaleClassLoader.putDynClass(shutdownClazz1.getName(), classBytes, shutdownClazz1);
+                RedkaleClassLoader.putReflectionDeclaredConstructors(shutdownClazz1, shutdownClazz1.getName());
+                signalShutdownConsumer0 = shutdownClazz1.getConstructor().newInstance();
             }
         } catch (Throwable e) { // 不会发生
             // do nothing
