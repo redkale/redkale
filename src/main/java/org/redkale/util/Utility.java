@@ -139,7 +139,7 @@ public final class Utility {
         Function<Supplier, ThreadLocal> virtualThreadLocalFunction0 = null;
         Function<String, ThreadFactory> virtualThreadFactoryFunction0 = null;
 
-        if (!NATIVE_IMAGE_ENV) { // not native-image
+        //if (!NATIVE_IMAGE_ENV) { // not native-image
             try {
                 final ClassLoader loader = Thread.currentThread().getContextClassLoader();
                 { // Jdk21Inners
@@ -198,8 +198,9 @@ public final class Utility {
                 }
             } catch (Throwable e) { // 不会发生
                 // do nothing
+                e.printStackTrace();
             }
-        }
+        //}
         strByteFunction = strByteFunction0;
         strLatin1Function = strLatin1Function0;
         signalShutdownConsumer = signalShutdownConsumer0;
