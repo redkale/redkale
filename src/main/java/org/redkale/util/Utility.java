@@ -65,12 +65,13 @@ public final class Utility {
         JAVA_RECORD_CLASS = clz;
     }
 
-    private static final MethodHandles.Lookup defaultLookup;
+    private static final MethodHandles.Lookup trustedLookup;
+    private static final boolean compactStrings;
 
     static {
-        MethodHandles.Lookup defaultLookup0 = null;
+        boolean compactStrings0 = true;
+        MethodHandles.Lookup trustedLookup0 = null;
         try {
-            final Class lookupClass = MethodHandles.Lookup.class;
             final ClassLoader loader = Thread.currentThread().getContextClassLoader();
             Class unsafeClass = loader.loadClass("sun.misc.Unsafe");
             Field safeField = unsafeClass.getDeclaredField("theUnsafe");
@@ -78,15 +79,24 @@ public final class Utility {
             safeField.setAccessible(true);
             final Object usafe = safeField.get(null);
             Method staticFieldOffsetMethod = usafe.getClass().getMethod("staticFieldOffset", Field.class);
+
+            Class lookupClass = MethodHandles.Lookup.class;
+            Field implField = lookupClass.getDeclaredField("IMPL_LOOKUP");
+            long implOffset = (Long) staticFieldOffsetMethod.invoke(usafe, implField);
             Method getObjectMethod = usafe.getClass().getMethod("getObject", Object.class, long.class);
-            Field implLookup = lookupClass.getDeclaredField("IMPL_LOOKUP");
-            long fieldOffset = (Long) staticFieldOffsetMethod.invoke(usafe, implLookup);
-            defaultLookup0 = (MethodHandles.Lookup) getObjectMethod.invoke(usafe, lookupClass, fieldOffset);
-            RedkaleClassLoader.putReflectionField(lookupClass.getName(), implLookup);
+            trustedLookup0 = (MethodHandles.Lookup) getObjectMethod.invoke(usafe, lookupClass, implOffset);
+            RedkaleClassLoader.putReflectionField(lookupClass.getName(), implField);
+
+            Field compactField = String.class.getDeclaredField("COMPACT_STRINGS");
+            long compactOffset = (Long) staticFieldOffsetMethod.invoke(usafe, compactField);
+            Method getBooleanMethod = usafe.getClass().getMethod("getBoolean", Object.class, long.class);
+            compactStrings0 = (Boolean) getBooleanMethod.invoke(usafe, String.class, compactOffset);
+            RedkaleClassLoader.putReflectionField(String.class.getName(), compactField);
         } catch (Throwable e) {
-            defaultLookup0 = MethodHandles.lookup();
+            e.printStackTrace();
         }
-        defaultLookup = defaultLookup0;
+        compactStrings = compactStrings0;
+        trustedLookup = trustedLookup0;
     }
 
     private static final Executor defaultExecutorConsumer = Runnable::run;
@@ -171,18 +181,23 @@ public final class Utility {
         } catch (Throwable t) {
             // do nothing
         }
+        if (trustedLookup != null) {
+            try {
+                // String-LATIN1
+                MethodHandles.Lookup lookup = trustedLookup;
+                VarHandle coderHandle = lookup.findVarHandle(String.class, "coder", byte.class);
+                VarHandle valueHandle = lookup.findVarHandle(String.class, "value", byte[].class);
+                // LATIN1:0  UTF16:1
+                strLatin1Function0 =
+                        compactStrings ? (String t) -> (Byte) coderHandle.get(t) == 0 : (String t) -> false;
+                strByteFunction0 = (String t) -> (byte[]) valueHandle.get(t);
+            } catch (Throwable e) { // 不会发生
+                // do nothing
+                e.printStackTrace();
+            }
+        }
+        // signalShutdown
         try {
-            // String-LATIN1
-            MethodHandles.Lookup lookup = defaultLookup;
-            VarHandle compactHandle = lookup.findStaticVarHandle(String.class, "COMPACT_STRINGS", boolean.class);
-            final boolean compact = (Boolean) compactHandle.get(null);
-            VarHandle coderHandle = lookup.findVarHandle(String.class, "coder", byte.class);
-            VarHandle valueHandle = lookup.findVarHandle(String.class, "value", byte[].class);
-            // LATIN1:0  UTF16:1
-            strLatin1Function0 = compact ? (String t) -> (Byte) coderHandle.get(t) == 0 : (String t) -> false;
-            strByteFunction0 = (String t) -> (byte[]) valueHandle.get(t);
-
-            // signalShutdown
             Class<Consumer<Consumer<String>>> shutdownClazz1 = null;
             try {
                 shutdownClazz1 = (Class) loader.loadClass("org.redkale.util.SignalShutDown");
@@ -201,9 +216,8 @@ public final class Utility {
                 RedkaleClassLoader.putReflectionDeclaredConstructors(shutdownClazz1, shutdownClazz1.getName());
                 signalShutdownConsumer0 = shutdownClazz1.getConstructor().newInstance();
             }
-        } catch (Throwable e) { // 不会发生
+        } catch (Throwable t) {
             // do nothing
-            e.printStackTrace();
         }
         strByteFunction = strByteFunction0;
         strLatin1Function = strLatin1Function0;
@@ -243,8 +257,8 @@ public final class Utility {
         return CPUS;
     }
 
-    public static MethodHandles.Lookup lookup() {
-        return defaultLookup;
+    public static @Nullable MethodHandles.Lookup trustedLookup() {
+        return trustedLookup;
     }
 
     public static boolean inNativeImage() {
