@@ -37,7 +37,8 @@ import org.redkale.convert.json.JsonConvert;
  */
 public final class Utility {
 
-    private static final char hex[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+    private static final char[] hex =
+            new char[] {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
     private static final int CPUS =
             Integer.getInteger("redkale.cpus", Runtime.getRuntime().availableProcessors());
@@ -81,9 +82,10 @@ public final class Utility {
         MethodHandles.Lookup trustedLookup0 = null;
         try {
             final ClassLoader loader = Thread.currentThread().getContextClassLoader();
+            String unsafeName = "org.redkale.util.AnonymousUnsafe";
             Class<Unsafe> unsafeClazz1 = null;
             try {
-                unsafeClazz1 = (Class) loader.loadClass("org.redkale.util.AnonymousUnsafe");
+                unsafeClazz1 = (Class) loader.loadClass(unsafeName);
             } catch (Throwable t) {
                 // do nothing
             }
@@ -94,10 +96,10 @@ public final class Utility {
                             public final Class<?> loadClass(String name, byte[] b) {
                                 return defineClass(name, b, 0, b.length);
                             }
-                        }.loadClass("org.redkale.util.AnonymousUnsafe", classBytes);
+                        }.loadClass(unsafeName, classBytes);
                 RedkaleClassLoader.putDynClass(unsafeClazz1.getName(), classBytes, unsafeClazz1);
+                RedkaleClassLoader.putReflectionDeclaredConstructors(unsafeClazz1, unsafeClazz1.getName());
             }
-            RedkaleClassLoader.putReflectionDeclaredConstructors(unsafeClazz1, unsafeClazz1.getName());
             unsafe0 = unsafeClazz1.getConstructor().newInstance();
 
             Class lookupClass = MethodHandles.Lookup.class;
