@@ -100,7 +100,7 @@ public final class Utility {
                 RedkaleClassLoader.putDynClass(unsafeClazz1.getName(), classBytes, unsafeClazz1);
                 RedkaleClassLoader.putReflectionDeclaredConstructors(unsafeClazz1, unsafeClazz1.getName());
             }
-            unsafe0 = unsafeClazz1.getConstructor().newInstance();
+            unsafe0 = unsafeClazz1.getDeclaredConstructor().newInstance();
 
             Class lookupClass = MethodHandles.Lookup.class;
             Field implField = lookupClass.getDeclaredField("IMPL_LOOKUP");
@@ -199,7 +199,7 @@ public final class Utility {
             virtualThreadFactoryFunction0 = (Function) method.invoke(null);
             RedkaleClassLoader.putReflectionMethod(virtualName, method);
         } catch (Throwable t) {
-            // do nothing
+            // do nothing 低于JDK21忽略
         }
         // strLatin1Function
         try {
@@ -248,9 +248,10 @@ public final class Utility {
                 RedkaleClassLoader.putDynClass(shutdownClazz1.getName(), classBytes, shutdownClazz1);
                 RedkaleClassLoader.putReflectionDeclaredConstructors(shutdownClazz1, shutdownClazz1.getName());
             }
-            signalShutdownConsumer0 = shutdownClazz1.getConstructor().newInstance();
-        } catch (Throwable t) {
+            signalShutdownConsumer0 = shutdownClazz1.getDeclaredConstructor().newInstance();
+        } catch (Throwable e) {
             // do nothing
+            e.printStackTrace();
         }
         strByteFunction = strByteFunction0;
         strLatin1Function = strLatin1Function0;
