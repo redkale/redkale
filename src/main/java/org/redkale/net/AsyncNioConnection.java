@@ -177,11 +177,11 @@ abstract class AsyncNioConnection extends AsyncConnection {
     }
 
     @Override
-    protected void fastPrepare(Object selector) {
-        if (this.writePending) {
-            return;
+    protected void fastPrepareInIOThread(Object selector) {
+        ByteArray array = this.fastWriteArray;
+        if (!this.writePending) {
+            array.clear();
         }
-        ByteArray array = this.fastWriteArray.clear();
         Consumer<ByteArray> func;
         while ((func = fastWriteQueue.poll()) != null) {
             func.accept(array);
@@ -372,6 +372,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
                         this.writeByteTuple2Array = null;
                         this.writeByteTuple2Offset = 0;
                         this.writeByteTuple2Length = 0;
+                    }
+                    if (this.fastWriteArray != null) {
+                        this.fastWriteArray.clear();
                     }
                 }
                 int writeCount;

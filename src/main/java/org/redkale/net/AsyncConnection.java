@@ -273,12 +273,12 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
             throw new RedkaleException("fast-writer handler is null");
         }
         for (Consumer<ByteArray> c : consumers) {
-            this.fastWriteQueue.add(c);
+            this.fastWriteQueue.offer(c);
         }
         this.ioWriteThread.fastWrite(this);
     }
 
-    protected abstract void fastPrepare(Object selector);
+    protected abstract void fastPrepareInIOThread(Object selector);
     // --------------------- fast-write-end ---------------------
 
     protected void startRead(CompletionHandler<Integer, ByteBuffer> handler) {

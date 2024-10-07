@@ -142,7 +142,7 @@ public class AsyncIOThread extends WorkThread {
     }
 
     public final void fastWrite(AsyncConnection conn) {
-        fastQueue.add(Objects.requireNonNull(conn));
+        fastQueue.offer(Objects.requireNonNull(conn));
         selector.wakeup();
     }
 
@@ -163,7 +163,7 @@ public class AsyncIOThread extends WorkThread {
             try {
                 AsyncConnection fastConn;
                 while ((fastConn = fastQueue.poll()) != null) {
-                    fastConn.fastPrepare(selector);
+                    fastConn.fastPrepareInIOThread(selector);
                 }
 
                 Consumer<Selector> register;
