@@ -201,7 +201,7 @@ public final class Utility {
         }
         // strLatin1Function
         try {
-            if (unsafeInstance != null) {
+            if (!NATIVE_IMAGE_ENV && unsafeInstance != null) { // native-image模式下objectFieldOffset值不一定精准，可能崩溃
                 final Unsafe unsafe = unsafeInstance;
                 final long coderOffset = unsafe.objectFieldOffset(String.class.getDeclaredField("coder"));
                 final long valueOffset = unsafe.objectFieldOffset(String.class.getDeclaredField("value"));
