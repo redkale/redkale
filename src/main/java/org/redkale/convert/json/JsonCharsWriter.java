@@ -388,38 +388,37 @@ public class JsonCharsWriter extends JsonWriter {
         }
         for (int i = 0; i < len; i++) {
             char ch = str.charAt(i);
-            switch (ch) {
-                case '\n':
-                    chars[curr++] = '\\';
-                    chars[curr++] = 'n';
-                    break;
-                case '\r':
-                    chars[curr++] = '\\';
-                    chars[curr++] = 'r';
-                    break;
-                case '\f':
-                    chars[curr++] = '\\';
-                    chars[curr++] = 'f';
-                    break;
-                case '\b':
-                    chars[curr++] = '\\';
-                    chars[curr++] = 'b';
-                    break;
-                case '\t':
-                    chars[curr++] = '\\';
-                    chars[curr++] = 't';
-                    break;
-                case '\\':
-                    chars[curr++] = '\\';
-                    chars[curr++] = ch;
-                    break;
-                case '"':
-                    chars[curr++] = '\\';
-                    chars[curr++] = ch;
-                    break;
-                default:
-                    chars[curr++] = ch;
-                    break;
+            if (ch < 14) {
+                switch (ch) {
+                    case '\n': // 10
+                        chars[curr++] = '\\';
+                        chars[curr++] = 'n';
+                        break;
+                    case '\r': // 13
+                        chars[curr++] = '\\';
+                        chars[curr++] = 'r';
+                        break;
+                    case '\t': // 8
+                        chars[curr++] = '\\';
+                        chars[curr++] = 't';
+                        break;
+                    case '\f': // 12
+                        chars[curr++] = '\\';
+                        chars[curr++] = 'f';
+                        break;
+                    case '\b': // 9
+                        chars[curr++] = '\\';
+                        chars[curr++] = 'b';
+                        break;
+                    default:
+                        chars[curr++] = ch;
+                        break;
+                }
+            } else if (ch == '"' || ch == '\\') {
+                chars[curr++] = '\\';
+                chars[curr++] = ch;
+            } else {
+                chars[curr++] = ch;
             }
         }
         if (quote) {
@@ -441,38 +440,37 @@ public class JsonCharsWriter extends JsonWriter {
             b1 = bytes[i];
             b2 = bytes[i + 1];
             char ch = (char) ((b2 == 0 && b1 >= 0) ? b1 : ((b1 & 0xff) | ((b2 & 0xff) << 8)));
-            switch (ch) {
-                case '\n':
-                    chars[curr++] = '\\';
-                    chars[curr++] = 'n';
-                    break;
-                case '\r':
-                    chars[curr++] = '\\';
-                    chars[curr++] = 'r';
-                    break;
-                case '\f':
-                    chars[curr++] = '\\';
-                    chars[curr++] = 'f';
-                    break;
-                case '\b':
-                    chars[curr++] = '\\';
-                    chars[curr++] = 'b';
-                    break;
-                case '\t':
-                    chars[curr++] = '\\';
-                    chars[curr++] = 't';
-                    break;
-                case '\\':
-                    chars[curr++] = '\\';
-                    chars[curr++] = ch;
-                    break;
-                case '"':
-                    chars[curr++] = '\\';
-                    chars[curr++] = ch;
-                    break;
-                default:
-                    chars[curr++] = ch;
-                    break;
+            if (ch < 14) {
+                switch (ch) {
+                    case '\n': // 10
+                        chars[curr++] = '\\';
+                        chars[curr++] = 'n';
+                        break;
+                    case '\r': // 13
+                        chars[curr++] = '\\';
+                        chars[curr++] = 'r';
+                        break;
+                    case '\t': // 8
+                        chars[curr++] = '\\';
+                        chars[curr++] = 't';
+                        break;
+                    case '\f': // 12
+                        chars[curr++] = '\\';
+                        chars[curr++] = 'f';
+                        break;
+                    case '\b': // 9
+                        chars[curr++] = '\\';
+                        chars[curr++] = 'b';
+                        break;
+                    default:
+                        chars[curr++] = ch;
+                        break;
+                }
+            } else if (ch == '"' || ch == '\\') {
+                chars[curr++] = '\\';
+                chars[curr++] = ch;
+            } else {
+                chars[curr++] = ch;
             }
         }
         if (quote) {
@@ -494,22 +492,22 @@ public class JsonCharsWriter extends JsonWriter {
             } else if (b == '\\') {
                 chars[curr++] = '\\';
                 chars[curr++] = '\\';
-            } else if (b < 32) {
-                if (b == '\n') {
+            } else if (b < 14) {
+                if (b == '\n') { // 10
                     chars[curr++] = '\\';
                     chars[curr++] = 'n';
-                } else if (b == '\r') {
+                } else if (b == '\r') { // 13
                     chars[curr++] = '\\';
                     chars[curr++] = 'r';
-                } else if (b == '\f') {
-                    chars[curr++] = '\\';
-                    chars[curr++] = 'f';
-                } else if (b == '\b') {
-                    chars[curr++] = '\\';
-                    chars[curr++] = 'b';
-                } else if (b == '\t') {
+                } else if (b == '\t') { // 8
                     chars[curr++] = '\\';
                     chars[curr++] = 't';
+                } else if (b == '\f') { // 12
+                    chars[curr++] = '\\';
+                    chars[curr++] = 'f';
+                } else if (b == '\b') { // 9
+                    chars[curr++] = '\\';
+                    chars[curr++] = 'b';
                 } else {
                     chars[curr++] = (char) b;
                 }

@@ -457,53 +457,50 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         }
         for (int i = 0; i < len; i++) {
             char ch = value.charAt(i);
-            switch (ch) {
-                case '\n':
-                    bytes[curr++] = '\\';
-                    bytes[curr++] = 'n';
-                    break;
-                case '\r':
-                    bytes[curr++] = '\\';
-                    bytes[curr++] = 'r';
-                    break;
-                case '\f':
-                    bytes[curr++] = '\\';
-                    bytes[curr++] = 'f';
-                    break;
-                case '\b':
-                    bytes[curr++] = '\\';
-                    bytes[curr++] = 'b';
-                    break;
-                case '\t':
-                    bytes[curr++] = '\\';
-                    bytes[curr++] = 't';
-                    break;
-                case '\\':
-                    bytes[curr++] = '\\';
-                    bytes[curr++] = '\\';
-                    break;
-                case BYTE_DQUOTE:
-                    bytes[curr++] = '\\';
-                    bytes[curr++] = BYTE_DQUOTE;
-                    break;
-                default:
-                    if (ch < 0x80) {
+            if (ch < 14) {
+                switch (ch) {
+                    case '\n': // 10
+                        bytes[curr++] = '\\';
+                        bytes[curr++] = 'n';
+                        break;
+                    case '\r': // 13
+                        bytes[curr++] = '\\';
+                        bytes[curr++] = 'r';
+                        break;
+                    case '\t': // 8
+                        bytes[curr++] = '\\';
+                        bytes[curr++] = 't';
+                        break;
+                    case '\f': // 12
+                        bytes[curr++] = '\\';
+                        bytes[curr++] = 'f';
+                        break;
+                    case '\b': // 9
+                        bytes[curr++] = '\\';
+                        bytes[curr++] = 'b';
+                        break;
+                    default:
                         bytes[curr++] = (byte) ch;
-                    } else if (ch < 0x800) {
-                        bytes[curr++] = (byte) (0xc0 | (ch >> 6));
-                        bytes[curr++] = (byte) (0x80 | (ch & 0x3f));
-                    } else if (Character.isSurrogate(ch)) { // 连取两个
-                        int uc = Character.toCodePoint(ch, value.charAt(++i));
-                        bytes[curr++] = (byte) (0xf0 | (uc >> 18));
-                        bytes[curr++] = (byte) (0x80 | ((uc >> 12) & 0x3f));
-                        bytes[curr++] = (byte) (0x80 | ((uc >> 6) & 0x3f));
-                        bytes[curr++] = (byte) (0x80 | (uc & 0x3f));
-                    } else {
-                        bytes[curr++] = (byte) (0xe0 | (ch >> 12));
-                        bytes[curr++] = (byte) (0x80 | ((ch >> 6) & 0x3f));
-                        bytes[curr++] = (byte) (0x80 | (ch & 0x3f));
-                    }
-                    break;
+                        break;
+                }
+            } else if (ch == '"' || ch == '\\') {
+                bytes[curr++] = '\\';
+                bytes[curr++] = (byte) ch;
+            } else if (ch < 0x80) {
+                bytes[curr++] = (byte) ch;
+            } else if (ch < 0x800) {
+                bytes[curr++] = (byte) (0xc0 | (ch >> 6));
+                bytes[curr++] = (byte) (0x80 | (ch & 0x3f));
+            } else if (Character.isSurrogate(ch)) { // 连取两个
+                int uc = Character.toCodePoint(ch, value.charAt(++i));
+                bytes[curr++] = (byte) (0xf0 | (uc >> 18));
+                bytes[curr++] = (byte) (0x80 | ((uc >> 12) & 0x3f));
+                bytes[curr++] = (byte) (0x80 | ((uc >> 6) & 0x3f));
+                bytes[curr++] = (byte) (0x80 | (uc & 0x3f));
+            } else {
+                bytes[curr++] = (byte) (0xe0 | (ch >> 12));
+                bytes[curr++] = (byte) (0x80 | ((ch >> 6) & 0x3f));
+                bytes[curr++] = (byte) (0x80 | (ch & 0x3f));
             }
         }
         if (quote) {
