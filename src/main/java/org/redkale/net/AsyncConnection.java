@@ -10,6 +10,7 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
@@ -82,6 +83,14 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
     private LongAdder closedCounter;
 
     private Consumer<AsyncConnection> beforeCloseListener;
+
+    // --------------------- fast-write-start ---------------------
+    protected ByteArray fastWriteArray;
+
+    protected Queue<Consumer<ByteArray>> fastWriteQueue;
+
+    protected CompletionHandler fastWriteHandler;
+    // --------------------- fast-write-end ---------------------
 
     // 用于服务端的Socket, 等同于一直存在的readCompletionHandler
     ProtocolCodec protocolCodec;
@@ -219,9 +228,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
 
     public abstract SocketAddress getLocalAddress();
 
-    //    public abstract <A> AsyncConnection fastHandler(CompletionHandler<Integer, ? super A> handler);
-    //
-    //    public abstract <A> void fastWrite(byte[] data);
     protected abstract void readRegisterImpl(CompletionHandler<Integer, ByteBuffer> handler);
 
     protected abstract void readImpl(CompletionHandler<Integer, ByteBuffer> handler);
@@ -250,6 +256,30 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
      */
     protected abstract <A> void writeImpl(
             ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler);
+
+    // --------------------- fast-write-start ---------------------
+    public final AsyncConnection fastHandler(CompletionHandler handler) {
+        if (!clientMode) {
+            throw new RedkaleException("fast-writer only for client connection");
+        }
+        this.fastWriteHandler = Objects.requireNonNull(handler);
+        this.fastWriteArray = new ByteArray();
+        this.fastWriteQueue = new ConcurrentLinkedQueue<>();
+        return this;
+    }
+
+    public final void fastWrite(Consumer<ByteArray>... consumers) {
+        if (fastWriteHandler == null) {
+            throw new RedkaleException("fast-writer handler is null");
+        }
+        for (Consumer<ByteArray> c : consumers) {
+            this.fastWriteQueue.add(c);
+        }
+        this.ioWriteThread.fastWrite(this);
+    }
+
+    protected abstract void fastPrepare(Object selector);
+    // --------------------- fast-write-end ---------------------
 
     protected void startRead(CompletionHandler<Integer, ByteBuffer> handler) {
         read(handler);

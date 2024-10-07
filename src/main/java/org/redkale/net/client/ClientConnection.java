@@ -46,19 +46,18 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
 
     protected final AsyncConnection channel;
 
-    protected final CompletionHandler<Integer, ClientConnection> writeHandler =
-            new CompletionHandler<Integer, ClientConnection>() {
+    protected final CompletionHandler<Integer, Object> writeHandler = new CompletionHandler<Integer, Object>() {
 
-                @Override
-                public void completed(Integer result, ClientConnection attachment) {
-                    // do nothing
-                }
+        @Override
+        public void completed(Integer result, Object attachment) {
+            // do nothing
+        }
 
-                @Override
-                public void failed(Throwable exc, ClientConnection attachment) {
-                    attachment.dispose(exc);
-                }
-            };
+        @Override
+        public void failed(Throwable exc, Object attachment) {
+            dispose(exc);
+        }
+    };
 
     @Nonnull
     protected LongAdder respWaitingCounter;

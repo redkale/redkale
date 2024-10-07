@@ -33,6 +33,8 @@ public class AsyncIOThread extends WorkThread {
 
     private final Consumer<ByteBuffer> bufferConsumer;
 
+    private final Queue<AsyncConnection> fastQueue = new ConcurrentLinkedQueue<>();
+
     private final Queue<Runnable> commandQueue = new ConcurrentLinkedQueue<>();
 
     private final Queue<Consumer<Selector>> registerQueue = new ConcurrentLinkedQueue<>();
@@ -138,6 +140,11 @@ public class AsyncIOThread extends WorkThread {
         selector.wakeup();
     }
 
+    public final void fastWrite(AsyncConnection conn) {
+        fastQueue.add(Objects.requireNonNull(conn));
+        selector.wakeup();
+    }
+
     public Supplier<ByteBuffer> getBufferSupplier() {
         return bufferSupplier;
     }
@@ -153,6 +160,11 @@ public class AsyncIOThread extends WorkThread {
         final Queue<Consumer<Selector>> registers = this.registerQueue;
         while (!isClosed()) {
             try {
+                AsyncConnection fastConn;
+                while ((fastConn = fastQueue.poll()) != null) {
+                    fastConn.fastPrepare(selector);
+                }
+
                 Consumer<Selector> register;
                 while ((register = registers.poll()) != null) {
                     try {
@@ -163,6 +175,7 @@ public class AsyncIOThread extends WorkThread {
                         }
                     }
                 }
+
                 Runnable command;
                 while ((command = commands.poll()) != null) {
                     try {
