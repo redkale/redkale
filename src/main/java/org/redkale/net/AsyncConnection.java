@@ -84,13 +84,13 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
 
     private Consumer<AsyncConnection> beforeCloseListener;
 
-    // --------------------- fast-write-start ---------------------
+    // --------------------- clientMode: fast-write-start ---------------------
     protected ByteArray fastWriteArray;
 
     protected Queue<Consumer<ByteArray>> fastWriteQueue;
 
     protected CompletionHandler fastWriteHandler;
-    // --------------------- fast-write-end ---------------------
+    // --------------------- clientMode: fast-write-end ---------------------
 
     // 用于服务端的Socket, 等同于一直存在的readCompletionHandler
     ProtocolCodec protocolCodec;

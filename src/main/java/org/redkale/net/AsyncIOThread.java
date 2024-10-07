@@ -33,6 +33,7 @@ public class AsyncIOThread extends WorkThread {
 
     private final Consumer<ByteBuffer> bufferConsumer;
 
+    // 应用于clientMode模式
     private final Queue<AsyncConnection> fastQueue = new ConcurrentLinkedQueue<>();
 
     private final Queue<Runnable> commandQueue = new ConcurrentLinkedQueue<>();
