@@ -476,50 +476,76 @@ public class JsonReader extends Reader {
         int end = this.limit;
         char[] text0 = this.text;
         char ch;
-        boolean hex = false;
         boolean dot = false;
-        for (; curr <= end; curr++) {
-            ch = text0[curr];
-            if (ch >= '0' && ch <= '9') {
-                if (dot) {
-                    continue;
-                }
-                value = (hex ? (value << 4) : ((value << 3) + (value << 1))) + digits[ch];
-            } else if (ch == '"' || ch == '\'') {
-                if (quote) {
+        if (value > 0) { // 十进制
+            for (; curr <= end; curr++) {
+                ch = text0[curr];
+                if (ch >= '0' && ch <= '9') {
+                    if (dot) {
+                        continue;
+                    }
+                    value = (value << 3) + (value << 1) + digits[ch];
+                } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
+                    curr--;
                     break;
-                }
-                throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
-            } else if (ch == 'x' || ch == 'X') {
-                if (value != 0) {
+                } else if (ch == '"' || ch == '\'') {
+                    if (quote) {
+                        break;
+                    }
+                    throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                } else if (quote && ch <= ' ') {
+                    // do nothing
+                } else if (ch == '.') {
+                    dot = true;
+                } else {
                     throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
                 }
-                hex = true;
-            } else if (ch >= 'a' && ch <= 'f') {
-                if (!hex) {
+            }
+        } else {
+            boolean hex = false;
+            for (; curr <= end; curr++) {
+                ch = text0[curr];
+                if (ch >= '0' && ch <= '9') {
+                    if (dot) {
+                        continue;
+                    }
+                    value = (hex ? (value << 4) : ((value << 3) + (value << 1))) + digits[ch];
+                } else if (ch == '"' || ch == '\'') {
+                    if (quote) {
+                        break;
+                    }
+                    throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                } else if (ch == 'x' || ch == 'X') {
+                    if (value != 0) {
+                        throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                    }
+                    hex = true;
+                } else if (ch >= 'a' && ch <= 'f') {
+                    if (!hex) {
+                        throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                    }
+                    if (dot) {
+                        continue;
+                    }
+                    value = (value << 4) + digits[ch];
+                } else if (ch >= 'A' && ch <= 'F') {
+                    if (!hex) {
+                        throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                    }
+                    if (dot) {
+                        continue;
+                    }
+                    value = (value << 4) + digits[ch];
+                } else if (quote && ch <= ' ') {
+                    // do nothing
+                } else if (ch == '.') {
+                    dot = true;
+                } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
+                    curr--;
+                    break;
+                } else {
                     throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
                 }
-                if (dot) {
-                    continue;
-                }
-                value = (value << 4) + digits[ch];
-            } else if (ch >= 'A' && ch <= 'F') {
-                if (!hex) {
-                    throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
-                }
-                if (dot) {
-                    continue;
-                }
-                value = (value << 4) + digits[ch];
-            } else if (quote && ch <= ' ') {
-                // do nothing
-            } else if (ch == '.') {
-                dot = true;
-            } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
-                curr--;
-                break;
-            } else {
-                throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
             }
         }
         this.position = curr;
@@ -613,50 +639,76 @@ public class JsonReader extends Reader {
         int end = this.limit;
         char[] text0 = this.text;
         char ch;
-        boolean hex = false;
         boolean dot = false;
-        for (; curr <= end; curr++) {
-            ch = text0[curr];
-            if (ch >= '0' && ch <= '9') {
-                if (dot) {
-                    continue;
-                }
-                value = (hex ? (value << 4) : ((value << 3) + (value << 1))) + digits[ch];
-            } else if (ch == '"' || ch == '\'') {
-                if (quote) {
+        if (value > 0) { // 十进制
+            for (; curr <= end; curr++) {
+                ch = text0[curr];
+                if (ch >= '0' && ch <= '9') {
+                    if (dot) {
+                        continue;
+                    }
+                    value = (value << 3) + (value << 1) + digits[ch];
+                } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
+                    curr--;
                     break;
-                }
-                throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
-            } else if (ch == 'x' || ch == 'X') {
-                if (value != 0) {
+                } else if (ch == '"' || ch == '\'') {
+                    if (quote) {
+                        break;
+                    }
+                    throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                } else if (quote && ch <= ' ') {
+                    // do nothing
+                } else if (ch == '.') {
+                    dot = true;
+                } else {
                     throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
                 }
-                hex = true;
-            } else if (ch >= 'a' && ch <= 'f') {
-                if (!hex) {
+            }
+        } else {
+            boolean hex = false;
+            for (; curr <= end; curr++) {
+                ch = text0[curr];
+                if (ch >= '0' && ch <= '9') {
+                    if (dot) {
+                        continue;
+                    }
+                    value = (hex ? (value << 4) : ((value << 3) + (value << 1))) + digits[ch];
+                } else if (ch == '"' || ch == '\'') {
+                    if (quote) {
+                        break;
+                    }
+                    throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                } else if (ch == 'x' || ch == 'X') {
+                    if (value != 0) {
+                        throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                    }
+                    hex = true;
+                } else if (ch >= 'a' && ch <= 'f') {
+                    if (!hex) {
+                        throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                    }
+                    if (dot) {
+                        continue;
+                    }
+                    value = (value << 4) + digits[ch];
+                } else if (ch >= 'A' && ch <= 'F') {
+                    if (!hex) {
+                        throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                    }
+                    if (dot) {
+                        continue;
+                    }
+                    value = (value << 4) + digits[ch];
+                } else if (quote && ch <= ' ') {
+                    // do nothing
+                } else if (ch == '.') {
+                    dot = true;
+                } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
+                    curr--;
+                    break;
+                } else {
                     throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
                 }
-                if (dot) {
-                    continue;
-                }
-                value = (value << 4) + digits[ch];
-            } else if (ch >= 'A' && ch <= 'F') {
-                if (!hex) {
-                    throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
-                }
-                if (dot) {
-                    continue;
-                }
-                value = (value << 4) + digits[ch];
-            } else if (quote && ch <= ' ') {
-                // do nothing
-            } else if (ch == '.') {
-                dot = true;
-            } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
-                curr--;
-                break;
-            } else {
-                throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
             }
         }
         this.position = curr;
@@ -679,17 +731,17 @@ public class JsonReader extends Reader {
         int curr = this.position;
         if (ch == '"' || ch == '\'') {
             final char quote = ch;
-            for (; ; ) {
-                ch = text0[++curr];
-                if (ch == quote) {
-                    break;
+            while ((ch = text0[++curr]) != quote) {
+                if (node != null) {
+                    node = node.getNode(ch);
                 }
-                node = node == null ? null : node.getNode(ch);
             }
             this.position = curr;
             return node == null ? null : node.getValue();
         } else {
-            node = node == null ? null : node.getNode(ch);
+            if (node != null) {
+                node = node.getNode(ch);
+            }
             for (; ; ) {
                 if (curr == eof) {
                     break;
@@ -699,7 +751,9 @@ public class JsonReader extends Reader {
                     curr--;
                     break;
                 }
-                node = node == null ? null : node.getNode(ch);
+                if (node != null) {
+                    node = node.getNode(ch);
+                }
             }
             this.position = curr;
             return node == null ? null : node.getValue();
@@ -973,16 +1027,16 @@ public class JsonReader extends Reader {
     }
 
     private String readEscapeValue(final char expected, int start) {
-        CharArray array = this.array();
+        CharArray tmp = this.array();
         final char[] text0 = this.text;
         int curr = this.position;
-        array.append(text0, start, curr + 1 - start);
+        tmp.append(text0, start, curr + 1 - start);
         char c;
         for (; ; ) {
             c = text0[++curr];
             if (c == expected) {
                 this.position = curr;
-                return array.toStringThenClear();
+                return tmp.toStringThenClear();
             } else if (c == '\\') {
                 c = text0[++curr];
                 switch (c) {
@@ -990,27 +1044,29 @@ public class JsonReader extends Reader {
                     case '\'':
                     case '\\':
                     case '/':
-                        array.append(c);
+                        tmp.append(c);
                         break;
                     case 'n':
-                        array.append('\n');
+                        tmp.append('\n');
                         break;
                     case 'r':
-                        array.append('\r');
+                        tmp.append('\r');
                         break;
                     case 'u':
-                        array.append((char) Integer.parseInt(
-                                new String(new char[] {text0[++curr], text0[++curr], text0[++curr], text0[++curr]}),
-                                16));
+                        int hex = (Character.digit(text0[++curr], 16) << 12)
+                                + (Character.digit(text0[++curr], 16) << 8)
+                                + (Character.digit(text0[++curr], 16) << 4)
+                                + Character.digit(text0[++curr], 16);
+                        tmp.append((char) hex);
                         break;
                     case 't':
-                        array.append('\t');
+                        tmp.append('\t');
                         break;
                     case 'b':
-                        array.append('\b');
+                        tmp.append('\b');
                         break;
                     case 'f':
-                        array.append('\f');
+                        tmp.append('\f');
                         break;
                     default:
                         this.position = curr;
@@ -1018,7 +1074,7 @@ public class JsonReader extends Reader {
                                 + new String(this.text));
                 }
             } else {
-                array.append(c);
+                tmp.append(c);
             }
         }
     }
@@ -1039,7 +1095,7 @@ public class JsonReader extends Reader {
             digits[i] = i - 'A' + 10;
         }
         digits['"'] = digits['\''] = -2; // -2 跳过
-        digits[' '] = digits['\t'] = digits['\r'] = digits['\n'] = -3; // -3可能跳过
+        digits[' '] = digits['\t'] = digits['\b'] = digits['\f'] = digits['\r'] = digits['\n'] = -3; // -3可能跳过
         digits[','] = digits['}'] = digits[']'] = digits[':'] = -4; // -4退出
     }
 
