@@ -10,12 +10,9 @@ import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 import javax.net.ssl.SSLContext;
-import org.redkale.util.ByteArray;
 import org.redkale.util.ByteBufferWriter;
-import org.redkale.util.RedkaleException;
 
 /**
  * 详情见: https://redkale.org
@@ -40,13 +37,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
     protected CompletionHandler<Integer, ByteBuffer> readCompletionHandler;
 
     protected SelectionKey readKey;
-
-    // ------------------------------ fast写操作 ------------------------------------
-    protected ByteArray fastWriteArray;
-
-    protected Queue<Consumer<ByteArray>> fastWriteQueue;
-
-    protected CompletionHandler fastWriteHandler;
     // -------------------------------- 写操作 --------------------------------------
     protected byte[] writeByteTuple1Array;
 
@@ -166,62 +156,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
         this.readPending = true;
         this.readCompletionHandler = handler;
         doRead(this.ioReadThread.inCurrThread());
-    }
-
-    @Override
-    public final AsyncConnection fastHandler(CompletionHandler handler) {
-        if (!clientMode) {
-            throw new RedkaleException("fast-writer only for client connection");
-        }
-        this.fastWriteHandler = Objects.requireNonNull(handler);
-        this.fastWriteArray = new ByteArray();
-        this.fastWriteQueue = new ConcurrentLinkedQueue<>();
-        return this;
-    }
-
-    @Override
-    public final void fastWrite(Consumer<ByteArray>... consumers) {
-        if (fastWriteHandler == null) {
-            throw new RedkaleException("fast-writer handler is null");
-        }
-        for (Consumer<ByteArray> c : consumers) {
-            this.fastWriteQueue.offer(c);
-        }
-        this.ioWriteThread.register(this::fastWriteRegister);
-    }
-
-    private void fastWriteRegister(Selector selector) {
-        try {
-            if (writeKey == null) {
-                writeKey = keyFor(selector);
-            }
-            if (writeKey == null) {
-                writeKey = implRegister(selector, SelectionKey.OP_WRITE);
-                writeKey.attach(this);
-            } else {
-                writeKey.interestOps(writeKey.interestOps() | SelectionKey.OP_WRITE);
-            }
-            // writeCompletionHandler不赋值会跳过doWrite
-            this.writeCompletionHandler = this.fastWriteHandler;
-        } catch (ClosedChannelException e) {
-            e.printStackTrace();
-            this.fastWriteQueue.clear();
-            handleWrite(0, e);
-        }
-    }
-
-    private void fastWritePrepare() {
-        ByteArray array = this.fastWriteArray.clear();
-        Consumer<ByteArray> func;
-        while ((func = fastWriteQueue.poll()) != null) {
-            func.accept(array);
-        }
-        this.writePending = true;
-        this.writeCompletionHandler = this.fastWriteHandler;
-        this.writeAttachment = null;
-        this.writeByteTuple1Array = array.content();
-        this.writeByteTuple1Offset = array.offset();
-        this.writeByteTuple1Length = array.length();
     }
 
     @Override
@@ -366,10 +300,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
             boolean hasRemain = true;
             boolean writeCompleted = true;
             boolean error = false;
-            // fastWrite
-            if (clientMode && fastWriteArray != null && writeByteBuffer == null && writeByteBuffers == null) {
-                fastWritePrepare();
-            }
             int batchOffset = writeBuffersOffset;
             int batchLength = writeBuffersLength;
             while (hasRemain) { // 必须要将buffer写完为止
@@ -405,9 +335,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
                         this.writeByteTuple2Array = null;
                         this.writeByteTuple2Offset = 0;
                         this.writeByteTuple2Length = 0;
-                    }
-                    if (this.fastWriteArray != null) {
-                        this.fastWriteArray.clear();
                     }
                 }
                 int writeCount;
