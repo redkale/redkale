@@ -10,7 +10,6 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
@@ -214,6 +213,10 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         return ioWriteThread;
     }
 
+    public abstract AsyncConnection fastHandler(CompletionHandler handler);
+
+    public abstract void fastWrite(Consumer<ByteArray>... consumers);
+
     public abstract boolean isTCP();
 
     public abstract boolean shutdownInput();
@@ -256,30 +259,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
      */
     protected abstract <A> void writeImpl(
             ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler);
-
-    // --------------------- fast-write-start ---------------------
-    public final AsyncConnection fastHandler(CompletionHandler handler) {
-        if (!clientMode) {
-            throw new RedkaleException("fast-writer only for client connection");
-        }
-        this.fastWriteHandler = Objects.requireNonNull(handler);
-        this.fastWriteArray = new ByteArray();
-        this.fastWriteQueue = new ConcurrentLinkedQueue<>();
-        return this;
-    }
-
-    public final void fastWrite(Consumer<ByteArray>... consumers) {
-        if (fastWriteHandler == null) {
-            throw new RedkaleException("fast-writer handler is null");
-        }
-        for (Consumer<ByteArray> c : consumers) {
-            this.fastWriteQueue.offer(c);
-        }
-        this.ioWriteThread.fastWrite(this);
-    }
-
-    protected abstract void fastPrepareInIOThread(Object selector);
-    // --------------------- fast-write-end ---------------------
 
     protected void startRead(CompletionHandler<Integer, ByteBuffer> handler) {
         read(handler);

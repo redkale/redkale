@@ -33,9 +33,6 @@ public class AsyncIOThread extends WorkThread {
 
     private final Consumer<ByteBuffer> bufferConsumer;
 
-    // 应用于clientMode模式
-    private final Queue<AsyncConnection> fastQueue = new ConcurrentLinkedQueue<>();
-
     private final Queue<Runnable> commandQueue = new ConcurrentLinkedQueue<>();
 
     private final Queue<Consumer<Selector>> registerQueue = new ConcurrentLinkedQueue<>();
@@ -141,11 +138,6 @@ public class AsyncIOThread extends WorkThread {
         selector.wakeup();
     }
 
-    public final void fastWrite(AsyncConnection conn) {
-        fastQueue.offer(Objects.requireNonNull(conn));
-        selector.wakeup();
-    }
-
     public Supplier<ByteBuffer> getBufferSupplier() {
         return bufferSupplier;
     }
@@ -161,11 +153,6 @@ public class AsyncIOThread extends WorkThread {
         final Queue<Consumer<Selector>> registers = this.registerQueue;
         while (!isClosed()) {
             try {
-                AsyncConnection fastConn;
-                while ((fastConn = fastQueue.poll()) != null) {
-                    fastConn.fastPrepareInIOThread(selector);
-                }
-
                 Consumer<Selector> register;
                 while ((register = registers.poll()) != null) {
                     try {
