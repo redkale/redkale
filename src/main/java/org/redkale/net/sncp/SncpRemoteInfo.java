@@ -11,6 +11,7 @@ import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
+import org.redkale.annotation.ClassDepends;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.convert.pb.ProtobufConvert;
 import org.redkale.convert.pb.ProtobufWriter;
@@ -107,6 +108,7 @@ public class SncpRemoteInfo<S extends Service> {
     }
 
     // 由远程模式的DyncRemoveService调用
+    @ClassDepends
     public <T> T remote(final String actionid, final Object... params) {
         final SncpRemoteAction action = this.actions.get(actionid);
         CompletionHandler callbackHandler = null;

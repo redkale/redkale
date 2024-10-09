@@ -32,6 +32,7 @@ import org.redkale.cluster.spi.HttpClusterRpcClient;
 import org.redkale.cluster.spi.HttpLocalRpcClient;
 import org.redkale.convert.Convert;
 import org.redkale.convert.json.*;
+import org.redkale.convert.pb.ProtobufConvert;
 import org.redkale.convert.pb.ProtobufFactory;
 import org.redkale.inject.ResourceAnnotationLoader;
 import org.redkale.inject.ResourceEvent;
@@ -305,12 +306,14 @@ public final class Application {
         this.resourceFactory.register(Environment.class, environment);
         this.resourceFactory.register(JsonFactory.root());
         this.resourceFactory.register(ProtobufFactory.root());
-        this.resourceFactory.register(JsonFactory.root().getConvert());
-        this.resourceFactory.register(ProtobufFactory.root().getConvert());
-        this.resourceFactory.register(
-                "jsonconvert", Convert.class, JsonFactory.root().getConvert());
-        this.resourceFactory.register(
-                "protobufconvert", Convert.class, ProtobufFactory.root().getConvert());
+        JsonConvert jsonConvert = JsonFactory.root().getConvert();
+        jsonConvert.offerWriter(jsonConvert.pollWriter());
+        this.resourceFactory.register(jsonConvert);
+        ProtobufConvert protobufConvert = ProtobufFactory.root().getConvert();
+        protobufConvert.offerWriter(protobufConvert.pollWriter());
+        this.resourceFactory.register(protobufConvert);
+        this.resourceFactory.register("jsonconvert", Convert.class, jsonConvert);
+        this.resourceFactory.register("protobufconvert", Convert.class, protobufConvert);
         JsonFactory.root().registerFieldFuncConsumer(resourceFactory::inject);
         ProtobufFactory.root().registerFieldFuncConsumer(resourceFactory::inject);
 
