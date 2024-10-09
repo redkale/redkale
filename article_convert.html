@@ -29,11 +29,11 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/convert.html" target="_blank">Convert</a>是个重复造轮子的组件，却是个飞速的轮子。Redkale之所以重复造轮子主要追求性能和需要与网络数据的序列化很好的结合(<a href="/convert.html#json_net_bytebuffer" target="_blank">Convert与ByteBuffer的结合</a>)。 Convert在API设计思路上也与其他同类型的框架不一样，配置与序列化方法是分开的，大部分场景下配置项是固定的，因此不同的配置会动态生成对应的处理类以保证性能。
             </p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从包结构可以看出，Convert分三层：序列化与反序列化的抽象基础包；JSON包、BSON包。即使boolean、int、String这种基础数据类型都不是包含在Convert基础包中。以下是详细的结构图：
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从包结构可以看出，Convert分三层：序列化与反序列化的抽象基础包；JSON包、Protobuf包。即使boolean、int、String这种基础数据类型都不是包含在Convert基础包中。以下是详细的结构图：
             </p>
             <p style="text-align: center;"><img src="images/convertimg_1.png" alt=""/></p>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从上图可以看出，JSON与BSON是Convert基础包的实现，主要是实现Reader与Writer类。若需要实现XML格式的序列化，可以以JSON为参考自己编写。对于不是内置(ext子包下的数据类型)的且没有自定义处理(Encoder、Decoder)的数据类型, Convert会动态生成ObjectEncoder、ObjectDecoder对象。
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;从上图可以看出，JSON与PROTOBUF是Convert基础包的实现，主要是实现Reader与Writer类。若需要实现XML格式的序列化，可以以JSON为参考自己编写。对于不是内置(ext子包下的数据类型)的且没有自定义处理(Encoder、Decoder)的数据类型, Convert会动态生成ObjectEncoder、ObjectDecoder对象。
             </p>
             <p>Convert 的性能</p>
             <p>

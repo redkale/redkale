@@ -885,6 +885,7 @@
     <span class="kd">public</span> <span class="n">Serializable</span> <span class="nf">getSessionid</span><span class="o">();</span>
 
     <span class="c1">//获取客户端直接地址, 当WebSocket连接是由代理服务器转发的，则该值固定为代理服务器的IP地址</span>
+<a href="article_convert.html"></a>
     <span class="kd">public</span> <span class="n">SocketAddress</span> <span class="nf">getRemoteAddress</span><span class="o">();</span>
 
     <span class="c1">//获取客户端真实地址 同 HttpRequest.getRemoteAddr()</span>
@@ -913,7 +914,7 @@
             <h3><a id="net_sncp" class="anchor" href="#" aria-hidden="true"></a>SNCP 协议</h3>
             <p>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SNCP(Service Node Communicate Protocol)协议是Redkale独有的一种传输协议，用于进程之间的通信，即请求方的<a href="service.html#service_remote" target="_blank">远程模式Service</a>与响应方的Service之间的通信。是RPC(远程过程调用协议)的同类型协议，主要区别在于Redkale里SNCP几乎是透明的，写一个普通的Service通过配置即可实现远程调用，而不需要专门针对远程写接口。SNCP服务的配置与HTTP差不多，只是SNCP不需要Servlet，SncpServlet是通过Service动态生成的。<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SNCP的数据包分包头和包体。包头描述请求的Service信息，请求包的包体描述参数的<a href="convert.html#convert_bson_struct" target="_blank">BSON值</a>，响应包的包体描述回调的参数对象和结果对象的<a href="convert.html#convert_bson_struct" target="_blank">BSON值</a>。<br/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SNCP的数据包分包头和包体。包头描述请求的Service信息，请求包的包体描述参数的PROTOBUF值。<br/>
                 &nbsp;&nbsp;&nbsp;&nbsp;包头长度固定，其结构如下: 
             </p>
             <table style="margin: auto;">
@@ -928,7 +929,7 @@
                 <tr><td>结果码</td><td style="text-align: center;">4</td><td>请求方的值固定为0，响应方的值视为错误码，为0表示成功，非0为失败。</td></tr>
             </table>
             <p>
-                &nbsp;&nbsp;&nbsp;&nbsp;包体数据结构为 ([参数序号][参数BSON值])* N + [0][结果对象BSON]。 其中参数序号从1开始，只有当Service的方法存在<a href="service.html#service_dyncall" target="_blank">@RpcCall回调</a>才会有参数<a href="convert.html#convert_bson_struct" target="_blank">BSON值</a>，序号为0表示为结果对象的<a href="convert.html#convert_bson_struct" target="_blank">BSON值</a>。若方法为<font color="blue">void</font>返回类型，则不存在结果对象<a href="convert.html#convert_bson_struct" target="_blank">BSON值</a>。
+                &nbsp;&nbsp;&nbsp;&nbsp;包体数据结构为 ([参数序号][参数PROTOBUF值])* N + [0][结果对象PROTOBUF]。 其中参数序号从1开始，只有当Service的方法存在<a href="service.html#service_dyncall" target="_blank">@RpcCall回调</a>才会有参数PROTOBUF值，序号为0表示为结果对象的PROTOBUF值。若方法为<font color="blue">void</font>返回类型，则不存在结果对象PROTOBUF值。
             </p>
 
             <h3><a id="net_diy" class="anchor" href="#" aria-hidden="true"></a>自定义协议</h3>

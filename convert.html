@@ -28,10 +28,10 @@
         <section class="main-content">
             <h3><a id="convert_intro" class="anchor" href="#" aria-hidden="true"></a>Convert 组件介绍</h3>
 
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Convert 是一个比较独立的组件，仅依赖于util包。提供Java对象的序列化与反序列化功能。支持JSON(JavaScript Object Notation)、BSON(Binary Stream Object Notation)两种格式化。 两种格式使用方式完全一样，其性能都大幅度超过其他JSON框架。同时JSON内置于HTTP服务中，BSON也是SNCP协议数据序列化的基础。<br/></p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Convert 是一个比较独立的组件，仅依赖于util包。提供Java对象的序列化与反序列化功能。支持JSON、PROTOBUF两种格式化。 两种格式使用方式完全一样，其性能都大幅度超过其他JSON框架。同时JSON内置于HTTP服务中，PROTOBUF也是SNCP协议数据序列化的基础。<br/></p>
 
             <h3><a id="convert_study" class="anchor" href="#" aria-hidden="true"></a>Convert 快速上手</h3>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本介绍仅以JSON为例(BSON与JSON使用方式雷同)。其操作类主要是JsonConvert，配置类主要是JsonFactory、ConvertColumn。JsonFactory采用同ClassLoader类似的双亲委托方式设计。</br></p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;本介绍仅以JSON为例(PROTOBUF与JSON使用方式雷同)。其操作类主要是JsonConvert，配置类主要是JsonFactory、ConvertColumn。JsonFactory采用同ClassLoader类似的双亲委托方式设计。</br></p>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JsonConvert 序列化encode方法：</p>
 
             <div class="highlight"><pre>    <span class="kd">public</span> <span class="n">String</span> <span class="nf">convertTo</span><span class="o">(<span class="kd">final</span> </span><span class="n">Object</span> <span class="n">value</span><span class="o">);</span>
@@ -122,14 +122,14 @@
         <span class="n">user2</span> <span class="o">=</span> <span class="n">childConvert</span><span class="o">.</span><span class="na">convertFrom</span><span class="o">(</span><span class="n">UserRecord</span><span class="o">.</span><span class="k">class</span><span class="o">,</span> <span class="n">json</span><span class="o">);</span>
         <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">childConvert</span><span class="o">.</span><span class="na">convertTo</span><span class="o">(</span><span class="n">user2</span><span class="o">));</span> <span class="c1">//应该也是 {&quot;userid&quot;:100,&quot;username&quot;:&quot;redkalename&quot;}</span>
     <span class="o">}</span></pre></div>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在Redkale里存在默认的JsonConvert、BsonConvert对象。 只需在所有Service、Servlet中增加依赖注入资源。</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在Redkale里存在默认的JsonConvert、ProtobufConvert对象。 只需在所有Service、Servlet中增加依赖注入资源。</p>
             <div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">XXXService</span> <span class="kd">implements</span> <span class="n">Service</span> <span class="o">{</span>
 
     <span class="nd">@Resource</span>
     <span class="kd">private</span> <span class="n">JsonConvert</span> <span class="n">jsonConvert</span><span class="o">;</span>
 
     <span class="nd">@Resource</span>
-    <span class="kd">private</span> <span class="n">BsonConvert</span> <span class="n">bsonConvert</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">ProtobufConvert</span> <span class="n">protobufConvert</span><span class="o">;</span>
 <span class="o">}</span>
 
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">XXXServlet</span> <span class="kd">extends</span> <span class="n">HttpServlet</span> <span class="o">{</span>
@@ -138,7 +138,7 @@
     <span class="kd">private</span> <span class="n">JsonConvert</span> <span class="n">jsonConvert</span><span class="o">;</span>
 
     <span class="nd">@Resource</span>
-    <span class="kd">private</span> <span class="n">BsonConvert</span> <span class="n">bsonConvert</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">ProtobufConvert</span> <span class="n">protobufConvert</span><span class="o">;</span>
     
 <span class="o">}</span>
                 </pre></div>
@@ -297,7 +297,7 @@
 
 <span class="n">JsonFactory</span><span class="o">.</span><span class="na">root</span><span class="o">().</span><span class="na">register</span><span class="o">(</span><span class="n">java</span><span class="o">.</span><span class="na">io</span><span class="o">.</span><span class="na">File</span><span class="o">.</span><span class="kd">class</span><span class="o">,</span> <span class="n">FileSimpleCoder</span><span class="o">.</span><span class="na">instance</span><span class="o">);</span>
 
-<span class="n">BsonFactory</span><span class="o">.</span><span class="na">root</span><span class="o">().</span><span class="na">register</span><span class="o">(</span><span class="n">java</span><span class="o">.</span><span class="na">io</span><span class="o">.</span><span class="na">File</span><span class="o">.</span><span class="kd">class</span><span class="o">,</span> <span class="n">FileSimpleCoder</span><span class="o">.</span><span class="na">instance</span><span class="o">);</span>
+<span class="n">ProtobufFactory</span><span class="o">.</span><span class="na">root</span><span class="o">().</span><span class="na">register</span><span class="o">(</span><span class="n">java</span><span class="o">.</span><span class="na">io</span><span class="o">.</span><span class="na">File</span><span class="o">.</span><span class="kd">class</span><span class="o">,</span> <span class="n">FileSimpleCoder</span><span class="o">.</span><span class="na">instance</span><span class="o">);</span>
                 </pre></div>
 
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. 通过JavaBean类自定义静态方法自动加载：</p>
@@ -321,9 +321,9 @@
 <span class="cm">     * 1) 方法名可以随意。</span>
 <span class="cm">     * 2) 方法必须是static</span>
 <span class="cm">     * 3）方法的参数有且只能有一个， 且必须是org.redkale.convert.ConvertFactory或子类。</span>
-<span class="cm">     * —3.1) 参数类型为org.redkale.convert.ConvertFactory 表示适合JSON和BSON。</span>
+<span class="cm">     * —3.1) 参数类型为org.redkale.convert.ConvertFactory 表示适合JSON和PROTOBUF。</span>
 <span class="cm">     * —3.2) 参数类型为org.redkale.convert.json.JsonFactory 表示仅适合JSON。</span>
-<span class="cm">     * —3.3) 参数类型为org.redkale.convert.bson.BsonFactory 表示仅适合BSON。</span>
+<span class="cm">     * —3.3) 参数类型为org.redkale.convert.pb.ProtobufFactory 表示仅适合PROTOBUF。</span>
 <span class="cm">     * 4）方法的返回类型必须是org.redkale.convert.Decodeable/org.redkale.convert.Encodeable/org.redkale.convert.SimpledCoder</span>
 <span class="cm">     * 若返回类型不是org.redkale.convert.SimpledCoder, 就必须提供两个方法： 一个返回Decodeable 一个返回 Encodeable。</span>
 <span class="cm">     *</span>
@@ -394,24 +394,6 @@
             <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;由上可以看出，Convert的自定义配置完全符合面向对象思想，提倡在JavaBean内部去自定义非常规的构造函数或Decode、Encode方法，通过ConvertFactory显式配置的方式通常用于非自己定义的数据类(如 java.io.File)。</p>
             <br/>
 
-            <h3><a id="convert_bson_struct" class="anchor" href="#" aria-hidden="true"></a>BSON的协议格式</h3>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BSON类似Java自带的Serializable， 其格式如下: <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1). 基本数据类型: 直接转换成byte[] <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2). SmallString(无特殊字符且长度小于256的字符串): length(1 byte) + byte[](utf8); 通常用于类名、字段名、枚举。 <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3). String: length(4 bytes) + byte[](utf8); <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4). 数组: length(4 bytes) + byte[]... <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5). Object: <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. realclass (SmallString) (如果指定格式化的class与实体对象的class不一致才会有该值, 该值可以使用@ConvertEntity给其取个别名) <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. 空字符串(SmallString) <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3. SIGN_OBJECTB 标记位，值固定为0xBB (short)<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4. 循环字段值:<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.1 SIGN_HASNEXT 标记位，值固定为1 (byte) <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.2 字段类型; 1-9为基本类型&字符串; 101-109为基本类型&字符串的数组; 127为Object <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.3 字段名 (SmallString) <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4.4 字段的值Object <br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5. SIGN_NONEXT 标记位，值固定为0 (byte)<br/>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6. SIGN_OBJECTE 标记位，值固定为0xEE (short)<br/>
-            </p>
             <footer class="site-footer">
                 <span class="site-footer-owner">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;欢迎加入Redkale QQ群: 527523235</span>
             </footer>
