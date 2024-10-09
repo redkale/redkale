@@ -35,7 +35,8 @@ import org.redkale.net.http.WebSocketPacket.FrameType;
  *      1.3 onConnected WebSocket成功连接后在准备接收数据前回调此方法。
  *      1.4 onMessage/onFragment+ WebSocket接收到消息后回调此消息类方法。
  *      1.5 onClose WebSocket被关闭后回调此方法。
- *  普通模式下 以上方法都应该被重载。
+ *  普通模式下 以上方法都应该被重载。 <br>
+ *  <b>注意: userid类型只能是: Integer/Long/String/BigInteger</b>
  * </pre>
  *
  * </blockquote>
@@ -746,7 +747,8 @@ public abstract class WebSocket<G extends Serializable, T> {
     }
 
     /**
-     * 创建userid， null表示异常， 必须实现该方法
+     * 创建userid， null表示异常， 必须实现该方法 <br>
+     * <b>注意: userid类型只能是: Integer/Long/String/BigInteger </b>
      *
      * @return userid
      */

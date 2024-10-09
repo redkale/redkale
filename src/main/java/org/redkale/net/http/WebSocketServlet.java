@@ -7,6 +7,7 @@ package org.redkale.net.http;
 
 import java.io.*;
 import java.lang.reflect.*;
+import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
@@ -354,6 +355,19 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                 response.kill();
                                 return;
                             }
+                            if (userid != null
+                                    && userid.getClass() != Integer.class
+                                    && userid.getClass() != Long.class
+                                    && userid.getClass() != String.class
+                                    && userid.getClass() != BigInteger.class) {
+                                logger.log(
+                                        Level.SEVERE,
+                                        "WebSocket userid must be Integer/Long/String/BigInteger type, but "
+                                                + userid.getClass().getName());
+                                response.kill();
+                                return;
+                            }
+
                             Runnable runHandler = () -> {
                                 webSocket._userid = userid;
                                 if (single && !anyuser) {

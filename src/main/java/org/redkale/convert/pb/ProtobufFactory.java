@@ -5,6 +5,7 @@
  */
 package org.redkale.convert.pb;
 
+import java.io.Serializable;
 import java.lang.reflect.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -84,6 +85,7 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
             this.register(InetSocketAddress.class, ProtobufCoders.ProtobufInetSocketAddressSimpledCoder.instance);
             this.register(LongAdder.class, ProtobufCoders.ProtobufLongAdderSimpledCoder.instance);
             this.register(Uint128.class, ProtobufCoders.ProtobufUint128SimpledCoder.instance);
+            this.register(Serializable.class, ProtobufCoders.ProtobufSerializableSimpledCoder.instance);
 
             this.register(boolean[].class, ProtobufCoders.ProtobufBoolArraySimpledCoder.instance);
             this.register(byte[].class, ProtobufCoders.ProtobufByteArraySimpledCoder.instance);

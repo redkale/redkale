@@ -4,11 +4,13 @@
  */
 package org.redkale.convert.pb;
 
+import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 import org.redkale.convert.SimpledCoder;
@@ -711,6 +713,77 @@ public abstract class ProtobufCoders {
         @Override
         public Type getType() {
             return Uint128.class;
+        }
+    }
+
+    // 只识别类型: Integer/Long/String/BigInteger
+    public static class ProtobufSerializableSimpledCoder
+            extends SimpledCoder<ProtobufReader, ProtobufWriter, Serializable>
+            implements ProtobufEncodeable<ProtobufWriter, Serializable> {
+
+        public static final ProtobufSerializableSimpledCoder instance = new ProtobufSerializableSimpledCoder();
+
+        private static final byte STRING = 0;
+        private static final byte INTEGER = 1;
+        private static final byte LONG = 2;
+        private static final byte BIGINTEGER = 3;
+        private static final byte[] STRINGS = new byte[] {STRING};
+        private static final byte[] INTEGERS = new byte[] {INTEGER};
+        private static final byte[] LONGS = new byte[] {LONG};
+        private static final byte[] BIGINTEGERS = new byte[] {BIGINTEGER};
+
+        @Override
+        public void convertTo(ProtobufWriter out, Serializable value) {
+            ProtobufByteArraySimpledCoder.instance.convertTo(out, formatValue(value));
+        }
+
+        @Override
+        public Serializable convertFrom(ProtobufReader in) {
+            byte[] bs = ProtobufByteArraySimpledCoder.instance.convertFrom(in);
+            if (bs == null || bs.length == 0) {
+                return null;
+            }
+            byte type = bs[0];
+            if (type == INTEGER) {
+                return ((bs[1] & 0xff) | ((bs[2] & 0xff) << 8) | ((bs[3] & 0xff) << 16) | ((bs[4] & 0xff) << 24));
+            } else if (type == LONG) {
+                return ((bs[1] & 0xffL)
+                        | ((bs[2] & 0xffL) << 8)
+                        | ((bs[3] & 0xffL) << 16)
+                        | ((bs[4] & 0xffL) << 24)
+                        | ((bs[5] & 0xffL) << 32)
+                        | ((bs[6] & 0xffL) << 40)
+                        | ((bs[7] & 0xffL) << 48)
+                        | ((bs[8] & 0xffL) << 56));
+            } else if (type == BIGINTEGER) {
+                return new BigInteger(bs, 1, bs.length - 1);
+            } else {
+                return new String(bs, 1, bs.length - 1, StandardCharsets.UTF_8);
+            }
+        }
+
+        @Override
+        public int computeSize(ProtobufWriter out, int tagSize, Serializable value) {
+            return ProtobufByteArraySimpledCoder.instance.computeSize(out, tagSize, formatValue(value));
+        }
+
+        private byte[] formatValue(Serializable value) {
+            if (value == null) {
+                return null;
+            } else if (value instanceof Integer) {
+                return Utility.append(INTEGERS, ProtobufWriter.fixed32((Integer) value));
+            } else if (value instanceof Long) {
+                return Utility.append(LONGS, ProtobufWriter.fixed64((Long) value));
+            } else if (value instanceof BigInteger) {
+                return Utility.append(BIGINTEGERS, ((BigInteger) value).toByteArray());
+            } else {
+                return Utility.append(STRINGS, value.toString().getBytes(StandardCharsets.UTF_8));
+            }
+        }
+
+        @Override
+        public Type getType() {
+            return Serializable.class;
         }
     }
 

@@ -239,6 +239,7 @@ public abstract class ProtobufWriter extends Writer {
      *
      * @param member 字段
      */
+    @Override
     public final void writeField(final EnMember member) {
         writeTag(member.getTag());
     }
