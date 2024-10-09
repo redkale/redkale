@@ -5,7 +5,7 @@
  */
 package org.redkale.mq.spi;
 
-import org.redkale.convert.bson.BsonWriter;
+import org.redkale.convert.pb.ProtobufWriter;
 import org.redkale.net.sncp.*;
 import org.redkale.util.ByteArray;
 
@@ -28,7 +28,7 @@ public class SncpMessageResponse extends SncpResponse {
     }
 
     @Override
-    public void finish(final int retcode, final BsonWriter out) {
+    public void finish(final int retcode, final ProtobufWriter out) {
         int headerSize = SncpHeader.calcHeaderSize(request);
         if (out == null) {
             final ByteArray result = new ByteArray(headerSize).putPlaceholder(headerSize);
@@ -36,7 +36,8 @@ public class SncpMessageResponse extends SncpResponse {
             messageClient
                     .getProducer()
                     .apply(messageClient.createMessageRecord(
-                            message.getSeqid(), MessageRecord.CTYPE_BSON, message.getRespTopic(), null, (byte[]) null));
+                            message.getSeqid(), MessageRecord.CTYPE_PROTOBUF, message.getRespTopic(), null, (byte[])
+                                    null));
             return;
         }
         final ByteArray result = out.toByteArray();
@@ -44,6 +45,10 @@ public class SncpMessageResponse extends SncpResponse {
         messageClient
                 .getProducer()
                 .apply(messageClient.createMessageRecord(
-                        message.getSeqid(), MessageRecord.CTYPE_BSON, message.getRespTopic(), null, result.getBytes()));
+                        message.getSeqid(),
+                        MessageRecord.CTYPE_PROTOBUF,
+                        message.getRespTopic(),
+                        null,
+                        result.getBytes()));
     }
 }

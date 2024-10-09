@@ -5,10 +5,9 @@
  */
 package org.redkale.convert;
 
+import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-import java.lang.annotation.*;
 
 /**
  * 序列化时永久禁用该字段, 与ConvertColumn.ignore()的区别在于: ConvertDisabled不能通过ConvertEntity来解禁
@@ -24,7 +23,7 @@ public @interface ConvertDisabled {
     /**
      * 解析/序列化定制化的TYPE
      *
-     * @return JSON or BSON or ALL
+     * @return JSON or PROTOBUF or ALL
      */
     ConvertType type() default ConvertType.ALL;
 

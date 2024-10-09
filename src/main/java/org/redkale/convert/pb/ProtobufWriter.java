@@ -106,6 +106,10 @@ public abstract class ProtobufWriter extends Writer {
         return this;
     }
 
+    public void clear() {
+        recycle();
+    }
+
     @Override
     protected boolean recycle() {
         super.recycle();
@@ -120,6 +124,8 @@ public abstract class ProtobufWriter extends Writer {
         this.streamArrayCache = null;
         return true;
     }
+
+    public abstract ByteArray toByteArray();
 
     public abstract ProtobufWriter pollChild();
 

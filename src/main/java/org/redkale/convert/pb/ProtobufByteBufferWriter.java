@@ -75,6 +75,7 @@ public class ProtobufByteBufferWriter extends ProtobufWriter {
         return this.buffers;
     }
 
+    @Override
     public ByteArray toByteArray() {
         ByteArray array = new ByteArray();
         if (buffers != null) {

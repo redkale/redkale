@@ -10,8 +10,9 @@ import java.nio.charset.*;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.*;
 import javax.net.ssl.SSLContext;
-import org.redkale.convert.bson.*;
 import org.redkale.convert.json.*;
+import org.redkale.convert.pb.ProtobufConvert;
+import org.redkale.convert.pb.ProtobufFactory;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.util.*;
 
@@ -48,8 +49,8 @@ public class Context {
     // 日志Logger
     protected final Logger logger;
 
-    // BSON操作工厂
-    protected final BsonFactory bsonFactory;
+    // Protobuf操作工厂
+    protected final ProtobufFactory protobufFactory;
 
     // JSON操作工厂
     protected final JsonFactory jsonFactory;
@@ -138,7 +139,7 @@ public class Context {
         this.readTimeoutSeconds = readTimeoutSeconds;
         this.writeTimeoutSeconds = writeTimeoutSeconds;
         this.jsonFactory = JsonFactory.root();
-        this.bsonFactory = BsonFactory.root();
+        this.protobufFactory = ProtobufFactory.root();
     }
 
     protected final void executeDispatch(Request request, Response response) {
@@ -247,8 +248,8 @@ public class Context {
         return jsonFactory.getConvert();
     }
 
-    public BsonConvert getBsonConvert() {
-        return bsonFactory.getConvert();
+    public ProtobufConvert getProtobufConvert() {
+        return protobufFactory.getConvert();
     }
 
     public static class ContextConfig {

@@ -18,7 +18,6 @@ module org.redkale {
     exports org.redkale.cluster;
     exports org.redkale.cluster.spi;
     exports org.redkale.convert;
-    exports org.redkale.convert.bson;
     exports org.redkale.convert.ext;
     exports org.redkale.convert.json;
     exports org.redkale.convert.pb;

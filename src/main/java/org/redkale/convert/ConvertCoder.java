@@ -70,7 +70,7 @@ public @interface ConvertCoder {
     /**
      * 解析/序列化定制化的TYPE
      *
-     * @return JSON or BSON or ALL
+     * @return JSON or PROTOBUF or ALL
      */
     ConvertType type() default ConvertType.ALL;
 

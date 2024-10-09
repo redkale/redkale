@@ -14,10 +14,8 @@ package org.redkale.convert;
  */
 public enum ConvertType {
     JSON(1),
-    BSON(2),
-    PROTOBUF(64),
-    PROTOBUF_JSON(64 + 1),
-    PROTOBUF_BSON(64 + 2),
+    PROTOBUF(2),
+    PROTOBUF_JSON(2 + 1),
     DIY(256),
     ALL(1023);
 

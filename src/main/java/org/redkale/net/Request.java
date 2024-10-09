@@ -11,8 +11,8 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.function.Function;
 import org.redkale.convert.ConvertDisabled;
-import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.convert.pb.ProtobufConvert;
 import org.redkale.util.Creator;
 
 /**
@@ -27,7 +27,7 @@ public abstract class Request<C extends Context> {
 
     protected final C context;
 
-    protected final BsonConvert bsonConvert;
+    protected final ProtobufConvert protobufConvert;
 
     protected final JsonConvert jsonConvert;
 
@@ -62,13 +62,13 @@ public abstract class Request<C extends Context> {
 
     protected Request(C context) {
         this.context = context;
-        this.bsonConvert = context.getBsonConvert();
+        this.protobufConvert = context.getProtobufConvert();
         this.jsonConvert = context.getJsonConvert();
     }
 
     protected Request(Request<C> request) {
         this.context = request.context;
-        this.bsonConvert = request.bsonConvert;
+        this.protobufConvert = request.protobufConvert;
         this.jsonConvert = request.jsonConvert;
         this.createTime = request.createTime;
         this.keepAlive = request.keepAlive;

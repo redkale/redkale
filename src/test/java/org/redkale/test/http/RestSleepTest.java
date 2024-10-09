@@ -10,8 +10,8 @@ import java.lang.reflect.Method;
 import java.net.*;
 import org.junit.jupiter.api.*;
 import org.redkale.boot.Application;
-import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.convert.pb.ProtobufConvert;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.net.AsyncIOGroup;
 import org.redkale.net.http.*;
@@ -34,7 +34,7 @@ public class RestSleepTest {
         asyncGroup.start();
         final ResourceFactory resFactory = ResourceFactory.create();
         resFactory.register(JsonConvert.root());
-        resFactory.register(BsonConvert.root());
+        resFactory.register(ProtobufConvert.root());
         Method method = Application.class.getDeclaredMethod("initWorkExecutor");
         method.setAccessible(true);
         method.invoke(application);

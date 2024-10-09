@@ -170,6 +170,17 @@ public class ProtobufBytesWriter extends ProtobufWriter {
     }
 
     @Override
+    public ByteArray toByteArray() {
+        return new ByteArray(toArray());
+    }
+
+    // 类似writeTo(new byte[length])
+    public void writePlaceholderTo(final int length) {
+        expand(length);
+        count += length;
+    }
+
+    @Override
     protected int expand(int len) {
         int newcount = count + len;
         if (newcount > content.length) {

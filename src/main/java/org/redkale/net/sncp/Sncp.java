@@ -17,8 +17,7 @@ import org.redkale.asm.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
-import org.redkale.convert.Convert;
-import org.redkale.convert.bson.BsonConvert;
+import org.redkale.convert.pb.ProtobufConvert;
 import org.redkale.inject.Resourcable;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.mq.spi.MessageAgent;
@@ -156,7 +155,7 @@ public abstract class Sncp {
             String resourceName,
             Class<T> resourceServiceType,
             Class<T> serviceImplClass,
-            Convert convert,
+            ProtobufConvert convert,
             SncpRpcGroups sncpRpcGroups,
             SncpClient sncpClient,
             MessageAgent messageAgent,
@@ -930,7 +929,7 @@ public abstract class Sncp {
                 name,
                 getResourceType(serviceTypeOrImplClass),
                 serviceTypeOrImplClass,
-                BsonConvert.root(),
+                ProtobufConvert.root(),
                 sncpRpcGroups,
                 client,
                 agent,

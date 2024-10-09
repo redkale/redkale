@@ -1,5 +1,5 @@
 # 序列化
-&emsp;&emsp;Convert提供Java对象的序列化与反序列化功能。支持JSON(JavaScript Object Notation)、BSON(Binary Stream Object Notation)、PROTOBUF三种格式化。 三种格式使用方式完全一样，其性能都大幅度超过其他JSON框架。同时JSON内置于HTTP服务中，BSON也是SNCP协议数据序列化的基础。
+&emsp;&emsp;Convert提供Java对象的序列化与反序列化功能。支持JSON(JavaScript Object Notation)、PROTOBUF两种格式化。 两种格式使用方式完全一样，其性能都大幅度超过其他JSON框架。同时JSON内置于HTTP服务中，PROTOBUF也是SNCP协议数据序列化的基础。
 ## 基本API
 &emsp;&emsp;JSON序列化其操作类主要是JsonConvert，配置类主要是JsonFactory、ConvertColumn。JsonFactory采用同ClassLoader类似的双亲委托方式设计。
  JsonConvert 序列化encode方法：
@@ -81,15 +81,12 @@ JsonConvert 反序列化decode方法：
         System.out.println(childConvert.convertTo(user2)); 
     }
 ```
-&emsp;&emsp;在Redkale里存在默认的JsonConvert、BsonConvert、ProtobufConvert对象。 只需在所有Service、Servlet中增加依赖注入资源。
+&emsp;&emsp;在Redkale里存在默认的JsonConvert、ProtobufConvert对象。 只需在所有Service、Servlet中增加依赖注入资源。
 ```java
 public class XXXService implements Service {
 
     @Resource
     private JsonConvert jsonConvert;
-
-    @Resource
-    private BsonConvert bsonConvert;
 
     @Resource
     private ProtobufConvert protobufConvert;
@@ -99,9 +96,6 @@ public class XXXServlet extends HttpServlet {
 
     @Resource
     private JsonConvert jsonConvert;
-
-    @Resource
-    private BsonConvert bsonConvert;
 
     @Resource
     private ProtobufConvert protobufConvert;
@@ -269,7 +263,7 @@ public class FileSimpleCoder<R extends Reader, W extends Writer> extends Simpled
 
 JsonFactory.root().register(File.class, FileSimpleCoder.instance);
 
-BsonFactory.root().register(File.class, FileSimpleCoder.instance);
+ProtobufFactory.root().register(File.class, FileSimpleCoder.instance);
 ```
 &emsp;&emsp;&emsp;&emsp;2. 通过JavaBean类自定义静态方法自动加载：
 ```java
@@ -293,9 +287,8 @@ public class InnerCoderEntity {
      * 1) 方法名可以随意。
      * 2) 方法必须是static
      * 3）方法的参数有且只能有一个， 且必须是org.redkale.convert.ConvertFactory或子类。
-     * —3.1) 参数类型为org.redkale.convert.ConvertFactory 表示适合JSON,BSON,PROTOBUF。
+     * —3.1) 参数类型为org.redkale.convert.ConvertFactory 表示适合JSON,PROTOBUF。
      * —3.2) 参数类型为org.redkale.convert.json.JsonFactory 表示仅适合JSON。
-     * —3.3) 参数类型为org.redkale.convert.bson.BsonFactory 表示仅适合BSON。
      * —3.3) 参数类型为org.redkale.convert.pb.ProtobufFactory 表示仅适合PROTOBUF。
      * 4）方法的返回类型必须是 Decodeable/Encodeable/SimpledCoder
      * 若返回类型不是SimpledCoder, 就必须提供两个方法： 一个返回Decodeable 一个返回 Encodeable。
@@ -444,37 +437,4 @@ public class RestConvertService extends AbstractService {
     }
 }
 ```
-
-## BSON数据格式
-&emsp;&emsp;BSON类似Java自带的Serializable， 其格式如下: 
-
-&emsp;&emsp;&emsp;&emsp;1). 基本数据类型: 直接转换成byte[]
-
-&emsp;&emsp;&emsp;&emsp;2). StandardString(无特殊字符且长度小于256的字符串): length(1 byte) + byte[](utf8); 通常用于类名、字段名、枚举。
-
-&emsp;&emsp;&emsp;&emsp;3). String: length(4 bytes) + byte[](utf8);
-
-&emsp;&emsp;&emsp;&emsp;4). 数组: length(4 bytes) + byte[]...
-
-&emsp;&emsp;&emsp;&emsp;5). Object:
-
-&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;1. realclass (StandardString) (如果指定格式化的class与实体对象的class不一致才会有该值, 该值可以使用@ConvertEntity给其取个别名)
-
-&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;2. 空字符串(StandardString)
-
-&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;3. SIGN_OBJECTB 标记位，值固定为0xBB (short)
-
-&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;4. 循环字段值:
-
-&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;4.1 SIGN_HASNEXT 标记位，值固定为1 (byte)
-
-&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;4.2 字段类型; 11-19为基本类型&字符串; 21-29为基本类型&字符串的数组; 127为Object
-
-&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;4.3 字段名 (StandardString)
-
-&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;4.4 字段的值Object
-
-&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;5. SIGN_NONEXT 标记位，值固定为0 (byte)
-
-&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; 6. SIGN_OBJECTE 标记位，值固定为0xEE (short)
 

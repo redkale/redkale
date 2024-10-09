@@ -96,7 +96,7 @@ public abstract class Writer {
     public abstract void writeNull();
 
     /**
-     * 是否需要写入类名, BSON需要， JSON不需要
+     * 是否需要写入类名, JSON不需要
      *
      * @return boolean
      */

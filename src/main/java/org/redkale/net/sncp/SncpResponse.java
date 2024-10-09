@@ -5,15 +5,15 @@
  */
 package org.redkale.net.sncp;
 
-import static org.redkale.net.sncp.SncpHeader.KEEPALIVE_OFF;
-import static org.redkale.net.sncp.SncpHeader.KEEPALIVE_ON;
-
 import java.lang.reflect.Type;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.*;
 import org.redkale.annotation.ClassDepends;
-import org.redkale.convert.bson.BsonWriter;
+import org.redkale.convert.pb.ProtobufBytesWriter;
+import org.redkale.convert.pb.ProtobufWriter;
 import org.redkale.net.Response;
+import static org.redkale.net.sncp.SncpHeader.KEEPALIVE_OFF;
+import static org.redkale.net.sncp.SncpHeader.KEEPALIVE_ON;
 import org.redkale.util.ByteArray;
 import org.redkale.util.Traces;
 
@@ -36,7 +36,7 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
 
     final int addrPort;
 
-    protected final BsonWriter writer = new BsonWriter();
+    protected final ProtobufWriter writer = new ProtobufBytesWriter();
 
     protected final CompletionHandler realHandler = new CompletionHandler() {
         @Override
@@ -106,7 +106,7 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         return super.recycle();
     }
 
-    public BsonWriter getBsonWriter() {
+    public ProtobufWriter getWriter() {
         return writer;
     }
 
@@ -141,8 +141,8 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
 
     public final void finishVoid() {
         int headerSize = SncpHeader.calcHeaderSize(request);
-        BsonWriter out = getBsonWriter();
-        out.writePlaceholderTo(headerSize);
+        ProtobufWriter out = getWriter();
+        ((ProtobufBytesWriter) out).writePlaceholderTo(headerSize);
         finish(0, out);
     }
 
@@ -170,17 +170,17 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
 
     public final void finish(final Type type, final Object result) {
         int headerSize = SncpHeader.calcHeaderSize(request);
-        BsonWriter out = getBsonWriter();
-        out.writePlaceholderTo(headerSize);
+        ProtobufWriter out = getWriter();
+        ((ProtobufBytesWriter) out).writePlaceholderTo(headerSize);
         if (result != null || type != Void.class) {
             out.writeByte((byte) 0); // body的第一个字节为0，表示返回结果对象，而不是参数回调对象
-            context.getBsonConvert().convertTo(out, type, result);
+            context.getProtobufConvert().convertTo(out, type, result);
         }
         finish(0, out);
     }
 
     // 调用此方法时out已写入SncpHeader的占位空间
-    public void finish(final int retcode, final BsonWriter out) {
+    public void finish(final int retcode, final ProtobufWriter out) {
         int headerSize = SncpHeader.calcHeaderSize(request);
         if (out == null) {
             final ByteArray array = new ByteArray(headerSize).putPlaceholder(headerSize);

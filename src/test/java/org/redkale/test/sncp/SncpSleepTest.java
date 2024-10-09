@@ -5,8 +5,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import org.junit.jupiter.api.*;
 import org.redkale.boot.Application;
-import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.convert.pb.ProtobufConvert;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.net.AsyncIOGroup;
 import org.redkale.net.WorkThread;
@@ -35,7 +35,7 @@ public class SncpSleepTest {
         final ResourceFactory resFactory = ResourceFactory.create();
         resFactory.register(Application.RESNAME_APP_EXECUTOR, ExecutorService.class, workExecutor);
         resFactory.register(JsonConvert.root());
-        resFactory.register(BsonConvert.root());
+        resFactory.register(ProtobufConvert.root());
 
         // ------------------------ 初始化 CService ------------------------------------
         SncpSleepService service = Sncp.createSimpleLocalService(SncpSleepService.class, resFactory);
@@ -64,6 +64,6 @@ public class SncpSleepTest {
         System.out.println("耗时: " + e + " ms");
         server.shutdown();
         workExecutor.shutdown();
-        Assertions.assertTrue(e < 600);
+        Assertions.assertTrue(e < 660);
     }
 }

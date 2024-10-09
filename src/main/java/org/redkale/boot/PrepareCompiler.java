@@ -6,14 +6,14 @@
 package org.redkale.boot;
 
 import java.util.List;
+import org.redkale.annotation.Serial;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.convert.Decodeable;
-import org.redkale.convert.bson.BsonFactory;
 import org.redkale.convert.json.*;
+import org.redkale.convert.pb.ProtobufFactory;
 import org.redkale.persistence.Entity;
 import org.redkale.source.*;
 import org.redkale.util.Utility;
-import org.redkale.annotation.Serial;
 
 /**
  * 执行一次Application.run提前获取所有动态类
@@ -60,11 +60,11 @@ public class PrepareCompiler {
                 // application.dataSources.forEach(source -> source.compile(clz));
                 JsonFactory.root().loadEncoder(clz);
                 if (hasSncp) {
-                    BsonFactory.root().loadEncoder(clz);
+                    ProtobufFactory.root().loadEncoder(clz);
                 }
                 Decodeable decoder = JsonFactory.root().loadDecoder(clz);
                 if (hasSncp) {
-                    BsonFactory.root().loadDecoder(clz);
+                    ProtobufFactory.root().loadDecoder(clz);
                 }
                 decoder.convertFrom(new JsonReader("{}"));
             } catch (Exception e) { // JsonFactory.loadDecoder可能会失败，因为class可能包含抽象类字段,如ColumnValue.value字段
@@ -81,11 +81,11 @@ public class PrepareCompiler {
                 // application.dataSources.forEach(source -> source.compile(clz));
                 JsonFactory.root().loadEncoder(clz);
                 if (hasSncp) {
-                    BsonFactory.root().loadEncoder(clz);
+                    ProtobufFactory.root().loadEncoder(clz);
                 }
                 Decodeable decoder = JsonFactory.root().loadDecoder(clz);
                 if (hasSncp) {
-                    BsonFactory.root().loadDecoder(clz);
+                    ProtobufFactory.root().loadDecoder(clz);
                 }
                 decoder.convertFrom(new JsonReader("{}"));
             } catch (Exception e) { // JsonFactory.loadDecoder可能会失败，因为class可能包含抽象类字段,如ColumnValue.value字段
@@ -99,11 +99,11 @@ public class PrepareCompiler {
             try {
                 JsonFactory.root().loadEncoder(clz);
                 if (hasSncp) {
-                    BsonFactory.root().loadEncoder(clz);
+                    ProtobufFactory.root().loadEncoder(clz);
                 }
                 Decodeable decoder = JsonFactory.root().loadDecoder(clz);
                 if (hasSncp) {
-                    BsonFactory.root().loadDecoder(clz);
+                    ProtobufFactory.root().loadDecoder(clz);
                 }
                 decoder.convertFrom(new JsonReader("{}"));
             } catch (Exception e) { // JsonFactory.loadDecoder可能会失败，因为class可能包含抽象类字段,如ColumnValue.value字段
@@ -117,11 +117,11 @@ public class PrepareCompiler {
             try {
                 JsonFactory.root().loadEncoder(clz);
                 if (hasSncp) {
-                    BsonFactory.root().loadEncoder(clz);
+                    ProtobufFactory.root().loadEncoder(clz);
                 }
                 Decodeable decoder = JsonFactory.root().loadDecoder(clz);
                 if (hasSncp) {
-                    BsonFactory.root().loadDecoder(clz);
+                    ProtobufFactory.root().loadDecoder(clz);
                 }
                 decoder.convertFrom(new JsonReader("{}"));
             } catch (Exception e) { // JsonFactory.loadDecoder可能会失败，因为class可能包含抽象类字段,如ColumnValue.value字段

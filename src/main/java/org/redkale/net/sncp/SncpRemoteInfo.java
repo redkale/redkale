@@ -11,8 +11,9 @@ import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
-import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.convert.pb.ProtobufConvert;
+import org.redkale.convert.pb.ProtobufWriter;
 import org.redkale.mq.spi.MessageAgent;
 import org.redkale.mq.spi.MessageClient;
 import org.redkale.mq.spi.MessageRecord;
@@ -59,8 +60,8 @@ public class SncpRemoteInfo<S extends Service> {
     // 非MQ模式下此字段才有值, 可能为null
     protected Set<InetSocketAddress> remoteAddresses;
 
-    // 默认值: BsonConvert.root()
-    protected final Convert convert;
+    // 默认值: ProtobufConvert.root()
+    protected final ProtobufConvert convert;
 
     // MQ模式下此字段才有值
     protected final String topic;
@@ -75,7 +76,7 @@ public class SncpRemoteInfo<S extends Service> {
             String resourceName,
             Class<S> resourceType,
             Class<S> serviceImplClass,
-            Convert convert,
+            ProtobufConvert convert,
             SncpRpcGroups sncpRpcGroups,
             SncpClient sncpClient,
             MessageAgent messageAgent,
@@ -192,7 +193,7 @@ public class SncpRemoteInfo<S extends Service> {
         request.writeTo(null, array);
         MessageRecord message = messageAgent
                 .getSncpMessageClient()
-                .createMessageRecord(MessageRecord.CTYPE_BSON, targetTopic, null, array.getBytes());
+                .createMessageRecord(MessageRecord.CTYPE_PROTOBUF, targetTopic, null, array.getBytes());
         final String tt = targetTopic;
         message.localActionName(action.actionName());
         message.localParams(params);
@@ -254,7 +255,7 @@ public class SncpRemoteInfo<S extends Service> {
         }
         byte[] body = null;
         if (myParamTypes.length > 0) {
-            Writer writer = convert.pollWriter();
+            ProtobufWriter writer = convert.pollWriter();
             for (int i = 0; i < params.length; i++) { // service方法的参数
                 convert.convertTo(
                         writer,
@@ -263,7 +264,7 @@ public class SncpRemoteInfo<S extends Service> {
                                 : myParamTypes[i],
                         params[i]);
             }
-            body = ((ByteTuple) writer).toArray();
+            body = writer.toByteArray().content();
             convert.offerWriter(writer);
         }
         final SncpClientRequest request = new SncpClientRequest();

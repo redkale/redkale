@@ -43,7 +43,7 @@ public class SncpDispatcherServlet
         }
     }
 
-    public <T> SncpServlet removeSncpServlet(Service service) {
+    public SncpServlet removeSncpServlet(Service service) {
         SncpServlet rs = null;
         updateLock.lock();
         try {

@@ -19,7 +19,6 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.*;
-import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.ext.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.convert.pb.ProtobufConvert;
@@ -222,9 +221,6 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         }
         if (type == ConvertType.PROTOBUF || type.contains(ConvertType.PROTOBUF)) {
             return ProtobufConvert.root();
-        }
-        if (type == ConvertType.BSON || type.contains(ConvertType.BSON)) {
-            return BsonConvert.root();
         }
 
         Iterator<ConvertProvider> it = ServiceLoader.load(ConvertProvider.class).iterator();

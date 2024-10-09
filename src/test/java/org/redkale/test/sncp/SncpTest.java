@@ -10,7 +10,8 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.redkale.boot.*;
-import org.redkale.convert.bson.*;
+import org.redkale.convert.pb.ProtobufConvert;
+import org.redkale.convert.pb.ProtobufFactory;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.net.*;
 import org.redkale.net.client.ClientAddress;
@@ -52,7 +53,7 @@ public class SncpTest {
         application = Application.create(true);
         rpcGroups = application.getSncpRpcGroups();
         factory = application.getResourceFactory();
-        factory.register("", BsonConvert.class, BsonFactory.root().getConvert());
+        factory.register("", ProtobufConvert.class, ProtobufFactory.root().getConvert());
         factory.register("", Application.class, application);
 
         if (System.getProperty("client") == null) {

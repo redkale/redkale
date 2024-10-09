@@ -18,7 +18,7 @@ import org.redkale.annotation.NonBlocking;
 import org.redkale.asm.*;
 import org.redkale.asm.Type;
 import org.redkale.convert.*;
-import org.redkale.convert.bson.BsonFactory;
+import org.redkale.convert.pb.ProtobufFactory;
 import org.redkale.net.*;
 import org.redkale.service.Service;
 import org.redkale.util.*;
@@ -764,18 +764,18 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
                     if (t.toString().startsWith("java.lang.")) {
                         continue;
                     }
-                    BsonFactory.root().loadDecoder(t);
+                    ProtobufFactory.root().loadDecoder(t);
                 }
                 if (originalReturnType != void.class && originalReturnType != Void.class) {
                     if (boolReturnTypeFuture && method.getReturnType() != method.getGenericReturnType()) {
                         java.lang.reflect.Type t =
                                 ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[0];
                         if (t != Void.class && t != java.lang.reflect.Type.class) {
-                            BsonFactory.root().loadEncoder(t);
+                            ProtobufFactory.root().loadEncoder(t);
                         }
                     } else {
                         try {
-                            BsonFactory.root().loadEncoder(originalReturnType);
+                            ProtobufFactory.root().loadEncoder(originalReturnType);
                         } catch (Exception e) {
                             System.err.println(method);
                         }

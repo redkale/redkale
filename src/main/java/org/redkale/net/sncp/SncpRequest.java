@@ -12,7 +12,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.logging.Level;
 import org.redkale.convert.*;
-import org.redkale.convert.bson.BsonReader;
+import org.redkale.convert.pb.ProtobufReader;
 import org.redkale.net.Request;
 import static org.redkale.net.client.ClientRequest.EMPTY_TRACEID;
 import org.redkale.util.*;
@@ -36,7 +36,7 @@ public class SncpRequest extends Request<SncpContext> {
 
     private static final Function<String, ByteArray> tbaFunc = s -> new ByteArray();
 
-    protected final BsonReader reader = new BsonReader();
+    protected final ProtobufReader reader = new ProtobufReader();
 
     protected int readState = READ_STATE_ROUTE;
 
@@ -80,15 +80,18 @@ public class SncpRequest extends Request<SncpContext> {
             }
             if (this.headerLength < SncpHeader.HEADER_SUBSIZE) {
                 context.getLogger()
-                        .log(Level.WARNING,
+                        .log(
+                                Level.WARNING,
                                 "sncp header.length must more " + SncpHeader.HEADER_SUBSIZE + ", but "
                                         + this.headerLength);
                 return -1;
             }
             if (this.headerLength > context.getMaxHeader()) {
                 context.getLogger()
-                        .log(Level.WARNING,
-                                "sncp header.length must lower " + context.getMaxHeader() + ", but " + this.headerLength);
+                        .log(
+                                Level.WARNING,
+                                "sncp header.length must lower " + context.getMaxHeader() + ", but "
+                                        + this.headerLength);
                 return -1;
             }
             this.readState = READ_STATE_HEADER;
@@ -199,7 +202,7 @@ public class SncpRequest extends Request<SncpContext> {
     }
 
     public Convert getConvert() {
-        return context.getBsonConvert();
+        return context.getProtobufConvert();
     }
 
     public Reader getReader() {

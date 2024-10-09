@@ -31,7 +31,6 @@ import org.redkale.cluster.spi.ClusterModuleEngine;
 import org.redkale.cluster.spi.HttpClusterRpcClient;
 import org.redkale.cluster.spi.HttpLocalRpcClient;
 import org.redkale.convert.Convert;
-import org.redkale.convert.bson.BsonFactory;
 import org.redkale.convert.json.*;
 import org.redkale.convert.pb.ProtobufFactory;
 import org.redkale.inject.ResourceAnnotationLoader;
@@ -304,19 +303,14 @@ public final class Application {
 
         // 需要在加载properties初始化System.properties之后再注册
         this.resourceFactory.register(Environment.class, environment);
-        this.resourceFactory.register(BsonFactory.root());
         this.resourceFactory.register(JsonFactory.root());
         this.resourceFactory.register(ProtobufFactory.root());
-        this.resourceFactory.register(BsonFactory.root().getConvert());
         this.resourceFactory.register(JsonFactory.root().getConvert());
         this.resourceFactory.register(ProtobufFactory.root().getConvert());
-        this.resourceFactory.register(
-                "bsonconvert", Convert.class, BsonFactory.root().getConvert());
         this.resourceFactory.register(
                 "jsonconvert", Convert.class, JsonFactory.root().getConvert());
         this.resourceFactory.register(
                 "protobufconvert", Convert.class, ProtobufFactory.root().getConvert());
-        BsonFactory.root().registerFieldFuncConsumer(resourceFactory::inject);
         JsonFactory.root().registerFieldFuncConsumer(resourceFactory::inject);
         ProtobufFactory.root().registerFieldFuncConsumer(resourceFactory::inject);
 

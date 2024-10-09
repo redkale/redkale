@@ -40,16 +40,17 @@ public class ProtobufReader extends Reader {
         setBytes(bytes);
     }
 
-    public final void setBytes(byte[] bytes) {
+    public final ProtobufReader setBytes(byte[] bytes) {
         if (bytes == null) {
             this.position = 0;
             this.limit = 0;
         } else {
             setBytes(bytes, 0, bytes.length);
         }
+        return this;
     }
 
-    public final void setBytes(byte[] bytes, int start, int len) {
+    public final ProtobufReader setBytes(byte[] bytes, int start, int len) {
         if (bytes == null) {
             this.position = 0;
             this.limit = 0;
@@ -58,6 +59,7 @@ public class ProtobufReader extends Reader {
             this.position = start - 1;
             this.limit = start + len;
         }
+        return this;
     }
 
     public void limit(int limit) {

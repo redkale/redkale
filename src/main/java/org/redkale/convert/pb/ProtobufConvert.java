@@ -657,7 +657,7 @@ public class ProtobufConvert extends BinaryConvert<ProtobufReader, ProtobufWrite
             decoder = factory.loadDecoder(type);
             this.lastDecodeable = decoder;
         }
-        if (!(decoder instanceof ObjectDecoder)) {
+        if (decoder == null) {
             throw new ConvertException(this.getClass().getSimpleName() + " not supported type(" + type + ")");
         }
         T rs = (T) decoder.convertFrom(reader);

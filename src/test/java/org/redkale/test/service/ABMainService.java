@@ -15,8 +15,8 @@ import java.util.concurrent.atomic.*;
 import java.util.logging.Level;
 import org.redkale.annotation.Resource;
 import org.redkale.boot.*;
-import org.redkale.convert.bson.BsonConvert;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.convert.pb.ProtobufConvert;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.net.AsyncIOGroup;
 import org.redkale.net.client.ClientAddress;
@@ -44,7 +44,7 @@ public class ABMainService implements Service {
                 new SncpClient("", asyncGroup, "0", sncpAddress, new ClientAddress(sncpAddress), "TCP", 16, 100);
         final ResourceFactory resFactory = ResourceFactory.create();
         resFactory.register(JsonConvert.root());
-        resFactory.register(BsonConvert.root());
+        resFactory.register(ProtobufConvert.root());
         final SncpRpcGroups rpcGroups = application.getSncpRpcGroups();
         rpcGroups.computeIfAbsent("g77", "TCP").putAddress(new InetSocketAddress("127.0.0.1", 5577));
         rpcGroups.computeIfAbsent("g88", "TCP").putAddress(new InetSocketAddress("127.0.0.1", 5588));

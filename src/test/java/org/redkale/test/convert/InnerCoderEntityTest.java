@@ -5,15 +5,16 @@
 package org.redkale.test.convert;
 
 import org.junit.jupiter.api.Test;
+import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.DeMember;
 import org.redkale.convert.DeMemberInfo;
 import org.redkale.convert.EnMember;
 import org.redkale.convert.Reader;
 import org.redkale.convert.SimpledCoder;
 import org.redkale.convert.Writer;
-import org.redkale.convert.bson.BsonConvert;
-import org.redkale.convert.bson.BsonFactory;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.convert.pb.ProtobufConvert;
+import org.redkale.convert.pb.ProtobufFactory;
 import org.redkale.util.Utility;
 
 /**
@@ -34,7 +35,7 @@ public class InnerCoderEntityTest {
         System.out.println(json);
         System.out.println(convert.convertFrom(InnerCoderEntity.class, json).toString());
 
-        final BsonConvert convert2 = BsonFactory.root().getConvert();
+        final ProtobufConvert convert2 = ProtobufFactory.root().getConvert();
         byte[] bs = convert2.convertTo(InnerCoderEntity.class, null);
         Utility.println("--", bs);
         InnerCoderEntity r = convert2.convertFrom(InnerCoderEntity.class, bs);
@@ -42,10 +43,11 @@ public class InnerCoderEntityTest {
     }
 
     public static class InnerCoderEntity {
-
-        private final String val;
-
+        @ConvertColumn(index = 1)
         private final int id;
+
+        @ConvertColumn(index = 2)
+        private final String val;
 
         private InnerCoderEntity(int id, String value) {
             this.id = id;
@@ -58,8 +60,8 @@ public class InnerCoderEntityTest {
 
         /**
          * 该方法提供给Convert组件自动加载。 1) 方法名可以随意。 2) 方法必须是static 3）方法的参数有且只能有一个， 且必须是org.redkale.convert.ConvertFactory或子类。 —3.1)
-         * 参数类型为org.redkale.convert.ConvertFactory 表示适合JSON和BSON。 —3.2) 参数类型为org.redkale.convert.json.JsonFactory 表示仅适合JSON。
-         * —3.3) 参数类型为org.redkale.convert.bson.BsonFactory 表示仅适合BSON。
+         * 参数类型为org.redkale.convert.ConvertFactory 表示适合JSON和PROTOBUF。 —3.2) 参数类型为org.redkale.convert.json.JsonFactory 表示仅适合JSON。
+         * —3.3) 参数类型为org.redkale.convert.pb.ProtobufFactory 表示仅适合PROTOBUF。
          * 4）方法的返回类型必须是org.redkale.convert.Decodeable/org.redkale.convert.Encodeable/org.redkale.convert.SimpledCoder
          * 若返回类型不是org.redkale.convert.SimpledCoder, 就必须提供两个方法： 一个返回Decodeable 一个返回 Encodeable。
          *

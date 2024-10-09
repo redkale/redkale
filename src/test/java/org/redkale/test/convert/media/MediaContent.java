@@ -5,10 +5,8 @@
  */
 package org.redkale.test.convert.media;
 
-import org.redkale.test.convert.bson.ConvertRecord;
 import java.util.*;
 import org.redkale.convert.json.*;
-import org.redkale.test.convert.*;
 
 /** @author redkale */
 public class MediaContent implements java.io.Serializable {
@@ -26,7 +24,6 @@ public class MediaContent implements java.io.Serializable {
 
     public static void main(String[] args) throws Exception {
         final MediaContent entry = MediaContent.createDefault();
-        ConvertRecord.run(MediaContent.class, entry);
     }
 
     public static MediaContent createDefault() {

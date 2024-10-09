@@ -9,9 +9,10 @@ import java.math.BigInteger;
 import java.util.*;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.ConvertCoder;
-import org.redkale.convert.bson.BsonConvert;
+import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.ext.BigIntegerSimpledCoder.BigIntegerHexJsonSimpledCoder;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.convert.pb.ProtobufConvert;
 
 /** @author zhangjx */
 public class ConvertCoderTest {
@@ -44,37 +45,47 @@ public class ConvertCoderTest {
         BigMessage msg12 = convert.convertFrom(BigMessage.class, json);
         Assertions.assertEquals(convert.convertTo(msg12), json);
 
-        byte[] bs1 = BsonConvert.root().convertTo(msg);
-        byte[] bs2 = BsonConvert.root().convertTo(msg2);
+        byte[] bs1 = ProtobufConvert.root().convertTo(msg);
+        byte[] bs2 = ProtobufConvert.root().convertTo(msg2);
         Assertions.assertEquals(Arrays.toString(bs1), Arrays.toString(bs2));
     }
 
     public static class BigMessage {
 
+        @ConvertColumn(index = 1)
         @ConvertCoder(encoder = BigIntegerHexJsonSimpledCoder.class, decoder = BigIntegerHexJsonSimpledCoder.class)
         public BigInteger big;
 
+        @ConvertColumn(index = 2)
         @ConvertCoder(encoder = BigIntegerHexJsonSimpledCoder.class, decoder = BigIntegerHexJsonSimpledCoder.class)
         public BigInteger big2;
 
+        @ConvertColumn(index = 3)
         public BigInteger big3;
 
-        public int num1;
-
+        @ConvertColumn(index = 4)
         @ConvertCoder(encoder = BigIntegerHexJsonSimpledCoder.class, decoder = BigIntegerHexJsonSimpledCoder.class)
         public Map<String, BigInteger> map;
+
+        @ConvertColumn(index = 5)
+        public int num1;
     }
 
     public static class BigMessage2 {
 
+        @ConvertColumn(index = 1)
         public BigInteger big;
 
+        @ConvertColumn(index = 2)
         public BigInteger big2;
 
+        @ConvertColumn(index = 3)
         public BigInteger big3;
 
-        public int num1;
-
+        @ConvertColumn(index = 4)
         public Map<String, BigInteger> map;
+
+        @ConvertColumn(index = 5)
+        public int num1;
     }
 }
