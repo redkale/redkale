@@ -5,9 +5,6 @@
  */
 package org.redkale.net.http;
 
-import static org.redkale.net.http.WebSocket.RETCODE_GROUP_EMPTY;
-import static org.redkale.net.http.WebSocketServlet.*;
-
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.*;
@@ -18,6 +15,8 @@ import java.util.stream.Stream;
 import org.redkale.annotation.Comment;
 import org.redkale.convert.Convert;
 import org.redkale.net.Cryptor;
+import static org.redkale.net.http.WebSocket.RETCODE_GROUP_EMPTY;
+import static org.redkale.net.http.WebSocketServlet.*;
 import org.redkale.util.AnyValue;
 
 /**
@@ -262,22 +261,21 @@ public class WebSocketEngine {
 
     @Comment("给所有连接用户发送消息")
     public CompletableFuture<Integer> broadcastLocalMessage(final Object message, final boolean last) {
-        return WebSocketEngine.this.broadcastLocalMessage((Predicate) null, message, last);
+        return broadcastLocalMessage((Predicate) null, message, last);
     }
 
     @Comment("给指定WebSocket连接用户发送消息")
     public CompletableFuture<Integer> broadcastLocalMessage(
             final WebSocketRange wsrange, final Object message, final boolean last) {
-        Predicate<WebSocket> predicate = wsrange == null ? null : (ws) -> ws.predicate(wsrange);
-        return WebSocketEngine.this.broadcastLocalMessage(predicate, message, last);
+        Predicate<WebSocket> predicate = wsrange == null ? null : ws -> ws.predicate(wsrange);
+        return broadcastLocalMessage(predicate, message, last);
     }
 
     @Comment("给指定WebSocket连接用户发送消息")
     public CompletableFuture<Integer> broadcastLocalMessage(
             final Predicate<WebSocket> predicate, final Object message, final boolean last) {
         if (message instanceof CompletableFuture) {
-            return ((CompletableFuture) message)
-                    .thenCompose((json) -> WebSocketEngine.this.broadcastLocalMessage(predicate, json, last));
+            return ((CompletableFuture) message).thenCompose(packet -> broadcastLocalMessage(predicate, packet, last));
         }
         //        final boolean more = (!(message instanceof WebSocketPacket) || ((WebSocketPacket) message).sendBuffers
         // == null);
@@ -361,15 +359,14 @@ public class WebSocketEngine {
         for (int i = 0; i < array.length; i++) {
             ss[i] = (Serializable) array[i];
         }
-        return WebSocketEngine.this.sendLocalMessage(message, last, ss);
+        return sendLocalMessage(message, last, ss);
     }
 
     @Comment("给指定用户组发送消息")
     public CompletableFuture<Integer> sendLocalMessage(
             final Object message, final boolean last, final Serializable... userids) {
         if (message instanceof CompletableFuture) {
-            return ((CompletableFuture) message)
-                    .thenCompose((json) -> WebSocketEngine.this.sendLocalMessage(json, last, userids));
+            return ((CompletableFuture) message).thenCompose(packet -> sendLocalMessage(packet, last, userids));
         }
         //        final boolean more = userids.length > 1;
         //        if (more) {
@@ -476,7 +473,7 @@ public class WebSocketEngine {
         for (int i = 0; i < array.length; i++) {
             ss[i] = (Serializable) array[i];
         }
-        return WebSocketEngine.this.sendLocalAction(action, ss);
+        return sendLocalAction(action, ss);
     }
 
     @Comment("给指定用户组发送操作")

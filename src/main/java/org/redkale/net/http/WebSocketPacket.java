@@ -22,12 +22,6 @@ public final class WebSocketPacket {
 
     public static final WebSocketPacket DEFAULT_PING_PACKET = new WebSocketPacket(FrameType.PING, new byte[0]);
 
-    public enum MessageType {
-        STRING,
-        BYTES,
-        OBJECT;
-    }
-
     public enum FrameType {
         SERIES(0x00),
         TEXT(0x01),

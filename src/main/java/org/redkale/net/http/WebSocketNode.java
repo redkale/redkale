@@ -7,6 +7,7 @@ package org.redkale.net.http;
 
 import java.io.Serializable;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
@@ -20,6 +21,7 @@ import org.redkale.convert.json.JsonConvert;
 import org.redkale.mq.spi.MessageAgent;
 import org.redkale.net.WorkThread;
 import static org.redkale.net.http.WebSocket.RETCODE_GROUP_EMPTY;
+import org.redkale.net.http.WebSocketPacket.FrameType;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;
 import org.redkale.source.CacheSource;
@@ -131,7 +133,7 @@ public abstract class WebSocketNode implements Service {
     protected abstract CompletableFuture<Integer> sendMessage(
             @RpcTargetTopic String topic,
             @RpcTargetAddress InetSocketAddress targetAddress,
-            Object message,
+            WebSocketPacket message,
             boolean last,
             Serializable... userids);
 
@@ -139,7 +141,7 @@ public abstract class WebSocketNode implements Service {
             @RpcTargetTopic String topic,
             @RpcTargetAddress InetSocketAddress targetAddress,
             WebSocketRange wsrange,
-            Object message,
+            WebSocketPacket message,
             boolean last);
 
     protected abstract CompletableFuture<Integer> sendAction(
@@ -675,16 +677,12 @@ public abstract class WebSocketNode implements Service {
         final Object message = (convert == null || message0 instanceof WebSocketPacket)
                 ? message0
                 : ((convert instanceof TextConvert)
-                        ? new WebSocketPacket(
-                                WebSocketPacket.FrameType.TEXT, ((TextConvert) convert).convertToBytes(message0), last)
-                        : new WebSocketPacket(
-                                WebSocketPacket.FrameType.BINARY,
-                                ((BinaryConvert) convert).convertToBytes(message0),
-                                last));
+                        ? new WebSocketPacket(FrameType.TEXT, convert.convertToBytes(message0), last)
+                        : new WebSocketPacket(FrameType.BINARY, convert.convertToBytes(message0), last));
         if (this.localEngine != null && this.source == null) { // 本地模式且没有分布式
             return this.localEngine.sendLocalMessage(message, last, userids);
         }
-        final Object remoteMessage = formatRemoteMessage(message);
+        final WebSocketPacket remoteMessage = formatRemoteMessage(message);
         CompletableFuture<Integer> rsfuture;
         if (userids.length == 1) {
             rsfuture = sendOneUserMessage(remoteMessage, last, userids[0]);
@@ -809,7 +807,7 @@ public abstract class WebSocketNode implements Service {
             return localFuture == null ? CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY) : localFuture;
         }
         // 远程节点发送消息
-        final Object remoteMessage = formatRemoteMessage(message);
+        final WebSocketPacket remoteMessage = formatRemoteMessage(message);
         tryAcquireSemaphore();
         CompletableFuture<Set<WebSocketAddress>> addrsFuture =
                 source.smembersAsync(WS_SOURCE_KEY_USERID_PREFIX + userid, WebSocketAddress.class);
@@ -872,7 +870,7 @@ public abstract class WebSocketNode implements Service {
             // 没有CacheSource就不会有分布式节点
             return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
         }
-        final Object remoteMessage = formatRemoteMessage(message);
+        final WebSocketPacket remoteMessage = formatRemoteMessage(message);
         return remoteNode.sendMessage(addr.getTopic(), addr.getAddr(), remoteMessage, last, userids);
     }
 
@@ -1018,7 +1016,7 @@ public abstract class WebSocketNode implements Service {
         if (this.localEngine != null && this.source == null) { // 本地模式且没有分布式
             return this.localEngine.broadcastLocalMessage(wsrange, message, last);
         }
-        final Object remoteMessage = formatRemoteMessage(message);
+        final WebSocketPacket remoteMessage = formatRemoteMessage(message);
         CompletableFuture<Integer> localFuture =
                 this.localEngine == null ? null : this.localEngine.broadcastLocalMessage(wsrange, message, last);
         tryAcquireSemaphore();
@@ -1274,23 +1272,23 @@ public abstract class WebSocketNode implements Service {
         return remoteNode.sendAction(addr.getTopic(), addr.getAddr(), action, userids);
     }
 
-    protected Object formatRemoteMessage(Object message) {
+    protected WebSocketPacket formatRemoteMessage(Object message) {
         if (message instanceof WebSocketPacket) {
-            return message;
+            return (WebSocketPacket) message;
         }
         if (message instanceof byte[]) {
-            return message;
+            return new WebSocketPacket(FrameType.BINARY, (byte[]) message);
         }
         if (message instanceof CharSequence) {
-            return message;
+            return new WebSocketPacket(FrameType.TEXT, message.toString().getBytes(StandardCharsets.UTF_8));
         }
         if (sendConvert instanceof TextConvert) {
-            ((TextConvert) sendConvert).convertTo(message);
+            return new WebSocketPacket(FrameType.TEXT, ((TextConvert) sendConvert).convertToBytes(message));
         }
         if (sendConvert instanceof BinaryConvert) {
-            ((BinaryConvert) sendConvert).convertTo(message);
+            return new WebSocketPacket(FrameType.BINARY, ((BinaryConvert) sendConvert).convertToBytes(message));
         }
-        return JsonConvert.root().convertTo(message);
+        return new WebSocketPacket(FrameType.TEXT, JsonConvert.root().convertToBytes(message));
     }
 
     protected boolean tryAcquireSemaphore() {
