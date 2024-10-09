@@ -162,7 +162,7 @@ public class JsonReader extends Reader {
      */
     protected char nextChar() {
         int p = ++this.position;
-        if (p >= limit) {
+        if (p > limit) {
             return 0;
         }
         return this.text[p];
