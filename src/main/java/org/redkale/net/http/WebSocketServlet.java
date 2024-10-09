@@ -244,32 +244,32 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
     @Override // 在IOThread中执行
     @NonBlocking
     public final void execute(final HttpRequest request, final HttpResponse response) throws IOException {
-        final boolean debug = logger.isLoggable(Level.FINEST);
+        final boolean debug = logger.isLoggable(Level.FINER);
+        final boolean fine = logger.isLoggable(Level.FINE);
         if (!request.isWebSocket()) {
-            if (debug) {
+            if (fine) {
                 logger.log(
-                        Level.FINEST,
+                        Level.FINE,
                         "WebSocket connect abort, (Not GET Method)/(Connection!=Upgrade)/(Upgrade!=websocket). request="
                                 + request);
             }
-            response.finish(true);
+            response.kill();
             return;
         }
         final String key = request.getHeader("Sec-WebSocket-Key");
         if (key == null) {
-            if (debug) {
+            if (fine) {
                 logger.log(
-                        Level.FINEST,
-                        "WebSocket connect abort, Not found Sec-WebSocket-Key header. request=" + request);
+                        Level.FINE, "WebSocket connect abort, Not found Sec-WebSocket-Key header. request=" + request);
             }
-            response.finish(true);
+            response.kill();
             return;
         }
         if (this.webSocketNode.localEngine.isLocalConnLimited()) {
             logger.log(
                     Level.WARNING,
                     "WebSocket connections limit, wsmaxconns=" + this.webSocketNode.localEngine.getLocalWsMaxConns());
-            response.finish(true);
+            response.kill();
             return;
         }
         final WebSocket webSocket = this.createWebSocket();
@@ -287,24 +287,25 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             webSocket.deflater = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
             webSocket.inflater = new Inflater(true);
         }
+        response.skipReadRegistered();
         initRestWebSocket(webSocket);
         CompletableFuture<String> sessionFuture = webSocket.onOpen(request);
         if (sessionFuture == null) {
             if (debug) {
-                logger.log(Level.FINEST, "WebSocket connect abort, Not found sessionid. request=" + request);
+                logger.log(Level.FINER, "WebSocket connect abort, Not found sessionid. request=" + request);
             }
-            response.finish(true);
+            response.kill();
             return;
         }
         BiConsumer<String, Throwable> sessionConsumer = (sessionid, ex) -> {
             if ((sessionid == null && webSocket.delayPackets == null) || ex != null) {
                 if (debug || ex != null) {
                     logger.log(
-                            ex == null ? Level.FINEST : Level.FINE,
+                            ex == null ? Level.FINER : Level.FINE,
                             "WebSocket connect abort, Not found sessionid or occur error. request=" + request,
                             ex);
                 }
-                response.finish(true);
+                response.kill();
                 return;
             }
             // onOpen成功或者存在delayPackets
@@ -338,7 +339,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                         Level.FINEST,
                                         "WebSocket connect abort, Create userid abort. request = " + request);
                             }
-                            response.finish(true);
+                            response.kill();
                             return;
                         }
                         userFuture.whenComplete((userid, ex2) -> {
@@ -350,7 +351,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                             "WebSocket connect abort, Create userid abort. request = " + request,
                                             ex2);
                                 }
-                                response.finish(true);
+                                response.kill();
                                 return;
                             }
                             Runnable runHandler = () -> {
@@ -360,14 +361,14 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                         Traces.currentTraceid(request.getTraceid());
                                         if (rs) {
                                             CompletableFuture<Boolean> rcFuture = webSocket.onSingleRepeatConnect();
-                                            Consumer<Boolean> task = (oldkilled) -> {
+                                            Consumer<Boolean> task = oldkilled -> {
                                                 if (oldkilled) {
                                                     webSocketNode.localEngine.addLocal(webSocket);
                                                     response.removeChannel();
                                                     webSocket._readHandler.startRead();
-                                                    response.finish(true);
+                                                    response.kill();
                                                 } else { // 关闭新连接
-                                                    response.finish(true);
+                                                    response.kill();
                                                 }
                                             };
                                             if (rcFuture == null) {
@@ -375,7 +376,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                             } else {
                                                 rcFuture.whenComplete((r, e) -> {
                                                     if (e != null) {
-                                                        response.finish(true);
+                                                        response.kill();
                                                     } else {
                                                         task.accept(r);
                                                     }
@@ -385,14 +386,14 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                             webSocketNode.localEngine.addLocal(webSocket);
                                             response.removeChannel();
                                             webSocket._readHandler.startRead();
-                                            response.finish(true);
+                                            response.kill();
                                         }
                                     });
                                 } else {
                                     webSocketNode.localEngine.addLocal(webSocket);
                                     response.removeChannel();
                                     webSocket._readHandler.startRead();
-                                    response.finish(true);
+                                    response.kill();
                                 }
                             };
                             if (webSocket.delayPackets != null) { // 存在待发送的消息
@@ -412,7 +413,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                                             + request,
                                                     t);
                                         }
-                                        response.finish(true);
+                                        response.kill();
                                     } else {
                                         runHandler.run();
                                     }
@@ -439,7 +440,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                                     + request,
                                             t);
                                 }
-                                response.finish(true);
+                                response.kill();
                             } else {
                                 createUseridHandler.run();
                             }
@@ -452,7 +453,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                 @Override
                 public void failed(Throwable exc, Void attachment) {
                     logger.log(Level.FINEST, "WebSocket connect abort, Response send abort. request = " + request, exc);
-                    response.finish(true);
+                    response.kill();
                 }
             });
         };

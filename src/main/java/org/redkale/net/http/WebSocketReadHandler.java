@@ -5,8 +5,6 @@
  */
 package org.redkale.net.http;
 
-import static org.redkale.net.http.WebSocket.*;
-
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.nio.charset.StandardCharsets;
@@ -16,6 +14,7 @@ import java.util.function.BiConsumer;
 import java.util.logging.*;
 import org.redkale.convert.Convert;
 import org.redkale.net.AsyncIOThread;
+import static org.redkale.net.http.WebSocket.*;
 import org.redkale.net.http.WebSocketPacket.FrameType;
 import org.redkale.util.*;
 
@@ -131,7 +130,7 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
                 if (lengthCode <= 0x7D) { // 125  长度<=125
                     length = lengthCode;
                 } else if (lengthCode == 0x7E) { // 0x7E=126  长度:126~65535
-                    length = (int) realbuf.getChar();
+                    length = realbuf.getChar();
                 } else if (lengthCode == 0x7F) { // 0x7E=127   长度>65535
                     length = (int) realbuf.getLong();
                 } else {
@@ -188,7 +187,7 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
             if (lengthCode <= 0x7D) { // 125  长度<=125
                 length = lengthCode;
             } else if (lengthCode == 0x7E) { // 0x7E=126  长度:126~65535
-                length = (int) realbuf.getChar();
+                length = realbuf.getChar();
             } else if (lengthCode == 0x7F) { // 0x7E=127   长度>65535
                 length = (int) realbuf.getLong();
             } else {

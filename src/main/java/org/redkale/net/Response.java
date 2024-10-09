@@ -162,6 +162,8 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         }
         this.responseSupplier = null;
         this.responseConsumer = null;
+        this.recycleListener = null;
+        this.afterFinishListeners = null;
         this.inited = false;
         return true;
     }
@@ -180,6 +182,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     protected void refuseAlive() {
         this.request.keepAlive = false;
+        this.readRegistered = true;
     }
 
     protected void init(AsyncConnection channel) {
