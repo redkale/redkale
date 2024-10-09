@@ -47,7 +47,7 @@ public class UserTest {
     }
 
     public static class InnerBean {
-        
+
         @ConvertColumn(index = 1)
         public Serializable id;
 

@@ -716,7 +716,7 @@ public abstract class ProtobufCoders {
         }
     }
 
-    // 只识别类型: Integer/Long/String/BigInteger
+    // 只识别类型: Integer/Long/String/BigInteger， 用于WebSocketNode中userid类型
     public static class ProtobufSerializableSimpledCoder
             extends SimpledCoder<ProtobufReader, ProtobufWriter, Serializable>
             implements ProtobufEncodeable<ProtobufWriter, Serializable> {

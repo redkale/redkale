@@ -545,13 +545,12 @@ public abstract class WebSocketNode implements Service {
      * 如果当前WebSocketNode是远程模式，此方法只发送远程连接
      *
      * @param message 消息内容
-     * @param useridOrAddrs Stream
+     * @param userids Serializable[]
      * @return 为0表示成功， 其他值表示部分发送异常
      */
     @Local
-    public final CompletableFuture<Integer> sendMessage(
-            Object message, final Stream<? extends Serializable> useridOrAddrs) {
-        return sendMessage((Convert) null, message, true, useridOrAddrs);
+    public final CompletableFuture<Integer> sendMessage(Object message, final Serializable... userids) {
+        return sendMessage((Convert) null, message, true, userids);
     }
 
     /**
@@ -559,12 +558,12 @@ public abstract class WebSocketNode implements Service {
      * 如果当前WebSocketNode是远程模式，此方法只发送远程连接
      *
      * @param message 消息内容
-     * @param useridOrAddrs Serializable[]
+     * @param useraddrs WebSocketUserAddress[]
      * @return 为0表示成功， 其他值表示部分发送异常
      */
     @Local
-    public final CompletableFuture<Integer> sendMessage(Object message, final Serializable... useridOrAddrs) {
-        return sendMessage((Convert) null, message, true, useridOrAddrs);
+    public final CompletableFuture<Integer> sendMessage(Object message, final WebSocketUserAddress... useraddrs) {
+        return sendMessage((Convert) null, message, true, useraddrs);
     }
 
     /**
@@ -573,13 +572,13 @@ public abstract class WebSocketNode implements Service {
      *
      * @param convert Convert
      * @param message 消息内容
-     * @param useridOrAddrs Stream
+     * @param userids Serializable[]
      * @return 为0表示成功， 其他值表示部分发送异常
      */
     @Local
     public final CompletableFuture<Integer> sendMessage(
-            final Convert convert, Object message, final Stream<? extends Serializable> useridOrAddrs) {
-        return sendMessage(convert, message, true, useridOrAddrs);
+            final Convert convert, Object message, final Serializable... userids) {
+        return sendMessage(convert, message, true, userids);
     }
 
     /**
@@ -588,13 +587,13 @@ public abstract class WebSocketNode implements Service {
      *
      * @param convert Convert
      * @param message 消息内容
-     * @param useridOrAddrs Serializable[]
+     * @param useraddrs WebSocketUserAddress[]
      * @return 为0表示成功， 其他值表示部分发送异常
      */
     @Local
     public final CompletableFuture<Integer> sendMessage(
-            final Convert convert, Object message, final Serializable... useridOrAddrs) {
-        return sendMessage(convert, message, true, useridOrAddrs);
+            final Convert convert, Object message, final WebSocketUserAddress... useraddrs) {
+        return sendMessage(convert, message, true, useraddrs);
     }
 
     /**
@@ -603,13 +602,13 @@ public abstract class WebSocketNode implements Service {
      *
      * @param message 消息内容
      * @param last 是否最后一条
-     * @param useridOrAddrs Stream
+     * @param userids Serializable[]
      * @return 为0表示成功， 其他值表示部分发送异常
      */
     @Local
     public final CompletableFuture<Integer> sendMessage(
-            Object message, boolean last, Stream<? extends Serializable> useridOrAddrs) {
-        return sendMessage((Convert) null, message, last, useridOrAddrs);
+            final Object message, final boolean last, final Serializable... userids) {
+        return sendMessage((Convert) null, message, last, userids);
     }
 
     /**
@@ -618,34 +617,13 @@ public abstract class WebSocketNode implements Service {
      *
      * @param message 消息内容
      * @param last 是否最后一条
-     * @param useridOrAddrs Serializable[]
+     * @param useraddrs WebSocketUserAddress[]
      * @return 为0表示成功， 其他值表示部分发送异常
      */
     @Local
     public final CompletableFuture<Integer> sendMessage(
-            final Object message, final boolean last, final Serializable... useridOrAddrs) {
-        return sendMessage((Convert) null, message, last, useridOrAddrs);
-    }
-
-    /**
-     * 向指定用户发送消息，先发送本地连接，再发送远程连接 <br>
-     * 如果当前WebSocketNode是远程模式，此方法只发送远程连接
-     *
-     * @param convert Convert
-     * @param message0 消息内容
-     * @param last 是否最后一条
-     * @param userids Stream
-     * @return 为0表示成功， 其他值表示部分发送异常
-     */
-    @Local
-    public final CompletableFuture<Integer> sendMessage(
-            Convert convert, Object message0, boolean last, Stream<? extends Serializable> userids) {
-        Object[] array = userids.toArray();
-        Serializable[] ss = new Serializable[array.length];
-        for (int i = 0; i < array.length; i++) {
-            ss[i] = (Serializable) array[i];
-        }
-        return sendMessage(convert, message0, last, ss);
+            final Object message, final boolean last, final WebSocketUserAddress... useraddrs) {
+        return sendMessage((Convert) null, message, last, useraddrs);
     }
 
     /**
@@ -663,13 +641,6 @@ public abstract class WebSocketNode implements Service {
             final Convert convert, final Object message0, final boolean last, final Serializable... userids) {
         if (Utility.isEmpty(userids)) {
             return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
-        }
-        if (userids[0] instanceof WebSocketUserAddress) {
-            WebSocketUserAddress[] useraddrs = new WebSocketUserAddress[userids.length];
-            for (int i = 0; i < useraddrs.length; i++) {
-                useraddrs[i] = (WebSocketUserAddress) userids[i];
-            }
-            return sendMessage(convert, message0, last, useraddrs);
         }
         if (message0 instanceof CompletableFuture) {
             return ((CompletableFuture) message0).thenApply(msg -> sendMessage(convert, msg, last, userids));
@@ -745,7 +716,7 @@ public abstract class WebSocketNode implements Service {
      */
     @Local
     public CompletableFuture<Integer> sendMessage(
-            Convert convert, Object message0, boolean last, WebSocketUserAddress... useraddrs) {
+            Convert convert, final Object message0, final boolean last, final WebSocketUserAddress... useraddrs) {
         if (Utility.isEmpty(useraddrs)) {
             return CompletableFuture.completedFuture(RETCODE_GROUP_EMPTY);
         }

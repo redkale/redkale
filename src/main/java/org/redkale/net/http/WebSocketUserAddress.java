@@ -12,11 +12,11 @@ import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.JsonConvert;
 
 /**
- * userid 与 sncpaddress组合对象
+ * userid 与 sncpaddress组合对象, 不能实现Serializable
  *
  * @author zhangjx
  */
-public interface WebSocketUserAddress extends Serializable {
+public interface WebSocketUserAddress {
 
     Serializable userid();
 
