@@ -122,16 +122,16 @@ public final class Utility {
 
     private static final Executor defaultExecutorConsumer = Runnable::run;
 
-    // org.redkale.util.JDK21VirtualThreadLocal
+    // org.redkale.util.AnonymousVirtuals.VirtualThreadLocal
     private static final Function<Supplier, ThreadLocal> virtualThreadLocalFunction;
 
-    // org.redkale.util.JDK21VirtualThreadFactory
+    // org.redkale.util.AnonymousVirtuals.VirtualThreadFactory
     private static final Function<String, ThreadFactory> virtualThreadFactoryFunction;
 
-    // org.redkale.util.JDK21VirtualPoolFunction
+    // org.redkale.util.AnonymousVirtuals.VirtualPoolFunction
     private static final Function<String, ExecutorService> virtualPoolFunction;
 
-    // org.redkale.util.JDK21VirtualExecutor
+    // org.redkale.util.AnonymousVirtuals.VirtualExecutor
     private static final Executor virtualExecutorConsumer;
 
     // org.redkale.util.SignalShutDown
@@ -180,8 +180,8 @@ public final class Utility {
         Consumer<Consumer<String>> signalShutdownConsumer0 = null;
 
         final ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        try { // Jdk21Inners
-            String virtualName = "org.redkale.util.Jdk21Inners";
+        try { // AnonymousVirtuals
+            String virtualName = "org.redkale.util.AnonymousVirtuals";
             Class virtualClazz = loader.loadClass(virtualName);
             Method method = virtualClazz.getMethod("createExecutor");
             virtualExecutorConsumer0 = (Executor) method.invoke(null);

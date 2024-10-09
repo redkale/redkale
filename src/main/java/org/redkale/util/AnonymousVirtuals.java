@@ -15,14 +15,14 @@ import java.util.function.Supplier;
  *
  * @author zhangjx
  */
-class Jdk21Inners {
+class AnonymousVirtuals {
 
     static {
         // 加载时进行可用性判断
         Thread.currentThread().isVirtual();
     }
 
-    private Jdk21Inners() {
+    private AnonymousVirtuals() {
         // do nothing
     }
 
