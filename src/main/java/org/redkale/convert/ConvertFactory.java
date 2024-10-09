@@ -53,8 +53,6 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
     // -----------------------------------------------------------------------------------
     private final ConcurrentHashMap<Class, Creator> creators = new ConcurrentHashMap();
 
-    private final ConcurrentHashMap<String, Class> entitys = new ConcurrentHashMap();
-
     private final ConcurrentHashMap<Type, Map<String, SimpledCoder<R, W, ?>>> fieldCoders = new ConcurrentHashMap();
 
     private final ConcurrentHashMap<Type, Decodeable<R, ?>> decoders = new ConcurrentHashMap();
@@ -765,185 +763,6 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return false;
     }
 
-    final String getEntityAlias(Class clazz) {
-        if (clazz == String.class) {
-            return "A";
-        }
-        if (clazz == int.class) {
-            return "I";
-        }
-        if (clazz == Integer.class) {
-            return "i";
-        }
-        if (clazz == long.class) {
-            return "J";
-        }
-        if (clazz == Long.class) {
-            return "j";
-        }
-        if (clazz == byte.class) {
-            return "B";
-        }
-        if (clazz == Byte.class) {
-            return "b";
-        }
-        if (clazz == boolean.class) {
-            return "Z";
-        }
-        if (clazz == Boolean.class) {
-            return "z";
-        }
-        if (clazz == short.class) {
-            return "S";
-        }
-        if (clazz == Short.class) {
-            return "s";
-        }
-        if (clazz == char.class) {
-            return "C";
-        }
-        if (clazz == Character.class) {
-            return "c";
-        }
-        if (clazz == float.class) {
-            return "F";
-        }
-        if (clazz == Float.class) {
-            return "f";
-        }
-        if (clazz == double.class) {
-            return "D";
-        }
-        if (clazz == Double.class) {
-            return "d";
-        }
-
-        if (clazz == String[].class) {
-            return "[A";
-        }
-        if (clazz == int[].class) {
-            return "[I";
-        }
-        if (clazz == long[].class) {
-            return "[J";
-        }
-        if (clazz == byte[].class) {
-            return "[B";
-        }
-        if (clazz == boolean[].class) {
-            return "[Z";
-        }
-        if (clazz == short[].class) {
-            return "[S";
-        }
-        if (clazz == char[].class) {
-            return "[C";
-        }
-        if (clazz == float[].class) {
-            return "[F";
-        }
-        if (clazz == double[].class) {
-            return "[D";
-        }
-
-        ConvertEntity ce = (ConvertEntity) clazz.getAnnotation(ConvertEntity.class);
-        if (ce != null && findEntityAlias(ce.value()) == null) {
-            entitys.put(ce.value(), clazz);
-        }
-        return ce == null ? clazz.getName() : ce.value();
-    }
-
-    final Class getEntityAlias(String name) {
-        if ("A".equals(name)) {
-            return String.class;
-        }
-        if ("I".equals(name)) {
-            return int.class;
-        }
-        if ("i".equals(name)) {
-            return Integer.class;
-        }
-        if ("J".equals(name)) {
-            return long.class;
-        }
-        if ("j".equals(name)) {
-            return Long.class;
-        }
-        if ("B".equals(name)) {
-            return byte.class;
-        }
-        if ("b".equals(name)) {
-            return Byte.class;
-        }
-        if ("Z".equals(name)) {
-            return boolean.class;
-        }
-        if ("z".equals(name)) {
-            return Boolean.class;
-        }
-        if ("S".equals(name)) {
-            return short.class;
-        }
-        if ("s".equals(name)) {
-            return Short.class;
-        }
-        if ("C".equals(name)) {
-            return char.class;
-        }
-        if ("c".equals(name)) {
-            return Character.class;
-        }
-        if ("F".equals(name)) {
-            return float.class;
-        }
-        if ("f".equals(name)) {
-            return Float.class;
-        }
-        if ("D".equals(name)) {
-            return double.class;
-        }
-        if ("d".equals(name)) {
-            return Double.class;
-        }
-
-        if ("[A".equals(name)) {
-            return String[].class;
-        }
-        if ("[I".equals(name)) {
-            return int[].class;
-        }
-        if ("[J".equals(name)) {
-            return long[].class;
-        }
-        if ("[B".equals(name)) {
-            return byte[].class;
-        }
-        if ("[Z".equals(name)) {
-            return boolean[].class;
-        }
-        if ("[S".equals(name)) {
-            return short[].class;
-        }
-        if ("[C".equals(name)) {
-            return char[].class;
-        }
-        if ("[F".equals(name)) {
-            return float[].class;
-        }
-        if ("[D".equals(name)) {
-            return double[].class;
-        }
-
-        Class clazz = findEntityAlias(name);
-        try {
-            return clazz == null
-                    ? Thread.currentThread().getContextClassLoader().loadClass(name)
-                    : clazz;
-        } catch (Exception ex) {
-            throw new ConvertException("convert entity is " + name, ex);
-        }
-    }
-
     ConvertFactory columnFactory(Type type, ConvertCoder[] coders, boolean encode) {
         if (Utility.isEmpty(coders)) {
             return this;
@@ -1142,11 +961,6 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             return fieldFuncConsumer;
         }
         return parent == null ? null : parent.findFieldFuncConsumer();
-    }
-
-    private Class findEntityAlias(String name) {
-        Class clazz = entitys.get(name);
-        return parent == null ? clazz : parent.findEntityAlias(name);
     }
 
     /**

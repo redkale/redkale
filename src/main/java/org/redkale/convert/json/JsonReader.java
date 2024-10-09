@@ -384,11 +384,6 @@ public class JsonReader extends Reader {
         return true;
     }
 
-    @Override
-    public final String readClassName() {
-        return null;
-    }
-
     /**
      * 读取一个int值
      *

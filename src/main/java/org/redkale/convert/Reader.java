@@ -192,13 +192,6 @@ public abstract class Reader {
     public abstract String readStandardString();
 
     /**
-     * 读取反解析对象的类名
-     *
-     * @return 类名
-     */
-    public abstract String readClassName();
-
-    /**
      * 读取一个String值
      *
      * @return String值

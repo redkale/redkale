@@ -96,27 +96,12 @@ public abstract class Writer {
     public abstract void writeNull();
 
     /**
-     * 是否需要写入类名, JSON不需要
-     *
-     * @return boolean
-     */
-    public abstract boolean needWriteClassName();
-
-    /**
-     * 写入类名
-     *
-     * @param clazz 类名
-     */
-    public abstract void writeClassName(String clazz);
-
-    /**
      * 输出一个为null的对象
      *
      * @param clazz 对象的类名
      */
     @ClassDepends
     public final void writeObjectNull(final Class clazz) {
-        writeClassName(null);
         writeNull();
     }
 

@@ -194,16 +194,6 @@ public abstract class ProtobufWriter extends Writer {
     }
 
     @Override
-    public final boolean needWriteClassName() {
-        return false;
-    }
-
-    @Override
-    public final void writeClassName(String clazz) {
-        // do nothing
-    }
-
-    @Override
     @ClassDepends
     public final void writeObjectB(Object obj) {
         // do nothing

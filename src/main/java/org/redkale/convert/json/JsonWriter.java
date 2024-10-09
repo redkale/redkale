@@ -216,14 +216,6 @@ public abstract class JsonWriter extends Writer {
     }
 
     @Override
-    public final boolean needWriteClassName() {
-        return false;
-    }
-
-    @Override
-    public final void writeClassName(String clazz) {}
-
-    @Override
     public final void writeObjectB(Object obj) {
         super.writeObjectB(obj);
         writeTo(BYTE_LBRACE);

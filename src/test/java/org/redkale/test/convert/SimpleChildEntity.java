@@ -7,10 +7,8 @@ package org.redkale.test.convert;
 
 import java.net.*;
 import java.util.*;
-import org.redkale.convert.ConvertEntity;
 
 /** @author zhangjx */
-@ConvertEntity("myname")
 public class SimpleChildEntity extends SimpleEntity {
 
     private short st = -1234;

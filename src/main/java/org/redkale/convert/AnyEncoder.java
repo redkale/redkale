@@ -28,7 +28,6 @@ public final class AnyEncoder<W extends Writer, T> implements Encodeable<W, T> {
     @SuppressWarnings("unchecked")
     public void convertTo(final W out, final T value) {
         if (value == null) {
-            out.writeClassName(null);
             out.writeNull();
         } else {
             Class clazz = value.getClass();
@@ -36,9 +35,6 @@ public final class AnyEncoder<W extends Writer, T> implements Encodeable<W, T> {
                 out.writeObjectB(value);
                 out.writeObjectE(value);
                 return;
-            }
-            if (out.needWriteClassName()) {
-                out.writeClassName(factory.getEntityAlias(clazz));
             }
             factory.loadEncoder(clazz).convertTo(out, value);
         }

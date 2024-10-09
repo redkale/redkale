@@ -363,9 +363,6 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
         if (clazz == null) {
             return null;
         }
-        if (!clazz.isEmpty()) {
-            return (T) factory.loadDecoder(factory.getEntityAlias(clazz)).convertFrom(in);
-        }
         if (this.creator == null) {
             if (typeClass.isInterface() || Modifier.isAbstract(typeClass.getModifiers())) {
                 throw new ConvertException(

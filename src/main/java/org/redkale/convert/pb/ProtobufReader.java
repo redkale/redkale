@@ -397,11 +397,6 @@ public class ProtobufReader extends Reader {
     }
 
     @Override
-    public final String readClassName() {
-        return "";
-    }
-
-    @Override
     public final String readStandardString() {
         return readString();
     }
