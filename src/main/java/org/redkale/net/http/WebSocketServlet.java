@@ -287,7 +287,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
             webSocket.deflater = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
             webSocket.inflater = new Inflater(true);
         }
-        response.skipReadRegistered();
+
         initRestWebSocket(webSocket);
         CompletableFuture<String> sessionFuture = webSocket.onOpen(request);
         if (sessionFuture == null) {

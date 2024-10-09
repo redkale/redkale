@@ -1037,10 +1037,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         this.responseConsumer.accept(this);
     }
 
-    void skipReadRegistered() {
-        this.readRegistered = true;
-    }
-
     /** 以304状态码输出 */
     public void finish304() {
         skipHeader();

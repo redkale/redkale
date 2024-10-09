@@ -5,9 +5,6 @@
  */
 package org.redkale.net.sncp;
 
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
-
 import java.io.IOException;
 import java.lang.reflect.*;
 import java.nio.channels.CompletionHandler;
@@ -16,6 +13,8 @@ import java.util.concurrent.*;
 import java.util.logging.Level;
 import org.redkale.annotation.NonBlocking;
 import org.redkale.asm.*;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.convert.*;
 import org.redkale.convert.pb.ProtobufFactory;
@@ -155,7 +154,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
             return 1;
         }
         SncpServlet o = other;
-        int rs = 0;
+        int rs;
         if (this.resourceType == null) {
             rs = o.resourceType == null ? 0 : -1;
         } else if (o.resourceType == null) {
@@ -489,7 +488,6 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
 
             final Class serviceClass = service.getClass();
             final String supDynName = SncpActionServlet.class.getName().replace('.', '/');
-            final String resourceTypeName = resourceType.getName().replace('.', '/');
             final String serviceImpTypeName = serviceImplClass.getName().replace('.', '/');
             final String convertName = Convert.class.getName().replace('.', '/');
             final String uint128Desc = Type.getDescriptor(Uint128.class);
@@ -521,7 +519,6 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
             if (newClazz == null) {
                 // -------------------------------------------------------------
                 ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
-                FieldVisitor fv;
                 MethodDebugVisitor mv;
 
                 cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
@@ -761,7 +758,9 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
                     // do nothing
                 }
                 for (java.lang.reflect.Type t : originalParamTypes) {
-                    if (t.toString().startsWith("java.lang.")) {
+                    if (t == java.io.Serializable.class
+                            || t == java.io.Serializable[].class
+                            || t.toString().startsWith("java.lang.")) {
                         continue;
                     }
                     ProtobufFactory.root().loadDecoder(t);

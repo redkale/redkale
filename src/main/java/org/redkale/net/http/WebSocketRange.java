@@ -7,6 +7,7 @@ package org.redkale.net.http;
 
 import java.io.Serializable;
 import java.util.Map;
+import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.JsonConvert;
 
 /**
@@ -18,8 +19,10 @@ import org.redkale.convert.json.JsonConvert;
  */
 public class WebSocketRange implements Serializable {
 
+    @ConvertColumn(index = 1)
     protected String wskey;
 
+    @ConvertColumn(index = 2)
     protected Map<String, String> attach;
 
     public WebSocketRange() {}

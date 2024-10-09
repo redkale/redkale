@@ -7,6 +7,7 @@ package org.redkale.net.http;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+import org.redkale.convert.ConvertColumn;
 import org.redkale.net.http.WebSocketPacket.FrameType;
 import org.redkale.util.ByteArray;
 
@@ -65,10 +66,13 @@ public final class WebSocketPacket {
         }
     }
 
+    @ConvertColumn(index = 1)
     protected FrameType type;
 
+    @ConvertColumn(index = 2)
     protected byte[] payload;
 
+    @ConvertColumn(index = 3)
     protected boolean last = true;
 
     public WebSocketPacket() {}

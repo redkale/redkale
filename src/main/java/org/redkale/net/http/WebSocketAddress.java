@@ -8,6 +8,7 @@ package org.redkale.net.http;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.util.Objects;
+import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.JsonConvert;
 
 /**
@@ -20,8 +21,10 @@ import org.redkale.convert.json.JsonConvert;
  */
 public class WebSocketAddress implements Serializable {
 
+    @ConvertColumn(index = 1)
     protected InetSocketAddress addr;
 
+    @ConvertColumn(index = 2)
     protected String topic;
 
     public WebSocketAddress() {}
