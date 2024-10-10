@@ -19,6 +19,7 @@ public class CreatorTest {
     public static void main(String[] args) throws Throwable {
         CreatorTest test = new CreatorTest();
         test.run1();
+        test.run2();
     }
 
     @Test
@@ -34,5 +35,11 @@ public class CreatorTest {
         System.out.println(json2);
         Assertions.assertEquals("ss", record.getName());
         Assertions.assertEquals(json, json2);
+    }
+
+    @Test
+    public void run2() throws Throwable {
+        Creator<CreatorRecord> creator = Creator.create(CreatorRecord.class, 1);
+        creator.create(null, null);
     }
 }

@@ -133,7 +133,7 @@ public class SncpRemoteInfo<S extends Service> {
                         handler.completed(
                                 v == null
                                         ? null
-                                        : convert.convertFrom(action.paramHandlerResultType, v, 1, v.length - 1),
+                                        : convert.convertFrom(action.paramHandlerType, v, 1, v.length - 1),
                                 attach);
                     } else {
                         handler.failed(t, attach);
@@ -144,7 +144,7 @@ public class SncpRemoteInfo<S extends Service> {
             if (action.returnFutureClass == CompletableFuture.class) {
                 // v,length-1为了读掉(byte)0
                 return (T) future.thenApply(
-                        v -> v == null ? null : convert.convertFrom(action.returnFutureResultType, v, 1, v.length - 1));
+                        v -> v == null ? null : convert.convertFrom(action.returnFutureType, v, 1, v.length - 1));
             } else {
                 final CompletableFuture returnFuture = action.returnFutureCreator.create();
                 future.whenComplete((v, t) -> {
@@ -153,7 +153,7 @@ public class SncpRemoteInfo<S extends Service> {
                         returnFuture.complete(
                                 v == null
                                         ? null
-                                        : convert.convertFrom(action.returnFutureResultType, v, 1, v.length - 1));
+                                        : convert.convertFrom(action.returnFutureType, v, 1, v.length - 1));
                     } else {
                         returnFuture.completeExceptionally(t);
                     }
@@ -256,8 +256,13 @@ public class SncpRemoteInfo<S extends Service> {
         byte[] body = null;
         if (myParamTypes.length > 0) { // 存在参数
             ProtobufWriter writer = convert.pollWriter();
-            for (int i = 0; i < params.length; i++) { // service方法的参数
-                convert.convertTo(writer, myParamTypes[i], params[i]);
+            if (action.paramComposeBeanCreator != null) {
+                Object paramBean = action.paramComposeBeanCreator.create(params);
+                convert.convertTo(writer, action.paramComposeBeanType, paramBean);
+            } else {
+                for (int i = 0; i < params.length; i++) { // service方法的参数
+                    convert.convertTo(writer, myParamTypes[i], params[i]);
+                }
             }
             body = writer.toByteArray().content();
             convert.offerWriter(writer);

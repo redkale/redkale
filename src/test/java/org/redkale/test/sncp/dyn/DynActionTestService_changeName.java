@@ -37,17 +37,17 @@ public class DynActionTestService_changeName extends SncpActionServlet {
     public void action(SncpRequest request, SncpResponse response) throws Throwable {
         Convert<Reader, Writer> convert = request.getConvert();
         Reader in = request.getReader();
-        DynActionTestService_changeName_paramBean bean = convert.convertFrom(paramComposeBeanType, in);
+        DynSncpActionParamBean_TestService_changeName bean = convert.convertFrom(paramComposeBeanType, in);
         TestService serviceObj = (TestService) service();
         CompletableFuture future = serviceObj.changeName(bean.arg1, bean.arg2, bean.arg3);
-        response.finishFuture(paramHandlerResultType, future);
+        response.finishFuture(paramHandlerType, future);
     }
 
-    public static class DynActionTestService_changeName_paramBean {
+    public static class DynSncpActionParamBean_TestService_changeName {
 
-        public DynActionTestService_changeName_paramBean() {}
+        public DynSncpActionParamBean_TestService_changeName() {}
 
-        public DynActionTestService_changeName_paramBean(Object[] params) {
+        public DynSncpActionParamBean_TestService_changeName(Object[] params) {
             this.arg1 = (TestBean) params[0];
             this.arg2 = (String) params[1];
             this.arg3 = (int) params[2];

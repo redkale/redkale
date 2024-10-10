@@ -31,6 +31,10 @@ public class CreatorRecord {
 
     public CreatorRecord() {}
 
+    public CreatorRecord(Object[] arg) {
+        System.out.println("creat CreatorRecord!");
+    }
+
     @ConstructorParameters({"id", "name", "lval", "tval", "bval", "sval", "cval", "fval", "dval"})
     public CreatorRecord(
             int id, String name, long lval, boolean tval, byte bval, short sval, char cval, float fval, double dval) {

@@ -60,6 +60,9 @@ public final class SncpRemoteAction {
     // 参数数量为0: 值为null; 参数数量为1且参数类型为JavaBean: 值为第一个参数的类型; 其他情况: 动态生成的Object类
     protected final Type paramComposeBeanType;
 
+    // 只有paramComposeBeanType为动态生成的组合类时才有值;
+    protected final Creator paramComposeBeanCreator;
+
     protected final int paramHandlerIndex;
 
     protected final int paramHandlerAttachIndex;
@@ -72,9 +75,9 @@ public final class SncpRemoteAction {
 
     protected final Class<? extends CompletionHandler> paramHandlerClass; // CompletionHandler参数的类型
 
-    protected final java.lang.reflect.Type paramHandlerResultType; // CompletionHandler.completed第一个参数的类型
+    protected final java.lang.reflect.Type paramHandlerType; // CompletionHandler.completed第一个参数的类型
 
-    protected final java.lang.reflect.Type returnFutureResultType; // 返回结果的CompletableFuture的结果泛型类型
+    protected final java.lang.reflect.Type returnFutureType; // 返回结果的CompletableFuture的结果泛型类型
 
     protected final Class<? extends Future> returnFutureClass; // 返回结果的CompletableFuture类型
 
@@ -95,8 +98,10 @@ public final class SncpRemoteAction {
         this.returnObjectType = rt == void.class || rt == Void.class ? null : rt;
         this.paramTypes = TypeToken.getGenericType(method.getGenericParameterTypes(), serviceImplClass);
         this.paramClasses = method.getParameterTypes();
-        this.paramComposeBeanType =
-                createParamComposeBeanType(serviceImplClass, method, actionid, paramTypes, paramClasses);
+        Type pt = createParamComposeBeanType(serviceImplClass, method, actionid, paramTypes, paramClasses);
+        this.paramComposeBeanType = pt;
+        this.paramComposeBeanCreator =
+                (pt == null || pt == paramTypes[0]) ? null : Creator.create(TypeToken.typeToClass(pt), 1);
         this.method = method;
         Annotation[][] anns = method.getParameterAnnotations();
         int topicAddrIndex = -1;
@@ -186,7 +191,7 @@ public final class SncpRemoteAction {
         this.paramAddressSourceIndex = sourceAddrIndex;
         this.paramHandlerIndex = handlerFuncIndex;
         this.paramHandlerClass = handlerFuncClass;
-        this.paramHandlerResultType = handlerResultType;
+        this.paramHandlerType = handlerResultType;
         this.paramHandlerAttachIndex = handlerAttachIndex;
         this.header = SncpHeader.create(
                 sncpClient == null ? null : sncpClient.getClientSncpAddress(),
@@ -209,7 +214,7 @@ public final class SncpRemoteAction {
             } else {
                 throw new SncpException(serviceImplClass + " had unknown return genericType in " + method);
             }
-            this.returnFutureResultType = returnType;
+            this.returnFutureType = returnType;
             this.returnFutureClass = method.getReturnType().isAssignableFrom(CompletableFuture.class)
                     ? CompletableFuture.class
                     : (Class) method.getReturnType();
@@ -220,7 +225,7 @@ public final class SncpRemoteAction {
                 throw new SncpException(serviceImplClass + " return must be CompletableFuture or subclass");
             }
         } else {
-            this.returnFutureResultType = null;
+            this.returnFutureType = null;
             this.returnFutureClass = null;
             this.returnFutureCreator = null;
         }
@@ -247,7 +252,7 @@ public final class SncpRemoteAction {
         // 动态生成组合JavaBean类
         final Class serviceClass = resourceType.getClass();
         final String columnDesc = org.redkale.asm.Type.getDescriptor(ConvertColumn.class);
-        final String newDynName = "org/redkaledyn/sncp/servlet/action/_DynSncpActionParamBean__"
+        final String newDynName = "org/redkaledyn/sncp/servlet/action/_DynSncpActionParamBean_"
                 + resourceType.getSimpleName() + "_" + method.getName() + "_" + actionid;
         try {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
@@ -278,7 +283,7 @@ public final class SncpRemoteAction {
             av.visitEnd();
             fv.visitEnd();
         }
-        { // 空参数构造函数
+        { // 空参数的构造函数
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
@@ -286,7 +291,7 @@ public final class SncpRemoteAction {
             mv.visitMaxs(1, 1);
             mv.visitEnd();
         }
-        { // 带参数构造函数
+        { // 一个参数的构造函数
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "([Ljava/lang/Object;)V", null, null));
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
@@ -306,13 +311,16 @@ public final class SncpRemoteAction {
         cw.visitEnd();
 
         byte[] bytes = cw.toByteArray();
-        Class newClazz = new ClassLoader(serviceClass.getClassLoader()) {
+        Class newClazz = new ClassLoader(Thread.currentThread().getContextClassLoader()) {
             public final Class<?> loadClass(String name, byte[] b) {
                 return defineClass(name, b, 0, b.length);
             }
         }.loadClass(newDynName.replace('/', '.'), bytes);
         RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
+        Creator.load(newClazz);
+        ProtobufFactory.root().loadDecoder(newClazz);
+        ProtobufFactory.root().loadEncoder(newClazz);
         return newClazz;
     }
 }

@@ -29,6 +29,7 @@ public class SncpSleepTest {
 
     @Test
     public void run() throws Exception {
+        Creator.create(List.class);
         System.out.println("------------------- 并发调用 -----------------------------------");
         final Application application = Application.create(true);
         final ExecutorService workExecutor = WorkThread.createWorkExecutor(10, "Thread-Work-%s");

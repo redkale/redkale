@@ -36,17 +36,17 @@ public class DynActionTestService_change extends SncpActionServlet {
     public void action(SncpRequest request, SncpResponse response) throws Throwable {
         Convert<Reader, Writer> convert = request.getConvert();
         Reader in = request.getReader();
-        DynActionTestService_change_paramBean bean = convert.convertFrom(paramComposeBeanType, in);
+        DynSncpActionParamBean_TestService_change bean = convert.convertFrom(paramComposeBeanType, in);
         TestService serviceObj = (TestService) service();
         Object rs = serviceObj.change(bean.arg1, bean.arg2, bean.arg3);
         response.finish(boolean.class, rs);
     }
 
-    public static class DynActionTestService_change_paramBean {
+    public static class DynSncpActionParamBean_TestService_change {
 
-        public DynActionTestService_change_paramBean() {}
+        public DynSncpActionParamBean_TestService_change() {}
 
-        public DynActionTestService_change_paramBean(Object[] params) {
+        public DynSncpActionParamBean_TestService_change(Object[] params) {
             this.arg1 = (TestBean) params[0];
             this.arg2 = (String) params[1];
             this.arg3 = (int) params[2];

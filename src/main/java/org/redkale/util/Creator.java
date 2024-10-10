@@ -4,9 +4,7 @@
  */
 package org.redkale.util;
 
-import java.io.*;
 import java.lang.reflect.*;
-import java.net.*;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.*;
@@ -360,6 +358,16 @@ public interface Creator<T> {
                     break;
                 }
             }
+            if (constructor0 == null && paramCount == 1) {
+                for (Constructor c : cs) {
+                    int cc = c.getParameterCount();
+                    if (cc == 1 && c.getParameterTypes()[0] == Object[].class) {
+                        constructor0 = c;
+                        constructorParameters0 = new SimpleEntry[1];
+                        break;
+                    }
+                }
+            }
         }
         if (constructor0 == null) { // 4、查找非private带ConstructorParameters的构造函数
             for (Constructor c : clazz.getDeclaredConstructors()) {
@@ -439,12 +447,14 @@ public interface Creator<T> {
             int paramLen = constructorParameters.length;
             Asms.visitInsn(mv, paramLen);
             mv.visitTypeInsn(ANEWARRAY, "java/lang/Class");
-
             for (int i = 0; i < constructorParameters.length; i++) {
-                final Class pt = constructorParameters[i].getValue();
                 mv.visitInsn(DUP);
                 Asms.visitInsn(mv, i);
-                Asms.visitFieldInsn(mv, pt);
+                if (constructorParameters[i] == null) {
+                    mv.visitLdcInsn(Type.getType("[Ljava/lang/Object;"));
+                } else {
+                    Asms.visitFieldInsn(mv, constructorParameters[i].getValue());
+                }
                 mv.visitInsn(AASTORE);
             }
             mv.visitInsn(ARETURN);
@@ -454,7 +464,7 @@ public interface Creator<T> {
         { // create 方法
             mv = cw.visitMethod(
                     ACC_PUBLIC + ACC_VARARGS, "create", "([Ljava/lang/Object;)L" + interName + ";", null, null);
-            if (constructorParameters.length > 0) {
+            if (constructorParameters.length > 0 && constructorParameters[0] != null) {
                 av0 = mv.visitAnnotation(Type.getDescriptor(ConstructorParameters.class), true);
                 AnnotationVisitor av1 = av0.visitArray("value");
                 for (SimpleEntry<String, Class> n : constructorParameters) {
@@ -463,81 +473,84 @@ public interface Creator<T> {
                 av1.visitEnd();
                 av0.visitEnd();
             }
-            { // 有Primitive数据类型且值为null的参数需要赋默认值
-                for (int i = 0; i < constructorParameters.length; i++) {
-                    final Class pt = constructorParameters[i].getValue();
-                    if (!pt.isPrimitive()) {
-                        continue;
-                    }
-                    mv.visitVarInsn(ALOAD, 1);
-                    Asms.visitInsn(mv, i);
-                    mv.visitInsn(AALOAD);
-                    Label lab = new Label();
-                    mv.visitJumpInsn(IFNONNULL, lab);
-                    mv.visitVarInsn(ALOAD, 1);
-                    Asms.visitInsn(mv, i);
-                    if (pt == int.class) {
-                        mv.visitInsn(ICONST_0);
-                        mv.visitMethodInsn(
-                                INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
-                    } else if (pt == long.class) {
-                        mv.visitInsn(LCONST_0);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", false);
-                    } else if (pt == boolean.class) {
-                        mv.visitFieldInsn(GETSTATIC, "java/lang/Boolean", "FALSE", "Ljava/lang/Boolean;");
-                    } else if (pt == short.class) {
-                        mv.visitInsn(ICONST_0);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "valueOf", "(S)Ljava/lang/Short;", false);
-                    } else if (pt == float.class) {
-                        mv.visitInsn(FCONST_0);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "valueOf", "(F)Ljava/lang/Float;", false);
-                    } else if (pt == byte.class) {
-                        mv.visitInsn(ICONST_0);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "valueOf", "(B)Ljava/lang/Byte;", false);
-                    } else if (pt == double.class) {
-                        mv.visitInsn(DCONST_0);
-                        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;", false);
-                    } else if (pt == char.class) {
-                        mv.visitInsn(ICONST_0);
-                        mv.visitMethodInsn(
-                                INVOKESTATIC, "java/lang/Character", "valueOf", "(C)Ljava/lang/Character;", false);
-                    }
-                    mv.visitInsn(AASTORE);
-                    mv.visitLabel(lab);
+            // 有Primitive数据类型且值为null的参数需要赋默认值
+            for (int i = 0; i < constructorParameters.length; i++) {
+                if (constructorParameters[i] == null) {
+                    continue;
                 }
+                final Class pt = constructorParameters[i].getValue();
+                if (!pt.isPrimitive()) {
+                    continue;
+                }
+                mv.visitVarInsn(ALOAD, 1);
+                Asms.visitInsn(mv, i);
+                mv.visitInsn(AALOAD);
+                Label lab = new Label();
+                mv.visitJumpInsn(IFNONNULL, lab);
+                mv.visitVarInsn(ALOAD, 1);
+                Asms.visitInsn(mv, i);
+                if (pt == int.class) {
+                    mv.visitInsn(ICONST_0);
+                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+                } else if (pt == long.class) {
+                    mv.visitInsn(LCONST_0);
+                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", false);
+                } else if (pt == boolean.class) {
+                    mv.visitFieldInsn(GETSTATIC, "java/lang/Boolean", "FALSE", "Ljava/lang/Boolean;");
+                } else if (pt == short.class) {
+                    mv.visitInsn(ICONST_0);
+                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "valueOf", "(S)Ljava/lang/Short;", false);
+                } else if (pt == float.class) {
+                    mv.visitInsn(FCONST_0);
+                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "valueOf", "(F)Ljava/lang/Float;", false);
+                } else if (pt == byte.class) {
+                    mv.visitInsn(ICONST_0);
+                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "valueOf", "(B)Ljava/lang/Byte;", false);
+                } else if (pt == double.class) {
+                    mv.visitInsn(DCONST_0);
+                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;", false);
+                } else if (pt == char.class) {
+                    mv.visitInsn(ICONST_0);
+                    mv.visitMethodInsn(
+                            INVOKESTATIC, "java/lang/Character", "valueOf", "(C)Ljava/lang/Character;", false);
+                }
+                mv.visitInsn(AASTORE);
+                mv.visitLabel(lab);
             }
             mv.visitTypeInsn(NEW, interName);
             mv.visitInsn(DUP);
             // ---------------------------------------
-            {
-                for (int i = 0; i < constructorParameters.length; i++) {
+            for (int i = 0; i < constructorParameters.length; i++) {
+                if (constructorParameters[i] == null) {
                     mv.visitVarInsn(ALOAD, 1);
-                    Asms.visitInsn(mv, i);
-                    mv.visitInsn(AALOAD);
-                    final Class ct = constructorParameters[i].getValue();
-                    if (ct.isPrimitive()) {
-                        final Class bigct = TypeToken.primitiveToWrapper(ct);
-                        mv.visitTypeInsn(CHECKCAST, bigct.getName().replace('.', '/'));
-                        try {
-                            Method pm = bigct.getMethod(ct.getSimpleName() + "Value");
-                            mv.visitMethodInsn(
-                                    INVOKEVIRTUAL,
-                                    bigct.getName().replace('.', '/'),
-                                    pm.getName(),
-                                    Type.getMethodDescriptor(pm),
-                                    false);
-                        } catch (Exception ex) {
-                            throw new RedkaleException(ex); // 不可能会发生
-                        }
-                    } else {
-                        mv.visitTypeInsn(CHECKCAST, ct.getName().replace('.', '/'));
+                    break;
+                }
+                mv.visitVarInsn(ALOAD, 1);
+                Asms.visitInsn(mv, i);
+                mv.visitInsn(AALOAD);
+                final Class ct = constructorParameters[i].getValue();
+                if (ct.isPrimitive()) {
+                    final Class bigct = TypeToken.primitiveToWrapper(ct);
+                    mv.visitTypeInsn(CHECKCAST, bigct.getName().replace('.', '/'));
+                    try {
+                        Method pm = bigct.getMethod(ct.getSimpleName() + "Value");
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL,
+                                bigct.getName().replace('.', '/'),
+                                pm.getName(),
+                                Type.getMethodDescriptor(pm),
+                                false);
+                    } catch (Exception ex) {
+                        throw new RedkaleException(ex); // 不可能会发生
                     }
+                } else {
+                    mv.visitTypeInsn(CHECKCAST, ct.getName().replace('.', '/'));
                 }
             }
             // ---------------------------------------
             mv.visitMethodInsn(INVOKESPECIAL, interName, "<init>", Type.getConstructorDescriptor(constructor), false);
             mv.visitInsn(ARETURN);
-            mv.visitMaxs((constructorParameters.length > 0 ? (constructorParameters.length + 3) : 2), 2);
+            mv.visitMaxs(3, 2);
             mv.visitEnd();
         }
         { // 虚拟 create 方法
@@ -555,52 +568,17 @@ public interface Creator<T> {
             mv.visitEnd();
         }
         cw.visitEnd();
-        final byte[] bytes = cw.toByteArray();
-        final boolean ispub = Modifier.isPublic(constructor.getModifiers());
-        Class<?> resultClazz = null;
-        if (loader instanceof URLClassLoader && !ispub) {
-            try {
-                final URLClassLoader urlLoader = (URLClassLoader) loader;
-                final URL url = new URL(
-                        "memclass", "localhost", -1, "/" + newDynName.replace('/', '.') + "/", new URLStreamHandler() {
-                            @Override
-                            protected URLConnection openConnection(URL u) throws IOException {
-                                return new URLConnection(u) {
-                                    @Override
-                                    public void connect() throws IOException {
-                                        // do nothing
-                                    }
 
-                                    @Override
-                                    public InputStream getInputStream() throws IOException {
-                                        return new ByteArrayInputStream(bytes);
-                                    }
-                                };
-                            }
-                        });
-                Method addURLMethod = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-                addURLMethod.setAccessible(true);
-                addURLMethod.invoke(urlLoader, url);
-                resultClazz = urlLoader.loadClass(newDynName.replace('/', '.'));
-            } catch (Throwable t) { // 异常无需理会， 使用下一种loader方式
-                t.printStackTrace();
-            }
-        }
-        if (!ispub && resultClazz == null) {
-            throw new RedkaleException(
-                    "[" + clazz + "] have no public or ConstructorParameters-Annotation constructor.");
-        }
+        byte[] bytes = cw.toByteArray();
         try {
-            if (resultClazz == null) {
-                resultClazz = new ClassLoader(loader) {
-                    public final Class<?> loadClass(String name, byte[] b) {
-                        return defineClass(name, b, 0, b.length);
-                    }
-                }.loadClass(newDynName.replace('/', '.'), bytes);
-            }
-            RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, resultClazz);
-            RedkaleClassLoader.putReflectionDeclaredConstructors(resultClazz, newDynName.replace('/', '.'));
-            return (Creator) resultClazz.getDeclaredConstructor().newInstance();
+            Class newClazz = new ClassLoader(loader) {
+                public final Class<?> loadClass(String name, byte[] b) {
+                    return defineClass(name, b, 0, b.length);
+                }
+            }.loadClass(newDynName.replace('/', '.'), bytes);
+            RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
+            RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
+            return (Creator) newClazz.getDeclaredConstructor().newInstance();
         } catch (Exception ex) {
             throw new RedkaleException(ex);
         }
