@@ -4,6 +4,7 @@
  */
 package org.redkale.convert.pb;
 
+import java.io.File;
 import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -260,6 +261,28 @@ public abstract class ProtobufCoders {
     }
 
     // ------------------------------------- simple object -------------------------------------
+
+    public static class ProtobufFileSimpledCoder extends FileSimpledCoder<ProtobufReader, ProtobufWriter>
+            implements ProtobufEncodeable<ProtobufWriter, File> {
+
+        public static final ProtobufFileSimpledCoder instance = new ProtobufFileSimpledCoder();
+
+        @Override
+        public int computeSize(ProtobufWriter out, int tagSize, File value) {
+            if (value == null) {
+                return 0;
+            }
+            String val = value.getPath();
+            int len = Utility.encodeUTF8Length(val);
+            return len + ProtobufFactory.computeSInt32SizeNoTag(len);
+        }
+
+        @Override
+        public Type getType() {
+            return File.class;
+        }
+    }
+
     public static class ProtobufNumberSimpledCoder extends NumberSimpledCoder<ProtobufReader, ProtobufWriter>
             implements ProtobufPrimitivable<Number>, ProtobufEncodeable<ProtobufWriter, Number> {
 

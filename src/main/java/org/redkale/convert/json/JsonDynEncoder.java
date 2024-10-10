@@ -66,7 +66,10 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
             }
         }
         final Map<String, AccessibleObject> mixedNames = mixedNames0;
-        final ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        if (String.class.getClassLoader() != clazz.getClassLoader()) {
+            loader = clazz.getClassLoader();
+        }
         final String newDynName = "org/redkaledyn/convert/json/_Dyn" + JsonDynEncoder.class.getSimpleName() + "__"
                 + clazz.getName().replace('.', '_').replace('$', '_') + "_" + factory.getFeatures() + "_"
                 + Utility.md5Hex(elementb.toString()); // tiny必须要加上, 同一个类会有多个字段定制Convert

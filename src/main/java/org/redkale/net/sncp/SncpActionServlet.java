@@ -74,6 +74,7 @@ public abstract class SncpActionServlet extends SncpServlet {
         this.actionid = actionid;
         this.method = method;
         this.paramComposeBeanType = SncpRemoteAction.createParamComposeBeanType(
+                Thread.currentThread().getContextClassLoader(),
                 Sncp.getServiceType(service),
                 method,
                 actionid,
@@ -355,13 +356,14 @@ public abstract class SncpActionServlet extends SncpServlet {
         final boolean boolReturnTypeFuture = Future.class.isAssignableFrom(method.getReturnType());
         final String newDynName = "org/redkaledyn/sncp/servlet/action/_DynSncpActionServlet__"
                 + resourceType.getSimpleName() + "_" + method.getName() + "_" + actionid;
-
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        if (String.class.getClassLoader() != serviceClass.getClassLoader()) {
+            loader = serviceClass.getClassLoader();
+        }
         Class<?> newClazz = null;
         try {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-            newClazz = clz == null
-                    ? Thread.currentThread().getContextClassLoader().loadClass(newDynName.replace('/', '.'))
-                    : clz;
+            newClazz = clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz;
         } catch (Throwable ex) {
             // do nothing
         }
@@ -373,7 +375,7 @@ public abstract class SncpActionServlet extends SncpServlet {
 
         final Class[] paramClasses = method.getParameterTypes();
         java.lang.reflect.Type paramComposeBeanType0 = SncpRemoteAction.createParamComposeBeanType(
-                serviceImplClass, method, actionid, originalParamTypes, paramClasses);
+                loader, serviceImplClass, method, actionid, originalParamTypes, paramClasses);
         if (paramComposeBeanType0 != null && paramComposeBeanType0 == originalParamTypes[0]) {
             paramComposeBeanType0 = null;
         }
@@ -621,7 +623,7 @@ public abstract class SncpActionServlet extends SncpServlet {
                             paramComposeBeanClass.getName().replace('.', '/');
                     mv.visitVarInsn(ALOAD, 3); // convert
                     mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynName, "paramComposeType", reflectTypeDesc);
+                    mv.visitFieldInsn(GETFIELD, newDynName, "paramComposeBeanType", reflectTypeDesc);
                     mv.visitVarInsn(ALOAD, 4); // reader
                     mv.visitMethodInsn(INVOKEVIRTUAL, convertName, "convertFrom", convertFromDesc, false);
                     mv.visitTypeInsn(CHECKCAST, paramComposeBeanName);
@@ -711,7 +713,7 @@ public abstract class SncpActionServlet extends SncpServlet {
             cw.visitEnd();
 
             byte[] bytes = cw.toByteArray();
-            newClazz = new ClassLoader(serviceClass.getClassLoader()) {
+            newClazz = new ClassLoader(loader) {
                 public final Class<?> loadClass(String name, byte[] b) {
                     return defineClass(name, b, 0, b.length);
                 }
