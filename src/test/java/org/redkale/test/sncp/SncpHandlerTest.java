@@ -12,11 +12,9 @@ import org.redkale.net.sncp.SncpAsyncHandler;
 /** @author zhangjx */
 public class SncpHandlerTest {
 
-    private boolean main;
-
     public static void main(String[] args) throws Throwable {
         SncpHandlerTest test = new SncpHandlerTest();
-        test.main = true;
+
         test.run();
     }
 
@@ -25,9 +23,7 @@ public class SncpHandlerTest {
         SncpAsyncHandler.createHandler(CompletionHandler.class, new CompletionHandler() {
                     @Override
                     public void completed(Object result, Object attachment) {
-                        if (main) {
-                            System.out.println("handler result: " + result + ", attachment: " + attachment);
-                        }
+                        System.out.println("handler result: " + result + ", attachment: " + attachment);
                     }
 
                     @Override

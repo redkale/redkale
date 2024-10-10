@@ -3,7 +3,6 @@
  */
 package org.redkale.asm;
 
-import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.TypeToken;
 
 /**
@@ -67,6 +66,6 @@ public class AsmMethodParam {
 
     @Override
     public String toString() {
-        return JsonConvert.root().convertTo(this);
+        return "{name:" + name + ", description:" + description + ", signature:" + signature + '}';
     }
 }

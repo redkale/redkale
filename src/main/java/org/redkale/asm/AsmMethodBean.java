@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.redkale.annotation.Param;
-import org.redkale.convert.json.JsonConvert;
 
 /**
  * 存放方法的字节信息
@@ -151,6 +150,7 @@ public class AsmMethodBean {
 
     @Override
     public String toString() {
-        return JsonConvert.root().convertTo(this);
+        return "{params:" + params + ", access:" + access + ", name:" + name + ", desc:" + desc + ", signature:"
+                + signature + ", exceptions:" + exceptions + '}';
     }
 }

@@ -22,7 +22,6 @@ import org.redkale.inject.Resourcable;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.mq.spi.MessageAgent;
 import org.redkale.net.http.WebSocketNode;
-import org.redkale.net.sncp.SncpRemoteInfo.SncpRemoteAction;
 import org.redkale.scheduled.Scheduled;
 import org.redkale.service.*;
 import org.redkale.util.AnyValue;

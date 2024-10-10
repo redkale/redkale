@@ -139,6 +139,7 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         finish(RETCODE_THROWEXCEPTION, null);
     }
 
+    @ClassDepends
     public final void finishVoid() {
         int headerSize = SncpHeader.calcHeaderSize(request);
         ProtobufWriter out = getWriter();
@@ -146,6 +147,7 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         finish(0, out);
     }
 
+    @ClassDepends
     public final void finishFuture(final Type futureResultType, final Future future) {
         if (future == null) {
             finishVoid();

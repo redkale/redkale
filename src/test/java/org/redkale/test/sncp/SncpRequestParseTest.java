@@ -16,11 +16,8 @@ import org.redkale.util.*;
 /** @author zhangjx */
 public class SncpRequestParseTest {
 
-    private boolean main;
-
     public static void main(String[] args) throws Throwable {
         SncpRequestParseTest test = new SncpRequestParseTest();
-        test.main = true;
         test.run();
     }
 

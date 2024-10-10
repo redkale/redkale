@@ -16,11 +16,8 @@ import org.redkale.util.*;
 /** @author zhangjx */
 public class SncpClientCodecTest {
 
-    private boolean main;
-
     public static void main(String[] args) throws Throwable {
         SncpClientCodecTest test = new SncpClientCodecTest();
-        test.main = true;
         test.run();
     }
 

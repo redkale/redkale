@@ -4,8 +4,6 @@
  */
 package org.redkale.util;
 
-import static org.redkale.asm.Opcodes.*;
-
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
@@ -15,6 +13,7 @@ import java.util.concurrent.*;
 import java.util.function.*;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.asm.*;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 
 /**
@@ -385,7 +384,7 @@ public interface Creator<T> {
             throw new RedkaleException(
                     "[" + clazz + "] have no public or ConstructorParameters-Annotation constructor.");
         }
-        final int[] iconsts = {ICONST_0, ICONST_1, ICONST_2, ICONST_3, ICONST_4, ICONST_5};
+
         // -------------------------------------------------------------
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
         FieldVisitor fv;
@@ -410,29 +409,13 @@ public interface Creator<T> {
         { // paramTypes 方法
             mv = cw.visitMethod(ACC_PUBLIC, "paramTypes", "()[Ljava/lang/Class;", null, null);
             int paramLen = constructorParameters.length;
-            if (paramLen < 6) {
-                mv.visitInsn(ICONST_0 + paramLen);
-            } else if (paramLen <= Byte.MAX_VALUE) {
-                mv.visitIntInsn(BIPUSH, paramLen);
-            } else if (paramLen <= Short.MAX_VALUE) {
-                mv.visitIntInsn(SIPUSH, paramLen);
-            } else {
-                mv.visitLdcInsn(paramLen);
-            }
+            Asms.visitInsn(mv, paramLen);
             mv.visitTypeInsn(ANEWARRAY, "java/lang/Class");
 
             for (int i = 0; i < constructorParameters.length; i++) {
                 final Class pt = constructorParameters[i].getValue();
                 mv.visitInsn(DUP);
-                if (i < 6) {
-                    mv.visitInsn(iconsts[i]);
-                } else if (i <= Byte.MAX_VALUE) {
-                    mv.visitIntInsn(BIPUSH, i);
-                } else if (i <= Short.MAX_VALUE) {
-                    mv.visitIntInsn(SIPUSH, i);
-                } else {
-                    mv.visitLdcInsn(i);
-                }
+                Asms.visitInsn(mv, i);
                 Asms.visitFieldInsn(mv, pt);
                 mv.visitInsn(AASTORE);
             }
@@ -459,28 +442,12 @@ public interface Creator<T> {
                         continue;
                     }
                     mv.visitVarInsn(ALOAD, 1);
-                    if (i < 6) {
-                        mv.visitInsn(iconsts[i]);
-                    } else if (i <= Byte.MAX_VALUE) {
-                        mv.visitIntInsn(BIPUSH, i);
-                    } else if (i <= Short.MAX_VALUE) {
-                        mv.visitIntInsn(SIPUSH, i);
-                    } else {
-                        mv.visitLdcInsn(i);
-                    }
+                    Asms.visitInsn(mv, i);
                     mv.visitInsn(AALOAD);
                     Label lab = new Label();
                     mv.visitJumpInsn(IFNONNULL, lab);
                     mv.visitVarInsn(ALOAD, 1);
-                    if (i < 6) {
-                        mv.visitInsn(iconsts[i]);
-                    } else if (i <= Byte.MAX_VALUE) {
-                        mv.visitIntInsn(BIPUSH, i);
-                    } else if (i <= Short.MAX_VALUE) {
-                        mv.visitIntInsn(SIPUSH, i);
-                    } else {
-                        mv.visitLdcInsn(i);
-                    }
+                    Asms.visitInsn(mv, i);
                     if (pt == int.class) {
                         mv.visitInsn(ICONST_0);
                         mv.visitMethodInsn(
@@ -517,15 +484,7 @@ public interface Creator<T> {
             {
                 for (int i = 0; i < constructorParameters.length; i++) {
                     mv.visitVarInsn(ALOAD, 1);
-                    if (i < 6) {
-                        mv.visitInsn(iconsts[i]);
-                    } else if (i <= Byte.MAX_VALUE) {
-                        mv.visitIntInsn(BIPUSH, i);
-                    } else if (i <= Short.MAX_VALUE) {
-                        mv.visitIntInsn(SIPUSH, i);
-                    } else {
-                        mv.visitLdcInsn(i);
-                    }
+                    Asms.visitInsn(mv, i);
                     mv.visitInsn(AALOAD);
                     final Class ct = constructorParameters[i].getValue();
                     if (ct.isPrimitive()) {

@@ -9,9 +9,9 @@ import org.redkale.convert.Convert;
 import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.Reader;
 import org.redkale.convert.Writer;
+import org.redkale.net.sncp.SncpActionServlet;
 import org.redkale.net.sncp.SncpRequest;
 import org.redkale.net.sncp.SncpResponse;
-import org.redkale.net.sncp.SncpServlet.SncpActionServlet;
 import org.redkale.service.Service;
 import org.redkale.test.util.TestBean;
 import org.redkale.util.Uint128;
@@ -36,7 +36,7 @@ public class DynActionTestService_insert extends SncpActionServlet {
     public void action(SncpRequest request, SncpResponse response) throws Throwable {
         Convert<Reader, Writer> convert = request.getConvert();
         Reader in = request.getReader();
-        DynActionTestService_insert_paramBean bean = convert.convertFrom(paramComposeType, in);
+        DynActionTestService_insert_paramBean bean = convert.convertFrom(paramComposeBeanType, in);
         bean.arg0 = response.getParamAsyncHandler();
         TestService serviceObj = (TestService) service();
         serviceObj.insert(bean.arg0, bean.arg1, bean.arg2, bean.arg3);
