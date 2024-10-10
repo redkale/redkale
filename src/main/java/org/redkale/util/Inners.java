@@ -25,7 +25,9 @@ class Inners {
 
         static final Logger logger = Logger.getLogger(Creator.class.getSimpleName());
 
-        static final Map<Class, Creator> creatorCacheMap = new HashMap<>();
+        static final Map<Class, Creator> creatorCacheMap = new ConcurrentHashMap<>();
+
+        static final Map<String, Creator> creatorCacheMap2 = new ConcurrentHashMap<>();
 
         static final Map<Class, IntFunction> arrayCacheMap = new ConcurrentHashMap<>();
 
@@ -160,8 +162,9 @@ class Inners {
             final List<String> fieldNames = new ArrayList<>();
             new ClassReader(out.toByteArray())
                     .accept(new SimpleClassVisitor(Opcodes.ASM6, fieldNames, constructorDesc), 0);
-            while (fieldNames.remove(" "))
-                ; // 删掉空元素
+            while (fieldNames.remove(" ")) {
+                // 删掉空元素
+            }
             if (fieldNames.isEmpty()) {
                 return null;
             }

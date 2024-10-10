@@ -113,6 +113,15 @@ public interface Creator<T> {
         return Inners.CreatorInner.creatorCacheMap.computeIfAbsent(clazz, v -> create(clazz));
     }
 
+    public static <T> Creator<T> load(Class<T> clazz, int paramCount) {
+        if (paramCount < 0) {
+            return Inners.CreatorInner.creatorCacheMap.computeIfAbsent(clazz, v -> create(clazz));
+        } else {
+            return Inners.CreatorInner.creatorCacheMap2.computeIfAbsent(
+                    clazz.getName() + "-" + paramCount, v -> create(clazz, paramCount));
+        }
+    }
+
     public static <T> Creator<T> register(Class<T> clazz, final Supplier<T> supplier) {
         Creator<T> creator = (Object... params) -> supplier.get();
         Inners.CreatorInner.creatorCacheMap.put(clazz, creator);
@@ -200,6 +209,20 @@ public interface Creator<T> {
      */
     @SuppressWarnings("unchecked")
     public static <T> Creator<T> create(Class<T> clazz) {
+        return create(clazz, -1);
+    }
+
+    /**
+     * 根据指定的class采用ASM技术生产Creator。
+     *
+     * @param <T> 构建类的数据类型
+     * @param clazz 构建类
+     * @param paramCount 参数个数
+     * @return Creator对象
+     * @since 2.8.0
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> Creator<T> create(Class<T> clazz, int paramCount) {
         if (List.class.isAssignableFrom(clazz)
                 && (clazz.isAssignableFrom(ArrayList.class)
                         || clazz.getName().startsWith("java.util.Collections")
@@ -237,9 +260,11 @@ public interface Creator<T> {
         } else if (Future.class.isAssignableFrom(clazz) && clazz.isAssignableFrom(CompletableFuture.class)) {
             clazz = (Class<T>) CompletableFuture.class;
         }
-        Creator creator = Inners.CreatorInner.creatorCacheMap.get(clazz);
-        if (creator != null) {
-            return creator;
+        if (paramCount < 0) {
+            Creator creator = Inners.CreatorInner.creatorCacheMap.get(clazz);
+            if (creator != null) {
+                return creator;
+            }
         }
         if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) {
             throw new RedkaleException("[" + clazz + "] is a interface or abstract class, cannot create it's Creator.");
@@ -274,7 +299,7 @@ public interface Creator<T> {
             loader = clazz.getClassLoader();
         }
         final String newDynName = "org/redkaledyn/creator/_Dyn" + Creator.class.getSimpleName() + "__"
-                + clazz.getName().replace('.', '_').replace('$', '_');
+                + clazz.getName().replace('.', '_').replace('$', '_') + (paramCount < 0 ? "" : ("_" + paramCount));
         try {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
             return (Creator) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz)
@@ -289,7 +314,8 @@ public interface Creator<T> {
 
         if (constructor0 == null) { // 1、查找public的空参数构造函数
             for (Constructor c : clazz.getConstructors()) {
-                if (c.getParameterCount() == 0) {
+                int cc = c.getParameterCount();
+                if (cc == 0 && (paramCount < 0 || cc == paramCount)) {
                     constructor0 = c;
                     constructorParameters0 = new SimpleEntry[0];
                     break;
@@ -302,9 +328,9 @@ public interface Creator<T> {
                 if (cp == null) {
                     continue;
                 }
-                SimpleEntry<String, Class>[] fields =
-                        Inners.CreatorInner.getConstructorField(clazz, c.getParameterCount(), cp.value());
-                if (fields != null) {
+                int cc = c.getParameterCount();
+                SimpleEntry<String, Class>[] fields = Inners.CreatorInner.getConstructorField(clazz, cc, cp.value());
+                if (fields != null && (paramCount < 0 || cc == paramCount)) {
                     constructor0 = c;
                     constructorParameters0 = fields;
                     break;
@@ -325,9 +351,10 @@ public interface Creator<T> {
             // 优先参数最多的构造函数
             cs.sort((o1, o2) -> o2.getParameterCount() - o1.getParameterCount());
             for (Constructor c : cs) {
-                SimpleEntry<String, Class>[] fields = Inners.CreatorInner.getConstructorField(
-                        clazz, c.getParameterCount(), Type.getConstructorDescriptor(c));
-                if (fields != null) {
+                int cc = c.getParameterCount();
+                SimpleEntry<String, Class>[] fields =
+                        Inners.CreatorInner.getConstructorField(clazz, cc, Type.getConstructorDescriptor(c));
+                if (fields != null && (paramCount < 0 || cc == paramCount)) {
                     constructor0 = c;
                     constructorParameters0 = fields;
                     break;
@@ -343,9 +370,9 @@ public interface Creator<T> {
                 if (cp == null) {
                     continue;
                 }
-                SimpleEntry<String, Class>[] fields =
-                        Inners.CreatorInner.getConstructorField(clazz, c.getParameterCount(), cp.value());
-                if (fields != null) {
+                int cc = c.getParameterCount();
+                SimpleEntry<String, Class>[] fields = Inners.CreatorInner.getConstructorField(clazz, cc, cp.value());
+                if (fields != null && (paramCount < 0 || cc == paramCount)) {
                     constructor0 = c;
                     constructorParameters0 = fields;
                     break;
@@ -369,9 +396,10 @@ public interface Creator<T> {
             // 优先参数最多的构造函数
             cs.sort((o1, o2) -> o2.getParameterCount() - o1.getParameterCount());
             for (Constructor c : cs) {
-                SimpleEntry<String, Class>[] fields = Inners.CreatorInner.getConstructorField(
-                        clazz, c.getParameterCount(), Type.getConstructorDescriptor(c));
-                if (fields != null) {
+                int cc = c.getParameterCount();
+                SimpleEntry<String, Class>[] fields =
+                        Inners.CreatorInner.getConstructorField(clazz, cc, Type.getConstructorDescriptor(c));
+                if (fields != null && (paramCount < 0 || cc == paramCount)) {
                     constructor0 = c;
                     constructorParameters0 = fields;
                     break;

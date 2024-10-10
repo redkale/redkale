@@ -5,11 +5,8 @@
  */
 package org.redkale.test.util;
 
-import java.util.Arrays;
-import org.junit.jupiter.api.*;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.util.Creator;
 
 /** @author zhangjx */
 public class CreatorRecord {
@@ -32,6 +29,8 @@ public class CreatorRecord {
 
     private double dval;
 
+    public CreatorRecord() {}
+
     @ConstructorParameters({"id", "name", "lval", "tval", "bval", "sval", "cval", "fval", "dval"})
     public CreatorRecord(
             int id, String name, long lval, boolean tval, byte bval, short sval, char cval, float fval, double dval) {
@@ -46,17 +45,40 @@ public class CreatorRecord {
         this.dval = dval;
     }
 
-    @Test
-    public void run1() {
-        Creator<CreatorRecord> creator = Creator.create(CreatorRecord.class);
-        System.out.println(Arrays.toString(creator.paramTypes()));
-        CreatorRecord record =
-                creator.create(new Object[] {null, "ss", null, true, null, (short) 45, null, 4.3f, null});
-        String json = record.toString();
-        System.out.println(json);
-        String json2 = JsonConvert.root().convertFrom(CreatorRecord.class, json).toString();
-        System.out.println(json2);
-        Assertions.assertEquals(json, json2);
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setLval(long lval) {
+        this.lval = lval;
+    }
+
+    public void setTval(boolean tval) {
+        this.tval = tval;
+    }
+
+    public void setBval(byte bval) {
+        this.bval = bval;
+    }
+
+    public void setSval(short sval) {
+        this.sval = sval;
+    }
+
+    public void setCval(char cval) {
+        this.cval = cval;
+    }
+
+    public void setFval(float fval) {
+        this.fval = fval;
+    }
+
+    public void setDval(double dval) {
+        this.dval = dval;
     }
 
     @Override
