@@ -3,6 +3,9 @@
  */
 package org.redkale.test.sncp;
 
+import java.io.File;
+import java.io.Serializable;
+import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import org.redkale.service.AbstractService;
 import org.redkale.util.Times;
@@ -45,5 +48,9 @@ public class SncpSleepService extends AbstractService {
                     return "ok500";
                 },
                 getExecutor());
+    }
+
+    public String test(Serializable id, String[] names, Collection<File> files) {
+        return "ok";
     }
 }

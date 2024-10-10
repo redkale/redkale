@@ -251,20 +251,14 @@ public class SncpRemoteInfo<S extends Service> {
     protected SncpClientRequest createSncpClientRequest(
             SncpRemoteAction action, InetSocketAddress clientSncpAddress, String traceid, Object[] params) {
         final Type[] myParamTypes = action.paramTypes;
-        final Class[] myParamClass = action.paramClasses;
         if (action.paramAddressSourceIndex >= 0) {
             params[action.paramAddressSourceIndex] = clientSncpAddress;
         }
         byte[] body = null;
-        if (myParamTypes.length > 0) {
+        if (myParamTypes.length > 0) { // 存在参数
             ProtobufWriter writer = convert.pollWriter();
             for (int i = 0; i < params.length; i++) { // service方法的参数
-                convert.convertTo(
-                        writer,
-                        CompletionHandler.class.isAssignableFrom(myParamClass[i])
-                                ? CompletionHandler.class
-                                : myParamTypes[i],
-                        params[i]);
+                convert.convertTo(writer, myParamTypes[i], params[i]);
             }
             body = writer.toByteArray().content();
             convert.offerWriter(writer);
@@ -404,7 +398,7 @@ public class SncpRemoteInfo<S extends Service> {
             this.paramClasses = method.getParameterTypes();
             this.method = method;
             Annotation[][] anns = method.getParameterAnnotations();
-            int tpoicAddrIndex = -1;
+            int topicAddrIndex = -1;
             int targetAddrIndex = -1;
             int sourceAddrIndex = -1;
             int handlerAttachIndex = -1;
@@ -479,7 +473,7 @@ public class SncpRemoteInfo<S extends Service> {
                                         throw new SncpException(
                                                 method + " have more than one @RpcTargetTopic parameter");
                                     } else {
-                                        tpoicAddrIndex = i;
+                                        topicAddrIndex = i;
                                     }
                                 } else {
                                     throw new SncpException(
@@ -490,7 +484,7 @@ public class SncpRemoteInfo<S extends Service> {
                     }
                 }
             }
-            this.paramTopicTargetIndex = tpoicAddrIndex;
+            this.paramTopicTargetIndex = topicAddrIndex;
             this.paramAddressTargetIndex = targetAddrIndex;
             this.paramAddressSourceIndex = sourceAddrIndex;
             this.paramHandlerIndex = handlerFuncIndex;

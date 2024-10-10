@@ -1,6 +1,8 @@
 package org.redkale.test.sncp;
 
+import java.io.File;
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import org.junit.jupiter.api.*;
@@ -62,6 +64,7 @@ public class SncpSleepTest {
         CompletableFuture.allOf(futures).join();
         long e = System.currentTimeMillis() - s;
         System.out.println("耗时: " + e + " ms");
+        remoteCService.test(333L, new String[] {"aaa", "bbb"}, List.of(new File("D:/a.txt"), new File("D:/b.txt")));
         server.shutdown();
         workExecutor.shutdown();
         Assertions.assertTrue(e < 600);

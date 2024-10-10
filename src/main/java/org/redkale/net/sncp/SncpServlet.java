@@ -215,6 +215,8 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
 
         protected final java.lang.reflect.Type returnFutureResultType; // 返回结果的CompletableFuture的结果泛型类型
 
+        protected final java.lang.reflect.Type paramComposeType;
+
         protected SncpActionServlet(
                 String resourceName,
                 Class resourceType,
@@ -226,6 +228,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
             Objects.requireNonNull(method);
             this.actionid = actionid;
             this.method = method;
+            this.paramComposeType = null; // 待实现
 
             int handlerFuncIndex = -1;
             Class handlerFuncClass = null;
@@ -292,8 +295,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
             }
             // Future代替CompletionStage 不容易判断异步
             this.nonBlocking = non == null
-                    ? (CompletionStage.class.isAssignableFrom(method.getReturnType()) || this.paramHandlerIndex >= 0)
-                    : false;
+                    && (CompletionStage.class.isAssignableFrom(method.getReturnType()) || this.paramHandlerIndex >= 0);
         }
 
         @Override
@@ -335,7 +337,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
          * <blockquote>
          *
          * <pre>
-         *      public interface TestService extends Service {
+         * public interface TestService extends Service {
          *
          *     public boolean change(TestBean bean, String name, int id);
          *
@@ -348,7 +350,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
          * }
          *
          * &#064;ResourceType(TestService.class)
-         * class TestServiceImpl implements TestService {
+         * public class TestServiceImpl implements TestService {
          *
          *     &#064;Override
          *     public boolean change(TestBean bean, String name, int id) {
@@ -369,7 +371,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
          *     }
          * }
          *
-         * class BooleanHandler implements CompletionHandler&#60;Boolean, TestBean&#62; {
+         * public class BooleanHandler implements CompletionHandler&#60;Boolean, TestBean&#62; {
          *
          *     &#064;Override
          *     public void completed(Boolean result, TestBean attachment) {
@@ -381,7 +383,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
          *
          * }
          *
-         * class DynActionTestService_change extends SncpActionServlet {
+         * public class DynActionTestService_change extends SncpActionServlet {
          *
          *     public DynActionTestService_change(String resourceName, Class resourceType, Service service, Uint128 serviceid, Uint128 actionid, final Method method) {
          *         super(resourceName, resourceType, service, serviceid, actionid, method);
@@ -400,7 +402,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
          *     }
          * }
          *
-         * class DynActionTestService_insert extends SncpActionServlet {
+         * public class DynActionTestService_insert extends SncpActionServlet {
          *
          *     public DynActionTestService_insert(String resourceName, Class resourceType, Service service, Uint128 serviceid, Uint128 actionid, final Method method) {
          *         super(resourceName, resourceType, service, serviceid, actionid, method);
@@ -421,7 +423,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
          *     }
          * }
          *
-         * class DynActionTestService_update extends SncpActionServlet {
+         * public class DynActionTestService_update extends SncpActionServlet {
          *
          *     public DynActionTestService_update(String resourceName, Class resourceType, Service service, Uint128 serviceid, Uint128 actionid, final Method method) {
          *         super(resourceName, resourceType, service, serviceid, actionid, method);
@@ -444,7 +446,7 @@ public class SncpServlet extends Servlet<SncpContext, SncpRequest, SncpResponse>
          *     }
          * }
          *
-         * class DynActionTestService_changeName extends SncpActionServlet {
+         * public class DynActionTestService_changeName extends SncpActionServlet {
          *
          *     public DynActionTestService_changeName(String resourceName, Class resourceType, Service service, Uint128 serviceid, Uint128 actionid, final Method method) {
          *         super(resourceName, resourceType, service, serviceid, actionid, method);

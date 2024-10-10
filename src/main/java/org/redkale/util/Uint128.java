@@ -135,7 +135,7 @@ public final class Uint128 extends Number implements Comparable<Uint128> {
                 | (((long) value[12] & 0xff) << 24)
                 | (((long) value[13] & 0xff) << 16)
                 | (((long) value[14] & 0xff) << 8)
-                | (((long) value[15] & 0xff)));
+                | ((long) value[15] & 0xff));
     }
 
     @Override
