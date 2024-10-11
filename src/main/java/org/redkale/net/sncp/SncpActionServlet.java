@@ -74,7 +74,7 @@ public abstract class SncpActionServlet extends SncpServlet {
         this.actionid = actionid;
         this.method = method;
         this.paramComposeBeanType = SncpRemoteAction.createParamComposeBeanType(
-                Thread.currentThread().getContextClassLoader(),
+                RedkaleClassLoader.getRedkaleClassLoader(),
                 Sncp.getServiceType(service),
                 method,
                 actionid,
@@ -356,10 +356,7 @@ public abstract class SncpActionServlet extends SncpServlet {
         final boolean boolReturnTypeFuture = Future.class.isAssignableFrom(method.getReturnType());
         final String newDynName = "org/redkaledyn/sncp/servlet/action/_DynSncpActionServlet__"
                 + resourceType.getSimpleName() + "_" + method.getName() + "_" + actionid;
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        if (String.class.getClassLoader() != serviceClass.getClassLoader()) {
-            loader = serviceClass.getClassLoader();
-        }
+        RedkaleClassLoader loader = RedkaleClassLoader.getRedkaleClassLoader();
         Class<?> newClazz = null;
         try {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
@@ -630,11 +627,13 @@ public abstract class SncpActionServlet extends SncpServlet {
                     mv.visitVarInsn(ASTORE, 5); // paramBean
 
                     // 给CompletionHandler参数赋值
-                    mv.visitVarInsn(ALOAD, 5);
-                    mv.visitVarInsn(ALOAD, 2);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, responseName, "getParamAsyncHandler", "()" + handlerDesc, false);
-                    mv.visitFieldInsn(PUTFIELD, paramComposeBeanName, "arg3", handlerDesc);
-
+                    if (handlerFuncIndex >= 0) {
+                        mv.visitVarInsn(ALOAD, 5);
+                        mv.visitVarInsn(ALOAD, 2);
+                        mv.visitMethodInsn(
+                                INVOKEVIRTUAL, responseName, "getParamAsyncHandler", "()" + handlerDesc, false);
+                        mv.visitFieldInsn(PUTFIELD, paramComposeBeanName, "arg" + (handlerFuncIndex + 1), handlerDesc);
+                    }
                     // 调用service()
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "service", "()" + serviceDesc, false);
@@ -713,13 +712,10 @@ public abstract class SncpActionServlet extends SncpServlet {
             cw.visitEnd();
 
             byte[] bytes = cw.toByteArray();
-            newClazz = new ClassLoader(loader) {
-                public final Class<?> loadClass(String name, byte[] b) {
-                    return defineClass(name, b, 0, b.length);
-                }
-            }.loadClass(newDynName.replace('/', '.'), bytes);
+            newClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
             RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
             RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
+
             try {
                 RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), newClazz.getField("service"));
             } catch (Exception e) {

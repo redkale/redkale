@@ -53,7 +53,6 @@ import org.redkale.mq.ResourceConsumer;
 import org.redkale.mq.spi.DynForMessaged.DynForMessageds;
 import org.redkale.service.LoadMode;
 import org.redkale.util.RedkaleClassLoader;
-import org.redkale.util.RedkaleClassLoader.DynBytesClassLoader;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.TypeToken;
 import org.redkale.util.Utility;
@@ -83,7 +82,7 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
 
     @Override
     public AsmNewMethod doMethod(
-            DynBytesClassLoader classLoader,
+            RedkaleClassLoader classLoader,
             ClassWriter cw,
             Class serviceImplClass,
             String newDynName,
@@ -322,7 +321,7 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
     }
 
     @Override
-    public void doAfterMethods(DynBytesClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {
+    public void doAfterMethods(RedkaleClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {
         if (Utility.isNotEmpty(consumerBytes)) {
             AnnotationVisitor av0 = cw.visitAnnotation(org.redkale.asm.Type.getDescriptor(DynForMessageds.class), true);
             AnnotationVisitor av1 = av0.visitArray("value");
@@ -342,7 +341,7 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
     }
 
     @Override
-    public void doInstance(DynBytesClassLoader classLoader, ResourceFactory resourceFactory, Object service) {
+    public void doInstance(RedkaleClassLoader classLoader, ResourceFactory resourceFactory, Object service) {
         DynForMessaged[] dyns = service.getClass().getAnnotationsByType(DynForMessaged.class);
         if (Utility.isNotEmpty(dyns)) {
             try {

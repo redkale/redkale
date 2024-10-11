@@ -41,7 +41,7 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
     protected final CompletionHandler realHandler = new CompletionHandler() {
         @Override
         public void completed(Object result, Object attachment) {
-            finish(paramHandlerResultType, result);
+            finish(paramHandlerType, result);
         }
 
         @Override
@@ -50,7 +50,7 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         }
     };
 
-    protected Type paramHandlerResultType;
+    protected Type paramHandlerType;
 
     protected CompletionHandler paramAsyncHandler;
 
@@ -80,11 +80,11 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
     }
 
     public SncpResponse paramAsyncHandler(
-            Class<? extends CompletionHandler> paramHandlerType, Type paramHandlerResultType) {
-        this.paramHandlerResultType = paramHandlerResultType;
-        this.paramAsyncHandler = paramHandlerType == CompletionHandler.class
+            Class<? extends CompletionHandler> paramHandlerClass, Type paramHandlerType) {
+        this.paramHandlerType = paramHandlerType;
+        this.paramAsyncHandler = paramHandlerClass == CompletionHandler.class
                 ? realHandler
-                : SncpAsyncHandler.createHandler(paramHandlerType, realHandler);
+                : SncpAsyncHandler.createHandler(paramHandlerClass, realHandler);
         return this;
     }
 
@@ -101,7 +101,7 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
     @Override
     protected boolean recycle() {
         writer.clear();
-        this.paramHandlerResultType = null;
+        this.paramHandlerType = null;
         this.paramAsyncHandler = null;
         return super.recycle();
     }

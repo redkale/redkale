@@ -29,7 +29,6 @@ import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;
 import org.redkale.source.Flipper;
 import org.redkale.util.*;
-import org.redkale.util.RedkaleClassLoader.DynBytesClassLoader;
 import static org.redkale.util.Utility.isEmpty;
 
 /**
@@ -661,7 +660,7 @@ public final class Rest {
             mv.visitEnd();
         }
 
-        DynBytesClassLoader newLoader = new DynBytesClassLoader(loader);
+        RedkaleClassLoader newLoader = RedkaleClassLoader.getRedkaleClassLoader(loader);
         Map<String, Annotation[]> msgclassToAnnotations = new HashMap<>();
         for (int i = 0; i < messageMethods.size(); i++) { // _DyncXXXWebSocketMessage 子消息List
             final Method method = messageMethods.get(i);
@@ -1990,7 +1989,7 @@ public final class Rest {
             return null; // 没有可HttpMapping的方法
         }
         Collections.sort(entrys);
-        DynBytesClassLoader newLoader = new DynBytesClassLoader(loader);
+        RedkaleClassLoader newLoader = RedkaleClassLoader.getRedkaleClassLoader(loader);
         final int moduleid = controller == null ? 0 : controller.moduleid();
         { // 注入 @WebServlet 注解
             String urlpath = "";
@@ -4073,7 +4072,7 @@ public final class Rest {
                 }
                 cw2.visitEnd();
                 byte[] bytes = cw2.toByteArray();
-                newLoader.addClass((newDynName + "$" + entry.newActionClassName).replace('/', '.'), bytes);
+                newLoader.addDynClass((newDynName + "$" + entry.newActionClassName).replace('/', '.'), bytes);
                 innerClassBytesMap.put((newDynName + "$" + entry.newActionClassName).replace('/', '.'), bytes);
             }
         } // end  for each
@@ -4237,7 +4236,7 @@ public final class Rest {
 
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();
-        newLoader.addClass(newDynName.replace('/', '.'), bytes);
+        newLoader.addDynClass(newDynName.replace('/', '.'), bytes);
         try {
             Class<?> newClazz = newLoader.findClass(newDynName.replace('/', '.'));
             innerClassBytesMap.forEach((n, bs) -> {

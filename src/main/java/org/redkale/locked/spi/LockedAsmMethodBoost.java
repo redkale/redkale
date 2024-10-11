@@ -20,7 +20,7 @@ import org.redkale.asm.Type;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.locked.Locked;
 import org.redkale.service.LoadMode;
-import org.redkale.util.RedkaleClassLoader.DynBytesClassLoader;
+import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 
 /** @author zhangjx */
@@ -39,7 +39,7 @@ public class LockedAsmMethodBoost extends AsmMethodBoost {
 
     @Override
     public AsmNewMethod doMethod(
-            DynBytesClassLoader classLoader,
+            RedkaleClassLoader classLoader,
             ClassWriter cw,
             Class serviceImplClass,
             String newDynName,
@@ -91,12 +91,12 @@ public class LockedAsmMethodBoost extends AsmMethodBoost {
     }
 
     @Override
-    public void doAfterMethods(DynBytesClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {
+    public void doAfterMethods(RedkaleClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {
         // do nothing
     }
 
     @Override
-    public void doInstance(DynBytesClassLoader classLoader, ResourceFactory resourceFactory, Object service) {
+    public void doInstance(RedkaleClassLoader classLoader, ResourceFactory resourceFactory, Object service) {
         // do nothing
     }
 }

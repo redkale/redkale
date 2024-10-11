@@ -47,7 +47,6 @@ import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
 import org.redkale.util.AnyValueWriter;
 import org.redkale.util.RedkaleClassLoader;
-import org.redkale.util.RedkaleClassLoader.DynBytesClassLoader;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Utility;
 
@@ -455,11 +454,11 @@ public class MessageModuleEngine extends ModuleEngine {
             }
         }
         if (boost != null && Utility.isNotEmpty(boost.consumerBytes)) {
-            DynBytesClassLoader classLoader = DynBytesClassLoader.create(null);
+            RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
             boost.consumerBytes.forEach((innerFullName, bytes) -> {
                 try {
                     String clzName = innerFullName.replace('/', '.');
-                    Class<? extends MessageConsumer> clazz = (Class) classLoader.loadClass(clzName, bytes);
+                    Class<? extends MessageConsumer> clazz = classLoader.loadClass(clzName, bytes);
                     RedkaleClassLoader.putDynClass(clzName, bytes, clazz);
                     RedkaleClassLoader.putReflectionPublicConstructors(clazz, clzName);
                     MessageConsumer consumer = (MessageConsumer) clazz.getConstructors()[0].newInstance(service);

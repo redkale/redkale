@@ -10,7 +10,7 @@ import java.util.*;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.ConvertCoder;
 import org.redkale.convert.ConvertColumn;
-import org.redkale.convert.ext.BigIntegerSimpledCoder.BigIntegerHexJsonSimpledCoder;
+import org.redkale.convert.json.JsonCoders.BigIntegerHexJsonSimpledCoder;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.convert.pb.ProtobufConvert;
 

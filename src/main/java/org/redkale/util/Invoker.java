@@ -5,11 +5,10 @@
  */
 package org.redkale.util;
 
-import static org.redkale.asm.Opcodes.*;
-
 import java.lang.reflect.*;
 import java.util.concurrent.ConcurrentHashMap;
 import org.redkale.asm.*;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 
 /**
@@ -92,7 +91,7 @@ public interface Invoker<C, R> {
         } else if (returnType == void.class) {
             returnDesc = Type.getDescriptor(Void.class);
         }
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        RedkaleClassLoader loader = RedkaleClassLoader.getRedkaleClassLoader();
         StringBuilder sbpts = new StringBuilder();
         for (Class c : method.getParameterTypes()) {
             sbpts.append('_').append(c.getName().replace('.', '_').replace('$', '_'));
@@ -209,11 +208,7 @@ public interface Invoker<C, R> {
         Class<?> resultClazz = null;
         try {
             if (resultClazz == null) {
-                resultClazz = new ClassLoader(loader) {
-                    public final Class<?> loadClass(String name, byte[] b) {
-                        return defineClass(name, b, 0, b.length);
-                    }
-                }.loadClass(newDynName.replace('/', '.'), bytes);
+                resultClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
             }
             RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, resultClazz);
             RedkaleClassLoader.putReflectionDeclaredConstructors(resultClazz, newDynName.replace('/', '.'));

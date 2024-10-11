@@ -143,7 +143,8 @@ class AppConfig {
             if (cacheClasses == null) {
                 this.classLoader = new RedkaleClassLoader(currClassLoader);
             } else {
-                this.classLoader = new RedkaleClassLoader.RedkaleCacheClassLoader(currClassLoader, cacheClasses);
+                this.classLoader = new RedkaleClassLoader.RedkaleCacheClassLoader(
+                        RedkaleClassLoader.getRedkaleClassLoader(currClassLoader), cacheClasses);
             }
             Thread.currentThread().setContextClassLoader(this.classLoader);
         }

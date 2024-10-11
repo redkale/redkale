@@ -1,12 +1,11 @@
 package org.redkale.util;
 
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
-
 import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.function.*;
 import org.redkale.asm.*;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
 
 /**
  * JavaBean类对象的拷贝，相同的字段名会被拷贝 <br>
@@ -68,7 +67,7 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
         final String srcClassName = srcClass.getName().replace('.', '/');
         final String destDesc = Type.getDescriptor(destClass);
         final String srcDesc = Type.getDescriptor(srcClass);
-        final ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        final RedkaleClassLoader loader = RedkaleClassLoader.getRedkaleClassLoader();
         final String newDynName = "org/redkaledyn/reproduce/_Dyn" + Reproduce.class.getSimpleName()
                 + "__" + destClass.getName().replace('.', '_').replace('$', '_')
                 + "__" + srcClass.getName().replace('.', '_').replace('$', '_');
@@ -232,11 +231,7 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
         cw.visitEnd();
         // ------------------------------------------------------------------------------
         byte[] bytes = cw.toByteArray();
-        Class<?> newClazz = new ClassLoader(loader) {
-            public final Class<?> loadClass(String name, byte[] b) {
-                return defineClass(name, b, 0, b.length);
-            }
-        }.loadClass(newDynName.replace('/', '.'), bytes);
+        Class<?> newClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
         RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {

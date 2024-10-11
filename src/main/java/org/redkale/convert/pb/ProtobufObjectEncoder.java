@@ -85,8 +85,12 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
     @Override
     protected void initForEachEnMember(ConvertFactory factory, EnMember member) {
         if (member.getIndex() < 1) {
-            throw new ConvertException(Utility.orElse(member.getField(), member.getMethod()) + " not found @"
-                    + ConvertColumn.class.getSimpleName() + ".index");
+            if (ProtobufFactory.INDEX_CHECK) {
+                throw new ConvertException(Utility.orElse(member.getField(), member.getMethod()) + " not found @"
+                        + ConvertColumn.class.getSimpleName() + ".index");
+            } else {
+                member.setPositionToIndex();
+            }
         }
         Attribute attr = member.getAttribute();
         boolean enumtostring = ((ProtobufFactory) factory).enumtostring;

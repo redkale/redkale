@@ -26,7 +26,6 @@ import org.redkale.scheduled.Scheduled;
 import org.redkale.service.*;
 import org.redkale.util.AnyValue;
 import org.redkale.util.RedkaleClassLoader;
-import org.redkale.util.RedkaleClassLoader.DynBytesClassLoader;
 import org.redkale.util.TypeToken;
 import org.redkale.util.Uint128;
 import org.redkale.util.Utility;
@@ -492,7 +491,7 @@ public abstract class Sncp {
      */
     @SuppressWarnings("unchecked")
     protected static <T extends Service> Class<? extends T> createLocalServiceClass(
-            DynBytesClassLoader dynLoader,
+            RedkaleClassLoader dynLoader,
             final String name,
             final Class<T> serviceImplClass,
             final AsmMethodBoost methodBoost) {
@@ -626,7 +625,7 @@ public abstract class Sncp {
     }
 
     private static void createNewMethods(
-            DynBytesClassLoader classLoader,
+            RedkaleClassLoader classLoader,
             Class clazz,
             final AsmMethodBoost methodBoost,
             Set<String> methodKeys,
@@ -766,7 +765,7 @@ public abstract class Sncp {
             final String remoteGroup,
             final AnyValue conf) {
         try {
-            final DynBytesClassLoader dynLoader = DynBytesClassLoader.create(classLoader);
+            final RedkaleClassLoader dynLoader = RedkaleClassLoader.getRedkaleClassLoader(classLoader);
             final Class newClazz = createLocalServiceClass(dynLoader, name, serviceImplClass, methodBoost);
             T service = (T) newClazz.getDeclaredConstructor().newInstance();
             // --------------------------------------
@@ -939,7 +938,7 @@ public abstract class Sncp {
         final String sncpInfoDesc = Type.getDescriptor(SncpRemoteInfo.class);
         final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
-        final DynBytesClassLoader dynLoader = DynBytesClassLoader.create(classLoader);
+        final RedkaleClassLoader dynLoader = RedkaleClassLoader.getRedkaleClassLoader(classLoader);
         String newDynName = "org/redkaledyn/service/remote/_DynRemoteService__"
                 + serviceTypeOrImplClass.getName().replace('.', '_').replace('$', '_');
         if (!name.isEmpty()) {

@@ -47,6 +47,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
 
     protected static ProtobufDynEncoder generateDyncEncoder(final ProtobufFactory factory, final Class clazz) {
         final ObjectEncoder selfObjEncoder = factory.createObjectEncoder(clazz);
+        factory.register(clazz, selfObjEncoder);
         selfObjEncoder.init(factory); // 必须执行，初始化EnMember内部信息
 
         final Map<String, SimpledCoder> simpledCoders = new HashMap<>();
@@ -68,10 +69,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
             }
         }
 
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        if (String.class.getClassLoader() != clazz.getClassLoader()) {
-            loader = clazz.getClassLoader();
-        }
+        RedkaleClassLoader loader = RedkaleClassLoader.getRedkaleClassLoader();
         final String newDynName = "org/redkaledyn/convert/pb/_Dyn" + ProtobufDynEncoder.class.getSimpleName() + "__"
                 + clazz.getName().replace('.', '_').replace('$', '_') + "_" + factory.getFeatures() + "_"
                 + Utility.md5Hex(elementb.toString()); // tiny必须要加上, 同一个类会有多个字段定制Convert
@@ -323,12 +321,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
         cw.visitEnd();
 
         byte[] bytes = cw.toByteArray();
-        Class<ProtobufDynEncoder> newClazz = (Class<ProtobufDynEncoder>)
-                new ClassLoader(loader) {
-                    public final Class<?> loadClass(String name, byte[] b) {
-                        return defineClass(name, b, 0, b.length);
-                    }
-                }.loadClass(newDynName.replace('/', '.'), bytes);
+        Class<ProtobufDynEncoder> newClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
         RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {

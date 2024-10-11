@@ -7,7 +7,6 @@ package org.redkale.convert.ext;
 
 import java.util.Objects;
 import org.redkale.convert.*;
-import org.redkale.convert.json.*;
 import org.redkale.util.*;
 
 /**
@@ -53,33 +52,4 @@ public class Uint128SimpledCoder<R extends Reader, W extends Writer> extends Sim
         return Uint128.create(bs);
     }
 
-    /**
-     * Uint128 的JsonSimpledCoder实现
-     *
-     * @param <R> Reader输入的子类型
-     * @param <W> Writer输出的子类型
-     */
-    public static class Uint128JsonSimpledCoder<R extends JsonReader, W extends JsonWriter>
-            extends SimpledCoder<R, W, Uint128> {
-
-        public static final Uint128JsonSimpledCoder instance = new Uint128JsonSimpledCoder();
-
-        @Override
-        public void convertTo(final W out, final Uint128 value) {
-            if (value == null) {
-                out.writeNull();
-            } else {
-                out.writeStandardString(value.toString());
-            }
-        }
-
-        @Override
-        public Uint128 convertFrom(R in) {
-            final String str = in.readStandardString();
-            if (str == null) {
-                return null;
-            }
-            return Uint128.create(Utility.hexToBin(str));
-        }
-    }
 }

@@ -3,13 +3,12 @@
  */
 package org.redkale.net.sncp;
 
-import static org.redkale.asm.Opcodes.*;
-
 import java.lang.reflect.*;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import org.redkale.asm.*;
+import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.util.*;
 
@@ -55,11 +54,10 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                     final String realHandlerDesc = Type.getDescriptor(CompletionHandler.class);
                     final String newDynName = "org/redkaledyn/sncp/handler/_Dyn" + sncpHandlerClass.getSimpleName()
                             + "__" + handlerClass.getName().replace('.', '/').replace('$', '_');
+                    RedkaleClassLoader loader = RedkaleClassLoader.getRedkaleClassLoader();
                     try {
                         Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-                        Class newHandlerClazz = clz == null
-                                ? Thread.currentThread().getContextClassLoader().loadClass(newDynName.replace('/', '.'))
-                                : clz;
+                        Class newHandlerClazz = clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz;
                         return (Creator<SncpAsyncHandler>) Creator.create(newHandlerClazz);
                     } catch (Throwable ex) {
                         // do nothing
@@ -208,13 +206,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                     }
                     cw.visitEnd();
                     byte[] bytes = cw.toByteArray();
-                    Class newClazz =
-                            new ClassLoader((handlerClass != CompletionHandler.class ? handlerClass : sncpHandlerClass)
-                                    .getClassLoader()) {
-                                public final Class<?> loadClass(String name, byte[] b) {
-                                    return defineClass(name, b, 0, b.length);
-                                }
-                            }.loadClass(newDynName.replace('/', '.'), bytes);
+                    Class newClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
                     RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
                     return (Creator<SncpAsyncHandler>) Creator.create(newClazz);
                 })

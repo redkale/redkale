@@ -26,7 +26,9 @@ import org.redkale.asm.FieldVisitor;
 import org.redkale.asm.MethodDebugVisitor;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.convert.ConvertColumn;
+import org.redkale.convert.Encodeable;
 import org.redkale.convert.ObjectEncoder;
+import org.redkale.convert.SimpledCoder;
 import org.redkale.convert.pb.ProtobufFactory;
 import org.redkale.service.RpcAttachment;
 import org.redkale.service.RpcSourceAddress;
@@ -99,7 +101,12 @@ public final class SncpRemoteAction {
         this.paramTypes = TypeToken.getGenericType(method.getGenericParameterTypes(), serviceImplClass);
         this.paramClasses = method.getParameterTypes();
         Type pt = createParamComposeBeanType(
-                serviceImplClass.getClassLoader(), serviceImplClass, method, actionid, paramTypes, paramClasses);
+                RedkaleClassLoader.getRedkaleClassLoader(),
+                serviceImplClass,
+                method,
+                actionid,
+                paramTypes,
+                paramClasses);
         this.paramComposeBeanType = pt;
         this.paramComposeBeanCreator =
                 (pt == null || pt == paramTypes[0]) ? null : Creator.load(TypeToken.typeToClass(pt), 1);
@@ -242,7 +249,7 @@ public final class SncpRemoteAction {
     }
 
     public static Type createParamComposeBeanType(
-            ClassLoader loader,
+            RedkaleClassLoader loader,
             Class resourceType,
             Method method,
             Uint128 actionid,
@@ -251,17 +258,17 @@ public final class SncpRemoteAction {
         if (paramTypes == null || paramTypes.length == 0) {
             return null;
         }
-        if (paramTypes.length == 1 && ProtobufFactory.root().createEncoder(paramTypes[0]) instanceof ObjectEncoder) {
-            return paramTypes[0];
+        if (paramTypes.length == 1) {
+            Encodeable encodeable = ProtobufFactory.root().findEncoder(paramTypes[0]);
+            if (encodeable == null) { // java.io.Serializable会预置，直接调用createEncoder会提示不支持的Type
+                ProtobufFactory.root().createEncoder(paramTypes[0]);
+            }
+            if (encodeable instanceof ObjectEncoder || encodeable instanceof SimpledCoder) {
+                return paramTypes[0];
+            }
         }
 
         // 动态生成组合JavaBean类
-        if (loader == null) {
-            loader = Thread.currentThread().getContextClassLoader();
-            if (String.class.getClassLoader() != resourceType.getClassLoader()) {
-                loader = resourceType.getClassLoader();
-            }
-        }
         final String columnDesc = org.redkale.asm.Type.getDescriptor(ConvertColumn.class);
         final String newDynName = "org/redkaledyn/sncp/servlet/action/_DynSncpActionParamBean_"
                 + resourceType.getSimpleName() + "_" + method.getName() + "_" + actionid;
@@ -320,11 +327,7 @@ public final class SncpRemoteAction {
         cw.visitEnd();
 
         byte[] bytes = cw.toByteArray();
-        Class newClazz = new ClassLoader(loader) {
-            public final Class<?> loadClass(String name, byte[] b) {
-                return defineClass(name, b, 0, b.length);
-            }
-        }.loadClass(newDynName.replace('/', '.'), bytes);
+        Class newClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
         RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         Creator.load(newClazz, 1); // 只一个Object[]参数

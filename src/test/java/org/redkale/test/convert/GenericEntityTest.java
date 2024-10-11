@@ -17,6 +17,7 @@ import java.util.function.Supplier;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.convert.json.JsonFactory;
 import org.redkale.convert.pb.ProtobufConvert;
 import org.redkale.util.TypeToken;
 import org.redkale.util.Utility;
@@ -43,6 +44,8 @@ public class GenericEntityTest {
     @Test
     public void runJson1() throws Exception {
         System.out.println("-------------------- runJson1 ---------------------------------");
+        JsonFactory.root().loadEncoder(TreeNode.class);
+        JsonFactory.root().loadEncoder(TreeNode2.class);
         JsonConvert convert = JsonConvert.root();
         GenericEntity<Long, String, SimpleEntity> bean = createBean();
         String json = convert.convertTo(ENTITY_TYPE, bean);
@@ -76,6 +79,8 @@ public class GenericEntityTest {
     @Test
     public void runPb1() throws Exception {
         System.out.println("-------------------- runPb1 ---------------------------------");
+        JsonFactory.root().loadEncoder(TreeNode.class);
+        JsonFactory.root().loadEncoder(TreeNode2.class);
         ProtobufConvert convert = ProtobufConvert.root();
         GenericEntity<Long, String, SimpleEntity> bean = createBean();
         byte[] bs = convert.convertTo(ENTITY_TYPE, bean);
@@ -135,6 +140,22 @@ public class GenericEntityTest {
         bean.setOneTimes(times);
         bean.setOneEntry(new Entry<>("aaaa", SimpleEntity.create()));
         return bean;
+    }
+
+    public static class TreeNode {
+        @ConvertColumn(index = 1)
+        public String name;
+
+        @ConvertColumn(index = 2)
+        public TreeNode next;
+    }
+
+    public static class TreeNode2 {
+        @ConvertColumn(index = 1)
+        public String name;
+
+        @ConvertColumn(index = 2)
+        public List<TreeNode2> next;
     }
 
     public static class GenericEntity<T, K, V> {

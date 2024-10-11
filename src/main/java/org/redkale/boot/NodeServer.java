@@ -114,7 +114,7 @@ public abstract class NodeServer {
                 || application.getServerClassLoader() instanceof RedkaleClassLoader.RedkaleCacheClassLoader) {
             this.serverClassLoader = application.getServerClassLoader();
         } else {
-            this.serverClassLoader = new RedkaleClassLoader(application.getServerClassLoader());
+            this.serverClassLoader = RedkaleClassLoader.getRedkaleClassLoader(application.getServerClassLoader());
         }
         Thread.currentThread().setContextClassLoader(this.serverClassLoader);
         this.serverThread = Thread.currentThread();

@@ -108,11 +108,10 @@ public class HttpContext extends Context {
         final String handlerDesc = Type.getDescriptor(CompletionHandler.class);
         final String newDynName = "org/redkaledyn/http/handler/_DynHttpAsyncHandler__"
                 + handlerClass.getName().replace('.', '/').replace('$', '_');
+        RedkaleClassLoader loader = RedkaleClassLoader.getRedkaleClassLoader();
         try {
             Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-            Class newHandlerClazz = clz == null
-                    ? Thread.currentThread().getContextClassLoader().loadClass(newDynName.replace('/', '.'))
-                    : clz;
+            Class newHandlerClazz = clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz;
             return Creator.create(newHandlerClazz);
         } catch (Throwable ex) {
             // do nothing
@@ -214,12 +213,7 @@ public class HttpContext extends Context {
         }
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();
-        Class<CompletionHandler> newClazz = (Class<CompletionHandler>)
-                new ClassLoader(handlerClass.getClassLoader()) {
-                    public final Class<?> loadClass(String name, byte[] b) {
-                        return defineClass(name, b, 0, b.length);
-                    }
-                }.loadClass(newDynName.replace('/', '.'), bytes);
+        Class<CompletionHandler> newClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
         RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         return (Creator<H>) Creator.create(newClazz);
     }

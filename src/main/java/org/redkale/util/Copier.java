@@ -679,7 +679,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
         final String srcClassName = srcClass.getName().replace('.', '/');
         final String destDesc = Type.getDescriptor(destClass);
         final String srcDesc = Type.getDescriptor(srcClass);
-        final ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        final RedkaleClassLoader loader = RedkaleClassLoader.getRedkaleClassLoader();
         final String utilClassName = Utility.class.getName().replace('.', '/');
         final String newDynName = "org/redkaledyn/copier/_Dyn" + Copier.class.getSimpleName() + "_" + options
                 + "__" + srcClass.getName().replace('.', '_').replace('$', '_')
@@ -1337,11 +1337,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
         cw.visitEnd();
         // ------------------------------------------------------------------------------
         byte[] bytes = cw.toByteArray();
-        Class<?> newClazz = new ClassLoader(loader) {
-            public final Class<?> loadClass(String name, byte[] b) {
-                return defineClass(name, b, 0, b.length);
-            }
-        }.loadClass(newDynName.replace('/', '.'), bytes);
+        Class<?> newClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
         RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {

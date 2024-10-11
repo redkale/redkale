@@ -37,8 +37,12 @@ public class ProtobufObjectDecoder<T> extends ObjectDecoder<ProtobufReader, T>
     @Override
     protected void initForEachDeMember(ConvertFactory factory, DeMember member) {
         if (member.getIndex() < 1) {
-            throw new ConvertException(Utility.orElse(member.getField(), member.getMethod()) + " not found @"
-                    + ConvertColumn.class.getSimpleName() + ".index");
+            if (ProtobufFactory.INDEX_CHECK) {
+                throw new ConvertException(Utility.orElse(member.getField(), member.getMethod()) + " not found @"
+                        + ConvertColumn.class.getSimpleName() + ".index");
+            } else {
+                member.setPositionToIndex();
+            }
         }
         Attribute attr = member.getAttribute();
         boolean enumtostring = ((ProtobufFactory) factory).enumtostring;

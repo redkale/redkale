@@ -29,7 +29,7 @@ import static org.redkale.asm.Opcodes.LLOAD;
 import static org.redkale.asm.Opcodes.LRETURN;
 import static org.redkale.asm.Opcodes.RETURN;
 import org.redkale.inject.ResourceFactory;
-import org.redkale.util.RedkaleClassLoader.DynBytesClassLoader;
+import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.Utility;
 
 /**
@@ -101,7 +101,7 @@ public abstract class AsmMethodBoost<T> {
      * @return 下一个新的方法名，不做任何处理应返回参数newMethodName
      */
     public abstract AsmNewMethod doMethod(
-            DynBytesClassLoader classLoader,
+            RedkaleClassLoader classLoader,
             ClassWriter cw,
             Class serviceImplClass,
             String newDynName,
@@ -119,7 +119,7 @@ public abstract class AsmMethodBoost<T> {
      * @param fieldPrefix 动态字段的前缀
      */
     public void doAfterMethods(
-            DynBytesClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {}
+            RedkaleClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {}
 
     /**
      * 处理所有动态方法后调用
@@ -132,7 +132,7 @@ public abstract class AsmMethodBoost<T> {
      * @param remote 是否远程模式
      */
     public void doConstructorMethod(
-            DynBytesClassLoader classLoader,
+            RedkaleClassLoader classLoader,
             ClassWriter cw,
             MethodVisitor mv,
             String newDynName,
@@ -145,7 +145,7 @@ public abstract class AsmMethodBoost<T> {
      * @param resourceFactory ResourceFactory
      * @param service 实例对象
      */
-    public abstract void doInstance(DynBytesClassLoader classLoader, ResourceFactory resourceFactory, T service);
+    public abstract void doInstance(RedkaleClassLoader classLoader, ResourceFactory resourceFactory, T service);
 
     protected AsmMethodBean getMethodBean(Method method) {
         Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBeans(serviceType);
@@ -325,7 +325,7 @@ public abstract class AsmMethodBoost<T> {
 
         @Override
         public AsmNewMethod doMethod(
-                DynBytesClassLoader classLoader,
+                RedkaleClassLoader classLoader,
                 ClassWriter cw,
                 Class serviceImplClass,
                 String newDynName,
@@ -345,7 +345,7 @@ public abstract class AsmMethodBoost<T> {
 
         @Override
         public void doAfterMethods(
-                DynBytesClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {
+                RedkaleClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {
             for (AsmMethodBoost item : items) {
                 if (item != null) {
                     item.doAfterMethods(classLoader, cw, newDynName, fieldPrefix);
@@ -355,7 +355,7 @@ public abstract class AsmMethodBoost<T> {
 
         @Override
         public void doConstructorMethod(
-                DynBytesClassLoader classLoader,
+                RedkaleClassLoader classLoader,
                 ClassWriter cw,
                 MethodVisitor mv,
                 String newDynName,
@@ -369,7 +369,7 @@ public abstract class AsmMethodBoost<T> {
         }
 
         @Override
-        public void doInstance(DynBytesClassLoader classLoader, ResourceFactory resourceFactory, T service) {
+        public void doInstance(RedkaleClassLoader classLoader, ResourceFactory resourceFactory, T service) {
             for (AsmMethodBoost item : items) {
                 if (item != null) {
                     item.doInstance(classLoader, resourceFactory, service);

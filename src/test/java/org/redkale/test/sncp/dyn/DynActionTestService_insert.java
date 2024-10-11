@@ -37,9 +37,9 @@ public class DynActionTestService_insert extends SncpActionServlet {
         Convert<Reader, Writer> convert = request.getConvert();
         Reader in = request.getReader();
         DynSncpActionParamBean_TestService_insert bean = convert.convertFrom(paramComposeBeanType, in);
-        bean.arg0 = response.getParamAsyncHandler();
+        bean.arg1 = response.getParamAsyncHandler();
         TestService serviceObj = (TestService) service();
-        serviceObj.insert(bean.arg0, bean.arg1, bean.arg2, bean.arg3);
+        serviceObj.insert(bean.arg1, bean.arg2, bean.arg3, bean.arg4);
         response.finishVoid();
     }
 
@@ -48,22 +48,22 @@ public class DynActionTestService_insert extends SncpActionServlet {
         public DynSncpActionParamBean_TestService_insert() {}
 
         public DynSncpActionParamBean_TestService_insert(Object[] params) {
-            this.arg0 = (BooleanHandler) params[0];
-            this.arg1 = (TestBean) params[1];
-            this.arg2 = (String) params[2];
-            this.arg3 = (int) params[3];
+            this.arg1 = (BooleanHandler) params[0];
+            this.arg2 = (TestBean) params[1];
+            this.arg3 = (String) params[2];
+            this.arg4 = (int) params[3];
         }
 
         @ConvertColumn(index = 1)
-        public BooleanHandler arg0;
+        public BooleanHandler arg1;
 
         @ConvertColumn(index = 2)
-        public TestBean arg1;
+        public TestBean arg2;
 
         @ConvertColumn(index = 3)
-        public String arg2;
+        public String arg3;
 
         @ConvertColumn(index = 4)
-        public int arg3;
+        public int arg4;
     }
 }

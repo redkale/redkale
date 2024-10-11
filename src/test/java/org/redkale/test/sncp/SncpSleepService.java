@@ -50,7 +50,7 @@ public class SncpSleepService extends AbstractService {
                 getExecutor());
     }
 
-    public String test(Serializable id, String[] names, Collection<File> files) {
+    public String test(Serializable id, String[] names, Collection<File> files, int time) {
         return "ok";
     }
 }

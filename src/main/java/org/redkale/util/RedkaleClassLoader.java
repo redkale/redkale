@@ -89,6 +89,26 @@ public class RedkaleClassLoader extends URLClassLoader {
         super(urls, parent);
     }
 
+    public static RedkaleClassLoader getRedkaleClassLoader(ClassLoader loader) {
+        if (loader == null) {
+            loader = Thread.currentThread().getContextClassLoader();
+        }
+        if (loader instanceof RedkaleClassLoader) {
+            return (RedkaleClassLoader) loader;
+        }
+        ClassLoader c = loader;
+        while ((c = c.getParent()) != null) {
+            if (c instanceof RedkaleClassLoader) {
+                return (RedkaleClassLoader) c;
+            }
+        }
+        return new RedkaleClassLoader(loader);
+    }
+
+    public static RedkaleClassLoader getRedkaleClassLoader() {
+        return getRedkaleClassLoader(Thread.currentThread().getContextClassLoader());
+    }
+
     public static URI getConfResourceAsURI(String confURI, String file) {
         if (file.startsWith("http:") || file.startsWith("https:") || file.startsWith("ftp:")) {
             return URI.create(file);
@@ -461,7 +481,20 @@ public class RedkaleClassLoader extends URLClassLoader {
         reflectionMap.forEach(action);
     }
 
-    public Class<?> loadClass(String name, byte[] b) {
+    @Override
+    public Class<?> findClass(String name) throws ClassNotFoundException {
+        byte[] classData = dynClassBytesMap.get(name);
+        if (classData == null) {
+            Class clazz = dynClassTypeMap.get(name);
+            if (clazz != null) {
+                return clazz;
+            }
+            return super.findClass(name);
+        }
+        return super.defineClass(name, classData, 0, classData.length);
+    }
+
+    public Class loadClass(String name, byte[] b) {
         return defineClass(name, b, 0, b.length);
     }
 
@@ -469,6 +502,10 @@ public class RedkaleClassLoader extends URLClassLoader {
         if (this.getParent() instanceof RedkaleClassLoader) {
             ((RedkaleClassLoader) getParent()).forEachCacheClass(action);
         }
+    }
+
+    public final void addDynClass(String name, byte[] bs) {
+        dynClassBytesMap.put(name, bs);
     }
 
     public void addURI(URI uri) {
@@ -575,41 +612,6 @@ public class RedkaleClassLoader extends URLClassLoader {
             if (getParent() instanceof RedkaleClassLoader) {
                 ((RedkaleClassLoader) getParent()).forEachCacheClass(action);
             }
-        }
-    }
-
-    public static class DynBytesClassLoader extends ClassLoader {
-
-        private final Map<String, byte[]> classes = new HashMap<>();
-
-        public DynBytesClassLoader(ClassLoader parent) {
-            super(parent);
-        }
-
-        public static DynBytesClassLoader create(ClassLoader parent) {
-            if (parent == null) {
-                parent = Thread.currentThread().getContextClassLoader();
-            }
-            return parent instanceof DynBytesClassLoader
-                    ? (DynBytesClassLoader) parent
-                    : new DynBytesClassLoader(parent);
-        }
-
-        @Override
-        public Class<?> findClass(String name) throws ClassNotFoundException {
-            byte[] classData = classes.get(name);
-            if (classData == null) {
-                return super.findClass(name);
-            }
-            return super.defineClass(name, classData, 0, classData.length);
-        }
-
-        public final Class<?> loadClass(String name, byte[] b) {
-            return defineClass(name, b, 0, b.length);
-        }
-
-        public final void addClass(String name, byte[] b) {
-            classes.put(name, b);
         }
     }
 }

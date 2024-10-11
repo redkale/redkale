@@ -127,6 +127,10 @@ public final class EnMember<W extends Writer, T, F> {
         return new EnMember<>(attribute, factory.loadEncoder(fieldtype), null, null, null);
     }
 
+    public void setPositionToIndex() {
+        this.index = this.position;
+    }
+
     public Object getFieldValue(T obj) {
         F val = attribute.get(obj);
         if (fieldFunc != null) {

@@ -7,7 +7,6 @@ package org.redkale.convert.ext;
 
 import java.time.Instant;
 import org.redkale.convert.*;
-import org.redkale.convert.json.*;
 
 /**
  * java.time.Instant 的SimpledCoder实现
@@ -33,27 +32,4 @@ public class InstantSimpledCoder<R extends Reader, W extends Writer> extends Sim
         return t == -1 ? null : Instant.ofEpochMilli(t);
     }
 
-    public static final class InstantJsonSimpledCoder<R extends JsonReader, W extends JsonWriter>
-            extends SimpledCoder<R, W, Instant> {
-
-        public static final InstantJsonSimpledCoder instance = new InstantJsonSimpledCoder();
-
-        @Override
-        public void convertTo(final W out, final Instant value) {
-            if (value == null) {
-                out.writeNull();
-            } else {
-                out.writeStandardString(value.toString());
-            }
-        }
-
-        @Override
-        public Instant convertFrom(R in) {
-            final String str = in.readStandardString();
-            if (str == null) {
-                return null;
-            }
-            return Instant.parse(str);
-        }
-    }
 }

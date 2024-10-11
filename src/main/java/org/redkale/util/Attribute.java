@@ -1002,11 +1002,11 @@ public interface Attribute<T, F> {
         final String interDesc = Type.getDescriptor(TypeToken.typeToClass(subclass));
         final String columnDesc = Type.getDescriptor(column);
         Class realclz = TypeToken.typeToClass(subclass);
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        RedkaleClassLoader loader = RedkaleClassLoader.getRedkaleClassLoader();
         try {
             loader.loadClass(realclz.getName());
         } catch (ClassNotFoundException e) {
-            loader = realclz.getClassLoader();
+            // do nothing
         }
         String pkgname = "";
         String clzname = newsubname.toString();
@@ -1233,12 +1233,7 @@ public interface Attribute<T, F> {
         cw.visitEnd();
 
         byte[] bytes = cw.toByteArray();
-        Class<Attribute> newClazz = (Class<Attribute>)
-                new ClassLoader(loader) {
-                    public final Class<?> loadClass(String name, byte[] b) {
-                        return defineClass(name, b, 0, b.length);
-                    }
-                }.loadClass(newDynName.replace('/', '.'), bytes);
+        Class<Attribute> newClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
         RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {

@@ -231,7 +231,7 @@ class Inners {
             }
             final String interName = clazz.getName().replace('.', '/');
             final String interDesc = org.redkale.asm.Type.getDescriptor(clazz);
-            final ClassLoader loader = clazz.getClassLoader();
+            final RedkaleClassLoader loader = RedkaleClassLoader.getRedkaleClassLoader();
             final String newDynName = "org/redkaledyn/creator/_DynArrayFunction__"
                     + clazz.getName().replace('.', '_').replace('$', '_');
             try {
@@ -283,11 +283,7 @@ class Inners {
             cw.visitEnd();
             final byte[] bytes = cw.toByteArray();
             try {
-                Class<?> resultClazz = new ClassLoader(loader) {
-                    public final Class<?> loadClass(String name, byte[] b) {
-                        return defineClass(name, b, 0, b.length);
-                    }
-                }.loadClass(newDynName.replace('/', '.'), bytes);
+                Class<?> resultClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
                 RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, resultClazz);
                 RedkaleClassLoader.putReflectionDeclaredConstructors(resultClazz, newDynName.replace('/', '.'));
                 return (IntFunction<T[]>) resultClazz.getDeclaredConstructor().newInstance();

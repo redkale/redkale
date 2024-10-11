@@ -662,7 +662,7 @@ public abstract class TypeToken<T> {
 
     // 注意:  RetResult<Map<String, Long>[]> 这种泛型带[]的尚未实现支持
     private static Type createParameterizedType0(final Class rawType, final Type... actualTypeArguments) {
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        RedkaleClassLoader loader = RedkaleClassLoader.getRedkaleClassLoader();
         StringBuilder tmpps = new StringBuilder(getClassTypeDescriptor(rawType));
         for (Type cz : actualTypeArguments) {
             tmpps.append(" ").append(getClassTypeDescriptor(cz));
@@ -715,11 +715,7 @@ public abstract class TypeToken<T> {
         }
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();
-        Class<?> newClazz = new ClassLoader(loader) {
-            public final Class<?> loadClass(String name, byte[] b) {
-                return defineClass(name, b, 0, b.length);
-            }
-        }.loadClass(newDynName.replace('/', '.'), bytes);
+        Class<?> newClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
         RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionPublicFields(newDynName.replace('/', '.'));
         try {

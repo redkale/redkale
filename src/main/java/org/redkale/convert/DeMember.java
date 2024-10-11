@@ -102,6 +102,10 @@ public final class DeMember<R extends Reader, T, F> {
         return new DeMember<>(attribute, factory.loadDecoder(fieldType), null, null);
     }
 
+    public void setPositionToIndex() {
+        this.index = this.position;
+    }
+
     public final boolean accepts(String name) {
         return attribute.field().equals(name);
     }

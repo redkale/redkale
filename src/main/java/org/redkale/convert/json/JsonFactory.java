@@ -10,7 +10,6 @@ import java.lang.reflect.Type;
 import java.math.*;
 import java.net.*;
 import org.redkale.convert.*;
-import org.redkale.convert.ext.*;
 import org.redkale.util.Uint128;
 
 /**
@@ -42,16 +41,15 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
     private JsonFactory(JsonFactory parent, int features) {
         super(parent, features);
         if (parent == null) {
-            this.register(InetAddress.class, InetAddressSimpledCoder.InetAddressJsonSimpledCoder.instance);
-            this.register(InetSocketAddress.class, InetAddressSimpledCoder.InetSocketAddressJsonSimpledCoder.instance);
-            this.register(Uint128.class, Uint128SimpledCoder.Uint128JsonSimpledCoder.instance);
-            this.register(BigInteger.class, BigIntegerSimpledCoder.BigIntegerJsonSimpledCoder.instance);
-            this.register(BigDecimal.class, BigDecimalSimpledCoder.BigDecimalJsonSimpledCoder.instance);
-            this.register(java.time.Instant.class, InstantSimpledCoder.InstantJsonSimpledCoder.instance);
-            this.register(java.time.LocalDate.class, LocalDateSimpledCoder.LocalDateJsonSimpledCoder.instance);
-            this.register(java.time.LocalTime.class, LocalTimeSimpledCoder.LocalTimeJsonSimpledCoder.instance);
-            this.register(
-                    java.time.LocalDateTime.class, LocalDateTimeSimpledCoder.LocalDateTimeJsonSimpledCoder.instance);
+            this.register(InetAddress.class, JsonCoders.InetAddressJsonSimpledCoder.instance);
+            this.register(InetSocketAddress.class, JsonCoders.InetSocketAddressJsonSimpledCoder.instance);
+            this.register(Uint128.class, JsonCoders.Uint128JsonSimpledCoder.instance);
+            this.register(BigInteger.class, JsonCoders.BigIntegerJsonSimpledCoder.instance);
+            this.register(BigDecimal.class, JsonCoders.BigDecimalJsonSimpledCoder.instance);
+            this.register(java.time.Instant.class, JsonCoders.InstantJsonSimpledCoder.instance);
+            this.register(java.time.LocalDate.class, JsonCoders.LocalDateJsonSimpledCoder.instance);
+            this.register(java.time.LocalTime.class, JsonCoders.LocalTimeJsonSimpledCoder.instance);
+            this.register(java.time.LocalDateTime.class, JsonCoders.LocalDateTimeJsonSimpledCoder.instance);
 
             this.register(JsonElement.class, (Decodeable) JsonElementDecoder.instance);
             this.register(JsonString.class, (Decodeable) JsonElementDecoder.instance);

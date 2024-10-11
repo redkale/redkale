@@ -21,6 +21,9 @@ import org.redkale.util.*;
 /** @author zhangjx */
 public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWriter> {
 
+    static final boolean INDEX_CHECK =
+            "true".equalsIgnoreCase(System.getProperty("redkale.convert.protobuf.indexcheck", "false"));
+
     private static final ProtobufFactory instance = new ProtobufFactory(
             null,
             getSystemPropertyInt("redkale.convert.protobuf.tiny", "redkale.convert.tiny", true, Convert.FEATURE_TINY)

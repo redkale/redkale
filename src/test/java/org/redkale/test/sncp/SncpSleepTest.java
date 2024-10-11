@@ -65,7 +65,7 @@ public class SncpSleepTest {
         CompletableFuture.allOf(futures).join();
         long e = System.currentTimeMillis() - s;
         System.out.println("耗时: " + e + " ms");
-        remoteCService.test(333L, new String[] {"aaa", "bbb"}, List.of(new File("D:/a.txt"), new File("D:/b.txt")));
+        remoteCService.test(333L, new String[] {"aaa", "bbb"}, List.of(new File("D:/a.txt"), new File("D:/b.txt")), 2);
         server.shutdown();
         workExecutor.shutdown();
         Assertions.assertTrue(e < 600);
