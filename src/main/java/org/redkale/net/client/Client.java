@@ -336,9 +336,6 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
 
     // 指定地址获取连接
     private CompletableFuture<C> connect(@Nonnull SocketAddress addr, @Nullable WorkThread workThread, boolean pool) {
-        if (addr == null) {
-            return CompletableFuture.failedFuture(new NullPointerException("address is empty"));
-        }
         final String traceid = Traces.currentTraceid();
         final AddressConnEntry<C> entry = getAddressConnEntry(addr, workThread);
         C ec = entry.connection;
@@ -416,10 +413,7 @@ public abstract class Client<C extends ClientConnection<R, P>, R extends ClientR
         if (workThread != null && workThread.threads() == entrys.length && workThread.index() > -1) {
             return entrys[workThread.index()];
         }
-        int index = workThread == null || workThread.index() < 0
-                ? random.nextInt(entrys.length)
-                : workThread.index() % entrys.length;
-        return entrys[index];
+        return entrys[random.nextInt(entrys.length)];
     }
 
     protected ClientFuture<R, P> createClientFuture(ClientConnection conn, R request) {
