@@ -504,6 +504,19 @@ public class RedkaleClassLoader extends URLClassLoader {
         return clz;
     }
 
+    public Class loadClass(String name, byte[] bs, Map<String, byte[]> innerClassMap) {
+        innerClassMap.forEach((k, v) -> {
+            dynClassBytesMap.put(k, v);
+            allDynClassBytesMap.put(k, v);
+        });
+        Class clz = defineClass(name, bs, 0, bs.length);
+        dynClassTypeMap.put(name, clz);
+        dynClassBytesMap.put(name, bs);
+        allDynClassTypeMap.put(name, clz);
+        allDynClassBytesMap.put(name, bs);
+        return clz;
+    }
+
     @Override
     public Class loadClass(String name) throws ClassNotFoundException {
         Class clazz = allDynClassTypeMap.get(name);
@@ -530,10 +543,6 @@ public class RedkaleClassLoader extends URLClassLoader {
         if (this.getParent() instanceof RedkaleClassLoader) {
             ((RedkaleClassLoader) getParent()).forEachCacheClass(action);
         }
-    }
-
-    public final void addDynClass(String name, byte[] bs) {
-        dynClassBytesMap.put(name, bs);
     }
 
     public void addURI(URI uri) {

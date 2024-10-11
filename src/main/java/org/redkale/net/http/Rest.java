@@ -4057,7 +4057,6 @@ public final class Rest {
                 }
                 cw2.visitEnd();
                 byte[] bytes = cw2.toByteArray();
-                classLoader.addDynClass((newDynName + "$" + entry.newActionClassName).replace('/', '.'), bytes);
                 innerClassBytesMap.put((newDynName + "$" + entry.newActionClassName).replace('/', '.'), bytes);
             }
         } // end  for each
@@ -4221,17 +4220,9 @@ public final class Rest {
 
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();
-        classLoader.addDynClass(newDynName.replace('/', '.'), bytes);
         try {
-            Class<?> newClazz = classLoader.loadClass(newDynName.replace('/', '.'));
-            innerClassBytesMap.forEach((n, bs) -> {
-                try {
-                    classLoader.loadClass(n, bs);
-                    RedkaleClassLoader.putReflectionClass(n);
-                } catch (Exception e) {
-                    throw new RestException(e);
-                }
-            });
+            Class<?> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes, innerClassBytesMap);
+            innerClassBytesMap.forEach((n, bs) -> RedkaleClassLoader.putReflectionClass(n));
             RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
             for (java.lang.reflect.Type t : retvalTypes) {
                 JsonFactory.root().loadEncoder(t);
