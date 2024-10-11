@@ -679,7 +679,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
         final String srcClassName = srcClass.getName().replace('.', '/');
         final String destDesc = Type.getDescriptor(destClass);
         final String srcDesc = Type.getDescriptor(srcClass);
-        final RedkaleClassLoader loader = RedkaleClassLoader.getRedkaleClassLoader();
+        final RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
         final String utilClassName = Utility.class.getName().replace('.', '/');
         final String newDynName = "org/redkaledyn/copier/_Dyn" + Copier.class.getSimpleName() + "_" + options
                 + "__" + srcClass.getName().replace('.', '_').replace('$', '_')
@@ -688,8 +688,8 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                         : ("__" + destClass.getName().replace('.', '_').replace('$', '_')))
                 + (extendInfo.length() == 0 ? "" : Utility.md5Hex(extendInfo.toString()));
         try {
-            Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-            return (Copier) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz)
+            Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
+            return (Copier) (clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz)
                     .getDeclaredConstructor()
                     .newInstance();
         } catch (Throwable ex) {
@@ -1337,8 +1337,8 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
         cw.visitEnd();
         // ------------------------------------------------------------------------------
         byte[] bytes = cw.toByteArray();
-        Class<?> newClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
-        RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
+        Class<?> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
+        classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {
             return (Copier) newClazz.getDeclaredConstructor().newInstance();

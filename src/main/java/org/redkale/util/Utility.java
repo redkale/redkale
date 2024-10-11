@@ -97,7 +97,7 @@ public final class Utility {
                                 return defineClass(name, b, 0, b.length);
                             }
                         }.loadClass(unsafeName, classBytes);
-                RedkaleClassLoader.putDynClass(unsafeClazz1.getName(), classBytes, unsafeClazz1);
+                RedkaleClassLoader.putDynClass0(unsafeClazz1.getName(), classBytes, unsafeClazz1);
                 RedkaleClassLoader.putReflectionDeclaredConstructors(unsafeClazz1, unsafeClazz1.getName());
             }
             unsafe0 = unsafeClazz1.getDeclaredConstructor().newInstance();
@@ -245,7 +245,7 @@ public final class Utility {
                                 return defineClass(name, b, 0, b.length);
                             }
                         }.loadClass("org.redkale.util.SignalShutDown", classBytes);
-                RedkaleClassLoader.putDynClass(shutdownClazz1.getName(), classBytes, shutdownClazz1);
+                RedkaleClassLoader.putDynClass0(shutdownClazz1.getName(), classBytes, shutdownClazz1);
                 RedkaleClassLoader.putReflectionDeclaredConstructors(shutdownClazz1, shutdownClazz1.getName());
             }
             signalShutdownConsumer0 = shutdownClazz1.getDeclaredConstructor().newInstance();
@@ -2226,12 +2226,11 @@ public final class Utility {
     /**
      * 将一个或多个新元素添加到数组结尾
      *
-     * @param <T> 泛型
      * @param array 原数组
      * @param objs 待追加数据
      * @return 新数组
      */
-    public static <T> Object[][] append(final Object[][] array, final Object[]... objs) {
+    public static Object[][] append(final Object[][] array, final Object[]... objs) {
         if (array == null || array.length == 0) {
             return objs;
         }

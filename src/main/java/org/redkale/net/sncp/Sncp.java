@@ -483,7 +483,7 @@ public abstract class Sncp {
      * 创建Service的本地模式Class
      *
      * @param <T> Service子类
-     * @param dynLoader DynBytesClassLoader
+     * @param classLoader DynBytesClassLoader
      * @param name 资源名
      * @param serviceImplClass Service类
      * @param methodBoost 方法扩展
@@ -491,7 +491,7 @@ public abstract class Sncp {
      */
     @SuppressWarnings("unchecked")
     protected static <T extends Service> Class<? extends T> createLocalServiceClass(
-            RedkaleClassLoader dynLoader,
+            RedkaleClassLoader classLoader,
             final String name,
             final Class<T> serviceImplClass,
             final AsmMethodBoost methodBoost) {
@@ -527,17 +527,16 @@ public abstract class Sncp {
             }
             newDynName += "_" + (normal ? name : hash(name));
         }
-        if (Utility.inNativeImage() || methodBoost == null) { // 加强动态时不能重复加载
-            try {
-                final String newDynClass = newDynName.replace('/', '.');
-                Class clz = RedkaleClassLoader.findDynClass(newDynClass);
-                return (Class<T>) (clz == null ? dynLoader.loadClass(newDynClass) : clz);
-            } catch (ClassNotFoundException e) {
-                // do nothing
-            } catch (Throwable t) {
-                t.printStackTrace();
-            }
+        // if (Utility.inNativeImage() || methodBoost == null) { // 加强动态时不能重复加载
+        try {
+            final String newDynClass = newDynName.replace('/', '.');
+            return (Class<T>) classLoader.findClass(newDynClass);
+        } catch (ClassNotFoundException e) {
+            // do nothing
+        } catch (Throwable t) {
+            t.printStackTrace();
         }
+        // }
         // ------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
@@ -584,8 +583,8 @@ public abstract class Sncp {
             fv.visitEnd();
         }
         if (methodBoost != null) {
-            createNewMethods(dynLoader, serviceImplClass, methodBoost, new HashSet<>(), cw, newDynName, supDynName);
-            methodBoost.doAfterMethods(dynLoader, cw, newDynName, FIELDPREFIX);
+            createNewMethods(classLoader, serviceImplClass, methodBoost, new HashSet<>(), cw, newDynName, supDynName);
+            methodBoost.doAfterMethods(classLoader, cw, newDynName, FIELDPREFIX);
         }
         { // 构造函数
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
@@ -593,7 +592,7 @@ public abstract class Sncp {
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
             if (methodBoost != null) {
-                methodBoost.doConstructorMethod(dynLoader, cw, mv, newDynName, FIELDPREFIX, false);
+                methodBoost.doConstructorMethod(classLoader, cw, mv, newDynName, FIELDPREFIX, false);
             }
             mv.visitInsn(RETURN);
             mv.visitMaxs(1, 1);
@@ -602,9 +601,9 @@ public abstract class Sncp {
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();
         final String newDynClass = newDynName.replace('/', '.');
-        Class<?> newClazz = dynLoader.loadClass(newDynClass, bytes);
+        Class<?> newClazz = classLoader.loadClass(newDynClass, bytes);
 
-        RedkaleClassLoader.putDynClass(newDynClass, bytes, newClazz);
+        classLoader.putDynClass(newDynClass, bytes, newClazz);
         RedkaleClassLoader.putReflectionPublicClasses(newDynClass);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynClass);
         try {
@@ -620,8 +619,9 @@ public abstract class Sncp {
     }
 
     public static <T extends Service> T createSimpleLocalService(
-            Class<T> serviceImplClass, ResourceFactory resourceFactory) {
-        return createLocalService(null, "", serviceImplClass, null, resourceFactory, null, null, null, null, null);
+            RedkaleClassLoader classLoader, Class<T> serviceImplClass, ResourceFactory resourceFactory) {
+        return createLocalService(
+                classLoader, "", serviceImplClass, null, resourceFactory, null, null, null, null, null);
     }
 
     private static void createNewMethods(
@@ -765,8 +765,7 @@ public abstract class Sncp {
             final String remoteGroup,
             final AnyValue conf) {
         try {
-            final RedkaleClassLoader dynLoader = RedkaleClassLoader.getRedkaleClassLoader(classLoader);
-            final Class newClazz = createLocalServiceClass(dynLoader, name, serviceImplClass, methodBoost);
+            final Class newClazz = createLocalServiceClass(classLoader, name, serviceImplClass, methodBoost);
             T service = (T) newClazz.getDeclaredConstructor().newInstance();
             // --------------------------------------
             Service remoteService = null;
@@ -818,7 +817,7 @@ public abstract class Sncp {
             }
             if (methodBoost != null) {
                 // 必须用servcie的ClassLoader， 因为service是动态ClassLoader会与doMethod里的动态ClassLoader不一致
-                methodBoost.doInstance(dynLoader, resourceFactory, service);
+                methodBoost.doInstance(classLoader, resourceFactory, service);
             }
             return service;
         } catch (RuntimeException rex) {
@@ -829,6 +828,7 @@ public abstract class Sncp {
     }
 
     public static <T extends Service> T createSimpleRemoteService(
+            RedkaleClassLoader classLoader,
             Class<T> serviceImplClass,
             ResourceFactory resourceFactory,
             SncpRpcGroups sncpRpcGroups,
@@ -841,7 +841,7 @@ public abstract class Sncp {
             throw new SncpException(SncpClient.class.getSimpleName() + " is null");
         }
         return createRemoteService(
-                null, "", serviceImplClass, null, resourceFactory, sncpRpcGroups, client, null, group, null);
+                classLoader, "", serviceImplClass, null, resourceFactory, sncpRpcGroups, client, null, group, null);
     }
 
     /**
@@ -897,7 +897,7 @@ public abstract class Sncp {
      */
     @SuppressWarnings("unchecked")
     public static <T extends Service> T createRemoteService(
-            final ClassLoader classLoader,
+            final RedkaleClassLoader classLoader,
             final String name,
             final Class<T> serviceTypeOrImplClass,
             final AsmMethodBoost methodBoost,
@@ -938,7 +938,6 @@ public abstract class Sncp {
         final String sncpInfoDesc = Type.getDescriptor(SncpRemoteInfo.class);
         final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
-        final RedkaleClassLoader dynLoader = RedkaleClassLoader.getRedkaleClassLoader(classLoader);
         String newDynName = "org/redkaledyn/service/remote/_DynRemoteService__"
                 + serviceTypeOrImplClass.getName().replace('.', '_').replace('$', '_');
         if (!name.isEmpty()) {
@@ -955,8 +954,8 @@ public abstract class Sncp {
         }
         try {
             final String newDynClass = newDynName.replace('/', '.');
-            Class clz = RedkaleClassLoader.findDynClass(newDynClass);
-            Class newClazz = clz == null ? dynLoader.loadClass(newDynClass) : clz;
+            Class clz = classLoader.findDynClass(newDynClass);
+            Class newClazz = clz == null ? classLoader.loadClass(newDynClass) : clz;
             T service = (T) newClazz.getDeclaredConstructor().newInstance();
             {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_conf");
@@ -975,7 +974,7 @@ public abstract class Sncp {
             }
             if (methodBoost != null) {
                 // 必须用servcie的ClassLoader， 因为service是动态ClassLoader会与doMethod里的动态ClassLoader不一致
-                methodBoost.doInstance(dynLoader, resourceFactory, service);
+                methodBoost.doInstance(classLoader, resourceFactory, service);
             }
             return service;
         } catch (Throwable ex) {
@@ -1087,7 +1086,7 @@ public abstract class Sncp {
             if (methodBoost != null) {
                 List<Class<? extends Annotation>> filterAnns = methodBoost.filterMethodAnnotations(method);
                 newMethod = methodBoost.doMethod(
-                        dynLoader, cw, serviceTypeOrImplClass, newDynName, FIELDPREFIX, filterAnns, method, null);
+                        classLoader, cw, serviceTypeOrImplClass, newDynName, FIELDPREFIX, filterAnns, method, null);
             }
             if (newMethod != null) {
                 acc = newMethod.getMethodAccs();
@@ -1214,8 +1213,8 @@ public abstract class Sncp {
             mv.visitEnd();
         }
         if (methodBoost != null) {
-            createNewMethods(dynLoader, serviceTypeOrImplClass, methodBoost, methodKeys, cw, newDynName, supDynName);
-            methodBoost.doAfterMethods(dynLoader, cw, newDynName, FIELDPREFIX);
+            createNewMethods(classLoader, serviceTypeOrImplClass, methodBoost, methodKeys, cw, newDynName, supDynName);
+            methodBoost.doAfterMethods(classLoader, cw, newDynName, FIELDPREFIX);
         }
         { // 构造函数
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
@@ -1228,7 +1227,7 @@ public abstract class Sncp {
                     "()V",
                     false);
             if (methodBoost != null) {
-                methodBoost.doConstructorMethod(dynLoader, cw, mv, newDynName, FIELDPREFIX, true);
+                methodBoost.doConstructorMethod(classLoader, cw, mv, newDynName, FIELDPREFIX, true);
             }
             mv.visitInsn(RETURN);
             mv.visitMaxs(1, 1);
@@ -1237,8 +1236,8 @@ public abstract class Sncp {
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();
         final String newDynClass = newDynName.replace('/', '.');
-        Class<?> newClazz = dynLoader.loadClass(newDynClass, bytes);
-        RedkaleClassLoader.putDynClass(newDynClass, bytes, newClazz);
+        Class<?> newClazz = classLoader.loadClass(newDynClass, bytes);
+        classLoader.putDynClass(newDynClass, bytes, newClazz);
         RedkaleClassLoader.putReflectionPublicConstructors(newClazz, newDynClass);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynClass);
         try {
@@ -1263,7 +1262,7 @@ public abstract class Sncp {
             }
             if (methodBoost != null) {
                 // 必须用servcie的ClassLoader， 因为service是动态ClassLoader会与doMethod里的动态ClassLoader不一致
-                methodBoost.doInstance(dynLoader, resourceFactory, service);
+                methodBoost.doInstance(classLoader, resourceFactory, service);
             }
             return service;
         } catch (Exception ex) {

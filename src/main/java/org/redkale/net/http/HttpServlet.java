@@ -560,12 +560,12 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         for (Class cz : method.getParameterTypes()) {
             tmpps.append("__").append(cz.getName().replace('.', '_'));
         }
-        RedkaleClassLoader loader = RedkaleClassLoader.getRedkaleClassLoader();
+        RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
         final String newDynName = "org/redkaledyn/http/servlet/action/_DynHttpActionServlet__"
                 + this.getClass().getName().replace('.', '_').replace('$', '_') + "__" + method.getName() + tmpps;
         try {
-            Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-            Class newClazz = clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz;
+            Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
+            Class newClazz = clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz;
             HttpServlet instance =
                     (HttpServlet) newClazz.getDeclaredConstructor().newInstance();
             instance.getClass().getField("_factServlet").set(instance, this);
@@ -626,8 +626,8 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         cw.visitEnd();
         // ------------------------------------------------------------------------------
         byte[] bytes = cw.toByteArray();
-        Class<?> newClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
-        RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
+        Class<?> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
+        classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {
             HttpServlet instance =

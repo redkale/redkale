@@ -356,11 +356,11 @@ public abstract class SncpActionServlet extends SncpServlet {
         final boolean boolReturnTypeFuture = Future.class.isAssignableFrom(method.getReturnType());
         final String newDynName = "org/redkaledyn/sncp/servlet/action/_DynSncpActionServlet__"
                 + resourceType.getSimpleName() + "_" + method.getName() + "_" + actionid;
-        RedkaleClassLoader loader = RedkaleClassLoader.getRedkaleClassLoader();
+        RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
         Class<?> newClazz = null;
         try {
-            Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-            newClazz = clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz;
+            Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
+            newClazz = clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz;
         } catch (Throwable ex) {
             // do nothing
         }
@@ -371,8 +371,7 @@ public abstract class SncpActionServlet extends SncpServlet {
                 TypeToken.getGenericType(method.getGenericReturnType(), serviceClass);
 
         final Class[] paramClasses = method.getParameterTypes();
-        java.lang.reflect.Type paramComposeBeanType0 = SncpRemoteAction.createParamComposeBeanType(
-                loader, serviceImplClass, method, actionid, originalParamTypes, paramClasses);
+        java.lang.reflect.Type paramComposeBeanType0 = SncpRemoteAction.createParamComposeBeanType(classLoader, serviceImplClass, method, actionid, originalParamTypes, paramClasses);
         if (paramComposeBeanType0 != null && paramComposeBeanType0 == originalParamTypes[0]) {
             paramComposeBeanType0 = null;
         }
@@ -712,8 +711,8 @@ public abstract class SncpActionServlet extends SncpServlet {
             cw.visitEnd();
 
             byte[] bytes = cw.toByteArray();
-            newClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
-            RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
+            newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
+            classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
             RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
 
             try {

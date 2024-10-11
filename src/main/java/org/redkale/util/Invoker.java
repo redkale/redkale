@@ -91,7 +91,7 @@ public interface Invoker<C, R> {
         } else if (returnType == void.class) {
             returnDesc = Type.getDescriptor(Void.class);
         }
-        RedkaleClassLoader loader = RedkaleClassLoader.getRedkaleClassLoader();
+        RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
         StringBuilder sbpts = new StringBuilder();
         for (Class c : method.getParameterTypes()) {
             sbpts.append('_').append(c.getName().replace('.', '_').replace('$', '_'));
@@ -99,8 +99,8 @@ public interface Invoker<C, R> {
         final String newDynName = "org/redkaledyn/invoker/_Dyn" + Invoker.class.getSimpleName() + "_"
                 + clazz.getName().replace('.', '_').replace('$', '_') + "_" + method.getName() + sbpts;
         try {
-            Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-            return (Invoker<C, T>) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz)
+            Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
+            return (Invoker<C, T>) (clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz)
                     .getDeclaredConstructor()
                     .newInstance();
         } catch (Throwable ex) {
@@ -208,9 +208,9 @@ public interface Invoker<C, R> {
         Class<?> resultClazz = null;
         try {
             if (resultClazz == null) {
-                resultClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
+                resultClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
             }
-            RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, resultClazz);
+            classLoader.putDynClass(newDynName.replace('/', '.'), bytes, resultClazz);
             RedkaleClassLoader.putReflectionDeclaredConstructors(resultClazz, newDynName.replace('/', '.'));
             return (Invoker<C, T>) resultClazz.getDeclaredConstructor().newInstance();
         } catch (Exception ex) {

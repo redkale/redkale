@@ -459,7 +459,7 @@ public class MessageModuleEngine extends ModuleEngine {
                 try {
                     String clzName = innerFullName.replace('/', '.');
                     Class<? extends MessageConsumer> clazz = classLoader.loadClass(clzName, bytes);
-                    RedkaleClassLoader.putDynClass(clzName, bytes, clazz);
+                    classLoader.putDynClass(clzName, bytes, clazz);
                     RedkaleClassLoader.putReflectionPublicConstructors(clazz, clzName);
                     MessageConsumer consumer = (MessageConsumer) clazz.getConstructors()[0].newInstance(service);
                     addMessageConsumer(consumer);

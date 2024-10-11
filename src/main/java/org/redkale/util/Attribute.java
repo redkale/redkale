@@ -1002,9 +1002,9 @@ public interface Attribute<T, F> {
         final String interDesc = Type.getDescriptor(TypeToken.typeToClass(subclass));
         final String columnDesc = Type.getDescriptor(column);
         Class realclz = TypeToken.typeToClass(subclass);
-        RedkaleClassLoader loader = RedkaleClassLoader.getRedkaleClassLoader();
+        RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
         try {
-            loader.loadClass(realclz.getName());
+            classLoader.loadClass(realclz.getName());
         } catch (ClassNotFoundException e) {
             // do nothing
         }
@@ -1021,8 +1021,8 @@ public interface Attribute<T, F> {
         final String newDynName = "org/redkaledyn/attribute/" + pkgname + "_Dyn" + Attribute.class.getSimpleName()
                 + "__" + clzname + "__" + fieldkey.substring(fieldkey.indexOf('.') + 1);
         try {
-            Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-            Attribute rs = (Attribute) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz)
+            Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
+            Attribute rs = (Attribute) (clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz)
                     .getDeclaredConstructor()
                     .newInstance();
             java.lang.reflect.Field _gtype = rs.getClass().getDeclaredField("_gtype");
@@ -1233,8 +1233,8 @@ public interface Attribute<T, F> {
         cw.visitEnd();
 
         byte[] bytes = cw.toByteArray();
-        Class<Attribute> newClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
-        RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
+        Class<Attribute> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
+        classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {
             Attribute rs = newClazz.getDeclaredConstructor().newInstance();

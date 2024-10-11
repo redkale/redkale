@@ -40,10 +40,12 @@ public class RestSleepTest {
         method.invoke(application);
 
         // ------------------------ 初始化 CService ------------------------------------
-        RestSleepService service = Sncp.createSimpleLocalService(RestSleepService.class, resFactory);
+        RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
+        RestSleepService service =
+                Sncp.createSimpleLocalService(application.getClassLoader(), RestSleepService.class, resFactory);
         HttpServer server = new HttpServer(application, System.currentTimeMillis(), resFactory);
         server.getResourceFactory().register(application);
-        System.out.println("servlet = " + server.addRestServlet(null, service, null, HttpServlet.class, ""));
+        System.out.println("servlet = " + server.addRestServlet(classLoader, service, null, HttpServlet.class, ""));
         server.init(AnyValueWriter.create("port", 0));
         server.start();
 

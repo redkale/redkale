@@ -51,7 +51,7 @@ public class ABMainService implements Service {
         rpcGroups.computeIfAbsent("g99", "TCP").putAddress(new InetSocketAddress("127.0.0.1", 5599));
 
         // ------------------------ 初始化 CService ------------------------------------
-        CService cservice = Sncp.createSimpleLocalService(CService.class, resFactory);
+        CService cservice = Sncp.createSimpleLocalService(application.getClassLoader(), CService.class, resFactory);
         SncpServer cserver = new SncpServer();
         cserver.getResourceFactory().register(application);
         // cserver.getLogger().setLevel(Level.WARNING);
@@ -60,8 +60,9 @@ public class ABMainService implements Service {
         cserver.start();
 
         // ------------------------ 初始化 BCService ------------------------------------
-        BCService bcservice = Sncp.createSimpleLocalService(BCService.class, resFactory);
-        CService remoteCService = Sncp.createSimpleRemoteService(CService.class, resFactory, rpcGroups, client, "g77");
+        BCService bcservice = Sncp.createSimpleLocalService(application.getClassLoader(), BCService.class, resFactory);
+        CService remoteCService = Sncp.createSimpleRemoteService(
+                application.getClassLoader(), CService.class, resFactory, rpcGroups, client, "g77");
         if (remoteCService != null) {
             resFactory.inject(remoteCService);
             resFactory.register("", remoteCService);
@@ -74,9 +75,10 @@ public class ABMainService implements Service {
         bcserver.start();
 
         // ------------------------ 初始化 ABMainService ------------------------------------
-        ABMainService service = Sncp.createSimpleLocalService(ABMainService.class, resFactory);
-        BCService remoteBCService =
-                Sncp.createSimpleRemoteService(BCService.class, resFactory, rpcGroups, client, "g88");
+        ABMainService service =
+                Sncp.createSimpleLocalService(application.getClassLoader(), ABMainService.class, resFactory);
+        BCService remoteBCService = Sncp.createSimpleRemoteService(
+                application.getClassLoader(), BCService.class, resFactory, rpcGroups, client, "g88");
         if (remoteBCService != null) {
             resFactory.inject(remoteBCService);
             resFactory.register("", remoteBCService);

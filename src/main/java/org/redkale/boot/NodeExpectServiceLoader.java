@@ -129,11 +129,11 @@ class NodeExpectServiceLoader implements ResourceTypeLoader {
                         group,
                         entry.getProperty());
             }
-            final Class restype = Sncp.getResourceType(service);
-            if (rf.find(resourceName, restype) == null) {
-                regFactory.register(resourceName, restype, service);
+            final Class resType = Sncp.getResourceType(service);
+            if (rf.find(resourceName, resType) == null) {
+                regFactory.register(resourceName, resType, service);
             } else if (nodeServer.isSNCP() && !entry.isAutoload()) {
-                throw new RedkaleException(restype.getSimpleName() + "(class:" + serviceImplClass.getName() + ", name:"
+                throw new RedkaleException(resType.getSimpleName() + "(class:" + serviceImplClass.getName() + ", name:"
                         + resourceName + ", group:" + group + ") is repeat.");
             }
             if (Sncp.isRemote(service)) {

@@ -274,7 +274,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @return RestServlet
      */
     public <S extends WebSocket, T extends WebSocketServlet> T addRestWebSocketServlet(
-            final ClassLoader classLoader,
+            final RedkaleClassLoader classLoader,
             final Class<S> webSocketType,
             final MessageAgent messageAgent,
             final String prefix,
@@ -300,7 +300,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      * @return RestServlet
      */
     public <S extends Service, T extends HttpServlet> T addRestServlet(
-            final ClassLoader classLoader,
+            final RedkaleClassLoader classLoader,
             final S service,
             final Class userType,
             final Class<T> baseServletType,
@@ -324,7 +324,7 @@ public class HttpServer extends Server<String, HttpContext, HttpRequest, HttpRes
      */
     @SuppressWarnings("unchecked")
     public <S extends Service, T extends HttpServlet> T addRestServlet(
-            final ClassLoader classLoader,
+            final RedkaleClassLoader classLoader,
             final String name,
             final S service,
             final Class userType,

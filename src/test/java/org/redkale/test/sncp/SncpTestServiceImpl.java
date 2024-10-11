@@ -95,7 +95,8 @@ public class SncpTestServiceImpl implements SncpTestIService {
         final SncpClient client =
                 new SncpClient("", asyncGroup, "0", sncpAddress, new ClientAddress(sncpAddress), "TCP", 16, 100);
 
-        Service service = Sncp.createSimpleLocalService(SncpTestServiceImpl.class, factory);
+        Service service =
+                Sncp.createSimpleLocalService(application.getClassLoader(), SncpTestServiceImpl.class, factory);
         for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }
@@ -104,7 +105,8 @@ public class SncpTestServiceImpl implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        service = Sncp.createSimpleRemoteService(SncpTestServiceImpl.class, factory, rpcGroups, client, "g70");
+        service = Sncp.createSimpleRemoteService(
+                application.getClassLoader(), SncpTestServiceImpl.class, factory, rpcGroups, client, "g70");
         for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }
@@ -113,7 +115,8 @@ public class SncpTestServiceImpl implements SncpTestIService {
             System.out.println(method);
         }
         System.out.println("-----------------------------------");
-        service = Sncp.createSimpleRemoteService(SncpTestIService.class, factory, rpcGroups, client, "g70");
+        service = Sncp.createSimpleRemoteService(
+                application.getClassLoader(), SncpTestIService.class, factory, rpcGroups, client, "g70");
         for (Method method : service.getClass().getDeclaredMethods()) {
             System.out.println(method);
         }

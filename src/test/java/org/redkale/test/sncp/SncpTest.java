@@ -8,6 +8,7 @@ package org.redkale.test.sncp;
 import java.net.InetSocketAddress;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.redkale.boot.*;
 import org.redkale.convert.pb.ProtobufConvert;
@@ -37,25 +38,32 @@ public class SncpTest {
 
     private static Application application;
 
+    private static RedkaleClassLoader classLoader;
+
     private static SncpRpcGroups rpcGroups;
 
     private boolean main;
 
     public static void main(String[] args) throws Throwable {
         SncpTest test = new SncpTest();
+        init();
         test.main = true;
         test.run();
     }
 
-    @Test
-    public void run() throws Exception {
+    @BeforeAll
+    public static void init() throws Exception {
         LoggingBaseHandler.initDebugLogConfig();
         application = Application.create(true);
+        classLoader = application.getClassLoader();
         rpcGroups = application.getSncpRpcGroups();
         factory = application.getResourceFactory();
         factory.register("", ProtobufConvert.class, ProtobufFactory.root().getConvert());
         factory.register("", Application.class, application);
+    }
 
+    @Test
+    public void run() throws Exception {
         if (System.getProperty("client") == null) {
             runServer();
             if (port2 > 0) {
@@ -95,6 +103,7 @@ public class SncpTest {
                 100);
 
         final SncpTestIService service = Sncp.createSimpleRemoteService(
+                classLoader,
                 SncpTestIService.class,
                 factory,
                 rpcGroups,
@@ -200,6 +209,7 @@ public class SncpTest {
                     }
 
                     SncpTestIService service = Sncp.createSimpleLocalService(
+                            classLoader,
                             SncpTestServiceImpl.class,
                             factory); // Sncp.createSimpleLocalService(SncpTestServiceImpl.class, null, factory,
                     // transFactory, addr, "server");
@@ -242,6 +252,7 @@ public class SncpTest {
                             .putAddress(new InetSocketAddress(myhost, port));
 
                     Service service = Sncp.createSimpleLocalService(
+                            new RedkaleClassLoader(Thread.currentThread().getContextClassLoader()),
                             SncpTestServiceImpl.class,
                             factory); // Sncp.createSimpleLocalService(SncpTestServiceImpl.class, null, factory,
                     // transFactory, addr, "server");

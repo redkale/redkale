@@ -66,10 +66,14 @@ public class RedkaleClassLoader extends URLClassLoader {
         "org.redkale.watch"
     };
 
-    // redkale里所有使用动态字节码生成的类都需要存于此处
-    private static final ConcurrentHashMap<String, byte[]> dynClassBytesMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, byte[]> dynClassBytesMap = new ConcurrentHashMap<>();
 
-    private static final ConcurrentHashMap<String, Class> dynClassTypeMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Class> dynClassTypeMap = new ConcurrentHashMap<>();
+
+    // redkale里所有使用动态字节码生成的类都需要存于此处
+    private static final ConcurrentHashMap<String, byte[]> allDynClassBytesMap = new ConcurrentHashMap<>();
+
+    private static final ConcurrentHashMap<String, Class> allDynClassTypeMap = new ConcurrentHashMap<>();
 
     private static final CopyOnWriteArraySet<String> resourcePathSet = new CopyOnWriteArraySet<>();
 
@@ -171,20 +175,30 @@ public class RedkaleClassLoader extends URLClassLoader {
         }
     }
 
-    public static byte[] putDynClass(String name, byte[] bs, Class clazz) {
+    static void putDynClass0(String name, byte[] bs, Class clazz) {
+        Objects.requireNonNull(name);
+        Objects.requireNonNull(bs);
+        Objects.requireNonNull(clazz);
+        allDynClassTypeMap.put(name, clazz);
+        allDynClassBytesMap.put(name, bs);
+    }
+
+    public void putDynClass(String name, byte[] bs, Class clazz) {
         Objects.requireNonNull(name);
         Objects.requireNonNull(bs);
         Objects.requireNonNull(clazz);
         dynClassTypeMap.put(name, clazz);
-        return dynClassBytesMap.put(name, bs);
+        dynClassBytesMap.put(name, bs);
+        allDynClassTypeMap.put(name, clazz);
+        allDynClassBytesMap.put(name, bs);
     }
 
-    public static Class findDynClass(String name) {
+    public Class findDynClass(String name) {
         return dynClassTypeMap.get(name);
     }
 
     public static void forEachDynClass(BiConsumer<String, byte[]> action) {
-        dynClassBytesMap.forEach(action);
+        allDynClassBytesMap.forEach(action);
     }
 
     public static void putReflectionClass(String className) {

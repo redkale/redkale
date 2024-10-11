@@ -292,13 +292,12 @@ public interface Creator<T> {
         final String supDynName = Creator.class.getName().replace('.', '/');
         final String interName = clazz.getName().replace('.', '/');
         final String interDesc = Type.getDescriptor(clazz);
-        RedkaleClassLoader loader =
-                RedkaleClassLoader.getRedkaleClassLoader();
+        RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
         final String newDynName = "org/redkaledyn/creator/_Dyn" + Creator.class.getSimpleName() + "__"
                 + clazz.getName().replace('.', '_').replace('$', '_') + (paramCount < 0 ? "" : ("_" + paramCount));
         try {
-            Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-            return (Creator) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz)
+            Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
+            return (Creator) (clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz)
                     .getDeclaredConstructor()
                     .newInstance();
         } catch (Throwable ex) {
@@ -569,8 +568,8 @@ public interface Creator<T> {
 
         byte[] bytes = cw.toByteArray();
         try {
-            Class newClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
-            RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
+            Class newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
+            classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
             RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
             return (Creator) newClazz.getDeclaredConstructor().newInstance();
         } catch (Exception ex) {

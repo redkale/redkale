@@ -54,10 +54,10 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                     final String realHandlerDesc = Type.getDescriptor(CompletionHandler.class);
                     final String newDynName = "org/redkaledyn/sncp/handler/_Dyn" + sncpHandlerClass.getSimpleName()
                             + "__" + handlerClass.getName().replace('.', '/').replace('$', '_');
-                    RedkaleClassLoader loader = RedkaleClassLoader.getRedkaleClassLoader();
+                    RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
                     try {
-                        Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-                        Class newHandlerClazz = clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz;
+                        Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
+                        Class newHandlerClazz = clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz;
                         return (Creator<SncpAsyncHandler>) Creator.create(newHandlerClazz);
                     } catch (Throwable ex) {
                         // do nothing
@@ -206,8 +206,8 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                     }
                     cw.visitEnd();
                     byte[] bytes = cw.toByteArray();
-                    Class newClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
-                    RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
+                    Class newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
+                    classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
                     return (Creator<SncpAsyncHandler>) Creator.create(newClazz);
                 })
                 .create(factHandler);

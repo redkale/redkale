@@ -119,8 +119,8 @@ public class NodeHttpServer extends NodeServer {
 
     @Override
     protected void loadService(ClassFilter<? extends Service> serviceFilter) throws Exception {
-        super.loadService(serviceFilter);
         resourceFactory.register(new NodeWebSocketNodeLoader(this));
+        super.loadService(serviceFilter);
     }
 
     @Override

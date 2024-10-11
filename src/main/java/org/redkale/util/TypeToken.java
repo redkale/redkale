@@ -662,7 +662,7 @@ public abstract class TypeToken<T> {
 
     // 注意:  RetResult<Map<String, Long>[]> 这种泛型带[]的尚未实现支持
     private static Type createParameterizedType0(final Class rawType, final Type... actualTypeArguments) {
-        RedkaleClassLoader loader = RedkaleClassLoader.getRedkaleClassLoader();
+        RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
         StringBuilder tmpps = new StringBuilder(getClassTypeDescriptor(rawType));
         for (Type cz : actualTypeArguments) {
             tmpps.append(" ").append(getClassTypeDescriptor(cz));
@@ -683,7 +683,7 @@ public abstract class TypeToken<T> {
         final String newDynName =
                 "org/redkaledyn/typetoken/_Dyn" + TypeToken.class.getSimpleName() + "_" + nsb.toString();
         try {
-            return loader.loadClass(newDynName.replace('/', '.'))
+            return classLoader.loadClass(newDynName.replace('/', '.'))
                     .getField("field")
                     .getGenericType();
         } catch (Throwable ex) {
@@ -715,8 +715,8 @@ public abstract class TypeToken<T> {
         }
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();
-        Class<?> newClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
-        RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
+        Class<?> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
+        classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionPublicFields(newDynName.replace('/', '.'));
         try {
             return newClazz.getField("field").getGenericType();

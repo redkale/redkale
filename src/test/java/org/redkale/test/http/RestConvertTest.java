@@ -20,6 +20,7 @@ import org.redkale.net.http.HttpServer;
 import org.redkale.net.http.HttpServlet;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.util.AnyValueWriter;
+import org.redkale.util.RedkaleClassLoader;
 
 /**
  *
@@ -44,12 +45,13 @@ public class RestConvertTest {
         Method method = Application.class.getDeclaredMethod("initWorkExecutor");
         method.setAccessible(true);
         method.invoke(application);
-
+        RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
         // ------------------------ 初始化 CService ------------------------------------
-        RestConvertService service = Sncp.createSimpleLocalService(RestConvertService.class, resFactory);
+        RestConvertService service =
+                Sncp.createSimpleLocalService(application.getClassLoader(), RestConvertService.class, resFactory);
         HttpServer server = new HttpServer(application, System.currentTimeMillis(), resFactory);
         server.getResourceFactory().register(application);
-        System.out.println("servlet = " + server.addRestServlet(null, service, null, HttpServlet.class, ""));
+        System.out.println("servlet = " + server.addRestServlet(classLoader, service, null, HttpServlet.class, ""));
         server.init(AnyValueWriter.create("port", 0));
         server.start();
 

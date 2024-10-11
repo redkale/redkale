@@ -24,6 +24,7 @@ import org.redkale.net.sncp.Sncp;
 import org.redkale.net.sncp.SncpClient;
 import org.redkale.net.sncp.SncpRpcGroups;
 import org.redkale.util.AnyValue;
+import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.Utility;
 
 /**
@@ -38,6 +39,8 @@ public class MessagedInstanceTest {
 
     private static ResourceFactory resourceFactory;
 
+    private static RedkaleClassLoader classLoader;
+
     public static void main(String[] args) throws Throwable {
         LoggingBaseHandler.initDebugLogConfig();
         MessagedInstanceTest test = new MessagedInstanceTest();
@@ -51,6 +54,7 @@ public class MessagedInstanceTest {
         application = Application.create(true);
         resourceFactory = application.getResourceFactory();
         engine = new MessageModuleEngine(application);
+        classLoader = RedkaleClassLoader.getRedkaleClassLoader();
 
         MessageAgent agent = createMessageAgent(application, "mymq");
         MessageAgent[] messageAgents = new MessageAgent[] {agent};
@@ -68,9 +72,8 @@ public class MessagedInstanceTest {
         SncpClient client = new SncpClient(
                 "", iGroup, "0", new InetSocketAddress("127.0.0.1", 8080), new ClientAddress(), "TCP", 1, 16);
         TestMessageService instance = Sncp.createLocalService(
-                null, "", serviceClass, boost, resourceFactory, grous, client, null, null, null);
+                classLoader, "", serviceClass, boost, resourceFactory, grous, client, null, null, null);
         resourceFactory.inject(instance);
-
     }
 
     @Test

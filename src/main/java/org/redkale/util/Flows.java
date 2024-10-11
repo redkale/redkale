@@ -5,12 +5,11 @@
  */
 package org.redkale.util;
 
-import static org.redkale.util.Utility.hexToBin;
-
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
+import static org.redkale.util.Utility.hexToBin;
 
 /**
  * Flow简单的操作
@@ -134,7 +133,8 @@ public abstract class Flows {
                                     return defineClass(name, b, 0, b.length);
                                 }
                             }.loadClass("org.redkale.util.AnonymousMonoFutureFunction", classBytes);
-                    RedkaleClassLoader.putDynClass(monoFuncClass.getName(), classBytes, monoFuncClass);
+                    RedkaleClassLoader.getRedkaleClassLoader()
+                            .putDynClass(monoFuncClass.getName(), classBytes, monoFuncClass);
                 }
                 RedkaleClassLoader.putReflectionDeclaredConstructors(monoFuncClass, monoFuncClass.getName());
                 reactorMonoFunction0 = (Function<Object, CompletableFuture>)
@@ -158,7 +158,8 @@ public abstract class Flows {
                                     return defineClass(name, b, 0, b.length);
                                 }
                             }.loadClass("org.redkale.util.AnonymousFluxFutureFunction", classBytes);
-                    RedkaleClassLoader.putDynClass(fluxFuncClass.getName(), classBytes, fluxFuncClass);
+                    RedkaleClassLoader.getRedkaleClassLoader()
+                            .putDynClass(fluxFuncClass.getName(), classBytes, fluxFuncClass);
                 }
                 RedkaleClassLoader.putReflectionDeclaredConstructors(fluxFuncClass, fluxFuncClass.getName());
                 reactorFluxFunction0 = (Function<Object, CompletableFuture>)

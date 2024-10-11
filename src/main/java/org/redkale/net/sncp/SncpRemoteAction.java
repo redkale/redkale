@@ -249,7 +249,7 @@ public final class SncpRemoteAction {
     }
 
     public static Type createParamComposeBeanType(
-            RedkaleClassLoader loader,
+            RedkaleClassLoader classLoader,
             Class resourceType,
             Method method,
             Uint128 actionid,
@@ -273,8 +273,8 @@ public final class SncpRemoteAction {
         final String newDynName = "org/redkaledyn/sncp/servlet/action/_DynSncpActionParamBean_"
                 + resourceType.getSimpleName() + "_" + method.getName() + "_" + actionid;
         try {
-            Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-            Class<?> newClazz = clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz;
+            Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
+            Class<?> newClazz = clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz;
             return newClazz;
         } catch (Throwable ex) {
             // do nothing
@@ -327,8 +327,8 @@ public final class SncpRemoteAction {
         cw.visitEnd();
 
         byte[] bytes = cw.toByteArray();
-        Class newClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
-        RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
+        Class newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
+        classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         Creator.load(newClazz, 1); // 只一个Object[]参数
         ProtobufFactory.root().loadDecoder(newClazz);

@@ -110,12 +110,7 @@ public abstract class NodeServer {
         this.server = server;
         this.resourceFactory = server.getResourceFactory();
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
-        if (application.isCompileMode()
-                || application.getServerClassLoader() instanceof RedkaleClassLoader.RedkaleCacheClassLoader) {
-            this.serverClassLoader = application.getServerClassLoader();
-        } else {
-            this.serverClassLoader = RedkaleClassLoader.getRedkaleClassLoader(application.getServerClassLoader());
-        }
+        this.serverClassLoader = application.getServerClassLoader();
         Thread.currentThread().setContextClassLoader(this.serverClassLoader);
         this.serverThread = Thread.currentThread();
         this.server.setServerClassLoader(serverClassLoader);
@@ -301,6 +296,12 @@ public abstract class NodeServer {
                 throw new RedkaleException("Not found group(" + entry.getGroup() + ")");
             }
             Service oldOther = resourceFactory.find(entry.getName(), serviceImplClass);
+            if (oldOther == null) {
+                Class<? extends Service> resType = Sncp.getResourceType(serviceImplClass);
+                if (resType != serviceImplClass) {
+                    oldOther = resourceFactory.find(entry.getName(), resType);
+                }
+            }
             if (oldOther != null) { // Server加载Service时需要判断是否已在其他协议服务中加载
                 if (!Sncp.isRemote(oldOther)) {
                     if (!Sncp.isComponent(oldOther)) {

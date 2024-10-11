@@ -41,7 +41,8 @@ public class SncpSleepTest {
         resFactory.register(ProtobufConvert.root());
 
         // ------------------------ 初始化 CService ------------------------------------
-        SncpSleepService service = Sncp.createSimpleLocalService(SncpSleepService.class, resFactory);
+        SncpSleepService service =
+                Sncp.createSimpleLocalService(application.getClassLoader(), SncpSleepService.class, resFactory);
         resFactory.inject(service);
         SncpServer server = new SncpServer(application, System.currentTimeMillis(), null, resFactory);
         server.getResourceFactory().register(application);
@@ -56,8 +57,8 @@ public class SncpSleepTest {
                 new SncpClient("", asyncGroup, "0", sncpAddress, new ClientAddress(sncpAddress), "TCP", 16, 100);
         final SncpRpcGroups rpcGroups = application.getSncpRpcGroups();
         rpcGroups.computeIfAbsent("cs", "TCP").putAddress(sncpAddress);
-        SncpSleepService remoteCService =
-                Sncp.createSimpleRemoteService(SncpSleepService.class, resFactory, rpcGroups, client, "cs");
+        SncpSleepService remoteCService = Sncp.createSimpleRemoteService(
+                application.getClassLoader(), SncpSleepService.class, resFactory, rpcGroups, client, "cs");
         long s = System.currentTimeMillis();
         CompletableFuture[] futures =
                 new CompletableFuture[] {remoteCService.sleep200(), remoteCService.sleep300(), remoteCService.sleep500()

@@ -60,14 +60,14 @@ public final class DataSqlMapperBuilder {
         if (!mapperType.isInterface()) {
             throw new SourceException(mapperType + " is not interface");
         }
-        final RedkaleClassLoader loader = RedkaleClassLoader.getRedkaleClassLoader();
+        final RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
         final Class entityType = entityType(mapperType);
         final String supDynName = mapperType.getName().replace('.', '/');
         final String newDynName = "org/redkaledyn/source/mapper/_DynDataSqlMapper_"
                 + mapperType.getName().replace('.', '_').replace('$', '_');
         try {
-            Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-            Class newClazz = clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz;
+            Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
+            Class newClazz = clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz;
             M mapper = (M) newClazz.getDeclaredConstructor().newInstance();
             { // DataSqlSource
                 Field c = newClazz.getDeclaredField("_source");
@@ -363,8 +363,8 @@ public final class DataSqlMapperBuilder {
         cw.visitEnd();
 
         byte[] bytes = cw.toByteArray();
-        Class<?> newClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
-        RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
+        Class<?> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
+        classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionPublicConstructors(newClazz, newDynName.replace('/', '.'));
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {

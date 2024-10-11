@@ -80,12 +80,12 @@ public abstract class EntityFullFunc<T> {
         final String objectDesc = Type.getDescriptor(Object.class);
         final String serisDesc = Type.getDescriptor(Serializable[].class);
 
-        RedkaleClassLoader loader = RedkaleClassLoader.getRedkaleClassLoader();
+        RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
         final String newDynName = "org/redkaledyn/source/_Dyn" + EntityFullFunc.class.getSimpleName() + "__"
                 + entityType.getName().replace('.', '_').replace('$', '_');
         try {
-            Class clz = RedkaleClassLoader.findDynClass(newDynName.replace('/', '.'));
-            return (EntityFullFunc) (clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz)
+            Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
+            return (EntityFullFunc) (clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz)
                     .getConstructor(Class.class, Creator.class, Attribute[].class)
                     .newInstance(entityType, creator, attrs);
         } catch (Throwable ex) {
@@ -793,8 +793,8 @@ public abstract class EntityFullFunc<T> {
         cw.visitEnd();
 
         byte[] bytes = cw.toByteArray();
-        Class<EntityFullFunc> newClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
-        RedkaleClassLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
+        Class<EntityFullFunc> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
+        classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {
             return newClazz.getConstructor(Class.class, Creator.class, Attribute[].class)
