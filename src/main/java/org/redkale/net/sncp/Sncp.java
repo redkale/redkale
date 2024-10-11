@@ -527,16 +527,16 @@ public abstract class Sncp {
             }
             newDynName += "_" + (normal ? name : hash(name));
         }
-        if (Utility.inNativeImage() || methodBoost == null) { //  || methodBoost == null 加强动态时不能重复加载
-            try {
-                final String newDynClass = newDynName.replace('/', '.');
-                return (Class<T>) classLoader.findClass(newDynClass);
-            } catch (ClassNotFoundException e) {
-                // do nothing
-            } catch (Throwable t) {
-                t.printStackTrace();
-            }
+        // if (Utility.inNativeImage() || methodBoost == null) { // 加强动态时不能重复加载
+        try {
+            final String newDynClass = newDynName.replace('/', '.');
+            return (Class<T>) classLoader.findClass(newDynClass);
+        } catch (ClassNotFoundException e) {
+            // do nothing
+        } catch (Throwable t) {
+            t.printStackTrace();
         }
+        // }
         // ------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
