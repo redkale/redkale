@@ -455,10 +455,7 @@ public final class Rest {
         final String newDynConsumerSimpleName = "_DynRestOnMessageConsumer";
         final String newDynConsumerFullName = newDynName + "$" + newDynConsumerSimpleName;
         try {
-            Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
-            if (clz == null) {
-                clz = classLoader.loadClass(newDynName.replace('/', '.'));
-            }
+            Class clz = classLoader.loadClass(newDynName.replace('/', '.'));
             T servlet = (T) clz.getDeclaredConstructor().newInstance();
             Map<String, Annotation[]> msgclassToAnnotations = new HashMap<>();
             for (int i = 0; i < messageMethods.size(); i++) { // _DyncXXXWebSocketMessage 子消息List
@@ -899,8 +896,7 @@ public final class Rest {
             }
             cw2.visitEnd();
             byte[] bytes = cw2.toByteArray();
-            Class cz = classLoader.loadClass((newDynSuperMessageFullName).replace('/', '.'), bytes);
-            classLoader.putDynClass((newDynSuperMessageFullName).replace('/', '.'), bytes, cz);
+            classLoader.loadClass((newDynSuperMessageFullName).replace('/', '.'), bytes);
         }
 
         if (wildcardMethod == null) { // _DynXXXWebSocketMessage class
@@ -957,8 +953,7 @@ public final class Rest {
             }
             cw2.visitEnd();
             byte[] bytes = cw2.toByteArray();
-            Class cz = classLoader.loadClass(newDynMessageFullName.replace('/', '.'), bytes);
-            classLoader.putDynClass(newDynMessageFullName.replace('/', '.'), bytes, cz);
+            classLoader.loadClass(newDynMessageFullName.replace('/', '.'), bytes);
         }
 
         { // _DynXXXWebSocket class
@@ -1000,8 +995,7 @@ public final class Rest {
             }
             cw2.visitEnd();
             byte[] bytes = cw2.toByteArray();
-            Class cz = classLoader.loadClass(newDynWebSokcetFullName.replace('/', '.'), bytes);
-            classLoader.putDynClass(newDynWebSokcetFullName.replace('/', '.'), bytes, cz);
+            classLoader.loadClass(newDynWebSokcetFullName.replace('/', '.'), bytes);
         }
 
         { // _DynRestOnMessageConsumer class
@@ -1108,14 +1102,12 @@ public final class Rest {
             }
             cw2.visitEnd();
             byte[] bytes = cw2.toByteArray();
-            Class cz = classLoader.loadClass(newDynConsumerFullName.replace('/', '.'), bytes);
-            classLoader.putDynClass(newDynConsumerFullName.replace('/', '.'), bytes, cz);
+            classLoader.loadClass(newDynConsumerFullName.replace('/', '.'), bytes);
         }
         cw.visitEnd();
 
         byte[] bytes = cw.toByteArray();
         Class<?> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
-        classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         JsonFactory.root().loadDecoder(newClazz.getAnnotation(RestDyn.class).types()[2]); // 固定Message类
 
@@ -1301,10 +1293,7 @@ public final class Rest {
                 + (namePostfix.isEmpty() ? "" : ("_" + namePostfix) + "DynServlet");
 
         try {
-            Class newClazz = classLoader.findClass(newDynName.replace('/', '.'));
-            if (newClazz == null) {
-                newClazz = classLoader.loadClass(newDynName.replace('/', '.'));
-            }
+            Class newClazz = classLoader.loadClass(newDynName.replace('/', '.'));
             T obj = (T) newClazz.getDeclaredConstructor().newInstance();
 
             final String defModuleName = getWebModuleNameLowerCase(serviceType);
@@ -4234,16 +4223,15 @@ public final class Rest {
         byte[] bytes = cw.toByteArray();
         classLoader.addDynClass(newDynName.replace('/', '.'), bytes);
         try {
-            Class<?> newClazz = classLoader.findClass(newDynName.replace('/', '.'));
+            Class<?> newClazz = classLoader.loadClass(newDynName.replace('/', '.'));
             innerClassBytesMap.forEach((n, bs) -> {
                 try {
-                    classLoader.putDynClass(n, bs, classLoader.findClass(n));
+                    classLoader.loadClass(n, bs);
                     RedkaleClassLoader.putReflectionClass(n);
                 } catch (Exception e) {
                     throw new RestException(e);
                 }
             });
-            classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
             RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
             for (java.lang.reflect.Type t : retvalTypes) {
                 JsonFactory.root().loadEncoder(t);

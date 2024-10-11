@@ -143,15 +143,14 @@ class AppConfig {
             if (cacheClasses == null) {
                 this.classLoader = new RedkaleClassLoader(currClassLoader);
             } else {
-                this.classLoader = new RedkaleClassLoader.RedkaleCacheClassLoader(
-                        RedkaleClassLoader.getRedkaleClassLoader(currClassLoader), cacheClasses);
+                this.classLoader = new RedkaleClassLoader.RedkaleCacheClassLoader(currClassLoader, cacheClasses);
             }
             Thread.currentThread().setContextClassLoader(this.classLoader);
         }
         if (compileMode || this.classLoader instanceof RedkaleClassLoader.RedkaleCacheClassLoader) {
             this.serverClassLoader = this.classLoader;
         } else {
-            //this.serverClassLoader = RedkaleClassLoader.getRedkaleClassLoader(this.classLoader);
+            // this.serverClassLoader = RedkaleClassLoader.getRedkaleClassLoader(this.classLoader);
             this.serverClassLoader = this.classLoader;
         }
     }

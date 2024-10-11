@@ -56,8 +56,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                             + "__" + handlerClass.getName().replace('.', '/').replace('$', '_');
                     RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
                     try {
-                        Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
-                        Class newHandlerClazz = clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz;
+                        Class newHandlerClazz = classLoader.loadClass(newDynName.replace('/', '.'));
                         return (Creator<SncpAsyncHandler>) Creator.create(newHandlerClazz);
                     } catch (Throwable ex) {
                         // do nothing
@@ -207,7 +206,6 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                     cw.visitEnd();
                     byte[] bytes = cw.toByteArray();
                     Class newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
-                    classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
                     return (Creator<SncpAsyncHandler>) Creator.create(newClazz);
                 })
                 .create(factHandler);

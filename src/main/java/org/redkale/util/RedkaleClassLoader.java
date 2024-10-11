@@ -175,28 +175,6 @@ public class RedkaleClassLoader extends URLClassLoader {
         }
     }
 
-    static void putDynClass0(String name, byte[] bs, Class clazz) {
-        Objects.requireNonNull(name);
-        Objects.requireNonNull(bs);
-        Objects.requireNonNull(clazz);
-        allDynClassTypeMap.put(name, clazz);
-        allDynClassBytesMap.put(name, bs);
-    }
-
-    public void putDynClass(String name, byte[] bs, Class clazz) {
-        Objects.requireNonNull(name);
-        Objects.requireNonNull(bs);
-        Objects.requireNonNull(clazz);
-        dynClassTypeMap.put(name, clazz);
-        dynClassBytesMap.put(name, bs);
-        allDynClassTypeMap.put(name, clazz);
-        allDynClassBytesMap.put(name, bs);
-    }
-
-    public Class findDynClass(String name) {
-        return dynClassTypeMap.get(name);
-    }
-
     public static void forEachDynClass(BiConsumer<String, byte[]> action) {
         allDynClassBytesMap.forEach(action);
     }
@@ -479,6 +457,10 @@ public class RedkaleClassLoader extends URLClassLoader {
         }
     }
 
+    public static byte[] getDynClassBytes(String clazzName) {
+        return allDynClassBytesMap.get(clazzName);
+    }
+
     // https://www.graalvm.org/reference-manual/native-image/Reflection/#manual-configuration
     private static Map<String, Object> createMap(String name, Class... cts) {
         Map<String, Object> map = new LinkedHashMap<>();
@@ -495,8 +477,44 @@ public class RedkaleClassLoader extends URLClassLoader {
         reflectionMap.forEach(action);
     }
 
+    static void putDynClass0(String name, byte[] bs, Class clazz) {
+        Objects.requireNonNull(name);
+        Objects.requireNonNull(bs);
+        Objects.requireNonNull(clazz);
+        allDynClassTypeMap.put(name, clazz);
+        allDynClassBytesMap.put(name, bs);
+    }
+
+    public void putDynClass2(String name, byte[] bs, Class clazz) {
+        Objects.requireNonNull(name);
+        Objects.requireNonNull(bs);
+        Objects.requireNonNull(clazz);
+        dynClassTypeMap.put(name, clazz);
+        dynClassBytesMap.put(name, bs);
+        allDynClassTypeMap.put(name, clazz);
+        allDynClassBytesMap.put(name, bs);
+    }
+
+    public Class loadClass(String name, byte[] bs) {
+        Class clz = defineClass(name, bs, 0, bs.length);
+        dynClassTypeMap.put(name, clz);
+        dynClassBytesMap.put(name, bs);
+        allDynClassTypeMap.put(name, clz);
+        allDynClassBytesMap.put(name, bs);
+        return clz;
+    }
+
     @Override
-    public Class<?> findClass(String name) throws ClassNotFoundException {
+    public Class loadClass(String name) throws ClassNotFoundException {
+        Class clazz = allDynClassTypeMap.get(name);
+        if (clazz != null) {
+            return clazz;
+        }
+        return super.loadClass(name);
+    }
+
+    @Override
+    public Class findClass(String name) throws ClassNotFoundException {
         byte[] classData = dynClassBytesMap.get(name);
         if (classData == null) {
             Class clazz = dynClassTypeMap.get(name);
@@ -506,10 +524,6 @@ public class RedkaleClassLoader extends URLClassLoader {
             return super.findClass(name);
         }
         return super.defineClass(name, classData, 0, classData.length);
-    }
-
-    public Class loadClass(String name, byte[] b) {
-        return defineClass(name, b, 0, b.length);
     }
 
     public void forEachCacheClass(Consumer<String> action) { // getAllURLs返回URL_NONE时需要重载此方法

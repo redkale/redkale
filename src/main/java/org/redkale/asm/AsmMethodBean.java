@@ -92,7 +92,8 @@ public class AsmMethodBean {
             return null;
         }
         Parameter[] ps = method == null ? null : method.getParameters();
-        String[] rs = new String[params.size()];
+        // params包含了throws, size()可能比ps.length大
+        String[] rs = new String[ps == null ? params.size() : ps.length];
         for (int i = 0; i < rs.length; i++) {
             Param pann = ps == null ? null : ps[i].getAnnotation(Param.class);
             rs[i] = pann == null ? params.get(i).getName() : pann.value();

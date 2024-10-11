@@ -71,8 +71,7 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
                 + clazz.getName().replace('.', '_').replace('$', '_') + "_" + factory.getFeatures() + "_"
                 + Utility.md5Hex(elementb.toString()); // tiny必须要加上, 同一个类会有多个字段定制Convert
         try {
-            Class clz = loader.findDynClass(newDynName.replace('/', '.'));
-            Class newClazz = clz == null ? loader.loadClass(newDynName.replace('/', '.')) : clz;
+            Class newClazz = loader.loadClass(newDynName.replace('/', '.'));
             JsonDynEncoder resultEncoder =
                     (JsonDynEncoder) newClazz.getConstructor(JsonFactory.class, Type.class, ObjectEncoder.class)
                             .newInstance(factory, clazz, selfObjEncoder);
@@ -681,7 +680,6 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
         // ------------------------------------------------------------------------------
         byte[] bytes = cw.toByteArray();
         Class<?> newClazz = loader.loadClass(newDynName.replace('/', '.'), bytes);
-        loader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(
                 newClazz, newDynName.replace('/', '.'), JsonFactory.class, Type.class);
         try {

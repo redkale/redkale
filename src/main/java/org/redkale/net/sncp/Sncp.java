@@ -529,12 +529,9 @@ public abstract class Sncp {
         }
         // if (Utility.inNativeImage() || methodBoost == null) { // 加强动态时不能重复加载
         try {
-            final String newDynClass = newDynName.replace('/', '.');
-            return (Class<T>) classLoader.findClass(newDynClass);
-        } catch (ClassNotFoundException e) {
-            // do nothing
+            return (Class<T>)classLoader.loadClass(newDynName.replace('/', '.'));
         } catch (Throwable t) {
-            t.printStackTrace();
+            // do nothing
         }
         // }
         // ------------------------------------------------------------------------------
@@ -602,8 +599,6 @@ public abstract class Sncp {
         byte[] bytes = cw.toByteArray();
         final String newDynClass = newDynName.replace('/', '.');
         Class<?> newClazz = classLoader.loadClass(newDynClass, bytes);
-
-        classLoader.putDynClass(newDynClass, bytes, newClazz);
         RedkaleClassLoader.putReflectionPublicClasses(newDynClass);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynClass);
         try {
@@ -953,9 +948,7 @@ public abstract class Sncp {
             newDynName += "_" + (normal ? name : hash(name));
         }
         try {
-            final String newDynClass = newDynName.replace('/', '.');
-            Class clz = classLoader.findDynClass(newDynClass);
-            Class newClazz = clz == null ? classLoader.loadClass(newDynClass) : clz;
+            Class newClazz = classLoader.loadClass(newDynName.replace('/', '.'));
             T service = (T) newClazz.getDeclaredConstructor().newInstance();
             {
                 Field c = newClazz.getDeclaredField(FIELDPREFIX + "_conf");
@@ -1237,7 +1230,6 @@ public abstract class Sncp {
         byte[] bytes = cw.toByteArray();
         final String newDynClass = newDynName.replace('/', '.');
         Class<?> newClazz = classLoader.loadClass(newDynClass, bytes);
-        classLoader.putDynClass(newDynClass, bytes, newClazz);
         RedkaleClassLoader.putReflectionPublicConstructors(newClazz, newDynClass);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynClass);
         try {

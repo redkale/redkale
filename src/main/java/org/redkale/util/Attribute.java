@@ -1021,8 +1021,8 @@ public interface Attribute<T, F> {
         final String newDynName = "org/redkaledyn/attribute/" + pkgname + "_Dyn" + Attribute.class.getSimpleName()
                 + "__" + clzname + "__" + fieldkey.substring(fieldkey.indexOf('.') + 1);
         try {
-            Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
-            Attribute rs = (Attribute) (clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz)
+            Attribute rs = (Attribute) classLoader
+                    .loadClass(newDynName.replace('/', '.'))
                     .getDeclaredConstructor()
                     .newInstance();
             java.lang.reflect.Field _gtype = rs.getClass().getDeclaredField("_gtype");
@@ -1234,7 +1234,6 @@ public interface Attribute<T, F> {
 
         byte[] bytes = cw.toByteArray();
         Class<Attribute> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
-        classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {
             Attribute rs = newClazz.getDeclaredConstructor().newInstance();

@@ -328,7 +328,6 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
             consumerBytes.forEach((innerFullName, bytes) -> {
                 String clzName = innerFullName.replace('/', '.');
                 Class clazz = classLoader.loadClass(clzName, bytes);
-                classLoader.putDynClass(clzName, bytes, clazz);
                 RedkaleClassLoader.putReflectionPublicConstructors(clazz, clzName);
                 AnnotationVisitor av2 =
                         av1.visitAnnotation(null, org.redkale.asm.Type.getDescriptor(DynForMessaged.class));

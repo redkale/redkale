@@ -688,8 +688,8 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                         : ("__" + destClass.getName().replace('.', '_').replace('$', '_')))
                 + (extendInfo.length() == 0 ? "" : Utility.md5Hex(extendInfo.toString()));
         try {
-            Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
-            return (Copier) (clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz)
+            return (Copier) classLoader
+                    .loadClass(newDynName.replace('/', '.'))
                     .getDeclaredConstructor()
                     .newInstance();
         } catch (Throwable ex) {
@@ -698,10 +698,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
 
         // ------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
-        FieldVisitor fv;
         MethodVisitor mv;
-        AnnotationVisitor av0;
-
         cw.visit(
                 V11,
                 ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
@@ -1338,7 +1335,6 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
         // ------------------------------------------------------------------------------
         byte[] bytes = cw.toByteArray();
         Class<?> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
-        classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {
             return (Copier) newClazz.getDeclaredConstructor().newInstance();

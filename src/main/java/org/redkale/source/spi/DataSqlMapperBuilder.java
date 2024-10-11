@@ -66,8 +66,7 @@ public final class DataSqlMapperBuilder {
         final String newDynName = "org/redkaledyn/source/mapper/_DynDataSqlMapper_"
                 + mapperType.getName().replace('.', '_').replace('$', '_');
         try {
-            Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
-            Class newClazz = clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz;
+            Class newClazz = classLoader.loadClass(newDynName.replace('/', '.'));
             M mapper = (M) newClazz.getDeclaredConstructor().newInstance();
             { // DataSqlSource
                 Field c = newClazz.getDeclaredField("_source");
@@ -364,7 +363,6 @@ public final class DataSqlMapperBuilder {
 
         byte[] bytes = cw.toByteArray();
         Class<?> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
-        classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionPublicConstructors(newClazz, newDynName.replace('/', '.'));
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {

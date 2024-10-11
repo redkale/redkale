@@ -99,8 +99,8 @@ public interface Invoker<C, R> {
         final String newDynName = "org/redkaledyn/invoker/_Dyn" + Invoker.class.getSimpleName() + "_"
                 + clazz.getName().replace('.', '_').replace('$', '_') + "_" + method.getName() + sbpts;
         try {
-            Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
-            return (Invoker<C, T>) (clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz)
+            return (Invoker<C, T>) classLoader
+                    .loadClass(newDynName.replace('/', '.'))
                     .getDeclaredConstructor()
                     .newInstance();
         } catch (Throwable ex) {
@@ -204,13 +204,9 @@ public interface Invoker<C, R> {
             mv.visitEnd();
         }
         cw.visitEnd();
-        final byte[] bytes = cw.toByteArray();
-        Class<?> resultClazz = null;
+        byte[] bytes = cw.toByteArray();
         try {
-            if (resultClazz == null) {
-                resultClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
-            }
-            classLoader.putDynClass(newDynName.replace('/', '.'), bytes, resultClazz);
+            Class<?> resultClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
             RedkaleClassLoader.putReflectionDeclaredConstructors(resultClazz, newDynName.replace('/', '.'));
             return (Invoker<C, T>) resultClazz.getDeclaredConstructor().newInstance();
         } catch (Exception ex) {

@@ -110,9 +110,7 @@ public class HttpContext extends Context {
                 + handlerClass.getName().replace('.', '/').replace('$', '_');
         RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
         try {
-            Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
-            Class newHandlerClazz = clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz;
-            return Creator.create(newHandlerClazz);
+            return (Creator<H>) Creator.create(classLoader.loadClass(newDynName.replace('/', '.')));
         } catch (Throwable ex) {
             // do nothing
         }
@@ -214,7 +212,6 @@ public class HttpContext extends Context {
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();
         Class<CompletionHandler> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
-        classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         return (Creator<H>) Creator.create(newClazz);
     }
 

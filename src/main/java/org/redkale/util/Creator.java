@@ -296,8 +296,8 @@ public interface Creator<T> {
         final String newDynName = "org/redkaledyn/creator/_Dyn" + Creator.class.getSimpleName() + "__"
                 + clazz.getName().replace('.', '_').replace('$', '_') + (paramCount < 0 ? "" : ("_" + paramCount));
         try {
-            Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
-            return (Creator) (clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz)
+            return (Creator) classLoader
+                    .loadClass(newDynName.replace('/', '.'))
                     .getDeclaredConstructor()
                     .newInstance();
         } catch (Throwable ex) {
@@ -569,7 +569,6 @@ public interface Creator<T> {
         byte[] bytes = cw.toByteArray();
         try {
             Class newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
-            classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
             RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
             return (Creator) newClazz.getDeclaredConstructor().newInstance();
         } catch (Exception ex) {

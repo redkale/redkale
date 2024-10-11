@@ -716,7 +716,6 @@ public abstract class TypeToken<T> {
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();
         Class<?> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
-        classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionPublicFields(newDynName.replace('/', '.'));
         try {
             return newClazz.getField("field").getGenericType();

@@ -84,8 +84,8 @@ public abstract class EntityFullFunc<T> {
         final String newDynName = "org/redkaledyn/source/_Dyn" + EntityFullFunc.class.getSimpleName() + "__"
                 + entityType.getName().replace('.', '_').replace('$', '_');
         try {
-            Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
-            return (EntityFullFunc) (clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz)
+            return (EntityFullFunc) classLoader
+                    .loadClass(newDynName.replace('/', '.'))
                     .getConstructor(Class.class, Creator.class, Attribute[].class)
                     .newInstance(entityType, creator, attrs);
         } catch (Throwable ex) {
@@ -794,7 +794,6 @@ public abstract class EntityFullFunc<T> {
 
         byte[] bytes = cw.toByteArray();
         Class<EntityFullFunc> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
-        classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {
             return newClazz.getConstructor(Class.class, Creator.class, Attribute[].class)

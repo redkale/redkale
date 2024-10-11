@@ -235,8 +235,8 @@ class Inners {
             final String newDynName = "org/redkaledyn/creator/_DynArrayFunction__"
                     + clazz.getName().replace('.', '_').replace('$', '_');
             try {
-                Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
-                return (IntFunction) (clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz)
+                return (IntFunction) classLoader
+                        .loadClass(newDynName.replace('/', '.'))
                         .getDeclaredConstructor()
                         .newInstance();
             } catch (Throwable ex) {
@@ -284,7 +284,6 @@ class Inners {
             final byte[] bytes = cw.toByteArray();
             try {
                 Class<?> resultClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
-                classLoader.putDynClass(newDynName.replace('/', '.'), bytes, resultClazz);
                 RedkaleClassLoader.putReflectionDeclaredConstructors(resultClazz, newDynName.replace('/', '.'));
                 return (IntFunction<T[]>) resultClazz.getDeclaredConstructor().newInstance();
             } catch (Throwable ex) {

@@ -273,9 +273,7 @@ public final class SncpRemoteAction {
         final String newDynName = "org/redkaledyn/sncp/servlet/action/_DynSncpActionParamBean_"
                 + resourceType.getSimpleName() + "_" + method.getName() + "_" + actionid;
         try {
-            Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
-            Class<?> newClazz = clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz;
-            return newClazz;
+            return classLoader.loadClass(newDynName.replace('/', '.'));
         } catch (Throwable ex) {
             // do nothing
         }
@@ -328,7 +326,6 @@ public final class SncpRemoteAction {
 
         byte[] bytes = cw.toByteArray();
         Class newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
-        classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         Creator.load(newClazz, 1); // 只一个Object[]参数
         ProtobufFactory.root().loadDecoder(newClazz);

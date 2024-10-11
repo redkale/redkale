@@ -115,55 +115,34 @@ public abstract class Flows {
         if (!"executable".equals(System.getProperty("org.graalvm.nativeimage.kind"))) { // not native-image
             try {
                 //
-                reactorMonoClass0 =
-                        Thread.currentThread().getContextClassLoader().loadClass("reactor.core.publisher.Mono");
+                RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
+                reactorMonoClass0 = classLoader.loadClass("reactor.core.publisher.Mono");
                 Class<Function<Object, CompletableFuture>> monoFuncClass = null;
                 try {
-                    monoFuncClass = (Class) Thread.currentThread()
-                            .getContextClassLoader()
-                            .loadClass("org.redkale.util.AnonymousMonoFutureFunction");
+                    monoFuncClass = classLoader.loadClass("org.redkale.util.AnonymousMonoFutureFunction");
                 } catch (Throwable t) {
                     // do nothing
                 }
                 if (monoFuncClass == null) {
                     byte[] classBytes = hexToBin(FUNCTION_MONO_FUTRUE_BINARY);
-                    monoFuncClass = (Class<Function<Object, CompletableFuture>>)
-                            new ClassLoader() {
-                                public final Class<?> loadClass(String name, byte[] b) {
-                                    return defineClass(name, b, 0, b.length);
-                                }
-                            }.loadClass("org.redkale.util.AnonymousMonoFutureFunction", classBytes);
-                    RedkaleClassLoader.getRedkaleClassLoader()
-                            .putDynClass(monoFuncClass.getName(), classBytes, monoFuncClass);
+                    monoFuncClass = classLoader.loadClass("org.redkale.util.AnonymousMonoFutureFunction", classBytes);
                 }
                 RedkaleClassLoader.putReflectionDeclaredConstructors(monoFuncClass, monoFuncClass.getName());
-                reactorMonoFunction0 = (Function<Object, CompletableFuture>)
-                        monoFuncClass.getDeclaredConstructor().newInstance();
+                reactorMonoFunction0 = monoFuncClass.getDeclaredConstructor().newInstance();
                 //
-                reactorFluxClass0 =
-                        Thread.currentThread().getContextClassLoader().loadClass("reactor.core.publisher.Flux");
+                reactorFluxClass0 = classLoader.loadClass("reactor.core.publisher.Flux");
                 Class<Function<Object, CompletableFuture>> fluxFuncClass = null;
                 try {
-                    fluxFuncClass = (Class) Thread.currentThread()
-                            .getContextClassLoader()
-                            .loadClass("org.redkale.util.AnonymousFluxFutureFunction");
+                    fluxFuncClass = classLoader.loadClass("org.redkale.util.AnonymousFluxFutureFunction");
                 } catch (Throwable t) {
                     // do nothing
                 }
                 if (fluxFuncClass == null) {
                     byte[] classBytes = hexToBin(FUNCTION_FLUX_FUTRUE_BINARY);
-                    fluxFuncClass = (Class<Function<Object, CompletableFuture>>)
-                            new ClassLoader() {
-                                public final Class<?> loadClass(String name, byte[] b) {
-                                    return defineClass(name, b, 0, b.length);
-                                }
-                            }.loadClass("org.redkale.util.AnonymousFluxFutureFunction", classBytes);
-                    RedkaleClassLoader.getRedkaleClassLoader()
-                            .putDynClass(fluxFuncClass.getName(), classBytes, fluxFuncClass);
+                    fluxFuncClass = classLoader.loadClass("org.redkale.util.AnonymousFluxFutureFunction", classBytes);
                 }
                 RedkaleClassLoader.putReflectionDeclaredConstructors(fluxFuncClass, fluxFuncClass.getName());
-                reactorFluxFunction0 = (Function<Object, CompletableFuture>)
-                        fluxFuncClass.getDeclaredConstructor().newInstance();
+                reactorFluxFunction0 = fluxFuncClass.getDeclaredConstructor().newInstance();
             } catch (Throwable t) {
                 // do nothing
             }

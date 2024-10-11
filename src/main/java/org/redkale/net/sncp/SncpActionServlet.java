@@ -359,8 +359,7 @@ public abstract class SncpActionServlet extends SncpServlet {
         RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
         Class<?> newClazz = null;
         try {
-            Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
-            newClazz = clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz;
+            newClazz = classLoader.loadClass(newDynName.replace('/', '.'));
         } catch (Throwable ex) {
             // do nothing
         }
@@ -371,7 +370,8 @@ public abstract class SncpActionServlet extends SncpServlet {
                 TypeToken.getGenericType(method.getGenericReturnType(), serviceClass);
 
         final Class[] paramClasses = method.getParameterTypes();
-        java.lang.reflect.Type paramComposeBeanType0 = SncpRemoteAction.createParamComposeBeanType(classLoader, serviceImplClass, method, actionid, originalParamTypes, paramClasses);
+        java.lang.reflect.Type paramComposeBeanType0 = SncpRemoteAction.createParamComposeBeanType(
+                classLoader, serviceImplClass, method, actionid, originalParamTypes, paramClasses);
         if (paramComposeBeanType0 != null && paramComposeBeanType0 == originalParamTypes[0]) {
             paramComposeBeanType0 = null;
         }
@@ -712,7 +712,6 @@ public abstract class SncpActionServlet extends SncpServlet {
 
             byte[] bytes = cw.toByteArray();
             newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
-            classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
             RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
 
             try {

@@ -828,7 +828,7 @@ public final class Application {
 
         ExecutorService clientWorkExecutor = this.workExecutor;
         if (executorName.contains("VirtualExecutor") || executorName.contains("PerTaskExecutor")) {
-            executorLog.append(", clientWorkExecutor: [workExecutor]");
+            executorLog.append(", clientWorkExecutor: [virtual]");
         } else {
             // 给所有client给一个新的默认ExecutorService
             int clientThreads = executorConf.getIntValue("clients", WorkThread.DEFAULT_WORK_POOL_SIZE);

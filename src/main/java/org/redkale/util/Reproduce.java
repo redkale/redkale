@@ -72,8 +72,8 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
                 + "__" + destClass.getName().replace('.', '_').replace('$', '_')
                 + "__" + srcClass.getName().replace('.', '_').replace('$', '_');
         try {
-            Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
-            return (Reproduce) (clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz)
+            return (Reproduce) classLoader
+                    .loadClass(newDynName.replace('/', '.'))
                     .getDeclaredConstructor()
                     .newInstance();
         } catch (Throwable ex) {
@@ -232,7 +232,6 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
         // ------------------------------------------------------------------------------
         byte[] bytes = cw.toByteArray();
         Class<?> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
-        classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {
             return (Reproduce) newClazz.getDeclaredConstructor().newInstance();

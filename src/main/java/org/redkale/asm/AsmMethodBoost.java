@@ -118,8 +118,7 @@ public abstract class AsmMethodBoost<T> {
      * @param newDynName 动态新类名
      * @param fieldPrefix 动态字段的前缀
      */
-    public void doAfterMethods(
-            RedkaleClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {}
+    public void doAfterMethods(RedkaleClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {}
 
     /**
      * 处理所有动态方法后调用
@@ -437,14 +436,23 @@ public abstract class AsmMethodBoost<T> {
         // 返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
         static Map<String, AsmMethodBean> getMethodParamNames(Map<String, AsmMethodBean> map, Class clazz) {
             String n = clazz.getName();
-            InputStream in = clazz.getResourceAsStream(n.substring(n.lastIndexOf('.') + 1) + ".class");
-            if (in == null) {
-                return map;
+            byte[] bs = RedkaleClassLoader.getDynClassBytes(n);
+            if (bs == null) {
+                InputStream in = clazz.getResourceAsStream(n.substring(n.lastIndexOf('.') + 1) + ".class");
+                if (in == null) {
+                    return map;
+                }
+                try {
+                    bs = Utility.readBytesThenClose(in);
+                } catch (Exception e) {
+                    // do nothing
+                }
             }
             try {
-                new ClassReader(Utility.readBytesThenClose(in))
-                        .accept(new MethodParamClassVisitor(Opcodes.ASM6, clazz, map), 0);
-            } catch (Exception e) { // 无需理会
+                new ClassReader(bs).accept(new MethodParamClassVisitor(Opcodes.ASM6, clazz, map), 0);
+            } catch (Exception e) {
+                e.printStackTrace();
+                // do nothing
             }
             Class superClass = clazz.getSuperclass();
             if (superClass == null || superClass == Object.class) { // 接口的getSuperclass为null

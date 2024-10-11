@@ -564,10 +564,10 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         final String newDynName = "org/redkaledyn/http/servlet/action/_DynHttpActionServlet__"
                 + this.getClass().getName().replace('.', '_').replace('$', '_') + "__" + method.getName() + tmpps;
         try {
-            Class clz = classLoader.findDynClass(newDynName.replace('/', '.'));
-            Class newClazz = clz == null ? classLoader.loadClass(newDynName.replace('/', '.')) : clz;
-            HttpServlet instance =
-                    (HttpServlet) newClazz.getDeclaredConstructor().newInstance();
+            HttpServlet instance = (HttpServlet) classLoader
+                    .loadClass(newDynName.replace('/', '.'))
+                    .getDeclaredConstructor()
+                    .newInstance();
             instance.getClass().getField("_factServlet").set(instance, this);
             return instance;
         } catch (Throwable ex) {
@@ -627,7 +627,6 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         // ------------------------------------------------------------------------------
         byte[] bytes = cw.toByteArray();
         Class<?> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
-        classLoader.putDynClass(newDynName.replace('/', '.'), bytes, newClazz);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {
             HttpServlet instance =
@@ -636,7 +635,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             field.set(instance, this);
             RedkaleClassLoader.putReflectionField(newDynName.replace('/', '.'), field);
             NonBlocking non = method.getAnnotation(NonBlocking.class);
-            instance._nonBlocking = typeNonBlocking ? (non == null ? typeNonBlocking : non.value()) : false;
+            instance._nonBlocking = typeNonBlocking && (non == null ? typeNonBlocking : non.value());
             return instance;
         } catch (Exception ex) {
             throw new HttpException(ex);
