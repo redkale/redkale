@@ -286,6 +286,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         }
         if (type instanceof Class) {
             return Collection.class.isAssignableFrom((Class) type);
+        } else if (!(type instanceof ParameterizedType)) {
+            return false;
         }
         ParameterizedType ptype = (ParameterizedType) type;
         if (!(ptype.getRawType() instanceof Class)) {
@@ -306,6 +308,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         }
         if (type instanceof Class) {
             return Object.class;
+        } else if (!(type instanceof ParameterizedType)) {
+            return null;
         }
         ParameterizedType ptype = ((ParameterizedType) type);
         return ptype.getActualTypeArguments()[0];
