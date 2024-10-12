@@ -361,7 +361,7 @@ public final class Application {
                         + RESNAME_APP_HOME + "     = " + this.home.getPath().replace('\\', '/') + "\r\n"
                         + RESNAME_APP_CONF_DIR + " = " + confDirStr.substring(confDirStr.indexOf('!') + 1));
 
-        if (!compileMode && !(classLoader instanceof RedkaleClassLoader.RedkaleCacheClassLoader)) {
+        if (!compileMode && !RedkaleClassLoader.isCacheClassLoader(classLoader)) {
             String lib = environment.getPropertyValue(
                     config.getValue("lib", "${APP_HOME}/libs/*").trim());
             lib = Utility.isEmpty(lib) ? confDirStr : (lib + ";" + confDirStr);

@@ -111,6 +111,10 @@ public class RedkaleClassLoader extends URLClassLoader {
         return new RedkaleCacheClassLoader(parent, classes);
     }
 
+    public static boolean isCacheClassLoader(ClassLoader loader) {
+        return !(loader instanceof RedkaleCacheClassLoader);
+    }
+
     public static URI getConfResourceAsURI(String confURI, String file) {
         if (file.startsWith("http:") || file.startsWith("https:") || file.startsWith("ftp:")) {
             return URI.create(file);
