@@ -143,16 +143,11 @@ class AppConfig {
             if (cacheClasses == null) {
                 this.classLoader = new RedkaleClassLoader(currClassLoader);
             } else {
-                this.classLoader = new RedkaleClassLoader.RedkaleCacheClassLoader(currClassLoader, cacheClasses);
+                this.classLoader = new RedkaleClassLoader.createCacheClassLoader(currClassLoader, cacheClasses);
             }
             Thread.currentThread().setContextClassLoader(this.classLoader);
         }
-        if (compileMode || this.classLoader instanceof RedkaleClassLoader.RedkaleCacheClassLoader) {
-            this.serverClassLoader = this.classLoader;
-        } else {
-            // this.serverClassLoader = RedkaleClassLoader.currentClassLoader(this.classLoader);
-            this.serverClassLoader = this.classLoader;
-        }
+        this.serverClassLoader = this.classLoader;
     }
 
     /** 初始化home、confDir、localAddress等信息 */
