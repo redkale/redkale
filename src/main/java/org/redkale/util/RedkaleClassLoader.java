@@ -93,10 +93,8 @@ public class RedkaleClassLoader extends URLClassLoader {
         super(urls, parent);
     }
 
-    public static RedkaleClassLoader getRedkaleClassLoader(ClassLoader loader) {
-        if (loader == null) {
-            loader = Thread.currentThread().getContextClassLoader();
-        }
+    public static RedkaleClassLoader currentClassLoader() {
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
         if (loader instanceof RedkaleClassLoader) {
             return (RedkaleClassLoader) loader;
         }
@@ -107,10 +105,6 @@ public class RedkaleClassLoader extends URLClassLoader {
             }
         }
         return new RedkaleClassLoader(loader);
-    }
-
-    public static RedkaleClassLoader getRedkaleClassLoader() {
-        return getRedkaleClassLoader(Thread.currentThread().getContextClassLoader());
     }
 
     public static URI getConfResourceAsURI(String confURI, String file) {

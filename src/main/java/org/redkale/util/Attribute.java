@@ -1002,7 +1002,7 @@ public interface Attribute<T, F> {
         final String interDesc = Type.getDescriptor(TypeToken.typeToClass(subclass));
         final String columnDesc = Type.getDescriptor(column);
         Class realclz = TypeToken.typeToClass(subclass);
-        RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
+        RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
         try {
             classLoader.loadClass(realclz.getName());
         } catch (ClassNotFoundException e) {

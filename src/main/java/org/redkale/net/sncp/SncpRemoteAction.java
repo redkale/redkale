@@ -101,7 +101,7 @@ public final class SncpRemoteAction {
         this.paramTypes = TypeToken.getGenericType(method.getGenericParameterTypes(), serviceImplClass);
         this.paramClasses = method.getParameterTypes();
         Type pt = createParamComposeBeanType(
-                RedkaleClassLoader.getRedkaleClassLoader(),
+                RedkaleClassLoader.currentClassLoader(),
                 serviceImplClass,
                 method,
                 actionid,

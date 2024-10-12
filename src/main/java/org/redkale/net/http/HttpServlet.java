@@ -560,7 +560,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         for (Class cz : method.getParameterTypes()) {
             tmpps.append("__").append(cz.getName().replace('.', '_'));
         }
-        RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
+        RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
         final String newDynName = "org/redkaledyn/http/servlet/action/_DynHttpActionServlet__"
                 + this.getClass().getName().replace('.', '_').replace('$', '_') + "__" + method.getName() + tmpps;
         try {

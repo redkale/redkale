@@ -454,7 +454,7 @@ public class MessageModuleEngine extends ModuleEngine {
             }
         }
         if (boost != null && Utility.isNotEmpty(boost.consumerBytes)) {
-            RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
+            RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
             boost.consumerBytes.forEach((innerFullName, bytes) -> {
                 try {
                     String clzName = innerFullName.replace('/', '.');

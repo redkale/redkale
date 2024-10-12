@@ -67,7 +67,7 @@ public interface Reproduce<D, S> extends BiFunction<D, S, D> {
         final String srcClassName = srcClass.getName().replace('.', '/');
         final String destDesc = Type.getDescriptor(destClass);
         final String srcDesc = Type.getDescriptor(srcClass);
-        final RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
+        final RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
         final String newDynName = "org/redkaledyn/reproduce/_Dyn" + Reproduce.class.getSimpleName()
                 + "__" + destClass.getName().replace('.', '_').replace('$', '_')
                 + "__" + srcClass.getName().replace('.', '_').replace('$', '_');

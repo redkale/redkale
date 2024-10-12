@@ -292,7 +292,7 @@ public interface Creator<T> {
         final String supDynName = Creator.class.getName().replace('.', '/');
         final String interName = clazz.getName().replace('.', '/');
         final String interDesc = Type.getDescriptor(clazz);
-        RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
+        RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
         final String newDynName = "org/redkaledyn/creator/_Dyn" + Creator.class.getSimpleName() + "__"
                 + clazz.getName().replace('.', '_').replace('$', '_') + (paramCount < 0 ? "" : ("_" + paramCount));
         try {

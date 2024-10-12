@@ -45,7 +45,7 @@ public class RestConvertTest {
         Method method = Application.class.getDeclaredMethod("initWorkExecutor");
         method.setAccessible(true);
         method.invoke(application);
-        RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
+        RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
         // ------------------------ 初始化 CService ------------------------------------
         RestConvertService service =
                 Sncp.createSimpleLocalService(application.getClassLoader(), RestConvertService.class, resFactory);

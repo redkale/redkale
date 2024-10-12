@@ -54,7 +54,7 @@ public class MessagedInstanceTest {
         application = Application.create(true);
         resourceFactory = application.getResourceFactory();
         engine = new MessageModuleEngine(application);
-        classLoader = RedkaleClassLoader.getRedkaleClassLoader();
+        classLoader = RedkaleClassLoader.currentClassLoader();
 
         MessageAgent agent = createMessageAgent(application, "mymq");
         MessageAgent[] messageAgents = new MessageAgent[] {agent};

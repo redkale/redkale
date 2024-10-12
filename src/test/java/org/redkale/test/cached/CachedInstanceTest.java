@@ -46,7 +46,7 @@ public class CachedInstanceTest {
 
     @BeforeAll
     public static void init() throws Exception {
-        classLoader = RedkaleClassLoader.getRedkaleClassLoader();
+        classLoader = RedkaleClassLoader.currentClassLoader();
         CacheMemorySource remoteSource = new CacheMemorySource("cache-remote");
         remoteSource.init(null);
         resourceFactory = ResourceFactory.create();

@@ -115,7 +115,7 @@ public abstract class Flows {
         if (!"executable".equals(System.getProperty("org.graalvm.nativeimage.kind"))) { // not native-image
             try {
                 //
-                RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
+                RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
                 reactorMonoClass0 = classLoader.loadClass("reactor.core.publisher.Mono");
                 Class<Function<Object, CompletableFuture>> monoFuncClass = null;
                 try {

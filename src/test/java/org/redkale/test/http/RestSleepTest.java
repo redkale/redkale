@@ -40,7 +40,7 @@ public class RestSleepTest {
         method.invoke(application);
 
         // ------------------------ 初始化 CService ------------------------------------
-        RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
+        RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
         RestSleepService service =
                 Sncp.createSimpleLocalService(application.getClassLoader(), RestSleepService.class, resFactory);
         HttpServer server = new HttpServer(application, System.currentTimeMillis(), resFactory);

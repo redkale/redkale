@@ -231,7 +231,7 @@ class Inners {
             }
             final String interName = clazz.getName().replace('.', '/');
             final String interDesc = org.redkale.asm.Type.getDescriptor(clazz);
-            final RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
+            final RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
             final String newDynName = "org/redkaledyn/creator/_DynArrayFunction__"
                     + clazz.getName().replace('.', '_').replace('$', '_');
             try {

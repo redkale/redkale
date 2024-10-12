@@ -679,7 +679,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
         final String srcClassName = srcClass.getName().replace('.', '/');
         final String destDesc = Type.getDescriptor(destClass);
         final String srcDesc = Type.getDescriptor(srcClass);
-        final RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
+        final RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
         final String utilClassName = Utility.class.getName().replace('.', '/');
         final String newDynName = "org/redkaledyn/copier/_Dyn" + Copier.class.getSimpleName() + "_" + options
                 + "__" + srcClass.getName().replace('.', '_').replace('$', '_')

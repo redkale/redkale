@@ -74,7 +74,7 @@ public abstract class SncpActionServlet extends SncpServlet {
         this.actionid = actionid;
         this.method = method;
         this.paramComposeBeanType = SncpRemoteAction.createParamComposeBeanType(
-                RedkaleClassLoader.getRedkaleClassLoader(),
+                RedkaleClassLoader.currentClassLoader(),
                 Sncp.getServiceType(service),
                 method,
                 actionid,
@@ -356,7 +356,7 @@ public abstract class SncpActionServlet extends SncpServlet {
         final boolean boolReturnTypeFuture = Future.class.isAssignableFrom(method.getReturnType());
         final String newDynName = "org/redkaledyn/sncp/servlet/action/_DynSncpActionServlet__"
                 + resourceType.getSimpleName() + "_" + method.getName() + "_" + actionid;
-        RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
+        RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
         Class<?> newClazz = null;
         try {
             newClazz = classLoader.loadClass(newDynName.replace('/', '.'));

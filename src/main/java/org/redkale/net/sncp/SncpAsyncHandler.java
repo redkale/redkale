@@ -54,7 +54,7 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                     final String realHandlerDesc = Type.getDescriptor(CompletionHandler.class);
                     final String newDynName = "org/redkaledyn/sncp/handler/_Dyn" + sncpHandlerClass.getSimpleName()
                             + "__" + handlerClass.getName().replace('.', '/').replace('$', '_');
-                    RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
+                    RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
                     try {
                         Class newHandlerClazz = classLoader.loadClass(newDynName.replace('/', '.'));
                         return (Creator<SncpAsyncHandler>) Creator.create(newHandlerClazz);

@@ -80,7 +80,7 @@ public abstract class EntityFullFunc<T> {
         final String objectDesc = Type.getDescriptor(Object.class);
         final String serisDesc = Type.getDescriptor(Serializable[].class);
 
-        RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
+        RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
         final String newDynName = "org/redkaledyn/source/_Dyn" + EntityFullFunc.class.getSimpleName() + "__"
                 + entityType.getName().replace('.', '_').replace('$', '_');
         try {

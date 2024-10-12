@@ -91,7 +91,7 @@ public interface Invoker<C, R> {
         } else if (returnType == void.class) {
             returnDesc = Type.getDescriptor(Void.class);
         }
-        RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
+        RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
         StringBuilder sbpts = new StringBuilder();
         for (Class c : method.getParameterTypes()) {
             sbpts.append('_').append(c.getName().replace('.', '_').replace('$', '_'));

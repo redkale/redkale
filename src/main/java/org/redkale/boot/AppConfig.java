@@ -150,7 +150,7 @@ class AppConfig {
         if (compileMode || this.classLoader instanceof RedkaleClassLoader.RedkaleCacheClassLoader) {
             this.serverClassLoader = this.classLoader;
         } else {
-            // this.serverClassLoader = RedkaleClassLoader.getRedkaleClassLoader(this.classLoader);
+            // this.serverClassLoader = RedkaleClassLoader.currentClassLoader(this.classLoader);
             this.serverClassLoader = this.classLoader;
         }
     }

@@ -22,7 +22,7 @@ public class GameTest {
 
     @Test
     public void run() throws Exception {
-        RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
+        RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
         WebSocketServlet servlet = Rest.createRestWebSocketServlet(classLoader, GameWebSocket.class, null);
     }
 }

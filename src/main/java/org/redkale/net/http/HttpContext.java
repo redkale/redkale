@@ -108,7 +108,7 @@ public class HttpContext extends Context {
         final String handlerDesc = Type.getDescriptor(CompletionHandler.class);
         final String newDynName = "org/redkaledyn/http/handler/_DynHttpAsyncHandler__"
                 + handlerClass.getName().replace('.', '/').replace('$', '_');
-        RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
+        RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
         try {
             return (Creator<H>) Creator.create(classLoader.loadClass(newDynName.replace('/', '.')));
         } catch (Throwable ex) {

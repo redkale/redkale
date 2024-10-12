@@ -60,7 +60,7 @@ public final class DataSqlMapperBuilder {
         if (!mapperType.isInterface()) {
             throw new SourceException(mapperType + " is not interface");
         }
-        final RedkaleClassLoader classLoader = RedkaleClassLoader.getRedkaleClassLoader();
+        final RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
         final Class entityType = entityType(mapperType);
         final String supDynName = mapperType.getName().replace('.', '/');
         final String newDynName = "org/redkaledyn/source/mapper/_DynDataSqlMapper_"
