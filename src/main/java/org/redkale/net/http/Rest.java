@@ -1472,6 +1472,10 @@ public final class Rest {
                         if (n == null && ptype == userType) {
                             n = "&"; // 用户类型特殊处理
                         }
+                        if (n != null && n.startsWith("#")) { // 不再支持/name:value路径, path里包含参数会增加网关限流复杂度
+                            throw new RedkaleException("found illegal @RestParam name (" + n + ") in method " + method
+                                    + ", serviceType is " + serviceType.getName());
+                        }
                         if (n == null) {
                             if (param.isNamePresent()) {
                                 n = param.getName();
@@ -2597,7 +2601,7 @@ public final class Rest {
             { // 设置 Annotation HttpMapping
                 boolean reqpath = false;
                 for (Object[] ps : paramlist) {
-                    if ("#".equals((String) ps[1])) {
+                    if ("#".equals(ps[1])) {
                         reqpath = true;
                         break;
                     }

@@ -27,11 +27,6 @@ import static org.redkale.util.Utility.isNotEmpty;
 /**
  * Http请求包 与javax.servlet.http.HttpServletRequest 基本类似。 <br>
  * 同时提供json的解析接口: public Object getJsonParameter(Type type, String name) <br>
- * Redkale提倡带简单的参数的GET请求采用类似REST风格, 因此提供了 getPathParam 系列接口。 <br>
- * 例如简单的翻页查询 <br>
- * /pipes/user/query/offset:0/limit:20 <br>
- * 获取页号: int offset = request.getPathParam("offset:", 0); <br>
- * 获取行数: int limit = request.getPathParam("limit:", 10); <br>
  *
  * <p>详情见: https://redkale.org
  *
@@ -2120,8 +2115,10 @@ public class HttpRequest extends Request<HttpContext> {
      * 截取getRequestPath最后的一个/后面的部分
      *
      * @return String
+     * @deprecated 2.8.0
      */
     @ConvertDisabled
+    @Deprecated(since = "2.8.0")
     public String getPathLastParam() {
         if (requestPath == null) {
             return "";
@@ -2136,7 +2133,9 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @param defvalue 默认short值
      * @return short值
+     * @deprecated 2.8.0
      */
+    @Deprecated(since = "2.8.0")
     public short getPathLastParam(short defvalue) {
         String val = getPathLastParam();
         if (val.isEmpty()) {
@@ -2157,7 +2156,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @param radix 进制数
      * @param defvalue 默认short值
      * @return short值
+     * @deprecated 2.8.0
      */
+    @Deprecated(since = "2.8.0")
     public short getPathLastParam(int radix, short defvalue) {
         String val = getPathLastParam();
         if (val.isEmpty()) {
@@ -2177,7 +2178,9 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @param defvalue 默认int值
      * @return int值
+     * @deprecated 2.8.0
      */
+    @Deprecated(since = "2.8.0")
     public int getPathLastParam(int defvalue) {
         String val = getPathLastParam();
         try {
@@ -2195,7 +2198,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @param radix 进制数
      * @param defvalue 默认int值
      * @return int值
+     * @deprecated 2.8.0
      */
+    @Deprecated(since = "2.8.0")
     public int getPathLastParam(int radix, int defvalue) {
         String val = getPathLastParam();
         try {
@@ -2212,7 +2217,9 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @param defvalue 默认float值
      * @return float值
+     * @deprecated 2.8.0
      */
+    @Deprecated(since = "2.8.0")
     public float getPathLastParam(float defvalue) {
         String val = getPathLastParam();
         try {
@@ -2229,7 +2236,9 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @param defvalue 默认long值
      * @return long值
+     * @deprecated 2.8.0
      */
+    @Deprecated(since = "2.8.0")
     public long getPathLastParam(long defvalue) {
         String val = getPathLastParam();
         try {
@@ -2247,7 +2256,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @param radix 进制数
      * @param defvalue 默认long值
      * @return long值
+     * @deprecated 2.8.0
      */
+    @Deprecated(since = "2.8.0")
     public long getPathLastParam(int radix, long defvalue) {
         String val = getPathLastParam();
         try {
@@ -2264,7 +2275,9 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @param defvalue 默认double值
      * @return double值
+     * @deprecated 2.8.0
      */
+    @Deprecated(since = "2.8.0")
     public double getPathLastParam(double defvalue) {
         String val = getPathLastParam();
         try {
@@ -2281,7 +2294,9 @@ public class HttpRequest extends Request<HttpContext> {
      *
      * @param prefix 前缀
      * @return String[]
+     * @deprecated 2.8.0
      */
+    @Deprecated(since = "2.8.0")
     public String[] getPathParams(String prefix) {
         if (requestPath == null || prefix == null) {
             return new String[0];
@@ -2299,7 +2314,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @param prefix prefix段前缀
      * @param defvalue 默认值
      * @return prefix截断后的值
+     * @deprecated 2.8.0
      */
+    @Deprecated(since = "2.8.0")
     public String getPathParam(String prefix, String defvalue) {
         if (requestPath == null || prefix == null || prefix.isEmpty()) {
             return defvalue;
@@ -2321,7 +2338,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @param prefix prefix段前缀
      * @param defvalue 默认short值
      * @return short值
+     * @deprecated 2.8.0
      */
+    @Deprecated(since = "2.8.0")
     public short getPathParam(String prefix, short defvalue) {
         String val = getPathParam(prefix, null);
         try {
@@ -2340,7 +2359,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @param prefix prefix段前缀
      * @param defvalue 默认short值
      * @return short值
+     * @deprecated 2.8.0
      */
+    @Deprecated(since = "2.8.0")
     public short getPathParam(int radix, String prefix, short defvalue) {
         String val = getPathParam(prefix, null);
         try {
@@ -2359,7 +2380,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @param prefix prefix段前缀
      * @param defvalue 默认int值
      * @return int值
+     * @deprecated 2.8.0
      */
+    @Deprecated(since = "2.8.0")
     public int getPathParam(String prefix, int defvalue) {
         String val = getPathParam(prefix, null);
         try {
@@ -2379,7 +2402,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @param prefix prefix段前缀
      * @param defvalue 默认int值
      * @return int值
+     * @deprecated 2.8.0
      */
+    @Deprecated(since = "2.8.0")
     public int getPathParam(int radix, String prefix, int defvalue) {
         String val = getPathParam(prefix, null);
         try {
@@ -2397,7 +2422,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @param prefix prefix段前缀
      * @param defvalue 默认float值
      * @return float值
+     * @deprecated 2.8.0
      */
+    @Deprecated(since = "2.8.0")
     public float getPathParam(String prefix, float defvalue) {
         String val = getPathParam(prefix, null);
         try {
@@ -2415,7 +2442,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @param prefix prefix段前缀
      * @param defvalue 默认long值
      * @return long值
+     * @deprecated 2.8.0
      */
+    @Deprecated(since = "2.8.0")
     public long getPathParam(String prefix, long defvalue) {
         String val = getPathParam(prefix, null);
         try {
@@ -2434,7 +2463,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @param prefix prefix段前缀
      * @param defvalue 默认long值
      * @return long值
+     * @deprecated 2.8.0
      */
+    @Deprecated(since = "2.8.0")
     public long getPathParam(int radix, String prefix, long defvalue) {
         String val = getPathParam(prefix, null);
         try {
@@ -2452,7 +2483,9 @@ public class HttpRequest extends Request<HttpContext> {
      * @param prefix prefix段前缀
      * @param defvalue 默认double值
      * @return double值
+     * @deprecated 2.8.0
      */
+    @Deprecated(since = "2.8.0")
     public double getPathParam(String prefix, double defvalue) {
         String val = getPathParam(prefix, null);
         try {
