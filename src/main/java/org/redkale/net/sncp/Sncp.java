@@ -468,7 +468,7 @@ public abstract class Sncp {
      * <blockquote>
      *
      * <pre>
-     * &#64;Resource(name = "")
+     * &#64;Resource(resourceName = "")
      * &#64;SncpDyn(remote = false)
      * &#64;ResourceType(TestService.class)
      * public final class _DynLocalTestService extends TestService {
@@ -484,7 +484,7 @@ public abstract class Sncp {
      *
      * @param <T> Service子类
      * @param classLoader DynBytesClassLoader
-     * @param name 资源名
+     * @param resourceName 资源名
      * @param serviceImplClass Service类
      * @param methodBoost 方法扩展
      * @return Service实例
@@ -492,14 +492,14 @@ public abstract class Sncp {
     @SuppressWarnings("unchecked")
     protected static <T extends Service> Class<? extends T> createLocalServiceClass(
             RedkaleClassLoader classLoader,
-            final String name,
+            final String resourceName,
             final Class<T> serviceImplClass,
             final AsmMethodBoost methodBoost) {
         Objects.requireNonNull(serviceImplClass);
         if (!Service.class.isAssignableFrom(serviceImplClass)) {
             throw new SncpException(serviceImplClass + " is not Service type");
         }
-        ResourceFactory.checkResourceName(name);
+        ResourceFactory.checkResourceName(resourceName);
         int mod = serviceImplClass.getModifiers();
         if (!java.lang.reflect.Modifier.isPublic(mod)) {
             throw new SncpException(serviceImplClass + " is not public");
@@ -515,9 +515,9 @@ public abstract class Sncp {
         // serviceImplClass.getSimpleName();
         String newDynName = "org/redkaledyn/service/local/_DynLocalService__"
                 + serviceImplClass.getName().replace('.', '_').replace('$', '_');
-        if (!name.isEmpty()) {
+        if (!resourceName.isEmpty()) {
             boolean normal = true;
-            for (char ch : name.toCharArray()) {
+            for (char ch : resourceName.toCharArray()) {
                 if (!((ch >= '0' && ch <= '9') || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) {
                     normal = false;
                 }
@@ -525,11 +525,11 @@ public abstract class Sncp {
             if (!normal) {
                 throw new SncpException(serviceImplClass + "'s resource name is illegal, must be 0-9 _ a-z A-Z");
             }
-            newDynName += "_" + (normal ? name : hash(name));
+            newDynName += "_" + (normal ? resourceName : hash(resourceName));
         }
         // if (Utility.inNativeImage() || methodBoost == null) { // 加强动态时不能重复加载
         try {
-            return (Class<T>)classLoader.loadClass(newDynName.replace('/', '.'));
+            return (Class<T>) classLoader.loadClass(newDynName.replace('/', '.'));
         } catch (Throwable t) {
             // do nothing
         }
@@ -543,7 +543,7 @@ public abstract class Sncp {
         cw.visit(V11, ACC_PUBLIC + ACC_SUPER, newDynName, null, supDynName, null);
         { // 给动态生成的Service类标记上Resource
             av0 = cw.visitAnnotation(resDesc, true);
-            av0.visit("name", name);
+            av0.visit("name", resourceName);
             av0.visitEnd();
         }
         {
@@ -736,7 +736,7 @@ public abstract class Sncp {
      *
      * @param <T> Service泛型
      * @param classLoader ClassLoader
-     * @param name 资源名
+     * @param resourceName 资源名
      * @param serviceImplClass Service类
      * @param methodBoost 方法扩展
      * @param resourceFactory ResourceFactory
@@ -750,7 +750,7 @@ public abstract class Sncp {
     @SuppressWarnings("unchecked")
     public static <T extends Service> T createLocalService(
             final RedkaleClassLoader classLoader,
-            final String name,
+            final String resourceName,
             final Class<T> serviceImplClass,
             final AsmMethodBoost methodBoost,
             final ResourceFactory resourceFactory,
@@ -760,7 +760,7 @@ public abstract class Sncp {
             final String remoteGroup,
             final AnyValue conf) {
         try {
-            final Class newClazz = createLocalServiceClass(classLoader, name, serviceImplClass, methodBoost);
+            final Class newClazz = createLocalServiceClass(classLoader, resourceName, serviceImplClass, methodBoost);
             T service = (T) newClazz.getDeclaredConstructor().newInstance();
             // --------------------------------------
             Service remoteService = null;
@@ -784,7 +784,7 @@ public abstract class Sncp {
                         if (remoteService == null && sncpRpcGroups != null && client != null) {
                             remoteService = createRemoteService(
                                     classLoader,
-                                    name,
+                                    resourceName,
                                     serviceImplClass,
                                     methodBoost,
                                     resourceFactory,
@@ -845,7 +845,7 @@ public abstract class Sncp {
      * <blockquote>
      *
      * <pre>
-     * &#64;Resource(name = "")
+     * &#64;Resource(resourceName = "")
      * &#64;SncpDyn(remote = true)
      * &#64;ResourceType(TestService.class)
      * public final class _DynRemoteTestService extends TestService {
@@ -879,7 +879,7 @@ public abstract class Sncp {
      *
      * @param <T> Service泛型
      * @param classLoader ClassLoader
-     * @param name 资源名
+     * @param resourceName 资源名
      * @param serviceTypeOrImplClass Service类
      * @param methodBoost 方法扩展
      * @param resourceFactory ResourceFactory
@@ -893,7 +893,7 @@ public abstract class Sncp {
     @SuppressWarnings("unchecked")
     public static <T extends Service> T createRemoteService(
             final RedkaleClassLoader classLoader,
-            final String name,
+            final String resourceName,
             final Class<T> serviceTypeOrImplClass,
             final AsmMethodBoost methodBoost,
             final ResourceFactory resourceFactory,
@@ -912,14 +912,14 @@ public abstract class Sncp {
             throw new SncpException(SncpRpcGroups.class.getSimpleName() + "/" + SncpClient.class.getSimpleName()
                     + " and " + MessageAgent.class.getSimpleName() + " are both null");
         }
-        ResourceFactory.checkResourceName(name);
+        ResourceFactory.checkResourceName(resourceName);
         final int mod = serviceTypeOrImplClass.getModifiers();
         boolean realed = !(java.lang.reflect.Modifier.isAbstract(mod) || serviceTypeOrImplClass.isInterface());
         if (!java.lang.reflect.Modifier.isPublic(mod)) {
             return null;
         }
         final SncpRemoteInfo info = createSncpRemoteInfo(
-                name,
+                resourceName,
                 getResourceType(serviceTypeOrImplClass),
                 serviceTypeOrImplClass,
                 ProtobufConvert.root(),
@@ -935,9 +935,9 @@ public abstract class Sncp {
         final String anyValueDesc = Type.getDescriptor(AnyValue.class);
         String newDynName = "org/redkaledyn/service/remote/_DynRemoteService__"
                 + serviceTypeOrImplClass.getName().replace('.', '_').replace('$', '_');
-        if (!name.isEmpty()) {
+        if (!resourceName.isEmpty()) {
             boolean normal = true;
-            for (char ch : name.toCharArray()) {
+            for (char ch : resourceName.toCharArray()) {
                 if (!((ch >= '0' && ch <= '9') || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) {
                     normal = false;
                 }
@@ -945,7 +945,7 @@ public abstract class Sncp {
             if (!normal) {
                 throw new SncpException(serviceTypeOrImplClass + "'s resource name is illegal, must be 0-9 _ a-z A-Z");
             }
-            newDynName += "_" + (normal ? name : hash(name));
+            newDynName += "_" + (normal ? resourceName : hash(resourceName));
         }
         try {
             Class newClazz = classLoader.loadClass(newDynName.replace('/', '.'));
@@ -988,7 +988,7 @@ public abstract class Sncp {
                 serviceTypeOrImplClass.isInterface() ? new String[] {supDynName} : null);
         { // 给动态生成的Service类标记上Resource
             av0 = cw.visitAnnotation(resDesc, true);
-            av0.visit("name", name);
+            av0.visit("name", resourceName);
             av0.visitEnd();
         }
         {
