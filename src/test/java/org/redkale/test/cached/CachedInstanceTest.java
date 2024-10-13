@@ -49,7 +49,7 @@ public class CachedInstanceTest {
         classLoader = RedkaleClassLoader.currentClassLoader();
         CacheMemorySource remoteSource = new CacheMemorySource("cache-remote");
         remoteSource.init(null);
-        
+
         resourceFactory = ResourceFactory.create();
         resourceFactory.register(new Environment());
         manager = CachedManagerService.create(remoteSource);
@@ -65,7 +65,6 @@ public class CachedInstanceTest {
 
     @Test
     public void run1() throws Exception {
-        RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
         Class<CachedInstance> instanceClass = CachedInstance.class;
         CachedAsmMethodBoost boost = new CachedAsmMethodBoost(false, instanceClass);
         CachedAsmMethodBoost boost2 = new CachedAsmMethodBoost(false, instanceClass);
@@ -103,7 +102,6 @@ public class CachedInstanceTest {
 
     @Test
     public void run2() throws Exception {
-        ClassLoader parent = Thread.currentThread().getContextClassLoader();
         Class<CachedInstance> serviceClass = CachedInstance.class;
         CachedAsmMethodBoost boost = new CachedAsmMethodBoost(false, serviceClass);
         CachedAsmMethodBoost boost2 = new CachedAsmMethodBoost(false, serviceClass);
@@ -112,28 +110,10 @@ public class CachedInstanceTest {
         SncpClient client = new SncpClient(
                 "", iGroup, "0", new InetSocketAddress("127.0.0.1", 8080), new ClientAddress(), "TCP", 1, 16);
         CachedInstance instance = Sncp.createLocalService(
-                new RedkaleClassLoader(parent),
-                "",
-                serviceClass,
-                boost,
-                resourceFactory,
-                grous,
-                client,
-                null,
-                null,
-                null);
+                classLoader, "c", serviceClass, boost, resourceFactory, grous, client, null, null, null);
         resourceFactory.inject(instance);
         CachedInstance instance2 = Sncp.createLocalService(
-                new RedkaleClassLoader(parent),
-                "",
-                serviceClass,
-                boost2,
-                resourceFactory2,
-                grous,
-                client,
-                null,
-                null,
-                null);
+                classLoader, "d", serviceClass, boost2, resourceFactory2, grous, client, null, null, null);
         resourceFactory2.inject(instance2);
 
         int threads = Runtime.getRuntime().availableProcessors() * 10;
