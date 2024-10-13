@@ -134,6 +134,8 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
         { // 构造函数
             mv = (cw.visitMethod(
                     ACC_PUBLIC, "<init>", "(" + pbfactoryDesc + typeDesc + pbencoderDesc + ")V", null, null));
+            Label label0 = new Label();
+            mv.visitLabel(label0);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitVarInsn(ALOAD, 1);
             mv.visitVarInsn(ALOAD, 2);
@@ -141,12 +143,20 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
             mv.visitMethodInsn(
                     INVOKESPECIAL, supDynName, "<init>", "(" + pbfactoryDesc + typeDesc + pbencoderDesc + ")V", false);
             mv.visitInsn(RETURN);
+            Label label2 = new Label();
+            mv.visitLabel(label2);
+            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
+            mv.visitLocalVariable("factory", pbfactoryDesc, null, label0, label2, 1);
+            mv.visitLocalVariable("type", typeDesc, null, label0, label2, 2);
+            mv.visitLocalVariable("objectEncoder", pbencoderDesc, null, label0, label2, 3);
             mv.visitMaxs(4, 4);
             mv.visitEnd();
         }
         { // convertTo 方法
             mv = (cw.visitMethod(
                     ACC_PUBLIC, "convertTo", "(" + pbwriterDesc + enMemberDesc + valtypeDesc + ")V", null, null));
+            Label label0 = new Label();
+            mv.visitLabel(label0);
             // if (value == null) return;
             mv.visitVarInsn(ALOAD, 3); // value
             Label ifLabel = new Label();
@@ -168,6 +178,8 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                     "(" + pbwriterDesc + enMemberDesc + objectDesc + ")" + pbwriterDesc,
                     false);
             mv.visitVarInsn(ASTORE, 4);
+            Label sublabel = new Label();
+            mv.visitLabel(sublabel);
 
             mv.visitVarInsn(ALOAD, 4);
             mv.visitVarInsn(ALOAD, 3);
@@ -291,6 +303,13 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                     INVOKEVIRTUAL, newDynName, "offerWriter", "(" + pbwriterDesc + pbwriterDesc + ")V", false);
 
             mv.visitInsn(RETURN);
+            Label label2 = new Label();
+            mv.visitLabel(label2);
+            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
+            mv.visitLocalVariable("out", pbwriterDesc, null, label0, label2, 1);
+            mv.visitLocalVariable("parentMember", enMemberDesc, null, label0, label2, 2);
+            mv.visitLocalVariable("value", valtypeDesc, null, label0, label2, 3);
+            mv.visitLocalVariable("subout", pbwriterDesc, null, sublabel, label2, 4);
             mv.visitMaxs(4, 3);
             mv.visitEnd();
         }

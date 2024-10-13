@@ -553,8 +553,8 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
         final String interDesc = org.redkale.asm.Type.getDescriptor(this.getClass());
         final String requestSupDesc = org.redkale.asm.Type.getDescriptor(Request.class);
         final String responseSupDesc = org.redkale.asm.Type.getDescriptor(Response.class);
-        final String requestDesc = org.redkale.asm.Type.getDescriptor(HttpRequest.class);
-        final String responseDesc = org.redkale.asm.Type.getDescriptor(HttpResponse.class);
+        final String reqDesc = org.redkale.asm.Type.getDescriptor(HttpRequest.class);
+        final String respDesc = org.redkale.asm.Type.getDescriptor(HttpResponse.class);
         final String factfield = "_factServlet";
         StringBuilder tmpps = new StringBuilder();
         for (Class cz : method.getParameterTypes()) {
@@ -593,16 +593,22 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             mv.visitEnd();
         }
         {
-            mv = (cw.visitMethod(ACC_PUBLIC, "execute", "(" + requestDesc + responseDesc + ")V", null, new String[] {
+            mv = (cw.visitMethod(ACC_PUBLIC, "execute", "(" + reqDesc + respDesc + ")V", null, new String[] {
                 "java/io/IOException"
             }));
+            Label label0 = new Label();
+            mv.visitLabel(label0);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitFieldInsn(GETFIELD, newDynName, factfield, interDesc);
             mv.visitVarInsn(ALOAD, 1);
             mv.visitVarInsn(ALOAD, 2);
-            mv.visitMethodInsn(
-                    INVOKEVIRTUAL, interName, method.getName(), "(" + requestDesc + responseDesc + ")V", false);
+            mv.visitMethodInsn(INVOKEVIRTUAL, interName, method.getName(), "(" + reqDesc + respDesc + ")V", false);
             mv.visitInsn(RETURN);
+            Label label2 = new Label();
+            mv.visitLabel(label2);
+            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
+            mv.visitLocalVariable("req", reqDesc, null, label0, label2, 1);
+            mv.visitLocalVariable("resp", respDesc, null, label0, label2, 2);
             mv.visitMaxs(3, 3);
             mv.visitEnd();
         }
@@ -618,7 +624,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             mv.visitTypeInsn(CHECKCAST, HttpRequest.class.getName().replace('.', '/'));
             mv.visitVarInsn(ALOAD, 2);
             mv.visitTypeInsn(CHECKCAST, HttpResponse.class.getName().replace('.', '/'));
-            mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "execute", "(" + requestDesc + responseDesc + ")V", false);
+            mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "execute", "(" + reqDesc + respDesc + ")V", false);
             mv.visitInsn(RETURN);
             mv.visitMaxs(3, 3);
             mv.visitEnd();

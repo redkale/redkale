@@ -719,6 +719,8 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
         if (srcIsMap) { // Map -> JavaBean
             {
                 mv = (cw.visitMethod(ACC_PUBLIC, "apply", "(" + srcDesc + destDesc + ")" + destDesc, null, null));
+                Label label0 = new Label();
+                mv.visitLabel(label0);
                 // mv.setDebug(true);
                 {
                     // if(src == null) return null;
@@ -760,6 +762,11 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                         srcClass.isInterface());
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitInsn(ARETURN);
+                Label label2 = new Label();
+                mv.visitLabel(label2);
+                mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
+                mv.visitLocalVariable("src", srcDesc, null, label0, label2, 1);
+                mv.visitLocalVariable("dest", destDesc, null, label0, label2, 2);
                 mv.visitMaxs(2, 3);
                 mv.visitEnd();
             }
@@ -841,6 +848,8 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
             }
         } else { // JavaBean -> Map/JavaBean
             mv = (cw.visitMethod(ACC_PUBLIC, "apply", "(" + srcDesc + destDesc + ")" + destDesc, null, null));
+            Label label0 = new Label();
+            mv.visitLabel(label0);
             // mv.setDebug(true);
             {
                 // if(src == null) return null;
@@ -1310,6 +1319,11 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
             }
             mv.visitVarInsn(ALOAD, 2);
             mv.visitInsn(ARETURN);
+            Label label2 = new Label();
+            mv.visitLabel(label2);
+            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
+            mv.visitLocalVariable("src", srcDesc, null, label0, label2, 1);
+            mv.visitLocalVariable("dest", destDesc, null, label0, label2, 2);
             mv.visitMaxs(3, 3);
             mv.visitEnd();
         }

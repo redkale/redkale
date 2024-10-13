@@ -1102,6 +1102,8 @@ public interface Attribute<T, F> {
         }
         { // get 方法
             mv = cw.visitMethod(ACC_PUBLIC, "get", "(" + interDesc + ")" + columnDesc, null, null);
+            Label label0 = new Label();
+            mv.visitLabel(label0);
             int m = 1;
             if (tgetter == null) {
                 if (tfield == null) {
@@ -1142,11 +1144,17 @@ public interface Attribute<T, F> {
                 }
             }
             mv.visitInsn(ARETURN);
+            Label label2 = new Label();
+            mv.visitLabel(label2);
+            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
+            mv.visitLocalVariable("obj", interDesc, null, label0, label2, 1);
             mv.visitMaxs(m, 2);
             mv.visitEnd();
         }
         { // set 方法
             mv = cw.visitMethod(ACC_PUBLIC, "set", "(" + interDesc + columnDesc + ")V", null, null);
+            Label label0 = new Label();
+            mv.visitLabel(label0);
             int m = 2;
             if (tsetter == null) {
                 if (tfield == null || java.lang.reflect.Modifier.isFinal(tfield.getModifiers())) {
@@ -1187,6 +1195,11 @@ public interface Attribute<T, F> {
                         INVOKEVIRTUAL, interName, tsetter.getName(), Type.getMethodDescriptor(tsetter), false);
             }
             mv.visitInsn(RETURN);
+            Label label2 = new Label();
+            mv.visitLabel(label2);
+            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
+            mv.visitLocalVariable("obj", interDesc, null, label0, label2, 1);
+            mv.visitLocalVariable("value", columnDesc, null, label0, label2, 2);
             mv.visitMaxs(m, 3);
             mv.visitEnd();
         }

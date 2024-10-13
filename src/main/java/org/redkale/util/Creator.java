@@ -461,6 +461,8 @@ public interface Creator<T> {
         { // create 方法
             mv = cw.visitMethod(
                     ACC_PUBLIC + ACC_VARARGS, "create", "([Ljava/lang/Object;)L" + interName + ";", null, null);
+            Label label0 = new Label();
+            mv.visitLabel(label0);
             if (constructorParameters.length > 0 && constructorParameters[0] != null) {
                 av0 = mv.visitAnnotation(Type.getDescriptor(ConstructorParameters.class), true);
                 AnnotationVisitor av1 = av0.visitArray("value");
@@ -547,6 +549,10 @@ public interface Creator<T> {
             // ---------------------------------------
             mv.visitMethodInsn(INVOKESPECIAL, interName, "<init>", Type.getConstructorDescriptor(constructor), false);
             mv.visitInsn(ARETURN);
+            Label label2 = new Label();
+            mv.visitLabel(label2);
+            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
+            mv.visitLocalVariable("params", "[Ljava/lang/Object;", null, label0, label2, 1);
             mv.visitMaxs(3, 2);
             mv.visitEnd();
         }

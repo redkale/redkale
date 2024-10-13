@@ -127,6 +127,8 @@ public abstract class EntityFullFunc<T> {
         }
         { // getObject(DataResultSetRow row)
             mv = cw.visitMethod(ACC_PUBLIC, "getObject", "(" + rowDesc + ")" + entityDesc, null, null);
+            Label label0 = new Label();
+            mv.visitLabel(label0);
             mv.visitVarInsn(ALOAD, 1);
             mv.visitMethodInsn(INVOKEINTERFACE, rowName, "wasNull", "()Z", true);
             Label ifLabel = new Label();
@@ -143,6 +145,8 @@ public abstract class EntityFullFunc<T> {
             mv.visitMethodInsn(INVOKEINTERFACE, creatorName, "create", "([Ljava/lang/Object;)Ljava/lang/Object;", true);
             mv.visitTypeInsn(CHECKCAST, entityName);
             mv.visitVarInsn(ASTORE, 2);
+            Label label1 = new Label();
+            mv.visitLabel(label1);
 
             for (int i = 0; i < attrs.length; i++) {
                 final int colIndex = i + 1;
@@ -442,6 +446,11 @@ public abstract class EntityFullFunc<T> {
 
             mv.visitVarInsn(ALOAD, 2); // obj
             mv.visitInsn(ARETURN);
+            Label label2 = new Label();
+            mv.visitLabel(label2);
+            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
+            mv.visitLocalVariable("row", rowDesc, null, label0, label2, 1);
+            mv.visitLocalVariable("obj", entityDesc, null, label1, label2, 2);
             mv.visitMaxs(5, 3);
             mv.visitEnd();
         }
@@ -458,6 +467,8 @@ public abstract class EntityFullFunc<T> {
 
         { // getObject(Serializable... values)
             mv = cw.visitMethod(ACC_PUBLIC | ACC_VARARGS, "getObject", "(" + serisDesc + ")" + entityDesc, null, null);
+            Label label0 = new Label();
+            mv.visitLabel(label0);
             // creator.create()
             mv.visitVarInsn(ALOAD, 0);
             mv.visitFieldInsn(GETFIELD, supDynName, "creator", creatorDesc);
@@ -466,6 +477,8 @@ public abstract class EntityFullFunc<T> {
             mv.visitMethodInsn(INVOKEINTERFACE, creatorName, "create", "([Ljava/lang/Object;)" + objectDesc, true);
             mv.visitTypeInsn(CHECKCAST, entityName);
             mv.visitVarInsn(ASTORE, 2);
+            Label label1 = new Label();
+            mv.visitLabel(label1);
 
             for (int i = 0; i < attrs.length; i++) {
                 final int attrIndex = i;
@@ -777,6 +790,11 @@ public abstract class EntityFullFunc<T> {
             }
             mv.visitVarInsn(ALOAD, 2); // obj
             mv.visitInsn(ARETURN);
+            Label label2 = new Label();
+            mv.visitLabel(label2);
+            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
+            mv.visitLocalVariable("values", serisDesc, null, label0, label2, 1);
+            mv.visitLocalVariable("obj", entityDesc, null, label1, label2, 2);
             mv.visitMaxs(3, 3);
             mv.visitEnd();
         }

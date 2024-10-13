@@ -2136,6 +2136,8 @@ public final class Rest {
                     ACC_PUBLIC, entry.newMethodName, "(" + reqDesc + respDesc + ")V", null, new String[] {
                         "java/io/IOException"
                     }));
+            Label label0 = new Label();
+            mv.visitLabel(label0);
             // mv.setDebug(true);
             mv.debugLine();
 
@@ -3990,6 +3992,11 @@ public final class Rest {
                 mv.visitInsn(RETURN);
                 maxLocals++;
             }
+            Label label2 = new Label();
+            mv.visitLabel(label2);
+            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
+            mv.visitLocalVariable("req", reqDesc, null, label0, label2, 1);
+            mv.visitLocalVariable("resp", respDesc, null, label0, label2, 2);
             mv.visitMaxs(maxStack, maxLocals);
             mappingMap.put("params", paramMaps);
 
@@ -4013,6 +4020,8 @@ public final class Rest {
                 }
                 {
                     mv = new MethodDebugVisitor(cw2.visitMethod(0, "<init>", "(L" + newDynName + ";)V", null, null));
+                    Label sublabel0 = new Label();
+                    mv.visitLabel(sublabel0);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitMethodInsn(INVOKESPECIAL, httpServletName, "<init>", "()V", false);
                     mv.visitVarInsn(ALOAD, 0);
@@ -4026,6 +4035,16 @@ public final class Rest {
                     mv.visitInsn(entry.nonBlocking ? ICONST_1 : ICONST_0);
                     mv.visitFieldInsn(PUTFIELD, newDynName + "$" + entry.newActionClassName, "_nonBlocking", "Z");
                     mv.visitInsn(RETURN);
+                    Label sublabel2 = new Label();
+                    mv.visitLabel(sublabel2);
+                    mv.visitLocalVariable("this", "L" + newDynName + ";", null, sublabel0, sublabel2, 0);
+                    mv.visitLocalVariable(
+                            "parentServlet",
+                            "L" + newDynName + "$" + entry.newActionClassName + ";",
+                            null,
+                            sublabel0,
+                            sublabel2,
+                            1);
                     mv.visitMaxs(2, 2);
                     mv.visitEnd();
                 }
@@ -4045,6 +4064,8 @@ public final class Rest {
                             cw2.visitMethod(ACC_PUBLIC, "execute", "(" + reqDesc + respDesc + ")V", null, new String[] {
                                 "java/io/IOException"
                             }));
+                    Label sublabel0 = new Label();
+                    mv.visitLabel(sublabel0);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(
                             GETFIELD,
@@ -4056,6 +4077,11 @@ public final class Rest {
                     mv.visitMethodInsn(
                             INVOKEVIRTUAL, newDynName, entry.newMethodName, "(" + reqDesc + respDesc + ")V", false);
                     mv.visitInsn(RETURN);
+                    Label sublabel2 = new Label();
+                    mv.visitLabel(sublabel2);
+                    mv.visitLocalVariable("this", "L" + newDynName + ";", null, sublabel0, sublabel2, 0);
+                    mv.visitLocalVariable("req", reqDesc, null, sublabel0, sublabel2, 1);
+                    mv.visitLocalVariable("resp", respDesc, null, sublabel0, sublabel2, 2);
                     mv.visitMaxs(3, 3);
                     mv.visitEnd();
                 }

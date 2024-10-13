@@ -165,6 +165,8 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
             mv = (cw.visitMethod(
                     ACC_PUBLIC, "<init>", "(" + jsonfactoryDesc + typeDesc + objEncoderDesc + ")V", null, null));
             // mv.setDebug(true);
+            Label label0 = new Label();
+            mv.visitLabel(label0);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitVarInsn(ALOAD, 1);
             mv.visitVarInsn(ALOAD, 2);
@@ -210,12 +212,21 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
                 mv.visitFieldInsn(PUTFIELD, newDynName, fieldName + "FirstFieldChars", "[C");
             }
             mv.visitInsn(RETURN);
+            Label label2 = new Label();
+            mv.visitLabel(label2);
+            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
+            mv.visitLocalVariable("factory", jsonfactoryDesc, null, label0, label2, 1);
+            mv.visitLocalVariable("type", typeDesc, null, label0, label2, 2);
+            mv.visitLocalVariable("objectEncoderSelf", objEncoderDesc, null, label0, label2, 3);
             mv.visitMaxs(1 + elements.size(), 1 + elements.size());
             mv.visitEnd();
         }
 
         { // convertTo 方法
             mv = (cw.visitMethod(ACC_PUBLIC, "convertTo", "(" + jsonwriterDesc + valtypeDesc + ")V", null, null));
+            Label commaLabel = null;
+            Label label0 = new Label();
+            mv.visitLabel(label0);
             // mv.setDebug(true);
             { // if (value == null) { out.writeObjectNull(null);  return; }
                 mv.visitVarInsn(ALOAD, 2);
@@ -432,6 +443,8 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
                 if (!mustHadComma) { // boolean comma = false;
                     mv.visitInsn(ICONST_0);
                     mv.visitVarInsn(ISTORE, 3);
+                    commaLabel = new Label();
+                    mv.visitLabel(commaLabel);
                 }
                 for (AccessibleObject element : elements) {
                     elementIndex++;
@@ -658,6 +671,14 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
                 }
             }
             mv.visitInsn(RETURN);
+            Label label2 = new Label();
+            mv.visitLabel(label2);
+            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
+            mv.visitLocalVariable("out", "Lorg/redkale/convert/json/JsonWriter;", null, label0, label2, 1);
+            mv.visitLocalVariable("value", "Lorg/redkale/test/convert/json/Message;", null, label0, label2, 2);
+            if (commaLabel != null) {
+                mv.visitLocalVariable("comma", "Z", null, commaLabel, label2, 3);
+            }
             mv.visitMaxs(maxLocals, maxLocals);
             mv.visitEnd();
         }

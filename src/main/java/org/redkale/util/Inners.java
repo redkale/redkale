@@ -264,9 +264,15 @@ class Inners {
             }
             { // apply 方法
                 mv = cw.visitMethod(ACC_PUBLIC, "apply", "(I)[" + interDesc, null, null);
+                Label label0 = new Label();
+                mv.visitLabel(label0);
                 mv.visitVarInsn(ILOAD, 1);
                 mv.visitTypeInsn(ANEWARRAY, interName);
                 mv.visitInsn(ARETURN);
+                Label label2 = new Label();
+                mv.visitLabel(label2);
+                mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
+                mv.visitLocalVariable("size", "I", null, label0, label2, 1);
                 mv.visitMaxs(1, 2);
                 mv.visitEnd();
             }

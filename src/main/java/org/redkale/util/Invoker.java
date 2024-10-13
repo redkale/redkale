@@ -134,6 +134,8 @@ public interface Invoker<C, R> {
                     "(" + interDesc + "[Ljava/lang/Object;)" + returnDesc,
                     null,
                     null));
+            Label label00 = new Label();
+            mv.visitLabel(label00);
 
             Label label0 = new Label();
             Label label1 = new Label();
@@ -182,6 +184,11 @@ public interface Invoker<C, R> {
                         INVOKESPECIAL, "java/lang/RuntimeException", "<init>", "(Ljava/lang/Throwable;)V", false);
                 mv.visitInsn(ATHROW);
             }
+            Label label22 = new Label();
+            mv.visitLabel(label22);
+            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label00, label22, 0);
+            mv.visitLocalVariable("obj", interDesc, null, label00, label22, 1);
+            mv.visitLocalVariable("params", "[Ljava/lang/Object;", null, label00, label22, 2);
             mv.visitMaxs(3 + method.getParameterCount(), 4);
             mv.visitEnd();
         }
