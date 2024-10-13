@@ -96,24 +96,30 @@ public abstract class JsonWriter extends Writer {
     public abstract void writeFieldLatin1Value(final byte[] fieldBytes, final char[] fieldChars, final String value);
 
     @ClassDepends
+    @Deprecated(since = "2.8.0")
     public abstract void writeLastFieldShortValue(final byte[] fieldBytes, final char[] fieldChars, final short value);
 
     @ClassDepends
+    @Deprecated(since = "2.8.0")
     public abstract void writeLastFieldIntValue(final byte[] fieldBytes, final char[] fieldChars, final int value);
 
     @ClassDepends
+    @Deprecated(since = "2.8.0")
     public abstract void writeLastFieldLongValue(final byte[] fieldBytes, final char[] fieldChars, final long value);
 
     @ClassDepends
+    @Deprecated(since = "2.8.0")
     public abstract void writeLastFieldLatin1Value(final byte[] fieldBytes, final char[] fieldChars, String value);
 
     // firstFieldBytes 必须带{开头
     @ClassDepends
+    @Deprecated(since = "2.8.0")
     public abstract void writeObjectByOnlyOneLatin1FieldValue(
             final byte[] firstFieldBytes, final char[] firstFieldChars, final String value);
 
     // firstFieldBytes 必须带{开头, lastFieldBytes必须,开头
     @ClassDepends
+    @Deprecated(since = "2.8.0")
     public abstract void writeObjectByOnlyTwoIntFieldValue(
             final byte[] firstFieldBytes,
             final char[] firstFieldChars,

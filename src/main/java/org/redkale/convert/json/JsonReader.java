@@ -75,7 +75,7 @@ public class JsonReader extends Reader {
         this.limit = -1;
         this.text = null;
         if (this.array != null) {
-            if (this.array.content.length > CharArray.DEFAULT_SIZE * 200) {
+            if (this.array.content.length > JsonWriter.DEFAULT_SIZE * 200) {
                 this.array = null;
             } else {
                 this.array.clear();
@@ -1096,11 +1096,9 @@ public class JsonReader extends Reader {
 
     protected static class CharArray {
 
-        private static final int DEFAULT_SIZE = 1024;
-
         private int count;
 
-        private char[] content = new char[DEFAULT_SIZE];
+        private char[] content = new char[JsonWriter.DEFAULT_SIZE];
 
         private char[] expand(int len) {
             int newcount = count + len;

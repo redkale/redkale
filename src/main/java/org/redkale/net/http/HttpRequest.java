@@ -291,6 +291,10 @@ public class HttpRequest extends Request<HttpContext> {
         return req;
     }
 
+    protected int pipelineIndex() {
+        return pipelineIndex;
+    }
+
     protected boolean isWebSocket() {
         return maybews && getmethod && "Upgrade".equalsIgnoreCase(getHeader("Connection"));
     }

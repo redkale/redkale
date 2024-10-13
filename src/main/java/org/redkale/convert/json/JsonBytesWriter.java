@@ -49,7 +49,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     }
 
     public JsonBytesWriter(int size) {
-        this.content = new byte[size > 1024 ? size : 1024];
+        this.content = new byte[size > DEFAULT_SIZE ? size : DEFAULT_SIZE];
     }
 
     public JsonBytesWriter(ByteArray array) {
@@ -423,10 +423,6 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         byte[] copy = new byte[count];
         System.arraycopy(content, 0, copy, 0, count);
         return copy;
-    }
-
-    public int count() {
-        return this.count;
     }
 
     @Override

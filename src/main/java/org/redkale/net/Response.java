@@ -103,7 +103,11 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         public void completed(final Integer result, final ByteBuffer[] attachments) {
             if (attachments != null) {
                 for (ByteBuffer attachment : attachments) {
-                    channel.offerWriteBuffer(attachment);
+                    if (attachment != writeBuffer) {
+                        channel.offerWriteBuffer(attachment);
+                    } else {
+                        attachment.clear();
+                    }
                 }
             }
             completeInIOThread(false);
@@ -113,7 +117,11 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         public void failed(Throwable exc, final ByteBuffer[] attachments) {
             if (attachments != null) {
                 for (ByteBuffer attachment : attachments) {
-                    channel.offerWriteBuffer(attachment);
+                    if (attachment != writeBuffer) {
+                        channel.offerWriteBuffer(attachment);
+                    } else {
+                        attachment.clear();
+                    }
                 }
             }
             completeInIOThread(true);
@@ -124,9 +132,12 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         this.context = context;
         this.request = request;
         this.thread = WorkThread.currentWorkThread();
-        this.writeBuffer = context != null ? ByteBuffer.allocateDirect(context.getBufferCapacity()) : null;
-        this.workExecutor =
-                context == null || context.workExecutor == null ? ForkJoinPool.commonPool() : context.workExecutor;
+        this.writeBuffer = context.createByteBuffer();
+        this.workExecutor = context.workExecutor == null ? ForkJoinPool.commonPool() : context.workExecutor;
+    }
+
+    protected ByteBuffer writeBuffer() {
+        return writeBuffer;
     }
 
     protected AsyncConnection removeChannel() {
@@ -157,6 +168,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
             }
             channel = null;
         }
+        this.writeBuffer.clear();
         this.responseSupplier = null;
         this.responseConsumer = null;
         this.recycleListener = null;
@@ -362,6 +374,10 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         } else {
             this.responseConsumer.accept(this);
         }
+    }
+
+    protected void writeInIOThread(ByteBuffer buffer) {
+        this.channel.writeInIOThread(buffer, buffer, finishBufferIOThreadHandler);
     }
 
     public final void finish(final byte[] bs) {

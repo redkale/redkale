@@ -158,6 +158,9 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
         if (onlyShotIntLongLatin1MoreFieldObjectFlag && membersSize < 2) {
             onlyShotIntLongLatin1MoreFieldObjectFlag = false; // 字段个数必须大于1
         }
+        onlyTwoIntFieldObjectFlag = false; // 废弃此特性
+        onlyOneLatin1FieldObjectFlag = false; // 废弃此特性
+        onlyShotIntLongLatin1MoreFieldObjectFlag = false; // 废弃此特性
         { // 构造函数
             mv = (cw.visitMethod(
                     ACC_PUBLIC, "<init>", "(" + jsonfactoryDesc + typeDesc + objEncoderDesc + ")V", null, null));

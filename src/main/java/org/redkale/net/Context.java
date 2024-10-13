@@ -6,6 +6,7 @@
 package org.redkale.net;
 
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.charset.*;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.*;
@@ -182,6 +183,10 @@ public class Context {
 
     protected void updateServerAddress(InetSocketAddress addr) {
         this.serverAddress = addr;
+    }
+
+    public ByteBuffer createByteBuffer() {
+        return ByteBuffer.allocateDirect(getBufferCapacity());
     }
 
     public ResourceFactory getResourceFactory() {

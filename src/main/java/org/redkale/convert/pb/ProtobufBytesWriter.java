@@ -14,9 +14,10 @@ import org.redkale.util.ByteTuple;
 
 /**
  *
+ *
  * @author zhangjx
  */
-public class ProtobufBytesWriter extends ProtobufWriter {
+public class ProtobufBytesWriter extends ProtobufWriter { // 存在child情况因此不能实现ByteTuple
 
     private static final int RESET_MAX_SIZE = DEFAULT_SIZE << 4;
 
