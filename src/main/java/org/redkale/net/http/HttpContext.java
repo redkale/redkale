@@ -134,6 +134,8 @@ public class HttpContext extends Context {
         { // 构造方法
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "(" + handlerDesc + ")V", null, null));
             // mv.setDebug(true);
+            Label label0 = new Label();
+            mv.visitLabel(label0);
             {
                 av0 = mv.visitAnnotation(cpDesc, true);
                 {
@@ -150,6 +152,10 @@ public class HttpContext extends Context {
             mv.visitVarInsn(ALOAD, 1);
             mv.visitFieldInsn(PUTFIELD, newDynName, "handler", handlerDesc);
             mv.visitInsn(RETURN);
+            Label label2 = new Label();
+            mv.visitLabel(label2);
+            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
+            mv.visitLocalVariable("handler", handlerDesc, null, label0, label2, 1);
             mv.visitMaxs(2, 2);
             mv.visitEnd();
         }

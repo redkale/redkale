@@ -23,6 +23,7 @@ import org.redkale.asm.Asms;
 import org.redkale.asm.ClassWriter;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.FieldVisitor;
+import org.redkale.asm.Label;
 import org.redkale.asm.MethodDebugVisitor;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.convert.ConvertColumn;
@@ -101,12 +102,7 @@ public final class SncpRemoteAction {
         this.paramTypes = TypeToken.getGenericType(method.getGenericParameterTypes(), serviceImplClass);
         this.paramClasses = method.getParameterTypes();
         Type pt = createParamComposeBeanType(
-                RedkaleClassLoader.currentClassLoader(),
-                serviceImplClass,
-                method,
-                actionid,
-                paramTypes,
-                paramClasses);
+                RedkaleClassLoader.currentClassLoader(), serviceImplClass, method, actionid, paramTypes, paramClasses);
         this.paramComposeBeanType = pt;
         this.paramComposeBeanCreator =
                 (pt == null || pt == paramTypes[0]) ? null : Creator.load(TypeToken.typeToClass(pt), 1);
@@ -307,6 +303,8 @@ public final class SncpRemoteAction {
         }
         { // 一个参数的构造函数
             mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "([Ljava/lang/Object;)V", null, null));
+            Label label0 = new Label();
+            mv.visitLabel(label0);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
             for (int i = 1; i <= paramClasses.length; i++) {
@@ -319,6 +317,10 @@ public final class SncpRemoteAction {
                 mv.visitFieldInsn(PUTFIELD, newDynName, "arg" + i, paramDesc);
             }
             mv.visitInsn(RETURN);
+            Label label2 = new Label();
+            mv.visitLabel(label2);
+            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
+            mv.visitLocalVariable("params", "[Ljava/lang/Object;", null, label0, label2, 1);
             mv.visitMaxs(3, 2);
             mv.visitEnd();
         }
