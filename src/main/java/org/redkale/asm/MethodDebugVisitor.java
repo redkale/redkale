@@ -169,9 +169,9 @@ public class MethodDebugVisitor extends MethodVisitor {
             if (index == null) {
                 index = labels.size();
                 labels.put(var, index);
-                System.out.println("Label l" + index + " = new Label();");
+                System.out.println("Label label" + index + " = new Label();");
             }
-            System.out.println("mv.visitLabel(l" + index + ");");
+            System.out.println("mv.visitLabel(label" + index + ");");
         }
     }
 

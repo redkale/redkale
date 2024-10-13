@@ -111,6 +111,8 @@ public abstract class EntityFullFunc<T> {
                     "(Ljava/lang/Class<" + entityDesc + ">;L" + creatorName + "<" + entityDesc + ">;[L" + attrName + "<"
                             + entityDesc + "Ljava/io/Serializable;>;)V",
                     null);
+            Label label0 = new Label();
+            mv.visitLabel(label0);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitVarInsn(ALOAD, 1);
             mv.visitVarInsn(ALOAD, 2);
@@ -122,6 +124,12 @@ public abstract class EntityFullFunc<T> {
                     "(Ljava/lang/Class;" + creatorDesc + "[" + attrDesc + ")V",
                     false);
             mv.visitInsn(RETURN);
+            Label label2 = new Label();
+            mv.visitLabel(label2);
+            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
+            mv.visitLocalVariable("type", "Ljava/lang/Class;", null, label0, label2, 1);
+            mv.visitLocalVariable("creator", creatorDesc, null, label0, label2, 2);
+            mv.visitLocalVariable("attrs", "[" + attrDesc, null, label0, label2, 3);
             mv.visitMaxs(4, 4);
             mv.visitEnd();
         }

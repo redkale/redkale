@@ -487,8 +487,8 @@ public final class Rest {
             sb1.append(Type.getDescriptor(field.getType()));
             sb2.append(Utility.getTypeDescriptor(field.getGenericType()));
         }
-        final String resourceDescriptor = sb1.toString();
-        final String resourceGenericDescriptor = sb1.length() == sb2.length() ? null : sb2.toString();
+        final String resourceDesc = sb1.toString();
+        final String resourceGenericDesc = sb1.length() == sb2.length() ? null : sb2.toString();
         // ----------------------------------------------------------------------------------------
 
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
@@ -628,8 +628,7 @@ public final class Rest {
                         "_redkale_resource_" + i,
                         Type.getDescriptor(resourcesFields.get(i).getType()));
             }
-            mv.visitMethodInsn(
-                    INVOKESPECIAL, newDynWebSokcetFullName, "<init>", "(" + resourceDescriptor + ")V", false);
+            mv.visitMethodInsn(INVOKESPECIAL, newDynWebSokcetFullName, "<init>", "(" + resourceDesc + ")V", false);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(2 + resourcesFields.size(), 1);
             mv.visitEnd();
@@ -767,6 +766,8 @@ public final class Rest {
                         "(Ljava/lang/String;)Ljava/lang/Object;",
                         "<T:Ljava/lang/Object;>(Ljava/lang/String;)TT;",
                         null));
+                Label label0 = new Label();
+                mv.visitLabel(label0);
                 for (Map.Entry<String, Parameter> en : paramap.entrySet()) {
                     Class paramType = en.getValue().getType();
                     mv.visitLdcInsn(en.getKey());
@@ -790,6 +791,11 @@ public final class Rest {
                 }
                 mv.visitInsn(ACONST_NULL);
                 mv.visitInsn(ARETURN);
+                Label label2 = new Label();
+                mv.visitLabel(label2);
+                mv.visitLocalVariable(
+                        "this", "L" + newDynSuperMessageFullName + ";", null, label0, label2, 0);
+                mv.visitLocalVariable("name", "Ljava/lang/String;", null, label0, label2, 1);
                 mv.visitMaxs(2, 2);
                 mv.visitEnd();
             }
@@ -825,6 +831,8 @@ public final class Rest {
             { // execute
                 mv = new MethodDebugVisitor(
                         cw2.visitMethod(ACC_PUBLIC, "execute", "(L" + newDynWebSokcetFullName + ";)V", null, null));
+                Label label0 = new Label();
+                mv.visitLabel(label0);
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitFieldInsn(
@@ -843,6 +851,10 @@ public final class Rest {
                         "(Ljava/lang/String;" + wsParamDesc + "Ljava/lang/Runnable;)V",
                         false);
                 mv.visitInsn(RETURN);
+                Label label2 = new Label();
+                mv.visitLabel(label2);
+                mv.visitLocalVariable("this", "L" + newDynSuperMessageFullName + ";", null, label0, label2, 0);
+                mv.visitLocalVariable("websocket", "L" + newDynWebSokcetFullName + ";", null, label0, label2, 1);
                 mv.visitMaxs(4, 2);
                 mv.visitEnd();
             }
@@ -969,12 +981,11 @@ public final class Rest {
             cw2.visitInnerClass(
                     newDynWebSokcetFullName, newDynName, newDynWebSokcetSimpleName, ACC_PUBLIC + ACC_STATIC);
             {
-                mv = new MethodDebugVisitor(cw2.visitMethod(
-                        ACC_PUBLIC,
-                        "<init>",
-                        "(" + resourceDescriptor + ")V",
-                        resourceGenericDescriptor == null ? null : ("(" + resourceGenericDescriptor + ")V"),
-                        null));
+                String resSignature = resourceGenericDesc == null ? null : ("(" + resourceGenericDesc + ")V");
+                mv = new MethodDebugVisitor(
+                        cw2.visitMethod(ACC_PUBLIC, "<init>", "(" + resourceDesc + ")V", resSignature, null));
+                Label sublabel0 = new Label();
+                mv.visitLabel(sublabel0);
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitMethodInsn(INVOKESPECIAL, webSocketInternalName, "<init>", "()V", false);
                 for (int i = 0; i < resourcesFields.size(); i++) {
@@ -985,6 +996,12 @@ public final class Rest {
                             PUTFIELD, newDynWebSokcetFullName, field.getName(), Type.getDescriptor(field.getType()));
                 }
                 mv.visitInsn(RETURN);
+                Label sublabel2 = new Label();
+                mv.visitLabel(sublabel2);
+                mv.visitLocalVariable("this", "L" + newDynWebSokcetFullName + ";", null, sublabel0, sublabel2, 0);
+                if (!resourceDesc.isEmpty()) {
+                    mv.visitLocalVariable("service", resourceDesc, resSignature, sublabel0, sublabel2, 1);
+                }
                 mv.visitMaxs(2, 1 + resourcesFields.size());
                 mv.visitEnd();
             }
@@ -1033,13 +1050,20 @@ public final class Rest {
             { // accept函数
                 mv = new MethodDebugVisitor(
                         cw2.visitMethod(ACC_PUBLIC, "accept", "(" + wsDesc + "Ljava/lang/Object;)V", null, null));
+                Label label0 = new Label();
+                mv.visitLabel(label0);
+
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitTypeInsn(CHECKCAST, newDynWebSokcetFullName);
                 mv.visitVarInsn(ASTORE, 3);
+                Label label3 = new Label();
+                mv.visitLabel(label3);
 
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitTypeInsn(CHECKCAST, newDynMessageFullName);
                 mv.visitVarInsn(ASTORE, 4);
+                Label label4 = new Label();
+                mv.visitLabel(label4);
 
                 for (int i = 0; i < messageMethods.size(); i++) {
                     final Method method = messageMethods.get(i);
@@ -1079,6 +1103,13 @@ public final class Rest {
                     }
                 }
                 mv.visitInsn(RETURN);
+                Label label2 = new Label();
+                mv.visitLabel(label2);
+                mv.visitLocalVariable("this", "L" + newDynConsumerFullName + ";", null, label0, label2, 0);
+                mv.visitLocalVariable("websocket", wsDesc, null, label0, label2, 1);
+                mv.visitLocalVariable("message", "Ljava/lang/Object;", null, label0, label2, 2);
+                mv.visitLocalVariable("ws", "L" + newDynWebSokcetFullName + ";", null, label3, label2, 3);
+                mv.visitLocalVariable("msg", "L" + newDynMessageFullName + ";", null, label4, label2, 4);
                 mv.visitMaxs(3, 3 + messageMethods.size());
                 mv.visitEnd();
             }
