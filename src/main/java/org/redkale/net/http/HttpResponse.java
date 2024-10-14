@@ -201,10 +201,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     private final JsonBytesWriter jsonWriter = new JsonBytesWriter();
 
-    private final Consumer<byte[]> headerArrayConsumer;
-
-    private final Consumer<byte[]> headerBufferConsumer;
-
     @SuppressWarnings("Convert2Lambda")
     protected final ConvertBytesHandler convertHandler = new ConvertBytesHandler() {
         @Override
@@ -235,8 +231,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         this.jsonLiveContentLengthArray = config == null ? null : config.jsonLiveContentLengthArray;
         this.jsonCloseContentLengthArray = config == null ? null : config.jsonCloseContentLengthArray;
         this.contentType = this.plainContentType;
-        this.headerArrayConsumer = headerArray::put;
-        this.headerBufferConsumer = writeBuffer()::put;
     }
 
     @Override
@@ -431,33 +425,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
      * @param obj 输出对象
      */
     public final void finishJson(final Type type, final Object obj) {
-        if (sendHandler == null
-                && cacheHandler == null
-                && headerBufferConsumer != null
-                && request.pipelineIndex() <= 0
-                && !this.channel.hasPipelineData()
-                && request.getRespConvert() == jsonRootConvert
-                && this.header.getStringEntrys().length == 0) {
-            this.contentType = this.jsonContentType;
-            if (this.recycleListener != null) {
-                this.output = obj;
-            }
-            JsonBytesWriter writer = jsonWriter;
-            jsonRootConvert.convertTo(writer.clear(), type, obj);
-            this.contentLength = writer.length();
-            createHeader(headerBufferConsumer); // 写进writeBuffer
-
-            ByteBuffer buffer = writeBuffer();
-            if (buffer.capacity() >= contentLength) {
-                buffer.put(writer.content(), 0, writer.length());
-                buffer.flip();
-                writeInIOThread(buffer);
-            } else {
-                finish(this.jsonContentType, writer);
-            }
-        } else {
-            finishJson((Convert) null, type, obj);
-        }
+        finishJson((Convert) null, type, obj);
     }
 
     /**
@@ -1101,12 +1069,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
 
     // Header大小
     protected void createHeader() {
-        createHeader(headerArrayConsumer);
-        this.headWritedSize = headerArray.length();
-    }
-
-    // Header大小
-    protected void createHeader(Consumer<byte[]> writer) {
         if (this.status == 200
                 && !this.respHeadContainsConnection
                 && !this.request.isWebSocket()
@@ -1126,47 +1088,47 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                     lengthArray = this.plainCloseContentLengthArray;
                 }
             }
-            writer.accept(lengthArray[(int) this.contentLength]);
+            headerArray.put(lengthArray[(int) this.contentLength]);
         } else {
             if (this.status == 200 && !this.respHeadContainsConnection && !this.request.isWebSocket()) {
                 if (this.request.isKeepAlive()) {
-                    writer.accept(status200_server_live_Bytes);
+                    headerArray.put(status200_server_live_Bytes);
                 } else {
-                    writer.accept(status200_server_close_Bytes);
+                    headerArray.put(status200_server_close_Bytes);
                 }
             } else {
                 if (this.status == 200) {
-                    writer.accept(status200Bytes);
+                    headerArray.put(status200Bytes);
                 } else {
-                    writer.accept(("HTTP/1.1 " + this.status + " " + httpCodes.get(this.status) + "\r\n").getBytes());
+                    headerArray.put(("HTTP/1.1 " + this.status + " " + httpCodes.get(this.status) + "\r\n").getBytes());
                 }
-                writer.accept(serverNameBytes);
+                headerArray.put(serverNameBytes);
                 if (!this.respHeadContainsConnection) {
                     byte[] bs = this.request.isKeepAlive() ? connectAliveBytes : connectCloseBytes;
                     if (bs.length > 0) {
-                        writer.accept(bs);
+                        headerArray.put(bs);
                     }
                 }
             }
             if (!this.request.isWebSocket()) {
                 if (this.contentType == this.jsonContentType) {
-                    writer.accept(this.jsonContentTypeBytes);
+                    headerArray.put(this.jsonContentTypeBytes);
                 } else if (this.contentType == null || this.contentType == this.plainContentType) {
-                    writer.accept(this.plainContentTypeBytes);
+                    headerArray.put(this.plainContentTypeBytes);
                 } else {
-                    writer.accept(("Content-Type: " + this.contentType + "\r\n").getBytes());
+                    headerArray.put(("Content-Type: " + this.contentType + "\r\n").getBytes());
                 }
             }
             if (this.contentLength >= 0) {
                 if (this.contentLength < contentLengthArray.length) {
-                    writer.accept(contentLengthArray[(int) this.contentLength]);
+                    headerArray.put(contentLengthArray[(int) this.contentLength]);
                 } else {
-                    writer.accept(("Content-Length: " + this.contentLength + "\r\n").getBytes());
+                    headerArray.put(("Content-Length: " + this.contentLength + "\r\n").getBytes());
                 }
             }
         }
         if (dateSupplier != null) {
-            writer.accept(dateSupplier.get());
+            headerArray.put(dateSupplier.get());
         }
 
         if (this.defaultAddHeaders != null) {
@@ -1204,7 +1166,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             }
         }
         for (Entry<String> en : this.header.getStringEntrys()) {
-            writer.accept((en.name + ": " + en.getValue() + "\r\n").getBytes());
+            headerArray.put((en.name + ": " + en.getValue() + "\r\n").getBytes());
         }
         if (request.newSessionid != null) {
             String domain = defaultCookie == null ? null : defaultCookie.getDomain();
@@ -1218,12 +1180,12 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
             //                path = "/";
             //            }
             if (request.newSessionid.isEmpty()) {
-                writer.accept(("Set-Cookie: " + HttpRequest.SESSIONID_NAME + "=; " + domain
+                headerArray.put(("Set-Cookie: " + HttpRequest.SESSIONID_NAME + "=; " + domain
                                 + "Path=/; Max-Age=0; HttpOnly\r\n")
                         .getBytes());
             } else {
-                writer.accept(("Set-Cookie: " + HttpRequest.SESSIONID_NAME + "=" + request.newSessionid + "; " + domain
-                                + "Path=/; HttpOnly\r\n")
+                headerArray.put(("Set-Cookie: " + HttpRequest.SESSIONID_NAME + "=" + request.newSessionid + "; "
+                                + domain + "Path=/; HttpOnly\r\n")
                         .getBytes());
             }
         }
@@ -1240,10 +1202,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                         cookie.setPath(defaultCookie.getPath());
                     }
                 }
-                writer.accept(("Set-Cookie: " + cookieString(cookie) + "\r\n").getBytes());
+                headerArray.put(("Set-Cookie: " + cookieString(cookie) + "\r\n").getBytes());
             }
         }
-        writer.accept(LINE);
+        headerArray.put(LINE);
+        this.headWritedSize = headerArray.length();
     }
 
     private CharSequence cookieString(HttpCookie cookie) {
