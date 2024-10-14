@@ -42,12 +42,12 @@ public class NodeHttpServer extends NodeServer {
     protected ClassFilter<? extends WebSocket> webSocketFilter;
 
     public NodeHttpServer(Application application, AnyValue serconf) {
-        super(application, createServer(application, serconf));
+        super(application, createServer(application));
         this.httpServer = (HttpServer) server;
         this.rest = serconf != null && serconf.getAnyValue("rest") != null;
     }
 
-    private static Server createServer(Application application, AnyValue serconf) {
+    private static Server createServer(Application application) {
         return new HttpServer(
                 application,
                 application.getStartTime(),
