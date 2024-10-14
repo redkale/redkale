@@ -13,6 +13,15 @@
 * 提供类似JPA功能，包含数据缓存自动同步、分表分库与简洁的数据层操作接口
 * 提供了MQ消息消费与生产简洁化API
 
+## 版本
+```xml
+<dependency>
+    <groupId>org.redkale</groupId>
+    <artifactId>redkale</artifactId>
+    <version>2.8.0</version>
+</dependency>
+```
+
 ## 开发文档
 * [快速入门](docs/quick-start.md)
 * [Service组件](docs/service.md)

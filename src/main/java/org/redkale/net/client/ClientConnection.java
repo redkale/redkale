@@ -150,16 +150,12 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
                 for (ClientFuture respFuture : respFutures) {
                     offerRespFuture(respFuture);
                 }
-                sendRequestInLocking(respFutures);
+                sendRequestToChannel(respFutures);
             }
         } finally {
             writeLock.unlock();
         }
         return respFutures;
-    }
-
-    protected void sendRequestInLocking(ClientFuture... respFutures) {
-        sendRequestToChannel(respFutures);
     }
 
     protected final void sendRequestToChannel(ClientFuture... respFutures) {
