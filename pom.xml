@@ -108,7 +108,7 @@
                     </compilerArgs>
                 </configuration>
             </plugin>
-            <!--  需要注释掉， 否则会生成native-image配置信息
+            <!-- must commented, otherwise native-image information will be generated
             <plugin>
                 <groupId>org.redkale.maven.plugins</groupId>
                 <artifactId>redkale-maven-plugin</artifactId>
