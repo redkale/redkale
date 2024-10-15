@@ -47,7 +47,7 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
         HelloService2 service = _redkale_servicemap == null
                 ? _redkale_service
                 : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
-        int id = Integer.parseInt(req.getPathLastParam());
+        int id = Integer.parseInt(req.getRequestPath().substring(req.getRequestPath().lastIndexOf('/') + 1));
         service.deleteHello(id);
         resp.finishJson(RetResult.success());
     }
@@ -89,7 +89,7 @@ public class _DynHelloRestServlet2 extends SimpleRestServlet {
         HelloService2 service = _redkale_servicemap == null
                 ? _redkale_service
                 : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
-        int id = Integer.parseInt(req.getPathLastParam());
+        int id = Integer.parseInt(req.getRequestPath().substring(req.getRequestPath().lastIndexOf('/') + 1));
         HelloEntity bean = service.findHello(id);
         resp.finishJson(bean);
     }

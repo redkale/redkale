@@ -15,6 +15,7 @@ import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.*;
 
 /** @author zhangjx */
+@SuppressWarnings("unchecked")
 public class CustMessage2Test {
 
     private boolean main;

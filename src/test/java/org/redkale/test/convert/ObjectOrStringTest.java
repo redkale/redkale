@@ -11,6 +11,7 @@ import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 
 /** @author zhangjx */
+@SuppressWarnings("unchecked")
 public class ObjectOrStringTest {
 
     private boolean main;

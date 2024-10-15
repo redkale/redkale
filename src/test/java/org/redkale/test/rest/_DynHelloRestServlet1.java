@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import org.redkale.annotation.Resource;
+import org.redkale.boot.Application;
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
 import org.redkale.source.Flipper;
@@ -21,35 +22,37 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
     private Map<String, HelloService> _redkale_servicemap;
 
     public static void main(String[] args) throws Throwable {
-        final int port = 8888;
+
+        Application application = Application.create(true);
+        HttpServer server = new HttpServer(application);
         HelloService service = new HelloService();
-        HttpServer server = new HttpServer();
+        RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
+        Class clazz = SimpleRestServlet.class;
+        System.out.println(server.addRestServlet(classLoader, service, null, clazz, "/pipes"));
+        System.out.println(server.addRestServlet(classLoader, new HelloService(3), null, clazz, "/pipes"));
 
-        System.out.println(server.addRestServlet(null, service, null, SimpleRestServlet.class, "/pipes"));
-        System.out.println(server.addRestServlet(null, new HelloService(3), null, SimpleRestServlet.class, "/pipes"));
-
-        AnyValueWriter conf = AnyValueWriter.create("port", "" + port);
+        AnyValueWriter conf = AnyValueWriter.create("port", "0");
         server.init(conf);
         server.start();
         Utility.sleep(100);
-
+        final int port = server.getSocketAddress().getPort();
         HelloEntity entity = new HelloEntity();
         entity.setHelloname("my name");
         Map<String, Serializable> headers = new HashMap<>();
         headers.put("hello-res", "my res");
         // headers.put(Rest.REST_HEADER_RESNAME, "my-res");
-        String url = "http://127.0.0.1:" + port + "/pipes/hello/update?entity={}&bean2={}";
+        String url = "http://127.0.0.1:" + port + "/pipes/hello/update?entity=%7B%7D&bean2=%7B%7D";
         System.out.println(Utility.postHttpContent(url, headers, null));
-        url = "http://127.0.0.1:" + port + "/pipes/hello/update2?entity={}&bean2={}";
+        url = "http://127.0.0.1:" + port + "/pipes/hello/update2?entity=%7B%7D&bean2=%7B%7D";
         System.out.println(Utility.postHttpContent(url, headers, null));
 
         url = "http://127.0.0.1:" + port + "/pipes/hello/asyncfind/1234";
         System.out.println("异步查找: " + Utility.postHttpContent(url, headers, null));
 
-        url = "http://127.0.0.1:" + port + "/pipes/hello/listmap?map={'a':5}";
+        url = "http://127.0.0.1:" + port + "/pipes/hello/listmap?map=%7B'a':5%7D";
         System.out.println("listmap: " + Utility.postHttpContent(url, headers, null));
 
-        url = "http://127.0.0.1:" + port + "/pipes/hello/create?entity={}";
+        url = "http://127.0.0.1:" + port + "/pipes/hello/create?entity=%7B%7D";
         System.out.println("增加记录: " + Utility.postHttpContent(url, headers, "{'a':2,'b':3}"));
 
         url = "http://127.0.0.1:" + port + "/pipes/hello/asyncfind/111111";
@@ -78,7 +81,8 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         HelloService service = _redkale_servicemap == null
                 ? _redkale_service
                 : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
-        int id = Integer.parseInt(req.getPathLastParam());
+        int id = Integer.parseInt(
+                req.getRequestPath().substring(req.getRequestPath().lastIndexOf('/') + 1));
         service.deleteHello(id);
         resp.finishJson(RetResult.success());
     }
@@ -143,7 +147,8 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         HelloService service = _redkale_servicemap == null
                 ? _redkale_service
                 : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
-        int id = Integer.parseInt(req.getPathLastParam());
+        int id = Integer.parseInt(
+                req.getRequestPath().substring(req.getRequestPath().lastIndexOf('/') + 1));
         HelloEntity bean = service.findHello(id);
         resp.finishJson(bean);
     }
@@ -153,7 +158,8 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         HelloService service = _redkale_servicemap == null
                 ? _redkale_service
                 : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
-        int id = Integer.parseInt(req.getPathLastParam());
+        int id = Integer.parseInt(
+                req.getRequestPath().substring(req.getRequestPath().lastIndexOf('/') + 1));
         resp.finishJson(service.asyncFindHello(id));
     }
 
@@ -162,7 +168,8 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         HelloService service = _redkale_servicemap == null
                 ? _redkale_service
                 : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
-        int id = Integer.parseInt(req.getPathLastParam());
+        int id = Integer.parseInt(
+                req.getRequestPath().substring(req.getRequestPath().lastIndexOf('/') + 1));
         service.asyncFindHello(resp.createAsyncHandler(), id);
     }
 
@@ -171,7 +178,8 @@ public class _DynHelloRestServlet1 extends SimpleRestServlet {
         HelloService service = _redkale_servicemap == null
                 ? _redkale_service
                 : _redkale_servicemap.get(req.getHeader(Rest.REST_HEADER_RESNAME, ""));
-        int id = Integer.parseInt(req.getPathLastParam());
+        int id = Integer.parseInt(
+                req.getRequestPath().substring(req.getRequestPath().lastIndexOf('/') + 1));
         service.asyncFindHello(resp.createAsyncHandler(HelloAsyncHandler.class), id);
     }
 }

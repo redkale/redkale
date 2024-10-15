@@ -21,6 +21,7 @@ import org.redkale.util.Utility;
  *
  * @author zhangjx
  */
+@SuppressWarnings("unchecked")
 public class InnerCoderEntityTest {
     public static void main(String[] args) throws Throwable {
         InnerCoderEntityTest test = new InnerCoderEntityTest();
