@@ -21,4 +21,6 @@ import static java.lang.annotation.RetentionPolicy.*;
 public @interface ClassDepends {
 
     Class[] value() default {};
+
+    String comment() default "";
 }

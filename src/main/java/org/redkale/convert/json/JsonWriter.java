@@ -83,50 +83,13 @@ public abstract class JsonWriter extends Writer {
         }
     }
 
-    @ClassDepends
     public abstract void writeFieldShortValue(final byte[] fieldBytes, final char[] fieldChars, final short value);
 
-    @ClassDepends
     public abstract void writeFieldIntValue(final byte[] fieldBytes, final char[] fieldChars, final int value);
 
-    @ClassDepends
     public abstract void writeFieldLongValue(final byte[] fieldBytes, final char[] fieldChars, final long value);
 
-    @ClassDepends
     public abstract void writeFieldLatin1Value(final byte[] fieldBytes, final char[] fieldChars, final String value);
-
-    @ClassDepends
-    @Deprecated(since = "2.8.0")
-    public abstract void writeLastFieldShortValue(final byte[] fieldBytes, final char[] fieldChars, final short value);
-
-    @ClassDepends
-    @Deprecated(since = "2.8.0")
-    public abstract void writeLastFieldIntValue(final byte[] fieldBytes, final char[] fieldChars, final int value);
-
-    @ClassDepends
-    @Deprecated(since = "2.8.0")
-    public abstract void writeLastFieldLongValue(final byte[] fieldBytes, final char[] fieldChars, final long value);
-
-    @ClassDepends
-    @Deprecated(since = "2.8.0")
-    public abstract void writeLastFieldLatin1Value(final byte[] fieldBytes, final char[] fieldChars, String value);
-
-    // firstFieldBytes 必须带{开头
-    @ClassDepends
-    @Deprecated(since = "2.8.0")
-    public abstract void writeObjectByOnlyOneLatin1FieldValue(
-            final byte[] firstFieldBytes, final char[] firstFieldChars, final String value);
-
-    // firstFieldBytes 必须带{开头, lastFieldBytes必须,开头
-    @ClassDepends
-    @Deprecated(since = "2.8.0")
-    public abstract void writeObjectByOnlyTwoIntFieldValue(
-            final byte[] firstFieldBytes,
-            final char[] firstFieldChars,
-            final int value1,
-            final byte[] lastFieldBytes,
-            final char[] lastFieldChars,
-            final int value2);
 
     @Override
     @ClassDepends
@@ -140,11 +103,15 @@ public abstract class JsonWriter extends Writer {
     @ClassDepends
     public abstract void writeLong(long value);
 
-    public abstract void writeString(final boolean quote, String value);
-
     @Override
     @ClassDepends
     public abstract void writeString(String value);
+
+    @Override
+    @ClassDepends
+    public final void writeStandardString(String value) {
+        writeLatin1To(true, value);
+    }
 
     @Override // 只容许JsonBytesWriter重写此方法
     public void writeField(EnMember member, String fieldName, Type fieldType, int fieldPos) {
@@ -164,19 +131,9 @@ public abstract class JsonWriter extends Writer {
         }
     }
 
-    @Override
-    public final void writeStandardString(String value) {
-        writeLatin1To(true, value);
-    }
-
     // ----------------------------------------------------------------------------------------------
     public final void writeTo(final char... chs) { // 只能是 0 - 127 的字符
         writeTo(chs, 0, chs.length);
-    }
-
-    @Override
-    public final void writeByte(byte value) {
-        writeInt(value);
     }
 
     public final void writeTo(final byte[] chs) { // 只能是 0 - 127 的字符
@@ -199,6 +156,11 @@ public abstract class JsonWriter extends Writer {
             flag = true;
         }
         writeArrayE();
+    }
+
+    @Override
+    public final void writeByte(byte value) {
+        writeInt(value);
     }
 
     @Override

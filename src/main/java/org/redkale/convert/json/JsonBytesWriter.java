@@ -250,157 +250,6 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         src[count++] = BYTE_DQUOTE;
     }
 
-    @Override
-    public void writeLastFieldShortValue(final byte[] fieldBytes, final char[] fieldChars, final short value) {
-        byte[] bs1 = fieldBytes;
-        byte[] bs2 = (value >= 0 && value < TENTHOUSAND_MAX)
-                ? TENTHOUSAND_BYTES[value]
-                : ((value < 0 && value > -TENTHOUSAND_MAX)
-                        ? TENTHOUSAND_BYTES2[-value]
-                        : Utility.latin1ByteArray(String.valueOf(value)));
-        int len1 = bs1.length;
-        int len2 = bs2.length;
-        byte[] src = expand(len1 + len2 + 1);
-        System.arraycopy(bs1, 0, src, count, len1);
-        count += len1;
-        System.arraycopy(bs2, 0, src, count, len2);
-        count += len2;
-        src[count++] = BYTE_RBRACE;
-    }
-
-    @Override
-    public void writeLastFieldIntValue(final byte[] fieldBytes, final char[] fieldChars, final int value) {
-        byte[] bs1 = fieldBytes;
-        byte[] bs2 = (value >= 0 && value < TENTHOUSAND_MAX)
-                ? TENTHOUSAND_BYTES[value]
-                : ((value < 0 && value > -TENTHOUSAND_MAX)
-                        ? TENTHOUSAND_BYTES2[-value]
-                        : Utility.latin1ByteArray(String.valueOf(value)));
-        int len1 = bs1.length;
-        int len2 = bs2.length;
-        byte[] src = expand(len1 + len2 + 1);
-        System.arraycopy(bs1, 0, src, count, len1);
-        count += len1;
-        System.arraycopy(bs2, 0, src, count, len2);
-        count += len2;
-        src[count++] = BYTE_RBRACE;
-    }
-
-    @Override
-    public void writeLastFieldLongValue(final byte[] fieldBytes, final char[] fieldChars, final long value) {
-        byte[] bs1 = fieldBytes;
-        byte[] bs2 = (value >= 0 && value < TENTHOUSAND_MAX)
-                ? TENTHOUSAND_BYTES[(int) value]
-                : ((value < 0 && value > -TENTHOUSAND_MAX)
-                        ? TENTHOUSAND_BYTES2[(int) -value]
-                        : Utility.latin1ByteArray(String.valueOf(value)));
-        int len1 = bs1.length;
-        int len2 = bs2.length;
-        byte[] src = expand(len1 + len2 + 1);
-        System.arraycopy(bs1, 0, src, count, len1);
-        count += len1;
-        System.arraycopy(bs2, 0, src, count, len2);
-        count += len2;
-        src[count++] = BYTE_RBRACE;
-    }
-
-    @Override
-    public void writeLastFieldLatin1Value(final byte[] fieldBytes, final char[] fieldChars, final String value) {
-        if (value == null && nullable()) {
-            writeTo(fieldBytes);
-            writeNull();
-            writeTo(BYTE_RBRACE);
-            return;
-        }
-        if (value == null || (tiny() && value.isEmpty())) {
-            expand(1);
-            content[count++] = BYTE_RBRACE;
-        } else {
-            byte[] bs1 = fieldBytes;
-            byte[] bs2 = Utility.latin1ByteArray(value);
-            int len1 = bs1.length;
-            int len2 = bs2.length;
-            byte[] src = expand(len1 + len2 + 3);
-            int c = count;
-            System.arraycopy(bs1, 0, src, c, len1);
-            c += len1;
-            src[c++] = BYTE_DQUOTE;
-            System.arraycopy(bs2, 0, src, c, len2);
-            c += len2;
-            src[c++] = BYTE_DQUOTE;
-            src[c++] = BYTE_RBRACE;
-            count = c;
-        }
-    }
-
-    @Override // firstFieldBytes 必须带{开头
-    public void writeObjectByOnlyOneLatin1FieldValue(
-            final byte[] firstFieldBytes, final char[] firstFieldChars, final String value) {
-        if (value == null && nullable()) {
-            writeTo(BYTE_LBRACE);
-            writeTo(firstFieldBytes);
-            writeNull();
-            writeTo(BYTE_RBRACE);
-            return;
-        }
-        if (value == null || (tiny() && value.isEmpty())) {
-            expand(2);
-            content[count++] = BYTE_LBRACE;
-            content[count++] = BYTE_RBRACE;
-        } else {
-            byte[] bs1 = firstFieldBytes;
-            byte[] bs2 = Utility.latin1ByteArray(value);
-            int len1 = bs1.length;
-            int len2 = bs2.length;
-            byte[] src = expand(len1 + len2 + 3);
-            int c = count;
-            System.arraycopy(bs1, 0, src, c, len1);
-            c += len1;
-            src[c++] = BYTE_DQUOTE;
-            System.arraycopy(bs2, 0, src, c, len2);
-            c += len2;
-            src[c++] = BYTE_DQUOTE;
-            src[c++] = BYTE_RBRACE;
-            count = c;
-        }
-    }
-
-    @Override // firstFieldBytes 必须带{开头, lastFieldBytes必须,开头
-    public void writeObjectByOnlyTwoIntFieldValue(
-            final byte[] firstFieldBytes,
-            final char[] firstFieldChars,
-            final int value1,
-            final byte[] lastFieldBytes,
-            final char[] lastFieldChars,
-            final int value2) {
-        byte[] bs1 = firstFieldBytes;
-        byte[] bs2 = (value1 >= 0 && value1 < TENTHOUSAND_MAX)
-                ? TENTHOUSAND_BYTES[value1]
-                : ((value1 < 0 && value1 > -TENTHOUSAND_MAX)
-                        ? TENTHOUSAND_BYTES2[-value1]
-                        : Utility.latin1ByteArray(String.valueOf(value1)));
-        byte[] bs3 = lastFieldBytes;
-        byte[] bs4 = (value2 >= 0 && value2 < TENTHOUSAND_MAX)
-                ? TENTHOUSAND_BYTES[value2]
-                : ((value2 < 0 && value2 > -TENTHOUSAND_MAX)
-                        ? TENTHOUSAND_BYTES2[-value2]
-                        : Utility.latin1ByteArray(String.valueOf(value2)));
-        int len1 = bs1.length;
-        int len2 = bs2.length;
-        int len3 = bs3.length;
-        int len4 = bs4.length;
-        byte[] src = expand(len1 + len2 + len3 + len4 + 1);
-        System.arraycopy(bs1, 0, src, count, len1);
-        count += len1;
-        System.arraycopy(bs2, 0, src, count, len2);
-        count += len2;
-        System.arraycopy(bs3, 0, src, count, len3);
-        count += len3;
-        System.arraycopy(bs4, 0, src, count, len4);
-        count += len4;
-        src[count++] = BYTE_RBRACE;
-    }
-
     public JsonBytesWriter clear() {
         this.count = 0;
         return this;
@@ -427,30 +276,23 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
 
     @Override
     public void writeString(String value) {
-        writeString(true, value);
-    }
-
-    @Override
-    public void writeString(final boolean quote, String value) {
         if (value == null) {
             writeNull();
             return;
         }
         if (Utility.isLatin1(value)) {
-            writeEscapeLatinString(quote, Utility.latin1ByteArray(value));
+            writeEscapeLatinString(Utility.latin1ByteArray(value));
             return;
         }
         byte[] utf16s = Utility.utf16ByteArray(value);
         if (utf16s != null) { // JDK9+
-            writeEscapeUTF16String(quote, utf16s);
+            writeEscapeUTF16String(utf16s);
             return;
         }
         int len = value.length();
         byte[] bytes = expand(len * 4 + 2);
         int curr = count;
-        if (quote) {
-            bytes[curr++] = BYTE_DQUOTE;
-        }
+        bytes[curr++] = BYTE_DQUOTE;
         for (int i = 0; i < len; i++) {
             char ch = value.charAt(i);
             if (ch < 14) {
@@ -499,20 +341,16 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
                 bytes[curr++] = (byte) (0x80 | (ch & 0x3f));
             }
         }
-        if (quote) {
-            bytes[curr++] = BYTE_DQUOTE;
-        }
+        bytes[curr++] = BYTE_DQUOTE;
         count = curr;
     }
 
     // see java.lang.StringCoding.encodeUTF8_UTF16 方法
-    private void writeEscapeUTF16String(final boolean quote, byte[] value) {
+    private void writeEscapeUTF16String(byte[] value) {
         int len = value.length;
         byte[] bytes = expand(len * 4 + 2);
         int curr = count;
-        if (quote) {
-            bytes[curr++] = BYTE_DQUOTE;
-        }
+        bytes[curr++] = BYTE_DQUOTE;
         byte[] src = value;
         int i = 0;
         while (i < len) {
@@ -578,9 +416,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
                 }
             }
         }
-        if (quote) {
-            bytes[curr++] = BYTE_DQUOTE;
-        }
+        bytes[curr++] = BYTE_DQUOTE;
         count = curr;
     }
 
@@ -594,12 +430,10 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     private static final int MIN_SUPPLEMENTARY_CODE_POINT_MORE =
             (MIN_SUPPLEMENTARY_CODE_POINT - (MIN_HIGH_SURROGATE << 10) - MIN_LOW_SURROGATE);
 
-    private void writeEscapeLatinString(final boolean quote, byte[] value) {
+    private void writeEscapeLatinString(byte[] value) {
         byte[] bytes = expand(value.length * 2 + 2);
         int curr = count;
-        if (quote) {
-            bytes[curr++] = BYTE_DQUOTE;
-        }
+        bytes[curr++] = BYTE_DQUOTE;
         for (byte b : value) {
             if (b == BYTE_DQUOTE) {
                 bytes[curr++] = '\\';
@@ -630,9 +464,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
                 bytes[curr++] = b;
             }
         }
-        if (quote) {
-            bytes[curr++] = BYTE_DQUOTE;
-        }
+        bytes[curr++] = BYTE_DQUOTE;
         count = curr;
     }
 

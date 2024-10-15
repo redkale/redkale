@@ -231,7 +231,7 @@ public class JsonByteBufferWriter extends JsonWriter {
                     if (!buffer.hasRemaining()) {
                         buffer = nextByteBuffer();
                     }
-                    buffer.put((byte) (0xf0 | ((uc >> 18))));
+                    buffer.put((byte) (0xf0 | (uc >> 18)));
                     if (!buffer.hasRemaining()) {
                         buffer = nextByteBuffer();
                     }
@@ -249,7 +249,7 @@ public class JsonByteBufferWriter extends JsonWriter {
                     if (!buffer.hasRemaining()) {
                         buffer = nextByteBuffer();
                     }
-                    buffer.put((byte) (0xe0 | ((c >> 12))));
+                    buffer.put((byte) (0xe0 | (c >> 12)));
                     if (!buffer.hasRemaining()) {
                         buffer = nextByteBuffer();
                     }
@@ -477,287 +477,6 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override
-    public void writeLastFieldShortValue(final byte[] fieldBytes, final char[] fieldChars, final short value) {
-        byte[] bs1 = fieldBytes;
-        byte[] bs2 = Utility.latin1ByteArray(String.valueOf(value));
-        int expandsize = expand(bs1.length + bs2.length + 1);
-        if (expandsize == 0) { // 只需要一个buffer
-            final ByteBuffer buffer = this.buffers[currBufIndex];
-            buffer.put(bs1);
-            buffer.put(bs2);
-            buffer.put((byte) '}');
-        } else {
-            ByteBuffer buffer = this.buffers[currBufIndex];
-            for (byte b : bs1) {
-                if (!buffer.hasRemaining()) {
-                    buffer = nextByteBuffer();
-                }
-                buffer.put(b);
-            }
-            for (byte b : bs2) {
-                if (!buffer.hasRemaining()) {
-                    buffer = nextByteBuffer();
-                }
-                buffer.put(b);
-            }
-            {
-                if (!buffer.hasRemaining()) {
-                    buffer = nextByteBuffer();
-                }
-                buffer.put((byte) '}');
-            }
-        }
-    }
-
-    @Override
-    public void writeLastFieldIntValue(final byte[] fieldBytes, final char[] fieldChars, final int value) {
-        byte[] bs1 = fieldBytes;
-        byte[] bs2 = Utility.latin1ByteArray(String.valueOf(value));
-        int expandsize = expand(bs1.length + bs2.length + 1);
-        if (expandsize == 0) { // 只需要一个buffer
-            final ByteBuffer buffer = this.buffers[currBufIndex];
-            buffer.put(bs1);
-            buffer.put(bs2);
-            buffer.put((byte) '}');
-        } else {
-            ByteBuffer buffer = this.buffers[currBufIndex];
-            for (byte b : bs1) {
-                if (!buffer.hasRemaining()) {
-                    buffer = nextByteBuffer();
-                }
-                buffer.put(b);
-            }
-            for (byte b : bs2) {
-                if (!buffer.hasRemaining()) {
-                    buffer = nextByteBuffer();
-                }
-                buffer.put(b);
-            }
-            {
-                if (!buffer.hasRemaining()) {
-                    buffer = nextByteBuffer();
-                }
-                buffer.put((byte) '}');
-            }
-        }
-    }
-
-    @Override
-    public void writeLastFieldLongValue(final byte[] fieldBytes, final char[] fieldChars, final long value) {
-        byte[] bs1 = fieldBytes;
-        byte[] bs2 = Utility.latin1ByteArray(String.valueOf(value));
-        int expandsize = expand(bs1.length + bs2.length + 1);
-        if (expandsize == 0) { // 只需要一个buffer
-            final ByteBuffer buffer = this.buffers[currBufIndex];
-            buffer.put(bs1);
-            buffer.put(bs2);
-            buffer.put((byte) '}');
-        } else {
-            ByteBuffer buffer = this.buffers[currBufIndex];
-            for (byte b : bs1) {
-                if (!buffer.hasRemaining()) {
-                    buffer = nextByteBuffer();
-                }
-                buffer.put(b);
-            }
-            for (byte b : bs2) {
-                if (!buffer.hasRemaining()) {
-                    buffer = nextByteBuffer();
-                }
-                buffer.put(b);
-            }
-            {
-                if (!buffer.hasRemaining()) {
-                    buffer = nextByteBuffer();
-                }
-                buffer.put((byte) '}');
-            }
-        }
-    }
-
-    @Override
-    public void writeLastFieldLatin1Value(final byte[] fieldBytes, final char[] fieldChars, final String value) {
-        if (value == null && nullable()) {
-            writeTo(fieldBytes);
-            writeNull();
-            writeTo('}');
-            return;
-        }
-        if (value == null || (tiny() && value.isEmpty())) {
-            expand(1);
-            this.buffers[currBufIndex].put((byte) '}');
-        } else {
-            byte[] bs1 = fieldBytes;
-            byte[] bs2 = Utility.latin1ByteArray(value);
-            int expandsize = expand(bs1.length + bs2.length + 3);
-            if (expandsize == 0) { // 只需要一个buffer
-                final ByteBuffer buffer = this.buffers[currBufIndex];
-                buffer.put(bs1);
-                buffer.put((byte) '"');
-                buffer.put(bs2);
-                buffer.put((byte) '"');
-                buffer.put((byte) '}');
-            } else {
-                ByteBuffer buffer = this.buffers[currBufIndex];
-                for (byte b : bs1) {
-                    if (!buffer.hasRemaining()) {
-                        buffer = nextByteBuffer();
-                    }
-                    buffer.put(b);
-                }
-                {
-                    if (!buffer.hasRemaining()) {
-                        buffer = nextByteBuffer();
-                    }
-                    buffer.put((byte) '"');
-                }
-                for (byte b : bs2) {
-                    if (!buffer.hasRemaining()) {
-                        buffer = nextByteBuffer();
-                    }
-                    buffer.put(b);
-                }
-                {
-                    if (!buffer.hasRemaining()) {
-                        buffer = nextByteBuffer();
-                    }
-                    buffer.put((byte) '"');
-                }
-                {
-                    if (!buffer.hasRemaining()) {
-                        buffer = nextByteBuffer();
-                    }
-                    buffer.put((byte) '}');
-                }
-            }
-        }
-    }
-
-    @Override // firstFieldBytes 必须带{开头
-    public void writeObjectByOnlyOneLatin1FieldValue(
-            final byte[] firstFieldBytes, final char[] firstFieldChars, final String value) {
-        if (value == null && nullable()) {
-            writeTo('{');
-            writeTo(firstFieldBytes);
-            writeNull();
-            writeTo('}');
-            return;
-        }
-        if (value == null || (tiny() && value.isEmpty())) {
-            int expandsize = expand(2);
-            if (expandsize == 0) { // 只需要一个buffer
-                ByteBuffer bb = this.buffers[currBufIndex];
-                bb.put((byte) '{');
-                bb.put((byte) '}');
-            } else {
-                ByteBuffer bb = this.buffers[currBufIndex];
-                bb.put((byte) '{');
-                bb = nextByteBuffer();
-                bb.put((byte) '}');
-            }
-        } else {
-            byte[] bs1 = firstFieldBytes;
-            byte[] bs2 = Utility.latin1ByteArray(value);
-            int expandsize = expand(bs1.length + bs2.length + 3);
-            if (expandsize == 0) { // 只需要一个buffer
-                final ByteBuffer buffer = this.buffers[currBufIndex];
-                buffer.put(bs1);
-                buffer.put((byte) '"');
-                buffer.put(bs2);
-                buffer.put((byte) '"');
-                buffer.put((byte) '}');
-            } else {
-                ByteBuffer buffer = this.buffers[currBufIndex];
-                for (byte b : bs1) {
-                    if (!buffer.hasRemaining()) {
-                        buffer = nextByteBuffer();
-                    }
-                    buffer.put(b);
-                }
-                {
-                    if (!buffer.hasRemaining()) {
-                        buffer = nextByteBuffer();
-                    }
-                    buffer.put((byte) '"');
-                }
-                for (byte b : bs2) {
-                    if (!buffer.hasRemaining()) {
-                        buffer = nextByteBuffer();
-                    }
-                    buffer.put(b);
-                }
-                {
-                    if (!buffer.hasRemaining()) {
-                        buffer = nextByteBuffer();
-                    }
-                    buffer.put((byte) '"');
-                }
-                {
-                    if (!buffer.hasRemaining()) {
-                        buffer = nextByteBuffer();
-                    }
-                    buffer.put((byte) '}');
-                }
-            }
-        }
-    }
-
-    @Override // firstFieldBytes 必须带{开头, lastFieldBytes必须,开头
-    public void writeObjectByOnlyTwoIntFieldValue(
-            final byte[] firstFieldBytes,
-            final char[] firstFieldChars,
-            final int value1,
-            final byte[] lastFieldBytes,
-            final char[] lastFieldChars,
-            final int value2) {
-        byte[] bs1 = firstFieldBytes;
-        byte[] bs2 = Utility.latin1ByteArray(String.valueOf(value1));
-        byte[] bs3 = lastFieldBytes;
-        byte[] bs4 = Utility.latin1ByteArray(String.valueOf(value2));
-        int expandsize = expand(bs1.length + bs2.length + bs3.length + bs4.length + 1);
-        if (expandsize == 0) { // 只需要一个buffer
-            final ByteBuffer buffer = this.buffers[currBufIndex];
-            buffer.put(bs1);
-            buffer.put(bs2);
-            buffer.put(bs3);
-            buffer.put(bs4);
-            buffer.put((byte) '}');
-        } else {
-            ByteBuffer buffer = this.buffers[currBufIndex];
-            for (byte b : bs1) {
-                if (!buffer.hasRemaining()) {
-                    buffer = nextByteBuffer();
-                }
-                buffer.put(b);
-            }
-            for (byte b : bs2) {
-                if (!buffer.hasRemaining()) {
-                    buffer = nextByteBuffer();
-                }
-                buffer.put(b);
-            }
-            for (byte b : bs3) {
-                if (!buffer.hasRemaining()) {
-                    buffer = nextByteBuffer();
-                }
-                buffer.put(b);
-            }
-            for (byte b : bs4) {
-                if (!buffer.hasRemaining()) {
-                    buffer = nextByteBuffer();
-                }
-                buffer.put(b);
-            }
-            {
-                if (!buffer.hasRemaining()) {
-                    buffer = nextByteBuffer();
-                }
-                buffer.put((byte) '}');
-            }
-        }
-    }
-
-    @Override
     public void writeBoolean(boolean value) {
         writeTo(value ? CHARS_TUREVALUE : CHARS_FALSEVALUE);
     }
@@ -774,11 +493,6 @@ public class JsonByteBufferWriter extends JsonWriter {
 
     @Override
     public void writeString(String value) {
-        writeString(true, value);
-    }
-
-    @Override
-    public void writeString(final boolean quote, String value) {
         if (value == null) {
             writeNull();
             return;
@@ -808,7 +522,7 @@ public class JsonByteBufferWriter extends JsonWriter {
             }
         }
         if (len == chs.length) {
-            writeTo(-1, quote, chs, 0, len);
+            writeTo(-1, true, chs, 0, len);
             return;
         }
         int expandsize = -1;
@@ -817,9 +531,7 @@ public class JsonByteBufferWriter extends JsonWriter {
             expandsize = expand(byteLength);
             if (expandsize == 0) { // 只需要一个buffer
                 final ByteBuffer buffer = this.buffers[currBufIndex];
-                if (quote) {
-                    buffer.put((byte) '"');
-                }
+                buffer.put((byte) '"');
                 for (int i = 0; i < chs.length; i++) {
                     char c = chs[i];
                     switch (c) {
@@ -859,9 +571,7 @@ public class JsonByteBufferWriter extends JsonWriter {
                             break;
                     }
                 }
-                if (quote) {
-                    buffer.put((byte) '"');
-                }
+                buffer.put((byte) '"');
                 return;
             }
         }
@@ -889,7 +599,7 @@ public class JsonByteBufferWriter extends JsonWriter {
             }
         }
         char[] cs = Utility.charArray(sb);
-        writeTo(expandsize, quote, cs, 0, sb.length());
+        writeTo(expandsize, true, cs, 0, sb.length());
     }
 
     @Override

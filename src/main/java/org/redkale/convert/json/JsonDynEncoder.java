@@ -117,50 +117,22 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
                 null);
 
         final int membersSize = elements.size();
-        boolean onlyTwoIntFieldObjectFlag = false; // 只包含两个int字段
-        boolean onlyOneLatin1FieldObjectFlag = false; // 只包含一个Latin1 String字段
-        boolean onlyShotIntLongLatin1MoreFieldObjectFlag = true;
-        int intFieldCount = 0;
         for (AccessibleObject element : elements) {
             final String fieldName = factory.readConvertFieldName(clazz, element);
             fv = cw.visitField(ACC_PROTECTED + ACC_FINAL, fieldName + "FieldBytes", "[B", null, null);
             fv.visitEnd();
             fv = cw.visitField(ACC_PROTECTED + ACC_FINAL, fieldName + "CommaFieldBytes", "[B", null, null);
             fv.visitEnd();
-            fv = cw.visitField(ACC_PROTECTED + ACC_FINAL, fieldName + "FirstFieldBytes", "[B", null, null);
-            fv.visitEnd();
             fv = cw.visitField(ACC_PROTECTED + ACC_FINAL, fieldName + "FieldChars", "[C", null, null);
             fv.visitEnd();
             fv = cw.visitField(ACC_PROTECTED + ACC_FINAL, fieldName + "CommaFieldChars", "[C", null, null);
-            fv.visitEnd();
-            fv = cw.visitField(ACC_PROTECTED + ACC_FINAL, fieldName + "FirstFieldChars", "[C", null, null);
             fv.visitEnd();
             final Class fieldType = readGetSetFieldType(element);
             if (fieldType != String.class && !fieldType.isPrimitive()) {
                 fv = cw.visitField(ACC_PROTECTED, fieldName + "Encoder", encodeableDesc, null, null);
                 fv.visitEnd();
             }
-            if (fieldType == int.class) {
-                intFieldCount++;
-            }
-            if (fieldType == String.class && membersSize == 1 && isConvertStandardString(factory, element)) {
-                onlyOneLatin1FieldObjectFlag = true;
-            } else if (fieldType != short.class
-                    && fieldType != int.class
-                    && fieldType != long.class
-                    && !(fieldType == String.class && isConvertStandardString(factory, element))) {
-                onlyShotIntLongLatin1MoreFieldObjectFlag = false;
-            }
         }
-        if (intFieldCount == 2 && intFieldCount == membersSize) {
-            onlyTwoIntFieldObjectFlag = true;
-        }
-        if (onlyShotIntLongLatin1MoreFieldObjectFlag && membersSize < 2) {
-            onlyShotIntLongLatin1MoreFieldObjectFlag = false; // 字段个数必须大于1
-        }
-        onlyTwoIntFieldObjectFlag = false; // 废弃此特性
-        onlyOneLatin1FieldObjectFlag = false; // 废弃此特性
-        onlyShotIntLongLatin1MoreFieldObjectFlag = false; // 废弃此特性
         { // 构造函数
             mv = (cw.visitMethod(
                     ACC_PUBLIC, "<init>", "(" + jsonfactoryDesc + typeDesc + objEncoderDesc + ")V", null, null));
@@ -190,11 +162,6 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
                 mv.visitLdcInsn(",\"" + fieldName + "\":");
                 mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "getBytes", "()[B", false);
                 mv.visitFieldInsn(PUTFIELD, newDynName, fieldName + "CommaFieldBytes", "[B");
-                // xxxFirstFieldBytes
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitLdcInsn("{\"" + fieldName + "\":");
-                mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "getBytes", "()[B", false);
-                mv.visitFieldInsn(PUTFIELD, newDynName, fieldName + "FirstFieldBytes", "[B");
                 // xxxFieldChars
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitLdcInsn("\"" + fieldName + "\":");
@@ -205,11 +172,6 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
                 mv.visitLdcInsn(",\"" + fieldName + "\":");
                 mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "toCharArray", "()[C", false);
                 mv.visitFieldInsn(PUTFIELD, newDynName, fieldName + "CommaFieldChars", "[C");
-                // xxxFirstFieldChars
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitLdcInsn("{\"" + fieldName + "\":");
-                mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "toCharArray", "()[C", false);
-                mv.visitFieldInsn(PUTFIELD, newDynName, fieldName + "FirstFieldChars", "[C");
             }
             mv.visitInsn(RETURN);
             Label label2 = new Label();
@@ -264,176 +226,9 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
             final boolean tiny = ConvertFactory.checkTinyFeature(factory.getFeatures());
             final boolean nullable = ConvertFactory.checkNullableFeature(factory.getFeatures());
             final Class firstType = readGetSetFieldType(elements.get(0));
-            final boolean mustHadComma = firstType.isPrimitive()
-                    && (firstType != boolean.class || !tiny || nullable); // byte/short/char/int/float/long/double
-
-            if (onlyOneLatin1FieldObjectFlag) {
-                // out.writeObjectByOnlyOneLatin1FieldValue(messageFirstFieldBytes, value.getMessage());elementIndex++;
-                elementIndex++;
-                AccessibleObject element = elements.get(elementIndex);
-                final String fieldName = factory.readConvertFieldName(clazz, element);
-                final Class fieldType = readGetSetFieldType(element);
-
-                mv.visitVarInsn(ALOAD, 1);
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, fieldName + "FirstFieldBytes", "[B");
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, fieldName + "FirstFieldChars", "[C");
-
-                mv.visitVarInsn(ALOAD, 2); // String message = value.getMessage(); 加载 value
-                if (element instanceof Field) {
-                    mv.visitFieldInsn(
-                            GETFIELD,
-                            valtypeName,
-                            ((Field) element).getName(),
-                            org.redkale.asm.Type.getDescriptor(fieldType));
-                } else {
-                    mv.visitMethodInsn(
-                            INVOKEVIRTUAL,
-                            valtypeName,
-                            ((Method) element).getName(),
-                            "()" + org.redkale.asm.Type.getDescriptor(fieldType),
-                            false);
-                }
-                mv.visitMethodInsn(
-                        INVOKEVIRTUAL,
-                        writerName,
-                        "writeObjectByOnlyOneLatin1FieldValue",
-                        "([B[CLjava/lang/String;)V",
-                        false);
-                maxLocals++;
-            } else if (onlyTwoIntFieldObjectFlag) {
-                elementIndex++;
-                AccessibleObject element1 = elements.get(elementIndex);
-                final String fieldName1 = factory.readConvertFieldName(clazz, element1);
-                final Class fieldType1 = readGetSetFieldType(element1);
-
-                elementIndex++;
-                AccessibleObject element2 = elements.get(elementIndex);
-                final String fieldName2 = factory.readConvertFieldName(clazz, element2);
-                final Class fieldtype2 = readGetSetFieldType(element2);
-
-                mv.visitVarInsn(ALOAD, 1);
-
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, fieldName1 + "FirstFieldBytes", "[B");
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, fieldName1 + "FirstFieldChars", "[C");
-
-                mv.visitVarInsn(ALOAD, 2); // String message = value.getMessage(); 加载 value
-                if (element1 instanceof Field) {
-                    mv.visitFieldInsn(
-                            GETFIELD,
-                            valtypeName,
-                            ((Field) element1).getName(),
-                            org.redkale.asm.Type.getDescriptor(fieldType1));
-                } else {
-                    mv.visitMethodInsn(
-                            INVOKEVIRTUAL,
-                            valtypeName,
-                            ((Method) element1).getName(),
-                            "()" + org.redkale.asm.Type.getDescriptor(fieldType1),
-                            false);
-                }
-                maxLocals++;
-
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, fieldName2 + "CommaFieldBytes", "[B");
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, fieldName2 + "CommaFieldChars", "[C");
-
-                mv.visitVarInsn(ALOAD, 2); // String message = value.getMessage(); 加载 value
-                if (element2 instanceof Field) {
-                    mv.visitFieldInsn(
-                            GETFIELD,
-                            valtypeName,
-                            ((Field) element2).getName(),
-                            org.redkale.asm.Type.getDescriptor(fieldtype2));
-                } else {
-                    mv.visitMethodInsn(
-                            INVOKEVIRTUAL,
-                            valtypeName,
-                            ((Method) element2).getName(),
-                            "()" + org.redkale.asm.Type.getDescriptor(fieldtype2),
-                            false);
-                }
-                maxLocals++;
-
-                mv.visitMethodInsn(
-                        INVOKEVIRTUAL, writerName, "writeObjectByOnlyTwoIntFieldValue", "([B[CI[B[CI)V", false);
-
-            } else if (onlyShotIntLongLatin1MoreFieldObjectFlag && mustHadComma) {
-                for (AccessibleObject element : elements) {
-                    elementIndex++;
-                    final String fieldName = factory.readConvertFieldName(clazz, element);
-                    final Class fieldType = readGetSetFieldType(element);
-
-                    mv.visitVarInsn(ALOAD, 1);
-                    mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(
-                            GETFIELD,
-                            newDynName,
-                            fieldName + (elementIndex == 0 ? "FirstFieldBytes" : "CommaFieldBytes"),
-                            "[B");
-                    mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(
-                            GETFIELD,
-                            newDynName,
-                            fieldName + (elementIndex == 0 ? "FirstFieldChars" : "CommaFieldChars"),
-                            "[C");
-
-                    mv.visitVarInsn(ALOAD, 2); // String message = value.getMessage(); 加载 value
-                    if (element instanceof Field) {
-                        mv.visitFieldInsn(
-                                GETFIELD,
-                                valtypeName,
-                                ((Field) element).getName(),
-                                org.redkale.asm.Type.getDescriptor(fieldType));
-                    } else {
-                        mv.visitMethodInsn(
-                                INVOKEVIRTUAL,
-                                valtypeName,
-                                ((Method) element).getName(),
-                                "()" + org.redkale.asm.Type.getDescriptor(fieldType),
-                                false);
-                    }
-                    if (fieldType == short.class) {
-                        mv.visitMethodInsn(
-                                INVOKEVIRTUAL,
-                                writerName,
-                                elementIndex + 1 == membersSize ? "writeLastFieldShortValue" : "writeFieldShortValue",
-                                "([B[CS)V",
-                                false);
-                    } else if (fieldType == int.class) {
-                        mv.visitMethodInsn(
-                                INVOKEVIRTUAL,
-                                writerName,
-                                elementIndex + 1 == membersSize ? "writeLastFieldIntValue" : "writeFieldIntValue",
-                                "([B[CI)V",
-                                false);
-                    } else if (fieldType == long.class) {
-                        mv.visitMethodInsn(
-                                INVOKEVIRTUAL,
-                                writerName,
-                                elementIndex + 1 == membersSize ? "writeLastFieldLongValue" : "writeFieldLongValue",
-                                "([B[CJ)V",
-                                false);
-                    } else {
-                        mv.visitMethodInsn(
-                                INVOKEVIRTUAL,
-                                writerName,
-                                elementIndex + 1 == membersSize ? "writeLastFieldLatin1Value" : "writeFieldLatin1Value",
-                                "([B[CLjava/lang/String;)V",
-                                false);
-                    }
-
-                    if (fieldType == long.class || fieldType == double.class) {
-                        maxLocals += 2;
-                    } else {
-                        maxLocals++;
-                    }
-                }
-            } else {
+            final boolean mustHadComma = (firstType.isPrimitive() && (firstType != boolean.class || !tiny || nullable))
+                    || membersSize == 1; // byte/short/char/int/float/long/double
+            {
                 { // out.writeTo('{');
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitIntInsn(BIPUSH, '{');
@@ -634,10 +429,9 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
                                     INVOKEVIRTUAL, writerName, "writeString", "(Ljava/lang/String;)V", false);
                         } else {
                             mv.visitVarInsn(ALOAD, 1);
-                            mv.visitInsn(ICONST_1);
                             mv.visitVarInsn(loadid, maxLocals);
                             mv.visitMethodInsn(
-                                    INVOKEVIRTUAL, writerName, "writeLatin1To", "(ZLjava/lang/String;)V", false);
+                                    INVOKEVIRTUAL, writerName, "writeStandardString", "(Ljava/lang/String;)V", false);
                         }
                     } else { // int[],Boolean[],String[]
                         mv.visitVarInsn(ALOAD, 0);
