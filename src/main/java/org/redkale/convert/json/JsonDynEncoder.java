@@ -51,7 +51,7 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
         if (selfObjEncoder.getMembers().length != elements.size()) {
             return null; // 存在ignore等定制配置
         }
-
+        final int features = factory.getFeatures();
         final Map<String, AccessibleObject> mixedNames = new HashMap<>();
         StringBuilder elementb = new StringBuilder();
         for (AccessibleObject element : elements) {
@@ -80,7 +80,7 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
         }
         RedkaleClassLoader loader = RedkaleClassLoader.currentClassLoader();
         final String newDynName = "org/redkaledyn/convert/json/_Dyn" + JsonDynEncoder.class.getSimpleName() + "__"
-                + clazz.getName().replace('.', '_').replace('$', '_') + "_" + factory.getFeatures() + "_"
+                + clazz.getName().replace('.', '_').replace('$', '_') + "_" + features + "_"
                 + Utility.md5Hex(elementb.toString()); // tiny必须要加上, 同一个类会有多个字段定制Convert
         try {
             Class newClazz = loader.loadClass(newDynName.replace('/', '.'));
@@ -222,8 +222,12 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
                     mv.visitIntInsn(BIPUSH, '{');
                     mv.visitMethodInsn(INVOKEVIRTUAL, writerName, "writeTo", "(B)V", false);
                 }
+                Class firstType = readGetSetFieldType(elements.get(0));
                 // boolean comma = false;
-                if (elements.size() > 1) {
+                if (elements.size() > 1
+                        && !ConvertFactory.checkNullableFeature(features)
+                        && !((!ConvertFactory.checkTinyFeature(features) || firstType != boolean.class)
+                                && firstType.isPrimitive())) {
                     mv.visitInsn(ICONST_0);
                     mv.visitVarInsn(ISTORE, 3);
                     commaLabel = new Label();
@@ -242,7 +246,7 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
                     if (commaLabel != null) {
                         mv.visitVarInsn(ILOAD, 3); // comma 第三个参数
                     } else {
-                        mv.visitInsn(ICONST_0); // comma=false 第三个参数
+                        mv.visitInsn(elementIndex == 0 ? ICONST_0 : ICONST_1); // comma=false 第三个参数
                     }
                     if (mixedNames.containsKey(fieldName)) { // Encodeable  第四个参数
                         mv.visitVarInsn(ALOAD, 0);
