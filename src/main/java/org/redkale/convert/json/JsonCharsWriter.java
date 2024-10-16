@@ -4,6 +4,8 @@
  */
 package org.redkale.convert.json;
 
+import org.redkale.convert.Encodeable;
+import static org.redkale.convert.json.JsonWriter.BYTE_COMMA;
 import static org.redkale.convert.json.JsonWriter.BYTE_DQUOTE;
 import static org.redkale.convert.json.JsonWriter.DEFAULT_SIZE;
 import static org.redkale.convert.json.JsonWriter.DigitOnes;
@@ -27,7 +29,8 @@ public class JsonCharsWriter extends JsonWriter {
 
     private static final char[] CHARS_FALSEVALUE = "false".toCharArray();
 
-    private static final int TENTHOUSAND_MAX = 10001;
+    // 所有byte、short值的序列化进行缓存
+    private static final int TENTHOUSAND_MAX = Short.MAX_VALUE + 2;
 
     private static final char[][] TENTHOUSAND_CHARS = new char[TENTHOUSAND_MAX][];
     private static final char[][] TENTHOUSAND_CHARS2 = new char[TENTHOUSAND_MAX][];
@@ -140,68 +143,133 @@ public class JsonCharsWriter extends JsonWriter {
     }
 
     @Override
-    public void writeFieldShortValue(final byte[] fieldBytes, final char[] fieldChars, final short value) {
+    public boolean writeFieldBooleanValue(byte[] fieldBytes, char[] fieldChars, boolean comma, boolean value) {
         char[] bs1 = fieldChars;
-        char[] bs2 = (value >= 0 && value < TENTHOUSAND_MAX)
-                ? TENTHOUSAND_CHARS[value]
-                : ((value < 0 && value > -TENTHOUSAND_MAX)
-                        ? TENTHOUSAND_CHARS2[-value]
-                        : String.valueOf(value).toCharArray());
+        char[] bs2 = value ? CHARS_TUREVALUE : CHARS_FALSEVALUE;
         int len1 = bs1.length;
         int len2 = bs2.length;
-        char[] src = expand(len1 + len2);
+        char[] src = expand(1 + len1 + len2);
+        if (comma) src[count++] = BYTE_COMMA;
         System.arraycopy(bs1, 0, src, count, len1);
         count += len1;
         System.arraycopy(bs2, 0, src, count, len2);
         count += len2;
+        return true;
     }
 
     @Override
-    public void writeFieldIntValue(final byte[] fieldBytes, final char[] fieldChars, final int value) {
+    public boolean writeFieldShortValue(byte[] fieldBytes, char[] fieldChars, boolean comma, short value) {
         char[] bs1 = fieldChars;
-        char[] bs2 = (value >= 0 && value < TENTHOUSAND_MAX)
-                ? TENTHOUSAND_CHARS[value]
-                : ((value < 0 && value > -TENTHOUSAND_MAX)
-                        ? TENTHOUSAND_CHARS2[-value]
-                        : String.valueOf(value).toCharArray());
+        char[] bs2 = value >= 0 ? TENTHOUSAND_CHARS[value] : TENTHOUSAND_CHARS2[-value];
         int len1 = bs1.length;
         int len2 = bs2.length;
-        char[] src = expand(len1 + len2);
+        char[] src = expand(1 + len1 + len2);
+        if (comma) src[count++] = BYTE_COMMA;
         System.arraycopy(bs1, 0, src, count, len1);
         count += len1;
         System.arraycopy(bs2, 0, src, count, len2);
         count += len2;
+        return true;
     }
 
     @Override
-    public void writeFieldLongValue(final byte[] fieldBytes, final char[] fieldChars, final long value) {
+    public boolean writeFieldByteValue(byte[] fieldBytes, char[] fieldChars, boolean comma, byte value) {
         char[] bs1 = fieldChars;
-        char[] bs2 = (value >= 0 && value < TENTHOUSAND_MAX)
-                ? TENTHOUSAND_CHARS[(int) value]
-                : ((value < 0 && value > -TENTHOUSAND_MAX)
-                        ? TENTHOUSAND_CHARS2[(int) -value]
-                        : String.valueOf(value).toCharArray());
+        char[] bs2 = value >= 0 ? TENTHOUSAND_CHARS[value] : TENTHOUSAND_CHARS2[-value];
         int len1 = bs1.length;
         int len2 = bs2.length;
-        char[] src = expand(len1 + len2);
+        char[] src = expand(1 + len1 + len2);
+        if (comma) src[count++] = BYTE_COMMA;
         System.arraycopy(bs1, 0, src, count, len1);
         count += len1;
         System.arraycopy(bs2, 0, src, count, len2);
         count += len2;
+        return true;
     }
 
     @Override
-    public void writeFieldLatin1Value(final byte[] fieldBytes, final char[] fieldChars, final String value) {
+    public boolean writeFieldIntValue(byte[] fieldBytes, char[] fieldChars, boolean comma, int value) {
+        char[] bs1 = fieldChars;
+        int len1 = bs1.length;
+        char[] src = expand(bs1.length + 12);
+        if (comma) src[count++] = BYTE_COMMA;
+        System.arraycopy(bs1, 0, src, count, len1);
+        count += bs1.length;
+        writeInt(value);
+        return true;
+    }
+
+    @Override
+    public boolean writeFieldLongValue(byte[] fieldBytes, char[] fieldChars, boolean comma, long value) {
+        char[] bs1 = fieldChars;
+        int len1 = bs1.length;
+        char[] src = expand(len1 + 21);
+        if (comma) src[count++] = BYTE_COMMA;
+        System.arraycopy(bs1, 0, src, count, len1);
+        count += len1;
+        writeLong(value);
+        return true;
+    }
+
+    @Override
+    public boolean writeFieldStringValue(byte[] fieldBytes, char[] fieldChars, boolean comma, String value) {
+        if (value == null) {
+            return comma;
+        }
+        char[] bs1 = fieldChars;
+        int len1 = bs1.length;
+        char[] src = expand(1 + len1);
+        if (comma) src[count++] = BYTE_COMMA;
+        System.arraycopy(bs1, 0, src, count, len1);
+        count += len1;
+        writeString(value);
+        return true;
+    }
+
+    @Override
+    public boolean writeFieldObjectValue(
+            byte[] fieldBytes, char[] fieldChars, boolean comma, Encodeable encodeable, Object value) {
+        if (value == null) {
+            return comma;
+        }
+        char[] bs1 = fieldChars;
+        int len1 = bs1.length;
+        char[] src = expand(1 + len1);
+        if (comma) src[count++] = BYTE_COMMA;
+        System.arraycopy(bs1, 0, src, count, len1);
+        count += len1;
+        encodeable.convertTo(this, value);
+        return true;
+    }
+
+    @Override
+    protected boolean writeFieldLatin1Value(
+            byte[] fieldBytes, char[] fieldChars, boolean comma, boolean quote, String value) {
+        if (value == null) {
+            return comma;
+        }
         char[] bs1 = fieldChars;
         int len1 = bs1.length;
         int len2 = value.length();
-        char[] src = expand(len1 + len2 + 2);
-        System.arraycopy(bs1, 0, src, count, len1);
-        count += len1;
-        src[count++] = BYTE_DQUOTE;
-        value.getChars(0, len2, content, count);
-        count += len2;
-        src[count++] = BYTE_DQUOTE;
+
+        if (quote) {
+            char[] src = expand(len1 + len2 + 3);
+            if (comma) src[count++] = BYTE_COMMA;
+            System.arraycopy(bs1, 0, src, count, len1);
+            count += len1;
+            src[count++] = BYTE_DQUOTE;
+            value.getChars(0, len2, content, count);
+            count += len2;
+            src[count++] = BYTE_DQUOTE;
+        } else {
+            char[] src = expand(1 + len1 + len2);
+            if (comma) src[count++] = BYTE_COMMA;
+            System.arraycopy(bs1, 0, src, count, len1);
+            count += len1;
+            value.getChars(0, len2, content, count);
+            count += len2;
+        }
+        return true;
     }
 
     public byte[] toBytes() {
@@ -389,8 +457,10 @@ public class JsonCharsWriter extends JsonWriter {
                 break;
             }
         }
-        if (sign != 0) size++; // 负数
-        expand(size);
+        if (sign != 0) {
+            size++; // 负数
+        }
+        char[] chars = expand(size);
 
         int q, r;
         int charPos = count + size;
@@ -401,8 +471,8 @@ public class JsonCharsWriter extends JsonWriter {
             // really: r = i - (q * 100);
             r = value - ((q << 6) + (q << 5) + (q << 2));
             value = q;
-            content[--charPos] = DigitOnes[r];
-            content[--charPos] = DigitTens[r];
+            chars[--charPos] = DigitOnes[r];
+            chars[--charPos] = DigitTens[r];
         }
 
         // Fall thru to fast mode for smaller numbers
@@ -410,11 +480,13 @@ public class JsonCharsWriter extends JsonWriter {
         for (; ; ) {
             q = (value * 52429) >>> (16 + 3);
             r = value - ((q << 3) + (q << 1)); // r = i-(q*10) ...
-            content[--charPos] = digits[r];
+            chars[--charPos] = digits[r];
             value = q;
             if (value == 0) break;
         }
-        if (sign != 0) content[--charPos] = sign;
+        if (sign != 0) {
+            chars[--charPos] = sign;
+        }
         count += size;
     }
 

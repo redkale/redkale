@@ -28,7 +28,8 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
 
     private static final byte[] BYTES_NULL = new byte[] {'n', 'u', 'l', 'l'};
 
-    private static final int TENTHOUSAND_MAX = 10001;
+    // 所有byte、short值的序列化进行缓存
+    private static final int TENTHOUSAND_MAX = Short.MAX_VALUE + 2;
 
     private static final byte[][] TENTHOUSAND_BYTES = new byte[TENTHOUSAND_MAX][];
     private static final byte[][] TENTHOUSAND_BYTES2 = new byte[TENTHOUSAND_MAX][];
@@ -185,69 +186,133 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     }
 
     @Override
-    public void writeFieldShortValue(final byte[] fieldBytes, final char[] fieldChars, final short value) {
+    public boolean writeFieldBooleanValue(byte[] fieldBytes, char[] fieldChars, boolean comma, boolean value) {
         byte[] bs1 = fieldBytes;
-        byte[] bs2 = (value >= 0 && value < TENTHOUSAND_MAX)
-                ? TENTHOUSAND_BYTES[value]
-                : ((value < 0 && value > -TENTHOUSAND_MAX)
-                        ? TENTHOUSAND_BYTES2[-value]
-                        : Utility.latin1ByteArray(String.valueOf(value)));
+        byte[] bs2 = value ? BYTES_TUREVALUE : BYTES_FALSEVALUE;
         int len1 = bs1.length;
         int len2 = bs2.length;
-        byte[] src = expand(len1 + len2);
+        byte[] src = expand(1 + len1 + len2);
+        if (comma) src[count++] = BYTE_COMMA;
         System.arraycopy(bs1, 0, src, count, len1);
         count += len1;
         System.arraycopy(bs2, 0, src, count, len2);
         count += len2;
+        return true;
     }
 
     @Override
-    public void writeFieldIntValue(final byte[] fieldBytes, final char[] fieldChars, final int value) {
+    public boolean writeFieldByteValue(byte[] fieldBytes, char[] fieldChars, boolean comma, byte value) {
         byte[] bs1 = fieldBytes;
-        byte[] bs2 = (value >= 0 && value < TENTHOUSAND_MAX)
-                ? TENTHOUSAND_BYTES[value]
-                : ((value < 0 && value > -TENTHOUSAND_MAX)
-                        ? TENTHOUSAND_BYTES2[-value]
-                        : Utility.latin1ByteArray(String.valueOf(value)));
+        byte[] bs2 = value >= 0 ? TENTHOUSAND_BYTES[value] : TENTHOUSAND_BYTES2[-value];
         int len1 = bs1.length;
         int len2 = bs2.length;
-        byte[] src = expand(len1 + len2);
+        byte[] src = expand(1 + len1 + len2);
+        if (comma) src[count++] = BYTE_COMMA;
         System.arraycopy(bs1, 0, src, count, len1);
         count += len1;
         System.arraycopy(bs2, 0, src, count, len2);
         count += len2;
+        return true;
     }
 
     @Override
-    public void writeFieldLongValue(final byte[] fieldBytes, final char[] fieldChars, final long value) {
+    public boolean writeFieldShortValue(byte[] fieldBytes, char[] fieldChars, boolean comma, short value) {
         byte[] bs1 = fieldBytes;
-        byte[] bs2 = (value >= 0 && value < TENTHOUSAND_MAX)
-                ? TENTHOUSAND_BYTES[(int) value]
-                : ((value < 0 && value > -TENTHOUSAND_MAX)
-                        ? TENTHOUSAND_BYTES2[(int) -value]
-                        : Utility.latin1ByteArray(String.valueOf(value)));
+        byte[] bs2 = value >= 0 ? TENTHOUSAND_BYTES[value] : TENTHOUSAND_BYTES2[-value];
         int len1 = bs1.length;
         int len2 = bs2.length;
-        byte[] src = expand(len1 + len2);
+        byte[] src = expand(1 + len1 + len2);
+        if (comma) src[count++] = BYTE_COMMA;
         System.arraycopy(bs1, 0, src, count, len1);
         count += len1;
         System.arraycopy(bs2, 0, src, count, len2);
         count += len2;
+        return true;
     }
 
     @Override
-    public void writeFieldLatin1Value(final byte[] fieldBytes, final char[] fieldChars, final String value) {
+    public boolean writeFieldIntValue(byte[] fieldBytes, char[] fieldChars, boolean comma, int value) {
+        byte[] bs1 = fieldBytes;
+        int len1 = bs1.length;
+        byte[] src = expand(len1 + 12);
+        if (comma) src[count++] = BYTE_COMMA;
+        System.arraycopy(bs1, 0, src, count, len1);
+        count += len1;
+        writeInt(value);
+        return true;
+    }
+
+    @Override
+    public boolean writeFieldLongValue(byte[] fieldBytes, char[] fieldChars, boolean comma, long value) {
+        byte[] bs1 = fieldBytes;
+        int len1 = bs1.length;
+        byte[] src = expand(len1 + 21);
+        if (comma) src[count++] = BYTE_COMMA;
+        System.arraycopy(bs1, 0, src, count, len1);
+        count += len1;
+        writeLong(value);
+        return true;
+    }
+
+    @Override
+    public boolean writeFieldStringValue(byte[] fieldBytes, char[] fieldChars, boolean comma, String value) {
+        if (value == null) {
+            return comma;
+        }
+        byte[] bs1 = fieldBytes;
+        int len1 = bs1.length;
+        byte[] src = expand(1 + len1);
+        if (comma) src[count++] = BYTE_COMMA;
+        System.arraycopy(bs1, 0, src, count, len1);
+        count += len1;
+        writeString(value);
+        return true;
+    }
+
+    @Override
+    public boolean writeFieldObjectValue(
+            byte[] fieldBytes, char[] fieldChars, boolean comma, Encodeable encodeable, Object value) {
+        if (value == null) {
+            return comma;
+        }
+        byte[] bs1 = fieldBytes;
+        int len1 = bs1.length;
+        byte[] src = expand(1 + len1);
+        if (comma) src[count++] = BYTE_COMMA;
+        System.arraycopy(bs1, 0, src, count, len1);
+        count += len1;
+        encodeable.convertTo(this, value);
+        return true;
+    }
+
+    @Override
+    protected boolean writeFieldLatin1Value(
+            byte[] fieldBytes, char[] fieldChars, boolean comma, boolean quote, String value) {
+        if (value == null) {
+            return comma;
+        }
         byte[] bs1 = fieldBytes;
         byte[] bs2 = Utility.latin1ByteArray(value);
         int len1 = bs1.length;
         int len2 = bs2.length;
-        byte[] src = expand(len1 + len2 + 2);
-        System.arraycopy(bs1, 0, src, count, len1);
-        count += len1;
-        src[count++] = BYTE_DQUOTE;
-        System.arraycopy(bs2, 0, src, count, len2);
-        count += len2;
-        src[count++] = BYTE_DQUOTE;
+        if (quote) {
+            byte[] src = expand(len1 + len2 + 3);
+            if (comma) src[count++] = BYTE_COMMA;
+            System.arraycopy(bs1, 0, src, count, len1);
+            count += len1;
+            src[count++] = BYTE_DQUOTE;
+            System.arraycopy(bs2, 0, src, count, len2);
+            count += len2;
+            src[count++] = BYTE_DQUOTE;
+        } else {
+            byte[] src = expand(1 + len1 + len2);
+            if (comma) src[count++] = BYTE_COMMA;
+            System.arraycopy(bs1, 0, src, count, len1);
+            count += len1;
+            System.arraycopy(bs2, 0, src, count, len2);
+            count += len2;
+        }
+        return true;
     }
 
     public JsonBytesWriter clear() {
@@ -536,7 +601,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             count += bs.length;
             return;
         }
-        final char sign = value >= 0 ? 0 : '-';
+        final byte sign = value >= 0 ? 0 : BYTE_NEGATIVE;
         if (value < 0) {
             value = -value;
         }
@@ -577,7 +642,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             }
         }
         if (sign != 0) {
-            bytes[--charPos] = (byte) sign;
+            bytes[--charPos] = BYTE_NEGATIVE;
         }
         count += size;
     }
