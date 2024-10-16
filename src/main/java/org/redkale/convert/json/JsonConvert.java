@@ -113,7 +113,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         } else {
             bytesWriterPool.set(null);
         }
-        return configWrite((JsonBytesWriter) writer.withFeatures(features));
+        return configWrite(writer);
     }
 
     @Override
@@ -133,7 +133,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         } else {
             bytesWriterPool.set(null);
         }
-        return configWrite((JsonBytesWriter) writer.withFeatures(features));
+        return configWrite(writer);
     }
 
     private void offerJsonBytesWriter(final JsonBytesWriter writer) {
@@ -150,7 +150,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         } else {
             charsWriterPool.set(null);
         }
-        return configWrite((JsonCharsWriter) writer.withFeatures(features));
+        return configWrite(writer);
     }
 
     private void offerJsonCharsWriter(final JsonCharsWriter writer) {

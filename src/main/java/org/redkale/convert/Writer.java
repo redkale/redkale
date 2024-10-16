@@ -85,11 +85,11 @@ public abstract class Writer {
     }
 
     protected final boolean tiny() {
-        return ConvertFactory.checkTinyFeature(features);
+        return features > 0 && ConvertFactory.checkTinyFeature(features);
     }
 
     protected final boolean nullable() {
-        return ConvertFactory.checkNullableFeature(features);
+        return features > 0 && ConvertFactory.checkNullableFeature(features);
     }
 
     /** 输出null值 */

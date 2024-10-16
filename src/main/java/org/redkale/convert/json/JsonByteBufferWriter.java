@@ -385,34 +385,9 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override
-    public boolean writeFieldStringValue(byte[] fieldBytes, char[] fieldChars, boolean comma, String value) {
-        if (value == null) {
-            return comma;
-        }
-        byte[] bs1 = fieldBytes;
-        int expandsize = expand(1 + bs1.length);
-        if (expandsize == 0) { // 只需要一个buffer
-            final ByteBuffer buffer = this.buffers[currBufIndex];
-            if (comma) buffer.put(BYTE_COMMA);
-            buffer.put(bs1);
-        } else {
-            ByteBuffer buffer = this.buffers[currBufIndex];
-            if (comma) buffer.put(BYTE_COMMA);
-            for (byte b : bs1) {
-                if (!buffer.hasRemaining()) {
-                    buffer = nextByteBuffer();
-                }
-                buffer.put(b);
-            }
-        }
-        writeString(value);
-        return true;
-    }
-
-    @Override
     public boolean writeFieldObjectValue(
             byte[] fieldBytes, char[] fieldChars, boolean comma, Encodeable encodeable, Object value) {
-        if (value == null) {
+        if (value == null && !nullable()) {
             return comma;
         }
         byte[] bs1 = fieldBytes;
@@ -436,9 +411,34 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override
+    public boolean writeFieldStringValue(byte[] fieldBytes, char[] fieldChars, boolean comma, String value) {
+        if (value == null || (tiny() && value.isEmpty())) {
+            return comma;
+        }
+        byte[] bs1 = fieldBytes;
+        int expandsize = expand(1 + bs1.length);
+        if (expandsize == 0) { // 只需要一个buffer
+            final ByteBuffer buffer = this.buffers[currBufIndex];
+            if (comma) buffer.put(BYTE_COMMA);
+            buffer.put(bs1);
+        } else {
+            ByteBuffer buffer = this.buffers[currBufIndex];
+            if (comma) buffer.put(BYTE_COMMA);
+            for (byte b : bs1) {
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
+                buffer.put(b);
+            }
+        }
+        writeString(value);
+        return true;
+    }
+
+    @Override
     protected boolean writeFieldLatin1Value(
             byte[] fieldBytes, char[] fieldChars, boolean comma, boolean quote, String value) {
-        if (value == null) {
+        if (value == null || (tiny() && value.isEmpty())) {
             return comma;
         }
         byte[] bs1 = fieldBytes;
