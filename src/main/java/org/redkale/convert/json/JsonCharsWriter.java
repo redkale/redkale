@@ -10,8 +10,6 @@ import static org.redkale.convert.json.JsonWriter.BYTE_DQUOTE;
 import static org.redkale.convert.json.JsonWriter.DEFAULT_SIZE;
 import static org.redkale.convert.json.JsonWriter.DigitOnes;
 import static org.redkale.convert.json.JsonWriter.DigitTens;
-import static org.redkale.convert.json.JsonWriter.digits;
-import static org.redkale.convert.json.JsonWriter.sizeTable;
 import org.redkale.util.StringWrapper;
 import org.redkale.util.Utility;
 
@@ -448,44 +446,28 @@ public class JsonCharsWriter extends JsonWriter {
             writeTo(TENTHOUSAND_CHARS2[-value]);
             return;
         }
-        final char sign = value >= 0 ? 0 : '-';
-        if (value < 0) value = -value;
-        int size;
-        for (int i = 0; ; i++) {
-            if (value <= sizeTable[i]) {
-                size = i + 1;
-                break;
-            }
-        }
-        if (sign != 0) {
-            size++; // 负数
-        }
+        final boolean negative = value < 0;
+        int size = stringSize(value);
         char[] chars = expand(size);
-
-        int q, r;
         int charPos = count + size;
-
+        int i = negative ? value : -value;
+        int q, r;
         // Generate two digits per iteration
-        while (value >= 65536) {
-            q = value / 100;
-            // really: r = i - (q * 100);
-            r = value - ((q << 6) + (q << 5) + (q << 2));
-            value = q;
+        while (i <= -100) {
+            q = i / 100;
+            r = (q * 100) - i;
+            i = q;
             chars[--charPos] = DigitOnes[r];
             chars[--charPos] = DigitTens[r];
         }
-
-        // Fall thru to fast mode for smaller numbers
-        // assert(i <= 65536, i);
-        for (; ; ) {
-            q = (value * 52429) >>> (16 + 3);
-            r = value - ((q << 3) + (q << 1)); // r = i-(q*10) ...
-            chars[--charPos] = digits[r];
-            value = q;
-            if (value == 0) break;
+        // We know there are at most two digits left at this point.
+        chars[--charPos] = DigitOnes[-i];
+        if (i < -9) {
+            chars[--charPos] = DigitTens[-i];
         }
-        if (sign != 0) {
-            chars[--charPos] = sign;
+
+        if (negative) {
+            chars[--charPos] = '-';
         }
         count += size;
     }
@@ -500,56 +482,39 @@ public class JsonCharsWriter extends JsonWriter {
             writeTo(TENTHOUSAND_CHARS2[(int) -value]);
             return;
         }
-        final char sign = value >= 0 ? 0 : '-';
-        if (value < 0) value = -value;
-        int size = 19;
-        long p = 10;
-        for (int i = 1; i < 19; i++) {
-            if (value < p) {
-                size = i;
-                break;
-            }
-            p = 10 * p;
-        }
-        if (sign != 0) size++; // 负数
-        expand(size);
-
+        final boolean negative = value < 0;
+        int size = stringSize(value);
+        char[] chars = expand(size);
+        int charPos = count + size;
+        long i = negative ? value : -value;
         long q;
         int r;
-        int charPos = count + size;
-
-        // Get 2 digits/iteration using longs until quotient fits into an int
-        while (value > Integer.MAX_VALUE) {
-            q = value / 100;
-            // really: r = i - (q * 100);
-            r = (int) (value - ((q << 6) + (q << 5) + (q << 2)));
-            value = q;
-            content[--charPos] = DigitOnes[r];
-            content[--charPos] = DigitTens[r];
+        while (i <= Integer.MIN_VALUE) {
+            q = i / 100;
+            r = (int) ((q * 100) - i);
+            i = q;
+            chars[--charPos] = DigitOnes[r];
+            chars[--charPos] = DigitTens[r];
         }
-
         // Get 2 digits/iteration using ints
         int q2;
-        int i2 = (int) value;
-        while (i2 >= 65536) {
+        int i2 = (int) i;
+        while (i2 <= -100) {
             q2 = i2 / 100;
-            // really: r = i2 - (q * 100);
-            r = i2 - ((q2 << 6) + (q2 << 5) + (q2 << 2));
+            r = (q2 * 100) - i2;
             i2 = q2;
-            content[--charPos] = DigitOnes[r];
-            content[--charPos] = DigitTens[r];
+            chars[--charPos] = DigitOnes[r];
+            chars[--charPos] = DigitTens[r];
+        }
+        // We know there are at most two digits left at this point.
+        chars[--charPos] = DigitOnes[-i2];
+        if (i2 < -9) {
+            chars[--charPos] = DigitTens[-i2];
         }
 
-        // Fall thru to fast mode for smaller numbers
-        // assert(i2 <= 65536, i2);
-        for (; ; ) {
-            q2 = (i2 * 52429) >>> (16 + 3);
-            r = i2 - ((q2 << 3) + (q2 << 1)); // r = i2-(q2*10) ...
-            content[--charPos] = digits[r];
-            i2 = q2;
-            if (i2 == 0) break;
+        if (negative) {
+            chars[--charPos] = '-';
         }
-        if (sign != 0) content[--charPos] = sign;
         count += size;
     }
 

@@ -35,7 +35,7 @@ public class _DyncWorldJsonEncoder extends JsonDynEncoder<World> {
         out.writeTo('{');
         boolean comma = false;
         comma = out.writeFieldIntValue(idFieldBytes, idFieldChars, comma, value.getId());
-        comma = out.writeFieldIntValue(randomNumberFieldBytes, randomNumberFieldChars, comma, value.getRandomNumber());
+        out.writeFieldIntValue(randomNumberFieldBytes, randomNumberFieldChars, comma, value.getRandomNumber());
         out.writeTo('}');
     }
 }

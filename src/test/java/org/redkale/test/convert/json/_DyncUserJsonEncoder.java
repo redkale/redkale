@@ -52,7 +52,7 @@ public class _DyncUserJsonEncoder extends JsonDynEncoder<User> {
         comma = out.writeFieldLongValue(idFieldBytes, idFieldChars, comma, value.getId());
         comma = out.writeFieldStringValue(nameFieldBytes, nameFieldChars, comma, value.getName());
         comma = out.writeFieldStringValue(sexFieldBytes, sexFieldChars, comma, value.getSex());
-        comma = out.writeFieldStringValue(nickNameFieldBytes, nickNameFieldChars, comma, value.getNickName());
+        out.writeFieldStringValue(nickNameFieldBytes, nickNameFieldChars, comma, value.getNickName());
         out.writeTo('}');
     }
 }

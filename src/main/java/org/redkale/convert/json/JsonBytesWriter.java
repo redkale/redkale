@@ -601,47 +601,26 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             count += bs.length;
             return;
         }
-        final byte sign = value >= 0 ? 0 : BYTE_NEGATIVE;
-        if (value < 0) {
-            value = -value;
-        }
-        int size;
-        for (int i = 0; ; i++) {
-            if (value <= sizeTable[i]) {
-                size = i + 1;
-                break;
-            }
-        }
-        if (sign != 0) {
-            size++; // 负数
-        }
+        final boolean negative = value < 0;
+        int size = stringSize(value);
         byte[] bytes = expand(size);
-
-        int q, r;
         int charPos = count + size;
-
+        int i = negative ? value : -value;
+        int q, r;
         // Generate two digits per iteration
-        while (value >= 65536) {
-            q = value / 100;
-            // really: r = i - (q * 100);
-            r = value - ((q << 6) + (q << 5) + (q << 2));
-            value = q;
+        while (i <= -100) {
+            q = i / 100;
+            r = (q * 100) - i;
+            i = q;
             bytes[--charPos] = (byte) DigitOnes[r];
             bytes[--charPos] = (byte) DigitTens[r];
         }
-
-        // Fall thru to fast mode for smaller numbers
-        // assert(i <= 65536, i);
-        for (; ; ) {
-            q = (value * 52429) >>> (16 + 3);
-            r = value - ((q << 3) + (q << 1)); // r = i-(q*10) ...
-            bytes[--charPos] = (byte) digits[r];
-            value = q;
-            if (value == 0) {
-                break;
-            }
+        // We know there are at most two digits left at this point.
+        bytes[--charPos] = (byte) DigitOnes[-i];
+        if (i < -9) {
+            bytes[--charPos] = (byte) DigitTens[-i];
         }
-        if (sign != 0) {
+        if (negative) {
             bytes[--charPos] = BYTE_NEGATIVE;
         }
         count += size;
@@ -663,63 +642,38 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             count += bs.length;
             return;
         }
-        final char sign = value >= 0 ? 0 : '-';
-        if (value < 0) {
-            value = -value;
-        }
-        int size = 19;
-        long p = 10;
-        for (int i = 1; i < 19; i++) {
-            if (value < p) {
-                size = i;
-                break;
-            }
-            p = 10 * p;
-        }
-        if (sign != 0) {
-            size++; // 负数
-        }
+        final boolean negative = value < 0;
+        int size = stringSize(value);
         byte[] bytes = expand(size);
-
+        int charPos = count + size;
+        long i = negative ? value : -value;
         long q;
         int r;
-        int charPos = count + size;
-
-        // Get 2 digits/iteration using longs until quotient fits into an int
-        while (value > Integer.MAX_VALUE) {
-            q = value / 100;
-            // really: r = i - (q * 100);
-            r = (int) (value - ((q << 6) + (q << 5) + (q << 2)));
-            value = q;
-            content[--charPos] = (byte) DigitOnes[r];
-            content[--charPos] = (byte) DigitTens[r];
+        while (i <= Integer.MIN_VALUE) {
+            q = i / 100;
+            r = (int) ((q * 100) - i);
+            i = q;
+            bytes[--charPos] = (byte) DigitOnes[r];
+            bytes[--charPos] = (byte) DigitTens[r];
         }
-
         // Get 2 digits/iteration using ints
         int q2;
-        int i2 = (int) value;
-        while (i2 >= 65536) {
+        int i2 = (int) i;
+        while (i2 <= -100) {
             q2 = i2 / 100;
-            // really: r = i2 - (q * 100);
-            r = i2 - ((q2 << 6) + (q2 << 5) + (q2 << 2));
+            r = (q2 * 100) - i2;
             i2 = q2;
             bytes[--charPos] = (byte) DigitOnes[r];
             bytes[--charPos] = (byte) DigitTens[r];
         }
-
-        // Fall thru to fast mode for smaller numbers
-        // assert(i2 <= 65536, i2);
-        for (; ; ) {
-            q2 = (i2 * 52429) >>> (16 + 3);
-            r = i2 - ((q2 << 3) + (q2 << 1)); // r = i2-(q2*10) ...
-            bytes[--charPos] = (byte) digits[r];
-            i2 = q2;
-            if (i2 == 0) {
-                break;
-            }
+        // We know there are at most two digits left at this point.
+        bytes[--charPos] = (byte) DigitOnes[-i2];
+        if (i2 < -9) {
+            bytes[--charPos] = (byte) DigitTens[-i2];
         }
-        if (sign != 0) {
-            bytes[--charPos] = (byte) sign;
+
+        if (negative) {
+            bytes[--charPos] = BYTE_NEGATIVE;
         }
         count += size;
     }

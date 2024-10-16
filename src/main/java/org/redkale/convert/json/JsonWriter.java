@@ -362,14 +362,31 @@ public abstract class JsonWriter extends Writer {
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
     };
 
-    static final char[] digits = {
-        '0', '1', '2', '3', '4', '5',
-        '6', '7', '8', '9', 'a', 'b',
-        'c', 'd', 'e', 'f', 'g', 'h',
-        'i', 'j', 'k', 'l', 'm', 'n',
-        'o', 'p', 'q', 'r', 's', 't',
-        'u', 'v', 'w', 'x', 'y', 'z'
-    };
+    protected static int stringSize(int x) {
+        int d = 1;
+        if (x >= 0) {
+            d = 0;
+            x = -x;
+        }
+        int p = -10;
+        for (int i = 1; i < 10; i++) {
+            if (x > p) return i + d;
+            p = 10 * p;
+        }
+        return 10 + d;
+    }
 
-    static final int[] sizeTable = {9, 99, 999, 9999, 99999, 999999, 9999999, 99999999, 999999999, Integer.MAX_VALUE};
+    protected static int stringSize(long x) {
+        int d = 1;
+        if (x >= 0) {
+            d = 0;
+            x = -x;
+        }
+        long p = -10;
+        for (int i = 1; i < 19; i++) {
+            if (x > p) return i + d;
+            p = 10 * p;
+        }
+        return 19 + d;
+    }
 }
