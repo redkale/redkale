@@ -46,13 +46,23 @@ public class _DyncUserJsonEncoder extends JsonDynEncoder<User> {
         }
         out.writeTo('{');
         boolean comma = false;
-        comma = out.writeFieldIntValue(ageFieldBytes, ageFieldChars, comma, value.getAge());
-        comma = out.writeFieldObjectValue(
-                createTimeFieldBytes, createTimeFieldChars, comma, this.createTimeEncoder, value.getCreateTime());
-        comma = out.writeFieldLongValue(idFieldBytes, idFieldChars, comma, value.getId());
-        comma = out.writeFieldStringValue(nameFieldBytes, nameFieldChars, comma, value.getName());
-        comma = out.writeFieldStringValue(sexFieldBytes, sexFieldChars, comma, value.getSex());
-        out.writeFieldStringValue(nickNameFieldBytes, nickNameFieldChars, comma, value.getNickName());
+        if (out.charsMode()) {
+            comma = out.writeFieldIntValue(ageFieldChars, comma, value.getAge());
+            comma = out.writeFieldObjectValue(
+                    createTimeFieldChars, comma, this.createTimeEncoder, value.getCreateTime());
+            comma = out.writeFieldLongValue(idFieldChars, comma, value.getId());
+            comma = out.writeFieldStringValue(nameFieldChars, comma, value.getName());
+            comma = out.writeFieldStringValue(sexFieldChars, comma, value.getSex());
+            out.writeFieldStringValue(nickNameFieldChars, comma, value.getNickName());
+        } else {
+            comma = out.writeFieldIntValue(ageFieldBytes, comma, value.getAge());
+            comma = out.writeFieldObjectValue(
+                    createTimeFieldBytes, comma, this.createTimeEncoder, value.getCreateTime());
+            comma = out.writeFieldLongValue(idFieldBytes, comma, value.getId());
+            comma = out.writeFieldStringValue(nameFieldBytes, comma, value.getName());
+            comma = out.writeFieldStringValue(sexFieldBytes, comma, value.getSex());
+            out.writeFieldStringValue(nickNameFieldBytes, comma, value.getNickName());
+        }
         out.writeTo('}');
     }
 }

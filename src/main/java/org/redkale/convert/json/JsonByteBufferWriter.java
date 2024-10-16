@@ -360,37 +360,36 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override
-    public boolean writeFieldBooleanValue(byte[] fieldBytes, char[] fieldChars, boolean comma, boolean value) {
-        return writeFieldLatin1Value(fieldBytes, fieldChars, comma, false, String.valueOf(value));
+    public boolean writeFieldBooleanValue(Object fieldArray, boolean comma, boolean value) {
+        return writeFieldLatin1Value(fieldArray, comma, false, String.valueOf(value));
     }
 
     @Override
-    public boolean writeFieldByteValue(byte[] fieldBytes, char[] fieldChars, boolean comma, byte value) {
-        return writeFieldLatin1Value(fieldBytes, fieldChars, comma, false, String.valueOf(value));
+    public boolean writeFieldByteValue(Object fieldArray, boolean comma, byte value) {
+        return writeFieldLatin1Value(fieldArray, comma, false, String.valueOf(value));
     }
 
     @Override
-    public boolean writeFieldShortValue(byte[] fieldBytes, char[] fieldChars, boolean comma, short value) {
-        return writeFieldLatin1Value(fieldBytes, fieldChars, comma, false, String.valueOf(value));
+    public boolean writeFieldShortValue(Object fieldArray, boolean comma, short value) {
+        return writeFieldLatin1Value(fieldArray, comma, false, String.valueOf(value));
     }
 
     @Override
-    public boolean writeFieldIntValue(byte[] fieldBytes, char[] fieldChars, boolean comma, int value) {
-        return writeFieldLatin1Value(fieldBytes, fieldChars, comma, false, String.valueOf(value));
+    public boolean writeFieldIntValue(Object fieldArray, boolean comma, int value) {
+        return writeFieldLatin1Value(fieldArray, comma, false, String.valueOf(value));
     }
 
     @Override
-    public boolean writeFieldLongValue(byte[] fieldBytes, char[] fieldChars, boolean comma, long value) {
-        return writeFieldLatin1Value(fieldBytes, fieldChars, comma, false, String.valueOf(value));
+    public boolean writeFieldLongValue(Object fieldArray, boolean comma, long value) {
+        return writeFieldLatin1Value(fieldArray, comma, false, String.valueOf(value));
     }
 
     @Override
-    public boolean writeFieldObjectValue(
-            byte[] fieldBytes, char[] fieldChars, boolean comma, Encodeable encodeable, Object value) {
+    public boolean writeFieldObjectValue(Object fieldArray, boolean comma, Encodeable encodeable, Object value) {
         if (value == null && !nullable()) {
             return comma;
         }
-        byte[] bs1 = fieldBytes;
+        byte[] bs1 = (byte[]) fieldArray;
         int expandsize = expand(1 + bs1.length);
         if (expandsize == 0) { // 只需要一个buffer
             final ByteBuffer buffer = this.buffers[currBufIndex];
@@ -411,11 +410,11 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override
-    public boolean writeFieldStringValue(byte[] fieldBytes, char[] fieldChars, boolean comma, String value) {
+    public boolean writeFieldStringValue(Object fieldArray, boolean comma, String value) {
         if (value == null || (tiny() && value.isEmpty())) {
             return comma;
         }
-        byte[] bs1 = fieldBytes;
+        byte[] bs1 = (byte[]) fieldArray;
         int expandsize = expand(1 + bs1.length);
         if (expandsize == 0) { // 只需要一个buffer
             final ByteBuffer buffer = this.buffers[currBufIndex];
@@ -436,12 +435,11 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override
-    protected boolean writeFieldLatin1Value(
-            byte[] fieldBytes, char[] fieldChars, boolean comma, boolean quote, String value) {
+    protected boolean writeFieldLatin1Value(Object fieldArray, boolean comma, boolean quote, String value) {
         if (value == null || (tiny() && value.isEmpty())) {
             return comma;
         }
-        byte[] bs1 = fieldBytes;
+        byte[] bs1 = (byte[]) fieldArray;
         byte[] bs2 = Utility.latin1ByteArray(value);
         int expandsize = expand(bs1.length + bs2.length + 3);
         if (expandsize == 0) { // 只需要一个buffer

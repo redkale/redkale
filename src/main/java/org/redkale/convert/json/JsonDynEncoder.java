@@ -111,7 +111,6 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
         final String jsonwriterDesc = org.redkale.asm.Type.getDescriptor(JsonWriter.class);
         final String encodeableDesc = org.redkale.asm.Type.getDescriptor(Encodeable.class);
         final String objEncoderDesc = org.redkale.asm.Type.getDescriptor(ObjectEncoder.class);
-        final String objectDesc = org.redkale.asm.Type.getDescriptor(Object.class);
         final String valtypeDesc = org.redkale.asm.Type.getDescriptor(clazz);
         // ------------------------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
@@ -215,7 +214,6 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
                 mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
             }
 
-            int elementIndex = -1;
             {
                 { // out.writeTo('{');
                     mv.visitVarInsn(ALOAD, 1);
@@ -233,122 +231,23 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
                     commaLabel = new Label();
                     mv.visitLabel(commaLabel);
                 }
-                // comma = out.writeFieldIntValue(ageFieldBytes, ageFieldChars, comma, value.getAge());
-                for (AccessibleObject element : elements) {
-                    elementIndex++;
-                    final String fieldName = factory.readConvertFieldName(clazz, element);
-                    final Class fieldType = readGetSetFieldType(element);
-                    mv.visitVarInsn(ALOAD, 1); // JsonWriter
-                    mv.visitVarInsn(ALOAD, 0); // this.xxxFieldBytes  第一个参数
-                    mv.visitFieldInsn(GETFIELD, newDynName, fieldName + "FieldBytes", "[B");
-                    mv.visitVarInsn(ALOAD, 0); // this.xxxFieldChars  第二个参数
-                    mv.visitFieldInsn(GETFIELD, newDynName, fieldName + "FieldChars", "[C");
-                    if (commaLabel != null) {
-                        mv.visitVarInsn(ILOAD, 3); // comma 第三个参数
-                    } else {
-                        mv.visitInsn(elementIndex == 0 ? ICONST_0 : ICONST_1); // comma=false 第三个参数
-                    }
-                    if (mixedNames.containsKey(fieldName)) { // Encodeable  第四个参数
-                        mv.visitVarInsn(ALOAD, 0);
-                        mv.visitFieldInsn(GETFIELD, newDynName, fieldName + "Encoder", encodeableDesc);
-                    }
-                    mv.visitVarInsn(ALOAD, 2); // value.getXXX()  第四/五个参数
-                    if (element instanceof Field) {
-                        mv.visitFieldInsn(
-                                GETFIELD,
-                                valtypeName,
-                                ((Field) element).getName(),
-                                org.redkale.asm.Type.getDescriptor(fieldType));
-                    } else {
-                        mv.visitMethodInsn(
-                                ((Method) element).getDeclaringClass().isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                                valtypeName,
-                                ((Method) element).getName(),
-                                "()" + org.redkale.asm.Type.getDescriptor(fieldType),
-                                false);
-                    }
-                    if (fieldType == boolean.class || fieldType == Boolean.class) {
-                        mv.visitMethodInsn(
-                                INVOKEVIRTUAL,
-                                writerName,
-                                "writeFieldBooleanValue",
-                                "([B[CZ" + org.redkale.asm.Type.getDescriptor(fieldType) + ")Z",
-                                false);
-                    } else if (fieldType == byte.class || fieldType == Byte.class) {
-                        mv.visitMethodInsn(
-                                INVOKEVIRTUAL,
-                                writerName,
-                                "writeFieldByteValue",
-                                "([B[CZ" + org.redkale.asm.Type.getDescriptor(fieldType) + ")Z",
-                                false);
-                    } else if (fieldType == short.class || fieldType == Short.class) {
-                        mv.visitMethodInsn(
-                                INVOKEVIRTUAL,
-                                writerName,
-                                "writeFieldShortValue",
-                                "([B[CZ" + org.redkale.asm.Type.getDescriptor(fieldType) + ")Z",
-                                false);
-                    } else if (fieldType == char.class || fieldType == Character.class) {
-                        mv.visitMethodInsn(
-                                INVOKEVIRTUAL,
-                                writerName,
-                                "writeFieldCharValue",
-                                "([B[CZ" + org.redkale.asm.Type.getDescriptor(fieldType) + ")Z",
-                                false);
-                    } else if (fieldType == int.class || fieldType == Integer.class) {
-                        mv.visitMethodInsn(
-                                INVOKEVIRTUAL,
-                                writerName,
-                                "writeFieldIntValue",
-                                "([B[CZ" + org.redkale.asm.Type.getDescriptor(fieldType) + ")Z",
-                                false);
-                    } else if (fieldType == float.class || fieldType == Float.class) {
-                        mv.visitMethodInsn(
-                                INVOKEVIRTUAL,
-                                writerName,
-                                "writeFieldFloatValue",
-                                "([B[CZ" + org.redkale.asm.Type.getDescriptor(fieldType) + ")Z",
-                                false);
-                    } else if (fieldType == long.class || fieldType == Long.class) {
-                        mv.visitMethodInsn(
-                                INVOKEVIRTUAL,
-                                writerName,
-                                "writeFieldLongValue",
-                                "([B[CZ" + org.redkale.asm.Type.getDescriptor(fieldType) + ")Z",
-                                false);
-                    } else if (fieldType == double.class || fieldType == Double.class) {
-                        mv.visitMethodInsn(
-                                INVOKEVIRTUAL,
-                                writerName,
-                                "writeFieldDoubleValue",
-                                "([B[CZ" + org.redkale.asm.Type.getDescriptor(fieldType) + ")Z",
-                                false);
-                    } else if (fieldType == String.class) {
-                        String writeFieldName = "writeFieldStringValue";
-                        if (isConvertStandardString(factory, element)) {
-                            writeFieldName = "writeFieldStandardStringValue";
-                        }
-                        mv.visitMethodInsn(
-                                INVOKEVIRTUAL,
-                                writerName,
-                                writeFieldName,
-                                "([B[CZ" + org.redkale.asm.Type.getDescriptor(fieldType) + ")Z",
-                                false);
-                    } else {
-                        // writeFieldObjectValue(fieldBytes, fieldChars, comma, encodeable, value)
-                        mv.visitMethodInsn(
-                                INVOKEVIRTUAL,
-                                writerName,
-                                "writeFieldObjectValue",
-                                "([B[CZ" + encodeableDesc + objectDesc + ")Z",
-                                false);
-                    }
-                    if (commaLabel != null && elementIndex + 1 < elements.size()) {
-                        mv.visitVarInsn(ISTORE, 3); // comma = out.writeFieldXXXValue()
-                    } else {
-                        mv.visitInsn(POP);
-                    }
-                }
+
+                // if (out.charsMode()) {
+                mv.visitVarInsn(ALOAD, 1);
+                mv.visitMethodInsn(INVOKEVIRTUAL, writerName, "charsMode", "()Z", false);
+                Label charIf = new Label();
+                mv.visitJumpInsn(IFEQ, charIf);
+                // comma = out.writeFieldIntValue(fieldArray, comma, value.getAge());
+                dynConvertToMethod(clazz, newDynName, mv, factory, mixedNames, elements, commaLabel, true);
+                Label byteIf = new Label();
+                mv.visitJumpInsn(GOTO, byteIf);
+                mv.visitLabel(charIf);
+                mv.visitFrame(Opcodes.F_APPEND, 1, new Object[] {Opcodes.INTEGER}, 0, null);
+                // comma = out.writeFieldIntValue(fieldArray, comma, value.getAge());
+                dynConvertToMethod(clazz, newDynName, mv, factory, mixedNames, elements, commaLabel, false);
+                mv.visitLabel(byteIf);
+                mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+
                 { // out.writeTo('}');
                     mv.visitVarInsn(ALOAD, 1);
                     mv.visitIntInsn(BIPUSH, '}');
@@ -573,6 +472,139 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
         } catch (Exception ex) {
             ex.printStackTrace();
             return null;
+        }
+    }
+
+    private static void dynConvertToMethod(
+            final Class clazz,
+            final String newDynName,
+            final MethodVisitor mv,
+            final JsonFactory factory,
+            final Map<String, AccessibleObject> mixedNames,
+            final List<AccessibleObject> elements,
+            final Label commaLabel,
+            final boolean charMode) {
+        final String valtypeName = clazz.getName().replace('.', '/');
+        final String writerName = JsonWriter.class.getName().replace('.', '/');
+        final String encodeableDesc = org.redkale.asm.Type.getDescriptor(Encodeable.class);
+        final String objectDesc = org.redkale.asm.Type.getDescriptor(Object.class);
+        int elementIndex = -1;
+        for (AccessibleObject element : elements) {
+            elementIndex++;
+            final String fieldName = factory.readConvertFieldName(clazz, element);
+            final Class fieldType = readGetSetFieldType(element);
+            mv.visitVarInsn(ALOAD, 1); // JsonWriter
+            mv.visitVarInsn(ALOAD, 0); // this.xxxFieldBytes  第一个参数
+            if (charMode) {
+                mv.visitFieldInsn(GETFIELD, newDynName, fieldName + "FieldChars", "[C");
+            } else {
+                mv.visitFieldInsn(GETFIELD, newDynName, fieldName + "FieldBytes", "[B");
+            }
+            if (commaLabel != null) {
+                mv.visitVarInsn(ILOAD, 3); // comma 第三个参数
+            } else {
+                mv.visitInsn(elementIndex == 0 ? ICONST_0 : ICONST_1); // comma=false 第二个参数
+            }
+            if (mixedNames.containsKey(fieldName)) { // Encodeable  第三个参数
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitFieldInsn(GETFIELD, newDynName, fieldName + "Encoder", encodeableDesc);
+            }
+            mv.visitVarInsn(ALOAD, 2); // value.getXXX()  第三/四个参数
+            if (element instanceof Field) {
+                mv.visitFieldInsn(
+                        GETFIELD,
+                        valtypeName,
+                        ((Field) element).getName(),
+                        org.redkale.asm.Type.getDescriptor(fieldType));
+            } else {
+                mv.visitMethodInsn(
+                        ((Method) element).getDeclaringClass().isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                        valtypeName,
+                        ((Method) element).getName(),
+                        "()" + org.redkale.asm.Type.getDescriptor(fieldType),
+                        false);
+            }
+            if (fieldType == boolean.class || fieldType == Boolean.class) {
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL,
+                        writerName,
+                        "writeFieldBooleanValue",
+                        "(" + objectDesc + "Z" + org.redkale.asm.Type.getDescriptor(fieldType) + ")Z",
+                        false);
+            } else if (fieldType == byte.class || fieldType == Byte.class) {
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL,
+                        writerName,
+                        "writeFieldByteValue",
+                        "(" + objectDesc + "Z" + org.redkale.asm.Type.getDescriptor(fieldType) + ")Z",
+                        false);
+            } else if (fieldType == short.class || fieldType == Short.class) {
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL,
+                        writerName,
+                        "writeFieldShortValue",
+                        "(" + objectDesc + "Z" + org.redkale.asm.Type.getDescriptor(fieldType) + ")Z",
+                        false);
+            } else if (fieldType == char.class || fieldType == Character.class) {
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL,
+                        writerName,
+                        "writeFieldCharValue",
+                        "(" + objectDesc + "Z" + org.redkale.asm.Type.getDescriptor(fieldType) + ")Z",
+                        false);
+            } else if (fieldType == int.class || fieldType == Integer.class) {
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL,
+                        writerName,
+                        "writeFieldIntValue",
+                        "(" + objectDesc + "Z" + org.redkale.asm.Type.getDescriptor(fieldType) + ")Z",
+                        false);
+            } else if (fieldType == float.class || fieldType == Float.class) {
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL,
+                        writerName,
+                        "writeFieldFloatValue",
+                        "(" + objectDesc + "Z" + org.redkale.asm.Type.getDescriptor(fieldType) + ")Z",
+                        false);
+            } else if (fieldType == long.class || fieldType == Long.class) {
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL,
+                        writerName,
+                        "writeFieldLongValue",
+                        "(" + objectDesc + "Z" + org.redkale.asm.Type.getDescriptor(fieldType) + ")Z",
+                        false);
+            } else if (fieldType == double.class || fieldType == Double.class) {
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL,
+                        writerName,
+                        "writeFieldDoubleValue",
+                        "(" + objectDesc + "Z" + org.redkale.asm.Type.getDescriptor(fieldType) + ")Z",
+                        false);
+            } else if (fieldType == String.class) {
+                String writeFieldName = "writeFieldStringValue";
+                if (isConvertStandardString(factory, element)) {
+                    writeFieldName = "writeFieldStandardStringValue";
+                }
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL,
+                        writerName,
+                        writeFieldName,
+                        "(" + objectDesc + "Z" + org.redkale.asm.Type.getDescriptor(fieldType) + ")Z",
+                        false);
+            } else {
+                // writeFieldObjectValue(fieldArray, comma, encodeable, value)
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL,
+                        writerName,
+                        "writeFieldObjectValue",
+                        "(" + objectDesc + "Z" + encodeableDesc + objectDesc + ")Z",
+                        false);
+            }
+            if (commaLabel != null && elementIndex + 1 < elements.size()) {
+                mv.visitVarInsn(ISTORE, 3); // comma = out.writeFieldXXXValue()
+            } else {
+                mv.visitInsn(POP);
+            }
         }
     }
 

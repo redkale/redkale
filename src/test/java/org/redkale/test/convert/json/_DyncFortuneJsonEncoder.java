@@ -31,7 +31,11 @@ public class _DyncFortuneJsonEncoder extends JsonDynEncoder<Fortune> {
             return;
         }
         out.writeTo('{');
-        out.writeFieldIntValue(idFieldBytes, idFieldChars, false, value.getId());
+        if (out.charsMode()) {
+            out.writeFieldIntValue(idFieldChars, false, value.getId());
+        } else {
+            out.writeFieldIntValue(idFieldBytes, false, value.getId());
+        }
         out.writeTo('}');
     }
 }

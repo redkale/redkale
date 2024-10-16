@@ -31,7 +31,11 @@ public class _DyncMessageJsonEncoder extends JsonDynEncoder<Message> {
             return;
         }
         out.writeTo('{');
-        out.writeFieldStandardStringValue(messageFieldBytes, messageFieldChars, false, value.getMessage());
+        if (out.charsMode()) {
+            out.writeFieldStandardStringValue(messageFieldChars, false, value.getMessage());
+        } else {
+            out.writeFieldStandardStringValue(messageFieldBytes, false, value.getMessage());
+        }
         out.writeTo('}');
     }
 }

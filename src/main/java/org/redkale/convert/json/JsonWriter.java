@@ -76,125 +76,114 @@ public abstract class JsonWriter extends Writer {
     @ClassDepends
     public abstract void writeLatin1To(final boolean quote, final String value);
 
-    @ClassDepends
-    public void writeField(final byte[] fieldBytes, final char[] fieldChars) {
-        if (charsMode()) {
-            writeTo(fieldChars, 0, fieldChars.length);
-        } else {
-            writeTo(fieldBytes, 0, fieldBytes.length);
-        }
-    }
-
     // ---------------------------- writeFieldXXXValue 调用前不需要判断值是否为null ----------------------------
     @ClassDepends
-    public abstract boolean writeFieldBooleanValue(byte[] fieldBytes, char[] fieldChars, boolean comma, boolean value);
+    public abstract boolean writeFieldBooleanValue(Object fieldArray, boolean comma, boolean value);
 
     @ClassDepends
-    public abstract boolean writeFieldByteValue(byte[] fieldBytes, char[] fieldChars, boolean comma, byte value);
+    public abstract boolean writeFieldByteValue(Object fieldArray, boolean comma, byte value);
 
     @ClassDepends
-    public abstract boolean writeFieldShortValue(byte[] fieldBytes, char[] fieldChars, boolean comma, short value);
+    public abstract boolean writeFieldShortValue(Object fieldArray, boolean comma, short value);
 
     @ClassDepends
-    public final boolean writeFieldCharValue(byte[] fieldBytes, char[] fieldChars, boolean comma, char value) {
-        return writeFieldIntValue(fieldBytes, fieldChars, comma, value);
+    public final boolean writeFieldCharValue(Object fieldArray, boolean comma, char value) {
+        return writeFieldIntValue(fieldArray, comma, value);
     }
 
     @ClassDepends
-    public abstract boolean writeFieldIntValue(byte[] fieldBytes, char[] fieldChars, boolean comma, int value);
+    public abstract boolean writeFieldIntValue(Object fieldArray, boolean comma, int value);
 
     @ClassDepends
-    public final boolean writeFieldFloatValue(byte[] fieldBytes, char[] fieldChars, boolean comma, float value) {
-        return writeFieldLatin1Value(fieldBytes, fieldChars, comma, false, String.valueOf(value));
+    public final boolean writeFieldFloatValue(Object fieldArray, boolean comma, float value) {
+        return writeFieldLatin1Value(fieldArray, comma, false, String.valueOf(value));
     }
 
     @ClassDepends
-    public abstract boolean writeFieldLongValue(byte[] fieldBytes, char[] fieldChars, boolean comma, long value);
+    public abstract boolean writeFieldLongValue(Object fieldArray, boolean comma, long value);
 
     @ClassDepends
-    public final boolean writeFieldDoubleValue(byte[] fieldBytes, char[] fieldChars, boolean comma, double value) {
-        return writeFieldLatin1Value(fieldBytes, fieldChars, comma, false, String.valueOf(value));
+    public final boolean writeFieldDoubleValue(Object fieldArray, boolean comma, double value) {
+        return writeFieldLatin1Value(fieldArray, comma, false, String.valueOf(value));
     }
 
     @ClassDepends
-    public final boolean writeFieldBooleanValue(byte[] fieldBytes, char[] fieldChars, boolean comma, Boolean value) {
+    public final boolean writeFieldBooleanValue(Object fieldArray, boolean comma, Boolean value) {
         if (value == null) {
             return comma;
         }
-        return writeFieldBooleanValue(fieldBytes, fieldChars, comma, value.booleanValue());
+        return writeFieldBooleanValue(fieldArray, comma, value.booleanValue());
     }
 
     @ClassDepends
-    public final boolean writeFieldByteValue(byte[] fieldBytes, char[] fieldChars, boolean comma, Byte value) {
+    public final boolean writeFieldByteValue(Object fieldArray, boolean comma, Byte value) {
         if (value == null) {
             return comma;
         }
-        return writeFieldByteValue(fieldBytes, fieldChars, comma, value.byteValue());
+        return writeFieldByteValue(fieldArray, comma, value.byteValue());
     }
 
     @ClassDepends
-    public final boolean writeFieldShortValue(byte[] fieldBytes, char[] fieldChars, boolean comma, Short value) {
+    public final boolean writeFieldShortValue(Object fieldArray, boolean comma, Short value) {
         if (value == null) {
             return comma;
         }
-        return writeFieldShortValue(fieldBytes, fieldChars, comma, value.shortValue());
+        return writeFieldShortValue(fieldArray, comma, value.shortValue());
     }
 
     @ClassDepends
-    public final boolean writeFieldCharValue(byte[] fieldBytes, char[] fieldChars, boolean comma, Character value) {
+    public final boolean writeFieldCharValue(Object fieldArray, boolean comma, Character value) {
         if (value == null) {
             return comma;
         }
-        return writeFieldIntValue(fieldBytes, fieldChars, comma, value.charValue());
+        return writeFieldIntValue(fieldArray, comma, value.charValue());
     }
 
     @ClassDepends
-    public final boolean writeFieldIntValue(byte[] fieldBytes, char[] fieldChars, boolean comma, Integer value) {
+    public final boolean writeFieldIntValue(Object fieldArray, boolean comma, Integer value) {
         if (value == null) {
             return comma;
         }
-        return writeFieldIntValue(fieldBytes, fieldChars, comma, value.intValue());
+        return writeFieldIntValue(fieldArray, comma, value.intValue());
     }
 
     @ClassDepends
-    public final boolean writeFieldFloatValue(byte[] fieldBytes, char[] fieldChars, boolean comma, Float value) {
+    public final boolean writeFieldFloatValue(Object fieldArray, boolean comma, Float value) {
         if (value == null) {
             return comma;
         }
-        return writeFieldLatin1Value(fieldBytes, fieldChars, comma, false, String.valueOf(value));
+        return writeFieldLatin1Value(fieldArray, comma, false, String.valueOf(value));
     }
 
     @ClassDepends
-    public final boolean writeFieldLongValue(byte[] fieldBytes, char[] fieldChars, boolean comma, Long value) {
+    public final boolean writeFieldLongValue(Object fieldArray, boolean comma, Long value) {
         if (value == null) {
             return comma;
         }
-        return writeFieldLongValue(fieldBytes, fieldChars, comma, value.longValue());
+        return writeFieldLongValue(fieldArray, comma, value.longValue());
     }
 
     @ClassDepends
-    public final boolean writeFieldDoubleValue(byte[] fieldBytes, char[] fieldChars, boolean comma, Double value) {
+    public final boolean writeFieldDoubleValue(Object fieldArray, boolean comma, Double value) {
         if (value == null) {
             return comma;
         }
-        return writeFieldLatin1Value(fieldBytes, fieldChars, comma, false, String.valueOf(value));
+        return writeFieldLatin1Value(fieldArray, comma, false, String.valueOf(value));
     }
 
     @ClassDepends
-    public final boolean writeFieldStandardStringValue(
-            byte[] fieldBytes, char[] fieldChars, boolean comma, String value) {
-        return writeFieldLatin1Value(fieldBytes, fieldChars, comma, true, value);
+    public final boolean writeFieldStandardStringValue(Object fieldArray, boolean comma, String value) {
+        return writeFieldLatin1Value(fieldArray, comma, true, value);
     }
 
     @ClassDepends
-    public abstract boolean writeFieldStringValue(byte[] fieldBytes, char[] fieldChars, boolean comma, String value);
+    public abstract boolean writeFieldStringValue(Object fieldArray, boolean comma, String value);
 
     @ClassDepends
     public abstract boolean writeFieldObjectValue(
-            byte[] fieldBytes, char[] fieldChars, boolean comma, Encodeable encodeable, Object value);
+            Object fieldArray, boolean comma, Encodeable encodeable, Object value);
 
-    protected abstract boolean writeFieldLatin1Value(
-            byte[] fieldBytes, char[] fieldChars, boolean comma, boolean quote, String value);
+    protected abstract boolean writeFieldLatin1Value(Object fieldArray, boolean comma, boolean quote, String value);
 
     // ---------------------------- writeFieldXXXValue 主要供JsonDynEncoder使用 ----------------------------
 

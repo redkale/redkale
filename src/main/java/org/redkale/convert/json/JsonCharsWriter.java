@@ -141,8 +141,8 @@ public class JsonCharsWriter extends JsonWriter {
     }
 
     @Override
-    public boolean writeFieldBooleanValue(byte[] fieldBytes, char[] fieldChars, boolean comma, boolean value) {
-        char[] bs1 = fieldChars;
+    public boolean writeFieldBooleanValue(Object fieldArray, boolean comma, boolean value) {
+        char[] bs1 = (char[]) fieldArray;
         char[] bs2 = value ? CHARS_TUREVALUE : CHARS_FALSEVALUE;
         int len1 = bs1.length;
         int len2 = bs2.length;
@@ -156,8 +156,8 @@ public class JsonCharsWriter extends JsonWriter {
     }
 
     @Override
-    public boolean writeFieldShortValue(byte[] fieldBytes, char[] fieldChars, boolean comma, short value) {
-        char[] bs1 = fieldChars;
+    public boolean writeFieldShortValue(Object fieldArray, boolean comma, short value) {
+        char[] bs1 = (char[]) fieldArray;
         char[] bs2 = value >= 0 ? TENTHOUSAND_CHARS[value] : TENTHOUSAND_CHARS2[-value];
         int len1 = bs1.length;
         int len2 = bs2.length;
@@ -171,8 +171,8 @@ public class JsonCharsWriter extends JsonWriter {
     }
 
     @Override
-    public boolean writeFieldByteValue(byte[] fieldBytes, char[] fieldChars, boolean comma, byte value) {
-        char[] bs1 = fieldChars;
+    public boolean writeFieldByteValue(Object fieldArray, boolean comma, byte value) {
+        char[] bs1 = (char[]) fieldArray;
         char[] bs2 = value >= 0 ? TENTHOUSAND_CHARS[value] : TENTHOUSAND_CHARS2[-value];
         int len1 = bs1.length;
         int len2 = bs2.length;
@@ -186,8 +186,8 @@ public class JsonCharsWriter extends JsonWriter {
     }
 
     @Override
-    public boolean writeFieldIntValue(byte[] fieldBytes, char[] fieldChars, boolean comma, int value) {
-        char[] bs1 = fieldChars;
+    public boolean writeFieldIntValue(Object fieldArray, boolean comma, int value) {
+        char[] bs1 = (char[]) fieldArray;
         int len1 = bs1.length;
         char[] src = expand(bs1.length + 12);
         if (comma) src[count++] = BYTE_COMMA;
@@ -198,8 +198,8 @@ public class JsonCharsWriter extends JsonWriter {
     }
 
     @Override
-    public boolean writeFieldLongValue(byte[] fieldBytes, char[] fieldChars, boolean comma, long value) {
-        char[] bs1 = fieldChars;
+    public boolean writeFieldLongValue(Object fieldArray, boolean comma, long value) {
+        char[] bs1 = (char[]) fieldArray;
         int len1 = bs1.length;
         char[] src = expand(len1 + 21);
         if (comma) src[count++] = BYTE_COMMA;
@@ -210,12 +210,11 @@ public class JsonCharsWriter extends JsonWriter {
     }
 
     @Override
-    public boolean writeFieldObjectValue(
-            byte[] fieldBytes, char[] fieldChars, boolean comma, Encodeable encodeable, Object value) {
+    public boolean writeFieldObjectValue(Object fieldArray, boolean comma, Encodeable encodeable, Object value) {
         if (value == null && !nullable()) {
             return comma;
         }
-        char[] bs1 = fieldChars;
+        char[] bs1 = (char[]) fieldArray;
         int len1 = bs1.length;
         char[] src = expand(1 + len1);
         if (comma) src[count++] = BYTE_COMMA;
@@ -226,11 +225,11 @@ public class JsonCharsWriter extends JsonWriter {
     }
 
     @Override
-    public boolean writeFieldStringValue(byte[] fieldBytes, char[] fieldChars, boolean comma, String value) {
+    public boolean writeFieldStringValue(Object fieldArray, boolean comma, String value) {
         if (value == null || (tiny() && value.isEmpty())) {
             return comma;
         }
-        char[] bs1 = fieldChars;
+        char[] bs1 = (char[]) fieldArray;
         int len1 = bs1.length;
         char[] src = expand(1 + len1);
         if (comma) src[count++] = BYTE_COMMA;
@@ -241,12 +240,11 @@ public class JsonCharsWriter extends JsonWriter {
     }
 
     @Override
-    protected boolean writeFieldLatin1Value(
-            byte[] fieldBytes, char[] fieldChars, boolean comma, boolean quote, String value) {
+    protected boolean writeFieldLatin1Value(Object fieldArray, boolean comma, boolean quote, String value) {
         if (value == null || (tiny() && value.isEmpty())) {
             return comma;
         }
-        char[] bs1 = fieldChars;
+        char[] bs1 = (char[]) fieldArray;
         int len1 = bs1.length;
         int len2 = value.length();
 
