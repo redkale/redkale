@@ -13,8 +13,9 @@ import org.redkale.convert.json.*;
 public class _DyncWorldJsonEncoder extends JsonDynEncoder<World> {
 
     protected final byte[] idFieldBytes = "\"id\":".getBytes();
-
+    protected final char[] idFieldChars = "\"id\":".toCharArray();
     protected final byte[] randomNumberFieldBytes = ",\"randomNumber\":".getBytes();
+    protected final char[] randomNumberFieldChars = ",\"randomNumber\":".toCharArray();
 
     public _DyncWorldJsonEncoder(JsonFactory factory, Type type, ObjectEncoder objectEncoderSelf) {
         super(factory, type, objectEncoderSelf);
@@ -33,13 +34,8 @@ public class _DyncWorldJsonEncoder extends JsonDynEncoder<World> {
 
         out.writeTo('{');
         boolean comma = false;
-
-        out.writeTo(idFieldBytes);
-        out.writeInt(value.getId());
-
-        out.writeTo(randomNumberFieldBytes);
-        out.writeInt(value.getRandomNumber());
-
+        comma = out.writeFieldIntValue(idFieldBytes, idFieldChars, comma, value.getId());
+        comma = out.writeFieldIntValue(randomNumberFieldBytes, randomNumberFieldChars, comma, value.getRandomNumber());
         out.writeTo('}');
     }
 }

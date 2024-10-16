@@ -2,7 +2,7 @@
  * Copyright (c) 2016-2116 Redkale
  * All rights reserved.
  */
-package org.redkale.test.convert.pb;
+package org.redkale.test.convert;
 
 import java.util.Date;
 import org.redkale.convert.ConvertColumn;

@@ -23,7 +23,7 @@ public class SelectColumnTest {
 
     @Test
     public void run1() throws Exception {
-        SelectColumn sel = SelectColumn.includes(User::getUserId, User::getUserName);
+        SelectColumn sel = SelectColumn.includes(UserEntry::getUserId, UserEntry::getUserName);
         SelectColumn sel2 = SelectColumn.includes("userId", "userName");
         Assertions.assertTrue(sel.equals(sel2));
         sel.setPatterns(new Pattern[] {Pattern.compile("aaa")});
@@ -34,7 +34,7 @@ public class SelectColumnTest {
         Assertions.assertEquals("aaa", pattern.pattern());
     }
 
-    public static class User {
+    public static class UserEntry {
 
         private long userId;
 

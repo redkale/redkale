@@ -14,7 +14,7 @@ public class _DyncFortuneJsonEncoder extends JsonDynEncoder<Fortune> {
 
     protected final byte[] idFieldBytes = "\"id\":".getBytes();
 
-    protected final byte[] messageCommaFieldBytes = ",\"message\":".getBytes();
+    protected final char[] idFieldChars = "\"id\":".toCharArray();
 
     public _DyncFortuneJsonEncoder(JsonFactory factory, Type type, ObjectEncoder objectEncoderSelf) {
         super(factory, type, objectEncoderSelf);
@@ -30,18 +30,8 @@ public class _DyncFortuneJsonEncoder extends JsonDynEncoder<Fortune> {
             objectEncoderSelf.convertTo(out, value);
             return;
         }
-
         out.writeTo('{');
-
-        out.writeTo(idFieldBytes);
-        out.writeInt(value.getId());
-
-        String message = value.getMessage();
-        if (message != null) {
-            out.writeTo(messageCommaFieldBytes);
-            out.writeString(message);
-        }
-
+        out.writeFieldIntValue(idFieldBytes, idFieldChars, false, value.getId());
         out.writeTo('}');
     }
 }

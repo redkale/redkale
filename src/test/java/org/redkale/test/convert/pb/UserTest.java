@@ -4,6 +4,7 @@
  */
 package org.redkale.test.convert.pb;
 
+import org.redkale.test.convert.User;
 import java.io.Serializable;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

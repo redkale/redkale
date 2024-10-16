@@ -14,7 +14,7 @@ public class _DyncMessageJsonEncoder extends JsonDynEncoder<Message> {
 
     protected final byte[] messageFieldBytes = "\"message\":".getBytes();
 
-    protected final byte[] messageCommaFieldBytes = ",\"message\":".getBytes();
+    protected final char[] messageFieldChars = ",\"message\":".toCharArray();
 
     public _DyncMessageJsonEncoder(JsonFactory factory, Type type, ObjectEncoder objectEncoderSelf) {
         super(factory, type, objectEncoderSelf);
@@ -30,19 +30,8 @@ public class _DyncMessageJsonEncoder extends JsonDynEncoder<Message> {
             objectEncoderSelf.convertTo(out, value);
             return;
         }
-
         out.writeTo('{');
-        boolean comma = false;
-        String message = value.getMessage();
-        if (message != null) {
-            if (comma) {
-                out.writeTo(messageCommaFieldBytes);
-            } else {
-                out.writeTo(messageFieldBytes);
-                comma = true;
-            }
-            out.writeLatin1To(true, message); // out.writeString(message);
-        }
+        out.writeFieldStandardStringValue(messageFieldBytes, messageFieldChars, false, value.getMessage());
         out.writeTo('}');
     }
 }
