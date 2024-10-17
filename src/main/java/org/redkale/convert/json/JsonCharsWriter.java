@@ -27,8 +27,7 @@ public class JsonCharsWriter extends JsonWriter {
 
     private static final char[] CHARS_FALSEVALUE = "false".toCharArray();
 
-    // 所有byte、short值的序列化进行缓存
-    private static final int TENTHOUSAND_MAX = Short.MAX_VALUE + 2;
+    private static final int TENTHOUSAND_MAX = 10001;
 
     private static final char[][] TENTHOUSAND_CHARS = new char[TENTHOUSAND_MAX][];
     private static final char[][] TENTHOUSAND_CHARS2 = new char[TENTHOUSAND_MAX][];
@@ -157,17 +156,7 @@ public class JsonCharsWriter extends JsonWriter {
 
     @Override
     public boolean writeFieldShortValue(Object fieldArray, boolean comma, short value) {
-        char[] bs1 = (char[]) fieldArray;
-        char[] bs2 = value >= 0 ? TENTHOUSAND_CHARS[value] : TENTHOUSAND_CHARS2[-value];
-        int len1 = bs1.length;
-        int len2 = bs2.length;
-        char[] src = expand(1 + len1 + len2);
-        if (comma) src[count++] = BYTE_COMMA;
-        System.arraycopy(bs1, 0, src, count, len1);
-        count += len1;
-        System.arraycopy(bs2, 0, src, count, len2);
-        count += len2;
-        return true;
+        return writeFieldIntValue(fieldArray, comma, value);
     }
 
     @Override

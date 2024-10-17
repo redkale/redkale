@@ -28,8 +28,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
 
     private static final byte[] BYTES_NULL = new byte[] {'n', 'u', 'l', 'l'};
 
-    // 所有byte、short值的序列化进行缓存
-    private static final int TENTHOUSAND_MAX = Short.MAX_VALUE + 2;
+    private static final int TENTHOUSAND_MAX = 10001;
 
     private static final byte[][] TENTHOUSAND_BYTES = new byte[TENTHOUSAND_MAX][];
     private static final byte[][] TENTHOUSAND_BYTES2 = new byte[TENTHOUSAND_MAX][];
@@ -217,17 +216,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
 
     @Override
     public boolean writeFieldShortValue(Object fieldArray, boolean comma, short value) {
-        byte[] bs1 = (byte[]) fieldArray;
-        byte[] bs2 = value >= 0 ? TENTHOUSAND_BYTES[value] : TENTHOUSAND_BYTES2[-value];
-        int len1 = bs1.length;
-        int len2 = bs2.length;
-        byte[] src = expand(1 + len1 + len2);
-        if (comma) src[count++] = BYTE_COMMA;
-        System.arraycopy(bs1, 0, src, count, len1);
-        count += len1;
-        System.arraycopy(bs2, 0, src, count, len2);
-        count += len2;
-        return true;
+        return writeFieldIntValue(fieldArray, comma, value);
     }
 
     @Override
