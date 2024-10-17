@@ -254,7 +254,7 @@ public abstract class JsonWriter extends Writer {
             writeTo(BYTE_COMMA);
         }
         if (member != null) {
-            writeTo(member.getJsonFieldNameBytes());
+            writeTo(member.getJsonFieldNameColonBytes());
         } else {
             writeLatin1To(true, fieldName);
             writeTo(BYTE_COLON);

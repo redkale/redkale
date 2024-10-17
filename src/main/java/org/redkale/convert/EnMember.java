@@ -35,9 +35,9 @@ public final class EnMember<W extends Writer, T, F> {
     // final boolean isnumber;
     final boolean bool;
 
-    final char[] jsonFieldNameChars;
+    final char[] jsonFieldNameColonChars;
 
-    final byte[] jsonFieldNameBytes;
+    final byte[] jsonFieldNameColonBytes;
 
     // 对应类成员的Field也可能为null
     @Nullable
@@ -68,8 +68,8 @@ public final class EnMember<W extends Writer, T, F> {
         Class t = attribute.type();
         this.string = CharSequence.class.isAssignableFrom(t);
         this.bool = t == Boolean.class || t == boolean.class;
-        this.jsonFieldNameChars = ('"' + attribute.field() + "\":").toCharArray();
-        this.jsonFieldNameBytes = ('"' + attribute.field() + "\":").getBytes();
+        this.jsonFieldNameColonChars = ('"' + attribute.field() + "\":").toCharArray();
+        this.jsonFieldNameColonBytes = ('"' + attribute.field() + "\":").getBytes();
         this.comment = "";
         this.field = null;
         this.method = null;
@@ -86,8 +86,8 @@ public final class EnMember<W extends Writer, T, F> {
         Class t = attribute.type();
         this.string = CharSequence.class.isAssignableFrom(t);
         this.bool = t == Boolean.class || t == boolean.class;
-        this.jsonFieldNameChars = ('"' + attribute.field() + "\":").toCharArray();
-        this.jsonFieldNameBytes = ('"' + attribute.field() + "\":").getBytes();
+        this.jsonFieldNameColonChars = ('"' + attribute.field() + "\":").toCharArray();
+        this.jsonFieldNameColonBytes = ('"' + attribute.field() + "\":").getBytes();
         if (field != null) {
             Comment ct = field.getAnnotation(Comment.class);
             this.comment = ct == null ? "" : ct.value();
@@ -156,12 +156,12 @@ public final class EnMember<W extends Writer, T, F> {
         return comment;
     }
 
-    public char[] getJsonFieldNameChars() {
-        return jsonFieldNameChars;
+    public char[] getJsonFieldNameColonChars() {
+        return jsonFieldNameColonChars;
     }
 
-    public byte[] getJsonFieldNameBytes() {
-        return jsonFieldNameBytes;
+    public byte[] getJsonFieldNameColonBytes() {
+        return jsonFieldNameColonBytes;
     }
 
     public Encodeable<W, F> getEncoder() {

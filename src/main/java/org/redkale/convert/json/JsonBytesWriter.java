@@ -119,7 +119,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
             writeTo(BYTE_COMMA);
         }
         if (member != null) {
-            byte[] bs = member.getJsonFieldNameBytes();
+            byte[] bs = member.getJsonFieldNameColonBytes();
             expand(bs.length);
             System.arraycopy(bs, 0, content, count, bs.length);
             count += bs.length;

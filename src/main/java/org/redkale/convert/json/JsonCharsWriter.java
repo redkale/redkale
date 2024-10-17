@@ -121,7 +121,7 @@ public class JsonCharsWriter extends JsonWriter {
             writeTo(',');
         }
         if (member != null) {
-            writeTo(member.getJsonFieldNameChars());
+            writeTo(member.getJsonFieldNameColonChars());
         } else {
             writeLatin1To(true, fieldName);
             writeTo(':');
