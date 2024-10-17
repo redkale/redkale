@@ -7,7 +7,6 @@ package org.redkale.convert.json;
 import java.lang.reflect.Type;
 import org.redkale.convert.EnMember;
 import org.redkale.convert.Encodeable;
-import static org.redkale.convert.json.JsonWriter.BYTE_COLON;
 import static org.redkale.convert.json.JsonWriter.BYTE_COMMA;
 import static org.redkale.convert.json.JsonWriter.BYTE_DQUOTE;
 import static org.redkale.convert.json.JsonWriter.DEFAULT_SIZE;
@@ -119,13 +118,13 @@ public class JsonCharsWriter extends JsonWriter {
     @Override // 只容许JsonBytesWriter重写此方法
     public final void writeField(EnMember member, String fieldName, Type fieldType, int fieldPos) {
         if (this.comma) {
-            writeTo(BYTE_COMMA);
+            writeTo(',');
         }
         if (member != null) {
             writeTo(member.getJsonFieldNameChars());
         } else {
             writeLatin1To(true, fieldName);
-            writeTo(BYTE_COLON);
+            writeTo(':');
         }
     }
 
