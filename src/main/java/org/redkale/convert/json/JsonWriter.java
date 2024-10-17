@@ -22,8 +22,6 @@ public abstract class JsonWriter extends Writer {
             "redkale.convert.json.writer.buffer.defsize",
             Integer.getInteger("redkale.convert.writer.buffer.defsize", 1024));
 
-    private static final char[] CHARS_NULL = new char[] {'n', 'u', 'l', 'l'};
-
     protected static final byte BYTE_NEGATIVE = '-';
 
     protected static final byte BYTE_COMMA = ',';
@@ -61,12 +59,11 @@ public abstract class JsonWriter extends Writer {
     // -----------------------------------------------------------------------
     public abstract void writeTo(final char ch); // 只能是 0 - 127 的字符
 
-    public abstract void writeTo(final char[] chs, final int start, final int len); // 只能是 0 - 127 的字符
+    public abstract void writeTo(final char[] cs, final int start, final int len); // 只能是 0 - 127 的字符
 
     public abstract void writeTo(final byte ch); // 只能是 0 - 127 的字符
 
-    public abstract void writeTo(final byte[] chs, final int start, final int len); // 只能是 0 - 127 的字符
-
+    public abstract void writeTo(final byte[] bs, final int start, final int len); // 只能是 0 - 127 的字符
     /**
      * <b>注意：</b> 该String值不能为null且不会进行转义， 只用于不含需要转义字符的字符串，例如enum、double、BigInteger、BigDecimal转换的String
      *
@@ -75,6 +72,10 @@ public abstract class JsonWriter extends Writer {
      */
     @ClassDepends
     public abstract void writeLatin1To(final boolean quote, final String value);
+
+    @Override
+    @ClassDepends
+    public abstract void writeNull();
 
     // ---------------------------- writeFieldXXXValue 调用前不需要判断值是否为null ----------------------------
     @ClassDepends
@@ -110,7 +111,12 @@ public abstract class JsonWriter extends Writer {
     @ClassDepends
     public final boolean writeFieldBooleanValue(Object fieldArray, boolean comma, Boolean value) {
         if (value == null) {
-            return comma;
+            if (nullable()) {
+                writeFieldNull(fieldArray, comma);
+                return true;
+            } else {
+                return comma;
+            }
         }
         return writeFieldBooleanValue(fieldArray, comma, value.booleanValue());
     }
@@ -118,7 +124,12 @@ public abstract class JsonWriter extends Writer {
     @ClassDepends
     public final boolean writeFieldByteValue(Object fieldArray, boolean comma, Byte value) {
         if (value == null) {
-            return comma;
+            if (nullable()) {
+                writeFieldNull(fieldArray, comma);
+                return true;
+            } else {
+                return comma;
+            }
         }
         return writeFieldByteValue(fieldArray, comma, value.byteValue());
     }
@@ -126,7 +137,12 @@ public abstract class JsonWriter extends Writer {
     @ClassDepends
     public final boolean writeFieldShortValue(Object fieldArray, boolean comma, Short value) {
         if (value == null) {
-            return comma;
+            if (nullable()) {
+                writeFieldNull(fieldArray, comma);
+                return true;
+            } else {
+                return comma;
+            }
         }
         return writeFieldShortValue(fieldArray, comma, value.shortValue());
     }
@@ -134,7 +150,12 @@ public abstract class JsonWriter extends Writer {
     @ClassDepends
     public final boolean writeFieldCharValue(Object fieldArray, boolean comma, Character value) {
         if (value == null) {
-            return comma;
+            if (nullable()) {
+                writeFieldNull(fieldArray, comma);
+                return true;
+            } else {
+                return comma;
+            }
         }
         return writeFieldIntValue(fieldArray, comma, value.charValue());
     }
@@ -142,7 +163,12 @@ public abstract class JsonWriter extends Writer {
     @ClassDepends
     public final boolean writeFieldIntValue(Object fieldArray, boolean comma, Integer value) {
         if (value == null) {
-            return comma;
+            if (nullable()) {
+                writeFieldNull(fieldArray, comma);
+                return true;
+            } else {
+                return comma;
+            }
         }
         return writeFieldIntValue(fieldArray, comma, value.intValue());
     }
@@ -150,7 +176,12 @@ public abstract class JsonWriter extends Writer {
     @ClassDepends
     public final boolean writeFieldFloatValue(Object fieldArray, boolean comma, Float value) {
         if (value == null) {
-            return comma;
+            if (nullable()) {
+                writeFieldNull(fieldArray, comma);
+                return true;
+            } else {
+                return comma;
+            }
         }
         return writeFieldLatin1Value(fieldArray, comma, false, String.valueOf(value));
     }
@@ -158,7 +189,12 @@ public abstract class JsonWriter extends Writer {
     @ClassDepends
     public final boolean writeFieldLongValue(Object fieldArray, boolean comma, Long value) {
         if (value == null) {
-            return comma;
+            if (nullable()) {
+                writeFieldNull(fieldArray, comma);
+                return true;
+            } else {
+                return comma;
+            }
         }
         return writeFieldLongValue(fieldArray, comma, value.longValue());
     }
@@ -166,7 +202,12 @@ public abstract class JsonWriter extends Writer {
     @ClassDepends
     public final boolean writeFieldDoubleValue(Object fieldArray, boolean comma, Double value) {
         if (value == null) {
-            return comma;
+            if (nullable()) {
+                writeFieldNull(fieldArray, comma);
+                return true;
+            } else {
+                return comma;
+            }
         }
         return writeFieldLatin1Value(fieldArray, comma, false, String.valueOf(value));
     }
@@ -182,6 +223,8 @@ public abstract class JsonWriter extends Writer {
     @ClassDepends
     public abstract boolean writeFieldObjectValue(
             Object fieldArray, boolean comma, Encodeable encodeable, Object value);
+
+    protected abstract void writeFieldNull(Object fieldArray, boolean comma);
 
     protected abstract boolean writeFieldLatin1Value(Object fieldArray, boolean comma, boolean quote, String value);
 
@@ -228,12 +271,12 @@ public abstract class JsonWriter extends Writer {
     }
 
     // ----------------------------------------------------------------------------------------------
-    public final void writeTo(final char... chs) { // 只能是 0 - 127 的字符
-        writeTo(chs, 0, chs.length);
+    public final void writeTo(final char... cs) { // 只能是 0 - 127 的字符
+        writeTo(cs, 0, cs.length);
     }
 
-    public final void writeTo(final byte[] chs) { // 只能是 0 - 127 的字符
-        writeTo(chs, 0, chs.length);
+    public final void writeTo(final byte[] bs) { // 只能是 0 - 127 的字符
+        writeTo(bs, 0, bs.length);
     }
 
     @Override
@@ -288,11 +331,6 @@ public abstract class JsonWriter extends Writer {
     @Override
     public final void writeObjectE(Object obj) {
         writeTo(BYTE_RBRACE);
-    }
-
-    @Override
-    public void writeNull() {
-        writeTo(CHARS_NULL);
     }
 
     @Override

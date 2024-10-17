@@ -109,7 +109,7 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     }
 
     @Override
-    public void writeNull() {
+    public final void writeNull() {
         writeTo(BYTES_NULL);
     }
 
@@ -186,6 +186,9 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
 
     @Override
     public boolean writeFieldBooleanValue(Object fieldArray, boolean comma, boolean value) {
+        if (!value && tiny()) {
+            return comma;
+        }
         byte[] bs1 = (byte[]) fieldArray;
         byte[] bs2 = value ? BYTES_TUREVALUE : BYTES_FALSEVALUE;
         int len1 = bs1.length;
@@ -245,8 +248,13 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
 
     @Override
     public boolean writeFieldObjectValue(Object fieldArray, boolean comma, Encodeable encodeable, Object value) {
-        if (value == null && !nullable()) {
-            return comma;
+        if (value == null) {
+            if (nullable()) {
+                writeFieldNull(fieldArray, comma);
+                return true;
+            } else {
+                return comma;
+            }
         }
         byte[] bs1 = (byte[]) fieldArray;
         int len1 = bs1.length;
@@ -260,7 +268,15 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
 
     @Override
     public boolean writeFieldStringValue(Object fieldArray, boolean comma, String value) {
-        if (value == null || (tiny() && value.isEmpty())) {
+        if (value == null) {
+            if (nullable()) {
+                writeFieldNull(fieldArray, comma);
+                return true;
+            } else {
+                return comma;
+            }
+        }
+        if (tiny() && value.isEmpty()) {
             return comma;
         }
         byte[] bs1 = (byte[]) fieldArray;
@@ -274,8 +290,30 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     }
 
     @Override
+    protected void writeFieldNull(Object fieldArray, boolean comma) {
+        byte[] bs1 = (byte[]) fieldArray;
+        byte[] bs2 = BYTES_NULL;
+        int len1 = bs1.length;
+        int len2 = bs2.length;
+        byte[] src = expand(1 + len1 + len2);
+        if (comma) src[count++] = BYTE_COMMA;
+        System.arraycopy(bs1, 0, src, count, len1);
+        count += len1;
+        System.arraycopy(bs2, 0, src, count, len2);
+        count += len2;
+    }
+
+    @Override
     protected boolean writeFieldLatin1Value(Object fieldArray, boolean comma, boolean quote, String value) {
-        if (value == null || (tiny() && value.isEmpty())) {
+        if (value == null) {
+            if (nullable()) {
+                writeFieldNull(fieldArray, comma);
+                return true;
+            } else {
+                return comma;
+            }
+        }
+        if (tiny() && value.isEmpty()) {
             return comma;
         }
         byte[] bs1 = (byte[]) fieldArray;

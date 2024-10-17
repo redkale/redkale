@@ -22,9 +22,11 @@ import org.redkale.util.*;
  */
 public class JsonByteBufferWriter extends JsonWriter {
 
-    private static final char[] CHARS_TUREVALUE = "true".toCharArray();
+    private static final byte[] BYTES_TUREVALUE = "true".getBytes();
 
-    private static final char[] CHARS_FALSEVALUE = "false".toCharArray();
+    private static final byte[] BYTES_FALSEVALUE = "false".getBytes();
+
+    private static final byte[] BYTES_NULL = new byte[] {'n', 'u', 'l', 'l'};
 
     protected Charset charset;
 
@@ -313,6 +315,11 @@ public class JsonByteBufferWriter extends JsonWriter {
         return size;
     }
 
+    @Override
+    public final void writeNull() {
+        writeTo(BYTES_NULL);
+    }
+
     /**
      * <b>注意：</b> 该String值不能为null且不会进行转义， 只用于不含需要转义字符的字符串，例如enum、double、BigInteger、BigDecimal转换的String
      *
@@ -361,6 +368,9 @@ public class JsonByteBufferWriter extends JsonWriter {
 
     @Override
     public boolean writeFieldBooleanValue(Object fieldArray, boolean comma, boolean value) {
+        if (!value && tiny()) {
+            return comma;
+        }
         return writeFieldLatin1Value(fieldArray, comma, false, String.valueOf(value));
     }
 
@@ -386,8 +396,13 @@ public class JsonByteBufferWriter extends JsonWriter {
 
     @Override
     public boolean writeFieldObjectValue(Object fieldArray, boolean comma, Encodeable encodeable, Object value) {
-        if (value == null && !nullable()) {
-            return comma;
+        if (value == null) {
+            if (nullable()) {
+                writeFieldNull(fieldArray, comma);
+                return true;
+            } else {
+                return comma;
+            }
         }
         byte[] bs1 = (byte[]) fieldArray;
         int expandsize = expand(1 + bs1.length);
@@ -411,7 +426,15 @@ public class JsonByteBufferWriter extends JsonWriter {
 
     @Override
     public boolean writeFieldStringValue(Object fieldArray, boolean comma, String value) {
-        if (value == null || (tiny() && value.isEmpty())) {
+        if (value == null) {
+            if (nullable()) {
+                writeFieldNull(fieldArray, comma);
+                return true;
+            } else {
+                return comma;
+            }
+        }
+        if (tiny() && value.isEmpty()) {
             return comma;
         }
         byte[] bs1 = (byte[]) fieldArray;
@@ -435,8 +458,44 @@ public class JsonByteBufferWriter extends JsonWriter {
     }
 
     @Override
+    protected void writeFieldNull(Object fieldArray, boolean comma) {
+        byte[] bs1 = (byte[]) fieldArray;
+        byte[] bs2 = BYTES_NULL;
+        int expandsize = expand(bs1.length + bs2.length + 3);
+        if (expandsize == 0) { // 只需要一个buffer
+            final ByteBuffer buffer = this.buffers[currBufIndex];
+            if (comma) buffer.put(BYTE_COMMA);
+            buffer.put(bs1);
+            buffer.put(bs2);
+        } else {
+            ByteBuffer buffer = this.buffers[currBufIndex];
+            if (comma) buffer.put(BYTE_COMMA);
+            for (byte b : bs1) {
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
+                buffer.put(b);
+            }
+            for (byte b : bs2) {
+                if (!buffer.hasRemaining()) {
+                    buffer = nextByteBuffer();
+                }
+                buffer.put(b);
+            }
+        }
+    }
+
+    @Override
     protected boolean writeFieldLatin1Value(Object fieldArray, boolean comma, boolean quote, String value) {
-        if (value == null || (tiny() && value.isEmpty())) {
+        if (value == null) {
+            if (nullable()) {
+                writeFieldNull(fieldArray, comma);
+                return true;
+            } else {
+                return comma;
+            }
+        }
+        if (tiny() && value.isEmpty()) {
             return comma;
         }
         byte[] bs1 = (byte[]) fieldArray;
@@ -482,7 +541,7 @@ public class JsonByteBufferWriter extends JsonWriter {
 
     @Override
     public void writeBoolean(boolean value) {
-        writeTo(value ? CHARS_TUREVALUE : CHARS_FALSEVALUE);
+        writeTo(value ? BYTES_TUREVALUE : BYTES_FALSEVALUE);
     }
 
     @Override

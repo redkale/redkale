@@ -27,6 +27,8 @@ public class JsonCharsWriter extends JsonWriter {
 
     private static final char[] CHARS_FALSEVALUE = "false".toCharArray();
 
+    private static final char[] CHARS_NULL = new char[] {'n', 'u', 'l', 'l'};
+
     private static final int TENTHOUSAND_MAX = 10001;
 
     private static final char[][] TENTHOUSAND_CHARS = new char[TENTHOUSAND_MAX][];
@@ -141,6 +143,9 @@ public class JsonCharsWriter extends JsonWriter {
 
     @Override
     public boolean writeFieldBooleanValue(Object fieldArray, boolean comma, boolean value) {
+        if (!value && tiny()) {
+            return comma;
+        }
         char[] bs1 = (char[]) fieldArray;
         char[] bs2 = value ? CHARS_TUREVALUE : CHARS_FALSEVALUE;
         int len1 = bs1.length;
@@ -200,8 +205,13 @@ public class JsonCharsWriter extends JsonWriter {
 
     @Override
     public boolean writeFieldObjectValue(Object fieldArray, boolean comma, Encodeable encodeable, Object value) {
-        if (value == null && !nullable()) {
-            return comma;
+        if (value == null) {
+            if (nullable()) {
+                writeFieldNull(fieldArray, comma);
+                return true;
+            } else {
+                return comma;
+            }
         }
         char[] bs1 = (char[]) fieldArray;
         int len1 = bs1.length;
@@ -215,7 +225,15 @@ public class JsonCharsWriter extends JsonWriter {
 
     @Override
     public boolean writeFieldStringValue(Object fieldArray, boolean comma, String value) {
-        if (value == null || (tiny() && value.isEmpty())) {
+        if (value == null) {
+            if (nullable()) {
+                writeFieldNull(fieldArray, comma);
+                return true;
+            } else {
+                return comma;
+            }
+        }
+        if (tiny() && value.isEmpty()) {
             return comma;
         }
         char[] bs1 = (char[]) fieldArray;
@@ -229,8 +247,30 @@ public class JsonCharsWriter extends JsonWriter {
     }
 
     @Override
+    protected void writeFieldNull(Object fieldArray, boolean comma) {
+        char[] bs1 = (char[]) fieldArray;
+        char[] bs2 = CHARS_NULL;
+        int len1 = bs1.length;
+        int len2 = bs2.length;
+        char[] src = expand(1 + len1 + len2);
+        if (comma) src[count++] = BYTE_COMMA;
+        System.arraycopy(bs1, 0, src, count, len1);
+        count += len1;
+        System.arraycopy(bs2, 0, src, count, len2);
+        count += len2;
+    }
+
+    @Override
     protected boolean writeFieldLatin1Value(Object fieldArray, boolean comma, boolean quote, String value) {
-        if (value == null || (tiny() && value.isEmpty())) {
+        if (value == null) {
+            if (nullable()) {
+                writeFieldNull(fieldArray, comma);
+                return true;
+            } else {
+                return comma;
+            }
+        }
+        if (tiny() && value.isEmpty()) {
             return comma;
         }
         char[] bs1 = (char[]) fieldArray;
@@ -263,6 +303,11 @@ public class JsonCharsWriter extends JsonWriter {
 
     public int count() {
         return this.count;
+    }
+
+    @Override
+    public final void writeNull() {
+        writeTo(CHARS_NULL);
     }
 
     @Override
