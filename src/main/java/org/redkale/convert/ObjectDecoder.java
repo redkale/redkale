@@ -294,8 +294,9 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                     if (member.index > 0) {
                         member.position = member.index;
                     } else {
-                        while (pos.contains(++pidx))
-                            ;
+                        while (pos.contains(++pidx)) {
+                            // do nothing
+                        }
                         member.position = pidx;
                     }
                     initForEachDeMember(factory, member);
@@ -375,7 +376,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
             final T result = this.creator == null ? null : this.creator.create();
             while (in.hasNext()) {
                 DeMember member = in.readField(info);
-                in.readBlank();
+                in.readColon();
                 if (member == null) {
                     in.skipValue(); // 跳过不存在的属性的值
                 } else {
@@ -392,7 +393,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
             int oc = 0;
             while (in.hasNext()) {
                 DeMember member = in.readField(info);
-                in.readBlank();
+                in.readColon();
                 if (member == null) {
                     in.skipValue(); // 跳过不存在的属性的值
                 } else {

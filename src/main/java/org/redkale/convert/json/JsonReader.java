@@ -109,7 +109,7 @@ public class JsonReader extends Reader {
         for (String key1 : keys) {
             while (this.hasNext()) {
                 String field = this.readStandardString();
-                readBlank();
+                readColon();
                 if (key1.equals(field)) {
                     break;
                 }
@@ -131,7 +131,7 @@ public class JsonReader extends Reader {
             case '{':
                 while (hasNext()) {
                     this.readStandardString(); // 读掉field
-                    this.readBlank();
+                    this.readColon();
                     this.skipValue();
                 }
                 break;
@@ -347,7 +347,7 @@ public class JsonReader extends Reader {
 
     /** 判断下一个非空白字符是否: */
     @Override
-    public void readBlank() {
+    public void readColon() {
         char ch = nextGoodChar(true);
         if (ch == ':') {
             return;

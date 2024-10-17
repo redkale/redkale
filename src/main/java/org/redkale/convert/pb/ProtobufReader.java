@@ -147,7 +147,7 @@ public class ProtobufReader extends Reader {
 
     /** 判断下一个非空白字节是否: */
     @Override
-    public final void readBlank() {
+    public final void readColon() {
         // do nothing
     }
 

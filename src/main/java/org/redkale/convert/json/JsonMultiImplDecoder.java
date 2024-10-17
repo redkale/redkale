@@ -143,7 +143,7 @@ public class JsonMultiImplDecoder<T> implements Decodeable<JsonReader, T> {
                     }
                 }
             }
-            in.readBlank();
+            in.readColon();
             if (member == null) {
                 in.skipValue(); // 跳过不存在的属性的值
             } else {

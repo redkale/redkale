@@ -126,14 +126,14 @@ public class MapDecoder<R extends Reader, K, V> implements Decodeable<R, Map<K, 
         if (len == Reader.SIGN_VARIABLE) {
             while (in.hasNext()) {
                 K key = kdecoder.convertFrom(in);
-                in.readBlank();
+                in.readColon();
                 V value = vdecoder.convertFrom(in);
                 result.put(key, value);
             }
         } else { // 固定长度
             for (int i = 0; i < len; i++) {
                 K key = kdecoder.convertFrom(in);
-                in.readBlank();
+                in.readColon();
                 V value = vdecoder.convertFrom(in);
                 result.put(key, value);
             }

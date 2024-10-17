@@ -203,7 +203,7 @@ public class JsonByteBufferReader extends JsonReader {
 
     /** 判断下一个非空白字符是否: */
     @Override
-    public final void readBlank() {
+    public final void readColon() {
         char ch = nextGoodChar(true);
         if (ch == ':') {
             return;
