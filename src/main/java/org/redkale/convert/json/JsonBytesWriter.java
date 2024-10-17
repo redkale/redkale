@@ -130,21 +130,6 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     }
 
     @Override
-    public void writeTo(final char ch) { // 只能是 0 - 127 的字符
-        expand(1);
-        content[count++] = (byte) ch;
-    }
-
-    @Override
-    public void writeTo(final char[] chs, final int start, final int len) { // 只能是 0 - 127 的字符
-        expand(len);
-        for (int i = 0; i < len; i++) {
-            content[count + i] = (byte) chs[start + i];
-        }
-        count += len;
-    }
-
-    @Override
     public void writeTo(final byte ch) { // 只能是 0 - 127 的字符
         expand(1);
         content[count++] = ch;

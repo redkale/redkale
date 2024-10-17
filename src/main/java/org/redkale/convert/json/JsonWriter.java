@@ -57,10 +57,6 @@ public abstract class JsonWriter extends Writer {
     }
 
     // -----------------------------------------------------------------------
-    public abstract void writeTo(final char ch); // 只能是 0 - 127 的字符
-
-    public abstract void writeTo(final char[] cs, final int start, final int len); // 只能是 0 - 127 的字符
-
     public abstract void writeTo(final byte ch); // 只能是 0 - 127 的字符
 
     public abstract void writeTo(final byte[] bs, final int start, final int len); // 只能是 0 - 127 的字符
@@ -252,18 +248,13 @@ public abstract class JsonWriter extends Writer {
         writeLatin1To(true, value);
     }
 
-    @Override // 只容许JsonBytesWriter重写此方法
+    @Override // 只容许JsonCharsWriter重写此方法
     public void writeField(EnMember member, String fieldName, Type fieldType, int fieldPos) {
         if (this.comma) {
             writeTo(BYTE_COMMA);
         }
         if (member != null) {
-            if (charsMode()) {
-                char[] chs = member.getJsonFieldNameChars();
-                writeTo(chs, 0, chs.length);
-            } else {
-                writeTo(member.getJsonFieldNameBytes());
-            }
+            writeTo(member.getJsonFieldNameBytes());
         } else {
             writeLatin1To(true, fieldName);
             writeTo(BYTE_COLON);
@@ -271,9 +262,6 @@ public abstract class JsonWriter extends Writer {
     }
 
     // ----------------------------------------------------------------------------------------------
-    public final void writeTo(final char... cs) { // 只能是 0 - 127 的字符
-        writeTo(cs, 0, cs.length);
-    }
 
     public final void writeTo(final byte[] bs) { // 只能是 0 - 127 的字符
         writeTo(bs, 0, bs.length);

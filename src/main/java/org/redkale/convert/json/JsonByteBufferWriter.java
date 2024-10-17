@@ -9,7 +9,6 @@ import java.nio.*;
 import java.nio.charset.Charset;
 import java.util.Objects;
 import java.util.function.Supplier;
-import org.redkale.convert.ConvertException;
 import org.redkale.convert.Encodeable;
 import org.redkale.util.*;
 
@@ -111,20 +110,6 @@ public class JsonByteBufferWriter extends JsonWriter {
             size++;
         }
         return size;
-    }
-
-    @Override
-    public void writeTo(final char ch) {
-        if (ch > Byte.MAX_VALUE) {
-            throw new ConvertException("writeTo char(int.value = " + (int) ch + ") must be less 127");
-        }
-        expand(1);
-        this.buffers[currBufIndex].put((byte) ch);
-    }
-
-    @Override
-    public void writeTo(final char[] chs, final int start, final int len) {
-        writeTo(-1, false, chs, start, len);
     }
 
     @Override

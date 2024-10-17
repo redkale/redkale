@@ -46,29 +46,12 @@ class JsonStreamWriter extends JsonByteBufferWriter {
     }
 
     @Override
-    public void writeTo(final char ch) {
-        if (ch > Byte.MAX_VALUE) {
-            throw new ConvertException("writeTo char(int.value = " + (int) ch + ") must be less 127");
-        }
-        try {
-            out.write((byte) ch);
-        } catch (IOException e) {
-            throw new ConvertException(e);
-        }
-    }
-
-    @Override
     public void writeTo(final byte[] bs, final int start, final int len) { // 只能是 0 - 127 的字符
         try {
             out.write(bs, start, len);
         } catch (IOException e) {
             throw new ConvertException(e);
         }
-    }
-
-    @Override
-    public void writeTo(final char[] chs, final int start, final int len) {
-        writeTo(false, chs, start, len);
     }
 
     private void writeTo(final boolean quote, final char[] chs, final int start, final int len) {

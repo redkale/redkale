@@ -32,7 +32,7 @@ public class _DyncWorldJsonEncoder extends JsonDynEncoder<World> {
             return;
         }
 
-        out.writeTo('{');
+        out.writeTo((byte) '{');
         boolean comma = false;
         if (out.charsMode()) {
             comma = out.writeFieldIntValue(idFieldChars, comma, value.getId());
@@ -41,6 +41,6 @@ public class _DyncWorldJsonEncoder extends JsonDynEncoder<World> {
             comma = out.writeFieldIntValue(idFieldBytes, comma, value.getId());
             out.writeFieldIntValue(randomNumberFieldBytes, comma, value.getRandomNumber());
         }
-        out.writeTo('}');
+        out.writeTo((byte) '}');
     }
 }

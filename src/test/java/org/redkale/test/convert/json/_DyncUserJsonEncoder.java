@@ -44,7 +44,7 @@ public class _DyncUserJsonEncoder extends JsonDynEncoder<User> {
             this.objectEncoderSelf.convertTo(out, value);
             return;
         }
-        out.writeTo('{');
+        out.writeTo((byte) '{');
         boolean comma = false;
         if (out.charsMode()) {
             comma = out.writeFieldIntValue(ageFieldChars, comma, value.getAge());
@@ -63,6 +63,6 @@ public class _DyncUserJsonEncoder extends JsonDynEncoder<User> {
             comma = out.writeFieldStringValue(sexFieldBytes, comma, value.getSex());
             out.writeFieldStringValue(nickNameFieldBytes, comma, value.getNickName());
         }
-        out.writeTo('}');
+        out.writeTo((byte) '}');
     }
 }

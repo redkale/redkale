@@ -4,7 +4,10 @@
  */
 package org.redkale.convert.json;
 
+import java.lang.reflect.Type;
+import org.redkale.convert.EnMember;
 import org.redkale.convert.Encodeable;
+import static org.redkale.convert.json.JsonWriter.BYTE_COLON;
 import static org.redkale.convert.json.JsonWriter.BYTE_COMMA;
 import static org.redkale.convert.json.JsonWriter.BYTE_DQUOTE;
 import static org.redkale.convert.json.JsonWriter.DEFAULT_SIZE;
@@ -87,13 +90,11 @@ public class JsonCharsWriter extends JsonWriter {
         return true;
     }
 
-    @Override
     public void writeTo(final char ch) { // 只能是 0 - 127 的字符
         expand(1);
         content[count++] = ch;
     }
 
-    @Override
     public void writeTo(final char[] chs, final int start, final int len) { // 只能是 0 - 127 的字符
         expand(len);
         System.arraycopy(chs, start, content, count, len);
@@ -113,6 +114,19 @@ public class JsonCharsWriter extends JsonWriter {
             chars[count + i] = (char) (bs[start + i] & 0xff);
         }
         count += len;
+    }
+
+    @Override // 只容许JsonBytesWriter重写此方法
+    public final void writeField(EnMember member, String fieldName, Type fieldType, int fieldPos) {
+        if (this.comma) {
+            writeTo(BYTE_COMMA);
+        }
+        if (member != null) {
+            writeTo(member.getJsonFieldNameChars());
+        } else {
+            writeLatin1To(true, fieldName);
+            writeTo(BYTE_COLON);
+        }
     }
 
     /**
@@ -303,6 +317,10 @@ public class JsonCharsWriter extends JsonWriter {
 
     public int count() {
         return this.count;
+    }
+
+    public final void writeTo(final char... cs) { // 只能是 0 - 127 的字符
+        writeTo(cs, 0, cs.length);
     }
 
     @Override
