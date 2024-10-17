@@ -103,14 +103,14 @@ public class JsonCharsWriter extends JsonWriter {
     @Override
     public void writeTo(final byte b) { // 只能是 0 - 127 的字符
         expand(1);
-        content[count++] = (char) (b & 0xff);
+        content[count++] = (char) b;
     }
 
     @Override
     public void writeTo(final byte[] bs, final int start, final int len) { // 只能是 0 - 127 的字符
         char[] chars = expand(len);
         for (int i = 0; i < len; i++) {
-            chars[count + i] = (char) (bs[start + i] & 0xff);
+            chars[count + i] = (char) bs[start + i];
         }
         count += len;
     }
