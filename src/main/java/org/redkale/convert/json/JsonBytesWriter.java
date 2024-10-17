@@ -120,8 +120,8 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
         }
         if (member != null) {
             byte[] bs = member.getJsonFieldNameColonBytes();
-            expand(bs.length);
-            System.arraycopy(bs, 0, content, count, bs.length);
+            byte[] bytes = expand(bs.length);
+            System.arraycopy(bs, 0, bytes, count, bs.length);
             count += bs.length;
         } else {
             writeLatin1To(true, fieldName);
@@ -131,14 +131,14 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
 
     @Override
     public void writeTo(final byte ch) { // 只能是 0 - 127 的字符
-        expand(1);
-        content[count++] = ch;
+        byte[] bytes = expand(1);
+        bytes[count++] = ch;
     }
 
     @Override
     public void writeTo(final byte[] chs, final int start, final int len) { // 只能是 0 - 127 的字符
-        expand(len);
-        System.arraycopy(chs, start, content, count, len);
+        byte[] bytes = expand(len);
+        System.arraycopy(chs, start, bytes, count, len);
         count += len;
     }
 
@@ -590,8 +590,8 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     @Override
     public void writeBoolean(boolean value) {
         byte[] bs = value ? BYTES_TUREVALUE : BYTES_FALSEVALUE;
-        expand(bs.length);
-        System.arraycopy(bs, 0, content, count, bs.length);
+        byte[] bytes = expand(bs.length);
+        System.arraycopy(bs, 0, bytes, count, bs.length);
         count += bs.length;
     }
 
@@ -599,15 +599,15 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     public void writeInt(int value) {
         if (value >= 0 && value < TENTHOUSAND_MAX) {
             byte[] bs = TENTHOUSAND_BYTES[value];
-            expand(bs.length);
-            System.arraycopy(bs, 0, content, count, bs.length);
+            byte[] bytes = expand(bs.length);
+            System.arraycopy(bs, 0, bytes, count, bs.length);
             count += bs.length;
             return;
         }
         if (value < 0 && value > -TENTHOUSAND_MAX) {
             byte[] bs = TENTHOUSAND_BYTES2[-value];
-            expand(bs.length);
-            System.arraycopy(bs, 0, content, count, bs.length);
+            byte[] bytes = expand(bs.length);
+            System.arraycopy(bs, 0, bytes, count, bs.length);
             count += bs.length;
             return;
         }
@@ -640,15 +640,15 @@ public class JsonBytesWriter extends JsonWriter implements ByteTuple {
     public void writeLong(long value) {
         if (value >= 0 && value < TENTHOUSAND_MAX) {
             byte[] bs = TENTHOUSAND_BYTES[(int) value];
-            expand(bs.length);
-            System.arraycopy(bs, 0, content, count, bs.length);
+            byte[] bytes = expand(bs.length);
+            System.arraycopy(bs, 0, bytes, count, bs.length);
             count += bs.length;
             return;
         }
         if (value < 0 && value > -TENTHOUSAND_MAX) {
             byte[] bs = TENTHOUSAND_BYTES2[(int) -value];
-            expand(bs.length);
-            System.arraycopy(bs, 0, content, count, bs.length);
+            byte[] bytes = expand(bs.length);
+            System.arraycopy(bs, 0, bytes, count, bs.length);
             count += bs.length;
             return;
         }

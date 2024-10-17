@@ -90,8 +90,8 @@ public class JsonCharsWriter extends JsonWriter {
     }
 
     public void writeTo(final char ch) { // 只能是 0 - 127 的字符
-        expand(1);
-        content[count++] = ch;
+        char[] chars = expand(1);
+        chars[count++] = ch;
     }
 
     public void writeTo(final char[] chs, final int start, final int len) { // 只能是 0 - 127 的字符
@@ -102,8 +102,8 @@ public class JsonCharsWriter extends JsonWriter {
 
     @Override
     public void writeTo(final byte b) { // 只能是 0 - 127 的字符
-        expand(1);
-        content[count++] = (char) b;
+        char[] chars = expand(1);
+        chars[count++] = (char) b;
     }
 
     @Override
@@ -142,14 +142,14 @@ public class JsonCharsWriter extends JsonWriter {
         }
         int len = value.length();
         if (quote) {
-            expand(len + 2);
-            content[count++] = BYTE_DQUOTE;
-            value.getChars(0, len, content, count);
+            char[] chars = expand(len + 2);
+            chars[count++] = BYTE_DQUOTE;
+            value.getChars(0, len, chars, count);
             count += len;
-            content[count++] = BYTE_DQUOTE;
+            chars[count++] = BYTE_DQUOTE;
         } else {
-            expand(len);
-            value.getChars(0, len, content, count);
+            char[] chars = expand(len);
+            value.getChars(0, len, chars, count);
             count += len;
         }
     }
