@@ -211,7 +211,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
      * 快速发送
      *
      * @see org.redkale.net.AsyncNioConnection#pipelineWrite(java.util.function.Consumer)
-     * @param consumers  Consumer
+     * @param consumer  Consumer
      */
     public abstract void pipelineWrite(Consumer<ByteArray> consumer);
 
