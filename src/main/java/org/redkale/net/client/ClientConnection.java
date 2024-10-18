@@ -94,7 +94,7 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
     public ClientConnection(Client<? extends ClientConnection<R, P>, R, P> client, AsyncConnection channel) {
         this.client = client;
         this.codec = createCodec();
-        this.channel = channel.beforeCloseListener(this); // .fastHandler(writeHandler);
+        this.channel = channel.beforeCloseListener(this); // .pipelineHandler(writeHandler);
         this.writeBuffer = channel.pollWriteBuffer();
     }
 
@@ -150,12 +150,16 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
                 for (ClientFuture respFuture : respFutures) {
                     offerRespFuture(respFuture);
                 }
-                sendRequestToChannel(respFutures);
+                sendRequestInLocking(respFutures);
             }
         } finally {
             writeLock.unlock();
         }
         return respFutures;
+    }
+
+    protected void sendRequestInLocking(ClientFuture... respFutures) {
+        sendRequestToChannel(respFutures);
     }
 
     protected final void sendRequestToChannel(ClientFuture... respFutures) {
