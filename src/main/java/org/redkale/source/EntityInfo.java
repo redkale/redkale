@@ -965,6 +965,28 @@ public final class EntityInfo<T> {
     /**
      * 获取Entity的QUERY SQL
      *
+     * @param dollar 是否$占位符
+     * @param pk 主键值
+     * @return String
+     */
+    public String getFindPrepareSQL(boolean dollar, Serializable pk) {
+        return dollar ? getFindDollarPrepareSQL(pk) : getFindQuestionPrepareSQL(pk);
+    }
+
+    /**
+     * 获取Entity的QUERY FINDS SQL
+     *
+     * @param dollar 是否$占位符
+     * @param pk 主键值
+     * @return String
+     */
+    public String getFindsPrepareSQL(boolean dollar, Serializable pk) {
+        return dollar ? getFindsDollarPrepareSQL(pk) : getFindsQuestionPrepareSQL(pk);
+    }
+
+    /**
+     * 获取Entity的QUERY SQL
+     *
      * @param pk 主键值
      * @return String
      */
@@ -1017,6 +1039,17 @@ public final class EntityInfo<T> {
     /**
      * 获取Entity的INSERT SQL
      *
+     * @param dollar 是否$占位符
+     * @param bean Entity对象
+     * @return String
+     */
+    public String getInsertPrepareSQL(boolean dollar, T bean) {
+        return dollar ? getInsertDollarPrepareSQL(bean) : getInsertQuestionPrepareSQL(bean);
+    }
+
+    /**
+     * 获取Entity的INSERT SQL
+     *
      * @param bean Entity对象
      * @return String
      */
@@ -1051,6 +1084,17 @@ public final class EntityInfo<T> {
             return updateDollarPrepareSQL;
         }
         return updateDollarPrepareSQL.replace("#{newtable}", getTable(bean));
+    }
+
+    /**
+     * 获取Entity的UPDATE SQL
+     *
+     * @param dollar 是否$占位符
+     * @param bean Entity对象
+     * @return String
+     */
+    public String getUpdatePrepareSQL(boolean dollar, T bean) {
+        return dollar ? getUpdateDollarPrepareSQL(bean) : getUpdateQuestionPrepareSQL(bean);
     }
 
     /**
@@ -1094,6 +1138,17 @@ public final class EntityInfo<T> {
     /**
      * 获取Entity的UPDATE SQL
      *
+     * @param dollar 是否$占位符
+     * @param beans Entity对象
+     * @return String
+     */
+    public String getUpdatePrepareCaseSQL(boolean dollar, T[] beans) {
+        return dollar ? getUpdateDollarPrepareCaseSQL(beans) : getUpdateQuestionPrepareCaseSQL(beans);
+    }
+
+    /**
+     * 获取Entity的UPDATE SQL
+     *
      * @param bean Entity对象
      * @return String
      */
@@ -1128,6 +1183,17 @@ public final class EntityInfo<T> {
             return deleteDollarPrepareSQL;
         }
         return deleteDollarPrepareSQL.replace("#{newtable}", getTable(bean));
+    }
+
+    /**
+     * 获取Entity的DELETE SQL
+     *
+     * @param dollar 是否$占位符
+     * @param bean Entity对象
+     * @return String
+     */
+    public String getDeletePrepareSQL(boolean dollar, T bean) {
+        return dollar ? getDeleteDollarPrepareSQL(bean) : getDeleteQuestionPrepareSQL(bean);
     }
 
     /**
