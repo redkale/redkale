@@ -92,14 +92,15 @@ public class ProtobufBytesWriter extends ProtobufWriter { // 存在child情况�
             this.child = result;
             delegate = result;
         } else {
-            if (delegate.child != null) {
-                while (delegate.child != null) {
-                    delegate = delegate.child;
-                }
-            }
             result.parent = delegate;
             delegate.child = result;
             delegate = result;
+        }
+        if (this.parent != null) {
+            ProtobufWriter p = this;
+            while ((p = p.parent) instanceof ProtobufBytesWriter) {
+                ((ProtobufBytesWriter) p).delegate = result;
+            }
         }
         result.configFieldFunc(result.parent);
         return result;
