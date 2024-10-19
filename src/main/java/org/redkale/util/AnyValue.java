@@ -98,6 +98,11 @@ public abstract class AnyValue {
             return value;
         }
 
+        @Override
+        public String toString() {
+            return "{'" + name + "': " + value + "}";
+        }
+
         static Entry<AnyValue>[] getEntryAnyValueArray(
                 BiPredicate<String, String> comparison, Entry<AnyValue>[] entitys, String name) {
             int len = 0;

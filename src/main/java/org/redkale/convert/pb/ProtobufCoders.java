@@ -42,6 +42,12 @@ public abstract class ProtobufCoders {
             return computeSize(value);
         }
 
+        // 对象是否为空
+        @Override
+        public boolean isEmpty(ProtobufWriter out, Boolean value) {
+            return (value == null || !value) && out.tiny();
+        }
+
         @Override
         public int computeSize(Boolean value) {
             return value == null ? 0 : 1;
@@ -66,6 +72,12 @@ public abstract class ProtobufCoders {
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Byte value) {
             return computeSize(value);
+        }
+
+        // 对象是否为空
+        @Override
+        public boolean isEmpty(ProtobufWriter out, Byte value) {
+            return (value == null || value.byteValue() == 0) && out.tiny();
         }
 
         @Override
@@ -94,6 +106,12 @@ public abstract class ProtobufCoders {
             return computeSize(value);
         }
 
+        // 对象是否为空
+        @Override
+        public boolean isEmpty(ProtobufWriter out, Character value) {
+            return (value == null || value.charValue() == 0) && out.tiny();
+        }
+
         @Override
         public int computeSize(Character value) {
             return value == null ? 0 : ProtobufFactory.computeSInt32SizeNoTag(value);
@@ -118,6 +136,12 @@ public abstract class ProtobufCoders {
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Short value) {
             return computeSize(value);
+        }
+
+        // 对象是否为空
+        @Override
+        public boolean isEmpty(ProtobufWriter out, Short value) {
+            return (value == null || value.shortValue() == 0) && out.tiny();
         }
 
         @Override
@@ -146,6 +170,12 @@ public abstract class ProtobufCoders {
             return computeSize(value);
         }
 
+        // 对象是否为空
+        @Override
+        public boolean isEmpty(ProtobufWriter out, Integer value) {
+            return (value == null || value.intValue() == 0) && out.tiny();
+        }
+
         @Override
         public int computeSize(Integer value) {
             return value == null ? 0 : ProtobufFactory.computeSInt32SizeNoTag(value);
@@ -170,6 +200,12 @@ public abstract class ProtobufCoders {
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, Float value) {
             return computeSize(value);
+        }
+
+        // 对象是否为空
+        @Override
+        public boolean isEmpty(ProtobufWriter out, Float value) {
+            return (value == null || value.floatValue() == 0) && out.tiny();
         }
 
         @Override
@@ -198,6 +234,12 @@ public abstract class ProtobufCoders {
             return computeSize(value);
         }
 
+        // 对象是否为空
+        @Override
+        public boolean isEmpty(ProtobufWriter out, Long value) {
+            return (value == null || value.longValue() == 0) && out.tiny();
+        }
+
         @Override
         public int computeSize(Long value) {
             return value == null ? 0 : ProtobufFactory.computeSInt64SizeNoTag(value);
@@ -224,6 +266,12 @@ public abstract class ProtobufCoders {
             return computeSize(value);
         }
 
+        // 对象是否为空
+        @Override
+        public boolean isEmpty(ProtobufWriter out, Double value) {
+            return (value == null || value.doubleValue() == 0) && out.tiny();
+        }
+
         @Override
         public int computeSize(Double value) {
             return value == null ? 0 : 8;
@@ -244,6 +292,12 @@ public abstract class ProtobufCoders {
             implements ProtobufEncodeable<ProtobufWriter, String> {
 
         public static final ProtobufStringSimpledCoder instance = new ProtobufStringSimpledCoder();
+
+        // 对象是否为空
+        @Override
+        public boolean isEmpty(ProtobufWriter out, String value) {
+            return (value == null || value.isEmpty()) && out.tiny();
+        }
 
         @Override
         public int computeSize(ProtobufWriter out, int tagSize, String value) {

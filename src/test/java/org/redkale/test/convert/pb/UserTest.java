@@ -16,6 +16,7 @@ import org.redkale.convert.pb.ProtobufObjectEncoder;
 import org.redkale.test.convert.User;
 import org.redkale.util.AnyValue;
 import org.redkale.util.AnyValueWriter;
+import org.redkale.util.Utility;
 
 /**
  *
@@ -59,15 +60,18 @@ public class UserTest {
         AnyValueWriter writer = AnyValueWriter.create();
         writer.addValue("name", "aaa");
         writer.addValue("name", "bbb");
-        writer.addValue("node", AnyValueWriter.create("id", "123"));
-        writer.addValue("node", AnyValueWriter.create("id", "456"));
+        writer.addValue("node", AnyValueWriter.create("id", "111"));
+        writer.addValue("node", AnyValueWriter.create("id", "222"));
+        writer.addValue("node", AnyValueWriter.create("id", "333"));
         System.out.println(writer);
         ProtobufObjectEncoder encoder = (ProtobufObjectEncoder) factory.loadEncoder(AnyValueWriter.class);
         System.out.println(encoder);
         ProtobufArrayEncoder stringEntrys = (ProtobufArrayEncoder) encoder.getMembers()[2].getEncoder();
         System.out.println(stringEntrys);
+        String excepted = "proto-buf 89.[0x12,0x0b,0x0a,0x04,0x6e,0x61,0x6d,0x65,0x12,0x03,0x61,0x61,0x61,0x12,0x0b,0x0a,0x04,0x6e,0x61,0x6d,0x65,0x12,0x03,0x62,0x62,0x62,0x1a,0x13,0x0a,0x04,0x6e,0x6f,0x64,0x65,0x12,0x0b,0x12,0x09,0x0a,0x02,0x69,0x64,0x12,0x03,0x31,0x31,0x31,0x1a,0x13,0x0a,0x04,0x6e,0x6f,0x64,0x65,0x12,0x0b,0x12,0x09,0x0a,0x02,0x69,0x64,0x12,0x03,0x32,0x32,0x32,0x1a,0x13,0x0a,0x04,0x6e,0x6f,0x64,0x65,0x12,0x0b,0x12,0x09,0x0a,0x02,0x69,0x64,0x12,0x03,0x33,0x33,0x33]";
         byte[] bs = factory.getConvert().convertTo(AnyValue.class, writer);
-        System.out.println("长度: " + bs.length);
+        System.out.println(excepted);
+        Utility.println("pbconvert ", bs);
         AnyValue other = factory.getConvert().convertFrom(AnyValue.class, bs);
         System.out.println(other);
         Assertions.assertEquals(writer.toString(), other.toString());
