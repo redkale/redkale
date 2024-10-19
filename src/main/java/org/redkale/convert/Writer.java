@@ -84,11 +84,11 @@ public abstract class Writer {
         return this;
     }
 
-    protected final boolean tiny() {
+    public final boolean tiny() {
         return features > 0 && ConvertFactory.checkTinyFeature(features);
     }
 
-    protected final boolean nullable() {
+    public final boolean nullable() {
         return features > 0 && ConvertFactory.checkNullableFeature(features);
     }
 

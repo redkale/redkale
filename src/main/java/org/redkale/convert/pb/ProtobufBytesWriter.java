@@ -53,14 +53,14 @@ public class ProtobufBytesWriter extends ProtobufWriter { // 存在child情况�
     @Override
     protected boolean recycle() {
         super.recycle();
-        if (this.delegate != null && this.pool != null) {
+        if (this.delegate != null && this.pool != null && this.parent == null) {
             ProtobufWriter s;
             ProtobufWriter p = this.delegate;
             do {
                 s = p;
                 p = p.parent;
                 offerPool(s);
-            } while (p != this);
+            } while (p != this && p != null);
         }
         this.delegate = null;
         if (this.content.length > RESET_MAX_SIZE) {
@@ -92,6 +92,11 @@ public class ProtobufBytesWriter extends ProtobufWriter { // 存在child情况�
             this.child = result;
             delegate = result;
         } else {
+            if (delegate.child != null) {
+                while (delegate.child != null) {
+                    delegate = delegate.child;
+                }
+            }
             result.parent = delegate;
             delegate.child = result;
             delegate = result;
