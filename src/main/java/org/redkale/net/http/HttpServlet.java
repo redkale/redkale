@@ -81,7 +81,7 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
                             response.finish(ce.getBytes());
                             return;
                         }
-                        response.setCacheHandler(entry.cacheHandler);
+                        response.cacheHandler(entry.cacheHandler);
                     }
                     if (response.inNonBlocking()) {
                         if (entry.nonBlocking) {
