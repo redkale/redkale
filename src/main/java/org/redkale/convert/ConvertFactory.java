@@ -78,133 +78,150 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     private Consumer<BiFunction> fieldFuncConsumer;
 
+    @SuppressWarnings("OverridableMethodCallInConstructor")
     protected ConvertFactory(ConvertFactory<R, W> parent, int features) {
         this.features = features;
         this.parent = parent;
         if (parent == null) {
-            // ---------------------------------------------------------
+            this.initPrimitiveCoderInRoot();
+            this.initSimpleCoderInRoot();
+            this.initObjectCoderInRoot();
+        }
+    }
 
-            this.register(boolean.class, BoolSimpledCoder.instance);
-            this.register(Boolean.class, BoolSimpledCoder.instance);
+    protected void initPrimitiveCoderInRoot() {
+        this.register(boolean.class, BoolSimpledCoder.instance);
+        this.register(Boolean.class, BoolSimpledCoder.instance);
 
-            this.register(byte.class, ByteSimpledCoder.instance);
-            this.register(Byte.class, ByteSimpledCoder.instance);
+        this.register(byte.class, ByteSimpledCoder.instance);
+        this.register(Byte.class, ByteSimpledCoder.instance);
 
-            this.register(short.class, ShortSimpledCoder.instance);
-            this.register(Short.class, ShortSimpledCoder.instance);
+        this.register(short.class, ShortSimpledCoder.instance);
+        this.register(Short.class, ShortSimpledCoder.instance);
 
-            this.register(char.class, CharSimpledCoder.instance);
-            this.register(Character.class, CharSimpledCoder.instance);
+        this.register(char.class, CharSimpledCoder.instance);
+        this.register(Character.class, CharSimpledCoder.instance);
 
-            this.register(int.class, IntSimpledCoder.instance);
-            this.register(Integer.class, IntSimpledCoder.instance);
+        this.register(int.class, IntSimpledCoder.instance);
+        this.register(Integer.class, IntSimpledCoder.instance);
 
-            this.register(long.class, LongSimpledCoder.instance);
-            this.register(Long.class, LongSimpledCoder.instance);
+        this.register(long.class, LongSimpledCoder.instance);
+        this.register(Long.class, LongSimpledCoder.instance);
 
-            this.register(float.class, FloatSimpledCoder.instance);
-            this.register(Float.class, FloatSimpledCoder.instance);
+        this.register(float.class, FloatSimpledCoder.instance);
+        this.register(Float.class, FloatSimpledCoder.instance);
 
-            this.register(double.class, DoubleSimpledCoder.instance);
-            this.register(Double.class, DoubleSimpledCoder.instance);
+        this.register(double.class, DoubleSimpledCoder.instance);
+        this.register(Double.class, DoubleSimpledCoder.instance);
 
-            this.register(Number.class, NumberSimpledCoder.instance);
-            this.register(String.class, StringSimpledCoder.instance);
-            this.register(StringWrapper.class, StringWrapperSimpledCoder.instance);
-            this.register(CharSequence.class, CharSequenceSimpledCoder.instance);
-            this.register(StringBuilder.class, CharSequenceSimpledCoder.StringBuilderSimpledCoder.instance);
-            this.register(java.util.Date.class, DateSimpledCoder.instance);
-            this.register(java.time.Instant.class, InstantSimpledCoder.instance);
-            this.register(java.time.LocalDate.class, LocalDateSimpledCoder.instance);
-            this.register(java.time.LocalTime.class, LocalTimeSimpledCoder.instance);
-            this.register(java.time.LocalDateTime.class, LocalDateTimeSimpledCoder.instance);
-            this.register(java.time.Duration.class, DurationSimpledCoder.instance);
-            this.register(AtomicBoolean.class, AtomicBooleanSimpledCoder.instance);
-            this.register(AtomicInteger.class, AtomicIntegerSimpledCoder.instance);
-            this.register(AtomicLong.class, AtomicLongSimpledCoder.instance);
-            this.register(BigInteger.class, BigIntegerSimpledCoder.instance);
-            this.register(BigDecimal.class, BigDecimalSimpledCoder.instance);
-            this.register(InetAddress.class, InetAddressSimpledCoder.instance);
-            this.register(InetSocketAddress.class, InetAddressSimpledCoder.InetSocketAddressSimpledCoder.instance);
-            this.register(LongAdder.class, LongAdderSimpledCoder.instance);
-            this.register(Uint128.class, Uint128SimpledCoder.instance);
-            this.register(Class.class, TypeSimpledCoder.instance);
-            this.register(Pattern.class, PatternSimpledCoder.instance);
-            this.register(File.class, FileSimpledCoder.instance);
-            this.register(Throwable.class, ThrowableSimpledCoder.instance);
-            this.register(CompletionHandler.class, CompletionHandlerSimpledCoder.instance);
-            this.register(URL.class, URLSimpledCoder.instance);
-            this.register(URI.class, URISimpledCoder.instance);
-            // ---------------------------------------------------------
-            this.register(ByteBuffer.class, ByteBufferSimpledCoder.instance);
-            this.register(boolean[].class, BoolArraySimpledCoder.instance);
-            this.register(byte[].class, ByteArraySimpledCoder.instance);
-            this.register(short[].class, ShortArraySimpledCoder.instance);
-            this.register(char[].class, CharArraySimpledCoder.instance);
-            this.register(int[].class, IntArraySimpledCoder.instance);
-            this.register(IntStream.class, IntArraySimpledCoder.IntStreamSimpledCoder.instance);
-            this.register(long[].class, LongArraySimpledCoder.instance);
-            this.register(LongStream.class, LongArraySimpledCoder.LongStreamSimpledCoder.instance);
-            this.register(float[].class, FloatArraySimpledCoder.instance);
-            this.register(double[].class, DoubleArraySimpledCoder.instance);
-            this.register(DoubleStream.class, DoubleArraySimpledCoder.DoubleStreamSimpledCoder.instance);
-            this.register(String[].class, StringArraySimpledCoder.instance);
-            // ---------------------------------------------------------
-            this.register(AnyValue.class, Creator.create(AnyValueWriter.class));
-            this.register(
-                    HttpCookie.class, (Object... params) -> new HttpCookie((String) params[0], (String) params[1]));
-            try {
-                Class sqldateClass =
-                        Thread.currentThread().getContextClassLoader().loadClass("java.sql.Date");
-                Invoker<Object, Object> sqldateInvoker = Invoker.create(sqldateClass, "valueOf", String.class);
-                this.register(sqldateClass, new SimpledCoder<R, W, Object>() {
+        this.register(Number.class, NumberSimpledCoder.instance);
+        this.register(String.class, StringSimpledCoder.instance);
+    }
 
-                    @Override
-                    public void convertTo(W out, Object value) {
-                        out.writeStandardString(value == null ? null : value.toString());
-                    }
+    protected void initSimpleCoderInRoot() {
+        this.register(StringWrapper.class, StringWrapperSimpledCoder.instance);
+        this.register(CharSequence.class, CharSequenceSimpledCoder.instance);
+        this.register(StringBuilder.class, CharSequenceSimpledCoder.StringBuilderSimpledCoder.instance);
+        this.register(java.util.Date.class, DateSimpledCoder.instance);
+        this.register(java.time.Instant.class, InstantSimpledCoder.instance);
+        this.register(java.time.LocalDate.class, LocalDateSimpledCoder.instance);
+        this.register(java.time.LocalTime.class, LocalTimeSimpledCoder.instance);
+        this.register(java.time.LocalDateTime.class, LocalDateTimeSimpledCoder.instance);
+        this.register(java.time.Duration.class, DurationSimpledCoder.instance);
+        this.register(AtomicBoolean.class, AtomicBooleanSimpledCoder.instance);
+        this.register(AtomicInteger.class, AtomicIntegerSimpledCoder.instance);
+        this.register(AtomicLong.class, AtomicLongSimpledCoder.instance);
+        this.register(BigInteger.class, BigIntegerSimpledCoder.instance);
+        this.register(BigDecimal.class, BigDecimalSimpledCoder.instance);
+        this.register(InetAddress.class, InetAddressSimpledCoder.instance);
+        this.register(InetSocketAddress.class, InetAddressSimpledCoder.InetSocketAddressSimpledCoder.instance);
+        this.register(LongAdder.class, LongAdderSimpledCoder.instance);
+        this.register(Uint128.class, Uint128SimpledCoder.instance);
+        this.register(Class.class, TypeSimpledCoder.instance);
+        this.register(Pattern.class, PatternSimpledCoder.instance);
+        this.register(File.class, FileSimpledCoder.instance);
+        this.register(Throwable.class, ThrowableSimpledCoder.instance);
+        this.register(CompletionHandler.class, CompletionHandlerSimpledCoder.instance);
+        this.register(URL.class, URLSimpledCoder.instance);
+        this.register(URI.class, URISimpledCoder.instance);
+        // ---------------------------------------------------------
+        this.register(ByteBuffer.class, ByteBufferSimpledCoder.instance);
+        this.register(boolean[].class, BoolArraySimpledCoder.instance);
+        this.register(byte[].class, ByteArraySimpledCoder.instance);
+        this.register(short[].class, ShortArraySimpledCoder.instance);
+        this.register(char[].class, CharArraySimpledCoder.instance);
+        this.register(int[].class, IntArraySimpledCoder.instance);
+        this.register(IntStream.class, IntArraySimpledCoder.IntStreamSimpledCoder.instance);
+        this.register(long[].class, LongArraySimpledCoder.instance);
+        this.register(LongStream.class, LongArraySimpledCoder.LongStreamSimpledCoder.instance);
+        this.register(float[].class, FloatArraySimpledCoder.instance);
+        this.register(double[].class, DoubleArraySimpledCoder.instance);
+        this.register(DoubleStream.class, DoubleArraySimpledCoder.DoubleStreamSimpledCoder.instance);
+        this.register(String[].class, StringArraySimpledCoder.instance);
+        // ---------------------------------------------------------
+    }
 
-                    @Override
-                    public Object convertFrom(R in) {
-                        String t = in.readStandardString();
-                        return t == null ? null : sqldateInvoker.invoke(null, t);
-                    }
-                });
-                Class sqltimeClass =
-                        Thread.currentThread().getContextClassLoader().loadClass("java.sql.Time");
-                Invoker<Object, Object> sqltimeInvoker = Invoker.create(sqltimeClass, "valueOf", String.class);
-                this.register(sqltimeClass, new SimpledCoder<R, W, Object>() {
+    protected void initObjectCoderInRoot() {
+        this.register(AnyValue.class, Creator.create(AnyValueWriter.class));
+        ObjectDecoder anyValueDecoder = createObjectDecoder(AnyValueWriter.class);
+        ObjectEncoder anyValueEncoder = createObjectEncoder(AnyValueWriter.class);
+        this.register(AnyValue.class, anyValueDecoder);
+        this.register(AnyValue.class, anyValueEncoder);
+        this.register(AnyValueWriter.class, anyValueDecoder);
+        this.register(AnyValueWriter.class, anyValueEncoder);
+        anyValueDecoder.init(this);
+        anyValueEncoder.init(this);
 
-                    @Override
-                    public void convertTo(W out, Object value) {
-                        out.writeStandardString(value == null ? null : value.toString());
-                    }
+        this.register(HttpCookie.class, (Object... params) -> new HttpCookie((String) params[0], (String) params[1]));
+        try {
+            Class sqldateClass = Thread.currentThread().getContextClassLoader().loadClass("java.sql.Date");
+            Invoker<Object, Object> sqldateInvoker = Invoker.create(sqldateClass, "valueOf", String.class);
+            this.register(sqldateClass, new SimpledCoder<R, W, Object>() {
 
-                    @Override
-                    public Object convertFrom(R in) {
-                        String t = in.readStandardString();
-                        return t == null ? null : sqltimeInvoker.invoke(null, t);
-                    }
-                });
-                Class timestampClass =
-                        Thread.currentThread().getContextClassLoader().loadClass("java.sql.Timestamp");
-                Invoker<Object, Object> timestampInvoker = Invoker.create(timestampClass, "valueOf", String.class);
-                this.register(timestampClass, new SimpledCoder<R, W, Object>() {
+                @Override
+                public void convertTo(W out, Object value) {
+                    out.writeStandardString(value == null ? null : value.toString());
+                }
 
-                    @Override
-                    public void convertTo(W out, Object value) {
-                        out.writeStandardString(value == null ? null : value.toString());
-                    }
+                @Override
+                public Object convertFrom(R in) {
+                    String t = in.readStandardString();
+                    return t == null ? null : sqldateInvoker.invoke(null, t);
+                }
+            });
+            Class sqltimeClass = Thread.currentThread().getContextClassLoader().loadClass("java.sql.Time");
+            Invoker<Object, Object> sqltimeInvoker = Invoker.create(sqltimeClass, "valueOf", String.class);
+            this.register(sqltimeClass, new SimpledCoder<R, W, Object>() {
 
-                    @Override
-                    public Object convertFrom(R in) {
-                        String t = in.readStandardString();
-                        return t == null ? null : timestampInvoker.invoke(null, t);
-                    }
-                });
-            } catch (Throwable t) {
-                // do nothing
-            }
+                @Override
+                public void convertTo(W out, Object value) {
+                    out.writeStandardString(value == null ? null : value.toString());
+                }
+
+                @Override
+                public Object convertFrom(R in) {
+                    String t = in.readStandardString();
+                    return t == null ? null : sqltimeInvoker.invoke(null, t);
+                }
+            });
+            Class timestampClass =
+                    Thread.currentThread().getContextClassLoader().loadClass("java.sql.Timestamp");
+            Invoker<Object, Object> timestampInvoker = Invoker.create(timestampClass, "valueOf", String.class);
+            this.register(timestampClass, new SimpledCoder<R, W, Object>() {
+
+                @Override
+                public void convertTo(W out, Object value) {
+                    out.writeStandardString(value == null ? null : value.toString());
+                }
+
+                @Override
+                public Object convertFrom(R in) {
+                    String t = in.readStandardString();
+                    return t == null ? null : timestampInvoker.invoke(null, t);
+                }
+            });
+        } catch (Throwable t) {
+            // do nothing
         }
     }
 

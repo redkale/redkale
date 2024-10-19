@@ -37,7 +37,7 @@ public class AnyValueWriter extends AnyValue {
     private Entry<String>[] stringEntrys = new Entry[0];
 
     @ConvertColumn(index = 3)
-    private Entry<AnyValueWriter>[] anyEntrys = new Entry[0];
+    private Entry<AnyValue>[] anyEntrys = new Entry[0];
 
     int parentArrayIndex = -1; // 只可能被loadFromProperties方法赋值
 
@@ -130,7 +130,7 @@ public class AnyValueWriter extends AnyValue {
         if (this.anyEntrys != null) {
             rs.anyEntrys = new Entry[this.anyEntrys.length];
             for (int i = 0; i < rs.anyEntrys.length; i++) {
-                Entry<AnyValueWriter> en = this.anyEntrys[i];
+                Entry<AnyValue> en = this.anyEntrys[i];
                 if (en == null) {
                     continue;
                 }
@@ -188,7 +188,7 @@ public class AnyValueWriter extends AnyValue {
             }
         }
         if (node.anyEntrys != null) {
-            for (Entry<AnyValueWriter> en : node.anyEntrys) {
+            for (Entry<AnyValue> en : node.anyEntrys) {
                 if (en == null || en.value == null) {
                     continue;
                 }
@@ -202,7 +202,8 @@ public class AnyValueWriter extends AnyValue {
                             continue;
                         }
                         if (item.value != null
-                                && en.value.parentArrayIndex == ((AnyValueWriter) item.value).parentArrayIndex) {
+                                && ((AnyValueWriter) en.value).parentArrayIndex
+                                        == ((AnyValueWriter) item.value).parentArrayIndex) {
                             if (func == null) {
                                 item.value.merge(en.value, func);
                                 ok = true;
@@ -274,7 +275,7 @@ public class AnyValueWriter extends AnyValue {
                 }
             }
             if (adv.anyEntrys != null) {
-                for (Entry<AnyValueWriter> en : adv.anyEntrys) {
+                for (Entry<AnyValue> en : adv.anyEntrys) {
                     this.addValue(en.name, en.value);
                 }
             }
@@ -314,7 +315,7 @@ public class AnyValueWriter extends AnyValue {
                 }
             }
             if (adv.anyEntrys != null) {
-                for (Entry<AnyValueWriter> en : adv.anyEntrys) {
+                for (Entry<AnyValue> en : adv.anyEntrys) {
                     this.setValue(en.name, en.value);
                 }
             }
@@ -372,7 +373,7 @@ public class AnyValueWriter extends AnyValue {
         return (Entry<AnyValue>[]) (Entry[]) anyEntrys;
     }
 
-    public void setAnyEntrys(Entry<AnyValueWriter>[] anyEntrys) {
+    public void setAnyEntrys(Entry<AnyValue>[] anyEntrys) {
         this.anyEntrys = anyEntrys;
     }
 
@@ -473,7 +474,7 @@ public class AnyValueWriter extends AnyValue {
         if (!existsValue(name)) {
             this.addValue(name, value);
         } else {
-            for (Entry<AnyValueWriter> en : this.anyEntrys) {
+            for (Entry<AnyValue> en : this.anyEntrys) {
                 if (predicate.test(en.name, name)) {
                     en.value = (AnyValueWriter) value;
                     return this;
@@ -571,7 +572,7 @@ public class AnyValueWriter extends AnyValue {
 
     @Override
     public AnyValue getAnyValue(String name, boolean create) {
-        for (Entry<AnyValueWriter> en : this.anyEntrys) {
+        for (Entry<AnyValue> en : this.anyEntrys) {
             if (predicate.test(en.name, name)) {
                 return en.value;
             }

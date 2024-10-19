@@ -8,37 +8,48 @@ package org.redkale.test.convert.json;
 import java.util.*;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.json.*;
+import org.redkale.util.AnyValue;
+import org.redkale.util.AnyValueWriter;
 
 /** @author zhangjx */
 public class DyncJsonTest {
 
-    private boolean main;
-
     public static void main(String[] args) throws Throwable {
         DyncJsonTest test = new DyncJsonTest();
-        test.main = true;
-        test.run();
+        test.run1();
+        test.run2();
     }
 
     @Test
-    public void run() throws Exception {
+    public void run1() throws Exception {
         SimpleDyncBean bean = new SimpleDyncBean();
         bean.name = "haha";
         System.out.println(JsonConvert.root().convertTo(bean));
-        if (!main)
-            Assertions.assertEquals("{\"name\":\"haha\"}", JsonConvert.root().convertTo(bean));
+        Assertions.assertEquals("{\"name\":\"haha\"}", JsonConvert.root().convertTo(bean));
 
         SimpleDyncBean2 bean2 = new SimpleDyncBean2();
         bean2.name = "haha";
 
         System.out.println(JsonConvert.root().convertTo(bean2));
-        if (!main)
-            Assertions.assertEquals("{\"name\":\"haha\"}", JsonConvert.root().convertTo(bean2));
+        Assertions.assertEquals("{\"name\":\"haha\"}", JsonConvert.root().convertTo(bean2));
         SimpleDyncBean3 bean3 = new SimpleDyncBean3();
         bean3.name = "haha";
         System.out.println(JsonConvert.root().convertTo(bean3));
-        if (!main)
-            Assertions.assertEquals("{\"name\":\"haha\"}", JsonConvert.root().convertTo(bean3));
+        Assertions.assertEquals("{\"name\":\"haha\"}", JsonConvert.root().convertTo(bean3));
+    }
+
+    @Test
+    public void run2() throws Exception {
+        AnyValueWriter writer = AnyValueWriter.create();
+        writer.addValue("name", "aaa");
+        writer.addValue("name", "bbb");
+        writer.addValue("node", AnyValueWriter.create("id", "123"));
+        writer.addValue("node", AnyValueWriter.create("id", "456"));
+        System.out.println(writer);
+        String bs = JsonConvert.root().convertTo(AnyValue.class, writer);
+        AnyValue other = JsonConvert.root().convertFrom(AnyValue.class, bs);
+        System.out.println(other);
+        Assertions.assertEquals(writer.toString(), other.toString());
     }
 
     public static class SimpleDyncBean {

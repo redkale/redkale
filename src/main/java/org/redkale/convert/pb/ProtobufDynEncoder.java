@@ -372,9 +372,6 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
         if (!(type instanceof Class)) {
             return null;
         }
-        if (AnyValue.class.isAssignableFrom((Class) type)) { // 不支持
-            return null;
-        }
         return generateDyncEncoder(factory, (Class) type);
     }
 

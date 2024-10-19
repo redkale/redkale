@@ -33,29 +33,29 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
 
     static {
         instance.register(Serializable.class, instance.loadEncoder(Object.class));
-
-        // instance.register(AnyValue.class, instance.loadDecoder(SimpleAnyValue.class));
-        // instance.register(AnyValue.class, instance.loadEncoder(SimpleAnyValue.class));
     }
 
     private JsonFactory(JsonFactory parent, int features) {
         super(parent, features);
-        if (parent == null) {
-            this.register(InetAddress.class, JsonCoders.InetAddressJsonSimpledCoder.instance);
-            this.register(InetSocketAddress.class, JsonCoders.InetSocketAddressJsonSimpledCoder.instance);
-            this.register(Uint128.class, JsonCoders.Uint128JsonSimpledCoder.instance);
-            this.register(BigInteger.class, JsonCoders.BigIntegerJsonSimpledCoder.instance);
-            this.register(BigDecimal.class, JsonCoders.BigDecimalJsonSimpledCoder.instance);
-            this.register(java.time.Instant.class, JsonCoders.InstantJsonSimpledCoder.instance);
-            this.register(java.time.LocalDate.class, JsonCoders.LocalDateJsonSimpledCoder.instance);
-            this.register(java.time.LocalTime.class, JsonCoders.LocalTimeJsonSimpledCoder.instance);
-            this.register(java.time.LocalDateTime.class, JsonCoders.LocalDateTimeJsonSimpledCoder.instance);
+    }
 
-            this.register(JsonElement.class, (Decodeable) JsonElementDecoder.instance);
-            this.register(JsonString.class, (Decodeable) JsonElementDecoder.instance);
-            this.register(JsonObject.class, (Decodeable) JsonElementDecoder.instance);
-            this.register(JsonArray.class, (Decodeable) JsonElementDecoder.instance);
-        }
+    @Override
+    protected void initSimpleCoderInRoot() {
+        super.initSimpleCoderInRoot();
+        this.register(InetAddress.class, JsonCoders.InetAddressJsonSimpledCoder.instance);
+        this.register(InetSocketAddress.class, JsonCoders.InetSocketAddressJsonSimpledCoder.instance);
+        this.register(Uint128.class, JsonCoders.Uint128JsonSimpledCoder.instance);
+        this.register(BigInteger.class, JsonCoders.BigIntegerJsonSimpledCoder.instance);
+        this.register(BigDecimal.class, JsonCoders.BigDecimalJsonSimpledCoder.instance);
+        this.register(java.time.Instant.class, JsonCoders.InstantJsonSimpledCoder.instance);
+        this.register(java.time.LocalDate.class, JsonCoders.LocalDateJsonSimpledCoder.instance);
+        this.register(java.time.LocalTime.class, JsonCoders.LocalTimeJsonSimpledCoder.instance);
+        this.register(java.time.LocalDateTime.class, JsonCoders.LocalDateTimeJsonSimpledCoder.instance);
+
+        this.register(JsonElement.class, (Decodeable) JsonElementDecoder.instance);
+        this.register(JsonString.class, (Decodeable) JsonElementDecoder.instance);
+        this.register(JsonObject.class, (Decodeable) JsonElementDecoder.instance);
+        this.register(JsonArray.class, (Decodeable) JsonElementDecoder.instance);
     }
 
     @Override

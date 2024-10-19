@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.function.*;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.ConvertColumn;
+import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonArray;
 import org.redkale.convert.json.JsonObject;
 import static org.redkale.util.Utility.isEmpty;
@@ -98,7 +99,7 @@ public abstract class AnyValue {
         }
 
         static Entry<AnyValue>[] getEntryAnyValueArray(
-                BiPredicate<String, String> comparison, Entry<AnyValueWriter>[] entitys, String name) {
+                BiPredicate<String, String> comparison, Entry<AnyValue>[] entitys, String name) {
             int len = 0;
             for (Entry en : entitys) {
                 if (comparison.test(en.name, name)) {
@@ -110,7 +111,7 @@ public abstract class AnyValue {
             }
             Entry[] rs = new Entry[len];
             int i = 0;
-            for (Entry<AnyValueWriter> en : entitys) {
+            for (Entry<AnyValue> en : entitys) {
                 if (comparison.test(en.name, name)) {
                     rs[i++] = en;
                 }
@@ -139,7 +140,7 @@ public abstract class AnyValue {
         }
 
         static AnyValue[] getAnyValueArray(
-                BiPredicate<String, String> comparison, Entry<AnyValueWriter>[] entitys, String name) {
+                BiPredicate<String, String> comparison, Entry<AnyValue>[] entitys, String name) {
             int len = 0;
             for (Entry en : entitys) {
                 if (comparison.test(en.name, name)) {
@@ -151,7 +152,7 @@ public abstract class AnyValue {
             }
             AnyValue[] rs = new AnyValue[len];
             int i = 0;
-            for (Entry<AnyValueWriter> en : entitys) {
+            for (Entry<AnyValue> en : entitys) {
                 if (comparison.test(en.name, name)) {
                     rs[i++] = en.value;
                 }
@@ -187,7 +188,7 @@ public abstract class AnyValue {
         }
 
         static AnyValue[] getAnyValueArray(
-                BiPredicate<String, String> comparison, Entry<AnyValueWriter>[] entitys, String... names) {
+                BiPredicate<String, String> comparison, Entry<AnyValue>[] entitys, String... names) {
             int len = 0;
             for (Entry en : entitys) {
                 for (String name : names) {
@@ -202,7 +203,7 @@ public abstract class AnyValue {
             }
             AnyValue[] rs = new AnyValue[len];
             int i = 0;
-            for (Entry<AnyValueWriter> en : entitys) {
+            for (Entry<AnyValue> en : entitys) {
                 for (String name : names) {
                     if (comparison.test(en.name, name)) {
                         rs[i++] = en.value;
@@ -663,6 +664,7 @@ public abstract class AnyValue {
      *
      * @return String[]
      */
+    @ConvertDisabled
     public abstract String[] getNames();
 
     /**
