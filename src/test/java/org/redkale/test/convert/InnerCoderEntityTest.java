@@ -99,7 +99,7 @@ public class InnerCoderEntityTest {
                     }
                     out.writeObjectB(value);
                     for (EnMember member : enMembers) {
-                        out.writeObjectField(member, value);
+                        out.writeFieldValue(member, value);
                     }
                     out.writeObjectE(value);
                 }

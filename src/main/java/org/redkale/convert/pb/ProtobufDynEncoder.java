@@ -286,7 +286,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                     mv.visitMethodInsn(
                             INVOKEVIRTUAL,
                             pbwriterName,
-                            "writeObjectField",
+                            "writeFieldValue",
                             "(" + enMemberDesc + objectDesc + ")V",
                             false);
                 }

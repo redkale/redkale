@@ -42,7 +42,7 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
         int maxPosition = 0;
         for (EnMember fieldMember : members) {
             maxPosition = fieldMember.getPosition();
-            subout.writeObjectField(fieldMember, value);
+            subout.writeFieldValue(fieldMember, value);
         }
         if (subout.objExtFunc() != null) {
             ConvertField[] extFields = subout.objExtFunc().apply(value);
@@ -51,7 +51,7 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
                 for (ConvertField en : extFields) {
                     if (en != null) {
                         maxPosition++;
-                        subout.writeObjectField(
+                        subout.writeFieldValue(
                                 en.getName(),
                                 en.getType(),
                                 Math.max(en.getPosition(), maxPosition),

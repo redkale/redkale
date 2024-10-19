@@ -78,7 +78,7 @@ public class UserBeanProtoDynEncoder extends ProtobufDynEncoder<UserBean> {
         subout.writeFieldBytesValue(23, value.getBit6());
         subout.writeFieldStringsValue(23, value.getStrs());
 
-        subout.writeObjectField(mapEnMember, value);
+        subout.writeFieldValue(mapEnMember, value);
         subout.writeObjectE(value);
         offerWriter(out, subout);
     }

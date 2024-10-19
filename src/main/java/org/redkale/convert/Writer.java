@@ -112,7 +112,7 @@ public abstract class Writer {
      * @param obj 写入的对象
      */
     @SuppressWarnings("unchecked")
-    public void writeObjectField(final EnMember member, Object obj) {
+    public void writeFieldValue(final EnMember member, Object obj) {
         Object value;
         if (objFieldFunc == null) {
             value = member.getFieldValue(obj);
@@ -155,7 +155,7 @@ public abstract class Writer {
      * @param value 写入的字段对象
      */
     @SuppressWarnings("unchecked")
-    public void writeObjectField(
+    public void writeFieldValue(
             final String fieldName, Type fieldType, int fieldPos, Encodeable anyEncoder, Object value) {
         if (value == null) {
             if (nullable()) {

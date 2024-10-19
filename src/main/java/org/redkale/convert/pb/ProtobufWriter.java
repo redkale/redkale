@@ -1054,7 +1054,7 @@ public abstract class ProtobufWriter extends Writer {
 
     @Override
     @ClassDepends // objExtFunc扩展字段时member=null
-    public final void writeObjectField(@Nullable EnMember member, Object obj) {
+    public final void writeFieldValue(@Nullable EnMember member, Object obj) {
         Object value;
         if (objFieldFunc == null) {
             value = member.getFieldValue(obj);
