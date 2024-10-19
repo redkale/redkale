@@ -42,7 +42,7 @@ public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWrit
 
     protected void convertObjectTo(final ProtobufWriter out, @Nonnull EnMember member, Collection<T> value) {
         ProtobufEncodeable itemEncoder = (ProtobufEncodeable) this.componentEncoder;
-        //out.writeArrayB(value.size(), itemEncoder, value);
+        // out.writeArrayB(value.size(), itemEncoder, value);
         boolean first = true;
         for (T item : value) {
             if (!first) {
@@ -55,7 +55,7 @@ public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWrit
             }
             first = false;
         }
-        //out.writeArrayE();
+        // out.writeArrayE();
     }
 
     protected void convertPrimitivedTo(final ProtobufWriter out, @Nonnull EnMember member, Collection<T> value) {
@@ -68,6 +68,12 @@ public class ProtobufCollectionEncoder<T> extends CollectionEncoder<ProtobufWrit
         for (T item : value) {
             itemEncoder.convertTo(out, item);
         }
+    }
+
+    // 对象是否为空
+    @Override
+    public boolean isEmpty(ProtobufWriter out, Collection<T> value) {
+        return value == null || value.isEmpty();
     }
 
     @Override

@@ -43,7 +43,7 @@ public class ProtobufStreamEncoder<T> extends StreamEncoder<ProtobufWriter, T>
 
     protected void convertObjectTo(final ProtobufWriter out, @Nonnull EnMember member, Object[] value) {
         ProtobufEncodeable itemEncoder = (ProtobufEncodeable) this.componentEncoder;
-        //out.writeArrayB(value.length, itemEncoder, value);
+        // out.writeArrayB(value.length, itemEncoder, value);
         boolean first = true;
         for (Object item : value) {
             if (!first) {
@@ -56,7 +56,7 @@ public class ProtobufStreamEncoder<T> extends StreamEncoder<ProtobufWriter, T>
             }
             first = false;
         }
-        //out.writeArrayE();
+        // out.writeArrayE();
     }
 
     protected void convertPrimitivedTo(final ProtobufWriter out, @Nonnull EnMember member, Object[] value) {
@@ -69,6 +69,13 @@ public class ProtobufStreamEncoder<T> extends StreamEncoder<ProtobufWriter, T>
         for (Object item : value) {
             itemEncoder.convertTo(out, item);
         }
+    }
+
+    // 对象是否为空
+    @Override
+    public boolean isEmpty(ProtobufWriter out, Stream<T> value) {
+        Object[] array = out.putStreamArray(value);
+        return array == null || array.length == 0;
     }
 
     @Override

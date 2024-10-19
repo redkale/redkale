@@ -51,7 +51,7 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
         BiFunction<K, V, V> mapFieldFunc = out.mapFieldFunc();
         ProtobufEncodeable kencoder = (ProtobufEncodeable) this.keyEncoder;
         ProtobufEncodeable vencoder = (ProtobufEncodeable) this.valueEncoder;
-        //out.writeMapB(values.size(), kencoder, vencoder, value);
+        // out.writeMapB(values.size(), kencoder, vencoder, value);
         AtomicBoolean first = new AtomicBoolean(true);
         values.forEach((key, val0) -> {
             if (ignoreColumns == null || !ignoreColumns.contains(key.toString())) {
@@ -76,7 +76,7 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
                 first.set(false);
             }
         });
-        //out.writeMapE();
+        // out.writeMapE();
     }
 
     protected int computeSize(ProtobufWriter out, K key, V val) {
@@ -85,6 +85,12 @@ public class ProtobufMapEncoder<K, V> extends MapEncoder<ProtobufWriter, K, V>
         int keySize = kencoder.computeSize(out, keyMember.getTagSize(), key);
         int valSize = vencoder.computeSize(out, valueMember.getTagSize(), val);
         return (keyMember.getTagSize() + keySize) + (valueMember.getTagSize() + valSize);
+    }
+
+    // 对象是否为空
+    @Override
+    public boolean isEmpty(ProtobufWriter out, Map<K, V> value) {
+        return value == null || value.isEmpty();
     }
 
     @Override

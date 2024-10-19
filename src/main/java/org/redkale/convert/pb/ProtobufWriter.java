@@ -1065,6 +1065,9 @@ public abstract class ProtobufWriter extends Writer {
             return;
         }
         ProtobufEncodeable encoder = (ProtobufEncodeable) member.getEncoder();
+        if (encoder.isEmpty(this, value)) {
+            return;
+        }
         this.writeField(member);
         encoder.convertTo(this, member, value);
     }

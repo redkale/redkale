@@ -24,8 +24,11 @@ public interface ProtobufEncodeable<W extends Writer, T> extends Encodeable<W, T
         convertTo(out, value);
     }
 
+    // 对象是否为空
+    default boolean isEmpty(W out, T value) {
+        return false;
+    }
+
     // 计算内容长度
     public int computeSize(ProtobufWriter out, int tagSize, T value);
-
-
 }
