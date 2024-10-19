@@ -60,7 +60,7 @@ public class ProtobufBytesWriter extends ProtobufWriter { // 存在child情况�
                 s = p;
                 p = p.parent;
                 offerPool(s);
-            } while (p != this && p != null);
+            } while (p != this);
         }
         this.delegate = null;
         if (this.content.length > RESET_MAX_SIZE) {
@@ -79,6 +79,23 @@ public class ProtobufBytesWriter extends ProtobufWriter { // 存在child情况�
     @Override
     public ProtobufWriter pollChild() {
         Queue<ProtobufBytesWriter> queue = this.pool;
+        if (queue == null) {
+            // 必须要使用根节点的pool
+            ProtobufBytesWriter root = null;
+            if (this.parent != null) {
+                ProtobufWriter p = this;
+                while ((p = p.parent) instanceof ProtobufBytesWriter) {
+                    root = (ProtobufBytesWriter) p;
+                }
+            }
+            if (root != null) {
+                queue = root.pool;
+                if (queue == null) {
+                    root.pool = new ArrayDeque<>(CHILD_SIZE);
+                    queue = root.pool;
+                }
+            }
+        }
         if (queue == null) {
             this.pool = new ArrayDeque<>(CHILD_SIZE);
             queue = this.pool;
