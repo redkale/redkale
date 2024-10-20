@@ -12,9 +12,9 @@ import java.util.function.*;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.ConvertDisabled;
+import org.redkale.convert.ConvertImpl;
 import org.redkale.convert.json.JsonArray;
 import org.redkale.convert.json.JsonObject;
-import static org.redkale.util.Utility.isEmpty;
 
 /**
  * 该类提供类似JSONObject的数据结构，主要用于读取xml配置文件和http-header存储
@@ -24,6 +24,7 @@ import static org.redkale.util.Utility.isEmpty;
  * @author zhangjx
  */
 @SuppressWarnings("unchecked")
+@ConvertImpl(AnyValueWriter.class)
 public abstract class AnyValue {
 
     /** xml的文本节点name */
@@ -1071,7 +1072,7 @@ public abstract class AnyValue {
     }
 
     private static <T> boolean equals(Entry<? extends T>[] entry1, Entry<T>[] entry2) {
-        if (isEmpty(entry1) && isEmpty(entry2)) {
+        if (Utility.isEmpty(entry1) && Utility.isEmpty(entry2)) {
             return true;
         }
         if (entry1.length != entry2.length) {
