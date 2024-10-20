@@ -151,12 +151,11 @@ public abstract class Writer {
      * @param fieldName 字段名称
      * @param fieldType 字段类型
      * @param fieldPos 字段顺序
-     * @param anyEncoder Encoder
+     * @param fieldEncoder Encoder
      * @param value 写入的字段对象
      */
     @SuppressWarnings("unchecked")
-    public void writeFieldValue(
-            final String fieldName, Type fieldType, int fieldPos, Encodeable anyEncoder, Object value) {
+    public void writeFieldValue(String fieldName, Type fieldType, int fieldPos, Encodeable fieldEncoder, Object value) {
         if (value == null) {
             if (nullable()) {
                 this.writeField(null, fieldName, fieldType, fieldPos);
@@ -181,7 +180,7 @@ public abstract class Writer {
             }
         }
         this.writeField(null, fieldName, fieldType, fieldPos);
-        anyEncoder.convertTo(this, value);
+        fieldEncoder.convertTo(this, value);
         this.comma = true;
     }
 
