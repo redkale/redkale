@@ -47,15 +47,15 @@ public class ProtobufObjectEncoder<T> extends ObjectEncoder<ProtobufWriter, T>
         if (subout.objExtFunc() != null) {
             ConvertField[] extFields = subout.objExtFunc().apply(value);
             if (extFields != null) {
-                Encodeable<ProtobufWriter, ?> anyEncoder = factory.getAnyEncoder();
                 for (ConvertField en : extFields) {
                     if (en != null) {
+                        Encodeable<ProtobufWriter, ?> extEncoder = factory.loadEncoder(en.getType());
                         maxPosition++;
                         subout.writeFieldValue(
                                 en.getName(),
                                 en.getType(),
                                 Math.max(en.getPosition(), maxPosition),
-                                anyEncoder,
+                                extEncoder,
                                 en.getValue());
                     }
                 }
