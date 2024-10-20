@@ -66,9 +66,6 @@ public abstract class ProtobufWriter extends Writer {
 
     protected boolean enumtostring;
 
-    protected ProtobufWriter parent;
-
-    protected ProtobufBytesWriter child;
 
     protected Map<Stream, Object[]> streamArrayCache;
 
@@ -113,8 +110,6 @@ public abstract class ProtobufWriter extends Writer {
     @Override
     protected boolean recycle() {
         super.recycle();
-        this.child = null;
-        this.parent = null;
         this.mapFieldFunc = null;
         this.objFieldFunc = null;
         this.objExtFunc = null;

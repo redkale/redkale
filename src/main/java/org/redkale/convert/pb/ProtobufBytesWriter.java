@@ -23,6 +23,10 @@ public class ProtobufBytesWriter extends ProtobufWriter { // 存在child情况�
 
     byte[] content;
 
+    ProtobufBytesWriter child;
+
+    private ProtobufBytesWriter parent;
+
     // 链表结构
     private ProtobufBytesWriter delegate;
 
@@ -54,14 +58,16 @@ public class ProtobufBytesWriter extends ProtobufWriter { // 存在child情况�
     protected boolean recycle() {
         super.recycle();
         if (this.delegate != null && this.pool != null && this.parent == null) {
-            ProtobufWriter s;
-            ProtobufWriter p = this.delegate;
+            ProtobufBytesWriter s;
+            ProtobufBytesWriter p = this.delegate;
             do {
                 s = p;
                 p = p.parent;
                 offerPool(s);
             } while (p != this);
         }
+        this.child = null;
+        this.parent = null;
         this.delegate = null;
         if (this.content.length > RESET_MAX_SIZE) {
             this.content = new byte[DEFAULT_SIZE];
@@ -69,10 +75,10 @@ public class ProtobufBytesWriter extends ProtobufWriter { // 存在child情况�
         return true;
     }
 
-    private void offerPool(ProtobufWriter item) {
+    private void offerPool(ProtobufBytesWriter item) {
         if (this.pool != null && this.pool.size() < CHILD_SIZE) {
             item.recycle();
-            this.pool.offer((ProtobufBytesWriter) item);
+            this.pool.offer(item);
         }
     }
 
@@ -83,9 +89,9 @@ public class ProtobufBytesWriter extends ProtobufWriter { // 存在child情况�
             // 必须要使用根节点的pool
             ProtobufBytesWriter root = null;
             if (this.parent != null) {
-                ProtobufWriter p = this;
-                while ((p = p.parent) instanceof ProtobufBytesWriter) {
-                    root = (ProtobufBytesWriter) p;
+                ProtobufBytesWriter p = this;
+                while ((p = p.parent) != null) {
+                    root = p;
                 }
             }
             if (root != null) {
@@ -114,9 +120,9 @@ public class ProtobufBytesWriter extends ProtobufWriter { // 存在child情况�
             delegate = result;
         }
         if (this.parent != null) {
-            ProtobufWriter p = this;
-            while ((p = p.parent) instanceof ProtobufBytesWriter) {
-                ((ProtobufBytesWriter) p).delegate = result;
+            ProtobufBytesWriter p = this;
+            while ((p = p.parent) != null) {
+                p.delegate = result;
             }
         }
         result.configFieldFunc(result.parent);
@@ -125,13 +131,14 @@ public class ProtobufBytesWriter extends ProtobufWriter { // 存在child情况�
 
     @Override
     public void offerChild(ProtobufWriter child) {
-        if (child != null) {
-            int len = child.length();
-            ProtobufWriter next = child;
+        ProtobufBytesWriter sub = (ProtobufBytesWriter) child;
+        if (sub != null) {
+            int len = sub.length();
+            ProtobufBytesWriter next = sub;
             while ((next = next.child) != null) {
                 len += next.length();
             }
-            child.parent.writeSelfLength(len);
+            sub.parent.writeSelfLength(len);
         }
     }
 
