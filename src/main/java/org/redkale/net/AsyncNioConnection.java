@@ -68,7 +68,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     protected Object writeAttachment;
 
-    protected CompletionHandler<Integer, Object> writeCompletionHandler;
+    protected CompletionHandler<Integer, ?> writeCompletionHandler;
 
     protected SelectionKey writeKey;
 
@@ -480,7 +480,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
     }
 
     protected void handleWrite(final int totalCount, Throwable t) {
-        CompletionHandler<Integer, Object> handler = this.writeCompletionHandler;
+        CompletionHandler handler = this.writeCompletionHandler;
         Object attach = this.writeAttachment;
         // 清空写参数
         this.writeCompletionHandler = null;

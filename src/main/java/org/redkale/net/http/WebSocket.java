@@ -8,6 +8,7 @@ package org.redkale.net.http;
 import java.io.Serializable;
 import java.net.*;
 import java.nio.ByteBuffer;
+import java.nio.channels.CompletionHandler;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -21,6 +22,7 @@ import org.redkale.annotation.Nonnull;
 import org.redkale.convert.Convert;
 import org.redkale.net.AsyncConnection;
 import org.redkale.net.http.WebSocketPacket.FrameType;
+import org.redkale.util.ByteArray;
 
 /**
  *
@@ -95,8 +97,6 @@ public abstract class WebSocket<G extends Serializable, T> {
     WebSocketEngine _engine;
 
     WebSocketReadHandler _readHandler;
-
-    WebSocketWriteHandler _writeHandler;
 
     // 分布式下不可为空
     InetSocketAddress _sncpAddress;
@@ -273,18 +273,54 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return 0表示成功， 非0表示错误码
      */
     CompletableFuture<Integer> sendPacket(WebSocketPacket packet) {
-        if (this._writeHandler == null) { // if (this._writeIOThread == null) {
+        if (this._readHandler == null) { // if (this._writeIOThread == null) {
             if (delayPackets == null) {
                 delayPackets = new ArrayList<>();
             }
             delayPackets.add(packet);
             return CompletableFuture.completedFuture(RETCODE_DELAYSEND);
         }
-        CompletableFuture<Integer> rs = this._writeHandler.send(packet); // this._writeIOThread.send(this, packet);
+        return _sendToChannel(packet);
+    }
+
+    /**
+     * 给自身发送消息体, 包含二进制/文本
+     *
+     * @param packet WebSocketPacket
+     * @return 0表示成功， 非0表示错误码
+     */
+    CompletableFuture<Integer> _sendToChannel(WebSocketPacket packet) {
+        if (_channel == null || closed.get()) {
+            return CompletableFuture.completedFuture(RETCODE_WSOCKET_CLOSED);
+        }
+        WebSocketFuture future = new WebSocketFuture();
+        _channel.writeInIOThread(packet.encodeToBytes(), future);
         if (_engine.logger.isLoggable(Level.FINER) && packet != WebSocketPacket.DEFAULT_PING_PACKET) {
             _engine.logger.finer("userid:" + getUserid() + " send websocket message(" + packet + ")" + " on " + this);
         }
-        return rs == null ? CompletableFuture.completedFuture(RETCODE_WSOCKET_CLOSED) : rs;
+        return future;
+    }
+
+    /**
+     * 给自身发送消息体, 包含二进制/文本
+     *
+     * @param packets WebSocketPacket集合
+     * @return 0表示成功， 非0表示错误码
+     */
+    CompletableFuture<Integer> _sendToChannel(List<WebSocketPacket> packets) {
+        if (_channel == null || closed.get()) {
+            return CompletableFuture.completedFuture(RETCODE_WSOCKET_CLOSED);
+        }
+        WebSocketFuture future = new WebSocketFuture();
+        ByteArray array = new ByteArray();
+        for (WebSocketPacket packet : packets) {
+            array.put(packet.encodeToBytes());
+        }
+        _channel.writeInIOThread(array.toArray(), future);
+        if (_engine.logger.isLoggable(Level.FINER)) {
+            _engine.logger.finer("userid:" + getUserid() + " send websocket messages(" + packets + ")" + " on " + this);
+        }
+        return future;
     }
 
     // ----------------------------------------------------------------
@@ -952,9 +988,6 @@ public abstract class WebSocket<G extends Serializable, T> {
                 if (_readHandler != null) {
                     _readHandler.byteArrayPool.accept(_readHandler.halfFrameBytes);
                 }
-                if (_writeHandler != null) {
-                    _writeHandler.byteArrayPool.accept(_writeHandler.writeArray);
-                }
                 return onClose(code, reason);
             };
             CompletableFuture<Void> future = _engine.removeLocalThenDisconnect(this);
@@ -978,5 +1011,23 @@ public abstract class WebSocket<G extends Serializable, T> {
     @Override
     public String toString() {
         return this.getUserid() + "@" + _remoteAddr + "@" + Objects.hashCode(this);
+    }
+
+    protected class WebSocketFuture extends CompletableFuture<Integer> implements CompletionHandler<Integer, Void> {
+
+        public WebSocketFuture() {
+            super();
+        }
+
+        @Override
+        public void completed(Integer result, Void attachment) {
+            super.complete(0);
+        }
+
+        @Override
+        public void failed(Throwable exc, Void attachment) {
+            super.completeExceptionally(exc);
+            kill(RETCODE_SENDEXCEPTION, "websocket send message failed on CompletionHandler");
+        }
     }
 }

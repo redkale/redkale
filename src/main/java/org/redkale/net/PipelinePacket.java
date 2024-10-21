@@ -26,40 +26,35 @@ public class PipelinePacket {
     protected int tupleLength;
 
     @ConvertColumn(index = 4)
-    protected CompletionHandler<Integer, Object> handler;
+    protected CompletionHandler<Integer, ?> handler;
 
     @ConvertColumn(index = 5)
     protected Object attach;
 
     public PipelinePacket() {}
 
-    public PipelinePacket(ByteTuple data, CompletionHandler<Integer, Object> handler) {
+    public PipelinePacket(ByteTuple data, CompletionHandler<Integer, ?> handler) {
         this(data, handler, null);
     }
 
-    public PipelinePacket(ByteTuple data, CompletionHandler<Integer, Object> handler, Object attach) {
+    public PipelinePacket(ByteTuple data, CompletionHandler<Integer, ?> handler, Object attach) {
         this(data.content(), data.offset(), data.length(), handler, attach);
     }
 
-    public PipelinePacket(byte[] tupleBytes, CompletionHandler<Integer, Object> handler) {
+    public PipelinePacket(byte[] tupleBytes, CompletionHandler<Integer, ?> handler) {
         this(tupleBytes, 0, tupleBytes.length, handler, null);
     }
 
-    public PipelinePacket(byte[] tupleBytes, CompletionHandler<Integer, Object> handler, Object attach) {
+    public PipelinePacket(byte[] tupleBytes, CompletionHandler<Integer, ?> handler, Object attach) {
         this(tupleBytes, 0, tupleBytes.length, handler, attach);
     }
 
-    public PipelinePacket(
-            byte[] tupleBytes, int tupleOffset, int tupleLength, CompletionHandler<Integer, Object> handler) {
+    public PipelinePacket(byte[] tupleBytes, int tupleOffset, int tupleLength, CompletionHandler<Integer, ?> handler) {
         this(tupleBytes, tupleOffset, tupleLength, handler, null);
     }
 
     public PipelinePacket(
-            byte[] tupleBytes,
-            int tupleOffset,
-            int tupleLength,
-            CompletionHandler<Integer, Object> handler,
-            Object attach) {
+            byte[] tupleBytes, int tupleOffset, int tupleLength, CompletionHandler<Integer, ?> handler, Object attach) {
         this.tupleBytes = tupleBytes;
         this.tupleOffset = tupleOffset;
         this.tupleLength = tupleLength;
@@ -91,11 +86,11 @@ public class PipelinePacket {
         this.tupleLength = tupleLength;
     }
 
-    public CompletionHandler<Integer, Object> getHandler() {
+    public CompletionHandler<Integer, ?> getHandler() {
         return handler;
     }
 
-    public void setHandler(CompletionHandler<Integer, Object> handler) {
+    public void setHandler(CompletionHandler<Integer, ?> handler) {
         this.handler = handler;
     }
 

@@ -329,8 +329,6 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                     Traces.currentTraceid(request.getTraceid());
                     webSocket._readHandler = new WebSocketReadHandler(
                             response.getContext(), webSocket, byteArrayPool, restMessageConsumer);
-                    webSocket._writeHandler =
-                            new WebSocketWriteHandler(response.getContext(), webSocket, byteArrayPool);
 
                     Runnable createUseridHandler = () -> {
                         CompletableFuture<Serializable> userFuture = webSocket.createUserid();
@@ -415,8 +413,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                                 webSocket.delayPackets = null;
                                 // CompletableFuture<Integer> cf = webSocket._writeIOThread.send(webSocket,
                                 // delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
-                                CompletableFuture<Integer> cf = webSocket._writeHandler.send(
-                                        delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
+                                CompletableFuture<Integer> cf = webSocket._sendToChannel(delayPackets);
                                 cf.whenComplete((Integer v, Throwable t) -> {
                                     Traces.currentTraceid(request.getTraceid());
                                     if (userid == null || t != null) {
@@ -442,8 +439,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                         webSocket.delayPackets = null;
                         // CompletableFuture<Integer> cf = webSocket._writeIOThread.send(webSocket,
                         // delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
-                        CompletableFuture<Integer> cf = webSocket._writeHandler.send(
-                                delayPackets.toArray(new WebSocketPacket[delayPackets.size()]));
+                        CompletableFuture<Integer> cf = webSocket._sendToChannel(delayPackets);
                         cf.whenComplete((Integer v, Throwable t) -> {
                             Traces.currentTraceid(request.getTraceid());
                             if (sessionid == null || t != null) {

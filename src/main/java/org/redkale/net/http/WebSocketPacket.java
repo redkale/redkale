@@ -9,7 +9,6 @@ import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import org.redkale.convert.ConvertColumn;
 import org.redkale.net.http.WebSocketPacket.FrameType;
-import org.redkale.util.ByteArray;
 
 /**
  * 详情见: https://redkale.org
@@ -94,23 +93,39 @@ public final class WebSocketPacket {
     }
 
     // 消息编码
-    public void writeEncode(final ByteArray array) {
+    public byte[] encodeToBytes() {
         final byte opcode = (byte) (type.getValue() | 0x80);
         final byte[] content = getPayload();
         final int len = content.length;
         if (len <= 0x7D) { // 125
-            array.put(opcode);
-            array.put((byte) len);
+            byte[] data = new byte[2 + len];
+            data[0] = opcode;
+            data[1] = (byte) len;
+            System.arraycopy(content, 0, data, 2, len);
+            return data;
         } else if (len <= 0xFFFF) { // 65535
-            array.put(opcode);
-            array.put((byte) 0x7E); // 126
-            array.putChar((char) len);
+            byte[] data = new byte[4 + len];
+            data[0] = opcode;
+            data[1] = (byte) 0x7E; // 126
+            data[2] = (byte) (len >> 8 & 0xFF);
+            data[3] = (byte) (len & 0xFF);
+            System.arraycopy(content, 0, data, 4, len);
+            return data;
         } else {
-            array.put(opcode);
-            array.put((byte) 0x7F); // 127
-            array.putLong(len);
+            byte[] data = new byte[10 + len];
+            data[0] = opcode;
+            data[1] = (byte) 0x7F; // 127
+            data[2] = (byte) (len >> 56 & 0xFF);
+            data[3] = (byte) (len >> 48 & 0xFF);
+            data[4] = (byte) (len >> 40 & 0xFF);
+            data[5] = (byte) (len >> 32 & 0xFF);
+            data[6] = (byte) (len >> 24 & 0xFF);
+            data[7] = (byte) (len >> 16 & 0xFF);
+            data[8] = (byte) (len >> 8 & 0xFF);
+            data[9] = (byte) (len & 0xFF);
+            System.arraycopy(content, 0, data, 10, len);
+            return data;
         }
-        array.put(content);
     }
 
     public byte[] getPayload() {
