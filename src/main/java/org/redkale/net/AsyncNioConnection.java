@@ -158,7 +158,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
     }
 
     @Override
-    public final void pipelineWrite(PipelinePacket packet) {
+    public final void pipelineWrite(PipelinePacket... packets) {
         if (pipelineWriteQueue == null) {
             pipelineLock.lock();
             try {
@@ -169,7 +169,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
                 pipelineLock.unlock();
             }
         }
-        this.pipelineWriteQueue.offer(packet);
+        for (PipelinePacket packet : packets) {
+            this.pipelineWriteQueue.offer(packet);
+        }
         this.ioWriteThread.execute(this::pipelineDoWrite);
     }
 

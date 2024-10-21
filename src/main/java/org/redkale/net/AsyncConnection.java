@@ -208,10 +208,10 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
     /**
      * 快速发送
      *
-     * @see org.redkale.net.AsyncNioConnection#pipelineWrite(org.redkale.net.PipelinePacket)
-     * @param packet  PipelinePacket
+     * @see org.redkale.net.AsyncNioConnection#pipelineWrite(org.redkale.net.PipelinePacket...)
+     * @param packets  PipelinePacket[]
      */
-    public abstract void pipelineWrite(PipelinePacket packet);
+    public abstract void pipelineWrite(PipelinePacket... packets);
 
     public abstract boolean isTCP();
 
