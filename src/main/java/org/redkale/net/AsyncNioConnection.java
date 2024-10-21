@@ -521,7 +521,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
             }
 
             @Override
-            public int read(byte b[], int off, int len) throws IOException {
+            public int read(byte[] b, int off, int len) throws IOException {
                 if (b == null) {
                     throw new NullPointerException();
                 } else if (off < 0 || len < 0 || len > b.length - off) {

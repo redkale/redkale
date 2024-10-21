@@ -12,10 +12,9 @@ import org.redkale.util.ByteTuple;
  * pipelineWrite写入包
  *
  * @author zhangjx
- * @param <T> attachment类型
  * @since 2.8.0
  */
-public class PipelinePacket<T> {
+public class PipelinePacket {
 
     @ConvertColumn(index = 1)
     protected byte[] tupleBytes;
@@ -27,35 +26,40 @@ public class PipelinePacket<T> {
     protected int tupleLength;
 
     @ConvertColumn(index = 4)
-    protected CompletionHandler<Integer, T> handler;
+    protected CompletionHandler<Integer, Object> handler;
 
     @ConvertColumn(index = 5)
-    protected T attach;
+    protected Object attach;
 
     public PipelinePacket() {}
 
-    public PipelinePacket(ByteTuple data, CompletionHandler<Integer, T> handler) {
+    public PipelinePacket(ByteTuple data, CompletionHandler<Integer, Object> handler) {
         this(data, handler, null);
     }
 
-    public PipelinePacket(ByteTuple data, CompletionHandler<Integer, T> handler, T attach) {
+    public PipelinePacket(ByteTuple data, CompletionHandler<Integer, Object> handler, Object attach) {
         this(data.content(), data.offset(), data.length(), handler, attach);
     }
 
-    public PipelinePacket(byte[] tupleBytes, CompletionHandler<Integer, T> handler) {
+    public PipelinePacket(byte[] tupleBytes, CompletionHandler<Integer, Object> handler) {
         this(tupleBytes, 0, tupleBytes.length, handler, null);
     }
 
-    public PipelinePacket(byte[] tupleBytes, CompletionHandler<Integer, T> handler, T attach) {
+    public PipelinePacket(byte[] tupleBytes, CompletionHandler<Integer, Object> handler, Object attach) {
         this(tupleBytes, 0, tupleBytes.length, handler, attach);
     }
 
-    public PipelinePacket(byte[] tupleBytes, int tupleOffset, int tupleLength, CompletionHandler<Integer, T> handler) {
+    public PipelinePacket(
+            byte[] tupleBytes, int tupleOffset, int tupleLength, CompletionHandler<Integer, Object> handler) {
         this(tupleBytes, tupleOffset, tupleLength, handler, null);
     }
 
     public PipelinePacket(
-            byte[] tupleBytes, int tupleOffset, int tupleLength, CompletionHandler<Integer, T> handler, T attach) {
+            byte[] tupleBytes,
+            int tupleOffset,
+            int tupleLength,
+            CompletionHandler<Integer, Object> handler,
+            Object attach) {
         this.tupleBytes = tupleBytes;
         this.tupleOffset = tupleOffset;
         this.tupleLength = tupleLength;
@@ -87,19 +91,19 @@ public class PipelinePacket<T> {
         this.tupleLength = tupleLength;
     }
 
-    public CompletionHandler<Integer, T> getHandler() {
+    public CompletionHandler<Integer, Object> getHandler() {
         return handler;
     }
 
-    public void setHandler(CompletionHandler<Integer, T> handler) {
+    public void setHandler(CompletionHandler<Integer, Object> handler) {
         this.handler = handler;
     }
 
-    public T getAttach() {
+    public Object getAttach() {
         return attach;
     }
 
-    public void setAttach(T attach) {
+    public void setAttach(Object attach) {
         this.attach = attach;
     }
 }
