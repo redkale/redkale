@@ -273,23 +273,13 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @return 0表示成功， 非0表示错误码
      */
     CompletableFuture<Integer> sendPacket(WebSocketPacket packet) {
-        if (this._readHandler == null) { // if (this._writeIOThread == null) {
+        if (this._readHandler == null) {
             if (delayPackets == null) {
                 delayPackets = new ArrayList<>();
             }
             delayPackets.add(packet);
             return CompletableFuture.completedFuture(RETCODE_DELAYSEND);
         }
-        return _sendToChannel(packet);
-    }
-
-    /**
-     * 给自身发送消息体, 包含二进制/文本
-     *
-     * @param packet WebSocketPacket
-     * @return 0表示成功， 非0表示错误码
-     */
-    CompletableFuture<Integer> _sendToChannel(WebSocketPacket packet) {
         if (_channel == null || closed.get()) {
             return CompletableFuture.completedFuture(RETCODE_WSOCKET_CLOSED);
         }
@@ -307,7 +297,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      * @param packets WebSocketPacket集合
      * @return 0表示成功， 非0表示错误码
      */
-    CompletableFuture<Integer> _sendToChannel(List<WebSocketPacket> packets) {
+    CompletableFuture<Integer> sendToChannel0(List<WebSocketPacket> packets) {
         if (_channel == null || closed.get()) {
             return CompletableFuture.completedFuture(RETCODE_WSOCKET_CLOSED);
         }
