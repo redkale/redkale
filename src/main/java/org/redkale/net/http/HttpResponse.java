@@ -975,7 +975,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     /**
      * 将指定byte[]按响应结果输出
      *
-     * @param kill kill
+     * @param kill abort
      * @param contentType ContentType
      * @param bs 输出内容
      * @param offset 偏移量
@@ -988,7 +988,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     /**
      * 将指定byte[]按响应结果输出
      *
-     * @param kill kill
+     * @param kill abort
      * @param contentType ContentType
      * @param bodyContent 输出内容
      * @param bodyOffset 偏移量
@@ -1031,11 +1031,11 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         if (cacheHandler != null) {
             cacheHandler.accept(this, data.getBytes());
         }
-        // 不能用finish(boolean kill, final ByteTuple array) 否则会调this.finishFuture
+        // 不能用finish(boolean abort, final ByteTuple array) 否则会调this.finishFuture
         super.finish(false, data.content(), 0, data.length());
     }
 
-    void kill() {
+    void abort() {
         refuseAlive();
         this.responseConsumer.accept(this);
     }

@@ -297,7 +297,7 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
                         "WebSocket(" + webSocket + ") abort on read buffer count, force to close channel, live "
                                 + (System.currentTimeMillis() - webSocket.getCreateTime()) / 1000 + " seconds");
             }
-            webSocket.kill(CLOSECODE_ILLPACKET, "read buffer count is " + count);
+            webSocket.abort(CLOSECODE_ILLPACKET, "read buffer count is " + count);
             return;
         }
         try {
@@ -371,13 +371,13 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
                                     Level.FINEST,
                                     "WebSocket(" + webSocket + ") onMessage by CLOSE FrameType : " + packet);
                         }
-                        webSocket.kill(CLOSECODE_CLIENTCLOSE, "received CLOSE frame-type message");
+                        webSocket.abort(CLOSECODE_CLIENTCLOSE, "received CLOSE frame-type message");
                         return;
                     } else {
                         logger.log(
                                 Level.WARNING,
                                 "WebSocket(" + webSocket + ") onMessage by unknown FrameType : " + packet);
-                        webSocket.kill(CLOSECODE_ILLPACKET, "received unknown frame-type message");
+                        webSocket.abort(CLOSECODE_ILLPACKET, "received unknown frame-type message");
                         return;
                     }
                 }
@@ -387,7 +387,7 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
             webSocket._channel.read(this);
         } catch (Throwable e) {
             logger.log(Level.WARNING, "WebSocket(" + webSocket + ") onMessage by received error", e);
-            webSocket.kill(CLOSECODE_WSEXCEPTION, "websocket-received error");
+            webSocket.abort(CLOSECODE_WSEXCEPTION, "websocket-received error");
         }
     }
 
@@ -406,9 +406,9 @@ public class WebSocketReadHandler implements CompletionHandler<Integer, ByteBuff
                                         + (System.currentTimeMillis() - webSocket.getCreateTime()) / 1000 + " seconds",
                                 exc);
             }
-            webSocket.kill(CLOSECODE_WSEXCEPTION, "read websocket-packet failed");
+            webSocket.abort(CLOSECODE_WSEXCEPTION, "read websocket-packet failed");
         } else {
-            webSocket.kill(CLOSECODE_WSEXCEPTION, "decode websocket-packet error");
+            webSocket.abort(CLOSECODE_WSEXCEPTION, "decode websocket-packet error");
         }
     }
 }

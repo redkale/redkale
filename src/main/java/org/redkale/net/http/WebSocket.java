@@ -952,7 +952,7 @@ public abstract class WebSocket<G extends Serializable, T> {
         if (this.inflater != null) {
             this.inflater.end();
         }
-        CompletableFuture<Void> future = kill(CLOSECODE_SERVERCLOSE, "user close");
+        CompletableFuture<Void> future = abort(CLOSECODE_SERVERCLOSE, "user close");
         if (future != null) {
             future.join();
         }
@@ -978,7 +978,7 @@ public abstract class WebSocket<G extends Serializable, T> {
      * java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:510) at
      * java.base/java.util.concurrent.CompletableFuture.complete(CompletableFuture.java:2179)
      */
-    CompletableFuture<Void> kill(int code, String reason) {
+    CompletableFuture<Void> abort(int code, String reason) {
         if (closed.compareAndSet(false, true)) {
             if (_channel == null) {
                 return null;
@@ -1027,7 +1027,7 @@ public abstract class WebSocket<G extends Serializable, T> {
         @Override
         public void failed(Throwable exc, Void attachment) {
             super.completeExceptionally(exc);
-            kill(RETCODE_SENDEXCEPTION, "websocket send message failed on CompletionHandler");
+            abort(RETCODE_SENDEXCEPTION, "websocket send message failed on CompletionHandler");
         }
     }
 }
