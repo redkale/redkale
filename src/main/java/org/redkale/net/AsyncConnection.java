@@ -65,7 +65,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
 
     private Consumer<ByteBuffer> writeBufferConsumer;
 
-    private final ReentrantLock pipelineLock = new ReentrantLock();
+    final ReentrantLock pipelineLock = new ReentrantLock();
 
     private ByteBufferWriter pipelineWriter;
 
@@ -205,15 +205,13 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         return ioWriteThread;
     }
 
-    public abstract AsyncConnection pipelineHandler(CompletionHandler handler);
-
     /**
      * 快速发送
      *
-     * @see org.redkale.net.AsyncNioConnection#pipelineWrite(java.util.function.Consumer)
-     * @param consumer  Consumer
+     * @see org.redkale.net.AsyncNioConnection#pipelineWrite(org.redkale.net.PipelinePacket)
+     * @param packet  PipelinePacket
      */
-    public abstract void pipelineWrite(Consumer<ByteArray> consumer);
+    public abstract void pipelineWrite(PipelinePacket packet);
 
     public abstract boolean isTCP();
 

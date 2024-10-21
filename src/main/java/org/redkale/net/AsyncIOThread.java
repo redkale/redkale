@@ -138,10 +138,6 @@ public class AsyncIOThread extends WorkThread {
         selector.wakeup();
     }
 
-    public final void wakeup() {
-        selector.wakeup();
-    }
-
     public Supplier<ByteBuffer> getBufferSupplier() {
         return bufferSupplier;
     }

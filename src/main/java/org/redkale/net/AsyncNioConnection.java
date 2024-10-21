@@ -10,12 +10,10 @@ import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Consumer;
 import javax.net.ssl.SSLContext;
-import org.redkale.util.ByteArray;
 import org.redkale.util.ByteBufferWriter;
-import org.redkale.util.RedkaleException;
 
 /**
  * 详情见: https://redkale.org
@@ -42,11 +40,8 @@ abstract class AsyncNioConnection extends AsyncConnection {
     protected SelectionKey readKey;
 
     // ------------------------------ pipeline写操作 ------------------------------------
-    protected ByteArray pipelineWriteArray;
+    protected Queue<PipelinePacket> pipelineWriteQueue;
 
-    protected Queue<Consumer<ByteArray>> pipelineWriteQueue;
-
-    protected CompletionHandler pipelineWriteHandler;
     // -------------------------------- 写操作 --------------------------------------
     protected byte[] writeByteTuple1Array;
 
@@ -163,63 +158,32 @@ abstract class AsyncNioConnection extends AsyncConnection {
     }
 
     @Override
-    public final AsyncConnection pipelineHandler(CompletionHandler handler) {
-        if (!clientMode) {
-            throw new RedkaleException("fast-writer only for client connection");
-        }
-        this.pipelineWriteHandler = Objects.requireNonNull(handler);
-        this.pipelineWriteArray = new ByteArray();
-        this.pipelineWriteQueue = new ConcurrentLinkedQueue<>();
-        return this;
-    }
-
-    @Override
-    public final void pipelineWrite(Consumer<ByteArray> consumer) {
-        if (pipelineWriteHandler == null) {
-            throw new RedkaleException("fast-writer handler is null");
-        }
-        this.pipelineWriteQueue.offer(consumer);
-        if (writeKey == null) {
-            this.ioWriteThread.register(this::pipelineWriteRegister);
-        } else {
-            this.writeCompletionHandler = this.pipelineWriteHandler;
-            writeKey.interestOps(writeKey.interestOps() | SelectionKey.OP_WRITE);
-            this.ioWriteThread.wakeup();
-        }
-    }
-
-    private void pipelineWriteRegister(Selector selector) {
-        try {
-            if (writeKey == null) {
-                writeKey = keyFor(selector);
+    public final void pipelineWrite(PipelinePacket packet) {
+        if (pipelineWriteQueue == null) {
+            pipelineLock.lock();
+            try {
+                if (pipelineWriteQueue == null) {
+                    pipelineWriteQueue = new ConcurrentLinkedDeque<>();
+                }
+            } finally {
+                pipelineLock.unlock();
             }
-            if (writeKey == null) {
-                writeKey = implRegister(selector, SelectionKey.OP_WRITE);
-                writeKey.attach(this);
-            } else {
-                writeKey.interestOps(writeKey.interestOps() | SelectionKey.OP_WRITE);
-            }
-            // writeCompletionHandler必须赋值，不然会跳过doWrite
-            this.writeCompletionHandler = this.pipelineWriteHandler;
-        } catch (ClosedChannelException e) {
-            e.printStackTrace();
-            this.pipelineWriteQueue.clear();
-            handleWrite(0, e);
         }
+        this.pipelineWriteQueue.offer(packet);
+        this.ioWriteThread.execute(this::pipelineDoWrite);
     }
 
-    private void pipelineWritePrepare() {
-        ByteArray array = this.pipelineWriteArray.clear();
-        Consumer<ByteArray> func;
-        while ((func = pipelineWriteQueue.poll()) != null) {
-            func.accept(array);
+    private void pipelineDoWrite() {
+        PipelinePacket packet;
+        while ((packet = pipelineWriteQueue.poll()) != null) {
+            this.writePending = true;
+            this.writeByteTuple1Array = packet.tupleBytes;
+            this.writeByteTuple1Offset = packet.tupleOffset;
+            this.writeByteTuple1Length = packet.tupleLength;
+            this.writeCompletionHandler = packet.handler;
+            this.writeAttachment = packet.attach;
+            doWrite();
         }
-        this.writePending = true;
-        this.writeAttachment = null;
-        this.writeByteTuple1Array = array.content();
-        this.writeByteTuple1Offset = array.offset();
-        this.writeByteTuple1Length = array.length();
-        this.writeCompletionHandler = this.pipelineWriteHandler;
     }
 
     @Override
@@ -364,10 +328,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
             boolean hasRemain = true;
             boolean writeCompleted = true;
             boolean error = false;
-            // pipelineWrite
-            if (clientMode && pipelineWriteArray != null && writeByteBuffer == null && writeByteBuffers == null) {
-                pipelineWritePrepare();
-            }
             int batchOffset = writeBuffersOffset;
             int batchLength = writeBuffersLength;
             while (hasRemain) { // 必须要将buffer写完为止
