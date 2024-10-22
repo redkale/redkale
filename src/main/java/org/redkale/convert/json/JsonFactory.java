@@ -42,6 +42,8 @@ public final class JsonFactory extends ConvertFactory<JsonReader, JsonWriter> {
     @Override
     protected void initSimpleCoderInRoot() {
         super.initSimpleCoderInRoot();
+        this.register(Object.class, new JsonAnyDecoder(this));
+        this.register(Object.class, new JsonAnyEncoder(this));
         this.register(InetAddress.class, JsonCoders.InetAddressJsonSimpledCoder.instance);
         this.register(InetSocketAddress.class, JsonCoders.InetSocketAddressJsonSimpledCoder.instance);
         this.register(Uint128.class, JsonCoders.Uint128JsonSimpledCoder.instance);

@@ -38,12 +38,12 @@ public class StreamEncoder<W extends Writer, T> implements Encodeable<W, Stream<
             if (type instanceof ParameterizedType) {
                 Type t = ((ParameterizedType) type).getActualTypeArguments()[0];
                 if (t instanceof TypeVariable) {
-                    this.componentEncoder = factory.getAnyEncoder();
+                    this.componentEncoder = factory.loadEncoder(Object.class);
                 } else {
                     this.componentEncoder = factory.loadEncoder(t);
                 }
             } else {
-                this.componentEncoder = factory.getAnyEncoder();
+                this.componentEncoder = factory.loadEncoder(Object.class);
             }
         } finally {
             inited = true;

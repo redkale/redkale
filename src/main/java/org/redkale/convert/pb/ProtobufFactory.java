@@ -77,6 +77,8 @@ public class ProtobufFactory extends ConvertFactory<ProtobufReader, ProtobufWrit
     @Override
     protected void initSimpleCoderInRoot() {
         super.initSimpleCoderInRoot();
+        this.register(Object.class, new ProtobufAnyDecoder(this));
+        this.register(Object.class, new ProtobufAnyEncoder(this));
         this.register(StringWrapper.class, ProtobufCoders.ProtobufStringWrapperSimpledCoder.instance);
         this.register(CharSequence.class, ProtobufCoders.ProtobufCharSequenceSimpledCoder.instance);
         this.register(StringBuilder.class, ProtobufCoders.ProtobufStringBuilderSimpledCoder.instance);

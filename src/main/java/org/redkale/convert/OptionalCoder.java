@@ -45,7 +45,7 @@ public class OptionalCoder<R extends Reader, W extends Writer, T> extends Simple
                 factory.register(type, this);
                 this.decoder = factory.loadDecoder(this.componentType);
                 if (this.componentType instanceof TypeVariable) {
-                    this.encoder = factory.getAnyEncoder();
+                    this.encoder = factory.loadEncoder(Object.class);
                     this.componentClass = Object.class;
                 } else {
                     if (componentType instanceof ParameterizedType) {
@@ -60,7 +60,7 @@ public class OptionalCoder<R extends Reader, W extends Writer, T> extends Simple
                 this.componentType = Object.class;
                 this.componentClass = Object.class;
                 this.decoder = factory.loadDecoder(this.componentType);
-                this.encoder = factory.getAnyEncoder();
+                this.encoder = factory.loadEncoder(this.componentType);
             }
         } finally {
             inited = true;

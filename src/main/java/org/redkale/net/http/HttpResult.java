@@ -210,7 +210,7 @@ public class HttpResult<T> {
             if (value instanceof byte[]) {
                 out.writeString(new String((byte[]) value, StandardCharsets.UTF_8));
             } else {
-                factory.getAnyEncoder().convertTo(out, value);
+                factory.loadEncoder(Object.class).convertTo(out, value);
             }
         }
 

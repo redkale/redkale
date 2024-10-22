@@ -9,7 +9,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import org.redkale.convert.*;
 import static org.redkale.convert.Reader.*;
-import org.redkale.convert.Reader.ValueType;
 import org.redkale.util.ByteTreeNode;
 import org.redkale.util.Utility;
 
@@ -21,6 +20,12 @@ import org.redkale.util.Utility;
  * @author zhangjx
  */
 public class JsonReader extends Reader {
+
+    public enum ValueType {
+        STRING,
+        ARRAY,
+        MAP;
+    }
 
     protected int position = -1;
 
@@ -250,7 +255,6 @@ public class JsonReader extends Reader {
         return ch == '[';
     }
 
-    @Override
     public final ValueType readType() {
         char ch = nextGoodChar(true);
         if (ch == '{') {

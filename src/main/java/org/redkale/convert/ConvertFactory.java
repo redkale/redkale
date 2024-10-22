@@ -48,8 +48,6 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
      */
     protected int features;
 
-    private final Encodeable<W, ?> anyEncoder = new AnyEncoder(this);
-
     // -----------------------------------------------------------------------------------
     private final ConcurrentHashMap<Class, Creator> creators = new ConcurrentHashMap();
 
@@ -1173,9 +1171,6 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
     }
 
     // ----------------------------------------------------------------------
-    public final <E> Encodeable<W, E> getAnyEncoder() {
-        return (Encodeable<W, E>) anyEncoder;
-    }
 
     public final <C extends BiFunction> void register(Class<C> clazz, C columnHandler) {
         fieldFuncs.put(Objects.requireNonNull(clazz), Objects.requireNonNull(columnHandler));
@@ -1477,8 +1472,6 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             encoder = CompletionHandlerSimpledCoder.instance;
         } else if (Optional.class == clazz) {
             encoder = new OptionalCoder(this, type);
-        } else if (clazz == Object.class) {
-            return (Encodeable<W, E>) this.anyEncoder;
         } else if (!clazz.getName().startsWith("java.")
                 || java.net.HttpCookie.class == clazz
                 || java.util.Map.Entry.class == clazz

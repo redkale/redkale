@@ -56,7 +56,7 @@ public class ArrayEncoder<W extends Writer, T> implements Encodeable<W, T[]> {
                 throw new ConvertException(
                         "ArrayEncoder init componentEncoder error, componentType = " + this.componentType);
             }
-            this.anyEncoder = factory.getAnyEncoder();
+            this.anyEncoder = factory.loadEncoder(Object.class);
             this.subTypeFinal = (this.componentType instanceof Class)
                     && Modifier.isFinal(((Class) this.componentType).getModifiers());
         } finally {

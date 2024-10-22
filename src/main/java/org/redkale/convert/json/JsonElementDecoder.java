@@ -5,7 +5,6 @@ package org.redkale.convert.json;
 
 import java.lang.reflect.Type;
 import java.util.*;
-import org.redkale.convert.AnyDecoder;
 import org.redkale.convert.ext.StringSimpledCoder;
 import org.redkale.util.*;
 
@@ -17,7 +16,7 @@ import org.redkale.util.*;
  * @author zhangjx
  * @since 2.8.0
  */
-class JsonElementDecoder extends AnyDecoder<JsonReader, JsonElement> {
+class JsonElementDecoder extends JsonAnyDecoder<JsonElement> {
 
     private static final Type arrayType = new TypeToken<Collection<JsonElement>>() {}.getType();
 

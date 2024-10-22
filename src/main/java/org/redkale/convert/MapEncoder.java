@@ -46,8 +46,8 @@ public class MapEncoder<W extends Writer, K, V> implements Encodeable<W, Map<K, 
                 this.keyEncoder = factory.loadEncoder(pt[0]);
                 this.valueEncoder = factory.loadEncoder(pt[1]);
             } else {
-                this.keyEncoder = factory.getAnyEncoder();
-                this.valueEncoder = factory.getAnyEncoder();
+                this.keyEncoder = factory.loadEncoder(Object.class);
+                this.valueEncoder = factory.loadEncoder(Object.class);
             }
             factory.ignoreMapColumnLock.lock();
             try {

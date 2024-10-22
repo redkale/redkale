@@ -1,11 +1,11 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (c) 2016-2116 Redkale
+ * All rights reserved.
  */
-package org.redkale.convert;
+package org.redkale.convert.pb;
 
 import java.lang.reflect.Type;
+import org.redkale.convert.Encodeable;
 
 /**
  * 对不明类型的对象进行序列化； PROTOBUF序列化时将对象的类名写入Writer，JSON则不写入。
@@ -13,20 +13,19 @@ import java.lang.reflect.Type;
  * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- * @param <W> Writer
  * @param <T> 序列化的泛型类型
  */
-public final class AnyEncoder<W extends Writer, T> implements Encodeable<W, T> {
+public final class ProtobufAnyEncoder<T> implements Encodeable<ProtobufWriter, T> {
 
-    final ConvertFactory factory;
+    final ProtobufFactory factory;
 
-    AnyEncoder(ConvertFactory factory) {
+    ProtobufAnyEncoder(ProtobufFactory factory) {
         this.factory = factory;
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public void convertTo(final W out, final T value) {
+    public void convertTo(final ProtobufWriter out, final T value) {
         if (value == null) {
             out.writeNull();
         } else {

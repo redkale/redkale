@@ -38,6 +38,8 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     private final ThreadLocal<JsonReader> readerPool = Utility.withInitialThreadLocal(JsonReader::new);
 
+    private final JsonAnyDecoder anyDecoder;
+
     @Nullable
     private Encodeable lastEncodeable;
 
@@ -46,6 +48,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
 
     protected JsonConvert(JsonFactory factory, int features) {
         super(factory, features);
+        this.anyDecoder = new JsonAnyDecoder(factory);
     }
 
     @Override
@@ -269,7 +272,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         }
         // final JsonReader in = readerPool.get();
         // in.setText(text, offset, length);
-        Object rs = new AnyDecoder(factory).convertFrom(new JsonReader(text, offset, length));
+        Object rs = anyDecoder.convertFrom(new JsonReader(text, offset, length));
         // readerPool.accept(in);
         return (V) rs;
     }
@@ -279,7 +282,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         if (in == null) {
             return null;
         }
-        return (V) new AnyDecoder(factory).convertFrom(new JsonStreamReader(in));
+        return (V) anyDecoder.convertFrom(new JsonStreamReader(in));
     }
 
     // 返回非null的值是由String、ArrayList、HashMap任意组合的对象
@@ -287,7 +290,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         if (buffers == null || buffers.length == 0) {
             return null;
         }
-        return (V) new AnyDecoder(factory).convertFrom(new JsonByteBufferReader(buffers));
+        return (V) anyDecoder.convertFrom(new JsonByteBufferReader(buffers));
     }
 
     // 返回非null的值是由String、ArrayList、HashMap任意组合的对象
@@ -295,7 +298,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         if (reader == null) {
             return null;
         }
-        return (V) new AnyDecoder(factory).convertFrom(reader);
+        return (V) anyDecoder.convertFrom(reader);
     }
 
     // json数据的数组长度必须和types个数相同

@@ -439,11 +439,6 @@ public class ProtobufReader extends Reader {
     }
 
     @Override
-    public final ValueType readType() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
     public boolean hasNext() {
         return (this.position + 1) < this.limit;
     }
