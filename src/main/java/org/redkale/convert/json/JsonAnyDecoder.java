@@ -65,14 +65,13 @@ public class JsonAnyDecoder<T> implements Decodeable<JsonReader, T> {
         JsonReader.ValueType vt = in.readType();
         if (vt == null) {
             return null;
+        } else if (vt == JsonReader.ValueType.ARRAY) {
+            return (T) this.collectionDecoder.convertFrom(in);
+        } else if (vt == JsonReader.ValueType.MAP) {
+            return (T) this.mapDecoder.convertFrom(in);
+        } else {
+            return (T) stringFrom(in);
         }
-        switch (vt) {
-            case ARRAY:
-                return (T) this.collectionDecoder.convertFrom(in);
-            case MAP:
-                return (T) this.mapDecoder.convertFrom(in);
-        }
-        return (T) stringFrom(in);
     }
 
     protected T stringFrom(JsonReader in) {

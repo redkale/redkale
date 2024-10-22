@@ -14,6 +14,8 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.*;
+import org.redkale.convert.Decodeable;
+import org.redkale.convert.Encodeable;
 import org.redkale.convert.SimpledCoder;
 import org.redkale.convert.ext.*;
 import org.redkale.util.*;
@@ -31,6 +33,47 @@ public abstract class ProtobufCoders {
         // do nothing
     }
 
+    public static class ProtobufAnyDecoder<T> implements Decodeable<ProtobufReader, T> {
+
+        public static final ProtobufAnyDecoder instance = new ProtobufAnyDecoder();
+
+        @Override
+        public T convertFrom(ProtobufReader in) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public Type getType() {
+            return Object.class;
+        }
+    }
+
+    public static class ProtobufAnyEncoder<T>
+            implements Encodeable<ProtobufWriter, T>, ProtobufEncodeable<ProtobufWriter, T> {
+
+        public static final ProtobufAnyEncoder instance = new ProtobufAnyEncoder();
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public void convertTo(final ProtobufWriter out, final T value) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public int computeSize(ProtobufWriter out, int tagSize, T value) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public Type getType() {
+            return Object.class;
+        }
+
+        @Override
+        public boolean specifyable() {
+            return false;
+        }
+    }
     // ------------------------------------- boolean -------------------------------------
     public static class ProtobufBoolSimpledCoder extends BoolSimpledCoder<ProtobufReader, ProtobufWriter>
             implements ProtobufPrimitivable<Boolean>, ProtobufEncodeable<ProtobufWriter, Boolean> {
