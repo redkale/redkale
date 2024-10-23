@@ -108,6 +108,9 @@ public class JsonMainTest {
         final JsonConvert convert = JsonConvert.root();
         long v = convert.convertFrom(long.class, "100");
         Assertions.assertEquals(100, v);
+        Map<String, String> map = convert.convertFrom(JsonConvert.TYPE_MAP_STRING_STRING, "{}");
+        Assertions.assertTrue(map.isEmpty());
+        convert.convertFrom(SimpleChildEntity.class, "{}");
     }
 
     @Test

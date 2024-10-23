@@ -5,7 +5,9 @@
  */
 package org.redkale.test.convert.json;
 
+import java.io.ByteArrayInputStream;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import org.junit.jupiter.api.*;
 import org.redkale.convert.Convert;
@@ -42,9 +44,16 @@ public class Json5Test {
         System.out.println(bean2.name);
         Assertions.assertTrue(bean.equals(bean2));
         System.out.println(convert.convertTo(bean2));
+        bean2 = convert.convertFrom(Json5Bean.class, new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
+        System.out.println(bean2.name);
+        Assertions.assertTrue(bean.equals(bean2));
+        System.out.println(convert.convertTo(bean2));
 
         String arrayJson = "[" + json + "," + json + "," + "]";
         Json5Bean[] beans = convert.convertFrom(Json5Bean[].class, arrayJson);
+        System.out.println(convert.convertTo(beans));
+        beans = convert.convertFrom(
+                Json5Bean[].class, new ByteArrayInputStream(arrayJson.getBytes(StandardCharsets.UTF_8)));
         System.out.println(convert.convertTo(beans));
 
         String intjson = "[1,2,3,4,]";
