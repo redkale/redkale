@@ -180,13 +180,13 @@ public class JsonReader extends Reader {
      * @return 有效字符
      */
     protected char nextGoodChar(boolean allowComment) {
-        char[] text0 = this.text;
-        int end = this.limit;
-        int curr = ++this.position;
-        char c = text0[curr];
+        char c = this.text[++this.position];
         if (c > ' ' && c != '/') {
             return c;
         }
+        char[] text0 = this.text;
+        int end = this.limit;
+        int curr = this.position;
         for (; curr <= end; curr++) {
             c = text0[curr];
             if (c > ' ') {
@@ -419,52 +419,28 @@ public class JsonReader extends Reader {
             if (negative) {
                 throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
             }
-            char c = nextChar();
-            if (c != 'a') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 'N') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            if (nextChar() != 'a' || nextChar() != 'N') {
+                throw new ConvertException("illegal escape(" + text[position] + ") (position = " + position + ")");
             }
             if (quote) {
-                c = nextChar();
+                char c = nextChar();
                 if (c != '"' && c != '\'') {
                     throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
                 }
             }
             return 0; // NaN 返回0;
         } else if (firstchar == 'I') { // Infinity
-            char c = nextChar();
-            if (c != 'n') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 'f') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 'i') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 'n') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 'i') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 't') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 'y') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            if (nextChar() != 'n'
+                    || nextChar() != 'f'
+                    || nextChar() != 'i'
+                    || nextChar() != 'n'
+                    || nextChar() != 'i'
+                    || nextChar() != 't'
+                    || nextChar() != 'y') {
+                throw new ConvertException("illegal escape(" + text[position] + ") (position = " + position + ")");
             }
             if (quote) {
-                c = nextChar();
+                char c = nextChar();
                 if (c != '"' && c != '\'') {
                     throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
                 }
@@ -582,52 +558,28 @@ public class JsonReader extends Reader {
             if (negative) {
                 throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
             }
-            char c = nextChar();
-            if (c != 'a') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 'N') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            if (nextChar() != 'a' || nextChar() != 'N') {
+                throw new ConvertException("illegal escape(" + text[position] + ") (position = " + position + ")");
             }
             if (quote) {
-                c = nextChar();
+                char c = nextChar();
                 if (c != '"' && c != '\'') {
                     throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
                 }
             }
             return 0L; // NaN 返回0;
         } else if (firstchar == 'I') { // Infinity
-            char c = nextChar();
-            if (c != 'n') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 'f') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 'i') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 'n') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 'i') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 't') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 'y') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            if (nextChar() != 'n'
+                    || nextChar() != 'f'
+                    || nextChar() != 'i'
+                    || nextChar() != 'n'
+                    || nextChar() != 'i'
+                    || nextChar() != 't'
+                    || nextChar() != 'y') {
+                throw new ConvertException("illegal escape(" + text[position] + ") (position = " + position + ")");
             }
             if (quote) {
-                c = nextChar();
+                char c = nextChar();
                 if (c != '"' && c != '\'') {
                     throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
                 }

@@ -76,7 +76,7 @@ public class JsonByteBufferReader extends JsonReader {
             this.cacheChar = 0;
             return ch;
         }
-        
+
         byte b = nextByte();
         if (b >= 0) { // 1 byte, 7 bits: 0xxxxxxx
             return (char) b;
