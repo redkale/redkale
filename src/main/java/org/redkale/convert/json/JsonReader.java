@@ -400,7 +400,7 @@ public class JsonReader extends Reader {
         if (firstchar == '"' || firstchar == '\'') {
             quote = firstchar;
             firstchar = nextGoodChar(false);
-            if (firstchar == '"' || firstchar == '\'') {
+            if (firstchar == quote) {
                 return 0;
             }
         }
@@ -460,7 +460,7 @@ public class JsonReader extends Reader {
             for (; curr <= end; curr++) {
                 ch = text0[curr];
                 if (ch >= '0' && ch <= '9') {
-                    if (dot) {
+                    if (dot) { // 兼容 123.456
                         continue;
                     }
                     value = (value << 3) + (value << 1) + digits[ch];
@@ -469,7 +469,7 @@ public class JsonReader extends Reader {
                     break;
                 } else if (ch == quote) {
                     break;
-                } else if (quote > 0 && ch <= ' ') {
+                } else if (quote > 0 && ch <= ' ') { // 兼容 "123 "
                     // do nothing
                 } else if (ch == '.') {
                     dot = true;
@@ -646,7 +646,7 @@ public class JsonReader extends Reader {
                         continue;
                     }
                     value = (value << 4) + digits[ch];
-                } else if (quote > 0 && ch <= ' ') {
+                } else if (quote > 0 && ch <= ' ') { // 兼容 "123 "
                     // do nothing
                 } else if (ch == '.') {
                     dot = true;

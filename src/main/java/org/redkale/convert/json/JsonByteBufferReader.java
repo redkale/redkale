@@ -23,6 +23,8 @@ public class JsonByteBufferReader extends JsonReader {
 
     private char cacheChar;
 
+    private char currentChar;
+
     private ByteBuffer[] buffers;
 
     private ByteBuffer currentBuffer;
@@ -70,22 +72,33 @@ public class JsonByteBufferReader extends JsonReader {
         return nextChar(null);
     }
 
+    protected final char currChar() {
+        return currentChar;
+    }
+
     protected final char nextChar(CharArray sb) {
         if (cacheChar != 0) {
             char ch = cacheChar;
             this.cacheChar = 0;
+            this.currentChar = ch;
             return ch;
         }
 
         byte b = nextByte();
         if (b >= 0) { // 1 byte, 7 bits: 0xxxxxxx
-            return (char) b;
+            char ch = (char) b;
+            this.currentChar = ch;
+            return ch;
         } else if ((b >> 5) == -2 && (b & 0x1e) != 0) { // 2 bytes, 11 bits: 110xxxxx 10xxxxxx
-            return (char) (((b << 6) ^ nextByte()) ^ (((byte) 0xC0 << 6) ^ ((byte) 0x80)));
+            char ch = (char) (((b << 6) ^ nextByte()) ^ (((byte) 0xC0 << 6) ^ ((byte) 0x80)));
+            this.currentChar = ch;
+            return ch;
         } else if ((b >> 4) == -2) { // 3 bytes, 16 bits: 1110xxxx 10xxxxxx 10xxxxxx
-            return (char) ((b << 12)
+            char ch = (char) ((b << 12)
                     ^ (nextByte() << 6)
                     ^ (nextByte() ^ (((byte) 0xE0 << 12) ^ ((byte) 0x80 << 6) ^ ((byte) 0x80))));
+            this.currentChar = ch;
+            return ch;
         } else if ((b >> 3) == -2) { // 4 bytes, 21 bits: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
             int uc = ((b << 18)
                     ^ (nextByte() << 12)
@@ -94,7 +107,9 @@ public class JsonByteBufferReader extends JsonReader {
             if (sb != null) {
                 sb.append(Character.highSurrogate(uc));
             }
-            return Character.lowSurrogate(uc);
+            char ch = Character.lowSurrogate(uc);
+            this.currentChar = ch;
+            return ch;
         } else {
             throw new ConvertException(new UnmappableCharacterException(4));
         }
@@ -214,78 +229,58 @@ public class JsonByteBufferReader extends JsonReader {
     @Override
     public int readInt() {
         char firstchar = nextGoodChar(true);
-        boolean quote = false;
+        char quote = 0;
         if (firstchar == '"' || firstchar == '\'') {
-            quote = true;
+            quote = firstchar;
             firstchar = nextGoodChar(false);
-            if (firstchar == '"' || firstchar == '\'') {
+            if (firstchar == quote) {
                 return 0;
             }
         }
         int value = 0;
         final boolean negative = firstchar == '-';
-        if (!negative) {
+        if (negative) { // 负数
+            firstchar = nextChar();
+            if (firstchar != 'N' && firstchar != 'I') {
+                if (firstchar < '0' || firstchar > '9') {
+                    throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
+                }
+                value = digits[firstchar];
+            }
+        } else { // 正数
             if (firstchar == '+') {
                 firstchar = nextChar(); // 兼容+开头的
             }
-            if (firstchar < '0' || firstchar > '9') {
-                throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
+            if (firstchar != 'N' && firstchar != 'I') {
+                if (firstchar < '0' || firstchar > '9') {
+                    throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
+                }
+                value = digits[firstchar];
             }
-            value = digits[firstchar];
         }
         if (firstchar == 'N') {
             if (negative) {
                 throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
             }
-            char c = nextChar();
-            if (c != 'a') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            if (nextChar() != 'a' || nextChar() != 'N') {
+                throw new ConvertException("illegal escape(" + currChar() + ") (position = " + position + ")");
             }
-            c = nextChar();
-            if (c != 'N') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            if (quote) {
-                c = nextChar();
-                if (c != '"' && c != '\'') {
-                    throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-                }
+            if (quote > 0 && nextChar() != quote) {
+                throw new ConvertException("illegal escape(" + currChar() + ") (position = " + position + ")");
             }
             return 0; // NaN 返回0;
         } else if (firstchar == 'I') { // Infinity
-            char c = nextChar();
-            if (c != 'n') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            if (nextChar() != 'n'
+                    || nextChar() != 'f'
+                    || nextChar() != 'i'
+                    || nextChar() != 'n'
+                    || nextChar() != 'i'
+                    || nextChar() != 't'
+                    || nextChar() != 'y') {
+                throw new ConvertException("illegal escape(" + currChar() + ") (position = " + position + ")");
             }
-            c = nextChar();
-            if (c != 'f') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 'i') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 'n') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 'i') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 't') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 'y') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            if (quote) {
-                c = nextChar();
-                if (c != '"' && c != '\'') {
-                    throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-                }
+            if (quote > 0 && nextChar() != quote) {
+                throw new ConvertException("illegal escape(" + currChar() + ") (position = " + position + ")");
             }
             return negative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         }
@@ -297,15 +292,12 @@ public class JsonByteBufferReader extends JsonReader {
                 break;
             }
             if (ch >= '0' && ch <= '9') {
-                if (dot) {
+                if (dot) { // 兼容 123.456
                     continue;
                 }
                 value = (hex ? (value << 4) : ((value << 3) + (value << 1))) + digits[ch];
-            } else if (ch == '"' || ch == '\'') {
-                if (quote) {
-                    break;
-                }
-                throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+            } else if (ch == quote) {
+                break;
             } else if (ch == 'x' || ch == 'X') {
                 if (value != 0) {
                     throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
@@ -327,7 +319,7 @@ public class JsonByteBufferReader extends JsonReader {
                     continue;
                 }
                 value = (value << 4) + digits[ch];
-            } else if (quote && ch <= ' ') {
+            } else if (quote > 0 && ch <= ' ') { // 兼容 "123 "
                 // do nothing
             } else if (ch == '.') {
                 dot = true;
@@ -349,80 +341,60 @@ public class JsonByteBufferReader extends JsonReader {
     @Override
     public long readLong() {
         char firstchar = nextGoodChar(true);
-        boolean quote = false;
+        char quote = 0;
         if (firstchar == '"' || firstchar == '\'') {
-            quote = true;
+            quote = firstchar;
             firstchar = nextGoodChar(false);
-            if (firstchar == '"' || firstchar == '\'') {
+            if (firstchar == firstchar) {
                 return 0L;
             }
         }
         long value = 0;
         final boolean negative = firstchar == '-';
-        if (!negative) {
+        if (negative) { // 负数
+            firstchar = nextChar();
+            if (firstchar != 'N' && firstchar != 'I') {
+                if (firstchar < '0' || firstchar > '9') {
+                    throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
+                }
+                value = digits[firstchar];
+            }
+        } else { // 正数
             if (firstchar == '+') {
                 firstchar = nextChar(); // 兼容+开头的
             }
-            if (firstchar < '0' || firstchar > '9') {
-                throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
+            if (firstchar != 'N' && firstchar != 'I') {
+                if (firstchar < '0' || firstchar > '9') {
+                    throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
+                }
+                value = digits[firstchar];
             }
-            value = digits[firstchar];
         }
         if (firstchar == 'N') {
             if (negative) {
                 throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
             }
-            char c = nextChar();
-            if (c != 'a') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            if (nextChar() != 'a' || nextChar() != 'N') {
+                throw new ConvertException("illegal escape(" + currChar() + ") (position = " + position + ")");
             }
-            c = nextChar();
-            if (c != 'N') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            if (quote > 0 && nextChar() != quote) {
+                throw new ConvertException("illegal escape(" + currChar() + ") (position = " + position + ")");
             }
-            if (quote) {
-                c = nextChar();
-                if (c != '"' && c != '\'') {
-                    throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-                }
-            }
-            return 0L; // NaN 返回0;
+            return 0; // NaN 返回0;
         } else if (firstchar == 'I') { // Infinity
-            char c = nextChar();
-            if (c != 'n') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            if (nextChar() != 'n'
+                    || nextChar() != 'f'
+                    || nextChar() != 'i'
+                    || nextChar() != 'n'
+                    || nextChar() != 'i'
+                    || nextChar() != 't'
+                    || nextChar() != 'y') {
+                throw new ConvertException("illegal escape(" + currChar() + ") (position = " + position + ")");
             }
-            c = nextChar();
-            if (c != 'f') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
+            if (quote > 0 && nextChar() != quote) {
+                throw new ConvertException("illegal escape(" + currChar() + ") (position = " + position + ")");
             }
-            c = nextChar();
-            if (c != 'i') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 'n') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 'i') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 't') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            c = nextChar();
-            if (c != 'y') {
-                throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-            }
-            if (quote) {
-                c = nextChar();
-                if (c != '"' && c != '\'') {
-                    throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-                }
-            }
-            return negative ? Long.MIN_VALUE : Long.MAX_VALUE;
+            return negative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         }
         boolean hex = false;
         boolean dot = false;
@@ -432,15 +404,12 @@ public class JsonByteBufferReader extends JsonReader {
                 break;
             }
             if (ch >= '0' && ch <= '9') {
-                if (dot) {
+                if (dot) { // 兼容 123.456
                     continue;
                 }
                 value = (hex ? (value << 4) : ((value << 3) + (value << 1))) + digits[ch];
-            } else if (ch == '"' || ch == '\'') {
-                if (quote) {
-                    break;
-                }
-                throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+            } else if (ch == quote) {
+                break;
             } else if (ch == 'x' || ch == 'X') {
                 if (value != 0) {
                     throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
@@ -462,7 +431,7 @@ public class JsonByteBufferReader extends JsonReader {
                     continue;
                 }
                 value = (value << 4) + digits[ch];
-            } else if (quote && ch <= ' ') {
+            } else if (quote > 0 && ch <= ' ') { // 兼容 "123 "
                 // do nothing
             } else if (ch == '.') {
                 dot = true;
