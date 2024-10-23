@@ -28,6 +28,9 @@ public class JsonMainTest {
         test.run4();
         test.run5();
         test.run6();
+        test.run7();
+        test.run8();
+        test.run9();
     }
 
     @Test
@@ -147,5 +150,23 @@ public class JsonMainTest {
                 JsonObject.class.getName(), obj.get("media").getClass().getName());
         Assertions.assertEquals(
                 JsonArray.class.getName(), obj.get("images").getClass().getName());
+    }
+
+    @Test
+    public void run7() throws Throwable {
+        long val = JsonConvert.root().convertFrom(long.class, "12345");
+        Assertions.assertEquals(12345L, val);
+    }
+
+    @Test
+    public void run8() throws Throwable {
+        long[] vals = JsonConvert.root().convertFrom(long[].class, "[-12345,'23456']");
+        Assertions.assertEquals(-12345L, vals[0]);
+    }
+
+    @Test
+    public void run9() throws Throwable {
+        long[] vals = JsonConvert.root().convertFrom(long[].class, "['12345','-23456']");
+        Assertions.assertEquals(-23456L, vals[1]);
     }
 }

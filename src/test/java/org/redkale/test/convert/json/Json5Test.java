@@ -22,6 +22,8 @@ public class Json5Test {
         test.run1();
         test.run2();
         test.run3();
+        test.run4();
+        test.run5();
     }
 
     @Test
@@ -77,6 +79,20 @@ public class Json5Test {
         String json2 = JsonConvert.root().convertTo(rs);
         System.out.println(json2);
         Assertions.assertEquals(json, json2);
+    }
+
+    @Test
+    public void run4() throws Exception {
+        int val = JsonConvert.root().convertFrom(int.class, "NaN");
+        Assertions.assertEquals(0, val);
+    }
+
+    @Test
+    public void run5() throws Exception {
+        long val = JsonConvert.root().convertFrom(long.class, "Infinity");
+        Assertions.assertEquals(Long.MAX_VALUE, val);
+        val = JsonConvert.root().convertFrom(long.class, "-Infinity");
+        Assertions.assertEquals(Long.MIN_VALUE, val);
     }
 
     private static Type MAP_TYPE = new TypeToken<LinkedHashMap<String, String>>() {}.getType();

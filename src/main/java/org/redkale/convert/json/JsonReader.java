@@ -396,9 +396,9 @@ public class JsonReader extends Reader {
     @Override
     public int readInt() {
         char firstchar = nextGoodChar(true);
-        boolean quote = false;
+        char quote = 0;
         if (firstchar == '"' || firstchar == '\'') {
-            quote = true;
+            quote = firstchar;
             firstchar = nextGoodChar(false);
             if (firstchar == '"' || firstchar == '\'') {
                 return 0;
@@ -406,14 +406,24 @@ public class JsonReader extends Reader {
         }
         int value = 0;
         final boolean negative = firstchar == '-';
-        if (!negative) {
+        if (negative) { // 负数
+            firstchar = nextChar();
+            if (firstchar != 'N' && firstchar != 'I') {
+                if (firstchar < '0' || firstchar > '9') {
+                    throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
+                }
+                value = digits[firstchar];
+            }
+        } else { // 正数
             if (firstchar == '+') {
                 firstchar = nextChar(); // 兼容+开头的
             }
-            if (firstchar < '0' || firstchar > '9') {
-                throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
+            if (firstchar != 'N' && firstchar != 'I') {
+                if (firstchar < '0' || firstchar > '9') {
+                    throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
+                }
+                value = digits[firstchar];
             }
-            value = digits[firstchar];
         }
         if (firstchar == 'N') {
             if (negative) {
@@ -422,11 +432,8 @@ public class JsonReader extends Reader {
             if (nextChar() != 'a' || nextChar() != 'N') {
                 throw new ConvertException("illegal escape(" + text[position] + ") (position = " + position + ")");
             }
-            if (quote) {
-                char c = nextChar();
-                if (c != '"' && c != '\'') {
-                    throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-                }
+            if (quote > 0 && nextChar() != quote) {
+                throw new ConvertException("illegal escape(" + text[position] + ") (position = " + position + ")");
             }
             return 0; // NaN 返回0;
         } else if (firstchar == 'I') { // Infinity
@@ -439,11 +446,8 @@ public class JsonReader extends Reader {
                     || nextChar() != 'y') {
                 throw new ConvertException("illegal escape(" + text[position] + ") (position = " + position + ")");
             }
-            if (quote) {
-                char c = nextChar();
-                if (c != '"' && c != '\'') {
-                    throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-                }
+            if (quote > 0 && nextChar() != quote) {
+                throw new ConvertException("illegal escape(" + text[position] + ") (position = " + position + ")");
             }
             return negative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         }
@@ -463,12 +467,9 @@ public class JsonReader extends Reader {
                 } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
                     curr--;
                     break;
-                } else if (ch == '"' || ch == '\'') {
-                    if (quote) {
-                        break;
-                    }
-                    throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
-                } else if (quote && ch <= ' ') {
+                } else if (ch == quote) {
+                    break;
+                } else if (quote > 0 && ch <= ' ') {
                     // do nothing
                 } else if (ch == '.') {
                     dot = true;
@@ -481,15 +482,12 @@ public class JsonReader extends Reader {
             for (; curr <= end; curr++) {
                 ch = text0[curr];
                 if (ch >= '0' && ch <= '9') {
-                    if (dot) {
+                    if (dot) { // 兼容 123.456
                         continue;
                     }
                     value = (hex ? (value << 4) : ((value << 3) + (value << 1))) + digits[ch];
-                } else if (ch == '"' || ch == '\'') {
-                    if (quote) {
-                        break;
-                    }
-                    throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                } else if (ch == quote) {
+                    break;
                 } else if (ch == 'x' || ch == 'X') {
                     if (value != 0) {
                         throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
@@ -511,7 +509,7 @@ public class JsonReader extends Reader {
                         continue;
                     }
                     value = (value << 4) + digits[ch];
-                } else if (quote && ch <= ' ') {
+                } else if (quote > 0 && ch <= ' ') { // 兼容 "123 "
                     // do nothing
                 } else if (ch == '.') {
                     dot = true;
@@ -535,9 +533,9 @@ public class JsonReader extends Reader {
     @Override
     public long readLong() {
         char firstchar = nextGoodChar(true);
-        boolean quote = false;
+        char quote = 0;
         if (firstchar == '"' || firstchar == '\'') {
-            quote = true;
+            quote = firstchar;
             firstchar = nextGoodChar(false);
             if (firstchar == '"' || firstchar == '\'') {
                 return 0L;
@@ -545,14 +543,24 @@ public class JsonReader extends Reader {
         }
         long value = 0;
         final boolean negative = firstchar == '-';
-        if (!negative) {
+        if (negative) { // 负数
+            firstchar = nextChar();
+            if (firstchar != 'N' && firstchar != 'I') {
+                if (firstchar < '0' || firstchar > '9') {
+                    throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
+                }
+                value = digits[firstchar];
+            }
+        } else { // 正数
             if (firstchar == '+') {
                 firstchar = nextChar(); // 兼容+开头的
             }
-            if (firstchar < '0' || firstchar > '9') {
-                throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
+            if (firstchar != 'N' && firstchar != 'I') {
+                if (firstchar < '0' || firstchar > '9') {
+                    throw new ConvertException("illegal escape(" + firstchar + ") (position = " + position + ")");
+                }
+                value = digits[firstchar];
             }
-            value = digits[firstchar];
         }
         if (firstchar == 'N') {
             if (negative) {
@@ -561,11 +569,8 @@ public class JsonReader extends Reader {
             if (nextChar() != 'a' || nextChar() != 'N') {
                 throw new ConvertException("illegal escape(" + text[position] + ") (position = " + position + ")");
             }
-            if (quote) {
-                char c = nextChar();
-                if (c != '"' && c != '\'') {
-                    throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-                }
+            if (quote > 0 && nextChar() != quote) {
+                throw new ConvertException("illegal escape(" + text[position] + ") (position = " + position + ")");
             }
             return 0L; // NaN 返回0;
         } else if (firstchar == 'I') { // Infinity
@@ -578,11 +583,8 @@ public class JsonReader extends Reader {
                     || nextChar() != 'y') {
                 throw new ConvertException("illegal escape(" + text[position] + ") (position = " + position + ")");
             }
-            if (quote) {
-                char c = nextChar();
-                if (c != '"' && c != '\'') {
-                    throw new ConvertException("illegal escape(" + c + ") (position = " + position + ")");
-                }
+            if (quote > 0 && nextChar() != quote) {
+                throw new ConvertException("illegal escape(" + text[position] + ") (position = " + position + ")");
             }
             return negative ? Long.MIN_VALUE : Long.MAX_VALUE;
         }
@@ -595,19 +597,16 @@ public class JsonReader extends Reader {
             for (; curr <= end; curr++) {
                 ch = text0[curr];
                 if (ch >= '0' && ch <= '9') {
-                    if (dot) {
+                    if (dot) { // 兼容 123.456
                         continue;
                     }
                     value = (value << 3) + (value << 1) + digits[ch];
                 } else if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ' || ch == ':') {
                     curr--;
                     break;
-                } else if (ch == '"' || ch == '\'') {
-                    if (quote) {
-                        break;
-                    }
-                    throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
-                } else if (quote && ch <= ' ') {
+                } else if (ch == quote) {
+                    break;
+                } else if (quote > 0 && ch <= ' ') { // 兼容 "123 "
                     // do nothing
                 } else if (ch == '.') {
                     dot = true;
@@ -624,11 +623,8 @@ public class JsonReader extends Reader {
                         continue;
                     }
                     value = (hex ? (value << 4) : ((value << 3) + (value << 1))) + digits[ch];
-                } else if (ch == '"' || ch == '\'') {
-                    if (quote) {
-                        break;
-                    }
-                    throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
+                } else if (ch == quote) {
+                    break;
                 } else if (ch == 'x' || ch == 'X') {
                     if (value != 0) {
                         throw new ConvertException("illegal escape(" + ch + ") (position = " + position + ")");
@@ -650,7 +646,7 @@ public class JsonReader extends Reader {
                         continue;
                     }
                     value = (value << 4) + digits[ch];
-                } else if (quote && ch <= ' ') {
+                } else if (quote > 0 && ch <= ' ') {
                     // do nothing
                 } else if (ch == '.') {
                     dot = true;
