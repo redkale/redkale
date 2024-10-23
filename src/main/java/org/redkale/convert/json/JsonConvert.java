@@ -184,7 +184,7 @@ public class JsonConvert extends TextConvert<JsonReader, JsonWriter> {
         if (text == null) {
             return null;
         }
-        return convertFrom(type, Utility.charArray(text));
+        return convertFrom(type, new JsonReader(text));
     }
 
     public <T> T convertFrom(final Type type, final char[] text) {
