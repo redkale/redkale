@@ -19,7 +19,7 @@ import org.redkale.convert.ConvertColumn;
  * @author zhangjx
  * @since 2.8.0
  */
-public class RowBound implements Serializable, Cloneable {
+public class RowBound implements Serializable {
 
     private static int DEFAULT_LIMIT = 20;
 
@@ -79,12 +79,6 @@ public class RowBound implements Serializable, Cloneable {
     public RowBound current(int current) {
         this.offset = (current - 1) * this.limit;
         return this;
-    }
-
-    @Override
-    @SuppressWarnings("CloneDoesntCallSuperClone")
-    public RowBound clone() {
-        return this.copyTo(new RowBound());
     }
 
     @Override

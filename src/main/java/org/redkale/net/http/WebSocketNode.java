@@ -393,7 +393,7 @@ public abstract class WebSocketNode implements Service {
             }
             return future == null ? CompletableFuture.completedFuture(false) : future;
         });
-        return localFuture == null ? remoteFuture : localFuture.thenCombine(remoteFuture, (a, b) -> a | b);
+        return localFuture == null ? remoteFuture : localFuture.thenCombine(remoteFuture, (a, b) -> a || b);
     }
 
     /**

@@ -106,12 +106,6 @@ public final class Flipper extends RowBound {
     }
 
     @Override
-    @SuppressWarnings("CloneDoesntCallSuperClone")
-    public Flipper clone() {
-        return this.copyTo(new Flipper());
-    }
-
-    @Override
     public String toString() {
         return "{\"limit\":" + this.limit + ",\"offset\":" + this.offset
                 + ((sort == null || sort.isEmpty()) ? "" : (",\"sort\":\"" + this.sort.replace('"', '\'') + "\""))
