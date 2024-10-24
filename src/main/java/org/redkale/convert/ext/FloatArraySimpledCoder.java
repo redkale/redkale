@@ -40,32 +40,22 @@ public final class FloatArraySimpledCoder<R extends Reader, W extends Writer> ex
 
     @Override
     public float[] convertFrom(R in) {
-        int len = in.readArrayB(FloatSimpledCoder.instance);
-        if (len == Reader.SIGN_NULL) {
+        if (!in.readArrayB(FloatSimpledCoder.instance)) {
             return null;
         }
-        if (len == Reader.SIGN_VARIABLE) {
-            int size = 0;
-            float[] data = new float[8];
-            while (in.hasNext()) {
-                if (size >= data.length) {
-                    float[] newdata = new float[data.length + 4];
-                    System.arraycopy(data, 0, newdata, 0, size);
-                    data = newdata;
-                }
-                data[size++] = in.readFloat();
+        int size = 0;
+        float[] data = new float[8];
+        while (in.hasNext()) {
+            if (size >= data.length) {
+                float[] newdata = new float[data.length + 4];
+                System.arraycopy(data, 0, newdata, 0, size);
+                data = newdata;
             }
-            in.readArrayE();
-            float[] newdata = new float[size];
-            System.arraycopy(data, 0, newdata, 0, size);
-            return newdata;
-        } else {
-            float[] values = new float[len];
-            for (int i = 0; i < values.length; i++) {
-                values[i] = in.readFloat();
-            }
-            in.readArrayE();
-            return values;
+            data[size++] = in.readFloat();
         }
+        in.readArrayE();
+        float[] newdata = new float[size];
+        System.arraycopy(data, 0, newdata, 0, size);
+        return newdata;
     }
 }

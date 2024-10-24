@@ -95,19 +95,12 @@ public class CollectionDecoder<R extends Reader, T> implements Decodeable<R, Col
     public Collection<T> convertFrom(R in) {
         this.checkInited();
         final Decodeable<R, T> itemDecoder = this.componentDecoder;
-        int size = in.readArrayB(itemDecoder);
-        if (size == Reader.SIGN_NULL) {
+        if (!in.readArrayB(itemDecoder)) {
             return null;
         }
         final Collection<T> result = this.creator.create();
-        if (size == Reader.SIGN_VARIABLE) {
-            while (in.hasNext()) {
-                result.add(itemDecoder.convertFrom(in));
-            }
-        } else { // 固定长度
-            for (int i = 0; i < size; i++) {
-                result.add(itemDecoder.convertFrom(in));
-            }
+        while (in.hasNext()) {
+            result.add(itemDecoder.convertFrom(in));
         }
         in.readArrayE();
         return result;

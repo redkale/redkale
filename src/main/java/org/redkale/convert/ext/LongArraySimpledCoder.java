@@ -41,33 +41,23 @@ public final class LongArraySimpledCoder<R extends Reader, W extends Writer> ext
 
     @Override
     public long[] convertFrom(R in) {
-        int len = in.readArrayB(LongSimpledCoder.instance);
-        if (len == Reader.SIGN_NULL) {
+        if (!in.readArrayB(LongSimpledCoder.instance)) {
             return null;
         }
-        if (len == Reader.SIGN_VARIABLE) {
-            int size = 0;
-            long[] data = new long[8];
-            while (in.hasNext()) {
-                if (size >= data.length) {
-                    long[] newdata = new long[data.length + 4];
-                    System.arraycopy(data, 0, newdata, 0, size);
-                    data = newdata;
-                }
-                data[size++] = in.readLong();
+        int size = 0;
+        long[] data = new long[8];
+        while (in.hasNext()) {
+            if (size >= data.length) {
+                long[] newdata = new long[data.length + 4];
+                System.arraycopy(data, 0, newdata, 0, size);
+                data = newdata;
             }
-            in.readArrayE();
-            long[] newdata = new long[size];
-            System.arraycopy(data, 0, newdata, 0, size);
-            return newdata;
-        } else {
-            long[] values = new long[len];
-            for (int i = 0; i < values.length; i++) {
-                values[i] = in.readLong();
-            }
-            in.readArrayE();
-            return values;
+            data[size++] = in.readLong();
         }
+        in.readArrayE();
+        long[] newdata = new long[size];
+        System.arraycopy(data, 0, newdata, 0, size);
+        return newdata;
     }
 
     public static final class LongStreamSimpledCoder<R extends Reader, W extends Writer>

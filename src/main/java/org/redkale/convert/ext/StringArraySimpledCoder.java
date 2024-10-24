@@ -40,32 +40,22 @@ public final class StringArraySimpledCoder<R extends Reader, W extends Writer> e
 
     @Override
     public String[] convertFrom(R in) {
-        int len = in.readArrayB(StringSimpledCoder.instance);
-        if (len == Reader.SIGN_NULL) {
+        if (!in.readArrayB(StringSimpledCoder.instance)) {
             return null;
         }
-        if (len == Reader.SIGN_VARIABLE) {
-            int size = 0;
-            String[] data = new String[8];
-            while (in.hasNext()) {
-                if (size >= data.length) {
-                    String[] newdata = new String[data.length + 4];
-                    System.arraycopy(data, 0, newdata, 0, size);
-                    data = newdata;
-                }
-                data[size++] = in.readString();
+        int size = 0;
+        String[] data = new String[8];
+        while (in.hasNext()) {
+            if (size >= data.length) {
+                String[] newdata = new String[data.length + 4];
+                System.arraycopy(data, 0, newdata, 0, size);
+                data = newdata;
             }
-            in.readArrayE();
-            String[] newdata = new String[size];
-            System.arraycopy(data, 0, newdata, 0, size);
-            return newdata;
-        } else {
-            String[] values = new String[len];
-            for (int i = 0; i < values.length; i++) {
-                values[i] = in.readString();
-            }
-            in.readArrayE();
-            return values;
+            data[size++] = in.readString();
         }
+        in.readArrayE();
+        String[] newdata = new String[size];
+        System.arraycopy(data, 0, newdata, 0, size);
+        return newdata;
     }
 }

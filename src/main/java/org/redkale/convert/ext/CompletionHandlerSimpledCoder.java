@@ -29,7 +29,7 @@ public final class CompletionHandlerSimpledCoder<R extends Reader, W extends Wri
 
     @Override
     public CompletionHandler convertFrom(R in) {
-        in.readObjectB(CompletionHandler.class);
+        in.readObjectB(this);
         return null;
     }
 }

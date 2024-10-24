@@ -80,19 +80,12 @@ public class StreamDecoder<R extends Reader, T> implements Decodeable<R, Stream<
     public Stream<T> convertFrom(R in) {
         this.checkInited();
         final Decodeable<R, T> itemDecoder = this.componentDecoder;
-        int len = in.readArrayB(itemDecoder);
-        if (len == Reader.SIGN_NULL) {
+        if (!in.readArrayB(itemDecoder)) {
             return null;
         }
         final List<T> result = new ArrayList();
-        if (len == Reader.SIGN_VARIABLE) {
-            while (in.hasNext()) {
-                result.add(itemDecoder.convertFrom(in));
-            }
-        } else { // 固定长度
-            for (int i = 0; i < len; i++) {
-                result.add(itemDecoder.convertFrom(in));
-            }
+        while (in.hasNext()) {
+            result.add(itemDecoder.convertFrom(in));
         }
         in.readArrayE();
         return result.stream();

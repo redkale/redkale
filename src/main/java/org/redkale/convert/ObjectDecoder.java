@@ -360,8 +360,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
     @Override
     public T convertFrom(final R in) {
         this.checkInited();
-        final String clazz = in.readObjectB(typeClass);
-        if (clazz == null) {
+        if (!in.readObjectB(this)) {
             return null;
         }
         if (this.creator == null) {
@@ -384,7 +383,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                     member.getAttribute().set(result, val);
                 }
             }
-            in.readObjectE(typeClass);
+            in.readObjectE();
             return result;
         } else { // 带参数的构造函数
             final DeMember<R, T, ?>[] constructorFields = this.creatorConstructorMembers;
@@ -411,7 +410,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                     }
                 }
             }
-            in.readObjectE(typeClass);
+            in.readObjectE();
             if (this.creator == null) {
                 return null;
             }

@@ -41,33 +41,23 @@ public final class DoubleArraySimpledCoder<R extends Reader, W extends Writer> e
 
     @Override
     public double[] convertFrom(R in) {
-        int len = in.readArrayB(DoubleSimpledCoder.instance);
-        if (len == Reader.SIGN_NULL) {
+        if (!in.readArrayB(DoubleSimpledCoder.instance)) {
             return null;
         }
-        if (len == Reader.SIGN_VARIABLE) {
-            int size = 0;
-            double[] data = new double[8];
-            while (in.hasNext()) {
-                if (size >= data.length) {
-                    double[] newdata = new double[data.length + 4];
-                    System.arraycopy(data, 0, newdata, 0, size);
-                    data = newdata;
-                }
-                data[size++] = in.readDouble();
+        int size = 0;
+        double[] data = new double[8];
+        while (in.hasNext()) {
+            if (size >= data.length) {
+                double[] newdata = new double[data.length + 4];
+                System.arraycopy(data, 0, newdata, 0, size);
+                data = newdata;
             }
-            in.readArrayE();
-            double[] newdata = new double[size];
-            System.arraycopy(data, 0, newdata, 0, size);
-            return newdata;
-        } else {
-            double[] values = new double[len];
-            for (int i = 0; i < values.length; i++) {
-                values[i] = in.readDouble();
-            }
-            in.readArrayE();
-            return values;
+            data[size++] = in.readDouble();
         }
+        in.readArrayE();
+        double[] newdata = new double[size];
+        System.arraycopy(data, 0, newdata, 0, size);
+        return newdata;
     }
 
     public static final class DoubleStreamSimpledCoder<R extends Reader, W extends Writer>

@@ -8,7 +8,6 @@ package org.redkale.convert.json;
 import java.nio.ByteBuffer;
 import java.nio.charset.UnmappableCharacterException;
 import org.redkale.convert.*;
-import static org.redkale.convert.Reader.*;
 import org.redkale.util.ByteTreeNode;
 
 /**
@@ -170,42 +169,43 @@ public class JsonByteBufferReader extends JsonReader {
     }
 
     /**
-     * 判断下一个非空白字符是否为{
+     * 读取对象，返回false表示对象为null
      *
-     * @return SIGN_VARIABLE 或 SIGN_NULL
+     * @param decoder Decodeable
+     * @return 是否存在对象
      */
     @Override
-    public final String readObjectB(final Class clazz) {
+    public final boolean readObjectB(Decodeable decoder) {
         char ch = nextGoodChar(true);
         if (ch == '{') {
-            return "";
+            return true;
         }
         if (ch == 'n' && nextChar() == 'u' && nextChar() == 'l' && nextChar() == 'l') {
-            return null;
+            return false;
         }
         if (ch == 'N' && nextChar() == 'U' && nextChar() == 'L' && nextChar() == 'L') {
-            return null;
+            return false;
         }
         throw new ConvertException("a json object must begin with '{' (position = " + position + ") but '" + ch + "'");
     }
 
     /**
-     * 判断下一个非空白字符是否为[
+     * 读取数组，返回false表示数组为null
      *
-     * @param decoder Decodeable
-     * @return SIGN_VARIABLE 或 SIGN_NULL
+     * @param componentDecoder Decodeable
+     * @return 是否存在对象
      */
     @Override
-    public final int readArrayB(Decodeable decoder) {
+    public final boolean readArrayB(Decodeable componentDecoder) {
         char ch = nextGoodChar(true);
         if (ch == '[' || ch == '{') {
-            return SIGN_VARIABLE;
+            return true;
         }
         if (ch == 'n' && nextChar() == 'u' && nextChar() == 'l' && nextChar() == 'l') {
-            return SIGN_NULL;
+            return false;
         }
         if (ch == 'N' && nextChar() == 'U' && nextChar() == 'L' && nextChar() == 'L') {
-            return SIGN_NULL;
+            return false;
         }
         int pos = this.position;
         throw new ConvertException("a json array must begin with '[' (position = " + pos + ") but '" + ch + "'");

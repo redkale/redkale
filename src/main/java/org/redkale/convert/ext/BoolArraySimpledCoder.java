@@ -40,32 +40,22 @@ public final class BoolArraySimpledCoder<R extends Reader, W extends Writer> ext
 
     @Override
     public boolean[] convertFrom(R in) {
-        int len = in.readArrayB(BoolSimpledCoder.instance);
-        if (len == Reader.SIGN_NULL) {
+        if (!in.readArrayB(BoolSimpledCoder.instance)) {
             return null;
         }
-        if (len == Reader.SIGN_VARIABLE) {
-            int size = 0;
-            boolean[] data = new boolean[8];
-            while (in.hasNext()) {
-                if (size >= data.length) {
-                    boolean[] newdata = new boolean[data.length + 4];
-                    System.arraycopy(data, 0, newdata, 0, size);
-                    data = newdata;
-                }
-                data[size++] = in.readBoolean();
+        int size = 0;
+        boolean[] data = new boolean[8];
+        while (in.hasNext()) {
+            if (size >= data.length) {
+                boolean[] newdata = new boolean[data.length + 4];
+                System.arraycopy(data, 0, newdata, 0, size);
+                data = newdata;
             }
-            in.readArrayE();
-            boolean[] newdata = new boolean[size];
-            System.arraycopy(data, 0, newdata, 0, size);
-            return newdata;
-        } else {
-            boolean[] values = new boolean[len];
-            for (int i = 0; i < values.length; i++) {
-                values[i] = in.readBoolean();
-            }
-            in.readArrayE();
-            return values;
+            data[size++] = in.readBoolean();
         }
+        in.readArrayE();
+        boolean[] newdata = new boolean[size];
+        System.arraycopy(data, 0, newdata, 0, size);
+        return newdata;
     }
 }

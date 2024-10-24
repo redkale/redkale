@@ -41,33 +41,23 @@ public final class IntArraySimpledCoder<R extends Reader, W extends Writer> exte
 
     @Override
     public int[] convertFrom(R in) {
-        int len = in.readArrayB(IntSimpledCoder.instance);
-        if (len == Reader.SIGN_NULL) {
+        if (!in.readArrayB(IntSimpledCoder.instance)) {
             return null;
         }
-        if (len == Reader.SIGN_VARIABLE) {
-            int size = 0;
-            int[] data = new int[8];
-            while (in.hasNext()) {
-                if (size >= data.length) {
-                    int[] newdata = new int[data.length + 4];
-                    System.arraycopy(data, 0, newdata, 0, size);
-                    data = newdata;
-                }
-                data[size++] = in.readInt();
+        int size = 0;
+        int[] data = new int[8];
+        while (in.hasNext()) {
+            if (size >= data.length) {
+                int[] newdata = new int[data.length + 4];
+                System.arraycopy(data, 0, newdata, 0, size);
+                data = newdata;
             }
-            in.readArrayE();
-            int[] newdata = new int[size];
-            System.arraycopy(data, 0, newdata, 0, size);
-            return newdata;
-        } else {
-            int[] values = new int[len];
-            for (int i = 0; i < values.length; i++) {
-                values[i] = in.readInt();
-            }
-            in.readArrayE();
-            return values;
+            data[size++] = in.readInt();
         }
+        in.readArrayE();
+        int[] newdata = new int[size];
+        System.arraycopy(data, 0, newdata, 0, size);
+        return newdata;
     }
 
     public static final class IntStreamSimpledCoder<R extends Reader, W extends Writer>

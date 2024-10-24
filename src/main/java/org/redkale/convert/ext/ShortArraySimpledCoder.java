@@ -40,32 +40,22 @@ public final class ShortArraySimpledCoder<R extends Reader, W extends Writer> ex
 
     @Override
     public short[] convertFrom(R in) {
-        int len = in.readArrayB(ShortSimpledCoder.instance);
-        if (len == Reader.SIGN_NULL) {
+        if (!in.readArrayB(ShortSimpledCoder.instance)) {
             return null;
         }
-        if (len == Reader.SIGN_VARIABLE) {
-            int size = 0;
-            short[] data = new short[8];
-            while (in.hasNext()) {
-                if (size >= data.length) {
-                    short[] newdata = new short[data.length + 4];
-                    System.arraycopy(data, 0, newdata, 0, size);
-                    data = newdata;
-                }
-                data[size++] = in.readShort();
+        int size = 0;
+        short[] data = new short[8];
+        while (in.hasNext()) {
+            if (size >= data.length) {
+                short[] newdata = new short[data.length + 4];
+                System.arraycopy(data, 0, newdata, 0, size);
+                data = newdata;
             }
-            in.readArrayE();
-            short[] newdata = new short[size];
-            System.arraycopy(data, 0, newdata, 0, size);
-            return newdata;
-        } else {
-            short[] values = new short[len];
-            for (int i = 0; i < values.length; i++) {
-                values[i] = in.readShort();
-            }
-            in.readArrayE();
-            return values;
+            data[size++] = in.readShort();
         }
+        in.readArrayE();
+        short[] newdata = new short[size];
+        System.arraycopy(data, 0, newdata, 0, size);
+        return newdata;
     }
 }

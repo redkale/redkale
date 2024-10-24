@@ -110,22 +110,12 @@ public class ProtobufReader extends Reader {
     }
 
     @Override
-    public final String readObjectB(final Class clazz) {
-        return hasNext() ? "" : null;
+    public final boolean readObjectB(final Decodeable decoder) {
+        return hasNext();
     }
 
     @Override
-    public final void readObjectE(final Class clazz) {
-        // do nothing
-    }
-
-    @Override
-    public final int readMapB(Decodeable keyDecoder, Decodeable valueDecoder) {
-        return Reader.SIGN_VARIABLE;
-    }
-
-    @Override
-    public final void readMapE() {
+    public final void readObjectE() {
         // do nothing
     }
 
@@ -133,15 +123,25 @@ public class ProtobufReader extends Reader {
      * 判断下一个非空白字符是否为[
      *
      * @param componentDecoder Decodeable
-     * @return SIGN_VARIABLE 或 SIGN_NULL
+     * @return 是否存在对象
      */
     @Override
-    public final int readArrayB(Decodeable componentDecoder) {
-        return Reader.SIGN_VARIABLE;
+    public final boolean readArrayB(Decodeable componentDecoder) {
+        return true;
     }
 
     @Override
     public final void readArrayE() {
+        // do nothing
+    }
+
+    @Override
+    public final boolean readMapB(Decodeable keyDecoder, Decodeable valueDecoder) {
+        return true;
+    }
+
+    @Override
+    public final void readMapE() {
         // do nothing
     }
 

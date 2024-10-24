@@ -40,32 +40,22 @@ public final class CharArraySimpledCoder<R extends Reader, W extends Writer> ext
 
     @Override
     public char[] convertFrom(R in) {
-        int len = in.readArrayB(CharSimpledCoder.instance);
-        if (len == Reader.SIGN_NULL) {
+        if (!in.readArrayB(CharSimpledCoder.instance)) {
             return null;
         }
-        if (len == Reader.SIGN_VARIABLE) {
-            int size = 0;
-            char[] data = new char[8];
-            while (in.hasNext()) {
-                if (size >= data.length) {
-                    char[] newdata = new char[data.length + 4];
-                    System.arraycopy(data, 0, newdata, 0, size);
-                    data = newdata;
-                }
-                data[size++] = in.readChar();
+        int size = 0;
+        char[] data = new char[8];
+        while (in.hasNext()) {
+            if (size >= data.length) {
+                char[] newdata = new char[data.length + 4];
+                System.arraycopy(data, 0, newdata, 0, size);
+                data = newdata;
             }
-            in.readArrayE();
-            char[] newdata = new char[size];
-            System.arraycopy(data, 0, newdata, 0, size);
-            return newdata;
-        } else {
-            char[] values = new char[len];
-            for (int i = 0; i < values.length; i++) {
-                values[i] = in.readChar();
-            }
-            in.readArrayE();
-            return values;
+            data[size++] = in.readChar();
         }
+        in.readArrayE();
+        char[] newdata = new char[size];
+        System.arraycopy(data, 0, newdata, 0, size);
+        return newdata;
     }
 }

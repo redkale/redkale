@@ -324,7 +324,9 @@ public class InnerCoderEntity {
 
             @Override
             public InnerCoderEntity convertFrom(Reader in) {
-                if (in.readObjectB(InnerCoderEntity.class) == null) return null;
+                if (!in.readObjectB(this)) {
+                    return null;
+                }
                 int index = 0;
                 final Object[] params = new Object[deMembers.length];
                 while (in.hasNext()) {
@@ -336,7 +338,7 @@ public class InnerCoderEntity {
                         params[index++] = member.read(in);
                     }
                 }
-                in.readObjectE(InnerCoderEntity.class);
+                in.readObjectE();
                 return InnerCoderEntity.create(params[0] == null ? 0 : (Integer) params[0], (String) params[1]);
             }
         };

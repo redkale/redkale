@@ -118,25 +118,15 @@ public class MapDecoder<R extends Reader, K, V> implements Decodeable<R, Map<K, 
         this.checkInited();
         Decodeable<R, K> kdecoder = this.keyDecoder;
         Decodeable<R, V> vdecoder = this.valueDecoder;
-        int len = in.readMapB(kdecoder, vdecoder);
-        if (len == Reader.SIGN_NULL) {
+        if (!in.readMapB(kdecoder, vdecoder)) {
             return null;
         }
         final Map<K, V> result = this.creator.create();
-        if (len == Reader.SIGN_VARIABLE) {
-            while (in.hasNext()) {
-                K key = kdecoder.convertFrom(in);
-                in.readColon();
-                V value = vdecoder.convertFrom(in);
-                result.put(key, value);
-            }
-        } else { // 固定长度
-            for (int i = 0; i < len; i++) {
-                K key = kdecoder.convertFrom(in);
-                in.readColon();
-                V value = vdecoder.convertFrom(in);
-                result.put(key, value);
-            }
+        while (in.hasNext()) {
+            K key = kdecoder.convertFrom(in);
+            in.readColon();
+            V value = vdecoder.convertFrom(in);
+            result.put(key, value);
         }
         in.readMapE();
         return result;

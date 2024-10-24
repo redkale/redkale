@@ -102,8 +102,7 @@ public class JsonMultiImplDecoder<T> implements Decodeable<JsonReader, T> {
 
     @Override
     public T convertFrom(JsonReader in) {
-        final String clazz = in.readObjectB(null);
-        if (clazz == null) {
+        if (!in.readObjectB(this)) {
             return null;
         }
         ObjectDecoder decoder = this.firstDecoder;
@@ -150,7 +149,7 @@ public class JsonMultiImplDecoder<T> implements Decodeable<JsonReader, T> {
                 params[++index] = new Object[] {member.getAttribute(), member.read(in)};
             }
         }
-        in.readObjectE(null);
+        in.readObjectE();
         if (decoder.getConstructorMembers() == null) { // 空构造函数
             T result = (T) decoder.getCreator().create();
             for (int i = 0; i <= index; i++) {

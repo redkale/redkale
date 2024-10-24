@@ -8,7 +8,6 @@ package org.redkale.convert.json;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import org.redkale.convert.*;
-import static org.redkale.convert.Reader.*;
 import org.redkale.util.ByteTreeNode;
 import org.redkale.util.Utility;
 
@@ -270,75 +269,58 @@ public class JsonReader extends Reader {
     }
 
     /**
-     * 判断下一个非空白字符是否为{
+     * 读取对象，返回false表示对象为null
      *
-     * @param clazz 类名
-     * @return 返回 null 表示对象为null， 返回空字符串表示当前class与返回的class一致，返回非空字符串表示class是当前class的子类。
+     * @param decoder Decodeable
+     * @return 是否存在对象
      */
     @Override
-    public String readObjectB(final Class clazz) {
+    public boolean readObjectB(final Decodeable decoder) {
         if (this.text.length == 0) {
-            return null;
+            return false;
         }
         char ch = nextGoodChar(true);
         if (ch == '{') {
-            return "";
+            return true;
         }
         if (ch == 'n' && text[++position] == 'u' && text[++position] == 'l' && text[++position] == 'l') {
-            return null;
+            return false;
         }
         if (ch == 'N' && text[++position] == 'U' && text[++position] == 'L' && text[++position] == 'L') {
-            return null;
+            return false;
         }
         throw new ConvertException("a json object must begin with '{' (position = " + position + ") but '" + ch
                 + "' in " + new String(this.text));
     }
 
     @Override
-    public final void readObjectE(final Class clazz) {
+    public final void readObjectE() {
         // do nothing
     }
 
     /**
-     * 判断下一个非空白字符是否为{
-     *
-     * @param keyDecoder Decodeable
-     * @param valuedecoder Decodeable
-     * @return SIGN_VARIABLE 或 SIGN_NULL
-     */
-    @Override
-    public final int readMapB(Decodeable keyDecoder, Decodeable valuedecoder) {
-        return readArrayB(keyDecoder);
-    }
-
-    @Override
-    public final void readMapE() {
-        // do nothing
-    }
-
-    /**
-     * 判断下一个非空白字符是否为[
+     * 读取数组，返回false表示数组为null
      *
      * @param componentDecoder Decodeable
-     * @return SIGN_VARIABLE 或 SIGN_NULL
+     * @return 是否存在对象
      */
     @Override
-    public int readArrayB(Decodeable componentDecoder) {
+    public boolean readArrayB(Decodeable componentDecoder) {
         if (this.text.length == 0) {
-            return SIGN_NULL;
+            return false;
         }
         char ch = nextGoodChar(true);
         if (ch == '[') {
-            return SIGN_VARIABLE;
+            return true;
         }
         if (ch == '{') {
-            return SIGN_VARIABLE;
+            return true;
         }
         if (ch == 'n' && text[++position] == 'u' && text[++position] == 'l' && text[++position] == 'l') {
-            return SIGN_NULL;
+            return false;
         }
         if (ch == 'N' && text[++position] == 'U' && text[++position] == 'L' && text[++position] == 'L') {
-            return SIGN_NULL;
+            return false;
         }
         throw new ConvertException("a json array text must begin with '[' (position = " + position + ") but '" + ch
                 + "' in " + new String(this.text));
@@ -346,6 +328,23 @@ public class JsonReader extends Reader {
 
     @Override
     public final void readArrayE() {
+        // do nothing
+    }
+
+    /**
+     * 读取map，返回false表示map为null
+     *
+     * @param keyDecoder Decodeable
+     * @param valueDecoder Decodeable
+     * @return 是否存在对象
+     */
+    @Override
+    public final boolean readMapB(Decodeable keyDecoder, Decodeable valueDecoder) {
+        return readArrayB(keyDecoder);
+    }
+
+    @Override
+    public final void readMapE() {
         // do nothing
     }
 
@@ -720,33 +719,24 @@ public class JsonReader extends Reader {
 
     @Override
     public final byte[] readByteArray() {
-        int len = readArrayB(null);
-        if (len == Reader.SIGN_NULL) {
+        boolean has = readArrayB(null);
+        if (!has) {
             return null;
         }
-        if (len == Reader.SIGN_VARIABLE) {
-            int size = 0;
-            byte[] data = new byte[8];
-            while (hasNext()) {
-                if (size >= data.length) {
-                    byte[] newdata = new byte[data.length + 4];
-                    System.arraycopy(data, 0, newdata, 0, size);
-                    data = newdata;
-                }
-                data[size++] = readByte();
+        int size = 0;
+        byte[] data = new byte[8];
+        while (hasNext()) {
+            if (size >= data.length) {
+                byte[] newdata = new byte[data.length + 4];
+                System.arraycopy(data, 0, newdata, 0, size);
+                data = newdata;
             }
-            readArrayE();
-            byte[] newdata = new byte[size];
-            System.arraycopy(data, 0, newdata, 0, size);
-            return newdata;
-        } else { // 固定长度
-            byte[] values = new byte[len];
-            for (int i = 0; i < values.length; i++) {
-                values[i] = readByte();
-            }
-            readArrayE();
-            return values;
+            data[size++] = readByte();
         }
+        readArrayE();
+        byte[] newdata = new byte[size];
+        System.arraycopy(data, 0, newdata, 0, size);
+        return newdata;
     }
 
     @Override

@@ -17,20 +17,6 @@ import org.redkale.annotation.Nullable;
 public abstract class Reader {
 
     /**
-     * 集合对象为null
-     *
-     * @see #readArrayB(org.redkale.convert.Decodeable)
-     */
-    public static final short SIGN_NULL = -1;
-
-    /**
-     * 不确定的长度， 比如解析json数组
-     *
-     * @see #readArrayB(org.redkale.convert.Decodeable)
-     */
-    public static final short SIGN_VARIABLE = -2;
-
-    /**
      * 设置Reader的内容，通常结合对象池使用
      *
      * @param content 内容
@@ -62,32 +48,26 @@ public abstract class Reader {
     public abstract void readColon();
 
     /**
-     * 读取对象的类名， 返回 null 表示对象为null， 返回空字符串表示当前class与返回的class一致，返回非空字符串表示class是当前class的子类。
+     * 读取对象，返回false表示对象为null
      *
-     * @param clazz 类名
-     *
-     * @return 返回字段数
+     * @param decoder Decodeable
+     * @return 是否存在对象
      */
-    public String readObjectB(final Class clazz) {
-        return null;
-    }
+    public abstract boolean readObjectB(final Decodeable decoder);
 
     /**
      * 读取对象的尾端
      *
-     * @param clazz 类名
      */
-    public abstract void readObjectE(final Class clazz);
+    public abstract void readObjectE();
 
     /**
-     * 读取数组的开头并返回数组的长度
+     * 读取数组，返回false表示数组为null
      *
-     * @see #SIGN_NULL
-     * @see #SIGN_VARIABLE
      * @param componentDecoder Decodeable
-     * @return 返回数组的长度
+     * @return 是否存在对象
      */
-    public abstract int readArrayB(@Nullable Decodeable componentDecoder);
+    public abstract boolean readArrayB(@Nullable Decodeable componentDecoder);
 
     /**
      * 读取数组的尾端
@@ -95,13 +75,13 @@ public abstract class Reader {
     public abstract void readArrayE();
 
     /**
-     * 读取map的开头并返回map的size
+     * 读取map，返回false表示map为null
      *
      * @param keyDecoder Decodeable
      * @param valueDecoder Decodeable
-     * @return 返回map的size
+     * @return 是否存在对象
      */
-    public abstract int readMapB(Decodeable keyDecoder, Decodeable valueDecoder);
+    public abstract boolean readMapB(Decodeable keyDecoder, Decodeable valueDecoder);
 
     /**
      * 读取Map的尾端
