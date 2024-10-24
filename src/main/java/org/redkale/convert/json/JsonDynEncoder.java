@@ -30,13 +30,10 @@ import org.redkale.util.*;
 @SuppressWarnings("unchecked")
 public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
 
-    protected final Class typeClass;
-
     protected final ObjectEncoder<JsonWriter, T> objectEncoderSelf;
 
     protected JsonDynEncoder(JsonFactory factory, Type type, ObjectEncoder objectEncoderSelf) {
         super(type);
-        this.typeClass = (Class) type;
         this.factory = factory;
         this.objectEncoderSelf = objectEncoderSelf;
         this.members = objectEncoderSelf.getMembers();
