@@ -202,10 +202,7 @@ public abstract class ClusterAgent {
             }
         }
         ClusterEntry entry = new ClusterEntry(ns, protocol, service);
-        if (entry.serviceName.endsWith(".")) {
-            return false;
-        }
-        return true;
+        return !entry.serviceName.endsWith(".");
     }
 
     protected void afterDeregister(NodeServer ns, String protocol) {

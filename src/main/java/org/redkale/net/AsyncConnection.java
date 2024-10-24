@@ -1305,6 +1305,8 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
                     });
                     return;
                 }
+                default:
+                    return;
             }
         }
     }

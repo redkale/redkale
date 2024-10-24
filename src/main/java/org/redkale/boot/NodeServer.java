@@ -470,11 +470,8 @@ public abstract class NodeServer {
     }
 
     protected boolean acceptsComponent(Class<? extends Service> serviceImplClass) {
-        if (Modifier.isAbstract(serviceImplClass.getModifiers())
-                || Modifier.isInterface(serviceImplClass.getModifiers())) {
-            return false;
-        }
-        return true;
+        return !(Modifier.isAbstract(serviceImplClass.getModifiers())
+                || Modifier.isInterface(serviceImplClass.getModifiers()));
     }
 
     protected boolean interceptComponent(Service service) {

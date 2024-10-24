@@ -815,8 +815,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
                         int c = Utility.sum(stmt2.executeBatch());
                         slowLog(s, sqls);
                         return c;
-                    } catch (SQLException se) {
-                        throw se;
                     } finally {
                         conn.offerUpdateStatement(stmt2);
                     }
@@ -2199,7 +2197,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
             conn.setAutoCommit(true);
             prestmt = conn.prepareQueryStatement(sql);
             final ResultSet set = prestmt.executeQuery();
-            boolean rs = set.next() ? (set.getInt(1) > 0) : false;
+            boolean rs = set.next() && (set.getInt(1) > 0);
             set.close();
             conn.offerQueryStatement(prestmt);
             if (info.isLoggable(logger, Level.FINEST, sql)) {

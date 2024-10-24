@@ -763,7 +763,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             Type[] ts = ((ParameterizedType) type).getActualTypeArguments();
             if (ts.length == 1) {
                 Type t = ts[0];
-                if (t == Boolean.class
+                return t == Boolean.class
                         || t == Byte.class
                         || t == Short.class
                         || t == Character.class
@@ -773,10 +773,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
                         || t == Double.class
                         || t == String.class
                         || rootFactory().findEncoder(t) != null
-                        || ((t instanceof Class) && ((Class) t).isEnum())) {
-                    return true;
-                }
-                return false;
+                        || ((t instanceof Class) && ((Class) t).isEnum());
             }
         }
         return false;

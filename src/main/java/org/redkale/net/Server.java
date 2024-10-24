@@ -404,19 +404,17 @@ public abstract class Server<
         final ProtocolServer oldServerChannel = this.serverChannel;
         ProtocolServer newServerChannel = null;
         InetSocketAddress addr0 = addr;
-        try {
-            newServerChannel = ProtocolServer.create(this.netprotocol, context, this.serverClassLoader);
-            this.resourceFactory.inject(newServerChannel);
-            newServerChannel.open(config);
-            newServerChannel.bind(addr, backlog);
-            SocketAddress localAddress = newServerChannel.getLocalAddress();
-            if (localAddress instanceof InetSocketAddress) {
-                addr0 = (InetSocketAddress) localAddress;
-            }
-            newServerChannel.accept(application, this);
-        } catch (IOException e) {
-            throw e;
+
+        newServerChannel = ProtocolServer.create(this.netprotocol, context, this.serverClassLoader);
+        this.resourceFactory.inject(newServerChannel);
+        newServerChannel.open(config);
+        newServerChannel.bind(addr, backlog);
+        SocketAddress localAddress = newServerChannel.getLocalAddress();
+        if (localAddress instanceof InetSocketAddress) {
+            addr0 = (InetSocketAddress) localAddress;
         }
+        newServerChannel.accept(application, this);
+
         context.updateServerAddress(addr0);
         this.address = context.serverAddress;
         this.serverChannel = newServerChannel;

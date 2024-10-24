@@ -24,8 +24,6 @@ import org.redkale.util.*;
  */
 public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
 
-    protected final Class typeClass;
-
     protected final ObjectEncoder<ProtobufWriter, T> objectEncoderSelf;
 
     // 动态字段: protected SimpledCoder xxxSimpledCoder;
@@ -34,7 +32,6 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
 
     protected ProtobufDynEncoder(ProtobufFactory factory, Type type, ProtobufObjectEncoder objectEncoderSelf) {
         super((Class) type);
-        this.typeClass = (Class) type;
         this.factory = factory;
         this.objectEncoderSelf = objectEncoderSelf;
         this.members = objectEncoderSelf.getMembers();
