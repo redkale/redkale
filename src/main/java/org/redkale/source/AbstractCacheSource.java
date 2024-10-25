@@ -6,6 +6,8 @@ import java.util.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ResourceChanged;
 import org.redkale.annotation.ResourceType;
+import org.redkale.convert.json.JsonConvert;
+import org.redkale.convert.json.JsonFactory;
 import org.redkale.inject.Resourcable;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
@@ -55,6 +57,9 @@ public abstract class AbstractCacheSource extends AbstractService implements Cac
 
     // @since 2.8.0 //是否非阻塞式
     public static final String CACHE_SOURCE_NON_BLOCKING = "non-blocking";
+
+    protected static final JsonConvert defaultConvert =
+            JsonFactory.create().skipAllIgnore(true).getConvert();
 
     @ResourceChanged
     public abstract void onResourceChange(ResourceEvent[] events);

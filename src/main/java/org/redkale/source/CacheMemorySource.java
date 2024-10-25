@@ -39,9 +39,6 @@ import org.redkale.util.*;
 @ResourceType(CacheSource.class)
 public final class CacheMemorySource extends AbstractCacheSource {
 
-    @Resource(required = false)
-    private JsonConvert defaultConvert = JsonConvert.root();
-
     @Resource(name = Resource.PARENT_NAME + "_convert", required = false)
     private JsonConvert convert;
 
@@ -127,10 +124,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     @SuppressWarnings("unchecked")
     public void init(AnyValue conf) {
         if (this.convert == null) {
-            this.convert = this.defaultConvert;
-        }
-        if (this.convert == null) {
-            this.convert = JsonConvert.root();
+            this.convert = defaultConvert;
         }
         final CacheMemorySource self = this;
         AnyValue prop = conf == null ? null : conf.getAnyValue("properties");
