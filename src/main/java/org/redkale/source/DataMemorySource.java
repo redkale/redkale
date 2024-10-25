@@ -71,7 +71,7 @@ public class DataMemorySource extends AbstractDataSource {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "{type=memory, name='" + resourceName() + "'}";
+        return getClass().getSimpleName() + "_" + Objects.hash(this) + "{type=memory, name='" + resourceName() + "'}";
     }
 
     @Override

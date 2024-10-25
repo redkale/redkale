@@ -487,8 +487,8 @@ public final class Rest {
             sb1.append(Type.getDescriptor(field.getType()));
             sb2.append(Utility.getTypeDescriptor(field.getGenericType()));
         }
-        final String resourceDesc = sb1.toString();
-        final String resourceGenericDesc = sb1.length() == sb2.length() ? null : sb2.toString();
+        final String serviceParamsDesc = sb1.toString();
+        final String serviceParamsGenericDesc = sb1.equals(sb2) ? null : sb2.toString();
         // ----------------------------------------------------------------------------------------
 
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
@@ -628,7 +628,7 @@ public final class Rest {
                         "_redkale_resource_" + i,
                         Type.getDescriptor(resourcesFields.get(i).getType()));
             }
-            mv.visitMethodInsn(INVOKESPECIAL, newDynWebSokcetFullName, "<init>", "(" + resourceDesc + ")V", false);
+            mv.visitMethodInsn(INVOKESPECIAL, newDynWebSokcetFullName, "<init>", "(" + serviceParamsDesc + ")V", false);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(2 + resourcesFields.size(), 1);
             mv.visitEnd();
@@ -793,8 +793,7 @@ public final class Rest {
                 mv.visitInsn(ARETURN);
                 Label label2 = new Label();
                 mv.visitLabel(label2);
-                mv.visitLocalVariable(
-                        "this", "L" + newDynSuperMessageFullName + ";", null, label0, label2, 0);
+                mv.visitLocalVariable("this", "L" + newDynSuperMessageFullName + ";", null, label0, label2, 0);
                 mv.visitLocalVariable("name", "Ljava/lang/String;", null, label0, label2, 1);
                 mv.visitMaxs(2, 2);
                 mv.visitEnd();
@@ -981,9 +980,9 @@ public final class Rest {
             cw2.visitInnerClass(
                     newDynWebSokcetFullName, newDynName, newDynWebSokcetSimpleName, ACC_PUBLIC + ACC_STATIC);
             {
-                String resSignature = resourceGenericDesc == null ? null : ("(" + resourceGenericDesc + ")V");
+                String resSignature = serviceParamsGenericDesc == null ? null : ("(" + serviceParamsGenericDesc + ")V");
                 mv = new MethodDebugVisitor(
-                        cw2.visitMethod(ACC_PUBLIC, "<init>", "(" + resourceDesc + ")V", resSignature, null));
+                        cw2.visitMethod(ACC_PUBLIC, "<init>", "(" + serviceParamsDesc + ")V", resSignature, null));
                 Label sublabel0 = new Label();
                 mv.visitLabel(sublabel0);
                 mv.visitVarInsn(ALOAD, 0);
@@ -999,8 +998,14 @@ public final class Rest {
                 Label sublabel2 = new Label();
                 mv.visitLabel(sublabel2);
                 mv.visitLocalVariable("this", "L" + newDynWebSokcetFullName + ";", null, sublabel0, sublabel2, 0);
-                if (!resourceDesc.isEmpty()) {
-                    mv.visitLocalVariable("service", resourceDesc, resSignature, sublabel0, sublabel2, 1);
+                for (int i = 0; i < resourcesFields.size(); i++) {
+                    Field field = resourcesFields.get(i);
+                    String fieldDesc = Type.getDescriptor(field.getType());
+                    String fieldSignature = Utility.getTypeDescriptor(field.getGenericType());
+                    if (fieldDesc.equals(fieldSignature)) {
+                        fieldSignature = null;
+                    }
+                    mv.visitLocalVariable(field.getName(), fieldDesc, fieldSignature, sublabel0, sublabel2, 1 + i);
                 }
                 mv.visitMaxs(2, 1 + resourcesFields.size());
                 mv.visitEnd();

@@ -13,6 +13,7 @@ import org.redkale.annotation.Resource;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
+import org.redkale.test.rest.UserService;
 import org.redkale.test.ws.ChatMessage;
 import org.redkale.test.ws.ChatService;
 import org.redkale.test.ws.ChatWebSocket;
@@ -24,6 +25,9 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
     @Resource
     private ChatService _redkale_resource_0;
 
+    @Resource
+    private UserService _redkale_resource_1;
+
     public static Map<String, Annotation[]> _redkale_annotations;
 
     public _DyncChatWebSocketServlet() {
@@ -33,7 +37,7 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
 
     @Override
     protected <G extends Serializable, T> WebSocket<G, T> createWebSocket() {
-        return (WebSocket) new _DyncChatWebSocket(_redkale_resource_0);
+        return (WebSocket) new _DyncChatWebSocket(_redkale_resource_0, _redkale_resource_1);
     }
 
     @Override
@@ -43,9 +47,10 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
 
     public static class _DyncChatWebSocket extends ChatWebSocket {
 
-        public _DyncChatWebSocket(ChatService service) {
+        public _DyncChatWebSocket(ChatService service, UserService userService) {
             super();
             this.service = service;
+            this.userService = userService;
         }
     }
 
