@@ -46,10 +46,9 @@ import org.redkale.util.ByteArray;
  * <p>详情见: https://redkale.org
  *
  * @author zhangjx
- * @param <G> Groupid的泛型
- * @param <T> Message的泛型
+ * @param <G> userid的泛型
  */
-public abstract class WebSocket<G extends Serializable, T> {
+public abstract class WebSocket<G extends Serializable> {
 
     // --------------------------- CLOSECODE -------------------------------
     @Comment("服务器主动关闭")
@@ -834,14 +833,6 @@ public abstract class WebSocket<G extends Serializable, T> {
     public void preOnMessage(String restMapping, WebSocketParam param, Runnable messageEvent) {
         messageEvent.run();
     }
-
-    /**
-     * 接收到消息的回调方法
-     *
-     * @param message 消息
-     * @param last 是否最后一条
-     */
-    public void onMessage(T message, boolean last) {}
 
     /**
      * 接收到文本消息的回调方法

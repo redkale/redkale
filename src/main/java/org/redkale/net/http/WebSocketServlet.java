@@ -477,7 +477,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
         });
     }
 
-    protected abstract <G extends Serializable, T> WebSocket<G, T> createWebSocket();
+    protected abstract <G extends Serializable> WebSocket<G> createWebSocket();
 
     protected WebSocketNode createWebSocketNode() {
         return null;

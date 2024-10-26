@@ -29,13 +29,12 @@ public class ChatWebSocketServlet extends WebSocketServlet {
     }
 
     @Override
-    protected WebSocket<Integer, ChatMessage> createWebSocket() {
+    protected WebSocket<Integer> createWebSocket() {
 
-        return new WebSocket<Integer, ChatMessage>() {
+        return new WebSocket<Integer>() {
 
             private UserInfo user;
 
-            @Override
             public void onMessage(
                     ChatMessage message,
                     boolean last) { // text 接收的格式:  {"receiveid":200000001, "content":"Hi Redkale!"}

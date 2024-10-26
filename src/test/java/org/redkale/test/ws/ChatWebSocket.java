@@ -15,7 +15,7 @@ import org.redkale.test.rest.*;
 /** @author zhangjx */
 // anyuser = true 表示WebSocket.createUserid返回的值不表示用户登录态
 @RestWebSocket(name = "chat", catalog = "ws", comment = "文字聊天", anyuser = true)
-public class ChatWebSocket extends WebSocket<Integer, Object> {
+public class ChatWebSocket extends WebSocket<Integer> {
 
     // @Resource标记的Field只能被修饰为public或protected
     @Resource

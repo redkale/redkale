@@ -616,7 +616,7 @@ public final class Rest {
                     "createWebSocket",
                     "()" + wsDesc,
                     "<G::Ljava/io/Serializable;T:Ljava/lang/Object;>()L"
-                            + WebSocket.class.getName().replace('.', '/') + "<TG;TT;>;",
+                            + WebSocket.class.getName().replace('.', '/') + "<TG;>;",
                     null));
             mv.visitTypeInsn(NEW, newDynName + "$" + newDynWebSokcetSimpleName);
             mv.visitInsn(DUP);

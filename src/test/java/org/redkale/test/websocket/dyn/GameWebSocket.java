@@ -15,7 +15,7 @@ import org.redkale.net.http.WebSocket;
  * @author zhangjx
  */
 @RestWebSocket(name = "wstest", catalog = "ws", wsmaxconns = 100, comment = "WebSocket服务", repair = false)
-public class GameWebSocket extends WebSocket<Long, Object> {
+public class GameWebSocket extends WebSocket<Long> {
 
     @Override
     protected CompletableFuture<String> onOpen(final HttpRequest request) {

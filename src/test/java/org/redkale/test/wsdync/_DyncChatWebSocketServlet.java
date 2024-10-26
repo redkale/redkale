@@ -36,7 +36,7 @@ public final class _DyncChatWebSocketServlet extends WebSocketServlet {
     }
 
     @Override
-    protected <G extends Serializable, T> WebSocket<G, T> createWebSocket() {
+    protected <G extends Serializable> WebSocket<G> createWebSocket() {
         return (WebSocket) new _DyncChatWebSocket(_redkale_resource_0, _redkale_resource_1);
     }
 
