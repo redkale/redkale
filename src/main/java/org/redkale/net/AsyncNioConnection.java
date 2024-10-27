@@ -169,13 +169,10 @@ abstract class AsyncNioConnection extends AsyncConnection {
                 pipelineLock.unlock();
             }
         }
-        boolean empty = this.pipelineWriteQueue.isEmpty();
         for (PipelinePacket packet : packets) {
             this.pipelineWriteQueue.offer(packet);
         }
-        if (empty) {
-            this.ioWriteThread.execute(this::pipelineDoWrite);
-        }
+        this.ioWriteThread.execute(this::pipelineDoWrite);
     }
 
     private void pipelineDoWrite() {
