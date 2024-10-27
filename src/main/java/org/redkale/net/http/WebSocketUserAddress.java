@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import org.redkale.convert.ConvertColumn;
+import org.redkale.convert.ConvertImpl;
 import org.redkale.convert.json.JsonConvert;
 
 /**
@@ -16,6 +17,7 @@ import org.redkale.convert.json.JsonConvert;
  *
  * @author zhangjx
  */
+@ConvertImpl(value = WebSocketUserAddress.SimpleWebSocketUserAddress.class)
 public interface WebSocketUserAddress {
 
     Serializable userid();
