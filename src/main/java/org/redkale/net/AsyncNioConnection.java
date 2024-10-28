@@ -160,13 +160,13 @@ abstract class AsyncNioConnection extends AsyncConnection {
     @Override
     public final void pipelineWrite(PipelinePacket... packets) {
         if (pipelineWriteQueue == null) {
-            writeLock.lock();
+            lockWrite();
             try {
                 if (pipelineWriteQueue == null) {
                     pipelineWriteQueue = new ConcurrentLinkedDeque<>();
                 }
             } finally {
-                writeLock.unlock();
+                unlockWrite();
             }
         }
         for (PipelinePacket packet : packets) {
