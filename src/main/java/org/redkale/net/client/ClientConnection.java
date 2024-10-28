@@ -12,7 +12,6 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import java.util.logging.Level;
 import org.redkale.annotation.*;
@@ -37,8 +36,6 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
     protected final LongAdder doneRequestCounter = new LongAdder();
 
     protected final LongAdder doneResponseCounter = new LongAdder();
-
-    protected final ReentrantLock writeLock = new ReentrantLock();
 
     protected final ByteArray writeArray = new ByteArray();
 
@@ -139,7 +136,7 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
         }
         respWaitingCounter.add(respFutures.length); // 放在writeChannelInWriteThread计数会延迟，导致不准确
 
-        writeLock.lock();
+        channel.lockWrite();
         try {
             if (pauseWriting.get()) {
                 for (ClientFuture respFuture : respFutures) {
@@ -150,15 +147,15 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
                 for (ClientFuture respFuture : respFutures) {
                     offerRespFuture(respFuture);
                 }
-                sendRequestInLocking(respFutures);
+                sendRequestInLock(respFutures);
             }
         } finally {
-            writeLock.unlock();
+            channel.unlockWrite();
         }
         return respFutures;
     }
 
-    protected void sendRequestInLocking(ClientFuture... respFutures) {
+    protected void sendRequestInLock(ClientFuture... respFutures) {
         sendRequestToChannel(respFutures);
     }
 
@@ -193,7 +190,7 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
 
     // 发送半包和积压的请求数据包
     void sendHalfWriteInReadThread(R halfRequest, Throwable halfException) {
-        writeLock.lock();
+        channel.lockWrite();
         try {
             pauseWriting.set(false);
             ClientFuture respFuture = this.currHalfWriteFuture;
@@ -210,7 +207,7 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
                 sendRequestToChannel(respFuture);
             }
         } finally {
-            writeLock.unlock();
+            channel.unlockWrite();
         }
     }
 
@@ -219,14 +216,15 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
             return CompletableFuture.failedFuture(
                     new RuntimeException("ClientVirtualRequest must be virtualType = true"));
         }
+        AsyncConnection conn = channel;
         ClientFuture<R, P> respFuture = client.createClientFuture(this, request);
-        writeLock.lock();
+        conn.lockWrite();
         try {
             offerRespFuture(respFuture);
         } finally {
-            writeLock.unlock();
+            conn.unlockWrite();
         }
-        channel.readRegister(getCodec()); // 不能在创建连接时注册读事件
+        conn.readRegister(getCodec()); // 不能在创建连接时注册读事件
         return respFuture;
     }
 

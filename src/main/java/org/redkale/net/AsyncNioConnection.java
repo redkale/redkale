@@ -160,13 +160,13 @@ abstract class AsyncNioConnection extends AsyncConnection {
     @Override
     public final void pipelineWrite(PipelinePacket... packets) {
         if (pipelineWriteQueue == null) {
-            pipelineLock.lock();
+            writeLock.lock();
             try {
                 if (pipelineWriteQueue == null) {
                     pipelineWriteQueue = new ConcurrentLinkedDeque<>();
                 }
             } finally {
-                pipelineLock.unlock();
+                writeLock.unlock();
             }
         }
         for (PipelinePacket packet : packets) {
@@ -241,7 +241,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
                 handler.failed(exc, attachment);
             }
         };
-        this.writeCompletionHandler = (CompletionHandler) newHandler;
+        this.writeCompletionHandler = newHandler;
         doWrite(); // 如果不是true，则bodyCallback的执行可能会切换线程
     }
 
@@ -260,7 +260,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
         this.writePending = true;
         this.writeByteBuffer = src;
         this.writeAttachment = attachment;
-        this.writeCompletionHandler = (CompletionHandler) handler;
+        this.writeCompletionHandler = handler;
         doWrite();
     }
 
@@ -282,7 +282,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
         this.writeBuffersOffset = offset;
         this.writeBuffersLength = length;
         this.writeAttachment = attachment;
-        this.writeCompletionHandler = (CompletionHandler) handler;
+        this.writeCompletionHandler = handler;
         doWrite();
     }
 

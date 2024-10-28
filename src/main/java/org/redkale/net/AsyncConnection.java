@@ -53,6 +53,8 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
 
     protected final int bufferCapacity;
 
+    private final ReentrantLock writeLock = new ReentrantLock();
+
     protected AsyncIOThread ioReadThread;
 
     protected AsyncIOThread ioWriteThread;
@@ -64,8 +66,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
     private Supplier<ByteBuffer> writeBufferSupplier;
 
     private Consumer<ByteBuffer> writeBufferConsumer;
-
-    final ReentrantLock pipelineLock = new ReentrantLock();
 
     private ByteBufferWriter pipelineWriter;
 
@@ -203,6 +203,14 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
 
     public final AsyncIOThread getWriteIOThread() {
         return ioWriteThread;
+    }
+
+    public final void lockWrite() {
+        writeLock.lock();
+    }
+
+    public final void unlockWrite() {
+        writeLock.unlock();
     }
 
     /**
@@ -615,7 +623,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
 
     // 返回pipelineCount个数数据是否全部写入完毕
     public boolean appendPipeline(int pipelineIndex, int pipelineCount, byte[] bs, int offset, int length) {
-        pipelineLock.lock();
+        writeLock.lock();
         try {
             ByteBufferWriter writer = this.pipelineWriter;
             if (writer == null) {
@@ -645,7 +653,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
                 return false;
             }
         } finally {
-            pipelineLock.unlock();
+            writeLock.unlock();
         }
     }
 
@@ -672,7 +680,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
             byte[] bodyContent,
             int bodyOffset,
             int bodyLength) {
-        pipelineLock.lock();
+        writeLock.lock();
         try {
             ByteBufferWriter writer = this.pipelineWriter;
             if (writer == null) {
@@ -703,7 +711,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
                 return false;
             }
         } finally {
-            pipelineLock.unlock();
+            writeLock.unlock();
         }
     }
 
