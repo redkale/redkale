@@ -264,6 +264,11 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
     protected abstract <A> void writeImpl(
             ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler);
 
+    public abstract <A> void writeInLock(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler);
+
+    public abstract <A> void writeInLock(
+            ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler);
+
     protected void startRead(CompletionHandler<Integer, ByteBuffer> handler) {
         read(handler);
     }
@@ -508,6 +513,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
+    // srcs写完才会回调
     public final void writeInIOThread(byte[] bytes, CompletionHandler<Integer, Void> handler) {
         if (inCurrWriteThread()) {
             write(bytes, handler);
@@ -516,6 +522,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
+    // srcs写完才会回调
     public final void writeInIOThread(ByteTuple array, CompletionHandler<Integer, Void> handler) {
         if (inCurrWriteThread()) {
             write(array, handler);
@@ -524,6 +531,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
+    // srcs写完才会回调
     public final void writeInIOThread(byte[] bytes, int offset, int length, CompletionHandler<Integer, Void> handler) {
         if (inCurrWriteThread()) {
             write(bytes, offset, length, handler);
@@ -532,6 +540,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
+    // srcs写完才会回调
     public final void writeInIOThread(ByteTuple header, ByteTuple body, CompletionHandler<Integer, Void> handler) {
         if (inCurrWriteThread()) {
             write(header, body, handler);
@@ -540,6 +549,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
+    // srcs写完才会回调
     public final void writeInIOThread(
             byte[] headerContent,
             int headerOffset,

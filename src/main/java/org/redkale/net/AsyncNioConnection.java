@@ -323,6 +323,87 @@ abstract class AsyncNioConnection extends AsyncConnection {
         }
     }
 
+    @Override
+    public <A> void writeInLock(ByteBuffer buffer, A attachment, CompletionHandler<Integer, ? super A> handler) {
+        int total = 0;
+        Exception t = null;
+        lockWrite();
+        try {
+            if (this.writePending) {
+                handler.failed(new WritePendingException(), attachment);
+                return;
+            }
+            this.writePending = true;
+            while (buffer.hasRemaining()) { // 必须要将buffer写完为止
+                int c = implWrite(buffer);
+                if (c < 0) {
+                    t = new ClosedChannelException();
+                    total = c;
+                    break;
+                }
+                total += c;
+            }
+        } catch (Exception e) {
+            t = e;
+        } finally {
+            this.writePending = false;
+            unlockWrite();
+        }
+        if (t != null) {
+            handler.failed(t, attachment);
+        } else {
+            handler.completed(total, attachment);
+        }
+    }
+
+    @Override
+    public <A> void writeInLock(
+            ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
+        int total = 0;
+        Exception t = null;
+        int batchOffset = offset;
+        int batchLength = length;
+        ByteBuffer[] batchBuffers = srcs;
+        lockWrite();
+        try {
+            if (this.writePending) {
+                handler.failed(new WritePendingException(), attachment);
+                return;
+            }
+            this.writePending = true;
+            boolean hasRemain = true;
+            while (hasRemain) { // 必须要将buffer写完为止
+                int c = implWrite(batchBuffers, batchOffset, batchLength);
+                if (c < 0) {
+                    t = new ClosedChannelException();
+                    total = c;
+                    break;
+                }
+                boolean remain = false;
+                for (int i = 0; i < batchLength; i++) {
+                    if (batchBuffers[batchOffset + i].hasRemaining()) {
+                        remain = true;
+                        batchOffset += i;
+                        batchLength -= i;
+                        break;
+                    }
+                }
+                hasRemain = remain;
+                total += c;
+            }
+        } catch (Exception e) {
+            t = e;
+        } finally {
+            this.writePending = false;
+            unlockWrite();
+        }
+        if (t != null) {
+            handler.failed(t, attachment);
+        } else {
+            handler.completed(total, attachment);
+        }
+    }
+
     public void doWrite() {
         try {
             this.writeTime = System.currentTimeMillis();
