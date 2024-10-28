@@ -361,7 +361,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    // srcs写完才会回调
     public final <A> void write(
             ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
         if (sslEngine == null) {
@@ -382,7 +381,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    // srcs写完才会回调
     public final <A> void write(ByteBuffer[] srcs, A attachment, CompletionHandler<Integer, ? super A> handler) {
         write(srcs, 0, srcs.length, attachment, handler);
     }
@@ -493,7 +491,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    // srcs写完才会回调
     public final <A> void writeInIOThread(
             ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
         if (inCurrWriteThread()) {
@@ -503,7 +500,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    // srcs写完才会回调
     public final <A> void writeInIOThread(
             ByteBuffer[] srcs, A attachment, CompletionHandler<Integer, ? super A> handler) {
         if (inCurrWriteThread()) {
@@ -513,7 +509,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    // srcs写完才会回调
     public final void writeInIOThread(byte[] bytes, CompletionHandler<Integer, Void> handler) {
         if (inCurrWriteThread()) {
             write(bytes, handler);
@@ -522,7 +517,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    // srcs写完才会回调
     public final void writeInIOThread(ByteTuple array, CompletionHandler<Integer, Void> handler) {
         if (inCurrWriteThread()) {
             write(array, handler);
@@ -531,7 +525,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    // srcs写完才会回调
     public final void writeInIOThread(byte[] bytes, int offset, int length, CompletionHandler<Integer, Void> handler) {
         if (inCurrWriteThread()) {
             write(bytes, offset, length, handler);
@@ -540,7 +533,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    // srcs写完才会回调
     public final void writeInIOThread(ByteTuple header, ByteTuple body, CompletionHandler<Integer, Void> handler) {
         if (inCurrWriteThread()) {
             write(header, body, handler);
@@ -549,7 +541,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    // srcs写完才会回调
     public final void writeInIOThread(
             byte[] headerContent,
             int headerOffset,
@@ -563,6 +554,61 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         } else {
             executeWrite(() ->
                     write(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength, handler));
+        }
+    }
+
+    public final <A> void writeInLock(ByteBuffer[] srcs, A attachment, CompletionHandler<Integer, ? super A> handler) {
+        writeInLock(srcs, 0, srcs.length, attachment, handler);
+    }
+
+    public final void writeInLock(byte[] bytes, CompletionHandler<Integer, Void> handler) {
+        writeInLock(ByteBuffer.wrap(bytes), null, handler);
+    }
+
+    public final void writeInLock(ByteTuple array, CompletionHandler<Integer, Void> handler) {
+        writeInLock(ByteBuffer.wrap(array.content(), array.offset(), array.length()), null, handler);
+    }
+
+    public final void writeInLock(byte[] bytes, int offset, int length, CompletionHandler<Integer, Void> handler) {
+        writeInLock(ByteBuffer.wrap(bytes, offset, length), null, handler);
+    }
+
+    public final void writeInLock(ByteTuple header, ByteTuple body, CompletionHandler<Integer, Void> handler) {
+        if (body == null) {
+            writeInLock(ByteBuffer.wrap(header.content(), header.offset(), header.length()), null, handler);
+        } else if (header == null) {
+            writeInLock(ByteBuffer.wrap(body.content(), body.offset(), body.length()), null, handler);
+        } else {
+            writeInLock(
+                    new ByteBuffer[] {
+                        ByteBuffer.wrap(header.content(), header.offset(), header.length()),
+                        ByteBuffer.wrap(body.content(), body.offset(), body.length())
+                    },
+                    null,
+                    handler);
+        }
+    }
+
+    public final void writeInLock(
+            byte[] headerContent,
+            int headerOffset,
+            int headerLength,
+            byte[] bodyContent,
+            int bodyOffset,
+            int bodyLength,
+            CompletionHandler<Integer, Void> handler) {
+        if (bodyContent == null) {
+            writeInLock(ByteBuffer.wrap(headerContent, headerOffset, headerLength), null, handler);
+        } else if (headerContent == null) {
+            writeInLock(ByteBuffer.wrap(bodyContent, bodyOffset, bodyLength), null, handler);
+        } else {
+            writeInLock(
+                    new ByteBuffer[] {
+                        ByteBuffer.wrap(headerContent, headerOffset, headerLength),
+                        ByteBuffer.wrap(bodyContent, bodyOffset, bodyLength)
+                    },
+                    null,
+                    handler);
         }
     }
 
