@@ -1366,7 +1366,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     private void finishFile(ByteArray headerData, File file, long offset, long length) throws IOException {
         // this.channel.write(headerData,  new TransferFileHandler(file, offset, length));
         final Logger logger = context.getLogger();
-        this.channel.write(headerData, new CompletionHandler<Integer, Void>() {
+        this.channel.writeInIOThread(headerData, new CompletionHandler<Integer, Void>() {
 
             FileChannel fileChannel;
 
@@ -1413,7 +1413,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                     } else {
                         sends += len;
                     }
-                    channel.write(buffer, attachment, this);
+                    channel.writeInIOThread(buffer, attachment, this);
                 } catch (Exception e) {
                     if (fileChannel != null) {
                         try {

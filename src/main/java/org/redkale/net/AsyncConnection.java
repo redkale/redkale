@@ -269,6 +269,9 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
     public abstract <A> void writeInLock(
             ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler);
 
+    public abstract <A> void writeInLock(
+            Supplier<ByteBuffer> supplier, A attachment, CompletionHandler<Integer, ? super A> handler);
+
     protected void startRead(CompletionHandler<Integer, ByteBuffer> handler) {
         read(handler);
     }
@@ -305,8 +308,16 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
+    public final void write(ByteTuple array, CompletionHandler<Integer, Void> handler) {
+        write(array.content(), array.offset(), array.length(), (byte[]) null, 0, 0, handler);
+    }
+
+    public final void write(ByteBuffer buffer, CompletionHandler<Integer, Void> handler) {
+        write(buffer, null, handler);
+    }
+
     // src写完才会回调
-    public final <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {
+    final <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {
         if (sslEngine == null) {
             writeImpl(src, attachment, handler);
         } else {
@@ -325,7 +336,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    public final <A> void write(
+    final <A> void write(
             ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
         if (sslEngine == null) {
             writeImpl(srcs, offset, length, attachment, handler);
@@ -345,31 +356,19 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    public final <A> void write(ByteBuffer[] srcs, A attachment, CompletionHandler<Integer, ? super A> handler) {
+    final <A> void write(ByteBuffer[] srcs, A attachment, CompletionHandler<Integer, ? super A> handler) {
         write(srcs, 0, srcs.length, attachment, handler);
     }
 
-    public final void write(byte[] bytes, CompletionHandler<Integer, Void> handler) {
+    final void write(byte[] bytes, CompletionHandler<Integer, Void> handler) {
         write(bytes, 0, bytes.length, (byte[]) null, 0, 0, handler);
     }
 
-    public final <A> void write(byte[] bytes, A attachment, CompletionHandler<Integer, ? super A> handler) {
-        write(bytes, 0, bytes.length, (byte[]) null, 0, 0, attachment, handler);
-    }
-
-    public final void write(byte[] bytes, int offset, int length, CompletionHandler<Integer, Void> handler) {
+    final void write(byte[] bytes, int offset, int length, CompletionHandler<Integer, Void> handler) {
         write(bytes, offset, length, (byte[]) null, 0, 0, handler);
     }
 
-    public final void write(ByteTuple array, CompletionHandler<Integer, Void> handler) {
-        write(array.content(), array.offset(), array.length(), (byte[]) null, 0, 0, handler);
-    }
-
-    public final <A> void write(ByteTuple array, A attachment, CompletionHandler<Integer, ? super A> handler) {
-        write(array.content(), array.offset(), array.length(), (byte[]) null, 0, 0, attachment, handler);
-    }
-
-    public final void write(ByteTuple header, ByteTuple body, CompletionHandler<Integer, Void> handler) {
+    final void write(ByteTuple header, ByteTuple body, CompletionHandler<Integer, Void> handler) {
         write(
                 header.content(),
                 header.offset(),
@@ -380,7 +379,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
                 handler);
     }
 
-    public void write(
+    void write(
             byte[] headerContent,
             int headerOffset,
             int headerLength,
@@ -391,7 +390,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         write(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength, null, handler);
     }
 
-    public void write(
+    void write(
             byte[] headerContent,
             int headerOffset,
             int headerLength,

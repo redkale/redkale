@@ -43,15 +43,15 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
 
     protected final AsyncConnection channel;
 
-    protected final CompletionHandler<Integer, Object> writeHandler = new CompletionHandler<Integer, Object>() {
+    protected final CompletionHandler<Integer, Void> writeHandler = new CompletionHandler<Integer, Void>() {
 
         @Override
-        public void completed(Integer result, Object attachment) {
+        public void completed(Integer result, Void attachment) {
             // do nothing
         }
 
         @Override
-        public void failed(Throwable exc, Object attachment) {
+        public void failed(Throwable exc, Void attachment) {
             dispose(exc);
         }
     };
@@ -181,9 +181,9 @@ public abstract class ClientConnection<R extends ClientRequest, P extends Client
                 writeBuffer.clear();
                 writeBuffer.put(writeArray.content(), 0, writeArray.length());
                 writeBuffer.flip();
-                channel.write(writeBuffer, this, writeHandler);
+                channel.write(writeBuffer, writeHandler);
             } else {
-                channel.write(writeArray, this, writeHandler);
+                channel.write(writeArray, writeHandler);
             }
         }
     }

@@ -12,6 +12,7 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import javax.net.ssl.SSLContext;
 import org.redkale.util.ByteBufferWriter;
 
@@ -389,6 +390,45 @@ abstract class AsyncNioConnection extends AsyncConnection {
                     }
                 }
                 hasRemain = remain;
+                total += c;
+            }
+        } catch (Exception e) {
+            t = e;
+        } finally {
+            this.writePending = false;
+            unlockWrite();
+        }
+        if (t != null) {
+            handler.failed(t, attachment);
+        } else {
+            handler.completed(total, attachment);
+        }
+    }
+
+    @Override
+    public <A> void writeInLock(
+            Supplier<ByteBuffer> supplier, A attachment, CompletionHandler<Integer, ? super A> handler) {
+        int total = 0;
+        Exception t = null;
+        lockWrite();
+        try {
+            ByteBuffer buffer = supplier.get();
+            if (buffer == null || !buffer.hasRemaining()) {
+                handler.completed(total, attachment);
+                return;
+            }
+            if (this.writePending) {
+                handler.failed(new WritePendingException(), attachment);
+                return;
+            }
+            this.writePending = true;
+            while (buffer.hasRemaining()) { // 必须要将buffer写完为止
+                int c = implWrite(buffer);
+                if (c < 0) {
+                    t = new ClosedChannelException();
+                    total = c;
+                    break;
+                }
                 total += c;
             }
         } catch (Exception e) {
