@@ -289,28 +289,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    public final void readRegisterInIOThread(CompletionHandler<Integer, ByteBuffer> handler) {
-        if (inCurrReadThread()) {
-            readRegister(handler);
-        } else {
-            executeRead(() -> readRegister(handler));
-        }
-    }
-
-    public final void readRegisterInIOThreadSafe(CompletionHandler<Integer, ByteBuffer> handler) {
-        if (inCurrReadThread()) {
-            if (!readPending) {
-                readRegister(handler);
-            }
-        } else {
-            executeRead(() -> {
-                if (!readPending) {
-                    readRegister(handler);
-                }
-            });
-        }
-    }
-
     public final void read(CompletionHandler<Integer, ByteBuffer> handler) {
         if (sslEngine == null) {
             readImpl(handler);
@@ -324,20 +302,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
             read(handler);
         } else {
             executeRead(() -> read(handler));
-        }
-    }
-
-    public final void readInIOThreadSafe(CompletionHandler<Integer, ByteBuffer> handler) {
-        if (inCurrReadThread()) {
-            if (!readPending) {
-                read(handler);
-            }
-        } else {
-            executeRead(() -> {
-                if (!readPending) {
-                    read(handler);
-                }
-            });
         }
     }
 
