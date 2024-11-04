@@ -1,38 +1,38 @@
 # 序列化
-&emsp;&emsp;Convert提供Java对象的序列化与反序列化功能。支持JSON(JavaScript Object Notation)、PROTOBUF两种格式化。 两种格式使用方式完全一样，其性能都大幅度超过其他JSON框架。同时JSON内置于HTTP服务中，PROTOBUF也是SNCP协议数据序列化的基础。
+&emsp;&emsp;Convert提供Java对象的序列化与反序列化功能。支持JSON、PROTOBUF两种格式化。 两种格式使用方式完全一样，其性能都大幅度超过其他JSON框架。同时JSON内置于HTTP服务中，PROTOBUF也是SNCP协议数据序列化的基础。
 ## 基本API
 &emsp;&emsp;JSON序列化其操作类主要是JsonConvert，配置类主要是JsonFactory、ConvertColumn。JsonFactory采用同ClassLoader类似的双亲委托方式设计。
  JsonConvert 序列化encode方法：
 ```java
-   public String convertTo(Object value);
+    public String convertTo(Object value);
 
     public String convertTo(Type type, Object value);
 
-    public void convertTo(OutputStream out, Object value);
+    public byte[] convertToBytes(Type type, Object value);
 
     public void convertTo(OutputStream out, Type type, Object value);
 
-    public ByteBuffer[] convertTo(Supplier<ByteBuffer> supplier, Object value);
-
     public ByteBuffer[] convertTo(Supplier<ByteBuffer> supplier, Type type, Object value);
-
-    public void convertTo(JsonWriter writer, Object value);
 
     public void convertTo(JsonWriter writer, Type type, Object value);
 ```
 JsonConvert 反序列化decode方法：
 ```java
-   public <T> T convertFrom(Type type, String text);
-
-    public <T> T convertFrom(Type type, char[] text);
-
-    public <T> T convertFrom(Type type, char[] text, int start, int len);
+    public <T> T convertFrom(Type type, String text);
 
     public <T> T convertFrom(Type type, InputStream in);
 
     public <T> T convertFrom(Type type, ByteBuffer... buffers);
 
     public <T> T convertFrom(Type type, JsonReader reader);
+
+    public Object[] convertFrom(Type[] types, String text);
+    
+    // 返回非null的值是由String、ArrayList、HashMap任意组合的对象
+    public <V> V convertFrom(final String text);
+
+    // 返回非null的值是由String、ArrayList、HashMap任意组合的对象
+    public <V> V convertFrom(final InputStream in);
 ```
 ## JSON基本用法
 ```java
