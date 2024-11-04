@@ -142,26 +142,6 @@ public class ByteBufferWriter {
         throw new ArrayIndexOutOfBoundsException(index);
     }
 
-    //    public static void main(String[] args) throws Throwable {
-    //        ObjectPool<ByteBuffer> pool = new ObjectPool<>(20, (p) -> ByteBuffer.allocate(10), (ByteBuffer t) ->
-    // t.clear(), (ByteBuffer t) -> false);
-    //        ByteBufferWriter writer = ByteBufferWriter.create(pool);
-    //        for (int i = 1; i <= 18; i++) {
-    //            writer.put((byte) i);
-    //        }
-    //        System.out.println(Arrays.toString(toBytes(writer.toBuffers())));
-    //
-    //        writer = ByteBufferWriter.create(pool);
-    //        for (int i = 1; i <= 18; i++) {
-    //            writer.put((byte) i);
-    //        }
-    //        int value = 0x223344;
-    //        byte[] b4 = new byte[]{(byte) ((value >> 24) & 0xFF), (byte) ((value >> 16) & 0xFF), (byte) ((value >> 8)
-    // & 0xFF), (byte) (value & 0xFF)};
-    //        writer.putInt(9, value);
-    //        System.out.println(Arrays.toString(b4));
-    //        System.out.println(Arrays.toString(toBytes(writer.toBuffers())));
-    //    }
     public ByteBufferWriter putFloat(float value) {
         getLastBuffer(4).putFloat(value);
         position += 4;

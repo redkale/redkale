@@ -41,6 +41,7 @@ public abstract class Request<C extends Context> {
 
     protected int pipelineIndex;
 
+    // 值不固定
     protected int pipelineCount;
 
     protected boolean pipelineCompleted;
