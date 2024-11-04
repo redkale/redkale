@@ -1077,16 +1077,16 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 && !this.respHeadContainsConnection
                 && !this.request.isWebSocket()
                 && (this.contentType == null
-                        || this.contentType == this.jsonContentType
-                        || this.contentType == this.plainContentType)
+                        || Objects.equals(this.contentType, this.jsonContentType)
+                        || Objects.equals(this.contentType, this.plainContentType))
                 && (this.contentLength >= 0 && this.contentLength < jsonLiveContentLengthArray.length)) {
             byte[][] lengthArray = this.plainLiveContentLengthArray;
             if (this.request.isKeepAlive()) {
-                if (this.contentType == this.jsonContentType) {
+                if (Objects.equals(this.contentType, this.jsonContentType)) {
                     lengthArray = this.jsonLiveContentLengthArray;
                 }
             } else {
-                if (this.contentType == this.jsonContentType) {
+                if (Objects.equals(this.contentType, this.jsonContentType)) {
                     lengthArray = this.jsonCloseContentLengthArray;
                 } else {
                     lengthArray = this.plainCloseContentLengthArray;
@@ -1115,9 +1115,9 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
                 }
             }
             if (!this.request.isWebSocket()) {
-                if (this.contentType == this.jsonContentType) {
+                if (Objects.equals(this.contentType, this.jsonContentType)) {
                     headerArray.put(this.jsonContentTypeBytes);
-                } else if (this.contentType == null || this.contentType == this.plainContentType) {
+                } else if (this.contentType == null || Objects.equals(this.contentType, this.plainContentType)) {
                     headerArray.put(this.plainContentTypeBytes);
                 } else {
                     headerArray.put(("Content-Type: " + this.contentType + "\r\n").getBytes());
