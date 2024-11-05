@@ -3,9 +3,11 @@
  */
 package org.redkale.cached.spi;
 
+import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 import org.redkale.cached.Cached;
 import org.redkale.convert.json.JsonConvert;
+import org.redkale.util.Utility;
 
 /**
  * 缓存信息的基本对象
@@ -36,9 +38,9 @@ public class CachedEntry {
 
     public CachedEntry() {}
 
-    public CachedEntry(DynForCached cached) {
+    public CachedEntry(DynForCached cached, Method method) {
         this.manager = cached.manager();
-        this.name = cached.name();
+        this.name = Utility.isBlank(cached.name()) ? method.getName() : cached.name();
         this.key = cached.key();
         this.localLimit = cached.localLimit();
         this.localExpire = cached.localExpire();
@@ -47,9 +49,9 @@ public class CachedEntry {
         this.nullable = cached.nullable();
     }
 
-    public CachedEntry(Cached cached) {
+    public CachedEntry(Cached cached, Method method) {
         this.manager = cached.manager();
-        this.name = cached.name();
+        this.name = Utility.isBlank(cached.name()) ? method.getName() : cached.name();
         this.key = cached.key();
         this.localLimit = cached.localLimit();
         this.localExpire = cached.localExpire();

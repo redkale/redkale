@@ -178,7 +178,11 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
             mv.visitMaxs(20, 20);
             mv.visitEnd();
             CachedAction action = new CachedAction(
-                    new CachedEntry(cached), method, serviceType, methodBean.paramNameArray(method), dynFieldName);
+                    new CachedEntry(cached, method),
+                    method,
+                    serviceType,
+                    methodBean.paramNameArray(method),
+                    dynFieldName);
             actions.put(dynFieldName, action);
         }
         { // ThrowSupplier
@@ -226,7 +230,7 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
                     String dynFieldName = cached.dynField();
                     AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
                     CachedAction action = new CachedAction(
-                            new CachedEntry(cached),
+                            new CachedEntry(cached, method),
                             method,
                             serviceType,
                             methodBean.paramNameArray(method),
