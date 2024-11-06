@@ -325,7 +325,11 @@ abstract class AsyncNioConnection extends AsyncConnection {
     }
 
     @Override
-    public <A> void writeInLock(ByteBuffer buffer, A attachment, CompletionHandler<Integer, ? super A> handler) {
+    public <A> void writeInLock(
+            ByteBuffer buffer,
+            Consumer<ByteBuffer> consumer,
+            A attachment,
+            CompletionHandler<Integer, ? super A> handler) {
         int total = 0;
         Exception t = null;
         lockWrite();
@@ -350,6 +354,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
             this.writePending = false;
             unlockWrite();
         }
+        if (consumer != null) {
+            consumer.accept(buffer);
+        }
         if (t != null) {
             handler.failed(t, attachment);
         } else {
@@ -359,7 +366,12 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     @Override
     public <A> void writeInLock(
-            ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
+            ByteBuffer[] srcs,
+            int offset,
+            int length,
+            Consumer<ByteBuffer> consumer,
+            A attachment,
+            CompletionHandler<Integer, ? super A> handler) {
         int total = 0;
         Exception t = null;
         int batchOffset = offset;
@@ -398,6 +410,11 @@ abstract class AsyncNioConnection extends AsyncConnection {
             this.writePending = false;
             unlockWrite();
         }
+        if (consumer != null) {
+            for (int i = 0; i < length; i++) {
+                consumer.accept(srcs[offset + i]);
+            }
+        }
         if (t != null) {
             handler.failed(t, attachment);
         } else {
@@ -407,7 +424,10 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     @Override
     public <A> void writeInLock(
-            Supplier<ByteBuffer> supplier, A attachment, CompletionHandler<Integer, ? super A> handler) {
+            Supplier<ByteBuffer> supplier,
+            Consumer<ByteBuffer> consumer,
+            A attachment,
+            CompletionHandler<Integer, ? super A> handler) {
         int total = 0;
         Exception t = null;
         lockWrite();
@@ -430,6 +450,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
                     break;
                 }
                 total += c;
+            }
+            if (consumer != null) {
+                consumer.accept(buffer);
             }
         } catch (Exception e) {
             t = e;

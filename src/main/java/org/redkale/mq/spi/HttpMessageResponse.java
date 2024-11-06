@@ -5,15 +5,13 @@
  */
 package org.redkale.mq.spi;
 
-import static org.redkale.mq.spi.MessageRecord.CTYPE_HTTP_RESULT;
-
 import java.lang.reflect.Type;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.function.*;
 import java.util.logging.Level;
 import org.redkale.convert.Convert;
+import static org.redkale.mq.spi.MessageRecord.CTYPE_HTTP_RESULT;
 import org.redkale.net.Response;
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
@@ -237,34 +235,5 @@ public class HttpMessageResponse extends HttpResponse {
         }
         byte[] rs = (offset == 0 && bs.length == length) ? bs : Arrays.copyOfRange(bs, offset, offset + length);
         finishHttpResult(null, new HttpResult(rs).contentType(contentType));
-    }
-
-    @Override
-    public void finishBuffer(boolean kill, ByteBuffer buffer) {
-        if (message.isEmptyRespTopic()) {
-            return;
-        }
-        byte[] bs = new byte[buffer.remaining()];
-        buffer.get(bs);
-        finishHttpResult(null, new HttpResult(bs));
-    }
-
-    @Override
-    public void finishBuffers(boolean kill, ByteBuffer... buffers) {
-        if (message.isEmptyRespTopic()) {
-            return;
-        }
-        int size = 0;
-        for (ByteBuffer buf : buffers) {
-            size += buf.remaining();
-        }
-        byte[] bs = new byte[size];
-        int index = 0;
-        for (ByteBuffer buf : buffers) {
-            int r = buf.remaining();
-            buf.get(bs, index, r);
-            index += r;
-        }
-        finishHttpResult(null, new HttpResult(bs));
     }
 }

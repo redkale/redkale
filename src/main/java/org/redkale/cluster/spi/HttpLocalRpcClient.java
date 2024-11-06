@@ -5,11 +5,8 @@
  */
 package org.redkale.cluster.spi;
 
-import static org.redkale.util.Utility.isEmpty;
-
 import java.io.Serializable;
 import java.lang.reflect.Type;
-import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
@@ -21,6 +18,7 @@ import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Traces;
+import static org.redkale.util.Utility.isEmpty;
 
 /**
  * 没有配置MQ且也没有ClusterAgent的情况下实现的默认HttpMessageClient实例
@@ -317,35 +315,6 @@ public class HttpLocalRpcClient extends HttpRpcClient {
             }
             byte[] rs = (offset == 0 && bs.length == length) ? bs : Arrays.copyOfRange(bs, offset, offset + length);
             future.complete(rs);
-        }
-
-        @Override
-        public void finishBuffer(boolean kill, ByteBuffer buffer) {
-            if (future == null) {
-                return;
-            }
-            byte[] bs = new byte[buffer.remaining()];
-            buffer.get(bs);
-            future.complete(bs);
-        }
-
-        @Override
-        public void finishBuffers(boolean kill, ByteBuffer... buffers) {
-            if (future == null) {
-                return;
-            }
-            int size = 0;
-            for (ByteBuffer buf : buffers) {
-                size += buf.remaining();
-            }
-            byte[] bs = new byte[size];
-            int index = 0;
-            for (ByteBuffer buf : buffers) {
-                int r = buf.remaining();
-                buf.get(bs, index, r);
-                index += r;
-            }
-            future.complete(bs);
         }
     }
 }
