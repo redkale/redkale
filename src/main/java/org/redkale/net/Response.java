@@ -345,10 +345,6 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         }
     }
 
-    protected void writeInIOThread(ByteBuffer buffer) {
-        this.channel.writeInIOThread(buffer, buffer, finishBufferIOThreadHandler);
-    }
-
     public final void finish(final byte[] bs) {
         finish(false, bs, 0, bs.length);
     }

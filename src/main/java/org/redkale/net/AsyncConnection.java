@@ -360,17 +360,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         write(bytes, offset, length, (byte[]) null, 0, 0, handler);
     }
 
-    final void write(ByteTuple header, ByteTuple body, CompletionHandler<Integer, Void> handler) {
-        write(
-                header.content(),
-                header.offset(),
-                header.length(),
-                body == null ? null : body.content(),
-                body == null ? 0 : body.offset(),
-                body == null ? 0 : body.length(),
-                handler);
-    }
-
     void write(
             byte[] headerContent,
             int headerOffset,
@@ -485,14 +474,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
             write(bytes, offset, length, handler);
         } else {
             executeWrite(() -> write(bytes, offset, length, handler));
-        }
-    }
-
-    public final void writeInIOThread(ByteTuple header, ByteTuple body, CompletionHandler<Integer, Void> handler) {
-        if (inCurrWriteThread()) {
-            write(header, body, handler);
-        } else {
-            executeWrite(() -> write(header, body, handler));
         }
     }
 
