@@ -264,23 +264,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
     protected abstract <A> void writeImpl(
             ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler);
 
-    public abstract <A> void writeInLock(
-            ByteBuffer src, Consumer<ByteBuffer> consumer, A attachment, CompletionHandler<Integer, ? super A> handler);
-
-    public abstract <A> void writeInLock(
-            ByteBuffer[] srcs,
-            int offset,
-            int length,
-            Consumer<ByteBuffer> consumer,
-            A attachment,
-            CompletionHandler<Integer, ? super A> handler);
-
-    public abstract <A> void writeInLock(
-            Supplier<ByteBuffer> supplier,
-            Consumer<ByteBuffer> consumer,
-            A attachment,
-            CompletionHandler<Integer, ? super A> handler);
-
     protected void startRead(CompletionHandler<Integer, ByteBuffer> handler) {
         read(handler);
     }
@@ -298,14 +281,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
             readRegisterImpl(handler);
         } else {
             sslReadRegisterImpl(false, handler);
-        }
-    }
-
-    public final void readRegisterInIOThread(CompletionHandler<Integer, ByteBuffer> handler) {
-        if (inCurrReadThread()) {
-            readRegister(handler);
-        } else {
-            executeRead(() -> readRegister(handler));
         }
     }
 
@@ -537,67 +512,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    public final <A> void writeInLock(
-            ByteBuffer[] srcs,
-            Consumer<ByteBuffer> consumer,
-            A attachment,
-            CompletionHandler<Integer, ? super A> handler) {
-        writeInLock(srcs, 0, srcs.length, consumer, attachment, handler);
-    }
-
-    public final void writeInLock(byte[] bytes, CompletionHandler<Integer, Void> handler) {
-        writeInLock(ByteBuffer.wrap(bytes), (Consumer) null, null, handler);
-    }
-
-    public final void writeInLock(ByteTuple array, CompletionHandler<Integer, Void> handler) {
-        writeInLock(ByteBuffer.wrap(array.content(), array.offset(), array.length()), null, null, handler);
-    }
-
-    public final void writeInLock(byte[] bytes, int offset, int length, CompletionHandler<Integer, Void> handler) {
-        writeInLock(ByteBuffer.wrap(bytes, offset, length), null, null, handler);
-    }
-
-    public final void writeInLock(ByteTuple header, ByteTuple body, CompletionHandler<Integer, Void> handler) {
-        if (body == null) {
-            writeInLock(ByteBuffer.wrap(header.content(), header.offset(), header.length()), null, null, handler);
-        } else if (header == null) {
-            writeInLock(ByteBuffer.wrap(body.content(), body.offset(), body.length()), null, null, handler);
-        } else {
-            writeInLock(
-                    new ByteBuffer[] {
-                        ByteBuffer.wrap(header.content(), header.offset(), header.length()),
-                        ByteBuffer.wrap(body.content(), body.offset(), body.length())
-                    },
-                    null,
-                    null,
-                    handler);
-        }
-    }
-
-    public final void writeInLock(
-            byte[] headerContent,
-            int headerOffset,
-            int headerLength,
-            byte[] bodyContent,
-            int bodyOffset,
-            int bodyLength,
-            CompletionHandler<Integer, Void> handler) {
-        if (bodyContent == null) {
-            writeInLock(ByteBuffer.wrap(headerContent, headerOffset, headerLength), null, null, handler);
-        } else if (headerContent == null) {
-            writeInLock(ByteBuffer.wrap(bodyContent, bodyOffset, bodyLength), null, null, handler);
-        } else {
-            writeInLock(
-                    new ByteBuffer[] {
-                        ByteBuffer.wrap(headerContent, headerOffset, headerLength),
-                        ByteBuffer.wrap(bodyContent, bodyOffset, bodyLength)
-                    },
-                    null,
-                    null,
-                    handler);
-        }
-    }
-
     public void setReadBuffer(ByteBuffer buffer) {
         if (this.readBuffer != null) {
             throw new RedkaleException("repeat AsyncConnection.setReadBuffer");
@@ -611,44 +525,33 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
     }
 
     public final void writePipeline(CompletionHandler<Integer, Void> handler) {
+        writePipeline(null, handler);
+    }
+
+    public <A> void writePipeline(A attachment, CompletionHandler<Integer, ? super A> handler) {
         ByteBufferWriter writer = this.pipelineWriter;
         this.pipelineWriter = null;
         if (writer == null) {
-            handler.completed(0, null);
+            handler.completed(0, attachment);
         } else {
             ByteBuffer[] srcs = writer.toBuffers();
-            CompletionHandler<Integer, Void> newHandler = new CompletionHandler<Integer, Void>() {
+            CompletionHandler<Integer, ? super A> newHandler = new CompletionHandler<Integer, A>() {
                 @Override
-                public void completed(Integer result, Void attachment) {
+                public void completed(Integer result, A attachment) {
                     offerWriteBuffers(srcs);
                     handler.completed(result, attachment);
                 }
 
                 @Override
-                public void failed(Throwable exc, Void attachment) {
+                public void failed(Throwable exc, A attachment) {
                     offerWriteBuffers(srcs);
                     handler.failed(exc, attachment);
                 }
             };
             if (srcs.length == 1) {
-                write(srcs[0], null, newHandler);
+                write(srcs[0], attachment, newHandler);
             } else {
-                write(srcs, null, newHandler);
-            }
-        }
-    }
-
-    public void writePipelineInLock(CompletionHandler<Integer, Void> handler) {
-        ByteBufferWriter writer = this.pipelineWriter;
-        this.pipelineWriter = null;
-        if (writer == null) {
-            handler.completed(0, null);
-        } else {
-            ByteBuffer[] srcs = writer.toBuffers();
-            if (srcs.length == 1) {
-                writeInLock(srcs[0], this.writeBufferConsumer, null, handler);
-            } else {
-                writeInLock(srcs, this.writeBufferConsumer, null, handler);
+                write(srcs, attachment, newHandler);
             }
         }
     }
@@ -658,6 +561,14 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
             writePipeline(handler);
         } else {
             executeWrite(() -> writePipeline(handler));
+        }
+    }
+
+    public final <A> void writePipelineInIOThread(A attachment, CompletionHandler<Integer, ? super A> handler) {
+        if (inCurrWriteThread()) {
+            writePipeline(attachment, handler);
+        } else {
+            executeWrite(() -> writePipeline(attachment, handler));
         }
     }
 
@@ -688,7 +599,65 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
                     dataNode.pipelineCount = pipelineCount;
                 }
                 dataNode.put(pipelineIndex, bs, offset, length);
-                if (writer.getWriteBytesCounter() + dataNode.size == dataNode.pipelineCount) {
+                if (writer.getWriteBytesCounter() + dataNode.itemsize == dataNode.pipelineCount) {
+                    for (PipelineDataItem item : dataNode.arrayItems()) {
+                        writer.put(item.data);
+                    }
+                    this.pipelineDataNode = null;
+                    return true;
+                }
+                return false;
+            }
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+    // 返回pipelineCount个数数据是否全部写入完毕
+    public final boolean appendPipeline(int pipelineIndex, int pipelineCount, ByteTuple header, ByteTuple body) {
+        return appendPipeline(
+                pipelineIndex,
+                pipelineCount,
+                header.content(),
+                header.offset(),
+                header.length(),
+                body == null ? null : body.content(),
+                body == null ? 0 : body.offset(),
+                body == null ? 0 : body.length());
+    }
+
+    // 返回pipelineCount个数数据是否全部写入完毕
+    public boolean appendPipeline(
+            int pipelineIndex,
+            int pipelineCount,
+            byte[] headerContent,
+            int headerOffset,
+            int headerLength,
+            byte[] bodyContent,
+            int bodyOffset,
+            int bodyLength) {
+        writeLock.lock();
+        try {
+            ByteBufferWriter writer = this.pipelineWriter;
+            if (writer == null) {
+                writer = ByteBufferWriter.create(getWriteBufferSupplier());
+                this.pipelineWriter = writer;
+            }
+            if (this.pipelineDataNode == null && pipelineIndex == writer.getWriteBytesCounter() + 1) {
+                writer.put(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength);
+                return (pipelineIndex == pipelineCount);
+            } else {
+                PipelineDataNode dataNode = this.pipelineDataNode;
+                if (dataNode == null) {
+                    dataNode = new PipelineDataNode();
+                    this.pipelineDataNode = dataNode;
+                }
+                if (pipelineIndex == pipelineCount) { // 此时pipelineCount为最大值
+                    dataNode.pipelineCount = pipelineCount;
+                }
+                dataNode.put(
+                        pipelineIndex, headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength);
+                if (writer.getWriteBytesCounter() + dataNode.itemsize == dataNode.pipelineCount) {
                     for (PipelineDataItem item : dataNode.arrayItems()) {
                         writer.put(item.data);
                     }
@@ -706,14 +675,14 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
 
         public int pipelineCount;
 
-        public int size;
+        public int itemsize;
 
         private PipelineDataItem head;
 
         private PipelineDataItem tail;
 
         public PipelineDataItem[] arrayItems() {
-            PipelineDataItem[] items = new PipelineDataItem[size];
+            PipelineDataItem[] items = new PipelineDataItem[itemsize];
             PipelineDataItem item = head;
             int i = 0;
             while (item != null) {
@@ -735,7 +704,28 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
                 tail.next = item;
                 tail = item;
             }
-            size++;
+            itemsize++;
+        }
+
+        public void put(
+                int pipelineIndex,
+                byte[] headerContent,
+                int headerOffset,
+                int headerLength,
+                byte[] bodyContent,
+                int bodyOffset,
+                int bodyLength) {
+            if (tail == null) {
+                head = new PipelineDataItem(
+                        pipelineIndex, headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength);
+                tail = head;
+            } else {
+                PipelineDataItem item = new PipelineDataItem(
+                        pipelineIndex, headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength);
+                tail.next = item;
+                tail = item;
+            }
+            itemsize++;
         }
     }
 
@@ -749,9 +739,34 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
 
         public PipelineDataItem(int index, byte[] bs, int offset, int length) {
             this.index = index;
-            byte[] result = new byte[length];
-            System.arraycopy(bs, offset, result, 0, length);
-            this.data = result;
+            this.data = Arrays.copyOfRange(bs, offset, offset + length);
+        }
+
+        public PipelineDataItem(
+                int index,
+                byte[] headerContent,
+                int headerOffset,
+                int headerLength,
+                byte[] bodyContent,
+                int bodyOffset,
+                int bodyLength) {
+            this.index = index;
+            this.data = bodyLength > 0
+                    ? copyOfRange(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength)
+                    : Arrays.copyOfRange(headerContent, headerOffset, headerOffset + headerLength);
+        }
+
+        private static byte[] copyOfRange(
+                byte[] headerContent,
+                int headerOffset,
+                int headerLength,
+                byte[] bodyContent,
+                int bodyOffset,
+                int bodyLength) {
+            byte[] result = new byte[headerLength + bodyLength];
+            System.arraycopy(headerContent, headerOffset, result, 0, headerLength);
+            System.arraycopy(bodyContent, bodyOffset, result, headerLength, bodyLength);
+            return result;
         }
 
         @Override

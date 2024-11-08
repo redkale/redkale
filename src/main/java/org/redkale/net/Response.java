@@ -61,7 +61,7 @@ public abstract class Response<C extends Context, R extends Request<C>> {
 
     private final ByteBuffer writeBuffer;
 
-    private final CompletionHandler<Integer, Void> finishVoidIOThreadHandler = new CompletionHandler<Integer, Void>() {
+    private final CompletionHandler finishBytesIOThreadHandler = new CompletionHandler<Integer, Void>() {
 
         @Override
         public void completed(Integer result, Void attachment) {
@@ -74,12 +74,39 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         }
     };
 
+    private final CompletionHandler finishBufferIOThreadHandler = new CompletionHandler<Integer, ByteBuffer>() {
+
+        @Override
+        public void completed(Integer result, ByteBuffer attachment) {
+            if (attachment != writeBuffer) {
+                channel.offerWriteBuffer(attachment);
+            } else {
+                attachment.clear();
+            }
+            completeInIOThread(false);
+        }
+
+        @Override
+        public void failed(Throwable exc, ByteBuffer attachment) {
+            if (attachment != writeBuffer) {
+                channel.offerWriteBuffer(attachment);
+            } else {
+                attachment.clear();
+            }
+            completeInIOThread(true);
+        }
+    };
+
     protected Response(C context, final R request) {
         this.context = context;
         this.request = request;
         this.thread = WorkThread.currentWorkThread();
         this.writeBuffer = context.createByteBuffer();
         this.workExecutor = context.workExecutor == null ? ForkJoinPool.commonPool() : context.workExecutor;
+    }
+
+    protected ByteBuffer writeBuffer() {
+        return writeBuffer;
     }
 
     protected AsyncConnection removeChannel() {
@@ -299,15 +326,27 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         }
         if (request.keepAlive && (request.pipelineIndex == 0 || request.pipelineCompleted)) {
             AsyncConnection conn = removeChannel();
-            if (conn != null) {
+            if (conn != null && conn.protocolCodec != null) {
                 this.responseConsumer.accept(this);
                 if (!request.readCompleted) {
-                    conn.readRegisterInIOThread(conn.protocolCodec);
+                    conn.readRegister(conn.protocolCodec);
                 }
-                return;
+            } else {
+                Supplier<Response> poolSupplier = this.responseSupplier;
+                Consumer<Response> poolConsumer = this.responseConsumer;
+                this.recycle();
+                new ProtocolCodec(context, poolSupplier, poolConsumer, conn)
+                        .response(this)
+                        .run(null);
+                request.readCompleted = false;
             }
+        } else {
+            this.responseConsumer.accept(this);
         }
-        this.responseConsumer.accept(this);
+    }
+
+    protected void writeInIOThread(ByteBuffer buffer) {
+        this.channel.writeInIOThread(buffer, buffer, finishBufferIOThreadHandler);
     }
 
     public final void finish(final byte[] bs) {
@@ -339,24 +378,47 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                     this.channel.appendPipeline(request.pipelineIndex, request.pipelineCount, bs, offset, length);
             if (allCompleted) {
                 request.pipelineCompleted = true;
-                this.channel.writePipelineInLock(this.finishVoidIOThreadHandler);
+                this.channel.writePipelineInIOThread(this.finishBytesIOThreadHandler);
             } else {
                 removeChannel();
                 this.responseConsumer.accept(this);
             }
         } else if (this.channel.hasPipelineData()) {
             this.channel.appendPipeline(request.pipelineIndex, request.pipelineCount, bs, offset, length);
-            this.channel.writePipelineInLock(this.finishVoidIOThreadHandler);
+            this.channel.writePipelineInIOThread(this.finishBytesIOThreadHandler);
         } else {
             ByteBuffer buffer = this.writeBuffer;
             if (buffer != null && buffer.capacity() >= length) {
                 buffer.clear();
                 buffer.put(bs, offset, length);
                 buffer.flip();
-                this.channel.writeInLock(buffer, (Consumer) null, null, finishVoidIOThreadHandler);
+                this.channel.writeInIOThread(buffer, buffer, finishBufferIOThreadHandler);
             } else {
-                this.channel.writeInLock(bs, offset, length, finishVoidIOThreadHandler);
+                this.channel.writeInIOThread(bs, offset, length, finishBytesIOThreadHandler);
             }
+        }
+    }
+
+    public void finish(boolean kill, byte[] bs1, int offset1, int length1, byte[] bs2, int offset2, int length2) {
+        if (kill) {
+            refuseAlive();
+        }
+        if (request.pipelineIndex > 0) {
+            boolean allCompleted = this.channel.appendPipeline(
+                    request.pipelineIndex, request.pipelineCount, bs1, offset1, length1, bs2, offset2, length2);
+            if (allCompleted) {
+                request.pipelineCompleted = true;
+                this.channel.writePipelineInIOThread(this.finishBytesIOThreadHandler);
+            } else {
+                removeChannel();
+                this.responseConsumer.accept(this);
+            }
+        } else if (this.channel.hasPipelineData()) {
+            this.channel.appendPipeline(
+                    request.pipelineIndex, request.pipelineCount, bs1, offset1, length1, bs2, offset2, length2);
+            this.channel.writePipelineInIOThread(this.finishBytesIOThreadHandler);
+        } else {
+            this.channel.writeInIOThread(bs1, offset1, length1, bs2, offset2, length2, finishBytesIOThreadHandler);
         }
     }
 

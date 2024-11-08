@@ -5,6 +5,8 @@
  */
 package org.redkale.cluster.spi;
 
+import static org.redkale.util.Utility.isEmpty;
+
 import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -18,7 +20,6 @@ import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.http.*;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Traces;
-import static org.redkale.util.Utility.isEmpty;
 
 /**
  * 没有配置MQ且也没有ClusterAgent的情况下实现的默认HttpMessageClient实例

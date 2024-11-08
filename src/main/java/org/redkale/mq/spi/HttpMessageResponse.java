@@ -5,13 +5,14 @@
  */
 package org.redkale.mq.spi;
 
+import static org.redkale.mq.spi.MessageRecord.CTYPE_HTTP_RESULT;
+
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.function.*;
 import java.util.logging.Level;
 import org.redkale.convert.Convert;
-import static org.redkale.mq.spi.MessageRecord.CTYPE_HTTP_RESULT;
 import org.redkale.net.Response;
 import org.redkale.net.http.*;
 import org.redkale.service.RetResult;
