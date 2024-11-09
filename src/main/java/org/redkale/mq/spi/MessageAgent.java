@@ -7,7 +7,6 @@ package org.redkale.mq.spi;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -640,9 +639,9 @@ public abstract class MessageAgent implements MessageManager {
 
         @Override
         public CompletableFuture<Void> sendDelayMessage(
-                String topic, Integer partition, Duration delay, Convert convert0, Type type, Object value) {
+                String topic, Integer partition, int delaySeconds, Convert convert0, Type type, Object value) {
             return producer.sendDelayMessage(
-                    topic, partition, delay, convert0 == null ? this.convert : convert0, type, value);
+                    topic, partition, delaySeconds, convert0 == null ? this.convert : convert0, type, value);
         }
     }
 }

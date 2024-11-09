@@ -4,7 +4,6 @@
 package org.redkale.mq;
 
 import java.lang.reflect.Type;
-import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import org.redkale.convert.Convert;
 
@@ -64,27 +63,27 @@ public interface MessageProducer {
     }
 
     public CompletableFuture<Void> sendDelayMessage(
-            String topic, Integer partition, Duration delay, Convert convert, Type type, Object value);
+            String topic, Integer partition, int delaySeconds, Convert convert, Type type, Object value);
 
     default CompletableFuture<Void> sendDelayMessage(
-            String topic, Integer partition, Duration delay, Convert convert, Object value) {
-        return sendDelayMessage(topic, partition, delay, convert, (Type) null, value);
+            String topic, Integer partition, int delaySeconds, Convert convert, Object value) {
+        return sendDelayMessage(topic, partition, delaySeconds, convert, (Type) null, value);
     }
 
-    default CompletableFuture<Void> sendDelayMessage(String topic, Integer partition, Duration delay, Object value) {
-        return sendDelayMessage(topic, partition, delay, (Convert) null, (Type) null, value);
+    default CompletableFuture<Void> sendDelayMessage(String topic, Integer partition, int delaySeconds, Object value) {
+        return sendDelayMessage(topic, partition, delaySeconds, (Convert) null, (Type) null, value);
     }
 
     default CompletableFuture<Void> sendDelayMessage(
-            String topic, Duration delay, Convert convert, Type type, Object value) {
-        return sendDelayMessage(topic, (Integer) null, delay, convert, type, value);
+            String topic, int delaySeconds, Convert convert, Type type, Object value) {
+        return sendDelayMessage(topic, (Integer) null, delaySeconds, convert, type, value);
     }
 
-    default CompletableFuture<Void> sendDelayMessage(String topic, Duration delay, Convert convert, Object value) {
-        return sendDelayMessage(topic, (Integer) null, delay, convert, (Type) null, value);
+    default CompletableFuture<Void> sendDelayMessage(String topic, int delaySeconds, Convert convert, Object value) {
+        return sendDelayMessage(topic, (Integer) null, delaySeconds, convert, (Type) null, value);
     }
 
-    default CompletableFuture<Void> sendDelayMessage(String topic, Duration delay, Object value) {
-        return sendDelayMessage(topic, (Integer) null, delay, (Convert) null, (Type) null, value);
+    default CompletableFuture<Void> sendDelayMessage(String topic, int delaySeconds, Object value) {
+        return sendDelayMessage(topic, (Integer) null, delaySeconds, (Convert) null, (Type) null, value);
     }
 }
