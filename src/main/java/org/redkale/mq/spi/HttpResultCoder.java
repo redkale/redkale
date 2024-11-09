@@ -5,14 +5,13 @@
  */
 package org.redkale.mq.spi;
 
-import static org.redkale.mq.spi.MessageCoder.*;
-
 import java.net.HttpCookie;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.redkale.convert.Convert;
 import org.redkale.convert.json.JsonConvert;
+import static org.redkale.mq.spi.MessageCoder.*;
 import org.redkale.net.http.HttpResult;
 import org.redkale.util.Utility;
 

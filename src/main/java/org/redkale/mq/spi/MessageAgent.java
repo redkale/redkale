@@ -7,6 +7,7 @@ package org.redkale.mq.spi;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -307,7 +308,7 @@ public abstract class MessageAgent implements MessageManager {
                 if (topicstr.length() > topicMax.get()) {
                     topicMax.set(topicstr.length());
                 }
-                views.put(typestr, new String[]{group, topicstr});
+                views.put(typestr, new String[] {group, topicstr});
             }
             views.forEach((typestr, strs) -> {
                 String groupstr = strs[0];
@@ -635,6 +636,13 @@ public abstract class MessageAgent implements MessageManager {
         public CompletableFuture<Void> sendMessage(
                 String topic, Integer partition, Convert convert0, Type type, Object value) {
             return producer.sendMessage(topic, partition, convert0 == null ? this.convert : convert0, type, value);
+        }
+
+        @Override
+        public CompletableFuture<Void> sendDelayMessage(
+                String topic, Integer partition, Duration delay, Convert convert0, Type type, Object value) {
+            return producer.sendDelayMessage(
+                    topic, partition, delay, convert0 == null ? this.convert : convert0, type, value);
         }
     }
 }
