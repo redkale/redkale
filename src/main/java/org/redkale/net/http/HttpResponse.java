@@ -1241,28 +1241,14 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     }
 
     /**
-     * 异步输出指定内容, 供WebSocketServlet使用
+     * 异步输出header
      *
-     * @param buffer 输出内容
      * @param handler 异步回调函数
      */
-    protected void sendBody(ByteBuffer buffer, CompletionHandler<Integer, Void> handler) {
-        if (this.headWritedSize < 0) {
-            if (this.contentLength < 0) {
-                this.contentLength = buffer == null ? 0 : buffer.remaining();
-            }
-            createHeader();
-            if (buffer == null) { // 只发header
-                super.send(headerArray, handler);
-            } else {
-                ByteBuffer headBuf = channel.pollWriteBuffer();
-                headBuf.put(headerArray.content(), 0, headerArray.length());
-                headBuf.flip();
-                super.send(new ByteBuffer[] {headBuf, buffer}, null, handler);
-            }
-        } else {
-            super.send(buffer, null, handler);
-        }
+    protected void sendHeader(CompletionHandler<Integer, Void> handler) {
+        this.contentLength = 0;
+        createHeader();
+        super.send(headerArray, handler);
     }
 
     /**

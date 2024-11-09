@@ -152,61 +152,160 @@ abstract class AsyncNioConnection extends AsyncConnection {
         doRead(this.ioReadThread.inCurrThread());
     }
 
+    public void doRead(boolean direct) {
+        try {
+            this.readTime = System.currentTimeMillis();
+            int readCount = 0;
+            if (direct) {
+                if (this.readByteBuffer == null) {
+                    this.readByteBuffer = sslEngine == null ? pollReadBuffer() : pollReadSSLBuffer();
+                }
+                readCount = implRead(readByteBuffer);
+            }
+
+            if (readCount != 0) {
+                handleRead(readCount, null);
+            } else if (readKey == null) {
+                ioReadThread.register(selector -> {
+                    try {
+                        if (readKey == null) {
+                            readKey = keyFor(selector);
+                        }
+                        if (readKey == null) {
+                            readKey = implRegister(selector, SelectionKey.OP_READ);
+                            readKey.attach(this);
+                        } else {
+                            readKey.interestOps(readKey.interestOps() | SelectionKey.OP_READ);
+                        }
+                    } catch (ClosedChannelException e) {
+                        handleRead(0, e);
+                    }
+                });
+            } else {
+                ioReadThread.interestOpsOr(readKey, SelectionKey.OP_READ);
+            }
+        } catch (Exception e) {
+            handleRead(0, e);
+        }
+    }
+
+    protected void handleRead(final int totalCount, Throwable t) {
+        CompletionHandler<Integer, ByteBuffer> handler = this.readCompletionHandler;
+        ByteBuffer attach = this.readByteBuffer;
+        // 清空读参数
+        this.readCompletionHandler = null;
+        this.readByteBuffer = null;
+        this.readPending = false; // 必须放最后
+
+        if (handler == null) {
+            if (t == null) {
+                protocolCodec.completed(totalCount, attach);
+            } else {
+                protocolCodec.failed(t, attach);
+            }
+        } else {
+            if (t == null) {
+                handler.completed(totalCount, attach);
+            } else {
+                handler.failed(t, attach);
+            }
+        }
+    }
+
     @Override
-    public void write(
-            byte[] headerContent,
-            int headerOffset,
-            int headerLength,
-            byte[] bodyContent,
-            int bodyOffset,
-            int bodyLength,
-            CompletionHandler<Integer, Void> handler) {
-
-        if (sslEngine != null) {
-            super.write(headerContent, headerOffset, headerLength, bodyContent, bodyOffset, bodyLength, handler);
-            return;
-        }
-        Objects.requireNonNull(headerContent);
+    public <A> void writeImpl(
+            ByteBuffer src,
+            Consumer<ByteBuffer> consumer,
+            A attachment,
+            CompletionHandler<Integer, ? super A> handler) {
+        Objects.requireNonNull(src);
         Objects.requireNonNull(handler);
-        if (!this.isConnected()) {
-            handler.failed(new NotYetConnectedException(), null);
-            return;
-        }
-        if (this.writePending) {
-            handler.failed(new WritePendingException(), null);
-            return;
-        }
-        this.writePending = true;
-        this.writeByteTuple1Array = headerContent;
-        this.writeByteTuple1Offset = headerOffset;
-        this.writeByteTuple1Length = headerLength;
-        this.writeByteTuple2Array = bodyContent;
-        this.writeByteTuple2Offset = bodyOffset;
-        this.writeByteTuple2Length = bodyLength;
-        this.writeAttachment = null;
-        CompletionHandler<Integer, Void> newHandler = new CompletionHandler<Integer, Void>() {
-            @Override
-            public void completed(Integer result, Void attachment) {
-                if (writeByteBuffers != null) {
-                    offerWriteBuffers(writeByteBuffers);
-                } else {
-                    offerWriteBuffer(writeByteBuffer);
-                }
-                handler.completed(result, attachment);
+        int total = 0;
+        Exception t = null;
+        try {
+            if (this.writePending) {
+                handler.failed(new WritePendingException(), attachment);
+                return;
             }
+            this.writePending = true;
+            while (src.hasRemaining()) { // 必须要将buffer写完为止
+                int c = implWrite(src);
+                if (c < 0) {
+                    t = new ClosedChannelException();
+                    total = c;
+                    break;
+                }
+                total += c;
+            }
+        } catch (Exception e) {
+            t = e;
+        }
+        this.writePending = false;
+        if (consumer != null) {
+            consumer.accept(src);
+        }
+        if (t != null) {
+            handler.failed(t, attachment);
+        } else {
+            handler.completed(total, attachment);
+        }
+    }
 
-            @Override
-            public void failed(Throwable exc, Void attachment) {
-                if (writeByteBuffers != null) {
-                    offerWriteBuffers(writeByteBuffers);
-                } else {
-                    offerWriteBuffer(writeByteBuffer);
-                }
-                handler.failed(exc, attachment);
+    @Override
+    public <A> void writeImpl(
+            ByteBuffer[] srcs,
+            int offset,
+            int length,
+            Consumer<ByteBuffer> consumer,
+            A attachment,
+            CompletionHandler<Integer, ? super A> handler) {
+        Objects.requireNonNull(srcs);
+        Objects.requireNonNull(handler);
+        int total = 0;
+        Exception t = null;
+        int batchOffset = offset;
+        int batchLength = length;
+        ByteBuffer[] batchBuffers = srcs;
+        try {
+            if (this.writePending) {
+                handler.failed(new WritePendingException(), attachment);
+                return;
             }
-        };
-        this.writeCompletionHandler = newHandler;
-        doWrite(); // 如果不是true，则bodyCallback的执行可能会切换线程
+            this.writePending = true;
+            boolean hasRemain = true;
+            while (hasRemain) { // 必须要将buffer写完为止
+                int c = implWrite(batchBuffers, batchOffset, batchLength);
+                if (c < 0) {
+                    t = new ClosedChannelException();
+                    total = c;
+                    break;
+                }
+                boolean remain = false;
+                for (int i = 0; i < batchLength; i++) {
+                    if (batchBuffers[batchOffset + i].hasRemaining()) {
+                        remain = true;
+                        batchOffset += i;
+                        batchLength -= i;
+                        break;
+                    }
+                }
+                hasRemain = remain;
+                total += c;
+            }
+        } catch (Exception e) {
+            t = e;
+        }
+        this.writePending = false;
+        if (consumer != null) {
+            for (int i = 0; i < length; i++) {
+                consumer.accept(srcs[offset + i]);
+            }
+        }
+        if (t != null) {
+            handler.failed(t, attachment);
+        } else {
+            handler.completed(total, attachment);
+        }
     }
 
     @Override
@@ -248,43 +347,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
         this.writeAttachment = attachment;
         this.writeCompletionHandler = handler;
         doWrite();
-    }
-
-    public void doRead(boolean direct) {
-        try {
-            this.readTime = System.currentTimeMillis();
-            int readCount = 0;
-            if (direct) {
-                if (this.readByteBuffer == null) {
-                    this.readByteBuffer = sslEngine == null ? pollReadBuffer() : pollReadSSLBuffer();
-                }
-                readCount = implRead(readByteBuffer);
-            }
-
-            if (readCount != 0) {
-                handleRead(readCount, null);
-            } else if (readKey == null) {
-                ioReadThread.register(selector -> {
-                    try {
-                        if (readKey == null) {
-                            readKey = keyFor(selector);
-                        }
-                        if (readKey == null) {
-                            readKey = implRegister(selector, SelectionKey.OP_READ);
-                            readKey.attach(this);
-                        } else {
-                            readKey.interestOps(readKey.interestOps() | SelectionKey.OP_READ);
-                        }
-                    } catch (ClosedChannelException e) {
-                        handleRead(0, e);
-                    }
-                });
-            } else {
-                ioReadThread.interestOpsOr(readKey, SelectionKey.OP_READ);
-            }
-        } catch (Exception e) {
-            handleRead(0, e);
-        }
     }
 
     public void doWrite() {
@@ -372,9 +434,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
                 handleWrite(totalCount, new ClosedChannelException());
             } else if (writeCompleted && (totalCount != 0 || !hasRemain)) {
                 handleWrite(this.writeTotal + totalCount, null);
-                //                if (fastWriteCount.get() > 0) {
-                //                    doWrite();
-                //                }
             } else if (writeKey == null) {
                 ioWriteThread.register(selector -> {
                     try {
@@ -399,6 +458,26 @@ abstract class AsyncNioConnection extends AsyncConnection {
         }
     }
 
+    protected void handleWrite(final int totalCount, Throwable t) {
+        CompletionHandler handler = this.writeCompletionHandler;
+        Object attach = this.writeAttachment;
+        // 清空写参数
+        this.writeCompletionHandler = null;
+        this.writeAttachment = null;
+        this.writeByteBuffer = null;
+        this.writeByteBuffers = null;
+        this.writeBuffersOffset = 0;
+        this.writeBuffersLength = 0;
+        this.writeTotal = 0;
+        this.writePending = false; // 必须放最后
+
+        if (t == null) {
+            handler.completed(totalCount, attach);
+        } else {
+            handler.failed(t, attach);
+        }
+    }
+
     protected void handleConnect(Throwable t) {
         if (connectKey != null) {
             connectKey.cancel();
@@ -417,49 +496,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
             } else {
                 handler.failed(t, attach);
             }
-        }
-    }
-
-    protected void handleRead(final int totalCount, Throwable t) {
-        CompletionHandler<Integer, ByteBuffer> handler = this.readCompletionHandler;
-        ByteBuffer attach = this.readByteBuffer;
-        // 清空读参数
-        this.readCompletionHandler = null;
-        this.readByteBuffer = null;
-        this.readPending = false; // 必须放最后
-
-        if (handler == null) {
-            if (t == null) {
-                protocolCodec.completed(totalCount, attach);
-            } else {
-                protocolCodec.failed(t, attach);
-            }
-        } else {
-            if (t == null) {
-                handler.completed(totalCount, attach);
-            } else {
-                handler.failed(t, attach);
-            }
-        }
-    }
-
-    protected void handleWrite(final int totalCount, Throwable t) {
-        CompletionHandler handler = this.writeCompletionHandler;
-        Object attach = this.writeAttachment;
-        // 清空写参数
-        this.writeCompletionHandler = null;
-        this.writeAttachment = null;
-        this.writeByteBuffer = null;
-        this.writeByteBuffers = null;
-        this.writeBuffersOffset = 0;
-        this.writeBuffersLength = 0;
-        this.writeTotal = 0;
-        this.writePending = false; // 必须放最后
-
-        if (t == null) {
-            handler.completed(totalCount, attach);
-        } else {
-            handler.failed(t, attach);
         }
     }
 

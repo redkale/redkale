@@ -9,7 +9,6 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.math.BigInteger;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.security.MessageDigest;
 import java.util.*;
@@ -322,7 +321,7 @@ public abstract class WebSocketServlet extends HttpServlet implements Resourcabl
                 response.addHeader("Sec-WebSocket-Extensions", "permessage-deflate");
             }
 
-            response.sendBody((ByteBuffer) null, new CompletionHandler<Integer, Void>() {
+            response.sendHeader(new CompletionHandler<Integer, Void>() {
 
                 @Override
                 public void completed(Integer result, Void attachment) {
