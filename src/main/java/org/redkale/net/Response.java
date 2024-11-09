@@ -254,6 +254,10 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         return output;
     }
 
+    public C getContext() {
+        return context;
+    }
+
     /**
      * 是否已关闭
      *
@@ -345,6 +349,10 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         }
     }
 
+    public final void finish(ByteTuple array) {
+        finish(false, array.content(), array.offset(), array.length());
+    }
+
     public final void finish(byte[] bs) {
         finish(false, bs, 0, bs.length);
     }
@@ -353,34 +361,30 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         finish(false, bs, offset, length);
     }
 
-    public final void finish(ByteTuple array) {
-        finish(false, array.content(), array.offset(), array.length());
+    public final void finish(boolean kill, ByteTuple array) {
+        finish(kill, array.content(), array.offset(), array.length());
     }
 
     public final void finish(boolean kill, byte[] bs) {
         finish(kill, bs, 0, bs.length);
     }
 
-    public final void finish(boolean kill, ByteTuple array) {
-        finish(kill, array.content(), array.offset(), array.length());
-    }
-
     public void finish(boolean kill, byte[] bs, int offset, int length) {
         if (kill) {
             refuseAlive();
         }
-        if (request.pipelineIndex > 0) {
-            boolean allCompleted =
-                    this.channel.appendPipeline(request.pipelineIndex, request.pipelineCount, bs, offset, length);
-            if (allCompleted) {
+        int pipelineIndex = request.pipelineIndex;
+        if (pipelineIndex > 0) {
+            boolean completed = this.channel.appendPipeline(pipelineIndex, request.pipelineCount, bs, offset, length);
+            if (completed) { // pipeline全部完成
                 request.pipelineCompleted = true;
                 this.channel.writePipelineInIOThread(this.finishBytesIOThreadHandler);
-            } else {
+            } else { // 数据缓存在channel中
                 removeChannel();
                 this.responseConsumer.accept(this);
             }
         } else if (this.channel.hasPipelineData()) {
-            this.channel.appendPipeline(request.pipelineIndex, request.pipelineCount, bs, offset, length);
+            this.channel.appendPipeline(pipelineIndex, request.pipelineCount, bs, offset, length);
             this.channel.writePipelineInIOThread(this.finishBytesIOThreadHandler);
         } else {
             ByteBuffer buffer = this.writeBuffer;
@@ -393,9 +397,5 @@ public abstract class Response<C extends Context, R extends Request<C>> {
                 this.channel.writeInIOThread(bs, offset, length, finishBytesIOThreadHandler);
             }
         }
-    }
-
-    public C getContext() {
-        return context;
     }
 }
