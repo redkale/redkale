@@ -220,13 +220,13 @@ abstract class AsyncNioConnection extends AsyncConnection {
             CompletionHandler<Integer, ? super A> handler) {
         Objects.requireNonNull(src);
         Objects.requireNonNull(handler);
+        if (this.writePending) {
+            handler.failed(new WritePendingException(), attachment);
+            return;
+        }
         int total = 0;
         Exception t = null;
         try {
-            if (this.writePending) {
-                handler.failed(new WritePendingException(), attachment);
-                return;
-            }
             this.writePending = true;
             while (src.hasRemaining()) { // 必须要将buffer写完为止
                 int c = implWrite(src);
@@ -239,8 +239,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
             }
         } catch (Exception e) {
             t = e;
+        } finally {
+            this.writePending = false;
         }
-        this.writePending = false;
         if (consumer != null) {
             consumer.accept(src);
         }
@@ -261,16 +262,16 @@ abstract class AsyncNioConnection extends AsyncConnection {
             CompletionHandler<Integer, ? super A> handler) {
         Objects.requireNonNull(srcs);
         Objects.requireNonNull(handler);
+        if (this.writePending) {
+            handler.failed(new WritePendingException(), attachment);
+            return;
+        }
         int total = 0;
         Exception t = null;
         int batchOffset = offset;
         int batchLength = length;
         ByteBuffer[] batchBuffers = srcs;
         try {
-            if (this.writePending) {
-                handler.failed(new WritePendingException(), attachment);
-                return;
-            }
             this.writePending = true;
             boolean hasRemain = true;
             while (hasRemain) { // 必须要将buffer写完为止
@@ -294,8 +295,9 @@ abstract class AsyncNioConnection extends AsyncConnection {
             }
         } catch (Exception e) {
             t = e;
+        } finally {
+            this.writePending = false;
         }
-        this.writePending = false;
         if (consumer != null) {
             for (int i = 0; i < length; i++) {
                 consumer.accept(srcs[offset + i]);
