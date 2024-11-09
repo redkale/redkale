@@ -213,14 +213,6 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         writeLock.unlock();
     }
 
-    /**
-     * 快速发送
-     *
-     * @see org.redkale.net.AsyncNioConnection#pipelineWrite(org.redkale.net.PipelinePacket...)
-     * @param packets  PipelinePacket[]
-     */
-    public abstract void pipelineWrite(PipelinePacket... packets);
-
     public abstract boolean isTCP();
 
     public abstract boolean shutdownInput();
@@ -300,16 +292,31 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
+    /**
+     * src写完才会回调
+     *
+     * @see #lockWrite()
+     * @see #unlockWrite()
+     * @param array 内容
+     * @param handler  回调函数
+     */
     public final void write(ByteTuple array, CompletionHandler<Integer, Void> handler) {
         write(array.content(), array.offset(), array.length(), (byte[]) null, 0, 0, handler);
     }
 
+    /**
+     * src写完才会回调
+     *
+     * @see #lockWrite()
+     * @see #unlockWrite()
+     * @param buffer 内容
+     * @param handler 回调函数
+     */
     public final void write(ByteBuffer buffer, CompletionHandler<Integer, Void> handler) {
         write(buffer, null, handler);
     }
 
-    // src写完才会回调
-    final <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {
+    <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {
         if (sslEngine == null) {
             writeImpl(src, attachment, handler);
         } else {
@@ -328,7 +335,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    final <A> void write(
+    <A> void write(
             ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
         if (sslEngine == null) {
             writeImpl(srcs, offset, length, attachment, handler);
@@ -348,15 +355,15 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    final <A> void write(ByteBuffer[] srcs, A attachment, CompletionHandler<Integer, ? super A> handler) {
+    <A> void write(ByteBuffer[] srcs, A attachment, CompletionHandler<Integer, ? super A> handler) {
         write(srcs, 0, srcs.length, attachment, handler);
     }
 
-    final void write(byte[] bytes, CompletionHandler<Integer, Void> handler) {
+    void write(byte[] bytes, CompletionHandler<Integer, Void> handler) {
         write(bytes, 0, bytes.length, (byte[]) null, 0, 0, handler);
     }
 
-    final void write(byte[] bytes, int offset, int length, CompletionHandler<Integer, Void> handler) {
+    void write(byte[] bytes, int offset, int length, CompletionHandler<Integer, Void> handler) {
         write(bytes, offset, length, (byte[]) null, 0, 0, handler);
     }
 
@@ -505,11 +512,11 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         return writer != null && writer.position() > 0;
     }
 
-    public final void writePipeline(CompletionHandler<Integer, Void> handler) {
+    void writePipeline(CompletionHandler<Integer, Void> handler) {
         writePipeline(null, handler);
     }
 
-    public <A> void writePipeline(A attachment, CompletionHandler<Integer, ? super A> handler) {
+    <A> void writePipeline(A attachment, CompletionHandler<Integer, ? super A> handler) {
         ByteBufferWriter writer = this.pipelineWriter;
         this.pipelineWriter = null;
         if (writer == null) {

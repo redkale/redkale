@@ -10,7 +10,6 @@ import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Consumer;
 import javax.net.ssl.SSLContext;
 import org.redkale.util.ByteBufferWriter;
@@ -38,9 +37,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
     protected CompletionHandler<Integer, ByteBuffer> readCompletionHandler;
 
     protected SelectionKey readKey;
-
-    // ------------------------------ pipeline写操作 ------------------------------------
-    protected Queue<PipelinePacket> pipelineWriteQueue;
 
     // -------------------------------- 写操作 --------------------------------------
     protected byte[] writeByteTuple1Array;
@@ -72,7 +68,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
 
     protected SelectionKey writeKey;
 
-    //    protected CompletionHandler<Integer, Object> writeFastHandler;
     public AsyncNioConnection(
             boolean clientMode,
             AsyncIOGroup ioGroup,
@@ -155,37 +150,6 @@ abstract class AsyncNioConnection extends AsyncConnection {
         this.readPending = true;
         this.readCompletionHandler = handler;
         doRead(this.ioReadThread.inCurrThread());
-    }
-
-    @Override
-    public final void pipelineWrite(PipelinePacket... packets) {
-        if (pipelineWriteQueue == null) {
-            lockWrite();
-            try {
-                if (pipelineWriteQueue == null) {
-                    pipelineWriteQueue = new ConcurrentLinkedDeque<>();
-                }
-            } finally {
-                unlockWrite();
-            }
-        }
-        for (PipelinePacket packet : packets) {
-            this.pipelineWriteQueue.offer(packet);
-        }
-        this.ioWriteThread.execute(this::pipelineDoWrite);
-    }
-
-    private void pipelineDoWrite() {
-        PipelinePacket packet;
-        while ((packet = pipelineWriteQueue.poll()) != null) {
-            this.writePending = true;
-            this.writeByteTuple1Array = packet.tupleBytes;
-            this.writeByteTuple1Offset = packet.tupleOffset;
-            this.writeByteTuple1Length = packet.tupleLength;
-            this.writeCompletionHandler = packet.handler;
-            this.writeAttachment = packet.attach;
-            doWrite();
-        }
     }
 
     @Override
