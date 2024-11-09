@@ -1248,7 +1248,7 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     protected void sendHeader(CompletionHandler<Integer, Void> handler) {
         this.contentLength = 0;
         createHeader();
-        super.send(headerArray, handler);
+        this.channel.writeInIOThread(headerArray, handler);
     }
 
     /**

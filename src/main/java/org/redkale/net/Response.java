@@ -395,10 +395,6 @@ public abstract class Response<C extends Context, R extends Request<C>> {
         }
     }
 
-    protected void send(ByteTuple array, CompletionHandler<Integer, Void> handler) {
-        this.channel.writeInIOThread(array, handler);
-    }
-
     public C getContext() {
         return context;
     }
