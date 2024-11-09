@@ -1334,23 +1334,22 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
         }
         this.addHeader("ETag", etag);
         createHeader();
-        ByteArray data = headerArray;
-        if (fileBody == null) {
+        ByteArray headerData = headerArray;
+        if (fileBody != null) { // 一般HttpResourceServlet缓存file内容时fileBody不为空
+            if (start >= 0) {
+                headerData.put(fileBody, (int) start, (int) ((len > 0) ? len : fileBody.length() - start));
+            }
+            super.finish(false, headerData.content(), 0, headerData.length());
+        } else {
             if (this.recycleListener != null) {
                 this.output = file;
             }
-            finishFile(data, file, start, len);
-        } else { // 一般HttpResourceServlet缓存file内容时fileBody不为空
-            if (start >= 0) {
-                data.put(fileBody, (int) start, (int) ((len > 0) ? len : fileBody.length() - start));
-            }
-            super.finish(false, data.content(), 0, data.length());
+            sendFile(headerData, file, start, len);
         }
     }
 
     // offset、length 为 -1 表示输出整个文件
-    private void finishFile(ByteArray headerData, File file, long offset, long length) throws IOException {
-        // this.channel.write(headerData,  new TransferFileHandler(file, offset, length));
+    private void sendFile(ByteArray headerData, File file, long offset, long length) throws IOException {
         final Logger logger = context.getLogger();
         this.channel.writeInIOThread(headerData, new CompletionHandler<Integer, Void>() {
 

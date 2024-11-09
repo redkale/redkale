@@ -380,7 +380,7 @@ public final class Transport {
                 factory.getLogger().log(Level.WARNING, Transport.class.getSimpleName() + " async error", ex);
                 return;
             }
-            conn.write(buffer, buffer, new CompletionHandler<Integer, ByteBuffer>() {
+            conn.writeInIOThread(buffer, buffer, new CompletionHandler<Integer, ByteBuffer>() {
 
                 @Override
                 public void completed(Integer result, ByteBuffer attachment) {

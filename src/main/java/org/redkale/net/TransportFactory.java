@@ -353,8 +353,8 @@ public class TransportFactory {
                 if (node.disabletime < 1) {
                     continue; // 可用
                 }
-                CompletableFuture<AsyncConnection> future =
-                        Utility.orTimeout(asyncGroup.createTCPClientConnection(node.address), null, 2, TimeUnit.SECONDS);
+                CompletableFuture<AsyncConnection> future = Utility.orTimeout(
+                        asyncGroup.createTCPClientConnection(node.address), null, 2, TimeUnit.SECONDS);
                 future.whenComplete((r, t) -> {
                     node.disabletime = t == null ? 0 : System.currentTimeMillis();
                     if (r != null) {
@@ -387,7 +387,7 @@ public class TransportFactory {
                         ByteBuffer sendBuffer = pingBuffer.duplicate();
                         final AsyncConnection localconn = conn;
                         final BlockingQueue<AsyncConnection> localqueue = queue;
-                        localconn.write(sendBuffer, sendBuffer, new CompletionHandler<Integer, ByteBuffer>() {
+                        localconn.writeInIOThread(sendBuffer, sendBuffer, new CompletionHandler<Integer, ByteBuffer>() {
                             @Override
                             public void completed(Integer result, ByteBuffer wbuffer) {
                                 localconn.read(new CompletionHandler<Integer, ByteBuffer>() {

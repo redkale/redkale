@@ -349,7 +349,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         write(buffer, null, handler);
     }
 
-    <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {
+    private <A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler) {
         if (sslEngine == null) {
             writeImpl(src, (Consumer) null, attachment, handler);
         } else {
@@ -368,7 +368,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    <A> void write(
+    private <A> void write(
             ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler) {
         if (sslEngine == null) {
             writeImpl(srcs, offset, length, (Consumer) null, attachment, handler);
@@ -388,7 +388,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
         }
     }
 
-    void write(byte[] bytes, int offset, int length, Object attachment, CompletionHandler handler) {
+    private void write(byte[] bytes, int offset, int length, Object attachment, CompletionHandler handler) {
         final ByteBuffer buffer = sslEngine == null ? pollWriteBuffer() : pollWriteSSLBuffer();
         if (buffer.remaining() >= length) {
             buffer.put(bytes, offset, length);
