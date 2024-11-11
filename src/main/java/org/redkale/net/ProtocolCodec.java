@@ -179,7 +179,7 @@ class ProtocolCodec implements CompletionHandler<Integer, ByteBuffer> {
                 final Response pipelineResponse = createResponse();
                 try {
                     decode(buffer, pipelineResponse, pindex + 1, plength);
-                } catch (Throwable t) { // 此处不可  offerBuffer(buffer); 以免dispatcher.dispatch内部异常导致重复 offerBuffer
+                } catch (Throwable t) { // 此处不可  offerBuffer(buffer); 以免dispatcher.dispatch内部异常导致重复offerBuffer
                     context.logger.log(Level.WARNING, "dispatch pipeline servlet abort, force to close channel ", t);
                     pipelineResponse.codecError(t);
                 }

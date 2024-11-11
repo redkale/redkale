@@ -85,8 +85,8 @@ abstract class AsyncNioConnection extends AsyncConnection {
     }
 
     @Override
-    protected void startHandshake(final Consumer<Throwable> callback) {
-        ioReadThread.register(t -> super.startHandshake(callback));
+    protected void startHandshake(CompletionHandler<Integer, Void> handler) {
+        ioReadThread.register(t -> super.startHandshake(handler));
     }
 
     @Override
@@ -102,7 +102,7 @@ abstract class AsyncNioConnection extends AsyncConnection {
             return;
         }
         if (handler != readCompletionHandler) { // 如果是Codec无需重复赋值
-            if (this.readPending) {
+            if (this.readPending && handler.getClass() != SslReadCompletionHandler.class) {
                 handler.failed(new ReadPendingException(), null);
                 return;
             }

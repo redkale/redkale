@@ -267,10 +267,14 @@ public class AsyncIOGroup extends AsyncGroup {
                 if (conn.sslEngine == null) {
                     future.complete(conn);
                 } else {
-                    conn.startHandshake(t -> {
-                        if (t == null) {
+                    conn.startHandshake(new CompletionHandler<Integer, Void>() {
+                        @Override
+                        public void completed(Integer result, Void attachment) {
                             future.complete(conn);
-                        } else {
+                        }
+
+                        @Override
+                        public void failed(Throwable t, Void attachment) {
                             future.completeExceptionally(t);
                         }
                     });
@@ -344,10 +348,14 @@ public class AsyncIOGroup extends AsyncGroup {
                 if (conn.sslEngine == null) {
                     future.complete(conn);
                 } else {
-                    conn.startHandshake(t -> {
-                        if (t == null) {
+                    conn.startHandshake(new CompletionHandler<Integer, Void>() {
+                        @Override
+                        public void completed(Integer result, Void attachment) {
                             future.complete(conn);
-                        } else {
+                        }
+
+                        @Override
+                        public void failed(Throwable t, Void attachment) {
                             future.completeExceptionally(t);
                         }
                     });

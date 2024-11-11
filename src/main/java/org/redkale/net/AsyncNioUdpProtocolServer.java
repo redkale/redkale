@@ -209,13 +209,19 @@ class AsyncNioUdpProtocolServer extends ProtocolServer {
         if (conn.sslEngine == null) {
             codec.start(buffer);
         } else {
-            conn.startHandshake(t -> {
-                if (t == null) {
+            conn.startHandshake(new CompletionHandler<Integer, Void>() {
+                @Override
+                public void completed(Integer result, Void attachment) {
                     codec.start(buffer);
-                } else if (t instanceof RuntimeException) {
-                    throw (RuntimeException) t;
-                } else {
-                    throw new RedkaleException(t);
+                }
+
+                @Override
+                public void failed(Throwable t, Void attachment) {
+                    if (t instanceof RuntimeException) {
+                        throw (RuntimeException) t;
+                    } else {
+                        throw new RedkaleException(t);
+                    }
                 }
             });
         }
