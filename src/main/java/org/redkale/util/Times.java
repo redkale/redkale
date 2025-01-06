@@ -21,6 +21,8 @@ public final class Times {
 
     private static final int ZONE_RAW_OFFSET = TimeZone.getDefault().getRawOffset();
 
+    static final String FORMAT_DAY = "%1$tY-%1$tm-%1$td"; // yyyy-MM-dd
+    
     static final String FORMAT_SECONDS = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS"; // yyyy-MM-dd HH:mm:ss
 
     static final String FORMAT_MILLS = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%1$tL"; // yyyy-MM-dd HH:mm:ss.fff
@@ -45,6 +47,15 @@ public final class Times {
      */
     public static String nowMillis() {
         return String.format(FORMAT_MILLS, System.currentTimeMillis());
+    }
+
+    /**
+     * 获取当天2015-01-01格式的string值
+     *
+     * @return 2015-01-01格式的string值
+     */
+    public static String nowDay() {
+        return String.format(FORMAT_DAY, System.currentTimeMillis());
     }
 
     /**
