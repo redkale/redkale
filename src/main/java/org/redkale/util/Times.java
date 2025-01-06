@@ -22,7 +22,7 @@ public final class Times {
     private static final int ZONE_RAW_OFFSET = TimeZone.getDefault().getRawOffset();
 
     static final String FORMAT_DAY = "%1$tY-%1$tm-%1$td"; // yyyy-MM-dd
-    
+
     static final String FORMAT_SECONDS = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS"; // yyyy-MM-dd HH:mm:ss
 
     static final String FORMAT_MILLS = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%1$tL"; // yyyy-MM-dd HH:mm:ss.fff
@@ -56,6 +56,16 @@ public final class Times {
      */
     public static String nowDay() {
         return String.format(FORMAT_DAY, System.currentTimeMillis());
+    }
+
+    /**
+     * 将指定时间格式化为 yyyy-MM-dd
+     *
+     * @param time 待格式化的时间
+     * @return 格式为yyyy-MM-dd的时间值
+     */
+    public static String formatDay(long time) {
+        return String.format(FORMAT_DAY, time);
     }
 
     /**

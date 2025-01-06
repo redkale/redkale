@@ -1084,6 +1084,12 @@ public final class EntityCache<T> {
             case SET:
                 if (val instanceof ColumnExpNode) {
                     val = updateColumnExpNode(attr, entity, (ColumnExpNode) val);
+                } else if (val instanceof ColumnNameNode) {
+                    val = ((ColumnNameNode) val).getColumn();
+                } else if (val instanceof ColumnStringNode) {
+                    val = ((ColumnStringNode) val).getValue();
+                } else if (val instanceof ColumnNumberNode) {
+                    val = ((ColumnNumberNode) val).getValue();
                 }
                 newVal = val;
                 if (val instanceof Number) {
