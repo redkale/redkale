@@ -5,10 +5,9 @@
  */
 package org.redkale.net.http;
 
-import static java.nio.file.StandardWatchEventKinds.*;
-
 import java.io.*;
 import java.nio.file.*;
+import static java.nio.file.StandardWatchEventKinds.*;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,7 +51,7 @@ public class HttpResourceServlet extends HttpServlet {
                         key.cancel();
                         continue;
                     }
-                    key.pollEvents().stream().forEach((event) -> {
+                    key.pollEvents().forEach(event -> {
                         try {
                             Path path = parent.resolve((Path) event.context());
                             final String uri =
@@ -92,10 +91,10 @@ public class HttpResourceServlet extends HttpServlet {
     protected final LongAdder cachedLength = new LongAdder();
 
     // 缓存总大小, 默认0
-    protected long cachelimit = 0 * 1024 * 1024L;
+    protected long cachelimit = 0L * 1024 * 1024L;
 
     // 最大可缓存的文件大小，  大于该值的文件将不被缓存
-    protected long cachelengthmax = 1 * 1024 * 1024;
+    protected long cachelengthmax = 1L * 1024 * 1024;
 
     // 是否监控缓存文件的变化， 默认不监控
     protected boolean watch = false;
