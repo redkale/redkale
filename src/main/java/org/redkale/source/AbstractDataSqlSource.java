@@ -2320,6 +2320,16 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
     }
 
     @Override
+    public <T> int updateColumnNonnull(final T entity) {
+        if (entity == null) {
+            return -1;
+        }
+        Class<T> clazz = (Class) entity.getClass();
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        return updateColumn(entity, info.getSelectColumn(entity));
+    }
+
+    @Override
     public <T> int updateColumn(final T entity, final SelectColumn selects) {
         if (entity == null || selects == null) {
             return -1;
@@ -2344,6 +2354,16 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
             updateCache(info, rs, false, entity, null, selects);
             return rs;
         }
+    }
+
+    @Override
+    public <T> CompletableFuture<Integer> updateColumnNonnullAsync(final T entity) {
+        if (entity == null) {
+            return CompletableFuture.completedFuture(-1);
+        }
+        Class<T> clazz = (Class) entity.getClass();
+        final EntityInfo<T> info = loadEntityInfo(clazz);
+        return updateColumnAsync(entity, info.getSelectColumn(entity));
     }
 
     @Override
