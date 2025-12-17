@@ -965,6 +965,18 @@ public interface DataSource extends Resourcable {
     public <T> int updateColumn(final T entity, final FilterNode node, final String... columns);
 
     /**
+     * 更新实体对象中非null字段 <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183;
+     * WHERE {filter node} <br>
+     *
+     * @param <T> Entity泛型
+     * @param entity 待更新的Entity对象
+     * @return 影响的记录条数
+     */
+    public <T> int updateColumnNonnull(final T entity);
+
+    /**
      * 更新符合过滤条件记录的指定字段 <br>
      * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新 <br>
      * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183;
@@ -995,6 +1007,18 @@ public interface DataSource extends Resourcable {
     public <T> CompletableFuture<Integer> updateColumnAsync(
             final T entity, final FilterNode node, final String... columns);
 
+    /**
+     * 更新实体对象中非null字段 <br>
+     * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新 <br>
+     * 等价SQL: UPDATE {table} SET {column1} = {value1}, {column2} = {value2}, {column3} = {value3}, &#183;&#183;&#183;
+     * WHERE {filter node} <br>
+     *
+     * @param <T> Entity泛型
+     * @param entity 待更新的Entity对象
+     * @return 影响的记录条数CompletableFuture
+     */
+    public <T> CompletableFuture<Integer> updateColumnNonnullAsync(final T entity);
+    
     /**
      * 更新符合过滤条件记录的指定字段 <br>
      * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新 <br>

@@ -97,6 +97,22 @@ public class RetResult<T> implements Serializable {
         return this;
     }
 
+    public <V> RetResult<V> cast(Type newType) {
+        return cast(this, newType);
+    }
+
+    public static <V> RetResult<V> cast(RetResult rs, Type newType) {
+        Object d = rs.result;
+        if (d != null) {
+            String text = d instanceof CharSequence
+                    ? d.toString()
+                    : JsonConvert.root().convertTo(d);
+            V n = JsonConvert.root().convertFrom(newType, text);
+            return new RetResult(rs.retcode, rs.retinfo, n).convert(rs.convert);
+        }
+        return rs;
+    }
+
     public CompletableFuture<RetResult<T>> toFuture() {
         return CompletableFuture.completedFuture(this);
     }

@@ -82,6 +82,17 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
     }
 
     /**
+     * 将源对象复制一份
+     *
+     * @param <S> 源类泛型
+     * @param src 源对象
+     * @return 目标对象
+     */
+    public static <S> S copy(final S src) {
+        return src == null ? null : (S) copy(src, src.getClass());
+    }
+
+    /**
      * 将源对象字段复制到目标对象
      *
      * @param <D> 目标类泛型

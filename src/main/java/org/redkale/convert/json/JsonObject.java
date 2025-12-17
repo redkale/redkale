@@ -58,7 +58,12 @@ public class JsonObject extends LinkedHashMap<String, Object> implements JsonEle
         return convertFrom(JsonConvert.root().convertTo(bean));
     }
 
+    @Deprecated(since = "2.8.1")
     public <T> T toObject(Type type) {
+        return cast(type);
+    }
+
+    public <T> T cast(Type type) {
         return (T) JsonConvert.root().convertFrom(type, JsonConvert.root().convertTo(this));
     }
 

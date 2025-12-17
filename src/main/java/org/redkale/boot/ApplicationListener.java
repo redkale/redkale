@@ -32,6 +32,13 @@ public interface ApplicationListener {
     default void onPreStart(Application application) {}
 
     /**
+     * Application在运行start后调用
+     *
+     * @param application Application
+     */
+    default void onPostStart(Application application) {}
+
+    /**
      * 服务全部停掉前被调用
      *
      * @param application Application
@@ -44,13 +51,6 @@ public interface ApplicationListener {
      * @param application Application
      */
     default void onServersPostStop(Application application) {}
-
-    /**
-     * Application在运行start后调用
-     *
-     * @param application Application
-     */
-    default void onPostStart(Application application) {}
 
     /**
      * Application在运行Compile前调用
