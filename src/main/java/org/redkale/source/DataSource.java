@@ -1018,7 +1018,7 @@ public interface DataSource extends Resourcable {
      * @return 影响的记录条数CompletableFuture
      */
     public <T> CompletableFuture<Integer> updateColumnNonnullAsync(final T entity);
-    
+
     /**
      * 更新符合过滤条件记录的指定字段 <br>
      * <b>注意</b>：Entity类中标记为&#064;Column(updatable=false)不会被更新 <br>

@@ -211,12 +211,12 @@ public class DataMemorySource extends AbstractDataSource {
     public <T> int updateColumnNonnull(T entity) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-    
+
     @Override
     public <T> CompletableFuture<Integer> updateColumnNonnullAsync(T entity) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-    
+
     @Override
     public Number getNumberResult(Class entityClass, FilterFunc func, Number defVal, String column, FilterNode node) {
         throw new UnsupportedOperationException("Not supported yet.");
