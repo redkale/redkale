@@ -25,9 +25,11 @@ jobs:
         server-password: CENTRAL_PASSWORD
         gpg-passphrase: GPG_PASSPHRASE
         
-    - name: Trace Info
+    - name: Trace Info    
+      env:
+          GPG_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
       run: |
-        echo "${{ secrets.GPG_PRIVATE_KEY }}"
+        echo "$GPG_KEY"
         echo "over"
         
     - name: Import GPG key
