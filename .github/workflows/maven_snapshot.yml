@@ -28,8 +28,9 @@ jobs:
     - name: Trace Info    
       env:
           GPG_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          UU: ${{ secrets.CENTRAL_USERNAME }}
       run: |
-        echo "$GPG_KEY"
+        echo "haha $UU $GPG_KEY !"
         echo "over"
         
     - name: Import GPG key
