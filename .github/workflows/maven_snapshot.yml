@@ -27,9 +27,8 @@ jobs:
         
     - name: Trace Info
       run: |
-        tail -n100 /home/runner/.m2/settings.xml
         echo "${{ secrets.GPG_PRIVATE_KEY }}"
-        gpg --list-secret-keys --keyid-format LONG 
+        echo "over"
         
     - name: Import GPG key
       uses: crazy-max/ghaction-import-gpg@v6
