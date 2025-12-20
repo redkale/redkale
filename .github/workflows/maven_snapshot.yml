@@ -14,6 +14,7 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+    
     - name: Setup Java ${{ matrix.java }} 
       uses: actions/setup-java@v4
       with:
@@ -24,12 +25,20 @@ jobs:
         server-username: CENTRAL_USERNAME
         server-password: CENTRAL_PASSWORD
         gpg-passphrase: GPG_PASSPHRASE
-        gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          
+
+    - name: Import GPG key
+      uses: crazy-max/ghaction-import-gpg@v6
+      with:
+        passphrase: ${{ secrets.GPG_PASSPHRASE }} 
+        gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+        git_config_global: true
+        git_user_signingkey: true
+        git_commit_gpgsign: true
+        
     - name: Build with Maven
       run: |
         cp -fr my/pom.xml pom.xml
-        mvn --batch-mode -e -X clean deploy -DskipTests=true
+        mvn --batch-mode clean deploy -DskipTests=true
       env:
         CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
         CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
