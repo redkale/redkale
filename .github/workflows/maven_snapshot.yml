@@ -28,7 +28,7 @@ jobs:
     - name: Trace Info
       run: |
         tail -n100 /home/runner/.m2/settings.xml
-        echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+        echo "${{ secrets.GPG_PRIVATE_KEY }}"
         gpg --list-secret-keys --keyid-format LONG 
         
     - name: Import GPG key
