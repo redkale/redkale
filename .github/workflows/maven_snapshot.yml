@@ -23,8 +23,8 @@ jobs:
         server-id: central
         server-username: CENTRAL_USERNAME
         server-password: CENTRAL_PASSWORD
-        gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
         gpg-passphrase: GPG_PASSPHRASE
+        gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           
     - name: Build with Maven
       run: |
