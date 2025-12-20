@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix: 
-        java: [11]
+        java: [21]
     name: Java ${{ matrix.java }} build
     
     steps:
@@ -20,16 +20,17 @@ jobs:
         java-version: ${{ matrix.java }}
         distribution: 'temurin'
         cache: maven
-        server-id: ossrh
-        server-username: MAVEN_USERNAME
-        server-password: MAVEN_PASSWORD
-      env:
-        MAVEN_USERNAME: ${{ secrets.OSSRHUSERNAME }}
-        MAVEN_PASSWORD: ${{ secrets.OSSRHPASSWORD }}
+        server-id: central
+        server-username: CENTRAL_USERNAME
+        server-password: CENTRAL_PASSWORD
+        gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+        gpg-passphrase: GPG_PASSPHRASE
+          
     - name: Build with Maven
       run: |
         cp -fr my/pom.xml pom.xml
         mvn --batch-mode -e -X clean deploy -DskipTests=true
       env:
-        MAVEN_GPG_KEY: ${{ secrets.OSSRHGPGKEY }}
-        MAVEN_GPG_PASSPHRASE: ${{ secrets.OSSRHGPGPASSWORD }}
+        CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+        CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
