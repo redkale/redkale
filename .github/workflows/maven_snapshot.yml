@@ -25,6 +25,12 @@ jobs:
         server-password: CENTRAL_PASSWORD
         gpg-passphrase: GPG_PASSPHRASE
         
+    - name: Trace Info
+      run: |
+        tail -n100 /home/runner/.m2/settings.xml
+        echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+        gpg --list-secret-keys --keyid-format LONG 
+        
     - name: Import GPG key
       uses: crazy-max/ghaction-import-gpg@v6
       with:
