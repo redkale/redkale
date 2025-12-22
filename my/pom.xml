@@ -8,7 +8,7 @@
     <name>RedkaleProject</name>     
     <url>https://redkale.org</url>
     <description>redkale -- java framework</description>
-    <version>2.8.0-SNAPSHOT</version>
+    <version>2.8.1</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -16,16 +16,18 @@
         <maven.compiler.target>11</maven.compiler.target>
         
         <junit.version>5.9.0</junit.version>
+        <jmh.version>1.37</jmh.version>
         <maven-jar-plugin.version>3.4.0</maven-jar-plugin.version>
-        <maven-gpg-plugin.version>3.2.4</maven-gpg-plugin.version>
-        <maven-source-plugin.version>3.2.0</maven-source-plugin.version>
-        <maven-assembly-plugin.version>3.7.0</maven-assembly-plugin.version>
-        <nexus-staging-plugin.version>1.7.0</nexus-staging-plugin.version>
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>3.2.5</maven-failsafe-plugin.version>
-        <spotless-maven-plugin.version>2.43.0</spotless-maven-plugin.version>
-        <palantir-java-format.version>2.46.0</palantir-java-format.version>
+        <spotless-maven-plugin.version>3.1.0</spotless-maven-plugin.version>
+        <palantir-java-format.version>2.83.0</palantir-java-format.version>
+        
+        <maven-assembly-plugin.version>3.7.0</maven-assembly-plugin.version>
+        <maven-source-plugin.version>3.2.0</maven-source-plugin.version>
+        <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
+        <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
 
     </properties>
 
@@ -45,21 +47,27 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <version>${jmh.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-generator-annprocess</artifactId>
+            <version>${jmh.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     
-    <repositories>
-        <repository>
+    <distributionManagement>
+        <snapshotRepository>
             <id>central</id>
-            <name>Central Repository</name>
-            <url>https://repo.maven.apache.org/maven2</url>
-        </repository>
-        <repository>
-            <id>sonatype-nexus-snapshots</id>
-            <name>Sonatype Nexus Snapshots</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </repository>
-    </repositories>
-    
+            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
     <developers>     
         <developer>      
             <id>Redkale</id>     
@@ -78,17 +86,6 @@
             <timezone>8</timezone>     
         </developer>     
     </developers>  
-
-    <distributionManagement>
-        <repository>
-            <id>ossrh</id>
-            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
-        </snapshotRepository>
-    </distributionManagement>
 
     <scm>
         <url>https://github.com/redkale/redkale</url>
@@ -160,6 +157,8 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>${maven-failsafe-plugin.version}</version>
             </plugin>
+            
+            <!-- GPG 签名插件 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
@@ -172,12 +171,24 @@
                             <goal>sign</goal>
                         </goals>
                         <configuration>
-                            <signer>bc</signer>
+                            <!-- signer bc /signer 不使用本地gpg才需配置，如: github -->
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
 
+            <!-- Sonatype Central 发布插件 -->
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>${central-publishing-maven-plugin.version}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                    <autoPublish>true</autoPublish> <!-- 设置为true可在校验通过后自动发布 -->
+                </configuration>
+            </plugin> 
+    
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
@@ -223,18 +234,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-            
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>${nexus-staging-plugin.version}</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                </configuration>
             </plugin>
             
             <plugin>
