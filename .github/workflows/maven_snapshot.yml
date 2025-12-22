@@ -39,7 +39,7 @@ jobs:
         
     - name: Build with Maven  
       run: |  # sleep60 给公钥服务器一点同步时间
-        sleep 60
+        sleep 30
         cp -fr my/pom.xml pom.xml
         mvn --batch-mode clean deploy -DskipTests=true
       env:
