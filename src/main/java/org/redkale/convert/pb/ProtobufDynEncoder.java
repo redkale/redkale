@@ -190,31 +190,41 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                     mv.visitVarInsn(ALOAD, 4); // out
                     Asms.visitInsn(mv, member.getTag()); // tag
                     mv.visitVarInsn(ALOAD, 3); // value
+                    String realDesc;
                     if (member.getMethod() != null) {
                         String mname = member.getMethod().getName();
+                        realDesc = org.redkale.asm.Type.getDescriptor(member.getMethod().getReturnType());
                         String mdesc = org.redkale.asm.Type.getMethodDescriptor(member.getMethod());
                         mv.visitMethodInsn(INVOKEVIRTUAL, valtypeName, mname, mdesc, false);
                     } else { // field
                         Field field = member.getField();
                         String fname = field.getName();
-                        String fdesc = org.redkale.asm.Type.getDescriptor(field.getType());
-                        mv.visitFieldInsn(GETFIELD, valtypeName, fname, fdesc);
+                        realDesc = org.redkale.asm.Type.getDescriptor(field.getType());
+                        mv.visitFieldInsn(GETFIELD, valtypeName, fname, realDesc);
                     }
-                    String fieldDesc = org.redkale.asm.Type.getDescriptor(fieldClass);
+                    String fieldDesc = org.redkale.asm.Type.getDescriptor(fieldClass);                   
+                    if (!Objects.equals(realDesc, fieldDesc)) { //父类方法参数类型时泛型
+                        mv.visitTypeInsn(CHECKCAST, fieldClass.getName().replace('.', '/'));
+                    }
                     mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, "writeFieldValue", "(I" + fieldDesc + ")V", false);
                 } else if (fieldClass.isEnum()) {
                     mv.visitVarInsn(ALOAD, 4); // out
                     Asms.visitInsn(mv, member.getTag()); // tag
                     mv.visitVarInsn(ALOAD, 3); // value
+                    String realDesc;
                     if (member.getMethod() != null) {
                         String mname = member.getMethod().getName();
+                        realDesc = org.redkale.asm.Type.getDescriptor(member.getMethod().getReturnType());
                         String mdesc = org.redkale.asm.Type.getMethodDescriptor(member.getMethod());
                         mv.visitMethodInsn(INVOKEVIRTUAL, valtypeName, mname, mdesc, false);
                     } else { // field
                         Field field = member.getField();
                         String fname = field.getName();
-                        String fdesc = org.redkale.asm.Type.getDescriptor(field.getType());
-                        mv.visitFieldInsn(GETFIELD, valtypeName, fname, fdesc);
+                        realDesc = org.redkale.asm.Type.getDescriptor(field.getType());
+                        mv.visitFieldInsn(GETFIELD, valtypeName, fname, realDesc);
+                    }                
+                    if (!Objects.equals(realDesc, "Ljava/lang/Enum;")) {
+                        mv.visitTypeInsn(CHECKCAST, "java/lang/Enum");
                     }
                     mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, "writeFieldValue", "(ILjava/lang/Enum;)V", false);
                 } else if (factory.supportSimpleCollectionType(fieldType)) {

@@ -17,6 +17,7 @@ import org.redkale.convert.pb.ProtobufConvert;
 import org.redkale.convert.pb.ProtobufObjectDecoder;
 import org.redkale.convert.pb.ProtobufObjectEncoder;
 import org.redkale.convert.pb.ProtobufReader;
+import org.redkale.service.RetResult;
 import org.redkale.util.*;
 
 /** @author zhangjx */
@@ -36,6 +37,8 @@ public class PBCustMessage2Test {
             }
             return t.get(u);
         };
+        ProtobufConvert.root().convertTo(new OnRetResultMessage());
+
         OnPlayerLeaveMessage msg1 = new OnPlayerLeaveMessage(100, "haha");
         byte[] bs1 = ProtobufConvert.root().convertTo(msg1);
         OnPlayerLeaveMessage2 msg2 = new OnPlayerLeaveMessage2(100, "haha");
@@ -222,6 +225,22 @@ public class PBCustMessage2Test {
             public String toString() {
                 return JsonConvert.root().convertTo(this);
             }
+        }
+
+        @Override
+        public String toString() {
+            return JsonConvert.root().convertTo(this);
+        }
+    }
+
+    public static class OnRetResultMessage extends RetResult<String> implements BaseMessage {
+
+        public OnRetResultMessage() {}
+
+        public OnRetResultMessage(RetResult<String> ret) {
+            this.retcode = ret.getRetcode();
+            this.retinfo = ret.getRetinfo();
+            this.result = ret.getResult();
         }
 
         @Override
