@@ -202,7 +202,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                         realDesc = org.redkale.asm.Type.getDescriptor(field.getType());
                         mv.visitFieldInsn(GETFIELD, valtypeName, fname, realDesc);
                     }
-                    String fieldDesc = org.redkale.asm.Type.getDescriptor(fieldClass);                   
+                    String fieldDesc = org.redkale.asm.Type.getDescriptor(fieldClass);
                     if (!Objects.equals(realDesc, fieldDesc)) { //父类方法参数类型时泛型
                         mv.visitTypeInsn(CHECKCAST, fieldClass.getName().replace('.', '/'));
                     }
@@ -222,7 +222,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                         String fname = field.getName();
                         realDesc = org.redkale.asm.Type.getDescriptor(field.getType());
                         mv.visitFieldInsn(GETFIELD, valtypeName, fname, realDesc);
-                    }                
+                    }
                     if (!Objects.equals(realDesc, "Ljava/lang/Enum;")) {
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Enum");
                     }

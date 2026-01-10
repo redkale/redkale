@@ -153,9 +153,9 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
         this.tableCopySQL = readConfProps.getProperty(
                 DATA_SOURCE_TABLECOPY_SQLTEMPLATE, "CREATE TABLE IF NOT EXISTS #{newtable} LIKE #{oldtable}");
 
-        this.autoDDL = "true".equals(readConfProps.getProperty(DATA_SOURCE_TABLE_AUTODDL, "false"));
+        this.autoDDL = "true".equalsIgnoreCase(readConfProps.getProperty(DATA_SOURCE_TABLE_AUTODDL, "false").trim());
         this.cacheForbidden = "NONE".equalsIgnoreCase(readConfProps.getProperty(DATA_SOURCE_CACHEMODE));
-        this.clientNonBlocking = "true".equalsIgnoreCase(readConfProps.getProperty(DATA_SOURCE_NON_BLOCKING, "false"));
+        this.clientNonBlocking = "true".equalsIgnoreCase(readConfProps.getProperty(DATA_SOURCE_NON_BLOCKING, "false").trim());
         this.slowmsWarn = Integer.parseInt(
                 readConfProps.getProperty(DATA_SOURCE_SLOWMS_WARN, "2000").trim());
         this.slowmsError = Integer.parseInt(
