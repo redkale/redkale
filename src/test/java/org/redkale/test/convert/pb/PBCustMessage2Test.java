@@ -37,7 +37,18 @@ public class PBCustMessage2Test {
             }
             return t.get(u);
         };
-        ProtobufConvert.root().convertTo(new OnRetResultMessage());
+        StringRetResultMessage smsg1 = new StringRetResultMessage(RetResult.success("aaa"));
+        byte[] bs = ProtobufConvert.root().convertTo(smsg1);
+        StringRetResultMessage smsg2 = ProtobufConvert.root().convertFrom(StringRetResultMessage.class, bs);
+        Assertions.assertEquals(smsg1.toString(), smsg2.toString());
+        EnumRetResultMessage emsg1 = new EnumRetResultMessage(RetResult.success(ConvertType.DIY));
+        bs = ProtobufConvert.root().convertTo(emsg1);
+        EnumRetResultMessage emsg2 = ProtobufConvert.root().convertFrom(EnumRetResultMessage.class, bs);
+        Assertions.assertEquals(emsg1.toString(), emsg2.toString());
+        IntegerRetResultMessage imsg1 = new IntegerRetResultMessage(RetResult.success((Integer) 300));
+        bs = ProtobufConvert.root().convertTo(imsg1);
+        IntegerRetResultMessage imsg2 = ProtobufConvert.root().convertFrom(IntegerRetResultMessage.class, bs);
+        Assertions.assertEquals(imsg1.toString(), imsg2.toString());
 
         OnPlayerLeaveMessage msg1 = new OnPlayerLeaveMessage(100, "haha");
         byte[] bs1 = ProtobufConvert.root().convertTo(msg1);
@@ -233,11 +244,43 @@ public class PBCustMessage2Test {
         }
     }
 
-    public static class OnRetResultMessage extends RetResult<String> implements BaseMessage {
+    public static class StringRetResultMessage extends RetResult<String> implements BaseMessage {
 
-        public OnRetResultMessage() {}
+        public StringRetResultMessage() {}
 
-        public OnRetResultMessage(RetResult<String> ret) {
+        public StringRetResultMessage(RetResult<String> ret) {
+            this.retcode = ret.getRetcode();
+            this.retinfo = ret.getRetinfo();
+            this.result = ret.getResult();
+        }
+
+        @Override
+        public String toString() {
+            return JsonConvert.root().convertTo(this);
+        }
+    }
+
+    public static class EnumRetResultMessage extends RetResult<ConvertType> implements BaseMessage {
+
+        public EnumRetResultMessage() {}
+
+        public EnumRetResultMessage(RetResult<ConvertType> ret) {
+            this.retcode = ret.getRetcode();
+            this.retinfo = ret.getRetinfo();
+            this.result = ret.getResult();
+        }
+
+        @Override
+        public String toString() {
+            return JsonConvert.root().convertTo(this);
+        }
+    }
+
+    public static class IntegerRetResultMessage extends RetResult<Integer> implements BaseMessage {
+
+        public IntegerRetResultMessage() {}
+
+        public IntegerRetResultMessage(RetResult<Integer> ret) {
             this.retcode = ret.getRetcode();
             this.retinfo = ret.getRetinfo();
             this.result = ret.getResult();

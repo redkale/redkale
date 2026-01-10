@@ -10,20 +10,20 @@ import org.redkale.convert.pb.ProtobufDynEncoder;
 import org.redkale.convert.pb.ProtobufFactory;
 import org.redkale.convert.pb.ProtobufObjectEncoder;
 import org.redkale.convert.pb.ProtobufWriter;
-import org.redkale.test.convert.pb.PBCustMessage2Test.OnRetResultMessage;
+import org.redkale.test.convert.pb.PBCustMessage2Test.StringRetResultMessage;
 
 /**
  *
  * @author zhangjx
  */
-public class OnRetResultMessageProtoDynEncoder extends ProtobufDynEncoder<OnRetResultMessage> {
+public class StrRetResultMsgDynEncoder extends ProtobufDynEncoder<StringRetResultMessage> {
 
-    public OnRetResultMessageProtoDynEncoder(ProtobufFactory factory, Type type, ProtobufObjectEncoder objectEncoder) {
+    public StrRetResultMsgDynEncoder(ProtobufFactory factory, Type type, ProtobufObjectEncoder objectEncoder) {
         super(factory, type, objectEncoder);
     }
 
     @Override
-    public void convertTo(ProtobufWriter out, EnMember parentMember, OnRetResultMessage value) {
+    public void convertTo(ProtobufWriter out, EnMember parentMember, StringRetResultMessage value) {
         if (value == null) {
             return;
         }
