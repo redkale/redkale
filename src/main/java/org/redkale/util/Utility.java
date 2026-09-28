@@ -128,9 +128,6 @@ public final class Utility {
 
     private static final ScheduledThreadPoolExecutor delayer;
 
-    // private static final javax.net.ssl.SSLContext DEFAULTSSL_CONTEXT;
-    // private static final javax.net.ssl.HostnameVerifier defaultVerifier = (s, ss) -> true;
-    //
     static {
         System.setProperty("jdk.httpclient.allowRestrictedHeaders", "host");
 
