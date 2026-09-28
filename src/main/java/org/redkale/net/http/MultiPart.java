@@ -100,16 +100,6 @@ public final class MultiPart {
         return fileName;
     }
 
-    /**
-     * @see #getFileName()
-     * @return String
-     * @deprecated replace by {@link #getFileName() }
-     */
-    @Deprecated(since = "2.8.0")
-    public String getFilename() {
-        return getFileName();
-    }
-
     public String getName() {
         return name;
     }

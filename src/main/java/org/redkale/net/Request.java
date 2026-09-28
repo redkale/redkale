@@ -228,17 +228,6 @@ public abstract class Request<C extends Context> {
         }
     }
 
-    /**
-     * @see #getCreateTime()
-     * @return long
-     * @deprecated replace by {@link #getCreateTime() }
-     */
-    @Deprecated(since = "2.7.0")
-    @ConvertDisabled
-    public long getCreatetime() {
-        return getCreateTime();
-    }
-
     public String getTraceid() {
         return traceid;
     }

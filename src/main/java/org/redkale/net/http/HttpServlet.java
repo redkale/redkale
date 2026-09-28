@@ -29,13 +29,6 @@ import org.redkale.util.*;
  */
 public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse> {
 
-    // @Deprecated(since = "2.8.0")
-    // public static final int RET_SERVER_ERROR = 1200_0001;
-    //
-    // @Deprecated(since = "2.8.0")
-    // public static final int RET_METHOD_ERROR = 1200_0002;
-    //
-
     // 只给HttpActionServlet使用，_actionSimpleMappingUrl不能包含正则表达式，比如: /json、/createRecord,
     // 不能是/user/**
     String _actionSimpleMappingUrl;
