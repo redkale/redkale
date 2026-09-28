@@ -942,9 +942,7 @@ public final class Application {
                     channel.configureBlocking(true);
                     channel.socket().setSoTimeout(6000); // 单位:毫秒
                     channel.bind(new InetSocketAddress("127.0.0.1", config.getIntValue("port")));
-                    if (!singletonMode) {
-                        signalShutdownHandle();
-                    }
+
                     boolean loop = true;
                     final ByteBuffer buffer = ByteBuffer.allocateDirect(UDP_CAPACITY);
                     while (loop) {
@@ -1657,27 +1655,6 @@ public final class Application {
             }
         });
         this.onServersPostStop();
-    }
-
-    // 使用了nohup或使用了后台&，Runtime.getRuntime().addShutdownHook失效
-    private void signalShutdownHandle() {
-        Consumer<Consumer<String>> signalShutdownConsumer = Utility.signalShutdownConsumer();
-        if (signalShutdownConsumer == null) {
-            return;
-        }
-        signalShutdownConsumer.accept(sig -> {
-            try {
-                long s = System.currentTimeMillis();
-                logger.info(Application.this.getClass().getSimpleName() + " shutdowning " + sig);
-                shutdown();
-                long e = System.currentTimeMillis() - s;
-                logger.info(Application.this.getClass().getSimpleName() + " shutdown in " + e + " ms");
-            } catch (Exception ex) {
-                logger.log(Level.INFO, "Shutdown fail", ex);
-            } finally {
-                shutdownLatch.countDown();
-            }
-        });
     }
 
     List<ModuleEngine> getModuleEngines() {
