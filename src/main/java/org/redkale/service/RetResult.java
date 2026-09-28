@@ -49,10 +49,6 @@ public class RetResult<T> implements Serializable {
     @ConvertColumn(index = 4)
     protected T result;
 
-    @ConvertColumn(index = 5)
-    @Deprecated(since = "2.5.0")
-    protected Map<String, String> attach;
-
     @ConvertDisabled
     protected Convert convert;
 
@@ -202,8 +198,7 @@ public class RetResult<T> implements Serializable {
         return new RetResult<>(mapper.apply(this.result))
                 .convert(this.convert)
                 .retcode(this.retcode)
-                .retinfo(this.retinfo)
-                .attach(this.attach);
+                .retinfo(this.retinfo);
     }
 
     /**
@@ -236,55 +231,6 @@ public class RetResult<T> implements Serializable {
      */
     public RetResult<T> result(T result) {
         this.result = result;
-        return this;
-    }
-
-    /**
-     * 同 setAttach
-     *
-     * @param attach attach
-     * @return RetResult
-     */
-    @Deprecated(since = "2.5.0")
-    public RetResult<T> attach(Map<String, String> attach) {
-        this.attach = attach;
-        System.err.println("RetResult.attach is deprecated");
-        return this;
-    }
-
-    /**
-     * attach添加元素
-     *
-     * @param key String
-     * @param value String
-     * @return RetResult
-     */
-    @Deprecated(since = "2.5.0")
-    public RetResult<T> attach(String key, Object value) {
-        System.err.println("RetResult.attach is deprecated");
-        if (this.attach == null) {
-            this.attach = new HashMap<>();
-        }
-        boolean canstr = value != null
-                && (value instanceof CharSequence
-                        || value instanceof Number
-                        || value.getClass().isPrimitive());
-        this.attach.put(
-                key,
-                value == null
-                        ? null
-                        : (canstr ? String.valueOf(value) : JsonConvert.root().convertTo(value)));
-        return this;
-    }
-
-    /**
-     * 清空attach
-     *
-     * @return RetResult
-     */
-    @Deprecated(since = "2.5.0")
-    public RetResult<T> clearAttach() {
-        this.attach = null;
         return this;
     }
 
@@ -327,39 +273,6 @@ public class RetResult<T> implements Serializable {
      */
     public void setRetinfo(String retinfo) {
         this.retinfo = retinfo;
-    }
-
-    /**
-     * 结果附件
-     *
-     * @return 结果附件
-     */
-    @Deprecated(since = "2.5.0")
-    public Map<String, String> getAttach() {
-        return attach;
-    }
-
-    /**
-     * 设置结果附件
-     *
-     * @param attach Map
-     */
-    @Deprecated(since = "2.5.0")
-    public void setAttach(Map<String, String> attach) {
-        this.attach = attach;
-    }
-
-    /**
-     * 获取附件元素值
-     *
-     * @param name 元素名
-     * @param defValue 默认值
-     * @return 结果值
-     */
-    @Deprecated(since = "2.5.0")
-    public String getAttach(String name, String defValue) {
-        System.err.println("RetResult.attach is deprecated");
-        return attach == null ? defValue : attach.getOrDefault(name, defValue);
     }
 
     /**
