@@ -5,9 +5,10 @@
  */
 package org.redkale.source;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 
 /**
  * 默认情况下FilterBean下的过滤字段之间是AND关系。 <br>

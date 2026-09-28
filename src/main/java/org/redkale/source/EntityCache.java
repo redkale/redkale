@@ -5,6 +5,8 @@
  */
 package org.redkale.source;
 
+import static org.redkale.source.FilterFunc.*;
+
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.*;
@@ -14,7 +16,6 @@ import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.*;
 import org.redkale.persistence.*;
-import static org.redkale.source.FilterFunc.*;
 import org.redkale.util.*;
 
 /**

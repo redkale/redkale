@@ -18,10 +18,7 @@ import org.redkale.source.DataSqlMapper;
 import org.redkale.source.DataSqlSource;
 import org.redkale.util.RedkaleException;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @AutoLoad(false)
 class DataSqlMapperLoader implements ResourceTypeLoader {
 

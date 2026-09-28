@@ -16,10 +16,9 @@ package org.redkale.util;
 public interface YamlProvider {
 
     /**
-     *
      * 创建 YamlLoader
      *
-     * @return  YamlLoader
+     * @return YamlLoader
      */
     public YamlLoader createLoader();
 
@@ -29,7 +28,7 @@ public interface YamlProvider {
          * 将yml内容转换成AnyValue
          *
          * @param content yml内容
-         * @return  AnyValue
+         * @return AnyValue
          */
         public AnyValue read(String content);
     }

@@ -3,6 +3,8 @@
  */
 package org.redkale.util;
 
+import static org.redkale.asm.Opcodes.*;
+
 import java.io.*;
 import java.lang.reflect.*;
 import java.math.*;
@@ -14,7 +16,6 @@ import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Stream;
 import org.redkale.asm.*;
-import static org.redkale.asm.Opcodes.*;
 
 /** @author zhangjx */
 class Inners {

@@ -5,9 +5,9 @@
  */
 package org.redkale.source;
 
+import org.redkale.annotation.Serial;
 import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.JsonConvert;
-import org.redkale.annotation.Serial;
 
 /**
  * 翻页对象与过滤条件Bean的组合对象

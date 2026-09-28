@@ -14,10 +14,7 @@ import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.persistence.Id;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class UserBean {
     @Id
     @ConvertColumn(index = 1)

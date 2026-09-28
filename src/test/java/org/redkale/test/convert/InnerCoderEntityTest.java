@@ -17,10 +17,7 @@ import org.redkale.convert.pb.ProtobufConvert;
 import org.redkale.convert.pb.ProtobufFactory;
 import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @SuppressWarnings("unchecked")
 public class InnerCoderEntityTest {
     public static void main(String[] args) throws Throwable {
@@ -60,9 +57,10 @@ public class InnerCoderEntityTest {
         }
 
         /**
-         * 该方法提供给Convert组件自动加载。 1) 方法名可以随意。 2) 方法必须是static 3）方法的参数有且只能有一个， 且必须是org.redkale.convert.ConvertFactory或子类。 —3.1)
-         * 参数类型为org.redkale.convert.ConvertFactory 表示适合JSON和PROTOBUF。 —3.2) 参数类型为org.redkale.convert.json.JsonFactory 表示仅适合JSON。
-         * —3.3) 参数类型为org.redkale.convert.pb.ProtobufFactory 表示仅适合PROTOBUF。
+         * 该方法提供给Convert组件自动加载。 1) 方法名可以随意。 2) 方法必须是static 3）方法的参数有且只能有一个， 且必须是org.redkale.convert.ConvertFactory或子类。
+         * —3.1) 参数类型为org.redkale.convert.ConvertFactory 表示适合JSON和PROTOBUF。 —3.2)
+         * 参数类型为org.redkale.convert.json.JsonFactory 表示仅适合JSON。 —3.3) 参数类型为org.redkale.convert.pb.ProtobufFactory
+         * 表示仅适合PROTOBUF。
          * 4）方法的返回类型必须是org.redkale.convert.Decodeable/org.redkale.convert.Encodeable/org.redkale.convert.SimpledCoder
          * 若返回类型不是org.redkale.convert.SimpledCoder, 就必须提供两个方法： 一个返回Decodeable 一个返回 Encodeable。
          *

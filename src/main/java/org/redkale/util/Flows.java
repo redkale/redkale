@@ -5,11 +5,12 @@
  */
 package org.redkale.util;
 
+import static org.redkale.util.Utility.hexToBin;
+
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
-import static org.redkale.util.Utility.hexToBin;
 
 /**
  * Flow简单的操作

@@ -9,10 +9,7 @@ import org.redkale.annotation.Resource;
 import org.redkale.mq.MessageManager;
 import org.redkale.service.AbstractService;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class TestMessageManager extends AbstractService {
 
     @Resource(name = "mymq")

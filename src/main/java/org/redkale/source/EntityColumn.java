@@ -8,10 +8,7 @@ import org.redkale.annotation.Comment;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.persistence.Column;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class EntityColumn {
 
     private final boolean primary; // 是否主键
@@ -54,8 +51,9 @@ public class EntityColumn {
 
     /**
      * 驼峰式字段名替换成下划线式
+     *
      * @param col 驼峰式字段名
-     * @return  下划线式字段名
+     * @return 下划线式字段名
      */
     public static String camelCase(String col) {
         char ch;

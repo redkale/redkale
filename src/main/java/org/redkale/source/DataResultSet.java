@@ -51,9 +51,10 @@ public interface DataResultSet extends DataResultSetRow {
 
     /**
      * 将对象转化成另一个类型对象
+     *
      * @param type 类型
      * @param o 数据库字段值
-     * @return  转换后对象
+     * @return 转换后对象
      */
     public static Serializable formatColumnValue(Class type, Object o) {
         return formatColumnValue(type, null, o);
@@ -61,10 +62,11 @@ public interface DataResultSet extends DataResultSetRow {
 
     /**
      * 将对象转化成另一个类型对象
+     *
      * @param type 类型
      * @param genericType 泛型类型
      * @param o 数据库字段值
-     * @return  转换后对象
+     * @return 转换后对象
      */
     public static Serializable formatColumnValue(Class type, Type genericType, Object o) {
         if (type == byte[].class) {

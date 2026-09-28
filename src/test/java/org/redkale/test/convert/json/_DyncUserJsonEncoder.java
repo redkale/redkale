@@ -12,10 +12,7 @@ import org.redkale.convert.json.JsonFactory;
 import org.redkale.convert.json.JsonWriter;
 import org.redkale.test.convert.User;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class _DyncUserJsonEncoder extends JsonDynEncoder<User> {
     protected final byte[] ageFieldBytes = "\"age\":".getBytes();
     protected final char[] ageFieldChars = "\"age\":".toCharArray();

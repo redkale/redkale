@@ -4,11 +4,12 @@
  */
 package org.redkale.util;
 
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
+
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
 
 /**
  * 获取泛型的Type类
@@ -683,7 +684,8 @@ public abstract class TypeToken<T> {
         final String newDynName =
                 "org/redkaledyn/typetoken/_Dyn" + TypeToken.class.getSimpleName() + "_" + nsb.toString();
         try {
-            return classLoader.loadClass(newDynName.replace('/', '.'))
+            return classLoader
+                    .loadClass(newDynName.replace('/', '.'))
                     .getField("field")
                     .getGenericType();
         } catch (Throwable ex) {

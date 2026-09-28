@@ -5,9 +5,10 @@
  */
 package org.redkale.source;
 
+import static org.redkale.source.ColumnExpress.*;
+
 import java.io.Serializable;
 import org.redkale.convert.ConvertColumn;
-import static org.redkale.source.ColumnExpress.*;
 
 /**
  * 作为ColumnValue的value字段值，用于复杂的字段表达式 。 <br>

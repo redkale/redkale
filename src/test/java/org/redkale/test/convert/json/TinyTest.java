@@ -53,6 +53,4 @@ public class TinyTest {
 
         public int id;
     }
-
-
 }

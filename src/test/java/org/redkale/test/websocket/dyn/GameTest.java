@@ -9,10 +9,7 @@ import org.redkale.net.http.Rest;
 import org.redkale.net.http.WebSocketServlet;
 import org.redkale.util.RedkaleClassLoader;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class GameTest {
 
     public static void main(String[] args) throws Throwable {

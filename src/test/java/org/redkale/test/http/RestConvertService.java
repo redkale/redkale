@@ -9,10 +9,7 @@ import org.redkale.net.http.RestConvertCoder;
 import org.redkale.net.http.RestService;
 import org.redkale.service.AbstractService;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @RestService(name = "test", autoMapping = true)
 public class RestConvertService extends AbstractService {
 

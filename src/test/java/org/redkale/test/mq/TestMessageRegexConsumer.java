@@ -1,6 +1,6 @@
 /*
 
- */
+*/
 
 package org.redkale.test.mq;
 
@@ -9,10 +9,7 @@ import org.redkale.mq.MessageEvent;
 import org.redkale.mq.ResourceConsumer;
 import org.redkale.util.AnyValue;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @ResourceConsumer(mq = "mymq", regexTopic = "test_.*")
 public class TestMessageRegexConsumer implements MessageConsumer<TestBean> {
 

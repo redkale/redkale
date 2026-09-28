@@ -3,12 +3,13 @@
  */
 package org.redkale.source;
 
+import static org.redkale.source.DataResultSet.formatColumnValue;
+
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.*;
 import org.redkale.annotation.ClassDepends;
-import static org.redkale.source.DataResultSet.formatColumnValue;
 import org.redkale.util.*;
 
 /**

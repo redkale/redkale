@@ -4,17 +4,18 @@
  */
 package org.redkale.source;
 
+import static org.redkale.asm.Opcodes.*;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Objects;
 import org.redkale.annotation.ClassDepends;
-import org.redkale.bytecode.ByteCodes;
 import org.redkale.asm.ClassWriter;
 import org.redkale.asm.Label;
 import org.redkale.asm.MethodVisitor;
 import org.redkale.asm.Opcodes;
-import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
+import org.redkale.bytecode.ByteCodes;
 import org.redkale.util.Attribute;
 import org.redkale.util.Creator;
 import org.redkale.util.RedkaleClassLoader;

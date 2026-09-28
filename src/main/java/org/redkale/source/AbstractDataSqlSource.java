@@ -5,6 +5,10 @@
  */
 package org.redkale.source;
 
+import static org.redkale.boot.Application.*;
+import static org.redkale.source.DataSources.*;
+import static org.redkale.util.Utility.isEmpty;
+
 import java.io.Serializable;
 import java.math.*;
 import java.sql.SQLException;
@@ -17,16 +21,13 @@ import java.util.stream.Stream;
 import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.ResourceType;
-import static org.redkale.boot.Application.*;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.net.AsyncGroup;
 import org.redkale.net.WorkThread;
 import org.redkale.persistence.Table;
 import org.redkale.service.Local;
-import static org.redkale.source.DataSources.*;
 import org.redkale.util.*;
-import static org.redkale.util.Utility.isEmpty;
 
 /**
  * DataSource的SQL抽象实现类 <br>
@@ -153,9 +154,15 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
         this.tableCopySQL = readConfProps.getProperty(
                 DATA_SOURCE_TABLECOPY_SQLTEMPLATE, "CREATE TABLE IF NOT EXISTS #{newtable} LIKE #{oldtable}");
 
-        this.autoDDL = "true".equalsIgnoreCase(readConfProps.getProperty(DATA_SOURCE_TABLE_AUTODDL, "false").trim());
+        this.autoDDL = "true"
+                .equalsIgnoreCase(readConfProps
+                        .getProperty(DATA_SOURCE_TABLE_AUTODDL, "false")
+                        .trim());
         this.cacheForbidden = "NONE".equalsIgnoreCase(readConfProps.getProperty(DATA_SOURCE_CACHEMODE));
-        this.clientNonBlocking = "true".equalsIgnoreCase(readConfProps.getProperty(DATA_SOURCE_NON_BLOCKING, "false").trim());
+        this.clientNonBlocking = "true"
+                .equalsIgnoreCase(readConfProps
+                        .getProperty(DATA_SOURCE_NON_BLOCKING, "false")
+                        .trim());
         this.slowmsWarn = Integer.parseInt(
                 readConfProps.getProperty(DATA_SOURCE_SLOWMS_WARN, "2000").trim());
         this.slowmsError = Integer.parseInt(

@@ -13,10 +13,7 @@ import org.redkale.inject.ResourceTypeLoader;
 import org.redkale.source.DataMemorySource;
 import org.redkale.source.DataSource;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class ResourceTypeTest {
 
     public static void main(String[] args) throws Throwable {

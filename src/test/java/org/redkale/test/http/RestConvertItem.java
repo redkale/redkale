@@ -7,10 +7,7 @@ package org.redkale.test.http;
 import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.JsonConvert;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class RestConvertItem {
 
     private long createTime;

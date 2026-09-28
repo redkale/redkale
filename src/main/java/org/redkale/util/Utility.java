@@ -4,6 +4,8 @@
  */
 package org.redkale.util;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.*;
 import java.lang.invoke.*;
 import java.lang.reflect.*;
@@ -13,21 +15,16 @@ import java.net.http.HttpClient;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.nio.charset.*;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import java.security.*;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
-
 import org.redkale.annotation.*;
 import org.redkale.convert.json.JsonConvert;
 
@@ -41,7 +38,7 @@ import org.redkale.convert.json.JsonConvert;
 public final class Utility {
 
     private static final char[] hex =
-            new char[]{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+            new char[] {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
     private static final int CPUS =
             Integer.getInteger("redkale.cpus", Runtime.getRuntime().availableProcessors());
@@ -132,11 +129,12 @@ public final class Utility {
         System.setProperty("jdk.httpclient.allowRestrictedHeaders", "host");
 
         (delayer = new ScheduledThreadPoolExecutor(1, r -> {
-            Thread t = new Thread(r);
-            t.setDaemon(true);
-            t.setName("RedkaleFutureDelayScheduler");
-            return t;
-        })).setRemoveOnCancelPolicy(true);
+                    Thread t = new Thread(r);
+                    t.setDaemon(true);
+                    t.setName("RedkaleFutureDelayScheduler");
+                    return t;
+                }))
+                .setRemoveOnCancelPolicy(true);
 
         Function<String, byte[]> strByteFunction0 = null;
         Predicate<String> strLatin1Function0 = null;
@@ -195,8 +193,7 @@ public final class Utility {
         //        }
     }
 
-    private Utility() {
-    }
+    private Utility() {}
 
     public static int cpus() {
         return CPUS;
@@ -318,7 +315,7 @@ public final class Utility {
     /**
      * 返回第一个不为null的对象
      *
-     * @param <T>  泛型
+     * @param <T> 泛型
      * @param val1 对象1
      * @param val2 对象2
      * @return 可用对象，可能返回null
@@ -330,7 +327,7 @@ public final class Utility {
     /**
      * 返回第一个不为null的对象
      *
-     * @param <T>  泛型
+     * @param <T> 泛型
      * @param vals 对象集合
      * @return 可用对象，可能返回null
      */
@@ -425,11 +422,11 @@ public final class Utility {
                 String methodName = ((java.lang.invoke.SerializedLambda) mh.invoke(func)).getImplMethodName();
                 String className = methodName.contains("lambda$")
                         ? org.redkale.asm.Type.getReturnType(((java.lang.invoke.SerializedLambda) mh.invoke(func))
-                                .getInstantiatedMethodType())
-                        .getClassName()
+                                        .getInstantiatedMethodType())
+                                .getClassName()
                         : ((java.lang.invoke.SerializedLambda) mh.invoke(func))
-                        .getImplClass()
-                        .replace('/', '.');
+                                .getImplClass()
+                                .replace('/', '.');
                 return (Class) Thread.currentThread().getContextClassLoader().loadClass(className);
             } catch (ClassNotFoundException ex) {
                 throw new RedkaleException(ex);
@@ -492,7 +489,7 @@ public final class Utility {
                 java.lang.invoke.SerializedLambda sl = (java.lang.invoke.SerializedLambda) obj;
                 String className = methodName.contains("lambda$")
                         ? org.redkale.asm.Type.getReturnType(sl.getInstantiatedMethodType())
-                        .getClassName()
+                                .getClassName()
                         : sl.getImplClass().replace('/', '.');
                 classNameReference.set(className);
             }
@@ -786,9 +783,9 @@ public final class Utility {
     /**
      * 是否为空白
      *
-     * @param str       字符串
+     * @param str 字符串
      * @param fromIndex 起始位置
-     * @param toIndex   结束位置
+     * @param toIndex 结束位置
      * @return 是否为空白
      */
     public static boolean isBlank(String str, int fromIndex, int toIndex) {
@@ -835,9 +832,9 @@ public final class Utility {
     /**
      * 是否不为空白
      *
-     * @param str       字符串
+     * @param str 字符串
      * @param fromIndex 起始位置
-     * @param toIndex   结束位置
+     * @param toIndex 结束位置
      * @return 是否为空白
      */
     public static boolean isNotBlank(String str, int fromIndex, int toIndex) {
@@ -934,7 +931,7 @@ public final class Utility {
     /**
      * 是否为空
      *
-     * @param <T>   泛型
+     * @param <T> 泛型
      * @param array 数组
      * @return 是否为空
      */
@@ -945,7 +942,7 @@ public final class Utility {
     /**
      * 是否不为空
      *
-     * @param <T>   泛型
+     * @param <T> 泛型
      * @param array 数组
      * @return 是否不为空
      */
@@ -1428,8 +1425,8 @@ public final class Utility {
     /**
      * 将多个key:value对应值组合成一个Map，items长度必须是偶数, 参数个数若是奇数的话，最后一个会被忽略 类似 JDK9中的 Map.of 方法
      *
-     * @param <K>   泛型
-     * @param <V>   泛型
+     * @param <K> 泛型
+     * @param <V> 泛型
      * @param items 键值对
      * @return Map
      */
@@ -1446,8 +1443,8 @@ public final class Utility {
     /**
      * 将多个Map合并到第一个Map中
      *
-     * @param <K>  泛型
-     * @param <V>  泛型
+     * @param <K> 泛型
+     * @param <V> 泛型
      * @param maps Map
      * @return Map
      */
@@ -1466,7 +1463,7 @@ public final class Utility {
     /**
      * 将多个元素组合成一个Set
      *
-     * @param <T>   泛型
+     * @param <T> 泛型
      * @param items 元素
      * @return Set
      */
@@ -1480,7 +1477,7 @@ public final class Utility {
      * 将多个元素组合成一个List <br>
      * 类似 JDK9中的 List.of 方法
      *
-     * @param <T>   泛型
+     * @param <T> 泛型
      * @param items 元素
      * @return List
      */
@@ -1493,7 +1490,7 @@ public final class Utility {
     /**
      * 将多个元素组合成一个Array
      *
-     * @param <T>   泛型
+     * @param <T> 泛型
      * @param items 元素
      * @return Array
      */
@@ -1504,8 +1501,8 @@ public final class Utility {
     /**
      * 裁剪List，使其size不超过limit大小 <br>
      *
-     * @param <T>   泛型
-     * @param list  集合
+     * @param <T> 泛型
+     * @param list 集合
      * @param limit 大小
      * @return List
      */
@@ -1560,7 +1557,7 @@ public final class Utility {
     /**
      * 排序, 值大排前面
      *
-     * @param <P>  泛型
+     * @param <P> 泛型
      * @param list 集合
      * @return 排序后的集合
      */
@@ -1576,9 +1573,9 @@ public final class Utility {
     /**
      * 将一个或多个新元素添加到数组开始，数组中的元素自动后移
      *
-     * @param <T>   泛型
+     * @param <T> 泛型
      * @param array 原数组
-     * @param objs  待追加数据
+     * @param objs 待追加数据
      * @return 新数组
      */
     public static <T> T[] unshift(final T[] array, final T... objs) {
@@ -1594,9 +1591,9 @@ public final class Utility {
     /**
      * 将一个或多个新元素添加到数组开始，数组中的元素自动后移
      *
-     * @param <T>   泛型
+     * @param <T> 泛型
      * @param array 原数组
-     * @param objs  待追加数据
+     * @param objs 待追加数据
      * @return 新数组
      */
     public static <T> T[] unshift(final T[] array, final Collection<T> objs) {
@@ -1767,7 +1764,7 @@ public final class Utility {
     /**
      * 将char数组用分隔符拼接成字符串
      *
-     * @param array     数组
+     * @param array 数组
      * @param delimiter 分隔符
      * @return String
      */
@@ -1788,7 +1785,7 @@ public final class Utility {
     /**
      * 将int数组用分隔符拼接成字符串
      *
-     * @param array     数组
+     * @param array 数组
      * @param delimiter 分隔符
      * @return String
      */
@@ -1809,7 +1806,7 @@ public final class Utility {
     /**
      * 将long数组用分隔符拼接成字符串
      *
-     * @param array     数组
+     * @param array 数组
      * @param delimiter 分隔符
      * @return String
      */
@@ -1830,8 +1827,8 @@ public final class Utility {
     /**
      * 将对象数组用分隔符拼接成字符串
      *
-     * @param <T>       泛型
-     * @param array     数组
+     * @param <T> 泛型
+     * @param array 数组
      * @param delimiter 分隔符
      * @return String
      */
@@ -1852,8 +1849,8 @@ public final class Utility {
     /**
      * 将对象集合用分隔符拼接成字符串
      *
-     * @param <T>       泛型
-     * @param stream    集合
+     * @param <T> 泛型
+     * @param stream 集合
      * @param delimiter 分隔符
      * @return String
      */
@@ -1874,8 +1871,8 @@ public final class Utility {
     /**
      * 将对象数组用分隔符拼接成字符串
      *
-     * @param <T>       泛型
-     * @param array     数组
+     * @param <T> 泛型
+     * @param array 数组
      * @param delimiter 分隔符
      * @return String
      */
@@ -1896,8 +1893,8 @@ public final class Utility {
     /**
      * 将对象数组用分隔符拼接成字符串
      *
-     * @param <T>       泛型
-     * @param array     数组
+     * @param <T> 泛型
+     * @param array 数组
      * @param delimiter 分隔符
      * @return String
      */
@@ -1919,10 +1916,10 @@ public final class Utility {
     /**
      * 将对象数组用分隔符拼接成字符串
      *
-     * @param <T>       泛型
-     * @param array     数组
-     * @param offset    偏移量
-     * @param length    长度
+     * @param <T> 泛型
+     * @param array 数组
+     * @param offset 偏移量
+     * @param length 长度
      * @param delimiter 分隔符
      * @return String
      */
@@ -1946,7 +1943,7 @@ public final class Utility {
      * 将一个或多个byte新元素添加到byte数组结尾
      *
      * @param array 原数组
-     * @param objs  待追加数据
+     * @param objs 待追加数据
      * @return 新数组
      */
     public static byte[] append(final byte[] array, final byte... objs) {
@@ -1965,8 +1962,8 @@ public final class Utility {
     /**
      * 将一个或多个byte新元素添加到byte数组结尾
      *
-     * @param array  原数组
-     * @param objs   待追加数据
+     * @param array 原数组
+     * @param objs 待追加数据
      * @param offset 待追加数据偏移量
      * @param length 待追加数据的长度
      * @return 新数组
@@ -1993,7 +1990,7 @@ public final class Utility {
      * 将一个或多个short新元素添加到short数组结尾
      *
      * @param array 原数组
-     * @param objs  待追加数据
+     * @param objs 待追加数据
      * @return 新数组
      */
     public static short[] append(final short[] array, final short... objs) {
@@ -2013,7 +2010,7 @@ public final class Utility {
      * 将一个或多个char新元素添加到char数组结尾
      *
      * @param array 原数组
-     * @param objs  待追加数据
+     * @param objs 待追加数据
      * @return 新数组
      */
     public static char[] append(final char[] array, final char... objs) {
@@ -2033,7 +2030,7 @@ public final class Utility {
      * 将一个或多个int新元素添加到int数组结尾
      *
      * @param array 原数组
-     * @param objs  待追加数据
+     * @param objs 待追加数据
      * @return 新数组
      */
     public static int[] append(final int[] array, final int... objs) {
@@ -2053,7 +2050,7 @@ public final class Utility {
      * 将一个或多个long新元素添加到long数组结尾
      *
      * @param array 原数组
-     * @param objs  待追加数据
+     * @param objs 待追加数据
      * @return 新数组
      */
     public static long[] append(final long[] array, final long... objs) {
@@ -2073,7 +2070,7 @@ public final class Utility {
      * 将一个或多个新元素添加到数组结尾
      *
      * @param array 原数组
-     * @param objs  待追加数据
+     * @param objs 待追加数据
      * @return 新数组
      */
     public static String[] append(final String[] array, final String... objs) {
@@ -2092,7 +2089,7 @@ public final class Utility {
     /**
      * 将一个或多个新元素添加到数组结尾
      *
-     * @param one  单个对象
+     * @param one 单个对象
      * @param objs 待追加数据
      * @return 新数组
      */
@@ -2109,8 +2106,8 @@ public final class Utility {
     /**
      * 将一个或多个新元素添加到数组结尾
      *
-     * @param one  单个对象
-     * @param two  单个对象
+     * @param one 单个对象
+     * @param two 单个对象
      * @param objs 待追加数据
      * @return 新数组
      */
@@ -2125,9 +2122,9 @@ public final class Utility {
     /**
      * 将一个或多个新元素添加到数组结尾
      *
-     * @param <T>   泛型
+     * @param <T> 泛型
      * @param array 原数组
-     * @param objs  待追加数据
+     * @param objs 待追加数据
      * @return 新数组
      */
     public static <T> T[] append(final T[] array, final T... objs) {
@@ -2147,7 +2144,7 @@ public final class Utility {
      * 将一个或多个新元素添加到数组结尾
      *
      * @param array 原数组
-     * @param objs  待追加数据
+     * @param objs 待追加数据
      * @return 新数组
      */
     public static Object[][] append(final Object[][] array, final Object[]... objs) {
@@ -2166,9 +2163,9 @@ public final class Utility {
     /**
      * 将一个或多个新元素添加到数组结尾
      *
-     * @param <T>   泛型
+     * @param <T> 泛型
      * @param array 原数组
-     * @param objs  待追加数据
+     * @param objs 待追加数据
      * @return 新数组
      */
     public static <T> T[] append(final T[] array, final Collection<T> objs) {
@@ -2201,9 +2198,9 @@ public final class Utility {
     /**
      * 将元素从数组中删除
      *
-     * @param <T>   泛型
+     * @param <T> 泛型
      * @param array 原数组
-     * @param item  元素
+     * @param item 元素
      * @return 新数组
      */
     public static <T> T[] remove(final T[] array, final T item) {
@@ -2213,8 +2210,8 @@ public final class Utility {
     /**
      * 将符合条件的元素从数组中删除
      *
-     * @param <T>    泛型
-     * @param array  原数组
+     * @param <T> 泛型
+     * @param array 原数组
      * @param filter Predicate
      * @return 新数组
      */
@@ -2241,7 +2238,7 @@ public final class Utility {
      * 将符合条件的元素从数组中删除
      *
      * @param array 原数组
-     * @param item  元素
+     * @param item 元素
      * @return 新数组
      */
     public static String[] remove(final String[] array, final String item) {
@@ -2284,9 +2281,9 @@ public final class Utility {
      * remove(new short[]{1, 1, 1, 2, 2, 3, 3, 3}, true, 1, 1, 2, 3, 3) = [] <br>
      * remove(new short[]{1, 1, 1, 2, 2, 3, 3, 3}, false, 1, 1, 2, 3, 3) = [1,2,3]
      *
-     * @param array  原数组
+     * @param array 原数组
      * @param repeat 是否重复删除相同的元素
-     * @param items  short[]
+     * @param items short[]
      * @return 新数组
      */
     public static short[] remove(final short[] array, boolean repeat, final short... items) {
@@ -2344,9 +2341,9 @@ public final class Utility {
      * remove(new int[]{1, 1, 1, 2, 2, 3, 3, 3}, true, 1, 1, 2, 3, 3) = [] <br>
      * remove(new int[]{1, 1, 1, 2, 2, 3, 3, 3}, false, 1, 1, 2, 3, 3) = [1,2,3]
      *
-     * @param array  原数组
+     * @param array 原数组
      * @param repeat 是否重复删除相同的元素
-     * @param items  int[]
+     * @param items int[]
      * @return 新数组
      */
     public static int[] remove(final int[] array, boolean repeat, final int... items) {
@@ -2404,9 +2401,9 @@ public final class Utility {
      * remove(new long[]{1, 1, 1, 2, 2, 3, 3, 3}, true, 1, 1, 2, 3, 3) = [] <br>
      * remove(new long[]{1, 1, 1, 2, 2, 3, 3, 3}, false, 1, 1, 2, 3, 3) = [1,2,3]<br>
      *
-     * @param array  原数组
+     * @param array 原数组
      * @param repeat 是否重复删除相同的元素
-     * @param items  long[]
+     * @param items long[]
      * @return 新数组
      */
     public static long[] remove(final long[] array, boolean repeat, final long... items) {
@@ -2448,8 +2445,8 @@ public final class Utility {
     /**
      * 将符合条件的元素从集合中删除
      *
-     * @param <T>    泛型
-     * @param objs   原集合
+     * @param <T> 泛型
+     * @param objs 原集合
      * @param filter Predicate
      * @return 新集合
      */
@@ -2493,7 +2490,7 @@ public final class Utility {
     /**
      * 比较两集合元素是否一样， 顺序不要求一样
      *
-     * @param <T>    泛型
+     * @param <T> 泛型
      * @param array1 集合
      * @param array2 集合
      * @return 元素是否完全相同
@@ -2514,7 +2511,7 @@ public final class Utility {
     /**
      * 比较两集合元素是否一样， 顺序不要求一样
      *
-     * @param <T>  泛型
+     * @param <T> 泛型
      * @param col1 集合
      * @param col2 集合
      * @return 元素是否完全相同
@@ -2542,8 +2539,8 @@ public final class Utility {
     /**
      * 比较两集合元素是否一样， 顺序不要求一样
      *
-     * @param <K>  泛型
-     * @param <V>  泛型
+     * @param <K> 泛型
+     * @param <V> 泛型
      * @param map1 集合
      * @param map2 集合
      * @return 元素是否完全相同
@@ -2570,7 +2567,7 @@ public final class Utility {
      * 判断指定值是否包含指定的数组中，包含返回true
      *
      * @param values 集合
-     * @param value  单值
+     * @param value 单值
      * @return boolean
      */
     public static boolean contains(char[] values, char value) {
@@ -2589,7 +2586,7 @@ public final class Utility {
      * 判断指定值是否包含指定的数组中，包含返回true
      *
      * @param values 集合
-     * @param value  单值
+     * @param value 单值
      * @return boolean
      */
     public static boolean contains(short[] values, short value) {
@@ -2608,7 +2605,7 @@ public final class Utility {
      * 判断指定值(不要包含相同的元素)是否包含指定的数组中，包含返回true
      *
      * @param values 集合
-     * @param items  多值
+     * @param items 多值
      * @return boolean
      */
     public static boolean contains(short[] values, short... items) {
@@ -2627,7 +2624,7 @@ public final class Utility {
      * 判断指定值是否包含指定的数组中，包含返回true
      *
      * @param values 集合
-     * @param value  单值
+     * @param value 单值
      * @return boolean
      */
     public static boolean contains(int[] values, int value) {
@@ -2646,7 +2643,7 @@ public final class Utility {
      * 判断指定值(不要包含相同的元素)是否包含指定的数组中，包含返回true
      *
      * @param values 集合
-     * @param items  多值
+     * @param items 多值
      * @return boolean
      */
     public static boolean contains(int[] values, int... items) {
@@ -2665,7 +2662,7 @@ public final class Utility {
      * 判断指定值是否包含指定的数组中，包含返回true
      *
      * @param values 集合
-     * @param value  单值
+     * @param value 单值
      * @return boolean
      */
     public static boolean contains(long[] values, long value) {
@@ -2684,7 +2681,7 @@ public final class Utility {
      * 判断指定值(不要包含相同的元素)是否包含指定的数组中，包含返回true
      *
      * @param values 集合
-     * @param items  多值
+     * @param items 多值
      * @return boolean
      */
     public static boolean contains(long[] values, long... items) {
@@ -2702,9 +2699,9 @@ public final class Utility {
     /**
      * 判断指定值是否包含指定的数组中，包含返回true
      *
-     * @param <T>    泛型
+     * @param <T> 泛型
      * @param values 集合
-     * @param value  单值
+     * @param value 单值
      * @return boolean
      */
     public static <T> boolean contains(T[] values, T value) {
@@ -2722,8 +2719,8 @@ public final class Utility {
     /**
      * 判断指定值是否包含指定的数组中，包含返回true
      *
-     * @param <T>       泛型
-     * @param values    集合
+     * @param <T> 泛型
+     * @param values 集合
      * @param predicate 过滤条件
      * @return boolean
      */
@@ -2742,8 +2739,8 @@ public final class Utility {
     /**
      * 判断指定值是否包含指定的数组中，包含返回true
      *
-     * @param <T>       泛型
-     * @param values    集合
+     * @param <T> 泛型
+     * @param values 集合
      * @param predicate 过滤条件
      * @return boolean
      */
@@ -2901,7 +2898,7 @@ public final class Utility {
      * 删除掉字符串数组中包含指定的字符串
      *
      * @param columns 待删除数组
-     * @param cols    需排除的字符串
+     * @param cols 需排除的字符串
      * @return 新字符串数组
      */
     public static String[] exclude(final String[] columns, final String... cols) {
@@ -2947,8 +2944,8 @@ public final class Utility {
     /**
      * 查询指定对象, 没有返回null
      *
-     * @param <T>       泛型
-     * @param array     数组
+     * @param <T> 泛型
+     * @param array 数组
      * @param predicate 查找器
      * @return 对象
      */
@@ -2967,8 +2964,8 @@ public final class Utility {
     /**
      * 查询指定对象, 没有返回null
      *
-     * @param <T>       泛型
-     * @param array     数组
+     * @param <T> 泛型
+     * @param array 数组
      * @param predicate 查找器
      * @return 对象
      */
@@ -2987,8 +2984,8 @@ public final class Utility {
     /**
      * 查询指定对象位置, 没有返回-1
      *
-     * @param <T>       泛型
-     * @param array     数组
+     * @param <T> 泛型
+     * @param array 数组
      * @param predicate 查找器
      * @return 位置
      */
@@ -3009,8 +3006,8 @@ public final class Utility {
     /**
      * 查询指定对象位置, 没有返回-1
      *
-     * @param <T>       泛型
-     * @param array     数组
+     * @param <T> 泛型
+     * @param array 数组
      * @param predicate 查找器
      * @return 位置
      */
@@ -3031,7 +3028,7 @@ public final class Utility {
     /**
      * 查询指定值位置, 没有返回-1
      *
-     * @param array   数组
+     * @param array 数组
      * @param element 指定值
      * @return 位置
      */
@@ -3050,9 +3047,9 @@ public final class Utility {
     /**
      * 查询指定值位置, 没有返回-1
      *
-     * @param array     数组
+     * @param array 数组
      * @param fromIndex 起始位置，从0开始
-     * @param element   指定值
+     * @param element 指定值
      * @return 位置
      */
     public static int indexOf(final byte[] array, int fromIndex, final byte element) {
@@ -3070,7 +3067,7 @@ public final class Utility {
     /**
      * 查询指定值位置, 没有返回-1
      *
-     * @param array   数组
+     * @param array 数组
      * @param element 指定值
      * @return 位置
      */
@@ -3081,9 +3078,9 @@ public final class Utility {
     /**
      * 查询指定值位置, 没有返回-1
      *
-     * @param array     数组
+     * @param array 数组
      * @param fromIndex 起始位置，从0开始
-     * @param element   指定值
+     * @param element 指定值
      * @return 位置
      */
     public static int indexOf(final short[] array, int fromIndex, final short element) {
@@ -3101,7 +3098,7 @@ public final class Utility {
     /**
      * 查询指定值位置, 没有返回-1
      *
-     * @param array   数组
+     * @param array 数组
      * @param element 指定值
      * @return 位置
      */
@@ -3112,9 +3109,9 @@ public final class Utility {
     /**
      * 查询指定值位置, 没有返回-1
      *
-     * @param array     数组
+     * @param array 数组
      * @param fromIndex 起始位置，从0开始
-     * @param element   指定值
+     * @param element 指定值
      * @return 位置
      */
     public static int indexOf(final char[] array, int fromIndex, final char element) {
@@ -3132,7 +3129,7 @@ public final class Utility {
     /**
      * 查询指定值位置, 没有返回-1
      *
-     * @param array   数组
+     * @param array 数组
      * @param element 指定值
      * @return 位置
      */
@@ -3143,9 +3140,9 @@ public final class Utility {
     /**
      * 查询指定值位置, 没有返回-1
      *
-     * @param array     数组
+     * @param array 数组
      * @param fromIndex 起始位置，从0开始
-     * @param element   指定值
+     * @param element 指定值
      * @return 位置
      */
     public static int indexOf(final int[] array, int fromIndex, final int element) {
@@ -3163,7 +3160,7 @@ public final class Utility {
     /**
      * 查询指定值位置, 没有返回-1
      *
-     * @param array   数组
+     * @param array 数组
      * @param element 指定值
      * @return 位置
      */
@@ -3174,9 +3171,9 @@ public final class Utility {
     /**
      * 查询指定值位置, 没有返回-1
      *
-     * @param array     数组
+     * @param array 数组
      * @param fromIndex 起始位置，从0开始
-     * @param element   指定值
+     * @param element 指定值
      * @return 位置
      */
     public static int indexOf(final long[] array, int fromIndex, final long element) {
@@ -3194,7 +3191,7 @@ public final class Utility {
     /**
      * 查询指定值位置, 没有返回-1
      *
-     * @param array   数组
+     * @param array 数组
      * @param element 指定值
      * @return 位置
      */
@@ -3205,9 +3202,9 @@ public final class Utility {
     /**
      * 查询指定值位置, 没有返回-1
      *
-     * @param array     数组
+     * @param array 数组
      * @param fromIndex 起始位置，从0开始
-     * @param element   指定值
+     * @param element 指定值
      * @return 位置
      */
     public static int indexOf(final float[] array, int fromIndex, final float element) {
@@ -3225,7 +3222,7 @@ public final class Utility {
     /**
      * 查询指定值位置, 没有返回-1
      *
-     * @param array   数组
+     * @param array 数组
      * @param element 指定值
      * @return 位置
      */
@@ -3236,9 +3233,9 @@ public final class Utility {
     /**
      * 查询指定值位置, 没有返回-1
      *
-     * @param array     数组
+     * @param array 数组
      * @param fromIndex 起始位置，从0开始
-     * @param element   指定值
+     * @param element 指定值
      * @return 位置
      */
     public static int indexOf(final double[] array, int fromIndex, final double element) {
@@ -3256,8 +3253,8 @@ public final class Utility {
     /**
      * 将源对象转换成目标类型
      *
-     * @param <T>   泛型
-     * @param type  目标类型
+     * @param <T> 泛型
+     * @param type 目标类型
      * @param value 源对象
      * @return 对象
      */
@@ -3396,7 +3393,7 @@ public final class Utility {
      * 将字节数组的内容转换成字符串并打印到控制台, string参数不为空时会追加在字节数组内容字符串之前
      *
      * @param string 字符串前缀
-     * @param bytes  字节数组
+     * @param bytes 字节数组
      * @return 字符串
      */
     public static String println(String string, byte... bytes) {
@@ -3407,9 +3404,9 @@ public final class Utility {
      * 将字节数组的内容转换成字符串并打印到控制台, string参数不为空时会追加在字节数组内容字符串之前
      *
      * @param string 字符串前缀
-     * @param bytes  字节数组
-     * @param start  起始位置
-     * @param len    长度
+     * @param bytes 字节数组
+     * @param start 起始位置
+     * @param len 长度
      * @return 字符串
      */
     public static String println(String string, byte[] bytes, int start, int len) {
@@ -3474,10 +3471,10 @@ public final class Utility {
     /**
      * 创建 CompletionHandler 对象
      *
-     * @param <V>     结果对象的泛型
-     * @param <A>     附件对象的泛型
+     * @param <V> 结果对象的泛型
+     * @param <A> 附件对象的泛型
      * @param success 成功的回调函数
-     * @param fail    失败的回调函数
+     * @param fail 失败的回调函数
      * @return CompletionHandler
      */
     public static <V, A> CompletionHandler<V, A> createAsyncHandler(
@@ -3502,9 +3499,9 @@ public final class Utility {
     /**
      * 创建没有返回结果的 CompletionHandler 对象
      *
-     * @param <A>     附件对象的泛型
+     * @param <A> 附件对象的泛型
      * @param success 成功的回调函数
-     * @param fail    失败的回调函数
+     * @param fail 失败的回调函数
      * @return CompletionHandler
      */
     public static <A> CompletionHandler<Void, A> createAsyncHandler(
@@ -3529,9 +3526,9 @@ public final class Utility {
     /**
      * 创建没有附件对象的 CompletionHandler 对象
      *
-     * @param <V>     结果对象的泛型
+     * @param <V> 结果对象的泛型
      * @param success 成功的回调函数
-     * @param fail    失败的回调函数
+     * @param fail 失败的回调函数
      * @return CompletionHandler
      */
     public static <V> CompletionHandler<V, Void> createAsyncHandler(
@@ -3631,9 +3628,9 @@ public final class Utility {
     /**
      * MD5加密
      *
-     * @param input  待加密数据
+     * @param input 待加密数据
      * @param offset 偏移量
-     * @param len    长度
+     * @param len 长度
      * @return md5值
      */
     public static byte[] md5(byte[] input, int offset, int len) {
@@ -3673,9 +3670,9 @@ public final class Utility {
     /**
      * SHA-256
      *
-     * @param input  待hash数据
+     * @param input 待hash数据
      * @param offset 偏移量
-     * @param len    长度
+     * @param len 长度
      * @return hash值
      */
     public static String sha256Hex(byte[] input, int offset, int len) {
@@ -3695,9 +3692,9 @@ public final class Utility {
     /**
      * 以0x开头的 SHA-256
      *
-     * @param input  待hash数据
+     * @param input 待hash数据
      * @param offset 偏移量
-     * @param len    长度
+     * @param len 长度
      * @return hash值
      */
     public static String sha256Hex0x(byte[] input, int offset, int len) {
@@ -3745,9 +3742,9 @@ public final class Utility {
     /**
      * SHA-256
      *
-     * @param input  待hash数据
+     * @param input 待hash数据
      * @param offset 偏移量
-     * @param len    长度
+     * @param len 长度
      * @return hash值
      */
     public static byte[] sha256(byte[] input, int offset, int len) {
@@ -3767,7 +3764,7 @@ public final class Utility {
     /**
      * HmacSHA1
      *
-     * @param key   密钥
+     * @param key 密钥
      * @param input 待hash数据
      * @return hash值
      */
@@ -3778,7 +3775,7 @@ public final class Utility {
     /**
      * HmacSHA1
      *
-     * @param key   密钥
+     * @param key 密钥
      * @param input 待hash数据
      * @return hash值
      */
@@ -3789,10 +3786,10 @@ public final class Utility {
     /**
      * HmacSHA1
      *
-     * @param key    密钥
-     * @param input  待hash数据
+     * @param key 密钥
+     * @param input 待hash数据
      * @param offset 偏移量
-     * @param len    长度
+     * @param len 长度
      * @return hash值
      */
     public static String hmacSha1Base64(byte[] key, byte[] input, int offset, int len) {
@@ -3802,7 +3799,7 @@ public final class Utility {
     /**
      * HmacSHA1
      *
-     * @param key   密钥
+     * @param key 密钥
      * @param input 待hash数据
      * @return hash值
      */
@@ -3813,10 +3810,10 @@ public final class Utility {
     /**
      * HmacSHA1
      *
-     * @param key    密钥
-     * @param input  待hash数据
+     * @param key 密钥
+     * @param input 待hash数据
      * @param offset 偏移量
-     * @param len    长度
+     * @param len 长度
      * @return hash值
      */
     public static String hmacSha1Hex(byte[] key, byte[] input, int offset, int len) {
@@ -3826,7 +3823,7 @@ public final class Utility {
     /**
      * 以0x开头的 HmacSHA1
      *
-     * @param key   密钥
+     * @param key 密钥
      * @param input 待hash数据
      * @return hash值
      */
@@ -3837,10 +3834,10 @@ public final class Utility {
     /**
      * 以0x开头的 HmacSHA1
      *
-     * @param key    密钥
-     * @param input  待hash数据
+     * @param key 密钥
+     * @param input 待hash数据
      * @param offset 偏移量
-     * @param len    长度
+     * @param len 长度
      * @return hash值
      */
     public static String hmacSha1Hex0x(byte[] key, byte[] input, int offset, int len) {
@@ -3850,7 +3847,7 @@ public final class Utility {
     /**
      * HmacSHA1
      *
-     * @param key   密钥
+     * @param key 密钥
      * @param input 待hash数据
      * @return hash值
      */
@@ -3870,10 +3867,10 @@ public final class Utility {
     /**
      * HmacSHA1
      *
-     * @param key    密钥
-     * @param input  待hash数据
+     * @param key 密钥
+     * @param input 待hash数据
      * @param offset 偏移量
-     * @param len    长度
+     * @param len 长度
      * @return hash值
      */
     public static byte[] hmacSha1(byte[] key, byte[] input, int offset, int len) {
@@ -3893,7 +3890,7 @@ public final class Utility {
     /**
      * HmacSHA256
      *
-     * @param key   密钥
+     * @param key 密钥
      * @param input 待hash数据
      * @return hash值
      */
@@ -3904,7 +3901,7 @@ public final class Utility {
     /**
      * HmacSHA256
      *
-     * @param key   密钥
+     * @param key 密钥
      * @param input 待hash数据
      * @return hash值
      */
@@ -3915,10 +3912,10 @@ public final class Utility {
     /**
      * HmacSHA256
      *
-     * @param key    密钥
-     * @param input  待hash数据
+     * @param key 密钥
+     * @param input 待hash数据
      * @param offset 偏移量
-     * @param len    长度
+     * @param len 长度
      * @return hash值
      */
     public static String hmacSha256Base64(byte[] key, byte[] input, int offset, int len) {
@@ -3928,7 +3925,7 @@ public final class Utility {
     /**
      * HmacSHA256
      *
-     * @param key   密钥
+     * @param key 密钥
      * @param input 待hash数据
      * @return hash值
      */
@@ -3939,10 +3936,10 @@ public final class Utility {
     /**
      * HmacSHA256
      *
-     * @param key    密钥
-     * @param input  待hash数据
+     * @param key 密钥
+     * @param input 待hash数据
      * @param offset 偏移量
-     * @param len    长度
+     * @param len 长度
      * @return hash值
      */
     public static String hmacSha256Hex(byte[] key, byte[] input, int offset, int len) {
@@ -3952,7 +3949,7 @@ public final class Utility {
     /**
      * 以0x开头的 HmacSHA256
      *
-     * @param key   密钥
+     * @param key 密钥
      * @param input 待hash数据
      * @return hash值
      */
@@ -3963,10 +3960,10 @@ public final class Utility {
     /**
      * 以0x开头的 HmacSHA256
      *
-     * @param key    密钥
-     * @param input  待hash数据
+     * @param key 密钥
+     * @param input 待hash数据
      * @param offset 偏移量
-     * @param len    长度
+     * @param len 长度
      * @return hash值
      */
     public static String hmacSha256Hex0x(byte[] key, byte[] input, int offset, int len) {
@@ -3976,7 +3973,7 @@ public final class Utility {
     /**
      * HmacSHA256
      *
-     * @param key   密钥
+     * @param key 密钥
      * @param input 待hash数据
      * @return hash值
      */
@@ -3996,10 +3993,10 @@ public final class Utility {
     /**
      * HmacSHA256
      *
-     * @param key    密钥
-     * @param input  待hash数据
+     * @param key 密钥
+     * @param input 待hash数据
      * @param offset 偏移量
-     * @param len    长度
+     * @param len 长度
      * @return hash值
      */
     public static byte[] hmacSha256(byte[] key, byte[] input, int offset, int len) {
@@ -4019,7 +4016,7 @@ public final class Utility {
     /**
      * HmacSHA512
      *
-     * @param key   密钥
+     * @param key 密钥
      * @param input 待hash数据
      * @return hash值
      */
@@ -4030,7 +4027,7 @@ public final class Utility {
     /**
      * HmacSHA512
      *
-     * @param key   密钥
+     * @param key 密钥
      * @param input 待hash数据
      * @return hash值
      */
@@ -4041,10 +4038,10 @@ public final class Utility {
     /**
      * HmacSHA512
      *
-     * @param key    密钥
-     * @param input  待hash数据
+     * @param key 密钥
+     * @param input 待hash数据
      * @param offset 偏移量
-     * @param len    长度
+     * @param len 长度
      * @return hash值
      */
     public static String hmacSha512Base64(byte[] key, byte[] input, int offset, int len) {
@@ -4054,7 +4051,7 @@ public final class Utility {
     /**
      * HmacSHA512
      *
-     * @param key   密钥
+     * @param key 密钥
      * @param input 待hash数据
      * @return hash值
      */
@@ -4065,10 +4062,10 @@ public final class Utility {
     /**
      * HmacSHA512
      *
-     * @param key    密钥
-     * @param input  待hash数据
+     * @param key 密钥
+     * @param input 待hash数据
      * @param offset 偏移量
-     * @param len    长度
+     * @param len 长度
      * @return hash值
      */
     public static String hmacSha512Hex(byte[] key, byte[] input, int offset, int len) {
@@ -4078,7 +4075,7 @@ public final class Utility {
     /**
      * 以0x开头的 HmacSHA512
      *
-     * @param key   密钥
+     * @param key 密钥
      * @param input 待hash数据
      * @return hash值
      */
@@ -4089,10 +4086,10 @@ public final class Utility {
     /**
      * 以0x开头的 HmacSHA512
      *
-     * @param key    密钥
-     * @param input  待hash数据
+     * @param key 密钥
+     * @param input 待hash数据
      * @param offset 偏移量
-     * @param len    长度
+     * @param len 长度
      * @return hash值
      */
     public static String hmacSha512Hex0x(byte[] key, byte[] input, int offset, int len) {
@@ -4102,7 +4099,7 @@ public final class Utility {
     /**
      * HmacSHA512
      *
-     * @param key   密钥
+     * @param key 密钥
      * @param input 待hash数据
      * @return hash值
      */
@@ -4123,10 +4120,10 @@ public final class Utility {
     /**
      * HmacSHA512
      *
-     * @param key    密钥
-     * @param input  待hash数据
+     * @param key 密钥
+     * @param input 待hash数据
      * @param offset 偏移量
-     * @param len    长度
+     * @param len 长度
      * @return hash值
      */
     public static byte[] hmacSha512(byte[] key, byte[] input, int offset, int len) {
@@ -4148,7 +4145,7 @@ public final class Utility {
      * 根据指定算法进行hash
      *
      * @param algorithm 算法名
-     * @param input     待hash数据
+     * @param input 待hash数据
      * @return hash值
      */
     public static byte[] hash(String algorithm, byte[] input) {
@@ -4164,9 +4161,9 @@ public final class Utility {
      * 根据指定算法进行hash
      *
      * @param algorithm 算法名
-     * @param input     待hash数据
-     * @param offset    偏移量
-     * @param length    长度
+     * @param input 待hash数据
+     * @param offset 偏移量
+     * @param length 长度
      * @return hash值
      */
     public static byte[] hash(String algorithm, byte[] input, int offset, int length) {
@@ -4213,9 +4210,9 @@ public final class Utility {
     /**
      * 将字节数组转换为以0x开头的16进制字符串
      *
-     * @param bytes  字节数组
+     * @param bytes 字节数组
      * @param offset 偏移量
-     * @param len    长度
+     * @param len 长度
      * @return 16进制字符串
      */
     public static String binTo0xHexString(byte[] bytes, int offset, int len) {
@@ -4245,9 +4242,9 @@ public final class Utility {
     /**
      * 将字节数组转换为16进制字符串
      *
-     * @param bytes  字节数组
+     * @param bytes 字节数组
      * @param offset 偏移量
-     * @param len    长度
+     * @param len 长度
      * @return 16进制字符串
      */
     public static String binToHexString(byte[] bytes, int offset, int len) {
@@ -4257,9 +4254,9 @@ public final class Utility {
     /**
      * 将字节数组转换为16进制字符数组
      *
-     * @param bytes  字节数组
+     * @param bytes 字节数组
      * @param offset 偏移量
-     * @param len    长度
+     * @param len 长度
      * @return 16进制字符串的字符数组
      */
     public static char[] binToHex(byte[] bytes, int offset, int len) {
@@ -4288,9 +4285,9 @@ public final class Utility {
     /**
      * 将16进制字符串转换成字节数组
      *
-     * @param src    16进制字符串
+     * @param src 16进制字符串
      * @param offset 偏移量
-     * @param len    长度
+     * @param len 长度
      * @return 字节数组
      */
     public static byte[] hexToBin(CharSequence src, int offset, int len) {
@@ -4346,9 +4343,9 @@ public final class Utility {
     /**
      * 将16进制字符数组转换成字节数组
      *
-     * @param src    16进制字符数组
+     * @param src 16进制字符数组
      * @param offset 偏移量
-     * @param len    长度
+     * @param len 长度
      * @return 字节数组
      */
     public static byte[] hexToBin(char[] src, int offset, int len) {
@@ -4425,7 +4422,7 @@ public final class Utility {
                         ^ (bytes[i++] << 12)
                         ^ (bytes[i++] << 6)
                         ^ (bytes[i++]
-                        ^ (((byte) 0xF0 << 18) ^ ((byte) 0x80 << 12) ^ ((byte) 0x80 << 6) ^ ((byte) 0x80))));
+                                ^ (((byte) 0xF0 << 18) ^ ((byte) 0x80 << 12) ^ ((byte) 0x80 << 6) ^ ((byte) 0x80))));
                 text[size++] = Character.highSurrogate(uc);
                 text[size++] = Character.lowSurrogate(uc);
                 // 测试代码 byte[] bs = {(byte)34, (byte)76, (byte)105, (byte)108, (byte)121, (byte)240, (byte)159,
@@ -4636,7 +4633,7 @@ public final class Utility {
      * 将两个数字组装成一个long
      *
      * @param high 高位值
-     * @param low  低位值
+     * @param low 低位值
      * @return long值
      */
     public static long merge(int high, int low) {

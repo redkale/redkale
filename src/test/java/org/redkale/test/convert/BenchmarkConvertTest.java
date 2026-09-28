@@ -11,10 +11,7 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.convert.pb.ProtobufConvert;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @State(Scope.Thread)
 public class BenchmarkConvertTest {
 
@@ -40,18 +37,18 @@ public class BenchmarkConvertTest {
         ProtobufConvert.root().convertTo(SimpleEntity.class, entry);
     }
 
-//    @Test
-//    public void testBenchmark() throws Exception {
-//        Options options = new OptionsBuilder()
-//                .include(BenchmarkConvertTest.class.getSimpleName())
-//                .forks(1)
-//                .threads(1)
-//                .warmupIterations(1)
-//                .measurementIterations(1)
-//                .mode(Mode.Throughput)
-//                .build();
-//        new Runner(options).run();
-//    }
+    //    @Test
+    //    public void testBenchmark() throws Exception {
+    //        Options options = new OptionsBuilder()
+    //                .include(BenchmarkConvertTest.class.getSimpleName())
+    //                .forks(1)
+    //                .threads(1)
+    //                .warmupIterations(1)
+    //                .measurementIterations(1)
+    //                .mode(Mode.Throughput)
+    //                .build();
+    //        new Runner(options).run();
+    //    }
 
     public static void main(String[] args) throws Exception {
         Options options = new OptionsBuilder()

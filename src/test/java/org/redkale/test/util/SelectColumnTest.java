@@ -10,10 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.SelectColumn;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class SelectColumnTest {
 
     public static void main(String[] args) throws Throwable {

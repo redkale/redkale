@@ -11,10 +11,7 @@ import org.redkale.mq.ResourceProducer;
 import org.redkale.service.AbstractService;
 import org.redkale.util.AnyValue;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class TestMessageService extends AbstractService {
 
     @ResourceProducer(mq = "mymq")

@@ -86,5 +86,4 @@ public interface DistributeTableStrategy<T> {
      * @since 2.8.0
      */
     public String[] getTables(String table, FilterNode node);
-
 }

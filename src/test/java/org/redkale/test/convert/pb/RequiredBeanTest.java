@@ -16,10 +16,7 @@ import org.redkale.convert.pb.ProtobufConvert;
 import org.redkale.test.convert.ConvertHelper;
 import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class RequiredBeanTest {
 
     public static void main(String[] args) throws Throwable {

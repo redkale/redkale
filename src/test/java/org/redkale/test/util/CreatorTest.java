@@ -10,10 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.Creator;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class CreatorTest {
 
     public static void main(String[] args) throws Throwable {

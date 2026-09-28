@@ -8,10 +8,7 @@ import java.util.Date;
 import org.redkale.convert.ConvertColumn;
 import org.redkale.convert.json.JsonConvert;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class User {
     @ConvertColumn(index = 3)
     private Long id;

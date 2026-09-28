@@ -10,10 +10,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.function.Supplier;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public abstract class ConvertHelper {
     private ConvertHelper() {
         //

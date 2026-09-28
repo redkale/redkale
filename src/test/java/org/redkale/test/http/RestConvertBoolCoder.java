@@ -9,7 +9,6 @@ import org.redkale.convert.SimpledCoder;
 import org.redkale.convert.Writer;
 
 /**
- *
  * @author zhangjx
  * @param <R> Reader
  * @param <W> Writer

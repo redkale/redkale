@@ -10,10 +10,7 @@ import org.redkale.net.http.RestOnMessage;
 import org.redkale.net.http.RestWebSocket;
 import org.redkale.net.http.WebSocket;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @RestWebSocket(name = "wstest", catalog = "ws", wsmaxconns = 100, comment = "WebSocket服务", repair = false)
 public class GameWebSocket extends WebSocket<Long> {
 

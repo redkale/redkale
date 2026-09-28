@@ -4,6 +4,8 @@
  */
 package org.redkale.util;
 
+import static org.redkale.asm.Opcodes.*;
+
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
@@ -11,7 +13,6 @@ import java.util.concurrent.*;
 import java.util.function.*;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.asm.*;
-import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.bytecode.ByteCodes;
 

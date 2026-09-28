@@ -22,10 +22,7 @@ import org.redkale.net.sncp.Sncp;
 import org.redkale.util.AnyValueWriter;
 import org.redkale.util.RedkaleClassLoader;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class RestConvertTest {
 
     public static void main(String[] args) throws Throwable {

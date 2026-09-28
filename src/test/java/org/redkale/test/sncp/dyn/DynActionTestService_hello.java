@@ -15,10 +15,7 @@ import org.redkale.service.Service;
 import org.redkale.test.util.TestBean;
 import org.redkale.util.Uint128;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class DynActionTestService_hello extends SncpActionServlet {
 
     public DynActionTestService_hello(

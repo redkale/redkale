@@ -9,10 +9,7 @@ import org.redkale.mq.MessageEvent;
 import org.redkale.mq.ResourceConsumer;
 import org.redkale.util.AnyValue;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @ResourceConsumer(mq = "mymq", topics = "test_bean_topic")
 public class TestMessageConsumer implements MessageConsumer<TestBean> {
 

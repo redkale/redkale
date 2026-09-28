@@ -4,10 +4,7 @@
  */
 package org.redkale.test.convert.pb;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public enum UserKind {
     ONE,
     TWO,

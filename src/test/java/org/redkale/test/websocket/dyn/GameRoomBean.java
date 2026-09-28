@@ -6,10 +6,7 @@ package org.redkale.test.websocket.dyn;
 
 import org.redkale.convert.ConvertColumn;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class GameRoomBean {
     @ConvertColumn(index = 1)
     public int roomid;

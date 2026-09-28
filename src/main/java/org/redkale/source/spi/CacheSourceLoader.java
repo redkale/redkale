@@ -18,10 +18,7 @@ import org.redkale.service.Service;
 import org.redkale.source.CacheSource;
 import org.redkale.util.RedkaleException;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @AutoLoad(false)
 class CacheSourceLoader implements ResourceTypeLoader {
 

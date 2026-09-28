@@ -15,7 +15,6 @@ import org.redkale.convert.ConvertColumn;
  *
  * @see org.redkale.source.Flipper
  * @see org.redkale.source.PageBean
- *
  * @author zhangjx
  * @since 2.8.0
  */

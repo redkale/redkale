@@ -7,10 +7,7 @@ package org.redkale.test.util;
 import org.junit.jupiter.api.*;
 import org.redkale.boot.ClassFilter;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class ClassFilterTest {
 
     public static void main(String[] args) throws Throwable {

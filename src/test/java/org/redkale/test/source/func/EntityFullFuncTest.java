@@ -13,10 +13,7 @@ import org.redkale.source.EntityBuilder;
 import org.redkale.source.EntityFullFunc;
 import org.redkale.source.EntityInfo;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class EntityFullFuncTest {
 
     public static void main(String[] args) throws Throwable {

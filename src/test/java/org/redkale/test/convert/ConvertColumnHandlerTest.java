@@ -9,10 +9,7 @@ import org.redkale.convert.ConvertColumnHandler;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.util.ColumnHandler;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class ConvertColumnHandlerTest {
 
     public static void main(String[] args) throws Throwable {

@@ -220,7 +220,6 @@ public abstract class AnyValue {
     /**
      * yaml内容流转换成AnyValue对象
      *
-     *
      * @param text 文本内容
      * @return AnyValue
      */

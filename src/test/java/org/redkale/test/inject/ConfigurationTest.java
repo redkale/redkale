@@ -9,10 +9,7 @@ import org.redkale.annotation.Resource;
 import org.redkale.convert.json.JsonFactory;
 import org.redkale.inject.ResourceFactory;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class ConfigurationTest {
 
     public static void main(String[] args) throws Throwable {

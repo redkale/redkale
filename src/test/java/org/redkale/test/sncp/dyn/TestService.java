@@ -9,10 +9,7 @@ import java.util.concurrent.CompletableFuture;
 import org.redkale.service.Service;
 import org.redkale.test.util.TestBean;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public interface TestService extends Service {
 
     public boolean change(TestBean bean, String name, int id);

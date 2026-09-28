@@ -11,10 +11,7 @@ import org.redkale.annotation.ClassDepends;
 import org.redkale.annotation.Nullable;
 import org.redkale.util.Attribute;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @ClassDepends
 public interface DataResultSetRow {
 
@@ -33,7 +30,7 @@ public interface DataResultSetRow {
      * 根据字段名获取字段值
      *
      * @param columnLabel 字段名
-     * @return  字段值
+     * @return 字段值
      */
     public Object getObject(String columnLabel);
 
@@ -41,7 +38,7 @@ public interface DataResultSetRow {
      * 根据字段序号获取字段值， index从1开始
      *
      * @param <T> 泛型
-     * @param attr  Attribute
+     * @param attr Attribute
      * @param columnIndex 字段序号
      * @param columnLabel 字段名
      * @return 字段值
@@ -63,7 +60,7 @@ public interface DataResultSetRow {
      * 根据字段名获取字段值
      *
      * @param columnLabel 字段名
-     * @return  字段值
+     * @return 字段值
      */
     @ClassDepends
     public String getString(String columnLabel);
@@ -80,7 +77,7 @@ public interface DataResultSetRow {
      * 根据字段名获取字段值
      *
      * @param columnLabel 字段名
-     * @return  字段值
+     * @return 字段值
      */
     @ClassDepends
     public byte[] getBytes(String columnLabel);
@@ -98,7 +95,7 @@ public interface DataResultSetRow {
      * 根据字段名获取字段值
      *
      * @param columnLabel 字段名
-     * @return  字段值
+     * @return 字段值
      */
     @ClassDepends
     public BigDecimal getBigDecimal(String columnLabel);
@@ -116,7 +113,7 @@ public interface DataResultSetRow {
      * 根据字段名获取字段值
      *
      * @param columnLabel 字段名
-     * @return  字段值
+     * @return 字段值
      */
     @ClassDepends
     public Boolean getBoolean(String columnLabel);
@@ -134,7 +131,7 @@ public interface DataResultSetRow {
      * 根据字段名获取字段值
      *
      * @param columnLabel 字段名
-     * @return  字段值
+     * @return 字段值
      */
     @ClassDepends
     public Short getShort(String columnLabel);
@@ -152,7 +149,7 @@ public interface DataResultSetRow {
      * 根据字段名获取字段值
      *
      * @param columnLabel 字段名
-     * @return  字段值
+     * @return 字段值
      */
     @ClassDepends
     public Integer getInteger(String columnLabel);
@@ -170,7 +167,7 @@ public interface DataResultSetRow {
      * 根据字段名获取字段值
      *
      * @param columnLabel 字段名
-     * @return  字段值
+     * @return 字段值
      */
     @ClassDepends
     public Float getFloat(String columnLabel);
@@ -188,7 +185,7 @@ public interface DataResultSetRow {
      * 根据字段名获取字段值
      *
      * @param columnLabel 字段名
-     * @return  字段值
+     * @return 字段值
      */
     @ClassDepends
     public Long getLong(String columnLabel);
@@ -206,7 +203,7 @@ public interface DataResultSetRow {
      * 根据字段名获取字段值
      *
      * @param columnLabel 字段名
-     * @return  字段值
+     * @return 字段值
      */
     @ClassDepends
     public Double getDouble(String columnLabel);
@@ -229,7 +226,7 @@ public interface DataResultSetRow {
      *
      * @param columnLabel 字段名
      * @param defValue 默认值
-     * @return  字段值
+     * @return 字段值
      */
     @ClassDepends
     default boolean getBoolean(String columnLabel, boolean defValue) {
@@ -254,7 +251,7 @@ public interface DataResultSetRow {
      *
      * @param columnLabel 字段名
      * @param defValue 默认值
-     * @return  字段值
+     * @return 字段值
      */
     @ClassDepends
     default short getShort(String columnLabel, short defValue) {
@@ -279,7 +276,7 @@ public interface DataResultSetRow {
      *
      * @param columnLabel 字段名
      * @param defValue 默认值
-     * @return  字段值
+     * @return 字段值
      */
     @ClassDepends
     default int getInteger(String columnLabel, int defValue) {
@@ -304,7 +301,7 @@ public interface DataResultSetRow {
      *
      * @param columnLabel 字段名
      * @param defValue 默认值
-     * @return  字段值
+     * @return 字段值
      */
     @ClassDepends
     default float getFloat(String columnLabel, float defValue) {
@@ -329,7 +326,7 @@ public interface DataResultSetRow {
      *
      * @param columnLabel 字段名
      * @param defValue 默认值
-     * @return  字段值
+     * @return 字段值
      */
     @ClassDepends
     default long getLong(String columnLabel, long defValue) {
@@ -354,7 +351,7 @@ public interface DataResultSetRow {
      *
      * @param columnLabel 字段名
      * @param defValue 默认值
-     * @return  字段值
+     * @return 字段值
      */
     @ClassDepends
     default double getDouble(String columnLabel, double defValue) {

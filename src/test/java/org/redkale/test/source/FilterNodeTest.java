@@ -5,6 +5,8 @@
  */
 package org.redkale.test.source;
 
+import static org.redkale.source.FilterExpress.*;
+
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -16,7 +18,6 @@ import org.redkale.persistence.Entity;
 import org.redkale.persistence.Id;
 import org.redkale.persistence.Transient;
 import org.redkale.source.*;
-import static org.redkale.source.FilterExpress.*;
 
 /** @author zhangjx */
 public class FilterNodeTest {

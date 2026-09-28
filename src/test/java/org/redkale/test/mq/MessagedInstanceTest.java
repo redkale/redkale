@@ -15,8 +15,8 @@ import org.redkale.boot.LoggingBaseHandler;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.mq.spi.MessageAgent;
-import org.redkale.mq.spi.MessageCodeMethodBoost;
 import org.redkale.mq.spi.MessageClientProducer;
+import org.redkale.mq.spi.MessageCodeMethodBoost;
 import org.redkale.mq.spi.MessageModuleEngine;
 import org.redkale.net.AsyncGroup;
 import org.redkale.net.client.ClientAddress;
@@ -27,10 +27,7 @@ import org.redkale.util.AnyValue;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class MessagedInstanceTest {
 
     private static Application application;

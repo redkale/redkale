@@ -10,10 +10,7 @@ import org.redkale.net.http.Rest;
 import org.redkale.net.http.WebSocketServlet;
 import org.redkale.util.RedkaleClassLoader;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class WebSocketTest {
     public static void main(String[] args) throws Throwable {
         WebSocketTest test = new WebSocketTest();

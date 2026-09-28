@@ -9,10 +9,7 @@ import java.util.concurrent.CompletableFuture;
 import org.redkale.annotation.ResourceType;
 import org.redkale.test.util.TestBean;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @ResourceType(TestService.class)
 public class TestServiceImpl implements TestService {
 

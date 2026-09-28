@@ -12,10 +12,7 @@ import org.redkale.net.http.HttpContext;
 import org.redkale.net.http.HttpRequest;
 import org.redkale.net.http.HttpServlet;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class HttpRequestTest {
 
     private static final String REQ_TEXT =

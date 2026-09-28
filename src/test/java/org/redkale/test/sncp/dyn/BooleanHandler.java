@@ -7,10 +7,7 @@ package org.redkale.test.sncp.dyn;
 import java.nio.channels.CompletionHandler;
 import org.redkale.test.util.TestBean;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class BooleanHandler implements CompletionHandler<Boolean, TestBean> {
 
     @Override

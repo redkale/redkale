@@ -22,10 +22,7 @@ import org.redkale.convert.pb.ProtobufConvert;
 import org.redkale.util.TypeToken;
 import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class GenericEntityTest {
     private static final Type ENTITY_TYPE = new TypeToken<GenericEntity<Long, String, SimpleEntity>>() {}.getType();
     private static final String JSON =

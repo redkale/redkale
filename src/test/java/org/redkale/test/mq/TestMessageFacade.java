@@ -9,10 +9,7 @@ import org.redkale.mq.MessageEvent;
 import org.redkale.mq.Messaged;
 import org.redkale.service.AbstractService;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @Component
 public class TestMessageFacade extends AbstractService {
 

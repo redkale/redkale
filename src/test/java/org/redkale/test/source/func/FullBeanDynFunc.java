@@ -12,10 +12,7 @@ import org.redkale.source.EntityFullFunc;
 import org.redkale.util.Attribute;
 import org.redkale.util.Creator;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class FullBeanDynFunc extends EntityFullFunc<FullBean> {
 
     public FullBeanDynFunc(Class<FullBean> type, Creator<FullBean> creator, Attribute<FullBean, Serializable>[] attrs) {

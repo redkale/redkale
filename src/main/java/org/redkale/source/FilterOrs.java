@@ -4,16 +4,17 @@
 
 package org.redkale.source;
 
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Target;
 
 /**
  * 设置 {@link org.redkale.source.FilterGroup}的<b>OR</b>关系
  *
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @see org.redkale.source.FilterBean
  * @see org.redkale.source.FilterNode

@@ -12,10 +12,7 @@ import org.redkale.convert.Encodeable;
 import org.redkale.convert.pb.ProtobufDynEncoder;
 import org.redkale.convert.pb.ProtobufFactory;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class UserDynTest {
 
     public static void main(String[] args) throws Throwable {
@@ -37,6 +34,6 @@ public class UserDynTest {
     public void run2() throws Exception {
         ProtobufFactory factory = ProtobufFactory.root();
         Encodeable encoder = factory.loadEncoder(UserBean.class);
-        //Assertions.assertTrue(ProtobufDynEncoder.class.isAssignableFrom(encoder.getClass()));
+        // Assertions.assertTrue(ProtobufDynEncoder.class.isAssignableFrom(encoder.getClass()));
     }
 }

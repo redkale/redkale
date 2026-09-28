@@ -16,10 +16,7 @@ import org.redkale.util.AnyValue;
 import org.redkale.util.AnyValueWriter;
 import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class UserTest {
 
     public static void main(String[] args) throws Throwable {

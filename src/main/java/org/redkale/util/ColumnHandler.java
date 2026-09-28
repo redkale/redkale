@@ -20,6 +20,7 @@ public interface ColumnHandler<F, V> extends BiFunction<String, F, V> {
 
     /**
      * 字段值转换
+     *
      * @param field 字段名
      * @param value 字段值
      * @return 新的字段值

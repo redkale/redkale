@@ -6,10 +6,7 @@ package org.redkale.test.http;
 
 import org.redkale.convert.json.JsonConvert;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class RestConvertBean {
 
     private int id;

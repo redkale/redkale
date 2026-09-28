@@ -6,10 +6,7 @@ package org.redkale.test.mq;
 
 import org.redkale.convert.json.JsonConvert;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class TestBean {
 
     private int userid;

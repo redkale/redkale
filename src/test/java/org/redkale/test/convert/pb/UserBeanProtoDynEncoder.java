@@ -12,10 +12,7 @@ import org.redkale.convert.pb.ProtobufFactory;
 import org.redkale.convert.pb.ProtobufObjectEncoder;
 import org.redkale.convert.pb.ProtobufWriter;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class UserBeanProtoDynEncoder extends ProtobufDynEncoder<UserBean> {
     protected SimpledCoder numberSimpledCoder;
     protected SimpledCoder scaleSimpledCoder;

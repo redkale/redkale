@@ -12,10 +12,7 @@ import org.redkale.convert.pb.ProtobufObjectEncoder;
 import org.redkale.convert.pb.ProtobufWriter;
 import org.redkale.test.convert.pb.PBCustMessage2Test.StringRetResultMessage;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class StrRetResultMsgDynEncoder extends ProtobufDynEncoder<StringRetResultMessage> {
 
     public StrRetResultMsgDynEncoder(ProtobufFactory factory, Type type, ProtobufObjectEncoder objectEncoder) {
