@@ -68,14 +68,4 @@ public @interface FilterColumn {
      * @return String
      */
     String example() default "";
-
-    /**
-     * 备注描述
-     *
-     * @see org.redkale.annotation.Comment
-     * @return 备注描述
-     * @deprecated
-     */
-    @Deprecated(since = "2.8.0")
-    String comment() default "";
 }

@@ -65,28 +65,6 @@ public class FilterJoinNode extends FilterNode {
         this.nodes = node.nodes;
     }
 
-    @Deprecated(since = "2.8.0")
-    public static FilterJoinNode create(Class joinClass, String joinColumn, String column, Serializable value) {
-        return FilterNodes.joinInner(joinClass, new String[] {joinColumn}, column, value);
-    }
-
-    @Deprecated(since = "2.8.0")
-    public static FilterJoinNode create(
-            Class joinClass, String joinColumn, String column, FilterExpress express, Serializable value) {
-        return FilterNodes.joinInner(joinClass, new String[] {joinColumn}, column, express, value);
-    }
-
-    @Deprecated(since = "2.8.0")
-    public static FilterJoinNode create(Class joinClass, String[] joinColumns, String column, Serializable value) {
-        return FilterNodes.joinInner(joinClass, joinColumns, column, null, value);
-    }
-
-    @Deprecated(since = "2.8.0")
-    public static FilterJoinNode create(
-            Class joinClass, String[] joinColumns, String column, FilterExpress express, Serializable value) {
-        return FilterNodes.joinInner(joinClass, joinColumns, column, express, value);
-    }
-
     @Override
     public FilterJoinNode copy() {
         FilterJoinNode node = (FilterJoinNode) copy(new FilterJoinNode());

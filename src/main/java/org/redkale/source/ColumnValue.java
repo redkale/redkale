@@ -77,18 +77,6 @@ public class ColumnValue implements Comparable<ColumnValue> {
     }
 
     /**
-     * @see #set(java.lang.String, java.io.Serializable)
-     * @param column 字段名
-     * @param value 字段值
-     * @return ColumnValue
-     * @deprecated
-     */
-    @Deprecated(since = "2.8.0")
-    public static ColumnValue mov(String column, Serializable value) {
-        return set(column, value);
-    }
-
-    /**
      * 返回 {column} = {value} 操作
      *
      * @param column 字段名

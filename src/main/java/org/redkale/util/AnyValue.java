@@ -318,7 +318,7 @@ public abstract class AnyValue {
         AnyValueWriter conf = new AnyValueWriter();
         final char splitChar = (char) 2;
         Map<String, AnyValueWriter> prefixArray = new TreeMap<>(); // 已处理的数组key，如:redkale.source[0].xx存redkale.source[0]
-        properties.forEach((key, value) -> {
+        properties.forEach((key, val) -> {
             StringBuilder temp = new StringBuilder();
             boolean flag = false;
             for (char ch : key.toString().toCharArray()) { // 替换redkale.properties[my.name]中括号里的'.'
@@ -417,7 +417,7 @@ public abstract class AnyValue {
             String lastItem = keys[keys.length - 1];
             int pos = lastItem.indexOf('[');
             if (pos < 0) {
-                parent.addValue(lastItem, value.toString());
+                parent.addValue(lastItem, val.toString());
             } else {
                 String itemField = lastItem.substring(0, pos); // [前面一部分
                 String itemIndex = lastItem.substring(pos + 1, lastItem.indexOf(']'));
@@ -460,7 +460,7 @@ public abstract class AnyValue {
                         child = new AnyValueWriter();
                         parent.addValue(itemField, child);
                     }
-                    child.addValue(itemIndex, value.toString());
+                    child.addValue(itemIndex, val.toString());
                 }
             }
         });

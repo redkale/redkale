@@ -2843,21 +2843,6 @@ public class DataJdbcSource extends AbstractDataSqlSource {
         return supplyAsync(() -> nativeQuerySheet(type, sql, round, params));
     }
 
-    @Deprecated
-    public int directExecute(String sql) {
-        return nativeUpdate(sql);
-    }
-
-    @Deprecated
-    public int[] directExecute(String... sqls) {
-        return nativeUpdates(sqls);
-    }
-
-    @Deprecated
-    public <V> V directQuery(String sql, Function<DataResultSet, V> handler) {
-        return nativeQuery(sql, handler);
-    }
-
     public static DataResultSet createDataResultSet(@Nullable EntityInfo info, ResultSet set) {
         return new DataJdbcResultSet(info).resultSet(set);
     }

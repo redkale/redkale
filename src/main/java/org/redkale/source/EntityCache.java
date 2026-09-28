@@ -96,12 +96,6 @@ public final class EntityCache<T> {
         if (!direct) {
             direct = ve != null && ve.direct();
         }
-        { // 兼容废弃类
-            org.redkale.source.VirtualEntity ve2 = info.getType().getAnnotation(org.redkale.source.VirtualEntity.class);
-            if (!direct && ve2 != null) {
-                direct = ve2.direct();
-            }
-        }
         this.needCopy = !direct;
         this.newCopier = Copier.create(type, type, (e, c) -> {
             try {

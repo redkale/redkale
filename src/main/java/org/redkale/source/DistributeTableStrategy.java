@@ -87,19 +87,4 @@ public interface DistributeTableStrategy<T> {
      */
     public String[] getTables(String table, FilterNode node);
 
-    /**
-     * 获取对象的表名 <br>
-     * 查询、修改、删除对象（DataSource.find、DataSource.query、DataSource.delete、DataSource.update）时调用本方法获取表名 <br>
-     * 注意： 需保证FilterNode过滤的结果集合必须在一个数据库表中 <br>
-     *
-     * @deprecated 2.8.0 replaced by getTables(String table, FilterNode node)
-     * @see #getTables(java.lang.String, org.redkale.source.FilterNode)
-     * @param table 模板表的表名
-     * @param node 过滤条件
-     * @return 带库名的全表名
-     */
-    @Deprecated(since = "2.8.0")
-    default String getTable(String table, FilterNode node) {
-        return getTables(table, node)[0];
-    }
 }

@@ -121,48 +121,6 @@ public class FilterNode { // FilterNode 不能实现Serializable接口， 否则
     }
 
     // ----------------------------------------------------------------------------------------------------
-    @Deprecated(since = "2.8.0")
-    public static FilterNode create(String column, Serializable value) {
-        return FilterNodes.create(column, null, value);
-    }
-
-    @Deprecated(since = "2.8.0")
-    public static FilterNode create(String column, FilterExpress express, Serializable value) {
-        return FilterNodes.create(column, express, value);
-    }
-
-    @Deprecated(since = "2.8.0")
-    public static <F extends Serializable> FilterNode create(LambdaSupplier<F> func) {
-        return FilterNodes.create(func);
-    }
-
-    @Deprecated(since = "2.8.0")
-    public static <F extends Serializable> FilterNode create(LambdaSupplier<F> func, FilterExpress express) {
-        return FilterNodes.create(func, express);
-    }
-
-    @Deprecated(since = "2.8.0")
-    public static <T, F extends Serializable> FilterNode create(LambdaFunction<T, F> func, F value) {
-        return FilterNodes.create(func, value);
-    }
-
-    @Deprecated(since = "2.8.0")
-    public static <T, F extends Serializable> FilterNode create(
-            LambdaFunction<T, F> func, FilterExpress express, F value) {
-        return FilterNodes.create(func, express, value);
-    }
-
-    @Deprecated(since = "2.8.0")
-    public static FilterNode filter(String column, Serializable value) {
-        return FilterNodes.create(column, null, value);
-    }
-
-    @Deprecated(since = "2.8.0")
-    public static FilterNode filter(String column, FilterExpress express, Serializable value) {
-        return FilterNodes.create(column, express, value);
-    }
-
-    // ----------------------------------------------------------------------------------------------------
     public FilterNode copy() {
         return copy(new FilterNode());
     }

@@ -266,19 +266,6 @@ class AppConfig {
                     } catch (IOException e) {
                         throw new RedkaleException(e);
                     }
-                } else {
-                    // 兼容 persistence.xml 【已废弃】
-                    File persist = new File(new File(confDir), "persistence.xml");
-                    if (persist.isFile() && persist.canRead()) {
-                        System.err.println("persistence.xml is deprecated, replaced by source.properties");
-                        try {
-                            InputStream in = new FileInputStream(persist);
-                            this.localEnvProperties.putAll(DataSources.loadSourceProperties(in));
-                            in.close();
-                        } catch (IOException e) {
-                            throw new RedkaleException(e);
-                        }
-                    }
                 }
             }
         } else { // 从url或jar文件中resources读取

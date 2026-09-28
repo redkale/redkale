@@ -307,7 +307,6 @@ public final class EntityInfo<T> {
             table0 = tableCcatalog0 + '.' + table0;
         }
         if (type.getAnnotation(org.redkale.persistence.VirtualEntity.class) != null
-                || type.getAnnotation(org.redkale.source.VirtualEntity.class) != null
                 || (source == null || "memory".equalsIgnoreCase(source.getType()))) {
             this.table = source == null && type.getAnnotation(org.redkale.persistence.VirtualEntity.class) == null
                     ? table0
@@ -321,12 +320,6 @@ public final class EntityInfo<T> {
                     loader = ve.loader().getDeclaredConstructor().newInstance();
                     RedkaleClassLoader.putReflectionDeclaredConstructors(
                             ve.loader(), ve.loader().getName());
-                }
-                org.redkale.source.VirtualEntity ve2 = type.getAnnotation(org.redkale.source.VirtualEntity.class);
-                if (ve2 != null) {
-                    loader = ve2.loader().getDeclaredConstructor().newInstance();
-                    RedkaleClassLoader.putReflectionDeclaredConstructors(
-                            ve2.loader(), ve2.loader().getName());
                 }
             } catch (Exception e) {
                 logger.log(Level.SEVERE, type + " init @VirtualEntity.loader error", e);
