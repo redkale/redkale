@@ -5,9 +5,10 @@
  */
 package org.redkale.net.http;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 
 /**
  * 依附在RestService类的方法的参数上, 用于接收上传文件 <br>

@@ -11,9 +11,7 @@ import org.redkale.util.MultiHashKey;
  * 缓存key生成器
  *
  * @see org.redkale.cached.Cached#key()
- *
- * <p>详情见: https://redkale.org
- *
+ *     <p>详情见: https://redkale.org
  * @author zhangjx
  * @since 2.8.0
  */
@@ -33,13 +31,13 @@ public interface CachedKeyGenerator {
      * 生成器的名字
      *
      * @see org.redkale.cached.Cached#key()
-     *
-     * @return  key
+     * @return key
      */
     public String key();
 
     /**
      * 根据MultiHashKey生成一个CachedKeyGenerator
+     *
      * @param key {@link org.redkale.util.MultiHashKey} 不能为空
      * @return CachedKeyGenerator
      */

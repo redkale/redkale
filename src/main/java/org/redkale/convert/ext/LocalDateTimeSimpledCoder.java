@@ -74,5 +74,4 @@ public class LocalDateTimeSimpledCoder<R extends Reader, W extends Writer> exten
         int v2 = ((bs[8] & 0xff) << 24) | ((bs[9] & 0xff) << 16) | ((bs[10] & 0xff) << 8) | (bs[11] & 0xff);
         return LocalDateTime.ofEpochSecond(v1, v2, ZoneOffset.UTC);
     }
-
 }

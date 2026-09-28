@@ -9,7 +9,6 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.locks.*;
 import org.redkale.annotation.Nullable;
-import org.redkale.convert.ext.StringSimpledCoder;
 import org.redkale.util.*;
 
 /**
@@ -207,7 +206,8 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                                 maybeField.getAnnotationsByType(ConvertCoder.class),
                                 false);
                     }
-                    Decodeable<R, ?> fieldCoder = colFactory.findFieldCoder(clazz, ConvertFactory.readGetSetFieldName(method));
+                    Decodeable<R, ?> fieldCoder =
+                            colFactory.findFieldCoder(clazz, ConvertFactory.readGetSetFieldName(method));
                     if (fieldCoder == null) {
                         Type t = TypeToken.createClassType(
                                 TypeToken.getGenericType(method.getGenericParameterTypes()[0], this.type), this.type);

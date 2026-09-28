@@ -18,7 +18,6 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * @author zhangjx
  * @since 2.8.0
- *
  */
 public class CachedAsyncLock {
 

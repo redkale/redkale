@@ -5,6 +5,8 @@
  */
 package org.redkale.net.sncp;
 
+import static org.redkale.net.client.ClientRequest.EMPTY_TRACEID;
+
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -14,7 +16,6 @@ import java.util.logging.Level;
 import org.redkale.convert.*;
 import org.redkale.convert.pb.ProtobufReader;
 import org.redkale.net.Request;
-import static org.redkale.net.client.ClientRequest.EMPTY_TRACEID;
 import org.redkale.util.*;
 
 /**

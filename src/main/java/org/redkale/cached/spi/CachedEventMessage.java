@@ -14,7 +14,6 @@ import org.redkale.convert.json.JsonConvert;
  *
  * @author zhangjx
  * @since 2.8.0
- *
  */
 public class CachedEventMessage implements Serializable {
 

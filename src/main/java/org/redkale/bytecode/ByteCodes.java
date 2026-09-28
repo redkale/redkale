@@ -3,10 +3,6 @@
  */
 package org.redkale.bytecode;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.Set;
 import static org.redkale.asm.Opcodes.BIPUSH;
 import static org.redkale.asm.Opcodes.CHECKCAST;
 import static org.redkale.asm.Opcodes.GETSTATIC;
@@ -15,6 +11,10 @@ import static org.redkale.asm.Opcodes.INVOKESTATIC;
 import static org.redkale.asm.Opcodes.INVOKEVIRTUAL;
 import static org.redkale.asm.Opcodes.SIPUSH;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.Set;
 import org.redkale.asm.*;
 import org.redkale.util.RedkaleException;
 

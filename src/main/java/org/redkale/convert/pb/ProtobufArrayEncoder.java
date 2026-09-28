@@ -11,6 +11,7 @@ import org.redkale.convert.*;
 
 /**
  * 非基本类型数组序列化。 注意: 基础类型不能使用此类
+ *
  * @author zhangjx
  * @param <T> T
  */

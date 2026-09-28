@@ -5,9 +5,10 @@
  */
 package org.redkale.convert;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.*;
+
+import java.lang.annotation.*;
 
 /**
  * 依附在setter、getter方法、字段进行简单的配置

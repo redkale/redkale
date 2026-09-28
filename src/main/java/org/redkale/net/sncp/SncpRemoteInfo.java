@@ -3,6 +3,9 @@
  */
 package org.redkale.net.sncp;
 
+import static org.redkale.net.sncp.Sncp.loadRemoteMethodActions;
+import static org.redkale.net.sncp.SncpHeader.HEADER_SUBSIZE;
+
 import java.lang.reflect.*;
 import java.net.*;
 import java.nio.ByteBuffer;
@@ -17,8 +20,6 @@ import org.redkale.convert.pb.ProtobufWriter;
 import org.redkale.mq.spi.MessageAgent;
 import org.redkale.mq.spi.MessageClient;
 import org.redkale.mq.spi.MessageRecord;
-import static org.redkale.net.sncp.Sncp.loadRemoteMethodActions;
-import static org.redkale.net.sncp.SncpHeader.HEADER_SUBSIZE;
 import org.redkale.service.*;
 import org.redkale.util.*;
 
@@ -131,9 +132,7 @@ public class SncpRemoteInfo<S extends Service> {
                     if (t == null) {
                         // v,length-1为了读掉(byte)0
                         handler.completed(
-                                v == null
-                                        ? null
-                                        : convert.convertFrom(action.paramHandlerType, v, 1, v.length - 1),
+                                v == null ? null : convert.convertFrom(action.paramHandlerType, v, 1, v.length - 1),
                                 attach);
                     } else {
                         handler.failed(t, attach);
@@ -151,9 +150,7 @@ public class SncpRemoteInfo<S extends Service> {
                     if (t == null) {
                         // v,length-1为了读掉(byte)0
                         returnFuture.complete(
-                                v == null
-                                        ? null
-                                        : convert.convertFrom(action.returnFutureType, v, 1, v.length - 1));
+                                v == null ? null : convert.convertFrom(action.returnFutureType, v, 1, v.length - 1));
                     } else {
                         returnFuture.completeExceptionally(t);
                     }

@@ -5,6 +5,9 @@
  */
 package org.redkale.net.sncp;
 
+import static org.redkale.net.sncp.SncpHeader.KEEPALIVE_OFF;
+import static org.redkale.net.sncp.SncpHeader.KEEPALIVE_ON;
+
 import java.lang.reflect.Type;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.*;
@@ -12,8 +15,6 @@ import org.redkale.annotation.ClassDepends;
 import org.redkale.convert.pb.ProtobufBytesWriter;
 import org.redkale.convert.pb.ProtobufWriter;
 import org.redkale.net.Response;
-import static org.redkale.net.sncp.SncpHeader.KEEPALIVE_OFF;
-import static org.redkale.net.sncp.SncpHeader.KEEPALIVE_ON;
 import org.redkale.util.ByteArray;
 import org.redkale.util.Traces;
 
@@ -79,8 +80,7 @@ public class SncpResponse extends Response<SncpContext, SncpRequest> {
         }
     }
 
-    public SncpResponse paramAsyncHandler(
-            Class<? extends CompletionHandler> paramHandlerClass, Type paramHandlerType) {
+    public SncpResponse paramAsyncHandler(Class<? extends CompletionHandler> paramHandlerClass, Type paramHandlerType) {
         this.paramHandlerType = paramHandlerType;
         this.paramAsyncHandler = paramHandlerClass == CompletionHandler.class
                 ? realHandler

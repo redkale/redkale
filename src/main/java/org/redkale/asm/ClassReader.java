@@ -180,9 +180,9 @@ public class ClassReader {
                 case ClassWriter.FLOAT:
                 case ClassWriter.NAME_TYPE:
                 case ClassWriter.INDY:
-                    // @@@ ClassWriter.CONDY
-                    // Enables MethodHandles.lookup().defineClass to function correctly
-                    // when it reads the class name
+                // @@@ ClassWriter.CONDY
+                // Enables MethodHandles.lookup().defineClass to function correctly
+                // when it reads the class name
                 case 17:
                     size = 5;
                     break;
@@ -200,11 +200,11 @@ public class ClassReader {
                 case ClassWriter.HANDLE:
                     size = 4;
                     break;
-                    // case ClassWriter.CLASS:
-                    // case ClassWriter.STR:
-                    // case ClassWriter.MTYPE
-                    // case ClassWriter.PACKAGE:
-                    // case ClassWriter.MODULE:
+                // case ClassWriter.CLASS:
+                // case ClassWriter.STR:
+                // case ClassWriter.MTYPE
+                // case ClassWriter.PACKAGE:
+                // case ClassWriter.MODULE:
                 default:
                     size = 3;
                     break;
@@ -333,11 +333,11 @@ public class ClassReader {
                     nameType = items[readUnsignedShort(index + 2)];
                     item.set(readUTF8(nameType, buf), readUTF8(nameType + 2, buf), readUnsignedShort(index));
                     break;
-                    // case ClassWriter.STR:
-                    // case ClassWriter.CLASS:
-                    // case ClassWriter.MTYPE:
-                    // case ClassWriter.MODULE:
-                    // case ClassWriter.PACKAGE:
+                // case ClassWriter.STR:
+                // case ClassWriter.CLASS:
+                // case ClassWriter.MTYPE:
+                // case ClassWriter.MODULE:
+                // case ClassWriter.PACKAGE:
                 default:
                     item.set(tag, readUTF8(index, buf), null, null);
                     break;
@@ -1169,7 +1169,7 @@ public class ClassReader {
                 case ClassWriter.INDYMETH_INSN:
                     u += 5;
                     break;
-                    // case MANA_INSN:
+                // case MANA_INSN:
                 default:
                     u += 4;
                     break;
@@ -1568,7 +1568,7 @@ public class ClassReader {
                     mv.visitIincInsn(b[u + 1] & 0xFF, b[u + 2]);
                     u += 3;
                     break;
-                    // case MANA_INSN:
+                // case MANA_INSN:
                 default:
                     mv.visitMultiANewArrayInsn(readClass(u + 1, c), b[u + 3] & 0xFF);
                     u += 4;
@@ -1742,15 +1742,15 @@ public class ClassReader {
                 case 0x4B: // METHOD_REFERENCE_TYPE_ARGUMENT
                     u += 4;
                     break;
-                    // case 0x10: // CLASS_EXTENDS
-                    // case 0x11: // CLASS_TYPE_PARAMETER_BOUND
-                    // case 0x12: // METHOD_TYPE_PARAMETER_BOUND
-                    // case 0x17: // THROWS
-                    // case 0x42: // EXCEPTION_PARAMETER
-                    // case 0x43: // INSTANCEOF
-                    // case 0x44: // NEW
-                    // case 0x45: // CONSTRUCTOR_REFERENCE
-                    // case 0x46: // METHOD_REFERENCE
+                // case 0x10: // CLASS_EXTENDS
+                // case 0x11: // CLASS_TYPE_PARAMETER_BOUND
+                // case 0x12: // METHOD_TYPE_PARAMETER_BOUND
+                // case 0x17: // THROWS
+                // case 0x42: // EXCEPTION_PARAMETER
+                // case 0x43: // INSTANCEOF
+                // case 0x44: // NEW
+                // case 0x45: // CONSTRUCTOR_REFERENCE
+                // case 0x46: // METHOD_REFERENCE
                 default:
                     u += 3;
                     break;
@@ -1819,15 +1819,15 @@ public class ClassReader {
                 target &= 0xFF0000FF;
                 u += 4;
                 break;
-                // case 0x10: // CLASS_EXTENDS
-                // case 0x11: // CLASS_TYPE_PARAMETER_BOUND
-                // case 0x12: // METHOD_TYPE_PARAMETER_BOUND
-                // case 0x17: // THROWS
-                // case 0x42: // EXCEPTION_PARAMETER
-                // case 0x43: // INSTANCEOF
-                // case 0x44: // NEW
-                // case 0x45: // CONSTRUCTOR_REFERENCE
-                // case 0x46: // METHOD_REFERENCE
+            // case 0x10: // CLASS_EXTENDS
+            // case 0x11: // CLASS_TYPE_PARAMETER_BOUND
+            // case 0x12: // METHOD_TYPE_PARAMETER_BOUND
+            // case 0x17: // THROWS
+            // case 0x42: // EXCEPTION_PARAMETER
+            // case 0x43: // INSTANCEOF
+            // case 0x44: // NEW
+            // case 0x45: // CONSTRUCTOR_REFERENCE
+            // case 0x46: // METHOD_REFERENCE
             default:
                 target &= (target >>> 24) < 0x43 ? 0xFFFFFF00 : 0xFF000000;
                 u += 3;

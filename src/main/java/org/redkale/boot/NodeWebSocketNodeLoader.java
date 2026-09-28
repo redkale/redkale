@@ -4,6 +4,8 @@
 
 package org.redkale.boot;
 
+import static org.redkale.boot.Application.RESNAME_SNCP_ADDRESS;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.net.InetSocketAddress;
@@ -13,7 +15,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.bytecode.CodeMethodBoost;
-import static org.redkale.boot.Application.RESNAME_SNCP_ADDRESS;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
 import org.redkale.mq.spi.MessageAgent;
@@ -26,10 +27,7 @@ import org.redkale.util.AnyValue;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @AutoLoad(false)
 class NodeWebSocketNodeLoader implements ResourceTypeLoader {
 

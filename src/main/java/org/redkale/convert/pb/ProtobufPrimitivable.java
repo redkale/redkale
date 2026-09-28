@@ -9,6 +9,7 @@ import org.redkale.convert.Encodeable;
 
 /**
  * 只能用于基本类型， 不能用于如String的其他类型
+ *
  * @author zhangjx
  * @param <T> 基本类型泛型
  */

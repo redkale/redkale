@@ -4,6 +4,9 @@
  */
 package org.redkale.net.sncp;
 
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
+
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -14,10 +17,8 @@ import java.util.concurrent.Future;
 import org.redkale.annotation.ClassDepends;
 import org.redkale.annotation.NonBlocking;
 import org.redkale.asm.ClassWriter;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.Label;
 import org.redkale.asm.MethodDebugVisitor;
-import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.convert.Convert;
 import org.redkale.convert.Reader;

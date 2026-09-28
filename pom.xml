@@ -22,7 +22,7 @@
         <maven-surefire-plugin.version>3.6.0</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>3.6.0</maven-failsafe-plugin.version>
         <spotless-maven-plugin.version>3.10.3</spotless-maven-plugin.version>
-        <palantir-java-format.version>2.99.0</palantir-java-format.version>
+        <palantir-java-format.version>2.100.0</palantir-java-format.version>
 
     </properties>
 
@@ -145,25 +145,21 @@
                 <artifactId>spotless-maven-plugin</artifactId>
                 <version>${spotless-maven-plugin.version}</version>
                 <configuration>
-                    <lineEndings>UNIX</lineEndings>
-                    <formats>
-                        <format>
-                            <includes>
-                                <include>src/**/java/**/*.java</include>
-                            </includes>
-                            <trimTrailingWhitespace/>
-                            <endWithNewline/>
-                            <indent>
-                                <spaces>true</spaces>
-                                <spacesPerTab>4</spacesPerTab>
-                            </indent>
-                        </format>
-                    </formats>
                     <java>
+                        <lineEndings>UNIX</lineEndings>
+                        <includes>
+                            <include>src/**/java/**/*.java</include>
+                        </includes>
+                        <trimTrailingWhitespace/>
+                        <endWithNewline/>
+                        <indent>
+                            <spaces>true</spaces>
+                            <spacesPerTab>4</spacesPerTab>
+                        </indent>
                         <palantirJavaFormat>
-                            <version>${palantir-java-format.version}</version>        
-                            <style>PALANTIR</style>            
-                            <formatJavadoc>true</formatJavadoc> 
+                            <version>${palantir-java-format.version}</version>
+                            <style>PALANTIR</style>
+                            <formatJavadoc>true</formatJavadoc>
                         </palantirJavaFormat>
                     </java>
                 </configuration>

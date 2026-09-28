@@ -5,6 +5,9 @@
  */
 package org.redkale.net;
 
+import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
+import static javax.net.ssl.SSLEngineResult.Status.*;
+
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
@@ -15,8 +18,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.*;
 import javax.net.ssl.*;
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;
-import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
-import static javax.net.ssl.SSLEngineResult.Status.*;
 import org.redkale.util.*;
 
 /**
@@ -234,7 +235,8 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
     /**
      * src写完才会回调
      *
-     * @see org.redkale.net.AsyncNioConnection#writeImpl(java.nio.ByteBuffer, java.lang.Object, java.nio.channels.CompletionHandler)
+     * @see org.redkale.net.AsyncNioConnection#writeImpl(java.nio.ByteBuffer, java.lang.Object,
+     *     java.nio.channels.CompletionHandler)
      * @param <A> A
      * @param src ByteBuffer
      * @param attachment A
@@ -243,15 +245,16 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
     protected abstract <A> void writeImpl(ByteBuffer src, A attachment, CompletionHandler<Integer, ? super A> handler);
 
     /**
-     *  srcs写完才会回调
+     * srcs写完才会回调
      *
-     * @see org.redkale.net.AsyncNioConnection#writeImpl(java.nio.ByteBuffer[], int, int, java.lang.Object, java.nio.channels.CompletionHandler)
+     * @see org.redkale.net.AsyncNioConnection#writeImpl(java.nio.ByteBuffer[], int, int, java.lang.Object,
+     *     java.nio.channels.CompletionHandler)
      * @param <A> A
      * @param srcs ByteBuffer[]
      * @param offset offset
      * @param length length
      * @param attachment A
-     * @param handler  CompletionHandler
+     * @param handler CompletionHandler
      */
     protected abstract <A> void writeImpl(
             ByteBuffer[] srcs, int offset, int length, A attachment, CompletionHandler<Integer, ? super A> handler);
@@ -259,7 +262,8 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
     /**
      * src写完才会回调
      *
-     * @see org.redkale.net.AsyncNioConnection#writeImpl(java.nio.ByteBuffer, java.util.function.Consumer, java.lang.Object, java.nio.channels.CompletionHandler)
+     * @see org.redkale.net.AsyncNioConnection#writeImpl(java.nio.ByteBuffer, java.util.function.Consumer,
+     *     java.lang.Object, java.nio.channels.CompletionHandler)
      * @param <A> A
      * @param src ByteBuffer
      * @param consumer Consumer
@@ -270,16 +274,17 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
             ByteBuffer src, Consumer<ByteBuffer> consumer, A attachment, CompletionHandler<Integer, ? super A> handler);
 
     /**
-     *  srcs写完才会回调
+     * srcs写完才会回调
      *
-     * @see org.redkale.net.AsyncNioConnection#writeImpl(java.nio.ByteBuffer[], int, int, java.util.function.Consumer, java.lang.Object, java.nio.channels.CompletionHandler)
+     * @see org.redkale.net.AsyncNioConnection#writeImpl(java.nio.ByteBuffer[], int, int, java.util.function.Consumer,
+     *     java.lang.Object, java.nio.channels.CompletionHandler)
      * @param <A> A
      * @param srcs ByteBuffer[]
      * @param offset offset
      * @param length length
      * @param consumer Consumer
      * @param attachment A
-     * @param handler  CompletionHandler
+     * @param handler CompletionHandler
      */
     protected abstract <A> void writeImpl(
             ByteBuffer[] srcs,
@@ -331,7 +336,7 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
      * @see #lockWrite()
      * @see #unlockWrite()
      * @param array 内容
-     * @param handler  回调函数
+     * @param handler 回调函数
      */
     public final void write(ByteTuple array, CompletionHandler<Integer, Void> handler) {
         write(array.content(), array.offset(), array.length(), null, handler);

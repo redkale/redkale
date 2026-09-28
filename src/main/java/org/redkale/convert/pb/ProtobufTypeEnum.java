@@ -9,10 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public enum ProtobufTypeEnum {
     // boolean/byte/char/short/int/long
     INT(0),

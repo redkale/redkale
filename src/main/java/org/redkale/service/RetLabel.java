@@ -5,9 +5,10 @@
  */
 package org.redkale.service;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 
 /**
  * 用于定义错误码的注解 <br>
@@ -37,5 +38,4 @@ public @interface RetLabel {
 
         RetLabel[] value();
     }
-
 }

@@ -153,7 +153,8 @@ public final class MultiContext {
      * @return 文件
      * @throws IOException IOException
      */
-    public File partsFirstFile(final File home, final long max, final String fileNameRegex, final String contentTypeRegex)
+    public File partsFirstFile(
+            final File home, final long max, final String fileNameRegex, final String contentTypeRegex)
             throws IOException {
         if (!isMultipart()) {
             return null;

@@ -214,7 +214,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     /**
      * 获取远程缓存Source, 可能为null
      *
-     * @return  {@link org.redkale.source.CacheSource}
+     * @return {@link org.redkale.source.CacheSource}
      */
     @Override
     public CacheSource getRemoteSource() {
@@ -341,7 +341,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
      *
      * @param <T> 泛型
      * @param name 缓存名称
-     * @param key 缓存键     *
+     * @param key 缓存键 *
      * @param localLimit 本地缓存数量上限
      * @param type 数据类型
      * @param value 数据值

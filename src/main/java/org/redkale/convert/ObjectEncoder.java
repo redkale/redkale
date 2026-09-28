@@ -10,7 +10,6 @@ import java.util.*;
 import java.util.concurrent.locks.*;
 import org.redkale.annotation.*;
 import org.redkale.annotation.ConstructorParameters;
-import org.redkale.convert.ext.StringSimpledCoder;
 import org.redkale.util.*;
 
 /**

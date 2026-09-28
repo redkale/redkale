@@ -12,6 +12,7 @@ import org.redkale.util.AnyValue;
  * MQ消费器， 实现类必须标记{@link org.redkale.mq.ResourceConsumer}
  *
  * <blockquote>
+ *
  * <pre>
  * &#64;ResourceConsumer(mq = "mymq", topics = "test_bean_topic")
  * public class TestMessageConsumer implements MessageConsumer&lt;TestBean&gt; {
@@ -34,6 +35,7 @@ import org.redkale.util.AnyValue;
  *     }
  * }
  * </pre>
+ *
  * </blockquote>
  *
  * <p>详情见: https://redkale.org

@@ -3,9 +3,10 @@
  */
 package org.redkale.mq;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 import org.redkale.annotation.ClassDepends;
 import org.redkale.convert.ConvertType;
 
@@ -13,6 +14,7 @@ import org.redkale.convert.ConvertType;
  * MQ资源注解, 只能标记在{@link org.redkale.mq.MessageConsumer}子类上
  *
  * <blockquote>
+ *
  * <pre>
  * &#64;ResourceConsumer(mq = "mymq", topics = "test_bean_topic")
  * public class TestMessageConsumer implements MessageConsumer&lt;TestBean&gt; {
@@ -35,6 +37,7 @@ import org.redkale.convert.ConvertType;
  *     }
  * }
  * </pre>
+ *
  * </blockquote>
  *
  * <p>详情见: https://redkale.org
@@ -73,21 +76,21 @@ public @interface ResourceConsumer {
     /**
      * 监听的topic, 当{@link #regexTopic() }值不为空时忽略此值
      *
-     * @return  topic
+     * @return topic
      */
     String[] topics() default {};
 
     /**
-     * 监听的topic， 与 {@link  #topics() }的值必须二选一，优先级高
+     * 监听的topic， 与 {@link #topics() }的值必须二选一，优先级高
      *
-     * @return  topic正则表达式
+     * @return topic正则表达式
      */
     String regexTopic() default "";
 
     /**
      * 消息序列化类型
      *
-     * @return  序列化类型
+     * @return 序列化类型
      */
     ConvertType convertType() default ConvertType.JSON;
 }

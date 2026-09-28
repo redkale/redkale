@@ -37,14 +37,10 @@ public abstract class Reader {
      */
     public abstract int position();
 
-    /**
-     * 跳过值(不包含值前面的字段)
-     */
+    /** 跳过值(不包含值前面的字段) */
     public abstract void skipValue();
 
-    /**
-     * 跳过字段与值之间的多余内容， json就是跳过:符, map跳过:
-     */
+    /** 跳过字段与值之间的多余内容， json就是跳过:符, map跳过: */
     public abstract void readColon();
 
     /**
@@ -55,10 +51,7 @@ public abstract class Reader {
      */
     public abstract boolean readObjectB(final Decodeable decoder);
 
-    /**
-     * 读取对象的尾端
-     *
-     */
+    /** 读取对象的尾端 */
     public abstract void readObjectE();
 
     /**
@@ -69,9 +62,7 @@ public abstract class Reader {
      */
     public abstract boolean readArrayB(@Nullable Decodeable componentDecoder);
 
-    /**
-     * 读取数组的尾端
-     */
+    /** 读取数组的尾端 */
     public abstract void readArrayE();
 
     /**
@@ -83,16 +74,13 @@ public abstract class Reader {
      */
     public abstract boolean readMapB(Decodeable keyDecoder, Decodeable valueDecoder);
 
-    /**
-     * 读取Map的尾端
-     */
+    /** 读取Map的尾端 */
     public abstract void readMapE();
 
     /**
      * 根据字段读取字段对应的DeMember
      *
      * @param memberInfo DeMember信息
-     *
      * @return 匹配的DeMember
      */
     public abstract DeMember readField(final DeMemberInfo memberInfo);

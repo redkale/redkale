@@ -17,13 +17,12 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Consumer;
 import java.util.logging.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Configuration;
 import org.redkale.annotation.Nonnull;
-import org.redkale.bytecode.CodeMethodBoost;
 import org.redkale.boot.ClassFilter.FilterEntry;
+import org.redkale.bytecode.CodeMethodBoost;
 import org.redkale.cached.spi.CachedModuleEngine;
 import org.redkale.cluster.*;
 import org.redkale.cluster.spi.ClusterAgent;
@@ -1173,10 +1172,7 @@ public final class Application {
         }
     }
 
-    /**
-     * 配置项加载后被调用
-     *
-     */
+    /** 配置项加载后被调用 */
     private void onEnvironmentLoaded() {
         this.registerResourceEnvs(true, this.envProperties);
         for (ModuleEngine item : moduleEngines) {

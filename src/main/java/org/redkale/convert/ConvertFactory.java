@@ -43,6 +43,7 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     /**
      * 配置属性集合
+     *
      * @see org.redkale.convert.Convert#FEATURE_NULLABLE
      * @see org.redkale.convert.Convert#FEATURE_TINY
      */

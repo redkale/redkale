@@ -3,6 +3,10 @@
  */
 package org.redkale.boot;
 
+import static org.redkale.boot.Application.*;
+import static org.redkale.util.RedkaleClassLoader.putReflectionClass;
+import static org.redkale.util.RedkaleClassLoader.putReflectionPublicConstructors;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,13 +24,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.logging.SimpleFormatter;
-import static org.redkale.boot.Application.*;
-import org.redkale.source.DataSources;
 import org.redkale.util.AnyValue;
 import org.redkale.util.AnyValueWriter;
 import org.redkale.util.RedkaleClassLoader;
-import static org.redkale.util.RedkaleClassLoader.putReflectionClass;
-import static org.redkale.util.RedkaleClassLoader.putReflectionPublicConstructors;
 import org.redkale.util.RedkaleException;
 import org.redkale.util.Utility;
 import org.redkale.util.YamlReader;

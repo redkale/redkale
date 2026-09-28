@@ -5,6 +5,8 @@
  */
 package org.redkale.cluster.spi;
 
+import static org.redkale.boot.Application.*;
+
 import java.lang.ref.WeakReference;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
@@ -14,7 +16,6 @@ import java.util.logging.*;
 import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.boot.*;
-import static org.redkale.boot.Application.*;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.inject.ResourceEvent;

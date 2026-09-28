@@ -48,5 +48,4 @@ public class BigIntegerSimpledCoder<R extends Reader, W extends Writer> extends 
         byte[] bytes = bsSimpledCoder.convertFrom(in);
         return bytes == null ? null : new BigInteger(bytes);
     }
-
 }

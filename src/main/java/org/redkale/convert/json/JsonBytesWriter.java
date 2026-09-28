@@ -5,11 +5,12 @@
  */
 package org.redkale.convert.json;
 
+import static org.redkale.convert.json.JsonWriter.*;
+
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
 import org.redkale.convert.*;
-import static org.redkale.convert.json.JsonWriter.*;
 import org.redkale.util.*;
 
 /**

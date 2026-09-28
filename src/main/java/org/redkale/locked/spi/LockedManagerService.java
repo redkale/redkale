@@ -9,11 +9,11 @@ import org.redkale.annotation.Nullable;
 import org.redkale.annotation.Resource;
 import org.redkale.annotation.ResourceType;
 import org.redkale.boot.Application;
+import org.redkale.locked.LockedManager;
 import org.redkale.service.Local;
 import org.redkale.service.Service;
 import org.redkale.source.CacheSource;
 import org.redkale.util.AnyValue;
-import org.redkale.locked.LockedManager;
 
 /** @author zhangjx */
 @Local

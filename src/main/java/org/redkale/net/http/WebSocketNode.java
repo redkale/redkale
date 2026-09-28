@@ -5,6 +5,9 @@
  */
 package org.redkale.net.http;
 
+import static org.redkale.boot.Application.RESNAME_APP_NODEID;
+import static org.redkale.net.http.WebSocket.RETCODE_GROUP_EMPTY;
+
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
@@ -15,12 +18,10 @@ import java.util.stream.*;
 import org.redkale.annotation.*;
 import org.redkale.annotation.Comment;
 import org.redkale.boot.Application;
-import static org.redkale.boot.Application.RESNAME_APP_NODEID;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.mq.spi.MessageAgent;
 import org.redkale.net.WorkThread;
-import static org.redkale.net.http.WebSocket.RETCODE_GROUP_EMPTY;
 import org.redkale.net.http.WebSocketPacket.FrameType;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;

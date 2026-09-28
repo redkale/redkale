@@ -5,10 +5,11 @@
  */
 package org.redkale.convert.pb;
 
+import static org.redkale.convert.pb.ProtobufMapEncoder.createAttribute;
+
 import java.lang.reflect.Type;
 import java.util.Map;
 import org.redkale.convert.*;
-import static org.redkale.convert.pb.ProtobufMapEncoder.createAttribute;
 
 /**
  * @author zhangjx

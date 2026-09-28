@@ -5,6 +5,9 @@
  */
 package org.redkale.net.http;
 
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
+
 import java.io.*;
 import java.lang.annotation.*;
 import java.lang.reflect.*;
@@ -14,8 +17,6 @@ import java.util.function.*;
 import java.util.logging.*;
 import org.redkale.annotation.*;
 import org.redkale.asm.*;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
 import org.redkale.boot.*;
 import org.redkale.net.*;
 import org.redkale.util.*;
@@ -586,9 +587,9 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             mv.visitEnd();
         }
         {
-            mv = (cw.visitMethod(ACC_PUBLIC, "execute", "(" + reqDesc + respDesc + ")V", null, new String[] {
-                "java/io/IOException"
-            }));
+            mv = (cw.visitMethod(
+                    ACC_PUBLIC, "execute", "(" + reqDesc + respDesc + ")V", null, new String[] {"java/io/IOException"
+                    }));
             Label label0 = new Label();
             mv.visitLabel(label0);
             mv.visitVarInsn(ALOAD, 0);

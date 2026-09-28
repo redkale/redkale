@@ -51,5 +51,4 @@ public class Uint128SimpledCoder<R extends Reader, W extends Writer> extends Sim
         }
         return Uint128.create(bs);
     }
-
 }

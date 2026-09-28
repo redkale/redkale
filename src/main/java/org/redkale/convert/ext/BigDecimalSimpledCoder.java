@@ -39,5 +39,4 @@ public class BigDecimalSimpledCoder<R extends Reader, W extends Writer> extends 
         }
         return new BigDecimal(Utility.charArray(value));
     }
-
 }

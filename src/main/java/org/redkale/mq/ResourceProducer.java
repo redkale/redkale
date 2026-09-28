@@ -3,15 +3,17 @@
  */
 package org.redkale.mq;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 import org.redkale.convert.ConvertType;
 
 /**
  * MQ资源注解, 只能标记在{@link org.redkale.mq.MessageProducer}类型字段上
  *
  * <blockquote>
+ *
  * <pre>
  * public class TestMessageService extends AbstractService {
  *
@@ -30,6 +32,7 @@ import org.redkale.convert.ConvertType;
  *      }
  * }
  * </pre>
+ *
  * </blockquote>
  *
  * <p>详情见: https://redkale.org
@@ -60,7 +63,7 @@ public @interface ResourceProducer {
     /**
      * 消息序列化类型
      *
-     * @return  序列化类型
+     * @return 序列化类型
      */
     ConvertType convertType() default ConvertType.JSON;
 }

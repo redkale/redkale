@@ -3,11 +3,12 @@
  */
 package org.redkale.net.http;
 
+import static org.redkale.net.http.HttpRequest.READ_STATE_END;
+
 import java.nio.ByteBuffer;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.client.ClientResult;
-import static org.redkale.net.http.HttpRequest.READ_STATE_END;
 import org.redkale.util.ByteArray;
 import org.redkale.util.RedkaleException;
 
@@ -17,7 +18,6 @@ import org.redkale.util.RedkaleException;
  * @see org.redkale.net.http.WebClient
  * @see org.redkale.net.http.WebConnection
  * @see org.redkale.net.http.WebRequest
- *
  * @author zhangjx
  * @param <T> T
  * @since 2.8.0

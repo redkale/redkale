@@ -10,6 +10,7 @@ import java.lang.reflect.Field;
  * 自定义注入加载器
  *
  * <blockquote>
+ *
  * <pre>
  *
  * &#064;Documented
@@ -59,6 +60,7 @@ import java.lang.reflect.Field;
  *
  *
  * </pre>
+ *
  * </blockquote>
  *
  * <p>详情见: https://redkale.org
@@ -73,10 +75,10 @@ public interface ResourceAnnotationLoader<T extends Annotation> {
      *
      * @param factory ResourceFactory
      * @param srcResourceName 依附对象的资源名
-     * @param srcObj  资源依附对象
-     * @param annotation  注解
-     * @param field  字段对象
-     * @param attachment  附加对象
+     * @param srcObj 资源依附对象
+     * @param annotation 注解
+     * @param field 字段对象
+     * @param attachment 附加对象
      */
     public void load(
             ResourceFactory factory,
@@ -88,7 +90,7 @@ public interface ResourceAnnotationLoader<T extends Annotation> {
     /**
      * 注入加载器对应的注解类型
      *
-     * @return  类型
+     * @return 类型
      */
     public Class<T> annotationType();
 }

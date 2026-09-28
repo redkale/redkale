@@ -4,15 +4,18 @@
 
 package org.redkale.annotation;
 
-import java.lang.annotation.Documented;
 import static java.lang.annotation.ElementType.TYPE;
-import java.lang.annotation.Retention;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
  * 启动服务时的初始化配置，需要结合{@link org.redkale.annotation.Resource}使用
+ *
  * <blockquote>
+ *
  * <pre>
  * &#064;Configuration
  * public class MyConfiguration {
@@ -35,10 +38,10 @@ import java.lang.annotation.Target;
  * }
  *
  * </pre>
+ *
  * </blockquote>
  *
- * <p>
- * 详情见: https://redkale.org
+ * <p>详情见: https://redkale.org
  *
  * @author zhangjx
  * @since 2.8.0

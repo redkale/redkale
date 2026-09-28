@@ -32,5 +32,4 @@ public class LocalDateSimpledCoder<R extends Reader, W extends Writer> extends S
         int t = in.readInt();
         return t == 0 ? null : LocalDate.of(t / 100_00, t % 100_00 / 100, t % 100);
     }
-
 }

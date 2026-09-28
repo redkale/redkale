@@ -16,7 +16,6 @@ import org.redkale.util.Utility;
  *
  * @author zhangjx
  * @since 2.8.0
- *
  */
 public class CachedEntry {
 

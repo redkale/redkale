@@ -18,10 +18,7 @@ import org.redkale.util.StringWrapper;
 import org.redkale.util.Uint128;
 import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public abstract class JsonCoders {
 
     private JsonCoders() {

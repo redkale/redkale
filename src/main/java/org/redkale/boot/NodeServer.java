@@ -5,6 +5,8 @@
  */
 package org.redkale.boot;
 
+import static org.redkale.boot.Application.*;
+
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
@@ -17,7 +19,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.*;
 import org.redkale.annotation.*;
 import org.redkale.annotation.Command;
-import static org.redkale.boot.Application.*;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.cluster.spi.ClusterAgent;
 import org.redkale.inject.ResourceFactory;

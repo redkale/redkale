@@ -31,5 +31,4 @@ public class LocalTimeSimpledCoder<R extends Reader, W extends Writer> extends S
         long t = in.readLong();
         return t == -1 ? null : LocalTime.ofNanoOfDay(t);
     }
-
 }

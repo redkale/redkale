@@ -5,6 +5,8 @@
  */
 package org.redkale.net.http;
 
+import static org.redkale.net.http.WebSocket.*;
+
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.nio.charset.StandardCharsets;
@@ -14,7 +16,6 @@ import java.util.function.BiConsumer;
 import java.util.logging.*;
 import org.redkale.convert.Convert;
 import org.redkale.net.AsyncIOThread;
-import static org.redkale.net.http.WebSocket.*;
 import org.redkale.net.http.WebSocketPacket.FrameType;
 import org.redkale.util.*;
 

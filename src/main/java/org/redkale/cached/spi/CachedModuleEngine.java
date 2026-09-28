@@ -12,10 +12,10 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 import org.redkale.annotation.Component;
-import org.redkale.bytecode.CodeMethodBoost;
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
 import org.redkale.boot.NodeServer;
+import org.redkale.bytecode.CodeMethodBoost;
 import org.redkale.cached.Cached;
 import org.redkale.cached.CachedManager;
 import org.redkale.net.sncp.Sncp;
@@ -112,9 +112,7 @@ public class CachedModuleEngine extends ModuleEngine {
         }
     }
 
-    /**
-     * 进入Application.shutdown方法被调用
-     */
+    /** 进入Application.shutdown方法被调用 */
     @Override
     public void onAppPreShutdown() {
         if (!application.isCompileMode()) {

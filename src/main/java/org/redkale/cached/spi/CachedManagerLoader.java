@@ -17,10 +17,7 @@ import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
 import org.redkale.util.RedkaleException;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @AutoLoad(false)
 class CachedManagerLoader implements ResourceTypeLoader {
 

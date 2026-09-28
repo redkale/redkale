@@ -5,10 +5,14 @@
  */
 package org.redkale.net.http;
 
-import java.io.*;
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
+import static org.redkale.util.Utility.isEmpty;
+
+import java.io.*;
+import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.net.InetSocketAddress;
 import java.nio.channels.CompletionHandler;
@@ -17,13 +21,11 @@ import java.util.concurrent.CompletionStage;
 import org.redkale.annotation.*;
 import org.redkale.annotation.Comment;
 import org.redkale.asm.*;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
+import org.redkale.bytecode.ByteCodes;
 import org.redkale.bytecode.CodeMethodBean;
 import org.redkale.bytecode.CodeMethodBoost;
 import org.redkale.bytecode.CodeMethodParam;
-import org.redkale.bytecode.ByteCodes;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.inject.ResourceFactory;
@@ -33,7 +35,6 @@ import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;
 import org.redkale.source.Flipper;
 import org.redkale.util.*;
-import static org.redkale.util.Utility.isEmpty;
 
 /**
  * 详情见: https://redkale.org
@@ -2147,7 +2148,8 @@ public final class Rest {
         } catch (Exception e) {
             // do nothing
         }
-        final Map<String, CodeMethodBean> asmParamMap = namePresent ? null : CodeMethodBoost.getMethodBeans(serviceType);
+        final Map<String, CodeMethodBean> asmParamMap =
+                namePresent ? null : CodeMethodBoost.getMethodBeans(serviceType);
 
         Map<String, byte[]> innerClassBytesMap = new LinkedHashMap<>();
         boolean containsMupload = false;

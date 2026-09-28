@@ -22,10 +22,7 @@ import org.redkale.service.Service;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @AutoLoad(false)
 class NodeExpectServiceLoader implements ResourceTypeLoader {
 
@@ -82,7 +79,8 @@ class NodeExpectServiceLoader implements ResourceTypeLoader {
 
             if (Sncp.loadRemoteMethodActions(Sncp.getResourceType(serviceImplClass))
                             .isEmpty()
-                    && serviceImplClass.getAnnotation(Priority.class) == null) { // class没有可用的方法且没有标记启动优先级的， 通常为BaseService
+                    && serviceImplClass.getAnnotation(Priority.class)
+                            == null) { // class没有可用的方法且没有标记启动优先级的， 通常为BaseService
                 if (!serviceImplClass.getName().startsWith("org.redkale.")
                         && !serviceImplClass.getSimpleName().contains("Base")) {
                     logger.log(

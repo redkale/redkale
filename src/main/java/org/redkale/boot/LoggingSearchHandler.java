@@ -2,6 +2,9 @@
  */
 package org.redkale.boot;
 
+import static org.redkale.boot.Application.RESNAME_APP_NAME;
+import static org.redkale.boot.Application.SYSNAME_APP_NAME;
+
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -9,8 +12,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.*;
 import java.util.logging.Formatter;
 import java.util.regex.Pattern;
-import static org.redkale.boot.Application.RESNAME_APP_NAME;
-import static org.redkale.boot.Application.SYSNAME_APP_NAME;
 import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.persistence.*;

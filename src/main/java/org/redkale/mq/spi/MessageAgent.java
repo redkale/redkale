@@ -5,6 +5,9 @@
  */
 package org.redkale.mq.spi;
 
+import static org.redkale.boot.Application.RESNAME_APP_NAME;
+import static org.redkale.boot.Application.RESNAME_APP_NODEID;
+
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -16,8 +19,6 @@ import java.util.logging.*;
 import org.redkale.annotation.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.boot.*;
-import static org.redkale.boot.Application.RESNAME_APP_NAME;
-import static org.redkale.boot.Application.RESNAME_APP_NODEID;
 import org.redkale.cluster.HttpRpcClient;
 import org.redkale.convert.Convert;
 import org.redkale.convert.ConvertFactory;

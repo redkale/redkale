@@ -4,19 +4,16 @@
  */
 package org.redkale.convert.pb;
 
+import static org.redkale.convert.pb.ProtobufWriter.CHILD_SIZE;
+
 import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.function.Consumer;
 import org.redkale.convert.ConvertBytesHandler;
-import static org.redkale.convert.pb.ProtobufWriter.CHILD_SIZE;
 import org.redkale.util.ByteArray;
 import org.redkale.util.ByteTuple;
 
-/**
- *
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 public class ProtobufBytesWriter extends ProtobufWriter { // 存在child情况因此不能实现ByteTuple
 
     private static final int RESET_MAX_SIZE = DEFAULT_SIZE << 4;

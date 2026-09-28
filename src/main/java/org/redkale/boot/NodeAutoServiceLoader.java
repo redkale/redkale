@@ -19,10 +19,7 @@ import org.redkale.service.Local;
 import org.redkale.service.Service;
 import org.redkale.util.Utility;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 @AutoLoad(false)
 class NodeAutoServiceLoader implements ResourceTypeLoader {
 

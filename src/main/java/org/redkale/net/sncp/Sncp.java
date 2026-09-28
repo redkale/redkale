@@ -5,17 +5,19 @@
  */
 package org.redkale.net.sncp;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
+import static org.redkale.util.Utility.isEmpty;
+
+import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import org.redkale.annotation.*;
 import org.redkale.asm.*;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
 import org.redkale.bytecode.*;
 import org.redkale.convert.pb.ProtobufConvert;
@@ -30,7 +32,6 @@ import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.TypeToken;
 import org.redkale.util.Uint128;
 import org.redkale.util.Utility;
-import static org.redkale.util.Utility.isEmpty;
 
 /**
  * Service Node Communicate Protocol 生成Service的本地模式或远程模式Service-Class的工具类

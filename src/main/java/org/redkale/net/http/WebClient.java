@@ -30,7 +30,6 @@ import org.redkale.util.*;
  * @see org.redkale.net.http.WebConnection
  * @see org.redkale.net.http.WebRequest
  * @see org.redkale.net.http.WebResult
- *
  * @author zhangjx
  * @since 2.3.0
  */
@@ -249,8 +248,8 @@ public class WebClient extends Client<WebConnection, WebRequest, WebResult> {
         final String path = (urlpos > 0 ? url.substring(urlpos) : "/");
         if (!url.startsWith("https:")) {
             WebRequest req = WebRequest.createPath(path, headers).method(method).body(body);
-            return (CompletableFuture)
-                    sendAsync(new InetSocketAddress(host, port), req).thenApply((WebResult rs) -> {
+            return (CompletableFuture) sendAsync(new InetSocketAddress(host, port), req)
+                    .thenApply((WebResult rs) -> {
                         if (valueType == null) {
                             return rs;
                         } else {

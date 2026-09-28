@@ -5,9 +5,10 @@
  */
 package org.redkale.convert;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.*;
+
+import java.lang.annotation.*;
 import org.redkale.util.ColumnHandler;
 
 /**
@@ -17,7 +18,6 @@ import org.redkale.util.ColumnHandler;
  *
  * @author zhangjx
  * @since 2.8.0
- *
  */
 @Documented
 @Target({METHOD, FIELD})
@@ -29,7 +29,6 @@ public @interface ConvertColumnHandler {
      * 字段值转换器
      *
      * @return ColumnHandler实现类
-     *
      * @since 2.8.0
      */
     Class<? extends ColumnHandler> value() default ColumnHandler.class;

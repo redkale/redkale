@@ -3,21 +3,23 @@
  */
 package org.redkale.mq;
 
-import java.lang.annotation.Documented;
 import static java.lang.annotation.ElementType.METHOD;
-import java.lang.annotation.Retention;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import org.redkale.convert.ConvertType;
 import org.redkale.service.LoadMode;
 
 /**
- * MQ资源注解, 只能标记在Service类方法上, 方法会被框架动态生成{@link org.redkale.mq.MessageConsumer}对象供内部调用  <br>
- * 1、方法必须是protected/public   <br>
- * 2、方法不能是final/static  <br>
+ * MQ资源注解, 只能标记在Service类方法上, 方法会被框架动态生成{@link org.redkale.mq.MessageConsumer}对象供内部调用 <br>
+ * 1、方法必须是protected/public <br>
+ * 2、方法不能是final/static <br>
  * 3、方法的参数只能是1个且为MessageEvent[] <br>
  *
  * <blockquote>
+ *
  * <pre>
  * public class MyMessageService extends AbstractService {
  *
@@ -37,6 +39,7 @@ import org.redkale.service.LoadMode;
  *    }
  * }
  * </pre>
+ *
  * </blockquote>
  *
  * <p>详情见: https://redkale.org
@@ -75,21 +78,21 @@ public @interface Messaged {
     /**
      * 监听的topic, 当{@link #regexTopic() }值不为空时忽略此值
      *
-     * @return  topic
+     * @return topic
      */
     String[] topics() default {};
 
     /**
-     * 监听的topic， 与 {@link  #topics() }的值必须二选一，优先级高
+     * 监听的topic， 与 {@link #topics() }的值必须二选一，优先级高
      *
-     * @return  topic正则表达式
+     * @return topic正则表达式
      */
     String regexTopic() default "";
 
     /**
      * 消息序列化类型
      *
-     * @return  序列化类型
+     * @return 序列化类型
      */
     ConvertType convertType() default ConvertType.JSON;
 

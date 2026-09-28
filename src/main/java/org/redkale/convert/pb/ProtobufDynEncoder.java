@@ -4,13 +4,13 @@
  */
 package org.redkale.convert.pb;
 
+import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
+import static org.redkale.asm.Opcodes.*;
+
 import java.lang.reflect.*;
 import java.lang.reflect.Type;
 import java.util.*;
 import org.redkale.asm.*;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
-
 import org.redkale.bytecode.ByteCodes;
 import org.redkale.convert.*;
 import org.redkale.util.*;
@@ -195,7 +195,8 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                     String realDesc;
                     if (member.getMethod() != null) {
                         String mname = member.getMethod().getName();
-                        realDesc = org.redkale.asm.Type.getDescriptor(member.getMethod().getReturnType());
+                        realDesc = org.redkale.asm.Type.getDescriptor(
+                                member.getMethod().getReturnType());
                         String mdesc = org.redkale.asm.Type.getMethodDescriptor(member.getMethod());
                         mv.visitMethodInsn(INVOKEVIRTUAL, valtypeName, mname, mdesc, false);
                     } else { // field
@@ -205,7 +206,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                         mv.visitFieldInsn(GETFIELD, valtypeName, fname, realDesc);
                     }
                     String fieldDesc = org.redkale.asm.Type.getDescriptor(fieldClass);
-                    if (!Objects.equals(realDesc, fieldDesc)) { //父类方法参数类型时泛型
+                    if (!Objects.equals(realDesc, fieldDesc)) { // 父类方法参数类型时泛型
                         mv.visitTypeInsn(CHECKCAST, fieldClass.getName().replace('.', '/'));
                     }
                     mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, "writeFieldValue", "(I" + fieldDesc + ")V", false);
@@ -216,7 +217,8 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                     String realDesc;
                     if (member.getMethod() != null) {
                         String mname = member.getMethod().getName();
-                        realDesc = org.redkale.asm.Type.getDescriptor(member.getMethod().getReturnType());
+                        realDesc = org.redkale.asm.Type.getDescriptor(
+                                member.getMethod().getReturnType());
                         String mdesc = org.redkale.asm.Type.getMethodDescriptor(member.getMethod());
                         mv.visitMethodInsn(INVOKEVIRTUAL, valtypeName, mname, mdesc, false);
                     } else { // field

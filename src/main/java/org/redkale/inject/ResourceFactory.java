@@ -106,23 +106,17 @@ public final class ResourceFactory {
         return result;
     }
 
-    /**
-     * 清空当前已注入资源的缓存
-     */
+    /** 清空当前已注入资源的缓存 */
     public void release() {
         this.entryStore.clear();
     }
 
-    /**
-     * inject时的锁
-     */
+    /** inject时的锁 */
     public void lock() {
         lock.lock();
     }
 
-    /**
-     * inject时的锁
-     */
+    /** inject时的锁 */
     public void unlock() {
         lock.unlock();
     }
@@ -166,7 +160,7 @@ public final class ResourceFactory {
      * 替换资源名中含${xxx}或{system.property.xxx}的配置项
      *
      * @param name 资源名
-     * @return  不包含配置项的资源名
+     * @return 不包含配置项的资源名
      */
     public static String getResourceName(String name) {
         return getResourceName(null, name);
@@ -177,7 +171,7 @@ public final class ResourceFactory {
      *
      * @param parent 父资源名
      * @param name 资源名
-     * @return  不包含配置项的资源名
+     * @return 不包含配置项的资源名
      */
     public static String getResourceName(String parent, String name) {
         if (name == null) {
@@ -216,9 +210,10 @@ public final class ResourceFactory {
 
     /**
      * 替换资源名中的配置项， 没有配置项返回null
+     *
      * @param parent 父资源名
      * @param name 可能包含配置项的资源名
-     * @return  替换资源名中的配置项后的资源名
+     * @return 替换资源名中的配置项后的资源名
      */
     private static String getResourceDefaultValue(String parent, String name) {
         if (name.startsWith("${")) {
@@ -621,7 +616,6 @@ public final class ResourceFactory {
      *
      * @param configuareClass 标记Configuration的类
      * @return 方法数
-     *
      */
     public int registerConfiguration(final Class configuareClass) {
         int count = 0;
@@ -677,7 +671,7 @@ public final class ResourceFactory {
      * @param clazz 资源类型
      * @param val 资源对象
      * @param wrappers 资源对象的缓存集合
-     * @return  旧资源对象
+     * @return 旧资源对象
      */
     private <A> A register(
             final boolean autoSync,
@@ -830,6 +824,7 @@ public final class ResourceFactory {
     /**
      * 获取类型对应的ResourceTypeLoader <br>
      * 优先匹配Type， 再匹配Class，再匹配父类
+     *
      * @param ft 类型
      * @param field 字段
      * @return ResourceTypeLoader
@@ -845,6 +840,7 @@ public final class ResourceFactory {
     /**
      * 获取类型对应的ResourceTypeLoader <br>
      * 优先匹配Type， 再匹配Class
+     *
      * @param ft 类型
      * @param field 字段
      * @return ResourceTypeLoader
@@ -890,7 +886,7 @@ public final class ResourceFactory {
      *
      * @param <A> 泛型
      * @param clazz 资源类型
-     * @return  资源对象
+     * @return 资源对象
      */
     public <A> A find(Class<? extends A> clazz) {
         return find("", clazz);
@@ -902,7 +898,7 @@ public final class ResourceFactory {
      * @param <A> 泛型
      * @param name 资源名
      * @param clazz 资源类型
-     * @return  资源对象
+     * @return 资源对象
      */
     public <A> A find(String name, Class<? extends A> clazz) {
         ResourceEntry<A> re = findEntry(name, clazz);
@@ -914,7 +910,7 @@ public final class ResourceFactory {
      *
      * @param <A> 泛型
      * @param clazz 资源类型
-     * @return  资源对象
+     * @return 资源对象
      */
     public <A> A find(Type clazz) {
         return find("", clazz);
@@ -926,7 +922,7 @@ public final class ResourceFactory {
      * @param <A> 泛型
      * @param name 资源名
      * @param clazz 资源类型
-     * @return  资源对象
+     * @return 资源对象
      */
     public <A> A find(String name, Type clazz) {
         ResourceEntry re = findEntry(name, clazz);
@@ -963,10 +959,11 @@ public final class ResourceFactory {
 
     /**
      * 找指定类型和资源名对应的资源对象
+     *
      * @param <A> 泛型
      * @param name 资源名
      * @param clazz 资源类型
-     * @return  资源对象
+     * @return 资源对象
      */
     private <A> ResourceEntry<A> findEntry(String name, Type clazz) {
         Map<String, ResourceEntry> map = this.entryStore.get(clazz);
@@ -987,8 +984,7 @@ public final class ResourceFactory {
      *
      * @param <A> 泛型
      * @param clazz 资源类型
-     * @return  资源对象
-     *
+     * @return 资源对象
      * @since 2.8.0
      */
     public <A> A load(Class<A> clazz) {
@@ -1001,8 +997,7 @@ public final class ResourceFactory {
      * @param <A> 泛型
      * @param name 资源名
      * @param clazz 资源类型
-     * @return  资源对象
-     *
+     * @return 资源对象
      * @since 2.8.0
      */
     public <A> A load(String name, Class<A> clazz) {
@@ -1014,8 +1009,7 @@ public final class ResourceFactory {
      *
      * @param <A> 泛型
      * @param clazz 资源类型
-     * @return  资源对象
-     *
+     * @return 资源对象
      * @since 2.8.0
      */
     public <A> A load(Type clazz) {
@@ -1028,8 +1022,7 @@ public final class ResourceFactory {
      * @param <A> 泛型
      * @param name 资源名
      * @param clazz 资源类型
-     * @return  资源对象
-     *
+     * @return 资源对象
      * @since 2.8.0
      */
     public <A> A load(String name, Type clazz) {
@@ -1057,7 +1050,7 @@ public final class ResourceFactory {
      *
      * @param <A> 泛型
      * @param clazz 资源类型
-     * @return  资源集合
+     * @return 资源集合
      */
     public <A> List<A> query(Class<? extends A> clazz) {
         return query(new ArrayList<>(), clazz);
@@ -1068,7 +1061,7 @@ public final class ResourceFactory {
      *
      * @param <A> 泛型
      * @param clazz 资源类型
-     * @return  资源集合
+     * @return 资源集合
      */
     public <A> List<A> query(Type clazz) {
         return query(new ArrayList<>(), clazz);
@@ -1080,7 +1073,7 @@ public final class ResourceFactory {
      * @param <A> 泛型
      * @param list 资源集合
      * @param clazz 资源类型
-     * @return  资源集合
+     * @return 资源集合
      */
     private <A> List<A> query(final List<A> list, Type clazz) {
         Map<String, ResourceEntry> map = this.entryStore.get(clazz);
@@ -1102,7 +1095,7 @@ public final class ResourceFactory {
      *
      * @param <A> 泛型
      * @param predicate 资源过滤条件
-     * @return  资源集合
+     * @return 资源集合
      */
     public <A> List<A> query(final BiPredicate<String, Object> predicate) {
         return query(new ArrayList<>(), predicate);
@@ -1114,7 +1107,7 @@ public final class ResourceFactory {
      * @param <A> 泛型
      * @param list 资源集合
      * @param predicate 资源过滤条件
-     * @return  资源集合
+     * @return 资源集合
      */
     private <A> List<A> query(final List<A> list, final BiPredicate<String, Object> predicate) {
         if (predicate == null) {
@@ -1491,7 +1484,7 @@ public final class ResourceFactory {
     /**
      * 获取最底层ResourceFactory
      *
-     * @return  ResourceFactory
+     * @return ResourceFactory
      */
     private ResourceFactory parentRoot2() {
         if (parent == null) {
@@ -1504,8 +1497,8 @@ public final class ResourceFactory {
      * 调用标记ResourceInjected的监听方法
      *
      * @param dest 资源的依附对象
-     * @param field  资源的依附对象的字段
-     * @param res  资源对象
+     * @param field 资源的依附对象的字段
+     * @param res 资源对象
      */
     private void onResourceInjected(Object dest, Field field, Object res) {
         if (res == null
@@ -1547,7 +1540,7 @@ public final class ResourceFactory {
     /**
      * 资源依附信息的缓存对象
      *
-     * @param <T>  泛型
+     * @param <T> 泛型
      */
     private static class ResourceEntry<T> {
 
@@ -1619,7 +1612,7 @@ public final class ResourceFactory {
     /**
      * 资源字段和变更监听方法信息的缓存对象
      *
-     * @param <T>  泛型
+     * @param <T> 泛型
      */
     private static class ResourceElement<T> {
 

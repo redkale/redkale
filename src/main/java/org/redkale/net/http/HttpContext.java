@@ -5,12 +5,13 @@
  */
 package org.redkale.net.http;
 
+import static org.redkale.asm.Opcodes.*;
+
 import java.nio.channels.CompletionHandler;
 import java.security.SecureRandom;
 import java.util.concurrent.ConcurrentHashMap;
 import org.redkale.annotation.ConstructorParameters;
 import org.redkale.asm.*;
-import static org.redkale.asm.Opcodes.*;
 import org.redkale.net.*;
 import org.redkale.net.Context.ContextConfig;
 import org.redkale.util.*;

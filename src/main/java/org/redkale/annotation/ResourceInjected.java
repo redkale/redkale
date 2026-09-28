@@ -5,9 +5,10 @@
  */
 package org.redkale.annotation;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 
 /**
  * &#64;Resource资源被依赖注入时的监听事件。<br>

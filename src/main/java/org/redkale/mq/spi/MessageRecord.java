@@ -346,7 +346,8 @@ public class MessageRecord implements Serializable {
         if (this.content != null) {
             if (this.ctype == CTYPE_PROTOBUF && this.content.length > SncpHeader.HEADER_SUBSIZE) {
                 // int offset = new ByteArray(this.content).getChar(0) + 1; //循环占位符
-                // Object rs = ProtobufConvert.root().convertFrom(Object.class, this.content, offset, this.content.length -
+                // Object rs = ProtobufConvert.root().convertFrom(Object.class, this.content, offset,
+                // this.content.length -
                 // offset);
                 // sb.append(",\"content\":").append(rs);
                 // SncpHeader包含不确定长度的信息，故不能再直接偏移读取

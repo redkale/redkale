@@ -31,5 +31,4 @@ public class InstantSimpledCoder<R extends Reader, W extends Writer> extends Sim
         long t = in.readLong();
         return t == -1 ? null : Instant.ofEpochMilli(t);
     }
-
 }

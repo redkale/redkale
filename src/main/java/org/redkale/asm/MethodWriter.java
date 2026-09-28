@@ -776,7 +776,7 @@ class MethodWriter extends MethodVisitor {
                     case Opcodes.GETFIELD:
                         size = stackSize + (c == 'D' || c == 'J' ? 1 : 0);
                         break;
-                        // case Constants.PUTFIELD:
+                    // case Constants.PUTFIELD:
                     default:
                         size = stackSize + (c == 'D' || c == 'J' ? -3 : -2);
                         break;
@@ -1829,7 +1829,7 @@ class MethodWriter extends MethodVisitor {
                 stackMap.putByte(SAME_FRAME_EXTENDED + k).putShort(delta);
                 writeFrameTypes(3 + localsSize, 3 + clocalsSize);
                 break;
-                // case FULL_FRAME:
+            // case FULL_FRAME:
             default:
                 stackMap.putByte(FULL_FRAME).putShort(delta).putShort(clocalsSize);
                 writeFrameTypes(3, 3 + clocalsSize);

@@ -4,6 +4,9 @@
 
 package org.redkale.service;
 
+import static org.redkale.boot.Application.SYSNAME_APP_CONF_DIR;
+import static org.redkale.boot.Application.SYSNAME_APP_HOME;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
@@ -16,14 +19,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.concurrent.locks.ReentrantLock;
-import static org.redkale.boot.Application.SYSNAME_APP_CONF_DIR;
-import static org.redkale.boot.Application.SYSNAME_APP_HOME;
 import org.redkale.util.RedkaleClassLoader;
 
-/**
- *
- * @author zhangjx
- */
+/** @author zhangjx */
 class RetInnerCache {
 
     static final ReentrantLock loadLock = new ReentrantLock();

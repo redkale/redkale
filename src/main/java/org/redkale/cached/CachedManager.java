@@ -23,14 +23,10 @@ import org.redkale.util.ThrowSupplier;
  */
 public interface CachedManager extends Resourcable {
 
-    /**
-     * 默认的schema
-     */
+    /** 默认的schema */
     public static final String CACHED_SCHEMA = "cached-schema";
 
-    /**
-     * 默认的远程缓存订阅消息的管道名称
-     */
+    /** 默认的远程缓存订阅消息的管道名称 */
     public static final String CACHED_TOPIC = "cached-topic";
 
     /**
@@ -44,21 +40,21 @@ public interface CachedManager extends Resourcable {
     /**
      * 唯一标识
      *
-     * @return  node
+     * @return node
      */
     public String getNode();
 
     /**
      * 缓存的schema, 不能含有':'、'#'、'@'字符
      *
-     * @return  schema
+     * @return schema
      */
     public String getSchema();
 
     /**
      * 获取远程缓存Source, 可能为null
      *
-     * @return  {@link org.redkale.source.CacheSource}
+     * @return {@link org.redkale.source.CacheSource}
      */
     public CacheSource getRemoteSource();
 

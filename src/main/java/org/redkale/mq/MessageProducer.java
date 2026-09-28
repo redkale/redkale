@@ -11,6 +11,7 @@ import org.redkale.convert.Convert;
  * MQ消息发送器 {@link org.redkale.mq.ResourceProducer}
  *
  * <blockquote>
+ *
  * <pre>
  * public class TestMessageService extends AbstractService {
  *
@@ -29,6 +30,7 @@ import org.redkale.convert.Convert;
  *      }
  * }
  * </pre>
+ *
  * </blockquote>
  *
  * <p>详情见: https://redkale.org

@@ -355,7 +355,7 @@ public final class ClassFilter<T> {
      * 判断class是否符合正则表达式
      *
      * @param className Class
-     * @return  boolean
+     * @return boolean
      */
     public boolean acceptPattern(String className) {
         if (excludePatterns != null) {
@@ -427,15 +427,12 @@ public final class ClassFilter<T> {
     }
 
     /**
-     *  将通配符转成标准的正则表达式 <br>
-     *  包含^、$、\字符的视为标准正则表达式， 其他视为通配符
-     *  一个*表示包的一个层级， 两个*表示包的多层级
-     * 例如：
-     * *.platf.** 转成  ^(\w+)\.platf\.(.*)$
-     * .platf.    转成  ^(.*)\.platf\.(.*)$
+     * 将通配符转成标准的正则表达式 <br>
+     * 包含^、$、\字符的视为标准正则表达式， 其他视为通配符 一个*表示包的一个层级， 两个*表示包的多层级 例如： *.platf.** 转成 ^(\w+)\.platf\.(.*)$ .platf. 转成
+     * ^(.*)\.platf\.(.*)$
      *
      * @param regex 正则表达式
-     * @return  Pattern
+     * @return Pattern
      */
     public static String formatPackageRegex(String regex) {
         if (regex.indexOf('^') >= 0 || regex.indexOf('$') >= 0 || regex.indexOf('\\') >= 0) { // 已经是标准正则表达式

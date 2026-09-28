@@ -66,7 +66,6 @@ public abstract class ProtobufWriter extends Writer {
 
     protected boolean enumtostring;
 
-
     protected Map<Stream, Object[]> streamArrayCache;
 
     protected ProtobufWriter() {}

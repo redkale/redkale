@@ -3,17 +3,6 @@
  */
 package org.redkale.bytecode;
 
-import java.io.InputStream;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-import org.redkale.annotation.Nullable;
 import static org.redkale.asm.Opcodes.ACC_PRIVATE;
 import static org.redkale.asm.Opcodes.ACC_PROTECTED;
 import static org.redkale.asm.Opcodes.ACC_PUBLIC;
@@ -29,6 +18,17 @@ import static org.redkale.asm.Opcodes.LLOAD;
 import static org.redkale.asm.Opcodes.LRETURN;
 import static org.redkale.asm.Opcodes.RETURN;
 
+import java.io.InputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.redkale.annotation.Nullable;
 import org.redkale.asm.*;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.util.RedkaleClassLoader;

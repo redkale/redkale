@@ -5,9 +5,10 @@
  */
 package org.redkale.annotation;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 
 /**
  * &#64;Resource资源被更新时的监听事件, 本注解只能标记在方法参数为ResourceEvent[]上 <br>
@@ -57,7 +58,7 @@ public @interface ResourceChanged {
 
     /**
      * 新旧值是否不相同的情况下才回调方法 <br>
-     * true: 新值与旧值不相同才回调ResourceChanged方法   <br>
+     * true: 新值与旧值不相同才回调ResourceChanged方法 <br>
      * false: 只要执行了ResourceFactory.register 就回调ResourceChanged方法
      *
      * @since 2.7.0

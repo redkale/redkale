@@ -2,9 +2,10 @@
  */
 package org.redkale.convert;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.*;
+
+import java.lang.annotation.*;
 
 /**
  * 依附在setter、getter方法、字段进行简单的配置 <br>
@@ -41,11 +42,11 @@ public @interface ConvertCoder {
 
     /**
      * 序列化定制化的 Encodeable, 构造函数的参数可以是：<br>
-     * 1、ConvertFactory   <br>
-     * 2、Type   <br>
-     * 3、Class   <br>
-     * 4、ConvertFactory和Type   <br>
-     * 5、ConvertFactory和Class  <br>
+     * 1、ConvertFactory <br>
+     * 2、Type <br>
+     * 3、Class <br>
+     * 4、ConvertFactory和Type <br>
+     * 5、ConvertFactory和Class <br>
      *
      * <p>类如果存在instance单实例对象字段值，则优先使用instance对象
      *
@@ -55,11 +56,11 @@ public @interface ConvertCoder {
 
     /**
      * 反序列化定制化的 Decodeable, 构造函数的参数可以是：<br>
-     * 1、ConvertFactory   <br>
-     * 2、Type   <br>
-     * 3、Class   <br>
-     * 4、ConvertFactory和Type   <br>
-     * 5、ConvertFactory和Class  <br>
+     * 1、ConvertFactory <br>
+     * 2、Type <br>
+     * 3、Class <br>
+     * 4、ConvertFactory和Type <br>
+     * 5、ConvertFactory和Class <br>
      *
      * <p>类如果存在instance单实例对象字段值，则优先使用instance对象
      *

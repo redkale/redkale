@@ -3,6 +3,8 @@
  */
 package org.redkale.net.http;
 
+import static org.redkale.net.http.HttpRequest.*;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
@@ -12,7 +14,6 @@ import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
 import org.redkale.net.client.ClientCodec;
-import static org.redkale.net.http.HttpRequest.*;
 import org.redkale.util.ByteArray;
 
 /**
@@ -22,7 +23,6 @@ import org.redkale.util.ByteArray;
  * @see org.redkale.net.http.WebConnection
  * @see org.redkale.net.http.WebRequest
  * @see org.redkale.net.http.WebResult
- *
  * @author zhangjx
  * @since 2.8.0
  */

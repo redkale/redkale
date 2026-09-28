@@ -4,14 +4,15 @@
  */
 package org.redkale.convert.json;
 
-import java.lang.reflect.Type;
-import org.redkale.convert.EnMember;
-import org.redkale.convert.Encodeable;
 import static org.redkale.convert.json.JsonWriter.BYTE_COMMA;
 import static org.redkale.convert.json.JsonWriter.BYTE_DQUOTE;
 import static org.redkale.convert.json.JsonWriter.DEFAULT_SIZE;
 import static org.redkale.convert.json.JsonWriter.DigitOnes;
 import static org.redkale.convert.json.JsonWriter.DigitTens;
+
+import java.lang.reflect.Type;
+import org.redkale.convert.EnMember;
+import org.redkale.convert.Encodeable;
 import org.redkale.util.StringWrapper;
 import org.redkale.util.Utility;
 
@@ -60,7 +61,6 @@ public class JsonCharsWriter extends JsonWriter {
      * 返回指定至少指定长度的缓冲区
      *
      * @param len
-     *
      * @return
      */
     private char[] expand(int len) {

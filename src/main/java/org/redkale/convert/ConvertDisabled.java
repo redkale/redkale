@@ -5,9 +5,10 @@
  */
 package org.redkale.convert;
 
-import java.lang.annotation.*;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.*;
 
 /**
  * 序列化时永久禁用该字段, 与ConvertColumn.ignore()的区别在于: ConvertDisabled不能通过ConvertEntity来解禁

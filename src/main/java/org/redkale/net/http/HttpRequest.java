@@ -5,6 +5,9 @@
  */
 package org.redkale.net.http;
 
+import static org.redkale.util.Utility.isEmpty;
+import static org.redkale.util.Utility.isNotEmpty;
+
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.net.*;
@@ -21,8 +24,6 @@ import org.redkale.convert.*;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.net.Request;
 import org.redkale.util.*;
-import static org.redkale.util.Utility.isEmpty;
-import static org.redkale.util.Utility.isNotEmpty;
 
 /**
  * Http请求包 与javax.servlet.http.HttpServletRequest 基本类似。 <br>
@@ -1681,8 +1682,7 @@ public class HttpRequest extends Request<HttpContext> {
 
     /**
      * 获取客户端地址IP, 与getRemoteAddress() 的区别在于：本方法优先取header中指定为RemoteAddress名的值，
-     * 没有则返回{@link #getRemoteAddress()}的getHostAddress()。
-     * <br>
+     * 没有则返回{@link #getRemoteAddress()}的getHostAddress()。 <br>
      * 本方法适用于服务前端有如nginx的代理服务器进行中转，通过 {@link #getRemoteAddress()}是获取不到客户端的真实IP。
      *
      * @return 地址
