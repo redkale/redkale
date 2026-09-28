@@ -17,6 +17,7 @@ import org.redkale.asm.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
+import org.redkale.bytecode.*;
 import org.redkale.convert.pb.ProtobufConvert;
 import org.redkale.inject.Resourcable;
 import org.redkale.inject.ResourceFactory;
@@ -494,7 +495,7 @@ public abstract class Sncp {
             RedkaleClassLoader classLoader,
             final String resourceName,
             final Class<T> serviceImplClass,
-            final AsmMethodBoost methodBoost) {
+            final CodeMethodBoost methodBoost) {
         Objects.requireNonNull(serviceImplClass);
         if (!Service.class.isAssignableFrom(serviceImplClass)) {
             throw new SncpException(serviceImplClass + " is not Service type");
@@ -557,7 +558,7 @@ public abstract class Sncp {
                 if (ann instanceof Resource || ann instanceof SncpDyn || ann instanceof ResourceType) {
                     continue;
                 }
-                Asms.visitAnnotation(
+                ByteCodes.visitAnnotation(
                         cw.visitAnnotation(Type.getDescriptor(ann.annotationType()), true), ann.annotationType(), ann);
             }
         }
@@ -618,7 +619,7 @@ public abstract class Sncp {
     private static void createNewMethods(
             RedkaleClassLoader classLoader,
             Class clazz,
-            final AsmMethodBoost methodBoost,
+            final CodeMethodBoost methodBoost,
             Set<String> methodKeys,
             ClassWriter cw,
             String newDynName,
@@ -628,7 +629,7 @@ public abstract class Sncp {
         }
         MethodDebugVisitor mv = null;
         do {
-            Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBeans(clazz);
+            Map<String, CodeMethodBean> methodBeans = CodeMethodBoost.getMethodBeans(clazz);
             for (final Method method : clazz.getDeclaredMethods()) {
                 String mk = Utility.methodKey(method);
                 if (methodKeys.contains(mk)) {
@@ -637,11 +638,11 @@ public abstract class Sncp {
                 }
                 methodKeys.add(mk);
                 List<Class<? extends Annotation>> filterAnns = methodBoost.filterMethodAnnotations(method);
-                AsmNewMethod newMethod =
+                CodeNewMethod newMethod =
                         methodBoost.doMethod(classLoader, cw, clazz, newDynName, FIELDPREFIX, filterAnns, method, null);
                 if (newMethod != null) {
                     String desc = Type.getMethodDescriptor(method);
-                    AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
+                    CodeMethodBean methodBean = CodeMethodBean.get(methodBeans, method);
                     String signature = null;
                     String[] exceptions = null;
                     if (methodBean == null) {
@@ -708,9 +709,9 @@ public abstract class Sncp {
                         Label l2 = new Label();
                         mv.visitLabel(l2);
                         // mv.visitLocalVariable("this", thisClassDesc, null, l0, l2, 0);
-                        List<AsmMethodParam> params = methodBean.getParams();
+                        List<CodeMethodParam> params = methodBean.getParams();
                         for (int i = 0; i < paramTypes.length; i++) {
-                            AsmMethodParam param = params.get(i);
+                            CodeMethodParam param = params.get(i);
                             mv.visitLocalVariable(
                                     param.getName(),
                                     param.description(paramTypes[i]),
@@ -748,7 +749,7 @@ public abstract class Sncp {
             final RedkaleClassLoader classLoader,
             final String resourceName,
             final Class<T> serviceImplClass,
-            final AsmMethodBoost methodBoost,
+            final CodeMethodBoost methodBoost,
             final ResourceFactory resourceFactory,
             final SncpRpcGroups sncpRpcGroups,
             final SncpClient client,
@@ -891,7 +892,7 @@ public abstract class Sncp {
             final RedkaleClassLoader classLoader,
             final String resourceName,
             final Class<T> serviceTypeOrImplClass,
-            final AsmMethodBoost methodBoost,
+            final CodeMethodBoost methodBoost,
             final ResourceFactory resourceFactory,
             final SncpRpcGroups sncpRpcGroups,
             final SncpClient client,
@@ -1004,7 +1005,7 @@ public abstract class Sncp {
                 if (ann instanceof Resource || ann instanceof SncpDyn || ann instanceof ResourceType) {
                     continue;
                 }
-                Asms.visitAnnotation(
+                ByteCodes.visitAnnotation(
                         cw.visitAnnotation(Type.getDescriptor(ann.annotationType()), true), ann.annotationType(), ann);
             }
         }
@@ -1054,7 +1055,7 @@ public abstract class Sncp {
         //            mv.visitEnd();
         //        }
         Set<String> methodKeys = new HashSet<>();
-        Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBeans(serviceTypeOrImplClass);
+        Map<String, CodeMethodBean> methodBeans = CodeMethodBoost.getMethodBeans(serviceTypeOrImplClass);
         for (final SncpRemoteAction entry : info.getActions()) {
             final java.lang.reflect.Method method = entry.method;
             String mk = Utility.methodKey(method);
@@ -1065,7 +1066,7 @@ public abstract class Sncp {
             methodKeys.add(mk);
 
             int acc = ACC_PUBLIC;
-            AsmNewMethod newMethod = null;
+            CodeNewMethod newMethod = null;
             String newMethodName = null;
             if (methodBoost != null) {
                 List<Class<? extends Annotation>> filterAnns = methodBoost.filterMethodAnnotations(method);
@@ -1087,7 +1088,7 @@ public abstract class Sncp {
                 final Annotation[][] anns = method.getParameterAnnotations();
                 for (int k = 0; k < anns.length; k++) {
                     for (Annotation ann : anns[k]) {
-                        Asms.visitAnnotation(
+                        ByteCodes.visitAnnotation(
                                 mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true),
                                 ann.annotationType(),
                                 ann);
@@ -1099,19 +1100,19 @@ public abstract class Sncp {
 
             mv.visitLdcInsn(entry.actionid.toString());
 
-            AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
+            CodeMethodBean methodBean = CodeMethodBean.get(methodBeans, method);
             List<Integer> insns = new ArrayList<>();
             java.lang.reflect.Type[] paramTypes = entry.paramTypes;
             { // 传参数
                 int paramlen = entry.paramTypes.length;
-                Asms.visitInsn(mv, paramlen);
+                ByteCodes.visitInsn(mv, paramlen);
                 mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
                 int insn = 0;
                 for (int j = 0; j < paramTypes.length; j++) {
                     final java.lang.reflect.Type pt = paramTypes[j];
                     mv.visitInsn(DUP);
                     insn++;
-                    Asms.visitInsn(mv, j);
+                    ByteCodes.visitInsn(mv, j);
                     if (pt instanceof Class && ((Class) pt).isPrimitive()) {
                         if (pt == long.class) {
                             mv.visitVarInsn(LLOAD, insn++);
@@ -1181,9 +1182,9 @@ public abstract class Sncp {
                 Label l2 = new Label();
                 mv.visitLabel(l2);
                 // mv.visitLocalVariable("this", thisClassDesc, null, l0, l2, 0);
-                List<AsmMethodParam> params = methodBean.getParams();
+                List<CodeMethodParam> params = methodBean.getParams();
                 for (int i = 0; i < paramTypes.length; i++) {
-                    AsmMethodParam param = params.get(i);
+                    CodeMethodParam param = params.get(i);
                     mv.visitLocalVariable(
                             param.getName(),
                             param.description(paramTypes[i]),

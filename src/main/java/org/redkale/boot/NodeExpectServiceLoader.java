@@ -11,7 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Priority;
-import org.redkale.asm.AsmMethodBoost;
+import org.redkale.bytecode.CodeMethodBoost;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
 import org.redkale.mq.spi.MessageAgent;
@@ -101,7 +101,7 @@ class NodeExpectServiceLoader implements ResourceTypeLoader {
                 }
                 service = serviceImplClass.getDeclaredConstructor().newInstance();
             } else if (srcObj instanceof WebSocketServlet || localMode) { // 本地模式
-                AsmMethodBoost methodBoost = application.createAsmMethodBoost(false, serviceImplClass);
+                CodeMethodBoost methodBoost = application.createCodeMethodBoost(false, serviceImplClass);
                 service = Sncp.createLocalService(
                         nodeServer.serverClassLoader,
                         resourceName,
@@ -114,7 +114,7 @@ class NodeExpectServiceLoader implements ResourceTypeLoader {
                         group,
                         entry.getProperty());
             } else {
-                AsmMethodBoost methodBoost = application.createAsmMethodBoost(true, serviceImplClass);
+                CodeMethodBoost methodBoost = application.createCodeMethodBoost(true, serviceImplClass);
                 service = Sncp.createRemoteService(
                         nodeServer.serverClassLoader,
                         resourceName,

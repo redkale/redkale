@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.asm;
+package org.redkale.bytecode;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -9,16 +9,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.redkale.annotation.Param;
+import org.redkale.asm.Type;
 
 /**
  * 存放方法的字节信息
  *
- * @see org.redkale.asm.AsmMethodBoost
+ * @see CodeMethodBoost
  * @since 2.8.0
  */
-public class AsmMethodBean {
+public class CodeMethodBean {
 
-    private List<AsmMethodParam> params;
+    private List<CodeMethodParam> params;
 
     private int access;
 
@@ -30,9 +31,9 @@ public class AsmMethodBean {
 
     private String[] exceptions;
 
-    public AsmMethodBean() {}
+    public CodeMethodBean() {}
 
-    public AsmMethodBean(int access, String name, String desc, String signature, String[] exceptions) {
+    public CodeMethodBean(int access, String name, String desc, String signature, String[] exceptions) {
         this.access = access;
         this.name = name;
         this.desc = desc;
@@ -41,14 +42,14 @@ public class AsmMethodBean {
         this.params = new ArrayList<>();
     }
 
-    public static AsmMethodBean get(Map<String, AsmMethodBean> map, Method method) {
+    public static CodeMethodBean get(Map<String, CodeMethodBean> map, Method method) {
         return map == null ? null : map.get(method.getName() + ":" + Type.getMethodDescriptor(method));
     }
 
     void removeEmptyNames() {
         if (params != null) {
-            List<AsmMethodParam> dels = null;
-            for (AsmMethodParam p : params) {
+            List<CodeMethodParam> dels = null;
+            for (CodeMethodParam p : params) {
                 if (" ".equals(p.getName())) {
                     if (dels == null) {
                         dels = new ArrayList<>();
@@ -57,7 +58,7 @@ public class AsmMethodBean {
                 }
             }
             if (dels != null) {
-                for (AsmMethodParam p : dels) {
+                for (CodeMethodParam p : dels) {
                     params.remove(p);
                 }
             }
@@ -75,7 +76,7 @@ public class AsmMethodBean {
         int index = 0;
         Parameter[] ps = method == null ? null : method.getParameters();
         List<String> rs = new ArrayList<>(params.size());
-        for (AsmMethodParam p : params) {
+        for (CodeMethodParam p : params) {
             Param pann = ps == null ? null : ps[index].getAnnotation(Param.class);
             rs.add(pann == null ? p.getName() : pann.value());
             index++;
@@ -101,11 +102,11 @@ public class AsmMethodBean {
         return rs;
     }
 
-    public List<AsmMethodParam> getParams() {
+    public List<CodeMethodParam> getParams() {
         return params;
     }
 
-    public void setParams(List<AsmMethodParam> params) {
+    public void setParams(List<CodeMethodParam> params) {
         this.params = params;
     }
 

@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
+import org.redkale.bytecode.ByteCodes;
 
 /**
  * 动态生成指定public方法的调用对象, 替代Method.invoke的反射方式
@@ -153,9 +154,9 @@ public interface Invoker<C, R> {
             for (Class paramType : method.getParameterTypes()) {
                 // 参数
                 mv.visitVarInsn(ALOAD, 2);
-                Asms.visitInsn(mv, paramIndex);
+                ByteCodes.visitInsn(mv, paramIndex);
                 mv.visitInsn(AALOAD);
-                Asms.visitCheckCast(mv, paramType);
+                ByteCodes.visitCheckCast(mv, paramType);
                 paramDescs.append(Type.getDescriptor(paramType));
                 paramIndex++;
             }
@@ -169,7 +170,7 @@ public interface Invoker<C, R> {
             if (returnType == void.class) {
                 mv.visitInsn(ACONST_NULL);
             } else {
-                Asms.visitPrimitiveValueOf(mv, returnType);
+                ByteCodes.visitPrimitiveValueOf(mv, returnType);
             }
             mv.visitLabel(label1);
             mv.visitInsn(ARETURN);

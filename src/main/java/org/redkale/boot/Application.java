@@ -22,7 +22,7 @@ import java.util.logging.*;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Configuration;
 import org.redkale.annotation.Nonnull;
-import org.redkale.asm.AsmMethodBoost;
+import org.redkale.bytecode.CodeMethodBoost;
 import org.redkale.boot.ClassFilter.FilterEntry;
 import org.redkale.cached.spi.CachedModuleEngine;
 import org.redkale.cluster.*;
@@ -237,9 +237,7 @@ public final class Application {
      * 5、ClusterAgent和MessageAgent实例化 <br>
      * 6、Work线程池初始化 7、原生sql解析器初始化 <br>
      *
-     * @param singletonMode 是否测试模式
-     * @param compileMode 是否编译模式
-     * @param config 启动配置
+     * @param appConfig 启动配置
      */
     @SuppressWarnings("UseSpecificCatch") // config: 不带redkale.前缀的配置项
     Application(final AppConfig appConfig) {
@@ -1125,10 +1123,10 @@ public final class Application {
         }
     }
 
-    AsmMethodBoost createAsmMethodBoost(boolean remote, Class serviceClass) {
-        List<AsmMethodBoost> list = null;
+    CodeMethodBoost createCodeMethodBoost(boolean remote, Class serviceClass) {
+        List<CodeMethodBoost> list = null;
         for (ModuleEngine item : moduleEngines) {
-            AsmMethodBoost boost = item.createAsmMethodBoost(remote, serviceClass);
+            CodeMethodBoost boost = item.createCodeMethodBoost(remote, serviceClass);
             if (boost != null) {
                 if (list == null) {
                     list = new ArrayList<>();
@@ -1140,7 +1138,7 @@ public final class Application {
             return null;
         }
         Utility.sortPriority(list);
-        return list.size() == 1 ? list.get(0) : AsmMethodBoost.create(remote, list);
+        return list.size() == 1 ? list.get(0) : CodeMethodBoost.create(remote, list);
     }
 
     /** 进入Application.init方法时被调用 */
@@ -1180,7 +1178,6 @@ public final class Application {
     /**
      * 配置项加载后被调用
      *
-     * @param props 配置项全量
      */
     private void onEnvironmentLoaded() {
         this.registerResourceEnvs(true, this.envProperties);

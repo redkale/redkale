@@ -2,7 +2,7 @@
 
 */
 
-package org.redkale.asm;
+package org.redkale.bytecode;
 
 import org.redkale.convert.json.JsonConvert;
 
@@ -11,15 +11,15 @@ import org.redkale.convert.json.JsonConvert;
  *
  * @since 2.8.0
  */
-public class AsmNewMethod {
+public class CodeNewMethod {
 
     private String methodName;
 
     private int methodAccs;
 
-    public AsmNewMethod() {}
+    public CodeNewMethod() {}
 
-    public AsmNewMethod(String newName, int newAccs) {
+    public CodeNewMethod(String newName, int newAccs) {
         this.methodName = newName;
         this.methodAccs = newAccs;
     }

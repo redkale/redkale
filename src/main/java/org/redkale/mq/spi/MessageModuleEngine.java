@@ -22,7 +22,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Component;
-import org.redkale.asm.AsmMethodBoost;
+import org.redkale.bytecode.CodeMethodBoost;
 import org.redkale.boot.Application;
 import org.redkale.boot.ClassFilter;
 import org.redkale.boot.ModuleEngine;
@@ -78,8 +78,8 @@ public class MessageModuleEngine extends ModuleEngine {
      * @return 方法动态扩展器
      */
     @Override
-    public AsmMethodBoost createAsmMethodBoost(boolean remote, Class serviceClass) {
-        return new MessageAsmMethodBoost(remote, serviceClass, this);
+    public CodeMethodBoost createCodeMethodBoost(boolean remote, Class serviceClass) {
+        return new MessageCodeMethodBoost(remote, serviceClass, this);
     }
 
     // 在doInstance方法里被调用
@@ -424,7 +424,7 @@ public class MessageModuleEngine extends ModuleEngine {
         if (Sncp.isSncpDyn(service)) {
             return; // 跳过动态生成的Service
         }
-        MessageAsmMethodBoost boost = null;
+        MessageCodeMethodBoost boost = null;
         for (Method method : service.getClass().getDeclaredMethods()) {
             Messaged messaged = method.getAnnotation(Messaged.class);
             if (messaged == null) {
@@ -443,11 +443,11 @@ public class MessageModuleEngine extends ModuleEngine {
                         + " must on one parameter(type: MessageEvent[]) method, but on " + method);
             }
 
-            Type messageType = MessageAsmMethodBoost.getMethodMessageType(method);
+            Type messageType = MessageCodeMethodBoost.getMethodMessageType(method);
             Convert convert = ConvertFactory.findConvert(messaged.convertType());
             convert.getFactory().loadDecoder(messageType);
             if (boost == null) {
-                boost = new MessageAsmMethodBoost(false, service.getClass(), this);
+                boost = new MessageCodeMethodBoost(false, service.getClass(), this);
                 String newDynName = "org/redkaledyn/service/local/_DynMessageService__"
                         + service.getClass().getName().replace('.', '_').replace('$', '_');
                 boost.createInnerConsumer(null, service.getClass(), method, messageType, messaged, newDynName, null);

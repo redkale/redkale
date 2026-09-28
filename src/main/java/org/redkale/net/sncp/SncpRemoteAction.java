@@ -16,10 +16,10 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import org.redkale.asm.AnnotationVisitor;
-import org.redkale.asm.AsmMethodBean;
-import org.redkale.asm.AsmMethodBoost;
-import org.redkale.asm.AsmMethodParam;
-import org.redkale.asm.Asms;
+import org.redkale.bytecode.CodeMethodBean;
+import org.redkale.bytecode.CodeMethodBoost;
+import org.redkale.bytecode.CodeMethodParam;
+import org.redkale.bytecode.ByteCodes;
 import org.redkale.asm.ClassWriter;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.FieldVisitor;
@@ -274,8 +274,8 @@ public final class SncpRemoteAction {
             // do nothing
         }
 
-        Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBeans(resourceType);
-        AsmMethodBean methodBean = Objects.requireNonNull(methodBeans.get(AsmMethodBoost.getMethodBeanKey(method)));
+        Map<String, CodeMethodBean> methodBeans = CodeMethodBoost.getMethodBeans(resourceType);
+        CodeMethodBean methodBean = Objects.requireNonNull(methodBeans.get(CodeMethodBoost.getMethodBeanKey(method)));
         // -------------------------------------------------------------
         ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
         FieldVisitor fv;
@@ -283,9 +283,9 @@ public final class SncpRemoteAction {
         AnnotationVisitor av;
 
         cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, "java/lang/Object", null);
-        final List<AsmMethodParam> asmParams = methodBean.getParams();
+        final List<CodeMethodParam> asmParams = methodBean.getParams();
         for (int i = 1; i <= paramClasses.length; i++) {
-            AsmMethodParam param = asmParams.get(i - 1);
+            CodeMethodParam param = asmParams.get(i - 1);
             String paramDesc = org.redkale.asm.Type.getDescriptor(paramClasses[i - 1]);
             fv = cw.visitField(ACC_PUBLIC, "arg" + i, paramDesc, param.getSignature(), null);
             av = fv.visitAnnotation(columnDesc, true);
@@ -311,9 +311,9 @@ public final class SncpRemoteAction {
                 String paramDesc = org.redkale.asm.Type.getDescriptor(paramClasses[i - 1]);
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitVarInsn(ALOAD, 1);
-                Asms.visitInsn(mv, i - 1);
+                ByteCodes.visitInsn(mv, i - 1);
                 mv.visitInsn(AALOAD);
-                Asms.visitCheckCast(mv, paramClasses[i - 1]);
+                ByteCodes.visitCheckCast(mv, paramClasses[i - 1]);
                 mv.visitFieldInsn(PUTFIELD, newDynName, "arg" + i, paramDesc);
             }
             mv.visitInsn(RETURN);

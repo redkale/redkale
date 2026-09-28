@@ -10,7 +10,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.redkale.boot.LoggingBaseHandler;
 import org.redkale.cached.CachedManager;
-import org.redkale.cached.spi.CachedAsmMethodBoost;
+import org.redkale.cached.spi.CachedCodeMethodBoost;
 import org.redkale.cached.spi.CachedManagerService;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.net.AsyncGroup;
@@ -66,8 +66,8 @@ public class CachedInstanceTest {
     @Test
     public void run1() throws Exception {
         Class<CachedInstance> instanceClass = CachedInstance.class;
-        CachedAsmMethodBoost boost = new CachedAsmMethodBoost(false, instanceClass);
-        CachedAsmMethodBoost boost2 = new CachedAsmMethodBoost(false, instanceClass);
+        CachedCodeMethodBoost boost = new CachedCodeMethodBoost(false, instanceClass);
+        CachedCodeMethodBoost boost2 = new CachedCodeMethodBoost(false, instanceClass);
         SncpRpcGroups grous = new SncpRpcGroups();
         AsyncGroup iGroup = AsyncGroup.create("", Utility.newScheduledExecutor(1), 0, 0);
         SncpClient client = new SncpClient(
@@ -103,8 +103,8 @@ public class CachedInstanceTest {
     @Test
     public void run2() throws Exception {
         Class<CachedInstance> serviceClass = CachedInstance.class;
-        CachedAsmMethodBoost boost = new CachedAsmMethodBoost(false, serviceClass);
-        CachedAsmMethodBoost boost2 = new CachedAsmMethodBoost(false, serviceClass);
+        CachedCodeMethodBoost boost = new CachedCodeMethodBoost(false, serviceClass);
+        CachedCodeMethodBoost boost2 = new CachedCodeMethodBoost(false, serviceClass);
         SncpRpcGroups grous = new SncpRpcGroups();
         AsyncGroup iGroup = AsyncGroup.create("", Utility.newScheduledExecutor(1), 0, 0);
         SncpClient client = new SncpClient(

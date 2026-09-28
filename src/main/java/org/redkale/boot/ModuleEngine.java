@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.logging.Logger;
-import org.redkale.asm.AsmMethodBoost;
+import org.redkale.bytecode.CodeMethodBoost;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.service.Service;
@@ -70,7 +70,7 @@ public abstract class ModuleEngine {
      * @param serviceClass 类
      * @return 方法动态扩展器
      */
-    public AsmMethodBoost createAsmMethodBoost(boolean remote, Class serviceClass) {
+    public CodeMethodBoost createCodeMethodBoost(boolean remote, Class serviceClass) {
         return null;
     }
 

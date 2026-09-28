@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.asm;
+package org.redkale.bytecode;
 
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
@@ -28,6 +28,8 @@ import static org.redkale.asm.Opcodes.IRETURN;
 import static org.redkale.asm.Opcodes.LLOAD;
 import static org.redkale.asm.Opcodes.LRETURN;
 import static org.redkale.asm.Opcodes.RETURN;
+
+import org.redkale.asm.*;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.Utility;
@@ -41,7 +43,7 @@ import org.redkale.util.Utility;
  * @author zhangjx
  * @since 2.8.0
  */
-public abstract class AsmMethodBoost<T> {
+public abstract class CodeMethodBoost<T> {
 
     protected final AtomicInteger fieldIndex = new AtomicInteger();
 
@@ -49,17 +51,17 @@ public abstract class AsmMethodBoost<T> {
 
     protected final Class serviceType;
 
-    protected AsmMethodBoost(boolean remote, Class serviceType) {
+    protected CodeMethodBoost(boolean remote, Class serviceType) {
         this.remote = remote;
         this.serviceType = serviceType;
     }
 
-    public static AsmMethodBoost create(boolean remote, Collection<AsmMethodBoost> list) {
-        return new AsmMethodBoosts(remote, list);
+    public static CodeMethodBoost create(boolean remote, Collection<CodeMethodBoost> list) {
+        return new CodeMethodBoosts(remote, list);
     }
 
-    public static AsmMethodBoost create(boolean remote, AsmMethodBoost... items) {
-        return new AsmMethodBoosts(remote, items);
+    public static CodeMethodBoost create(boolean remote, CodeMethodBoost... items) {
+        return new CodeMethodBoosts(remote, items);
     }
 
     /**
@@ -68,10 +70,10 @@ public abstract class AsmMethodBoost<T> {
      * @param clazz Class
      * @return Map
      */
-    public static Map<String, AsmMethodBean> getMethodBeans(Class clazz) {
-        Map<String, AsmMethodBean> rs = MethodParamClassVisitor.getMethodParamNames(new HashMap<>(), clazz);
+    public static Map<String, CodeMethodBean> getMethodBeans(Class clazz) {
+        Map<String, CodeMethodBean> rs = MethodParamClassVisitor.getMethodParamNames(new HashMap<>(), clazz);
         // 返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
-        rs.values().forEach(AsmMethodBean::removeEmptyNames);
+        rs.values().forEach(CodeMethodBean::removeEmptyNames);
         return rs;
     }
 
@@ -100,7 +102,7 @@ public abstract class AsmMethodBoost<T> {
      * @param newMethod 新的方法名, 可能为null
      * @return 下一个新的方法名，不做任何处理应返回参数newMethodName
      */
-    public abstract AsmNewMethod doMethod(
+    public abstract CodeNewMethod doMethod(
             RedkaleClassLoader classLoader,
             ClassWriter cw,
             Class serviceImplClass,
@@ -108,7 +110,7 @@ public abstract class AsmMethodBoost<T> {
             String fieldPrefix,
             List<Class<? extends Annotation>> filterAnns,
             Method method,
-            @Nullable AsmNewMethod newMethod);
+            @Nullable CodeNewMethod newMethod);
 
     /**
      * 处理所有动态方法后调用
@@ -146,13 +148,13 @@ public abstract class AsmMethodBoost<T> {
      */
     public abstract void doInstance(RedkaleClassLoader classLoader, ResourceFactory resourceFactory, T service);
 
-    protected AsmMethodBean getMethodBean(Method method) {
-        Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBeans(serviceType);
-        return AsmMethodBean.get(methodBeans, method);
+    protected CodeMethodBean getMethodBean(Method method) {
+        Map<String, CodeMethodBean> methodBeans = CodeMethodBoost.getMethodBeans(serviceType);
+        return CodeMethodBean.get(methodBeans, method);
     }
 
     protected MethodVisitor createMethodVisitor(
-            ClassWriter cw, Method method, AsmNewMethod newMethod, AsmMethodBean methodBean) {
+            ClassWriter cw, Method method, CodeNewMethod newMethod, CodeMethodBean methodBean) {
         return new MethodDebugVisitor(cw.visitMethod(
                 getAcc(method, newMethod),
                 getNowMethodName(method, newMethod),
@@ -161,22 +163,22 @@ public abstract class AsmMethodBoost<T> {
                 getMethodExceptions(method, methodBean)));
     }
 
-    protected final int getAcc(Method method, AsmNewMethod newMethod) {
+    protected final int getAcc(Method method, CodeNewMethod newMethod) {
         if (newMethod != null) {
             return ACC_PRIVATE;
         }
         return Modifier.isProtected(method.getModifiers()) ? ACC_PROTECTED : ACC_PUBLIC;
     }
 
-    protected String getNowMethodName(Method method, AsmNewMethod newMethod) {
+    protected String getNowMethodName(Method method, CodeNewMethod newMethod) {
         return newMethod == null ? method.getName() : newMethod.getMethodName();
     }
 
-    protected String getMethodSignature(Method method, AsmMethodBean methodBean) {
+    protected String getMethodSignature(Method method, CodeMethodBean methodBean) {
         return methodBean != null ? methodBean.getSignature() : null;
     }
 
-    protected String[] getMethodExceptions(Method method, AsmMethodBean methodBean) {
+    protected String[] getMethodExceptions(Method method, CodeMethodBean methodBean) {
         if (methodBean == null) {
             String[] exceptions = null;
             Class<?>[] expTypes = method.getExceptionTypes();
@@ -193,14 +195,14 @@ public abstract class AsmMethodBoost<T> {
     }
 
     protected void visitRawAnnotation(
-            Method method, AsmNewMethod newMethod, MethodVisitor mv, Class skipAnnType, List skipAnns) {
+            Method method, CodeNewMethod newMethod, MethodVisitor mv, Class skipAnnType, List skipAnns) {
         if (newMethod == null) {
             // 给方法加上原有的Annotation
             final Annotation[] anns = method.getAnnotations();
             for (Annotation ann : anns) {
                 if (ann.annotationType() != skipAnnType
                         && (skipAnns == null || !skipAnns.contains(ann.annotationType()))) {
-                    Asms.visitAnnotation(
+                    ByteCodes.visitAnnotation(
                             mv.visitAnnotation(Type.getDescriptor(ann.annotationType()), true),
                             ann.annotationType(),
                             ann);
@@ -210,7 +212,7 @@ public abstract class AsmMethodBoost<T> {
             final Annotation[][] annss = method.getParameterAnnotations();
             for (int k = 0; k < annss.length; k++) {
                 for (Annotation ann : annss[k]) {
-                    Asms.visitAnnotation(
+                    ByteCodes.visitAnnotation(
                             mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true),
                             ann.annotationType(),
                             ann);
@@ -244,13 +246,13 @@ public abstract class AsmMethodBoost<T> {
     }
 
     protected void visitParamTypesLocalVariable(
-            MethodVisitor mv, Method method, Label l0, Label l2, List<Integer> insns, AsmMethodBean methodBean) {
+            MethodVisitor mv, Method method, Label l0, Label l2, List<Integer> insns, CodeMethodBean methodBean) {
         Class[] paramTypes = method.getParameterTypes();
         if (methodBean != null && paramTypes.length > 0) {
             mv.visitLabel(l2);
-            List<AsmMethodParam> params = methodBean.getParams();
+            List<CodeMethodParam> params = methodBean.getParams();
             for (int i = 0; i < paramTypes.length; i++) {
-                AsmMethodParam param = params.get(i);
+                CodeMethodParam param = params.get(i);
                 mv.visitLocalVariable(
                         param.getName(),
                         param.description(paramTypes[i]),
@@ -263,7 +265,7 @@ public abstract class AsmMethodBoost<T> {
     }
 
     protected void visitInsnReturn(
-            MethodVisitor mv, Method method, Label l0, List<Integer> insns, AsmMethodBean methodBean) {
+            MethodVisitor mv, Method method, Label l0, List<Integer> insns, CodeMethodBean methodBean) {
         if (method.getGenericReturnType() == void.class) {
             mv.visitInsn(RETURN);
         } else {
@@ -291,16 +293,16 @@ public abstract class AsmMethodBoost<T> {
      * @param <T> 泛型
      * @since 2.8.0
      */
-    static class AsmMethodBoosts<T> extends AsmMethodBoost<T> {
+    static class CodeMethodBoosts<T> extends CodeMethodBoost<T> {
 
-        private final AsmMethodBoost[] items;
+        private final CodeMethodBoost[] items;
 
-        public AsmMethodBoosts(boolean remote, Collection<AsmMethodBoost> list) {
+        public CodeMethodBoosts(boolean remote, Collection<CodeMethodBoost> list) {
             super(remote, null);
-            this.items = list.toArray(new AsmMethodBoost[list.size()]);
+            this.items = list.toArray(new CodeMethodBoost[list.size()]);
         }
 
-        public AsmMethodBoosts(boolean remote, AsmMethodBoost... items) {
+        public CodeMethodBoosts(boolean remote, CodeMethodBoost... items) {
             super(remote, null);
             this.items = items;
         }
@@ -308,7 +310,7 @@ public abstract class AsmMethodBoost<T> {
         @Override
         public List<Class<? extends Annotation>> filterMethodAnnotations(Method method) {
             List<Class<? extends Annotation>> list = null;
-            for (AsmMethodBoost item : items) {
+            for (CodeMethodBoost item : items) {
                 if (item != null) {
                     List<Class<? extends Annotation>> sub = item.filterMethodAnnotations(method);
                     if (sub != null) {
@@ -323,7 +325,7 @@ public abstract class AsmMethodBoost<T> {
         }
 
         @Override
-        public AsmNewMethod doMethod(
+        public CodeNewMethod doMethod(
                 RedkaleClassLoader classLoader,
                 ClassWriter cw,
                 Class serviceImplClass,
@@ -331,9 +333,9 @@ public abstract class AsmMethodBoost<T> {
                 String fieldPrefix,
                 List<Class<? extends Annotation>> filterAnns,
                 Method method,
-                AsmNewMethod newMethod) {
-            AsmNewMethod newResult = newMethod;
-            for (AsmMethodBoost item : items) {
+                CodeNewMethod newMethod) {
+            CodeNewMethod newResult = newMethod;
+            for (CodeMethodBoost item : items) {
                 if (item != null) {
                     newResult = item.doMethod(
                             classLoader, cw, serviceImplClass, newDynName, fieldPrefix, filterAnns, method, newResult);
@@ -345,7 +347,7 @@ public abstract class AsmMethodBoost<T> {
         @Override
         public void doAfterMethods(
                 RedkaleClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {
-            for (AsmMethodBoost item : items) {
+            for (CodeMethodBoost item : items) {
                 if (item != null) {
                     item.doAfterMethods(classLoader, cw, newDynName, fieldPrefix);
                 }
@@ -360,7 +362,7 @@ public abstract class AsmMethodBoost<T> {
                 String newDynName,
                 String fieldPrefix,
                 boolean remote) {
-            for (AsmMethodBoost item : items) {
+            for (CodeMethodBoost item : items) {
                 if (item != null) {
                     item.doConstructorMethod(classLoader, cw, mv, newDynName, fieldPrefix, remote);
                 }
@@ -369,7 +371,7 @@ public abstract class AsmMethodBoost<T> {
 
         @Override
         public void doInstance(RedkaleClassLoader classLoader, ResourceFactory resourceFactory, T service) {
-            for (AsmMethodBoost item : items) {
+            for (CodeMethodBoost item : items) {
                 if (item != null) {
                     item.doInstance(classLoader, resourceFactory, service);
                 }
@@ -381,9 +383,9 @@ public abstract class AsmMethodBoost<T> {
 
         private Class serviceType;
 
-        private final Map<String, AsmMethodBean> methodBeanMap;
+        private final Map<String, CodeMethodBean> methodBeanMap;
 
-        public MethodParamClassVisitor(int api, Class serviceType, final Map<String, AsmMethodBean> methodBeanMap) {
+        public MethodParamClassVisitor(int api, Class serviceType, final Map<String, CodeMethodBean> methodBeanMap) {
             super(api);
             this.serviceType = serviceType;
             this.methodBeanMap = methodBeanMap;
@@ -404,14 +406,14 @@ public abstract class AsmMethodBoost<T> {
             if (methodBeanMap.containsKey(key)) {
                 return null;
             }
-            AsmMethodBean bean =
-                    new AsmMethodBean(methodAccess, methodName, methodDesc, methodSignature, methodExceptions);
-            List<AsmMethodParam> paramList = bean.getParams();
+            CodeMethodBean bean =
+                    new CodeMethodBean(methodAccess, methodName, methodDesc, methodSignature, methodExceptions);
+            List<CodeMethodParam> paramList = bean.getParams();
             methodBeanMap.put(key, bean);
             return new MethodVisitor(Opcodes.ASM6) {
                 @Override
                 public void visitParameter(String paramName, int paramAccess) {
-                    paramList.add(new AsmMethodParam(paramName));
+                    paramList.add(new CodeMethodParam(paramName));
                 }
 
                 @Override
@@ -424,17 +426,17 @@ public abstract class AsmMethodBoost<T> {
                     // index并不会按顺序执行
                     if (varIndex > size) {
                         for (int i = size; i < varIndex; i++) {
-                            paramList.add(new AsmMethodParam(" ", varDesc, varSignature));
+                            paramList.add(new CodeMethodParam(" ", varDesc, varSignature));
                         }
-                        paramList.set(varIndex - 1, new AsmMethodParam(varName, varDesc, varSignature));
+                        paramList.set(varIndex - 1, new CodeMethodParam(varName, varDesc, varSignature));
                     }
-                    paramList.set(varIndex - 1, new AsmMethodParam(varName, varDesc, varSignature));
+                    paramList.set(varIndex - 1, new CodeMethodParam(varName, varDesc, varSignature));
                 }
             };
         }
 
         // 返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
-        static Map<String, AsmMethodBean> getMethodParamNames(Map<String, AsmMethodBean> map, Class clazz) {
+        static Map<String, CodeMethodBean> getMethodParamNames(Map<String, CodeMethodBean> map, Class clazz) {
             String n = clazz.getName();
             byte[] bs = RedkaleClassLoader.getDynClassBytes(n);
             if (bs == null) {

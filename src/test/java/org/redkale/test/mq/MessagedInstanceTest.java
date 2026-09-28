@@ -15,7 +15,7 @@ import org.redkale.boot.LoggingBaseHandler;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.mq.spi.MessageAgent;
-import org.redkale.mq.spi.MessageAsmMethodBoost;
+import org.redkale.mq.spi.MessageCodeMethodBoost;
 import org.redkale.mq.spi.MessageClientProducer;
 import org.redkale.mq.spi.MessageModuleEngine;
 import org.redkale.net.AsyncGroup;
@@ -66,7 +66,7 @@ public class MessagedInstanceTest {
     @Test
     public void run1() throws Exception {
         Class<TestMessageService> serviceClass = TestMessageService.class;
-        MessageAsmMethodBoost boost = new MessageAsmMethodBoost(false, serviceClass, engine);
+        MessageCodeMethodBoost boost = new MessageCodeMethodBoost(false, serviceClass, engine);
         SncpRpcGroups grous = new SncpRpcGroups();
         AsyncGroup iGroup = AsyncGroup.create("", Utility.newScheduledExecutor(1), 0, 0);
         SncpClient client = new SncpClient(

@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 import org.redkale.annotation.Component;
-import org.redkale.asm.AsmMethodBoost;
+import org.redkale.bytecode.CodeMethodBoost;
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
 import org.redkale.boot.NodeServer;
@@ -69,8 +69,8 @@ public class CachedModuleEngine extends ModuleEngine {
      * @return 方法动态扩展器
      */
     @Override
-    public AsmMethodBoost createAsmMethodBoost(boolean remote, Class serviceClass) {
-        return new CachedAsmMethodBoost(remote, serviceClass);
+    public CodeMethodBoost createCodeMethodBoost(boolean remote, Class serviceClass) {
+        return new CachedCodeMethodBoost(remote, serviceClass);
     }
 
     /** 结束Application.init方法前被调用 */

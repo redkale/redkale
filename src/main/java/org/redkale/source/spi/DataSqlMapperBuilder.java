@@ -14,10 +14,10 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.IntFunction;
 import org.redkale.annotation.Param;
-import org.redkale.asm.AsmMethodBean;
-import org.redkale.asm.AsmMethodBoost;
-import org.redkale.asm.AsmMethodParam;
-import org.redkale.asm.Asms;
+import org.redkale.bytecode.CodeMethodBean;
+import org.redkale.bytecode.CodeMethodBoost;
+import org.redkale.bytecode.CodeMethodParam;
+import org.redkale.bytecode.ByteCodes;
 import org.redkale.asm.ClassWriter;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.FieldVisitor;
@@ -86,7 +86,7 @@ public final class DataSqlMapperBuilder {
         }
         EntityBuilder.load(entityType);
         List<Item> items = new ArrayList<>();
-        Map<String, AsmMethodBean> selfMethodBeans = AsmMethodBoost.getMethodBeans(mapperType);
+        Map<String, CodeMethodBean> selfMethodBeans = CodeMethodBoost.getMethodBeans(mapperType);
         for (Method method : mapperType.getMethods()) {
             if (Modifier.isStatic(method.getModifiers())) {
                 continue;
@@ -118,7 +118,7 @@ public final class DataSqlMapperBuilder {
                 signFunc = ((AbstractDataSqlSource) source).getSignFunc();
             }
             DataNativeSqlInfo sqlInfo = nativeSqlParser.parse(signFunc, source.getType(), sql.value());
-            AsmMethodBean methodBean = selfMethodBeans.get(AsmMethodBoost.getMethodBeanKey(method));
+            CodeMethodBean methodBean = selfMethodBeans.get(CodeMethodBoost.getMethodBeanKey(method));
             List<String> fieldNames = methodBean.paramNameList(method);
             Class resultClass = resultClass(method);
             int roundIndex = -1;
@@ -216,7 +216,7 @@ public final class DataSqlMapperBuilder {
         for (Item item : items) {
             Method method = item.method;
             DataNativeSqlInfo sqlInfo = item.sqlInfo;
-            AsmMethodBean methodBean = item.methodBean;
+            CodeMethodBean methodBean = item.methodBean;
             int roundIndex = item.roundIndex;
             Sql sql = method.getAnnotation(Sql.class);
             Class resultClass = resultClass(method);
@@ -224,7 +224,7 @@ public final class DataSqlMapperBuilder {
             final boolean async = method.getReturnType().isAssignableFrom(CompletableFuture.class);
             Parameter[] params = method.getParameters();
             Class[] paramTypes = method.getParameterTypes();
-            List<AsmMethodParam> methodParams = methodBean.getParams();
+            List<CodeMethodParam> methodParams = methodBean.getParams();
             List<Integer> insns = new ArrayList<>();
             if (!EntityBuilder.isSimpleType(componentTypes[0])) {
                 EntityBuilder.load(componentTypes[0]);
@@ -250,7 +250,7 @@ public final class DataSqlMapperBuilder {
                 mv.visitVarInsn(ALOAD, roundIndex + 1);
             }
             // 参数: params
-            Asms.visitInsn(mv, paramTypes.length * 2 - (roundIndex >= 0 ? 2 : 0));
+            ByteCodes.visitInsn(mv, paramTypes.length * 2 - (roundIndex >= 0 ? 2 : 0));
             mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
             int insn = 0;
             for (int i = 0; i < paramTypes.length; i++) {
@@ -259,14 +259,14 @@ public final class DataSqlMapperBuilder {
                     Class pt = paramTypes[i];
                     // 参数名
                     mv.visitInsn(DUP);
-                    Asms.visitInsn(mv, i * 2);
+                    ByteCodes.visitInsn(mv, i * 2);
                     Param p = params[i].getAnnotation(Param.class);
                     String k = p == null ? methodParams.get(i).getName() : p.value();
                     mv.visitLdcInsn(k);
                     mv.visitInsn(AASTORE);
                     // 参数值
                     mv.visitInsn(DUP);
-                    Asms.visitInsn(mv, i * 2 + 1);
+                    ByteCodes.visitInsn(mv, i * 2 + 1);
                     if (pt.isPrimitive()) {
                         if (pt == long.class) {
                             mv.visitVarInsn(LLOAD, insn++);
@@ -280,7 +280,7 @@ public final class DataSqlMapperBuilder {
                     } else {
                         mv.visitVarInsn(ALOAD, insn);
                     }
-                    Asms.visitPrimitiveValueOf(mv, pt);
+                    ByteCodes.visitPrimitiveValueOf(mv, pt);
                     mv.visitInsn(AASTORE);
                 }
                 insns.add(insn);
@@ -346,7 +346,7 @@ public final class DataSqlMapperBuilder {
             mv.visitLabel(l2);
             mv.visitLocalVariable("this", "L" + newDynName + ";", null, l0, l2, 0);
             for (int i = 0; i < paramTypes.length; i++) {
-                AsmMethodParam param = methodParams.get(i);
+                CodeMethodParam param = methodParams.get(i);
                 mv.visitLocalVariable(
                         param.getName(),
                         param.description(paramTypes[i]),
@@ -445,11 +445,11 @@ public final class DataSqlMapperBuilder {
 
         public DataNativeSqlInfo sqlInfo;
 
-        public AsmMethodBean methodBean;
+        public CodeMethodBean methodBean;
 
         public int roundIndex = -1;
 
-        public Item(Method method, DataNativeSqlInfo sqlInfo, AsmMethodBean methodBean, int roundIndex) {
+        public Item(Method method, DataNativeSqlInfo sqlInfo, CodeMethodBean methodBean, int roundIndex) {
             this.method = method;
             this.sqlInfo = sqlInfo;
             this.methodBean = methodBean;

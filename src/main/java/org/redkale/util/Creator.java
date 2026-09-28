@@ -13,6 +13,7 @@ import org.redkale.annotation.ConstructorParameters;
 import org.redkale.asm.*;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
+import org.redkale.bytecode.ByteCodes;
 
 /**
  * 实现一个类的构造方法。 代替低效的反射实现方式。 不支持数组类。 常见的无参数的构造函数类都可以自动生成Creator， 对应自定义的类可以提供一个静态构建Creator方法。 例如:
@@ -442,15 +443,15 @@ public interface Creator<T> {
         { // paramTypes 方法
             mv = cw.visitMethod(ACC_PUBLIC, "paramTypes", "()[Ljava/lang/Class;", null, null);
             int paramLen = constructorParameters.length;
-            Asms.visitInsn(mv, paramLen);
+            ByteCodes.visitInsn(mv, paramLen);
             mv.visitTypeInsn(ANEWARRAY, "java/lang/Class");
             for (int i = 0; i < constructorParameters.length; i++) {
                 mv.visitInsn(DUP);
-                Asms.visitInsn(mv, i);
+                ByteCodes.visitInsn(mv, i);
                 if (constructorParameters[i] == null) {
                     mv.visitLdcInsn(Type.getType("[Ljava/lang/Object;"));
                 } else {
-                    Asms.visitFieldInsn(mv, constructorParameters[i].getValue());
+                    ByteCodes.visitFieldInsn(mv, constructorParameters[i].getValue());
                 }
                 mv.visitInsn(AASTORE);
             }
@@ -482,12 +483,12 @@ public interface Creator<T> {
                     continue;
                 }
                 mv.visitVarInsn(ALOAD, 1);
-                Asms.visitInsn(mv, i);
+                ByteCodes.visitInsn(mv, i);
                 mv.visitInsn(AALOAD);
                 Label lab = new Label();
                 mv.visitJumpInsn(IFNONNULL, lab);
                 mv.visitVarInsn(ALOAD, 1);
-                Asms.visitInsn(mv, i);
+                ByteCodes.visitInsn(mv, i);
                 if (pt == int.class) {
                     mv.visitInsn(ICONST_0);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
@@ -525,7 +526,7 @@ public interface Creator<T> {
                     break;
                 }
                 mv.visitVarInsn(ALOAD, 1);
-                Asms.visitInsn(mv, i);
+                ByteCodes.visitInsn(mv, i);
                 mv.visitInsn(AALOAD);
                 final Class ct = constructorParameters[i].getValue();
                 if (ct.isPrimitive()) {

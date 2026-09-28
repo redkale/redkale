@@ -12,6 +12,7 @@ import org.redkale.asm.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
+import org.redkale.bytecode.ByteCodes;
 
 /**
  * JavaBean类对象的拷贝，相同的字段名会被拷贝 <br>
@@ -822,7 +823,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                     }
 
                     mv.visitVarInsn(ALOAD, 0);
-                    Asms.visitFieldInsn(mv, fieldClass);
+                    ByteCodes.visitFieldInsn(mv, fieldClass);
 
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitMethodInsn(
@@ -831,7 +832,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                             "convertValue",
                             "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;",
                             false);
-                    Asms.visitCheckCast(mv, fieldClass);
+                    ByteCodes.visitCheckCast(mv, fieldClass);
 
                     if (en.getValue() instanceof Field) {
                         mv.visitFieldInsn(PUTFIELD, destClassName, en.getKey(), Type.getDescriptor(fieldClass));
@@ -892,7 +893,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                         mv.visitLdcInsn(dfname);
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitFieldInsn(GETFIELD, srcClassName, sfname, td);
-                        Asms.visitPrimitiveValueOf(mv, srcFieldType);
+                        ByteCodes.visitPrimitiveValueOf(mv, srcFieldType);
                         mv.visitMethodInsn(
                                 destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
                                 destClassName,
@@ -989,17 +990,17 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                             || (srcFieldType.isPrimitive() && destFieldType.isPrimitive())) {
                         if (needTypeCast) {
                             mv.visitVarInsn(ALOAD, 2);
-                            Asms.visitFieldInsn(mv, destFieldType);
+                            ByteCodes.visitFieldInsn(mv, destFieldType);
                             mv.visitVarInsn(ALOAD, 1);
                             mv.visitFieldInsn(GETFIELD, srcClassName, sfname, srcFieldDesc);
-                            Asms.visitPrimitiveValueOf(mv, srcFieldType);
+                            ByteCodes.visitPrimitiveValueOf(mv, srcFieldType);
                             mv.visitMethodInsn(
                                     INVOKESTATIC,
                                     utilClassName,
                                     "convertValue",
                                     "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;",
                                     false);
-                            Asms.visitCheckCast(mv, destFieldType);
+                            ByteCodes.visitCheckCast(mv, destFieldType);
                             if (setter == null) { // src: field, dest: field
                                 mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
                             } else { // src: field, dest: method
@@ -1046,16 +1047,16 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                         }
                         if (needTypeCast) {
                             mv.visitVarInsn(ALOAD, 2);
-                            Asms.visitFieldInsn(mv, destFieldType);
+                            ByteCodes.visitFieldInsn(mv, destFieldType);
                             mv.visitVarInsn(ALOAD, 3);
-                            Asms.visitPrimitiveValueOf(mv, srcFieldType);
+                            ByteCodes.visitPrimitiveValueOf(mv, srcFieldType);
                             mv.visitMethodInsn(
                                     INVOKESTATIC,
                                     utilClassName,
                                     "convertValue",
                                     "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;",
                                     false);
-                            Asms.visitCheckCast(mv, destFieldType);
+                            ByteCodes.visitCheckCast(mv, destFieldType);
                             if (setter == null) { // src: field, dest: field
                                 mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
                             } else { // src: field, dest: method
@@ -1114,7 +1115,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                                 getter.getName(),
                                 Type.getMethodDescriptor(getter),
                                 srcClass.isInterface());
-                        Asms.visitPrimitiveValueOf(mv, srcFieldType);
+                        ByteCodes.visitPrimitiveValueOf(mv, srcFieldType);
                         mv.visitMethodInsn(
                                 destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
                                 destClassName,
@@ -1209,7 +1210,7 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                             || (srcFieldType.isPrimitive() && destFieldType.isPrimitive())) {
                         if (needTypeCast) {
                             mv.visitVarInsn(ALOAD, 2);
-                            Asms.visitFieldInsn(mv, destFieldType);
+                            ByteCodes.visitFieldInsn(mv, destFieldType);
                             mv.visitVarInsn(ALOAD, 1);
                             mv.visitMethodInsn(
                                     srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
@@ -1217,14 +1218,14 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                                     getter.getName(),
                                     Type.getMethodDescriptor(getter),
                                     srcClass.isInterface());
-                            Asms.visitPrimitiveValueOf(mv, srcFieldType);
+                            ByteCodes.visitPrimitiveValueOf(mv, srcFieldType);
                             mv.visitMethodInsn(
                                     INVOKESTATIC,
                                     utilClassName,
                                     "convertValue",
                                     "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;",
                                     false);
-                            Asms.visitCheckCast(mv, destFieldType);
+                            ByteCodes.visitCheckCast(mv, destFieldType);
                             if (setter == null) { // src: method, dest: field
                                 mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
                             } else { // src: method, dest: method
@@ -1281,16 +1282,16 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
                         }
                         if (needTypeCast) {
                             mv.visitVarInsn(ALOAD, 2);
-                            Asms.visitFieldInsn(mv, destFieldType);
+                            ByteCodes.visitFieldInsn(mv, destFieldType);
                             mv.visitVarInsn(ALOAD, 3);
-                            Asms.visitPrimitiveValueOf(mv, srcFieldType);
+                            ByteCodes.visitPrimitiveValueOf(mv, srcFieldType);
                             mv.visitMethodInsn(
                                     INVOKESTATIC,
                                     utilClassName,
                                     "convertValue",
                                     "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;",
                                     false);
-                            Asms.visitCheckCast(mv, destFieldType);
+                            ByteCodes.visitCheckCast(mv, destFieldType);
                             if (setter == null) { // src: method, dest: field
                                 mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
                             } else { // src: method, dest: method

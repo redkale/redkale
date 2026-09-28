@@ -1,18 +1,19 @@
 /*
  *
  */
-package org.redkale.asm;
+package org.redkale.bytecode;
 
+import org.redkale.asm.Type;
 import org.redkale.util.TypeToken;
 
 /**
  * 存放方法参数的字节信息
  *
- * @see org.redkale.asm.AsmMethodBean
- * @see org.redkale.asm.AsmMethodBoost
+ * @see CodeMethodBean
+ * @see CodeMethodBoost
  * @since 2.8.0
  */
-public class AsmMethodParam {
+public class CodeMethodParam {
 
     private String name;
 
@@ -20,13 +21,13 @@ public class AsmMethodParam {
 
     private String signature;
 
-    public AsmMethodParam() {}
+    public CodeMethodParam() {}
 
-    public AsmMethodParam(String name) {
+    public CodeMethodParam(String name) {
         this.name = name;
     }
 
-    public AsmMethodParam(String name, String description, String signature) {
+    public CodeMethodParam(String name, String description, String signature) {
         this.name = name;
         this.description = description;
         this.signature = signature;

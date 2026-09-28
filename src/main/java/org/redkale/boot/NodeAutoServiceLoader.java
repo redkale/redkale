@@ -10,7 +10,7 @@ import java.lang.reflect.Type;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.redkale.annotation.AutoLoad;
-import org.redkale.asm.AsmMethodBoost;
+import org.redkale.bytecode.CodeMethodBoost;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
 import org.redkale.mq.spi.MessageAgent;
@@ -67,7 +67,7 @@ class NodeAutoServiceLoader implements ResourceTypeLoader {
             if (Modifier.isFinal(serviceImplClass.getModifiers()) || Sncp.isComponent(serviceImplClass)) {
                 service = (Service) serviceImplClass.getConstructor().newInstance();
             } else if (Utility.isAbstractOrInterface(serviceImplClass)) { // 没有具体实现类
-                AsmMethodBoost methodBoost = application.createAsmMethodBoost(true, serviceImplClass);
+                CodeMethodBoost methodBoost = application.createCodeMethodBoost(true, serviceImplClass);
                 MessageAgent mqAgent = appResFactory.find("", MessageAgent.class);
                 service = Sncp.createRemoteService(
                         nodeServer.serverClassLoader,
@@ -81,7 +81,7 @@ class NodeAutoServiceLoader implements ResourceTypeLoader {
                         null,
                         null);
             } else {
-                AsmMethodBoost methodBoost = application.createAsmMethodBoost(false, serviceImplClass);
+                CodeMethodBoost methodBoost = application.createCodeMethodBoost(false, serviceImplClass);
                 service = Sncp.createLocalService(
                         nodeServer.serverClassLoader,
                         resourceName,

@@ -12,7 +12,7 @@ import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.redkale.annotation.AutoLoad;
-import org.redkale.asm.AsmMethodBoost;
+import org.redkale.bytecode.CodeMethodBoost;
 import static org.redkale.boot.Application.RESNAME_SNCP_ADDRESS;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
@@ -76,7 +76,7 @@ class NodeWebSocketNodeLoader implements ResourceTypeLoader {
                 if (groups.isEmpty() && nodeServer.isSNCP() && nodeServer.sncpGroup != null) {
                     groups.add(nodeServer.sncpGroup);
                 }
-                AsmMethodBoost methodBoost = application.createAsmMethodBoost(false, WebSocketNodeService.class);
+                CodeMethodBoost methodBoost = application.createCodeMethodBoost(false, WebSocketNodeService.class);
                 nodeService = Sncp.createLocalService(
                         nodeServer.serverClassLoader,
                         resourceName,
@@ -172,7 +172,7 @@ class NodeWebSocketNodeLoader implements ResourceTypeLoader {
                     } catch (Exception ex) {
                         logger.log(Level.WARNING, "WebSocketServlet getMessageAgent error", ex);
                     }
-                    AsmMethodBoost methodBoost = application.createAsmMethodBoost(false, WebSocketNodeService.class);
+                    CodeMethodBoost methodBoost = application.createCodeMethodBoost(false, WebSocketNodeService.class);
                     nodeService = Sncp.createLocalService(
                             nodeServer.serverClassLoader,
                             resourceName,

@@ -1,7 +1,7 @@
 /*
  *
  */
-package org.redkale.asm;
+package org.redkale.bytecode;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -14,6 +14,8 @@ import static org.redkale.asm.Opcodes.ICONST_0;
 import static org.redkale.asm.Opcodes.INVOKESTATIC;
 import static org.redkale.asm.Opcodes.INVOKEVIRTUAL;
 import static org.redkale.asm.Opcodes.SIPUSH;
+
+import org.redkale.asm.*;
 import org.redkale.util.RedkaleException;
 
 /**
@@ -24,9 +26,9 @@ import org.redkale.util.RedkaleException;
  * @author zhangjx
  * @since 2.8.0
  */
-public final class Asms {
+public final class ByteCodes {
 
-    private Asms() {}
+    private ByteCodes() {}
 
     public static Handle createLambdaMetaHandle() {
         return new Handle(

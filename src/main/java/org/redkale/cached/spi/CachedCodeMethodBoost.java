@@ -14,10 +14,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.redkale.asm.AnnotationVisitor;
-import org.redkale.asm.AsmMethodBean;
-import org.redkale.asm.AsmMethodBoost;
-import org.redkale.asm.AsmNewMethod;
-import org.redkale.asm.Asms;
+import org.redkale.bytecode.CodeMethodBean;
+import org.redkale.bytecode.CodeMethodBoost;
+import org.redkale.bytecode.CodeNewMethod;
+import org.redkale.bytecode.ByteCodes;
 import org.redkale.asm.ClassWriter;
 import org.redkale.asm.FieldVisitor;
 import org.redkale.asm.Handle;
@@ -41,7 +41,7 @@ import org.redkale.util.TypeToken;
  *
  * @since 2.8.0
  */
-public class CachedAsmMethodBoost extends AsmMethodBoost {
+public class CachedCodeMethodBoost extends CodeMethodBoost {
 
     static final java.lang.reflect.Type FUTURE_VOID = new TypeToken<CompletableFuture<Void>>() {}.getType();
 
@@ -51,7 +51,7 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
 
     private Map<String, CachedAction> actionMap;
 
-    public CachedAsmMethodBoost(boolean remote, Class serviceType) {
+    public CachedCodeMethodBoost(boolean remote, Class serviceType) {
         super(remote, serviceType);
     }
 
@@ -61,7 +61,7 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
     }
 
     @Override
-    public AsmNewMethod doMethod(
+    public CodeNewMethod doMethod(
             final RedkaleClassLoader classLoader,
             final ClassWriter cw,
             final Class serviceImplClass,
@@ -69,7 +69,7 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
             final String fieldPrefix,
             final List filterAnns,
             final Method method,
-            final AsmNewMethod newMethod) {
+            final CodeNewMethod newMethod) {
         Map<String, CachedAction> actions = this.actionMap;
         if (actions == null) {
             actions = new LinkedHashMap<>();
@@ -100,14 +100,14 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
         final String rsMethodName = method.getName() + "_afterCached";
         final String dynFieldName =
                 fieldPrefix + "_" + method.getName() + CachedAction.class.getSimpleName() + actionIndex;
-        final AsmMethodBean methodBean = getMethodBean(method);
+        final CodeMethodBean methodBean = getMethodBean(method);
         { // 定义一个新方法调用 this.rsMethodName
             final String cacheDynDesc = Type.getDescriptor(DynForCached.class);
             final MethodVisitor mv = createMethodVisitor(cw, method, newMethod, methodBean);
             // mv.setDebug(true);
             AnnotationVisitor av = mv.visitAnnotation(cacheDynDesc, true);
             av.visit("dynField", dynFieldName);
-            Asms.visitAnnotation(av, DynForCached.class, cached);
+            ByteCodes.visitAnnotation(av, DynForCached.class, cached);
             visitRawAnnotation(method, newMethod, mv, Cached.class, filterAnns);
 
             Label l0 = new Label();
@@ -117,7 +117,7 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
             String dynDesc = methodBean.getDesc();
             dynDesc = "(L" + newDynName + ";" + dynDesc.substring(1, dynDesc.lastIndexOf(')') + 1)
                     + Type.getDescriptor(ThrowSupplier.class);
-            mv.visitInvokeDynamicInsn("get", dynDesc, Asms.createLambdaMetaHandle(), new Object[] {
+            mv.visitInvokeDynamicInsn("get", dynDesc, ByteCodes.createLambdaMetaHandle(), new Object[] {
                 org.redkale.asm.Type.getType("()Ljava/lang/Object;"),
                 new Handle(Opcodes.H_INVOKESPECIAL, newDynName, "lambda$" + actionIndex, methodBean.getDesc(), false),
                 org.redkale.asm.Type.getType("()" + Type.getDescriptor(method.getReturnType()))
@@ -129,7 +129,7 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
             mv.visitFieldInsn(GETFIELD, newDynName, dynFieldName, Type.getDescriptor(CachedAction.class));
 
             mv.visitVarInsn(ALOAD, 1 + method.getParameterCount());
-            Asms.visitInsn(mv, method.getParameterCount());
+            ByteCodes.visitInsn(mv, method.getParameterCount());
             mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
             int insn = 0;
             Class[] paramtypes = method.getParameterTypes();
@@ -137,7 +137,7 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
                 final Class pt = paramtypes[j];
                 mv.visitInsn(DUP);
                 insn++;
-                Asms.visitInsn(mv, j);
+                ByteCodes.visitInsn(mv, j);
                 if (pt.isPrimitive()) {
                     if (pt == long.class) {
                         mv.visitVarInsn(LLOAD, insn++);
@@ -215,7 +215,7 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
                     "Lookup",
                     ACC_PUBLIC + ACC_FINAL + ACC_STATIC);
         }
-        return new AsmNewMethod(rsMethodName, ACC_PRIVATE);
+        return new CodeNewMethod(rsMethodName, ACC_PRIVATE);
     }
 
     @Override
@@ -223,12 +223,12 @@ public class CachedAsmMethodBoost extends AsmMethodBoost {
         Class clazz = service.getClass();
         if (actionMap == null) { // 为null表示没有调用过doMethod， 动态类在编译是已经生成好了
             actionMap = new LinkedHashMap<>();
-            Map<String, AsmMethodBean> methodBeans = AsmMethodBoost.getMethodBeans(clazz);
+            Map<String, CodeMethodBean> methodBeans = CodeMethodBoost.getMethodBeans(clazz);
             for (final Method method : clazz.getDeclaredMethods()) {
                 DynForCached cached = method.getAnnotation(DynForCached.class);
                 if (cached != null) {
                     String dynFieldName = cached.dynField();
-                    AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
+                    CodeMethodBean methodBean = CodeMethodBean.get(methodBeans, method);
                     CachedAction action = new CachedAction(
                             new CachedEntry(cached, method),
                             method,

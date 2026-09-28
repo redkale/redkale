@@ -16,10 +16,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Nonnull;
 import org.redkale.asm.AnnotationVisitor;
-import org.redkale.asm.AsmMethodBean;
-import org.redkale.asm.AsmMethodBoost;
-import org.redkale.asm.AsmNewMethod;
-import org.redkale.asm.Asms;
+import org.redkale.bytecode.CodeMethodBean;
+import org.redkale.bytecode.CodeMethodBoost;
+import org.redkale.bytecode.CodeNewMethod;
+import org.redkale.bytecode.ByteCodes;
 import org.redkale.asm.ClassWriter;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import org.redkale.asm.FieldVisitor;
@@ -58,7 +58,7 @@ import org.redkale.util.TypeToken;
 import org.redkale.util.Utility;
 
 /** @author zhangjx */
-public class MessageAsmMethodBoost extends AsmMethodBoost {
+public class MessageCodeMethodBoost extends CodeMethodBoost {
 
     private static final List<Class<? extends Annotation>> FILTER_ANN = List.of(Messaged.class);
 
@@ -66,11 +66,11 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
 
     private final MessageModuleEngine messageEngine;
 
-    private Map<String, AsmMethodBean> methodBeans;
+    private Map<String, CodeMethodBean> methodBeans;
 
     Map<String, byte[]> consumerBytes;
 
-    public MessageAsmMethodBoost(boolean remote, Class serviceType, MessageModuleEngine messageEngine) {
+    public MessageCodeMethodBoost(boolean remote, Class serviceType, MessageModuleEngine messageEngine) {
         super(remote, serviceType);
         this.messageEngine = messageEngine;
     }
@@ -81,7 +81,7 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
     }
 
     @Override
-    public AsmNewMethod doMethod(
+    public CodeNewMethod doMethod(
             RedkaleClassLoader classLoader,
             ClassWriter cw,
             Class serviceImplClass,
@@ -89,7 +89,7 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
             String fieldPrefix,
             List filterAnns,
             Method method,
-            AsmNewMethod newMethod) {
+            CodeNewMethod newMethod) {
         if (serviceType.getAnnotation(DynForMessaged.class) != null) {
             return newMethod;
         }
@@ -135,9 +135,9 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
     }
 
     private void createMessageMethod(
-            ClassWriter cw, Method method, Class serviceImplClass, List filterAnns, AsmNewMethod newMethod) {
+            ClassWriter cw, Method method, Class serviceImplClass, List filterAnns, CodeNewMethod newMethod) {
         final String serviceName = serviceImplClass.getName().replace('.', '/');
-        final AsmMethodBean methodBean = getMethodBean(method);
+        final CodeMethodBean methodBean = getMethodBean(method);
         final MethodVisitor mv = createMethodVisitor(cw, method, newMethod, methodBean);
         visitRawAnnotation(method, newMethod, mv, Messaged.class, filterAnns);
         Label l0 = new Label();
@@ -170,7 +170,7 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
             Type messageType,
             Messaged messaged,
             String newDynName,
-            AsmNewMethod newMethod) {
+            CodeNewMethod newMethod) {
         final String newDynDesc =
                 pcw == null ? org.redkale.asm.Type.getDescriptor(serviceImplClass) : ("L" + newDynName + ";");
         final String innerClassName = "Dyn" + MessageConsumer.class.getSimpleName() + index.incrementAndGet();
@@ -184,9 +184,9 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
                 Utility.contains(method.getExceptionTypes(), e -> !RuntimeException.class.isAssignableFrom(e));
 
         if (methodBeans == null) {
-            methodBeans = AsmMethodBoost.getMethodBeans(serviceType);
+            methodBeans = CodeMethodBoost.getMethodBeans(serviceType);
         }
-        AsmMethodBean methodBean = AsmMethodBean.get(methodBeans, method);
+        CodeMethodBean methodBean = CodeMethodBean.get(methodBeans, method);
         String genericMsgTypeDesc = msgTypeDesc;
         if (Utility.isNotEmpty(methodBean.getSignature())) {
             String methodSignature = methodBean.getSignature();
@@ -209,7 +209,7 @@ public class MessageAsmMethodBoost extends AsmMethodBoost {
                 new String[] {messageConsumerName});
         {
             AnnotationVisitor av = cw.visitAnnotation(org.redkale.asm.Type.getDescriptor(ResourceConsumer.class), true);
-            Asms.visitAnnotation(av, ResourceConsumer.class, messaged);
+            ByteCodes.visitAnnotation(av, ResourceConsumer.class, messaged);
             av.visitEnd();
         }
         { // 设置DynForConsumer

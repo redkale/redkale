@@ -20,6 +20,10 @@ import org.redkale.asm.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
+import org.redkale.bytecode.CodeMethodBean;
+import org.redkale.bytecode.CodeMethodBoost;
+import org.redkale.bytecode.CodeMethodParam;
+import org.redkale.bytecode.ByteCodes;
 import org.redkale.convert.*;
 import org.redkale.convert.json.*;
 import org.redkale.inject.ResourceFactory;
@@ -386,8 +390,8 @@ public final class Rest {
         } catch (Exception e) {
             // do nothing
         }
-        final Map<String, AsmMethodBean> asmParamMap =
-                namePresent ? null : AsmMethodBoost.getMethodBeans(webSocketType);
+        final Map<String, CodeMethodBean> asmParamMap =
+                namePresent ? null : CodeMethodBoost.getMethodBeans(webSocketType);
         final Set<String> messageNames = new HashSet<>();
         Method wildcardMethod = null;
         List<Method> mmethods = new ArrayList<>();
@@ -585,15 +589,15 @@ public final class Rest {
             mv.visitFieldInsn(PUTFIELD, newDynName, "messageRestType", "Ljava/lang/reflect/Type;");
 
             mv.visitVarInsn(ALOAD, 0);
-            Asms.visitInsn(mv, rws.liveinterval());
+            ByteCodes.visitInsn(mv, rws.liveinterval());
             mv.visitFieldInsn(PUTFIELD, newDynName, "liveinterval", "I");
 
             mv.visitVarInsn(ALOAD, 0);
-            Asms.visitInsn(mv, rws.wsmaxconns());
+            ByteCodes.visitInsn(mv, rws.wsmaxconns());
             mv.visitFieldInsn(PUTFIELD, newDynName, "wsmaxconns", "I");
 
             mv.visitVarInsn(ALOAD, 0);
-            Asms.visitInsn(mv, rws.wsmaxbody());
+            ByteCodes.visitInsn(mv, rws.wsmaxbody());
             mv.visitFieldInsn(PUTFIELD, newDynName, "wsmaxbody", "I");
 
             mv.visitVarInsn(ALOAD, 0);
@@ -671,8 +675,8 @@ public final class Rest {
             cw2.visitInnerClass(
                     newDynSuperMessageFullName, newDynName, newDynMessageSimpleName + endfix, ACC_PUBLIC + ACC_STATIC);
             Set<String> paramNames = new HashSet<>();
-            AsmMethodBean methodBean = asmParamMap == null ? null : AsmMethodBean.get(asmParamMap, method);
-            List<AsmMethodParam> names = methodBean == null ? null : methodBean.getParams();
+            CodeMethodBean methodBean = asmParamMap == null ? null : CodeMethodBean.get(asmParamMap, method);
+            List<CodeMethodParam> names = methodBean == null ? null : methodBean.getParams();
             Parameter[] params = method.getParameters();
             final LinkedHashMap<String, Parameter> paramap = new LinkedHashMap(); // 必须使用LinkedHashMap确保顺序
             for (int j = 0; j < params.length; j++) { // 字段列表
@@ -744,12 +748,12 @@ public final class Rest {
                         cw2.visitMethod(ACC_PUBLIC, "getNames", "()[Ljava/lang/String;", null, null));
                 av0 = mv.visitAnnotation(convertDisabledDesc, true);
                 av0.visitEnd();
-                Asms.visitInsn(mv, paramap.size());
+                ByteCodes.visitInsn(mv, paramap.size());
                 mv.visitTypeInsn(ANEWARRAY, "java/lang/String");
                 int index = -1;
                 for (Map.Entry<String, Parameter> en : paramap.entrySet()) {
                     mv.visitInsn(DUP);
-                    Asms.visitInsn(mv, ++index);
+                    ByteCodes.visitInsn(mv, ++index);
                     mv.visitLdcInsn(en.getKey());
                     mv.visitInsn(AASTORE);
                 }
@@ -2143,7 +2147,7 @@ public final class Rest {
         } catch (Exception e) {
             // do nothing
         }
-        final Map<String, AsmMethodBean> asmParamMap = namePresent ? null : AsmMethodBoost.getMethodBeans(serviceType);
+        final Map<String, CodeMethodBean> asmParamMap = namePresent ? null : CodeMethodBoost.getMethodBeans(serviceType);
 
         Map<String, byte[]> innerClassBytesMap = new LinkedHashMap<>();
         boolean containsMupload = false;
@@ -2208,7 +2212,7 @@ public final class Rest {
             mv.visitVarInsn(ALOAD, 1);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitFieldInsn(GETFIELD, newDynName, REST_METHOD_ANNS_NAME, "[[Ljava/lang/annotation/Annotation;");
-            Asms.visitInsn(mv, entry.methodIdx); // 方法下标
+            ByteCodes.visitInsn(mv, entry.methodIdx); // 方法下标
             mv.visitInsn(AALOAD);
             mv.visitMethodInsn(
                     INVOKESTATIC,
@@ -2221,8 +2225,8 @@ public final class Rest {
             List<int[]> varInsns = new ArrayList<>();
             int maxLocals = 4;
 
-            AsmMethodBean methodBean = asmParamMap == null ? null : AsmMethodBean.get(asmParamMap, method);
-            List<AsmMethodParam> asmParamNames = methodBean == null ? null : methodBean.getParams();
+            CodeMethodBean methodBean = asmParamMap == null ? null : CodeMethodBean.get(asmParamMap, method);
+            List<CodeMethodParam> asmParamNames = methodBean == null ? null : methodBean.getParams();
             List<Object[]> paramlist = new ArrayList<>();
             // 解析方法中的每个参数
             for (int i = 0; i < params.length; i++) {
@@ -3382,7 +3386,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(
                                 GETFIELD, newDynName, REST_PARAMTYPES_FIELD_NAME, "[[Ljava/lang/reflect/Type;");
-                        Asms.visitInsn(mv, entry.methodIdx); // 方法下标
+                        ByteCodes.visitInsn(mv, entry.methodIdx); // 方法下标
                         mv.visitInsn(AALOAD);
                         int paramidx = -1;
                         for (int i = 0; i < params.length; i++) {
@@ -3391,7 +3395,7 @@ public final class Rest {
                                 break;
                             }
                         }
-                        Asms.visitInsn(mv, paramidx); // 参数下标
+                        ByteCodes.visitInsn(mv, paramidx); // 参数下标
                         mv.visitInsn(AALOAD);
                     }
                     mv.visitLdcInsn(pname);
@@ -3663,7 +3667,7 @@ public final class Rest {
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                Asms.visitInsn(mv, entry.methodIdx); // 方法下标
+                ByteCodes.visitInsn(mv, entry.methodIdx); // 方法下标
                 mv.visitInsn(AALOAD);
                 mv.visitMethodInsn(INVOKESTATIC, retInternalName, "success", "()" + retDesc, false);
                 mv.visitMethodInsn(
@@ -3773,7 +3777,7 @@ public final class Rest {
                             GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    Asms.visitInsn(mv, entry.methodIdx); // 方法下标
+                    ByteCodes.visitInsn(mv, entry.methodIdx); // 方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(
@@ -3785,7 +3789,7 @@ public final class Rest {
                 } else {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    Asms.visitInsn(mv, entry.methodIdx); // 方法下标
+                    ByteCodes.visitInsn(mv, entry.methodIdx); // 方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(
@@ -3802,7 +3806,7 @@ public final class Rest {
                             GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    Asms.visitInsn(mv, entry.methodIdx); // 方法下标
+                    ByteCodes.visitInsn(mv, entry.methodIdx); // 方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(
@@ -3814,7 +3818,7 @@ public final class Rest {
                 } else {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    Asms.visitInsn(mv, entry.methodIdx); // 方法下标
+                    ByteCodes.visitInsn(mv, entry.methodIdx); // 方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(
@@ -3873,7 +3877,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(
                                 GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                        Asms.visitInsn(mv, entry.methodIdx); // 方法下标
+                        ByteCodes.visitInsn(mv, entry.methodIdx); // 方法下标
                         mv.visitInsn(AALOAD);
                         mv.visitVarInsn(ALOAD, maxLocals);
                         mv.visitMethodInsn(
@@ -3886,7 +3890,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(
                                 GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                        Asms.visitInsn(mv, entry.methodIdx); // 方法下标
+                        ByteCodes.visitInsn(mv, entry.methodIdx); // 方法下标
                         mv.visitInsn(AALOAD);
                         mv.visitVarInsn(ALOAD, maxLocals);
                         mv.visitMethodInsn(
@@ -3904,7 +3908,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(
                                 GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                        Asms.visitInsn(mv, entry.methodIdx); // 方法下标
+                        ByteCodes.visitInsn(mv, entry.methodIdx); // 方法下标
                         mv.visitInsn(AALOAD);
                         mv.visitVarInsn(ALOAD, maxLocals);
                         mv.visitMethodInsn(
@@ -3917,7 +3921,7 @@ public final class Rest {
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitFieldInsn(
                                 GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                        Asms.visitInsn(mv, entry.methodIdx); // 方法下标
+                        ByteCodes.visitInsn(mv, entry.methodIdx); // 方法下标
                         mv.visitInsn(AALOAD);
                         mv.visitVarInsn(ALOAD, maxLocals);
                         mv.visitMethodInsn(
@@ -3939,7 +3943,7 @@ public final class Rest {
                             GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    Asms.visitInsn(mv, entry.methodIdx); // 方法下标
+                    ByteCodes.visitInsn(mv, entry.methodIdx); // 方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(
@@ -3951,7 +3955,7 @@ public final class Rest {
                 } else {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    Asms.visitInsn(mv, entry.methodIdx); // 方法下标
+                    ByteCodes.visitInsn(mv, entry.methodIdx); // 方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(
@@ -3972,7 +3976,7 @@ public final class Rest {
                             GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    Asms.visitInsn(mv, entry.methodIdx); // 方法下标
+                    ByteCodes.visitInsn(mv, entry.methodIdx); // 方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(
@@ -3984,7 +3988,7 @@ public final class Rest {
                 } else {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    Asms.visitInsn(mv, entry.methodIdx); // 方法下标
+                    ByteCodes.visitInsn(mv, entry.methodIdx); // 方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(
@@ -4005,7 +4009,7 @@ public final class Rest {
                             GETFIELD, newDynName, REST_CONVERT_FIELD_PREFIX + restConverts.size(), convertDesc);
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    Asms.visitInsn(mv, entry.methodIdx); // 方法下标
+                    ByteCodes.visitInsn(mv, entry.methodIdx); // 方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(
@@ -4017,7 +4021,7 @@ public final class Rest {
                 } else {
                     mv.visitVarInsn(ALOAD, 0);
                     mv.visitFieldInsn(GETFIELD, newDynName, REST_RETURNTYPES_FIELD_NAME, "[Ljava/lang/reflect/Type;");
-                    Asms.visitInsn(mv, entry.methodIdx); // 方法下标
+                    ByteCodes.visitInsn(mv, entry.methodIdx); // 方法下标
                     mv.visitInsn(AALOAD);
                     mv.visitVarInsn(ALOAD, maxLocals);
                     mv.visitMethodInsn(
@@ -4160,21 +4164,21 @@ public final class Rest {
                 mv.visitLdcInsn(entry.mappingurl); // name
                 mv.visitTypeInsn(NEW, actionEntryName); // new ActionEntry
                 mv.visitInsn(DUP);
-                Asms.visitInsn(mv, moduleid); // moduleid
-                Asms.visitInsn(mv, entry.actionid); // actionid
+                ByteCodes.visitInsn(mv, moduleid); // moduleid
+                ByteCodes.visitInsn(mv, entry.actionid); // actionid
                 mv.visitLdcInsn(entry.mappingurl); // name
-                Asms.visitInsn(mv, entry.methods.length); // methods
+                ByteCodes.visitInsn(mv, entry.methods.length); // methods
                 mv.visitTypeInsn(ANEWARRAY, "java/lang/String");
                 for (int i = 0; i < entry.methods.length; i++) {
                     mv.visitInsn(DUP);
-                    Asms.visitInsn(mv, i);
+                    ByteCodes.visitInsn(mv, i);
                     mv.visitLdcInsn(entry.methods[i]);
                     mv.visitInsn(AASTORE);
                 }
                 mv.visitInsn(ACONST_NULL); // method
                 mv.visitInsn(entry.rpcOnly ? ICONST_1 : ICONST_0); // rpcOnly
                 mv.visitInsn(entry.auth ? ICONST_1 : ICONST_0); // auth
-                Asms.visitInsn(mv, entry.cacheSeconds); // cacheSeconds
+                ByteCodes.visitInsn(mv, entry.cacheSeconds); // cacheSeconds
                 mv.visitTypeInsn(NEW, newDynName + "$" + entry.newActionClassName);
                 mv.visitInsn(DUP);
                 mv.visitVarInsn(ALOAD, 0);

@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
 import org.redkale.annotation.Component;
-import org.redkale.asm.AsmMethodBoost;
+import org.redkale.bytecode.CodeMethodBoost;
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
 import org.redkale.boot.NodeServer;
@@ -60,8 +60,8 @@ public class LockedModuleEngine extends ModuleEngine {
      * @param serviceClass 类
      * @return 方法动态扩展器
      */
-    public AsmMethodBoost createAsmMethodBoost(boolean remote, Class serviceClass) {
-        return new LockedAsmMethodBoost(remote, serviceClass);
+    public CodeMethodBoost createCodeMethodBoost(boolean remote, Class serviceClass) {
+        return new LockedCodeMethodBoost(remote, serviceClass);
     }
 
     /** 结束Application.init方法前被调用 */

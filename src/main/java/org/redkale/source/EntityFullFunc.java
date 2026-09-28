@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Objects;
 import org.redkale.annotation.ClassDepends;
-import org.redkale.asm.Asms;
+import org.redkale.bytecode.ByteCodes;
 import org.redkale.asm.ClassWriter;
 import org.redkale.asm.Label;
 import org.redkale.asm.MethodVisitor;
@@ -179,7 +179,7 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitInsn(ICONST_0);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getBoolean", "(IZ)Z", true);
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
@@ -187,7 +187,7 @@ public abstract class EntityFullFunc<T> {
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitInsn(ICONST_0);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getBoolean", "(IZ)Z", true);
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Z");
@@ -198,7 +198,7 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitInsn(ICONST_0);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getShort", "(IS)S", true);
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
@@ -206,7 +206,7 @@ public abstract class EntityFullFunc<T> {
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitInsn(ICONST_0);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getShort", "(IS)S", true);
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "S");
@@ -217,7 +217,7 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitInsn(ICONST_0);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getInteger", "(II)I", true);
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
@@ -225,7 +225,7 @@ public abstract class EntityFullFunc<T> {
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitInsn(ICONST_0);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getInteger", "(II)I", true);
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "I");
@@ -236,7 +236,7 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitInsn(FCONST_0);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getFloat", "(IF)F", true);
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
@@ -244,7 +244,7 @@ public abstract class EntityFullFunc<T> {
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitInsn(FCONST_0);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getFloat", "(IF)F", true);
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "F");
@@ -255,7 +255,7 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitInsn(LCONST_0);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getLong", "(IJ)J", true);
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
@@ -263,7 +263,7 @@ public abstract class EntityFullFunc<T> {
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitInsn(LCONST_0);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getLong", "(IJ)J", true);
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "J");
@@ -274,7 +274,7 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitInsn(DCONST_0);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getDouble", "(ID)D", true);
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
@@ -282,7 +282,7 @@ public abstract class EntityFullFunc<T> {
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitInsn(DCONST_0);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getDouble", "(ID)D", true);
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "D");
@@ -293,14 +293,14 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getBoolean", "(I)Ljava/lang/Boolean;", true);
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
                         continue;
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getBoolean", "(I)Ljava/lang/Boolean;", true);
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Boolean;");
                         continue;
@@ -310,14 +310,14 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getShort", "(I)Ljava/lang/Short;", true);
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
                         continue;
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getShort", "(I)Ljava/lang/Short;", true);
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Short;");
                         continue;
@@ -327,14 +327,14 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getInteger", "(I)Ljava/lang/Integer;", true);
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
                         continue;
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getInteger", "(I)Ljava/lang/Integer;", true);
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Integer;");
                         continue;
@@ -344,14 +344,14 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getFloat", "(I)Ljava/lang/Float;", true);
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
                         continue;
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getFloat", "(I)Ljava/lang/Float;", true);
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Float;");
                         continue;
@@ -361,14 +361,14 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getLong", "(I)Ljava/lang/Long;", true);
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
                         continue;
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getLong", "(I)Ljava/lang/Long;", true);
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Long;");
                         continue;
@@ -378,14 +378,14 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getDouble", "(I)Ljava/lang/Double;", true);
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
                         continue;
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getDouble", "(I)Ljava/lang/Double;", true);
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Double;");
                         continue;
@@ -395,14 +395,14 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getString", "(I)Ljava/lang/String;", true);
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
                         continue;
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getString", "(I)Ljava/lang/String;", true);
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/String;");
                         continue;
@@ -412,14 +412,14 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getBytes", "(I)[B", true);
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
                         continue;
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getBytes", "(I)[B", true);
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "[B");
                         continue;
@@ -429,7 +429,7 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitMethodInsn(
                                 INVOKEINTERFACE, rowName, "getBigDecimal", "(I)Ljava/math/BigDecimal;", true);
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
@@ -437,7 +437,7 @@ public abstract class EntityFullFunc<T> {
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // row
-                        Asms.visitInsn(mv, colIndex);
+                        ByteCodes.visitInsn(mv, colIndex);
                         mv.visitMethodInsn(
                                 INVOKEINTERFACE, rowName, "getBigDecimal", "(I)Ljava/math/BigDecimal;", true);
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/math/BigDecimal;");
@@ -445,7 +445,7 @@ public abstract class EntityFullFunc<T> {
                     }
                 }
                 mv.visitVarInsn(ALOAD, 0);
-                Asms.visitInsn(mv, colIndex - 1);
+                ByteCodes.visitInsn(mv, colIndex - 1);
                 mv.visitVarInsn(ALOAD, 1); // row
                 mv.visitVarInsn(ALOAD, 2); // obj
                 mv.visitMethodInsn(
@@ -514,7 +514,7 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Boolean");
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z", false);
@@ -522,7 +522,7 @@ public abstract class EntityFullFunc<T> {
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Boolean");
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z", false);
@@ -533,7 +533,7 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Short");
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Short", "shortValue", "()S", false);
@@ -541,7 +541,7 @@ public abstract class EntityFullFunc<T> {
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Short");
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Short", "shortValue", "()S", false);
@@ -552,7 +552,7 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer", "intValue", "()I", false);
@@ -560,7 +560,7 @@ public abstract class EntityFullFunc<T> {
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer", "intValue", "()I", false);
@@ -571,7 +571,7 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Float");
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Float", "floatValue", "()F", false);
@@ -579,7 +579,7 @@ public abstract class EntityFullFunc<T> {
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Float");
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Float", "floatValue", "()F", false);
@@ -590,7 +590,7 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Long");
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Long", "longValue", "()J", false);
@@ -598,7 +598,7 @@ public abstract class EntityFullFunc<T> {
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Long");
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Long", "longValue", "()J", false);
@@ -609,7 +609,7 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Double");
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Double", "doubleValue", "()D", false);
@@ -617,7 +617,7 @@ public abstract class EntityFullFunc<T> {
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Double");
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Double", "doubleValue", "()D", false);
@@ -628,14 +628,14 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Boolean");
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Boolean");
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Boolean;");
@@ -645,14 +645,14 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Short");
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Short");
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Short;");
@@ -662,14 +662,14 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Integer;");
@@ -679,14 +679,14 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Float");
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Float");
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Float;");
@@ -696,14 +696,14 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Long");
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Long");
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Long;");
@@ -713,14 +713,14 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Double");
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/Double");
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Double;");
@@ -730,14 +730,14 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/String");
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/lang/String");
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/String;");
@@ -747,14 +747,14 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "[B");
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "[B");
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "[B");
@@ -764,14 +764,14 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/math/BigDecimal");
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
                     } else if (field != null) {
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
                         mv.visitTypeInsn(CHECKCAST, "java/math/BigDecimal");
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/math/BigDecimal;");
@@ -781,17 +781,17 @@ public abstract class EntityFullFunc<T> {
                         String desc = Type.getMethodDescriptor(setter);
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
-                        Asms.visitCheckCast(mv, setter.getParameterTypes()[0]);
+                        ByteCodes.visitCheckCast(mv, setter.getParameterTypes()[0]);
                         mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
                     } else if (field != null) {
                         String desc = Type.getDescriptor(field.getType());
                         mv.visitVarInsn(ALOAD, 2); // obj
                         mv.visitVarInsn(ALOAD, 1); // values
-                        Asms.visitInsn(mv, attrIndex);
+                        ByteCodes.visitInsn(mv, attrIndex);
                         mv.visitInsn(AALOAD);
-                        Asms.visitCheckCast(mv, field.getType());
+                        ByteCodes.visitCheckCast(mv, field.getType());
                         mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), desc);
                     }
                 }

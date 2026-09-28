@@ -13,7 +13,7 @@ import org.redkale.asm.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
 import org.redkale.asm.Type;
-import org.redkale.util.Attribute;
+import org.redkale.bytecode.ByteCodes;
 
 /**
  * 该类实现动态映射一个JavaBean类中成员对应的getter、setter方法； 代替低效的反射实现方式。
@@ -1072,7 +1072,7 @@ public interface Attribute<T, F> {
         }
         { // type 方法
             mv = cw.visitMethod(ACC_PUBLIC, "type", "()Ljava/lang/Class;", null, null);
-            Asms.visitFieldInsn(mv, pcolumn);
+            ByteCodes.visitFieldInsn(mv, pcolumn);
             mv.visitInsn(ARETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();

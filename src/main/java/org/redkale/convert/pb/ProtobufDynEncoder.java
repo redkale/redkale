@@ -10,6 +10,8 @@ import java.util.*;
 import org.redkale.asm.*;
 import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
 import static org.redkale.asm.Opcodes.*;
+
+import org.redkale.bytecode.ByteCodes;
 import org.redkale.convert.*;
 import org.redkale.util.*;
 
@@ -188,7 +190,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                 final Class fieldClass = member.getAttribute().type();
                 if (ProtobufFactory.isSimpleType(fieldClass)) {
                     mv.visitVarInsn(ALOAD, 4); // out
-                    Asms.visitInsn(mv, member.getTag()); // tag
+                    ByteCodes.visitInsn(mv, member.getTag()); // tag
                     mv.visitVarInsn(ALOAD, 3); // value
                     String realDesc;
                     if (member.getMethod() != null) {
@@ -209,7 +211,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                     mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, "writeFieldValue", "(I" + fieldDesc + ")V", false);
                 } else if (fieldClass.isEnum()) {
                     mv.visitVarInsn(ALOAD, 4); // out
-                    Asms.visitInsn(mv, member.getTag()); // tag
+                    ByteCodes.visitInsn(mv, member.getTag()); // tag
                     mv.visitVarInsn(ALOAD, 3); // value
                     String realDesc;
                     if (member.getMethod() != null) {
@@ -229,7 +231,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                     mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, "writeFieldValue", "(ILjava/lang/Enum;)V", false);
                 } else if (factory.supportSimpleCollectionType(fieldType)) {
                     mv.visitVarInsn(ALOAD, 4); // out
-                    Asms.visitInsn(mv, member.getTag()); // tag
+                    ByteCodes.visitInsn(mv, member.getTag()); // tag
                     mv.visitVarInsn(ALOAD, 3); // value
                     if (member.getMethod() != null) {
                         String mname = member.getMethod().getName();
@@ -265,7 +267,7 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
                     mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, wmethodName, "(ILjava/util/Collection;)V", false);
                 } else if (simpledCoders.containsKey(fieldName)) {
                     mv.visitVarInsn(ALOAD, 4); // out
-                    Asms.visitInsn(mv, member.getTag()); // tag
+                    ByteCodes.visitInsn(mv, member.getTag()); // tag
                     mv.visitVarInsn(ALOAD, 0); // this
                     mv.visitFieldInsn(GETFIELD, newDynName, fieldName + "SimpledCoder", simpledCoderDesc);
                     mv.visitVarInsn(ALOAD, 3); // value
