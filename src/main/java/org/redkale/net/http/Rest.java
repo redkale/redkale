@@ -352,8 +352,7 @@ public final class Rest {
         Class clzz = webSocketType;
         do {
             for (Field field : clzz.getDeclaredFields()) {
-                if (field.getAnnotation(Resource.class) == null
-                        && field.getAnnotation(javax.annotation.Resource.class) == null) {
+                if (field.getAnnotation(Resource.class) == null) {
                     continue;
                 }
                 if (resourcesFieldNameSet.contains(field.getName())) {
@@ -552,7 +551,6 @@ public final class Rest {
             for (int i = 0; i < resourcesFields.size(); i++) {
                 Field field = resourcesFields.get(i);
                 Resource res = field.getAnnotation(Resource.class);
-                javax.annotation.Resource res2 = field.getAnnotation(javax.annotation.Resource.class);
                 java.lang.reflect.Type fieldType = field.getGenericType();
                 fv = cw.visitField(
                         ACC_PRIVATE,
@@ -562,7 +560,7 @@ public final class Rest {
                         null);
                 {
                     av0 = fv.visitAnnotation(resDesc, true);
-                    av0.visit("name", res != null ? res.name() : res2.name());
+                    av0.visit("name", res.name());
                     av0.visit("required", res == null || res.required());
                     av0.visitEnd();
                 }

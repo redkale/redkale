@@ -273,8 +273,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
         for (T val : entitys) {
             if (clazz == null) {
                 clazz = val.getClass();
-                if (clazz.getAnnotation(Entity.class) == null
-                        && clazz.getAnnotation(javax.persistence.Entity.class) == null) {
+                if (clazz.getAnnotation(Entity.class) == null) {
                     throw new SourceException("Entity Class " + clazz + " must be on Annotation @Entity");
                 }
             } else if (clazz != val.getClass()) {

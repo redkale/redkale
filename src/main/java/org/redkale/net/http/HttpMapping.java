@@ -97,16 +97,6 @@ public @interface HttpMapping {
     String resultRef() default "";
 
     /**
-     * 输出结果的数据类型集合，由于结果类型可能是泛型而注解的参数值不支持泛型，因此加入明细数据类型集合
-     *
-     * @see #resultRef()
-     * @deprecated
-     * @return Class[]
-     */
-    @Deprecated(since = "2.5.0")
-    Class[] results() default {};
-
-    /**
      * 返回结果的样例 for OpenAPI Specification 3.1.0
      *
      * @return String

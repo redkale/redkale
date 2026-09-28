@@ -49,19 +49,6 @@ public abstract class AnyValue {
     }
 
     /**
-     * @see org.redkale.util.AnyValueWriter
-     * @deprecated replace {@link org.redkale.util.AnyValueWriter}
-     */
-    @Deprecated(since = "2.8.0")
-    public static final class DefaultAnyValue extends AnyValueWriter {
-
-        public static final DefaultAnyValue create() {
-            return new DefaultAnyValue();
-        }
-    }
-    //
-
-    /**
      * 字段名和值的组合对象
      *
      * @param <T> 泛型

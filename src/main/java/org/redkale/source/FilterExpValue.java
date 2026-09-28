@@ -38,7 +38,7 @@ public class FilterExpValue implements java.io.Serializable {
 
     public FilterExpValue(Number left, FilterExpress express, Number right) {
         this.left = left;
-        this.express = FilterNodes.oldExpress(express);
+        this.express = express;
         this.right = right;
     }
 

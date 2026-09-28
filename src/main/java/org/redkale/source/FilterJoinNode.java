@@ -54,7 +54,7 @@ public class FilterJoinNode extends FilterNode {
         this.joinType = joinType;
         this.joinColumns = joinColumns;
         this.column = column;
-        this.express = express == null ? EQ : FilterNodes.oldExpress(express);
+        this.express = express == null ? EQ : express;
         this.value = value;
     }
 

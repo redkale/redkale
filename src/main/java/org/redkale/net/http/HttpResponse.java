@@ -455,18 +455,6 @@ public class HttpResponse extends Response<HttpContext, HttpRequest> {
     }
 
     /**
-     * 将CompletableFuture的结果对象以JSON格式输出
-     *
-     * @param convert 指定的Convert
-     * @param valueType 指定CompletableFuture.value的泛型类型
-     * @param future 输出对象的句柄
-     */
-    //    @Deprecated //@since 2.5.0
-    //    @SuppressWarnings("unchecked")
-    //    public void finishJson(final Convert convert, final Type valueType, final CompletableFuture future) {
-    //        finishFuture(convert, valueType, future);
-    //    }
-    /**
      * 将RetResult对象输出
      *
      * @param type 指定的RetResult泛型类型

@@ -55,66 +55,7 @@ public enum FilterExpress {
     FV_DIV("DIV"), // 整除运算，需要与FilterValue配合使用
 
     AND("AND"),
-    OR("OR"),
-    // ------------------------ 过期 ------------------------
-    @Deprecated(since = "2.8.0")
-    EQUAL("="),
-    @Deprecated(since = "2.8.0")
-    IGNORECASELIKE("LIKE"),
-    @Deprecated(since = "2.8.0")
-    IGNORECASENOTLIKE("NOT LIKE"),
-    @Deprecated(since = "2.8.0")
-    ENDSWITH("LIKE"),
-    @Deprecated(since = "2.8.0")
-    STARTSWITH("LIKE"),
-    @Deprecated(since = "2.8.0")
-    IGNORECASEEQUAL("="),
-    @Deprecated(since = "2.8.0")
-    NOTEQUAL("<>"),
-    @Deprecated(since = "2.8.0")
-    GREATERTHAN(">"),
-    @Deprecated(since = "2.8.0")
-    LESSTHAN("<"),
-    @Deprecated(since = "2.8.0")
-    GREATERTHANOREQUALTO(">="),
-    @Deprecated(since = "2.8.0")
-    LESSTHANOREQUALTO("<="),
-    @Deprecated(since = "2.8.0")
-    NOTLIKE("NOT LIKE"),
-    @Deprecated(since = "2.8.0")
-    IGNORECASENOTEQUAL("="),
-    @Deprecated(since = "2.8.0")
-    NOTENDSWITH("NOT LIKE"),
-    @Deprecated(since = "2.8.0")
-    NOTSTARTSWITH("NOT LIKE"),
-    @Deprecated(since = "2.8.0")
-    LENGTH_EQUAL("="),
-    @Deprecated(since = "2.8.0")
-    LENGTH_GREATERTHAN(">"),
-    @Deprecated(since = "2.8.0")
-    LENGTH_LESSTHAN("<"),
-    @Deprecated(since = "2.8.0")
-    LENGTH_GREATERTHANOREQUALTO(">="),
-    @Deprecated(since = "2.8.0")
-    IGNORECASENOTCONTAIN("NOT CONTAIN"),
-    @Deprecated(since = "2.8.0")
-    IGNORECASECONTAIN("CONTAIN"),
-    @Deprecated(since = "2.8.0")
-    LENGTH_LESSTHANOREQUALTO("<="),
-    @Deprecated(since = "2.8.0")
-    NOTCONTAIN("NOT CONTAIN"),
-    @Deprecated(since = "2.8.0")
-    ISEMPTY("="),
-    @Deprecated(since = "2.8.0")
-    ISNOTNULL("IS NOT NULL"),
-    @Deprecated(since = "2.8.0")
-    NOTBETWEEN("NOT BETWEEN"),
-    @Deprecated(since = "2.8.0")
-    NOTIN("NOT IN"),
-    @Deprecated(since = "2.8.0")
-    ISNULL("IS NULL"),
-    @Deprecated(since = "2.8.0")
-    ISNOTEMPTY("<>");
+    OR("OR");
 
     private final String value;
 

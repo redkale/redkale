@@ -745,8 +745,7 @@ public abstract class NodeServer {
             // do {   public方法不用递归
             for (Method m : loop.getMethods()) {
                 Command c = m.getAnnotation(Command.class);
-                org.redkale.util.Command c2 = m.getAnnotation(org.redkale.util.Command.class);
-                if (c == null && c2 == null) {
+                if (c == null) {
                     continue;
                 }
                 if (Modifier.isStatic(m.getModifiers())) {

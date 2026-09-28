@@ -85,7 +85,7 @@ public class FilterNode { // FilterNode 不能实现Serializable接口， 否则
             }
         }
         this.column = col;
-        this.express = exp == null ? EQ : FilterNodes.oldExpress(exp);
+        this.express = exp == null ? EQ : exp;
         this.value = val;
     }
 
