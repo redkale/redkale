@@ -13,6 +13,7 @@ module org.redkale {
     exports org.redkale.annotation;
     exports org.redkale.boot;
     exports org.redkale.boot.watch;
+    exports org.redkale.bytecode;
     exports org.redkale.cached;
     exports org.redkale.cached.spi;
     exports org.redkale.cluster;
