@@ -58,10 +58,6 @@ class NodeAutoServiceLoader implements ResourceTypeLoader {
             if (al != null) {
                 auto = al.value();
             }
-            org.redkale.util.AutoLoad al2 = serviceImplClass.getAnnotation(org.redkale.util.AutoLoad.class);
-            if (al2 != null) {
-                auto = al2.value();
-            }
             if (auto && !Utility.isAbstractOrInterface(serviceImplClass)) {
                 return null;
             }

@@ -264,11 +264,8 @@ public final class ClassFilter<T> {
             }
 
             AutoLoad auto = (AutoLoad) clazz.getAnnotation(AutoLoad.class);
-            org.redkale.util.AutoLoad auto2 =
-                    (org.redkale.util.AutoLoad) clazz.getAnnotation(org.redkale.util.AutoLoad.class);
             if ((expectPredicate != null && expectPredicate.test(clazzName))
-                    || (autoScan && auto != null && !auto.value())
-                    || (autoScan && auto2 != null && !auto2.value())) { // 自动扫描且被标记为@AutoLoad(false)的
+                    || (autoScan && auto != null && !auto.value())) { // 自动扫描且被标记为@AutoLoad(false)的
                 expectEntrys.add(new FilterEntry(clazz, autoScan, true, property));
             } else {
                 entrys.add(new FilterEntry(clazz, autoScan, false, property));

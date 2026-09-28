@@ -105,8 +105,7 @@ public final class EntityCache<T> {
         this.needCopy = !direct;
         this.newCopier = Copier.create(type, type, (e, c) -> {
             try {
-                return e.getAnnotation(Transient.class) == null
-                        && e.getAnnotation(javax.persistence.Transient.class) == null;
+                return e.getAnnotation(Transient.class) == null;
             } catch (Exception ex) {
                 return true;
             }
@@ -114,9 +113,6 @@ public final class EntityCache<T> {
         this.uptCopier = Copier.create(type, type, (e, c) -> {
             try {
                 if (e.getAnnotation(Transient.class) != null) {
-                    return false;
-                }
-                if (e.getAnnotation(javax.persistence.Transient.class) != null) {
                     return false;
                 }
                 Column column = e.getAnnotation(Column.class);

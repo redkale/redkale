@@ -451,10 +451,6 @@ public abstract class MessageAgent implements MessageManager {
         if (al != null && !al.value() && service.getClass().getAnnotation(Local.class) != null) {
             return;
         }
-        org.redkale.util.AutoLoad al2 = service.getClass().getAnnotation(org.redkale.util.AutoLoad.class);
-        if (al2 != null && !al2.value() && service.getClass().getAnnotation(Local.class) != null) {
-            return;
-        }
         { // 标记@RestService(name = " ") 需要跳过， 一般作为模板引擎
             RestService rest = service.getClass().getAnnotation(RestService.class);
             if (rest != null && !rest.name().isEmpty() && rest.name().trim().isEmpty()) {
@@ -473,10 +469,6 @@ public abstract class MessageAgent implements MessageManager {
     public final void putService(NodeSncpServer ns, Service service, SncpServlet servlet) {
         AutoLoad al = service.getClass().getAnnotation(AutoLoad.class);
         if (al != null && !al.value() && service.getClass().getAnnotation(Local.class) != null) {
-            return;
-        }
-        org.redkale.util.AutoLoad al2 = service.getClass().getAnnotation(org.redkale.util.AutoLoad.class);
-        if (al2 != null && !al2.value() && service.getClass().getAnnotation(Local.class) != null) {
             return;
         }
         if (WebSocketNode.class.isAssignableFrom(Sncp.getResourceType(service)) && Utility.isEmpty(nodeid)) {

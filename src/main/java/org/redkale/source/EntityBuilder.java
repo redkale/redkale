@@ -126,12 +126,6 @@ public class EntityBuilder<T> {
                         cm.getAnnotation(org.redkale.annotation.ConstructorParameters.class);
                 if (cp != null && cp.value().length > 0) {
                     constructorParameters = cp.value();
-                } else {
-                    org.redkale.util.ConstructorParameters cp2 =
-                            cm.getAnnotation(org.redkale.util.ConstructorParameters.class);
-                    if (cp2 != null && cp2.value().length > 0) {
-                        constructorParameters = cp2.value();
-                    }
                 }
             } catch (Exception e) {
                 throw new SourceException(type + " cannot find "
@@ -154,9 +148,6 @@ public class EntityBuilder<T> {
                         continue;
                     }
                     if (field.getAnnotation(Transient.class) != null) {
-                        continue;
-                    }
-                    if (field.getAnnotation(javax.persistence.Transient.class) != null) {
                         continue;
                     }
                     if (fields.contains(field.getName())) {

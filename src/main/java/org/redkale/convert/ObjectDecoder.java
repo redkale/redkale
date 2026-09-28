@@ -107,15 +107,9 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                     if (ref != null && ref.ignore()) {
                         continue;
                     }
-                    ConvertSmallString small = field.getAnnotation(ConvertSmallString.class);
                     colFactory = factory.columnFactory(
                             field.getGenericType(), field.getAnnotationsByType(ConvertCoder.class), false);
-                    Decodeable<R, ?> fieldCoder;
-                    if (small != null && field.getType() == String.class) {
-                        fieldCoder = StringSimpledCoder.StandardStringSimpledCoder.instance;
-                    } else {
-                        fieldCoder = colFactory.findFieldCoder(clazz, field.getName());
-                    }
+                    Decodeable<R, ?> fieldCoder = colFactory.findFieldCoder(clazz, field.getName());
                     if (fieldCoder == null) {
                         Type t = TypeToken.createClassType(
                                 TypeToken.getGenericType(field.getGenericType(), this.type), this.type);
@@ -202,7 +196,6 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                         continue;
                     }
 
-                    ConvertSmallString small = method.getAnnotation(ConvertSmallString.class);
                     Field maybeField = ConvertFactory.readGetSetField(method);
                     colFactory = factory.columnFactory(
                             method.getGenericParameterTypes()[0],
@@ -214,12 +207,7 @@ public class ObjectDecoder<R extends Reader, T> implements Decodeable<R, T> {
                                 maybeField.getAnnotationsByType(ConvertCoder.class),
                                 false);
                     }
-                    Decodeable<R, ?> fieldCoder;
-                    if (small != null && method.getParameterTypes()[0] == String.class) {
-                        fieldCoder = StringSimpledCoder.StandardStringSimpledCoder.instance;
-                    } else {
-                        fieldCoder = colFactory.findFieldCoder(clazz, ConvertFactory.readGetSetFieldName(method));
-                    }
+                    Decodeable<R, ?> fieldCoder = colFactory.findFieldCoder(clazz, ConvertFactory.readGetSetFieldName(method));
                     if (fieldCoder == null) {
                         Type t = TypeToken.createClassType(
                                 TypeToken.getGenericType(method.getGenericParameterTypes()[0], this.type), this.type);

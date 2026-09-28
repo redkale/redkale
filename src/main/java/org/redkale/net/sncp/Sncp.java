@@ -564,11 +564,7 @@ public abstract class Sncp {
         {
             av0 = cw.visitAnnotation(Type.getDescriptor(ResourceType.class), true);
             ResourceType rty = serviceImplClass.getAnnotation(ResourceType.class);
-            org.redkale.util.ResourceType rty2 = serviceImplClass.getAnnotation(org.redkale.util.ResourceType.class);
-            av0.visit(
-                    "value",
-                    Type.getType(Type.getDescriptor(
-                            rty != null ? rty.value() : (rty2 != null ? rty2.value() : serviceImplClass))));
+            av0.visit("value", Type.getType(Type.getDescriptor(rty != null ? rty.value() : serviceImplClass)));
             av0.visitEnd();
         }
         {
@@ -994,12 +990,7 @@ public abstract class Sncp {
         {
             av0 = cw.visitAnnotation(Type.getDescriptor(ResourceType.class), true);
             ResourceType rty = serviceTypeOrImplClass.getAnnotation(ResourceType.class);
-            org.redkale.util.ResourceType rty2 =
-                    serviceTypeOrImplClass.getAnnotation(org.redkale.util.ResourceType.class);
-            av0.visit(
-                    "value",
-                    Type.getType(Type.getDescriptor(
-                            rty != null ? rty.value() : (rty2 != null ? rty2.value() : serviceTypeOrImplClass))));
+            av0.visit("value", Type.getType(Type.getDescriptor(rty != null ? rty.value() : serviceTypeOrImplClass)));
             av0.visitEnd();
         }
         {

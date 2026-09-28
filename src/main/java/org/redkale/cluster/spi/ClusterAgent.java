@@ -192,10 +192,6 @@ public abstract class ClusterAgent {
         if (al != null && !al.value() && service.getClass().getAnnotation(Local.class) != null) {
             return false;
         }
-        org.redkale.util.AutoLoad al2 = service.getClass().getAnnotation(org.redkale.util.AutoLoad.class);
-        if (al2 != null && !al2.value() && service.getClass().getAnnotation(Local.class) != null) {
-            return false;
-        }
         if (service instanceof WebSocketNode) {
             if (((WebSocketNode) service).getLocalWebSocketEngine() == null) {
                 return false;

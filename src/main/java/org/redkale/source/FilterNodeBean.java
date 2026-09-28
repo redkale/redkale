@@ -220,9 +220,6 @@ public final class FilterNodeBean<T extends FilterBean> implements Comparable<Fi
                 if (field.getAnnotation(Transient.class) != null) {
                     continue;
                 }
-                if (field.getAnnotation(javax.persistence.Transient.class) != null) {
-                    continue;
-                }
                 if (field.getAnnotation(FilterColumn.class) != null
                         && field.getAnnotation(FilterColumn.class).ignore()) {
                     continue;

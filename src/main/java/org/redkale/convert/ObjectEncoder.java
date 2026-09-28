@@ -93,15 +93,9 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                     if (ref != null && ref.ignore()) {
                         continue;
                     }
-                    ConvertSmallString small = field.getAnnotation(ConvertSmallString.class);
                     colFactory = factory.columnFactory(
                             field.getGenericType(), field.getAnnotationsByType(ConvertCoder.class), true);
-                    Encodeable<W, ?> fieldCoder;
-                    if (small != null && field.getType() == String.class) {
-                        fieldCoder = StringSimpledCoder.StandardStringSimpledCoder.instance;
-                    } else {
-                        fieldCoder = colFactory.findFieldCoder(clazz, field.getName());
-                    }
+                    Encodeable<W, ?> fieldCoder = colFactory.findFieldCoder(clazz, field.getName());
                     if (fieldCoder == null) {
                         Type t = TypeToken.createClassType(
                                 TypeToken.getGenericType(field.getGenericType(), this.type), this.type);
@@ -162,17 +156,6 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                     if (ref != null && ref.ignore()) {
                         continue;
                     }
-                    ConvertSmallString small = method.getAnnotation(ConvertSmallString.class);
-                    if (small == null) {
-                        try {
-                            Field f = clazz.getDeclaredField(convertName);
-                            if (f != null) {
-                                small = f.getAnnotation(ConvertSmallString.class);
-                            }
-                        } catch (Exception e) {
-                            // do nothing
-                        }
-                    }
                     Field maybeField = ConvertFactory.readGetSetField(method);
                     colFactory = factory.columnFactory(
                             method.getGenericReturnType(), method.getAnnotationsByType(ConvertCoder.class), true);
@@ -180,13 +163,8 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
                         colFactory = factory.columnFactory(
                                 maybeField.getGenericType(), maybeField.getAnnotationsByType(ConvertCoder.class), true);
                     }
-                    Encodeable<W, ?> fieldCoder;
-                    if (small != null && method.getReturnType() == String.class) {
-                        fieldCoder = StringSimpledCoder.StandardStringSimpledCoder.instance;
-                    } else {
-                        String fieldName = ConvertFactory.readGetSetFieldName(method);
-                        fieldCoder = colFactory.findFieldCoder(clazz, fieldName);
-                    }
+                    String fieldName = ConvertFactory.readGetSetFieldName(method);
+                    Encodeable<W, ?> fieldCoder = colFactory.findFieldCoder(clazz, fieldName);
                     if (fieldCoder == null) {
                         Type t = TypeToken.createClassType(
                                 TypeToken.getGenericType(method.getGenericReturnType(), this.type), this.type);
@@ -423,12 +401,6 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
             String[] vals = null;
             if (cps != null) {
                 vals = cps.value();
-            } else {
-                org.redkale.util.ConstructorParameters cps2 =
-                        method.getAnnotation(org.redkale.util.ConstructorParameters.class);
-                if (cps2 != null) {
-                    vals = cps2.value();
-                }
             }
             return vals;
         } catch (Exception e) {

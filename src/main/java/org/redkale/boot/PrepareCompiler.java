@@ -40,11 +40,7 @@ public class PrepareCompiler {
                 .isPresent();
 
         final ClassFilter<?> entityFilter = new ClassFilter(application.getClassLoader(), Entity.class, Object.class);
-        final ClassFilter<?> entityFilter2 =
-                new ClassFilter(application.getClassLoader(), javax.persistence.Entity.class, Object.class);
         final ClassFilter<?> serialFilter = new ClassFilter(application.getClassLoader(), Serial.class, Object.class);
-        final ClassFilter<?> serialFilter2 =
-                new ClassFilter(application.getClassLoader(), org.redkale.util.Bean.class, Object.class);
         final ClassFilter<?> filterFilter = new ClassFilter(application.getClassLoader(), null, FilterBean.class);
 
         application.loadClassByFilters(entityFilter, serialFilter, filterFilter);
@@ -70,46 +66,7 @@ public class PrepareCompiler {
             } catch (Exception e) { // JsonFactory.loadDecoder可能会失败，因为class可能包含抽象类字段,如ColumnValue.value字段
             }
         }
-        for (FilterEntry en : entityFilter2.getFilterEntrys()) {
-            Class clz = en.getType();
-            if (Utility.isAbstractOrInterface(clz)) {
-                continue;
-            }
-            try {
-                List<DataSource> dataSources = application.getResourceFactory().query(DataSource.class);
-                dataSources.forEach(source -> source.compile(clz));
-                // application.dataSources.forEach(source -> source.compile(clz));
-                JsonFactory.root().loadEncoder(clz);
-                if (hasSncp) {
-                    ProtobufFactory.root().loadEncoder(clz);
-                }
-                Decodeable decoder = JsonFactory.root().loadDecoder(clz);
-                if (hasSncp) {
-                    ProtobufFactory.root().loadDecoder(clz);
-                }
-                decoder.convertFrom(new JsonReader("{}"));
-            } catch (Exception e) { // JsonFactory.loadDecoder可能会失败，因为class可能包含抽象类字段,如ColumnValue.value字段
-            }
-        }
         for (FilterEntry en : serialFilter.getFilterEntrys()) {
-            Class clz = en.getType();
-            if (Utility.isAbstractOrInterface(clz)) {
-                continue;
-            }
-            try {
-                JsonFactory.root().loadEncoder(clz);
-                if (hasSncp) {
-                    ProtobufFactory.root().loadEncoder(clz);
-                }
-                Decodeable decoder = JsonFactory.root().loadDecoder(clz);
-                if (hasSncp) {
-                    ProtobufFactory.root().loadDecoder(clz);
-                }
-                decoder.convertFrom(new JsonReader("{}"));
-            } catch (Exception e) { // JsonFactory.loadDecoder可能会失败，因为class可能包含抽象类字段,如ColumnValue.value字段
-            }
-        }
-        for (FilterEntry en : serialFilter2.getFilterEntrys()) {
             Class clz = en.getType();
             if (Utility.isAbstractOrInterface(clz)) {
                 continue;

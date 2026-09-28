@@ -269,25 +269,11 @@ public final class EntityInfo<T> {
         // ---------------------------------------------
 
         LogLevel ll = type.getAnnotation(LogLevel.class);
-        org.redkale.util.LogLevel ll2 = type.getAnnotation(org.redkale.util.LogLevel.class);
-        String levelName = ll != null ? ll.value() : (ll2 != null ? ll2.value() : null);
+        String levelName = ll != null ? ll.value() : null;
         this.logLevel =
                 levelName == null ? Integer.MIN_VALUE : Level.parse(levelName).intValue();
         Map<Integer, HashSet<String>> logmap = new HashMap<>();
         for (LogExcludeLevel lel : type.getAnnotationsByType(LogExcludeLevel.class)) {
-            for (String onelevel : lel.levels()) {
-                int level = Level.parse(onelevel).intValue();
-                HashSet<String> set = logmap.get(level);
-                if (set == null) {
-                    set = new HashSet<>();
-                    logmap.put(level, set);
-                }
-                for (String key : lel.keys()) {
-                    set.add(key);
-                }
-            }
-        }
-        for (org.redkale.util.LogExcludeLevel lel : type.getAnnotationsByType(org.redkale.util.LogExcludeLevel.class)) {
             for (String onelevel : lel.levels()) {
                 int level = Level.parse(onelevel).intValue();
                 HashSet<String> set = logmap.get(level);
@@ -310,9 +296,8 @@ public final class EntityInfo<T> {
         org.redkale.persistence.Entity en = type.getAnnotation(org.redkale.persistence.Entity.class);
         boolean camelCase = en != null && en.camelCase();
         org.redkale.persistence.Table t1 = type.getAnnotation(org.redkale.persistence.Table.class);
-        javax.persistence.Table t2 = type.getAnnotation(javax.persistence.Table.class);
-        final String tableName0 = t1 != null ? t1.name() : (t2 != null ? t2.name() : null);
-        final String tableCcatalog0 = t1 != null ? t1.catalog() : (t2 != null ? t2.catalog() : null);
+        final String tableName0 = t1 != null ? t1.name() : null;
+        final String tableCcatalog0 = t1 != null ? t1.catalog() : null;
         String table0 = Utility.isEmpty(tableName0)
                 ? (camelCase
                         ? EntityColumn.camelCase(type.getSimpleName())
@@ -378,12 +363,6 @@ public final class EntityInfo<T> {
             ConstructorParameters cp = cm.getAnnotation(ConstructorParameters.class);
             if (cp != null && cp.value().length > 0) {
                 cps = cp.value();
-            } else {
-                org.redkale.util.ConstructorParameters cp2 =
-                        cm.getAnnotation(org.redkale.util.ConstructorParameters.class);
-                if (cp2 != null && cp2.value().length > 0) {
-                    cps = cp2.value();
-                }
             }
         } catch (Exception e) {
             logger.log(Level.SEVERE, type + " cannot find ConstructorParameters Creator", e);
@@ -415,9 +394,6 @@ public final class EntityInfo<T> {
                 if (field.getAnnotation(Transient.class) != null) {
                     continue;
                 }
-                if (field.getAnnotation(javax.persistence.Transient.class) != null) {
-                    continue;
-                }
                 if (fields.contains(field.getName())) {
                     continue;
                 }
@@ -437,8 +413,7 @@ public final class EntityInfo<T> {
                     continue;
                 }
 
-                boolean idFlag = field.getAnnotation(Id.class) != null
-                        || field.getAnnotation(javax.persistence.Id.class) != null;
+                boolean idFlag = field.getAnnotation(Id.class) != null;
                 if (idFlag && idAttr0 == null) {
                     auto = field.getAnnotation(GeneratedValue.class) != null;
                     idAttr0 = attr;

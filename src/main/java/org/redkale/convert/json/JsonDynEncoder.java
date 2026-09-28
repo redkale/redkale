@@ -607,8 +607,7 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
 
     protected static boolean isConvertStandardString(JsonFactory factory, AccessibleObject element) {
         if (element instanceof Field) {
-            return ((Field) element).getAnnotation(ConvertStandardString.class) != null
-                    || ((Field) element).getAnnotation(ConvertSmallString.class) != null;
+            return ((Field) element).getAnnotation(ConvertStandardString.class) != null;
         }
         Method method = (Method) element;
         ConvertStandardString standard = method.getAnnotation(ConvertStandardString.class);
@@ -617,19 +616,6 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
                 Field f = method.getDeclaringClass().getDeclaredField(factory.readGetSetFieldName(method));
                 if (f != null) {
                     standard = f.getAnnotation(ConvertStandardString.class);
-                }
-            } catch (Exception e) {
-                // do nothing
-            }
-        }
-        if (standard == null) {
-            if (method.getAnnotation(ConvertSmallString.class) != null) {
-                return true;
-            }
-            try {
-                Field f = method.getDeclaringClass().getDeclaredField(factory.readGetSetFieldName(method));
-                if (f != null && f.getAnnotation(ConvertSmallString.class) != null) {
-                    return true;
                 }
             } catch (Exception e) {
                 // do nothing
