@@ -3,9 +3,13 @@
  */
 package org.redkale.util;
 
-import static org.redkale.asm.Opcodes.*;
+import static java.lang.classfile.ClassFile.*;
+import static java.lang.constant.ConstantDescs.*;
 
 import java.io.*;
+import java.lang.classfile.*;
+import java.lang.classfile.attribute.*;
+import java.lang.constant.*;
 import java.lang.reflect.*;
 import java.math.*;
 import java.net.*;
@@ -15,7 +19,6 @@ import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.Stream;
-import org.redkale.asm.*;
 
 /** @author zhangjx */
 class Inners {
@@ -93,55 +96,6 @@ class Inners {
             arrayCacheMap.put(CompletableFuture.class, t -> new CompletableFuture[t]);
         }
 
-        static class SimpleClassVisitor extends ClassVisitor {
-
-            private final String constructorDesc;
-
-            private final List<String> fieldNames;
-
-            private boolean started;
-
-            public SimpleClassVisitor(int api, List<String> fieldNames, String constructorDesc) {
-                super(api);
-                this.fieldNames = fieldNames;
-                this.constructorDesc = constructorDesc;
-            }
-
-            @Override
-            public MethodVisitor visitMethod(
-                    int access, String name, String desc, String signature, String[] exceptions) {
-                if (java.lang.reflect.Modifier.isStatic(access) || !"<init>".equals(name)) {
-                    return null;
-                }
-                if (constructorDesc != null && !constructorDesc.equals(desc)) {
-                    return null;
-                }
-                if (this.started) {
-                    return null;
-                }
-                this.started = true;
-                // 返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
-                return new MethodVisitor(Opcodes.ASM6) {
-                    @Override
-                    public void visitLocalVariable(
-                            String name, String description, String signature, Label start, Label end, int index) {
-                        if (index < 1) {
-                            return;
-                        }
-                        int size = fieldNames.size();
-                        // index不会按顺序执行的
-                        if (index > size) {
-                            for (int i = size; i < index; i++) {
-                                fieldNames.add(" ");
-                            }
-                            fieldNames.set(index - 1, name);
-                        }
-                        fieldNames.set(index - 1, name);
-                    }
-                };
-            }
-        }
-
         public static AbstractMap.SimpleEntry<String, Class>[] getConstructorField(
                 Class clazz, int paramCount, String constructorDesc) {
             String n = clazz.getName();
@@ -161,8 +115,27 @@ class Inners {
                 return null;
             }
             final List<String> fieldNames = new ArrayList<>();
-            new ClassReader(out.toByteArray())
-                    .accept(new SimpleClassVisitor(Opcodes.ASM6, fieldNames, constructorDesc), 0);
+            for (MethodModel method : ClassFile.of().parse(out.toByteArray()).methods()) {
+                if (!method.methodName().equalsString("<init>")
+                        || (constructorDesc != null && !method.methodType().equalsString(constructorDesc))) {
+                    continue;
+                }
+                method.code()
+                        .flatMap(code -> code.findAttribute(Attributes.localVariableTable()))
+                        .ifPresent(table -> {
+                            for (LocalVariableInfo variable : table.localVariables()) {
+                                int slot = variable.slot();
+                                if (slot < 1) {
+                                    continue;
+                                }
+                                while (fieldNames.size() < slot) {
+                                    fieldNames.add(" ");
+                                }
+                                fieldNames.set(slot - 1, variable.name().stringValue());
+                            }
+                        });
+                break;
+            }
             while (fieldNames.remove(" ")) {
                 // 删掉空元素
             }
@@ -230,11 +203,15 @@ class Inners {
             if (Utility.inNativeImage()) {
                 return t -> (T[]) Array.newInstance(clazz, t);
             }
-            final String interName = clazz.getName().replace('.', '/');
-            final String interDesc = org.redkale.asm.Type.getDescriptor(clazz);
+
+            final ClassDesc componentDesc = ClassDesc.ofDescriptor(clazz.descriptorString());
             final RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
             final String newDynName = "org/redkaledyn/creator/_DynArrayFunction__"
-                    + clazz.getName().replace('.', '_').replace('$', '_');
+                    + clazz.getName()
+                            .replace('.', '_')
+                            .replace('$', '_')
+                            .replace('[', '_')
+                            .replace(';', '_');
             try {
                 return (IntFunction) classLoader
                         .loadClass(newDynName.replace('/', '.'))
@@ -245,50 +222,37 @@ class Inners {
             }
 
             // -------------------------------------------------------------
-            ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-            MethodVisitor mv;
-            cw.visit(
-                    V11,
-                    ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
-                    newDynName,
-                    "Ljava/lang/Object;Ljava/util/function/IntFunction<[" + interDesc + ">;",
-                    "java/lang/Object",
-                    new String[] {"java/util/function/IntFunction"});
-
-            { // IntFunction自身的构造方法
-                mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
-                mv.visitInsn(RETURN);
-                mv.visitMaxs(1, 1);
-                mv.visitEnd();
-            }
-            { // apply 方法
-                mv = cw.visitMethod(ACC_PUBLIC, "apply", "(I)[" + interDesc, null, null);
-                Label label0 = new Label();
-                mv.visitLabel(label0);
-                mv.visitVarInsn(ILOAD, 1);
-                mv.visitTypeInsn(ANEWARRAY, interName);
-                mv.visitInsn(ARETURN);
-                Label label2 = new Label();
-                mv.visitLabel(label2);
-                mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
-                mv.visitLocalVariable("size", "I", null, label0, label2, 1);
-                mv.visitMaxs(1, 2);
-                mv.visitEnd();
-            }
-            { // 虚拟 apply 方法
-                mv = cw.visitMethod(
-                        ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC, "apply", "(I)Ljava/lang/Object;", null, null);
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitVarInsn(ILOAD, 1);
-                mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "apply", "(I)[" + interDesc, false);
-                mv.visitInsn(ARETURN);
-                mv.visitMaxs(2, 2);
-                mv.visitEnd();
-            }
-            cw.visitEnd();
-            final byte[] bytes = cw.toByteArray();
+            final ClassDesc dynDesc = ClassDesc.ofInternalName(newDynName);
+            final ClassDesc arrayDesc = componentDesc.arrayType();
+            final MethodTypeDesc applyDesc = MethodTypeDesc.of(arrayDesc, CD_int);
+            final byte[] bytes = ClassFile.of().build(dynDesc, cb -> {
+                cb.withVersion(JAVA_11_VERSION, 0)
+                        .withFlags(ACC_PUBLIC | ACC_FINAL | ACC_SUPER)
+                        .withSuperclass(CD_Object)
+                        .withInterfaceSymbols(ClassDesc.of("java.util.function.IntFunction"));
+                cb.with(SignatureAttribute.of(ClassSignature.parseFrom(
+                        "Ljava/lang/Object;Ljava/util/function/IntFunction<" + arrayDesc.descriptorString() + ">;")));
+                cb.withMethodBody(
+                        "<init>",
+                        MethodTypeDesc.of(CD_void),
+                        ACC_PUBLIC,
+                        code -> code.aload(0)
+                                .invokespecial(CD_Object, "<init>", MethodTypeDesc.of(CD_void))
+                                .return_());
+                cb.withMethodBody(
+                        "apply",
+                        applyDesc,
+                        ACC_PUBLIC,
+                        code -> code.iload(1).anewarray(componentDesc).areturn());
+                cb.withMethodBody(
+                        "apply",
+                        MethodTypeDesc.of(CD_Object, CD_int),
+                        ACC_PUBLIC | ACC_BRIDGE | ACC_SYNTHETIC,
+                        code -> code.aload(0)
+                                .iload(1)
+                                .invokevirtual(dynDesc, "apply", applyDesc)
+                                .areturn());
+            });
             try {
                 Class<?> resultClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
                 RedkaleClassLoader.putReflectionDeclaredConstructors(resultClazz, newDynName.replace('/', '.'));
