@@ -5,16 +5,16 @@
  */
 package org.redkale.util;
 
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
+import static java.lang.classfile.ClassFile.*;
+import static java.lang.constant.ConstantDescs.*;
 
+import java.lang.classfile.*;
+import java.lang.classfile.attribute.SignatureAttribute;
+import java.lang.constant.*;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.*;
 import org.redkale.annotation.*;
-import org.redkale.asm.*;
-import org.redkale.asm.Type;
-import org.redkale.bytecode.ByteCodes;
 
 /**
  * 该类实现动态映射一个JavaBean类中成员对应的getter、setter方法； 代替低效的反射实现方式。
@@ -997,12 +997,10 @@ public interface Attribute<T, F> {
         if (column.isPrimitive()) {
             column = TypeToken.primitiveToWrapper(column);
         }
-        final String supDynName = Attribute.class.getName().replace('.', '/');
-        final String interName = TypeToken.typeToClass(subclass).getName().replace('.', '/');
-        final String columnName = column.getName().replace('.', '/');
-        final String interDesc = Type.getDescriptor(TypeToken.typeToClass(subclass));
-        final String columnDesc = Type.getDescriptor(column);
-        Class realclz = TypeToken.typeToClass(subclass);
+        final Class<?> realclz = TypeToken.typeToClass(subclass);
+        final ClassDesc interDesc = ClassDesc.ofDescriptor(realclz.descriptorString());
+        final ClassDesc columnDesc = ClassDesc.ofDescriptor(column.descriptorString());
+        final ClassDesc primitiveDesc = ClassDesc.ofDescriptor(pcolumn.descriptorString());
         RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
         try {
             classLoader.loadClass(realclz.getName());
@@ -1037,216 +1035,167 @@ public interface Attribute<T, F> {
             // do nothing
         }
         // ---------------------------------------------------
-        final ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
-        MethodVisitor mv;
-
-        cw.visit(
-                V11,
-                ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
-                newDynName,
-                "Ljava/lang/Object;L" + supDynName + "<" + interDesc + columnDesc + ">;",
-                "java/lang/Object",
-                new String[] {supDynName});
-        { // _gtype
-            FieldVisitor fv = cw.visitField(ACC_PRIVATE, "_gtype", "Ljava/lang/reflect/Type;", null, null);
-            fv.visitEnd();
-        }
-        { // _attach
-            FieldVisitor fv = cw.visitField(ACC_PRIVATE, "_attach", "Ljava/lang/Object;", null, null);
-            fv.visitEnd();
-        }
-        { // 构造方法
-            mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
-
-        { // field 方法
-            mv = cw.visitMethod(ACC_PUBLIC, "field", "()Ljava/lang/String;", null, null);
-            mv.visitLdcInsn(fieldName);
-            mv.visitInsn(ARETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
-        { // type 方法
-            mv = cw.visitMethod(ACC_PUBLIC, "type", "()Ljava/lang/Class;", null, null);
-            ByteCodes.visitFieldInsn(mv, pcolumn);
-            mv.visitInsn(ARETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
-        { // genericType
-            mv = cw.visitMethod(ACC_PUBLIC, "genericType", "()Ljava/lang/reflect/Type;", null, null);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, newDynName, "_gtype", "Ljava/lang/reflect/Type;");
-            mv.visitInsn(ARETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
-        { // attach
-            mv = cw.visitMethod(ACC_PUBLIC, "attach", "()Ljava/lang/Object;", "<E:Ljava/lang/Object;>()TE;", null);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, newDynName, "_attach", "Ljava/lang/Object;");
-            mv.visitInsn(ARETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
-        { // declaringClass 方法
-            mv = cw.visitMethod(ACC_PUBLIC, "declaringClass", "()Ljava/lang/Class;", null, null);
-            mv.visitLdcInsn(Type.getType(TypeToken.typeToClass(subclass)));
-            mv.visitInsn(ARETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
-        { // get 方法
-            mv = cw.visitMethod(ACC_PUBLIC, "get", "(" + interDesc + ")" + columnDesc, null, null);
-            Label label0 = new Label();
-            mv.visitLabel(label0);
-            int m = 1;
-            if (tgetter == null) {
-                if (tfield == null) {
-                    mv.visitInsn(ACONST_NULL);
-                } else { // public tfield
-                    mv.visitVarInsn(ALOAD, 1);
-                    mv.visitFieldInsn(GETFIELD, interName, tfield.getName(), Type.getDescriptor(pcolumn));
-                    if (pcolumn != column) {
-                        mv.visitMethodInsn(
-                                INVOKESTATIC,
-                                columnName,
-                                "valueOf",
-                                "(" + Type.getDescriptor(pcolumn) + ")" + columnDesc,
-                                false);
-                        m = 2;
-                    } else {
-                        if (checkCast) {
-                            mv.visitTypeInsn(CHECKCAST, columnName);
-                        }
-                    }
-                }
-            } else {
-                mv.visitVarInsn(ALOAD, 1);
-                mv.visitMethodInsn(
-                        INVOKEVIRTUAL, interName, tgetter.getName(), Type.getMethodDescriptor(tgetter), false);
-                if (pcolumn != column) {
-                    mv.visitMethodInsn(
-                            INVOKESTATIC,
-                            columnName,
-                            "valueOf",
-                            "(" + Type.getDescriptor(pcolumn) + ")" + columnDesc,
-                            false);
-                    m = 2;
+        final ClassDesc dynDesc = ClassDesc.ofInternalName(newDynName);
+        final ClassDesc typeDesc = ClassDesc.of("java.lang.reflect.Type");
+        final MethodTypeDesc getDesc = MethodTypeDesc.of(columnDesc, interDesc);
+        final MethodTypeDesc setDesc = MethodTypeDesc.of(CD_void, interDesc, columnDesc);
+        final boolean primitive = pcolumn.isPrimitive();
+        final boolean cast = checkCast;
+        final String description = tostr;
+        byte[] bytes = ClassFile.of().build(dynDesc, cb -> {
+            cb.withVersion(JAVA_11_VERSION, 0)
+                    .withFlags(ACC_PUBLIC | ACC_FINAL | ACC_SUPER)
+                    .withSuperclass(CD_Object)
+                    .withInterfaceSymbols(ClassDesc.of(Attribute.class.getName()));
+            cb.with(SignatureAttribute.of(ClassSignature.parseFrom("Ljava/lang/Object;L"
+                    + Attribute.class.getName().replace('.', '/') + "<"
+                    + interDesc.descriptorString() + columnDesc.descriptorString() + ">;")));
+            cb.withField("_gtype", typeDesc, ACC_PRIVATE);
+            cb.withField("_attach", CD_Object, ACC_PRIVATE);
+            cb.withMethodBody(
+                    "<init>",
+                    MethodTypeDesc.of(CD_void),
+                    ACC_PUBLIC,
+                    code -> code.aload(0)
+                            .invokespecial(CD_Object, "<init>", MethodTypeDesc.of(CD_void))
+                            .return_());
+            cb.withMethodBody(
+                    "field",
+                    MethodTypeDesc.of(CD_String),
+                    ACC_PUBLIC,
+                    code -> code.ldc(fieldName).areturn());
+            cb.withMethodBody("type", MethodTypeDesc.of(CD_Class), ACC_PUBLIC, code -> {
+                if (primitive) {
+                    code.getstatic(columnDesc, "TYPE", CD_Class);
                 } else {
-                    if (checkCast) {
-                        mv.visitTypeInsn(CHECKCAST, columnName);
-                    }
+                    code.ldc(primitiveDesc);
                 }
-            }
-            mv.visitInsn(ARETURN);
-            Label label2 = new Label();
-            mv.visitLabel(label2);
-            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
-            mv.visitLocalVariable("obj", interDesc, null, label0, label2, 1);
-            mv.visitMaxs(m, 2);
-            mv.visitEnd();
-        }
-        { // set 方法
-            mv = cw.visitMethod(ACC_PUBLIC, "set", "(" + interDesc + columnDesc + ")V", null, null);
-            Label label0 = new Label();
-            mv.visitLabel(label0);
-            int m = 2;
-            if (tsetter == null) {
-                if (tfield == null || java.lang.reflect.Modifier.isFinal(tfield.getModifiers())) {
-                    m = 0;
-                } else { // public tfield
-                    mv.visitVarInsn(ALOAD, 1);
-                    mv.visitVarInsn(ALOAD, 2);
-                    if (pcolumn != column) {
-                        try {
-                            java.lang.reflect.Method pm = column.getMethod(pcolumn.getSimpleName() + "Value");
-                            mv.visitMethodInsn(
-                                    INVOKEVIRTUAL, columnName, pm.getName(), Type.getMethodDescriptor(pm), false);
-                            m = 3;
-                        } catch (Exception ex) {
-                            throw new RedkaleException(ex); // 不可能会发生
+                code.areturn();
+            });
+            cb.withMethodBody(
+                    "genericType",
+                    MethodTypeDesc.of(typeDesc),
+                    ACC_PUBLIC,
+                    code -> code.aload(0).getfield(dynDesc, "_gtype", typeDesc).areturn());
+            cb.withMethod("attach", MethodTypeDesc.of(CD_Object), ACC_PUBLIC, mb -> {
+                mb.with(SignatureAttribute.of(MethodSignature.parseFrom("<E:Ljava/lang/Object;>()TE;")));
+                mb.withCode(code ->
+                        code.aload(0).getfield(dynDesc, "_attach", CD_Object).areturn());
+            });
+            cb.withMethodBody(
+                    "declaringClass",
+                    MethodTypeDesc.of(CD_Class),
+                    ACC_PUBLIC,
+                    code -> code.ldc(interDesc).areturn());
+            cb.withMethodBody("get", getDesc, ACC_PUBLIC, code -> {
+                if (tgetter == null && tfield == null) {
+                    code.aconst_null();
+                } else {
+                    if (tgetter == null) {
+                        code.aload(1)
+                                .getfield(
+                                        interDesc,
+                                        tfield.getName(),
+                                        ClassDesc.ofDescriptor(tfield.getType().descriptorString()));
+                    } else {
+                        MethodTypeDesc methodDesc = MethodTypeDesc.of(
+                                ClassDesc.ofDescriptor(tgetter.getReturnType().descriptorString()));
+                        if (Modifier.isStatic(tgetter.getModifiers())) {
+                            code.invokestatic(
+                                    ClassDesc.of(tgetter.getDeclaringClass().getName()),
+                                    tgetter.getName(),
+                                    methodDesc,
+                                    tgetter.getDeclaringClass().isInterface());
+                        } else {
+                            code.aload(1);
+                            if (realclz.isInterface()) {
+                                code.invokeinterface(interDesc, tgetter.getName(), methodDesc);
+                            } else {
+                                code.invokevirtual(interDesc, tgetter.getName(), methodDesc);
+                            }
                         }
                     }
-                    if (!tfield.getType().isPrimitive() && tfield.getGenericType() instanceof TypeVariable) {
-                        mv.visitFieldInsn(PUTFIELD, interName, tfield.getName(), "Ljava/lang/Object;");
+                    if (primitive) {
+                        code.invokestatic(columnDesc, "valueOf", MethodTypeDesc.of(columnDesc, primitiveDesc));
+                    } else if (cast) {
+                        code.checkcast(columnDesc);
+                    }
+                }
+                code.areturn();
+            });
+            cb.withMethodBody("set", setDesc, ACC_PUBLIC, code -> {
+                if (tsetter != null || (tfield != null && !Modifier.isFinal(tfield.getModifiers()))) {
+                    if (tsetter == null || !Modifier.isStatic(tsetter.getModifiers())) {
+                        code.aload(1);
+                    }
+                    code.aload(2);
+                    if (primitive) {
+                        code.invokevirtual(
+                                columnDesc, pcolumn.getSimpleName() + "Value", MethodTypeDesc.of(primitiveDesc));
+                    }
+                    if (tsetter == null) {
+                        code.putfield(
+                                interDesc,
+                                tfield.getName(),
+                                ClassDesc.ofDescriptor(tfield.getType().descriptorString()));
                     } else {
-                        mv.visitFieldInsn(PUTFIELD, interName, tfield.getName(), Type.getDescriptor(pcolumn));
+                        MethodTypeDesc methodDesc = MethodTypeDesc.of(
+                                ClassDesc.ofDescriptor(tsetter.getReturnType().descriptorString()),
+                                Arrays.stream(tsetter.getParameterTypes())
+                                        .map(t -> ClassDesc.ofDescriptor(t.descriptorString()))
+                                        .toArray(ClassDesc[]::new));
+                        if (Modifier.isStatic(tsetter.getModifiers())) {
+                            code.invokestatic(
+                                    ClassDesc.of(tsetter.getDeclaringClass().getName()),
+                                    tsetter.getName(),
+                                    methodDesc,
+                                    tsetter.getDeclaringClass().isInterface());
+                        } else if (realclz.isInterface()) {
+                            code.invokeinterface(interDesc, tsetter.getName(), methodDesc);
+                        } else {
+                            code.invokevirtual(interDesc, tsetter.getName(), methodDesc);
+                        }
+                        if (tsetter.getReturnType() == long.class || tsetter.getReturnType() == double.class) {
+                            code.pop2();
+                        } else if (tsetter.getReturnType() != void.class) {
+                            code.pop();
+                        }
                     }
                 }
-            } else {
-                mv.visitVarInsn(ALOAD, 1);
-                mv.visitVarInsn(ALOAD, 2);
-                if (pcolumn != column) {
-                    try {
-                        java.lang.reflect.Method pm = column.getMethod(pcolumn.getSimpleName() + "Value");
-                        mv.visitMethodInsn(
-                                INVOKEVIRTUAL, columnName, pm.getName(), Type.getMethodDescriptor(pm), false);
-                        m = 3;
-                    } catch (Exception ex) {
-                        throw new RedkaleException(ex); // 不可能会发生
-                    }
-                }
-                mv.visitMethodInsn(
-                        INVOKEVIRTUAL, interName, tsetter.getName(), Type.getMethodDescriptor(tsetter), false);
+                code.return_();
+            });
+            MethodTypeDesc bridgeGetDesc = MethodTypeDesc.of(CD_Object, CD_Object);
+            if (!getDesc.equals(bridgeGetDesc)) {
+                cb.withMethodBody(
+                        "get",
+                        bridgeGetDesc,
+                        ACC_PUBLIC | ACC_BRIDGE | ACC_SYNTHETIC,
+                        code -> code.aload(0)
+                                .aload(1)
+                                .checkcast(interDesc)
+                                .invokevirtual(dynDesc, "get", getDesc)
+                                .areturn());
             }
-            mv.visitInsn(RETURN);
-            Label label2 = new Label();
-            mv.visitLabel(label2);
-            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
-            mv.visitLocalVariable("obj", interDesc, null, label0, label2, 1);
-            mv.visitLocalVariable("value", columnDesc, null, label0, label2, 2);
-            mv.visitMaxs(m, 3);
-            mv.visitEnd();
-        }
-        { // 虚拟get
-            mv = cw.visitMethod(
-                    ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC,
-                    "get",
-                    "(Ljava/lang/Object;)Ljava/lang/Object;",
-                    null,
-                    null);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitTypeInsn(CHECKCAST, interName);
-            mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "get", "(" + interDesc + ")" + columnDesc, false);
-            mv.visitInsn(ARETURN);
-            mv.visitMaxs(2, 2);
-            mv.visitEnd();
-        }
-        { // 虚拟set
-            mv = cw.visitMethod(
-                    ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC,
-                    "set",
-                    "(Ljava/lang/Object;Ljava/lang/Object;)V",
-                    null,
-                    null);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitTypeInsn(CHECKCAST, interName);
-            mv.visitVarInsn(ALOAD, 2);
-            mv.visitTypeInsn(CHECKCAST, columnName);
-            mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "set", "(" + interDesc + columnDesc + ")V", false);
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(3, 3);
-            mv.visitEnd();
-        }
-        { // toString函数
-            mv = cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null);
-            // mv.setDebug(true);
-            mv.visitLdcInsn(tostr);
-            mv.visitInsn(ARETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
-        cw.visitEnd();
-
-        byte[] bytes = cw.toByteArray();
+            MethodTypeDesc bridgeSetDesc = MethodTypeDesc.of(CD_void, CD_Object, CD_Object);
+            if (!setDesc.equals(bridgeSetDesc)) {
+                cb.withMethodBody(
+                        "set",
+                        bridgeSetDesc,
+                        ACC_PUBLIC | ACC_BRIDGE | ACC_SYNTHETIC,
+                        code -> code.aload(0)
+                                .aload(1)
+                                .checkcast(interDesc)
+                                .aload(2)
+                                .checkcast(columnDesc)
+                                .invokevirtual(dynDesc, "set", setDesc)
+                                .return_());
+            }
+            cb.withMethodBody(
+                    "toString",
+                    MethodTypeDesc.of(CD_String),
+                    ACC_PUBLIC,
+                    code -> code.ldc(description).areturn());
+        });
         Class<Attribute> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {
