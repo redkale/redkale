@@ -3,17 +3,19 @@
  */
 package org.redkale.util;
 
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
+import static java.lang.classfile.ClassFile.*;
+import static java.lang.classfile.Opcode.*;
+import static java.lang.constant.ConstantDescs.*;
 
+import java.lang.classfile.*;
+import java.lang.classfile.attribute.SignatureAttribute;
+import java.lang.constant.*;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.*;
 import java.util.stream.Collectors;
-import org.redkale.asm.*;
-import org.redkale.asm.Type;
-import org.redkale.bytecode.ByteCodes;
 
 /**
  * JavaBean类对象的拷贝，相同的字段名会被拷贝 <br>
@@ -684,8 +686,8 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
         final String supDynName = Copier.class.getName().replace('.', '/');
         final String destClassName = destClass.getName().replace('.', '/');
         final String srcClassName = srcClass.getName().replace('.', '/');
-        final String destDesc = Type.getDescriptor(destClass);
-        final String srcDesc = Type.getDescriptor(srcClass);
+        final String destDesc = destClass.descriptorString();
+        final String srcDesc = srcClass.descriptorString();
         final RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
         final String utilClassName = Utility.class.getName().replace('.', '/');
         final String newDynName = "org/redkaledyn/copier/_Dyn" + Copier.class.getSimpleName() + "_" + options
@@ -704,663 +706,848 @@ public interface Copier<S, D> extends BiFunction<S, D, D> {
         }
 
         // ------------------------------------------------------------------------------
-        ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
-        MethodVisitor mv;
-        cw.visit(
-                V11,
-                ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
-                newDynName,
-                "Ljava/lang/Object;L" + supDynName + "<" + srcDesc + destDesc + ">;",
-                "java/lang/Object",
-                new String[] {supDynName});
+        byte[] bytes = ClassFile.of().build(ClassDesc.ofInternalName(newDynName), cb -> {
+            cb.withVersion(JAVA_11_VERSION, 0)
+                    .withFlags(ACC_PUBLIC | ACC_FINAL | ACC_SUPER)
+                    .withSuperclass(CD_Object)
+                    .withInterfaceSymbols(ClassDesc.ofInternalName(supDynName));
+            cb.with(SignatureAttribute.of(
+                    ClassSignature.parseFrom("Ljava/lang/Object;L" + supDynName + "<" + srcDesc + destDesc + ">;")));
 
-        { // 构造函数
-            mv = (cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
-            // mv.setDebug(true);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
-        if (srcIsMap) { // Map -> JavaBean
-            {
-                mv = (cw.visitMethod(ACC_PUBLIC, "apply", "(" + srcDesc + destDesc + ")" + destDesc, null, null));
-                Label label0 = new Label();
-                mv.visitLabel(label0);
-                // mv.setDebug(true);
-                {
-                    // if(src == null) return null;
-                    mv.visitVarInsn(ALOAD, 1);
-                    Label ifLabel = new Label();
-                    mv.visitJumpInsn(IFNONNULL, ifLabel);
-                    mv.visitVarInsn(ALOAD, 2);
-                    mv.visitInsn(ARETURN);
-                    mv.visitLabel(ifLabel);
-                    mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
-                }
-
-                mv.visitVarInsn(ALOAD, 1);
-                mv.visitVarInsn(ALOAD, 2);
-                mv.visitInvokeDynamicInsn(
-                        "accept",
-                        "(" + destDesc + ")Ljava/util/function/BiConsumer;",
-                        new Handle(
-                                Opcodes.H_INVOKESTATIC,
-                                "java/lang/invoke/LambdaMetafactory",
-                                "metafactory",
-                                "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
-                                false),
-                        new Object[] {
-                            Type.getType("(Ljava/lang/Object;Ljava/lang/Object;)V"),
-                            new Handle(
-                                    Opcodes.H_INVOKESTATIC,
-                                    newDynName,
-                                    "lambda$0",
-                                    "(" + destDesc + "Ljava/lang/Object;Ljava/lang/Object;)V",
-                                    false),
-                            Type.getType("(Ljava/lang/Object;Ljava/lang/Object;)V")
-                        });
-                mv.visitMethodInsn(
-                        srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                        srcClassName,
-                        "forEach",
-                        "(Ljava/util/function/BiConsumer;)V",
-                        srcClass.isInterface());
-                mv.visitVarInsn(ALOAD, 2);
-                mv.visitInsn(ARETURN);
-                Label label2 = new Label();
-                mv.visitLabel(label2);
-                mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
-                mv.visitLocalVariable("src", srcDesc, null, label0, label2, 1);
-                mv.visitLocalVariable("dest", destDesc, null, label0, label2, 2);
-                mv.visitMaxs(2, 3);
-                mv.visitEnd();
-            }
-            {
-                mv = cw.visitMethod(
-                        ACC_PRIVATE + ACC_STATIC + ACC_SYNTHETIC,
-                        "lambda$0",
-                        "(" + destDesc + "Ljava/lang/Object;Ljava/lang/Object;)V",
-                        null,
-                        null);
-                Label goLabel = new Label();
-                int i = 0;
-                for (Map.Entry<String, AccessibleObject> en : elements.entrySet()) {
-                    final int index = ++i;
-                    final java.lang.reflect.Type fieldType = en.getValue() instanceof Field
-                            ? ((Field) en.getValue()).getGenericType()
-                            : ((Method) en.getValue()).getGenericParameterTypes()[0];
-                    final Class fieldClass = en.getValue() instanceof Field
-                            ? ((Field) en.getValue()).getType()
-                            : ((Method) en.getValue()).getParameterTypes()[0];
-                    final boolean primitive = fieldClass.isPrimitive();
-                    final boolean charstr = CharSequence.class.isAssignableFrom(fieldClass);
-
-                    mv.visitLdcInsn(en.getKey());
-                    mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "equals", "(Ljava/lang/Object;)Z", false);
-                    Label ifeq = index == elements.size() ? goLabel : new Label();
-                    mv.visitJumpInsn(IFEQ, ifeq);
-                    if (skipNullValue || primitive) {
-                        mv.visitVarInsn(ALOAD, 2);
-                        mv.visitJumpInsn(IFNULL, ifeq);
-                    } else if (skipEmptyString && charstr) {
-                        mv.visitVarInsn(ALOAD, 2);
-                        mv.visitJumpInsn(IFNULL, ifeq);
-                        mv.visitVarInsn(ALOAD, 2);
-                        mv.visitTypeInsn(INSTANCEOF, "java/lang/CharSequence");
-                        mv.visitJumpInsn(IFEQ, ifeq);
-                        mv.visitVarInsn(ALOAD, 2);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/CharSequence");
-                        mv.visitMethodInsn(INVOKEINTERFACE, "java/lang/CharSequence", "length", "()I", true);
-                        mv.visitJumpInsn(IFLE, ifeq);
-                    }
-
-                    mv.visitVarInsn(ALOAD, 0);
-                    ByteCodes.visitFieldInsn(mv, fieldClass);
-
-                    mv.visitVarInsn(ALOAD, 2);
-                    mv.visitMethodInsn(
-                            INVOKESTATIC,
-                            utilClassName,
-                            "convertValue",
-                            "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;",
+            { // 构造函数
+                cb.withMethodBody("<init>", MethodTypeDesc.ofDescriptor("()V"), ACC_PUBLIC, mv -> {
+                    mv.aload(0);
+                    mv.invoke(
+                            INVOKESPECIAL,
+                            ClassDesc.ofInternalName("java/lang/Object"),
+                            "<init>",
+                            MethodTypeDesc.ofDescriptor("()V"),
                             false);
-                    ByteCodes.visitCheckCast(mv, fieldClass);
-
-                    if (en.getValue() instanceof Field) {
-                        mv.visitFieldInsn(PUTFIELD, destClassName, en.getKey(), Type.getDescriptor(fieldClass));
-                    } else {
-                        Method setter = (Method) en.getValue();
-                        mv.visitMethodInsn(
-                                destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                                destClassName,
-                                setter.getName(),
-                                Type.getMethodDescriptor(setter),
-                                destClass.isInterface());
-                    }
-                    if (index == elements.size()) {
-                        mv.visitLabel(goLabel);
-                    } else {
-                        mv.visitJumpInsn(GOTO, goLabel);
-                        mv.visitLabel(ifeq);
-                    }
-                    mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
-                }
-
-                mv.visitInsn(RETURN);
-                mv.visitMaxs(3, 3);
-                mv.visitEnd();
+                    mv.return_();
+                });
             }
-        } else { // JavaBean -> Map/JavaBean
-            mv = (cw.visitMethod(ACC_PUBLIC, "apply", "(" + srcDesc + destDesc + ")" + destDesc, null, null));
-            Label label0 = new Label();
-            mv.visitLabel(label0);
-            // mv.setDebug(true);
-            {
-                // if(src == null) return null;
-                mv.visitVarInsn(ALOAD, 1);
-                Label ifLabel = new Label();
-                mv.visitJumpInsn(IFNONNULL, ifLabel);
-                mv.visitVarInsn(ALOAD, 2);
-                mv.visitInsn(ARETURN);
-                mv.visitLabel(ifLabel);
-                mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
-            }
+            if (srcIsMap) { // Map -> JavaBean
+                {
+                    cb.withMethodBody(
+                            "apply",
+                            MethodTypeDesc.ofDescriptor("(" + srcDesc + destDesc + ")" + destDesc),
+                            ACC_PUBLIC,
+                            mv -> {
+                                Label label0 = mv.newLabel();
+                                mv.labelBinding(label0);
+                                {
+                                    // if(src == null) return null;
+                                    mv.aload(1);
+                                    Label ifLabel = mv.newLabel();
+                                    mv.branch(IFNONNULL, ifLabel);
+                                    mv.aload(2);
+                                    mv.areturn();
+                                    mv.labelBinding(ifLabel);
+                                }
 
-            Predicate<Class> simpler = t -> t.isPrimitive() || t == String.class || Number.class.isAssignableFrom(t);
-            // 遍历所有字段
-            for (Map.Entry<String, AccessibleObject> en : elements.entrySet()) {
-                if (!(en.getValue() instanceof java.lang.reflect.Field)) {
-                    continue;
+                                mv.aload(1);
+                                mv.aload(2);
+                                mv.invokedynamic(DynamicCallSiteDesc.of(
+                                        MethodHandleDesc.ofMethod(
+                                                DirectMethodHandleDesc.Kind.STATIC,
+                                                ClassDesc.of("java.lang.invoke.LambdaMetafactory"),
+                                                "metafactory",
+                                                MethodTypeDesc.of(
+                                                        CD_CallSite,
+                                                        CD_MethodHandles_Lookup,
+                                                        CD_String,
+                                                        CD_MethodType,
+                                                        CD_MethodType,
+                                                        CD_MethodHandle,
+                                                        CD_MethodType)),
+                                        "accept",
+                                        MethodTypeDesc.of(
+                                                ClassDesc.of("java.util.function.BiConsumer"),
+                                                ClassDesc.ofDescriptor(destDesc)),
+                                        MethodTypeDesc.of(CD_void, CD_Object, CD_Object),
+                                        MethodHandleDesc.ofMethod(
+                                                DirectMethodHandleDesc.Kind.STATIC,
+                                                ClassDesc.ofInternalName(newDynName),
+                                                "lambda$0",
+                                                MethodTypeDesc.of(
+                                                        CD_void,
+                                                        ClassDesc.ofDescriptor(destDesc),
+                                                        CD_Object,
+                                                        CD_Object)),
+                                        MethodTypeDesc.of(CD_void, CD_Object, CD_Object)));
+                                mv.invoke(
+                                        srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                        ClassDesc.ofInternalName(srcClassName),
+                                        "forEach",
+                                        MethodTypeDesc.ofDescriptor("(Ljava/util/function/BiConsumer;)V"),
+                                        srcClass.isInterface());
+                                mv.aload(2);
+                                mv.areturn();
+                                Label label2 = mv.newLabel();
+                                mv.labelBinding(label2);
+                            });
                 }
-                java.lang.reflect.Field field = (java.lang.reflect.Field) en.getValue();
-                final String sfname = en.getKey();
+                {
+                    cb.withMethodBody(
+                            "lambda$0",
+                            MethodTypeDesc.ofDescriptor("(" + destDesc + "Ljava/lang/Object;Ljava/lang/Object;)V"),
+                            ACC_PRIVATE + ACC_STATIC + ACC_SYNTHETIC,
+                            mv -> {
+                                Label goLabel = mv.newLabel();
+                                int i = 0;
+                                for (Map.Entry<String, AccessibleObject> en : elements.entrySet()) {
+                                    final int index = ++i;
+                                    final java.lang.reflect.Type fieldType = en.getValue() instanceof Field
+                                            ? ((Field) en.getValue()).getGenericType()
+                                            : ((Method) en.getValue()).getGenericParameterTypes()[0];
+                                    final Class fieldClass = en.getValue() instanceof Field
+                                            ? ((Field) en.getValue()).getType()
+                                            : ((Method) en.getValue()).getParameterTypes()[0];
+                                    final boolean primitive = fieldClass.isPrimitive();
+                                    final boolean charstr = CharSequence.class.isAssignableFrom(fieldClass);
 
-                final String dfname = destNewNames.getOrDefault(sfname, sfname);
-                final Class srcFieldType = field.getType();
-                final boolean charstr = CharSequence.class.isAssignableFrom(srcFieldType);
-                if (destIsMap) { // JavaBean -> Map
-                    String td = Type.getDescriptor(srcFieldType);
-                    if ((!skipNullValue && !(skipEmptyString && charstr)) || srcFieldType.isPrimitive()) {
-                        mv.visitVarInsn(ALOAD, 2);
-                        mv.visitLdcInsn(dfname);
-                        mv.visitVarInsn(ALOAD, 1);
-                        mv.visitFieldInsn(GETFIELD, srcClassName, sfname, td);
-                        ByteCodes.visitPrimitiveValueOf(mv, srcFieldType);
-                        mv.visitMethodInsn(
-                                destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                                destClassName,
-                                "put",
-                                "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-                                destClass.isInterface());
-                        mv.visitInsn(POP);
-                    } else { // skipNullValue OR (skipEmptyString && charstr)
-                        mv.visitVarInsn(ALOAD, 1);
-                        mv.visitFieldInsn(GETFIELD, srcClassName, sfname, td);
-                        mv.visitVarInsn(ASTORE, 3);
-                        mv.visitVarInsn(ALOAD, 3);
-                        Label ifLabel = new Label();
-                        mv.visitJumpInsn(IFNULL, ifLabel);
-                        if (skipEmptyString && charstr) {
-                            mv.visitVarInsn(ALOAD, 3);
-                            mv.visitTypeInsn(CHECKCAST, "java/lang/CharSequence");
-                            mv.visitMethodInsn(INVOKEINTERFACE, "java/lang/CharSequence", "length", "()I", true);
-                            mv.visitJumpInsn(IFLE, ifLabel);
-                        }
-                        mv.visitVarInsn(ALOAD, 2);
-                        mv.visitLdcInsn(dfname);
-                        mv.visitVarInsn(ALOAD, 3);
-                        mv.visitMethodInsn(
-                                destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                                destClassName,
-                                "put",
-                                "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-                                destClass.isInterface());
-                        mv.visitInsn(POP);
-                        mv.visitLabel(ifLabel);
-                        mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
-                    }
-                } else { // JavaBean -> JavaBean
-                    boolean needTypeCast = false;
-                    java.lang.reflect.Method setter = null;
-                    java.lang.reflect.Field setField = null;
-                    try {
-                        setField = destClass.getField(dfname);
-                        if (field.getType() == setField.getType()) {
-                            needTypeCast = false;
-                        } else if (simpler.test(field.getType()) && simpler.test(setField.getType())) {
-                            needTypeCast = true;
-                        } else if (!field.getType().equals(setField.getType())) {
-                            if (allowTypeCast) {
-                                needTypeCast = true;
-                            } else {
-                                continue;
-                            }
-                        }
-                    } catch (Exception e) {
-                        String setterMethodName = "set" + Utility.firstCharUpperCase(dfname);
-                        try {
-                            setter = destClass.getMethod(setterMethodName, field.getType());
-                            if (Utility.contains(setter.getExceptionTypes(), throwPredicate)) {
-                                continue; // setter方法带有非RuntimeException异常
-                            }
-                        } catch (Exception e2) {
-                            try {
-                                for (java.lang.reflect.Method m : destClass.getMethods()) {
-                                    if (Modifier.isStatic(m.getModifiers())) {
-                                        continue;
+                                    mv.ldc(en.getKey());
+                                    mv.aload(1);
+                                    mv.invoke(
+                                            INVOKEVIRTUAL,
+                                            ClassDesc.ofInternalName("java/lang/String"),
+                                            "equals",
+                                            MethodTypeDesc.ofDescriptor("(Ljava/lang/Object;)Z"),
+                                            false);
+                                    Label ifeq = index == elements.size() ? goLabel : mv.newLabel();
+                                    mv.branch(IFEQ, ifeq);
+                                    if (skipNullValue || primitive) {
+                                        mv.aload(2);
+                                        mv.branch(IFNULL, ifeq);
+                                    } else if (skipEmptyString && charstr) {
+                                        mv.aload(2);
+                                        mv.branch(IFNULL, ifeq);
+                                        mv.aload(2);
+                                        mv.instanceOf(ClassDesc.ofInternalName("java/lang/CharSequence"));
+                                        mv.branch(IFEQ, ifeq);
+                                        mv.aload(2);
+                                        mv.checkcast(ClassDesc.ofInternalName("java/lang/CharSequence"));
+                                        mv.invoke(
+                                                INVOKEINTERFACE,
+                                                ClassDesc.ofInternalName("java/lang/CharSequence"),
+                                                "length",
+                                                MethodTypeDesc.ofDescriptor("()I"),
+                                                true);
+                                        mv.branch(IFLE, ifeq);
                                     }
-                                    if (Utility.contains(m.getExceptionTypes(), throwPredicate)) {
-                                        continue; // setter方法带有非RuntimeException异常
-                                    }
-                                    if (m.getParameterTypes().length != 1) {
-                                        continue;
-                                    }
-                                    if (m.getName().equals(setterMethodName)) {
-                                        if (simpler.test(field.getType()) && simpler.test(setField.getType())) {
-                                            setter = m;
-                                            needTypeCast = true;
-                                        } else if (!allowTypeCast) {
-                                            setter = null;
+
+                                    mv.aload(0);
+                                    loadClass(mv, fieldClass);
+
+                                    mv.aload(2);
+                                    mv.invoke(
+                                            INVOKESTATIC,
+                                            ClassDesc.ofInternalName(utilClassName),
+                                            "convertValue",
+                                            MethodTypeDesc.ofDescriptor(
+                                                    "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;"),
+                                            false);
+                                    cast(mv, fieldClass);
+
+                                    if (en.getValue() instanceof Field) {
+                                        mv.putfield(
+                                                ClassDesc.ofInternalName(destClassName),
+                                                en.getKey(),
+                                                ClassDesc.ofDescriptor(fieldClass.descriptorString()));
+                                    } else {
+                                        Method setter = (Method) en.getValue();
+                                        mv.invoke(
+                                                destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                                ClassDesc.ofInternalName(destClassName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(MethodType.methodType(
+                                                                setter.getReturnType(), setter.getParameterTypes())
+                                                        .descriptorString()),
+                                                destClass.isInterface());
+                                        if (setter.getReturnType() == long.class
+                                                || setter.getReturnType() == double.class) {
+                                            mv.pop2();
+                                        } else if (setter.getReturnType() != void.class) {
+                                            mv.pop();
                                         }
-                                        break;
+                                    }
+                                    if (index == elements.size()) {
+                                        mv.labelBinding(goLabel);
+                                    } else {
+                                        mv.branch(GOTO, goLabel);
+                                        mv.labelBinding(ifeq);
                                     }
                                 }
-                                if (setter == null) {
+
+                                mv.return_();
+                            });
+                }
+            } else { // JavaBean -> Map/JavaBean
+                cb.withMethodBody(
+                        "apply",
+                        MethodTypeDesc.ofDescriptor("(" + srcDesc + destDesc + ")" + destDesc),
+                        ACC_PUBLIC,
+                        mv -> {
+                            Label label0 = mv.newLabel();
+                            mv.labelBinding(label0);
+                            {
+                                // if(src == null) return null;
+                                mv.aload(1);
+                                Label ifLabel = mv.newLabel();
+                                mv.branch(IFNONNULL, ifLabel);
+                                mv.aload(2);
+                                mv.areturn();
+                                mv.labelBinding(ifLabel);
+                            }
+
+                            Predicate<Class> simpler =
+                                    t -> t.isPrimitive() || t == String.class || Number.class.isAssignableFrom(t);
+                            // 遍历所有字段
+                            for (Map.Entry<String, AccessibleObject> en : elements.entrySet()) {
+                                if (!(en.getValue() instanceof java.lang.reflect.Field)) {
                                     continue;
                                 }
-                            } catch (Exception e3) {
-                                continue;
-                            }
-                        }
-                    }
-                    String srcFieldDesc = Type.getDescriptor(srcFieldType);
-                    final Class destFieldType = setter == null ? setField.getType() : setter.getParameterTypes()[0];
-                    boolean localSkipNull =
-                            skipNullValue || (!srcFieldType.isPrimitive() && destFieldType.isPrimitive());
-                    if ((!localSkipNull && !(skipEmptyString && charstr))
-                            || (srcFieldType.isPrimitive() && !allowTypeCast)
-                            || (srcFieldType.isPrimitive() && destFieldType.isPrimitive())) {
-                        if (needTypeCast) {
-                            mv.visitVarInsn(ALOAD, 2);
-                            ByteCodes.visitFieldInsn(mv, destFieldType);
-                            mv.visitVarInsn(ALOAD, 1);
-                            mv.visitFieldInsn(GETFIELD, srcClassName, sfname, srcFieldDesc);
-                            ByteCodes.visitPrimitiveValueOf(mv, srcFieldType);
-                            mv.visitMethodInsn(
-                                    INVOKESTATIC,
-                                    utilClassName,
-                                    "convertValue",
-                                    "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;",
-                                    false);
-                            ByteCodes.visitCheckCast(mv, destFieldType);
-                            if (setter == null) { // src: field, dest: field
-                                mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
-                            } else { // src: field, dest: method
-                                mv.visitMethodInsn(
-                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                                        destClassName,
-                                        setter.getName(),
-                                        Type.getMethodDescriptor(setter),
-                                        destClass.isInterface());
-                                if (setter.getReturnType() != void.class) {
-                                    mv.visitInsn(POP);
-                                }
-                            }
-                        } else {
-                            mv.visitVarInsn(ALOAD, 2);
-                            mv.visitVarInsn(ALOAD, 1);
-                            mv.visitFieldInsn(GETFIELD, srcClassName, sfname, srcFieldDesc);
-                            if (setter == null) { // src: field, dest: field
-                                mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
-                            } else { // src: field, dest: method
-                                mv.visitMethodInsn(
-                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                                        destClassName,
-                                        setter.getName(),
-                                        Type.getMethodDescriptor(setter),
-                                        destClass.isInterface());
-                                if (setter.getReturnType() != void.class) {
-                                    mv.visitInsn(POP);
-                                }
-                            }
-                        }
-                    } else { // skipNullValue OR (skipEmptyString && charstr)
-                        mv.visitVarInsn(ALOAD, 1);
-                        mv.visitFieldInsn(GETFIELD, srcClassName, sfname, srcFieldDesc);
-                        mv.visitVarInsn(ASTORE, 3);
-                        mv.visitVarInsn(ALOAD, 3);
-                        Label ifLabel = new Label();
-                        mv.visitJumpInsn(IFNULL, ifLabel);
-                        if (skipEmptyString && charstr) {
-                            mv.visitVarInsn(ALOAD, 3);
-                            mv.visitTypeInsn(CHECKCAST, "java/lang/CharSequence");
-                            mv.visitMethodInsn(INVOKEINTERFACE, "java/lang/CharSequence", "length", "()I", true);
-                            mv.visitJumpInsn(IFLE, ifLabel);
-                        }
-                        if (needTypeCast) {
-                            mv.visitVarInsn(ALOAD, 2);
-                            ByteCodes.visitFieldInsn(mv, destFieldType);
-                            mv.visitVarInsn(ALOAD, 3);
-                            ByteCodes.visitPrimitiveValueOf(mv, srcFieldType);
-                            mv.visitMethodInsn(
-                                    INVOKESTATIC,
-                                    utilClassName,
-                                    "convertValue",
-                                    "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;",
-                                    false);
-                            ByteCodes.visitCheckCast(mv, destFieldType);
-                            if (setter == null) { // src: field, dest: field
-                                mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
-                            } else { // src: field, dest: method
-                                mv.visitMethodInsn(
-                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                                        destClassName,
-                                        setter.getName(),
-                                        Type.getMethodDescriptor(setter),
-                                        destClass.isInterface());
-                                if (setter.getReturnType() != void.class) {
-                                    mv.visitInsn(POP);
-                                }
-                            }
-                        } else {
-                            mv.visitVarInsn(ALOAD, 2);
-                            mv.visitVarInsn(ALOAD, 3);
-                            mv.visitTypeInsn(CHECKCAST, srcFieldType.getName().replace('.', '/'));
-                            if (setter == null) { // src: field, dest: field
-                                mv.visitFieldInsn(PUTFIELD, destClassName, dfname, srcFieldDesc);
-                            } else { // src: field, dest: method
-                                mv.visitMethodInsn(
-                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                                        destClassName,
-                                        setter.getName(),
-                                        Type.getMethodDescriptor(setter),
-                                        destClass.isInterface());
-                                if (setter.getReturnType() != void.class) {
-                                    mv.visitInsn(POP);
-                                }
-                            }
-                        }
-                        mv.visitLabel(ifLabel);
-                        mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
-                    }
-                }
-            }
-            // 遍历所有方法
-            for (Map.Entry<String, AccessibleObject> en : elements.entrySet()) {
-                if (!(en.getValue() instanceof java.lang.reflect.Method)) {
-                    continue;
-                }
-                java.lang.reflect.Method getter = (java.lang.reflect.Method) en.getValue();
-                final String sfname = en.getKey();
+                                java.lang.reflect.Field field = (java.lang.reflect.Field) en.getValue();
+                                final String sfname = en.getKey();
 
-                final String dfname = destNewNames.getOrDefault(sfname, sfname);
-                final Class srcFieldType = getter.getReturnType();
-                final boolean charstr = CharSequence.class.isAssignableFrom(srcFieldType);
-                if (destIsMap) { // srcClass是JavaBean
-                    if ((!skipNullValue && !(skipEmptyString && charstr)) || srcFieldType.isPrimitive()) {
-                        mv.visitVarInsn(ALOAD, 2);
-                        mv.visitLdcInsn(dfname);
-                        mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(
-                                srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                                srcClassName,
-                                getter.getName(),
-                                Type.getMethodDescriptor(getter),
-                                srcClass.isInterface());
-                        ByteCodes.visitPrimitiveValueOf(mv, srcFieldType);
-                        mv.visitMethodInsn(
-                                destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                                destClassName,
-                                "put",
-                                "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-                                destClass.isInterface());
-                        mv.visitInsn(POP);
-                    } else { // skipNullValue OR (skipEmptyString && charstr)
-                        mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(
-                                srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                                srcClassName,
-                                getter.getName(),
-                                Type.getMethodDescriptor(getter),
-                                srcClass.isInterface());
-                        mv.visitVarInsn(ASTORE, 3);
-                        mv.visitVarInsn(ALOAD, 3);
-                        Label ifLabel = new Label();
-                        mv.visitJumpInsn(IFNULL, ifLabel);
-                        if (skipEmptyString && charstr) {
-                            mv.visitVarInsn(ALOAD, 3);
-                            mv.visitTypeInsn(CHECKCAST, "java/lang/CharSequence");
-                            mv.visitMethodInsn(INVOKEINTERFACE, "java/lang/CharSequence", "length", "()I", true);
-                            mv.visitJumpInsn(IFLE, ifLabel);
-                        }
-                        mv.visitVarInsn(ALOAD, 2);
-                        mv.visitLdcInsn(dfname);
-                        mv.visitVarInsn(ALOAD, 3);
-                        mv.visitMethodInsn(
-                                destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                                destClassName,
-                                "put",
-                                "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-                                destClass.isInterface());
-                        mv.visitInsn(POP);
-                        mv.visitLabel(ifLabel);
-                        mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
-                    }
-                } else { // srcClass、destClass是JavaBean
-                    boolean needTypeCast = false;
-                    java.lang.reflect.Method setter = null;
-                    java.lang.reflect.Field setField = null;
-                    String setterMethodName = "set" + Utility.firstCharUpperCase(dfname);
-                    try {
-                        setter = destClass.getMethod(setterMethodName, getter.getReturnType());
-                        if (Utility.contains(setter.getExceptionTypes(), throwPredicate)) {
-                            continue; // setter方法带有非RuntimeException异常
-                        }
-                    } catch (Exception e) {
-                        if (allowTypeCast) {
-                            try {
-                                for (java.lang.reflect.Method m : destClass.getMethods()) {
-                                    if (Modifier.isStatic(m.getModifiers())) {
-                                        continue;
+                                final String dfname = destNewNames.getOrDefault(sfname, sfname);
+                                final Class srcFieldType = field.getType();
+                                final boolean charstr = CharSequence.class.isAssignableFrom(srcFieldType);
+                                if (destIsMap) { // JavaBean -> Map
+                                    String td = srcFieldType.descriptorString();
+                                    if ((!skipNullValue && !(skipEmptyString && charstr))
+                                            || srcFieldType.isPrimitive()) {
+                                        mv.aload(2);
+                                        mv.ldc(dfname);
+                                        mv.aload(1);
+                                        mv.getfield(
+                                                ClassDesc.ofInternalName(srcClassName),
+                                                sfname,
+                                                ClassDesc.ofDescriptor(td));
+                                        box(mv, srcFieldType);
+                                        mv.invoke(
+                                                destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                                ClassDesc.ofInternalName(destClassName),
+                                                "put",
+                                                MethodTypeDesc.ofDescriptor(
+                                                        "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
+                                                destClass.isInterface());
+                                        mv.pop();
+                                    } else { // skipNullValue OR (skipEmptyString && charstr)
+                                        mv.aload(1);
+                                        mv.getfield(
+                                                ClassDesc.ofInternalName(srcClassName),
+                                                sfname,
+                                                ClassDesc.ofDescriptor(td));
+                                        mv.astore(3);
+                                        mv.aload(3);
+                                        Label ifLabel = mv.newLabel();
+                                        mv.branch(IFNULL, ifLabel);
+                                        if (skipEmptyString && charstr) {
+                                            mv.aload(3);
+                                            mv.checkcast(ClassDesc.ofInternalName("java/lang/CharSequence"));
+                                            mv.invoke(
+                                                    INVOKEINTERFACE,
+                                                    ClassDesc.ofInternalName("java/lang/CharSequence"),
+                                                    "length",
+                                                    MethodTypeDesc.ofDescriptor("()I"),
+                                                    true);
+                                            mv.branch(IFLE, ifLabel);
+                                        }
+                                        mv.aload(2);
+                                        mv.ldc(dfname);
+                                        mv.aload(3);
+                                        mv.invoke(
+                                                destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                                ClassDesc.ofInternalName(destClassName),
+                                                "put",
+                                                MethodTypeDesc.ofDescriptor(
+                                                        "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
+                                                destClass.isInterface());
+                                        mv.pop();
+                                        mv.labelBinding(ifLabel);
                                     }
-                                    if (Utility.contains(m.getExceptionTypes(), throwPredicate)) {
-                                        continue; // setter方法带有非RuntimeException异常
+                                } else { // JavaBean -> JavaBean
+                                    boolean needTypeCast = false;
+                                    java.lang.reflect.Method setter = null;
+                                    java.lang.reflect.Field setField = null;
+                                    try {
+                                        setField = destClass.getField(dfname);
+                                        if (field.getType() == setField.getType()) {
+                                            needTypeCast = false;
+                                        } else if (simpler.test(field.getType()) && simpler.test(setField.getType())) {
+                                            needTypeCast = true;
+                                        } else if (!field.getType().equals(setField.getType())) {
+                                            if (allowTypeCast) {
+                                                needTypeCast = true;
+                                            } else {
+                                                continue;
+                                            }
+                                        }
+                                    } catch (Exception e) {
+                                        String setterMethodName = "set" + Utility.firstCharUpperCase(dfname);
+                                        try {
+                                            setter = destClass.getMethod(setterMethodName, field.getType());
+                                            if (Utility.contains(setter.getExceptionTypes(), throwPredicate)) {
+                                                continue; // setter方法带有非RuntimeException异常
+                                            }
+                                        } catch (Exception e2) {
+                                            try {
+                                                for (java.lang.reflect.Method m : destClass.getMethods()) {
+                                                    if (Modifier.isStatic(m.getModifiers())) {
+                                                        continue;
+                                                    }
+                                                    if (Utility.contains(m.getExceptionTypes(), throwPredicate)) {
+                                                        continue; // setter方法带有非RuntimeException异常
+                                                    }
+                                                    if (m.getParameterTypes().length != 1) {
+                                                        continue;
+                                                    }
+                                                    if (m.getName().equals(setterMethodName)) {
+                                                        if (simpler.test(field.getType())
+                                                                && simpler.test(setField.getType())) {
+                                                            setter = m;
+                                                            needTypeCast = true;
+                                                        } else if (!allowTypeCast) {
+                                                            setter = null;
+                                                        }
+                                                        break;
+                                                    }
+                                                }
+                                                if (setter == null) {
+                                                    continue;
+                                                }
+                                            } catch (Exception e3) {
+                                                continue;
+                                            }
+                                        }
                                     }
-                                    if (m.getParameterTypes().length != 1) {
-                                        continue;
+                                    String srcFieldDesc = srcFieldType.descriptorString();
+                                    final Class destFieldType =
+                                            setter == null ? setField.getType() : setter.getParameterTypes()[0];
+                                    boolean localSkipNull = skipNullValue
+                                            || (!srcFieldType.isPrimitive() && destFieldType.isPrimitive());
+                                    if ((!localSkipNull && !(skipEmptyString && charstr))
+                                            || (srcFieldType.isPrimitive() && !allowTypeCast)
+                                            || (srcFieldType.isPrimitive() && destFieldType.isPrimitive())) {
+                                        if (needTypeCast) {
+                                            mv.aload(2);
+                                            loadClass(mv, destFieldType);
+                                            mv.aload(1);
+                                            mv.getfield(
+                                                    ClassDesc.ofInternalName(srcClassName),
+                                                    sfname,
+                                                    ClassDesc.ofDescriptor(srcFieldDesc));
+                                            box(mv, srcFieldType);
+                                            mv.invoke(
+                                                    INVOKESTATIC,
+                                                    ClassDesc.ofInternalName(utilClassName),
+                                                    "convertValue",
+                                                    MethodTypeDesc.ofDescriptor(
+                                                            "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;"),
+                                                    false);
+                                            cast(mv, destFieldType);
+                                            if (setter == null) { // src: field, dest: field
+                                                mv.putfield(
+                                                        ClassDesc.ofInternalName(destClassName),
+                                                        dfname,
+                                                        ClassDesc.ofDescriptor(destFieldType.descriptorString()));
+                                            } else { // src: field, dest: method
+                                                mv.invoke(
+                                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                                        ClassDesc.ofInternalName(destClassName),
+                                                        setter.getName(),
+                                                        MethodTypeDesc.ofDescriptor(MethodType.methodType(
+                                                                        setter.getReturnType(),
+                                                                        setter.getParameterTypes())
+                                                                .descriptorString()),
+                                                        destClass.isInterface());
+                                                if (setter.getReturnType() == long.class
+                                                        || setter.getReturnType() == double.class) {
+                                                    mv.pop2();
+                                                } else if (setter.getReturnType() != void.class) {
+                                                    mv.pop();
+                                                }
+                                            }
+                                        } else {
+                                            mv.aload(2);
+                                            mv.aload(1);
+                                            mv.getfield(
+                                                    ClassDesc.ofInternalName(srcClassName),
+                                                    sfname,
+                                                    ClassDesc.ofDescriptor(srcFieldDesc));
+                                            if (setter == null) { // src: field, dest: field
+                                                mv.putfield(
+                                                        ClassDesc.ofInternalName(destClassName),
+                                                        dfname,
+                                                        ClassDesc.ofDescriptor(destFieldType.descriptorString()));
+                                            } else { // src: field, dest: method
+                                                mv.invoke(
+                                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                                        ClassDesc.ofInternalName(destClassName),
+                                                        setter.getName(),
+                                                        MethodTypeDesc.ofDescriptor(MethodType.methodType(
+                                                                        setter.getReturnType(),
+                                                                        setter.getParameterTypes())
+                                                                .descriptorString()),
+                                                        destClass.isInterface());
+                                                if (setter.getReturnType() == long.class
+                                                        || setter.getReturnType() == double.class) {
+                                                    mv.pop2();
+                                                } else if (setter.getReturnType() != void.class) {
+                                                    mv.pop();
+                                                }
+                                            }
+                                        }
+                                    } else { // skipNullValue OR (skipEmptyString && charstr)
+                                        mv.aload(1);
+                                        mv.getfield(
+                                                ClassDesc.ofInternalName(srcClassName),
+                                                sfname,
+                                                ClassDesc.ofDescriptor(srcFieldDesc));
+                                        mv.astore(3);
+                                        mv.aload(3);
+                                        Label ifLabel = mv.newLabel();
+                                        mv.branch(IFNULL, ifLabel);
+                                        if (skipEmptyString && charstr) {
+                                            mv.aload(3);
+                                            mv.checkcast(ClassDesc.ofInternalName("java/lang/CharSequence"));
+                                            mv.invoke(
+                                                    INVOKEINTERFACE,
+                                                    ClassDesc.ofInternalName("java/lang/CharSequence"),
+                                                    "length",
+                                                    MethodTypeDesc.ofDescriptor("()I"),
+                                                    true);
+                                            mv.branch(IFLE, ifLabel);
+                                        }
+                                        if (needTypeCast) {
+                                            mv.aload(2);
+                                            loadClass(mv, destFieldType);
+                                            mv.aload(3);
+                                            box(mv, srcFieldType);
+                                            mv.invoke(
+                                                    INVOKESTATIC,
+                                                    ClassDesc.ofInternalName(utilClassName),
+                                                    "convertValue",
+                                                    MethodTypeDesc.ofDescriptor(
+                                                            "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;"),
+                                                    false);
+                                            cast(mv, destFieldType);
+                                            if (setter == null) { // src: field, dest: field
+                                                mv.putfield(
+                                                        ClassDesc.ofInternalName(destClassName),
+                                                        dfname,
+                                                        ClassDesc.ofDescriptor(destFieldType.descriptorString()));
+                                            } else { // src: field, dest: method
+                                                mv.invoke(
+                                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                                        ClassDesc.ofInternalName(destClassName),
+                                                        setter.getName(),
+                                                        MethodTypeDesc.ofDescriptor(MethodType.methodType(
+                                                                        setter.getReturnType(),
+                                                                        setter.getParameterTypes())
+                                                                .descriptorString()),
+                                                        destClass.isInterface());
+                                                if (setter.getReturnType() == long.class
+                                                        || setter.getReturnType() == double.class) {
+                                                    mv.pop2();
+                                                } else if (setter.getReturnType() != void.class) {
+                                                    mv.pop();
+                                                }
+                                            }
+                                        } else {
+                                            mv.aload(2);
+                                            mv.aload(3);
+                                            mv.checkcast(ClassDesc.ofDescriptor(srcFieldType.descriptorString()));
+                                            if (setter == null) { // src: field, dest: field
+                                                mv.putfield(
+                                                        ClassDesc.ofInternalName(destClassName),
+                                                        dfname,
+                                                        ClassDesc.ofDescriptor(srcFieldDesc));
+                                            } else { // src: field, dest: method
+                                                mv.invoke(
+                                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                                        ClassDesc.ofInternalName(destClassName),
+                                                        setter.getName(),
+                                                        MethodTypeDesc.ofDescriptor(MethodType.methodType(
+                                                                        setter.getReturnType(),
+                                                                        setter.getParameterTypes())
+                                                                .descriptorString()),
+                                                        destClass.isInterface());
+                                                if (setter.getReturnType() == long.class
+                                                        || setter.getReturnType() == double.class) {
+                                                    mv.pop2();
+                                                } else if (setter.getReturnType() != void.class) {
+                                                    mv.pop();
+                                                }
+                                            }
+                                        }
+                                        mv.labelBinding(ifLabel);
                                     }
-                                    if (m.getName().equals(setterMethodName)) {
-                                        setter = m;
-                                        needTypeCast = true;
-                                        break;
+                                }
+                            }
+                            // 遍历所有方法
+                            for (Map.Entry<String, AccessibleObject> en : elements.entrySet()) {
+                                if (!(en.getValue() instanceof java.lang.reflect.Method)) {
+                                    continue;
+                                }
+                                java.lang.reflect.Method getter = (java.lang.reflect.Method) en.getValue();
+                                final String sfname = en.getKey();
+
+                                final String dfname = destNewNames.getOrDefault(sfname, sfname);
+                                final Class srcFieldType = getter.getReturnType();
+                                final boolean charstr = CharSequence.class.isAssignableFrom(srcFieldType);
+                                if (destIsMap) { // srcClass是JavaBean
+                                    if ((!skipNullValue && !(skipEmptyString && charstr))
+                                            || srcFieldType.isPrimitive()) {
+                                        mv.aload(2);
+                                        mv.ldc(dfname);
+                                        mv.aload(1);
+                                        mv.invoke(
+                                                srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                                ClassDesc.ofInternalName(srcClassName),
+                                                getter.getName(),
+                                                MethodTypeDesc.ofDescriptor(MethodType.methodType(
+                                                                getter.getReturnType(), getter.getParameterTypes())
+                                                        .descriptorString()),
+                                                srcClass.isInterface());
+                                        box(mv, srcFieldType);
+                                        mv.invoke(
+                                                destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                                ClassDesc.ofInternalName(destClassName),
+                                                "put",
+                                                MethodTypeDesc.ofDescriptor(
+                                                        "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
+                                                destClass.isInterface());
+                                        mv.pop();
+                                    } else { // skipNullValue OR (skipEmptyString && charstr)
+                                        mv.aload(1);
+                                        mv.invoke(
+                                                srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                                ClassDesc.ofInternalName(srcClassName),
+                                                getter.getName(),
+                                                MethodTypeDesc.ofDescriptor(MethodType.methodType(
+                                                                getter.getReturnType(), getter.getParameterTypes())
+                                                        .descriptorString()),
+                                                srcClass.isInterface());
+                                        mv.astore(3);
+                                        mv.aload(3);
+                                        Label ifLabel = mv.newLabel();
+                                        mv.branch(IFNULL, ifLabel);
+                                        if (skipEmptyString && charstr) {
+                                            mv.aload(3);
+                                            mv.checkcast(ClassDesc.ofInternalName("java/lang/CharSequence"));
+                                            mv.invoke(
+                                                    INVOKEINTERFACE,
+                                                    ClassDesc.ofInternalName("java/lang/CharSequence"),
+                                                    "length",
+                                                    MethodTypeDesc.ofDescriptor("()I"),
+                                                    true);
+                                            mv.branch(IFLE, ifLabel);
+                                        }
+                                        mv.aload(2);
+                                        mv.ldc(dfname);
+                                        mv.aload(3);
+                                        mv.invoke(
+                                                destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                                ClassDesc.ofInternalName(destClassName),
+                                                "put",
+                                                MethodTypeDesc.ofDescriptor(
+                                                        "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
+                                                destClass.isInterface());
+                                        mv.pop();
+                                        mv.labelBinding(ifLabel);
+                                    }
+                                } else { // srcClass、destClass是JavaBean
+                                    boolean needTypeCast = false;
+                                    java.lang.reflect.Method setter = null;
+                                    java.lang.reflect.Field setField = null;
+                                    String setterMethodName = "set" + Utility.firstCharUpperCase(dfname);
+                                    try {
+                                        setter = destClass.getMethod(setterMethodName, getter.getReturnType());
+                                        if (Utility.contains(setter.getExceptionTypes(), throwPredicate)) {
+                                            continue; // setter方法带有非RuntimeException异常
+                                        }
+                                    } catch (Exception e) {
+                                        if (allowTypeCast) {
+                                            try {
+                                                for (java.lang.reflect.Method m : destClass.getMethods()) {
+                                                    if (Modifier.isStatic(m.getModifiers())) {
+                                                        continue;
+                                                    }
+                                                    if (Utility.contains(m.getExceptionTypes(), throwPredicate)) {
+                                                        continue; // setter方法带有非RuntimeException异常
+                                                    }
+                                                    if (m.getParameterTypes().length != 1) {
+                                                        continue;
+                                                    }
+                                                    if (m.getName().equals(setterMethodName)) {
+                                                        setter = m;
+                                                        needTypeCast = true;
+                                                        break;
+                                                    }
+                                                }
+                                            } catch (Exception e2) {
+                                                // do nothing
+                                            }
+                                        }
+                                        if (setter == null) {
+                                            try {
+                                                setField = destClass.getField(dfname);
+                                                if (!getter.getReturnType().equals(setField.getType())) {
+                                                    if (allowTypeCast) {
+                                                        needTypeCast = true;
+                                                    } else {
+                                                        continue;
+                                                    }
+                                                }
+                                            } catch (Exception e3) {
+                                                continue;
+                                            }
+                                        }
+                                    }
+                                    final Class destFieldType =
+                                            setter == null ? setField.getType() : setter.getParameterTypes()[0];
+                                    boolean localSkipNull = skipNullValue
+                                            || (!srcFieldType.isPrimitive() && destFieldType.isPrimitive());
+                                    if ((!localSkipNull && !(skipEmptyString && charstr))
+                                            || (srcFieldType.isPrimitive() && !allowTypeCast)
+                                            || (srcFieldType.isPrimitive() && destFieldType.isPrimitive())) {
+                                        if (needTypeCast) {
+                                            mv.aload(2);
+                                            loadClass(mv, destFieldType);
+                                            mv.aload(1);
+                                            mv.invoke(
+                                                    srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                                    ClassDesc.ofInternalName(srcClassName),
+                                                    getter.getName(),
+                                                    MethodTypeDesc.ofDescriptor(MethodType.methodType(
+                                                                    getter.getReturnType(), getter.getParameterTypes())
+                                                            .descriptorString()),
+                                                    srcClass.isInterface());
+                                            box(mv, srcFieldType);
+                                            mv.invoke(
+                                                    INVOKESTATIC,
+                                                    ClassDesc.ofInternalName(utilClassName),
+                                                    "convertValue",
+                                                    MethodTypeDesc.ofDescriptor(
+                                                            "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;"),
+                                                    false);
+                                            cast(mv, destFieldType);
+                                            if (setter == null) { // src: method, dest: field
+                                                mv.putfield(
+                                                        ClassDesc.ofInternalName(destClassName),
+                                                        dfname,
+                                                        ClassDesc.ofDescriptor(destFieldType.descriptorString()));
+                                            } else { // src: method, dest: method
+                                                mv.invoke(
+                                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                                        ClassDesc.ofInternalName(destClassName),
+                                                        setter.getName(),
+                                                        MethodTypeDesc.ofDescriptor(MethodType.methodType(
+                                                                        setter.getReturnType(),
+                                                                        setter.getParameterTypes())
+                                                                .descriptorString()),
+                                                        destClass.isInterface());
+                                                if (setter.getReturnType() == long.class
+                                                        || setter.getReturnType() == double.class) {
+                                                    mv.pop2();
+                                                } else if (setter.getReturnType() != void.class) {
+                                                    mv.pop();
+                                                }
+                                            }
+                                        } else {
+                                            mv.aload(2);
+                                            mv.aload(1);
+                                            mv.invoke(
+                                                    srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                                    ClassDesc.ofInternalName(srcClassName),
+                                                    getter.getName(),
+                                                    MethodTypeDesc.ofDescriptor(MethodType.methodType(
+                                                                    getter.getReturnType(), getter.getParameterTypes())
+                                                            .descriptorString()),
+                                                    srcClass.isInterface());
+                                            if (setter == null) { // src: method, dest: field
+                                                mv.putfield(
+                                                        ClassDesc.ofInternalName(destClassName),
+                                                        dfname,
+                                                        ClassDesc.ofDescriptor(destFieldType.descriptorString()));
+                                            } else { // src: method, dest: method
+                                                mv.invoke(
+                                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                                        ClassDesc.ofInternalName(destClassName),
+                                                        setter.getName(),
+                                                        MethodTypeDesc.ofDescriptor(MethodType.methodType(
+                                                                        setter.getReturnType(),
+                                                                        setter.getParameterTypes())
+                                                                .descriptorString()),
+                                                        destClass.isInterface());
+                                                if (setter.getReturnType() == long.class
+                                                        || setter.getReturnType() == double.class) {
+                                                    mv.pop2();
+                                                } else if (setter.getReturnType() != void.class) {
+                                                    mv.pop();
+                                                }
+                                            }
+                                        }
+                                    } else { // skipNullValue OR (skipEmptyString && charstr)
+                                        mv.aload(1);
+                                        mv.invoke(
+                                                srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                                ClassDesc.ofInternalName(srcClassName),
+                                                getter.getName(),
+                                                MethodTypeDesc.ofDescriptor(MethodType.methodType(
+                                                                getter.getReturnType(), getter.getParameterTypes())
+                                                        .descriptorString()),
+                                                srcClass.isInterface());
+                                        mv.astore(3);
+                                        mv.aload(3);
+                                        Label ifLabel = mv.newLabel();
+                                        mv.branch(IFNULL, ifLabel);
+                                        if (skipEmptyString && charstr) {
+                                            mv.aload(3);
+                                            mv.checkcast(ClassDesc.ofInternalName("java/lang/CharSequence"));
+                                            mv.invoke(
+                                                    INVOKEINTERFACE,
+                                                    ClassDesc.ofInternalName("java/lang/CharSequence"),
+                                                    "length",
+                                                    MethodTypeDesc.ofDescriptor("()I"),
+                                                    true);
+                                            mv.branch(IFLE, ifLabel);
+                                        }
+                                        if (needTypeCast) {
+                                            mv.aload(2);
+                                            loadClass(mv, destFieldType);
+                                            mv.aload(3);
+                                            box(mv, srcFieldType);
+                                            mv.invoke(
+                                                    INVOKESTATIC,
+                                                    ClassDesc.ofInternalName(utilClassName),
+                                                    "convertValue",
+                                                    MethodTypeDesc.ofDescriptor(
+                                                            "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;"),
+                                                    false);
+                                            cast(mv, destFieldType);
+                                            if (setter == null) { // src: method, dest: field
+                                                mv.putfield(
+                                                        ClassDesc.ofInternalName(destClassName),
+                                                        dfname,
+                                                        ClassDesc.ofDescriptor(destFieldType.descriptorString()));
+                                            } else { // src: method, dest: method
+                                                mv.invoke(
+                                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                                        ClassDesc.ofInternalName(destClassName),
+                                                        setter.getName(),
+                                                        MethodTypeDesc.ofDescriptor(MethodType.methodType(
+                                                                        setter.getReturnType(),
+                                                                        setter.getParameterTypes())
+                                                                .descriptorString()),
+                                                        destClass.isInterface());
+                                                if (setter.getReturnType() == long.class
+                                                        || setter.getReturnType() == double.class) {
+                                                    mv.pop2();
+                                                } else if (setter.getReturnType() != void.class) {
+                                                    mv.pop();
+                                                }
+                                            }
+                                        } else {
+                                            mv.aload(2);
+                                            mv.aload(3);
+                                            mv.checkcast(ClassDesc.ofDescriptor(srcFieldType.descriptorString()));
+                                            if (setter == null) { // src: method, dest: field
+                                                mv.putfield(
+                                                        ClassDesc.ofInternalName(destClassName),
+                                                        dfname,
+                                                        ClassDesc.ofDescriptor(getter.getReturnType()
+                                                                .descriptorString()));
+                                            } else { // src: method, dest: method
+                                                mv.invoke(
+                                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
+                                                        ClassDesc.ofInternalName(destClassName),
+                                                        setter.getName(),
+                                                        MethodTypeDesc.ofDescriptor(MethodType.methodType(
+                                                                        setter.getReturnType(),
+                                                                        setter.getParameterTypes())
+                                                                .descriptorString()),
+                                                        destClass.isInterface());
+                                                if (setter.getReturnType() == long.class
+                                                        || setter.getReturnType() == double.class) {
+                                                    mv.pop2();
+                                                } else if (setter.getReturnType() != void.class) {
+                                                    mv.pop();
+                                                }
+                                            }
+                                        }
+                                        mv.labelBinding(ifLabel);
                                     }
                                 }
-                            } catch (Exception e2) {
-                                // do nothing
                             }
-                        }
-                        if (setter == null) {
-                            try {
-                                setField = destClass.getField(dfname);
-                                if (!getter.getReturnType().equals(setField.getType())) {
-                                    if (allowTypeCast) {
-                                        needTypeCast = true;
-                                    } else {
-                                        continue;
-                                    }
-                                }
-                            } catch (Exception e3) {
-                                continue;
-                            }
-                        }
-                    }
-                    final Class destFieldType = setter == null ? setField.getType() : setter.getParameterTypes()[0];
-                    boolean localSkipNull =
-                            skipNullValue || (!srcFieldType.isPrimitive() && destFieldType.isPrimitive());
-                    if ((!localSkipNull && !(skipEmptyString && charstr))
-                            || (srcFieldType.isPrimitive() && !allowTypeCast)
-                            || (srcFieldType.isPrimitive() && destFieldType.isPrimitive())) {
-                        if (needTypeCast) {
-                            mv.visitVarInsn(ALOAD, 2);
-                            ByteCodes.visitFieldInsn(mv, destFieldType);
-                            mv.visitVarInsn(ALOAD, 1);
-                            mv.visitMethodInsn(
-                                    srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                                    srcClassName,
-                                    getter.getName(),
-                                    Type.getMethodDescriptor(getter),
-                                    srcClass.isInterface());
-                            ByteCodes.visitPrimitiveValueOf(mv, srcFieldType);
-                            mv.visitMethodInsn(
-                                    INVOKESTATIC,
-                                    utilClassName,
-                                    "convertValue",
-                                    "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;",
-                                    false);
-                            ByteCodes.visitCheckCast(mv, destFieldType);
-                            if (setter == null) { // src: method, dest: field
-                                mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
-                            } else { // src: method, dest: method
-                                mv.visitMethodInsn(
-                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                                        destClassName,
-                                        setter.getName(),
-                                        Type.getMethodDescriptor(setter),
-                                        destClass.isInterface());
-                                if (setter.getReturnType() != void.class) {
-                                    mv.visitInsn(POP);
-                                }
-                            }
-                        } else {
-                            mv.visitVarInsn(ALOAD, 2);
-                            mv.visitVarInsn(ALOAD, 1);
-                            mv.visitMethodInsn(
-                                    srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                                    srcClassName,
-                                    getter.getName(),
-                                    Type.getMethodDescriptor(getter),
-                                    srcClass.isInterface());
-                            if (setter == null) { // src: method, dest: field
-                                mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
-                            } else { // src: method, dest: method
-                                mv.visitMethodInsn(
-                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                                        destClassName,
-                                        setter.getName(),
-                                        Type.getMethodDescriptor(setter),
-                                        destClass.isInterface());
-                                if (setter.getReturnType() != void.class) {
-                                    mv.visitInsn(POP);
-                                }
-                            }
-                        }
-                    } else { // skipNullValue OR (skipEmptyString && charstr)
-                        mv.visitVarInsn(ALOAD, 1);
-                        mv.visitMethodInsn(
-                                srcClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                                srcClassName,
-                                getter.getName(),
-                                Type.getMethodDescriptor(getter),
-                                srcClass.isInterface());
-                        mv.visitVarInsn(ASTORE, 3);
-                        mv.visitVarInsn(ALOAD, 3);
-                        Label ifLabel = new Label();
-                        mv.visitJumpInsn(IFNULL, ifLabel);
-                        if (skipEmptyString && charstr) {
-                            mv.visitVarInsn(ALOAD, 3);
-                            mv.visitTypeInsn(CHECKCAST, "java/lang/CharSequence");
-                            mv.visitMethodInsn(INVOKEINTERFACE, "java/lang/CharSequence", "length", "()I", true);
-                            mv.visitJumpInsn(IFLE, ifLabel);
-                        }
-                        if (needTypeCast) {
-                            mv.visitVarInsn(ALOAD, 2);
-                            ByteCodes.visitFieldInsn(mv, destFieldType);
-                            mv.visitVarInsn(ALOAD, 3);
-                            ByteCodes.visitPrimitiveValueOf(mv, srcFieldType);
-                            mv.visitMethodInsn(
-                                    INVOKESTATIC,
-                                    utilClassName,
-                                    "convertValue",
-                                    "(Ljava/lang/reflect/Type;Ljava/lang/Object;)Ljava/lang/Object;",
-                                    false);
-                            ByteCodes.visitCheckCast(mv, destFieldType);
-                            if (setter == null) { // src: method, dest: field
-                                mv.visitFieldInsn(PUTFIELD, destClassName, dfname, Type.getDescriptor(destFieldType));
-                            } else { // src: method, dest: method
-                                mv.visitMethodInsn(
-                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                                        destClassName,
-                                        setter.getName(),
-                                        Type.getMethodDescriptor(setter),
-                                        destClass.isInterface());
-                                if (setter.getReturnType() != void.class) {
-                                    mv.visitInsn(POP);
-                                }
-                            }
-                        } else {
-                            mv.visitVarInsn(ALOAD, 2);
-                            mv.visitVarInsn(ALOAD, 3);
-                            mv.visitTypeInsn(CHECKCAST, srcFieldType.getName().replace('.', '/'));
-                            if (setter == null) { // src: method, dest: field
-                                mv.visitFieldInsn(
-                                        PUTFIELD, destClassName, dfname, Type.getDescriptor(getter.getReturnType()));
-                            } else { // src: method, dest: method
-                                mv.visitMethodInsn(
-                                        destClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                                        destClassName,
-                                        setter.getName(),
-                                        Type.getMethodDescriptor(setter),
-                                        destClass.isInterface());
-                                if (setter.getReturnType() != void.class) {
-                                    mv.visitInsn(POP);
-                                }
-                            }
-                        }
-                        mv.visitLabel(ifLabel);
-                        mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
-                    }
-                }
+                            mv.aload(2);
+                            mv.areturn();
+                            Label label2 = mv.newLabel();
+                            mv.labelBinding(label2);
+                        });
             }
-            mv.visitVarInsn(ALOAD, 2);
-            mv.visitInsn(ARETURN);
-            Label label2 = new Label();
-            mv.visitLabel(label2);
-            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
-            mv.visitLocalVariable("src", srcDesc, null, label0, label2, 1);
-            mv.visitLocalVariable("dest", destDesc, null, label0, label2, 2);
-            mv.visitMaxs(3, 3);
-            mv.visitEnd();
-        }
-        {
-            mv = (cw.visitMethod(
-                    ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC,
-                    "apply",
-                    "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-                    null,
-                    null));
-            // mv.setDebug(true);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitTypeInsn(CHECKCAST, srcClassName);
-            mv.visitVarInsn(ALOAD, 2);
-            mv.visitTypeInsn(CHECKCAST, destClassName);
-            mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "apply", "(" + srcDesc + destDesc + ")" + destDesc, false);
-            mv.visitInsn(ARETURN);
-            mv.visitMaxs(3, 3);
-            mv.visitEnd();
-        }
-        cw.visitEnd();
+            {
+                cb.withMethodBody(
+                        "apply",
+                        MethodTypeDesc.ofDescriptor("(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
+                        ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC,
+                        mv -> {
+                            mv.aload(0);
+                            mv.aload(1);
+                            mv.checkcast(ClassDesc.ofInternalName(srcClassName));
+                            mv.aload(2);
+                            mv.checkcast(ClassDesc.ofInternalName(destClassName));
+                            mv.invoke(
+                                    INVOKEVIRTUAL,
+                                    ClassDesc.ofInternalName(newDynName),
+                                    "apply",
+                                    MethodTypeDesc.ofDescriptor("(" + srcDesc + destDesc + ")" + destDesc),
+                                    false);
+                            mv.areturn();
+                        });
+            }
+        });
         // ------------------------------------------------------------------------------
-        byte[] bytes = cw.toByteArray();
         Class<?> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {
             return (Copier) newClazz.getDeclaredConstructor().newInstance();
         } catch (Exception ex) {
             throw new RedkaleException(ex);
+        }
+    }
+
+    private static void loadClass(CodeBuilder code, Class<?> type) {
+        if (type.isPrimitive()) {
+            code.getstatic(
+                    ClassDesc.ofDescriptor(TypeToken.primitiveToWrapper(type).descriptorString()), "TYPE", CD_Class);
+        } else {
+            code.ldc(ClassDesc.ofDescriptor(type.descriptorString()));
+        }
+    }
+
+    private static void box(CodeBuilder code, Class<?> type) {
+        if (type.isPrimitive()) {
+            ClassDesc wrapper =
+                    ClassDesc.ofDescriptor(TypeToken.primitiveToWrapper(type).descriptorString());
+            code.invokestatic(
+                    wrapper, "valueOf", MethodTypeDesc.of(wrapper, ClassDesc.ofDescriptor(type.descriptorString())));
+        }
+    }
+
+    private static void cast(CodeBuilder code, Class<?> type) {
+        if (type.isPrimitive()) {
+            ClassDesc wrapper =
+                    ClassDesc.ofDescriptor(TypeToken.primitiveToWrapper(type).descriptorString());
+            code.checkcast(wrapper)
+                    .invokevirtual(
+                            wrapper,
+                            type.getSimpleName() + "Value",
+                            MethodTypeDesc.of(ClassDesc.ofDescriptor(type.descriptorString())));
+        } else {
+            code.checkcast(ClassDesc.ofDescriptor(type.descriptorString()));
         }
     }
 }
