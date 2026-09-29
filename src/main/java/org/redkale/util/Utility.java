@@ -7,6 +7,8 @@ package org.redkale.util;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.*;
+import java.lang.constant.ClassDesc;
+import java.lang.constant.MethodTypeDesc;
 import java.lang.invoke.*;
 import java.lang.reflect.*;
 import java.math.*;
@@ -419,14 +421,11 @@ public final class Utility {
                 MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(func.getClass(), MethodHandles.lookup());
                 MethodHandle mh =
                         lookup.findVirtual(func.getClass(), "writeReplace", MethodType.methodType(Object.class));
-                String methodName = ((java.lang.invoke.SerializedLambda) mh.invoke(func)).getImplMethodName();
+                SerializedLambda sl = (SerializedLambda) mh.invoke(func);
+                String methodName = sl.getImplMethodName();
                 String className = methodName.contains("lambda$")
-                        ? org.redkale.asm.Type.getReturnType(((java.lang.invoke.SerializedLambda) mh.invoke(func))
-                                        .getInstantiatedMethodType())
-                                .getClassName()
-                        : ((java.lang.invoke.SerializedLambda) mh.invoke(func))
-                                .getImplClass()
-                                .replace('/', '.');
+                        ? readMethodReturnClassName(sl.getInstantiatedMethodType())
+                        : sl.getImplClass().replace('/', '.');
                 return (Class) Thread.currentThread().getContextClassLoader().loadClass(className);
             } catch (ClassNotFoundException ex) {
                 throw new RedkaleException(ex);
@@ -434,6 +433,19 @@ public final class Utility {
                 return readLambdaClassNameFromBytes(func);
             }
         });
+    }
+
+    private static String readMethodReturnClassName(String descriptor) {
+        ClassDesc returnType = MethodTypeDesc.ofDescriptor(descriptor).returnType();
+        int dimensions = 0;
+        while (returnType.isArray()) {
+            dimensions++;
+            returnType = returnType.componentType();
+        }
+        String packageName = returnType.packageName();
+        String className =
+                packageName.isEmpty() ? returnType.displayName() : packageName + "." + returnType.displayName();
+        return className + "[]".repeat(dimensions);
     }
 
     private static Class readLambdaClassNameFromBytes(Serializable func) {
@@ -488,8 +500,7 @@ public final class Utility {
                 methodNameReference.set(methodName);
                 java.lang.invoke.SerializedLambda sl = (java.lang.invoke.SerializedLambda) obj;
                 String className = methodName.contains("lambda$")
-                        ? org.redkale.asm.Type.getReturnType(sl.getInstantiatedMethodType())
-                                .getClassName()
+                        ? readMethodReturnClassName(sl.getInstantiatedMethodType())
                         : sl.getImplClass().replace('/', '.');
                 classNameReference.set(className);
             }
