@@ -4,17 +4,20 @@
  */
 package org.redkale.util;
 
-import static org.redkale.asm.Opcodes.*;
+import static java.lang.classfile.ClassFile.*;
+import static java.lang.constant.ConstantDescs.*;
 
+import java.lang.classfile.*;
+import java.lang.classfile.attribute.RuntimeVisibleAnnotationsAttribute;
+import java.lang.classfile.attribute.SignatureAttribute;
+import java.lang.constant.*;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.*;
 import java.util.function.*;
 import org.redkale.annotation.ConstructorParameters;
-import org.redkale.asm.*;
-import org.redkale.asm.Type;
-import org.redkale.bytecode.ByteCodes;
 
 /**
  * 实现一个类的构造方法。 代替低效的反射实现方式。 不支持数组类。 常见的无参数的构造函数类都可以自动生成Creator， 对应自定义的类可以提供一个静态构建Creator方法。 例如:
@@ -292,8 +295,8 @@ public interface Creator<T> {
             }
         }
         final String supDynName = Creator.class.getName().replace('.', '/');
-        final String interName = clazz.getName().replace('.', '/');
-        final String interDesc = Type.getDescriptor(clazz);
+
+        final String interDesc = clazz.descriptorString();
         RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
         final String newDynName = "org/redkaledyn/creator/_Dyn" + Creator.class.getSimpleName() + "__"
                 + clazz.getName().replace('.', '_').replace('$', '_') + (paramCount < 0 ? "" : ("_" + paramCount));
@@ -349,8 +352,10 @@ public interface Creator<T> {
             cs.sort((o1, o2) -> o2.getParameterCount() - o1.getParameterCount());
             for (Constructor c : cs) {
                 int cc = c.getParameterCount();
-                SimpleEntry<String, Class>[] fields =
-                        Inners.CreatorInner.getConstructorField(clazz, cc, Type.getConstructorDescriptor(c));
+                SimpleEntry<String, Class>[] fields = Inners.CreatorInner.getConstructorField(
+                        clazz,
+                        cc,
+                        MethodType.methodType(void.class, c.getParameterTypes()).descriptorString());
                 if (fields != null && (paramCount < 0 || cc == paramCount)) {
                     constructor0 = c;
                     constructorParameters0 = fields;
@@ -404,8 +409,10 @@ public interface Creator<T> {
             cs.sort((o1, o2) -> o2.getParameterCount() - o1.getParameterCount());
             for (Constructor c : cs) {
                 int cc = c.getParameterCount();
-                SimpleEntry<String, Class>[] fields =
-                        Inners.CreatorInner.getConstructorField(clazz, cc, Type.getConstructorDescriptor(c));
+                SimpleEntry<String, Class>[] fields = Inners.CreatorInner.getConstructorField(
+                        clazz,
+                        cc,
+                        MethodType.methodType(void.class, c.getParameterTypes()).descriptorString());
                 if (fields != null && (paramCount < 0 || cc == paramCount)) {
                     constructor0 = c;
                     constructorParameters0 = fields;
@@ -421,160 +428,123 @@ public interface Creator<T> {
         }
 
         // -------------------------------------------------------------
-        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-        FieldVisitor fv;
-        MethodVisitor mv;
-        AnnotationVisitor av0;
-        cw.visit(
-                V11,
-                ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
-                newDynName,
-                "Ljava/lang/Object;L" + supDynName + "<" + interDesc + ">;",
-                "java/lang/Object",
-                new String[] {supDynName});
-
-        { // Creator自身的构造方法
-            mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
-        { // paramTypes 方法
-            mv = cw.visitMethod(ACC_PUBLIC, "paramTypes", "()[Ljava/lang/Class;", null, null);
-            int paramLen = constructorParameters.length;
-            ByteCodes.visitInsn(mv, paramLen);
-            mv.visitTypeInsn(ANEWARRAY, "java/lang/Class");
-            for (int i = 0; i < constructorParameters.length; i++) {
-                mv.visitInsn(DUP);
-                ByteCodes.visitInsn(mv, i);
-                if (constructorParameters[i] == null) {
-                    mv.visitLdcInsn(Type.getType("[Ljava/lang/Object;"));
-                } else {
-                    ByteCodes.visitFieldInsn(mv, constructorParameters[i].getValue());
-                }
-                mv.visitInsn(AASTORE);
-            }
-            mv.visitInsn(ARETURN);
-            mv.visitMaxs(4, 1);
-            mv.visitEnd();
-        }
-        { // create 方法
-            mv = cw.visitMethod(
-                    ACC_PUBLIC + ACC_VARARGS, "create", "([Ljava/lang/Object;)L" + interName + ";", null, null);
-            Label label0 = new Label();
-            mv.visitLabel(label0);
-            if (constructorParameters.length > 0 && constructorParameters[0] != null) {
-                av0 = mv.visitAnnotation(Type.getDescriptor(ConstructorParameters.class), true);
-                AnnotationVisitor av1 = av0.visitArray("value");
-                for (SimpleEntry<String, Class> n : constructorParameters) {
-                    av1.visit(null, n.getKey());
-                }
-                av1.visitEnd();
-                av0.visitEnd();
-            }
-            // 有Primitive数据类型且值为null的参数需要赋默认值
-            for (int i = 0; i < constructorParameters.length; i++) {
-                if (constructorParameters[i] == null) {
-                    continue;
-                }
-                final Class pt = constructorParameters[i].getValue();
-                if (!pt.isPrimitive()) {
-                    continue;
-                }
-                mv.visitVarInsn(ALOAD, 1);
-                ByteCodes.visitInsn(mv, i);
-                mv.visitInsn(AALOAD);
-                Label lab = new Label();
-                mv.visitJumpInsn(IFNONNULL, lab);
-                mv.visitVarInsn(ALOAD, 1);
-                ByteCodes.visitInsn(mv, i);
-                if (pt == int.class) {
-                    mv.visitInsn(ICONST_0);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
-                } else if (pt == long.class) {
-                    mv.visitInsn(LCONST_0);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", false);
-                } else if (pt == boolean.class) {
-                    mv.visitFieldInsn(GETSTATIC, "java/lang/Boolean", "FALSE", "Ljava/lang/Boolean;");
-                } else if (pt == short.class) {
-                    mv.visitInsn(ICONST_0);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "valueOf", "(S)Ljava/lang/Short;", false);
-                } else if (pt == float.class) {
-                    mv.visitInsn(FCONST_0);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "valueOf", "(F)Ljava/lang/Float;", false);
-                } else if (pt == byte.class) {
-                    mv.visitInsn(ICONST_0);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "valueOf", "(B)Ljava/lang/Byte;", false);
-                } else if (pt == double.class) {
-                    mv.visitInsn(DCONST_0);
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;", false);
-                } else if (pt == char.class) {
-                    mv.visitInsn(ICONST_0);
-                    mv.visitMethodInsn(
-                            INVOKESTATIC, "java/lang/Character", "valueOf", "(C)Ljava/lang/Character;", false);
-                }
-                mv.visitInsn(AASTORE);
-                mv.visitLabel(lab);
-            }
-            mv.visitTypeInsn(NEW, interName);
-            mv.visitInsn(DUP);
-            // ---------------------------------------
-            for (int i = 0; i < constructorParameters.length; i++) {
-                if (constructorParameters[i] == null) {
-                    mv.visitVarInsn(ALOAD, 1);
-                    break;
-                }
-                mv.visitVarInsn(ALOAD, 1);
-                ByteCodes.visitInsn(mv, i);
-                mv.visitInsn(AALOAD);
-                final Class ct = constructorParameters[i].getValue();
-                if (ct.isPrimitive()) {
-                    final Class bigct = TypeToken.primitiveToWrapper(ct);
-                    mv.visitTypeInsn(CHECKCAST, bigct.getName().replace('.', '/'));
-                    try {
-                        Method pm = bigct.getMethod(ct.getSimpleName() + "Value");
-                        mv.visitMethodInsn(
-                                INVOKEVIRTUAL,
-                                bigct.getName().replace('.', '/'),
-                                pm.getName(),
-                                Type.getMethodDescriptor(pm),
-                                false);
-                    } catch (Exception ex) {
-                        throw new RedkaleException(ex); // 不可能会发生
+        final ClassDesc targetDesc = ClassDesc.ofDescriptor(interDesc);
+        final ClassDesc dynDesc = ClassDesc.ofInternalName(newDynName);
+        final MethodTypeDesc createDesc = MethodTypeDesc.of(targetDesc, CD_Object.arrayType());
+        final MethodTypeDesc constructorDesc =
+                MethodTypeDesc.ofDescriptor(MethodType.methodType(void.class, constructor.getParameterTypes())
+                        .descriptorString());
+        byte[] bytes = ClassFile.of().build(dynDesc, cb -> {
+            cb.withVersion(JAVA_11_VERSION, 0)
+                    .withFlags(ACC_PUBLIC | ACC_FINAL | ACC_SUPER)
+                    .withSuperclass(CD_Object)
+                    .withInterfaceSymbols(ClassDesc.ofInternalName(supDynName));
+            cb.with(SignatureAttribute.of(
+                    ClassSignature.parseFrom("Ljava/lang/Object;L" + supDynName + "<" + interDesc + ">;")));
+            cb.withMethodBody(
+                    "<init>",
+                    MethodTypeDesc.of(CD_void),
+                    ACC_PUBLIC,
+                    code -> code.aload(0)
+                            .invokespecial(CD_Object, "<init>", MethodTypeDesc.of(CD_void))
+                            .return_());
+            cb.withMethodBody("paramTypes", MethodTypeDesc.of(CD_Class.arrayType()), ACC_PUBLIC, code -> {
+                code.loadConstant(constructorParameters.length).anewarray(CD_Class);
+                for (int i = 0; i < constructorParameters.length; i++) {
+                    code.dup().loadConstant(i);
+                    if (constructorParameters[i] == null) {
+                        code.ldc(CD_Object.arrayType());
+                    } else {
+                        Class<?> type = constructorParameters[i].getValue();
+                        if (type.isPrimitive()) {
+                            code.getstatic(
+                                    ClassDesc.ofDescriptor(
+                                            TypeToken.primitiveToWrapper(type).descriptorString()),
+                                    "TYPE",
+                                    CD_Class);
+                        } else {
+                            code.ldc(ClassDesc.ofDescriptor(type.descriptorString()));
+                        }
                     }
-                } else {
-                    mv.visitTypeInsn(CHECKCAST, ct.getName().replace('.', '/'));
+                    code.aastore();
                 }
+                code.areturn();
+            });
+            cb.withMethod("create", createDesc, ACC_PUBLIC | ACC_VARARGS, mb -> {
+                if (constructorParameters.length > 0 && constructorParameters[0] != null) {
+                    AnnotationValue[] names = Arrays.stream(constructorParameters)
+                            .map(n -> AnnotationValue.ofString(n.getKey()))
+                            .toArray(AnnotationValue[]::new);
+                    mb.with(RuntimeVisibleAnnotationsAttribute.of(Annotation.of(
+                            ClassDesc.of(ConstructorParameters.class.getName()),
+                            AnnotationElement.ofArray("value", names))));
+                }
+                mb.withCode(code -> {
+                    // 基本类型参数为 null 时，填入对应的默认值。
+                    for (int i = 0; i < constructorParameters.length; i++) {
+                        if (constructorParameters[i] == null) {
+                            continue;
+                        }
+                        Class<?> type = constructorParameters[i].getValue();
+                        if (!type.isPrimitive()) {
+                            continue;
+                        }
+                        ClassDesc primitiveDesc = ClassDesc.ofDescriptor(type.descriptorString());
+                        ClassDesc wrapperDesc = ClassDesc.ofDescriptor(
+                                TypeToken.primitiveToWrapper(type).descriptorString());
+                        Label present = code.newLabel();
+                        code.aload(1).loadConstant(i).aaload().ifnonnull(present);
+                        code.aload(1).loadConstant(i);
+                        if (type == boolean.class) {
+                            code.getstatic(wrapperDesc, "FALSE", wrapperDesc);
+                        } else {
+                            if (type == long.class) {
+                                code.lconst_0();
+                            } else if (type == float.class) {
+                                code.fconst_0();
+                            } else if (type == double.class) {
+                                code.dconst_0();
+                            } else {
+                                code.iconst_0();
+                            }
+                            code.invokestatic(wrapperDesc, "valueOf", MethodTypeDesc.of(wrapperDesc, primitiveDesc));
+                        }
+                        code.aastore().labelBinding(present);
+                    }
+                    code.new_(targetDesc).dup();
+                    for (int i = 0; i < constructorParameters.length; i++) {
+                        if (constructorParameters[i] == null) {
+                            code.aload(1);
+                            break;
+                        }
+                        code.aload(1).loadConstant(i).aaload();
+                        Class<?> type = constructorParameters[i].getValue();
+                        ClassDesc typeDesc = ClassDesc.ofDescriptor(type.descriptorString());
+                        if (type.isPrimitive()) {
+                            ClassDesc wrapperDesc = ClassDesc.ofDescriptor(
+                                    TypeToken.primitiveToWrapper(type).descriptorString());
+                            code.checkcast(wrapperDesc)
+                                    .invokevirtual(
+                                            wrapperDesc, type.getSimpleName() + "Value", MethodTypeDesc.of(typeDesc));
+                        } else {
+                            code.checkcast(typeDesc);
+                        }
+                    }
+                    code.invokespecial(targetDesc, "<init>", constructorDesc).areturn();
+                });
+            });
+            MethodTypeDesc bridgeDesc = MethodTypeDesc.of(CD_Object, CD_Object.arrayType());
+            if (!createDesc.equals(bridgeDesc)) {
+                cb.withMethodBody(
+                        "create",
+                        bridgeDesc,
+                        ACC_PUBLIC | ACC_BRIDGE | ACC_VARARGS | ACC_SYNTHETIC,
+                        code -> code.aload(0)
+                                .aload(1)
+                                .invokevirtual(dynDesc, "create", createDesc)
+                                .areturn());
             }
-            // ---------------------------------------
-            mv.visitMethodInsn(INVOKESPECIAL, interName, "<init>", Type.getConstructorDescriptor(constructor), false);
-            mv.visitInsn(ARETURN);
-            Label label2 = new Label();
-            mv.visitLabel(label2);
-            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
-            mv.visitLocalVariable("params", "[Ljava/lang/Object;", null, label0, label2, 1);
-            mv.visitMaxs(3, 2);
-            mv.visitEnd();
-        }
-        { // 虚拟 create 方法
-            mv = cw.visitMethod(
-                    ACC_PUBLIC + ACC_BRIDGE + ACC_VARARGS + ACC_SYNTHETIC,
-                    "create",
-                    "([Ljava/lang/Object;)Ljava/lang/Object;",
-                    null,
-                    null);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "create", "([Ljava/lang/Object;)" + interDesc, false);
-            mv.visitInsn(ARETURN);
-            mv.visitMaxs(2, 2);
-            mv.visitEnd();
-        }
-        cw.visitEnd();
-
-        byte[] bytes = cw.toByteArray();
+        });
         try {
             Class newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
             RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
