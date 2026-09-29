@@ -5,13 +5,15 @@
  */
 package org.redkale.util;
 
-import static org.redkale.asm.Opcodes.*;
+import static java.lang.classfile.ClassFile.*;
+import static java.lang.constant.ConstantDescs.*;
 
+import java.lang.classfile.*;
+import java.lang.classfile.attribute.SignatureAttribute;
+import java.lang.constant.*;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.*;
 import java.util.concurrent.ConcurrentHashMap;
-import org.redkale.asm.*;
-import org.redkale.asm.Type;
-import org.redkale.bytecode.ByteCodes;
 
 /**
  * 动态生成指定public方法的调用对象, 替代Method.invoke的反射方式
@@ -70,33 +72,18 @@ public interface Invoker<C, R> {
         boolean staticFlag = Modifier.isStatic(method.getModifiers());
         final Class<T> returnType = (Class<T>) method.getReturnType();
         final String supDynName = Invoker.class.getName().replace('.', '/');
-        final String interName = clazz.getName().replace('.', '/');
-        final String interDesc = Type.getDescriptor(clazz);
-        final String returnPrimiveDesc = Type.getDescriptor(returnType);
-        String returnDesc = Type.getDescriptor(returnType);
-        if (returnType == boolean.class) {
-            returnDesc = Type.getDescriptor(Boolean.class);
-        } else if (returnType == byte.class) {
-            returnDesc = Type.getDescriptor(Byte.class);
-        } else if (returnType == short.class) {
-            returnDesc = Type.getDescriptor(Short.class);
-        } else if (returnType == char.class) {
-            returnDesc = Type.getDescriptor(Character.class);
-        } else if (returnType == int.class) {
-            returnDesc = Type.getDescriptor(Integer.class);
-        } else if (returnType == float.class) {
-            returnDesc = Type.getDescriptor(Float.class);
-        } else if (returnType == long.class) {
-            returnDesc = Type.getDescriptor(Long.class);
-        } else if (returnType == double.class) {
-            returnDesc = Type.getDescriptor(Double.class);
-        } else if (returnType == void.class) {
-            returnDesc = Type.getDescriptor(Void.class);
-        }
+        final ClassDesc targetDesc = ClassDesc.ofDescriptor(clazz.descriptorString());
+        final ClassDesc returnDesc =
+                ClassDesc.ofDescriptor(TypeToken.primitiveToWrapper(returnType).descriptorString());
         RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
         StringBuilder sbpts = new StringBuilder();
         for (Class c : method.getParameterTypes()) {
-            sbpts.append('_').append(c.getName().replace('.', '_').replace('$', '_'));
+            sbpts.append('_')
+                    .append(c.getName()
+                            .replace('.', '_')
+                            .replace('$', '_')
+                            .replace('[', '_')
+                            .replace(';', '_'));
         }
         final String newDynName = "org/redkaledyn/invoker/_Dyn" + Invoker.class.getSimpleName() + "_"
                 + clazz.getName().replace('.', '_').replace('$', '_') + "_" + method.getName() + sbpts;
@@ -109,111 +96,91 @@ public interface Invoker<C, R> {
             // do nothing
         }
         // -------------------------------------------------------------
-        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-        FieldVisitor fv;
-        MethodDebugVisitor mv;
-        AnnotationVisitor av0;
-        cw.visit(
-                V11,
-                ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
-                newDynName,
-                "Ljava/lang/Object;L" + supDynName + "<" + interDesc + returnDesc + ">;",
-                "java/lang/Object",
-                new String[] {supDynName});
-
-        { // Invoker自身的构造方法
-            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
-        { // invoke 方法
-            mv = new MethodDebugVisitor(cw.visitMethod(
-                    ACC_PUBLIC + ACC_VARARGS,
-                    "invoke",
-                    "(" + interDesc + "[Ljava/lang/Object;)" + returnDesc,
-                    null,
-                    null));
-            Label label00 = new Label();
-            mv.visitLabel(label00);
-
-            Label label0 = new Label();
-            Label label1 = new Label();
-            Label label2 = new Label();
-            if (throwFlag) {
-                mv.visitTryCatchBlock(label0, label1, label2, "java/lang/Throwable");
-                mv.visitLabel(label0);
+        final ClassDesc dynDesc = ClassDesc.ofInternalName(newDynName);
+        final MethodTypeDesc invokeDesc = MethodTypeDesc.of(returnDesc, targetDesc, CD_Object.arrayType());
+        final MethodTypeDesc methodDesc = MethodTypeDesc.ofDescriptor(
+                MethodType.methodType(returnType, method.getParameterTypes()).descriptorString());
+        byte[] bytes = ClassFile.of().build(dynDesc, cb -> {
+            cb.withVersion(JAVA_11_VERSION, 0)
+                    .withFlags(ACC_PUBLIC | ACC_FINAL | ACC_SUPER)
+                    .withSuperclass(CD_Object)
+                    .withInterfaceSymbols(ClassDesc.ofInternalName(supDynName));
+            cb.with(SignatureAttribute.of(ClassSignature.parseFrom("Ljava/lang/Object;L" + supDynName + "<"
+                    + targetDesc.descriptorString() + returnDesc.descriptorString() + ">;")));
+            cb.withMethodBody(
+                    "<init>",
+                    MethodTypeDesc.of(CD_void),
+                    ACC_PUBLIC,
+                    code -> code.aload(0)
+                            .invokespecial(CD_Object, "<init>", MethodTypeDesc.of(CD_void))
+                            .return_());
+            cb.withMethodBody("invoke", invokeDesc, ACC_PUBLIC | ACC_VARARGS, code -> {
+                Label start = code.newLabel();
+                Label end = code.newLabel();
+                Label handler = code.newLabel();
+                if (throwFlag) {
+                    code.exceptionCatch(start, end, handler, CD_Throwable);
+                    code.labelBinding(start);
+                }
+                if (!staticFlag) {
+                    code.aload(1);
+                }
+                Class<?>[] paramTypes = method.getParameterTypes();
+                for (int i = 0; i < paramTypes.length; i++) {
+                    code.aload(2).loadConstant(i).aaload();
+                    Class<?> paramType = paramTypes[i];
+                    ClassDesc paramDesc = ClassDesc.ofDescriptor(paramType.descriptorString());
+                    if (paramType.isPrimitive()) {
+                        ClassDesc wrapperDesc = ClassDesc.ofDescriptor(
+                                TypeToken.primitiveToWrapper(paramType).descriptorString());
+                        code.checkcast(wrapperDesc)
+                                .invokevirtual(
+                                        wrapperDesc, paramType.getSimpleName() + "Value", MethodTypeDesc.of(paramDesc));
+                    } else {
+                        code.checkcast(paramDesc);
+                    }
+                }
+                if (staticFlag) {
+                    code.invokestatic(targetDesc, method.getName(), methodDesc, clazz.isInterface());
+                } else if (clazz.isInterface()) {
+                    code.invokeinterface(targetDesc, method.getName(), methodDesc);
+                } else {
+                    code.invokevirtual(targetDesc, method.getName(), methodDesc);
+                }
+                if (returnType == void.class) {
+                    code.aconst_null();
+                } else if (returnType.isPrimitive()) {
+                    code.invokestatic(returnDesc, "valueOf", MethodTypeDesc.of(returnDesc, methodDesc.returnType()));
+                }
+                if (throwFlag) {
+                    code.labelBinding(end);
+                }
+                code.areturn();
+                if (throwFlag) {
+                    ClassDesc exceptionDesc = ClassDesc.of("java.lang.RuntimeException");
+                    code.labelBinding(handler)
+                            .astore(3)
+                            .new_(exceptionDesc)
+                            .dup()
+                            .aload(3)
+                            .invokespecial(exceptionDesc, "<init>", MethodTypeDesc.of(CD_void, CD_Throwable))
+                            .athrow();
+                }
+            });
+            MethodTypeDesc bridgeDesc = MethodTypeDesc.of(CD_Object, CD_Object, CD_Object.arrayType());
+            if (!invokeDesc.equals(bridgeDesc)) {
+                cb.withMethodBody(
+                        "invoke",
+                        bridgeDesc,
+                        ACC_PUBLIC | ACC_BRIDGE | ACC_VARARGS | ACC_SYNTHETIC,
+                        code -> code.aload(0)
+                                .aload(1)
+                                .checkcast(targetDesc)
+                                .aload(2)
+                                .invokevirtual(dynDesc, "invoke", invokeDesc)
+                                .areturn());
             }
-            if (!staticFlag) {
-                mv.visitVarInsn(ALOAD, 1);
-            }
-
-            StringBuilder paramDescs = new StringBuilder();
-            int paramIndex = 0;
-            for (Class paramType : method.getParameterTypes()) {
-                // 参数
-                mv.visitVarInsn(ALOAD, 2);
-                ByteCodes.visitInsn(mv, paramIndex);
-                mv.visitInsn(AALOAD);
-                ByteCodes.visitCheckCast(mv, paramType);
-                paramDescs.append(Type.getDescriptor(paramType));
-                paramIndex++;
-            }
-
-            mv.visitMethodInsn(
-                    staticFlag ? INVOKESTATIC : (clazz.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL),
-                    interName,
-                    method.getName(),
-                    "(" + paramDescs + ")" + returnPrimiveDesc,
-                    !staticFlag && clazz.isInterface());
-            if (returnType == void.class) {
-                mv.visitInsn(ACONST_NULL);
-            } else {
-                ByteCodes.visitPrimitiveValueOf(mv, returnType);
-            }
-            mv.visitLabel(label1);
-            mv.visitInsn(ARETURN);
-            if (throwFlag) {
-                mv.visitLabel(label2);
-                mv.visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[] {"java/lang/Throwable"});
-                mv.visitVarInsn(ASTORE, 3);
-                mv.visitTypeInsn(NEW, "java/lang/RuntimeException");
-                mv.visitInsn(DUP);
-                mv.visitVarInsn(ALOAD, 3);
-                mv.visitMethodInsn(
-                        INVOKESPECIAL, "java/lang/RuntimeException", "<init>", "(Ljava/lang/Throwable;)V", false);
-                mv.visitInsn(ATHROW);
-            }
-            Label label22 = new Label();
-            mv.visitLabel(label22);
-            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label00, label22, 0);
-            mv.visitLocalVariable("obj", interDesc, null, label00, label22, 1);
-            mv.visitLocalVariable("params", "[Ljava/lang/Object;", null, label00, label22, 2);
-            mv.visitMaxs(3 + method.getParameterCount(), 4);
-            mv.visitEnd();
-        }
-
-        { // 虚拟 invoke 方法
-            mv = new MethodDebugVisitor(cw.visitMethod(
-                    ACC_PUBLIC + ACC_BRIDGE + ACC_VARARGS + ACC_SYNTHETIC,
-                    "invoke",
-                    "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;",
-                    null,
-                    null));
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitTypeInsn(CHECKCAST, interName);
-            mv.visitVarInsn(ALOAD, 2);
-            mv.visitMethodInsn(
-                    INVOKEVIRTUAL, newDynName, "invoke", "(" + interDesc + "[Ljava/lang/Object;)" + returnDesc, false);
-            mv.visitInsn(ARETURN);
-            mv.visitMaxs(3, 3);
-            mv.visitEnd();
-        }
-        cw.visitEnd();
-        byte[] bytes = cw.toByteArray();
+        });
         try {
             Class<?> resultClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
             RedkaleClassLoader.putReflectionDeclaredConstructors(resultClazz, newDynName.replace('/', '.'));
