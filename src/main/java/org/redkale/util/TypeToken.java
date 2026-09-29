@@ -4,9 +4,14 @@
  */
 package org.redkale.util;
 
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
+import static java.lang.classfile.ClassFile.*;
+import static java.lang.constant.ConstantDescs.*;
 
+import java.lang.classfile.ClassFile;
+import java.lang.classfile.Signature;
+import java.lang.classfile.attribute.SignatureAttribute;
+import java.lang.constant.ClassDesc;
+import java.lang.constant.MethodTypeDesc;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
@@ -692,31 +697,29 @@ public abstract class TypeToken<T> {
             // do nothing
         }
         // ------------------------------------------------------------------------------
-        org.redkale.asm.ClassWriter cw = new org.redkale.asm.ClassWriter(COMPUTE_FRAMES);
-        org.redkale.asm.FieldVisitor fv;
-        org.redkale.asm.MethodVisitor mv;
-        cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, "java/lang/Object", null);
-        String rawTypeDesc = org.redkale.asm.Type.getDescriptor(rawType);
+        String rawTypeDesc = rawType.descriptorString();
         StringBuilder sb = new StringBuilder();
         sb.append(rawTypeDesc.substring(0, rawTypeDesc.length() - 1)).append('<');
         for (Type c : actualTypeArguments) {
             sb.append(getClassTypeDescriptor(c));
         }
         sb.append(">;");
-        {
-            fv = cw.visitField(ACC_PUBLIC, "field", rawTypeDesc, sb.toString(), null);
-            fv.visitEnd();
-        }
-        { // 构造方法
-            mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
-        cw.visitEnd();
-        byte[] bytes = cw.toByteArray();
+        byte[] bytes = ClassFile.of().build(ClassDesc.ofInternalName(newDynName), cb -> {
+            cb.withVersion(JAVA_11_VERSION, 0)
+                    .withFlags(ACC_PUBLIC | ACC_FINAL | ACC_SUPER)
+                    .withSuperclass(CD_Object);
+            cb.withField(
+                    "field",
+                    ClassDesc.ofDescriptor(rawTypeDesc),
+                    fb -> fb.withFlags(ACC_PUBLIC).with(SignatureAttribute.of(Signature.parseFrom(sb.toString()))));
+            cb.withMethodBody(
+                    "<init>",
+                    MethodTypeDesc.of(CD_void),
+                    ACC_PUBLIC,
+                    code -> code.aload(0)
+                            .invokespecial(CD_Object, "<init>", MethodTypeDesc.of(CD_void))
+                            .return_());
+        });
         Class<?> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
         RedkaleClassLoader.putReflectionPublicFields(newDynName.replace('/', '.'));
         try {
@@ -731,7 +734,7 @@ public abstract class TypeToken<T> {
             throw new IllegalArgumentException(type + " not a class type");
         }
         if (type instanceof Class) {
-            return org.redkale.asm.Type.getDescriptor((Class) type);
+            return ((Class<?>) type).descriptorString();
         }
         if (type instanceof GenericArrayType) {
             return getClassTypeDescriptor(((GenericArrayType) type).getGenericComponentType()) + "[]";
