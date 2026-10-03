@@ -57,65 +57,7 @@ public final class Utility {
 
     private static final IntFunction<Serializable[]> serialArrayFunc = Serializable[]::new;
 
-    // org.redkale.util.AnonymousUnsafe
-    private static final String funcAnonymousUnsafeBinary =
-            "cafebabe00000037006f0a001900470700480800490a004a004b0a004c004d0a004c004e07004f0700500800510a000800520a0053005409001800550a000200560a000200570a000200580a000200590a0002005a0a0002005b0a0002005c0a0002005d0a0002005e0a0002005f0a00020060070061070062070063010006756e736166650100114c73756e2f6d6973632f556e736166653b0100063c696e69743e010003282956010004436f646501000f4c696e654e756d6265725461626c650100124c6f63616c5661726961626c655461626c650100056669656c640100194c6a6176612f6c616e672f7265666c6563742f4669656c643b010001650100154c6a6176612f6c616e672f5468726f7761626c653b010004746869730100224c6f72672f7265646b616c652f7574696c2f416e6f6e796d6f7573556e736166653b010007756e736166653001000d537461636b4d61705461626c6501000a676574426f6f6c65616e010016284c6a6176612f6c616e672f4f626a6563743b4a295a0100016f0100124c6a6176612f6c616e672f4f626a6563743b0100066f66667365740100014a0100104d6574686f64506172616d657465727301000767657442797465010016284c6a6176612f6c616e672f4f626a6563743b4a294201000867657453686f7274010016284c6a6176612f6c616e672f4f626a6563743b4a295301000767657443686172010016284c6a6176612f6c616e672f4f626a6563743b4a2943010006676574496e74010016284c6a6176612f6c616e672f4f626a6563743b4a29490100076765744c6f6e67010016284c6a6176612f6c616e672f4f626a6563743b4a294a010008676574466c6f6174010016284c6a6176612f6c616e672f4f626a6563743b4a2946010009676574446f75626c65010016284c6a6176612f6c616e672f4f626a6563743b4a29440100096765744f626a656374010027284c6a6176612f6c616e672f4f626a6563743b4a294c6a6176612f6c616e672f4f626a6563743b0100116f626a6563744669656c644f666673657401001c284c6a6176612f6c616e672f7265666c6563742f4669656c643b294a010001660100117374617469634669656c644f666673657401000a536f7572636546696c65010014416e6f6e796d6f7573556e736166652e6a6176610c001d001e01000f73756e2f6d6973632f556e73616665010009746865556e736166650700640c006500660700670c006800690c006a006b0100136a6176612f6c616e672f5468726f7761626c650100216f72672f7265646b616c652f7574696c2f5265646b616c65457863657074696f6e010011696e697420756e73616665206572726f720c001d006c07006d0c006e006b0c001b001c0c002a002b0c003100320c003300340c003500360c003700380c0039003a0c003b003c0c003d003e0c003f00400c004100420c004400420100206f72672f7265646b616c652f7574696c2f416e6f6e796d6f7573556e736166650100106a6176612f6c616e672f4f626a6563740100176f72672f7265646b616c652f7574696c2f556e7361666501000f6a6176612f6c616e672f436c6173730100106765744465636c617265644669656c6401002d284c6a6176612f6c616e672f537472696e673b294c6a6176612f6c616e672f7265666c6563742f4669656c643b0100176a6176612f6c616e672f7265666c6563742f4669656c6401000d73657441636365737369626c65010004285a2956010003676574010026284c6a6176612f6c616e672f4f626a6563743b294c6a6176612f6c616e672f4f626a6563743b01002a284c6a6176612f6c616e672f537472696e673b4c6a6176612f6c616e672f5468726f7761626c653b29560100116a6176612f7574696c2f4f626a6563747301000e726571756972654e6f6e4e756c6c0021001800190001001a00010012001b001c0000000c0001001d001e0001001f000000c400040003000000372ab70001014c12021203b600044d2c04b600052c01b60006c000024ca7000f4dbb00085912092cb7000abf2a2bb8000bc00002b5000cb100010006001c001f0007000300200000002a000a0000000a0004000b0006000d000e000e0013000f001c0012001f001000200011002b00130036001400210000002a0004000e000e0022002300020020000b00240025000200000037002600270000000600310028001c00010029000000130002ff001f000207001807000200010700070b0001002a002b0002001f00000048000400040000000a2ab4000c2b20b6000dac0000000200200000000600010000001800210000002000030000000a0026002700000000000a002c002d00010000000a002e002f000200300000000902002c0000002e00000001003100320002001f00000048000400040000000a2ab4000c2b20b6000eac0000000200200000000600010000001d00210000002000030000000a0026002700000000000a002c002d00010000000a002e002f000200300000000902002c0000002e00000001003300340002001f00000048000400040000000a2ab4000c2b20b6000fac0000000200200000000600010000002200210000002000030000000a0026002700000000000a002c002d00010000000a002e002f000200300000000902002c0000002e00000001003500360002001f00000048000400040000000a2ab4000c2b20b60010ac0000000200200000000600010000002700210000002000030000000a0026002700000000000a002c002d00010000000a002e002f000200300000000902002c0000002e00000001003700380002001f00000048000400040000000a2ab4000c2b20b60011ac0000000200200000000600010000002c00210000002000030000000a0026002700000000000a002c002d00010000000a002e002f000200300000000902002c0000002e000000010039003a0002001f00000048000400040000000a2ab4000c2b20b60012ad0000000200200000000600010000003100210000002000030000000a0026002700000000000a002c002d00010000000a002e002f000200300000000902002c0000002e00000001003b003c0002001f00000048000400040000000a2ab4000c2b20b60013ae0000000200200000000600010000003600210000002000030000000a0026002700000000000a002c002d00010000000a002e002f000200300000000902002c0000002e00000001003d003e0002001f00000048000400040000000a2ab4000c2b20b60014af0000000200200000000600010000003b00210000002000030000000a0026002700000000000a002c002d00010000000a002e002f000200300000000902002c0000002e00000001003f00400002001f00000048000400040000000a2ab4000c2b20b60015b00000000200200000000600010000004000210000002000030000000a0026002700000000000a002c002d00010000000a002e002f000200300000000902002c0000002e00000001004100420002001f0000003d00020002000000092ab4000c2bb60016ad000000020020000000060001000000450021000000160002000000090026002700000000000900430023000100300000000501004300000001004400420002001f0000003d00020002000000092ab4000c2bb60017ad0000000200200000000600010000004a00210000001600020000000900260027000000000009004300230001003000000005010043000000010045000000020046";
-
-    // org.redkale.util.Unsafe
-    private static final Unsafe unsafeInstance;
-
-    private static final MethodHandles.Lookup trustedLookup;
-    private static final boolean compactStrings;
-
-    static {
-        Unsafe unsafe0 = null;
-        boolean compactStrings0 = true;
-        MethodHandles.Lookup trustedLookup0 = null;
-        try {
-            final ClassLoader loader = Thread.currentThread().getContextClassLoader();
-            String unsafeName = "org.redkale.util.AnonymousUnsafe";
-            Class<Unsafe> unsafeClazz1 = null;
-            try {
-                unsafeClazz1 = (Class) loader.loadClass(unsafeName);
-            } catch (Throwable t) {
-                // do nothing
-            }
-            if (unsafeClazz1 == null) {
-                byte[] classBytes = hexToBin(funcAnonymousUnsafeBinary);
-                unsafeClazz1 = (Class<Unsafe>)
-                        new ClassLoader(loader) {
-                            public final Class<?> loadClass(String name, byte[] b) {
-                                return defineClass(name, b, 0, b.length);
-                            }
-                        }.loadClass(unsafeName, classBytes);
-                RedkaleClassLoader.putDynClass0(unsafeClazz1.getName(), classBytes, unsafeClazz1);
-                RedkaleClassLoader.putReflectionDeclaredConstructors(unsafeClazz1, unsafeClazz1.getName());
-            }
-            unsafe0 = unsafeClazz1.getDeclaredConstructor().newInstance();
-
-            Class lookupClass = MethodHandles.Lookup.class;
-            Field implField = lookupClass.getDeclaredField("IMPL_LOOKUP");
-            long implOffset = unsafe0.staticFieldOffset(implField);
-            trustedLookup0 = (MethodHandles.Lookup) unsafe0.getObject(lookupClass, implOffset);
-            RedkaleClassLoader.putReflectionField(lookupClass.getName(), implField);
-
-            Field compactField = String.class.getDeclaredField("COMPACT_STRINGS");
-            long compactOffset = unsafe0.staticFieldOffset(compactField);
-            compactStrings0 = unsafe0.getBoolean(String.class, compactOffset);
-            RedkaleClassLoader.putReflectionField(String.class.getName(), compactField);
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-        unsafeInstance = unsafe0;
-        compactStrings = compactStrings0;
-        trustedLookup = trustedLookup0;
-    }
-
     // -------------------------------------------------------------------------------
-
-    private static final Function<String, byte[]> strByteFunction;
-
-    private static final Predicate<String> strLatin1Function;
 
     private static final ReentrantLock clientLock = new ReentrantLock();
 
@@ -137,62 +79,6 @@ public final class Utility {
                     return t;
                 }))
                 .setRemoveOnCancelPolicy(true);
-
-        Function<String, byte[]> strByteFunction0 = null;
-        Predicate<String> strLatin1Function0 = null;
-        // strLatin1Function
-        try {
-            if (!NATIVE_IMAGE_ENV && unsafeInstance != null) { // native-image模式下objectFieldOffset值不一定精准，可能崩溃
-                final Unsafe unsafe = unsafeInstance;
-                final long coderOffset = unsafe.objectFieldOffset(String.class.getDeclaredField("coder"));
-                final long valueOffset = unsafe.objectFieldOffset(String.class.getDeclaredField("value"));
-                // LATIN1:0  UTF16:1
-                strLatin1Function0 = (String t) -> false;
-                if (compactStrings) {
-                    strLatin1Function0 = (String t) -> unsafe.getByte(t, coderOffset) == 0;
-                }
-                strByteFunction0 = (String t) -> (byte[]) unsafe.getObject(t, valueOffset);
-            } else if (trustedLookup != null) {
-                // String-LATIN1
-                MethodHandles.Lookup lookup = trustedLookup;
-                VarHandle coderHandle = lookup.findVarHandle(String.class, "coder", byte.class);
-                VarHandle valueHandle = lookup.findVarHandle(String.class, "value", byte[].class);
-                // LATIN1:0  UTF16:1
-                strLatin1Function0 = (String t) -> false;
-                if (compactStrings) {
-                    strLatin1Function0 = (String t) -> (Byte) coderHandle.get(t) == 0;
-                }
-                strByteFunction0 = (String t) -> (byte[]) valueHandle.get(t);
-            }
-        } catch (Throwable e) { // 不会发生
-            // do nothing
-            e.printStackTrace();
-        }
-        strByteFunction = strByteFunction0;
-        strLatin1Function = strLatin1Function0;
-
-        //        try {
-        //            DEFAULTSSL_CONTEXT = javax.net.ssl.SSLContext.getInstance("SSL");
-        //            DEFAULTSSL_CONTEXT.init(null, new javax.net.ssl.TrustManager[]{new
-        // javax.net.ssl.X509TrustManager() {
-        //                @Override
-        //                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-        //                    return null;
-        //                }
-        //
-        //                @Override
-        //                public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType)
-        // throws java.security.cert.CertificateException {
-        //                }
-        //
-        //                @Override
-        //                public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType)
-        // throws java.security.cert.CertificateException {
-        //                }
-        //            }}, null);
-        //        } catch (Exception e) {
-        //            throw new RedkaleException(e); //不会发生
-        //        }
     }
 
     private Utility() {}
@@ -202,7 +88,7 @@ public final class Utility {
     }
 
     public static @Nullable MethodHandles.Lookup trustedLookup() {
-        return trustedLookup;
+        return null;
     }
 
     public static boolean inNativeImage() {
@@ -210,18 +96,14 @@ public final class Utility {
     }
 
     public static Function<String, ExecutorService> virtualExecutorFunction() {
-        return new Function<String, ExecutorService>() {
-
-            @Override
-            public ExecutorService apply(String threadNameFormat) {
-                final ThreadFactory factory = Thread.ofVirtual().factory();
-                final String threadName = String.format(threadNameFormat, "Virtual");
-                return Executors.newThreadPerTaskExecutor(r -> {
-                    Thread t = factory.newThread(r);
-                    t.setName(threadName);
-                    return t;
-                });
-            }
+        return threadNameFormat -> {
+            final ThreadFactory factory = Thread.ofVirtual().factory();
+            final String threadName = String.format(threadNameFormat, "Virtual");
+            return Executors.newThreadPerTaskExecutor(r -> {
+                Thread t = factory.newThread(r);
+                t.setName(threadName);
+                return t;
+            });
         };
     }
 
@@ -4603,9 +4485,6 @@ public final class Utility {
         if (value == null) {
             return true;
         }
-        if (strLatin1Function != null) {
-            return strLatin1Function.test(value); // LATIN1:0  UTF16:1
-        }
         char[] chs = charArray(value);
         for (char ch : chs) {
             if (ch >= 0x80) {
@@ -4620,17 +4499,11 @@ public final class Utility {
         if (latin1Value == null) {
             return null;
         }
-        if (strByteFunction == null) {
-            return latin1Value.getBytes();
-        }
-        return strByteFunction.apply(latin1Value);
+        return latin1Value.getBytes();
     }
 
     public static byte[] utf16ByteArray(String value) {
-        if (value == null || strByteFunction == null) {
-            return null;
-        }
-        return strByteFunction.apply(value);
+        return null;
     }
 
     public static char[] charArray(String value) {
