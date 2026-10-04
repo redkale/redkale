@@ -290,7 +290,7 @@ public final class Utility {
             if (methodName != null) {
                 return readFieldName(methodName);
             } else {
-                // native-image环境下获取不到methodName
+                // native-image环境下获取不到methodName 
                 throw new RedkaleException("cannot found method-name from lambda " + func);
             }
         } catch (IOException e) {
