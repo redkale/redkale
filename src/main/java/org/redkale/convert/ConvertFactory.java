@@ -1075,6 +1075,14 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         }
     }
 
+    public final <T> boolean register(LambdaSupplier<T> func, String alias) {
+        return register(LambdaSupplier.readClass(func), LambdaSupplier.readColumn(func), new ConvertColumnEntry(alias));
+    }
+
+    public final <T> boolean register(LambdaFunction<T, ?> func, String alias) {
+        return register(LambdaFunction.readClass(func), LambdaFunction.readColumn(func), new ConvertColumnEntry(alias));
+    }
+
     public final boolean register(final Class type, String column, String alias) {
         return register(type, column, new ConvertColumnEntry(alias));
     }

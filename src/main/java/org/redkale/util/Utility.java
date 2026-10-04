@@ -244,6 +244,10 @@ public final class Utility {
         return readLambdaFieldName(func);
     }
 
+    public static Class readClassName(LambdaFunction func) {
+        return readLambdaClassName(func);
+    }
+
     public static String readFieldName(LambdaBiConsumer consumer) {
         return readLambdaFieldName(consumer);
     }
