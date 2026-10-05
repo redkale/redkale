@@ -4,10 +4,14 @@
  */
 package org.redkale.net.sncp;
 
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
+import static java.lang.classfile.ClassFile.*;
+import static java.lang.constant.ConstantDescs.*;
 
 import java.io.IOException;
+import java.lang.classfile.*;
+import java.lang.classfile.attribute.ExceptionsAttribute;
+import java.lang.constant.*;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.nio.channels.CompletionHandler;
@@ -16,10 +20,6 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
 import org.redkale.annotation.ClassDepends;
 import org.redkale.annotation.NonBlocking;
-import org.redkale.asm.ClassWriter;
-import org.redkale.asm.Label;
-import org.redkale.asm.MethodDebugVisitor;
-import org.redkale.asm.Type;
 import org.redkale.convert.Convert;
 import org.redkale.convert.Reader;
 import org.redkale.convert.pb.ProtobufFactory;
@@ -340,20 +340,17 @@ public abstract class SncpActionServlet extends SncpServlet {
             final Method method) {
 
         final Class serviceClass = service.getClass();
-        final String supDynName = SncpActionServlet.class.getName().replace('.', '/');
-        final String serviceImpTypeName = serviceImplClass.getName().replace('.', '/');
-        final String convertName = Convert.class.getName().replace('.', '/');
-        final String uint128Desc = Type.getDescriptor(Uint128.class);
-        final String convertDesc = Type.getDescriptor(Convert.class);
-        final String readerDesc = Type.getDescriptor(Reader.class);
-        final String requestName = SncpRequest.class.getName().replace('.', '/');
-        final String responseName = SncpResponse.class.getName().replace('.', '/');
-        final String requestDesc = Type.getDescriptor(SncpRequest.class);
-        final String responseDesc = Type.getDescriptor(SncpResponse.class);
-        final String serviceDesc = Type.getDescriptor(Service.class);
-        final String handlerDesc = Type.getDescriptor(CompletionHandler.class);
-        final String futureDesc = Type.getDescriptor(Future.class);
-        final String reflectTypeDesc = Type.getDescriptor(java.lang.reflect.Type.class);
+        final ClassDesc superDesc = ClassDesc.ofDescriptor(SncpActionServlet.class.descriptorString());
+        final ClassDesc serviceImplDesc = ClassDesc.ofDescriptor(serviceImplClass.descriptorString());
+        final ClassDesc uint128Desc = ClassDesc.ofDescriptor(Uint128.class.descriptorString());
+        final ClassDesc convertDesc = ClassDesc.ofDescriptor(Convert.class.descriptorString());
+        final ClassDesc readerDesc = ClassDesc.ofDescriptor(Reader.class.descriptorString());
+        final ClassDesc requestDesc = ClassDesc.ofDescriptor(SncpRequest.class.descriptorString());
+        final ClassDesc responseDesc = ClassDesc.ofDescriptor(SncpResponse.class.descriptorString());
+        final ClassDesc serviceDesc = ClassDesc.ofDescriptor(Service.class.descriptorString());
+        final ClassDesc handlerDesc = ClassDesc.ofDescriptor(CompletionHandler.class.descriptorString());
+        final ClassDesc futureDesc = ClassDesc.ofDescriptor(Future.class.descriptorString());
+        final ClassDesc reflectTypeDesc = ClassDesc.ofDescriptor(java.lang.reflect.Type.class.descriptorString());
         final boolean boolReturnTypeFuture = Future.class.isAssignableFrom(method.getReturnType());
         final String newDynName = "org/redkaledyn/sncp/servlet/action/_DynSncpActionServlet__"
                 + resourceType.getSimpleName() + "_" + method.getName() + "_" + actionid;
@@ -393,325 +390,131 @@ public abstract class SncpActionServlet extends SncpServlet {
 
         if (newClazz == null) {
             // -------------------------------------------------------------
-            ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
-            MethodDebugVisitor mv;
-
-            cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
-            {
-                mv = new MethodDebugVisitor(cw.visitMethod(
-                        ACC_PUBLIC,
-                        "<init>",
-                        "(Ljava/lang/String;Ljava/lang/Class;" + serviceDesc + uint128Desc + uint128Desc
-                                + "Ljava/lang/reflect/Method;)V",
-                        null,
-                        null));
-                Label label0 = new Label();
-                mv.visitLabel(label0);
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitVarInsn(ALOAD, 1);
-                mv.visitVarInsn(ALOAD, 2);
-                mv.visitVarInsn(ALOAD, 3);
-                mv.visitVarInsn(ALOAD, 4);
-                mv.visitVarInsn(ALOAD, 5);
-                mv.visitVarInsn(ALOAD, 6);
-                mv.visitMethodInsn(
-                        INVOKESPECIAL,
-                        supDynName,
-                        "<init>",
-                        "(Ljava/lang/String;Ljava/lang/Class;" + serviceDesc + uint128Desc + uint128Desc
-                                + "Ljava/lang/reflect/Method;)V",
-                        false);
-                mv.visitInsn(RETURN);
-                Label label2 = new Label();
-                mv.visitLabel(label2);
-                mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
-                mv.visitLocalVariable("resourceName", "Ljava/lang/String;", null, label0, label2, 1);
-                mv.visitLocalVariable("resourceType", "Ljava/lang/Class;", null, label0, label2, 2);
-                mv.visitLocalVariable("service", serviceDesc, null, label0, label2, 3);
-                mv.visitLocalVariable("serviceid", uint128Desc, null, label0, label2, 4);
-                mv.visitLocalVariable("actionid", uint128Desc, null, label0, label2, 5);
-                mv.visitLocalVariable("method", "Ljava/lang/reflect/Method;", null, label0, label2, 6);
-                mv.visitMaxs(7, 7);
-                mv.visitEnd();
-            }
-            String convertFromDesc = "(Ljava/lang/reflect/Type;" + readerDesc + ")Ljava/lang/Object;";
-            try {
-                convertFromDesc = Type.getMethodDescriptor(
-                        Convert.class.getMethod("convertFrom", java.lang.reflect.Type.class, Reader.class));
-            } catch (Exception ex) {
-                throw new SncpException(ex); // 不可能会发生
-            }
-            { // action方法
-                mv = new MethodDebugVisitor(cw.visitMethod(
-                        ACC_PUBLIC, "action", "(" + requestDesc + responseDesc + ")V", null, new String[] {
-                            "java/lang/Throwable"
-                        }));
-                // mv.setDebug(true);
-                { // Convert
-                    mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, requestName, "getConvert", "()" + convertDesc, false);
-                    mv.visitVarInsn(ASTORE, 3);
-                }
-                { // Reader
-                    mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, requestName, "getReader", "()" + readerDesc, false);
-                    mv.visitVarInsn(ASTORE, 4);
-                }
-                if (paramComposeBeanType == null) {
-                    int iconst = ICONST_1;
-                    int intconst = 1;
-                    int store = 5; // action的参数个数+2
-                    int[][] codes = new int[paramClasses.length][2];
-                    for (int i = 0; i < paramClasses.length; i++) { // 反序列化方法的每个参数
-                        if (CompletionHandler.class.isAssignableFrom(paramClasses[i])) {
-                            mv.visitVarInsn(ALOAD, 2);
-                            mv.visitMethodInsn(
-                                    INVOKEVIRTUAL,
-                                    responseName,
-                                    "getParamAsyncHandler",
-                                    "()Ljava/nio/channels/CompletionHandler;",
-                                    false);
-                            mv.visitTypeInsn(
-                                    CHECKCAST, paramClasses[i].getName().replace('.', '/'));
-                            mv.visitVarInsn(ASTORE, store);
-                            codes[i] = new int[] {ALOAD, store};
-                            store++;
-                            iconst++;
-                            intconst++;
-                            mv.visitVarInsn(ALOAD, 3);
-                            mv.visitLdcInsn(Type.getType(Type.getDescriptor(CompletionHandler.class)));
-                            mv.visitVarInsn(ALOAD, 4);
-                            mv.visitMethodInsn(INVOKEVIRTUAL, convertName, "convertFrom", convertFromDesc, false);
-                            mv.visitInsn(POP);
-                            continue;
-                        }
-                        mv.visitVarInsn(ALOAD, 3);
-                        mv.visitVarInsn(ALOAD, 0);
-                        mv.visitFieldInsn(GETFIELD, newDynName, "paramTypes", "[Ljava/lang/reflect/Type;");
-
-                        if (intconst < 6) {
-                            mv.visitInsn(ICONST_0 + intconst);
-                        } else if (iconst <= Byte.MAX_VALUE) {
-                            mv.visitIntInsn(BIPUSH, intconst);
-                        } else if (iconst <= Short.MAX_VALUE) {
-                            mv.visitIntInsn(SIPUSH, intconst);
+            final ClassDesc dynDesc = ClassDesc.ofInternalName(newDynName);
+            final ClassDesc methodClassDesc = ClassDesc.ofDescriptor(Method.class.descriptorString());
+            final MethodTypeDesc constructorDesc = MethodTypeDesc.of(
+                    CD_void, CD_String, CD_Class, serviceDesc, uint128Desc, uint128Desc, methodClassDesc);
+            final MethodTypeDesc serviceMethodDesc = MethodTypeDesc.ofDescriptor(
+                    MethodType.methodType(method.getReturnType(), paramClasses).descriptorString());
+            final MethodTypeDesc convertFromDesc = MethodTypeDesc.of(CD_Object, reflectTypeDesc, readerDesc);
+            final int handlerIndex = handlerFuncIndex;
+            byte[] bytes = ClassFile.of().build(dynDesc, cb -> {
+                cb.withVersion(JAVA_11_VERSION, 0)
+                        .withFlags(ACC_PUBLIC | ACC_FINAL | ACC_SUPER)
+                        .withSuperclass(superDesc);
+                cb.withMethodBody("<init>", constructorDesc, ACC_PUBLIC, code -> {
+                    code.aload(0).aload(1).aload(2).aload(3).aload(4).aload(5).aload(6)
+                            .invokespecial(superDesc, "<init>", constructorDesc)
+                            .return_();
+                    code.localVariable(0, "this", dynDesc, code.startLabel(), code.endLabel());
+                    code.localVariable(1, "resourceName", CD_String, code.startLabel(), code.endLabel());
+                    code.localVariable(2, "resourceType", CD_Class, code.startLabel(), code.endLabel());
+                    code.localVariable(3, "service", serviceDesc, code.startLabel(), code.endLabel());
+                    code.localVariable(4, "serviceid", uint128Desc, code.startLabel(), code.endLabel());
+                    code.localVariable(5, "actionid", uint128Desc, code.startLabel(), code.endLabel());
+                    code.localVariable(6, "method", methodClassDesc, code.startLabel(), code.endLabel());
+                });
+                cb.withMethod("action", MethodTypeDesc.of(CD_void, requestDesc, responseDesc), ACC_PUBLIC, mb -> {
+                    mb.with(ExceptionsAttribute.ofSymbols(CD_Throwable));
+                    mb.withCode(code -> {
+                        int convertSlot = code.allocateLocal(TypeKind.REFERENCE);
+                        int readerSlot = code.allocateLocal(TypeKind.REFERENCE);
+                        code.aload(1).invokevirtual(requestDesc, "getConvert", MethodTypeDesc.of(convertDesc))
+                                .astore(convertSlot);
+                        code.aload(1).invokevirtual(requestDesc, "getReader", MethodTypeDesc.of(readerDesc))
+                                .astore(readerSlot);
+                        if (paramComposeBeanType == null) {
+                            int[] paramSlots = new int[paramClasses.length];
+                            for (int i = 0; i < paramClasses.length; i++) {
+                                Class paramClass = paramClasses[i];
+                                ClassDesc paramDesc = ClassDesc.ofDescriptor(paramClass.descriptorString());
+                                TypeKind kind = TypeKind.from(paramDesc);
+                                paramSlots[i] = code.allocateLocal(kind);
+                                if (CompletionHandler.class.isAssignableFrom(paramClass)) {
+                                    code.aload(2)
+                                            .invokevirtual(responseDesc, "getParamAsyncHandler", MethodTypeDesc.of(handlerDesc))
+                                            .checkcast(paramDesc)
+                                            .astore(paramSlots[i]);
+                                    // 消费请求中的CompletionHandler占位参数
+                                    code.aload(convertSlot).loadConstant(handlerDesc).aload(readerSlot)
+                                            .invokevirtual(convertDesc, "convertFrom", convertFromDesc).pop();
+                                } else {
+                                    code.aload(convertSlot).aload(0)
+                                            .getfield(dynDesc, "paramTypes", reflectTypeDesc.arrayType())
+                                            .loadConstant(i + 1).aaload().aload(readerSlot)
+                                            .invokevirtual(convertDesc, "convertFrom", convertFromDesc);
+                                    if (paramClass.isPrimitive()) {
+                                        ClassDesc wrapperDesc = ClassDesc.ofDescriptor(
+                                                TypeToken.primitiveToWrapper(paramClass).descriptorString());
+                                        code.checkcast(wrapperDesc)
+                                                .invokevirtual(wrapperDesc, paramClass.getSimpleName() + "Value",
+                                                        MethodTypeDesc.of(paramDesc));
+                                    } else {
+                                        code.checkcast(paramDesc);
+                                    }
+                                    code.storeLocal(kind, paramSlots[i]);
+                                }
+                            }
+                            code.aload(0).invokevirtual(dynDesc, "service", MethodTypeDesc.of(serviceDesc))
+                                    .checkcast(serviceImplDesc);
+                            for (int i = 0; i < paramClasses.length; i++) {
+                                code.loadLocal(TypeKind.from(paramClasses[i]), paramSlots[i]);
+                            }
                         } else {
-                            mv.visitLdcInsn(intconst);
+                            // 动态生成的参数组合类
+                            ClassDesc beanDesc = ClassDesc.ofDescriptor(
+                                    TypeToken.typeToClass(paramComposeBeanType).descriptorString());
+                            int beanSlot = code.allocateLocal(TypeKind.REFERENCE);
+                            code.aload(convertSlot).aload(0)
+                                    .getfield(dynDesc, "paramComposeBeanType", reflectTypeDesc)
+                                    .aload(readerSlot)
+                                    .invokevirtual(convertDesc, "convertFrom", convertFromDesc)
+                                    .checkcast(beanDesc).astore(beanSlot);
+                            if (handlerIndex >= 0) {
+                                code.aload(beanSlot).aload(2)
+                                        .invokevirtual(responseDesc, "getParamAsyncHandler", MethodTypeDesc.of(handlerDesc))
+                                        .putfield(beanDesc, "arg" + (handlerIndex + 1), handlerDesc);
+                            }
+                            code.aload(0).invokevirtual(dynDesc, "service", MethodTypeDesc.of(serviceDesc))
+                                    .checkcast(serviceImplDesc);
+                            for (int i = 0; i < paramClasses.length; i++) {
+                                code.aload(beanSlot).getfield(beanDesc, "arg" + (i + 1),
+                                        ClassDesc.ofDescriptor(paramClasses[i].descriptorString()));
+                            }
                         }
-                        mv.visitInsn(AALOAD);
-                        mv.visitVarInsn(ALOAD, 4);
-
-                        mv.visitMethodInsn(INVOKEVIRTUAL, convertName, "convertFrom", convertFromDesc, false);
-                        int load = ALOAD;
-                        int v = 0;
-                        if (paramClasses[i].isPrimitive()) {
-                            int storecode = ISTORE;
-                            load = ILOAD;
-                            if (paramClasses[i] == long.class) {
-                                storecode = LSTORE;
-                                load = LLOAD;
-                                v = 1;
-                            } else if (paramClasses[i] == float.class) {
-                                storecode = FSTORE;
-                                load = FLOAD;
-                                v = 1;
-                            } else if (paramClasses[i] == double.class) {
-                                storecode = DSTORE;
-                                load = DLOAD;
-                                v = 1;
-                            }
-                            Class bigPrimitiveClass = TypeToken.primitiveToWrapper(paramClasses[i]);
-                            String bigPrimitiveName =
-                                    bigPrimitiveClass.getName().replace('.', '/');
-                            try {
-                                Method pm = bigPrimitiveClass.getMethod(paramClasses[i].getSimpleName() + "Value");
-                                mv.visitTypeInsn(CHECKCAST, bigPrimitiveName);
-                                mv.visitMethodInsn(
-                                        INVOKEVIRTUAL,
-                                        bigPrimitiveName,
-                                        pm.getName(),
-                                        Type.getMethodDescriptor(pm),
-                                        false);
-                            } catch (Exception ex) {
-                                throw new SncpException(ex); // 不可能会发生
-                            }
-                            mv.visitVarInsn(storecode, store);
+                        if (serviceImplClass.isInterface()) {
+                            code.invokeinterface(serviceImplDesc, method.getName(), serviceMethodDesc);
                         } else {
-                            mv.visitTypeInsn(
-                                    CHECKCAST, paramClasses[i].getName().replace('.', '/'));
-                            mv.visitVarInsn(ASTORE, store); //
+                            code.invokevirtual(serviceImplDesc, method.getName(), serviceMethodDesc);
                         }
-                        codes[i] = new int[] {load, store};
-                        store += v;
-                        iconst++;
-                        intconst++;
-                        store++;
-                    }
-                    { // 调用service
-                        mv.visitVarInsn(ALOAD, 0);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "service", "()" + serviceDesc, false);
-                        mv.visitTypeInsn(CHECKCAST, serviceImpTypeName);
-                        mv.visitVarInsn(ASTORE, store);
-
-                        mv.visitVarInsn(ALOAD, store);
-                        for (int[] j : codes) {
-                            mv.visitVarInsn(j[0], j[1]);
-                        }
-                        mv.visitMethodInsn(
-                                serviceImplClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                                serviceImpTypeName,
-                                method.getName(),
-                                Type.getMethodDescriptor(method),
-                                serviceImplClass.isInterface());
-                        store++;
-                    }
-
-                    if (method.getReturnType() != void.class) {
-                        final Class returnClass = method.getReturnType();
-                        if (returnClass.isPrimitive()) {
-                            Class bigClass = TypeToken.primitiveToWrapper(returnClass);
-                            try {
-                                Method vo = bigClass.getMethod("valueOf", returnClass);
-                                mv.visitMethodInsn(
-                                        INVOKESTATIC,
-                                        bigClass.getName().replace('.', '/'),
-                                        vo.getName(),
-                                        Type.getMethodDescriptor(vo),
-                                        false);
-                            } catch (Exception ex) {
-                                throw new SncpException(ex); // 不可能会发生
+                        Class returnClass = method.getReturnType();
+                        if (returnClass == void.class) {
+                            code.aload(2).invokevirtual(responseDesc, "finishVoid", MethodTypeDesc.of(CD_void));
+                        } else {
+                            if (returnClass.isPrimitive()) {
+                                ClassDesc wrapperDesc = ClassDesc.ofDescriptor(
+                                        TypeToken.primitiveToWrapper(returnClass).descriptorString());
+                                code.invokestatic(wrapperDesc, "valueOf",
+                                        MethodTypeDesc.of(wrapperDesc, serviceMethodDesc.returnType()));
+                            }
+                            int resultSlot = code.allocateLocal(TypeKind.REFERENCE);
+                            code.astore(resultSlot);
+                            if (boolReturnTypeFuture) {
+                                code.aload(2).aload(0).getfield(dynDesc, "returnFutureType", reflectTypeDesc)
+                                        .aload(resultSlot).invokevirtual(responseDesc, "finishFuture",
+                                                MethodTypeDesc.of(CD_void, reflectTypeDesc, futureDesc));
+                            } else if (handlerIndex >= 0) {
+                                code.aload(2).invokevirtual(responseDesc, "finishVoid", MethodTypeDesc.of(CD_void));
+                            } else {
+                                code.aload(2).aload(0).getfield(dynDesc, "returnObjectType", reflectTypeDesc)
+                                        .aload(resultSlot).invokevirtual(responseDesc, "finish",
+                                                MethodTypeDesc.of(CD_void, reflectTypeDesc, CD_Object));
                             }
                         }
-                        mv.visitVarInsn(ASTORE, store); // 11
-
-                        if (boolReturnTypeFuture) { // 返回类型为Future
-                            mv.visitVarInsn(ALOAD, 2);
-                            mv.visitVarInsn(ALOAD, 0);
-                            mv.visitFieldInsn(GETFIELD, newDynName, "returnFutureType", reflectTypeDesc);
-                            mv.visitVarInsn(ALOAD, store);
-                            mv.visitMethodInsn(
-                                    INVOKEVIRTUAL,
-                                    responseName,
-                                    "finishFuture",
-                                    "(" + reflectTypeDesc + futureDesc + ")V",
-                                    false);
-                        } else if (handlerFuncIndex >= 0) { // 参数有CompletionHandler
-                            mv.visitVarInsn(ALOAD, 2);
-                            mv.visitMethodInsn(INVOKEVIRTUAL, responseName, "finishVoid", "()V", false);
-                        } else { // 普通对象
-                            mv.visitVarInsn(ALOAD, 2);
-                            mv.visitVarInsn(ALOAD, 0);
-                            mv.visitFieldInsn(GETFIELD, newDynName, "returnObjectType", reflectTypeDesc);
-                            mv.visitVarInsn(ALOAD, store);
-                            mv.visitMethodInsn(
-                                    INVOKEVIRTUAL,
-                                    responseName,
-                                    "finish",
-                                    "(" + reflectTypeDesc + "Ljava/lang/Object;)V",
-                                    false);
-                        }
-                    } else { // void返回类型
-                        mv.visitVarInsn(ALOAD, 2);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, responseName, "finishVoid", "()V", false);
-                    }
-                } else { // 动态生成的参数组合类
-                    Class paramComposeBeanClass = TypeToken.typeToClass(paramComposeBeanType);
-                    String paramComposeBeanName =
-                            paramComposeBeanClass.getName().replace('.', '/');
-                    mv.visitVarInsn(ALOAD, 3); // convert
-                    mv.visitVarInsn(ALOAD, 0);
-                    mv.visitFieldInsn(GETFIELD, newDynName, "paramComposeBeanType", reflectTypeDesc);
-                    mv.visitVarInsn(ALOAD, 4); // reader
-                    mv.visitMethodInsn(INVOKEVIRTUAL, convertName, "convertFrom", convertFromDesc, false);
-                    mv.visitTypeInsn(CHECKCAST, paramComposeBeanName);
-                    mv.visitVarInsn(ASTORE, 5); // paramBean
-
-                    // 给CompletionHandler参数赋值
-                    if (handlerFuncIndex >= 0) {
-                        mv.visitVarInsn(ALOAD, 5);
-                        mv.visitVarInsn(ALOAD, 2);
-                        mv.visitMethodInsn(
-                                INVOKEVIRTUAL, responseName, "getParamAsyncHandler", "()" + handlerDesc, false);
-                        mv.visitFieldInsn(PUTFIELD, paramComposeBeanName, "arg" + (handlerFuncIndex + 1), handlerDesc);
-                    }
-                    // 调用service()
-                    mv.visitVarInsn(ALOAD, 0);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "service", "()" + serviceDesc, false);
-                    mv.visitTypeInsn(CHECKCAST, serviceImpTypeName);
-                    mv.visitVarInsn(ASTORE, 6); // service
-
-                    // 执行service方法
-                    mv.visitVarInsn(ALOAD, 6); // service
-                    for (int i = 1; i <= paramClasses.length; i++) {
-                        mv.visitVarInsn(ALOAD, 5); // paramBean
-                        mv.visitFieldInsn(
-                                GETFIELD, paramComposeBeanName, "arg" + i, Type.getDescriptor(paramClasses[i - 1]));
-                    }
-                    mv.visitMethodInsn(
-                            serviceImplClass.isInterface() ? INVOKEINTERFACE : INVOKEVIRTUAL,
-                            serviceImpTypeName,
-                            method.getName(),
-                            Type.getMethodDescriptor(method),
-                            serviceImplClass.isInterface());
-
-                    // 返回
-                    if (method.getReturnType() != void.class) {
-                        final Class returnClass = method.getReturnType();
-                        if (returnClass.isPrimitive()) {
-                            Class bigClass = TypeToken.primitiveToWrapper(returnClass);
-                            try {
-                                Method vo = bigClass.getMethod("valueOf", returnClass);
-                                mv.visitMethodInsn(
-                                        INVOKESTATIC,
-                                        bigClass.getName().replace('.', '/'),
-                                        vo.getName(),
-                                        Type.getMethodDescriptor(vo),
-                                        false);
-                            } catch (Exception ex) {
-                                throw new SncpException(ex); // 不可能会发生
-                            }
-                        }
-                        mv.visitVarInsn(ASTORE, 7); // returnObject
-
-                        if (boolReturnTypeFuture) { // 返回类型为Future
-                            mv.visitVarInsn(ALOAD, 2); // response
-                            mv.visitVarInsn(ALOAD, 0);
-                            mv.visitFieldInsn(GETFIELD, newDynName, "returnFutureType", reflectTypeDesc);
-                            mv.visitVarInsn(ALOAD, 7); // returnObject
-                            mv.visitMethodInsn(
-                                    INVOKEVIRTUAL,
-                                    responseName,
-                                    "finishFuture",
-                                    "(" + reflectTypeDesc + futureDesc + ")V",
-                                    false);
-                        } else if (handlerFuncIndex >= 0) { // 参数有CompletionHandler
-                            mv.visitVarInsn(ALOAD, 2); // response
-                            mv.visitMethodInsn(INVOKEVIRTUAL, responseName, "finishVoid", "()V", false);
-                        } else { // 普通对象
-                            mv.visitVarInsn(ALOAD, 2);
-                            mv.visitVarInsn(ALOAD, 0);
-                            mv.visitFieldInsn(GETFIELD, newDynName, "returnObjectType", reflectTypeDesc);
-                            mv.visitVarInsn(ALOAD, 7); // returnObject
-                            mv.visitMethodInsn(
-                                    INVOKEVIRTUAL,
-                                    responseName,
-                                    "finish",
-                                    "(" + reflectTypeDesc + "Ljava/lang/Object;)V",
-                                    false);
-                        }
-                    } else { // void返回类型
-                        mv.visitVarInsn(ALOAD, 2); // response
-                        mv.visitMethodInsn(INVOKEVIRTUAL, responseName, "finishVoid", "()V", false);
-                    }
-                }
-
-                mv.visitInsn(RETURN);
-                mv.visitMaxs(8, 8);
-                mv.visitEnd();
-            }
-            cw.visitEnd();
-
-            byte[] bytes = cw.toByteArray();
+                        code.return_();
+                    });
+                });
+            });
             newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
             RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
 

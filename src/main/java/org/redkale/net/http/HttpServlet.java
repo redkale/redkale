@@ -5,18 +5,20 @@
  */
 package org.redkale.net.http;
 
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
+import static java.lang.classfile.ClassFile.*;
+import static java.lang.constant.ConstantDescs.*;
 
 import java.io.*;
 import java.lang.annotation.*;
+import java.lang.classfile.ClassFile;
+import java.lang.classfile.attribute.ExceptionsAttribute;
+import java.lang.constant.*;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.logging.*;
 import org.redkale.annotation.*;
-import org.redkale.asm.*;
 import org.redkale.boot.*;
 import org.redkale.net.*;
 import org.redkale.util.*;
@@ -542,13 +544,12 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
 
     private HttpServlet createActionServlet(final boolean typeNonBlocking, final Method method) {
         // ------------------------------------------------------------------------------
-        final String supDynName = HttpServlet.class.getName().replace('.', '/');
-        final String interName = this.getClass().getName().replace('.', '/');
-        final String interDesc = org.redkale.asm.Type.getDescriptor(this.getClass());
-        final String requestSupDesc = org.redkale.asm.Type.getDescriptor(Request.class);
-        final String responseSupDesc = org.redkale.asm.Type.getDescriptor(Response.class);
-        final String reqDesc = org.redkale.asm.Type.getDescriptor(HttpRequest.class);
-        final String respDesc = org.redkale.asm.Type.getDescriptor(HttpResponse.class);
+        final ClassDesc superDesc = ClassDesc.ofDescriptor(HttpServlet.class.descriptorString());
+        final ClassDesc servletDesc = ClassDesc.ofDescriptor(this.getClass().descriptorString());
+        final ClassDesc requestSupDesc = ClassDesc.ofDescriptor(Request.class.descriptorString());
+        final ClassDesc responseSupDesc = ClassDesc.ofDescriptor(Response.class.descriptorString());
+        final ClassDesc reqDesc = ClassDesc.ofDescriptor(HttpRequest.class.descriptorString());
+        final ClassDesc respDesc = ClassDesc.ofDescriptor(HttpResponse.class.descriptorString());
         final String factfield = "_factServlet";
         StringBuilder tmpps = new StringBuilder();
         for (Class cz : method.getParameterTypes()) {
@@ -568,64 +569,51 @@ public class HttpServlet extends Servlet<HttpContext, HttpRequest, HttpResponse>
             // do nothing
         }
         // ------------------------------------------------------------------------------
-        ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
-        FieldVisitor fv;
-        MethodVisitor mv;
-        AnnotationVisitor av0;
-        cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, supDynName, null);
-        {
-            fv = cw.visitField(ACC_PUBLIC, factfield, interDesc, null, null);
-            fv.visitEnd();
-        }
-        { // 构造函数
-            mv = (cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
-            // mv.setDebug(true);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
-        {
-            mv = (cw.visitMethod(
-                    ACC_PUBLIC, "execute", "(" + reqDesc + respDesc + ")V", null, new String[] {"java/io/IOException"
-                    }));
-            Label label0 = new Label();
-            mv.visitLabel(label0);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, newDynName, factfield, interDesc);
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitVarInsn(ALOAD, 2);
-            mv.visitMethodInsn(INVOKEVIRTUAL, interName, method.getName(), "(" + reqDesc + respDesc + ")V", false);
-            mv.visitInsn(RETURN);
-            Label label2 = new Label();
-            mv.visitLabel(label2);
-            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
-            mv.visitLocalVariable("req", reqDesc, null, label0, label2, 1);
-            mv.visitLocalVariable("resp", respDesc, null, label0, label2, 2);
-            mv.visitMaxs(3, 3);
-            mv.visitEnd();
-        }
-        {
-            mv = cw.visitMethod(
-                    ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC,
+        final ClassDesc dynDesc = ClassDesc.ofInternalName(newDynName);
+        final MethodTypeDesc executeDesc = MethodTypeDesc.of(CD_void, reqDesc, respDesc);
+        final ClassDesc ioExceptionDesc = ClassDesc.ofDescriptor(IOException.class.descriptorString());
+        byte[] bytes = ClassFile.of().build(dynDesc, cb -> {
+            cb.withVersion(JAVA_11_VERSION, 0)
+                    .withFlags(ACC_PUBLIC | ACC_FINAL | ACC_SUPER)
+                    .withSuperclass(superDesc);
+            cb.withField(factfield, servletDesc, ACC_PUBLIC);
+            cb.withMethodBody(
+                    "<init>",
+                    MethodTypeDesc.of(CD_void),
+                    ACC_PUBLIC,
+                    code -> code.aload(0)
+                            .invokespecial(superDesc, "<init>", MethodTypeDesc.of(CD_void))
+                            .return_());
+            cb.withMethod("execute", executeDesc, ACC_PUBLIC, mb -> {
+                mb.with(ExceptionsAttribute.ofSymbols(ioExceptionDesc));
+                mb.withCode(code -> {
+                    code.aload(0)
+                            .getfield(dynDesc, factfield, servletDesc)
+                            .aload(1)
+                            .aload(2)
+                            .invokevirtual(servletDesc, method.getName(), executeDesc)
+                            .return_();
+                    code.localVariable(0, "this", dynDesc, code.startLabel(), code.endLabel());
+                    code.localVariable(1, "req", reqDesc, code.startLabel(), code.endLabel());
+                    code.localVariable(2, "resp", respDesc, code.startLabel(), code.endLabel());
+                });
+            });
+            cb.withMethod(
                     "execute",
-                    "(" + requestSupDesc + responseSupDesc + ")V",
-                    null,
-                    new String[] {"java/io/IOException"});
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitTypeInsn(CHECKCAST, HttpRequest.class.getName().replace('.', '/'));
-            mv.visitVarInsn(ALOAD, 2);
-            mv.visitTypeInsn(CHECKCAST, HttpResponse.class.getName().replace('.', '/'));
-            mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "execute", "(" + reqDesc + respDesc + ")V", false);
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(3, 3);
-            mv.visitEnd();
-        }
-        cw.visitEnd();
+                    MethodTypeDesc.of(CD_void, requestSupDesc, responseSupDesc),
+                    ACC_PUBLIC | ACC_BRIDGE | ACC_SYNTHETIC,
+                    mb -> {
+                        mb.with(ExceptionsAttribute.ofSymbols(ioExceptionDesc));
+                        mb.withCode(code -> code.aload(0)
+                                .aload(1)
+                                .checkcast(reqDesc)
+                                .aload(2)
+                                .checkcast(respDesc)
+                                .invokevirtual(dynDesc, "execute", executeDesc)
+                                .return_());
+                    });
+        });
         // ------------------------------------------------------------------------------
-        byte[] bytes = cw.toByteArray();
         Class<?> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {

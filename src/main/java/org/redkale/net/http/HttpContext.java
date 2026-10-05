@@ -5,13 +5,17 @@
  */
 package org.redkale.net.http;
 
-import static org.redkale.asm.Opcodes.*;
+import static java.lang.classfile.ClassFile.*;
+import static java.lang.constant.ConstantDescs.*;
 
+import java.lang.classfile.*;
+import java.lang.classfile.attribute.RuntimeVisibleAnnotationsAttribute;
+import java.lang.constant.*;
+import java.lang.invoke.MethodType;
 import java.nio.channels.CompletionHandler;
 import java.security.SecureRandom;
 import java.util.concurrent.ConcurrentHashMap;
 import org.redkale.annotation.ConstructorParameters;
-import org.redkale.asm.*;
 import org.redkale.net.*;
 import org.redkale.net.Context.ContextConfig;
 import org.redkale.util.*;
@@ -103,10 +107,9 @@ public class HttpContext extends Context {
         // 生成规则与SncpAsyncHandler.Factory 很类似
         // -------------------------------------------------------------
         final boolean handlerinterface = handlerClass.isInterface();
-        final String cpDesc = Type.getDescriptor(ConstructorParameters.class);
-        final String handlerClassName = handlerClass.getName().replace('.', '/');
-        final String handlerName = CompletionHandler.class.getName().replace('.', '/');
-        final String handlerDesc = Type.getDescriptor(CompletionHandler.class);
+        final ClassDesc cpDesc = ClassDesc.ofDescriptor(ConstructorParameters.class.descriptorString());
+        final ClassDesc handlerClassDesc = ClassDesc.ofDescriptor(handlerClass.descriptorString());
+        final ClassDesc handlerDesc = ClassDesc.ofDescriptor(CompletionHandler.class.descriptorString());
         final String newDynName = "org/redkaledyn/http/handler/_DynHttpAsyncHandler__"
                 + handlerClass.getName().replace('.', '/').replace('$', '_');
         RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
@@ -116,108 +119,66 @@ public class HttpContext extends Context {
             // do nothing
         }
         // ------------------------------------------------------------------------------
-        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-        FieldVisitor fv;
-        MethodDebugVisitor mv;
-        AnnotationVisitor av0;
-        cw.visit(
-                V11,
-                ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
-                newDynName,
-                null,
-                handlerinterface ? "java/lang/Object" : handlerClassName,
-                handlerinterface ? new String[] {handlerClassName} : new String[] {handlerName});
-
-        { // handler 属性
-            fv = cw.visitField(ACC_PRIVATE, "handler", handlerDesc, null, null);
-            fv.visitEnd();
-        }
-        { // 构造方法
-            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "(" + handlerDesc + ")V", null, null));
-            // mv.setDebug(true);
-            Label label0 = new Label();
-            mv.visitLabel(label0);
-            {
-                av0 = mv.visitAnnotation(cpDesc, true);
-                {
-                    AnnotationVisitor av1 = av0.visitArray("value");
-                    av1.visit(null, "handler");
-                    av1.visitEnd();
+        final ClassDesc dynDesc = ClassDesc.ofInternalName(newDynName);
+        final ClassDesc superDesc = handlerinterface ? CD_Object : handlerClassDesc;
+        byte[] bytes = ClassFile.of().build(dynDesc, cb -> {
+            cb.withVersion(JAVA_11_VERSION, 0)
+                    .withFlags(ACC_PUBLIC | ACC_FINAL | ACC_SUPER)
+                    .withSuperclass(superDesc)
+                    .withInterfaceSymbols(handlerinterface ? handlerClassDesc : handlerDesc);
+            cb.withField("handler", handlerDesc, ACC_PRIVATE);
+            cb.withMethod("<init>", MethodTypeDesc.of(CD_void, handlerDesc), ACC_PUBLIC, mb -> {
+                mb.with(RuntimeVisibleAnnotationsAttribute.of(Annotation.of(
+                        cpDesc, AnnotationElement.ofArray("value", AnnotationValue.ofString("handler")))));
+                mb.withCode(code -> {
+                    code.aload(0)
+                            .invokespecial(superDesc, "<init>", MethodTypeDesc.of(CD_void))
+                            .aload(0)
+                            .aload(1)
+                            .putfield(dynDesc, "handler", handlerDesc)
+                            .return_();
+                    code.localVariable(0, "this", dynDesc, code.startLabel(), code.endLabel());
+                    code.localVariable(1, "handler", handlerDesc, code.startLabel(), code.endLabel());
+                });
+            });
+            for (java.lang.reflect.Method method : handlerClass.getMethods()) {
+                final MethodTypeDesc methodDesc = MethodTypeDesc.ofDescriptor(MethodType.methodType(
+                                method.getReturnType(), method.getParameterTypes())
+                        .descriptorString());
+                if (("completed".equals(method.getName()) || "failed".equals(method.getName()))
+                        && method.getParameterCount() == 2) {
+                    cb.withMethodBody(method.getName(), methodDesc, ACC_PUBLIC, code -> code.aload(0)
+                            .getfield(dynDesc, "handler", handlerDesc)
+                            .aload(1)
+                            .aload(2)
+                            .invokeinterface(
+                                    handlerDesc,
+                                    method.getName(),
+                                    MethodTypeDesc.of(
+                                            CD_void,
+                                            "completed".equals(method.getName()) ? CD_Object : CD_Throwable,
+                                            CD_Object))
+                            .return_());
+                } else if (handlerinterface || java.lang.reflect.Modifier.isAbstract(method.getModifiers())) {
+                    cb.withMethodBody(method.getName(), methodDesc, ACC_PUBLIC, code -> {
+                        Class returnType = method.getReturnType();
+                        if (returnType == void.class) {
+                            code.return_();
+                        } else if (returnType == long.class) {
+                            code.lconst_0().lreturn();
+                        } else if (returnType == float.class) {
+                            code.fconst_0().freturn();
+                        } else if (returnType == double.class) {
+                            code.dconst_0().dreturn();
+                        } else if (returnType.isPrimitive()) {
+                            code.iconst_0().ireturn();
+                        } else {
+                            code.aconst_null().areturn();
+                        }
+                    });
                 }
-                av0.visitEnd();
             }
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(
-                    INVOKESPECIAL, handlerinterface ? "java/lang/Object" : handlerClassName, "<init>", "()V", false);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitFieldInsn(PUTFIELD, newDynName, "handler", handlerDesc);
-            mv.visitInsn(RETURN);
-            Label label2 = new Label();
-            mv.visitLabel(label2);
-            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
-            mv.visitLocalVariable("handler", handlerDesc, null, label0, label2, 1);
-            mv.visitMaxs(2, 2);
-            mv.visitEnd();
-        }
-
-        for (java.lang.reflect.Method method : handlerClass.getMethods()) { //
-            if ("completed".equals(method.getName()) && method.getParameterCount() == 2) {
-                mv = new MethodDebugVisitor(
-                        cw.visitMethod(ACC_PUBLIC, "completed", Type.getMethodDescriptor(method), null, null));
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, "handler", handlerDesc);
-                mv.visitVarInsn(ALOAD, 1);
-                mv.visitVarInsn(ALOAD, 2);
-                mv.visitMethodInsn(
-                        INVOKEINTERFACE, handlerName, "completed", "(Ljava/lang/Object;Ljava/lang/Object;)V", true);
-                mv.visitInsn(RETURN);
-                mv.visitMaxs(3, 3);
-                mv.visitEnd();
-            } else if ("failed".equals(method.getName()) && method.getParameterCount() == 2) {
-                mv = new MethodDebugVisitor(
-                        cw.visitMethod(ACC_PUBLIC, "failed", Type.getMethodDescriptor(method), null, null));
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitFieldInsn(GETFIELD, newDynName, "handler", handlerDesc);
-                mv.visitVarInsn(ALOAD, 1);
-                mv.visitVarInsn(ALOAD, 2);
-                mv.visitMethodInsn(
-                        INVOKEINTERFACE, handlerName, "failed", "(Ljava/lang/Throwable;Ljava/lang/Object;)V", true);
-                mv.visitInsn(RETURN);
-                mv.visitMaxs(3, 3);
-                mv.visitEnd();
-            } else if (handlerinterface || java.lang.reflect.Modifier.isAbstract(method.getModifiers())) {
-                mv = new MethodDebugVisitor(
-                        cw.visitMethod(ACC_PUBLIC, method.getName(), Type.getMethodDescriptor(method), null, null));
-                Class returnType = method.getReturnType();
-                if (returnType == void.class) {
-                    mv.visitInsn(RETURN);
-                    mv.visitMaxs(0, 1);
-                } else if (returnType.isPrimitive()) {
-                    mv.visitInsn(ICONST_0);
-                    if (returnType == long.class) {
-                        mv.visitInsn(LRETURN);
-                        mv.visitMaxs(2, 1);
-                    } else if (returnType == float.class) {
-                        mv.visitInsn(FRETURN);
-                        mv.visitMaxs(2, 1);
-                    } else if (returnType == double.class) {
-                        mv.visitInsn(DRETURN);
-                        mv.visitMaxs(2, 1);
-                    } else {
-                        mv.visitInsn(IRETURN);
-                        mv.visitMaxs(1, 1);
-                    }
-                } else {
-                    mv.visitInsn(ACONST_NULL);
-                    mv.visitInsn(ARETURN);
-                    mv.visitMaxs(1, 1);
-                }
-                mv.visitEnd();
-            }
-        }
-        cw.visitEnd();
-        byte[] bytes = cw.toByteArray();
+        });
         Class<CompletionHandler> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
         return (Creator<H>) Creator.create(newClazz);
     }
