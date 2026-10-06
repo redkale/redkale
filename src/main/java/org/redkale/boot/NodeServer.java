@@ -395,9 +395,7 @@ public abstract class NodeServer {
             localServices.forEach(y -> {
                 String serstr = Sncp.toSimpleString(y, maxNameLength, maxTypeLength);
                 if (slist != null) {
-                    slist.add(serstr +
-                            " load" +
-                            LINE_SEPARATOR);
+                    slist.add(serstr + " load" + LINE_SEPARATOR);
                 }
             });
         } else {
@@ -409,12 +407,11 @@ public abstract class NodeServer {
                 long e = System.currentTimeMillis() - s;
                 if (slist != null) {
                     String serstr = Sncp.toSimpleString(y, maxNameLength, maxTypeLength);
-                    slist.add(serstr +
-                            " load and init in " +
-                            (e < 10 ? "  " : (e < 100 ? " " : "")) +
-                            e +
-                            " ms" +
-                            LINE_SEPARATOR);
+                    slist.add(serstr + " load and init in "
+                            + (e < 10 ? "  " : (e < 100 ? " " : ""))
+                            + e
+                            + " ms"
+                            + LINE_SEPARATOR);
                 }
             });
             localServices.forEach(y -> {
@@ -424,12 +421,11 @@ public abstract class NodeServer {
                     long e = System.currentTimeMillis() - s;
                     if (rs && slist != null) {
                         String serstr = Sncp.toSimpleString(y, maxNameLength, maxTypeLength);
-                        slist.add(serstr +
-                                " component-start in " +
-                                (e < 10 ? "  " : (e < 100 ? " " : "")) +
-                                e +
-                                " ms" +
-                                LINE_SEPARATOR);
+                        slist.add(serstr + " component-start in "
+                                + (e < 10 ? "  " : (e < 100 ? " " : ""))
+                                + e
+                                + " ms"
+                                + LINE_SEPARATOR);
                     }
                 }
             });
