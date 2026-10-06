@@ -392,18 +392,16 @@ public abstract class NodeServer {
         long preinite = System.currentTimeMillis() - preinits;
         final List<String> slist = sb == null ? null : new CopyOnWriteArrayList<>();
         if (application.isCompileMode()) {
-            localServices.stream().forEach(y -> {
+            localServices.forEach(y -> {
                 String serstr = Sncp.toSimpleString(y, maxNameLength, maxTypeLength);
                 if (slist != null) {
-                    slist.add(new StringBuilder()
-                            .append(serstr)
-                            .append(" load")
-                            .append(LINE_SEPARATOR)
-                            .toString());
+                    slist.add(serstr +
+                            " load" +
+                            LINE_SEPARATOR);
                 }
             });
         } else {
-            localServices.stream().forEach(y -> {
+            localServices.forEach(y -> {
                 long s = System.currentTimeMillis();
                 application.onServicePreInit(this, y);
                 y.init(Sncp.getResourceConf(y));
@@ -411,31 +409,27 @@ public abstract class NodeServer {
                 long e = System.currentTimeMillis() - s;
                 if (slist != null) {
                     String serstr = Sncp.toSimpleString(y, maxNameLength, maxTypeLength);
-                    slist.add(new StringBuilder()
-                            .append(serstr)
-                            .append(" load and init in ")
-                            .append(e < 10 ? "  " : (e < 100 ? " " : ""))
-                            .append(e)
-                            .append(" ms")
-                            .append(LINE_SEPARATOR)
-                            .toString());
+                    slist.add(serstr +
+                            " load and init in " +
+                            (e < 10 ? "  " : (e < 100 ? " " : "")) +
+                            e +
+                            " ms" +
+                            LINE_SEPARATOR);
                 }
             });
-            localServices.stream().forEach(y -> {
+            localServices.forEach(y -> {
                 if (Sncp.isComponent(y)) {
                     long s = System.currentTimeMillis();
                     boolean rs = interceptComponent(y);
                     long e = System.currentTimeMillis() - s;
                     if (rs && slist != null) {
                         String serstr = Sncp.toSimpleString(y, maxNameLength, maxTypeLength);
-                        slist.add(new StringBuilder()
-                                .append(serstr)
-                                .append(" component-start in ")
-                                .append(e < 10 ? "  " : (e < 100 ? " " : ""))
-                                .append(e)
-                                .append(" ms")
-                                .append(LINE_SEPARATOR)
-                                .toString());
+                        slist.add(serstr +
+                                " component-start in " +
+                                (e < 10 ? "  " : (e < 100 ? " " : "")) +
+                                e +
+                                " ms" +
+                                LINE_SEPARATOR);
                     }
                 }
             });
