@@ -164,7 +164,9 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
                                         CD_void, ClassDesc.ofDescriptor(Writer.class.descriptorString()), CD_Object))
                         .return_();
                 code.labelBinding(noExtFunc);
-                code.aload(1).loadConstant((int) '{').invokevirtual(writerDesc, "writeTo", MethodTypeDesc.of(CD_void, CD_byte));
+                code.aload(1)
+                        .loadConstant((int) '{')
+                        .invokevirtual(writerDesc, "writeTo", MethodTypeDesc.of(CD_void, CD_byte));
                 Class firstType = readGetSetFieldType(elements.get(0));
                 final boolean trackComma = elements.size() > 1
                         && !ConvertFactory.checkNullableFeature(features)
@@ -175,12 +177,16 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
                 }
                 Label byteMode = code.newLabel();
                 Label end = code.newLabel();
-                code.aload(1).invokevirtual(writerDesc, "charsMode", MethodTypeDesc.of(CD_boolean)).ifeq(byteMode);
+                code.aload(1)
+                        .invokevirtual(writerDesc, "charsMode", MethodTypeDesc.of(CD_boolean))
+                        .ifeq(byteMode);
                 dynConvertToMethod(clazz, dynDesc, code, factory, mixedNames, elements, trackComma, true);
                 code.goto_(end).labelBinding(byteMode);
                 dynConvertToMethod(clazz, dynDesc, code, factory, mixedNames, elements, trackComma, false);
                 code.labelBinding(end);
-                code.aload(1).loadConstant((int) '}').invokevirtual(writerDesc, "writeTo", MethodTypeDesc.of(CD_void, CD_byte));
+                code.aload(1)
+                        .loadConstant((int) '}')
+                        .invokevirtual(writerDesc, "writeTo", MethodTypeDesc.of(CD_void, CD_byte));
                 code.return_();
             });
             cb.withMethodBody(
@@ -445,7 +451,8 @@ public abstract class JsonDynEncoder<T> extends ObjectEncoder<JsonWriter, T> {
                 writeFieldName = "writeFieldDoubleValue";
             } else if (fieldType == String.class) {
                 writeFieldName = isConvertStandardString(factory, element)
-                        ? "writeFieldStandardStringValue" : "writeFieldStringValue";
+                        ? "writeFieldStandardStringValue"
+                        : "writeFieldStringValue";
             } else {
                 writeFieldName = "writeFieldObjectValue";
             }

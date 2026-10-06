@@ -403,7 +403,13 @@ public abstract class SncpActionServlet extends SncpServlet {
                         .withFlags(ACC_PUBLIC | ACC_FINAL | ACC_SUPER)
                         .withSuperclass(superDesc);
                 cb.withMethodBody("<init>", constructorDesc, ACC_PUBLIC, code -> {
-                    code.aload(0).aload(1).aload(2).aload(3).aload(4).aload(5).aload(6)
+                    code.aload(0)
+                            .aload(1)
+                            .aload(2)
+                            .aload(3)
+                            .aload(4)
+                            .aload(5)
+                            .aload(6)
                             .invokespecial(superDesc, "<init>", constructorDesc)
                             .return_();
                     code.localVariable(0, "this", dynDesc, code.startLabel(), code.endLabel());
@@ -419,9 +425,11 @@ public abstract class SncpActionServlet extends SncpServlet {
                     mb.withCode(code -> {
                         int convertSlot = code.allocateLocal(TypeKind.REFERENCE);
                         int readerSlot = code.allocateLocal(TypeKind.REFERENCE);
-                        code.aload(1).invokevirtual(requestDesc, "getConvert", MethodTypeDesc.of(convertDesc))
+                        code.aload(1)
+                                .invokevirtual(requestDesc, "getConvert", MethodTypeDesc.of(convertDesc))
                                 .astore(convertSlot);
-                        code.aload(1).invokevirtual(requestDesc, "getReader", MethodTypeDesc.of(readerDesc))
+                        code.aload(1)
+                                .invokevirtual(requestDesc, "getReader", MethodTypeDesc.of(readerDesc))
                                 .astore(readerSlot);
                         if (paramComposeBeanType == null) {
                             int[] paramSlots = new int[paramClasses.length];
@@ -432,22 +440,34 @@ public abstract class SncpActionServlet extends SncpServlet {
                                 paramSlots[i] = code.allocateLocal(kind);
                                 if (CompletionHandler.class.isAssignableFrom(paramClass)) {
                                     code.aload(2)
-                                            .invokevirtual(responseDesc, "getParamAsyncHandler", MethodTypeDesc.of(handlerDesc))
+                                            .invokevirtual(
+                                                    responseDesc,
+                                                    "getParamAsyncHandler",
+                                                    MethodTypeDesc.of(handlerDesc))
                                             .checkcast(paramDesc)
                                             .astore(paramSlots[i]);
                                     // 消费请求中的CompletionHandler占位参数
-                                    code.aload(convertSlot).loadConstant(handlerDesc).aload(readerSlot)
-                                            .invokevirtual(convertDesc, "convertFrom", convertFromDesc).pop();
+                                    code.aload(convertSlot)
+                                            .loadConstant(handlerDesc)
+                                            .aload(readerSlot)
+                                            .invokevirtual(convertDesc, "convertFrom", convertFromDesc)
+                                            .pop();
                                 } else {
-                                    code.aload(convertSlot).aload(0)
+                                    code.aload(convertSlot)
+                                            .aload(0)
                                             .getfield(dynDesc, "paramTypes", reflectTypeDesc.arrayType())
-                                            .loadConstant(i + 1).aaload().aload(readerSlot)
+                                            .loadConstant(i + 1)
+                                            .aaload()
+                                            .aload(readerSlot)
                                             .invokevirtual(convertDesc, "convertFrom", convertFromDesc);
                                     if (paramClass.isPrimitive()) {
-                                        ClassDesc wrapperDesc = ClassDesc.ofDescriptor(
-                                                TypeToken.primitiveToWrapper(paramClass).descriptorString());
+                                        ClassDesc wrapperDesc =
+                                                ClassDesc.ofDescriptor(TypeToken.primitiveToWrapper(paramClass)
+                                                        .descriptorString());
                                         code.checkcast(wrapperDesc)
-                                                .invokevirtual(wrapperDesc, paramClass.getSimpleName() + "Value",
+                                                .invokevirtual(
+                                                        wrapperDesc,
+                                                        paramClass.getSimpleName() + "Value",
                                                         MethodTypeDesc.of(paramDesc));
                                     } else {
                                         code.checkcast(paramDesc);
@@ -455,7 +475,8 @@ public abstract class SncpActionServlet extends SncpServlet {
                                     code.storeLocal(kind, paramSlots[i]);
                                 }
                             }
-                            code.aload(0).invokevirtual(dynDesc, "service", MethodTypeDesc.of(serviceDesc))
+                            code.aload(0)
+                                    .invokevirtual(dynDesc, "service", MethodTypeDesc.of(serviceDesc))
                                     .checkcast(serviceImplDesc);
                             for (int i = 0; i < paramClasses.length; i++) {
                                 code.loadLocal(TypeKind.from(paramClasses[i]), paramSlots[i]);
@@ -465,21 +486,29 @@ public abstract class SncpActionServlet extends SncpServlet {
                             ClassDesc beanDesc = ClassDesc.ofDescriptor(
                                     TypeToken.typeToClass(paramComposeBeanType).descriptorString());
                             int beanSlot = code.allocateLocal(TypeKind.REFERENCE);
-                            code.aload(convertSlot).aload(0)
+                            code.aload(convertSlot)
+                                    .aload(0)
                                     .getfield(dynDesc, "paramComposeBeanType", reflectTypeDesc)
                                     .aload(readerSlot)
                                     .invokevirtual(convertDesc, "convertFrom", convertFromDesc)
-                                    .checkcast(beanDesc).astore(beanSlot);
+                                    .checkcast(beanDesc)
+                                    .astore(beanSlot);
                             if (handlerIndex >= 0) {
-                                code.aload(beanSlot).aload(2)
-                                        .invokevirtual(responseDesc, "getParamAsyncHandler", MethodTypeDesc.of(handlerDesc))
+                                code.aload(beanSlot)
+                                        .aload(2)
+                                        .invokevirtual(
+                                                responseDesc, "getParamAsyncHandler", MethodTypeDesc.of(handlerDesc))
                                         .putfield(beanDesc, "arg" + (handlerIndex + 1), handlerDesc);
                             }
-                            code.aload(0).invokevirtual(dynDesc, "service", MethodTypeDesc.of(serviceDesc))
+                            code.aload(0)
+                                    .invokevirtual(dynDesc, "service", MethodTypeDesc.of(serviceDesc))
                                     .checkcast(serviceImplDesc);
                             for (int i = 0; i < paramClasses.length; i++) {
-                                code.aload(beanSlot).getfield(beanDesc, "arg" + (i + 1),
-                                        ClassDesc.ofDescriptor(paramClasses[i].descriptorString()));
+                                code.aload(beanSlot)
+                                        .getfield(
+                                                beanDesc,
+                                                "arg" + (i + 1),
+                                                ClassDesc.ofDescriptor(paramClasses[i].descriptorString()));
                             }
                         }
                         if (serviceImplClass.isInterface()) {
@@ -492,22 +521,34 @@ public abstract class SncpActionServlet extends SncpServlet {
                             code.aload(2).invokevirtual(responseDesc, "finishVoid", MethodTypeDesc.of(CD_void));
                         } else {
                             if (returnClass.isPrimitive()) {
-                                ClassDesc wrapperDesc = ClassDesc.ofDescriptor(
-                                        TypeToken.primitiveToWrapper(returnClass).descriptorString());
-                                code.invokestatic(wrapperDesc, "valueOf",
+                                ClassDesc wrapperDesc = ClassDesc.ofDescriptor(TypeToken.primitiveToWrapper(returnClass)
+                                        .descriptorString());
+                                code.invokestatic(
+                                        wrapperDesc,
+                                        "valueOf",
                                         MethodTypeDesc.of(wrapperDesc, serviceMethodDesc.returnType()));
                             }
                             int resultSlot = code.allocateLocal(TypeKind.REFERENCE);
                             code.astore(resultSlot);
                             if (boolReturnTypeFuture) {
-                                code.aload(2).aload(0).getfield(dynDesc, "returnFutureType", reflectTypeDesc)
-                                        .aload(resultSlot).invokevirtual(responseDesc, "finishFuture",
+                                code.aload(2)
+                                        .aload(0)
+                                        .getfield(dynDesc, "returnFutureType", reflectTypeDesc)
+                                        .aload(resultSlot)
+                                        .invokevirtual(
+                                                responseDesc,
+                                                "finishFuture",
                                                 MethodTypeDesc.of(CD_void, reflectTypeDesc, futureDesc));
                             } else if (handlerIndex >= 0) {
                                 code.aload(2).invokevirtual(responseDesc, "finishVoid", MethodTypeDesc.of(CD_void));
                             } else {
-                                code.aload(2).aload(0).getfield(dynDesc, "returnObjectType", reflectTypeDesc)
-                                        .aload(resultSlot).invokevirtual(responseDesc, "finish",
+                                code.aload(2)
+                                        .aload(0)
+                                        .getfield(dynDesc, "returnObjectType", reflectTypeDesc)
+                                        .aload(resultSlot)
+                                        .invokevirtual(
+                                                responseDesc,
+                                                "finish",
                                                 MethodTypeDesc.of(CD_void, reflectTypeDesc, CD_Object));
                             }
                         }

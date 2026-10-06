@@ -142,23 +142,27 @@ public class HttpContext extends Context {
                 });
             });
             for (java.lang.reflect.Method method : handlerClass.getMethods()) {
-                final MethodTypeDesc methodDesc = MethodTypeDesc.ofDescriptor(MethodType.methodType(
-                                method.getReturnType(), method.getParameterTypes())
-                        .descriptorString());
+                final MethodTypeDesc methodDesc = MethodTypeDesc.ofDescriptor(
+                        MethodType.methodType(method.getReturnType(), method.getParameterTypes())
+                                .descriptorString());
                 if (("completed".equals(method.getName()) || "failed".equals(method.getName()))
                         && method.getParameterCount() == 2) {
-                    cb.withMethodBody(method.getName(), methodDesc, ACC_PUBLIC, code -> code.aload(0)
-                            .getfield(dynDesc, "handler", handlerDesc)
-                            .aload(1)
-                            .aload(2)
-                            .invokeinterface(
-                                    handlerDesc,
-                                    method.getName(),
-                                    MethodTypeDesc.of(
-                                            CD_void,
-                                            "completed".equals(method.getName()) ? CD_Object : CD_Throwable,
-                                            CD_Object))
-                            .return_());
+                    cb.withMethodBody(
+                            method.getName(),
+                            methodDesc,
+                            ACC_PUBLIC,
+                            code -> code.aload(0)
+                                    .getfield(dynDesc, "handler", handlerDesc)
+                                    .aload(1)
+                                    .aload(2)
+                                    .invokeinterface(
+                                            handlerDesc,
+                                            method.getName(),
+                                            MethodTypeDesc.of(
+                                                    CD_void,
+                                                    "completed".equals(method.getName()) ? CD_Object : CD_Throwable,
+                                                    CD_Object))
+                                    .return_());
                 } else if (handlerinterface || java.lang.reflect.Modifier.isAbstract(method.getModifiers())) {
                     cb.withMethodBody(method.getName(), methodDesc, ACC_PUBLIC, code -> {
                         Class returnType = method.getReturnType();
