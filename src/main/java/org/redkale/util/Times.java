@@ -79,6 +79,16 @@ public final class Times {
     }
 
     /**
+     * 将指定时间格式化为 yyyy-MM-dd HH:mm:ss
+     *
+     * @param time 待格式化的时间
+     * @return 格式为yyyy-MM-dd HH:mm:ss的时间值
+     */
+    public static String formatTime(Instant time) {
+        return formatTime(time.toEpochMilli());
+    }
+
+    /**
      * 将时间值转换为长度为9的36进制值
      *
      * @param time 时间值
