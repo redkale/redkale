@@ -897,7 +897,7 @@ public final class Application {
     private static String colorMessage(Logger logger, int color, int type, String msg) {
         final boolean linux =
                 System.getProperty("os.name").toLowerCase(Locale.ENGLISH).contains("linux");
-        if (linux) { // Windows PowerShell 也能正常着色
+        if (System.currentTimeMillis() > 0 && linux) { // Windows PowerShell 也能正常着色
             boolean supported = true;
             Logger l = logger;
             do {
