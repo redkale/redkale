@@ -110,7 +110,7 @@ public class ScheduleManagerService implements ScheduledManager, Service {
                 this.propertyFunc = func;
             }
             this.scheduler = new ScheduledThreadPoolExecutor(
-                    Utility.cpus(), Utility.newThreadFactory("Redkale-Scheduled-Task-Thread-%s"));
+                    Utility.cpus(), Utility.newThreadFactory("Redkale-Scheduled-Task-Thread"));
             this.scheduler.setRemoveOnCancelPolicy(true);
         }
     }
