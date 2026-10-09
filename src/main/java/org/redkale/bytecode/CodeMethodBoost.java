@@ -227,11 +227,13 @@ public abstract class CodeMethodBoost<T> {
         List<Integer> insns = new ArrayList<>();
         for (Class pt : paramTypes) {
             insn++;
+            // 调试信息记录参数的起始槽位；long/double 的第二个槽位不能作为起点。
+            insns.add(insn);
             if (pt.isPrimitive()) {
                 if (pt == long.class) {
                     mv.visitVarInsn(LLOAD, insn++);
                 } else if (pt == float.class) {
-                    mv.visitVarInsn(FLOAD, insn++);
+                    mv.visitVarInsn(FLOAD, insn);
                 } else if (pt == double.class) {
                     mv.visitVarInsn(DLOAD, insn++);
                 } else {
@@ -240,7 +242,6 @@ public abstract class CodeMethodBoost<T> {
             } else {
                 mv.visitVarInsn(ALOAD, insn);
             }
-            insns.add(insn);
         }
         return insns;
     }
@@ -411,9 +412,17 @@ public abstract class CodeMethodBoost<T> {
             List<CodeMethodParam> paramList = bean.getParams();
             methodBeanMap.put(key, bean);
             return new MethodVisitor(Opcodes.ASM6) {
+                private final Type[] parameterTypes = Type.getArgumentTypes(methodDesc);
+                private int parameterIndex;
+
                 @Override
                 public void visitParameter(String paramName, int paramAccess) {
                     paramList.add(new CodeMethodParam(paramName));
+                    // MethodParameters 按参数计数，LocalVariableTable 按槽位计数。
+                    // 保留宽参数的空槽，避免后续局部变量信息覆盖错误的参数名。
+                    if (parameterTypes[parameterIndex++].getSize() == 2) {
+                        paramList.add(new CodeMethodParam(" "));
+                    }
                 }
 
                 @Override

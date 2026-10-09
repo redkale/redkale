@@ -122,29 +122,33 @@ public class CachedCodeMethodBoost extends CodeMethodBoost {
                 new Handle(Opcodes.H_INVOKESPECIAL, newDynName, "lambda$" + actionIndex, methodBean.getDesc(), false),
                 org.redkale.asm.Type.getType("()" + Type.getDescriptor(method.getReturnType()))
             });
-            mv.visitVarInsn(ASTORE, 1 + method.getParameterCount());
+            // 参数个数不等于槽位数：long/double 占两个槽位，其他参数占一个。
+            int supplierSlot = 1;
+            for (Class<?> pt : method.getParameterTypes()) {
+                supplierSlot += Type.getType(pt).getSize();
+            }
+            mv.visitVarInsn(ASTORE, supplierSlot);
             Label l1 = new Label();
             mv.visitLabel(l1);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitFieldInsn(GETFIELD, newDynName, dynFieldName, Type.getDescriptor(CachedAction.class));
 
-            mv.visitVarInsn(ALOAD, 1 + method.getParameterCount());
+            mv.visitVarInsn(ALOAD, supplierSlot);
             ByteCodes.visitInsn(mv, method.getParameterCount());
             mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
-            int insn = 0;
             Class[] paramtypes = method.getParameterTypes();
             for (int j = 0; j < paramtypes.length; j++) {
                 final Class pt = paramtypes[j];
                 mv.visitInsn(DUP);
-                insn++;
+                int insn = insns.get(j);
                 ByteCodes.visitInsn(mv, j);
                 if (pt.isPrimitive()) {
                     if (pt == long.class) {
-                        mv.visitVarInsn(LLOAD, insn++);
+                        mv.visitVarInsn(LLOAD, insn);
                     } else if (pt == float.class) {
-                        mv.visitVarInsn(FLOAD, insn++);
+                        mv.visitVarInsn(FLOAD, insn);
                     } else if (pt == double.class) {
-                        mv.visitVarInsn(DLOAD, insn++);
+                        mv.visitVarInsn(DLOAD, insn);
                     } else {
                         mv.visitVarInsn(ILOAD, insn);
                     }
@@ -173,7 +177,8 @@ public class CachedCodeMethodBoost extends CodeMethodBoost {
             mv.visitLabel(l2);
             mv.visitLocalVariable("this", "L" + newDynName + ";", null, l0, l2, 0);
             visitParamTypesLocalVariable(mv, method, l0, l2, insns, methodBean);
-            mv.visitLocalVariable("_redkale_supplier", Type.getDescriptor(ThrowSupplier.class), null, l1, l2, ++insn);
+            mv.visitLocalVariable(
+                    "_redkale_supplier", Type.getDescriptor(ThrowSupplier.class), null, l1, l2, supplierSlot);
 
             mv.visitMaxs(20, 20);
             mv.visitEnd();

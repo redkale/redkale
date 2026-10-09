@@ -671,11 +671,12 @@ public abstract class Sncp {
                     int insn = 0;
                     for (Class pt : paramTypes) {
                         insn++;
+                        insns.add(insn);
                         if (pt.isPrimitive()) {
                             if (pt == long.class) {
                                 mv.visitVarInsn(LLOAD, insn++);
                             } else if (pt == float.class) {
-                                mv.visitVarInsn(FLOAD, insn++);
+                                mv.visitVarInsn(FLOAD, insn);
                             } else if (pt == double.class) {
                                 mv.visitVarInsn(DLOAD, insn++);
                             } else {
@@ -684,7 +685,6 @@ public abstract class Sncp {
                         } else {
                             mv.visitVarInsn(ALOAD, insn);
                         }
-                        insns.add(insn);
                     }
                     mv.visitMethodInsn(
                             INVOKESPECIAL, supDynName, method.getName(), Type.getMethodDescriptor(method), false);
