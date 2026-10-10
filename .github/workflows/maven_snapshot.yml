@@ -39,7 +39,7 @@ jobs:
     - name: Build with Maven  
       run: |
         cp -fr my/pom.xml pom.xml
-        mvn --batch-mode clean deploy -DskipTests=true
+        mvn --batch-mode clean deploy -DskipTests=true -Dmaven.repository.credentialScope=id
       env:
         CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
         CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
