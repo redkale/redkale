@@ -3,14 +3,18 @@
  */
 package org.redkale.net.sncp;
 
-import static org.redkale.asm.Opcodes.*;
+import static java.lang.classfile.ClassFile.*;
 
+import java.lang.classfile.AnnotationElement;
+import java.lang.classfile.AnnotationValue;
+import java.lang.classfile.ClassFile;
+import java.lang.classfile.attribute.*;
+import java.lang.constant.*;
 import java.lang.reflect.*;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import org.redkale.asm.*;
-import org.redkale.asm.Type;
+import org.redkale.bytecode.ByteCodes;
 import org.redkale.util.*;
 
 /**
@@ -49,10 +53,10 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                     final Class sncpHandlerClass = SncpAsyncHandler.class;
                     final String handlerClassName = handlerClass.getName().replace('.', '/');
                     final String sncpHandlerName = sncpHandlerClass.getName().replace('.', '/');
-                    final String cpDesc = Type.getDescriptor(org.redkale.annotation.ConstructorParameters.class);
+                    final String cpDesc = ByteCodes.descriptor(org.redkale.annotation.ConstructorParameters.class);
                     final String realHandlerName =
                             CompletionHandler.class.getName().replace('.', '/');
-                    final String realHandlerDesc = Type.getDescriptor(CompletionHandler.class);
+                    final String realHandlerDesc = ByteCodes.descriptor(CompletionHandler.class);
                     final String newDynName = "org/redkaledyn/sncp/handler/_Dyn" + sncpHandlerClass.getSimpleName()
                             + "__" + handlerClass.getName().replace('.', '/').replace('$', '_');
                     RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
@@ -63,149 +67,138 @@ public interface SncpAsyncHandler<V, A> extends CompletionHandler<V, A> {
                         // do nothing
                     }
                     // ------------------------------------------------------------------------------
-                    ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-                    FieldVisitor fv;
-                    MethodDebugVisitor mv;
-                    AnnotationVisitor av0;
-                    cw.visit(
-                            V11,
-                            ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
-                            newDynName,
-                            null,
-                            handlerInterface ? "java/lang/Object" : handlerClassName,
-                            handlerInterface && handlerClass != sncpHandlerClass
-                                    ? new String[] {handlerClassName, sncpHandlerName}
-                                    : new String[] {sncpHandlerName});
 
-                    { // handler 属性
-                        fv = cw.visitField(ACC_PRIVATE, "factHandler", realHandlerDesc, null, null);
-                        fv.visitEnd();
-                    }
-                    { // 构造方法
-                        mv = new MethodDebugVisitor(
-                                cw.visitMethod(ACC_PUBLIC, "<init>", "(" + realHandlerDesc + ")V", null, null));
-                        // mv.setDebug(true);
-                        {
-                            av0 = mv.visitAnnotation(cpDesc, true);
-                            {
-                                AnnotationVisitor av1 = av0.visitArray("value");
-                                av1.visit(null, "factHandler");
-                                av1.visitEnd();
-                            }
-                            av0.visitEnd();
+                    byte[] classBytes = ClassFile.of().build(ByteCodes.classDesc(newDynName), cw -> {
+                        cw.withVersion(JAVA_11_VERSION, 0)
+                                .withFlags(ACC_PUBLIC + ACC_FINAL + ACC_SUPER)
+                                .withSuperclass(
+                                        ByteCodes.classDesc(handlerInterface ? "java/lang/Object" : handlerClassName));
+
+                        cw.withInterfaceSymbols(Arrays.stream(
+                                        handlerInterface && handlerClass != sncpHandlerClass
+                                                ? new String[] {handlerClassName, sncpHandlerName}
+                                                : new String[] {sncpHandlerName})
+                                .map(ByteCodes::classDesc)
+                                .toList());
+
+                        { // handler 属性
+                            cw.withField("factHandler", ClassDesc.ofDescriptor(realHandlerDesc), ACC_PRIVATE);
                         }
-                        mv.visitVarInsn(ALOAD, 0);
-                        mv.visitMethodInsn(
-                                INVOKESPECIAL,
-                                handlerInterface ? "java/lang/Object" : handlerClassName,
-                                "<init>",
-                                "()V",
-                                false);
-                        mv.visitVarInsn(ALOAD, 0);
-                        mv.visitVarInsn(ALOAD, 1);
-                        mv.visitFieldInsn(PUTFIELD, newDynName, "factHandler", realHandlerDesc);
-                        mv.visitInsn(RETURN);
-                        mv.visitMaxs(2, 2);
-                        mv.visitEnd();
-                    }
-                    for (Method method : Sncp.loadNotImplMethods(handlerClass)) { //
-                        int mod = method.getModifiers();
-                        String methodDesc = Type.getMethodDescriptor(method);
-                        if (Modifier.isPublic(mod)
-                                && "completed".equals(method.getName())
-                                && method.getParameterCount() == 2) {
-                            mv = new MethodDebugVisitor(
-                                    cw.visitMethod(ACC_PUBLIC, "completed", methodDesc, null, null));
-                            mv.visitVarInsn(ALOAD, 0);
-                            mv.visitFieldInsn(GETFIELD, newDynName, "factHandler", realHandlerDesc);
-                            mv.visitVarInsn(ALOAD, 1);
-                            mv.visitVarInsn(ALOAD, 2);
-                            mv.visitMethodInsn(
-                                    INVOKEINTERFACE,
-                                    realHandlerName,
-                                    "completed",
-                                    "(Ljava/lang/Object;Ljava/lang/Object;)V",
-                                    true);
-                            mv.visitInsn(RETURN);
-                            mv.visitMaxs(3, 3);
-                            mv.visitEnd();
-                            //                    if (!"(Ljava/lang/Object;Ljava/lang/Object;)V".equals(methodDesc)) {
-                            //                        mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC + ACC_BRIDGE
-                            // + ACC_SYNTHETIC, "completed", "(Ljava/lang/Object;Ljava/lang/Object;)V", null, null));
-                            //                        mv.visitVarInsn(ALOAD, 0);
-                            //                        mv.visitVarInsn(ALOAD, 1);
-                            //                        mv.visitTypeInsn(CHECKCAST, "java/lang/Object");
-                            //                        mv.visitVarInsn(ALOAD, 2);
-                            //                        mv.visitTypeInsn(CHECKCAST, "java/lang/Object");
-                            //                        mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "completed",
-                            // methodDesc, false);
-                            //                        mv.visitInsn(RETURN);
-                            //                        mv.visitMaxs(3, 3);
-                            //                        mv.visitEnd();
-                            //                    }
-                        } else if (Modifier.isPublic(mod)
-                                && "failed".equals(method.getName())
-                                && method.getParameterCount() == 2) {
-                            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "failed", methodDesc, null, null));
-                            mv.visitVarInsn(ALOAD, 0);
-                            mv.visitFieldInsn(GETFIELD, newDynName, "factHandler", realHandlerDesc);
-                            mv.visitVarInsn(ALOAD, 1);
-                            mv.visitVarInsn(ALOAD, 2);
-                            mv.visitMethodInsn(
-                                    INVOKEINTERFACE,
-                                    realHandlerName,
-                                    "failed",
-                                    "(Ljava/lang/Throwable;Ljava/lang/Object;)V",
-                                    true);
-                            mv.visitInsn(RETURN);
-                            mv.visitMaxs(3, 3);
-                            mv.visitEnd();
-                            //                    if (!"(Ljava/lang/Throwable;Ljava/lang/Object;)V".equals(methodDesc))
-                            // {
-                            //                        mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC + ACC_BRIDGE
-                            // + ACC_SYNTHETIC, "failed", "(Ljava/lang/Throwable;Ljava/lang/Object;)V", null, null));
-                            //                        mv.visitVarInsn(ALOAD, 0);
-                            //                        mv.visitVarInsn(ALOAD, 1);
-                            //                        mv.visitVarInsn(ALOAD, 2);
-                            //                        mv.visitTypeInsn(CHECKCAST, "java/lang/Object");
-                            //                        mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "failed",
-                            // methodDesc, false);
-                            //                        mv.visitInsn(RETURN);
-                            //                        mv.visitMaxs(3, 3);
-                            //                        mv.visitEnd();
-                            //                    }
-                        } else if (handlerInterface || Modifier.isAbstract(mod)) {
-                            mv = new MethodDebugVisitor(cw.visitMethod(
-                                    ACC_PUBLIC, method.getName(), Type.getMethodDescriptor(method), null, null));
-                            Class returnType = method.getReturnType();
-                            if (returnType == void.class) {
-                                mv.visitInsn(RETURN);
-                                mv.visitMaxs(0, 1);
-                            } else if (returnType.isPrimitive()) {
-                                mv.visitInsn(ICONST_0);
-                                if (returnType == long.class) {
-                                    mv.visitInsn(LRETURN);
-                                    mv.visitMaxs(2, 1);
-                                } else if (returnType == float.class) {
-                                    mv.visitInsn(FRETURN);
-                                    mv.visitMaxs(2, 1);
-                                } else if (returnType == double.class) {
-                                    mv.visitInsn(DRETURN);
-                                    mv.visitMaxs(2, 1);
-                                } else {
-                                    mv.visitInsn(IRETURN);
-                                    mv.visitMaxs(1, 1);
-                                }
-                            } else {
-                                mv.visitInsn(ACONST_NULL);
-                                mv.visitInsn(ARETURN);
-                                mv.visitMaxs(1, 1);
-                            }
-                            mv.visitEnd();
+                        { // 构造方法
+                            cw.withMethod(
+                                    "<init>",
+                                    MethodTypeDesc.ofDescriptor("(" + realHandlerDesc + ")V"),
+                                    ACC_PUBLIC,
+                                    mb -> {
+                                        List<java.lang.classfile.Annotation> mvAnnotations = new ArrayList<>();
+                                        mb.withCode(mv -> {
+                                            {
+                                                {
+                                                    List<AnnotationElement> av0 = new ArrayList<>();
+                                                    {
+                                                        {
+                                                            List<AnnotationValue> av1 = new ArrayList<>();
+                                                            av1.add(ByteCodes.annotationValue("factHandler"));
+                                                            av0.add(AnnotationElement.of(
+                                                                    "value", AnnotationValue.ofArray(av1)));
+                                                        }
+                                                    }
+                                                    mvAnnotations.add(java.lang.classfile.Annotation.of(
+                                                            ClassDesc.ofDescriptor(cpDesc), av0));
+                                                }
+                                            }
+                                            mv.aload(0);
+                                            mv.invokespecial(
+                                                    ByteCodes.classDesc(
+                                                            handlerInterface ? "java/lang/Object" : handlerClassName),
+                                                    "<init>",
+                                                    MethodTypeDesc.ofDescriptor("()V"),
+                                                    false);
+                                            mv.aload(0);
+                                            mv.aload(1);
+                                            mv.putfield(
+                                                    ByteCodes.classDesc(newDynName),
+                                                    "factHandler",
+                                                    ClassDesc.ofDescriptor(realHandlerDesc));
+                                            mv.return_();
+                                        });
+                                        if (!mvAnnotations.isEmpty())
+                                            mb.with(RuntimeVisibleAnnotationsAttribute.of(mvAnnotations));
+                                    });
                         }
-                    }
-                    cw.visitEnd();
-                    byte[] bytes = cw.toByteArray();
+                        for (Method method : Sncp.loadNotImplMethods(handlerClass)) { //
+                            int mod = method.getModifiers();
+                            String methodDesc = ByteCodes.methodDescriptor(method);
+                            if (Modifier.isPublic(mod)
+                                    && "completed".equals(method.getName())
+                                    && method.getParameterCount() == 2) {
+                                cw.withMethodBody(
+                                        "completed", MethodTypeDesc.ofDescriptor(methodDesc), ACC_PUBLIC, mv -> {
+                                            mv.aload(0);
+                                            mv.getfield(
+                                                    ByteCodes.classDesc(newDynName),
+                                                    "factHandler",
+                                                    ClassDesc.ofDescriptor(realHandlerDesc));
+                                            mv.aload(1);
+                                            mv.aload(2);
+                                            mv.invokeinterface(
+                                                    ByteCodes.classDesc(realHandlerName),
+                                                    "completed",
+                                                    MethodTypeDesc.ofDescriptor(
+                                                            "(Ljava/lang/Object;Ljava/lang/Object;)V"));
+                                            mv.return_();
+                                        });
+
+                            } else if (Modifier.isPublic(mod)
+                                    && "failed".equals(method.getName())
+                                    && method.getParameterCount() == 2) {
+                                cw.withMethodBody("failed", MethodTypeDesc.ofDescriptor(methodDesc), ACC_PUBLIC, mv -> {
+                                    mv.aload(0);
+                                    mv.getfield(
+                                            ByteCodes.classDesc(newDynName),
+                                            "factHandler",
+                                            ClassDesc.ofDescriptor(realHandlerDesc));
+                                    mv.aload(1);
+                                    mv.aload(2);
+                                    mv.invokeinterface(
+                                            ByteCodes.classDesc(realHandlerName),
+                                            "failed",
+                                            MethodTypeDesc.ofDescriptor("(Ljava/lang/Throwable;Ljava/lang/Object;)V"));
+                                    mv.return_();
+                                });
+
+                            } else if (handlerInterface || Modifier.isAbstract(mod)) {
+                                cw.withMethodBody(
+                                        method.getName(),
+                                        MethodTypeDesc.ofDescriptor(ByteCodes.methodDescriptor(method)),
+                                        ACC_PUBLIC,
+                                        mv -> {
+                                            Class returnType = method.getReturnType();
+                                            if (returnType == void.class) {
+                                                mv.return_();
+
+                                            } else if (returnType.isPrimitive()) {
+                                                if (returnType == long.class) {
+                                                    mv.lconst_0().lreturn();
+
+                                                } else if (returnType == float.class) {
+                                                    mv.fconst_0().freturn();
+
+                                                } else if (returnType == double.class) {
+                                                    mv.dconst_0().dreturn();
+
+                                                } else {
+                                                    mv.iconst_0().ireturn();
+                                                }
+                                            } else {
+                                                mv.aconst_null();
+                                                mv.areturn();
+                                            }
+                                        });
+                            }
+                        }
+                    });
+                    byte[] bytes = classBytes;
                     Class newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
                     return (Creator<SncpAsyncHandler>) Creator.create(newClazz);
                 })

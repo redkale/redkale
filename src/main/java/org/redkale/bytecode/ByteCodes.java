@@ -1,232 +1,119 @@
 /*
- *
+ * Copyright (c) 2016-2116 Redkale
  */
 package org.redkale.bytecode;
 
-import static org.redkale.asm.Opcodes.BIPUSH;
-import static org.redkale.asm.Opcodes.CHECKCAST;
-import static org.redkale.asm.Opcodes.GETSTATIC;
-import static org.redkale.asm.Opcodes.ICONST_0;
-import static org.redkale.asm.Opcodes.INVOKESTATIC;
-import static org.redkale.asm.Opcodes.INVOKEVIRTUAL;
-import static org.redkale.asm.Opcodes.SIPUSH;
+import static java.lang.constant.ConstantDescs.*;
 
 import java.lang.annotation.Annotation;
+import java.lang.classfile.*;
+import java.lang.classfile.attribute.*;
+import java.lang.constant.*;
+import java.lang.invoke.MethodType;
+import java.lang.reflect.Array;
 import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.Set;
-import org.redkale.asm.*;
+import java.util.*;
 import org.redkale.util.RedkaleException;
+import org.redkale.util.TypeToken;
 
-/**
- * ASM简单的工具方法 <br>
- *
- * <p>详情见: https://redkale.org
- *
- * @author zhangjx
- * @since 2.8.0
- */
+/** Classfile utilities shared by dynamic code generators. */
 public final class ByteCodes {
-
     private ByteCodes() {}
 
-    public static Handle createLambdaMetaHandle() {
-        return new Handle(
-                Opcodes.H_INVOKESTATIC,
-                "java/lang/invoke/LambdaMetafactory",
-                "metafactory",
-                "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
-                false);
+    public static String descriptor(Class<?> type) {
+        return type.descriptorString();
     }
 
-    // annType与annValue不一定是同一类型
-    public static <T extends Annotation> void visitAnnotation(
-            final AnnotationVisitor av, final Class<T> annType, final Annotation annValue) {
+    public static String internalName(Class<?> type) {
+        return type.getName().replace('.', '/');
+    }
+
+    public static String methodDescriptor(Method method) {
+        return MethodType.methodType(method.getReturnType(), method.getParameterTypes())
+                .descriptorString();
+    }
+
+    public static ClassDesc classDesc(String name) {
+        return name.startsWith("[") ? ClassDesc.ofDescriptor(name) : ClassDesc.ofInternalName(name.replace('.', '/'));
+    }
+
+    public static ConstantDesc constantType(String descriptor) {
+        return descriptor.startsWith("(")
+                ? MethodTypeDesc.ofDescriptor(descriptor)
+                : ClassDesc.ofDescriptor(descriptor);
+    }
+
+    public static ClassDesc constantType(Class<?> type) {
+        return ClassDesc.ofDescriptor(type.descriptorString());
+    }
+
+    public static AnnotationValue annotationValue(Object value) {
+        if (value instanceof Class<?> type) return AnnotationValue.ofClass(constantType(type));
+        if (value instanceof Enum<?> item)
+            return AnnotationValue.ofEnum(constantType(item.getDeclaringClass()), item.name());
+        if (value instanceof Annotation annotation)
+            return AnnotationValue.ofAnnotation(annotation(annotation.annotationType(), annotation));
+        if (value.getClass().isArray()) {
+            List<AnnotationValue> values = new ArrayList<>();
+            for (int i = 0; i < Array.getLength(value); i++) values.add(annotationValue(Array.get(value, i)));
+            return AnnotationValue.ofArray(values);
+        }
+        return AnnotationValue.of(value);
+    }
+
+    public static java.lang.classfile.Annotation annotation(Class<? extends Annotation> type, Annotation value) {
+        List<AnnotationElement> elements = new ArrayList<>();
         try {
-            Set<String> methods = null;
-            if (annType != annValue.annotationType()) {
-                methods = new HashSet<>();
-                for (Method anm : annType.getMethods()) {
-                    methods.add(anm.getName());
-                }
-            }
-            for (Method anm : annValue.annotationType().getMethods()) {
-                final String mname = anm.getName();
-                if ("equals".equals(mname)
-                        || "hashCode".equals(mname)
-                        || "toString".equals(mname)
-                        || "annotationType".equals(mname)) {
+            for (Method method : value.annotationType().getDeclaredMethods()) {
+                try {
+                    type.getDeclaredMethod(method.getName());
+                } catch (NoSuchMethodException e) {
                     continue;
                 }
-                if (methods != null && !methods.contains(mname)) {
-                    continue;
-                }
-                final Object r = anm.invoke(annValue);
-                if (r instanceof String[]) {
-                    AnnotationVisitor av1 = av.visitArray(mname);
-                    for (String item : (String[]) r) {
-                        av1.visit(null, item);
-                    }
-                    av1.visitEnd();
-                } else if (r instanceof Class[]) {
-                    AnnotationVisitor av1 = av.visitArray(mname);
-                    for (Class item : (Class[]) r) {
-                        av1.visit(null, Type.getType(item));
-                    }
-                    av1.visitEnd();
-                } else if (r instanceof Enum[]) {
-                    AnnotationVisitor av1 = av.visitArray(mname);
-                    for (Enum item : (Enum[]) r) {
-                        av1.visitEnum(null, Type.getDescriptor(item.getClass()), item.name());
-                    }
-                    av1.visitEnd();
-                } else if (r instanceof Annotation[]) {
-                    AnnotationVisitor av1 = av.visitArray(mname);
-                    for (Annotation item : (Annotation[]) r) {
-                        visitAnnotation(
-                                av1.visitAnnotation(null, Type.getDescriptor(((Annotation) r).annotationType())),
-                                item.annotationType(),
-                                item);
-                    }
-                    av1.visitEnd();
-                } else if (r instanceof Class) {
-                    av.visit(mname, Type.getType((Class) r));
-                } else if (r instanceof Enum) {
-                    av.visitEnum(mname, Type.getDescriptor(r.getClass()), ((Enum) r).name());
-                } else if (r instanceof Annotation) {
-                    visitAnnotation(
-                            av.visitAnnotation(null, Type.getDescriptor(((Annotation) r).annotationType())),
-                            ((Annotation) r).annotationType(),
-                            (Annotation) r);
-                } else {
-                    av.visit(mname, r);
-                }
+                elements.add(AnnotationElement.of(method.getName(), annotationValue(method.invoke(value))));
             }
-            av.visitEnd();
-        } catch (Exception e) {
+        } catch (ReflectiveOperationException e) {
             throw new RedkaleException(e);
         }
+        return java.lang.classfile.Annotation.of(constantType(type), elements);
     }
 
-    public static void visitInsn(MethodVisitor mv, int num) {
-        if (num < 6) {
-            mv.visitInsn(ICONST_0 + num);
-        } else if (num <= Byte.MAX_VALUE) {
-            mv.visitIntInsn(BIPUSH, num);
-        } else if (num <= Short.MAX_VALUE) {
-            mv.visitIntInsn(SIPUSH, num);
-        } else {
-            mv.visitLdcInsn(num);
+    public static void parameterAnnotations(MethodBuilder builder, Method method) {
+        List<List<java.lang.classfile.Annotation>> params = new ArrayList<>();
+        for (Annotation[] annotations : method.getParameterAnnotations()) {
+            List<java.lang.classfile.Annotation> values = new ArrayList<>();
+            for (Annotation annotation : annotations) values.add(annotation(annotation.annotationType(), annotation));
+            params.add(values);
+        }
+        if (params.stream().anyMatch(v -> !v.isEmpty()))
+            builder.with(RuntimeVisibleParameterAnnotationsAttribute.of(params));
+    }
+
+    public static void visitCheckCast(CodeBuilder code, Class<?> type) {
+        if (type.isPrimitive()) {
+            ClassDesc wrapper = constantType(TypeToken.primitiveToWrapper(type));
+            code.checkcast(wrapper)
+                    .invokevirtual(wrapper, type.getSimpleName() + "Value", MethodTypeDesc.of(constantType(type)));
+        } else code.checkcast(constantType(type));
+    }
+
+    public static void visitPrimitiveValueOf(CodeBuilder code, Class<?> type) {
+        if (type.isPrimitive()) {
+            ClassDesc wrapper = constantType(TypeToken.primitiveToWrapper(type));
+            code.invokestatic(wrapper, "valueOf", MethodTypeDesc.of(wrapper, constantType(type)));
         }
     }
 
-    public static void visitFieldInsn(MethodVisitor mv, Class clazz) {
-        if (clazz == boolean.class) {
-            mv.visitFieldInsn(GETSTATIC, "java/lang/Boolean", "TYPE", "Ljava/lang/Class;");
-        } else if (clazz == byte.class) {
-            mv.visitFieldInsn(GETSTATIC, "java/lang/Byte", "TYPE", "Ljava/lang/Class;");
-        } else if (clazz == char.class) {
-            mv.visitFieldInsn(GETSTATIC, "java/lang/Character", "TYPE", "Ljava/lang/Class;");
-        } else if (clazz == short.class) {
-            mv.visitFieldInsn(GETSTATIC, "java/lang/Short", "TYPE", "Ljava/lang/Class;");
-        } else if (clazz == int.class) {
-            mv.visitFieldInsn(GETSTATIC, "java/lang/Integer", "TYPE", "Ljava/lang/Class;");
-        } else if (clazz == float.class) {
-            mv.visitFieldInsn(GETSTATIC, "java/lang/Float", "TYPE", "Ljava/lang/Class;");
-        } else if (clazz == long.class) {
-            mv.visitFieldInsn(GETSTATIC, "java/lang/Long", "TYPE", "Ljava/lang/Class;");
-        } else if (clazz == double.class) {
-            mv.visitFieldInsn(GETSTATIC, "java/lang/Double", "TYPE", "Ljava/lang/Class;");
-        } else {
-            mv.visitLdcInsn(Type.getType(Type.getDescriptor(clazz)));
-        }
+    public static void visitFieldInsn(CodeBuilder code, Class<?> type) {
+        if (type.isPrimitive()) code.getstatic(constantType(TypeToken.primitiveToWrapper(type)), "TYPE", CD_Class);
+        else code.loadConstant(constantType(type));
     }
 
-    public static void visitPrimitiveValueOf(MethodVisitor mv, Class clazz) {
-        if (clazz == boolean.class) {
-            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
-        } else if (clazz == byte.class) {
-            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Byte", "valueOf", "(B)Ljava/lang/Byte;", false);
-        } else if (clazz == short.class) {
-            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Short", "valueOf", "(S)Ljava/lang/Short;", false);
-        } else if (clazz == char.class) {
-            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Character", "valueOf", "(C)Ljava/lang/Character;", false);
-        } else if (clazz == int.class) {
-            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
-        } else if (clazz == float.class) {
-            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "valueOf", "(F)Ljava/lang/Float;", false);
-        } else if (clazz == long.class) {
-            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", false);
-        } else if (clazz == double.class) {
-            mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;", false);
-        }
-    }
-
-    public static void visitCheckCast(MethodVisitor mv, Class clazz) {
-        if (clazz == boolean.class) {
-            mv.visitTypeInsn(CHECKCAST, "java/lang/Boolean");
-            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z", false);
-        } else if (clazz == byte.class) {
-            mv.visitTypeInsn(CHECKCAST, "java/lang/Byte");
-            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Byte", "byteValue", "()B", false);
-        } else if (clazz == short.class) {
-            mv.visitTypeInsn(CHECKCAST, "java/lang/Short");
-            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Short", "shortValue", "()S", false);
-        } else if (clazz == char.class) {
-            mv.visitTypeInsn(CHECKCAST, "java/lang/Character");
-            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Character", "charValue", "()C", false);
-        } else if (clazz == int.class) {
-            mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
-            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer", "intValue", "()I", false);
-        } else if (clazz == float.class) {
-            mv.visitTypeInsn(CHECKCAST, "java/lang/Float");
-            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Float", "floatValue", "()F", false);
-        } else if (clazz == long.class) {
-            mv.visitTypeInsn(CHECKCAST, "java/lang/Long");
-            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Long", "longValue", "()J", false);
-        } else if (clazz == double.class) {
-            mv.visitTypeInsn(CHECKCAST, "java/lang/Double");
-            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Double", "doubleValue", "()D", false);
-        } else if (clazz == boolean[].class) {
-            mv.visitTypeInsn(CHECKCAST, "[Z");
-        } else if (clazz == byte[].class) {
-            mv.visitTypeInsn(CHECKCAST, "[B");
-        } else if (clazz == short[].class) {
-            mv.visitTypeInsn(CHECKCAST, "[S");
-        } else if (clazz == char[].class) {
-            mv.visitTypeInsn(CHECKCAST, "[C");
-        } else if (clazz == int[].class) {
-            mv.visitTypeInsn(CHECKCAST, "[I");
-        } else if (clazz == float[].class) {
-            mv.visitTypeInsn(CHECKCAST, "[F");
-        } else if (clazz == long[].class) {
-            mv.visitTypeInsn(CHECKCAST, "[J");
-        } else if (clazz == double[].class) {
-            mv.visitTypeInsn(CHECKCAST, "[D");
-        } else if (clazz.isArray()) {
-            mv.visitTypeInsn(CHECKCAST, Type.getDescriptor(clazz));
-        } else {
-            mv.visitTypeInsn(CHECKCAST, clazz.getName().replace('.', '/'));
-        }
-    }
-
-    public static void visitPrimitiveVirtual(MethodVisitor mv, Class clazz) {
-        if (clazz == boolean.class) {
-            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z", false);
-        } else if (clazz == byte.class) {
-            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Byte", "byteValue", "()B", false);
-        } else if (clazz == short.class) {
-            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Short", "shortValue", "()S", false);
-        } else if (clazz == char.class) {
-            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Character", "charValue", "()C", false);
-        } else if (clazz == int.class) {
-            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer", "intValue", "()I", false);
-        } else if (clazz == float.class) {
-            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Float", "floatValue", "()F", false);
-        } else if (clazz == long.class) {
-            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Long", "longValue", "()J", false);
-        } else if (clazz == double.class) {
-            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Double", "doubleValue", "()D", false);
-        }
+    public static void visitPrimitiveVirtual(CodeBuilder code, Class<?> type) {
+        if (type.isPrimitive())
+            code.invokevirtual(
+                    constantType(TypeToken.primitiveToWrapper(type)),
+                    type.getSimpleName() + "Value",
+                    MethodTypeDesc.of(constantType(type)));
     }
 }

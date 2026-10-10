@@ -1,54 +1,28 @@
 /*
- *
+ * Copyright (c) 2016-2116 Redkale
  */
 package org.redkale.bytecode;
 
-import static org.redkale.asm.Opcodes.ACC_PRIVATE;
-import static org.redkale.asm.Opcodes.ACC_PROTECTED;
-import static org.redkale.asm.Opcodes.ACC_PUBLIC;
-import static org.redkale.asm.Opcodes.ALOAD;
-import static org.redkale.asm.Opcodes.ARETURN;
-import static org.redkale.asm.Opcodes.DLOAD;
-import static org.redkale.asm.Opcodes.DRETURN;
-import static org.redkale.asm.Opcodes.FLOAD;
-import static org.redkale.asm.Opcodes.FRETURN;
-import static org.redkale.asm.Opcodes.ILOAD;
-import static org.redkale.asm.Opcodes.IRETURN;
-import static org.redkale.asm.Opcodes.LLOAD;
-import static org.redkale.asm.Opcodes.LRETURN;
-import static org.redkale.asm.Opcodes.RETURN;
+import static java.lang.classfile.ClassFile.*;
 
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
+import java.lang.classfile.*;
+import java.lang.classfile.attribute.*;
+import java.lang.constant.*;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import org.redkale.annotation.Nullable;
-import org.redkale.asm.*;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.util.RedkaleClassLoader;
-import org.redkale.util.Utility;
 
-/**
- * 生产动态字节码的方法扩展器， 可以进行方法加强动作
- *
- * <p>详情见: https://redkale.org
- *
- * @param <T> 泛型
- * @author zhangjx
- * @since 2.8.0
- */
+/** Dynamic method extensions backed by the JDK Classfile API. */
 public abstract class CodeMethodBoost<T> {
-
     protected final AtomicInteger fieldIndex = new AtomicInteger();
-
     protected final boolean remote;
-
     protected final Class serviceType;
 
     protected CodeMethodBoost(boolean remote, Class serviceType) {
@@ -64,47 +38,90 @@ public abstract class CodeMethodBoost<T> {
         return new CodeMethodBoosts(remote, items);
     }
 
-    /**
-     * 返回一个类所有方法的字节信息， key为: method.getName+':'+Type.getMethodDescriptor(method)
-     *
-     * @param clazz Class
-     * @return Map
-     */
     public static Map<String, CodeMethodBean> getMethodBeans(Class clazz) {
-        Map<String, CodeMethodBean> rs = MethodParamClassVisitor.getMethodParamNames(new HashMap<>(), clazz);
-        // 返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
-        rs.values().forEach(CodeMethodBean::removeEmptyNames);
-        return rs;
+        Map<String, CodeMethodBean> result = new HashMap<>();
+        for (Class current = clazz; current != null && current != Object.class; current = current.getSuperclass()) {
+            String name = current.getName();
+            byte[] bytes = RedkaleClassLoader.getDynClassBytes(name);
+            if (bytes == null) {
+                try (InputStream in =
+                        current.getResourceAsStream(name.substring(name.lastIndexOf('.') + 1) + ".class")) {
+                    if (in == null) continue;
+                    bytes = in.readAllBytes();
+                } catch (Exception e) {
+                    throw new org.redkale.util.RedkaleException(e);
+                }
+            }
+            ClassModel model = ClassFile.of().parse(bytes);
+            for (MethodModel method : model.methods()) {
+                if (method.flags().has(java.lang.reflect.AccessFlag.STATIC)) continue;
+                String methodName = method.methodName().stringValue();
+                String desc = method.methodType().stringValue();
+                String key = methodName + ":" + desc;
+                if (result.containsKey(key)) continue;
+                String signature = method.findAttribute(Attributes.signature())
+                        .map(a -> a.signature().stringValue())
+                        .orElse(null);
+                String[] exceptions = method.findAttribute(Attributes.exceptions())
+                        .map(a -> a.exceptions().stream()
+                                .map(e -> e.asInternalName())
+                                .toArray(String[]::new))
+                        .orElse(null);
+                CodeMethodBean bean =
+                        new CodeMethodBean(method.flags().flagsMask(), methodName, desc, signature, exceptions);
+                List<MethodParameterInfo> parameters = method.findAttribute(Attributes.methodParameters())
+                        .map(MethodParametersAttribute::parameters)
+                        .orElse(List.of());
+                List<LocalVariableInfo> locals = method.code()
+                        .flatMap(c -> c.findAttribute(Attributes.localVariableTable()))
+                        .map(LocalVariableTableAttribute::localVariables)
+                        .orElse(List.of());
+                List<LocalVariableTypeInfo> genericLocals = method.code()
+                        .flatMap(c -> c.findAttribute(Attributes.localVariableTypeTable()))
+                        .map(LocalVariableTypeTableAttribute::localVariableTypes)
+                        .orElse(List.of());
+                MethodTypeDesc methodType = method.methodTypeSymbol();
+                int slot = 1;
+                for (int i = 0; i < methodType.parameterCount(); i++) {
+                    String paramName = i < parameters.size()
+                            ? parameters.get(i).name().map(n -> n.stringValue()).orElse(null)
+                            : null;
+                    String paramSignature = null;
+                    for (LocalVariableInfo local : locals) {
+                        if (local.slot() == slot && local.startPc() == 0) {
+                            paramName = local.name().stringValue();
+                            break;
+                        }
+                    }
+                    for (LocalVariableTypeInfo local : genericLocals) {
+                        if (local.slot() == slot && local.startPc() == 0) {
+                            paramSignature = local.signature().stringValue();
+                            break;
+                        }
+                    }
+                    ClassDesc paramType = methodType.parameterType(i);
+                    bean.getParams()
+                            .add(new CodeMethodParam(
+                                    paramName == null ? "arg" + i : paramName,
+                                    paramType.descriptorString(),
+                                    paramSignature));
+                    slot += TypeKind.from(paramType).slotSize();
+                }
+                result.put(key, bean);
+            }
+        }
+        return result;
     }
 
     public static String getMethodBeanKey(Method method) {
-        return method.getName() + ":" + Type.getMethodDescriptor(method);
+        return method.getName() + ":" + ByteCodes.methodDescriptor(method);
     }
 
-    /**
-     * 获取需屏蔽的方法上的注解
-     *
-     * @param method 方法
-     * @return 需要屏蔽的注解
-     */
     public abstract List<Class<? extends Annotation>> filterMethodAnnotations(Method method);
 
-    /**
-     * 对方法进行动态加强处理
-     *
-     * @param classLoader ClassLoader
-     * @param cw 动态字节码Writer
-     * @param serviceImplClass 原始实现类
-     * @param newDynName 动态新类名
-     * @param fieldPrefix 动态字段的前缀
-     * @param filterAnns 需要过滤的注解
-     * @param method 操作的方法
-     * @param newMethod 新的方法名, 可能为null
-     * @return 下一个新的方法名，不做任何处理应返回参数newMethodName
-     */
     public abstract CodeNewMethod doMethod(
             RedkaleClassLoader classLoader,
-            ClassWriter cw,
+            ClassBuilder cw,
             Class serviceImplClass,
             String newDynName,
             String fieldPrefix,
@@ -112,188 +129,120 @@ public abstract class CodeMethodBoost<T> {
             Method method,
             @Nullable CodeNewMethod newMethod);
 
-    /**
-     * 处理所有动态方法后调用
-     *
-     * @param classLoader ClassLoader
-     * @param cw 动态字节码Writer
-     * @param newDynName 动态新类名
-     * @param fieldPrefix 动态字段的前缀
-     */
-    public void doAfterMethods(RedkaleClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {}
+    public void doAfterMethods(
+            RedkaleClassLoader classLoader,
+            ClassBuilder cw,
+            String newDynName,
+            String fieldPrefix,
+            List<java.lang.classfile.Annotation> cwAnnotations) {}
 
-    /**
-     * 处理所有动态方法后调用
-     *
-     * @param classLoader ClassLoader
-     * @param cw 动态字节码Writer
-     * @param mv 构造函数MethodVisitor
-     * @param newDynName 动态新类名
-     * @param fieldPrefix 动态字段的前缀
-     * @param remote 是否远程模式
-     */
     public void doConstructorMethod(
             RedkaleClassLoader classLoader,
-            ClassWriter cw,
-            MethodVisitor mv,
+            ClassBuilder cw,
+            CodeBuilder mv,
             String newDynName,
             String fieldPrefix,
             boolean remote) {}
-    /**
-     * 实例对象进行操作，通常用于给动态的字段赋值
-     *
-     * @param classLoader ClassLoader
-     * @param resourceFactory ResourceFactory
-     * @param service 实例对象
-     */
+
     public abstract void doInstance(RedkaleClassLoader classLoader, ResourceFactory resourceFactory, T service);
 
     protected CodeMethodBean getMethodBean(Method method) {
-        Map<String, CodeMethodBean> methodBeans = CodeMethodBoost.getMethodBeans(serviceType);
-        return CodeMethodBean.get(methodBeans, method);
+        return CodeMethodBean.get(getMethodBeans(serviceType), method);
     }
 
-    protected MethodVisitor createMethodVisitor(
-            ClassWriter cw, Method method, CodeNewMethod newMethod, CodeMethodBean methodBean) {
-        return new MethodDebugVisitor(cw.visitMethod(
-                getAcc(method, newMethod),
+    protected void createMethod(
+            ClassBuilder cw,
+            Method method,
+            CodeNewMethod newMethod,
+            CodeMethodBean methodBean,
+            Consumer<MethodBuilder> builder) {
+        cw.withMethod(
                 getNowMethodName(method, newMethod),
-                Type.getMethodDescriptor(method),
-                getMethodSignature(method, methodBean),
-                getMethodExceptions(method, methodBean)));
+                MethodTypeDesc.ofDescriptor(ByteCodes.methodDescriptor(method)),
+                getAcc(method, newMethod),
+                mb -> {
+                    String signature = getMethodSignature(method, methodBean);
+                    if (signature != null) mb.with(SignatureAttribute.of(MethodSignature.parseFrom(signature)));
+                    String[] exceptions = getMethodExceptions(method, methodBean);
+                    if (exceptions != null)
+                        mb.with(ExceptionsAttribute.ofSymbols(Arrays.stream(exceptions)
+                                .map(ByteCodes::classDesc)
+                                .toList()));
+                    builder.accept(mb);
+                });
     }
 
     protected final int getAcc(Method method, CodeNewMethod newMethod) {
-        if (newMethod != null) {
-            return ACC_PRIVATE;
-        }
-        return Modifier.isProtected(method.getModifiers()) ? ACC_PROTECTED : ACC_PUBLIC;
+        return newMethod != null
+                ? ACC_PRIVATE
+                : Modifier.isProtected(method.getModifiers()) ? ACC_PROTECTED : ACC_PUBLIC;
     }
 
-    protected String getNowMethodName(Method method, CodeNewMethod newMethod) {
+    protected final String getNowMethodName(Method method, CodeNewMethod newMethod) {
         return newMethod == null ? method.getName() : newMethod.getMethodName();
     }
 
     protected String getMethodSignature(Method method, CodeMethodBean methodBean) {
-        return methodBean != null ? methodBean.getSignature() : null;
+        return methodBean == null ? null : methodBean.getSignature();
     }
 
     protected String[] getMethodExceptions(Method method, CodeMethodBean methodBean) {
-        if (methodBean == null) {
-            String[] exceptions = null;
-            Class<?>[] expTypes = method.getExceptionTypes();
-            if (expTypes.length > 0) {
-                exceptions = new String[expTypes.length];
-                for (int i = 0; i < expTypes.length; i++) {
-                    exceptions[i] = expTypes[i].getName().replace('.', '/');
-                }
-            }
-            return exceptions;
-        } else {
-            return methodBean.getExceptions();
-        }
+        return methodBean == null
+                ? Arrays.stream(method.getExceptionTypes())
+                        .map(ByteCodes::internalName)
+                        .toArray(String[]::new)
+                : methodBean.getExceptions();
     }
 
     protected void visitRawAnnotation(
-            Method method, CodeNewMethod newMethod, MethodVisitor mv, Class skipAnnType, List skipAnns) {
+            Method method,
+            CodeNewMethod newMethod,
+            MethodBuilder mb,
+            Class skipAnnType,
+            List skipAnns,
+            List<java.lang.classfile.Annotation> annotations) {
         if (newMethod == null) {
-            // 给方法加上原有的Annotation
-            final Annotation[] anns = method.getAnnotations();
-            for (Annotation ann : anns) {
+            for (Annotation ann : method.getAnnotations()) {
                 if (ann.annotationType() != skipAnnType
-                        && (skipAnns == null || !skipAnns.contains(ann.annotationType()))) {
-                    ByteCodes.visitAnnotation(
-                            mv.visitAnnotation(Type.getDescriptor(ann.annotationType()), true),
-                            ann.annotationType(),
-                            ann);
-                }
+                        && (skipAnns == null || !skipAnns.contains(ann.annotationType())))
+                    annotations.add(ByteCodes.annotation(ann.annotationType(), ann));
             }
-            // 给参数加上原有的Annotation
-            final Annotation[][] annss = method.getParameterAnnotations();
-            for (int k = 0; k < annss.length; k++) {
-                for (Annotation ann : annss[k]) {
-                    ByteCodes.visitAnnotation(
-                            mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true),
-                            ann.annotationType(),
-                            ann);
-                }
-            }
+            ByteCodes.parameterAnnotations(mb, method);
         }
     }
 
-    protected List<Integer> visitVarInsnParamTypes(MethodVisitor mv, Method method, int insn) {
-        // 传参数
-        Class[] paramTypes = method.getParameterTypes();
-        List<Integer> insns = new ArrayList<>();
-        for (Class pt : paramTypes) {
-            insn++;
-            // 调试信息记录参数的起始槽位；long/double 的第二个槽位不能作为起点。
-            insns.add(insn);
-            if (pt.isPrimitive()) {
-                if (pt == long.class) {
-                    mv.visitVarInsn(LLOAD, insn++);
-                } else if (pt == float.class) {
-                    mv.visitVarInsn(FLOAD, insn);
-                } else if (pt == double.class) {
-                    mv.visitVarInsn(DLOAD, insn++);
-                } else {
-                    mv.visitVarInsn(ILOAD, insn);
-                }
-            } else {
-                mv.visitVarInsn(ALOAD, insn);
-            }
+    protected List<Integer> visitVarInsnParamTypes(CodeBuilder code, Method method, int previousSlot) {
+        List<Integer> slots = new ArrayList<>();
+        int slot = previousSlot + 1;
+        for (Class<?> type : method.getParameterTypes()) {
+            TypeKind kind = TypeKind.from(type);
+            slots.add(slot);
+            code.loadLocal(kind, slot);
+            slot += kind.slotSize();
         }
-        return insns;
+        return slots;
     }
 
     protected void visitParamTypesLocalVariable(
-            MethodVisitor mv, Method method, Label l0, Label l2, List<Integer> insns, CodeMethodBean methodBean) {
-        Class[] paramTypes = method.getParameterTypes();
-        if (methodBean != null && paramTypes.length > 0) {
-            mv.visitLabel(l2);
-            List<CodeMethodParam> params = methodBean.getParams();
-            for (int i = 0; i < paramTypes.length; i++) {
-                CodeMethodParam param = params.get(i);
-                mv.visitLocalVariable(
-                        param.getName(),
-                        param.description(paramTypes[i]),
-                        param.signature(paramTypes[i]),
-                        l0,
-                        l2,
-                        insns.get(i));
-            }
+            CodeBuilder code, Method method, Label start, Label end, List<Integer> slots, CodeMethodBean methodBean) {
+        code.labelBinding(end);
+        if (methodBean == null) return;
+        for (int i = 0; i < method.getParameterCount(); i++) {
+            CodeMethodParam param = methodBean.getParams().get(i);
+            code.localVariable(
+                    slots.get(i), param.getName(), ByteCodes.constantType(method.getParameterTypes()[i]), start, end);
+            String signature = param.signature(method.getParameterTypes()[i]);
+            if (signature != null)
+                code.localVariableType(slots.get(i), param.getName(), Signature.parseFrom(signature), start, end);
         }
     }
 
     protected void visitInsnReturn(
-            MethodVisitor mv, Method method, Label l0, List<Integer> insns, CodeMethodBean methodBean) {
-        if (method.getGenericReturnType() == void.class) {
-            mv.visitInsn(RETURN);
-        } else {
-            Class returnclz = method.getReturnType();
-            if (returnclz.isPrimitive()) {
-                if (returnclz == long.class) {
-                    mv.visitInsn(LRETURN);
-                } else if (returnclz == float.class) {
-                    mv.visitInsn(FRETURN);
-                } else if (returnclz == double.class) {
-                    mv.visitInsn(DRETURN);
-                } else {
-                    mv.visitInsn(IRETURN);
-                }
-            } else {
-                mv.visitInsn(ARETURN);
-            }
-        }
-        visitParamTypesLocalVariable(mv, method, l0, new Label(), insns, methodBean);
+            CodeBuilder code, Method method, Label start, List<Integer> slots, CodeMethodBean bean) {
+        code.return_(TypeKind.from(method.getReturnType()));
+        visitParamTypesLocalVariable(code, method, start, code.newLabel(), slots, bean);
     }
 
-    /**
-     * 生产动态字节码的方法扩展器， 可以进行方法加强动作
-     *
-     * @param <T> 泛型
-     * @since 2.8.0
-     */
     static class CodeMethodBoosts<T> extends CodeMethodBoost<T> {
 
         private final CodeMethodBoost[] items;
@@ -328,7 +277,7 @@ public abstract class CodeMethodBoost<T> {
         @Override
         public CodeNewMethod doMethod(
                 RedkaleClassLoader classLoader,
-                ClassWriter cw,
+                ClassBuilder cw,
                 Class serviceImplClass,
                 String newDynName,
                 String fieldPrefix,
@@ -347,10 +296,14 @@ public abstract class CodeMethodBoost<T> {
 
         @Override
         public void doAfterMethods(
-                RedkaleClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {
+                RedkaleClassLoader classLoader,
+                ClassBuilder cw,
+                String newDynName,
+                String fieldPrefix,
+                List<java.lang.classfile.Annotation> cwAnnotations) {
             for (CodeMethodBoost item : items) {
                 if (item != null) {
-                    item.doAfterMethods(classLoader, cw, newDynName, fieldPrefix);
+                    item.doAfterMethods(classLoader, cw, newDynName, fieldPrefix, cwAnnotations);
                 }
             }
         }
@@ -358,8 +311,8 @@ public abstract class CodeMethodBoost<T> {
         @Override
         public void doConstructorMethod(
                 RedkaleClassLoader classLoader,
-                ClassWriter cw,
-                MethodVisitor mv,
+                ClassBuilder cw,
+                CodeBuilder mv,
                 String newDynName,
                 String fieldPrefix,
                 boolean remote) {
@@ -377,99 +330,6 @@ public abstract class CodeMethodBoost<T> {
                     item.doInstance(classLoader, resourceFactory, service);
                 }
             }
-        }
-    }
-
-    static class MethodParamClassVisitor extends ClassVisitor {
-
-        private Class serviceType;
-
-        private final Map<String, CodeMethodBean> methodBeanMap;
-
-        public MethodParamClassVisitor(int api, Class serviceType, final Map<String, CodeMethodBean> methodBeanMap) {
-            super(api);
-            this.serviceType = serviceType;
-            this.methodBeanMap = methodBeanMap;
-        }
-
-        @Override
-        public MethodVisitor visitMethod(
-                int methodAccess,
-                String methodName,
-                String methodDesc,
-                String methodSignature,
-                String[] methodExceptions) {
-            super.visitMethod(api, methodName, methodDesc, methodSignature, methodExceptions);
-            if (java.lang.reflect.Modifier.isStatic(methodAccess)) {
-                return null;
-            }
-            String key = methodName + ":" + methodDesc;
-            if (methodBeanMap.containsKey(key)) {
-                return null;
-            }
-            CodeMethodBean bean =
-                    new CodeMethodBean(methodAccess, methodName, methodDesc, methodSignature, methodExceptions);
-            List<CodeMethodParam> paramList = bean.getParams();
-            methodBeanMap.put(key, bean);
-            return new MethodVisitor(Opcodes.ASM6) {
-                private final Type[] parameterTypes = Type.getArgumentTypes(methodDesc);
-                private int parameterIndex;
-
-                @Override
-                public void visitParameter(String paramName, int paramAccess) {
-                    paramList.add(new CodeMethodParam(paramName));
-                    // MethodParameters 按参数计数，LocalVariableTable 按槽位计数。
-                    // 保留宽参数的空槽，避免后续局部变量信息覆盖错误的参数名。
-                    if (parameterTypes[parameterIndex++].getSize() == 2) {
-                        paramList.add(new CodeMethodParam(" "));
-                    }
-                }
-
-                @Override
-                public void visitLocalVariable(
-                        String varName, String varDesc, String varSignature, Label start, Label end, int varIndex) {
-                    if (varIndex < 1) {
-                        return;
-                    }
-                    int size = paramList.size();
-                    // index并不会按顺序执行
-                    if (varIndex > size) {
-                        for (int i = size; i < varIndex; i++) {
-                            paramList.add(new CodeMethodParam(" ", varDesc, varSignature));
-                        }
-                        paramList.set(varIndex - 1, new CodeMethodParam(varName, varDesc, varSignature));
-                    }
-                    paramList.set(varIndex - 1, new CodeMethodParam(varName, varDesc, varSignature));
-                }
-            };
-        }
-
-        // 返回的List中参数列表可能会比方法参数量多，因为方法内的临时变量也会存入list中， 所以需要list的元素集合比方法的参数多
-        static Map<String, CodeMethodBean> getMethodParamNames(Map<String, CodeMethodBean> map, Class clazz) {
-            String n = clazz.getName();
-            byte[] bs = RedkaleClassLoader.getDynClassBytes(n);
-            if (bs == null) {
-                InputStream in = clazz.getResourceAsStream(n.substring(n.lastIndexOf('.') + 1) + ".class");
-                if (in == null) {
-                    return map;
-                }
-                try {
-                    bs = Utility.readBytesThenClose(in);
-                } catch (Exception e) {
-                    // do nothing
-                }
-            }
-            try {
-                new ClassReader(bs).accept(new MethodParamClassVisitor(Opcodes.ASM6, clazz, map), 0);
-            } catch (Exception e) {
-                e.printStackTrace();
-                // do nothing
-            }
-            Class superClass = clazz.getSuperclass();
-            if (superClass == null || superClass == Object.class) { // 接口的getSuperclass为null
-                return map;
-            }
-            return getMethodParamNames(map, superClass);
         }
     }
 }

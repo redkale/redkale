@@ -4,17 +4,19 @@
  */
 package org.redkale.source;
 
-import static org.redkale.asm.Opcodes.*;
+import static java.lang.classfile.ClassFile.*;
 
 import java.io.Serializable;
+import java.lang.classfile.ClassFile;
+import java.lang.classfile.ClassSignature;
+import java.lang.classfile.Label;
+import java.lang.classfile.MethodSignature;
+import java.lang.classfile.attribute.*;
+import java.lang.constant.*;
 import java.math.BigDecimal;
+import java.util.*;
 import java.util.Objects;
 import org.redkale.annotation.ClassDepends;
-import org.redkale.asm.ClassWriter;
-import org.redkale.asm.Label;
-import org.redkale.asm.MethodVisitor;
-import org.redkale.asm.Opcodes;
-import org.redkale.asm.Type;
 import org.redkale.bytecode.ByteCodes;
 import org.redkale.util.Attribute;
 import org.redkale.util.Creator;
@@ -71,15 +73,15 @@ public abstract class EntityFullFunc<T> {
     static <T> EntityFullFunc<T> create(Class<T> entityType, Creator<T> creator, Attribute<T, Serializable>[] attrs) {
         final String supDynName = EntityFullFunc.class.getName().replace('.', '/');
         final String entityName = entityType.getName().replace('.', '/');
-        final String entityDesc = Type.getDescriptor(entityType);
-        final String creatorDesc = Type.getDescriptor(Creator.class);
+        final String entityDesc = ByteCodes.descriptor(entityType);
+        final String creatorDesc = ByteCodes.descriptor(Creator.class);
         final String creatorName = Creator.class.getName().replace('.', '/');
-        final String attrDesc = Type.getDescriptor(Attribute.class);
+        final String attrDesc = ByteCodes.descriptor(Attribute.class);
         final String attrName = Attribute.class.getName().replace('.', '/');
-        final String rowDesc = Type.getDescriptor(DataResultSetRow.class);
+        final String rowDesc = ByteCodes.descriptor(DataResultSetRow.class);
         final String rowName = DataResultSetRow.class.getName().replace('.', '/');
-        final String objectDesc = Type.getDescriptor(Object.class);
-        final String serisDesc = Type.getDescriptor(Serializable[].class);
+        final String objectDesc = ByteCodes.descriptor(Object.class);
+        final String serisDesc = ByteCodes.descriptor(Serializable[].class);
 
         RedkaleClassLoader classLoader = RedkaleClassLoader.currentClassLoader();
         final String newDynName = "org/redkaledyn/source/_Dyn" + EntityFullFunc.class.getSimpleName() + "__"
@@ -94,732 +96,1070 @@ public abstract class EntityFullFunc<T> {
         }
 
         // -------------------------------------------------------------
-        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-        MethodVisitor mv;
-        cw.visit(
-                V11,
-                ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
-                newDynName,
-                "L" + supDynName + "<" + entityDesc + ">;",
-                supDynName,
-                null);
 
-        { // 构造方法
-            mv = cw.visitMethod(
-                    ACC_PUBLIC,
-                    "<init>",
-                    "(Ljava/lang/Class;" + creatorDesc + "[" + attrDesc + ")V",
-                    "(Ljava/lang/Class<" + entityDesc + ">;L" + creatorName + "<" + entityDesc + ">;[L" + attrName + "<"
-                            + entityDesc + "Ljava/io/Serializable;>;)V",
-                    null);
-            Label label0 = new Label();
-            mv.visitLabel(label0);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitVarInsn(ALOAD, 2);
-            mv.visitVarInsn(ALOAD, 3);
-            mv.visitMethodInsn(
-                    INVOKESPECIAL,
-                    supDynName,
-                    "<init>",
-                    "(Ljava/lang/Class;" + creatorDesc + "[" + attrDesc + ")V",
-                    false);
-            mv.visitInsn(RETURN);
-            Label label2 = new Label();
-            mv.visitLabel(label2);
-            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
-            mv.visitLocalVariable("type", "Ljava/lang/Class;", null, label0, label2, 1);
-            mv.visitLocalVariable("creator", creatorDesc, null, label0, label2, 2);
-            mv.visitLocalVariable("attrs", "[" + attrDesc, null, label0, label2, 3);
-            mv.visitMaxs(4, 4);
-            mv.visitEnd();
-        }
-        { // getObject(DataResultSetRow row)
-            mv = cw.visitMethod(ACC_PUBLIC, "getObject", "(" + rowDesc + ")" + entityDesc, null, null);
-            Label label0 = new Label();
-            mv.visitLabel(label0);
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitMethodInsn(INVOKEINTERFACE, rowName, "wasNull", "()Z", true);
-            Label ifLabel = new Label();
-            mv.visitJumpInsn(IFEQ, ifLabel);
-            mv.visitInsn(ACONST_NULL);
-            mv.visitInsn(ARETURN);
-            mv.visitLabel(ifLabel);
-            mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
-            // creator.create()
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, supDynName, "creator", creatorDesc);
-            mv.visitInsn(ICONST_0);
-            mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
-            mv.visitMethodInsn(INVOKEINTERFACE, creatorName, "create", "([Ljava/lang/Object;)Ljava/lang/Object;", true);
-            mv.visitTypeInsn(CHECKCAST, entityName);
-            mv.visitVarInsn(ASTORE, 2);
-            Label label1 = new Label();
-            mv.visitLabel(label1);
+        byte[] classBytes = ClassFile.of().build(ByteCodes.classDesc(newDynName), cw -> {
+            cw.withVersion(JAVA_11_VERSION, 0)
+                    .withFlags(ACC_PUBLIC + ACC_FINAL + ACC_SUPER)
+                    .withSuperclass(ByteCodes.classDesc(supDynName));
 
-            for (int i = 0; i < attrs.length; i++) {
-                final int colIndex = i + 1;
-                final Attribute<T, Serializable> attr = attrs[i];
-                java.lang.reflect.Method setter = null;
-                java.lang.reflect.Field field = null;
-                try {
-                    setter = entityType.getMethod("set" + Utility.firstCharUpperCase(attr.field()), attr.type());
-                } catch (Exception e) {
-                    try {
-                        field = entityType.getField(attr.field());
-                    } catch (Exception e2) {
-                        try {
-                            setter = entityType.getMethod(attr.field(), attr.type());
-                        } catch (Exception e3) {
-                            // do nothing
-                        }
-                    }
-                }
-                if (attr.type() == boolean.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitInsn(ICONST_0);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getBoolean", "(IZ)Z", true);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                        continue;
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitInsn(ICONST_0);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getBoolean", "(IZ)Z", true);
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Z");
-                        continue;
-                    }
-                } else if (attr.type() == short.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitInsn(ICONST_0);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getShort", "(IS)S", true);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                        continue;
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitInsn(ICONST_0);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getShort", "(IS)S", true);
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "S");
-                        continue;
-                    }
-                } else if (attr.type() == int.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitInsn(ICONST_0);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getInteger", "(II)I", true);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                        continue;
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitInsn(ICONST_0);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getInteger", "(II)I", true);
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "I");
-                        continue;
-                    }
-                } else if (attr.type() == float.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitInsn(FCONST_0);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getFloat", "(IF)F", true);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                        continue;
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitInsn(FCONST_0);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getFloat", "(IF)F", true);
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "F");
-                        continue;
-                    }
-                } else if (attr.type() == long.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitInsn(LCONST_0);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getLong", "(IJ)J", true);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                        continue;
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitInsn(LCONST_0);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getLong", "(IJ)J", true);
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "J");
-                        continue;
-                    }
-                } else if (attr.type() == double.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitInsn(DCONST_0);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getDouble", "(ID)D", true);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                        continue;
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitInsn(DCONST_0);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getDouble", "(ID)D", true);
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "D");
-                        continue;
-                    }
-                } else if (attr.type() == Boolean.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getBoolean", "(I)Ljava/lang/Boolean;", true);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                        continue;
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getBoolean", "(I)Ljava/lang/Boolean;", true);
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Boolean;");
-                        continue;
-                    }
-                } else if (attr.type() == Short.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getShort", "(I)Ljava/lang/Short;", true);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                        continue;
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getShort", "(I)Ljava/lang/Short;", true);
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Short;");
-                        continue;
-                    }
-                } else if (attr.type() == Integer.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getInteger", "(I)Ljava/lang/Integer;", true);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                        continue;
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getInteger", "(I)Ljava/lang/Integer;", true);
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Integer;");
-                        continue;
-                    }
-                } else if (attr.type() == Float.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getFloat", "(I)Ljava/lang/Float;", true);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                        continue;
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getFloat", "(I)Ljava/lang/Float;", true);
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Float;");
-                        continue;
-                    }
-                } else if (attr.type() == Long.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getLong", "(I)Ljava/lang/Long;", true);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                        continue;
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getLong", "(I)Ljava/lang/Long;", true);
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Long;");
-                        continue;
-                    }
-                } else if (attr.type() == Double.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getDouble", "(I)Ljava/lang/Double;", true);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                        continue;
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getDouble", "(I)Ljava/lang/Double;", true);
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Double;");
-                        continue;
-                    }
-                } else if (attr.type() == String.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getString", "(I)Ljava/lang/String;", true);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                        continue;
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getString", "(I)Ljava/lang/String;", true);
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/String;");
-                        continue;
-                    }
-                } else if (attr.type() == byte[].class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getBytes", "(I)[B", true);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                        continue;
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitMethodInsn(INVOKEINTERFACE, rowName, "getBytes", "(I)[B", true);
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "[B");
-                        continue;
-                    }
-                } else if (attr.type() == BigDecimal.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitMethodInsn(
-                                INVOKEINTERFACE, rowName, "getBigDecimal", "(I)Ljava/math/BigDecimal;", true);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                        continue;
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // row
-                        ByteCodes.visitInsn(mv, colIndex);
-                        mv.visitMethodInsn(
-                                INVOKEINTERFACE, rowName, "getBigDecimal", "(I)Ljava/math/BigDecimal;", true);
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/math/BigDecimal;");
-                        continue;
-                    }
-                }
-                mv.visitVarInsn(ALOAD, 0);
-                ByteCodes.visitInsn(mv, colIndex - 1);
-                mv.visitVarInsn(ALOAD, 1); // row
-                mv.visitVarInsn(ALOAD, 2); // obj
-                mv.visitMethodInsn(
-                        INVOKEVIRTUAL, supDynName, "setFieldValue", "(I" + rowDesc + objectDesc + ")V", false);
+            cw.with(SignatureAttribute.of(ClassSignature.parseFrom("L" + supDynName + "<" + entityDesc + ">;")));
+
+            { // 构造方法
+                cw.withMethod(
+                        "<init>",
+                        MethodTypeDesc.ofDescriptor("(Ljava/lang/Class;" + creatorDesc + "[" + attrDesc + ")V"),
+                        ACC_PUBLIC,
+                        mb -> {
+                            mb.with(SignatureAttribute.of(MethodSignature.parseFrom(
+                                    "(Ljava/lang/Class<" + entityDesc + ">;L" + creatorName + "<" + entityDesc + ">;[L"
+                                            + attrName + "<" + entityDesc + "Ljava/io/Serializable;>;)V")));
+
+                            mb.withCode(mv -> {
+                                Label label0 = mv.newLabel();
+                                mv.labelBinding(label0);
+                                mv.aload(0);
+                                mv.aload(1);
+                                mv.aload(2);
+                                mv.aload(3);
+                                mv.invokespecial(
+                                        ByteCodes.classDesc(supDynName),
+                                        "<init>",
+                                        MethodTypeDesc.ofDescriptor(
+                                                "(Ljava/lang/Class;" + creatorDesc + "[" + attrDesc + ")V"),
+                                        false);
+                                mv.return_();
+                                Label label2 = mv.newLabel();
+                                mv.labelBinding(label2);
+                                mv.localVariable(
+                                        0, "this", ClassDesc.ofDescriptor("L" + newDynName + ";"), label0, label2);
+                                mv.localVariable(
+                                        1, "type", ClassDesc.ofDescriptor("Ljava/lang/Class;"), label0, label2);
+                                mv.localVariable(2, "creator", ClassDesc.ofDescriptor(creatorDesc), label0, label2);
+                                mv.localVariable(3, "attrs", ClassDesc.ofDescriptor("[" + attrDesc), label0, label2);
+                            });
+                        });
+            }
+            { // getObject(DataResultSetRow row)
+                cw.withMethodBody(
+                        "getObject", MethodTypeDesc.ofDescriptor("(" + rowDesc + ")" + entityDesc), ACC_PUBLIC, mv -> {
+                            Label label0 = mv.newLabel();
+                            mv.labelBinding(label0);
+                            mv.aload(1);
+                            mv.invokeinterface(
+                                    ByteCodes.classDesc(rowName), "wasNull", MethodTypeDesc.ofDescriptor("()Z"));
+                            Label ifLabel = mv.newLabel();
+                            mv.ifeq(ifLabel);
+                            mv.aconst_null();
+                            mv.areturn();
+                            mv.labelBinding(ifLabel);
+
+                            // creator.create()
+                            mv.aload(0);
+                            mv.getfield(
+                                    ByteCodes.classDesc(supDynName), "creator", ClassDesc.ofDescriptor(creatorDesc));
+                            mv.iconst_0();
+                            mv.anewarray(ByteCodes.classDesc("java/lang/Object"));
+                            mv.invokeinterface(
+                                    ByteCodes.classDesc(creatorName),
+                                    "create",
+                                    MethodTypeDesc.ofDescriptor("([Ljava/lang/Object;)Ljava/lang/Object;"));
+                            mv.checkcast(ByteCodes.classDesc(entityName));
+                            mv.astore(2);
+                            Label label1 = mv.newLabel();
+                            mv.labelBinding(label1);
+
+                            for (int i = 0; i < attrs.length; i++) {
+                                final int colIndex = i + 1;
+                                final Attribute<T, Serializable> attr = attrs[i];
+                                java.lang.reflect.Method setter = null;
+                                java.lang.reflect.Field field = null;
+                                try {
+                                    setter = entityType.getMethod(
+                                            "set" + Utility.firstCharUpperCase(attr.field()), attr.type());
+                                } catch (Exception e) {
+                                    try {
+                                        field = entityType.getField(attr.field());
+                                    } catch (Exception e2) {
+                                        try {
+                                            setter = entityType.getMethod(attr.field(), attr.type());
+                                        } catch (Exception e3) {
+                                            // do nothing
+                                        }
+                                    }
+                                }
+                                if (attr.type() == boolean.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.iconst_0();
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getBoolean",
+                                                MethodTypeDesc.ofDescriptor("(IZ)Z"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                        continue;
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.iconst_0();
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getBoolean",
+                                                MethodTypeDesc.ofDescriptor("(IZ)Z"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("Z"));
+                                        continue;
+                                    }
+                                } else if (attr.type() == short.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.iconst_0();
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getShort",
+                                                MethodTypeDesc.ofDescriptor("(IS)S"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                        continue;
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.iconst_0();
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getShort",
+                                                MethodTypeDesc.ofDescriptor("(IS)S"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("S"));
+                                        continue;
+                                    }
+                                } else if (attr.type() == int.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.iconst_0();
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getInteger",
+                                                MethodTypeDesc.ofDescriptor("(II)I"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                        continue;
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.iconst_0();
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getInteger",
+                                                MethodTypeDesc.ofDescriptor("(II)I"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("I"));
+                                        continue;
+                                    }
+                                } else if (attr.type() == float.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.fconst_0();
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getFloat",
+                                                MethodTypeDesc.ofDescriptor("(IF)F"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                        continue;
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.fconst_0();
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getFloat",
+                                                MethodTypeDesc.ofDescriptor("(IF)F"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("F"));
+                                        continue;
+                                    }
+                                } else if (attr.type() == long.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.lconst_0();
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getLong",
+                                                MethodTypeDesc.ofDescriptor("(IJ)J"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                        continue;
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.lconst_0();
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getLong",
+                                                MethodTypeDesc.ofDescriptor("(IJ)J"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("J"));
+                                        continue;
+                                    }
+                                } else if (attr.type() == double.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.dconst_0();
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getDouble",
+                                                MethodTypeDesc.ofDescriptor("(ID)D"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                        continue;
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.dconst_0();
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getDouble",
+                                                MethodTypeDesc.ofDescriptor("(ID)D"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("D"));
+                                        continue;
+                                    }
+                                } else if (attr.type() == Boolean.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getBoolean",
+                                                MethodTypeDesc.ofDescriptor("(I)Ljava/lang/Boolean;"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                        continue;
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getBoolean",
+                                                MethodTypeDesc.ofDescriptor("(I)Ljava/lang/Boolean;"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("Ljava/lang/Boolean;"));
+                                        continue;
+                                    }
+                                } else if (attr.type() == Short.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getShort",
+                                                MethodTypeDesc.ofDescriptor("(I)Ljava/lang/Short;"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                        continue;
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getShort",
+                                                MethodTypeDesc.ofDescriptor("(I)Ljava/lang/Short;"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("Ljava/lang/Short;"));
+                                        continue;
+                                    }
+                                } else if (attr.type() == Integer.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getInteger",
+                                                MethodTypeDesc.ofDescriptor("(I)Ljava/lang/Integer;"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                        continue;
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getInteger",
+                                                MethodTypeDesc.ofDescriptor("(I)Ljava/lang/Integer;"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("Ljava/lang/Integer;"));
+                                        continue;
+                                    }
+                                } else if (attr.type() == Float.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getFloat",
+                                                MethodTypeDesc.ofDescriptor("(I)Ljava/lang/Float;"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                        continue;
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getFloat",
+                                                MethodTypeDesc.ofDescriptor("(I)Ljava/lang/Float;"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("Ljava/lang/Float;"));
+                                        continue;
+                                    }
+                                } else if (attr.type() == Long.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getLong",
+                                                MethodTypeDesc.ofDescriptor("(I)Ljava/lang/Long;"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                        continue;
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getLong",
+                                                MethodTypeDesc.ofDescriptor("(I)Ljava/lang/Long;"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("Ljava/lang/Long;"));
+                                        continue;
+                                    }
+                                } else if (attr.type() == Double.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getDouble",
+                                                MethodTypeDesc.ofDescriptor("(I)Ljava/lang/Double;"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                        continue;
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getDouble",
+                                                MethodTypeDesc.ofDescriptor("(I)Ljava/lang/Double;"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("Ljava/lang/Double;"));
+                                        continue;
+                                    }
+                                } else if (attr.type() == String.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getString",
+                                                MethodTypeDesc.ofDescriptor("(I)Ljava/lang/String;"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                        continue;
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getString",
+                                                MethodTypeDesc.ofDescriptor("(I)Ljava/lang/String;"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("Ljava/lang/String;"));
+                                        continue;
+                                    }
+                                } else if (attr.type() == byte[].class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getBytes",
+                                                MethodTypeDesc.ofDescriptor("(I)[B"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                        continue;
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getBytes",
+                                                MethodTypeDesc.ofDescriptor("(I)[B"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("[B"));
+                                        continue;
+                                    }
+                                } else if (attr.type() == BigDecimal.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getBigDecimal",
+                                                MethodTypeDesc.ofDescriptor("(I)Ljava/math/BigDecimal;"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                        continue;
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // row
+                                        mv.loadConstant(colIndex);
+                                        mv.invokeinterface(
+                                                ByteCodes.classDesc(rowName),
+                                                "getBigDecimal",
+                                                MethodTypeDesc.ofDescriptor("(I)Ljava/math/BigDecimal;"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("Ljava/math/BigDecimal;"));
+                                        continue;
+                                    }
+                                }
+                                mv.aload(0);
+                                mv.loadConstant(colIndex - 1);
+                                mv.aload(1); // row
+                                mv.aload(2); // obj
+                                mv.invokevirtual(
+                                        ByteCodes.classDesc(supDynName),
+                                        "setFieldValue",
+                                        MethodTypeDesc.ofDescriptor("(I" + rowDesc + objectDesc + ")V"));
+                            }
+
+                            mv.aload(2); // obj
+                            mv.areturn();
+                            Label label2 = mv.newLabel();
+                            mv.labelBinding(label2);
+                            mv.localVariable(0, "this", ClassDesc.ofDescriptor("L" + newDynName + ";"), label0, label2);
+                            mv.localVariable(1, "row", ClassDesc.ofDescriptor(rowDesc), label0, label2);
+                            mv.localVariable(2, "obj", ClassDesc.ofDescriptor(entityDesc), label1, label2);
+                        });
+            }
+            { // 虚拟 getObject(DataResultSetRow row)
+                cw.withMethodBody(
+                        "getObject",
+                        MethodTypeDesc.ofDescriptor("(" + rowDesc + ")" + objectDesc),
+                        ACC_PUBLIC | ACC_BRIDGE | ACC_SYNTHETIC,
+                        mv -> {
+                            mv.aload(0);
+                            mv.aload(1);
+                            mv.invokevirtual(
+                                    ByteCodes.classDesc(newDynName),
+                                    "getObject",
+                                    MethodTypeDesc.ofDescriptor("(" + rowDesc + ")" + entityDesc));
+                            mv.areturn();
+                        });
             }
 
-            mv.visitVarInsn(ALOAD, 2); // obj
-            mv.visitInsn(ARETURN);
-            Label label2 = new Label();
-            mv.visitLabel(label2);
-            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
-            mv.visitLocalVariable("row", rowDesc, null, label0, label2, 1);
-            mv.visitLocalVariable("obj", entityDesc, null, label1, label2, 2);
-            mv.visitMaxs(5, 3);
-            mv.visitEnd();
-        }
-        { // 虚拟 getObject(DataResultSetRow row)
-            mv = cw.visitMethod(
-                    ACC_PUBLIC | ACC_BRIDGE | ACC_SYNTHETIC, "getObject", "(" + rowDesc + ")" + objectDesc, null, null);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "getObject", "(" + rowDesc + ")" + entityDesc, false);
-            mv.visitInsn(ARETURN);
-            mv.visitMaxs(2, 2);
-            mv.visitEnd();
-        }
+            { // getObject(Serializable... values)
+                cw.withMethodBody(
+                        "getObject",
+                        MethodTypeDesc.ofDescriptor("(" + serisDesc + ")" + entityDesc),
+                        ACC_PUBLIC | ACC_VARARGS,
+                        mv -> {
+                            Label label0 = mv.newLabel();
+                            mv.labelBinding(label0);
+                            // creator.create()
+                            mv.aload(0);
+                            mv.getfield(
+                                    ByteCodes.classDesc(supDynName), "creator", ClassDesc.ofDescriptor(creatorDesc));
+                            mv.iconst_0();
+                            mv.anewarray(ByteCodes.classDesc("java/lang/Object"));
+                            mv.invokeinterface(
+                                    ByteCodes.classDesc(creatorName),
+                                    "create",
+                                    MethodTypeDesc.ofDescriptor("([Ljava/lang/Object;)" + objectDesc));
+                            mv.checkcast(ByteCodes.classDesc(entityName));
+                            mv.astore(2);
+                            Label label1 = mv.newLabel();
+                            mv.labelBinding(label1);
 
-        { // getObject(Serializable... values)
-            mv = cw.visitMethod(ACC_PUBLIC | ACC_VARARGS, "getObject", "(" + serisDesc + ")" + entityDesc, null, null);
-            Label label0 = new Label();
-            mv.visitLabel(label0);
-            // creator.create()
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, supDynName, "creator", creatorDesc);
-            mv.visitInsn(ICONST_0);
-            mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
-            mv.visitMethodInsn(INVOKEINTERFACE, creatorName, "create", "([Ljava/lang/Object;)" + objectDesc, true);
-            mv.visitTypeInsn(CHECKCAST, entityName);
-            mv.visitVarInsn(ASTORE, 2);
-            Label label1 = new Label();
-            mv.visitLabel(label1);
-
-            for (int i = 0; i < attrs.length; i++) {
-                final int attrIndex = i;
-                final Attribute<T, Serializable> attr = attrs[i];
-                java.lang.reflect.Method setter = null;
-                java.lang.reflect.Field field = null;
-                try {
-                    setter = entityType.getMethod("set" + Utility.firstCharUpperCase(attr.field()), attr.type());
-                } catch (Exception e) {
-                    try {
-                        field = entityType.getField(attr.field());
-                    } catch (Exception e2) {
-                        try {
-                            setter = entityType.getMethod(attr.field(), attr.type());
-                        } catch (Exception e3) {
-                            // do nothing
-                        }
-                    }
-                }
-                if (setter == null && field == null) {
-                    throw new SourceException("Not found '" + attr.field() + "' setter method or public field ");
-                }
-                if (attr.type() == boolean.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Boolean");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z", false);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Boolean");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z", false);
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Z");
-                    }
-                } else if (attr.type() == short.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Short");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Short", "shortValue", "()S", false);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Short");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Short", "shortValue", "()S", false);
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "S");
-                    }
-                } else if (attr.type() == int.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer", "intValue", "()I", false);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer", "intValue", "()I", false);
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "I");
-                    }
-                } else if (attr.type() == float.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Float");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Float", "floatValue", "()F", false);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Float");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Float", "floatValue", "()F", false);
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "F");
-                    }
-                } else if (attr.type() == long.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Long");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Long", "longValue", "()J", false);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Long");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Long", "longValue", "()J", false);
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "J");
-                    }
-                } else if (attr.type() == double.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Double");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Double", "doubleValue", "()D", false);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Double");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Double", "doubleValue", "()D", false);
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "D");
-                    }
-                } else if (attr.type() == Boolean.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Boolean");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Boolean");
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Boolean;");
-                    }
-                } else if (attr.type() == Short.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Short");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Short");
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Short;");
-                    }
-                } else if (attr.type() == Integer.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Integer;");
-                    }
-                } else if (attr.type() == Float.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Float");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Float");
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Float;");
-                    }
-                } else if (attr.type() == Long.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Long");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Long");
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Long;");
-                    }
-                } else if (attr.type() == Double.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Double");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Double");
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/Double;");
-                    }
-                } else if (attr.type() == String.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/String");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/String");
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/lang/String;");
-                    }
-                } else if (attr.type() == byte[].class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "[B");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "[B");
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "[B");
-                    }
-                } else if (attr.type() == BigDecimal.class) {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/math/BigDecimal");
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                    } else if (field != null) {
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        mv.visitTypeInsn(CHECKCAST, "java/math/BigDecimal");
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), "Ljava/math/BigDecimal;");
-                    }
-                } else {
-                    if (setter != null) {
-                        String desc = Type.getMethodDescriptor(setter);
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        ByteCodes.visitCheckCast(mv, setter.getParameterTypes()[0]);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, entityName, setter.getName(), desc, false);
-                    } else if (field != null) {
-                        String desc = Type.getDescriptor(field.getType());
-                        mv.visitVarInsn(ALOAD, 2); // obj
-                        mv.visitVarInsn(ALOAD, 1); // values
-                        ByteCodes.visitInsn(mv, attrIndex);
-                        mv.visitInsn(AALOAD);
-                        ByteCodes.visitCheckCast(mv, field.getType());
-                        mv.visitFieldInsn(PUTFIELD, entityName, field.getName(), desc);
-                    }
-                }
+                            for (int i = 0; i < attrs.length; i++) {
+                                final int attrIndex = i;
+                                final Attribute<T, Serializable> attr = attrs[i];
+                                java.lang.reflect.Method setter = null;
+                                java.lang.reflect.Field field = null;
+                                try {
+                                    setter = entityType.getMethod(
+                                            "set" + Utility.firstCharUpperCase(attr.field()), attr.type());
+                                } catch (Exception e) {
+                                    try {
+                                        field = entityType.getField(attr.field());
+                                    } catch (Exception e2) {
+                                        try {
+                                            setter = entityType.getMethod(attr.field(), attr.type());
+                                        } catch (Exception e3) {
+                                            // do nothing
+                                        }
+                                    }
+                                }
+                                if (setter == null && field == null) {
+                                    throw new SourceException(
+                                            "Not found '" + attr.field() + "' setter method or public field ");
+                                }
+                                if (attr.type() == boolean.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Boolean"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc("java/lang/Boolean"),
+                                                "booleanValue",
+                                                MethodTypeDesc.ofDescriptor("()Z"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Boolean"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc("java/lang/Boolean"),
+                                                "booleanValue",
+                                                MethodTypeDesc.ofDescriptor("()Z"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("Z"));
+                                    }
+                                } else if (attr.type() == short.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Short"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc("java/lang/Short"),
+                                                "shortValue",
+                                                MethodTypeDesc.ofDescriptor("()S"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Short"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc("java/lang/Short"),
+                                                "shortValue",
+                                                MethodTypeDesc.ofDescriptor("()S"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("S"));
+                                    }
+                                } else if (attr.type() == int.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Integer"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc("java/lang/Integer"),
+                                                "intValue",
+                                                MethodTypeDesc.ofDescriptor("()I"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Integer"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc("java/lang/Integer"),
+                                                "intValue",
+                                                MethodTypeDesc.ofDescriptor("()I"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("I"));
+                                    }
+                                } else if (attr.type() == float.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Float"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc("java/lang/Float"),
+                                                "floatValue",
+                                                MethodTypeDesc.ofDescriptor("()F"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Float"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc("java/lang/Float"),
+                                                "floatValue",
+                                                MethodTypeDesc.ofDescriptor("()F"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("F"));
+                                    }
+                                } else if (attr.type() == long.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Long"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc("java/lang/Long"),
+                                                "longValue",
+                                                MethodTypeDesc.ofDescriptor("()J"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Long"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc("java/lang/Long"),
+                                                "longValue",
+                                                MethodTypeDesc.ofDescriptor("()J"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("J"));
+                                    }
+                                } else if (attr.type() == double.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Double"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc("java/lang/Double"),
+                                                "doubleValue",
+                                                MethodTypeDesc.ofDescriptor("()D"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Double"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc("java/lang/Double"),
+                                                "doubleValue",
+                                                MethodTypeDesc.ofDescriptor("()D"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("D"));
+                                    }
+                                } else if (attr.type() == Boolean.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Boolean"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Boolean"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("Ljava/lang/Boolean;"));
+                                    }
+                                } else if (attr.type() == Short.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Short"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Short"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("Ljava/lang/Short;"));
+                                    }
+                                } else if (attr.type() == Integer.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Integer"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Integer"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("Ljava/lang/Integer;"));
+                                    }
+                                } else if (attr.type() == Float.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Float"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Float"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("Ljava/lang/Float;"));
+                                    }
+                                } else if (attr.type() == Long.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Long"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Long"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("Ljava/lang/Long;"));
+                                    }
+                                } else if (attr.type() == Double.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Double"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Double"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("Ljava/lang/Double;"));
+                                    }
+                                } else if (attr.type() == String.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/String"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/String"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("Ljava/lang/String;"));
+                                    }
+                                } else if (attr.type() == byte[].class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("[B"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("[B"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("[B"));
+                                    }
+                                } else if (attr.type() == BigDecimal.class) {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/math/BigDecimal"));
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                    } else if (field != null) {
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        mv.checkcast(ByteCodes.classDesc("java/math/BigDecimal"));
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor("Ljava/math/BigDecimal;"));
+                                    }
+                                } else {
+                                    if (setter != null) {
+                                        String desc = ByteCodes.methodDescriptor(setter);
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        ByteCodes.visitCheckCast(mv, setter.getParameterTypes()[0]);
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(entityName),
+                                                setter.getName(),
+                                                MethodTypeDesc.ofDescriptor(desc));
+                                    } else if (field != null) {
+                                        String desc = ByteCodes.descriptor(field.getType());
+                                        mv.aload(2); // obj
+                                        mv.aload(1); // values
+                                        mv.loadConstant(attrIndex);
+                                        mv.aaload();
+                                        ByteCodes.visitCheckCast(mv, field.getType());
+                                        mv.putfield(
+                                                ByteCodes.classDesc(entityName),
+                                                field.getName(),
+                                                ClassDesc.ofDescriptor(desc));
+                                    }
+                                }
+                            }
+                            mv.aload(2); // obj
+                            mv.areturn();
+                            Label label2 = mv.newLabel();
+                            mv.labelBinding(label2);
+                            mv.localVariable(0, "this", ClassDesc.ofDescriptor("L" + newDynName + ";"), label0, label2);
+                            mv.localVariable(1, "values", ClassDesc.ofDescriptor(serisDesc), label0, label2);
+                            mv.localVariable(2, "obj", ClassDesc.ofDescriptor(entityDesc), label1, label2);
+                        });
             }
-            mv.visitVarInsn(ALOAD, 2); // obj
-            mv.visitInsn(ARETURN);
-            Label label2 = new Label();
-            mv.visitLabel(label2);
-            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
-            mv.visitLocalVariable("values", serisDesc, null, label0, label2, 1);
-            mv.visitLocalVariable("obj", entityDesc, null, label1, label2, 2);
-            mv.visitMaxs(3, 3);
-            mv.visitEnd();
-        }
-        { // 虚拟 getObject(Serializable... values)
-            int access = ACC_PUBLIC | ACC_BRIDGE | ACC_VARARGS | ACC_SYNTHETIC;
-            mv = cw.visitMethod(access, "getObject", "(" + serisDesc + ")" + objectDesc, null, null);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "getObject", "(" + serisDesc + ")" + entityDesc, false);
-            mv.visitInsn(ARETURN);
-            mv.visitMaxs(2, 2);
-            mv.visitEnd();
-        }
-        cw.visitEnd();
+            { // 虚拟 getObject(Serializable... values)
+                int access = ACC_PUBLIC | ACC_BRIDGE | ACC_VARARGS | ACC_SYNTHETIC;
+                cw.withMethodBody(
+                        "getObject", MethodTypeDesc.ofDescriptor("(" + serisDesc + ")" + objectDesc), access, mv -> {
+                            mv.aload(0);
+                            mv.aload(1);
+                            mv.invokevirtual(
+                                    ByteCodes.classDesc(newDynName),
+                                    "getObject",
+                                    MethodTypeDesc.ofDescriptor("(" + serisDesc + ")" + entityDesc));
+                            mv.areturn();
+                        });
+            }
+        });
 
-        byte[] bytes = cw.toByteArray();
+        byte[] bytes = classBytes;
         Class<EntityFullFunc> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {

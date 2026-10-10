@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.redkale.annotation.Param;
-import org.redkale.asm.Type;
 
 /**
  * 存放方法的字节信息
@@ -43,7 +42,7 @@ public class CodeMethodBean {
     }
 
     public static CodeMethodBean get(Map<String, CodeMethodBean> map, Method method) {
-        return map == null ? null : map.get(method.getName() + ":" + Type.getMethodDescriptor(method));
+        return map == null ? null : map.get(method.getName() + ":" + ByteCodes.methodDescriptor(method));
     }
 
     void removeEmptyNames() {

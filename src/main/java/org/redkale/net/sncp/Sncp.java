@@ -8,17 +8,23 @@ package org.redkale.net.sncp;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
+import static java.lang.classfile.ClassFile.*;
 import static org.redkale.util.Utility.isEmpty;
 
 import java.lang.annotation.*;
+import java.lang.classfile.AnnotationElement;
+import java.lang.classfile.ClassBuilder;
+import java.lang.classfile.ClassFile;
+import java.lang.classfile.Label;
+import java.lang.classfile.MethodSignature;
+import java.lang.classfile.Signature;
+import java.lang.classfile.TypeKind;
+import java.lang.classfile.attribute.*;
+import java.lang.constant.*;
 import java.lang.reflect.*;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import org.redkale.annotation.*;
-import org.redkale.asm.*;
-import org.redkale.asm.Type;
 import org.redkale.bytecode.*;
 import org.redkale.convert.pb.ProtobufConvert;
 import org.redkale.inject.Resourcable;
@@ -510,9 +516,9 @@ public abstract class Sncp {
             throw new SncpException(serviceImplClass + " is abstract");
         }
         final String supDynName = serviceImplClass.getName().replace('.', '/');
-        final String resDesc = Type.getDescriptor(Resource.class);
-        final String anyValueDesc = Type.getDescriptor(AnyValue.class);
-        final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
+        final String resDesc = ByteCodes.descriptor(Resource.class);
+        final String anyValueDesc = ByteCodes.descriptor(AnyValue.class);
+        final String sncpDynDesc = ByteCodes.descriptor(SncpDyn.class);
         // String newDynName = supDynName.substring(0, supDynName.lastIndexOf('/') + 1) + LOCALPREFIX +
         // serviceImplClass.getSimpleName();
         String newDynName = "org/redkaledyn/service/local/_DynLocalService__"
@@ -537,64 +543,78 @@ public abstract class Sncp {
         }
         // }
         // ------------------------------------------------------------------------------
-        ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
-        FieldVisitor fv;
-        MethodDebugVisitor mv;
-        AnnotationVisitor av0;
 
-        cw.visit(V11, ACC_PUBLIC + ACC_SUPER, newDynName, null, supDynName, null);
-        { // 给动态生成的Service类标记上Resource
-            av0 = cw.visitAnnotation(resDesc, true);
-            av0.visit("name", resourceName);
-            av0.visitEnd();
-        }
-        {
-            av0 = cw.visitAnnotation(sncpDynDesc, true);
-            av0.visit("remote", Boolean.FALSE);
-            av0.visit("type", Type.getType(Type.getDescriptor(serviceImplClass)));
-            av0.visitEnd();
-        }
-        { // 给新类加上原有的Annotation
-            for (Annotation ann : serviceImplClass.getAnnotations()) {
-                if (ann instanceof Resource || ann instanceof SncpDyn || ann instanceof ResourceType) {
-                    continue;
+        final String dynName = newDynName;
+        byte[] classBytes = ClassFile.of().build(ByteCodes.classDesc(dynName), cw -> {
+            cw.withVersion(JAVA_11_VERSION, 0)
+                    .withFlags(ACC_PUBLIC + ACC_SUPER)
+                    .withSuperclass(ByteCodes.classDesc(supDynName));
+            List<java.lang.classfile.Annotation> cwAnnotations = new ArrayList<>();
+            List<InnerClassInfo> cwInnerClasses = new ArrayList<>();
+
+            { // 给动态生成的Service类标记上Resource
+                {
+                    List<AnnotationElement> av0 = new ArrayList<>();
+                    av0.add(AnnotationElement.of("name", ByteCodes.annotationValue(resourceName)));
+                    cwAnnotations.add(java.lang.classfile.Annotation.of(ClassDesc.ofDescriptor(resDesc), av0));
                 }
-                ByteCodes.visitAnnotation(
-                        cw.visitAnnotation(Type.getDescriptor(ann.annotationType()), true), ann.annotationType(), ann);
             }
-        }
-        {
-            av0 = cw.visitAnnotation(Type.getDescriptor(ResourceType.class), true);
-            ResourceType rty = serviceImplClass.getAnnotation(ResourceType.class);
-            av0.visit("value", Type.getType(Type.getDescriptor(rty != null ? rty.value() : serviceImplClass)));
-            av0.visitEnd();
-        }
-        {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_conf", anyValueDesc, null, null);
-            fv.visitEnd();
-        }
-        {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_mq", Type.getDescriptor(String.class), null, null);
-            fv.visitEnd();
-        }
-        if (methodBoost != null) {
-            createNewMethods(classLoader, serviceImplClass, methodBoost, new HashSet<>(), cw, newDynName, supDynName);
-            methodBoost.doAfterMethods(classLoader, cw, newDynName, FIELDPREFIX);
-        }
-        { // 构造函数
-            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
-            // mv.setDebug(true);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, supDynName, "<init>", "()V", false);
+            {
+                {
+                    List<AnnotationElement> av0 = new ArrayList<>();
+                    av0.add(AnnotationElement.of("remote", ByteCodes.annotationValue(Boolean.FALSE)));
+                    av0.add(AnnotationElement.of(
+                            "type",
+                            ByteCodes.annotationValue(ByteCodes.constantType(ByteCodes.descriptor(serviceImplClass)))));
+                    cwAnnotations.add(java.lang.classfile.Annotation.of(ClassDesc.ofDescriptor(sncpDynDesc), av0));
+                }
+            }
+            { // 给新类加上原有的Annotation
+                for (Annotation ann : serviceImplClass.getAnnotations()) {
+                    if (ann instanceof Resource || ann instanceof SncpDyn || ann instanceof ResourceType) {
+                        continue;
+                    }
+                    cwAnnotations.add(ByteCodes.annotation(ann.annotationType(), ann));
+                }
+            }
+            {
+                {
+                    List<AnnotationElement> av0 = new ArrayList<>();
+                    ResourceType rty = serviceImplClass.getAnnotation(ResourceType.class);
+                    av0.add(AnnotationElement.of(
+                            "value",
+                            ByteCodes.annotationValue(ByteCodes.constantType(
+                                    ByteCodes.descriptor(rty != null ? rty.value() : serviceImplClass)))));
+                    cwAnnotations.add(java.lang.classfile.Annotation.of(
+                            ClassDesc.ofDescriptor(ByteCodes.descriptor(ResourceType.class)), av0));
+                }
+            }
+            {
+                cw.withField(FIELDPREFIX + "_conf", ClassDesc.ofDescriptor(anyValueDesc), ACC_PRIVATE);
+            }
+            {
+                cw.withField(
+                        FIELDPREFIX + "_mq", ClassDesc.ofDescriptor(ByteCodes.descriptor(String.class)), ACC_PRIVATE);
+            }
             if (methodBoost != null) {
-                methodBoost.doConstructorMethod(classLoader, cw, mv, newDynName, FIELDPREFIX, false);
+                createNewMethods(classLoader, serviceImplClass, methodBoost, new HashSet<>(), cw, dynName, supDynName);
+                methodBoost.doAfterMethods(classLoader, cw, dynName, FIELDPREFIX, cwAnnotations);
             }
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
-        cw.visitEnd();
-        byte[] bytes = cw.toByteArray();
+            { // 构造函数
+                cw.withMethodBody("<init>", MethodTypeDesc.ofDescriptor("()V"), ACC_PUBLIC, mv -> {
+                    mv.aload(0);
+                    mv.invokespecial(
+                            ByteCodes.classDesc(supDynName), "<init>", MethodTypeDesc.ofDescriptor("()V"), false);
+                    if (methodBoost != null) {
+                        methodBoost.doConstructorMethod(classLoader, cw, mv, dynName, FIELDPREFIX, false);
+                    }
+                    mv.return_();
+                });
+            }
+            if (!cwAnnotations.isEmpty()) cw.with(RuntimeVisibleAnnotationsAttribute.of(cwAnnotations));
+            if (!cwInnerClasses.isEmpty()) cw.with(InnerClassesAttribute.of(cwInnerClasses));
+        });
+        byte[] bytes = classBytes;
         final String newDynClass = newDynName.replace('/', '.');
         Class<?> newClazz = classLoader.loadClass(newDynClass, bytes);
         RedkaleClassLoader.putReflectionPublicClasses(newDynClass);
@@ -622,13 +642,13 @@ public abstract class Sncp {
             Class clazz,
             final CodeMethodBoost methodBoost,
             Set<String> methodKeys,
-            ClassWriter cw,
+            ClassBuilder cw,
             String newDynName,
             String supDynName) {
         if (methodBoost == null) {
             return;
         }
-        MethodDebugVisitor mv = null;
+
         do {
             Map<String, CodeMethodBean> methodBeans = CodeMethodBoost.getMethodBeans(clazz);
             for (final Method method : clazz.getDeclaredMethods()) {
@@ -642,7 +662,7 @@ public abstract class Sncp {
                 CodeNewMethod newMethod =
                         methodBoost.doMethod(classLoader, cw, clazz, newDynName, FIELDPREFIX, filterAnns, method, null);
                 if (newMethod != null) {
-                    String desc = Type.getMethodDescriptor(method);
+                    String desc = ByteCodes.methodDescriptor(method);
                     CodeMethodBean methodBean = CodeMethodBean.get(methodBeans, method);
                     String signature = null;
                     String[] exceptions = null;
@@ -659,71 +679,93 @@ public abstract class Sncp {
                         exceptions = methodBean.getExceptions();
                     }
                     // 需要定义一个新方法调用 super.method
-                    mv = new MethodDebugVisitor(cw.visitMethod(
-                            newMethod.getMethodAccs(), newMethod.getMethodName(), desc, signature, exceptions));
-                    Label l0 = new Label();
-                    mv.visitLabel(l0);
-                    // mv.setDebug(true);
-                    mv.visitVarInsn(ALOAD, 0);
-                    // 传参数
-                    Class[] paramTypes = method.getParameterTypes();
-                    List<Integer> insns = new ArrayList<>();
-                    int insn = 0;
-                    for (Class pt : paramTypes) {
-                        insn++;
-                        insns.add(insn);
-                        if (pt.isPrimitive()) {
-                            if (pt == long.class) {
-                                mv.visitVarInsn(LLOAD, insn++);
-                            } else if (pt == float.class) {
-                                mv.visitVarInsn(FLOAD, insn);
-                            } else if (pt == double.class) {
-                                mv.visitVarInsn(DLOAD, insn++);
-                            } else {
-                                mv.visitVarInsn(ILOAD, insn);
-                            }
-                        } else {
-                            mv.visitVarInsn(ALOAD, insn);
-                        }
-                    }
-                    mv.visitMethodInsn(
-                            INVOKESPECIAL, supDynName, method.getName(), Type.getMethodDescriptor(method), false);
-                    if (method.getGenericReturnType() == void.class) {
-                        mv.visitInsn(RETURN);
-                    } else {
-                        Class returnclz = method.getReturnType();
-                        if (returnclz.isPrimitive()) {
-                            if (returnclz == long.class) {
-                                mv.visitInsn(LRETURN);
-                            } else if (returnclz == float.class) {
-                                mv.visitInsn(FRETURN);
-                            } else if (returnclz == double.class) {
-                                mv.visitInsn(DRETURN);
-                            } else {
-                                mv.visitInsn(IRETURN);
-                            }
-                        } else {
-                            mv.visitInsn(ARETURN);
-                        }
-                    }
-                    if (methodBean != null && paramTypes.length > 0) {
-                        Label l2 = new Label();
-                        mv.visitLabel(l2);
-                        // mv.visitLocalVariable("this", thisClassDesc, null, l0, l2, 0);
-                        List<CodeMethodParam> params = methodBean.getParams();
-                        for (int i = 0; i < paramTypes.length; i++) {
-                            CodeMethodParam param = params.get(i);
-                            mv.visitLocalVariable(
-                                    param.getName(),
-                                    param.description(paramTypes[i]),
-                                    param.signature(paramTypes[i]),
-                                    l0,
-                                    l2,
-                                    insns.get(i));
-                        }
-                    }
-                    mv.visitMaxs(20, 20);
-                    mv.visitEnd();
+                    final String methodSignature = signature;
+                    final String[] methodExceptions = exceptions;
+                    cw.withMethod(
+                            newMethod.getMethodName(),
+                            MethodTypeDesc.ofDescriptor(desc),
+                            newMethod.getMethodAccs(),
+                            mb -> {
+                                if (methodSignature != null)
+                                    mb.with(SignatureAttribute.of(MethodSignature.parseFrom(methodSignature)));
+                                if (methodExceptions != null)
+                                    mb.with(ExceptionsAttribute.ofSymbols(Arrays.stream(methodExceptions)
+                                            .map(ByteCodes::classDesc)
+                                            .toList()));
+
+                                mb.withCode(mv -> {
+                                    Label l0 = mv.newLabel();
+                                    mv.labelBinding(l0);
+
+                                    mv.aload(0);
+                                    // 传参数
+                                    Class[] paramTypes = method.getParameterTypes();
+                                    List<Integer> insns = new ArrayList<>();
+                                    int insn = 0;
+                                    for (Class pt : paramTypes) {
+                                        insn++;
+                                        insns.add(insn);
+                                        if (pt.isPrimitive()) {
+                                            if (pt == long.class) {
+                                                mv.lload(insn++);
+                                            } else if (pt == float.class) {
+                                                mv.fload(insn);
+                                            } else if (pt == double.class) {
+                                                mv.dload(insn++);
+                                            } else {
+                                                mv.iload(insn);
+                                            }
+                                        } else {
+                                            mv.aload(insn);
+                                        }
+                                    }
+                                    mv.invokespecial(
+                                            ByteCodes.classDesc(supDynName),
+                                            method.getName(),
+                                            MethodTypeDesc.ofDescriptor(ByteCodes.methodDescriptor(method)),
+                                            false);
+                                    if (method.getGenericReturnType() == void.class) {
+                                        mv.return_();
+                                    } else {
+                                        Class returnclz = method.getReturnType();
+                                        if (returnclz.isPrimitive()) {
+                                            if (returnclz == long.class) {
+                                                mv.lreturn();
+                                            } else if (returnclz == float.class) {
+                                                mv.freturn();
+                                            } else if (returnclz == double.class) {
+                                                mv.dreturn();
+                                            } else {
+                                                mv.ireturn();
+                                            }
+                                        } else {
+                                            mv.areturn();
+                                        }
+                                    }
+                                    if (methodBean != null && paramTypes.length > 0) {
+                                        Label l2 = mv.newLabel();
+                                        mv.labelBinding(l2);
+
+                                        List<CodeMethodParam> params = methodBean.getParams();
+                                        for (int i = 0; i < paramTypes.length; i++) {
+                                            CodeMethodParam param = params.get(i);
+                                            mv.localVariable(
+                                                    insns.get(i),
+                                                    param.getName(),
+                                                    ClassDesc.ofDescriptor(param.description(paramTypes[i])),
+                                                    l0,
+                                                    l2);
+                                            if (param.signature(paramTypes[i]) != null)
+                                                mv.localVariableType(
+                                                        insns.get(i),
+                                                        param.getName(),
+                                                        Signature.parseFrom(param.signature(paramTypes[i])),
+                                                        l0,
+                                                        l2);
+                                        }
+                                    }
+                                });
+                            });
                 }
             }
         } while ((clazz = clazz.getSuperclass()) != Object.class);
@@ -927,10 +969,10 @@ public abstract class Sncp {
                 remoteGroup);
         final String supDynName = serviceTypeOrImplClass.getName().replace('.', '/');
         final String sncpInfoName = SncpRemoteInfo.class.getName().replace('.', '/');
-        final String resDesc = Type.getDescriptor(Resource.class);
-        final String sncpInfoDesc = Type.getDescriptor(SncpRemoteInfo.class);
-        final String sncpDynDesc = Type.getDescriptor(SncpDyn.class);
-        final String anyValueDesc = Type.getDescriptor(AnyValue.class);
+        final String resDesc = ByteCodes.descriptor(Resource.class);
+        final String sncpInfoDesc = ByteCodes.descriptor(SncpRemoteInfo.class);
+        final String sncpDynDesc = ByteCodes.descriptor(SncpDyn.class);
+        final String anyValueDesc = ByteCodes.descriptor(AnyValue.class);
         String newDynName = "org/redkaledyn/service/remote/_DynRemoteService__"
                 + serviceTypeOrImplClass.getName().replace('.', '_').replace('$', '_');
         if (!resourceName.isEmpty()) {
@@ -972,255 +1014,234 @@ public abstract class Sncp {
             // do nothing
         }
         // ------------------------------------------------------------------------------
-        ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
-        FieldVisitor fv;
-        MethodDebugVisitor mv;
-        AnnotationVisitor av0;
 
-        cw.visit(
-                V11,
-                ACC_PUBLIC + ACC_SUPER,
-                newDynName,
-                null,
-                serviceTypeOrImplClass.isInterface() ? "java/lang/Object" : supDynName,
-                serviceTypeOrImplClass.isInterface() ? new String[] {supDynName} : null);
-        { // 给动态生成的Service类标记上Resource
-            av0 = cw.visitAnnotation(resDesc, true);
-            av0.visit("name", resourceName);
-            av0.visitEnd();
-        }
-        {
-            av0 = cw.visitAnnotation(Type.getDescriptor(ResourceType.class), true);
-            ResourceType rty = serviceTypeOrImplClass.getAnnotation(ResourceType.class);
-            av0.visit("value", Type.getType(Type.getDescriptor(rty != null ? rty.value() : serviceTypeOrImplClass)));
-            av0.visitEnd();
-        }
-        {
-            av0 = cw.visitAnnotation(sncpDynDesc, true);
-            av0.visit("remote", Boolean.TRUE);
-            av0.visit("type", Type.getType(Type.getDescriptor(serviceTypeOrImplClass)));
-            av0.visitEnd();
-        }
-        { // 给新类加上原有的Annotation
-            for (Annotation ann : serviceTypeOrImplClass.getAnnotations()) {
-                if (ann instanceof Resource || ann instanceof SncpDyn || ann instanceof ResourceType) {
+        final String dynName = newDynName;
+        byte[] classBytes = ClassFile.of().build(ByteCodes.classDesc(dynName), cw -> {
+            cw.withVersion(JAVA_11_VERSION, 0)
+                    .withFlags(ACC_PUBLIC + ACC_SUPER)
+                    .withSuperclass(ByteCodes.classDesc(
+                            serviceTypeOrImplClass.isInterface() ? "java/lang/Object" : supDynName));
+            List<java.lang.classfile.Annotation> cwAnnotations = new ArrayList<>();
+            List<InnerClassInfo> cwInnerClasses = new ArrayList<>();
+            if ((serviceTypeOrImplClass.isInterface() ? new String[] {supDynName} : null) != null)
+                cw.withInterfaceSymbols(
+                        Arrays.stream(serviceTypeOrImplClass.isInterface() ? new String[] {supDynName} : null)
+                                .map(ByteCodes::classDesc)
+                                .toList());
+            { // 给动态生成的Service类标记上Resource
+                {
+                    List<AnnotationElement> av0 = new ArrayList<>();
+                    av0.add(AnnotationElement.of("name", ByteCodes.annotationValue(resourceName)));
+                    cwAnnotations.add(java.lang.classfile.Annotation.of(ClassDesc.ofDescriptor(resDesc), av0));
+                }
+            }
+            {
+                {
+                    List<AnnotationElement> av0 = new ArrayList<>();
+                    ResourceType rty = serviceTypeOrImplClass.getAnnotation(ResourceType.class);
+                    av0.add(AnnotationElement.of(
+                            "value",
+                            ByteCodes.annotationValue(ByteCodes.constantType(
+                                    ByteCodes.descriptor(rty != null ? rty.value() : serviceTypeOrImplClass)))));
+                    cwAnnotations.add(java.lang.classfile.Annotation.of(
+                            ClassDesc.ofDescriptor(ByteCodes.descriptor(ResourceType.class)), av0));
+                }
+            }
+            {
+                {
+                    List<AnnotationElement> av0 = new ArrayList<>();
+                    av0.add(AnnotationElement.of("remote", ByteCodes.annotationValue(Boolean.TRUE)));
+                    av0.add(AnnotationElement.of(
+                            "type",
+                            ByteCodes.annotationValue(
+                                    ByteCodes.constantType(ByteCodes.descriptor(serviceTypeOrImplClass)))));
+                    cwAnnotations.add(java.lang.classfile.Annotation.of(ClassDesc.ofDescriptor(sncpDynDesc), av0));
+                }
+            }
+            { // 给新类加上原有的Annotation
+                for (Annotation ann : serviceTypeOrImplClass.getAnnotations()) {
+                    if (ann instanceof Resource || ann instanceof SncpDyn || ann instanceof ResourceType) {
+                        continue;
+                    }
+                    cwAnnotations.add(ByteCodes.annotation(ann.annotationType(), ann));
+                }
+            }
+            {
+                cw.withField(FIELDPREFIX + "_conf", ClassDesc.ofDescriptor(anyValueDesc), ACC_PRIVATE);
+            }
+            {
+                cw.withField(
+                        FIELDPREFIX + "_mq", ClassDesc.ofDescriptor(ByteCodes.descriptor(String.class)), ACC_PRIVATE);
+            }
+            {
+                cw.withField(FIELDPREFIX + "_sncp", ClassDesc.ofDescriptor(sncpInfoDesc), ACC_PRIVATE);
+            }
+            { // init
+                cw.withMethodBody("init", MethodTypeDesc.ofDescriptor("(" + anyValueDesc + ")V"), ACC_PUBLIC, mv -> {
+                    mv.return_();
+                });
+            }
+            { // destroy
+                cw.withMethodBody("destroy", MethodTypeDesc.ofDescriptor("(" + anyValueDesc + ")V"), ACC_PUBLIC, mv -> {
+                    mv.return_();
+                });
+            }
+            //        { // toString()
+
+            // null));
+
+            //            Label l1 = mv.newLabel();
+
+            //            Label l2 = mv.newLabel();
+
+            //        }
+            Set<String> methodKeys = new HashSet<>();
+            Map<String, CodeMethodBean> methodBeans = CodeMethodBoost.getMethodBeans(serviceTypeOrImplClass);
+            for (final SncpRemoteAction entry : info.getActions()) {
+                final java.lang.reflect.Method method = entry.method;
+                String mk = Utility.methodKey(method);
+                if (methodKeys.contains(mk)) {
+                    // 跳过已处理的继承方法
                     continue;
                 }
-                ByteCodes.visitAnnotation(
-                        cw.visitAnnotation(Type.getDescriptor(ann.annotationType()), true), ann.annotationType(), ann);
-            }
-        }
-        {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_conf", anyValueDesc, null, null);
-            fv.visitEnd();
-        }
-        {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_mq", Type.getDescriptor(String.class), null, null);
-            fv.visitEnd();
-        }
-        {
-            fv = cw.visitField(ACC_PRIVATE, FIELDPREFIX + "_sncp", sncpInfoDesc, null, null);
-            fv.visitEnd();
-        }
-        { // init
-            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "init", "(" + anyValueDesc + ")V", null, null));
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(0, 2);
-            mv.visitEnd();
-        }
-        { // destroy
-            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "destroy", "(" + anyValueDesc + ")V", null, null));
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(0, 2);
-            mv.visitEnd();
-        }
-        //        { // toString()
-        //            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null,
-        // null));
-        //            mv.visitVarInsn(ALOAD, 0);
-        //            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_sncp", sncpInfoDesc);
-        //            Label l1 = new Label();
-        //            mv.visitJumpInsn(IFNONNULL, l1);
-        //            mv.visitVarInsn(ALOAD, 0);
-        //            mv.visitCheckCast(INVOKEVIRTUAL, "java/lang/Object", "getClass", "()Ljava/lang/Class;", false);
-        //            mv.visitCheckCast(INVOKEVIRTUAL, "java/lang/Class", "getName", "()Ljava/lang/String;", false);
-        //            Label l2 = new Label();
-        //            mv.visitJumpInsn(GOTO, l2);
-        //            mv.visitLabel(l1);
-        //            mv.visitVarInsn(ALOAD, 0);
-        //            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_sncp", sncpInfoDesc);
-        //            mv.visitCheckCast(INVOKEVIRTUAL, sncpInfoName, "toSimpleString", "()Ljava/lang/String;", false);
-        //            mv.visitLabel(l2);
-        //            mv.visitInsn(ARETURN);
-        //            mv.visitMaxs(1, 1);
-        //            mv.visitEnd();
-        //        }
-        Set<String> methodKeys = new HashSet<>();
-        Map<String, CodeMethodBean> methodBeans = CodeMethodBoost.getMethodBeans(serviceTypeOrImplClass);
-        for (final SncpRemoteAction entry : info.getActions()) {
-            final java.lang.reflect.Method method = entry.method;
-            String mk = Utility.methodKey(method);
-            if (methodKeys.contains(mk)) {
-                // 跳过已处理的继承方法
-                continue;
-            }
-            methodKeys.add(mk);
+                methodKeys.add(mk);
 
-            int acc = ACC_PUBLIC;
-            CodeNewMethod newMethod = null;
-            String newMethodName = null;
-            if (methodBoost != null) {
-                List<Class<? extends Annotation>> filterAnns = methodBoost.filterMethodAnnotations(method);
-                newMethod = methodBoost.doMethod(
-                        classLoader, cw, serviceTypeOrImplClass, newDynName, FIELDPREFIX, filterAnns, method, null);
-            }
-            if (newMethod != null) {
-                acc = newMethod.getMethodAccs();
-                newMethodName = newMethod.getMethodName();
-            } else {
-                newMethodName = method.getName();
-            }
-            mv = new MethodDebugVisitor(
-                    cw.visitMethod(acc, newMethodName, Type.getMethodDescriptor(method), null, null));
-            Label l0 = new Label();
-            mv.visitLabel(l0);
-            // mv.setDebug(true);
-            { // 给参数加上 Annotation
-                final Annotation[][] anns = method.getParameterAnnotations();
-                for (int k = 0; k < anns.length; k++) {
-                    for (Annotation ann : anns[k]) {
-                        ByteCodes.visitAnnotation(
-                                mv.visitParameterAnnotation(k, Type.getDescriptor(ann.annotationType()), true),
-                                ann.annotationType(),
-                                ann);
-                    }
+                int acc = ACC_PUBLIC;
+                CodeNewMethod newMethod = null;
+                String newMethodName = null;
+                if (methodBoost != null) {
+                    List<Class<? extends Annotation>> filterAnns = methodBoost.filterMethodAnnotations(method);
+                    newMethod = methodBoost.doMethod(
+                            classLoader, cw, serviceTypeOrImplClass, dynName, FIELDPREFIX, filterAnns, method, null);
                 }
-            }
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, newDynName, FIELDPREFIX + "_sncp", sncpInfoDesc);
-
-            mv.visitLdcInsn(entry.actionid.toString());
-
-            CodeMethodBean methodBean = CodeMethodBean.get(methodBeans, method);
-            List<Integer> insns = new ArrayList<>();
-            java.lang.reflect.Type[] paramTypes = entry.paramTypes;
-            { // 传参数
-                int paramlen = entry.paramTypes.length;
-                ByteCodes.visitInsn(mv, paramlen);
-                mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
-                int insn = 0;
-                for (int j = 0; j < paramTypes.length; j++) {
-                    final java.lang.reflect.Type pt = paramTypes[j];
-                    mv.visitInsn(DUP);
-                    insn++;
-                    ByteCodes.visitInsn(mv, j);
-                    if (pt instanceof Class && ((Class) pt).isPrimitive()) {
-                        if (pt == long.class) {
-                            mv.visitVarInsn(LLOAD, insn++);
-                        } else if (pt == float.class) {
-                            mv.visitVarInsn(FLOAD, insn++);
-                        } else if (pt == double.class) {
-                            mv.visitVarInsn(DLOAD, insn++);
-                        } else {
-                            mv.visitVarInsn(ILOAD, insn);
-                        }
-                        Class bigclaz = TypeToken.primitiveToWrapper((Class) pt);
-                        mv.visitMethodInsn(
-                                INVOKESTATIC,
-                                bigclaz.getName().replace('.', '/'),
-                                "valueOf",
-                                "(" + Type.getDescriptor((Class) pt) + ")" + Type.getDescriptor(bigclaz),
-                                false);
-                    } else {
-                        mv.visitVarInsn(ALOAD, insn);
-                    }
-                    mv.visitInsn(AASTORE);
-                    insns.add(insn);
-                }
-            }
-
-            mv.visitMethodInsn(
-                    INVOKEVIRTUAL,
-                    sncpInfoName,
-                    "remote",
-                    "(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object;",
-                    false);
-            // mv.visitCheckCast(INVOKEVIRTUAL, convertName, "convertFrom", convertFromDesc, false);
-            if (method.getGenericReturnType() == void.class) {
-                mv.visitInsn(POP);
-                mv.visitInsn(RETURN);
-            } else {
-                Class returnclz = method.getReturnType();
-                Class bigPrimitiveClass = returnclz.isPrimitive() ? TypeToken.primitiveToWrapper(returnclz) : returnclz;
-                mv.visitTypeInsn(
-                        CHECKCAST,
-                        (returnclz.isPrimitive() ? bigPrimitiveClass : returnclz)
-                                .getName()
-                                .replace('.', '/'));
-                if (returnclz.isPrimitive()) {
-                    String bigPrimitiveName = bigPrimitiveClass.getName().replace('.', '/');
-                    try {
-                        java.lang.reflect.Method pm = bigPrimitiveClass.getMethod(returnclz.getSimpleName() + "Value");
-                        mv.visitMethodInsn(
-                                INVOKEVIRTUAL, bigPrimitiveName, pm.getName(), Type.getMethodDescriptor(pm), false);
-                    } catch (Exception ex) {
-                        throw new SncpException(ex); // 不可能会发生
-                    }
-                    if (returnclz == long.class) {
-                        mv.visitInsn(LRETURN);
-                    } else if (returnclz == float.class) {
-                        mv.visitInsn(FRETURN);
-                    } else if (returnclz == double.class) {
-                        mv.visitInsn(DRETURN);
-                    } else {
-                        mv.visitInsn(IRETURN);
-                    }
+                if (newMethod != null) {
+                    acc = newMethod.getMethodAccs();
+                    newMethodName = newMethod.getMethodName();
                 } else {
-                    mv.visitInsn(ARETURN);
+                    newMethodName = method.getName();
                 }
+                cw.withMethod(
+                        newMethodName, MethodTypeDesc.ofDescriptor(ByteCodes.methodDescriptor(method)), acc, mb -> {
+                            ByteCodes.parameterAnnotations(mb, method);
+                            mb.withCode(mv -> {
+                                Label l0 = mv.newLabel();
+                                mv.labelBinding(l0);
+
+                                mv.aload(0);
+                                mv.getfield(
+                                        ByteCodes.classDesc(dynName),
+                                        FIELDPREFIX + "_sncp",
+                                        ClassDesc.ofDescriptor(sncpInfoDesc));
+
+                                mv.loadConstant(entry.actionid.toString());
+
+                                CodeMethodBean methodBean = CodeMethodBean.get(methodBeans, method);
+                                List<Integer> insns = new ArrayList<>();
+                                Class<?>[] paramTypes = method.getParameterTypes();
+                                mv.loadConstant(paramTypes.length);
+                                mv.anewarray(ByteCodes.classDesc("java/lang/Object"));
+                                int slot = 1;
+                                for (int j = 0; j < paramTypes.length; j++) {
+                                    Class<?> pt = paramTypes[j];
+                                    TypeKind kind = TypeKind.fromDescriptor(pt.descriptorString());
+                                    insns.add(slot);
+                                    mv.dup().loadConstant(j).loadLocal(kind, slot);
+                                    ByteCodes.visitPrimitiveValueOf(mv, pt);
+                                    mv.aastore();
+                                    slot += kind.slotSize();
+                                }
+
+                                mv.invokevirtual(
+                                        ByteCodes.classDesc(sncpInfoName),
+                                        "remote",
+                                        MethodTypeDesc.ofDescriptor(
+                                                "(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object;"));
+
+                                if (method.getGenericReturnType() == void.class) {
+                                    mv.pop();
+                                    mv.return_();
+                                } else {
+                                    Class returnclz = method.getReturnType();
+                                    Class bigPrimitiveClass = returnclz.isPrimitive()
+                                            ? TypeToken.primitiveToWrapper(returnclz)
+                                            : returnclz;
+                                    mv.checkcast(ByteCodes.classDesc(
+                                            (returnclz.isPrimitive() ? bigPrimitiveClass : returnclz)
+                                                    .getName()
+                                                    .replace('.', '/')));
+                                    if (returnclz.isPrimitive()) {
+                                        String bigPrimitiveName =
+                                                bigPrimitiveClass.getName().replace('.', '/');
+                                        try {
+                                            java.lang.reflect.Method pm =
+                                                    bigPrimitiveClass.getMethod(returnclz.getSimpleName() + "Value");
+                                            mv.invokevirtual(
+                                                    ByteCodes.classDesc(bigPrimitiveName),
+                                                    pm.getName(),
+                                                    MethodTypeDesc.ofDescriptor(ByteCodes.methodDescriptor(pm)));
+                                        } catch (Exception ex) {
+                                            throw new SncpException(ex); // 不可能会发生
+                                        }
+                                        if (returnclz == long.class) {
+                                            mv.lreturn();
+                                        } else if (returnclz == float.class) {
+                                            mv.freturn();
+                                        } else if (returnclz == double.class) {
+                                            mv.dreturn();
+                                        } else {
+                                            mv.ireturn();
+                                        }
+                                    } else {
+                                        mv.areturn();
+                                    }
+                                }
+                                if (methodBean != null && paramTypes.length > 0) {
+                                    Label l2 = mv.newLabel();
+                                    mv.labelBinding(l2);
+
+                                    List<CodeMethodParam> params = methodBean.getParams();
+                                    for (int i = 0; i < paramTypes.length; i++) {
+                                        CodeMethodParam param = params.get(i);
+                                        mv.localVariable(
+                                                insns.get(i),
+                                                param.getName(),
+                                                ClassDesc.ofDescriptor(param.description(paramTypes[i])),
+                                                l0,
+                                                l2);
+                                        if (param.signature(paramTypes[i]) != null)
+                                            mv.localVariableType(
+                                                    insns.get(i),
+                                                    param.getName(),
+                                                    Signature.parseFrom(param.signature(paramTypes[i])),
+                                                    l0,
+                                                    l2);
+                                    }
+                                }
+                            });
+                        });
             }
-            if (methodBean != null && paramTypes.length > 0) {
-                Label l2 = new Label();
-                mv.visitLabel(l2);
-                // mv.visitLocalVariable("this", thisClassDesc, null, l0, l2, 0);
-                List<CodeMethodParam> params = methodBean.getParams();
-                for (int i = 0; i < paramTypes.length; i++) {
-                    CodeMethodParam param = params.get(i);
-                    mv.visitLocalVariable(
-                            param.getName(),
-                            param.description(paramTypes[i]),
-                            param.signature(paramTypes[i]),
-                            l0,
-                            l2,
-                            insns.get(i));
-                }
-            }
-            mv.visitMaxs(20, 20);
-            mv.visitEnd();
-        }
-        if (methodBoost != null) {
-            createNewMethods(classLoader, serviceTypeOrImplClass, methodBoost, methodKeys, cw, newDynName, supDynName);
-            methodBoost.doAfterMethods(classLoader, cw, newDynName, FIELDPREFIX);
-        }
-        { // 构造函数
-            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
-            // mv.setDebug(true);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(
-                    INVOKESPECIAL,
-                    serviceTypeOrImplClass.isInterface() ? "java/lang/Object" : supDynName,
-                    "<init>",
-                    "()V",
-                    false);
             if (methodBoost != null) {
-                methodBoost.doConstructorMethod(classLoader, cw, mv, newDynName, FIELDPREFIX, true);
+                createNewMethods(classLoader, serviceTypeOrImplClass, methodBoost, methodKeys, cw, dynName, supDynName);
+                methodBoost.doAfterMethods(classLoader, cw, dynName, FIELDPREFIX, cwAnnotations);
             }
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
-        cw.visitEnd();
-        byte[] bytes = cw.toByteArray();
+            { // 构造函数
+                cw.withMethodBody("<init>", MethodTypeDesc.ofDescriptor("()V"), ACC_PUBLIC, mv -> {
+                    mv.aload(0);
+                    mv.invokespecial(
+                            ByteCodes.classDesc(serviceTypeOrImplClass.isInterface() ? "java/lang/Object" : supDynName),
+                            "<init>",
+                            MethodTypeDesc.ofDescriptor("()V"),
+                            false);
+                    if (methodBoost != null) {
+                        methodBoost.doConstructorMethod(classLoader, cw, mv, dynName, FIELDPREFIX, true);
+                    }
+                    mv.return_();
+                });
+            }
+            if (!cwAnnotations.isEmpty()) cw.with(RuntimeVisibleAnnotationsAttribute.of(cwAnnotations));
+            if (!cwInnerClasses.isEmpty()) cw.with(InnerClassesAttribute.of(cwInnerClasses));
+        });
+        byte[] bytes = classBytes;
         final String newDynClass = newDynName.replace('/', '.');
         Class<?> newClazz = classLoader.loadClass(newDynClass, bytes);
         RedkaleClassLoader.putReflectionPublicConstructors(newClazz, newDynClass);

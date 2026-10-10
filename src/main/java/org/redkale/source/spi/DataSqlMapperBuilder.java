@@ -3,27 +3,28 @@
  */
 package org.redkale.source.spi;
 
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
+import static java.lang.classfile.ClassFile.*;
 import static org.redkale.source.DataNativeSqlInfo.SqlMode.SELECT;
 
+import java.lang.classfile.ClassFile;
+import java.lang.classfile.Label;
+import java.lang.classfile.MethodSignature;
+import java.lang.classfile.Signature;
+import java.lang.classfile.TypeKind;
+import java.lang.classfile.attribute.*;
+import java.lang.constant.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
+import java.util.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.IntFunction;
 import org.redkale.annotation.Param;
-import org.redkale.asm.ClassWriter;
-import org.redkale.asm.FieldVisitor;
-import org.redkale.asm.Label;
-import org.redkale.asm.MethodDebugVisitor;
-import org.redkale.asm.MethodVisitor;
-import org.redkale.asm.Type;
 import org.redkale.bytecode.ByteCodes;
 import org.redkale.bytecode.CodeMethodBean;
 import org.redkale.bytecode.CodeMethodBoost;
@@ -153,216 +154,238 @@ public final class DataSqlMapperBuilder {
         // ------------------------------------------------------------------------------
 
         final String utilClassName = Utility.class.getName().replace('.', '/');
-        final String sheetDesc = Type.getDescriptor(Sheet.class);
-        final String roundDesc = Type.getDescriptor(RowBound.class);
-        final String entityDesc = Type.getDescriptor(entityType);
+        final String sheetDesc = ByteCodes.descriptor(Sheet.class);
+        final String roundDesc = ByteCodes.descriptor(RowBound.class);
+        final String entityDesc = ByteCodes.descriptor(entityType);
         final String sqlSourceName = DataSqlSource.class.getName().replace('.', '/');
-        final String sqlSourceDesc = Type.getDescriptor(DataSqlSource.class);
+        final String sqlSourceDesc = ByteCodes.descriptor(DataSqlSource.class);
 
-        ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
-        FieldVisitor fv;
-        MethodVisitor mv;
+        byte[] classBytes = ClassFile.of().build(ByteCodes.classDesc(newDynName), cw -> {
+            cw.withVersion(JAVA_11_VERSION, 0)
+                    .withFlags(ACC_PUBLIC + ACC_SUPER)
+                    .withSuperclass(ByteCodes.classDesc("java/lang/Object"));
 
-        cw.visit(V11, ACC_PUBLIC + ACC_SUPER, newDynName, null, "java/lang/Object", new String[] {supDynName});
-        {
-            fv = cw.visitField(ACC_PRIVATE, "_source", sqlSourceDesc, null, null);
-            fv.visitEnd();
-        }
-        {
-            fv = cw.visitField(ACC_PRIVATE, "_type", "Ljava/lang/Class;", null, null);
-            fv.visitEnd();
-        }
-        {
-            mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
-        {
-            mv = cw.visitMethod(ACC_PUBLIC, "dataSource", "()" + sqlSourceDesc, null, null);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, newDynName, "_source", sqlSourceDesc);
-            mv.visitInsn(ARETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
-        {
-            mv = cw.visitMethod(
-                    ACC_PUBLIC, "entityType", "()Ljava/lang/Class;", "()Ljava/lang/Class<" + entityDesc + ">;", null);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, newDynName, "_type", "Ljava/lang/Class;");
-            mv.visitInsn(ARETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
+            cw.withInterfaceSymbols(Arrays.stream(new String[] {supDynName})
+                    .map(ByteCodes::classDesc)
+                    .toList());
+            {
+                cw.withField("_source", ClassDesc.ofDescriptor(sqlSourceDesc), ACC_PRIVATE);
+            }
+            {
+                cw.withField("_type", ClassDesc.ofDescriptor("Ljava/lang/Class;"), ACC_PRIVATE);
+            }
+            {
+                cw.withMethodBody("<init>", MethodTypeDesc.ofDescriptor("()V"), ACC_PUBLIC, mv -> {
+                    mv.aload(0);
+                    mv.invokespecial(
+                            ByteCodes.classDesc("java/lang/Object"),
+                            "<init>",
+                            MethodTypeDesc.ofDescriptor("()V"),
+                            false);
+                    mv.return_();
+                });
+            }
+            {
+                cw.withMethodBody("dataSource", MethodTypeDesc.ofDescriptor("()" + sqlSourceDesc), ACC_PUBLIC, mv -> {
+                    mv.aload(0);
+                    mv.getfield(ByteCodes.classDesc(newDynName), "_source", ClassDesc.ofDescriptor(sqlSourceDesc));
+                    mv.areturn();
+                });
+            }
+            {
+                cw.withMethod("entityType", MethodTypeDesc.ofDescriptor("()Ljava/lang/Class;"), ACC_PUBLIC, mb -> {
+                    mb.with(SignatureAttribute.of(
+                            MethodSignature.parseFrom("()Ljava/lang/Class<" + entityDesc + ">;")));
 
-        // sql系列方法
-        // int nativeUpdate(String sql)
-        // CompletableFuture<Integer> nativeUpdateAsync(String sql)
-        // int nativeUpdate(String sql, Map<String, Object> params)
-        // CompletableFuture<Integer> nativeUpdateAsync(String sql, Map<String, Object> params)
-        //
-        // V nativeQueryOne(Class<V> type, String sql)
-        // CompletableFuture<V> nativeQueryOneAsync(Class<V> type, String sql)
-        // V nativeQueryOne(Class<V> type, String sql, Map<String, Object> params)
-        // CompletableFuture<V> nativeQueryOneAsync(Class<V> type, String sql, Map<String, Object> params)
-        //
-        // Map<K, V> nativeQueryMap(Class<K> keyType, Class<V> valType, String sql, Map<String, Object> params)
-        // CompletableFuture<Map<K, V>> nativeQueryMapAsync(Class<K> keyType, Class<V> valType, String sql, Map<String,
-        // Object> params)
-        //
-        // nativeQueryOne、nativeQueryList、nativeQuerySheet
-        for (Item item : items) {
-            Method method = item.method;
-            DataNativeSqlInfo sqlInfo = item.sqlInfo;
-            CodeMethodBean methodBean = item.methodBean;
-            int roundIndex = item.roundIndex;
-            Sql sql = method.getAnnotation(Sql.class);
-            Class resultClass = resultClass(method);
-            Class[] componentTypes = resultComponentType(method);
-            final boolean async = method.getReturnType().isAssignableFrom(CompletableFuture.class);
-            Parameter[] params = method.getParameters();
-            Class[] paramTypes = method.getParameterTypes();
-            List<CodeMethodParam> methodParams = methodBean.getParams();
-            List<Integer> insns = new ArrayList<>();
-            if (!EntityBuilder.isSimpleType(componentTypes[0])) {
-                EntityBuilder.load(componentTypes[0]);
+                    mb.withCode(mv -> {
+                        mv.aload(0);
+                        mv.getfield(
+                                ByteCodes.classDesc(newDynName), "_type", ClassDesc.ofDescriptor("Ljava/lang/Class;"));
+                        mv.areturn();
+                    });
+                });
             }
 
-            mv = new MethodDebugVisitor(cw.visitMethod(
-                            ACC_PUBLIC, method.getName(), methodBean.getDesc(), methodBean.getSignature(), null))
-                    .setDebug(false);
-            Label l0 = new Label();
-            mv.visitLabel(l0);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKEVIRTUAL, newDynName, "dataSource", "()" + sqlSourceDesc, false);
-            if (sqlInfo.getSqlMode() == SELECT) {
-                // 参数：结果类
-                mv.visitLdcInsn(Type.getType(Type.getDescriptor(componentTypes[0])));
-                if (resultClass.isAssignableFrom(Map.class)) {
-                    mv.visitLdcInsn(Type.getType(Type.getDescriptor(componentTypes[1])));
+            // sql系列方法
+            // int nativeUpdate(String sql)
+            // CompletableFuture<Integer> nativeUpdateAsync(String sql)
+            // int nativeUpdate(String sql, Map<String, Object> params)
+            // CompletableFuture<Integer> nativeUpdateAsync(String sql, Map<String, Object> params)
+            //
+            // V nativeQueryOne(Class<V> type, String sql)
+            // CompletableFuture<V> nativeQueryOneAsync(Class<V> type, String sql)
+            // V nativeQueryOne(Class<V> type, String sql, Map<String, Object> params)
+            // CompletableFuture<V> nativeQueryOneAsync(Class<V> type, String sql, Map<String, Object> params)
+            //
+            // Map<K, V> nativeQueryMap(Class<K> keyType, Class<V> valType, String sql, Map<String, Object> params)
+            // CompletableFuture<Map<K, V>> nativeQueryMapAsync(Class<K> keyType, Class<V> valType, String sql,
+            // Map<String,
+            // Object> params)
+            //
+            // nativeQueryOne、nativeQueryList、nativeQuerySheet
+            for (Item item : items) {
+                Method method = item.method;
+                DataNativeSqlInfo sqlInfo = item.sqlInfo;
+                CodeMethodBean methodBean = item.methodBean;
+                int roundIndex = item.roundIndex;
+                Sql sql = method.getAnnotation(Sql.class);
+                Class resultClass = resultClass(method);
+                Class[] componentTypes = resultComponentType(method);
+                final boolean async = method.getReturnType().isAssignableFrom(CompletableFuture.class);
+                Parameter[] params = method.getParameters();
+                Class[] paramTypes = method.getParameterTypes();
+                List<CodeMethodParam> methodParams = methodBean.getParams();
+                List<Integer> insns = new ArrayList<>();
+                if (!EntityBuilder.isSimpleType(componentTypes[0])) {
+                    EntityBuilder.load(componentTypes[0]);
                 }
-            }
-            // 参数：sql
-            mv.visitLdcInsn(sql.value());
-            if (roundIndex >= 0) {
-                mv.visitVarInsn(ALOAD, roundIndex + 1);
-            }
-            // 参数: params
-            ByteCodes.visitInsn(mv, paramTypes.length * 2 - (roundIndex >= 0 ? 2 : 0));
-            mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
-            int insn = 0;
-            for (int i = 0; i < paramTypes.length; i++) {
-                insn++;
-                if (i != roundIndex) {
-                    Class pt = paramTypes[i];
-                    // 参数名
-                    mv.visitInsn(DUP);
-                    ByteCodes.visitInsn(mv, i * 2);
-                    Param p = params[i].getAnnotation(Param.class);
-                    String k = p == null ? methodParams.get(i).getName() : p.value();
-                    mv.visitLdcInsn(k);
-                    mv.visitInsn(AASTORE);
-                    // 参数值
-                    mv.visitInsn(DUP);
-                    ByteCodes.visitInsn(mv, i * 2 + 1);
-                    if (pt.isPrimitive()) {
-                        if (pt == long.class) {
-                            mv.visitVarInsn(LLOAD, insn++);
-                        } else if (pt == float.class) {
-                            mv.visitVarInsn(FLOAD, insn++);
-                        } else if (pt == double.class) {
-                            mv.visitVarInsn(DLOAD, insn++);
-                        } else {
-                            mv.visitVarInsn(ILOAD, insn);
+
+                cw.withMethod(method.getName(), MethodTypeDesc.ofDescriptor(methodBean.getDesc()), ACC_PUBLIC, mb -> {
+                    if (methodBean.getSignature() != null)
+                        mb.with(SignatureAttribute.of(MethodSignature.parseFrom(methodBean.getSignature())));
+
+                    mb.withCode(mv -> {
+                        Label l0 = mv.newLabel();
+                        mv.labelBinding(l0);
+                        mv.aload(0);
+                        mv.invokevirtual(
+                                ByteCodes.classDesc(newDynName),
+                                "dataSource",
+                                MethodTypeDesc.ofDescriptor("()" + sqlSourceDesc));
+                        if (sqlInfo.getSqlMode() == SELECT) {
+                            // 参数：结果类
+                            mv.loadConstant(ByteCodes.constantType(ByteCodes.descriptor(componentTypes[0])));
+                            if (resultClass.isAssignableFrom(Map.class)) {
+                                mv.loadConstant(ByteCodes.constantType(ByteCodes.descriptor(componentTypes[1])));
+                            }
                         }
-                    } else {
-                        mv.visitVarInsn(ALOAD, insn);
-                    }
-                    ByteCodes.visitPrimitiveValueOf(mv, pt);
-                    mv.visitInsn(AASTORE);
-                }
-                insns.add(insn);
+                        // 参数：sql
+                        mv.loadConstant(sql.value());
+                        int parameterSlot = 1;
+                        for (Class<?> parameterType : paramTypes) {
+                            insns.add(parameterSlot);
+                            parameterSlot += TypeKind.fromDescriptor(parameterType.descriptorString())
+                                    .slotSize();
+                        }
+                        if (roundIndex >= 0) {
+                            mv.aload(insns.get(roundIndex));
+                        }
+                        // 参数: params
+                        mv.loadConstant(paramTypes.length * 2 - (roundIndex >= 0 ? 2 : 0));
+                        mv.anewarray(ByteCodes.classDesc("java/lang/Object"));
+                        int arrayIndex = 0;
+                        for (int i = 0; i < paramTypes.length; i++) {
+                            if (i != roundIndex) {
+                                Class<?> pt = paramTypes[i];
+                                Param p = params[i].getAnnotation(Param.class);
+                                String k = p == null ? methodParams.get(i).getName() : p.value();
+                                mv.dup()
+                                        .loadConstant(arrayIndex++)
+                                        .loadConstant(k)
+                                        .aastore();
+                                mv.dup().loadConstant(arrayIndex++);
+                                mv.loadLocal(TypeKind.fromDescriptor(pt.descriptorString()), insns.get(i));
+                                ByteCodes.visitPrimitiveValueOf(mv, pt);
+                                mv.aastore();
+                            }
+                        }
+
+                        mv.invokestatic(
+                                ByteCodes.classDesc(utilClassName),
+                                "ofMap",
+                                MethodTypeDesc.ofDescriptor("([Ljava/lang/Object;)Ljava/util/HashMap;"),
+                                false);
+
+                        // One:   "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/lang/Object;"
+                        // Map:   "(Ljava/lang/Class;Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/util/Map;"
+                        // List:  "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/util/List;"
+                        // Sheet:
+                        // "(Ljava/lang/Class;Ljava/lang/String;Lorg/redkale/source/RowRound;Ljava/util/Map;)Lorg/redkale/util/Sheet;"
+                        // Async:
+                        // "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/util/concurrent/CompletableFuture;"
+                        if (sqlInfo.getSqlMode() == SELECT) {
+                            String queryMethodName = "nativeQueryOne";
+                            String queryMethodDesc = "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)"
+                                    + (async ? "Ljava/util/concurrent/CompletableFuture;" : "Ljava/lang/Object;");
+                            boolean oneMode = !async;
+                            if (resultClass.isAssignableFrom(Map.class)) {
+                                oneMode = false;
+                                queryMethodName = "nativeQueryMap";
+                                queryMethodDesc =
+                                        "(Ljava/lang/Class;Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)"
+                                                + (async
+                                                        ? "Ljava/util/concurrent/CompletableFuture;"
+                                                        : "Ljava/util/Map;");
+                            } else if (resultClass.isAssignableFrom(List.class)) {
+                                oneMode = false;
+                                queryMethodName = "nativeQueryList";
+                                queryMethodDesc = "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)"
+                                        + (async ? "Ljava/util/concurrent/CompletableFuture;" : "Ljava/util/List;");
+                            } else if (resultClass.isAssignableFrom(Sheet.class)) {
+                                oneMode = false;
+                                queryMethodName = "nativeQuerySheet";
+                                queryMethodDesc =
+                                        "(Ljava/lang/Class;Ljava/lang/String;" + roundDesc + "Ljava/util/Map;)"
+                                                + (async ? "Ljava/util/concurrent/CompletableFuture;" : sheetDesc);
+                            }
+                            mv.invokeinterface(
+                                    ByteCodes.classDesc(sqlSourceName),
+                                    queryMethodName + (async ? "Async" : ""),
+                                    MethodTypeDesc.ofDescriptor(queryMethodDesc));
+                            if (oneMode) {
+                                mv.checkcast(ByteCodes.classDesc(
+                                        componentTypes[0].getName().replace('.', '/')));
+                            }
+                            mv.areturn();
+                        } else {
+                            String updateMethodName = "nativeUpdate" + (async ? "Async" : "");
+                            String updateMethodDesc = "(Ljava/lang/String;Ljava/util/Map;)"
+                                    + (async ? "Ljava/util/concurrent/CompletableFuture;" : "I");
+                            mv.invokeinterface(
+                                    ByteCodes.classDesc(sqlSourceName),
+                                    updateMethodName,
+                                    MethodTypeDesc.ofDescriptor(updateMethodDesc));
+                            if (resultClass == int.class) {
+                                mv.ireturn();
+                            } else if (!async && resultClass == Integer.class) {
+                                mv.invokestatic(
+                                        ByteCodes.classDesc("java/lang/Integer"),
+                                        "valueOf",
+                                        MethodTypeDesc.ofDescriptor("(I)Ljava/lang/Integer;"),
+                                        false);
+                                mv.areturn();
+                            } else if (resultClass == void.class) {
+                                mv.pop();
+                                mv.return_();
+                            } else {
+                                mv.areturn();
+                            }
+                        }
+                        Label l2 = mv.newLabel();
+                        mv.labelBinding(l2);
+                        mv.localVariable(0, "this", ClassDesc.ofDescriptor("L" + newDynName + ";"), l0, l2);
+                        for (int i = 0; i < paramTypes.length; i++) {
+                            CodeMethodParam param = methodParams.get(i);
+                            mv.localVariable(
+                                    insns.get(i),
+                                    param.getName(),
+                                    ClassDesc.ofDescriptor(param.description(paramTypes[i])),
+                                    l0,
+                                    l2);
+                            if (param.signature(paramTypes[i]) != null)
+                                mv.localVariableType(
+                                        insns.get(i),
+                                        param.getName(),
+                                        Signature.parseFrom(param.signature(paramTypes[i])),
+                                        l0,
+                                        l2);
+                        }
+                    });
+                });
             }
+        });
 
-            mv.visitMethodInsn(INVOKESTATIC, utilClassName, "ofMap", "([Ljava/lang/Object;)Ljava/util/HashMap;", false);
-
-            // One:   "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/lang/Object;"
-            // Map:   "(Ljava/lang/Class;Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/util/Map;"
-            // List:  "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/util/List;"
-            // Sheet:
-            // "(Ljava/lang/Class;Ljava/lang/String;Lorg/redkale/source/RowRound;Ljava/util/Map;)Lorg/redkale/util/Sheet;"
-            // Async: "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)Ljava/util/concurrent/CompletableFuture;"
-            if (sqlInfo.getSqlMode() == SELECT) {
-                String queryMethodName = "nativeQueryOne";
-                String queryMethodDesc = "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)"
-                        + (async ? "Ljava/util/concurrent/CompletableFuture;" : "Ljava/lang/Object;");
-                boolean oneMode = !async;
-                if (resultClass.isAssignableFrom(Map.class)) {
-                    oneMode = false;
-                    queryMethodName = "nativeQueryMap";
-                    queryMethodDesc = "(Ljava/lang/Class;Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)"
-                            + (async ? "Ljava/util/concurrent/CompletableFuture;" : "Ljava/util/Map;");
-                } else if (resultClass.isAssignableFrom(List.class)) {
-                    oneMode = false;
-                    queryMethodName = "nativeQueryList";
-                    queryMethodDesc = "(Ljava/lang/Class;Ljava/lang/String;Ljava/util/Map;)"
-                            + (async ? "Ljava/util/concurrent/CompletableFuture;" : "Ljava/util/List;");
-                } else if (resultClass.isAssignableFrom(Sheet.class)) {
-                    oneMode = false;
-                    queryMethodName = "nativeQuerySheet";
-                    queryMethodDesc = "(Ljava/lang/Class;Ljava/lang/String;" + roundDesc + "Ljava/util/Map;)"
-                            + (async ? "Ljava/util/concurrent/CompletableFuture;" : sheetDesc);
-                }
-                mv.visitMethodInsn(
-                        INVOKEINTERFACE,
-                        sqlSourceName,
-                        queryMethodName + (async ? "Async" : ""),
-                        queryMethodDesc,
-                        true);
-                if (oneMode) {
-                    mv.visitTypeInsn(CHECKCAST, componentTypes[0].getName().replace('.', '/'));
-                }
-                mv.visitInsn(ARETURN);
-            } else {
-                String updateMethodName = "nativeUpdate" + (async ? "Async" : "");
-                String updateMethodDesc = "(Ljava/lang/String;Ljava/util/Map;)"
-                        + (async ? "Ljava/util/concurrent/CompletableFuture;" : "I");
-                mv.visitMethodInsn(INVOKEINTERFACE, sqlSourceName, updateMethodName, updateMethodDesc, true);
-                if (resultClass == int.class) {
-                    mv.visitInsn(IRETURN);
-                } else if (!async && resultClass == Integer.class) {
-                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
-                    mv.visitInsn(ARETURN);
-                } else if (resultClass == void.class) {
-                    mv.visitInsn(POP);
-                    mv.visitInsn(RETURN);
-                } else {
-                    mv.visitInsn(ARETURN);
-                }
-            }
-            Label l2 = new Label();
-            mv.visitLabel(l2);
-            mv.visitLocalVariable("this", "L" + newDynName + ";", null, l0, l2, 0);
-            for (int i = 0; i < paramTypes.length; i++) {
-                CodeMethodParam param = methodParams.get(i);
-                mv.visitLocalVariable(
-                        param.getName(),
-                        param.description(paramTypes[i]),
-                        param.signature(paramTypes[i]),
-                        l0,
-                        l2,
-                        insns.get(i));
-            }
-            mv.visitMaxs(8, 5);
-            mv.visitEnd();
-        }
-
-        cw.visitEnd();
-
-        byte[] bytes = cw.toByteArray();
+        byte[] bytes = classBytes;
         Class<?> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
         RedkaleClassLoader.putReflectionPublicConstructors(newClazz, newDynName.replace('/', '.'));
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));

@@ -4,25 +4,26 @@
  */
 package org.redkale.net.sncp;
 
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
+import static java.lang.classfile.ClassFile.*;
 
 import java.lang.annotation.Annotation;
+import java.lang.classfile.AnnotationElement;
+import java.lang.classfile.ClassFile;
+import java.lang.classfile.Label;
+import java.lang.classfile.Signature;
+import java.lang.classfile.attribute.*;
+import java.lang.constant.*;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.SocketAddress;
 import java.nio.channels.CompletionHandler;
+import java.util.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
-import org.redkale.asm.AnnotationVisitor;
-import org.redkale.asm.ClassWriter;
-import org.redkale.asm.FieldVisitor;
-import org.redkale.asm.Label;
-import org.redkale.asm.MethodDebugVisitor;
 import org.redkale.bytecode.ByteCodes;
 import org.redkale.bytecode.CodeMethodBean;
 import org.redkale.bytecode.CodeMethodBoost;
@@ -266,7 +267,7 @@ public final class SncpRemoteAction {
         }
 
         // 动态生成组合JavaBean类
-        final String columnDesc = org.redkale.asm.Type.getDescriptor(ConvertColumn.class);
+        final String columnDesc = ByteCodes.descriptor(ConvertColumn.class);
         final String newDynName = "org/redkaledyn/sncp/servlet/action/_DynSncpActionParamBean_"
                 + resourceType.getSimpleName() + "_" + method.getName() + "_" + actionid;
         try {
@@ -278,56 +279,71 @@ public final class SncpRemoteAction {
         Map<String, CodeMethodBean> methodBeans = CodeMethodBoost.getMethodBeans(resourceType);
         CodeMethodBean methodBean = Objects.requireNonNull(methodBeans.get(CodeMethodBoost.getMethodBeanKey(method)));
         // -------------------------------------------------------------
-        ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
-        FieldVisitor fv;
-        MethodDebugVisitor mv;
-        AnnotationVisitor av;
 
-        cw.visit(V11, ACC_PUBLIC + ACC_FINAL + ACC_SUPER, newDynName, null, "java/lang/Object", null);
-        final List<CodeMethodParam> asmParams = methodBean.getParams();
-        for (int i = 1; i <= paramClasses.length; i++) {
-            CodeMethodParam param = asmParams.get(i - 1);
-            String paramDesc = org.redkale.asm.Type.getDescriptor(paramClasses[i - 1]);
-            fv = cw.visitField(ACC_PUBLIC, "arg" + i, paramDesc, param.getSignature(), null);
-            av = fv.visitAnnotation(columnDesc, true);
-            av.visit("index", i);
-            av.visitEnd();
-            fv.visitEnd();
-        }
-        { // 空参数的构造函数
-            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null));
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
-        }
-        { // 一个参数的构造函数
-            mv = new MethodDebugVisitor(cw.visitMethod(ACC_PUBLIC, "<init>", "([Ljava/lang/Object;)V", null, null));
-            Label label0 = new Label();
-            mv.visitLabel(label0);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+        byte[] classBytes = ClassFile.of().build(ByteCodes.classDesc(newDynName), cw -> {
+            cw.withVersion(JAVA_11_VERSION, 0)
+                    .withFlags(ACC_PUBLIC + ACC_FINAL + ACC_SUPER)
+                    .withSuperclass(ByteCodes.classDesc("java/lang/Object"));
+
+            final List<CodeMethodParam> methodParams = methodBean.getParams();
             for (int i = 1; i <= paramClasses.length; i++) {
-                String paramDesc = org.redkale.asm.Type.getDescriptor(paramClasses[i - 1]);
-                mv.visitVarInsn(ALOAD, 0);
-                mv.visitVarInsn(ALOAD, 1);
-                ByteCodes.visitInsn(mv, i - 1);
-                mv.visitInsn(AALOAD);
-                ByteCodes.visitCheckCast(mv, paramClasses[i - 1]);
-                mv.visitFieldInsn(PUTFIELD, newDynName, "arg" + i, paramDesc);
-            }
-            mv.visitInsn(RETURN);
-            Label label2 = new Label();
-            mv.visitLabel(label2);
-            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
-            mv.visitLocalVariable("params", "[Ljava/lang/Object;", null, label0, label2, 1);
-            mv.visitMaxs(3, 2);
-            mv.visitEnd();
-        }
-        cw.visitEnd();
+                CodeMethodParam param = methodParams.get(i - 1);
+                final int paramIndex = i;
+                String paramDesc = ByteCodes.descriptor(paramClasses[i - 1]);
+                cw.withField("arg" + i, ClassDesc.ofDescriptor(paramDesc), fv -> {
+                    fv.withFlags(ACC_PUBLIC);
+                    List<java.lang.classfile.Annotation> fvAnnotations = new ArrayList<>();
+                    if (param.getSignature() != null)
+                        fv.with(SignatureAttribute.of(Signature.parseFrom(param.getSignature())));
+                    {
+                        List<AnnotationElement> av = new ArrayList<>();
+                        av.add(AnnotationElement.of("index", ByteCodes.annotationValue(paramIndex)));
+                        fvAnnotations.add(java.lang.classfile.Annotation.of(ClassDesc.ofDescriptor(columnDesc), av));
+                    }
 
-        byte[] bytes = cw.toByteArray();
+                    if (!fvAnnotations.isEmpty()) fv.with(RuntimeVisibleAnnotationsAttribute.of(fvAnnotations));
+                });
+            }
+            { // 空参数的构造函数
+                cw.withMethodBody("<init>", MethodTypeDesc.ofDescriptor("()V"), ACC_PUBLIC, mv -> {
+                    mv.aload(0);
+                    mv.invokespecial(
+                            ByteCodes.classDesc("java/lang/Object"),
+                            "<init>",
+                            MethodTypeDesc.ofDescriptor("()V"),
+                            false);
+                    mv.return_();
+                });
+            }
+            { // 一个参数的构造函数
+                cw.withMethodBody("<init>", MethodTypeDesc.ofDescriptor("([Ljava/lang/Object;)V"), ACC_PUBLIC, mv -> {
+                    Label label0 = mv.newLabel();
+                    mv.labelBinding(label0);
+                    mv.aload(0);
+                    mv.invokespecial(
+                            ByteCodes.classDesc("java/lang/Object"),
+                            "<init>",
+                            MethodTypeDesc.ofDescriptor("()V"),
+                            false);
+                    for (int i = 1; i <= paramClasses.length; i++) {
+                        String paramDesc = ByteCodes.descriptor(paramClasses[i - 1]);
+                        mv.aload(0);
+                        mv.aload(1);
+                        mv.loadConstant(i - 1);
+                        mv.aaload();
+                        ByteCodes.visitCheckCast(mv, paramClasses[i - 1]);
+                        mv.putfield(ByteCodes.classDesc(newDynName), "arg" + i, ClassDesc.ofDescriptor(paramDesc));
+                    }
+                    mv.return_();
+                    Label label2 = mv.newLabel();
+                    mv.labelBinding(label2);
+                    mv.localVariable(0, "this", ClassDesc.ofDescriptor("L" + newDynName + ";"), label0, label2);
+                    mv.localVariable(1, "params", ClassDesc.ofDescriptor("[Ljava/lang/Object;"), label0, label2);
+                });
+            }
+        });
+
+        byte[] bytes = classBytes;
         Class newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         Creator.load(newClazz, 1); // 只一个Object[]参数

@@ -5,7 +5,7 @@
 &emsp;&emsp;&emsp;&emsp; 2、类被标记```@Local```  <br>
 &emsp;&emsp;&emsp;&emsp; 3、类被标记```@Component```  <br>
          
-&emsp;&emsp;Redkale进程启动时扫描可加载的Service实现类，根据配置文件配置的模式采用```ASM```技术动态生成相应的Service临时类进行实例化，并注册到ResourceFactory同其他Service、Servlet依赖注入。
+&emsp;&emsp;Redkale进程启动时扫描可加载的Service实现类，根据配置文件配置的模式采用```Classfile API```技术动态生成相应的Service临时类进行实例化，并注册到ResourceFactory同其他Service、Servlet依赖注入。
 
 ## Service使用类型
 |类型|使用注解|场景说明|

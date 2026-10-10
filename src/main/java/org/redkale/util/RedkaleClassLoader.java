@@ -34,9 +34,9 @@ public class RedkaleClassLoader extends URLClassLoader {
     private static final String[] buildPackages = {
         "org.redkaledyn", // 所有动态生成类的根package
         "org.redkale.annotation",
-        "org.redkale.asm",
         "org.redkale.boot",
         "org.redkale.boot.watch",
+        "org.redkale.bytecode",
         "org.redkale.cached",
         "org.redkale.cached.spi",
         "org.redkale.cluster",

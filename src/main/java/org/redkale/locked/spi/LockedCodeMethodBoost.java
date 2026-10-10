@@ -3,17 +3,18 @@
  */
 package org.redkale.locked.spi;
 
-import static org.redkale.asm.Opcodes.*;
+import static java.lang.classfile.ClassFile.*;
 
 import java.lang.annotation.Annotation;
+import java.lang.classfile.AnnotationElement;
+import java.lang.classfile.ClassBuilder;
+import java.lang.classfile.Label;
+import java.lang.classfile.attribute.*;
+import java.lang.constant.*;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.*;
 import java.util.List;
-import org.redkale.asm.AnnotationVisitor;
-import org.redkale.asm.ClassWriter;
-import org.redkale.asm.Label;
-import org.redkale.asm.MethodVisitor;
-import org.redkale.asm.Type;
 import org.redkale.bytecode.ByteCodes;
 import org.redkale.bytecode.CodeMethodBean;
 import org.redkale.bytecode.CodeMethodBoost;
@@ -25,7 +26,7 @@ import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
 
 /** @author zhangjx */
-public class LockedCodeMethodBoost extends CodeMethodBoost {
+public class LockedCodeMethodBoost extends CodeMethodBoost<Object> {
 
     private static final List<Class<? extends Annotation>> FILTER_ANN = List.of(Locked.class, DynForLocked.class);
 
@@ -41,7 +42,7 @@ public class LockedCodeMethodBoost extends CodeMethodBoost {
     @Override
     public CodeNewMethod doMethod(
             RedkaleClassLoader classLoader,
-            ClassWriter cw,
+            ClassBuilder cw,
             Class serviceImplClass,
             String newDynName,
             String fieldPrefix,
@@ -70,29 +71,36 @@ public class LockedCodeMethodBoost extends CodeMethodBoost {
         final String rsMethodName = method.getName() + "_afterLocked";
         final String dynFieldName = fieldPrefix + "_" + method.getName() + LockedAction.class.getSimpleName()
                 + fieldIndex.incrementAndGet();
-        { // 定义一个新方法调用 this.rsMethodName
-            final CodeMethodBean methodBean = getMethodBean(method);
-            final String lockDynDesc = Type.getDescriptor(DynForLocked.class);
-            final MethodVisitor mv = createMethodVisitor(cw, method, newMethod, methodBean);
-            // mv.setDebug(true);
-            Label l0 = new Label();
-            mv.visitLabel(l0);
-            AnnotationVisitor av = mv.visitAnnotation(lockDynDesc, true);
-            av.visit("dynField", dynFieldName);
-            ByteCodes.visitAnnotation(av, DynForLocked.class, locked);
-            visitRawAnnotation(method, newMethod, mv, Locked.class, filterAnns);
-            mv.visitVarInsn(ALOAD, 0);
-            List<Integer> insns = visitVarInsnParamTypes(mv, method, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, newDynName, rsMethodName, Type.getMethodDescriptor(method), false);
-            visitInsnReturn(mv, method, l0, insns, methodBean);
-            mv.visitMaxs(20, 20);
-            mv.visitEnd();
-        }
+        final CodeMethodBean methodBean = getMethodBean(method);
+        createMethod(cw, method, newMethod, methodBean, mb -> {
+            List<java.lang.classfile.Annotation> annotations = new ArrayList<>();
+            List<AnnotationElement> elements = new ArrayList<>(
+                    ByteCodes.annotation(DynForLocked.class, locked).elements());
+            elements.add(AnnotationElement.ofString("dynField", dynFieldName));
+            annotations.add(java.lang.classfile.Annotation.of(ByteCodes.constantType(DynForLocked.class), elements));
+            visitRawAnnotation(method, newMethod, mb, Locked.class, filterAnns, annotations);
+            mb.with(RuntimeVisibleAnnotationsAttribute.of(annotations));
+            mb.withCode(code -> {
+                Label start = code.newLabel();
+                code.labelBinding(start).aload(0);
+                List<Integer> slots = visitVarInsnParamTypes(code, method, 0);
+                code.invokespecial(
+                        ByteCodes.classDesc(newDynName),
+                        rsMethodName,
+                        MethodTypeDesc.ofDescriptor(ByteCodes.methodDescriptor(method)));
+                visitInsnReturn(code, method, start, slots, methodBean);
+            });
+        });
         return new CodeNewMethod(rsMethodName, ACC_PRIVATE);
     }
 
     @Override
-    public void doAfterMethods(RedkaleClassLoader classLoader, ClassWriter cw, String newDynName, String fieldPrefix) {
+    public void doAfterMethods(
+            RedkaleClassLoader classLoader,
+            ClassBuilder cw,
+            String newDynName,
+            String fieldPrefix,
+            List<java.lang.classfile.Annotation> cwAnnotations) {
         // do nothing
     }
 

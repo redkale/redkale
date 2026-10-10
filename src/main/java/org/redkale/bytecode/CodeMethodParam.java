@@ -3,7 +3,6 @@
  */
 package org.redkale.bytecode;
 
-import org.redkale.asm.Type;
 import org.redkale.util.TypeToken;
 
 /**
@@ -34,7 +33,7 @@ public class CodeMethodParam {
     }
 
     public String description(java.lang.reflect.Type type) {
-        return description == null ? Type.getDescriptor(TypeToken.typeToClass(type)) : description;
+        return description == null ? TypeToken.typeToClass(type).descriptorString() : description;
     }
 
     public String signature(java.lang.reflect.Type type) {

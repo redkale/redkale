@@ -3,26 +3,25 @@
  */
 package org.redkale.cached.spi;
 
-import static org.redkale.asm.Opcodes.*;
+import static java.lang.classfile.ClassFile.*;
 
 import java.lang.annotation.Annotation;
+import java.lang.classfile.AnnotationElement;
+import java.lang.classfile.ClassBuilder;
+import java.lang.classfile.Label;
+import java.lang.classfile.TypeKind;
+import java.lang.classfile.attribute.*;
+import java.lang.constant.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.*;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.redkale.asm.AnnotationVisitor;
-import org.redkale.asm.ClassWriter;
-import org.redkale.asm.FieldVisitor;
-import org.redkale.asm.Handle;
-import org.redkale.asm.Label;
-import org.redkale.asm.MethodVisitor;
-import org.redkale.asm.Opcodes;
-import org.redkale.asm.Type;
 import org.redkale.bytecode.ByteCodes;
 import org.redkale.bytecode.CodeMethodBean;
 import org.redkale.bytecode.CodeMethodBoost;
@@ -41,7 +40,7 @@ import org.redkale.util.TypeToken;
  * @author zhangjx
  * @since 2.8.0
  */
-public class CachedCodeMethodBoost extends CodeMethodBoost {
+public class CachedCodeMethodBoost extends CodeMethodBoost<Object> {
 
     static final java.lang.reflect.Type FUTURE_VOID = new TypeToken<CompletableFuture<Void>>() {}.getType();
 
@@ -63,7 +62,7 @@ public class CachedCodeMethodBoost extends CodeMethodBoost {
     @Override
     public CodeNewMethod doMethod(
             final RedkaleClassLoader classLoader,
-            final ClassWriter cw,
+            final ClassBuilder cw,
             final Class serviceImplClass,
             final String newDynName,
             final String fieldPrefix,
@@ -101,125 +100,72 @@ public class CachedCodeMethodBoost extends CodeMethodBoost {
         final String dynFieldName =
                 fieldPrefix + "_" + method.getName() + CachedAction.class.getSimpleName() + actionIndex;
         final CodeMethodBean methodBean = getMethodBean(method);
-        { // 定义一个新方法调用 this.rsMethodName
-            final String cacheDynDesc = Type.getDescriptor(DynForCached.class);
-            final MethodVisitor mv = createMethodVisitor(cw, method, newMethod, methodBean);
-            // mv.setDebug(true);
-            AnnotationVisitor av = mv.visitAnnotation(cacheDynDesc, true);
-            av.visit("dynField", dynFieldName);
-            ByteCodes.visitAnnotation(av, DynForCached.class, cached);
-            visitRawAnnotation(method, newMethod, mv, Cached.class, filterAnns);
-
-            Label l0 = new Label();
-            mv.visitLabel(l0);
-            mv.visitVarInsn(ALOAD, 0);
-            List<Integer> insns = visitVarInsnParamTypes(mv, method, 0);
-            String dynDesc = methodBean.getDesc();
-            dynDesc = "(L" + newDynName + ";" + dynDesc.substring(1, dynDesc.lastIndexOf(')') + 1)
-                    + Type.getDescriptor(ThrowSupplier.class);
-            mv.visitInvokeDynamicInsn("get", dynDesc, ByteCodes.createLambdaMetaHandle(), new Object[] {
-                org.redkale.asm.Type.getType("()Ljava/lang/Object;"),
-                new Handle(Opcodes.H_INVOKESPECIAL, newDynName, "lambda$" + actionIndex, methodBean.getDesc(), false),
-                org.redkale.asm.Type.getType("()" + Type.getDescriptor(method.getReturnType()))
-            });
-            // 参数个数不等于槽位数：long/double 占两个槽位，其他参数占一个。
-            int supplierSlot = 1;
-            for (Class<?> pt : method.getParameterTypes()) {
-                supplierSlot += Type.getType(pt).getSize();
-            }
-            mv.visitVarInsn(ASTORE, supplierSlot);
-            Label l1 = new Label();
-            mv.visitLabel(l1);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitFieldInsn(GETFIELD, newDynName, dynFieldName, Type.getDescriptor(CachedAction.class));
-
-            mv.visitVarInsn(ALOAD, supplierSlot);
-            ByteCodes.visitInsn(mv, method.getParameterCount());
-            mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
-            Class[] paramtypes = method.getParameterTypes();
-            for (int j = 0; j < paramtypes.length; j++) {
-                final Class pt = paramtypes[j];
-                mv.visitInsn(DUP);
-                int insn = insns.get(j);
-                ByteCodes.visitInsn(mv, j);
-                if (pt.isPrimitive()) {
-                    if (pt == long.class) {
-                        mv.visitVarInsn(LLOAD, insn);
-                    } else if (pt == float.class) {
-                        mv.visitVarInsn(FLOAD, insn);
-                    } else if (pt == double.class) {
-                        mv.visitVarInsn(DLOAD, insn);
-                    } else {
-                        mv.visitVarInsn(ILOAD, insn);
-                    }
-                    Class bigclaz = TypeToken.primitiveToWrapper(pt);
-                    mv.visitMethodInsn(
-                            INVOKESTATIC,
-                            bigclaz.getName().replace('.', '/'),
-                            "valueOf",
-                            "(" + Type.getDescriptor((Class) pt) + ")" + Type.getDescriptor(bigclaz),
-                            false);
-                } else {
-                    mv.visitVarInsn(ALOAD, insn);
+        final ClassDesc dynDesc = ByteCodes.classDesc(newDynName);
+        final ClassDesc actionDesc = ByteCodes.constantType(CachedAction.class);
+        final ClassDesc supplierDesc = ByteCodes.constantType(ThrowSupplier.class);
+        final MethodTypeDesc methodDesc = MethodTypeDesc.ofDescriptor(ByteCodes.methodDescriptor(method));
+        createMethod(cw, method, newMethod, methodBean, mb -> {
+            List<java.lang.classfile.Annotation> annotations = new ArrayList<>();
+            java.lang.classfile.Annotation cachedAnn = ByteCodes.annotation(DynForCached.class, cached);
+            List<AnnotationElement> elements = new ArrayList<>(cachedAnn.elements());
+            elements.add(AnnotationElement.ofString("dynField", dynFieldName));
+            annotations.add(java.lang.classfile.Annotation.of(ByteCodes.constantType(DynForCached.class), elements));
+            visitRawAnnotation(method, newMethod, mb, Cached.class, filterAnns, annotations);
+            mb.with(RuntimeVisibleAnnotationsAttribute.of(annotations));
+            mb.withCode(code -> {
+                Label start = code.newLabel();
+                code.labelBinding(start).aload(0);
+                List<Integer> slots = visitVarInsnParamTypes(code, method, 0);
+                MethodTypeDesc factoryType =
+                        methodDesc.changeReturnType(supplierDesc).insertParameterTypes(0, dynDesc);
+                DirectMethodHandleDesc bootstrap = MethodHandleDesc.ofMethod(
+                        DirectMethodHandleDesc.Kind.STATIC,
+                        ClassDesc.of("java.lang.invoke.LambdaMetafactory"),
+                        "metafactory",
+                        MethodTypeDesc.ofDescriptor(
+                                "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;"));
+                code.invokedynamic(DynamicCallSiteDesc.of(
+                        bootstrap,
+                        "get",
+                        factoryType,
+                        MethodTypeDesc.of(ConstantDescs.CD_Object),
+                        MethodHandleDesc.ofMethod(
+                                DirectMethodHandleDesc.Kind.SPECIAL, dynDesc, "lambda$" + actionIndex, methodDesc),
+                        MethodTypeDesc.of(methodDesc.returnType())));
+                int supplierSlot = code.allocateLocal(TypeKind.REFERENCE);
+                code.astore(supplierSlot)
+                        .aload(0)
+                        .getfield(dynDesc, dynFieldName, actionDesc)
+                        .aload(supplierSlot)
+                        .loadConstant(method.getParameterCount())
+                        .anewarray(ConstantDescs.CD_Object);
+                for (int i = 0; i < method.getParameterCount(); i++) {
+                    Class<?> type = method.getParameterTypes()[i];
+                    code.dup().loadConstant(i).loadLocal(TypeKind.from(type), slots.get(i));
+                    ByteCodes.visitPrimitiveValueOf(code, type);
+                    code.aastore();
                 }
-                mv.visitInsn(AASTORE);
-            }
-            String throwFuncDesc = Type.getDescriptor(ThrowSupplier.class);
-            mv.visitMethodInsn(
-                    INVOKEVIRTUAL,
-                    CachedAction.class.getName().replace('.', '/'),
-                    "get",
-                    "(" + throwFuncDesc + "[Ljava/lang/Object;)Ljava/lang/Object;",
-                    false);
-            mv.visitTypeInsn(CHECKCAST, method.getReturnType().getName().replace('.', '/'));
-            mv.visitInsn(ARETURN);
-            Label l2 = new Label();
-            mv.visitLabel(l2);
-            mv.visitLocalVariable("this", "L" + newDynName + ";", null, l0, l2, 0);
-            visitParamTypesLocalVariable(mv, method, l0, l2, insns, methodBean);
-            mv.visitLocalVariable(
-                    "_redkale_supplier", Type.getDescriptor(ThrowSupplier.class), null, l1, l2, supplierSlot);
-
-            mv.visitMaxs(20, 20);
-            mv.visitEnd();
-            CachedAction action = new CachedAction(
-                    new CachedEntry(cached, method),
-                    method,
-                    serviceType,
-                    methodBean.paramNameArray(method),
-                    dynFieldName);
-            actions.put(dynFieldName, action);
-        }
-        { // ThrowSupplier
-            final MethodVisitor mv = cw.visitMethod(
-                    ACC_PRIVATE + ACC_SYNTHETIC, "lambda$" + actionIndex, methodBean.getDesc(), null, new String[] {
-                        "java/lang/Throwable"
-                    });
-            // mv.setDebug(true);
-            Label l0 = new Label();
-            mv.visitLabel(l0);
-            mv.visitVarInsn(ALOAD, 0);
-            visitVarInsnParamTypes(mv, method, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, newDynName, rsMethodName, methodBean.getDesc(), false);
-            mv.visitInsn(ARETURN);
-            Label l1 = new Label();
-            mv.visitLabel(l1);
-            mv.visitLocalVariable("this", "L" + newDynName + ";", null, l0, l1, 0);
-            mv.visitMaxs(5, 5);
-            mv.visitEnd();
-        }
-        { // 定义字段
-            FieldVisitor fv =
-                    cw.visitField(ACC_PRIVATE, dynFieldName, Type.getDescriptor(CachedAction.class), null, null);
-            fv.visitEnd();
-        }
-        if (actions.size() == 1) {
-            cw.visitInnerClass(
-                    "java/lang/invoke/MethodHandles$Lookup",
-                    "java/lang/invoke/MethodHandles",
-                    "Lookup",
-                    ACC_PUBLIC + ACC_FINAL + ACC_STATIC);
-        }
+                code.invokevirtual(
+                        actionDesc,
+                        "get",
+                        MethodTypeDesc.of(ConstantDescs.CD_Object, supplierDesc, ConstantDescs.CD_Object.arrayType()));
+                ByteCodes.visitCheckCast(code, method.getReturnType());
+                code.return_(TypeKind.from(method.getReturnType()));
+                visitParamTypesLocalVariable(code, method, start, code.newLabel(), slots, methodBean);
+            });
+        });
+        CachedAction action = new CachedAction(
+                new CachedEntry(cached, method), method, serviceType, methodBean.paramNameArray(method), dynFieldName);
+        actions.put(dynFieldName, action);
+        cw.withMethod("lambda$" + actionIndex, methodDesc, ACC_PRIVATE | ACC_SYNTHETIC, mb -> {
+            mb.with(ExceptionsAttribute.ofSymbols(ConstantDescs.CD_Throwable));
+            mb.withCode(code -> {
+                code.aload(0);
+                visitVarInsnParamTypes(code, method, 0);
+                code.invokespecial(dynDesc, rsMethodName, methodDesc).return_(TypeKind.from(method.getReturnType()));
+            });
+        });
+        cw.withField(dynFieldName, actionDesc, ACC_PRIVATE);
         return new CodeNewMethod(rsMethodName, ACC_PRIVATE);
     }
 

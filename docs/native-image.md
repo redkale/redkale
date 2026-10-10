@@ -1,5 +1,5 @@
 # 使用native-image
-&emsp;&emsp; Redkale支持GraalVM的native-image， 由于Redkale使用了大量的asm动态生成代码，而native-image不支持动态字节码，因此需要使用```redkale-maven-plugin```执行预编译，提前生成动态字节码进行打包。
+&emsp;&emsp; Redkale支持GraalVM的native-image， 由于Redkale使用了大量的Classfile API动态生成代码，而native-image不支持动态字节码，因此需要使用```redkale-maven-plugin```执行预编译，提前生成动态字节码进行打包。
 
 ## 安装GraalVM
 ```

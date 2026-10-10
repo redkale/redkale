@@ -204,7 +204,7 @@ public interface Creator<T> {
     }
 
     /**
-     * 根据指定的class采用ASM技术生产Creator。
+     * 根据指定的class采用Classfile API技术生产Creator。
      *
      * @param <T> 构建类的数据类型
      * @param clazz 构建类
@@ -216,7 +216,7 @@ public interface Creator<T> {
     }
 
     /**
-     * 根据指定的class采用ASM技术生产Creator。
+     * 根据指定的class采用Classfile API技术生产Creator。
      *
      * @param <T> 构建类的数据类型
      * @param clazz 构建类

@@ -4,13 +4,16 @@
  */
 package org.redkale.convert.pb;
 
-import static org.redkale.asm.ClassWriter.COMPUTE_FRAMES;
-import static org.redkale.asm.Opcodes.*;
+import static java.lang.classfile.ClassFile.*;
 
+import java.lang.classfile.ClassFile;
+import java.lang.classfile.ClassSignature;
+import java.lang.classfile.Label;
+import java.lang.classfile.attribute.*;
+import java.lang.constant.*;
 import java.lang.reflect.*;
 import java.lang.reflect.Type;
 import java.util.*;
-import org.redkale.asm.*;
 import org.redkale.bytecode.ByteCodes;
 import org.redkale.convert.*;
 import org.redkale.util.*;
@@ -99,257 +102,293 @@ public abstract class ProtobufDynEncoder<T> extends ProtobufObjectEncoder<T> {
         final String supDynName = ProtobufDynEncoder.class.getName().replace('.', '/');
         final String valtypeName = clazz.getName().replace('.', '/');
         final String pbwriterName = ProtobufWriter.class.getName().replace('.', '/');
-        final String typeDesc = org.redkale.asm.Type.getDescriptor(Type.class);
-        final String pbfactoryDesc = org.redkale.asm.Type.getDescriptor(ProtobufFactory.class);
-        final String pbwriterDesc = org.redkale.asm.Type.getDescriptor(ProtobufWriter.class);
-        final String simpledCoderDesc = org.redkale.asm.Type.getDescriptor(SimpledCoder.class);
-        final String enMemberDesc = org.redkale.asm.Type.getDescriptor(EnMember.class);
-        final String pbencoderDesc = org.redkale.asm.Type.getDescriptor(ProtobufObjectEncoder.class);
-        final String objectDesc = org.redkale.asm.Type.getDescriptor(Object.class);
-        final String valtypeDesc = org.redkale.asm.Type.getDescriptor(clazz);
+        final String typeDesc = ByteCodes.descriptor(Type.class);
+        final String pbfactoryDesc = ByteCodes.descriptor(ProtobufFactory.class);
+        final String pbwriterDesc = ByteCodes.descriptor(ProtobufWriter.class);
+        final String simpledCoderDesc = ByteCodes.descriptor(SimpledCoder.class);
+        final String enMemberDesc = ByteCodes.descriptor(EnMember.class);
+        final String pbencoderDesc = ByteCodes.descriptor(ProtobufObjectEncoder.class);
+        final String objectDesc = ByteCodes.descriptor(Object.class);
+        final String valtypeDesc = ByteCodes.descriptor(clazz);
         // ------------------------------------------------------------------------------
-        ClassWriter cw = new ClassWriter(COMPUTE_FRAMES);
-        FieldVisitor fv;
-        MethodVisitor mv;
-        cw.visit(
-                V11,
-                ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
-                newDynName,
-                "L" + supDynName + "<" + valtypeDesc + ">;",
-                supDynName,
-                null);
-        if (!simpledCoders.isEmpty()) {
-            for (String key : simpledCoders.keySet()) {
-                fv = cw.visitField(ACC_PROTECTED, key + "SimpledCoder", simpledCoderDesc, null, null);
-                fv.visitEnd();
-            }
-        }
-        if (!otherMembers.isEmpty()) {
-            for (String key : otherMembers.keySet()) {
-                fv = cw.visitField(ACC_PROTECTED, key + "EnMember", enMemberDesc, null, null);
-                fv.visitEnd();
-            }
-        }
-        { // 构造函数
-            mv = (cw.visitMethod(
-                    ACC_PUBLIC, "<init>", "(" + pbfactoryDesc + typeDesc + pbencoderDesc + ")V", null, null));
-            Label label0 = new Label();
-            mv.visitLabel(label0);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitVarInsn(ALOAD, 2);
-            mv.visitVarInsn(ALOAD, 3);
-            mv.visitMethodInsn(
-                    INVOKESPECIAL, supDynName, "<init>", "(" + pbfactoryDesc + typeDesc + pbencoderDesc + ")V", false);
-            mv.visitInsn(RETURN);
-            Label label2 = new Label();
-            mv.visitLabel(label2);
-            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
-            mv.visitLocalVariable("factory", pbfactoryDesc, null, label0, label2, 1);
-            mv.visitLocalVariable("type", typeDesc, null, label0, label2, 2);
-            mv.visitLocalVariable("objectEncoder", pbencoderDesc, null, label0, label2, 3);
-            mv.visitMaxs(4, 4);
-            mv.visitEnd();
-        }
-        { // convertTo 方法
-            mv = (cw.visitMethod(
-                    ACC_PUBLIC, "convertTo", "(" + pbwriterDesc + enMemberDesc + valtypeDesc + ")V", null, null));
-            Label label0 = new Label();
-            mv.visitLabel(label0);
-            // if (value == null) return;
-            mv.visitVarInsn(ALOAD, 3); // value
-            Label ifLabel = new Label();
-            mv.visitJumpInsn(IFNONNULL, ifLabel);
-            mv.visitInsn(RETURN);
-            mv.visitLabel(ifLabel);
-            mv.visitLineNumber(33, ifLabel);
-            mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
 
-            // ProtobufWriter out = acceptWriter(out0, member, value);
-            mv.visitVarInsn(ALOAD, 0); // this
-            mv.visitVarInsn(ALOAD, 1); // out0
-            mv.visitVarInsn(ALOAD, 2); // member
-            mv.visitVarInsn(ALOAD, 3); // value
-            mv.visitMethodInsn(
-                    INVOKEVIRTUAL,
-                    newDynName,
-                    "acceptWriter",
-                    "(" + pbwriterDesc + enMemberDesc + objectDesc + ")" + pbwriterDesc,
-                    false);
-            mv.visitVarInsn(ASTORE, 4);
-            Label sublabel = new Label();
-            mv.visitLabel(sublabel);
+        byte[] classBytes = ClassFile.of().build(ByteCodes.classDesc(newDynName), cw -> {
+            cw.withVersion(JAVA_11_VERSION, 0)
+                    .withFlags(ACC_PUBLIC + ACC_FINAL + ACC_SUPER)
+                    .withSuperclass(ByteCodes.classDesc(supDynName));
 
-            mv.visitVarInsn(ALOAD, 4);
-            mv.visitVarInsn(ALOAD, 3);
-            mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, "writeObjectB", "(Ljava/lang/Object;)V", false);
-
-            for (EnMember member : selfObjEncoder.getMembers()) {
-                final String fieldName = member.getFieldName();
-                final Type fieldType = member.getAttribute().genericType();
-                final Class fieldClass = member.getAttribute().type();
-                if (ProtobufFactory.isSimpleType(fieldClass)) {
-                    mv.visitVarInsn(ALOAD, 4); // out
-                    ByteCodes.visitInsn(mv, member.getTag()); // tag
-                    mv.visitVarInsn(ALOAD, 3); // value
-                    String realDesc;
-                    if (member.getMethod() != null) {
-                        String mname = member.getMethod().getName();
-                        realDesc = org.redkale.asm.Type.getDescriptor(
-                                member.getMethod().getReturnType());
-                        String mdesc = org.redkale.asm.Type.getMethodDescriptor(member.getMethod());
-                        mv.visitMethodInsn(INVOKEVIRTUAL, valtypeName, mname, mdesc, false);
-                    } else { // field
-                        Field field = member.getField();
-                        String fname = field.getName();
-                        realDesc = org.redkale.asm.Type.getDescriptor(field.getType());
-                        mv.visitFieldInsn(GETFIELD, valtypeName, fname, realDesc);
-                    }
-                    String fieldDesc = org.redkale.asm.Type.getDescriptor(fieldClass);
-                    if (!Objects.equals(realDesc, fieldDesc)) { // 父类方法参数类型时泛型
-                        mv.visitTypeInsn(CHECKCAST, fieldClass.getName().replace('.', '/'));
-                    }
-                    mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, "writeFieldValue", "(I" + fieldDesc + ")V", false);
-                } else if (fieldClass.isEnum()) {
-                    mv.visitVarInsn(ALOAD, 4); // out
-                    ByteCodes.visitInsn(mv, member.getTag()); // tag
-                    mv.visitVarInsn(ALOAD, 3); // value
-                    String realDesc;
-                    if (member.getMethod() != null) {
-                        String mname = member.getMethod().getName();
-                        realDesc = org.redkale.asm.Type.getDescriptor(
-                                member.getMethod().getReturnType());
-                        String mdesc = org.redkale.asm.Type.getMethodDescriptor(member.getMethod());
-                        mv.visitMethodInsn(INVOKEVIRTUAL, valtypeName, mname, mdesc, false);
-                    } else { // field
-                        Field field = member.getField();
-                        String fname = field.getName();
-                        realDesc = org.redkale.asm.Type.getDescriptor(field.getType());
-                        mv.visitFieldInsn(GETFIELD, valtypeName, fname, realDesc);
-                    }
-                    if (!Objects.equals(realDesc, "Ljava/lang/Enum;")) {
-                        mv.visitTypeInsn(CHECKCAST, "java/lang/Enum");
-                    }
-                    mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, "writeFieldValue", "(ILjava/lang/Enum;)V", false);
-                } else if (factory.supportSimpleCollectionType(fieldType)) {
-                    mv.visitVarInsn(ALOAD, 4); // out
-                    ByteCodes.visitInsn(mv, member.getTag()); // tag
-                    mv.visitVarInsn(ALOAD, 3); // value
-                    if (member.getMethod() != null) {
-                        String mname = member.getMethod().getName();
-                        String mdesc = org.redkale.asm.Type.getMethodDescriptor(member.getMethod());
-                        mv.visitMethodInsn(INVOKEVIRTUAL, valtypeName, mname, mdesc, false);
-                    } else { // field
-                        Field field = member.getField();
-                        String fname = field.getName();
-                        String fdesc = org.redkale.asm.Type.getDescriptor(field.getType());
-                        mv.visitFieldInsn(GETFIELD, valtypeName, fname, fdesc);
-                    }
-                    Class componentType = factory.getSimpleCollectionComponentType(fieldType);
-                    String wmethodName = null;
-                    if (componentType == Boolean.class) {
-                        wmethodName = "writeFieldBoolsValue";
-                    } else if (componentType == Byte.class) {
-                        wmethodName = "writeFieldBytesValue";
-                    } else if (componentType == Character.class) {
-                        wmethodName = "writeFieldCharsValue";
-                    } else if (componentType == Short.class) {
-                        wmethodName = "writeFieldShortsValue";
-                    } else if (componentType == Integer.class) {
-                        wmethodName = "writeFieldIntsValue";
-                    } else if (componentType == Float.class) {
-                        wmethodName = "writeFieldFloatsValue";
-                    } else if (componentType == Long.class) {
-                        wmethodName = "writeFieldLongsValue";
-                    } else if (componentType == Double.class) {
-                        wmethodName = "writeFieldDoublesValue";
-                    } else if (componentType == String.class) {
-                        wmethodName = "writeFieldStringsValue";
-                    }
-                    mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, wmethodName, "(ILjava/util/Collection;)V", false);
-                } else if (simpledCoders.containsKey(fieldName)) {
-                    mv.visitVarInsn(ALOAD, 4); // out
-                    ByteCodes.visitInsn(mv, member.getTag()); // tag
-                    mv.visitVarInsn(ALOAD, 0); // this
-                    mv.visitFieldInsn(GETFIELD, newDynName, fieldName + "SimpledCoder", simpledCoderDesc);
-                    mv.visitVarInsn(ALOAD, 3); // value
-                    if (member.getMethod() != null) {
-                        String mname = member.getMethod().getName();
-                        String mdesc = org.redkale.asm.Type.getMethodDescriptor(member.getMethod());
-                        mv.visitMethodInsn(INVOKEVIRTUAL, valtypeName, mname, mdesc, false);
-                    } else { // field
-                        Field field = member.getField();
-                        String fname = field.getName();
-                        String fdesc = org.redkale.asm.Type.getDescriptor(field.getType());
-                        mv.visitFieldInsn(GETFIELD, valtypeName, fname, fdesc);
-                    }
-                    mv.visitMethodInsn(
-                            INVOKEVIRTUAL,
-                            pbwriterName,
-                            "writeFieldValue",
-                            "(I" + simpledCoderDesc + objectDesc + ")V",
-                            false);
-                } else {
-                    mv.visitVarInsn(ALOAD, 4); // out
-                    mv.visitVarInsn(ALOAD, 0); // this
-                    mv.visitFieldInsn(GETFIELD, newDynName, fieldName + "EnMember", enMemberDesc);
-                    mv.visitVarInsn(ALOAD, 3); // value
-                    mv.visitMethodInsn(
-                            INVOKEVIRTUAL,
-                            pbwriterName,
-                            "writeFieldValue",
-                            "(" + enMemberDesc + objectDesc + ")V",
-                            false);
+            cw.with(SignatureAttribute.of(ClassSignature.parseFrom("L" + supDynName + "<" + valtypeDesc + ">;")));
+            if (!simpledCoders.isEmpty()) {
+                for (String key : simpledCoders.keySet()) {
+                    cw.withField(key + "SimpledCoder", ClassDesc.ofDescriptor(simpledCoderDesc), ACC_PROTECTED);
                 }
             }
-            // out.writeObjectE(value);
-            mv.visitVarInsn(ALOAD, 4); // out
-            mv.visitVarInsn(ALOAD, 3); // value
-            mv.visitMethodInsn(INVOKEVIRTUAL, pbwriterName, "writeObjectE", "(Ljava/lang/Object;)V", false);
-            // offerWriter(out0, out);
-            mv.visitVarInsn(ALOAD, 0); // this
-            mv.visitVarInsn(ALOAD, 1); // out0
-            mv.visitVarInsn(ALOAD, 4); // out
-            mv.visitMethodInsn(
-                    INVOKEVIRTUAL, newDynName, "offerWriter", "(" + pbwriterDesc + pbwriterDesc + ")V", false);
+            if (!otherMembers.isEmpty()) {
+                for (String key : otherMembers.keySet()) {
+                    cw.withField(key + "EnMember", ClassDesc.ofDescriptor(enMemberDesc), ACC_PROTECTED);
+                }
+            }
+            { // 构造函数
+                cw.withMethodBody(
+                        "<init>",
+                        MethodTypeDesc.ofDescriptor("(" + pbfactoryDesc + typeDesc + pbencoderDesc + ")V"),
+                        ACC_PUBLIC,
+                        mv -> {
+                            Label label0 = mv.newLabel();
+                            mv.labelBinding(label0);
+                            mv.aload(0);
+                            mv.aload(1);
+                            mv.aload(2);
+                            mv.aload(3);
+                            mv.invokespecial(
+                                    ByteCodes.classDesc(supDynName),
+                                    "<init>",
+                                    MethodTypeDesc.ofDescriptor("(" + pbfactoryDesc + typeDesc + pbencoderDesc + ")V"),
+                                    false);
+                            mv.return_();
+                            Label label2 = mv.newLabel();
+                            mv.labelBinding(label2);
+                            mv.localVariable(0, "this", ClassDesc.ofDescriptor("L" + newDynName + ";"), label0, label2);
+                            mv.localVariable(1, "factory", ClassDesc.ofDescriptor(pbfactoryDesc), label0, label2);
+                            mv.localVariable(2, "type", ClassDesc.ofDescriptor(typeDesc), label0, label2);
+                            mv.localVariable(3, "objectEncoder", ClassDesc.ofDescriptor(pbencoderDesc), label0, label2);
+                        });
+            }
+            { // convertTo 方法
+                cw.withMethodBody(
+                        "convertTo",
+                        MethodTypeDesc.ofDescriptor("(" + pbwriterDesc + enMemberDesc + valtypeDesc + ")V"),
+                        ACC_PUBLIC,
+                        mv -> {
+                            Label label0 = mv.newLabel();
+                            mv.labelBinding(label0);
+                            // if (value == null) return;
+                            mv.aload(3); // value
+                            Label ifLabel = mv.newLabel();
+                            mv.ifnonnull(ifLabel);
+                            mv.return_();
+                            mv.labelBinding(ifLabel);
+                            mv.lineNumber(33);
 
-            mv.visitInsn(RETURN);
-            Label label2 = new Label();
-            mv.visitLabel(label2);
-            mv.visitLocalVariable("this", "L" + newDynName + ";", null, label0, label2, 0);
-            mv.visitLocalVariable("out", pbwriterDesc, null, label0, label2, 1);
-            mv.visitLocalVariable("parentMember", enMemberDesc, null, label0, label2, 2);
-            mv.visitLocalVariable("value", valtypeDesc, null, label0, label2, 3);
-            mv.visitLocalVariable("subout", pbwriterDesc, null, sublabel, label2, 4);
-            mv.visitMaxs(4, 3);
-            mv.visitEnd();
-        }
-        { // convertTo 虚拟方法
-            mv = (cw.visitMethod(
-                    ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC,
-                    "convertTo",
-                    "(" + pbwriterDesc + enMemberDesc + "Ljava/lang/Object;)V",
-                    null,
-                    null));
-            // mv.setDebug(true);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitVarInsn(ALOAD, 2);
-            mv.visitVarInsn(ALOAD, 3);
-            mv.visitTypeInsn(CHECKCAST, valtypeName);
-            mv.visitMethodInsn(
-                    INVOKEVIRTUAL,
-                    newDynName,
-                    "convertTo",
-                    "(" + pbwriterDesc + enMemberDesc + valtypeDesc + ")V",
-                    false);
-            mv.visitInsn(RETURN);
-            mv.visitMaxs(3, 3);
-            mv.visitEnd();
-        }
-        cw.visitEnd();
+                            // ProtobufWriter out = acceptWriter(out0, member, value);
+                            mv.aload(0); // this
+                            mv.aload(1); // out0
+                            mv.aload(2); // member
+                            mv.aload(3); // value
+                            mv.invokevirtual(
+                                    ByteCodes.classDesc(newDynName),
+                                    "acceptWriter",
+                                    MethodTypeDesc.ofDescriptor(
+                                            "(" + pbwriterDesc + enMemberDesc + objectDesc + ")" + pbwriterDesc));
+                            mv.astore(4);
+                            Label sublabel = mv.newLabel();
+                            mv.labelBinding(sublabel);
 
-        byte[] bytes = cw.toByteArray();
+                            mv.aload(4);
+                            mv.aload(3);
+                            mv.invokevirtual(
+                                    ByteCodes.classDesc(pbwriterName),
+                                    "writeObjectB",
+                                    MethodTypeDesc.ofDescriptor("(Ljava/lang/Object;)V"));
+
+                            for (EnMember member : selfObjEncoder.getMembers()) {
+                                final String fieldName = member.getFieldName();
+                                final Type fieldType = member.getAttribute().genericType();
+                                final Class fieldClass = member.getAttribute().type();
+                                if (ProtobufFactory.isSimpleType(fieldClass)) {
+                                    mv.aload(4); // out
+                                    mv.loadConstant(member.getTag()); // tag
+                                    mv.aload(3); // value
+                                    String realDesc;
+                                    if (member.getMethod() != null) {
+                                        String mname = member.getMethod().getName();
+                                        realDesc = ByteCodes.descriptor(
+                                                member.getMethod().getReturnType());
+                                        String mdesc = ByteCodes.methodDescriptor(member.getMethod());
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(valtypeName),
+                                                mname,
+                                                MethodTypeDesc.ofDescriptor(mdesc));
+                                    } else { // field
+                                        Field field = member.getField();
+                                        String fname = field.getName();
+                                        realDesc = ByteCodes.descriptor(field.getType());
+                                        mv.getfield(
+                                                ByteCodes.classDesc(valtypeName),
+                                                fname,
+                                                ClassDesc.ofDescriptor(realDesc));
+                                    }
+                                    String fieldDesc = ByteCodes.descriptor(fieldClass);
+                                    if (!Objects.equals(realDesc, fieldDesc)) { // 父类方法参数类型时泛型
+                                        mv.checkcast(ByteCodes.classDesc(
+                                                fieldClass.getName().replace('.', '/')));
+                                    }
+                                    mv.invokevirtual(
+                                            ByteCodes.classDesc(pbwriterName),
+                                            "writeFieldValue",
+                                            MethodTypeDesc.ofDescriptor("(I" + fieldDesc + ")V"));
+                                } else if (fieldClass.isEnum()) {
+                                    mv.aload(4); // out
+                                    mv.loadConstant(member.getTag()); // tag
+                                    mv.aload(3); // value
+                                    String realDesc;
+                                    if (member.getMethod() != null) {
+                                        String mname = member.getMethod().getName();
+                                        realDesc = ByteCodes.descriptor(
+                                                member.getMethod().getReturnType());
+                                        String mdesc = ByteCodes.methodDescriptor(member.getMethod());
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(valtypeName),
+                                                mname,
+                                                MethodTypeDesc.ofDescriptor(mdesc));
+                                    } else { // field
+                                        Field field = member.getField();
+                                        String fname = field.getName();
+                                        realDesc = ByteCodes.descriptor(field.getType());
+                                        mv.getfield(
+                                                ByteCodes.classDesc(valtypeName),
+                                                fname,
+                                                ClassDesc.ofDescriptor(realDesc));
+                                    }
+                                    if (!Objects.equals(realDesc, "Ljava/lang/Enum;")) {
+                                        mv.checkcast(ByteCodes.classDesc("java/lang/Enum"));
+                                    }
+                                    mv.invokevirtual(
+                                            ByteCodes.classDesc(pbwriterName),
+                                            "writeFieldValue",
+                                            MethodTypeDesc.ofDescriptor("(ILjava/lang/Enum;)V"));
+                                } else if (factory.supportSimpleCollectionType(fieldType)) {
+                                    mv.aload(4); // out
+                                    mv.loadConstant(member.getTag()); // tag
+                                    mv.aload(3); // value
+                                    if (member.getMethod() != null) {
+                                        String mname = member.getMethod().getName();
+                                        String mdesc = ByteCodes.methodDescriptor(member.getMethod());
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(valtypeName),
+                                                mname,
+                                                MethodTypeDesc.ofDescriptor(mdesc));
+                                    } else { // field
+                                        Field field = member.getField();
+                                        String fname = field.getName();
+                                        String fdesc = ByteCodes.descriptor(field.getType());
+                                        mv.getfield(
+                                                ByteCodes.classDesc(valtypeName), fname, ClassDesc.ofDescriptor(fdesc));
+                                    }
+                                    Class componentType = factory.getSimpleCollectionComponentType(fieldType);
+                                    String wmethodName = null;
+                                    if (componentType == Boolean.class) {
+                                        wmethodName = "writeFieldBoolsValue";
+                                    } else if (componentType == Byte.class) {
+                                        wmethodName = "writeFieldBytesValue";
+                                    } else if (componentType == Character.class) {
+                                        wmethodName = "writeFieldCharsValue";
+                                    } else if (componentType == Short.class) {
+                                        wmethodName = "writeFieldShortsValue";
+                                    } else if (componentType == Integer.class) {
+                                        wmethodName = "writeFieldIntsValue";
+                                    } else if (componentType == Float.class) {
+                                        wmethodName = "writeFieldFloatsValue";
+                                    } else if (componentType == Long.class) {
+                                        wmethodName = "writeFieldLongsValue";
+                                    } else if (componentType == Double.class) {
+                                        wmethodName = "writeFieldDoublesValue";
+                                    } else if (componentType == String.class) {
+                                        wmethodName = "writeFieldStringsValue";
+                                    }
+                                    mv.invokevirtual(
+                                            ByteCodes.classDesc(pbwriterName),
+                                            wmethodName,
+                                            MethodTypeDesc.ofDescriptor("(ILjava/util/Collection;)V"));
+                                } else if (simpledCoders.containsKey(fieldName)) {
+                                    mv.aload(4); // out
+                                    mv.loadConstant(member.getTag()); // tag
+                                    mv.aload(0); // this
+                                    mv.getfield(
+                                            ByteCodes.classDesc(newDynName),
+                                            fieldName + "SimpledCoder",
+                                            ClassDesc.ofDescriptor(simpledCoderDesc));
+                                    mv.aload(3); // value
+                                    if (member.getMethod() != null) {
+                                        String mname = member.getMethod().getName();
+                                        String mdesc = ByteCodes.methodDescriptor(member.getMethod());
+                                        mv.invokevirtual(
+                                                ByteCodes.classDesc(valtypeName),
+                                                mname,
+                                                MethodTypeDesc.ofDescriptor(mdesc));
+                                    } else { // field
+                                        Field field = member.getField();
+                                        String fname = field.getName();
+                                        String fdesc = ByteCodes.descriptor(field.getType());
+                                        mv.getfield(
+                                                ByteCodes.classDesc(valtypeName), fname, ClassDesc.ofDescriptor(fdesc));
+                                    }
+                                    mv.invokevirtual(
+                                            ByteCodes.classDesc(pbwriterName),
+                                            "writeFieldValue",
+                                            MethodTypeDesc.ofDescriptor("(I" + simpledCoderDesc + objectDesc + ")V"));
+                                } else {
+                                    mv.aload(4); // out
+                                    mv.aload(0); // this
+                                    mv.getfield(
+                                            ByteCodes.classDesc(newDynName),
+                                            fieldName + "EnMember",
+                                            ClassDesc.ofDescriptor(enMemberDesc));
+                                    mv.aload(3); // value
+                                    mv.invokevirtual(
+                                            ByteCodes.classDesc(pbwriterName),
+                                            "writeFieldValue",
+                                            MethodTypeDesc.ofDescriptor("(" + enMemberDesc + objectDesc + ")V"));
+                                }
+                            }
+                            // out.writeObjectE(value);
+                            mv.aload(4); // out
+                            mv.aload(3); // value
+                            mv.invokevirtual(
+                                    ByteCodes.classDesc(pbwriterName),
+                                    "writeObjectE",
+                                    MethodTypeDesc.ofDescriptor("(Ljava/lang/Object;)V"));
+                            // offerWriter(out0, out);
+                            mv.aload(0); // this
+                            mv.aload(1); // out0
+                            mv.aload(4); // out
+                            mv.invokevirtual(
+                                    ByteCodes.classDesc(newDynName),
+                                    "offerWriter",
+                                    MethodTypeDesc.ofDescriptor("(" + pbwriterDesc + pbwriterDesc + ")V"));
+
+                            mv.return_();
+                            Label label2 = mv.newLabel();
+                            mv.labelBinding(label2);
+                            mv.localVariable(0, "this", ClassDesc.ofDescriptor("L" + newDynName + ";"), label0, label2);
+                            mv.localVariable(1, "out", ClassDesc.ofDescriptor(pbwriterDesc), label0, label2);
+                            mv.localVariable(2, "parentMember", ClassDesc.ofDescriptor(enMemberDesc), label0, label2);
+                            mv.localVariable(3, "value", ClassDesc.ofDescriptor(valtypeDesc), label0, label2);
+                            mv.localVariable(4, "subout", ClassDesc.ofDescriptor(pbwriterDesc), sublabel, label2);
+                        });
+            }
+            { // convertTo 虚拟方法
+                cw.withMethodBody(
+                        "convertTo",
+                        MethodTypeDesc.ofDescriptor("(" + pbwriterDesc + enMemberDesc + "Ljava/lang/Object;)V"),
+                        ACC_PUBLIC + ACC_BRIDGE + ACC_SYNTHETIC,
+                        mv -> {
+                            mv.aload(0);
+                            mv.aload(1);
+                            mv.aload(2);
+                            mv.aload(3);
+                            mv.checkcast(ByteCodes.classDesc(valtypeName));
+                            mv.invokevirtual(
+                                    ByteCodes.classDesc(newDynName),
+                                    "convertTo",
+                                    MethodTypeDesc.ofDescriptor(
+                                            "(" + pbwriterDesc + enMemberDesc + valtypeDesc + ")V"));
+                            mv.return_();
+                        });
+            }
+        });
+
+        byte[] bytes = classBytes;
         Class<ProtobufDynEncoder> newClazz = classLoader.loadClass(newDynName.replace('/', '.'), bytes);
         RedkaleClassLoader.putReflectionDeclaredConstructors(newClazz, newDynName.replace('/', '.'));
         try {
