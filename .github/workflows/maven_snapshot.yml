@@ -13,10 +13,10 @@ jobs:
     name: Java ${{ matrix.java }} build
     
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     
     - name: Setup Java ${{ matrix.java }} 
-      uses: actions/setup-java@v7
+      uses: actions/setup-java@v6
       with:
         java-version: ${{ matrix.java }}
         distribution: 'temurin'
