@@ -414,38 +414,42 @@ public class ObjectEncoder<W extends Writer, T> implements Encodeable<W, T> {
             final Field field,
             final Method getter,
             final Method setter) {
-        String fieldalias;
+        String fieldAlias;
         if (field != null) { // public field
             ConvertColumnEntry ref = factory.findRef(clazz, field);
-            fieldalias = ref == null || ref.name().isEmpty() ? field.getName() : ref.name();
+            fieldAlias = ref == null || ref.name().isEmpty() ? field.getName() : ref.name();
         } else if (getter != null) {
             ConvertColumnEntry ref = factory.findRef(clazz, getter);
-            String mfieldname = ConvertFactory.readGetSetFieldName(getter);
+            String mfieldName = ConvertFactory.readGetSetFieldName(getter);
             if (ref == null) {
                 try {
-                    ref = factory.findRef(clazz, clazz.getDeclaredField(mfieldname));
+                    ref = factory.findRef(clazz, clazz.getDeclaredField(mfieldName));
                 } catch (Exception e) {
                     // do nothing
                 }
             }
-            fieldalias = ref == null || ref.name().isEmpty() ? mfieldname : ref.name();
+            fieldAlias = ref == null || ref.name().isEmpty() ? mfieldName : ref.name();
         } else { // setter != null
             ConvertColumnEntry ref = factory.findRef(clazz, setter);
-            String mfieldname = ConvertFactory.readGetSetFieldName(setter);
+            String mfieldName = ConvertFactory.readGetSetFieldName(setter);
             if (ref == null) {
                 try {
-                    ref = factory.findRef(clazz, clazz.getDeclaredField(mfieldname));
+                    ref = factory.findRef(clazz, clazz.getDeclaredField(mfieldName));
                 } catch (Exception e) {
                     // do nothing
                 }
             }
-            fieldalias = ref == null || ref.name().isEmpty() ? mfieldname : ref.name();
+            fieldAlias = ref == null || ref.name().isEmpty() ? mfieldName : ref.name();
         }
         Type subclass = realType;
         if ((realType instanceof Class) && field != null && getter == null && setter == null) {
             // 修复父类含public field，subclass不传父类会导致java.lang.NoSuchFieldError的bug
             subclass = field.getDeclaringClass();
         }
-        return Attribute.create(subclass, clazz, fieldalias, null, field, getter, setter, null);
+        Attribute attr = factory.findAttribute(clazz, fieldAlias);
+        if (attr != null) {
+            return attr;
+        }
+        return Attribute.create(subclass, clazz, fieldAlias, null, field, getter, setter, null);
     }
 }

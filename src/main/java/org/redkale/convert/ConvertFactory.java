@@ -54,6 +54,8 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
 
     private final ConcurrentHashMap<Type, Map<String, SimpledCoder<R, W, ?>>> fieldCoders = new ConcurrentHashMap();
 
+    private final ConcurrentHashMap<Type, Map<String, Attribute>> fieldAttributes = new ConcurrentHashMap();
+
     private final ConcurrentHashMap<Type, Decodeable<R, ?>> decoders = new ConcurrentHashMap();
 
     private final ConcurrentHashMap<Type, Encodeable<W, ?>> encoders = new ConcurrentHashMap();
@@ -1166,6 +1168,20 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
             }
         }
         return result;
+    }
+
+    public final <T, F> void register(final Class<T> clazz, final String field, final Attribute<T, F> attribute) {
+        if (field == null || clazz == null) {
+            return;
+        }
+        this.fieldAttributes
+                .computeIfAbsent(clazz, c -> new ConcurrentHashMap<>())
+                .put(field, attribute);
+    }
+
+    public final <T, F> Attribute<T, F> findAttribute(Class<T> type, final String field) {
+        Map<String, Attribute> attributes = fieldAttributes.get(type);
+        return attributes == null ? null : attributes.get(field);
     }
 
     public final <C extends BiFunction> BiFunction findFieldFunc(Class<C> type) {
