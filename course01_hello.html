@@ -1,28 +1,47 @@
 <!DOCTYPE html>
-<html lang="en-us">
+<html lang="zh-CN" data-theme="dark">
     <head>
         <meta charset="UTF-8">
-        <title>Redkale(红菜苔)--基于Java 8全新的微服务开源框架 - Redkale官网</title>
+        <title>Hello World | Redkale 文档</title>
         <meta name="keywords" content="Redkale,redkale,java,微服务,架构"/>
-        <meta name="description" content="Redkale(红菜苔)是基于Java 8全新的微服务开源框架"/>
+        <meta name="description" content="创建第一个 Redkale 应用，了解项目目录、启动配置和简单的 HTTP 接口。">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+        <link rel="stylesheet" type="text/css" href="stylesheets/docs.css" media="screen">
+    <link rel="icon" href="favicon.ico">
+        <script src="scripts/theme.js"></script>
     </head>
     <body>
-        <section class="page-header">
-            <a href="index.html" class="project-name">Redkale</a>
-            <h2 class="project-tagline"></h2>
-            <a href="redkale.html" class="btn">Redkale 入门</a> 
-            <a href="convert.html" class="btn">Convert 组件</a> 
-            <a href="service.html" class="btn">Service 组件</a> 
-            <a href="source.html" class="btn">Source 组件</a> 
-            <a href="net.html" class="btn">Net 组件</a> 
-            <a href="watch.html" class="btn">Watch 组件</a> 
-            <a href="plugins.html" class="btn">Redkale 插件</a>
-            <a href="articles.html" class="btn">技术文章</a> 
-        </section>
-
-        <section class="main-content">
+<!-- docs-shell:start -->
+<a class="skip-link" href="#main-content">跳到主要内容</a>
+<header class="docs-header">
+  <div class="header-start">
+    <button class="icon-button menu-toggle" type="button" aria-label="打开导航菜单" aria-controls="docs-sidebar" aria-expanded="false"><svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <a class="docs-brand" href="index.html" aria-label="Redkale 文档首页"><img src="logo_96.png" alt="" width="35" height="35"><span>Redkale <span>Docs</span></span></a>
+  </div>
+  <nav class="header-actions" aria-label="主导航">
+    <button class="search-trigger" type="button" aria-label="搜索文档"><svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><span>搜索文档…</span><kbd>Ctrl K</kbd></button>
+    <span class="header-language" lang="zh-CN">简体中文</span>
+    <a class="header-link" href="https://github.com/redkale/redkale" target="_blank" rel="noopener noreferrer">GitHub <svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3h7v7M21 3l-11 11M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"/></svg></a>
+    <a class="header-link" href="https://gitee.com/redkale/redkale" target="_blank" rel="noopener noreferrer">Gitee <svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3h7v7M21 3l-11 11M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"/></svg></a>
+    <button class="icon-button theme-toggle" type="button" aria-label="切换到浅色主题"><svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 13a9 9 0 1 1-10-10 7 7 0 0 0 10 10Z"/></svg><svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></button>
+  </nav>
+</header>
+<aside class="docs-sidebar" id="docs-sidebar" aria-label="文档导航">
+  <p class="sidebar-label">REDKALE DOCUMENTATION</p>
+  <nav aria-label="文档章节"><details class="nav-group" open><summary>开始使用</summary><ul><li><a class="nav-link" href="index.html">简介</a></li><li><a class="nav-link" href="redkale.html">快速入门</a></li><li><a class="nav-link" href="course01_helloidea.html">01 · IntelliJ IDEA 与 Maven</a></li><li><a class="nav-link" href="code.html">源码与下载</a></li></ul></details><details class="nav-group" open><summary>核心组件</summary><ul><li><a class="nav-link" href="convert.html">Convert · 序列化</a></li><li><a class="nav-link" href="service.html">Service · 服务</a></li><li><a class="nav-link" href="source.html">Source · 数据与缓存</a></li><li><a class="nav-link" href="net.html">Net · 网络服务</a></li><li><a class="nav-link" href="watch.html">Watch · 运行管理</a></li></ul></details><details class="nav-group" open><summary>开发教程</summary><ul><li><a class="nav-link" href="course01_hello.html" aria-current="page">01 · Hello World</a></li><li><a class="nav-link" href="course02_dbconn.html">02 · 数据库连接</a></li><li><a class="nav-link" href="course02_rest.html">02 · REST 敏捷开发</a></li><li><a class="nav-link" href="course03_userauth.html">03 · 用户鉴权</a></li><li><a class="nav-link" href="course04_cachedb.html">04 · 缓存数据源</a></li><li><a class="nav-link" href="course05_dbaction.html">05 · 数据增删改查</a></li><li><a class="nav-link" href="course06_dbdis.html">06 · 分库分表</a></li><li><a class="nav-link" href="course07_convert.html">07 · 数据序列化</a></li><li><a class="nav-link" href="course08_httpservlet.html">08 · HTTP 接口</a></li><li><a class="nav-link" href="course09_fileup.html">09 · 文件上传下载</a></li><li><a class="nav-link" href="course10_websocket.html">10 · WebSocket</a></li><li><a class="nav-link" href="course11_sncp.html">11 · SNCP 分布式部署</a></li></ul></details><details class="nav-group" open><summary>生态与资源</summary><ul><li><a class="nav-link" href="plugins.html">Redkale 插件</a></li><li><a class="nav-link" href="articles.html">教程与技术文章</a></li><li><a class="nav-link" href="javadoc/index.html">Javadoc API<svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3h7v7M21 3l-11 11M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"/></svg></a></li></ul></details><details class="nav-group"><summary>技术文章</summary><ul><li><a class="nav-link" href="article_parents.html">双亲委托模型</a></li><li><a class="nav-link" href="article_creator.html">Creator 对象构建</a></li><li><a class="nav-link" href="article_convert.html">Convert 高性能序列化</a></li><li><a class="nav-link" href="article_source.html">DataSource 数据访问</a></li><li><a class="nav-link" href="article_regain.html">重新认识 Java</a></li></ul></details></nav>
+  <div class="sidebar-footer">Java 微服务开源框架<br><a href="https://redkale.org">redkale.org</a> · Apache License 2.0</div>
+</aside>
+<button class="menu-backdrop" type="button" tabindex="-1" aria-label="关闭导航菜单"></button>
+<!-- docs-shell:end -->
+<main id="main-content" class="docs-layout" tabindex="-1">
+  <article class="main-content">
+<!-- docs-intro:start -->
+<nav class="breadcrumbs" aria-label="页面路径"><a href="index.html" aria-label="文档首页"><svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9"/></svg></a><span aria-hidden="true">›</span><span>开发教程</span><span aria-hidden="true">›</span><span class="current">01 · Hello World</span></nav>
+<header class="doc-intro"><h1>Hello World</h1><p class="doc-description">创建第一个 Redkale 应用，了解项目目录、启动配置和简单的 HTTP 接口。</p></header>
+<details class="mobile-toc"><summary>本页目录</summary><ul class="toc-links"></ul></details>
+<div class="doc-note">历史教程与技术文章保留了原版示例。开发新项目时，请对照当前版本的 Javadoc API 使用。</div>
+<!-- docs-intro:end -->
+<!-- docs-content:start -->
             <h3>Redkale 入门教程 01 -- Hello Word！</h3>
 
             <p>
@@ -162,9 +181,18 @@
                 <span class="site-footer-owner">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;欢迎加入Redkale QQ群: 527523235</span>
             </footer>
 
-        </section>
-
-        <script>
+        <!-- docs-content:end -->
+<nav class="doc-pagination" aria-label="文档翻页"><a class="next" href="course02_dbconn.html"><span>下一页</span>02 · 数据库连接 ›</a></nav>
+  </article>
+  <aside class="docs-toc" aria-label="本页目录"><p class="toc-title">本页目录</p><ul class="toc-links"></ul></aside>
+</main>
+<dialog class="search-dialog" aria-label="搜索文档">
+  <div class="search-field"><svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input type="search" placeholder="搜索组件、教程、API…" aria-label="搜索关键词" autocomplete="off"><button class="icon-button search-close" type="button" aria-label="关闭搜索"><svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
+  <div class="search-results" aria-live="polite"></div>
+  <div class="search-help"><span><kbd>↑ ↓</kbd> 选择结果</span><span><kbd>Enter</kbd> 打开文档</span><span><kbd>Esc</kbd> 关闭</span></div>
+</dialog>
+<script src="scripts/docs.js" defer></script>
+<script>
             var _hmt = _hmt || [];
             (function () {
                 var hm = document.createElement("script");
@@ -173,5 +201,5 @@
                 s.parentNode.insertBefore(hm, s);
             })();
         </script>
-    </body>
+</body>
 </html>
