@@ -1170,6 +1170,14 @@ public abstract class ConvertFactory<R extends Reader, W extends Writer> {
         return result;
     }
 
+    public final <T, F> void register(final LambdaSupplier<T> func, final Attribute<T, F> attribute) {
+        register(LambdaSupplier.readClass(func), LambdaSupplier.readColumn(func), attribute);
+    }
+
+    public final <T, F> void register(LambdaFunction<T, ?> func, final Attribute<T, F> attribute) {
+        register(LambdaFunction.readClass(func), LambdaFunction.readColumn(func), attribute);
+    }
+
     public final <T, F> void register(final Class<T> clazz, final String field, final Attribute<T, F> attribute) {
         if (field == null || clazz == null) {
             return;
