@@ -5,6 +5,7 @@
  */
 package org.redkale.convert.ext;
 
+import java.net.URI;
 import java.net.URL;
 import org.redkale.convert.*;
 
@@ -35,7 +36,7 @@ public class URLSimpledCoder<R extends Reader, W extends Writer> extends Simpled
             return null;
         }
         try {
-            return new URL(str);
+            return URI.create(str).toURL();
         } catch (Exception e) {
             return null;
         }

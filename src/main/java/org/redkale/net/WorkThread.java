@@ -61,7 +61,7 @@ public class WorkThread extends Thread implements Executor {
      */
     public static ExecutorService createWorkExecutor(final int threads, final String threadNameFormat) {
         final Function<String, ExecutorService> func = Utility.virtualExecutorFunction();
-        return func == null ? createExecutor(threads, threadNameFormat) : func.apply(threadNameFormat);
+        return func.apply(threadNameFormat);
     }
 
     /**

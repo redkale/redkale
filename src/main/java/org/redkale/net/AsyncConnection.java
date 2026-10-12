@@ -1129,8 +1129,9 @@ public abstract class AsyncConnection implements Channel, AutoCloseable {
             try {
                 ByteBuffer appBuffer = sslUnwrap(handshake, netBuffer);
                 if (appBuffer == null) {
-                    failed(new SSLException("appBuffer is null"), attachment);
-                    return; // CLOSED，netBuffer已被回收
+                    // CLOSED：sslUnwrap 已回收网络和明文缓冲区，不再将 attachment 交给调用方回收。
+                    handler.completed(-1, null);
+                    return;
                 }
                 if (readSSLHalfBuffer != netBuffer) { // unwap完整
                     offerReadBuffer(netBuffer);

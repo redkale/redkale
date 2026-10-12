@@ -87,10 +87,6 @@ public final class Utility {
         return CPUS;
     }
 
-    public static @Nullable MethodHandles.Lookup trustedLookup() {
-        return null;
-    }
-
     public static boolean inNativeImage() {
         return NATIVE_IMAGE_ENV;
     }

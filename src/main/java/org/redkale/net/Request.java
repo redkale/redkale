@@ -161,7 +161,7 @@ public abstract class Request<C extends Context> {
     }
 
     protected InputStream newInputStream() {
-        return ((AsyncNioConnection) channel).newInputStream();
+        return new AsyncConnectionInputStream(channel, Math.max(0L, context.getReadTimeoutSeconds()) * 1000L);
     }
 
     public boolean isKeepAlive() {

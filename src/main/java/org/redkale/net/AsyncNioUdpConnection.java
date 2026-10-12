@@ -95,22 +95,6 @@ class AsyncNioUdpConnection extends AsyncNioConnection {
     }
 
     @Override
-    public ReadableByteChannel readableByteChannel() {
-        if (this.sslEngine == null) {
-            return this.channel;
-        }
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public WritableByteChannel writableByteChannel() {
-        if (this.sslEngine == null) {
-            return this.channel;
-        }
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
     public boolean isConnected() {
         if (clientMode) {
             return this.channel.isConnected();

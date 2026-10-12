@@ -11,7 +11,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Set;
 import javax.net.ssl.SSLContext;
-import org.redkale.util.ByteBufferReader;
 
 /**
  * 详情见: https://redkale.org
@@ -97,108 +96,6 @@ class AsyncNioTcpConnection extends AsyncNioConnection {
         } catch (IOException e) {
             return null;
         }
-    }
-
-    @Override
-    public ReadableByteChannel readableByteChannel() {
-        if (this.sslEngine == null) {
-            return this.channel;
-        }
-
-        AsyncConnection self = this;
-        return new ReadableByteChannel() {
-            // ssl解密后的半包数据
-            ByteBuffer halfBuffer;
-
-            @Override
-            public int read(final ByteBuffer bb) throws IOException {
-                if (halfBuffer != null) {
-                    int pos = bb.position();
-                    while (bb.hasRemaining() && halfBuffer.hasRemaining()) {
-                        bb.put(halfBuffer.get());
-                    }
-                    if (!halfBuffer.hasRemaining()) {
-                        offerReadBuffer(halfBuffer);
-                        halfBuffer = null;
-                    }
-                    return bb.position() - pos;
-                }
-                ByteBuffer netBuffer = pollReadSSLBuffer();
-                channel.read(netBuffer);
-                netBuffer.flip();
-                if (netBuffer.hasRemaining()) {
-                    ByteBuffer appBuffer = sslUnwrap(false, netBuffer);
-                    if (appBuffer == null) {
-                        return -1; // CLOSED，netBuffer已被回收
-                    }
-                    appBuffer.flip();
-                    int pos = bb.position();
-                    while (bb.hasRemaining() && appBuffer.hasRemaining()) bb.put(appBuffer.get());
-                    if (appBuffer.hasRemaining()) {
-                        halfBuffer = appBuffer;
-                    } else {
-                        offerReadBuffer(appBuffer);
-                    }
-                    return bb.position() - pos;
-                } else {
-                    offerReadBuffer(netBuffer);
-                    return 0;
-                }
-            }
-
-            @Override
-            public boolean isOpen() {
-                return self.isOpen();
-            }
-
-            @Override
-            public void close() throws IOException {
-                if (halfBuffer != null) {
-                    offerReadBuffer(halfBuffer);
-                    halfBuffer = null;
-                }
-                self.close();
-            }
-        };
-    }
-
-    @Override
-    public WritableByteChannel writableByteChannel() {
-        if (this.sslEngine == null) {
-            return this.channel;
-        }
-
-        AsyncConnection self = this;
-        return new WritableByteChannel() {
-
-            @Override
-            public int write(final ByteBuffer src) throws IOException {
-                int remain = src.remaining();
-                ByteBuffer[] netBuffers = sslWrap(false, src);
-                int len = remain - src.remaining();
-                if (netBuffers.length == 1) {
-                    while (netBuffers[0].hasRemaining()) {
-                        channel.write(netBuffers[0]);
-                    }
-                } else {
-                    while (ByteBufferReader.hasRemaining(netBuffers)) {
-                        channel.write(netBuffers);
-                    }
-                }
-                offerWriteBuffers(netBuffers);
-                return len;
-            }
-
-            @Override
-            public boolean isOpen() {
-                return self.isOpen();
-            }
-
-            @Override
-            public void close() throws IOException {
-                self.close();
-            }
-        };
     }
 
     @Override
