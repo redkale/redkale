@@ -878,11 +878,11 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public double incrbyFloat(final String key, double num) {
-        CacheEntry entry = find(key, CacheEntryType.DOUBLE);
+        CacheEntry entry = find(key);
         if (entry == null) {
             containerLock.lock();
             try {
-                entry = find(key, CacheEntryType.DOUBLE);
+                entry = find(key);
                 if (entry == null) {
                     entry = new CacheEntry(CacheEntryType.DOUBLE, key);
                     entry.objectValue = new AtomicLong();
@@ -895,11 +895,14 @@ public final class CacheMemorySource extends AbstractCacheSource {
         entry.lock();
         try {
             if (entry.cacheType != CacheEntryType.DOUBLE) {
-                entry.objectValue = new AtomicLong(Long.parseLong(entry.getObjectValue(convert, String.class)));
+                double current = Double.parseDouble(entry.getObjectValue(convert, String.class));
+                entry.objectValue = new AtomicLong(Double.doubleToLongBits(current));
                 entry.cacheType = CacheEntryType.DOUBLE;
             }
-            Long v = ((AtomicLong) entry.objectValue).addAndGet(Double.doubleToLongBits(num));
-            return Double.longBitsToDouble(v.longValue());
+            AtomicLong value = (AtomicLong) entry.objectValue;
+            double result = Double.longBitsToDouble(value.get()) + num;
+            value.set(Double.doubleToLongBits(result));
+            return result;
         } finally {
             entry.unlock();
         }
@@ -1112,7 +1115,28 @@ public final class CacheMemorySource extends AbstractCacheSource {
 
     @Override
     public double hincrbyFloat(final String key, String field, double num) {
-        return Double.longBitsToDouble(hincrby(key, field, Double.doubleToLongBits(num)));
+        CacheEntry entry = find(key, CacheEntryType.MAP);
+        if (entry == null) {
+            containerLock.lock();
+            try {
+                entry = find(key, CacheEntryType.MAP);
+                if (entry == null) {
+                    entry = new CacheEntry(CacheEntryType.MAP, key);
+                    container.put(key, entry);
+                }
+            } finally {
+                containerLock.unlock();
+            }
+        }
+        entry.lock();
+        try {
+            Double current = entry.getMapValue(field, convert, Double.class);
+            double result = (current == null ? 0.0 : current) + num;
+            entry.mapValue.put(field, Double.toString(result));
+            return result;
+        } finally {
+            entry.unlock();
+        }
     }
 
     @Override

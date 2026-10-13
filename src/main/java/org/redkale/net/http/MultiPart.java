@@ -44,10 +44,9 @@ public final class MultiPart {
     }
 
     public boolean save(long max, File file) throws IOException {
-        OutputStream out = new FileOutputStream(file);
-        boolean rs = save(max, out);
-        out.close();
-        return rs;
+        try (OutputStream out = new FileOutputStream(file)) {
+            return save(max, out);
+        }
     }
 
     public byte[] getContentBytes() throws IOException {
@@ -83,7 +82,7 @@ public final class MultiPart {
         int pos;
         InputStream in0 = this.getInputStream();
         while ((pos = in0.read(bytes)) != -1) {
-            if (max < 0) {
+            if (pos > max) {
                 return false;
             }
             out.write(bytes, 0, pos);

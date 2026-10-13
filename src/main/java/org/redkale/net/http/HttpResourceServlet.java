@@ -266,13 +266,33 @@ public class HttpResourceServlet extends HttpServlet {
     }
 
     protected FileEntry createFileEntry(String uri) {
-        File rfile = new File(root, uri);
-        File file = rfile;
-        if (file.isDirectory()) {
-            file = new File(rfile, this.indexHtml);
-        }
-        if (file.isDirectory()) {
-            file = new File(rfile, "index.html");
+        File file;
+        try {
+            Path rootPath = root.toPath().toRealPath();
+            String relativeUri = uri.replace('\\', '/');
+            while (relativeUri.startsWith("/")) {
+                relativeUri = relativeUri.substring(1);
+            }
+            Path path = rootPath.resolve(relativeUri).normalize();
+            if (!path.startsWith(rootPath)) {
+                return null;
+            }
+            File rfile = path.toFile();
+            file = rfile;
+            if (file.isDirectory()) {
+                file = new File(rfile, this.indexHtml);
+            }
+            if (file.isDirectory()) {
+                file = new File(rfile, "index.html");
+            }
+            // Check the final target, including index files and symbolic links.
+            Path realPath = file.toPath().toRealPath();
+            if (!realPath.startsWith(rootPath)) {
+                return null;
+            }
+            file = realPath.toFile();
+        } catch (IOException | InvalidPathException e) {
+            return null;
         }
         if (!file.isFile() || !file.canRead()) {
             return null;

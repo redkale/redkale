@@ -393,6 +393,11 @@ public class HttpRequest extends Request<HttpContext> {
                 this.headerHalfLen = this.headerLength;
                 this.headerParsed = true;
             }
+            // Body framing must be known even when GET headers were loaded lazily.
+            parseHeader();
+            if (this.chunked && this.contentLength >= 0) {
+                return -1;
+            }
             if (this.contentType != null && this.contentType.contains("boundary=")) {
                 this.boundary = true;
             }
@@ -419,7 +424,8 @@ public class HttpRequest extends Request<HttpContext> {
                                             + this.contentLength + ", path: " + requestPath);
                     return -1;
                 }
-                bbytes.put(buffer, Math.min((int) this.contentLength, buffer.remaining()));
+                int remainingBody = (int) this.contentLength - bbytes.length();
+                bbytes.put(buffer, Math.min(remainingBody, buffer.remaining()));
                 int lr = (int) this.contentLength - bbytes.length();
                 if (lr == 0) {
                     this.readState = READ_STATE_END;
@@ -451,98 +457,109 @@ public class HttpRequest extends Request<HttpContext> {
 
     private int readChunkedBody(final ByteBuffer buf) {
         final ByteBuffer buffer = buf;
-        int remain = buffer.remaining();
-        if (this.chunkedLength < 0) { // 需要读取length
-            ByteArray input = array().clear();
-            if (this.chunkedHalfLenBytes != null) {
-                input.put(this.chunkedHalfLenBytes);
-                this.chunkedHalfLenBytes = null;
-            }
-            for (; ; ) {
-                if (remain-- < 1) {
-                    buffer.clear();
-                    if (input.length() > 0) {
-                        this.chunkedHalfLenBytes = input.getBytes();
-                    }
-                    return 1;
+        while (true) {
+            int remain = buffer.remaining();
+            if (this.chunkedLength < 0) { // 需要读取length
+                ByteArray input = array().clear();
+                if (this.chunkedHalfLenBytes != null) {
+                    input.put(this.chunkedHalfLenBytes);
+                    this.chunkedHalfLenBytes = null;
                 }
-                byte b = buffer.get();
-                if (b == '\n') {
-                    break;
-                }
-                input.put(b);
-            }
-            this.chunkedLength = parseHexLength(input);
-            this.chunkedCurrOffset = 0;
-            this.chunkedCR = false;
-        }
-        if (this.chunkedLength == 0) {
-            if (remain < 1) {
-                buffer.clear();
-                return 1;
-            }
-            if (!this.chunkedCR) { // 读\r
-                remain--;
-                if (buffer.get() != '\r') {
-                    throw new RedkaleException("invalid chunk end");
-                }
-                this.chunkedCR = true;
-                if (remain < 1) {
-                    buffer.clear();
-                    return 1;
-                }
-            }
-            // 读\n
-            remain--;
-            if (buffer.get() != '\n') {
-                throw new RedkaleException("invalid chunk end");
-            }
-            this.readState = READ_STATE_END;
-            if (this.bodyBytes.isEmpty()) {
-                this.bodyParsed = true; // no bodyBytes data
-            }
-            return 0;
-        } else {
-            ByteArray body = this.bodyBytes;
-            if (this.chunkedCurrOffset < this.chunkedLength) {
                 for (; ; ) {
                     if (remain-- < 1) {
                         buffer.clear();
+                        if (input.length() > 0) {
+                            this.chunkedHalfLenBytes = input.getBytes();
+                        }
                         return 1;
                     }
                     byte b = buffer.get();
-                    body.put(b);
-                    this.chunkedCurrOffset++;
-                    if (this.chunkedCurrOffset == this.chunkedLength) {
-                        this.chunkedCR = false;
+                    if (b == '\n') {
+                        if (input.isEmpty() || input.get(input.length() - 1) != '\r') {
+                            throw new RedkaleException("invalid chunk header");
+                        }
                         break;
                     }
+                    input.put(b);
+                    if (input.length() >= MAX_CHUNK_HEADER_SIZE) {
+                        throw new RedkaleException("chunk header too large");
+                    }
                 }
-            }
-            if (remain < 1) {
-                buffer.clear();
-                return 1;
-            }
-            // 读\r
-            if (!this.chunkedCR) {
-                remain--;
-                if (buffer.get() != '\r') {
-                    throw new RedkaleException("invalid chunk end");
+                this.chunkedLength = parseHexLength(input);
+                if (this.chunkedLength > context.getMaxBody() - this.bodyBytes.length()) {
+                    throw new RedkaleException("http body too large");
                 }
-                this.chunkedCR = true;
+                this.chunkedCurrOffset = 0;
+                this.chunkedCR = false;
+            }
+            if (this.chunkedLength == 0) {
                 if (remain < 1) {
                     buffer.clear();
                     return 1;
                 }
+                if (!this.chunkedCR) { // 读\r
+                    remain--;
+                    if (buffer.get() != '\r') {
+                        throw new RedkaleException("invalid chunk end");
+                    }
+                    this.chunkedCR = true;
+                    if (remain < 1) {
+                        buffer.clear();
+                        return 1;
+                    }
+                }
+                // 读\n
+                remain--;
+                if (buffer.get() != '\n') {
+                    throw new RedkaleException("invalid chunk end");
+                }
+                this.readState = READ_STATE_END;
+                if (this.bodyBytes.isEmpty()) {
+                    this.bodyParsed = true; // no bodyBytes data
+                }
+                return 0;
+            } else {
+                ByteArray body = this.bodyBytes;
+                if (this.chunkedCurrOffset < this.chunkedLength) {
+                    for (; ; ) {
+                        if (remain-- < 1) {
+                            buffer.clear();
+                            return 1;
+                        }
+                        byte b = buffer.get();
+                        body.put(b);
+                        this.chunkedCurrOffset++;
+                        if (this.chunkedCurrOffset == this.chunkedLength) {
+                            this.chunkedCR = false;
+                            break;
+                        }
+                    }
+                }
+                if (remain < 1) {
+                    buffer.clear();
+                    return 1;
+                }
+                // 读\r
+                if (!this.chunkedCR) {
+                    remain--;
+                    if (buffer.get() != '\r') {
+                        throw new RedkaleException("invalid chunk end");
+                    }
+                    this.chunkedCR = true;
+                    if (remain < 1) {
+                        buffer.clear();
+                        return 1;
+                    }
+                }
+                // 读\n
+                remain--;
+                if (buffer.get() != '\n') {
+                    throw new RedkaleException("invalid chunk end");
+                }
+                this.chunkedLength = -1;
+                // 继续读下一个chunk
+                continue;
             }
-            // 读\n
-            remain--;
-            if (buffer.get() != '\n') {
-                throw new RedkaleException("invalid chunk end");
-            }
-            this.chunkedLength = -1;
-            // 继续读下一个chunk
-            return readChunkedBody(buffer);
         }
     }
 
@@ -559,11 +576,20 @@ public class HttpRequest extends Request<HttpContext> {
             } else if (c >= 'A' && c <= 'F') {
                 val = c - 'A' + 10;
             } else if (c == '\r' || c == ';') { // ;后面是注释内容
+                if (i == 0) {
+                    throw new RedkaleException("invalid chunk length");
+                }
                 break;
             } else {
                 throw new RedkaleException("invalid chunk length");
             }
+            if (len > (Integer.MAX_VALUE - val) / 16) {
+                throw new RedkaleException("chunk length overflow");
+            }
             len = len * 16 + val;
+        }
+        if (count == 0) {
+            throw new RedkaleException("invalid chunk length");
         }
         return len;
     }
@@ -934,7 +960,12 @@ public class HttpRequest extends Request<HttpContext> {
                     this.contentType = bytes.toString(true, charset);
                     break;
                 case HEAD_CONTENT_LENGTH: // Content-Length
-                    this.contentLength = Long.decode(bytes.toString(true, charset));
+                    long length =
+                            parseContentLength(bytes.toString(true, charset).trim());
+                    if (this.contentLength >= 0 && this.contentLength != length) {
+                        return -1;
+                    }
+                    this.contentLength = length;
                     break;
                 case HEAD_CONTENT_ENCODING: // Content-Encoding
                     this.contentEncoding = bytes.toString(true, charset);
@@ -995,15 +1026,14 @@ public class HttpRequest extends Request<HttpContext> {
                     headers.setValid(HEAD_UPGRADE, this.maybews ? "websocket" : bytes.toString(true, charset));
                     break;
                 case HEAD_TRANSFER_ENCODING: // Transfer-Encoding
-                    this.chunked = vlen == 7
-                            && content[0] == 'c'
-                            && content[1] == 'h'
-                            && content[2] == 'u'
-                            && content[3] == 'n'
-                            && content[4] == 'k'
-                            && content[5] == 'e'
-                            && content[6] == 'd';
-                    headers.setValid(HEAD_TRANSFER_ENCODING, this.chunked ? "chunked" : bytes.toString(true, charset));
+                    if (this.chunked
+                            || !"chunked"
+                                    .equalsIgnoreCase(
+                                            bytes.toString(true, charset).trim())) {
+                        return -1;
+                    }
+                    this.chunked = true;
+                    headers.setValid(HEAD_TRANSFER_ENCODING, "chunked");
                     break;
                 case HEAD_EXPECT: // Expect
                     this.expect = vlen == 12
@@ -1072,10 +1102,27 @@ public class HttpRequest extends Request<HttpContext> {
         if (headerParsed) {
             return;
         }
-        headerParsed = true;
         if (headerBytes.length() > 0) {
-            readHeaderLines(this.headerBytes.wrapByteBuffer(), array().clear());
+            if (readHeaderLines(this.headerBytes.wrapByteBuffer(), array().clear()) != 0) {
+                throw new RedkaleException("invalid http headers");
+            }
         }
+        headerParsed = true;
+    }
+
+    static long parseContentLength(String value) {
+        if (value.isEmpty()) {
+            throw new RedkaleException("invalid content-length");
+        }
+        long result = 0;
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if (c < '0' || c > '9' || result > (Long.MAX_VALUE - (c - '0')) / 10) {
+                throw new RedkaleException("invalid content-length");
+            }
+            result = result * 10 + c - '0';
+        }
+        return result;
     }
 
     static String parseHeaderName(boolean latin1, ByteArray bytes, Charset charset) {
@@ -1264,7 +1311,17 @@ public class HttpRequest extends Request<HttpContext> {
                 return Rest.REST_HEADER_RESP_CONVERT;
             }
         }
-        return bytes.toString(latin1, charset);
+        String name = bytes.toString(latin1, charset);
+        if (HEAD_CONTENT_LENGTH.equalsIgnoreCase(name)) {
+            return HEAD_CONTENT_LENGTH;
+        }
+        if (HEAD_TRANSFER_ENCODING.equalsIgnoreCase(name)) {
+            return HEAD_TRANSFER_ENCODING;
+        }
+        if (HEAD_CONTENT_ENCODING.equalsIgnoreCase(name)) {
+            return HEAD_CONTENT_ENCODING;
+        }
+        return name;
     }
 
     @Override
@@ -1334,10 +1391,10 @@ public class HttpRequest extends Request<HttpContext> {
         if (this.boundary || bodyParsed) {
             return;
         }
-        bodyParsed = true;
         if (this.contentEncoding != null) {
             unzipEncoding();
         }
+        bodyParsed = true;
         if (this.getContentType() != null && this.contentType.toLowerCase().contains("x-www-form-urlencoded")) {
             addParameter(bodyBytes, true, 0, bodyBytes.length());
         }
@@ -1355,31 +1412,46 @@ public class HttpRequest extends Request<HttpContext> {
             if ("gzip".equalsIgnoreCase(this.contentEncoding)) {
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 ByteArrayInputStream in = new ByteArrayInputStream(bodyBytes.content(), 0, bodyBytes.length());
-                GZIPInputStream ungzip = new GZIPInputStream(in);
-                int n;
-                byte[] buffer = array().clear().content();
-                while ((n = ungzip.read(buffer)) > 0) {
-                    out.write(buffer, 0, n);
+                try (GZIPInputStream ungzip = new GZIPInputStream(in)) {
+                    int n;
+                    byte[] buffer = array().clear().content();
+                    while ((n = ungzip.read(buffer)) > 0) {
+                        if (n > context.getMaxBody() - out.size()) {
+                            throw new RedkaleException("decoded http body too large");
+                        }
+                        out.write(buffer, 0, n);
+                    }
                 }
                 bodyBytes.clear();
                 bodyBytes.put(out.toByteArray());
             } else if ("deflate".equalsIgnoreCase(this.contentEncoding)) {
                 Inflater infl = new Inflater();
-                infl.setInput(bodyBytes.content(), 0, bodyBytes.length());
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
-                int n;
-                byte[] buffer = array().clear().content();
-                while (!infl.finished()) {
-                    n = infl.inflate(buffer);
-                    if (n == 0) {
-                        break;
+                try {
+                    infl.setInput(bodyBytes.content(), 0, bodyBytes.length());
+                    int n;
+                    byte[] buffer = array().clear().content();
+                    while (!infl.finished()) {
+                        n = infl.inflate(buffer);
+                        if (n == 0) {
+                            if (infl.finished()) {
+                                break;
+                            }
+                            throw new RedkaleException("invalid deflate content");
+                        }
+                        if (n > context.getMaxBody() - out.size()) {
+                            throw new RedkaleException("decoded http body too large");
+                        }
+                        out.write(buffer, 0, n);
                     }
-                    out.write(buffer, 0, n);
+                } finally {
+                    infl.end();
                 }
-                infl.end();
                 bodyBytes.clear();
                 bodyBytes.put(out.toByteArray());
             }
+        } catch (RedkaleException e) {
+            throw e;
         } catch (Exception e) {
             throw new RedkaleException("invalid encoding content");
         }
