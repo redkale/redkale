@@ -224,6 +224,10 @@ public final class Utility {
         Thread.ofVirtual().name("Redkale-VirtualThread").start(task);
     }
 
+    public static void execute(String threadName, Runnable task) {
+        Thread.ofVirtual().name(threadName).start(task);
+    }
+    
     public static void sleep(long millis) {
         try {
             Thread.sleep(millis);
