@@ -460,6 +460,12 @@ public abstract class NodeServer {
                 Math.max(maxTypeLength, Sncp.getResourceType(y).getName().length() + 1);
     }
 
+    /**
+     * 类是否可实例化成对象
+     *
+     * @param serviceImplClass 类名
+     * @return 是否可实例化
+     */
     protected boolean acceptsComponent(Class<? extends Service> serviceImplClass) {
         return !(Modifier.isAbstract(serviceImplClass.getModifiers())
                 || Modifier.isInterface(serviceImplClass.getModifiers()));

@@ -76,6 +76,12 @@ public abstract class Sncp {
 
     // key: actionid
     public static LinkedHashMap<Uint128, Method> loadRemoteMethodActions(final Class serviceTypeOrImplClass) {
+        return loadRemoteMethodActions(serviceTypeOrImplClass, new HashSet<>());
+    }
+
+    // key: actionid
+    public static LinkedHashMap<Uint128, Method> loadRemoteMethodActions(
+            final Class serviceTypeOrImplClass, Set<Class<? extends Annotation>> annotations) {
         final List<Method> list = new ArrayList<>();
         final List<Method> multis = new ArrayList<>();
         final Map<Uint128, Method> actionids = new LinkedHashMap<>();
@@ -85,6 +91,9 @@ public abstract class Sncp {
                 continue;
             }
             if (method.getAnnotation(Scheduled.class) != null) {
+                if (annotations != null) {
+                    annotations.add(Scheduled.class);
+                }
                 continue;
             }
             if (Modifier.isStatic(method.getModifiers())) {
@@ -97,6 +106,9 @@ public abstract class Sncp {
                 continue;
             }
             if (method.getAnnotation(ResourceChanged.class) != null) {
+                if (annotations != null) {
+                    annotations.add(ResourceChanged.class);
+                }
                 continue;
             }
             if (method.getName().equals("getClass") || method.getName().equals("toString")) {

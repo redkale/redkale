@@ -4,8 +4,11 @@
 
 package org.redkale.boot;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,6 +21,7 @@ import org.redkale.mq.spi.MessageAgent;
 import org.redkale.net.http.WebSocketServlet;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.net.sncp.SncpRpcGroups;
+import org.redkale.scheduled.Scheduled;
 import org.redkale.service.Service;
 import org.redkale.util.RedkaleClassLoader;
 import org.redkale.util.RedkaleException;
@@ -76,11 +80,11 @@ class NodeExpectServiceLoader implements ResourceTypeLoader {
             final ResourceFactory resourceFactory = nodeServer.getResourceFactory();
             final ResourceFactory appResourceFactory = application.getResourceFactory();
             ResourceFactory regFactory = nodeServer.isSNCP() ? application.getResourceFactory() : resourceFactory;
-
-            if (Sncp.loadRemoteMethodActions(Sncp.getResourceType(serviceImplClass))
+            Set<Class<? extends Annotation>> annotations = new HashSet<>();
+            if (Sncp.loadRemoteMethodActions(Sncp.getResourceType(serviceImplClass), annotations)
                             .isEmpty()
-                    && serviceImplClass.getAnnotation(Priority.class)
-                            == null) { // class没有可用的方法且没有标记启动优先级的， 通常为BaseService
+                    && serviceImplClass.getAnnotation(Priority.class) == null
+                    && !annotations.contains(Scheduled.class)) { // class没有可用的方法且没有标记启动优先级的， 通常为BaseService
                 if (!serviceImplClass.getName().startsWith("org.redkale.")
                         && !serviceImplClass.getSimpleName().contains("Base")) {
                     logger.log(
