@@ -94,6 +94,10 @@ public class SncpHeader {
         header.timestamp = buffer.getLong(); // 8
         int traceSize = buffer.getChar(); // 2
         if (traceSize > 0) {
+            if (buffer.remaining() < traceSize + 8) {
+                throw new SncpException(
+                        "trace length is " + traceSize + ", but buffer.remaining = " + buffer.remaining());
+            }
             byte[] traces = new byte[traceSize];
             buffer.get(traces);
             header.traceid = new String(traces, StandardCharsets.UTF_8);
@@ -220,16 +224,10 @@ public class SncpHeader {
                         ? ("{serviceid=" + this.serviceid + ",serviceName=" + this.serviceName)
                         : ("{seqid=" + this.seqid + ",serviceid=" + this.serviceid + ",serviceName="
                                 + this.serviceName))
-                + ",sncpVersion=" + this.sncpVersion
-                + ",actionid=" + this.actionid
-                + ",methodName=" + this.methodName
-                + ",address=" + getAddress()
-                + ",keepAlive=" + isKeepAlive()
-                + ",timestamp=" + this.timestamp
-                + ",traceid=" + getTraceid()
-                + ",retcode=" + this.retcode
-                + ",bodyLength=" + this.bodyLength
-                + "}";
+                + ",sncpVersion=" + this.sncpVersion + ",actionid=" + this.actionid + ",methodName="
+                + this.methodName + ",address=" + getAddress() + ",keepAlive=" + isKeepAlive() + ",timestamp="
+                + this.timestamp + ",traceid=" + getTraceid() + ",retcode=" + this.retcode + ",bodyLength="
+                + this.bodyLength + "}";
     }
 
     public InetSocketAddress getAddress() {
