@@ -221,13 +221,19 @@ public final class Utility {
     }
 
     public static void execute(Runnable task) {
-        Thread.ofVirtual().name("Redkale-VirtualThread").start(task);
+        execute("Redkale-VirtualThread", task);
     }
 
+    /**
+     * 异步执行任务
+     *
+     * @param threadName 现场名称
+     * @param task 任务
+     */
     public static void execute(String threadName, Runnable task) {
         Thread.ofVirtual().name(threadName).start(task);
     }
-    
+
     public static void sleep(long millis) {
         try {
             Thread.sleep(millis);
