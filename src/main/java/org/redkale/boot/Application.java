@@ -705,7 +705,7 @@ public final class Application {
         ClassFilter<ResourceTypeLoader> resTypeFilter =
                 new ClassFilter(this.getClassLoader(), ResourceTypeLoader.class);
 
-        loadClassByFilters(true, resConfigFilter, resAnnFilter, resTypeFilter);
+        loadClassByFilters0(true, resConfigFilter, resAnnFilter, resTypeFilter);
         { // Configuration
             StringBuilder sb = new StringBuilder();
             resConfigFilter.getFilterEntrys().forEach(en -> {
@@ -1658,10 +1658,10 @@ public final class Application {
     }
 
     public void loadClassByFilters(final ClassFilter<?>... filters) {
-        loadClassByFilters(false, filters);
+        loadClassByFilters0(false, filters);
     }
 
-    private void loadClassByFilters(boolean logable, final ClassFilter<?>... filters) {
+    private void loadClassByFilters0(boolean logable, final ClassFilter<?>... filters) {
         try {
             long s = System.currentTimeMillis();
             ClassFilter.Loader.load(getHome(), getClassLoader(), filters);
