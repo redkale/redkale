@@ -238,10 +238,7 @@ public abstract class NodeServer {
         if (otherFilters != null) {
             filters.addAll(otherFilters);
         }
-        long s = System.currentTimeMillis();
         application.loadClassByFilters(filters.toArray(new ClassFilter[filters.size()]));
-        long e = System.currentTimeMillis() - s;
-        logger.info(this.getClass().getSimpleName() + " load filter class in " + e + " ms");
         loadService(serviceFilter); // 必须在servlet之前
         loadOthers(otherFilters);
         if (!application.isSingletonMode()) { // 非singleton模式下才加载Filter、Servlet

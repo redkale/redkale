@@ -705,7 +705,7 @@ public final class Application {
         ClassFilter<ResourceTypeLoader> resTypeFilter =
                 new ClassFilter(this.getClassLoader(), ResourceTypeLoader.class);
 
-        loadClassByFilters(resConfigFilter, resAnnFilter, resTypeFilter);
+        loadClassByFilters(true, resConfigFilter, resAnnFilter, resTypeFilter);
         { // Configuration
             StringBuilder sb = new StringBuilder();
             resConfigFilter.getFilterEntrys().forEach(en -> {
@@ -1657,15 +1657,24 @@ public final class Application {
         return moduleEngines;
     }
 
-    public void loadClassByFilters(final ClassFilter... filters) {
+    public void loadClassByFilters(final ClassFilter<?>... filters) {
+        loadClassByFilters(false, filters);
+    }
+
+    private void loadClassByFilters(boolean logable, final ClassFilter<?>... filters) {
         try {
+            long s = System.currentTimeMillis();
             ClassFilter.Loader.load(getHome(), getClassLoader(), filters);
+            long e = System.currentTimeMillis() - s;
+            if (logable) {
+                logger.info("Load filter class in " + e + " ms");
+            }
         } catch (IOException e) {
             throw new RedkaleException(e);
         }
     }
 
-    public void loadServerClassFilters(final ClassFilter... filters) {
+    public void loadServerClassFilters(final ClassFilter<?>... filters) {
         try {
             ClassFilter.Loader.load(getHome(), getServerClassLoader(), filters);
         } catch (IOException e) {
