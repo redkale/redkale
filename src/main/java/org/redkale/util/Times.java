@@ -5,7 +5,9 @@ package org.redkale.util;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.TimeZone;
 
@@ -26,6 +28,8 @@ public final class Times {
     static final String FORMAT_SECONDS = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS"; // yyyy-MM-dd HH:mm:ss
 
     static final String FORMAT_MILLS = "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS.%1$tL"; // yyyy-MM-dd HH:mm:ss.fff
+
+    static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private Times() {
         // do nothind
@@ -323,6 +327,27 @@ public final class Times {
         LocalDate ld = instant.atZone(zid).toLocalDate();
         ld = ld.withDayOfMonth(ld.lengthOfMonth());
         return ld.atStartOfDay(zid).toInstant().toEpochMilli();
+    }
+
+    /**
+     * 解析 yyyy-MM-dd HH:mm:ss 字符串转成当前时区的Instant
+     *
+     * @param datetime yyyy-MM-dd HH:mm:ss 字符串
+     * @return Instant
+     */
+    public static Instant parseInstant(String datetime) {
+        LocalDateTime ldt = parseDateTime(datetime);
+        return ldt.atZone(ZoneId.systemDefault()).toInstant();
+    }
+
+    /**
+     * 解析 yyyy-MM-dd HH:mm:ss 字符串转成当LocalDateTime
+     *
+     * @param datetime yyyy-MM-dd HH:mm:ss 字符串
+     * @return LocalDateTime
+     */
+    public static LocalDateTime parseDateTime(String datetime) {
+        return LocalDateTime.parse(datetime, FORMATTER);
     }
 
     /**
