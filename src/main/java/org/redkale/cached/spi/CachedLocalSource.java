@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
 import java.util.logging.Level;
@@ -51,23 +51,12 @@ public class CachedLocalSource implements Service {
         if (scheduler == null) {
             this.scheduler = Utility.newScheduledExecutor(
                     1, "Redkale-" + CachedLocalSource.class.getSimpleName() + "-Expirer-Thread");
-            final List<String> keys = new ArrayList<>();
             int interval = 15;
             scheduler.scheduleWithFixedDelay(
                     () -> {
                         try {
-                            container.forEach((n, m) -> {
-                                keys.clear();
-                                long now = System.currentTimeMillis();
-                                m.forEach((k, x) -> {
-                                    if (x.isExpired(now)) {
-                                        keys.add(k);
-                                    }
-                                });
-                                for (String key : keys) {
-                                    m.remove(key);
-                                }
-                            });
+                            long now = System.currentTimeMillis();
+                            container.forEach((n, m) -> m.removeExpired(now));
                         } catch (Throwable t) {
                             logger.log(
                                     Level.SEVERE,
@@ -93,10 +82,7 @@ public class CachedLocalSource implements Service {
     public <T> void set(String name, String key, int localLimit, long millis, Type type, T value) {
         // millis > 0 才需要过期设置
         String json = convert.convertTo(type, value);
-        container
-                .computeIfAbsent(name, n -> new CacheMap(localLimit))
-                .computeIfAbsent(key, json)
-                .set(json, millis);
+        container.computeIfAbsent(name, n -> new CacheMap(localLimit)).set(key, json, millis);
     }
 
     public <T> T get(String name, String key, Type type) {
@@ -134,10 +120,7 @@ public class CachedLocalSource implements Service {
         if (map == null) {
             return -1;
         }
-        int old = map.limit;
-        map.limit = limit;
-        map.checkLimit();
-        return old;
+        return map.updateLimit(limit);
     }
 
     protected static class CacheMap {
@@ -146,7 +129,7 @@ public class CachedLocalSource implements Service {
 
         protected final ConcurrentHashMap<String, CacheItem> map = new ConcurrentHashMap<>();
 
-        protected int limit;
+        protected volatile int limit;
 
         public CacheMap(int limit) {
             this.limit = limit;
@@ -164,20 +147,35 @@ public class CachedLocalSource implements Service {
             return map.get(key);
         }
 
-        public CacheItem computeIfAbsent(String key, String json) {
-            if (limit > 0) {
-                AtomicBoolean added = new AtomicBoolean();
-                CacheItem item = map.computeIfAbsent(key, k -> {
-                    added.set(true);
-                    return new CacheItem(key, json);
-                });
-                if (added.get()) {
-                    checkLimit();
-                }
-                return item;
-            } else {
-                return map.computeIfAbsent(key, k -> new CacheItem(key, json));
+        public void set(String key, String json, long millis) {
+            lock.lock();
+            try {
+                map.put(key, new CacheItem(key, json, millis));
+                checkLimit();
+            } finally {
+                lock.unlock();
             }
+        }
+
+        public int updateLimit(int limit) {
+            lock.lock();
+            try {
+                int old = this.limit;
+                this.limit = limit;
+                checkLimit();
+                return old;
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        public void removeExpired(long now) {
+            forEach((key, item) -> {
+                if (item.isExpired(now)) {
+                    // A concurrent refresh replaces the item, so never remove by key alone.
+                    map.remove(key, item);
+                }
+            });
         }
 
         public int size() {
@@ -185,40 +183,49 @@ public class CachedLocalSource implements Service {
         }
 
         protected void checkLimit() {
-            int l = limit;
-            if (l > 0 && map.size() > l) {
-                lock.lock();
-                try {
-                    if (l > 0 && map.size() > l) {
-                        List<CacheItem> items = new ArrayList<>(map.values());
-                        Collections.sort(items);
-                        int count = map.size() - l;
-                        for (int i = 0; i < count; i++) {
-                            map.remove(items.get(i).getKey());
-                        }
+            lock.lock();
+            try {
+                int l = limit;
+                if (l > 0 && map.size() > l) {
+                    List<CacheItem> items = new ArrayList<>(map.values());
+                    Collections.sort(items);
+                    int count = items.size() - l;
+                    for (int i = 0; i < count && map.size() > l; i++) {
+                        CacheItem item = items.get(i);
+                        map.remove(item.getKey(), item);
                     }
-                } finally {
-                    lock.unlock();
                 }
+            } finally {
+                lock.unlock();
             }
         }
     }
 
     protected static class CacheItem implements Comparable<CacheItem> {
 
+        private static final AtomicLong SEQUENCE = new AtomicLong();
+
         private final String key;
 
         @Nullable // json格式
-        protected String value;
+        protected final String value;
 
         // 为0表示永久， 大于0表示有过期时间
-        protected long endMillis;
+        protected final long endMillis;
 
-        private long createTime = System.currentTimeMillis();
+        private final long createTime;
+
+        private final long sequence = SEQUENCE.incrementAndGet();
 
         public CacheItem(String key, String value) {
+            this(key, value, 0);
+        }
+
+        public CacheItem(String key, String value, long millis) {
             this.key = key;
             this.value = value;
+            this.createTime = System.currentTimeMillis();
+            this.endMillis = millis > 0 ? (this.createTime + millis) : 0;
         }
 
         public String getKey() {
@@ -231,12 +238,6 @@ public class CachedLocalSource implements Service {
 
         public long getCreateTime() {
             return createTime;
-        }
-
-        public void set(String value, long millis) {
-            this.value = value;
-            this.createTime = System.currentTimeMillis();
-            this.endMillis = millis > 0 ? (this.createTime + millis) : 0;
         }
 
         @ConvertDisabled
@@ -252,7 +253,7 @@ public class CachedLocalSource implements Service {
         public int compareTo(CacheItem o) {
             long t1 = this.createTime;
             long t2 = o == null ? 0 : o.createTime;
-            return t1 == t2 ? 0 : (t1 > t2 ? 1 : -1);
+            return t1 == t2 ? Long.compare(this.sequence, o == null ? 0 : o.sequence) : Long.compare(t1, t2);
         }
 
         @Override

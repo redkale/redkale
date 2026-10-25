@@ -6,9 +6,9 @@ package org.redkale.cached.spi;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -21,11 +21,11 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class CachedAsyncLock {
 
-    private static final Object NIL = new Object();
-
     private final ConcurrentHashMap<String, CachedAsyncLock> asyncLockMap;
 
-    private final AtomicBoolean state = new AtomicBoolean();
+    private boolean started;
+
+    private boolean completed;
 
     private final List<CompletableFuture> futures = new ArrayList<>();
 
@@ -33,7 +33,7 @@ public class CachedAsyncLock {
 
     private final String lockId;
 
-    private Object resultObj = NIL;
+    private Object resultObj;
 
     private Throwable resultExp;
 
@@ -43,48 +43,61 @@ public class CachedAsyncLock {
     }
 
     public boolean compareAddFuture(CompletableFuture future) {
+        Objects.requireNonNull(future);
+        Object value;
+        Throwable error;
         lock.lock();
         try {
-            if (resultObj != NIL) {
-                future.complete(resultObj);
-                return false;
-            } else if (resultExp != null) {
-                future.completeExceptionally(resultExp);
-                return false;
+            if (!completed) {
+                boolean owner = !started;
+                started = true;
+                this.futures.add(future);
+                return owner;
             }
-            boolean rs = state.compareAndSet(false, true);
-            this.futures.add(future);
-            return rs;
+            value = resultObj;
+            error = resultExp;
         } finally {
             lock.unlock();
         }
+        // Completing a future can synchronously execute arbitrary user callbacks.
+        complete(future, value, error);
+        return false;
     }
 
     public void fail(Throwable t) {
-        lock.lock();
-        try {
-            this.resultExp = t;
-            for (CompletableFuture future : futures) {
-                future.completeExceptionally(t);
-            }
-            this.futures.clear();
-        } finally {
-            asyncLockMap.remove(lockId);
-            lock.unlock();
-        }
+        finish(null, Objects.requireNonNull(t));
     }
 
     public <T> void success(T val) {
+        finish(val, null);
+    }
+
+    private void finish(Object value, Throwable error) {
+        List<CompletableFuture> waiting;
         lock.lock();
         try {
-            this.resultObj = val;
-            for (CompletableFuture future : futures) {
-                future.complete(val);
+            if (completed) {
+                return;
             }
+            completed = true;
+            this.resultObj = value;
+            this.resultExp = error;
+            waiting = new ArrayList<>(this.futures);
             this.futures.clear();
+            asyncLockMap.remove(lockId, this);
         } finally {
-            asyncLockMap.remove(lockId);
             lock.unlock();
+        }
+        for (CompletableFuture future : waiting) {
+            complete(future, value, error);
+        }
+    }
+
+    private static void complete(CompletableFuture future, Object value, Throwable error) {
+        if (error == null) {
+            future.complete(value);
+        } else {
+            future.completeExceptionally(error);
         }
     }
 }

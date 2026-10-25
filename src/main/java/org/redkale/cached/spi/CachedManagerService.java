@@ -866,18 +866,32 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
             CompletableFuture<T> future = new CompletableFuture<>();
             if (lock.compareAddFuture(future)) {
                 try {
-                    supplier.get().whenComplete((v, e) -> {
-                        if (e != null) {
-                            lock.fail(e);
-                        }
-                        CachedValue<T> cacheVal = toCacheValue(nullable, v);
-                        if (CachedValue.isValid(cacheVal)) {
-                            setter.set(name, key, localLimit, expire, cacheType, cacheVal)
-                                    .whenComplete((v2, e2) -> lock.success(CachedValue.get(cacheVal)));
-                        } else {
-                            lock.success(CachedValue.get(cacheVal));
-                        }
-                    });
+                    // A previous load may have finished while the first cache read was pending.
+                    getter.get(name, key, localLimit, expire, cacheType)
+                            .thenCompose(cached -> {
+                                if (CachedValue.isValid(cached)) {
+                                    return CompletableFuture.completedFuture(cached.getVal());
+                                }
+                                try {
+                                    return supplier.get().thenCompose(v -> {
+                                        CachedValue<T> cacheVal = toCacheValue(nullable, v);
+                                        if (!CachedValue.isValid(cacheVal)) {
+                                            return CompletableFuture.completedFuture(v);
+                                        }
+                                        return setter.set(name, key, localLimit, expire, cacheType, cacheVal)
+                                                .thenApply(ignored -> v);
+                                    });
+                                } catch (Throwable e) {
+                                    return CompletableFuture.<T>failedFuture(e);
+                                }
+                            })
+                            .whenComplete((v, e) -> {
+                                if (e == null) {
+                                    lock.success(v);
+                                } else {
+                                    lock.fail(e);
+                                }
+                            });
                 } catch (Throwable e) {
                     lock.fail(e);
                 }
