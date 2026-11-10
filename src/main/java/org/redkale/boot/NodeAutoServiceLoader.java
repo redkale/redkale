@@ -96,7 +96,7 @@ class NodeAutoServiceLoader implements ResourceTypeLoader {
             field.set(srcObj, service);
             rf.inject(resourceName, service, nodeServer); // 给其可能包含@Resource的字段赋值;
             if (!application.isCompileMode() && !Sncp.isRemote(service)) {
-                service.init(null);
+                Sncp.initService(service);
             }
             logger.info("Load Service(" + (Sncp.isRemote(service) ? "Remote" : "@Local") + " @AutoLoad service = "
                     + serviceImplClass.getSimpleName() + ", resourceName='" + resourceName + "')");

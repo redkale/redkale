@@ -54,6 +54,7 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     protected String name;
 
     @Override
+    @PostConstruct
     public void init(AnyValue conf) {
         super.init(conf);
         if (conf.getAnyValue("read") == null) {

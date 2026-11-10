@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
+import org.redkale.net.sncp.Sncp;
 import org.redkale.service.Service;
 import org.redkale.util.RedkaleException;
 
@@ -51,7 +52,7 @@ class CachedKeyGeneratorLoader implements ResourceTypeLoader {
                     if (Objects.equals(n, instance.key())) {
                         rf.inject(instance);
                         if (instance instanceof Service) {
-                            ((Service) instance).init(null);
+                            Sncp.initService((Service) instance, null);
                         }
                         return instance;
                     }

@@ -79,6 +79,7 @@ public abstract class WebSocketNode implements Service {
     private int tryAcquireSeconds = 12;
 
     @Override
+    @PostConstruct
     public void init(AnyValue conf) {
         this.tryAcquireSeconds = Integer.getInteger("redkale.http.websocket.tryAcquireSeconds", 12);
 
@@ -104,6 +105,7 @@ public abstract class WebSocketNode implements Service {
     }
 
     @Override
+    @PreDestroy
     public void destroy(AnyValue conf) {}
 
     @Local

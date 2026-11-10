@@ -139,7 +139,7 @@ public abstract class MessageAgent implements MessageManager {
                 MessageCoder<MessageRecord> coder = coderClass.getConstructor().newInstance();
                 application.getResourceFactory().inject(coder);
                 if (coder instanceof Service) {
-                    ((Service) coder).init(config);
+                    Sncp.initService((Service) coder, config);
                 }
                 this.messageRecordCoder = coder;
             } catch (RuntimeException ex) {
@@ -222,7 +222,7 @@ public abstract class MessageAgent implements MessageManager {
             this.messageClientProducer.stop();
         }
         if (this.messageRecordCoder instanceof Service) {
-            ((Service) this.messageRecordCoder).destroy(config);
+            Sncp.destroyService((Service) this.messageRecordCoder, config);
         }
         if (this.timeoutExecutor != null) {
             this.timeoutExecutor.shutdownNow();

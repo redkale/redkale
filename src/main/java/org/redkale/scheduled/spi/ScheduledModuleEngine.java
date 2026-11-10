@@ -10,6 +10,7 @@ import java.util.ServiceLoader;
 import org.redkale.boot.Application;
 import org.redkale.boot.ModuleEngine;
 import org.redkale.boot.NodeServer;
+import org.redkale.net.sncp.Sncp;
 import org.redkale.scheduled.ScheduledManager;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
@@ -57,7 +58,7 @@ public class ScheduledModuleEngine extends ModuleEngine {
         if (!application.isCompileMode()) {
             this.resourceFactory.inject(this.scheduledManager);
             if (this.scheduledManager instanceof Service) {
-                ((Service) this.scheduledManager).init(this.config);
+                Sncp.initService((Service) this.scheduledManager, this.config);
             }
         }
         this.resourceFactory.register("", ScheduledManager.class, this.scheduledManager);
@@ -105,7 +106,7 @@ public class ScheduledModuleEngine extends ModuleEngine {
     @Override
     public void onAppPreShutdown() {
         if (!application.isCompileMode() && this.scheduledManager instanceof Service) {
-            ((Service) this.scheduledManager).destroy(this.config);
+            Sncp.destroyService((Service) this.scheduledManager, this.config);
         }
     }
 

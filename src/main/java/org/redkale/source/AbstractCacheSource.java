@@ -11,6 +11,7 @@ import org.redkale.convert.json.JsonFactory;
 import org.redkale.inject.Resourcable;
 import org.redkale.inject.ResourceEvent;
 import org.redkale.inject.ResourceFactory;
+import org.redkale.net.sncp.Sncp;
 import org.redkale.service.*;
 import org.redkale.source.spi.CacheSourceProvider;
 import org.redkale.util.*;
@@ -122,7 +123,7 @@ public abstract class AbstractCacheSource extends AbstractService implements Cac
             resourceFactory.inject(sourceName, source);
         }
         if (!compileMode && source instanceof Service) {
-            ((Service) source).init(sourceConf);
+            Sncp.initService((Service) source, sourceConf);
         }
         return source;
     }

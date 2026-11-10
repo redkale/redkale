@@ -46,6 +46,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     }
 
     @Override
+    @PostConstruct
     public void init(AnyValue conf) {
         super.init(conf);
         this.readPool = new JdbcConnectionPool(true, readConfProps);
@@ -82,6 +83,7 @@ public class DataJdbcSource extends AbstractDataSqlSource {
     }
 
     @Override
+    @PreDestroy
     public void destroy(AnyValue config) {
         if (readPool != null) {
             readPool.close();

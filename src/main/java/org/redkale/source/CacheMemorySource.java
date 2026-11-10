@@ -120,6 +120,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    @PostConstruct
     @SuppressWarnings("unchecked")
     public void init(AnyValue conf) {
         if (this.convert == null) {
@@ -195,6 +196,7 @@ public final class CacheMemorySource extends AbstractCacheSource {
     }
 
     @Override
+    @PreDestroy
     public void destroy(AnyValue conf) {
         if (scheduler != null) {
             scheduler.shutdownNow();

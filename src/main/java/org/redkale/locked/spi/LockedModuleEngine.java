@@ -73,7 +73,7 @@ public class LockedModuleEngine extends ModuleEngine {
         if (!application.isCompileMode()) {
             this.resourceFactory.inject(this.lockManager);
             if (this.lockManager instanceof Service) {
-                ((Service) this.lockManager).init(this.config);
+                Sncp.initService((Service) this.lockManager, this.config);
             }
         }
         this.resourceFactory.register("", LockedManager.class, this.lockManager);
@@ -102,7 +102,7 @@ public class LockedModuleEngine extends ModuleEngine {
     @Override
     public void onAppPreShutdown() {
         if (!application.isCompileMode() && this.lockManager instanceof Service) {
-            ((Service) this.lockManager).destroy(this.config);
+            Sncp.destroyService((Service) this.lockManager, this.config);
         }
     }
 

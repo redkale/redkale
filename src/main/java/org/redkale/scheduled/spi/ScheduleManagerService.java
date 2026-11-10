@@ -29,11 +29,7 @@ import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.redkale.annotation.AutoLoad;
-import org.redkale.annotation.Component;
-import org.redkale.annotation.Nullable;
-import org.redkale.annotation.Resource;
-import org.redkale.annotation.ResourceType;
+import org.redkale.annotation.*;
 import org.redkale.boot.Application;
 import org.redkale.net.sncp.Sncp;
 import org.redkale.scheduled.Scheduled;
@@ -98,6 +94,7 @@ public class ScheduleManagerService implements ScheduledManager, Service {
     }
 
     @Override
+    @PostConstruct
     public void init(AnyValue conf) {
         if (conf == null) {
             conf = AnyValue.create();
@@ -116,6 +113,7 @@ public class ScheduleManagerService implements ScheduledManager, Service {
     }
 
     @Override
+    @PreDestroy
     public void destroy(AnyValue conf) {
         if (scheduler != null) {
             scheduler.shutdown();

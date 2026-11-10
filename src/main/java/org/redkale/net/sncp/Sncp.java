@@ -105,6 +105,12 @@ public abstract class Sncp {
             if (method.getAnnotation(Local.class) != null) {
                 continue;
             }
+            if (method.getAnnotation(PostConstruct.class) != null) {
+                continue;
+            }
+            if (method.getAnnotation(PreDestroy.class) != null) {
+                continue;
+            }
             if (method.getAnnotation(ResourceChanged.class) != null) {
                 if (annotations != null) {
                     annotations.add(ResourceChanged.class);
@@ -321,6 +327,22 @@ public abstract class Sncp {
         return "sncp.resp.";
     }
 
+    public static void initService(Service service) {
+        initService(service, getResourceConf(service));
+    }
+
+    public static void initService(Service service, AnyValue conf) {
+        service.init(conf);
+    }
+
+    public static void destroyService(Service service) {
+        destroyService(service, getResourceConf(service));
+    }
+
+    public static void destroyService(Service service, AnyValue conf) {
+        service.destroy(conf);
+    }
+
     public static AnyValue getResourceConf(Service service) {
         if (service == null || !isSncpDyn(service)) {
             return null;
@@ -419,8 +441,8 @@ public abstract class Sncp {
         for (Class c : types) {
             for (Method m : c.getDeclaredMethods()) {
                 if (c.isInterface() || Modifier.isAbstract(m.getModifiers())) {
-                    StringBuilder sb =
-                            new StringBuilder(); // 不能使用method.toString() 因为包含declaringClass信息导致接口与实现类的方法hash不一致
+                    // 不能使用method.toString() 因为包含declaringClass信息导致接口与实现类的方法hash不一致
+                    StringBuilder sb = new StringBuilder();
                     sb.append(m.getName());
                     sb.append('(');
                     boolean first = true;
@@ -623,8 +645,12 @@ public abstract class Sncp {
                     mv.return_();
                 });
             }
-            if (!cwAnnotations.isEmpty()) cw.with(RuntimeVisibleAnnotationsAttribute.of(cwAnnotations));
-            if (!cwInnerClasses.isEmpty()) cw.with(InnerClassesAttribute.of(cwInnerClasses));
+            if (!cwAnnotations.isEmpty()) {
+                cw.with(RuntimeVisibleAnnotationsAttribute.of(cwAnnotations));
+            }
+            if (!cwInnerClasses.isEmpty()) {
+                cw.with(InnerClassesAttribute.of(cwInnerClasses));
+            }
         });
         byte[] bytes = classBytes;
         final String newDynClass = newDynName.replace('/', '.');
@@ -863,7 +889,7 @@ public abstract class Sncp {
                 c.set(service, agent == null ? null : agent.getName());
             }
             if (methodBoost != null) {
-                // 必须用servcie的ClassLoader， 因为service是动态ClassLoader会与doMethod里的动态ClassLoader不一致
+                // 必须用service的ClassLoader， 因为service是动态ClassLoader会与doMethod里的动态ClassLoader不一致
                 methodBoost.doInstance(classLoader, resourceFactory, service);
             }
             return service;
@@ -1018,7 +1044,7 @@ public abstract class Sncp {
                 c.set(service, info);
             }
             if (methodBoost != null) {
-                // 必须用servcie的ClassLoader， 因为service是动态ClassLoader会与doMethod里的动态ClassLoader不一致
+                // 必须用service的ClassLoader， 因为service是动态ClassLoader会与doMethod里的动态ClassLoader不一致
                 methodBoost.doInstance(classLoader, resourceFactory, service);
             }
             return service;
@@ -1250,8 +1276,12 @@ public abstract class Sncp {
                     mv.return_();
                 });
             }
-            if (!cwAnnotations.isEmpty()) cw.with(RuntimeVisibleAnnotationsAttribute.of(cwAnnotations));
-            if (!cwInnerClasses.isEmpty()) cw.with(InnerClassesAttribute.of(cwInnerClasses));
+            if (!cwAnnotations.isEmpty()) {
+                cw.with(RuntimeVisibleAnnotationsAttribute.of(cwAnnotations));
+            }
+            if (!cwInnerClasses.isEmpty()) {
+                cw.with(InnerClassesAttribute.of(cwInnerClasses));
+            }
         });
         byte[] bytes = classBytes;
         final String newDynClass = newDynName.replace('/', '.');
@@ -1279,7 +1309,7 @@ public abstract class Sncp {
                 RedkaleClassLoader.putReflectionField(newDynClass, c);
             }
             if (methodBoost != null) {
-                // 必须用servcie的ClassLoader， 因为service是动态ClassLoader会与doMethod里的动态ClassLoader不一致
+                // 必须用service的ClassLoader， 因为service是动态ClassLoader会与doMethod里的动态ClassLoader不一致
                 methodBoost.doInstance(classLoader, resourceFactory, service);
             }
             return service;

@@ -399,7 +399,7 @@ public abstract class NodeServer {
             localServices.forEach(y -> {
                 long s = System.currentTimeMillis();
                 application.onServicePreInit(this, y);
-                y.init(Sncp.getResourceConf(y));
+                Sncp.initService(y);
                 application.onServicePostInit(this, y);
                 long e = System.currentTimeMillis() - s;
                 if (slist != null) {
@@ -700,7 +700,7 @@ public abstract class NodeServer {
                 logger.finest(Sncp.getResourceType(y) + " is destroying");
             }
             application.onServicePreDestroy(this, y);
-            y.destroy(Sncp.getResourceConf(y));
+            Sncp.destroyService(y);
             if (finest) {
                 logger.finest(Sncp.getResourceType(y) + " was destroyed");
             }

@@ -19,6 +19,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.redkale.annotation.AutoLoad;
 import org.redkale.annotation.Nullable;
+import org.redkale.annotation.PostConstruct;
+import org.redkale.annotation.PreDestroy;
 import org.redkale.convert.ConvertDisabled;
 import org.redkale.convert.json.JsonConvert;
 import org.redkale.convert.json.JsonFactory;
@@ -47,6 +49,7 @@ public class CachedLocalSource implements Service {
     private ScheduledThreadPoolExecutor scheduler;
 
     @Override
+    @PostConstruct
     public void init(AnyValue conf) {
         if (scheduler == null) {
             this.scheduler = Utility.newScheduledExecutor(
@@ -72,6 +75,7 @@ public class CachedLocalSource implements Service {
     }
 
     @Override
+    @PreDestroy
     public void destroy(AnyValue conf) {
         if (scheduler != null) {
             scheduler.shutdownNow();

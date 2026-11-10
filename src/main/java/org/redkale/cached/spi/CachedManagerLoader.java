@@ -13,6 +13,7 @@ import org.redkale.annotation.AutoLoad;
 import org.redkale.cached.CachedManager;
 import org.redkale.inject.ResourceFactory;
 import org.redkale.inject.ResourceTypeLoader;
+import org.redkale.net.sncp.Sncp;
 import org.redkale.service.Service;
 import org.redkale.util.AnyValue;
 import org.redkale.util.RedkaleException;
@@ -55,7 +56,7 @@ class CachedManagerLoader implements ResourceTypeLoader {
                 if (!engine.getApplication().isCompileMode()) {
                     rf.inject(manager);
                     if (manager instanceof Service) {
-                        ((Service) manager).init(config);
+                        Sncp.initService((Service) manager, config);
                     }
                     logger.info("Load " + CachedManager.class.getSimpleName() + " (type="
                             + manager.getClass().getSimpleName() + ", resourceName='"

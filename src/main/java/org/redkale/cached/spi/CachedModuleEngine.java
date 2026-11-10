@@ -119,7 +119,7 @@ public class CachedModuleEngine extends ModuleEngine {
             cacheManagerMap.forEach((k, v) -> {
                 CachedManager manager = v.manager;
                 if (manager instanceof Service) {
-                    ((Service) manager).destroy(v.config);
+                    Sncp.destroyService((Service) manager, v.config);
                 }
             });
             cacheManagerMap.clear();

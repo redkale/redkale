@@ -15,13 +15,10 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.redkale.annotation.AutoLoad;
-import org.redkale.annotation.Component;
-import org.redkale.annotation.Nullable;
-import org.redkale.annotation.Resource;
-import org.redkale.annotation.ResourceType;
+import org.redkale.annotation.*;
 import org.redkale.boot.Application;
 import org.redkale.cached.CachedManager;
+import org.redkale.net.sncp.Sncp;
 import org.redkale.service.Local;
 import org.redkale.service.Service;
 import org.redkale.source.CacheEventListener;
@@ -110,6 +107,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     }
 
     @Override
+    @PostConstruct
     public void init(AnyValue conf) {
         this.config = conf;
         if (conf == null) {
@@ -119,7 +117,7 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
         this.enabled = conf.getBoolValue("enabled", true);
         this.schema = checkSchema(conf.getValue("schema", CACHED_SCHEMA));
         if (this.enabled) {
-            this.localSource.init(conf);
+            Sncp.initService(this.localSource, conf);
             String remoteSourceName = conf.getValue("remote", "");
             if (remoteSource == null && remoteSourceName != null) {
                 CacheSource source = application.loadCacheSource(remoteSourceName, false);
@@ -159,9 +157,10 @@ public class CachedManagerService implements CachedManager, CachedActionFunc, Se
     }
 
     @Override
+    @PreDestroy
     public void destroy(AnyValue conf) {
         if (this.enabled) {
-            this.localSource.destroy(conf);
+            Sncp.destroyService(this.localSource, conf);
         }
         if (this.remoteSource != null && this.remoteListener != null) {
             this.remoteSource.unsubscribe(remoteListener, getChannelTopic());

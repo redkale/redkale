@@ -11,6 +11,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import org.redkale.inject.ResourceFactory;
+import org.redkale.net.sncp.Sncp;
 import org.redkale.service.Service;
 import org.redkale.source.spi.DataSourceProvider;
 import org.redkale.util.*;
@@ -171,7 +172,7 @@ public final class DataSources {
             resourceFactory.inject(sourceName, source);
         }
         if (!compileMode && source instanceof Service) {
-            ((Service) source).init(sourceConf);
+            Sncp.initService((Service) source, sourceConf);
         }
         return source;
     }

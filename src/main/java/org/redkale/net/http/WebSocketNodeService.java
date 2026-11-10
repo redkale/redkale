@@ -23,11 +23,13 @@ import org.redkale.util.AnyValue;
 public class WebSocketNodeService extends WebSocketNode implements Service {
 
     @Override
+    @PostConstruct
     public void init(AnyValue conf) {
         super.init(conf);
     }
 
     @Override
+    @PreDestroy
     public void destroy(AnyValue conf) {
         super.destroy(conf);
     }

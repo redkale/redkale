@@ -5,6 +5,8 @@
  */
 package org.redkale.service;
 
+import org.redkale.annotation.PostConstruct;
+import org.redkale.annotation.PreDestroy;
 import org.redkale.util.AnyValue;
 
 /**
@@ -48,6 +50,7 @@ public interface Service {
      *
      * @param config 配置参数
      */
+    @PostConstruct
     default void init(AnyValue config) {}
 
     /**
@@ -56,5 +59,6 @@ public interface Service {
      *
      * @param config 配置参数
      */
+    @PreDestroy
     default void destroy(AnyValue config) {}
 }

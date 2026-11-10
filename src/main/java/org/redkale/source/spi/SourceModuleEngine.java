@@ -323,8 +323,9 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
             try {
                 if (source instanceof Service) {
                     long s = System.currentTimeMillis();
-                    ((Service) source)
-                            .destroy(Sncp.isSncpDyn((Service) source) ? Sncp.getResourceConf((Service) source) : null);
+                    Sncp.destroyService(
+                            (Service) source,
+                            Sncp.isSncpDyn((Service) source) ? Sncp.getResourceConf((Service) source) : null);
                     logger.info(source + " destroy in " + (System.currentTimeMillis() - s) + " ms");
                 }
             } catch (Exception e) {
@@ -338,8 +339,9 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
             try {
                 if (source instanceof Service) {
                     long s = System.currentTimeMillis();
-                    ((Service) source)
-                            .destroy(Sncp.isSncpDyn((Service) source) ? Sncp.getResourceConf((Service) source) : null);
+                    Sncp.destroyService(
+                            (Service) source,
+                            Sncp.isSncpDyn((Service) source) ? Sncp.getResourceConf((Service) source) : null);
                     logger.info(source + " destroy in " + (System.currentTimeMillis() - s) + " ms");
                 }
             } catch (Exception e) {
@@ -378,7 +380,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                 cacheSources.add(source);
                 resourceFactory.register(sourceName, CacheSource.class, source);
                 if (!application.isCompileMode() && source instanceof Service) {
-                    ((Service) source).init(sourceConf);
+                    Sncp.initService((Service) source, sourceConf);
                 }
                 logger.info("Load CacheSource resourceName='" + sourceName + "', source=" + source + " in "
                         + (System.currentTimeMillis() - st) + " ms");
@@ -457,7 +459,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
                 DataSource source = new DataMemorySource(sourceName);
                 if (!application.isCompileMode() && source instanceof Service) {
                     resourceFactory.inject(sourceName, source);
-                    ((Service) source).init(sourceConf);
+                    Sncp.initService((Service) source, sourceConf);
                 }
                 dataSources.add(source);
                 resourceFactory.register(sourceName, DataSource.class, source);
@@ -494,7 +496,7 @@ public class SourceModuleEngine extends ModuleEngine implements SourceManager {
 
                 if (!application.isCompileMode() && source instanceof Service) {
                     resourceFactory.inject(sourceName, source);
-                    ((Service) source).init(sourceConf);
+                    Sncp.initService((Service) source, sourceConf);
                 }
                 dataSources.add(source);
                 if (source instanceof DataMemorySource && source instanceof SearchSource) {

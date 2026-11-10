@@ -117,6 +117,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
     public AbstractDataSqlSource() {}
 
     @Override
+    @PostConstruct
     public void init(AnyValue conf) {
         super.init(conf);
         this.config = conf;
@@ -949,6 +950,7 @@ public abstract class AbstractDataSqlSource extends AbstractDataSource
     }
 
     @Override
+    @PreDestroy
     public void destroy(AnyValue config) {
         super.destroy(config);
     }
