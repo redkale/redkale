@@ -67,6 +67,10 @@ public abstract class AbstractDataSource extends AbstractService implements Data
     }
 
     @Override
+    @PreDestroy
+    public void destroy(AnyValue config) {}
+
+    @Override
     public final String resourceName() {
         return name;
     }

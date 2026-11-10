@@ -4,6 +4,7 @@
 
 package org.redkale.test.mq;
 
+import org.redkale.annotation.PreDestroy;
 import org.redkale.mq.MessageEvent;
 import org.redkale.mq.MessageProducer;
 import org.redkale.mq.Messaged;
@@ -21,6 +22,10 @@ public class TestMessageService extends AbstractService {
     public void init(AnyValue config) {
         sendMessage();
     }
+
+    @Override
+    @PreDestroy
+    public void destroy(AnyValue config) {}
 
     public void sendMessage() {
         TestBean bean = new TestBean(12345, "this is a message");
